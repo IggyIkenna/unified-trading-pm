@@ -1,0 +1,59 @@
+---
+description: "Keep uv.lock in sync when dependencies change"
+alwaysApply: true
+priority: 30
+tags: [uv, dependencies]
+---
+
+# UV Lock File: Update When Dependencies Change
+
+## CRITICAL: Commit uv.lock
+
+When you change `pyproject.toml` (add/remove/update dependencies), you MUST update the lock file so others get the same versions:
+
+```bash
+uv lock
+```
+
+Then **commit `uv.lock`** with your changes. Quality gates and quickmerge run `uv lock` automatically, so the lock file is kept current when you run them.
+
+---
+
+## Why
+
+- **Reproducible installs** — CI, production, and all devs get identical dependency versions
+- **Cross-platform** — uv.lock works on Linux and macOS (resolves for all platforms)
+- **No manual thinking** — Run quality gates or quickmerge; they update the lock when needed
+
+---
+
+## Workflow
+
+1. **Dev changes pyproject.toml** (or any code)
+2. **Dev runs quality gates** — `bash scripts/quality-gates.sh` — lock is updated if deps changed
+3. **Dev runs quickmerge** — lock changes are included in the commit (git add -A)
+4. **Other devs pull** — they get the updated uv.lock and install identical deps
+
+If you skip quality gates and run quickmerge directly, quickmerge runs quality gates first, so the lock is still updated.
+
+---
+
+## NEVER
+
+- NEVER add `uv.lock` to `.gitignore` — it must be committed
+- NEVER commit dependency changes without running quality gates or `uv lock` first
+
+---
+
+## Path Dependencies in CI
+
+Repos with path deps need a "Checkout dependencies" step in `quality-gates.yml` before `uv pip install`. Clone to `../repo-name`. See `.cursor/rules/path-dependency-ci.mdc`.
+
+---
+
+## Related
+
+- `.cursor/rules/uv-package-manager.mdc` — UV for all installs
+- `.cursor/rules/git-workflow.mdc` — Quickmerge includes modified files
+- `.cursor/rules/path-dependency-ci.mdc` — Path deps checkout pattern for CI
+- `unified-trading-codex/06-coding-standards/dependency-management.md`

@@ -1,0 +1,30 @@
+---
+description: "Universal semver for all repos; version = Docker image tag"
+alwaysApply: false
+priority: 50
+globs:
+  - "**/pyproject.toml"
+  - "**/package.json"
+  - "**/unified-*/**/*.py"
+tags:
+  - versioning
+  - libraries
+  - services
+  - ci-cd
+---
+# Universal Versioning
+
+RULE: ALL repos (libraries, services, UIs) use semver. Every main merge bumps version. Version tag = Docker image tag = immutable reference.
+WHY: Cloud Build fails if library version exists with different commit; prevents stale packages. Immutable tags enable safe rollbacks.
+CODEX: 05-infrastructure/versioning-rollback.md, 06-coding-standards/quality-gates.md
+
+DO:
+- Bump version in pyproject.toml/package.json before changing code in unified-* libraries
+- Every main merge bumps version (quality gates enforce for libraries; convention for services/UIs)
+- Deploy by version tag only (never SHA or latest)
+- Branch builds: tagged with branch-name-sha, not semver; auto-routed to dev project
+
+NEVER:
+- Change code then bump; reuse version with different commit
+- Deploy by SHA or latest
+- Bump version on branches (branch images use branch-name-sha tag)

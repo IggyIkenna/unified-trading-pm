@@ -1,0 +1,20 @@
+---
+description: "Always use quickmerge.sh, never run quality gates standalone"
+alwaysApply: true
+priority: 85
+tags: [ci-cd, quickmerge]
+---
+
+# Always Use Quickmerge
+
+RULE: ALWAYS run `bash scripts/quickmerge.sh "message"`. NEVER run `scripts/quality-gates.sh` standalone. Use `--dep-branch` when dependencies differ from main.
+WHY: Quickmerge runs dependency validation, pre-flight audit, quality gates, Act simulation, and PR creation. Standalone quality gates miss critical checks.
+CODEX: 06-coding-standards/quality-gates.md
+
+DO:
+  bash scripts/quickmerge.sh "feat: add feature"
+  bash scripts/quickmerge.sh "update" --dep-branch "my-feature"  # when deps differ
+
+NEVER:
+  bash scripts/quality-gates.sh  # standalone
+  git add -A && git commit && git push

@@ -1,0 +1,21 @@
+---
+description: "Use specific types, never Any. Check source code for actual type."
+alwaysApply: true
+priority: 90
+tags: [type-safety, blocking, strict-typing]
+globs: ["**/*.py", "!**/tests/**"]
+---
+
+# No Type Any - Use Specific Types (BLOCKING)
+
+RULE: Use specific types (TypedDict, Pydantic, Protocol, dict[str, X]). Never use Any. Check dependency source code to determine actual type.
+WHY: Any defeats type checking — no autocomplete, no refactoring safety, runtime errors instead of compile-time.
+CODEX: 06-coding-standards/README.md#type-hints
+
+DO:
+  def process(data: dict[str, str]) -> str: return data.get("key", "")
+  class Config(TypedDict): max_workers: int; venues: list[str]
+
+NEVER:
+  def process(data: Any) -> Any:
+  config: dict[str, Any] = load_config()  # when you know the structure

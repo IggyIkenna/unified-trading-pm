@@ -1,0 +1,338 @@
+---
+description: "Standard workflow for using sub-agents to preserve context and track costs"
+alwaysApply: true
+priority: 95
+globs:
+  - "**/*"
+tags:
+  - workflow
+  - sub-agents
+  - context-preservation
+  - cost-optimization
+---
+
+# Sub-Agent Workflow Standard
+
+## CRITICAL: Use Sub-Agents for Multi-Component Work
+
+Sub-agents preserve your context (cursor rules stay fresh) and enable massive parallelization while tracking costs.
+
+**Standard Location**: `unified-trading-pm/plans/ai/tasks/` directory structure
+
+---
+
+## 🎯 WHY SUB-AGENTS ARE ESSENTIAL
+
+### Context Preservation
+
+**Without Sub-Agents** (Master does everything):
+```
+Your context:
+├── Cursor rules: 90K tokens ✅
+├── Read file 1: 50K
+├── Read file 2: 50K
+├── Read file 3: 50K
+├── Edit files: 100K
+├── Tool outputs: 150K
+└── More work: 200K
+Total: 690K tokens ⚠️ Approaching limit, rules getting compressed!
+```
+
+**With Sub-Agents** (Delegate heavy work):
+```
+Your context:
+├── Cursor rules: 90K tokens ✅
+├── Task prompts: 20K
+├── Agent 1 summary: 3K
+├── Agent 2 summary: 3K
+├── Agent 3 summary: 3K
+└── Conversation: 20K
+Total: 139K tokens ✅ 86% context free, rules preserved!
+
+Each sub-agent (in their own 1M context):
+├── Task prompt: 5K
+├── Read files: 80K
+├── Make fixes: 100K
+└── Total: 185K in THEIR context
+```
+
+**Result**: 7 agents × 1M each = **7M+ effective working memory!**
+
+---
+
+## 📋 WHEN TO USE SUB-AGENTS
+
+### ✅ ALWAYS Use for:
+- Multi-repo operations (each repo = sub-agent)
+- Large file refactoring (each file = sub-agent)
+- Parallel independent tasks
+- Tasks requiring >100K token file reads
+- Iterative fixes (resume pattern)
+
+### ⚠️ CONSIDER for:
+- Tasks 50-100K tokens (if context preservation matters)
+- Multiple similar fixes (pattern replication)
+
+### ❌ SKIP for:
+- Single small file edits (<50K tokens)
+- Simple find-replace
+- Quick doc updates
+
+---
+
+## 🚀 STANDARD WORKFLOW
+
+### Step 1: Choose Mode
+
+**Complex/Unclear**: Start with Plan mode → discuss → build task docs → execute in Agent mode
+
+**Clear/Proven**: Skip to Agent mode → use task template → launch sub-agents
+
+### Step 2: Create Task Document
+
+**Location**: `unified-trading-pm/plans/ai/tasks/TASK_X_[NAME].md`
+
+**Copy**: `unified-trading-pm/plans/ai/tasks/TEMPLATE.md` structure
+
+**Include**:
+- Explicit Task tool usage with model: fast
+- Agent ID tracking (for resume)
+- Token tracking requirements
+- Backup branch creation
+- Verification steps
+
+### Step 3: Execute
+
+**Say**:
+```
+Execute unified-trading-pm/plans/ai/tasks/TASK_X_[NAME].md in full
+```
+
+**Task doc explicitly launches sub-agents** using Task tool
+
+### Step 4: Track & Resume
+
+**Save agent IDs** from launch (for resume if needed)
+
+**If agent needs corrections**:
+```
+Resume Task sub-agent:
+description: Continue [task]
+subagent_type: generalPurpose
+resume: [agent-id]
+model: fast
+prompt: |
+  [Specific feedback/guidance]
+```
+
+**Agent keeps context** → No re-reading files → 40-60% token savings!
+
+---
+
+## 💰 TOKEN TRACKING (REQUIRED)
+
+### In Every Task:
+
+**Master Agent**:
+- Starting tokens: [check Cursor UI]
+- Ending tokens: [check Cursor UI]
+- Used: [end - start]
+- Cost: [calculate with rates]
+
+**Each Sub-Agent** (must report):
+```
+💰 TOKENS:
+   Agent ID: agent-xyz-123 ← Save for resume!
+   Input: XK tokens
+   Output: YK tokens
+   Total: ZK tokens
+   Cost: $X.XX (fast model rate)
+```
+
+**Session Summary**:
+- Master: XK tokens, $Y
+- Sub-agents: XK tokens total, $Y
+- **Total: XK tokens, $Z**
+
+---
+
+## 📊 COST OPTIMIZATION
+
+### Rates (Current):
+- **Sonnet 4.5** (Master): $3/1M input, $15/1M output
+- **Fast Model** (Sub-agents): $0.30/1M input, $1.50/1M output (10x cheaper!)
+
+### Savings:
+- **Without sub-agents**: Master does all (800K Sonnet) = $12.50
+- **With sub-agents**: Master orchestrates (230K Sonnet) + sub-agents work (750K fast) = $2.25
+- **Savings: $10.25 (82%!)**
+
+### Resume Savings:
+- **Fresh agent**: 150K tokens (re-reads files)
+- **Resume**: +30K tokens (keeps context)
+- **Savings: 120K tokens per iteration (80%!)**
+
+---
+
+## 📁 DIRECTORY STRUCTURE (Standard)
+
+```
+unified-trading-pm/plans/ai/
+├── tasks/              ← Executable task docs
+│   ├── START_HERE.md
+│   ├── TEMPLATE.md
+│   ├── TOKEN_TRACKING_GUIDE.md
+│   ├── RESUME_PATTERN.md
+│   └── TASK_X_[NAME].md
+│
+├── contexts/           ← Context for sub-agents
+│   ├── CODING_STANDARDS.md
+│   └── [Context files]
+│
+└── [Historical plans]  ← Background
+```
+
+---
+
+## 🔄 RESUME PATTERN (40-60% Token Savings)
+
+**Pattern**:
+```
+1. Launch sub-agent → Save agent ID
+2. Agent reports back → You review
+3. If needs fixes → Resume with agent ID + feedback
+4. Agent continues (keeps context!)
+5. Repeat until success
+```
+
+**Example**:
+```
+Launch Agent 1 (180K tokens) → "328 → 150 errors, stuck on decorators"
+Resume Agent 1 (+40K tokens) → "150 → 50 errors, pattern working!"
+Resume Agent 1 (+35K tokens) → "50 → 0 errors ✅"
+Total: 255K tokens
+
+vs 3 Separate Agents: 180K × 3 = 540K tokens
+Savings: 285K tokens (53%!)
+```
+
+---
+
+## 📋 EPIC COMPLETION WORKFLOW
+
+### For Completing Epics:
+
+**Epic Structure**:
+1. Read epic from `unified-trading-codex/11-project-management/epics/`
+2. Break into tasks (use Plan mode if complex)
+3. Create task docs (`unified-trading-pm/plans/ai/tasks/TASK_X_EPIC_[NAME].md`)
+4. Execute tasks with sub-agents
+5. Track tokens/costs per task
+6. Resume agents as needed
+
+**Example Epic**: `quality-gates-consistency-epic.md`
+- Task 1: Add checks (1 agent)
+- Task 2: Fix 14 services (4 agents, parallel)
+- Task 3: Verify all (1 agent)
+- Total: 6 agents, 4-6 hours, ~$5-8
+
+---
+
+## 🎓 BEST PRACTICES
+
+### 1. Always Save Agent IDs
+```
+# Track in notes or file
+Agent 1 (orchestrator): agent-abc-123
+Agent 2 (aggregator): agent-def-456
+```
+
+### 2. Give Specific Resume Feedback
+```
+# ❌ Vague: "Fix the errors"
+# ✅ Specific: "Apply pattern from cefi_processor.py lines 135-166 to remaining decorators"
+```
+
+### 3. Track Tokens at Every Level
+- Master start/end
+- Each sub-agent reports
+- Calculate session total
+- Compare to alternatives
+
+### 4. Use Fast Model for Sub-Agents
+- 10x cheaper than Sonnet
+- Patterns are proven (fast model can follow)
+- Save Sonnet for orchestration/complex decisions
+
+---
+
+## 🚨 ANTI-PATTERNS
+
+### ❌ DON'T:
+- Launch sub-agent without saving ID (can't resume!)
+- Let master agent read 30+ files (use sub-agents!)
+- Launch fresh agent for corrections (resume instead!)
+- Skip token tracking (need cost data!)
+
+### ✅ DO:
+- Save all agent IDs immediately
+- Use sub-agents for heavy work
+- Resume for iterations
+- Track tokens at all levels
+
+---
+
+## 📚 REFERENCES
+
+**Task Framework**: `unified-trading-pm/plans/ai/tasks/`
+- TEMPLATE.md - Task structure
+- TOKEN_TRACKING_GUIDE.md - Cost tracking
+- RESUME_PATTERN.md - Iterative feedback
+
+**Coding Standards**: `unified-trading-pm/plans/ai/contexts/CODING_STANDARDS.md`
+
+**Codex**: `unified-trading-codex/06-coding-standards/sub-agent-workflow.md`
+
+**Project Management**: `unified-trading-codex/11-project-management/epic-execution-with-sub-agents.md`
+
+---
+
+## ✅ SUMMARY
+
+**Sub-agents are ESSENTIAL for**:
+- ✅ Context preservation (cursor rules stay fresh)
+- ✅ Cost optimization (10x cheaper fast model)
+- ✅ Parallel execution (7M+ capacity)
+- ✅ Iterative fixes (resume pattern)
+
+**Standard Location**: `unified-trading-pm/plans/ai/tasks/` with executable task docs
+
+**Always track tokens**: Master + sub-agents + resume iterations
+
+**Always save agent IDs**: Enable resume pattern (40-60% savings!)
+
+**Result**: Large-scale work (epics, refactorings) with preserved context and tracked costs ✅
+
+---
+
+## Agent Selection — Optimize for Cost and Context
+
+Main thread (Sonnet 4.5/4.6 in Cursor):
+- Keep MINIMAL context — delegate heavy work to sub-agents
+- Resume existing agents (`resume: agent-id`) before launching new ones
+- Context preserved in resume = 40-60% token savings vs re-reading files
+
+Sub-agent model selection:
+- `auto` (free in Cursor): well-defined, low-risk tasks — simple file moves, single-file edits, known patterns
+- `fast` (cheap): harder tasks needing capability — multi-file investigations, complex edits, code generation
+- No model specified: inherits from parent (default = sonnet)
+
+When in doubt: use `auto`. Only upgrade to `fast` if auto produces poor results.
+
+Claude Code context (fixed monthly price, API rate-limited):
+- CANNOT launch Cursor auto/composer agents — different runtime
+- Uses Read/Write/Shell/Grep tools instead
+- Optimise by batching parallel tool calls
+- Does not benefit from Cursor's agent model pricing
+
+CODEX: `06-coding-standards/sub-agent-workflow.md`

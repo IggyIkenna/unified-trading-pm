@@ -1,0 +1,103 @@
+{
+  "folders": [
+    {"path": "../../.cursor", "name": "⚙️ Cursor Config"},
+    {"path": "../../.github", "name": "🔀 GitHub / CI"},
+    {"path": "../../.venv-workspace", "name": "🐍 Venv"},
+    {"path": "../../unified-trading-codex", "name": "📚 Codex (Docs)"},
+    {"path": "../../unified-trading-deployment-v3", "name": "🚀 Deployment v3"},
+    {"path": "../../unified-cloud-services", "name": "☁️ Cloud Services"},
+    {"path": "../../unified-events-interface", "name": "📡 Events"},
+    {"path": "../../unified-config-interface", "name": "⚙️ Config"},
+    {"path": "../../unified-domain-services", "name": "📦 Domain Services"},
+    {"path": "../../unified-market-interface", "name": "📊 Market Interface"},
+    {"path": "../../api-contracts", "name": "📜 API Contracts"},
+    {"path": "../../instruments-service"},
+    {"path": "../../market-tick-data-handler"},
+    {"path": "../../market-data-processing-service"}
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "cursorpyright.analysis.typeCheckingMode": "strict",
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.useLibraryCodeForTypes": true,
+    "cursorpyright.analysis.indexing": true,
+    "cursorpyright.analysis.inlayHints.variableTypes": true,
+    "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
+    "cursorpyright.analysis.extraPaths": [
+      "${workspaceFolder}/unified-cloud-services",
+      "${workspaceFolder}/unified-events-interface",
+      "${workspaceFolder}/unified-config-interface",
+      "${workspaceFolder}/unified-domain-services",
+      "${workspaceFolder}/unified-market-interface",
+      "${workspaceFolder}/api-contracts",
+      "${workspaceFolder}/instruments-service",
+      "${workspaceFolder}/market-tick-data-handler",
+      "${workspaceFolder}/market-data-processing-service"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+      }
+    },
+    "ruff.enable": true,
+    "ruff.lint.enable": true,
+    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lineLength": 120,
+    "ruff.organizeImports": true,
+    "ruff.fixAll": true,
+    "ruff.path": [
+      "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
+    ],
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.venv": true,
+      "**/.pixi": true,
+      "**/.venv.backup": true,
+      "**/uv.lock": false
+    },
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/.hg/store/**": true,
+      "**/.pixi/**": true,
+      "**/.venv/**": true,
+      "**/.venv.backup/**": true
+    },
+    "search.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.venv": true,
+      "**/uv.lock": false
+    },
+    "editor.rulers": [100],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true
+  }
+}

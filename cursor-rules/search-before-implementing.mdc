@@ -1,0 +1,27 @@
+---
+description: "Search for existing implementations in unified libraries before writing new code"
+alwaysApply: true
+priority: 90
+tags:
+  - refactoring
+  - libraries
+  - duplication
+---
+
+# Search Before Implementing
+
+Before writing ANY new function, class, adapter, or connector, search these libraries:
+  1. `unified-market-interface` — market data, venue adapters, canonical schemas
+  2. `unified-trade-execution-interface` — order management, execution adapters
+  3. `unified-position-interface` — position feeds (when built)
+  4. `unified-cloud-services` — storage, secrets, pubsub, ConfigStore
+  5. `unified-config-interface` — config schema, BaseConfig
+  6. `unified-events-interface` — event logging
+  7. `unified-domain-services` — instruments, domain clients
+  8. `api-contracts` — external API schemas, VCR mocks
+
+If it EXISTS in a library: USE the library. Do NOT reimplement.
+If the library version is WRONG: FIX the library. Do NOT add a workaround in the service.
+If it is MISSING from a library: ADD it to the library first, then use it.
+
+CODEX: `05-infrastructure/unified-libraries/dependency-matrix.md`

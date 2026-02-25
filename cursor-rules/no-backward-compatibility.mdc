@@ -1,0 +1,14 @@
+---
+description: "No backward compatibility - fail fast, clean migrations per codex standards"
+alwaysApply: false
+priority: 60
+tags:
+  - code-quality
+  - codex-compliance
+---
+# No Backward Compatibility
+RULE: Never add fallbacks, legacy aliases, or dual-format support. Fail fast with clear error.
+WHY: Violates codex; fallbacks hide migration issues.
+CODEX: 06-coding-standards/README.md, .cursor/rules/delete-deprecated.mdc
+DO: Bump version; update all consumers; remove old code; document migration
+NEVER: try/except import fallbacks; config.old or config.new; alias for backward compat

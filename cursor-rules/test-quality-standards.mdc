@@ -1,0 +1,14 @@
+---
+description: "High-quality tests without duplication or performance degradation"
+alwaysApply: false
+priority: 55
+tags:
+  - testing
+  - quality
+---
+# Test Quality Standards
+RULE: Expand existing test files; never create test_*_extended.py. Use singleton fixtures from conftest; mock external deps.
+WHY: Duplicate files and fixtures cause maintenance burden; real GCS/API in unit tests slows gates.
+CODEX: 06-coding-standards/testing.md, .cursor/rules/no-duplicate-tests.mdc
+DO: Add tests to existing test_config.py; use session/module scope fixtures; mock GCS, APIs
+NEVER: Create test_config_extended.py; duplicate fixtures; use real GCS in unit tests; 500MB fixtures

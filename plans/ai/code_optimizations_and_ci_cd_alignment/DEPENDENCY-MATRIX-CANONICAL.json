@@ -1,0 +1,998 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "Unified Trading System - Canonical Dependency Matrix",
+  "description": "Single source of truth for all repo dependencies. Uses versioned dependencies, NO PATH DEPENDENCIES.",
+  "lastUpdated": "2026-02-24T16:00:00Z",
+  "notes": "All dependencies are versioned. Path dependencies removed as part of UCS v2.0 migration.",
+  "versions": {
+    "api-contracts": "1.0.0",
+    "unified-config-interface": "0.3.0",
+    "unified-events-interface": "0.2.0",
+    "unified-cloud-services": "2.0.0",
+    "unified-domain-services": "1.0.0",
+    "unified-market-interface": "1.0.0",
+    "unified-ml-interface": "1.0.0",
+    "unified-trade-execution-interface": "1.0.0",
+    "unified-defi-execution-interface": "1.0.0",
+    "matching-engine-library": "1.0.0",
+    "execution-algo-library": "1.0.0",
+    "pnl-attribution-service": "0.1.0"
+  },
+  "repositories": {
+    "api-contracts": {
+      "version": "1.0.0",
+      "dependencies": []
+    },
+    "unified-config-interface": {
+      "version": "0.3.0",
+      "dependencies": []
+    },
+    "unified-events-interface": {
+      "version": "0.2.0",
+      "dependencies": []
+    },
+    "unified-cloud-services": {
+      "version": "2.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "unified-domain-services": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        }
+      ]
+    },
+    "unified-market-interface": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        }
+      ]
+    },
+    "unified-ml-interface": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
+      ]
+    },
+    "unified-trade-execution-interface": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        }
+      ]
+    },
+    "unified-defi-execution-interface": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "matching-engine-library": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
+      ]
+    },
+    "execution-algo-library": {
+      "version": "1.0.0",
+      "dependencies": []
+    },
+    "instruments-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "strategy-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "market-data-processing-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "market-tick-data-handler",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "market-tick-data-handler": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "instruments-service",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "position-balance-monitor-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "api-contracts",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trade-execution-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "execution-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true,
+          "rationale": "Receives position updates from execution"
+        },
+        {
+          "name": "instruments-service",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true,
+          "rationale": "Needs canonical instrument definitions"
+        }
+      ],
+      "notes": "REQUIRED operational pipeline service"
+    },
+    "risk-and-exposure-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "market-data-processing-service",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true,
+          "rationale": "Needs current prices for mark-to-market"
+        }
+      ],
+      "notes": "REQUIRED operational pipeline service"
+    },
+    "pnl-attribution-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "execution-services": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trade-execution-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "execution-algo-library",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "matching-engine-library",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-defi-execution-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "market-tick-data-handler",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "instruments-service",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "pnl-attribution-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "notes": "Unified batch-live architecture: UTEI (venue adapters), execution-algo-library, matching-engine-library, UDEI. Mode adapters in modes/batch/, modes/live/. Unified orchestrator in engine/orchestrator.py. Post-trade analytics (execution_alpha, analytics) moved to pnl-attribution-service."
+    },
+    "ml-training-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "ml-inference-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "ml-training-service",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "features-calendar-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "features-delta-one-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "features-onchain-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "features-volatility-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "features-sports-service": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "alerting-system": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "corporate-actions": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "unified-trading-deployment-v3": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-services",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ],
+      "notes": "Uses GCS FUSE helpers for deployment operations"
+    },
+    "batch-audit-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs GCS for audit logs"
+    },
+    "ml-deployment-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs GCS for model storage"
+    },
+    "trading-analytics-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs BigQuery for analytics"
+    },
+    "live-health-monitor-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - uses security audit logging"
+    },
+    "client-reporting-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs BigQuery for reports"
+    },
+    "backtest-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs GCS for results"
+    },
+    "logs-dashboard-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs GCS for logs"
+    },
+    "onboarding-ui": {
+      "version": "1.0.0",
+      "dependencies": [
+        {
+          "name": "unified-cloud-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ],
+      "notes": "UI service - needs GCS for configs"
+    }
+  },
+  "topologicalOrder": {
+    "description": "Order for cascading quickmerge (dependencies BEFORE dependents)",
+    "levels": [
+      {
+        "level": 0,
+        "description": "Foundation - no dependencies",
+        "repos": ["unified-config-interface", "unified-events-interface", "api-contracts"]
+      },
+      {
+        "level": 1,
+        "description": "Cloud services",
+        "repos": ["unified-cloud-services"]
+      },
+      {
+        "level": 2,
+        "description": "Domain services and pure libraries",
+        "repos": [
+          "unified-domain-services",
+          "execution-algo-library"
+        ]
+      },
+      {
+        "level": 3,
+        "description": "Interfaces and engine libraries",
+        "repos": [
+          "unified-market-interface",
+          "unified-ml-interface",
+          "unified-trade-execution-interface",
+          "matching-engine-library"
+        ]
+      },
+      {
+        "level": 4,
+        "description": "DeFi interface",
+        "repos": ["unified-defi-execution-interface"]
+      },
+      {
+        "level": 5,
+        "description": "Core services",
+        "repos": [
+          "instruments-service",
+          "market-tick-data-handler",
+          "ml-training-service"
+        ]
+      },
+      {
+        "level": 6,
+        "description": "Services with service dependencies",
+        "repos": [
+          "strategy-service",
+          "market-data-processing-service",
+          "ml-inference-service",
+          "features-calendar-service",
+          "features-delta-one-service",
+          "features-onchain-service",
+          "features-volatility-service",
+          "features-sports-service",
+          "pnl-attribution-service",
+          "alerting-system",
+          "corporate-actions",
+          "unified-trading-deployment-v3",
+          "execution-services"
+        ]
+      },
+      {
+        "level": 7,
+        "description": "Operational services that depend on execution",
+        "repos": [
+          "position-balance-monitor-service",
+          "risk-and-exposure-service"
+        ]
+      },
+      {
+        "level": 8,
+        "description": "UI services",
+        "repos": [
+          "batch-audit-ui",
+          "ml-deployment-ui",
+          "trading-analytics-ui",
+          "live-health-monitor-ui",
+          "client-reporting-ui",
+          "backtest-ui",
+          "logs-dashboard-ui",
+          "onboarding-ui"
+        ]
+      }
+    ]
+  },
+  "publishingOrder": {
+    "description": "Order for publishing packages to artifact registry",
+    "steps": [
+      {
+        "step": 1,
+        "packages": ["api-contracts", "unified-config-interface", "unified-events-interface"],
+        "reason": "Foundation packages with no dependencies"
+      },
+      {
+        "step": 2,
+        "packages": ["unified-cloud-services"],
+        "reason": "Depends only on api-contracts"
+      },
+      {
+        "step": 3,
+        "packages": ["unified-domain-services", "execution-algo-library"],
+        "reason": "Depend on cloud services"
+      },
+      {
+        "step": 4,
+        "packages": ["unified-market-interface", "unified-ml-interface", "unified-trade-execution-interface", "matching-engine-library"],
+        "reason": "Depend on domain services"
+      },
+      {
+        "step": 5,
+        "packages": ["unified-defi-execution-interface"],
+        "reason": "Depends on market interface"
+      },
+      {
+        "step": 6,
+        "packages": ["All services"],
+        "reason": "Can be published once all libraries are available"
+      }
+    ]
+  },
+  "migrationNotes": {
+    "pathDependencyRemoval": "All path dependencies removed as part of UCS v2.0 migration",
+    "versioningStrategy": "Semantic versioning with upper bounds to prevent breaking changes",
+    "artifactRegistry": "All packages should be published to private PyPI or artifact registry",
+    "backwardsCompatibility": "No backwards compatibility - all services migrate to v2.0"
+  }
+}

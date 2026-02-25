@@ -1,0 +1,21 @@
+---
+description: "Never git reset/revert local changes without explicit user approval"
+alwaysApply: true
+priority: 95
+tags: [git, safety]
+---
+
+# Never Revert Local Changes
+
+RULE: Never run git reset --hard, git clean -fd, git restore, or checkout that discards uncommitted work without explicit user request.
+WHY: Parallel agents or branch switches can permanently lose hours of work.
+CODEX: 06-coding-standards/README.md
+
+DO:
+  git status first; if changes exist, ask user: stash, commit, or cancel
+  git stash push -u -m "Save work" before switching branches
+
+NEVER:
+  git reset --hard
+  git clean -fd
+  git checkout <branch> when uncommitted changes exist

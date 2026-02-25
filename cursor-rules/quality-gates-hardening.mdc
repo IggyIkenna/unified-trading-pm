@@ -1,0 +1,16 @@
+---
+description: "Quality gates hardening - E501 enforced, basedpyright for type checking"
+alwaysApply: false
+priority: 70
+tags:
+  - quality-gates
+  - hardening
+  - basedpyright
+  - ruff
+---
+# Quality Gates Hardening
+RULE: E501 enforced (line-length 120). Use basedpyright (not pyright/mypy). Format first, then check --fix.
+WHY: Aligns IDE and CI; basedpyright supports reportAny; E501 catches remaining long lines.
+CODEX: 06-coding-standards/quality-gates-service-template.sh, .cursor/rules/basedpyright-safety.mdc
+DO: `ruff format --line-length 120`; `timeout 120 basedpyright <source_dir>/`; never add E501 to ignore
+NEVER: Use pyright or mypy; add E501 to ruff ignore; skip format before check

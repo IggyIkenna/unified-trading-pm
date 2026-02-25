@@ -1,0 +1,21 @@
+---
+description: "Clone path deps to ../repo-name in CI, never deps/"
+alwaysApply: true
+priority: 40
+tags: [ci, path-dependencies]
+---
+
+# Path Dependency CI
+
+RULE: Clone path dependencies to `../repo-name` in CI. pyproject.toml must use `path = "../repo-name"`. Never use `deps/` for path deps.
+WHY: Local workspace has repos as siblings; CI clone to `../` creates same layout. `deps/` breaks `uv pip install -e ".[dev]"`.
+CODEX: 06-coding-standards/dependency-management.md
+
+DO:
+  git clone ... ../unified-cloud-services
+  uv pip install --system -e ../unified-cloud-services
+  uv pip install --system -e ".[dev]"
+
+NEVER:
+  Clone to deps/ when pyproject expects ../
+  Add checkout to unified-cloud-services (zero path deps)

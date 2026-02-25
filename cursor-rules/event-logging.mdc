@@ -1,0 +1,22 @@
+---
+description: "Use setup_events/log_event from unified-events-interface, all 12 lifecycle events required"
+alwaysApply: true
+priority: 75
+tags: [observability, event-logging]
+---
+
+# Event Logging
+
+RULE: Use `setup_events()` and `log_event()` from unified-events-interface. All 12 lifecycle events required. `tests/unit/test_event_logging.py` MUST exist and never be skipped.
+WHY: UTD v2 parses events for real-time progress, debugging, and cost optimization.
+CODEX: 03-observability/lifecycle-events.md
+
+DO:
+  from unified_events_interface import setup_events, log_event
+  setup_events(service_name="my-service", mode="batch")
+  log_event("STARTED"); log_event("VALIDATION_STARTED"); ... log_event("STOPPED")
+
+NEVER:
+  from unified_cloud_services.observability import log_event
+  setup_cloud_logging
+  Exit without logging STOPPED or FAILED

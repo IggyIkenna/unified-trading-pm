@@ -1,0 +1,21 @@
+---
+description: "Import from top-level package only, never from internal modules"
+alwaysApply: true
+priority: 50
+tags: [imports, dependencies, refactoring]
+globs: ["**/*.py"]
+---
+
+# External Import Standards
+
+RULE: Import from package root (e.g. `from unified_config_interface import UnifiedCloudConfig`). Never from nested modules (e.g. `from unified_config_interface.core.config import ...`).
+WHY: Top-level imports allow upstream refactoring without breaking 30+ downstream repos.
+CODEX: 06-coding-standards/external-import-standards.md
+
+DO:
+  from unified_events_interface import setup_events, log_event
+  from unified_domain_services import InstrumentsDomainClient
+
+NEVER:
+  from unified_events_interface.core.lifecycle import log_event
+  from unified_cloud_services.storage.gcs import get_storage_client

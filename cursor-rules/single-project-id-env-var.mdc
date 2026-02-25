@@ -1,0 +1,17 @@
+---
+description: "Use GCP_PROJECT_ID as primary environment variable (not GOOGLE_CLOUD_PROJECT)"
+alwaysApply: false
+priority: 50
+globs:
+  - "**/*.py"
+  - "**/*.sh"
+tags:
+  - configuration
+  - project-id
+---
+# Single Project ID Environment Variable
+RULE: Use GCP_PROJECT_ID as primary. Config classes may support GOOGLE_CLOUD_PROJECT for backward compat.
+WHY: Multiple vars (GCP_PROJECT_ID, GOOGLE_CLOUD_PROJECT) cause confusion and wrong config loading.
+CODEX: 06-coding-standards/README.md#configuration, .cursorrules
+DO: Document GCP_PROJECT_ID first; use AliasChoices for compat; validate non-empty
+NEVER: Use PROJECT_ID (too generic); document GOOGLE_CLOUD_PROJECT as primary

@@ -1,0 +1,31 @@
+---
+description: "Delete deprecated code completely — do not archive in place or leave for safety"
+alwaysApply: true
+priority: 95
+tags:
+  - refactoring
+  - deletion
+  - critical
+---
+
+# Delete Deprecated Code — Do Not Archive In Place
+
+When refactoring or replacing something, DELETE the old implementation completely.
+
+NEVER:
+- Leave `# deprecated`, `# legacy`, `# kept for backward compat` comments
+- Create `_old.py`, `_legacy.py`, `_deprecated.py` copies
+- Archive in the same directory where consumers can still import it
+
+RULE: A deleted function that causes a FAILING TEST is BETTER than a deprecated
+function that causes SILENT WRONG BEHAVIOR.
+
+When to delete:
+- Removing a duplicate config class → delete it immediately
+- Moving ConfigStore from UCI to UCS → delete from UCI immediately
+- Replacing `os.getenv()` with config class → delete the `os.getenv()` call
+- Replacing custom venue connector with UMI → delete the custom connector
+
+Only safe fallback: git history. Code is never truly gone — use `git blame`.
+
+CODEX: `06-coding-standards/error-handling.md`

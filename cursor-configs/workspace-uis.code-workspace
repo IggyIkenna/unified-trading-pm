@@ -1,0 +1,108 @@
+{
+  "folders": [
+    {"path": "../../.cursor", "name": "⚙️ Cursor Config"},
+    {"path": "../../.github", "name": "🔀 GitHub / CI"},
+    {"path": "../../.venv-workspace", "name": "🐍 Venv"},
+    {"path": "../../unified-trading-codex", "name": "📚 Codex (Docs)"},
+    {"path": "../../unified-trading-deployment-v3", "name": "🚀 Deployment v3"},
+    {"path": "../../unified-cloud-services", "name": "☁️ Cloud Services (Backend APIs)"},
+    {"path": "../../unified-config-interface", "name": "⚙️ Config (API configs)"},
+    {"path": "../../backtest-ui"},
+    {"path": "../../batch-audit-ui"},
+    {"path": "../../live-health-monitor-ui"},
+    {"path": "../../client-reporting-ui"},
+    {"path": "../../trading-analytics-ui"},
+    {"path": "../../logs-dashboard-ui"},
+    {"path": "../../ml-deployment-ui"},
+    {"path": "../../onboarding-ui"},
+    {"path": "../../settlement-ui"}
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "cursorpyright.analysis.typeCheckingMode": "strict",
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.useLibraryCodeForTypes": true,
+    "cursorpyright.analysis.indexing": true,
+    "cursorpyright.analysis.inlayHints.variableTypes": true,
+    "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
+    "cursorpyright.analysis.extraPaths": [
+      "${workspaceFolder}/unified-cloud-services",
+      "${workspaceFolder}/unified-config-interface",
+      "${workspaceFolder}/backtest-ui",
+      "${workspaceFolder}/batch-audit-ui",
+      "${workspaceFolder}/live-health-monitor-ui",
+      "${workspaceFolder}/client-reporting-ui",
+      "${workspaceFolder}/trading-analytics-ui",
+      "${workspaceFolder}/logs-dashboard-ui",
+      "${workspaceFolder}/ml-deployment-ui",
+      "${workspaceFolder}/onboarding-ui",
+      "${workspaceFolder}/settlement-ui"
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+      }
+    },
+    "ruff.enable": true,
+    "ruff.lint.enable": true,
+    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lineLength": 120,
+    "ruff.organizeImports": true,
+    "ruff.fixAll": true,
+    "ruff.path": [
+      "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
+    ],
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.venv": true,
+      "**/.pixi": true,
+      "**/.venv.backup": true,
+      "**/uv.lock": false
+    },
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/.hg/store/**": true,
+      "**/.pixi/**": true,
+      "**/.venv/**": true,
+      "**/.venv.backup/**": true
+    },
+    "search.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.venv": true,
+      "**/uv.lock": false
+    },
+    "editor.rulers": [100],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true
+  }
+}

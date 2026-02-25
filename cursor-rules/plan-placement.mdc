@@ -1,0 +1,28 @@
+---
+description: "Plans go in exactly two places: unified-trading-pm or unified-trading-pm/plans/ai/"
+alwaysApply: true
+priority: 95
+tags:
+  - documentation
+  - plans
+  - critical
+---
+
+# Plan Placement — Two Places Only
+
+PLANS go only in:
+  1. `unified-trading-pm/` — permanent, tracked, visible to team (epics, roadmaps, long-term plans)
+  2. `unified-trading-pm/plans/ai/` — active AI execution plans, current session only
+
+NEVER create plans or execution docs in:
+- Workspace root (`unified-trading-system-repos/*.md`)
+- Codex root (`unified-trading-codex/*.md`)
+- Service repo root or `docs/`
+- `unified-trading-pm/scripts/`, `.cursor/rules/`
+
+After `unified-trading-pm/plans/ai/` task completes:
+- If rollout should be tracked: create entry in `unified-trading-pm`
+- If ephemeral (one-session task): delete the plan file
+- NEVER create a `*_COMPLETE.md`, `*_SUMMARY.md`, or `*_STATUS.md` alongside it
+
+CODEX: `06-coding-standards/cursor-rules-system.md`

@@ -1,0 +1,14 @@
+# manifest_warnings.yaml - Additive-only annotations for flagged releases
+# NEVER delete entries from this file. Add new entries when a release is found bad.
+# Checked by rollback.sh before suggesting rollback targets.
+#
+# Format:
+# - repo: <repo-name>
+#   version: "<semver>"        # the bad version
+#   status: DANGEROUS          # always DANGEROUS
+#   reason: "<why it's bad>"   # brief description
+#   flagged_by: <github-username>
+#   flagged_at: "<ISO timestamp>"
+#   safe_alternative: "<semver>"  # recommended rollback target
+
+warnings: []  # empty to start - add entries here when releases are flagged

@@ -1,0 +1,20 @@
+---
+description: "Instruments domain reader and API key resolution — single source of truth"
+alwaysApply: true
+priority: 70
+tags: [instruments, api-keys, data-access]
+---
+
+# Instruments Domain and API Keys
+
+RULE: All instrument reads via InstrumentsDomainClient (unified-domain-services). API keys via get_secret_with_fallback, never os.getenv.
+WHY: Single source of truth; no duplicate GCS reads or fallbacks in services.
+CODEX: 02-data/instruments-and-api-keys-standard.md
+
+DO:
+  from unified_domain_services import InstrumentsDomainClient
+  api_key = get_secret_with_fallback(project_id=..., secret_name=..., fallback_env_var="TARDIS_API_KEY")
+
+NEVER:
+  os.environ.get("TARDIS_API_KEY")
+  Direct GCS reads for instruments; duplicate _load_instruments_by_venue in services

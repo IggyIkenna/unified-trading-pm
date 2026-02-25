@@ -1,0 +1,14 @@
+---
+description: "File/function/class size limits - enforced in quality gates"
+alwaysApply: false
+priority: 65
+tags:
+  - code-quality
+  - limits
+---
+# Code Quality Limits
+RULE: File 900 max; function 50; class 300; complexity 10; imports 30; params 5. Split by SRP when exceeded.
+WHY: Enforced in quality gates; maintains maintainability.
+CODEX: 06-coding-standards/file-splitting-guide.md, quality-gates-service-template.sh
+DO: Extract helpers; use composition; split files >900 lines; McCabe max-complexity 10
+NEVER: Exceed limits without refactor; add to ignore; bypass enforcement

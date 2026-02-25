@@ -1,0 +1,14 @@
+---
+description: "Use ConfigStore for runtime config - persistence and hot reload"
+alwaysApply: false
+priority: 55
+tags:
+  - configuration
+  - config-store
+---
+# ConfigStore Usage
+RULE: Use ConfigStore for runtime config (service params). Grid config uses domain buckets, NOT ConfigStore.
+WHY: Enables persistence and hot reload for service parameters.
+CODEX: 06-coding-standards/config-types.md, unified-config-interface
+DO: ConfigStore(bucket_name, service_name, schema_version); load_config(MyServiceConfig); hot_reloadable fields
+NEVER: Use grid config for runtime params; skip ConfigStore for services with hot-reloadable config
