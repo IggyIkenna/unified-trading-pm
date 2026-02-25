@@ -6,10 +6,11 @@
 # ── Colors ────────────────────────────────────────────────────────────────────
 if command -v tput >/dev/null 2>&1 && [ -t 1 ]; then
     RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
-    CYAN=$(tput setaf 6); BOLD=$(tput bold); NC=$(tput sgr0)
+    BOLD=$(tput bold); NC=$(tput sgr0)
 else
-    RED=""; GREEN=""; YELLOW=""; CYAN=""; BOLD=""; NC=""
+    RED=""; GREEN=""; YELLOW=""; BOLD=""; NC=""
 fi
+export RED GREEN YELLOW BOLD NC
 
 # ── Path resolution ───────────────────────────────────────────────────────────
 # Every script that sources this sets SCRIPT_DIR before sourcing.
@@ -156,13 +157,13 @@ count_rules_repo() {
 # Lists .mdc filenames only in local but not in repo
 rules_only_local() {
     comm -23 \
-        <(ls "$WORKSPACE_ROOT/.cursor/rules/"*.mdc 2>/dev/null | xargs -I{} basename {} | sort) \
-        <(ls "$PM_ROOT/cursor-rules/"*.mdc 2>/dev/null | xargs -I{} basename {} | sort)
+        <(find "$WORKSPACE_ROOT/.cursor/rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort) \
+        <(find "$PM_ROOT/cursor-rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort)
 }
 
 # Lists .mdc filenames only in repo but not in local
 rules_only_repo() {
     comm -13 \
-        <(ls "$WORKSPACE_ROOT/.cursor/rules/"*.mdc 2>/dev/null | xargs -I{} basename {} | sort) \
-        <(ls "$PM_ROOT/cursor-rules/"*.mdc 2>/dev/null | xargs -I{} basename {} | sort)
+        <(find "$WORKSPACE_ROOT/.cursor/rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort) \
+        <(find "$PM_ROOT/cursor-rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort)
 }
