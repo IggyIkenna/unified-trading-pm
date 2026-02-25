@@ -32,7 +32,7 @@ WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 # shellcheck source=./_workspace-lib.sh
 source "$SCRIPT_DIR/_workspace-lib.sh"
 
-log()  { echo "${BOLD}[unified-trading-pm]${RESET} $*"; }
+log()  { echo "${BOLD}[unified-trading-pm]${NC} $*"; }
 ok()   { echo "${GREEN}✓${NC} $*"; }
 warn() { echo "${YELLOW}⚠${NC}  $*"; }
 fail() { echo "${RED}✗${NC} $*" >&2; exit 1; }
