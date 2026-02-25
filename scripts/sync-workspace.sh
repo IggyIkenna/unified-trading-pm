@@ -18,13 +18,10 @@ if command -v tput >/dev/null 2>&1 && [ -t 1 ]; then
     BOLD=$(tput bold)
     NC=$(tput sgr0)
 else
-    RED=""
-    GREEN=""
-    YELLOW=""
-    CYAN=""
-    BOLD=""
-    NC=""
+    RED=""; GREEN=""; YELLOW=""; CYAN=""; BOLD=""; NC=""
 fi
+# Export so subshells (sync-rules-push/pull) inherit colors
+export RED GREEN YELLOW CYAN BOLD NC
 
 # Resolve paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

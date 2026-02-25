@@ -49,8 +49,8 @@ if [ "$DRY_RUN" = true ]; then
     echo "  $CURSOR_RULES_SRC → $CURSOR_RULES_DST"
     echo ""
     echo "Rules to copy:"
-    find "$CURSOR_RULES_SRC" -maxdepth 1 -name "*.mdc" 2>/dev/null | \
-        xargs -I{} basename {} | sort | sed 's/^/  - /'
+    find "$CURSOR_RULES_SRC" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | \
+        xargs -0 -I{} basename {} | sort | sed 's/^/  - /'
     exit 0
 fi
 
