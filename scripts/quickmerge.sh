@@ -172,7 +172,7 @@ fi
 # ── Stage 5: Stay on branch ───────────────────────────────────────────────────
 log "Stage 5: Done. Staying on branch $BRANCH"
 echo ""
-echo "${GREEN}${BOLD}✓ quickmerge complete${RESET}"
+echo "${GREEN}✓ quickmerge complete${NC}"
 echo "  Branch:  $BRANCH"
 echo "  Commit:  $COMMIT_MSG"
 [ -n "$PR_URL" ] && echo "  PR:      $PR_URL"
