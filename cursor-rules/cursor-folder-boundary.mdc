@@ -1,0 +1,62 @@
+---
+description: .cursor/ folder contains IDE config only — no scripts, plans, or manifests
+globs: [".cursor/**"]
+alwaysApply: true
+---
+
+# .cursor/ = IDE Config Working Copies Only
+
+The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling.
+
+## What belongs in .cursor/
+
+✅ `rules/` — Cursor rule files (working copies, synced from unified-trading-pm/cursor-rules/)
+✅ `skills-cursor/` — Cursor skill files
+✅ `workspace-configs/` — Cursor/VSCode workspace .json configs
+✅ `plugins/` — Cursor plugin cache (auto-managed)
+
+## What does NOT belong in .cursor/
+
+❌ Scripts that do real work → `unified-trading-pm/scripts/`
+❌ Execution plans or AI plans → `unified-trading-pm/plans/ai/`
+❌ Manifests or config files → `unified-trading-pm/workspace-manifest.json`
+❌ Bad-release annotations → `unified-trading-pm/manifest_warnings.yaml`
+❌ Archives → `unified-trading-pm/archive/`
+❌ Git operations or CI/CD logic
+
+## Cursor Rules Sync Workflow
+
+Rules live in TWO places:
+- `.cursor/rules/` — your LOCAL working copy (IDE reads from here)
+- `unified-trading-pm/cursor-rules/` — GIT-TRACKED source of truth
+
+**To share your rule changes with the team (one command):**
+```bash
+cd unified-trading-pm
+bash scripts/quickmerge.sh "feat: add rule for X"
+# Stage 0 auto-syncs .cursor/rules/ → cursor-rules/ before committing
+# No separate sync step needed
+```
+
+**To pull latest rules from the team:**
+```bash
+cd unified-trading-pm && git pull
+./scripts/sync-rules-pull.sh
+```
+
+**To check what's different:**
+```bash
+cd unified-trading-pm && ./scripts/sync-workspace.sh
+```
+
+## Why this separation?
+
+- `.cursor/` is gitignored at workspace root → changes are NOT tracked
+- `unified-trading-pm/` is a proper git repo → changes ARE tracked, reviewable, shareable
+- Keeps IDE concerns separate from workspace tooling concerns
+- Users can choose whether to sync rules (pull is opt-in, push is explicit)
+
+## Reference
+
+Codex: `unified-trading-codex/05-infrastructure/workspace-setup.md`
+# cursor-folder-boundary test line - safe to remove

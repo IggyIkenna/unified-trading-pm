@@ -519,7 +519,7 @@ git add -A && git commit && git push
 
 ### Canonical Dependency Matrix (Source of Truth)
 **ALL dependency changes must reference:**
-- **File**: `.cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json`
+- **File**: `unified-trading-pm/workspace-manifest.json`
 - **Usage**: Check before making dependency changes, understand cascade order
 - **Integration**: Used by quickmerge for automatic dependency cascade
 
@@ -559,9 +559,9 @@ ENVIRONMENT=production → Uses GCP_PROJECT_ID
 
 ### Documentation References
 - **CI/CD Rules**: `.cursor/rules/always-use-quickmerge.mdc`, `.cursor/rules/dependency-aware-development.mdc`, `.cursor/rules/pr-review-checklist.mdc`
-- **Master Plan**: `.cursor/plans/code_optimizations_and_ci_cd_alignment/00-MASTER-CICD-PLAN.md`
-- **Canonical Matrix**: `.cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json`
-- **Resolution Strategy**: `.cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-RESOLUTION-STRATEGY.md`
+- **Master Plan**: `unified-trading-pm/plans/ai/code_optimizations_and_ci_cd_alignment/00-MASTER-CICD-PLAN.md`
+- **Canonical Matrix**: `unified-trading-pm/workspace-manifest.json`
+- **Resolution Strategy**: `unified-trading-pm/plans/ai/code_optimizations_and_ci_cd_alignment/DEPENDENCY-RESOLUTION-STRATEGY.md`
 
 ---
 
