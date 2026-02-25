@@ -10,7 +10,7 @@ globs: ["**/*.py"]
 
 RULE: Import from package root (e.g. `from unified_config_interface import UnifiedCloudConfig`). Never from nested modules (e.g. `from unified_config_interface.core.config import ...`).
 WHY: Top-level imports allow upstream refactoring without breaking 30+ downstream repos.
-CODEX: 06-coding-standards/external-import-standards.md
+CODEX: 06-coding-standards/README.md#imports, 06-coding-standards/cursor-rules-system.md
 
 DO:
   from unified_events_interface import setup_events, log_event

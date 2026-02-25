@@ -1,3 +1,9 @@
+---
+description: "Install deps at repo and workspace venv levels for IDE health"
+alwaysApply: false
+globs: ["**/pyproject.toml"]
+---
+
 # Workspace Venv Sync
 
 When adding dependencies to any repo's pyproject.toml, ALWAYS install at BOTH levels:

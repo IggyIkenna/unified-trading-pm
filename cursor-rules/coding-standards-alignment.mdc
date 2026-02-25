@@ -1,3 +1,9 @@
+---
+description: "Run alignment agent when editing codex 06-coding-standards SSOT docs"
+alwaysApply: false
+globs: ["unified-trading-codex/06-coding-standards/**"]
+---
+
 # Coding Standards Alignment Rule
 
 ## When Updating Coding Standards
