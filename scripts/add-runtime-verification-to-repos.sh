@@ -52,7 +52,8 @@ LIBRARY_REPOS=(
   "unified-domain-services"
 )
 
-# Pattern to match "## Workspace Rules" section
+# Pattern to match "## Workspace Rules" section (documentation; used in add_verification_text logic)
+# shellcheck disable=SC2034
 WORKSPACE_RULES_PATTERN="## Workspace Rules"
 
 # UI verification text

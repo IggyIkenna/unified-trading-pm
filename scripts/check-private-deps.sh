@@ -4,8 +4,6 @@ set -e
 # Check if private package versions in pyproject.toml are published to Artifact Registry
 # This prevents pushing code that depends on unpublished package versions
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Private packages published to Artifact Registry
 PRIVATE_PACKAGES=(
     "unified-cloud-services"

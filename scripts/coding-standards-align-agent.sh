@@ -52,8 +52,10 @@ done < "$SSOT_CONFIG" 2>/dev/null || true
 
 [[ -z "$SSOT_FILES" ]] && SSOT_FILES="${STANDARDS_DIR}/README.md ${STANDARDS_DIR}/config-types.md ${STANDARDS_DIR}/quality-gates.md ${STANDARDS_DIR}/QUALITY_GATES_COMPREHENSIVE.md"
 
-# Docs to scan for contradictions (exclude SSOT)
+# Docs to scan for contradictions (exclude SSOT) - used in ALIGN_PROMPT find command
+# shellcheck disable=SC2034
 SCAN_DIRS="$STANDARDS_DIR"
+# shellcheck disable=SC2034
 EXCLUDE_PATTERN="README\.md|config-types\.md|quality-gates\.md|QUALITY_GATES_COMPREHENSIVE\.md"
 
 ALIGN_PROMPT="WORKSPACE: $WORKSPACE_ROOT
@@ -133,13 +135,15 @@ fi
 
 # Check for API key (optional for local)
 if [ -f /tmp/cursor_key.txt ]; then
-    export CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+    CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+    export CURSOR_API_KEY
 elif [ -n "$CURSOR_API_KEY" ]; then
     :
 else
     echo "Getting API key from Secret Manager..."
     if gcloud secrets versions access latest --secret=cursor-api-key --project=central-element-323112 > /tmp/cursor_key.txt 2>/dev/null; then
-        export CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+        CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+        export CURSOR_API_KEY
     else
         echo -e "${YELLOW}⚠️  No CURSOR_API_KEY. Run: export CURSOR_API_KEY=$(gh auth token 2>/dev/null || echo 'your-key')${NC}"
         exit 1

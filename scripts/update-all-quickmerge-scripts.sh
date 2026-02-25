@@ -5,6 +5,7 @@
 set -e
 
 WORKSPACE_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# shellcheck disable=SC2034
 ENFORCEMENT_SCRIPT="$WORKSPACE_ROOT/.cursor/scripts/cursor-team-kit-enforcement.sh"
 
 echo "Cursor Team Kit: Bulk Update for Quickmerge Scripts"

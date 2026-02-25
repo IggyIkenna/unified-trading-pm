@@ -3,7 +3,8 @@
 # Function to add function size check to quality-gates.sh
 add_function_check() {
     local file=$1
-    local temp_file=$(mktemp)
+    local temp_file
+    temp_file=$(mktemp)
     
     # Create the function check block
     cat > /tmp/function_check.txt << 'EOF'
@@ -77,7 +78,7 @@ EOF
 }
 
 # Add to all repos that need it
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
+cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos || exit 1
 
 for repo in unified-trade-execution-interface unified-ml-interface execution-algo-library unified-trading-deployment-v3 batch-audit-ui; do
     if [ -f "$repo/scripts/quality-gates.sh" ]; then

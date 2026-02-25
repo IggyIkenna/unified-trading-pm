@@ -10,7 +10,7 @@ WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$WORKSPACE_ROOT"
 
 THRESHOLD=1500
-REPOS=""
+REPOS_ARG=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --repos)
-      REPOS="$2"
+      REPOS_ARG="$2"
       shift 2
       ;;
     *)
@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Default to all repos if not specified
-if [ -z "$REPOS" ]; then
+if [ -z "$REPOS_ARG" ]; then
   REPOS=(
     "instruments-service"
     "unified-cloud-services"
@@ -67,7 +67,7 @@ if [ -z "$REPOS" ]; then
   )
 else
   # Split repos string into array
-  IFS=' ' read -ra REPOS <<< "$REPOS"
+  IFS=' ' read -ra REPOS <<< "$REPOS_ARG"
 fi
 
 echo "=== COD-SIZE Violation Scanner ==="

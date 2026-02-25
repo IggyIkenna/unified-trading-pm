@@ -84,7 +84,8 @@ case "$LLM_TOOL" in
         echo "🤖 Using Cursor CLI agent (model: auto - FREE)"
         
         # Get API key from temp file (same as run-agent.sh)
-        export CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+        CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+        export CURSOR_API_KEY
         
         # Set up environment
         export PATH="$HOME/.local/bin:$PATH"
