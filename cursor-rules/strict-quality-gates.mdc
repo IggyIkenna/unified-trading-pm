@@ -1,6 +1,6 @@
 ---
 description: "Comprehensive strict quality gate standards - all BLOCKING violations"
-alwaysApply: false
+alwaysApply: true
 priority: 100
 tags:
   - quality-gates

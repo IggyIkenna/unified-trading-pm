@@ -1,5 +1,5 @@
 ---
-description: "Use setup_events/log_event from unified-events-interface, all 12 lifecycle events required"
+description: "Use setup_events/log_event from unified-events-interface, 11 batch / 12 live lifecycle events"
 alwaysApply: true
 priority: 75
 tags: [observability, event-logging]
@@ -7,7 +7,7 @@ tags: [observability, event-logging]
 
 # Event Logging
 
-RULE: Use `setup_events()` and `log_event()` from unified-events-interface. All 12 lifecycle events required. `tests/unit/test_event_logging.py` MUST exist and never be skipped.
+RULE: Use `setup_events()` and `log_event()` from unified-events-interface. 11 required for batch / 12 for live (STARTED through FAILED, plus live-only CONNECTION_ESTABLISHED). `tests/unit/test_event_logging.py` MUST exist and never be skipped.
 WHY: UTD v2 parses events for real-time progress, debugging, and cost optimization.
 CODEX: 03-observability/lifecycle-events.md
 
