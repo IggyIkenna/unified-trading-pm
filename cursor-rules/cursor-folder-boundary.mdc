@@ -59,4 +59,3 @@ cd unified-trading-pm && ./scripts/sync-workspace.sh
 ## Reference
 
 Codex: `unified-trading-codex/05-infrastructure/workspace-setup.md`
-# cursor-folder-boundary test line - safe to remove

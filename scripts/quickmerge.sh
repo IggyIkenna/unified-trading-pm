@@ -26,7 +26,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-PM_ROOT="$REPO_ROOT"
+export PM_ROOT="$REPO_ROOT"
 WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 
 # shellcheck source=./_workspace-lib.sh
@@ -55,6 +55,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 NO_SYNC="${NO_SYNC:-false}"
+
+# ── Quality gates (before touching git) ─────────────────────────────────────
+log "Running quality gates..."
+bash "$SCRIPT_DIR/quality-gates.sh" --quick || fail "Quality gates failed — fix before committing"
+echo ""
 
 # ── Stage 0: Auto-sync cursor rules and configs ───────────────────────────────
 if [ "$NO_SYNC" = false ]; then

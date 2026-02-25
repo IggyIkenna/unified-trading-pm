@@ -1,0 +1,38 @@
+name: quality-gates
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          path: unified-trading-pm
+
+      - name: Simulate sibling workspace layout
+        # Scripts infer workspace root as parent of unified-trading-pm/.
+        # In CI the checkout lands at $GITHUB_WORKSPACE/unified-trading-pm,
+        # so $GITHUB_WORKSPACE is the workspace root — perfect sibling layout.
+        # We just need to create .cursor/rules/ and one sibling so validation passes.
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.cursor/rules"
+          touch "$GITHUB_WORKSPACE/.cursorrules"
+          mkdir -p "$GITHUB_WORKSPACE/unified-trading-codex"
+
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Install bats-core
+        run: |
+          git clone https://github.com/bats-core/bats-core.git /tmp/bats-core
+          sudo /tmp/bats-core/install.sh /usr/local
+
+      - name: Run quality gates
+        working-directory: unified-trading-pm
+        run: bash scripts/quality-gates.sh
