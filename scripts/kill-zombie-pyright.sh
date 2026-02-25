@@ -11,7 +11,7 @@ echo "🔍 Checking for zombie basedpyright processes (> ${MAX_HOURS} hours old)
 # Find and kill basedpyright processes older than MAX_HOURS
 killed=0
 
-ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep | while read pid etime cmd; do
+ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep | while read pid etime _cmd; do
     # Parse etime format: [[dd-]hh:]mm:ss
     if echo "$etime" | grep -q '-'; then
         # Format: dd-hh:mm:ss
@@ -19,7 +19,7 @@ ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep 
         rest=$(echo "$etime" | cut -d'-' -f2)
         hours=$(echo "$rest" | cut -d':' -f1)
         total_hours=$((days * 24 + hours))
-    elif [ $(echo "$etime" | tr ':' '\n' | wc -l) -eq 3 ]; then
+    elif [ "$(echo "$etime" | tr ':' '\n' | wc -l)" -eq 3 ]; then
         # Format: hh:mm:ss
         total_hours=$(echo "$etime" | cut -d':' -f1)
     else
@@ -34,7 +34,8 @@ ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep 
 done
 
 # Also kill any that are using excessive memory (> 4GB)
-ps aux 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep | while read user pid cpu mem vsz rss tty stat start time cmd; do
+# shellcheck disable=SC2034
+ps aux 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep | while read _user pid _cpu _mem _vsz rss _tty _stat _start _time _cmd; do
     # rss is in KB, 4GB = 4194304 KB
     if [ "$rss" -gt 4194304 ]; then
         echo "⚠️  Killing memory-hungry basedpyright (PID: $pid, MEM: $((rss / 1024))MB)"

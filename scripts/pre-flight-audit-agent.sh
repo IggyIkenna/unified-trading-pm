@@ -26,7 +26,8 @@ if [ ! -f /tmp/cursor_key.txt ]; then
         --project=central-element-323112 > /tmp/cursor_key.txt
 fi
 
-export CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
+export CURSOR_API_KEY
 export PATH="$HOME/.local/bin:$PATH"
 
 # Enhanced prompt for audit
