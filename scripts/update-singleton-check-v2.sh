@@ -26,6 +26,7 @@ REPOS=(
 WORKSPACE_ROOT="/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos"
 
 # Improved check that only validates files with get_ factory functions
+# shellcheck disable=SC2034
 IMPROVED_CHECK='
 FACTORY_FILES=$(find . -name "factory.py" -o -name "adapter_loader.py" -o -name "*_factory.py" 2>/dev/null | grep -v "__pycache__" | grep -v ".venv" | grep -v "deps/" | grep -v "build/")
 

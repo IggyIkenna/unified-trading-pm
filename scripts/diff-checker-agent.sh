@@ -31,7 +31,7 @@ if [ -n "$TARGET_SERVICE" ] && [ "$TARGET_SERVICE" != "--dry-run" ]; then
   SERVICES=("$TARGET_SERVICE")
 else
   # Get all services from manifest
-  SERVICES=($(jq -r '.repositories | to_entries[] | select(.value.type == "service") | select(.value.status != "future") | .key' "$MANIFEST" 2>/dev/null || echo ""))
+  mapfile -t SERVICES < <(jq -r '.repositories | to_entries[] | select(.value.type == "service") | select(.value.status != "future") | .key' "$MANIFEST" 2>/dev/null || true)
 fi
 
 ISSUES_FILE="/tmp/diff-checker-issues.json"

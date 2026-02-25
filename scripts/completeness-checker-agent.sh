@@ -12,6 +12,7 @@ set -e
 WORKSPACE_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 CODEX="$WORKSPACE_ROOT/unified-trading-codex"
 MANIFEST="$WORKSPACE_ROOT/.cursor/WORKSPACE-MANIFEST.json"
+# shellcheck disable=SC2034
 FIX_MODE="${1:-}"
 
 echo "Running Completeness Checker..."
@@ -27,7 +28,9 @@ if ! command -v jq &>/dev/null; then
 fi
 
 SERVICE_REPOS=$(jq -r '.repositories | to_entries[] | select(.value.type == "service") | select(.value.status != "future") | .key' "$MANIFEST")
+# shellcheck disable=SC2034
 LIBRARY_REPOS=$(jq -r '.repositories | to_entries[] | select(.value.type == "library") | select(.value.status != "future") | .key' "$MANIFEST")
+# shellcheck disable=SC2034
 ALL_NON_FUTURE=$(jq -r '.repositories | to_entries[] | select(.value.status != "future") | .key' "$MANIFEST")
 
 echo "=== Check 1: Service 8-canonical docs ==="

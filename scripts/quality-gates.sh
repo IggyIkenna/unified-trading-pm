@@ -49,41 +49,22 @@ section "shellcheck"
 if ! command -v shellcheck >/dev/null 2>&1; then
     warn "shellcheck not installed — skipping (brew install shellcheck)"
 else
-    # Shellcheck only the core workspace scripts (not historical utility scripts
-    # copied from .cursor/scripts/ which pre-date shellcheck enforcement)
-    CORE_SCRIPTS=(
-        "$REPO_ROOT/scripts/quickmerge.sh"
-        "$REPO_ROOT/scripts/quality-gates.sh"
-        "$REPO_ROOT/scripts/sync-rules-push.sh"
-        "$REPO_ROOT/scripts/sync-rules-pull.sh"
-        "$REPO_ROOT/scripts/sync-workspace.sh"
-    )
-    SOURCED_SCRIPTS=(
-        "$REPO_ROOT/scripts/_workspace-lib.sh"
-    )
-
     SHELL_ERRORS=0
-    for script in "${CORE_SCRIPTS[@]}"; do
-        [ -f "$script" ] || continue
-        if shellcheck -S warning "$script" 2>/dev/null; then
-            ok "$(basename "$script")"
-        else
-            fail "$(basename "$script") has shellcheck warnings"
-            shellcheck -S warning "$script" 2>&1 | sed 's/^/    /' >&2
-            ((SHELL_ERRORS++)) || true
-        fi
-    done
 
-    for script in "${SOURCED_SCRIPTS[@]}"; do
-        [ -f "$script" ] || continue
-        if shellcheck -S warning -e SC1091 "$script" 2>/dev/null; then
-            ok "$(basename "$script")"
+    # All .sh scripts — sourced libs get SC1091 disabled (they're not standalone)
+    while IFS= read -r -d '' script; do
+        basename_script="$(basename "$script")"
+        flags=(-S warning)
+        [[ "$basename_script" == _* ]] && flags+=(-e SC1091)
+
+        if shellcheck "${flags[@]}" "$script" 2>/dev/null; then
+            ok "$basename_script"
         else
-            fail "$(basename "$script") has shellcheck warnings"
-            shellcheck -S warning -e SC1091 "$script" 2>&1 | sed 's/^/    /' >&2
+            fail "$basename_script has shellcheck warnings"
+            shellcheck "${flags[@]}" "$script" 2>&1 | sed 's/^/    /' >&2
             ((SHELL_ERRORS++)) || true
         fi
-    done
+    done < <(find "$REPO_ROOT/scripts" -name "*.sh" -print0 | sort -z)
 fi
 
 # ── 2. JSON validation ────────────────────────────────────────────────────────
