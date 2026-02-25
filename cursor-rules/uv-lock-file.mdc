@@ -1,8 +1,9 @@
 ---
 description: "Keep uv.lock in sync when dependencies change"
-alwaysApply: true
+alwaysApply: false
 priority: 30
 tags: [uv, dependencies]
+globs: ["**/pyproject.toml", "**/uv.lock"]
 ---
 
 # UV Lock File: Update When Dependencies Change
@@ -23,25 +24,22 @@ Then **commit `uv.lock`** with your changes. Quality gates and quickmerge run `u
 
 - **Reproducible installs** — CI, production, and all devs get identical dependency versions
 - **Cross-platform** — uv.lock works on Linux and macOS (resolves for all platforms)
-- **No manual thinking** — Run quality gates or quickmerge; they update the lock when needed
+- **No manual thinking** — Run quickmerge (it auto-runs quality gates and updates the lock)
 
 ---
 
 ## Workflow
 
 1. **Dev changes pyproject.toml** (or any code)
-2. **Dev runs quality gates** — `bash scripts/quality-gates.sh` — lock is updated if deps changed
-3. **Dev runs quickmerge** — lock changes are included in the commit (git add -A)
-4. **Other devs pull** — they get the updated uv.lock and install identical deps
-
-If you skip quality gates and run quickmerge directly, quickmerge runs quality gates first, so the lock is still updated.
+2. **Dev runs quickmerge** — `bash scripts/quickmerge.sh "message"` (NOT quality-gates.sh standalone). Quickmerge auto-runs quality gates and updates uv.lock.
+3. **Other devs pull** — they get the updated uv.lock and install identical deps
 
 ---
 
 ## NEVER
 
 - NEVER add `uv.lock` to `.gitignore` — it must be committed
-- NEVER commit dependency changes without running quality gates or `uv lock` first
+- NEVER commit dependency changes without running quickmerge or `uv lock` first
 
 ---
 
@@ -54,6 +52,6 @@ Repos with path deps need a "Checkout dependencies" step in `quality-gates.yml` 
 ## Related
 
 - `.cursor/rules/uv-package-manager.mdc` — UV for all installs
-- `.cursor/rules/git-workflow.mdc` — Quickmerge includes modified files
+- `.cursor/rules/always-use-quickmerge.mdc` — Quickmerge includes modified files
 - `.cursor/rules/path-dependency-ci.mdc` — Path deps checkout pattern for CI
 - `unified-trading-codex/06-coding-standards/dependency-management.md`

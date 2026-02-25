@@ -1,3 +1,9 @@
+---
+description: "Use api-contracts for external API schemas and VCR mocks"
+alwaysApply: false
+globs: ["**/*.py", "**/api-contracts/**"]
+---
+
 # API Contracts Usage
 
 **Full specification:** `unified-trading-codex/06-coding-standards/api-contracts.md`

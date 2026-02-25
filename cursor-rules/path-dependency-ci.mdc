@@ -1,8 +1,9 @@
 ---
 description: "Clone path deps to ../repo-name in CI, never deps/"
-alwaysApply: true
+alwaysApply: false
 priority: 40
 tags: [ci, path-dependencies]
+globs: ["**/.github/workflows/*.yml", "**/pyproject.toml"]
 ---
 
 # Path Dependency CI

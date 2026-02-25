@@ -7,8 +7,8 @@ tags:
   - limits
 ---
 # Code Quality Limits
-RULE: File 900 max; function 50; class 300; complexity 10; imports 30; params 5. Split by SRP when exceeded.
-WHY: Enforced in quality gates; maintains maintainability.
+RULE: File 900 max (warn 700); function 50; class 300; complexity 10; imports 30; params 5. Split by SRP when exceeded.
+WHY: Enforced in quality gates; maintains maintainability. Single Responsibility Principle.
 CODEX: 06-coding-standards/file-splitting-guide.md, quality-gates-service-template.sh
-DO: Extract helpers; use composition; split files >900 lines; McCabe max-complexity 10
-NEVER: Exceed limits without refactor; add to ignore; bypass enforcement
+DO: Extract helpers; use composition; split files >900 lines (by pipeline stage, domain, or operation); McCabe max-complexity 10
+NEVER: Exceed limits without refactor; add to ignore; bypass enforcement; add noqa to bypass
