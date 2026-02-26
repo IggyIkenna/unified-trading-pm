@@ -133,19 +133,15 @@ if ! command -v agent &>/dev/null; then
     exit 0
 fi
 
-# Check for API key (optional for local)
-if [ -f /tmp/cursor_key.txt ]; then
-    CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
-    export CURSOR_API_KEY
-elif [ -n "$CURSOR_API_KEY" ]; then
-    :
-else
-    echo "Getting API key from Secret Manager..."
-    if gcloud secrets versions access latest --secret=cursor-api-key --project=central-element-323112 > /tmp/cursor_key.txt 2>/dev/null; then
-        CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
-        export CURSOR_API_KEY
-    else
-        echo -e "${YELLOW}⚠️  No CURSOR_API_KEY. Run: export CURSOR_API_KEY=$(gh auth token 2>/dev/null || echo 'your-key')${NC}"
+# Check for API key (never write to world-readable temp file)
+if [ -z "${CURSOR_API_KEY:-}" ]; then
+    if [ -n "${GCP_PROJECT_ID:-}" ]; then
+        echo "Getting API key from Secret Manager..."
+        CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$GCP_PROJECT_ID" 2>/dev/null) || true
+        [ -n "${CURSOR_API_KEY:-}" ] && export CURSOR_API_KEY
+    fi
+    if [ -z "${CURSOR_API_KEY:-}" ]; then
+        echo -e "${YELLOW}⚠️  No CURSOR_API_KEY. Set GCP_PROJECT_ID and ensure gcloud auth, or: export CURSOR_API_KEY=\$(gh auth token 2>/dev/null || echo 'your-key')${NC}"
         exit 1
     fi
 fi

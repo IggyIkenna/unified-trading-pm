@@ -18,15 +18,13 @@ NC='\033[0m'
 echo "🤖 Running Pre-Flight Audit Agent for $REPO_NAME..."
 echo ""
 
-# Check for API key
-if [ ! -f /tmp/cursor_key.txt ]; then
+# Check for API key (never write to world-readable temp file)
+if [ -z "${CURSOR_API_KEY:-}" ]; then
+    PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key from Secret Manager}"
     echo "Getting API key from Secret Manager..."
-    gcloud secrets versions access latest \
-        --secret=cursor-api-key \
-        --project=central-element-323112 > /tmp/cursor_key.txt
+    CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
+    export CURSOR_API_KEY
 fi
-
-CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
 export CURSOR_API_KEY
 export PATH="$HOME/.local/bin:$PATH"
 
