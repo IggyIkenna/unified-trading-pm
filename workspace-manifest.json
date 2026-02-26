@@ -50,6 +50,7 @@
   },
   "versions": {
     "api-contracts": "1.0.0",
+    "unified-reference-data-interface": "1.0.0",
     "unified-config-interface": "1.1.0",
     "unified-events-interface": "1.0.0",
     "unified-cloud-services": "2.1.0",
@@ -83,6 +84,23 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/api-contracts",
       "cloud_build_trigger": "api-contracts-build",
       "status": "active"
+    },
+    "unified-reference-data-interface": {
+      "type": "library",
+      "doc_standard": "library-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "02-data"
+      ],
+      "version": "1.0.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 0,
+      "dependencies": [],
+      "github_url": "https://github.com/IggyIkenna/unified-reference-data-interface",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-reference-data-interface",
+      "cloud_build_trigger": "unified-reference-data-interface-build",
+      "status": "active",
+      "notes": "REST-only reference data: instrument definitions, options chains, expiry calendars, corporate actions. Phase 8 of io_interface plan."
     },
     "unified-config-interface": {
       "type": "library",
@@ -1104,6 +1122,7 @@
           "unified-config-interface",
           "unified-events-interface",
           "api-contracts",
+          "unified-reference-data-interface",
           "unified-trading-codex"
         ]
       },
@@ -1222,7 +1241,8 @@
         "packages": [
           "api-contracts",
           "unified-config-interface",
-          "unified-events-interface"
+          "unified-events-interface",
+          "unified-reference-data-interface"
         ],
         "reason": "Foundation packages with no dependencies"
       },
