@@ -56,8 +56,8 @@ IMPORTANT: Only run basedpyright/quality-gates 2-3 times total (not every file) 
 # Detect available LLM tools
 detect_llm_tool() {
     # Preference 1: Cursor CLI agent (FREE with Ultra)
-    # Check for API key in temp file (same as run-agent.sh)
-    if command -v agent >/dev/null 2>&1 && [ -f /tmp/cursor_key.txt ]; then
+    # Check for API key (CURSOR_API_KEY or GCP_PROJECT_ID for Secret Manager fetch)
+    if command -v agent >/dev/null 2>&1 && { [ -n "${CURSOR_API_KEY:-}" ] || [ -n "${GCP_PROJECT_ID:-}" ]; }; then
         echo "cursor"
         return
     fi
@@ -83,9 +83,12 @@ case "$LLM_TOOL" in
     cursor)
         echo "🤖 Using Cursor CLI agent (model: auto - FREE)"
         
-        # Get API key from temp file (same as run-agent.sh)
-        CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
-        export CURSOR_API_KEY
+        # Get API key (never use world-readable temp file)
+        if [ -z "${CURSOR_API_KEY:-}" ]; then
+            PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key}"
+            CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
+            export CURSOR_API_KEY
+        fi
         
         # Set up environment
         export PATH="$HOME/.local/bin:$PATH"
@@ -131,8 +134,8 @@ case "$LLM_TOOL" in
         echo ""
         echo "Install one of:"
         echo "  - Cursor CLI agent: Check if 'agent' command exists"
-        echo "    - Ensure API key in /tmp/cursor_key.txt"
-        echo "    - Run: gcloud secrets versions access latest --secret=cursor-api-key --project=central-element-323112 > /tmp/cursor_key.txt"
+        echo "    - Set: export GCP_PROJECT_ID=your-project (to fetch from Secret Manager)"
+        echo "    - Or: export CURSOR_API_KEY=\$(gcloud secrets versions access latest --secret=cursor-api-key --project=\$GCP_PROJECT_ID)"
         echo ""
         echo "  - Claude Code CLI: claude --version"
         echo "    - Set: export ANTHROPIC_API_KEY=sk-ant-..."

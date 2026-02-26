@@ -44,13 +44,13 @@ fi
 # Set up environment
 export PATH="$HOME/.local/bin:$PATH"
 
-# Get API key from temp file (should already exist)
-if [ ! -f /tmp/cursor_key.txt ]; then
+# Get API key (never write to world-readable temp file)
+if [ -z "${CURSOR_API_KEY:-}" ]; then
+    PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key from Secret Manager}"
     echo "Getting API key from Secret Manager..."
-    gcloud secrets versions access latest --secret=cursor-api-key --project=central-element-323112 > /tmp/cursor_key.txt
+    CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
+    export CURSOR_API_KEY
 fi
-
-export CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
 
 # Workspace root
 WORKSPACE_ROOT="/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos"

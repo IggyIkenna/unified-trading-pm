@@ -20,12 +20,11 @@ WORKSPACE_ROOT="/Users/ikennaigboaka/Documents/repos/unified-trading-system-repo
 # Set up environment
 export PATH="$HOME/.local/bin:$PATH"
 
-# Get API key from temp file (should already exist)
-if [ -f /tmp/cursor_key.txt ]; then
-    export CURSOR_API_KEY=$(cat /tmp/cursor_key.txt)
-else
-    echo "Error: /tmp/cursor_key.txt not found. Run gcloud command first."
-    exit 1
+# Get API key (never use world-readable temp file)
+if [ -z "${CURSOR_API_KEY:-}" ]; then
+    PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key from Secret Manager}"
+    CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
+    export CURSOR_API_KEY
 fi
 
 # Set parser path
