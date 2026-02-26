@@ -50,9 +50,9 @@
   },
   "versions": {
     "api-contracts": "1.0.0",
-    "unified-config-interface": "1.0.0",
+    "unified-config-interface": "1.1.0",
     "unified-events-interface": "1.0.0",
-    "unified-cloud-services": "2.0.0",
+    "unified-cloud-services": "2.1.0",
     "unified-domain-services": "1.0.0",
     "unified-market-interface": "1.0.0",
     "unified-ml-interface": "1.0.0",
@@ -78,7 +78,11 @@
       "version": "1.0.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
-      "dependencies": []
+      "dependencies": [],
+      "github_url": "https://github.com/IggyIkenna/api-contracts",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/api-contracts",
+      "cloud_build_trigger": "api-contracts-build",
+      "status": "active"
     },
     "unified-config-interface": {
       "type": "library",
@@ -87,7 +91,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "1.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": []
@@ -111,7 +115,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "2.0.0",
+      "version": "2.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 1,
       "dependencies": [
