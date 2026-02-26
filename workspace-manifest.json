@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "title": "Unified Trading System — Workspace Manifest v2",
+  "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
   "lastUpdated": "2026-02-25T00:00:00Z",
   "notes": "Promoted from DEPENDENCY-MATRIX-CANONICAL.json. Added type, doc_standard, codex_sections per repo. corporate-actions removed (it is an operational mode within instruments-service, not a standalone repo). features-sports-service and unified-position-interface marked as future. settlement-ui and unified-feature-calculator-library added. All versions reset to 1.0.0 on 2026-02-25 as clean baseline. Previous versions were inconsistently tracked. All future bumps will follow semver consistently.",
@@ -53,6 +53,7 @@
     "unified-reference-data-interface": "1.0.0",
     "unified-config-interface": "1.1.0",
     "unified-events-interface": "1.0.0",
+    "unified-cloud-interface": "1.0.0",
     "unified-cloud-services": "2.1.0",
     "unified-domain-services": "1.0.0",
     "unified-market-interface": "1.0.0",
@@ -71,6 +72,7 @@
   "repositories": {
     "api-contracts": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "05-infrastructure",
@@ -87,6 +89,7 @@
     },
     "unified-reference-data-interface": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "05-infrastructure",
@@ -104,6 +107,7 @@
     },
     "unified-config-interface": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "05-infrastructure",
@@ -116,6 +120,7 @@
     },
     "unified-events-interface": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "03-observability",
@@ -126,8 +131,24 @@
       "merge_level": 0,
       "dependencies": []
     },
+    "unified-cloud-interface": {
+      "type": "library",
+      "arch_tier": "0",
+      "doc_standard": "library-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
+      "version": "1.0.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 0,
+      "dependencies": [],
+      "status": "active",
+      "notes": "Cloud abstraction layer: storage, pub/sub, logging. Tier 0 pure leaf."
+    },
     "unified-cloud-services": {
       "type": "library",
+      "arch_tier": "1",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "05-infrastructure",
@@ -146,6 +167,7 @@
     },
     "unified-domain-services": {
       "type": "library",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "01-domain",
@@ -175,6 +197,7 @@
     },
     "execution-algo-library": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -187,6 +210,7 @@
     },
     "matching-engine-library": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -210,6 +234,7 @@
     },
     "unified-feature-calculator-library": {
       "type": "library",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -222,6 +247,7 @@
     },
     "unified-market-interface": {
       "type": "library",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "02-data",
@@ -260,6 +286,7 @@
     },
     "unified-ml-interface": {
       "type": "library",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "05-infrastructure"
@@ -287,6 +314,7 @@
     },
     "unified-trade-execution-interface": {
       "type": "library",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -320,6 +348,7 @@
     },
     "unified-defi-execution-interface": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -353,6 +382,7 @@
     },
     "unified-position-interface": {
       "type": "library",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -383,6 +413,7 @@
     },
     "instruments-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -428,6 +459,7 @@
     },
     "market-tick-data-handler": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -472,6 +504,7 @@
     },
     "market-data-processing-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -516,6 +549,7 @@
     },
     "features-calendar-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -545,6 +579,7 @@
     },
     "features-delta-one-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -579,6 +614,7 @@
     },
     "features-volatility-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -608,6 +644,7 @@
     },
     "features-onchain-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -637,6 +674,7 @@
     },
     "features-sports-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -657,6 +695,7 @@
     },
     "ml-training-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -696,6 +735,7 @@
     },
     "ml-inference-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "02-data",
@@ -735,6 +775,7 @@
     },
     "strategy-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -781,6 +822,7 @@
     },
     "execution-services": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -790,7 +832,7 @@
       "version": "1.0.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
-      "deployment_note": "Per-client deployment — holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
+      "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
           "name": "unified-cloud-services",
@@ -831,6 +873,7 @@
     },
     "alerting-system": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "03-observability"
@@ -858,6 +901,7 @@
     },
     "pnl-attribution-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -887,6 +931,7 @@
     },
     "position-balance-monitor-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -895,7 +940,7 @@
       "version": "1.0.0",
       "version_source": "pyproject.toml",
       "merge_level": 7,
-      "deployment_note": "Shared service — serves many clients. One instance per workspace.",
+      "deployment_note": "Shared service \u2014 serves many clients. One instance per workspace.",
       "dependencies": [
         {
           "name": "unified-cloud-services",
@@ -916,6 +961,7 @@
     },
     "risk-and-exposure-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -944,6 +990,7 @@
     },
     "strategy-validation-service": {
       "type": "service",
+      "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": [
         "01-domain",
@@ -975,6 +1022,7 @@
     },
     "unified-trading-deployment-v3": {
       "type": "infrastructure",
+      "arch_tier": "service",
       "doc_standard": "infrastructure-canonical",
       "codex_sections": [
         "05-infrastructure"
@@ -986,6 +1034,7 @@
     },
     "unified-trading-codex": {
       "type": "infrastructure",
+      "arch_tier": "service",
       "doc_standard": "infrastructure-canonical",
       "codex_sections": [],
       "version": "1.0.0",
@@ -995,6 +1044,7 @@
     },
     "backtest-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1008,6 +1058,7 @@
     },
     "batch-audit-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "monitoring",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1021,6 +1072,7 @@
     },
     "trading-analytics-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1034,6 +1086,7 @@
     },
     "live-health-monitor-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "hybrid",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1048,6 +1101,7 @@
     },
     "client-reporting-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1061,6 +1115,7 @@
     },
     "logs-dashboard-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "monitoring",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1074,6 +1129,7 @@
     },
     "ml-deployment-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1086,6 +1142,7 @@
     },
     "onboarding-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1099,6 +1156,7 @@
     },
     "settlement-ui": {
       "type": "ui",
+      "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
       "codex_sections": [
@@ -1108,7 +1166,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
-      "notes": "Settlement UI — empty directory, not yet implemented.",
+      "notes": "Settlement UI \u2014 empty directory, not yet implemented.",
       "dependencies": []
     }
   },
@@ -1117,10 +1175,11 @@
     "levels": [
       {
         "level": 0,
-        "description": "Foundation — no dependencies",
+        "description": "Foundation \u2014 no dependencies",
         "repos": [
           "unified-config-interface",
           "unified-events-interface",
+          "unified-cloud-interface",
           "api-contracts",
           "unified-reference-data-interface",
           "unified-trading-codex"
@@ -1212,12 +1271,42 @@
       }
     ]
   },
+  "tier_rules": {
+    "0": {
+      "allowed_from": [],
+      "description": "Pure leaf \u2014 no inter-library imports"
+    },
+    "1": {
+      "allowed_from": [
+        "0"
+      ],
+      "description": "Service runtime \u2014 imports Tier 0 only"
+    },
+    "2": {
+      "allowed_from": [
+        "0"
+      ],
+      "description": "Domain libs \u2014 imports Tier 0 only, no Tier 1"
+    },
+    "service": {
+      "allowed_from": [
+        "0",
+        "1",
+        "2"
+      ],
+      "description": "Services import from all tiers"
+    },
+    "ui": {
+      "allowed_from": [],
+      "description": "TypeScript \u2014 separate QG rules"
+    }
+  },
   "futureRepos": {
     "description": "Repos planned but not yet in workspace",
     "repos": [
       {
         "name": "features-sports-service",
-        "notes": "Sports integration — post-commercialisation. Repo exists on GitHub but not in workspace."
+        "notes": "Sports integration \u2014 post-commercialisation. Repo exists on GitHub but not in workspace."
       },
       {
         "name": "unified-position-interface",
@@ -1242,6 +1331,7 @@
           "api-contracts",
           "unified-config-interface",
           "unified-events-interface",
+          "unified-cloud-interface",
           "unified-reference-data-interface"
         ],
         "reason": "Foundation packages with no dependencies"
