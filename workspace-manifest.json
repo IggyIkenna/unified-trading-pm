@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-02-25T00:00:00Z",
+  "lastUpdated": "2026-02-26",
   "notes": "Promoted from DEPENDENCY-MATRIX-CANONICAL.json. Added type, doc_standard, codex_sections per repo. corporate-actions removed (it is an operational mode within instruments-service, not a standalone repo). features-sports-service and unified-position-interface marked as future. settlement-ui and unified-feature-calculator-library added. All versions reset to 1.0.0 on 2026-02-25 as clean baseline. Previous versions were inconsistently tracked. All future bumps will follow semver consistently.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
@@ -50,12 +50,13 @@
   },
   "versions": {
     "api-contracts": "1.0.0",
+    "unified-internal-contracts": "1.0.0",
     "unified-reference-data-interface": "1.0.0",
     "unified-config-interface": "1.1.0",
     "unified-events-interface": "1.0.0",
     "unified-cloud-interface": "1.0.0",
-    "unified-cloud-services": "2.1.0",
-    "unified-domain-services": "1.0.0",
+    "unified-trading-services": "2.2.0",
+    "unified-domain-client": "1.0.0",
     "unified-market-interface": "1.0.0",
     "unified-ml-interface": "1.0.0",
     "unified-trade-execution-interface": "1.0.0",
@@ -86,6 +87,22 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/api-contracts",
       "cloud_build_trigger": "api-contracts-build",
       "status": "active"
+    },
+    "unified-internal-contracts": {
+      "type": "library",
+      "arch_tier": "0",
+      "doc_standard": "library-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
+      "version": "1.0.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 0,
+      "dependencies": [],
+      "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
+      "status": "active",
+      "notes": "Internal message schemas, topic names, request/response/error contracts. NO cloud SDKs."
     },
     "unified-reference-data-interface": {
       "type": "library",
@@ -146,7 +163,7 @@
       "status": "active",
       "notes": "Cloud abstraction layer: storage, pub/sub, logging. Tier 0 pure leaf."
     },
-    "unified-cloud-services": {
+    "unified-trading-services": {
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
@@ -154,18 +171,24 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "2.1.0",
+      "version": "2.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 1,
+      "github_url": "https://github.com/IggyIkenna/unified-trading-services",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-services",
+      "cloud_build_trigger": "unified-trading-services-build",
+      "folder_name": "unified-trading-services",
+      "status": "active",
       "dependencies": [
         {
           "name": "api-contracts",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
-      ]
+      ],
+      "notes": "GitHub repo renamed from unified-trading-services. Local folder still named unified-trading-services. Package: unified_trading_services (alias) + unified_trading_services (internal)."
     },
-    "unified-domain-services": {
+    "unified-domain-client": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
@@ -179,7 +202,7 @@
       "merge_level": 2,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -193,7 +216,11 @@
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
-      ]
+      ],
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-domain-client",
+      "folder_name": "unified-domain-client",
+      "notes": "Primary package. GitHub repo: unified-domain-client. Local folder: unified-domain-client."
     },
     "execution-algo-library": {
       "type": "library",
@@ -210,7 +237,7 @@
     },
     "matching-engine-library": {
       "type": "library",
-      "arch_tier": "0",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -221,7 +248,7 @@
       "merge_level": 3,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -263,7 +290,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -273,7 +300,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -296,12 +323,12 @@
       "merge_level": 3,
       "dependencies": [
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -330,7 +357,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -348,7 +375,7 @@
     },
     "unified-defi-execution-interface": {
       "type": "library",
-      "arch_tier": "0",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -359,7 +386,7 @@
       "merge_level": 4,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -382,7 +409,7 @@
     },
     "unified-position-interface": {
       "type": "library",
-      "arch_tier": "0",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
@@ -405,7 +432,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -431,7 +458,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -446,7 +473,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -476,7 +503,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -491,7 +518,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -516,7 +543,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -526,7 +553,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -561,7 +588,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -591,7 +618,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -601,7 +628,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -626,7 +653,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -656,7 +683,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -687,7 +714,7 @@
       "notes": "Sports integration planned post-commercialisation. Repo exists on GitHub but not in this workspace.",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -707,7 +734,7 @@
       "merge_level": 5,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -717,7 +744,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -747,7 +774,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -757,7 +784,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -789,7 +816,7 @@
       "deployment_note": "One instance per client (separately managed accounts)",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -799,7 +826,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -835,7 +862,7 @@
       "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -845,7 +872,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -883,7 +910,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -913,7 +940,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -943,7 +970,7 @@
       "deployment_note": "Shared service \u2014 serves many clients. One instance per workspace.",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -972,7 +999,7 @@
       "merge_level": 7,
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1004,7 +1031,7 @@
       "notes": "Backtest vs Live T+1 reconciliation. Not yet built. Daily scheduled, per-client/per-strategy, catches model degradation and execution drift.",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1181,6 +1208,7 @@
           "unified-events-interface",
           "unified-cloud-interface",
           "api-contracts",
+          "unified-internal-contracts",
           "unified-reference-data-interface",
           "unified-trading-codex"
         ]
@@ -1189,14 +1217,14 @@
         "level": 1,
         "description": "Cloud services",
         "repos": [
-          "unified-cloud-services"
+          "unified-trading-services"
         ]
       },
       {
         "level": 2,
         "description": "Domain services and pure libraries",
         "repos": [
-          "unified-domain-services",
+          "unified-domain-client",
           "execution-algo-library",
           "unified-feature-calculator-library"
         ]
@@ -1329,6 +1357,7 @@
         "step": 1,
         "packages": [
           "api-contracts",
+          "unified-internal-contracts",
           "unified-config-interface",
           "unified-events-interface",
           "unified-cloud-interface",
@@ -1339,14 +1368,14 @@
       {
         "step": 2,
         "packages": [
-          "unified-cloud-services"
+          "unified-trading-services"
         ],
-        "reason": "Depends only on api-contracts"
+        "reason": "Depends only on api-contracts. GitHub repo renamed from unified-trading-services."
       },
       {
         "step": 3,
         "packages": [
-          "unified-domain-services",
+          "unified-domain-client",
           "execution-algo-library",
           "unified-feature-calculator-library"
         ],
