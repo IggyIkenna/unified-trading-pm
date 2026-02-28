@@ -3,7 +3,7 @@
 ## Problem Statement
 
 When working on a feature that requires changes across multiple repos:
-- Make changes to `unified-cloud-services`
+- Make changes to `unified-trading-services`
 - Make changes to `instruments-service` (depends on UCS)
 - Need to test them together
 - Need to ensure all dependencies are committed BEFORE downstream
@@ -18,7 +18,7 @@ When working on a feature that requires changes across multiple repos:
 
 ### Old Approach (Complex)
 ```bash
---dep-branches "unified-cloud-services:branch-a,unified-config-interface:branch-b"
+--dep-branches "unified-trading-services:branch-a,unified-config-interface:branch-b"
 # Different branches for each dependency → Hard to track
 ```
 
@@ -47,8 +47,8 @@ Create in each repo:
   "name": "instruments-service",
   "dependencies": [
     {
-      "name": "unified-cloud-services",
-      "path": "../unified-cloud-services",
+      "name": "unified-trading-services",
+      "path": "../unified-trading-services",
       "required": true
     },
     {
@@ -100,7 +100,7 @@ DEP_PATHS=$(jq -r '.dependencies[] | "\(.name):\(.path)"' .dependency-matrix.jso
 
 # Example result:
 # Level 0: unified-config-interface (no deps)
-# Level 1: unified-cloud-services (depends on UCI)
+# Level 1: unified-trading-services (depends on UCI)
 # Level 1: unified-events-interface (depends on UCI)
 # Level 2: instruments-service (depends on UCS, UEI)
 ```
@@ -146,7 +146,7 @@ bash scripts/quickmerge.sh "$COMMIT_MSG" --dep-branch "$BRANCH_NAME"
 
 ```
 instruments-service
-  ├─> unified-cloud-services
+  ├─> unified-trading-services
   │   └─> unified-config-interface
   └─> unified-events-interface
       └─> unified-config-interface
@@ -159,7 +159,7 @@ cd instruments-service
 
 # Make changes to instruments-service AND dependencies
 vim instruments_service/main.py
-vim ../unified-cloud-services/unified_cloud_services/core.py
+vim ../unified-trading-services/unified_trading_services/core.py
 vim ../unified-config-interface/unified_config_interface/config.py
 
 # Run quickmerge with branch name
@@ -171,11 +171,11 @@ bash scripts/quickmerge.sh "feat: new API" --dep-branch "my-feature"
 ```
 [instruments-service] Starting quickmerge...
 [instruments-service] Reading dependency matrix...
-[instruments-service] Dependencies: unified-cloud-services, unified-events-interface
+[instruments-service] Dependencies: unified-trading-services, unified-events-interface
 
 [instruments-service] Building dependency graph...
   Level 0: unified-config-interface
-  Level 1: unified-cloud-services, unified-events-interface
+  Level 1: unified-trading-services, unified-events-interface
   Level 2: instruments-service
 
 [instruments-service] Checking Level 0: unified-config-interface
@@ -185,14 +185,14 @@ bash scripts/quickmerge.sh "feat: new API" --dep-branch "my-feature"
   [unified-config-interface] Stage 1-7: Full pipeline
   [unified-config-interface] ✅ Pushed to branch "my-feature"
 
-[instruments-service] Checking Level 1: unified-cloud-services
-  [unified-cloud-services] Has uncommitted changes: YES
-  [unified-cloud-services] 🔄 Cascading quickmerge...
-  [unified-cloud-services] Dependency: unified-config-interface
+[instruments-service] Checking Level 1: unified-trading-services
+  [unified-trading-services] Has uncommitted changes: YES
+  [unified-trading-services] 🔄 Cascading quickmerge...
+  [unified-trading-services] Dependency: unified-config-interface
   [unified-config-interface] Already committed @ "my-feature" ✅
-  [unified-cloud-services] Stage 1-7: Full pipeline
-  [unified-cloud-services] Uses unified-config-interface @ "my-feature"
-  [unified-cloud-services] ✅ Pushed to branch "my-feature"
+  [unified-trading-services] Stage 1-7: Full pipeline
+  [unified-trading-services] Uses unified-config-interface @ "my-feature"
+  [unified-trading-services] ✅ Pushed to branch "my-feature"
 
 [instruments-service] Checking Level 1: unified-events-interface
   [unified-events-interface] Has uncommitted changes: NO
@@ -201,14 +201,14 @@ bash scripts/quickmerge.sh "feat: new API" --dep-branch "my-feature"
 [instruments-service] All dependencies committed, proceeding with quickmerge
 [instruments-service] Stage 1-7: Full pipeline
 [instruments-service] Uses:
-  - unified-cloud-services @ "my-feature"
+  - unified-trading-services @ "my-feature"
   - unified-events-interface @ "my-feature"
   - unified-config-interface @ "my-feature"
 [instruments-service] ✅ Pushed to branch "my-feature"
 
 🎉 Complete! All repos pushed to branch "my-feature"
   - unified-config-interface PR: #123
-  - unified-cloud-services PR: #456
+  - unified-trading-services PR: #456
   - instruments-service PR: #789
 ```
 
@@ -222,11 +222,11 @@ bash scripts/quickmerge.sh "feat: new API" --dep-branch "my-feature"
 Cascade order ensures commits happen in dependency order:
 
 1. unified-config-interface pushed @ "my-feature" (t=0)
-2. unified-cloud-services pushed @ "my-feature" (t=1)
+2. unified-trading-services pushed @ "my-feature" (t=1)
 3. instruments-service pushed @ "my-feature" (t=2)
 
 When instruments-service GitHub Actions runs:
-  → Clones unified-cloud-services @ "my-feature" ✅ (already pushed at t=1)
+  → Clones unified-trading-services @ "my-feature" ✅ (already pushed at t=1)
   → Clones unified-config-interface @ "my-feature" ✅ (already pushed at t=0)
   → All dependencies available
 ```
@@ -260,10 +260,10 @@ jobs:
         run: |
           # Clone all deps at same branch (cascade ensures they exist)
           git clone --branch ${{ steps.branch.outputs.branch }} \
-            https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-cloud-services.git \
-            ../unified-cloud-services || \
-            git clone https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-cloud-services.git \
-            ../unified-cloud-services  # Fallback to main if branch doesn't exist
+            https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-trading-services.git \
+            ../unified-trading-services || \
+            git clone https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-trading-services.git \
+            ../unified-trading-services  # Fallback to main if branch doesn't exist
           
           # Repeat for other deps
 ```
@@ -277,7 +277,7 @@ jobs:
 ```
 Cloud Build triggers run in parallel:
   - unified-config-interface Cloud Build starts (t=0)
-  - unified-cloud-services Cloud Build starts (t=0)  ← ❌ Needs UCI package!
+  - unified-trading-services Cloud Build starts (t=0)  ← ❌ Needs UCI package!
   - instruments-service Cloud Build starts (t=0)  ← ❌ Needs UCS + UCI packages!
 ```
 
@@ -294,19 +294,19 @@ steps:
     args:
       - '-c'
       - |
-        # Wait for unified-cloud-services build on this branch
+        # Wait for unified-trading-services build on this branch
         echo "Waiting for dependencies to build..."
         
         # Poll for package availability
         while ! gcloud artifacts docker images list \
-          asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-cloud-services \
+          asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-services \
           --filter="tags:${BRANCH_NAME}" \
           --limit=1 | grep -q "${BRANCH_NAME}"; do
-          echo "Waiting for unified-cloud-services@${BRANCH_NAME}..."
+          echo "Waiting for unified-trading-services@${BRANCH_NAME}..."
           sleep 30
         done
         
-        echo "✅ unified-cloud-services@${BRANCH_NAME} available"
+        echo "✅ unified-trading-services@${BRANCH_NAME} available"
   
   # Now proceed with build
   - name: 'gcr.io/cloud-builders/docker'
@@ -327,7 +327,7 @@ substitutions:
   _BRANCH_NAME: $(body.ref)
 
 ---
-# unified-cloud-services trigger (depends on UCI)
+# unified-trading-services trigger (depends on UCI)
 name: ucs-build
 includedFiles: ['**']
 substitutions:
@@ -354,9 +354,9 @@ waitFor: ['ucs-build']  # ← Cloud Build feature
    → Publishes to topic: "uci-build-complete"
 
 2. Cloud Function subscribes to "uci-build-complete"
-   → Triggers unified-cloud-services build
+   → Triggers unified-trading-services build
 
-3. unified-cloud-services build completes
+3. unified-trading-services build completes
    → Publishes to topic: "ucs-build-complete"
 
 4. Cloud Function subscribes to "ucs-build-complete"
@@ -521,11 +521,11 @@ cascade_quickmerge "$SORTED_REPOS" "$NEW_BRANCH" "$COMMIT_MSG"
 ### Error 1: Circular Dependencies
 
 ```bash
-# instruments-service depends on unified-cloud-services
-# unified-cloud-services depends on instruments-service ← ❌ Circular
+# instruments-service depends on unified-trading-services
+# unified-trading-services depends on instruments-service ← ❌ Circular
 
 # Topological sort will detect this
-echo "❌ Circular dependency detected: instruments-service ↔ unified-cloud-services"
+echo "❌ Circular dependency detected: instruments-service ↔ unified-trading-services"
 exit 1
 ```
 
@@ -596,7 +596,7 @@ cd instruments-service
 
 # Edit files across dependency tree
 vim instruments_service/main.py
-vim ../unified-cloud-services/core.py
+vim ../unified-trading-services/core.py
 vim ../unified-config-interface/config.py
 
 # One command handles everything
@@ -604,7 +604,7 @@ bash scripts/quickmerge.sh "feat: new API" --dep-branch "my-feature"
 
 # Automatic cascade:
 # 1. unified-config-interface quickmerge
-# 2. unified-cloud-services quickmerge (uses UCI @ my-feature)
+# 2. unified-trading-services quickmerge (uses UCI @ my-feature)
 # 3. instruments-service quickmerge (uses UCS @ my-feature)
 ```
 

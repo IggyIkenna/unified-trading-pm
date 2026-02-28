@@ -54,7 +54,7 @@
 | + | Dev environment support | 00-MASTER-CICD-PLAN §Dev Environment |
 | + | PR watcher (LLM-enhanced) | 00-MASTER-CICD-PLAN §GitHub Actions |
 
-**Pilot**: Start with unified-cloud-services (see PILOT-UCS.md).
+**Pilot**: Start with unified-trading-services (see PILOT-UCS.md).
 
 ---
 
@@ -97,7 +97,7 @@
 ```toml
 # pyproject.toml
 [tool.uv.sources]
-unified-cloud-services = { path = "../unified-cloud-services" }
+unified-trading-services = { path = "../unified-trading-services" }
 unified-config-interface = { path = "../unified-config-interface" }
 ```
 
@@ -109,7 +109,7 @@ unified-config-interface = { path = "../unified-config-interface" }
     GH_PAT: ${{ secrets.GH_PAT }}
   run: |
     if [ -n "$GH_PAT" ]; then
-      git clone https://x-access-token:${GH_PAT}@github.com/.../unified-cloud-services.git ../unified-cloud-services
+      git clone https://x-access-token:${GH_PAT}@github.com/.../unified-trading-services.git ../unified-trading-services
       # ... other deps to ../
     else
       echo "❌ GH_PAT not set" && exit 1
@@ -150,7 +150,7 @@ Use "CI/CD Phase 1" vs "Audit Phase 1" when both are discussed.
 ## Quick Start for Agents
 
 1. **First run**: Execute Track 1 (CI/CD Phase 1) — 5 tasks, 5 repos.
-2. **Then**: Start Track 2 (Master Plan) pilot with unified-cloud-services.
+2. **Then**: Start Track 2 (Master Plan) pilot with unified-trading-services.
 3. **Parallel**: Launch 4 agents for Track 3 (Audit Phase 1) — one per critical repo.
 4. **Parallel**: Launch 2 agents for Track 4 (API Contracts) — Phase 1 + Phase 2.
 

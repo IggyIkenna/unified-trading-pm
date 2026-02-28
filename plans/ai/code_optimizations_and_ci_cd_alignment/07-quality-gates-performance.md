@@ -268,7 +268,7 @@ SERVICES=(
     "instruments-service"
     "market-tick-data-handler"
     "market-data-processing-service"
-    "unified-cloud-services"
+    "unified-trading-services"
 )
 
 RESULTS_FILE="quality-gates-benchmark-$(date +%Y%m%d-%H%M%S).csv"

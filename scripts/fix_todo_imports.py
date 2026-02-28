@@ -9,32 +9,32 @@ from typing import Dict, List
 
 # Specific TODO fixes
 TODO_FIXES = {
-    "from unified_cloud_services import BaseDependencyChecker  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import BaseDependencyChecker",
-    "from unified_cloud_services import DependencyError  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import DependencyError",
-    "from unified_cloud_services import log_dependency_failures  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import log_dependency_failures",
-    "from unified_cloud_services import ParquetSchemaEnforcer  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.parquet_schema_enforcer import ParquetSchemaEnforcer",
-    "from unified_cloud_services import ColumnSchema  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.schema_definition import ColumnSchema",
-    "from unified_cloud_services import SchemaDefinition  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.schema_definition import SchemaDefinition",
-    "from unified_cloud_services import BaseGCSWriter  # TODO: Map to explicit import":
-        "from unified_cloud_services.io.base_writer import BaseGCSWriter",
-    "from unified_cloud_services import BaseGCSLoader  # TODO: Map to explicit import":
-        "from unified_cloud_services.io.base_loader import BaseGCSLoader",
-    "from unified_domain_services import create_market_candle_data_client  # TODO: Map to explicit import":
-        "from unified_domain_services.clients import create_market_candle_data_client",
+    "from unified_trading_services import BaseDependencyChecker  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import BaseDependencyChecker",
+    "from unified_trading_services import DependencyError  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import DependencyError",
+    "from unified_trading_services import log_dependency_failures  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import log_dependency_failures",
+    "from unified_trading_services import ParquetSchemaEnforcer  # TODO: Map to explicit import":
+        "from unified_trading_services.core.parquet_schema_enforcer import ParquetSchemaEnforcer",
+    "from unified_trading_services import ColumnSchema  # TODO: Map to explicit import":
+        "from unified_trading_services.models.schema_definition import ColumnSchema",
+    "from unified_trading_services import SchemaDefinition  # TODO: Map to explicit import":
+        "from unified_trading_services.models.schema_definition import SchemaDefinition",
+    "from unified_trading_services import BaseGCSWriter  # TODO: Map to explicit import":
+        "from unified_trading_services.io.base_writer import BaseGCSWriter",
+    "from unified_trading_services import BaseGCSLoader  # TODO: Map to explicit import":
+        "from unified_trading_services.io.base_loader import BaseGCSLoader",
+    "from unified_domain_client import create_market_candle_data_client  # TODO: Map to explicit import":
+        "from unified_domain_client.clients import create_market_candle_data_client",
     "from unified_config_interface import BaseConfig  # TODO: Map to explicit import":
         "from unified_config_interface.base_config import BaseConfig",
     
     # Handle cases with 'as' aliasing
-    "from unified_cloud_services import BaseDependencyChecker as DependencyChecker  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import BaseDependencyChecker as DependencyChecker",
-    "from unified_cloud_services import BaseDependencyChecker as LookbackValidator  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import BaseDependencyChecker as LookbackValidator",
+    "from unified_trading_services import BaseDependencyChecker as DependencyChecker  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import BaseDependencyChecker as DependencyChecker",
+    "from unified_trading_services import BaseDependencyChecker as LookbackValidator  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import BaseDependencyChecker as LookbackValidator",
 }
 
 def fix_todos_in_file(file_path: str) -> bool:

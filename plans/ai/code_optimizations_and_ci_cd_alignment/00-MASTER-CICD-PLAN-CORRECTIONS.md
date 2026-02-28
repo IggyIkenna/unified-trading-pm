@@ -198,10 +198,10 @@ jobs:
 ### 5. Library Names (Codex Compliance)
 
 **Correct Names** (from Standards Compliance Guide):
-- ✅ unified-cloud-services (UCS) - **Storage is HERE** (no separate storage interface)
+- ✅ unified-trading-services (UCS) - **Storage is HERE** (no separate storage interface)
 - ✅ unified-config-interface (UCI)
 - ✅ unified-events-interface (UEI)
-- ✅ unified-domain-services (UDS)
+- ✅ unified-domain-client (UDS)
 - ✅ unified-market-interface (UMI)
 - ✅ unified-trade-execution-interface (UOI)
 - ✅ unified-ml-interface (UML) - **CORRECT NAME**
@@ -311,7 +311,7 @@ uv pip install --system ruff==0.15.0
 | PR Watcher | Async, posts comments, blocks merge | Master Plan + instruments-service |
 | Package Manager | uv (except `pip install uv` bootstrap) | Cursor rules |
 | Canonical Repo | instruments-service | User guidance |
-| Storage Library | unified-cloud-services (not separate) | Standards guide |
+| Storage Library | unified-trading-services (not separate) | Standards guide |
 | ML Library | unified-ml-interface (not model) | Standards guide |
 
 ---

@@ -43,8 +43,8 @@ isProject: false
 flowchart TB
     subgraph current [Current Architecture]
         UCI[unified-config-interface]
-        UCS[unified-cloud-services]
-        UDS[unified-domain-services]
+        UCS[unified-trading-services]
+        UDS[unified-domain-client]
         SVC[Services]
 
         UCI -->|BaseConfig| UCS
@@ -128,7 +128,7 @@ flowchart TB
 
 **Rationale:** config.py enables validation and type safety; GCS enables hot reload, versioning, and batch replay.
 
-**Storage implementation:** ConfigStore and TimeSeriesConfigStore use `get_storage_client()` from unified-cloud-services (UCS). Never use direct `google.cloud.storage` or `boto3` imports. This keeps config storage cloud-agnostic (GCS or S3).
+**Storage implementation:** ConfigStore and TimeSeriesConfigStore use `get_storage_client()` from unified-trading-services (UCS). Never use direct `google.cloud.storage` or `boto3` imports. This keeps config storage cloud-agnostic (GCS or S3).
 
 ---
 
@@ -401,9 +401,9 @@ For each phase (or the full overhaul), success means:
 
 ## Phase 1: Move Config Validation to UCI
 
-### 1.1 Move from unified-domain-services
+### 1.1 Move from unified-domain-client
 
-**Source:** [unified-domain-services/unified_domain_services/schemas/config_schema.py](unified-domain-services/unified_domain_services/schemas/config_schema.py)
+**Source:** [unified-domain-client/unified_domain_client/schemas/config_schema.py](unified-domain-client/unified_domain_client/schemas/config_schema.py)
 
 **Move to UCI** (`unified_config_interface/validation.py`):
 
@@ -444,7 +444,7 @@ For each phase (or the full overhaul), success means:
 **New:** `unified_config_interface/persistence.py`
 
 - `ConfigStore` class: `save_config()`, `load_config()`, `list_versions()`, `compare_configs()`, `ensure_ready()`
-- **Storage:** All GCS/S3 access MUST use `get_storage_client()` from unified-cloud-services. No direct `google.cloud.storage` or `boto3` imports.
+- **Storage:** All GCS/S3 access MUST use `get_storage_client()` from unified-trading-services. No direct `google.cloud.storage` or `boto3` imports.
 - Timestamp format: compact UTC seconds `%Y%m%dT%H%M%SZ` (e.g. `config-v20260220T143000Z.yaml`); collision suffix `-1`, `-2` if same second
 - GCS layout: `config-store-{project}/{service}/config-v{timestamp}.yaml` + `active.yaml` pointer
 - Version metadata: timestamp, deployer, git commit, **schema_version**
@@ -485,7 +485,7 @@ Add config-store bucket to `get_infrastructure_buckets()` in [setup-buckets.py](
 
 ### 4.1 Move class to UCI
 
-**From:** [unified-cloud-services/unified_cloud_services/core/config.py](unified-cloud-services/unified_cloud_services/core/config.py)
+**From:** [unified-trading-services/unified_trading_services/core/config.py](unified-trading-services/unified_trading_services/core/config.py)
 
 **To:** `unified_config_interface/cloud_config.py` — `UnifiedCloudConfig` extends `BaseConfig`
 
@@ -552,7 +552,7 @@ Single config per replay job: `--config-schema-version 1.0` loads one config at 
 ### 6.1 Secrets
 
 - `get_secret(secret_path, project_id=None)`: when None, use `os.environ.get("GCP_PROJECT_ID")` not `unified_config`
-- Remove `from unified_cloud_services import unified_config` from secrets.py
+- Remove `from unified_trading_services import unified_config` from secrets.py
 
 ### 6.2 Reloader
 
@@ -697,8 +697,8 @@ Implements Section 12. Can run after Phase 8 (UCI has unified-events-interface d
 | **unified-events-interface**      | Modify: `schemas.py` (add CONFIG_HOT_RELOADED), `README.md`                                                                                                                                                                                                                                                                                                                   |
 | **unified-trading-deployment-v3** | Modify: `scripts/setup-buckets.py`, `docs/CONFIG_LOADING_PATTERNS.md`, `configs/README.md`, `docs/INDEX.md` or `docs/INFRASTRUCTURE.md`; Create: `configs/restart-policies.yaml`, `docs/CONFIG_INTERFACE_SERVICE_USAGE.md`                                                                                                                                                    |
 | **unified-trading-codex**         | Modify: `05-infrastructure/unified-libraries/config-interface.md`, `02-data/bucket-naming-and-config.md`, `06-coding-standards/README.md`, `qa-sessions/UNIFIED_CONFIG_OVERVIEW.md`, `04-architecture/batch-live-symmetry.md`; Create: `05-infrastructure/config-management.md`                                                                                               |
-| **unified-domain-services**       | Modify: `schemas/config_schema.py` (re-export), `pyproject.toml`                                                                                                                                                                                                                                                                                                              |
-| **unified-cloud-services**        | Modify: `core/config.py` (re-export), `__init__.py`, `pyproject.toml`                                                                                                                                                                                                                                                                                                         |
+| **unified-domain-client**       | Modify: `schemas/config_schema.py` (re-export), `pyproject.toml`                                                                                                                                                                                                                                                                                                              |
+| **unified-trading-services**        | Modify: `core/config.py` (re-export), `__init__.py`, `pyproject.toml`                                                                                                                                                                                                                                                                                                         |
 | **execution-services**            | Modify: `backtest/preflight.py`, `backtest/engine.py`, `visualizer-api/`, `visualizer-ui/`, `configs/ssot/validate_configs.py`                                                                                                                                                                                                                                                |
 | **All 14 services**               | Modify: each service's `config.py` — import from UCI; Add/update: `tests/unit/test_config_interface.py` — assert config uses UCI correctly                                                                                                                                                                                                                                    |
 

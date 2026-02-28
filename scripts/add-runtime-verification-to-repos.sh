@@ -44,12 +44,12 @@ BACKEND_REPOS=(
 
 # Library repos get library-specific text
 LIBRARY_REPOS=(
-  "unified-cloud-services"
+  "unified-trading-services"
   "unified-config-interface"
   "unified-events-interface"
   "unified-trade-execution-interface"
   "unified-market-interface"
-  "unified-domain-services"
+  "unified-domain-client"
 )
 
 # Pattern to match "## Workspace Rules" section (documentation; used in add_verification_text logic)

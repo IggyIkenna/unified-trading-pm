@@ -63,7 +63,7 @@ gs://config-store-{project}/{service}/
 # Runtime config for instruments-service
 max_workers: 16
 log_level: INFO
-venues: [binance, coinbase, kraken]
+venues: [binance, coinbase]
 enable_defi: true
 ```
 

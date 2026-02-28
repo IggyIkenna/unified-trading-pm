@@ -28,8 +28,8 @@
 
 - ⬜ instruments-service: All tests passing
 - ⬜ unified-market-interface: All tests passing
-- ⬜ unified-domain-services: All tests passing
-- ⬜ unified-cloud-services: All tests passing
+- ⬜ unified-domain-client: All tests passing
+- ⬜ unified-trading-services: All tests passing
 - ⬜ unified-config-interface: All tests passing
 - ⬜ unified-events-interface: All tests passing
 - ⬜ api-contracts: All tests passing (if any)

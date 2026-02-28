@@ -138,7 +138,7 @@ Main has a full React/TypeScript UI with:
 
 ### 3. Refactored algorithms.py
 
-Main's version is cleaner and uses unified-cloud-services patterns. Keep main's version but ensure all fixes from alpha are present.
+Main's version is cleaner and uses unified-trading-services patterns. Keep main's version but ensure all fixes from alpha are present.
 
 ## Merge Strategy
 

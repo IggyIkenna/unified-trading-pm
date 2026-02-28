@@ -74,14 +74,14 @@ for repo in "${REPOS[@]}"; do
 - You can ONLY EDIT files in $repo/ directory
 - Read unified-trading-codex/ for standards
 - Read workspace .cursorrules and .cursor/rules/*.mdc
-- Read path dependencies (../unified-cloud-services, etc.)
+- Read path dependencies (../unified-trading-services, etc.)
 
 TASK FOR $repo:
 $PROMPT
 
 CRITICAL RESTRICTIONS:
 - ONLY edit files in $repo/ directory
-- DO NOT edit unified-trading-codex/, unified-cloud-services/, or other repos
+- DO NOT edit unified-trading-codex/, unified-trading-services/, or other repos
 - You can read everything, but edit only $repo/
 
 IMPORTANT: Only run basedpyright 2-3 times total (not every 5 files) to avoid hanging:

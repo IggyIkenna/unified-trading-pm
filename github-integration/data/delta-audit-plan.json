@@ -1,0 +1,236 @@
+[
+  {
+    "title": "[Delta Audit][Planning and Intake] Close pending program gap: implemented in docs; rollout to issue creation workflow pending.",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "program-planning-and-intake-close-pending-program-gap-implemented-in-docs-rollout-to-issue-creation-workflow-pending"
+  },
+  {
+    "title": "[Delta Audit][Audit Remediation + Capability Expansion] Close pending program gap: modeled in docs and schema; GitHub board enforcement pending.",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "program-audit-remediation-capability-expansion-close-pending-program-gap-modeled-in-docs-and-schema-github-board-enforcement-pending"
+  },
+  {
+    "title": "[Delta Audit][Lifecycle and Gates] Close pending program gap: codified; project field and automation enforcement pending.",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "program-lifecycle-and-gates-close-pending-program-gap-codified-project-field-and-automation-enforcement-pending"
+  },
+  {
+    "title": "[Delta Audit][Dual-Cloud Readiness] Close pending program gap: criteria and schema defined; checklist/YAML expansion and sync implementation pending.",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/femi"],
+    "milestone": "Live90",
+    "slug": "program-dual-cloud-readiness-close-pending-program-gap-criteria-and-schema-defined-checklist-yaml-expansion-and-sync-implementation-pending"
+  },
+  {
+    "title": "[Delta Audit][execution-services] remove residual position-tracking responsibility",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-execution-services-remove-residual-position-tracking-responsibility"
+  },
+  {
+    "title": "[Delta Audit][execution-services] integrate with externalized risk/exposure/pnl services",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-execution-services-integrate-with-externalized-risk-exposure-pnl-services"
+  },
+  {
+    "title": "[Delta Audit][execution-services] enforce exchange-interface thin-adapter boundary",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-execution-services-enforce-exchange-interface-thin-adapter-boundary"
+  },
+  {
+    "title": "[Delta Audit][strategy-service] extraction plan for embedded responsibilities",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-strategy-service-extraction-plan-for-embedded-responsibilities"
+  },
+  {
+    "title": "[Delta Audit][strategy-service] interface contracts to new monitor services",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-strategy-service-interface-contracts-to-new-monitor-services"
+  },
+  {
+    "title": "[Delta Audit][strategy-service] staged migration without live-path regressions",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-strategy-service-staged-migration-without-live-path-regressions"
+  },
+  {
+    "title": "[Delta Audit][market-tick-data-handler] complete lifecycle event coverage",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-market-tick-data-handler-complete-lifecycle-event-coverage"
+  },
+  {
+    "title": "[Delta Audit][market-tick-data-handler] live-mode reliability and health signaling",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-market-tick-data-handler-live-mode-reliability-and-health-signaling"
+  },
+  {
+    "title": "[Delta Audit][market-data-processing-service] live pipeline event coordination maturity",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-market-data-processing-service-live-pipeline-event-coordination-maturity"
+  },
+  {
+    "title": "[Delta Audit][market-data-processing-service] contract parity with codex decomposition",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-market-data-processing-service-contract-parity-with-codex-decomposition"
+  },
+  {
+    "title": "[Delta Audit][features-delta-one-service] event logging completeness",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-delta-one-service-event-logging-completeness"
+  },
+  {
+    "title": "[Delta Audit][features-delta-one-service] data contract standardization",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-delta-one-service-data-contract-standardization"
+  },
+  {
+    "title": "[Delta Audit][features-volatility-service] volatility feature and options model contract lock-in",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-volatility-service-volatility-feature-and-options-model-contract-lock-in"
+  },
+  {
+    "title": "[Delta Audit][features-volatility-service] live-readiness and observability maturity",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-volatility-service-live-readiness-and-observability-maturity"
+  },
+  {
+    "title": "[Delta Audit][features-onchain-service] consistent pub/sub and event contracts",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-onchain-service-consistent-pub-sub-and-event-contracts"
+  },
+  {
+    "title": "[Delta Audit][features-onchain-service] commercialization linkage clarity",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-onchain-service-commercialization-linkage-clarity"
+  },
+  {
+    "title": "[Delta Audit][ml-inference-service] model registry/source-of-truth finalization",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-ml-inference-service-model-registry-source-of-truth-finalization"
+  },
+  {
+    "title": "[Delta Audit][ml-inference-service] promotion controls and audit evidence",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-ml-inference-service-promotion-controls-and-audit-evidence"
+  },
+  {
+    "title": "[Delta Audit][ml-training-service] contract continuity into inference/deployment UIs",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-ml-training-service-contract-continuity-into-inference-deployment-uis"
+  },
+  {
+    "title": "[Delta Audit][ml-training-service] standards compliance closure",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-ml-training-service-standards-compliance-closure"
+  },
+  {
+    "title": "[Delta Audit][instruments-service] refactor debt closure",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-instruments-service-refactor-debt-closure"
+  },
+  {
+    "title": "[Delta Audit][instruments-service] cloud-agnostic and standards conformance",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-instruments-service-cloud-agnostic-and-standards-conformance"
+  },
+  {
+    "title": "[Delta Audit][features-calendar-service] confirm checklist and PM mapping completeness",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-features-calendar-service-confirm-checklist-and-pm-mapping-completeness"
+  },
+  {
+    "title": "[Delta Audit][corporate-actions] inclusion in remediation rollout and PM field mapping",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
+    "milestone": "Live90",
+    "slug": "service-corporate-actions-inclusion-in-remediation-rollout-and-pm-field-mapping"
+  },
+  {
+    "title": "[Delta Audit][projects-v2] field provisioning and enforcement on active project board(s)",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "pm-projects-v2-field-provisioning-and-enforcement-on-active-project-board-s"
+  },
+  {
+    "title": "[Delta Audit][projects-v2] migration/update of existing issues into new field structure",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "pm-projects-v2-migration-update-of-existing-issues-into-new-field-structure"
+  },
+  {
+    "title": "[Delta Audit][projects-v2] automation coverage for subtasks and lane labeling",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "pm-projects-v2-automation-coverage-for-subtasks-and-lane-labeling"
+  },
+  {
+    "title": "[Delta Audit][checklist-yaml] YAML schema/section updates for wave-1 services",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/infrastructure", "owner-default/femi"],
+    "milestone": "Live90",
+    "slug": "deployment-checklist-yaml-yaml-schema-section-updates-for-wave-1-services"
+  },
+  {
+    "title": "[Delta Audit][checklist-yaml] sync script implementation/upgrade and reconciliation policy",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/infrastructure", "owner-default/femi"],
+    "milestone": "Live90",
+    "slug": "deployment-checklist-yaml-sync-script-implementation-upgrade-and-reconciliation-policy"
+  },
+  {
+    "title": "[Delta Audit][targeted] venue-specific circuit-break tuning values",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "unknowns-targeted-venue-specific-circuit-break-tuning-values"
+  },
+  {
+    "title": "[Delta Audit][targeted] middle-band auto-reconciliation guardrail tuning by risk tier",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "unknowns-targeted-middle-band-auto-reconciliation-guardrail-tuning-by-risk-tier"
+  },
+  {
+    "title": "[Delta Audit][targeted] numeric per-asset residual threshold values",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "unknowns-targeted-numeric-per-asset-residual-threshold-values"
+  },
+  {
+    "title": "[Delta Audit][targeted] alert threshold numeric table",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "unknowns-targeted-alert-threshold-numeric-table"
+  },
+  {
+    "title": "[Delta Audit][targeted] token model and rotation standards beyond phase-1 baseline",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/ikenna"],
+    "milestone": "TechReadiness",
+    "slug": "unknowns-targeted-token-model-and-rotation-standards-beyond-phase-1-baseline"
+  },
+  {
+    "title": "[Delta Audit][targeted] external-client auth boundary details beyond operator/internal baseline",
+    "labels": ["issue", "P1-high", "lane/audit-remediation", "area/workflows", "owner-default/harsh"],
+    "milestone": "TechReadiness",
+    "slug": "unknowns-targeted-external-client-auth-boundary-details-beyond-operator-internal-baseline"
+  }
+]

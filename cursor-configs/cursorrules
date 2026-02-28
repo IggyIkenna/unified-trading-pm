@@ -4,7 +4,7 @@
 
 **This is NOT a monorepo.** This is a **multi-repo workspace** containing **30+ independent repositories**:
 - 14 service repos (instruments-service, market-tick-data-handler, etc.)
-- 8 shared library repos (unified-cloud-services, unified-events-interface, unified-config-interface, unified-domain-services, unified-market-interface, unified-trade-execution-interface, unified-ml-interface, execution-algo-library)
+- 8 shared library repos (unified-trading-services, unified-events-interface, unified-config-interface, unified-domain-client, unified-market-interface, unified-trade-execution-interface, unified-ml-interface, execution-algo-library)
 - 8+ UI repos (backtest-ui, batch-audit-ui, live-health-monitor-ui, etc.)
 - 3+ utility repos (unified-trading-deployment-v2, unified-trading-deployment-v3, unified-trading-codex, execution-algo-library)
 
@@ -115,7 +115,7 @@ Codex: `06-coding-standards/quality-gates.md`
 **Pre-flight validation** (before processing starts):
 - Fail fast - raise exceptions, don't proceed
 - Validate config, upstream data, connectivity, resources
-- Use `BaseDependencyChecker` from unified-cloud-services
+- Use `BaseDependencyChecker` from unified-trading-services
 
 **In-flight validation** (during processing):
 - Fail gracefully - log errors, skip bad records, continue
@@ -189,9 +189,9 @@ Codex: `06-coding-standards/README.md#configuration`, `05-infrastructure/unified
 ## Cloud-Agnostic: Use Abstractions
 
 ```python
-from unified_cloud_services import get_storage_client, get_secret_client
-# Note: Domain clients now from unified-domain-services
-from unified_domain_services import InstrumentsDomainClient
+from unified_trading_services import get_storage_client, get_secret_client
+# Note: Domain clients now from unified-domain-client
+from unified_domain_client import InstrumentsDomainClient
 ```
 
 NEVER: `from google.cloud import storage`, hardcoded `central-element-323112`
@@ -259,14 +259,14 @@ Codex: `06-coding-standards/dependency-management.md`, `.cursor/rules/dependency
 
 **Test the artifact you deploy** - no git clones needed:
 
-1. Pull `unified-cloud-services:latest` base image (requires auth)
+1. Pull `unified-trading-services:latest` base image (requires auth)
 2. Build service image (includes source + tests + dev deps)
 3. Run `quality-gates.sh --no-fix --quick` INSIDE the image
 4. Push image ONLY if tests pass
 
 Benefits: prod parity, no GitHub token, ~2-3 min faster
 
-**Shared Libraries Pattern**: For packages published to Artifact Registry (unified-cloud-services, unified-events-interface, etc.), Cloud Build uses idempotent package upload with version validation:
+**Shared Libraries Pattern**: For packages published to Artifact Registry (unified-trading-services, unified-events-interface, etc.), Cloud Build uses idempotent package upload with version validation:
 - Stores version→commit mapping in GCS
 - Before upload: checks if version exists with different commit
 - If same commit: skip (idempotent rebuild)
@@ -289,8 +289,8 @@ log_event("STARTED")
 ```
 
 **NEVER:**
-- `try: from unified_events_interface ... except: from unified_cloud_services.observability`
-- `from unified_cloud_services.observability import log_event`
+- `try: from unified_events_interface ... except: from unified_trading_services.observability`
+- `from unified_trading_services.observability import log_event`
 - `setup_cloud_logging` (use `setup_events` instead)
 
 ALL 11 lifecycle events required. `tests/unit/test_event_logging.py` MUST exist and include `SERVICE_SPECIFIC_EVENTS` populated from your service's per-service doc.
@@ -304,7 +304,7 @@ Codex: `03-observability/lifecycle-events.md`, `03-observability/[batch|live]/pe
 ## Error Handling: Use Decorators
 
 ```python
-from unified_cloud_services import handle_api_errors, handle_storage_errors
+from unified_trading_services import handle_api_errors, handle_storage_errors
 
 @handle_api_errors(max_retries=3)
 async def fetch():
@@ -610,7 +610,7 @@ Codex: `04-architecture/concurrency.md`
 
 ## Schema: Service-Owned + Pre-Upload Validation
 
-Services own `schemas/output_schemas.py`. unified-cloud-services owns cross-cutting (events, config).
+Services own `schemas/output_schemas.py`. unified-trading-services owns cross-cutting (events, config).
 
 `validate_timestamp_date_alignment()` before every GCS write.
 

@@ -85,10 +85,10 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-unified-cloud-services = { path = "../unified-cloud-services" }
+unified-trading-services = { path = "../unified-trading-services" }
 unified-config-interface = { path = "../unified-config-interface" }
 unified-events-interface = { path = "../unified-events-interface" }
-unified-domain-services = { path = "../unified-domain-services" }
+unified-domain-client = { path = "../unified-domain-client" }
 unified-market-interface = { path = "../unified-market-interface" }
 api-contracts = { path = "../api-contracts" }
 ```

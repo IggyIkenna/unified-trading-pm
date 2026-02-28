@@ -60,7 +60,7 @@ bash run-parallel-agents.sh repo1 repo2 repo3 repo4 "prompt"
 2. ✅ **Full context**: Agents see codex, dependencies, workspace rules
 3. ✅ **No conflicts**: Each agent edits only its target repo
 4. ✅ **Better fixes**: Access to canonical patterns from codex
-5. ✅ **Path dependencies**: Agents see unified-cloud-services/, etc.
+5. ✅ **Path dependencies**: Agents see unified-trading-services/, etc.
 
 **Files**:
 - Updated: `run-agent.sh` - Now uses workspace root + target repo parameter

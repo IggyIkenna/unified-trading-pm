@@ -146,7 +146,7 @@ Target: 0 errors.
 
 CRITICAL RESTRICTIONS:
 - ONLY edit files in $repo/ directory
-- DO NOT edit unified-trading-codex/, unified-cloud-services/, or other repos
+- DO NOT edit unified-trading-codex/, unified-trading-services/, or other repos
 - You can read everything, but edit only $repo/
 "
     

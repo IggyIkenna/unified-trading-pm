@@ -1,0 +1,269 @@
+# ==============================================================================
+# Unified Trading System - GitHub Label Schema
+# ==============================================================================
+#
+# Apply these labels to all service repos and the deployment repo.
+# Use: gh label create (see github-integration/README.md for sync commands)
+#
+# ==============================================================================
+
+labels:
+  # ---------------------------------------------------------------------------
+  # Type labels
+  # ---------------------------------------------------------------------------
+
+  - name: bug
+    description: "Code exists but doesn't work per standards"
+    color: d73a4a
+
+  - name: issue
+    description: "Known gap where code is needed (standards exist)"
+    color: 0075ca
+
+  - name: feature
+    description: "New capability requiring standards + code evolution"
+    color: a2eeef
+
+  - name: refactor
+    description: "Code improvement (no functionality change)"
+    color: fbca04
+
+  - name: infrastructure
+    description: "CI/CD, Terraform, deployment changes"
+    color: 0e8a16
+
+  - name: type/implementation
+    description: "Core implementation task (code, logic, functionality)"
+    color: 1d76db
+
+  - name: type/tests
+    description: "Test-specific task (unit, integration, e2e, regression)"
+    color: 1d76db
+
+  - name: type/observability
+    description: "Observability task (logging, monitoring, alerts)"
+    color: 1d76db
+
+  - name: type/docs
+    description: "Documentation task (codex, README, API docs)"
+    color: 1d76db
+
+  - name: type/checklist-sync
+    description: "Checklist synchronization task (audit YAML updates)"
+    color: 1d76db
+
+  # ---------------------------------------------------------------------------
+  # Priority labels
+  # ---------------------------------------------------------------------------
+
+  - name: P0-critical
+    description: "Blocks production (e.g., credential leaks, OOM loops)"
+    color: b60205
+
+  - name: P1-high
+    description: "Should fix before live (e.g., missing log_event calls)"
+    color: d93f0b
+
+  - name: P2-medium
+    description: "Improve quality (e.g., file size, regression tests)"
+    color: fbca04
+
+  - name: P3-low
+    description: "Nice to have (e.g., type hints, documentation)"
+    color: 0e8a16
+
+  # ---------------------------------------------------------------------------
+  # Area labels (from codex 01-09)
+  # ---------------------------------------------------------------------------
+
+  - name: area/domain
+    description: "01-domain: domain model, signals, asset classes"
+    color: c5def5
+
+  - name: area/data
+    description: "02-data: schemas, validation, storage, catalogue"
+    color: c5def5
+
+  - name: area/observability
+    description: "03-observability: lifecycle events, logging, monitoring"
+    color: c5def5
+
+  - name: area/architecture
+    description: "04-architecture: pipeline DAG, sharding, compute"
+    color: c5def5
+
+  - name: area/infrastructure
+    description: "05-infrastructure: Terraform, CI/CD, Docker"
+    color: c5def5
+
+  - name: area/coding-standards
+    description: "06-coding-standards: config, error handling, tests"
+    color: c5def5
+
+  - name: area/security
+    description: "07-security: secrets, credentials, scanning"
+    color: c5def5
+
+  - name: area/workflows
+    description: "08-workflows: DR, rollback, reconciliation"
+    color: c5def5
+
+  - name: area/analysis
+    description: "09-analysis: backtest, live performance, cost"
+    color: c5def5
+
+  - name: area/cloud-agnostic
+    description: "Cloud-agnostic migration: GCP → AWS compatibility"
+    color: c5def5
+
+  - name: area/testing
+    description: "Testing infrastructure, coverage, regression tests"
+    color: c5def5
+
+  # ---------------------------------------------------------------------------
+  # Service labels (all 13 service/cross-cutting entities from 10-audit)
+  # ---------------------------------------------------------------------------
+
+  - name: service/instruments
+    description: "instruments-service"
+    color: ededed
+
+  - name: service/corporate-actions
+    description: "corporate-actions"
+    color: ededed
+
+  - name: service/market-tick
+    description: "market-tick-data-handler"
+    color: ededed
+
+  - name: service/market-data-processing
+    description: "market-data-processing-service"
+    color: ededed
+
+  - name: service/features-calendar
+    description: "features-calendar-service"
+    color: ededed
+
+  - name: service/features-delta-one
+    description: "features-delta-one-service"
+    color: ededed
+
+  - name: service/features-onchain
+    description: "features-onchain-service"
+    color: ededed
+
+  - name: service/features-volatility
+    description: "features-volatility-service"
+    color: ededed
+
+  - name: service/ml-training
+    description: "ml-training-service"
+    color: ededed
+
+  - name: service/ml-inference
+    description: "ml-inference-service"
+    color: ededed
+
+  - name: service/strategy
+    description: "strategy-service"
+    color: ededed
+
+  - name: service/execution
+    description: "execution-services"
+    color: ededed
+
+  - name: service/cross-service
+    description: "Cross-cutting batch/live concerns"
+    color: ededed
+
+  # ---------------------------------------------------------------------------
+  # Milestone markers
+  # ---------------------------------------------------------------------------
+
+  - name: batch-85pct
+    description: "Batch production readiness milestone"
+    color: 1d76db
+
+  - name: live-90pct
+    description: "Live production readiness milestone"
+    color: 1d76db
+
+  # ---------------------------------------------------------------------------
+  # Triage (optional - for new issues before classification)
+  # ---------------------------------------------------------------------------
+
+  - name: needs-triage
+    description: "Needs type, priority, and area assignment"
+    color: c2e0c6
+
+  # ---------------------------------------------------------------------------
+  # Program lane labels
+  # ---------------------------------------------------------------------------
+
+  - name: lane/audit-remediation
+    description: "Existing audit-standard gaps and remediation work"
+    color: 5319e7
+
+  - name: lane/capability-request
+    description: "New capability request from normalized intake flow"
+    color: 5319e7
+
+  - name: lane/docs-ahead
+    description: "Docs-driven workflow: feature fully specified in docs, code catching up"
+    color: 5319e7
+
+  # ---------------------------------------------------------------------------
+  # Owner bootstrap group labels (optional)
+  # ---------------------------------------------------------------------------
+
+  - name: owner-default/ikenna
+    description: "Default owner bootstrap: Ikenna"
+    color: 0052cc
+
+  - name: owner-default/harsh
+    description: "Default owner bootstrap: Harsh"
+    color: 0052cc
+
+  - name: owner-default/femi
+    description: "Default owner bootstrap: Femi"
+    color: 0052cc
+
+  # ---------------------------------------------------------------------------
+  # Cloud compatibility labels
+  # ---------------------------------------------------------------------------
+
+  - name: cloud/gcp-only
+    description: "Currently GCP-only, needs AWS compatibility"
+    color: ff9900
+
+  - name: cloud/aws-ready
+    description: "AWS-compatible or ready for AWS deployment"
+    color: 00cc00
+
+  - name: cloud/both
+    description: "Supports both GCP and AWS"
+    color: 0066cc
+
+  # ---------------------------------------------------------------------------
+  # Domain labels (asset classes, venues, products)
+  # ---------------------------------------------------------------------------
+
+  - name: domain/crypto-cefi
+    description: "CeFi crypto exchanges (Binance, Coinbase, Deribit)"
+    color: f9d0c4
+
+  - name: domain/defi
+    description: "DeFi protocols (Aave, Uniswap, Compound)"
+    color: f9d0c4
+
+  - name: domain/tradfi-equities
+    description: "TradFi equities (NYSE, NASDAQ)"
+    color: f9d0c4
+
+  - name: domain/tradfi-options
+    description: "TradFi options (CME, Deribit)"
+    color: f9d0c4
+
+  - name: domain/sports
+    description: "Sports betting (Polymarket, Betfair)"
+    color: f9d0c4

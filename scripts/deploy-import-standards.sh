@@ -18,7 +18,7 @@ BASE_DIR="/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos"
 # Target repositories
 REPOS=(
     "unified-events-interface"
-    "unified-domain-services" 
+    "unified-domain-client" 
     "unified-market-interface"
     "unified-trade-execution-interface"
     "unified-ml-interface"

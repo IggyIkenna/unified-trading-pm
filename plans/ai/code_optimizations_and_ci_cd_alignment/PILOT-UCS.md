@@ -1,4 +1,4 @@
-# Pilot: unified-cloud-services Quick Merge Implementation
+# Pilot: unified-trading-services Quick Merge Implementation
 
 **Goal**: Test complete flow on one repo, fix issues interactively, then scale.
 
@@ -6,13 +6,13 @@
 
 ## Current State
 
-### unified-cloud-services
+### unified-trading-services
 - **Branch**: `type-fixes-1771875849`
 - **Status**: Uncommitted changes (60+ files modified/deleted/added)
 - **Diff from main**: 87 files changed (+2615, -7758)
-- **Dependency**: unified-domain-services
+- **Dependency**: unified-domain-client
 
-### unified-domain-services
+### unified-domain-client
 - **Diff from main**: 19 files changed (+542, -263)
 - **Status**: Also differs from main
 
@@ -27,17 +27,17 @@
 #### 1a. Create `.dependency-matrix.json` for UCS
 
 ```bash
-cd unified-cloud-services
+cd unified-trading-services
 ```
 
 Create file:
 ```json
 {
-  "name": "unified-cloud-services",
+  "name": "unified-trading-services",
   "dependencies": [
     {
-      "name": "unified-domain-services",
-      "path": "../unified-domain-services",
+      "name": "unified-domain-client",
+      "path": "../unified-domain-client",
       "required": true
     }
   ]
@@ -54,7 +54,7 @@ ENVIRONMENT=development
 #### 1c. Set GitHub repo variables
 
 ```bash
-cd unified-cloud-services
+cd unified-trading-services
 
 # Set dev project ID (for now, same as prod)
 gh variable set GCP_PROJECT_ID_DEV --body "central-element-323112"
@@ -70,7 +70,7 @@ gh variable list
 Instead of creating from scratch, let's **incrementally enhance** existing quickmerge:
 
 ```bash
-cd unified-cloud-services
+cd unified-trading-services
 cp scripts/quickmerge.sh scripts/quickmerge.sh.backup
 ```
 
@@ -218,14 +218,14 @@ fi
 **Current state**: Both UCS and UDS differ from main
 
 ```bash
-cd unified-cloud-services
+cd unified-trading-services
 
 # Try without --dep-branch (should error)
 bash scripts/quickmerge.sh "feat: type fixes and refactor"
 
 # Expected output:
 # ❌ DEPENDENCY CONFLICT DETECTED
-# unified-domain-services DIFFERS from main
+# unified-domain-client DIFFERS from main
 # Use --dep-branch flag
 ```
 
@@ -235,7 +235,7 @@ bash scripts/quickmerge.sh "feat: type fixes and refactor"
 bash scripts/quickmerge.sh "feat: type fixes and refactor" --dep-branch "type-fixes-cascade"
 
 # Expected flow:
-# Stage 1: Check deps → unified-domain-services differs
+# Stage 1: Check deps → unified-domain-client differs
 # Stage 2: Environment → development
 # Stage 3: Quality gates → Run (may fail, we'll fix)
 # Stage 4: Create branch "type-fixes-cascade"
@@ -265,7 +265,7 @@ brew install act
 echo "GH_PAT=$GH_PAT" > ~/.secrets
 
 # Test act separately first
-cd unified-cloud-services
+cd unified-trading-services
 act -l  # List workflows
 act -j quality-gates --secret-file ~/.secrets --dryrun
 ```
@@ -304,7 +304,7 @@ echo ""
 After merging the branch PRs:
 
 ```bash
-cd unified-cloud-services
+cd unified-trading-services
 
 # Make a small change
 echo "# test" >> README.md

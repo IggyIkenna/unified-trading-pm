@@ -38,14 +38,14 @@ ENHANCED_PROMPT="WORKSPACE CONTEXT:
 - You can ONLY EDIT files in $TARGET_REPO/ directory
 - Read unified-trading-codex/ for standards
 - Read workspace .cursorrules and .cursor/rules/*.mdc
-- Read path dependencies (../unified-cloud-services, etc.)
+- Read path dependencies (../unified-trading-services, etc.)
 
 TASK:
 $PROMPT
 
 CRITICAL RESTRICTIONS:
 - ONLY edit files in $TARGET_REPO/ directory
-- DO NOT edit unified-trading-codex/, unified-cloud-services/, or other repos
+- DO NOT edit unified-trading-codex/, unified-trading-services/, or other repos
 - You can read everything, but edit only $TARGET_REPO/
 
 IMPORTANT: Only run basedpyright 2-3 times total (not every 5 files) to avoid hanging:

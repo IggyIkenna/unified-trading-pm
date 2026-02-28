@@ -1,0 +1,16 @@
+# Runtime Topology SSOT
+
+RULE: Runtime transport and co-location policy must live in `unified-trading-deployment-v3/configs/runtime-topology.yaml`. Do not hardcode transport behavior in service repos or create service-to-service dependencies for live paths.
+WHY: DAG boundaries stay clean only when runtime deployment topology is declarative and owned by deployment config.
+CODEX: 04-architecture/TOPOLOGY-DAG.md, 04-architecture/batch-live-symmetry.md
+
+DO:
+- Keep dependency graph (`dependencies.yaml`) separate from runtime transport (`runtime-topology.yaml`)
+- Configure per-edge mode behavior (`batch` vs `live`) via `transport` and `deployment_profile`
+- Use `in_memory` only when `deployment_profile=co_located_vm`
+- Keep services thin: they select mode/adapters, not infrastructure discovery logic
+
+NEVER:
+- Add service-to-service import or pyproject dependency to enable live in-memory handoff
+- Encode co-location assumptions directly in service code
+- Use runtime topology docs that diverge from `runtime-topology.yaml`

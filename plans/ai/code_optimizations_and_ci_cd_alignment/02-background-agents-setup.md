@@ -228,7 +228,7 @@ Launch 4 local agents in parallel:
 Agent 1: Check instruments-service for pattern X
 Agent 2: Check market-tick-data-handler for pattern X
 Agent 3: Check market-data-processing-service for pattern X
-Agent 4: Check unified-cloud-services for pattern X
+Agent 4: Check unified-trading-services for pattern X
 ```
 
 **Pros**:

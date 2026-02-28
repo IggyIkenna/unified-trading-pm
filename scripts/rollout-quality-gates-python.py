@@ -35,10 +35,10 @@ STANDARD_SERVICES = {
 
 SHARED_LIBRARIES = {
     # 70% coverage for shared libraries
-    "unified-cloud-services": 70,
+    "unified-trading-services": 70,
     "unified-config-interface": 70,
     "unified-defi-execution-interface": 70,
-    "unified-domain-services": 70,
+    "unified-domain-client": 70,
     "unified-events-interface": 70,
     "unified-market-interface": 70,
     "unified-ml-interface": 70,

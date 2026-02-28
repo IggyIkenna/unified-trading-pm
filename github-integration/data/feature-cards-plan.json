@@ -1,0 +1,209 @@
+{
+  "epics": [
+    {
+      "title": "[Epic] ExchangeInterfaceCore: Exchange Interface Package",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/observability",
+        "area/security"
+      ],
+      "milestone": "TechReadiness",
+      "slug": "card-1-exchange-interface-package"
+    },
+    {
+      "title": "[Epic] PositionBalanceTruth: Position and Account Balance Monitor",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/workflows",
+        "area/observability"
+      ],
+      "milestone": "Batch85",
+      "slug": "card-2-position-and-account-balance-monitor"
+    },
+    {
+      "title": "[Epic] ExposureControls: Exposure Monitor",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/observability"
+      ],
+      "milestone": "Live90",
+      "slug": "card-3-exposure-monitor"
+    },
+    {
+      "title": "[Epic] RiskPolicyEnforcement: Risk Monitor",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/workflows",
+        "area/security"
+      ],
+      "milestone": "Live90",
+      "slug": "card-4-risk-monitor"
+    },
+    {
+      "title": "[Epic] PnlAttributionCore: PnL Attribution Service",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/observability",
+        "area/analysis"
+      ],
+      "milestone": "TechReadiness",
+      "slug": "card-5-pnl-attribution-service"
+    },
+    {
+      "title": "[Epic] ObservabilityHardening: Alerting and Monitoring Core",
+      "labels": [
+        "infrastructure",
+        "P1-high",
+        "lane/audit-remediation",
+        "owner-default/femi",
+        "area/observability",
+        "area/workflows"
+      ],
+      "milestone": "Batch85",
+      "slug": "card-6-alerting-and-monitoring-core"
+    },
+    {
+      "title": "[Epic] SecurityRebaseline: Security, Auth, and Hardening Reintroduction",
+      "labels": [
+        "infrastructure",
+        "P1-high",
+        "lane/audit-remediation",
+        "owner-default/femi",
+        "area/security",
+        "area/architecture",
+        "area/coding-standards"
+      ],
+      "milestone": "Batch85",
+      "slug": "card-7-security-auth-and-hardening-reintroduction"
+    },
+    {
+      "title": "[Epic] DualCloudReadiness: Dual-Cloud Readiness Program",
+      "labels": [
+        "infrastructure",
+        "P1-high",
+        "lane/audit-remediation",
+        "owner-default/femi",
+        "area/infrastructure",
+        "area/workflows"
+      ],
+      "milestone": "Live90",
+      "slug": "card-8-dual-cloud-readiness-program"
+    },
+    {
+      "title": "[Epic] OpsDeploymentUI: Trading Analytics Deployment UI",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/harsh",
+        "area/workflows",
+        "area/observability"
+      ],
+      "milestone": "Live90",
+      "slug": "card-9-trading-analytics-deployment-ui"
+    },
+    {
+      "title": "[Epic] MlDeploymentUI: ML Deployment UI",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/analysis",
+        "area/workflows",
+        "area/observability"
+      ],
+      "milestone": "Commercialization",
+      "slug": "card-10-ml-deployment-ui"
+    },
+    {
+      "title": "[Epic] ClientOnboardingReporting: Client Onboarding and Reporting UI",
+      "labels": [
+        "feature",
+        "P1-high",
+        "lane/capability-request",
+        "owner-default/harsh",
+        "area/workflows",
+        "area/security"
+      ],
+      "milestone": "Commercialization",
+      "slug": "card-11-client-onboarding-and-reporting-ui"
+    }
+  ],
+  "discovery": [
+    {
+      "title": "[Discovery] ExchangeInterfaceCore: venue-specific circuit-break threshold tuning values",
+      "labels": [
+        "issue",
+        "P2-medium",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/observability",
+        "area/security"
+      ],
+      "milestone": "TechReadiness",
+      "slug": "card-1-exchange-interface-package:1"
+    },
+    {
+      "title": "[Discovery] PnlAttributionCore: exact numeric residual threshold table by instrument/risk tier",
+      "labels": [
+        "issue",
+        "P2-medium",
+        "lane/capability-request",
+        "owner-default/ikenna",
+        "area/architecture",
+        "area/observability",
+        "area/analysis"
+      ],
+      "milestone": "TechReadiness",
+      "slug": "card-5-pnl-attribution-service:1"
+    },
+    {
+      "title": "[Discovery] ObservabilityHardening: final severity matrix numeric threshold table (config values)",
+      "labels": [
+        "issue",
+        "P2-medium",
+        "lane/audit-remediation",
+        "owner-default/femi",
+        "area/observability",
+        "area/workflows"
+      ],
+      "milestone": "Batch85",
+      "slug": "card-6-alerting-and-monitoring-core:1"
+    },
+    {
+      "title": "[Discovery] OpsDeploymentUI: auth boundaries for external client access beyond operator role model",
+      "labels": [
+        "issue",
+        "P2-medium",
+        "lane/capability-request",
+        "owner-default/harsh",
+        "area/workflows",
+        "area/observability"
+      ],
+      "milestone": "Live90",
+      "slug": "card-9-trading-analytics-deployment-ui:1"
+    }
+  ]
+}

@@ -17,6 +17,6 @@ DO:
   log_event("STARTED"); log_event("VALIDATION_STARTED"); ... log_event("STOPPED")
 
 NEVER:
-  from unified_cloud_services.observability import log_event
+  from unified_trading_services.observability import log_event
   setup_cloud_logging
   Exit without logging STOPPED or FAILED

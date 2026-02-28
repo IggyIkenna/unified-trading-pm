@@ -17,15 +17,15 @@
 ```bash
 # ALWAYS uninstall global versions first
 pip uninstall unified-config-interface unified-events-interface \
-  unified-domain-services unified-market-interface \
-  unified-cloud-services api-contracts -y
+  unified-domain-client unified-market-interface \
+  unified-trading-services api-contracts -y
 
 # Install in STRICT topological order
 pip install --no-deps -e ../unified-config-interface  # Level 0
 pip install --no-deps -e ../unified-events-interface  # Level 0
 pip install --no-deps -e ../api-contracts            # Level 0
-pip install --no-deps -e ../unified-cloud-services   # Level 1
-pip install --no-deps -e ../unified-domain-services  # Level 2
+pip install --no-deps -e ../unified-trading-services   # Level 1
+pip install --no-deps -e ../unified-domain-client  # Level 2
 pip install --no-deps -e ../unified-market-interface # Level 3
 ```
 
@@ -38,7 +38,7 @@ pip install --no-deps -e ../unified-market-interface # Level 3
 ```bash
 # Before any quality gates, verify workspace deps installed correctly
 validate_workspace_deps() {
-  local deps=(unified-config-interface unified-events-interface unified-cloud-services)
+  local deps=(unified-config-interface unified-events-interface unified-trading-services)
   for dep in "${deps[@]}"; do
     location=$(pip show $dep 2>/dev/null | grep "Location:" | awk '{print $2}')
     if [[ ! "$location" =~ "unified-trading-system-repos" ]]; then
@@ -341,8 +341,8 @@ For each level:
 #!/bin/bash
 # Validate workspace dependencies are installed correctly
 
-deps=(unified-config-interface unified-events-interface unified-cloud-services 
-      unified-domain-services unified-market-interface api-contracts)
+deps=(unified-config-interface unified-events-interface unified-trading-services 
+      unified-domain-client unified-market-interface api-contracts)
 
 workspace_root=$(git rev-parse --show-toplevel | xargs dirname)
 errors=0
@@ -386,8 +386,8 @@ echo "📦 Installing workspace dependencies in topological order..."
 # Uninstall global versions first
 echo "1/3 Uninstalling global versions..."
 pip uninstall -y unified-config-interface unified-events-interface \
-  unified-domain-services unified-market-interface \
-  unified-cloud-services api-contracts 2>/dev/null || true
+  unified-domain-client unified-market-interface \
+  unified-trading-services api-contracts 2>/dev/null || true
 
 # Install in topological order
 echo "2/3 Installing Level 0 (no dependencies)..."
@@ -396,10 +396,10 @@ pip install --no-deps -e unified-events-interface
 pip install --no-deps -e api-contracts
 
 echo "   Installing Level 1..."
-pip install --no-deps -e unified-cloud-services
+pip install --no-deps -e unified-trading-services
 
 echo "   Installing Level 2..."
-pip install --no-deps -e unified-domain-services
+pip install --no-deps -e unified-domain-client
 
 echo "   Installing Level 3..."
 pip install --no-deps -e unified-market-interface
@@ -479,10 +479,10 @@ Before scaling to 32 repos:
 - Codex: 22 violations (non-blocking)
 
 ### Dependencies
-- unified-domain-services: 131/131 (100%)
+- unified-domain-client: 131/131 (100%)
 - unified-config-interface: 83/84 (98%)
 - unified-market-interface: 156/159 (98%)
-- unified-cloud-services: 116/122 (95%)
+- unified-trading-services: 116/122 (95%)
 - unified-events-interface: 63/67 (94%)
 
 **Overall**: 549/563 tests passing (96%)

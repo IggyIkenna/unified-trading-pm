@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-02-26",
-  "notes": "Promoted from DEPENDENCY-MATRIX-CANONICAL.json. Added type, doc_standard, codex_sections per repo. corporate-actions removed (it is an operational mode within instruments-service, not a standalone repo). features-sports-service and unified-position-interface marked as future. settlement-ui and unified-feature-calculator-library added. All versions reset to 1.0.0 on 2026-02-25 as clean baseline. Previous versions were inconsistently tracked. All future bumps will follow semver consistently.",
+  "lastUpdated": "2026-02-28",
+  "notes": "Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 \u2014 codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-service, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI\u2192UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, infra, strategy-validation-service; deleted execution_services.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -48,27 +48,40 @@
       "optional_dir": "specs/"
     }
   },
+  "versions_policy": {
+    "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release — it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
+    "bump_authority": "GitHub Action (version-bump.yml) on merge to main only. Conventional commit prefix determines bump type.",
+    "local_bumps": "FORBIDDEN on branches. Only the GitHub Action bumps versions. Manual bumps cause double-bump (local + CI = skipped semver).",
+    "pre_stable_convention": "0.MINOR.PATCH — minor reflects architectural evolution; patch reflects fixes. 0.x.x means not yet validated as stable on the new CI/CD pipeline.",
+    "stable_threshold": "1.0.0+ = passed full quickmerge on main with Phase 0-CI infrastructure in place."
+  },
   "versions": {
-    "api-contracts": "1.0.0",
-    "unified-internal-contracts": "1.0.0",
-    "unified-reference-data-interface": "1.0.0",
-    "unified-config-interface": "1.1.0",
-    "unified-events-interface": "1.0.0",
-    "unified-cloud-interface": "1.0.0",
-    "unified-trading-services": "2.2.0",
-    "unified-domain-client": "1.0.0",
-    "unified-market-interface": "1.0.0",
-    "unified-ml-interface": "1.0.0",
-    "unified-trade-execution-interface": "1.0.0",
-    "unified-defi-execution-interface": "1.0.0",
-    "matching-engine-library": "1.0.0",
-    "execution-algo-library": "1.0.0",
+    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTS 0.2.2 reflects more history than AC 0.1.0).",
+    "api-contracts": "0.1.0",
+    "unified-internal-contracts": "0.1.0",
+    "unified-reference-data-interface": "0.1.0",
+    "unified-config-interface": "0.1.1",
+    "unified-events-interface": "0.1.0",
+    "unified-cloud-interface": "0.1.0",
+    "unified-trading-services": "0.2.2",
+    "unified-domain-client": "0.1.0",
+    "unified-market-interface": "0.1.0",
+    "unified-ml-interface": "0.1.0",
+    "unified-trade-execution-interface": "0.1.0",
+    "unified-sports-execution-interface": "0.1.0",
+    "unified-defi-execution-interface": "0.1.0",
+    "matching-engine-library": "0.1.0",
+    "execution-algo-library": "0.1.0",
     "unified-feature-calculator-library": "0.1.0",
     "unified-position-interface": "0.1.0",
     "features-sports-service": "0.1.0",
     "strategy-validation-service": "0.1.0",
-    "pnl-attribution-service": "1.0.0",
-    "unified-trading-deployment-v3": "3.0.0"
+    "pnl-attribution-service": "0.1.0",
+    "unified-trading-deployment-v3": "0.3.0",
+    "deployment-engine": "0.1.0",
+    "deployment-api": "0.1.0",
+    "deployment-ui": "0.1.0",
+    "system-integration-tests": "0.1.0"
   },
   "repositories": {
     "api-contracts": {
@@ -79,7 +92,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": [],
@@ -96,7 +109,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": [],
@@ -112,7 +125,7 @@
         "05-infrastructure",
         "02-data"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": [],
@@ -130,7 +143,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "1.1.0",
+      "version": "0.1.1",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": []
@@ -143,7 +156,7 @@
         "03-observability",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": []
@@ -156,7 +169,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 0,
       "dependencies": [],
@@ -171,7 +184,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "2.2.0",
+      "version": "0.2.2",
       "version_source": "pyproject.toml",
       "merge_level": 1,
       "github_url": "https://github.com/IggyIkenna/unified-trading-services",
@@ -190,16 +203,16 @@
     },
     "unified-domain-client": {
       "type": "library",
-      "arch_tier": "2",
+      "arch_tier": "3",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "01-domain",
         "02-data",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 2,
+      "merge_level": 3,
       "dependencies": [
         {
           "name": "unified-trading-services",
@@ -220,7 +233,7 @@
       "status": "active",
       "github_url": "https://github.com/IggyIkenna/unified-domain-client",
       "folder_name": "unified-domain-client",
-      "notes": "Primary package. GitHub repo: unified-domain-client. Local folder: unified-domain-client."
+      "notes": "TIER 3: Cloud storage I/O layer \u2014 reads/writes GCS/S3 domain data. Imports T0 (UCLI, UCI, UEI) + T1 (UTS). arch_tier corrected from 2\u21923 on 2026-02-28 per canonical DAG and codex SSOT (04-architecture/TIER-ARCHITECTURE.md)."
     },
     "execution-algo-library": {
       "type": "library",
@@ -230,34 +243,24 @@
         "04-architecture",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
       "dependencies": []
     },
     "matching-engine-library": {
       "type": "library",
-      "arch_tier": "2",
+      "arch_tier": "0",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 3,
-      "dependencies": [
-        {
-          "name": "unified-trading-services",
-          "version": ">=2.0.0,<3.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=1.0.0,<2.0.0",
-          "required": true
-        }
-      ]
+      "merge_level": 0,
+      "dependencies": [],
+      "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed."
     },
     "unified-feature-calculator-library": {
       "type": "library",
@@ -280,9 +283,12 @@
         "02-data",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 3,
+      "known_violations": [
+        "\u26a0\ufe0f TIER VIOLATION: unified-domain-client (T3) listed as dep. T2 must only import T0+T1. Remove UDC dep \u2014 see cohesion-umi-udc-dep-violation in consolidated plan."
+      ],
       "dependencies": [
         {
           "name": "api-contracts",
@@ -292,7 +298,8 @@
         {
           "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
-          "required": true
+          "required": true,
+          "_violation": "T2\u2192T3 lateral import \u2014 must be removed"
         },
         {
           "name": "unified-config-interface",
@@ -318,7 +325,7 @@
       "codex_sections": [
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 3,
       "dependencies": [
@@ -347,7 +354,7 @@
         "04-architecture",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 3,
       "dependencies": [
@@ -373,6 +380,33 @@
         }
       ]
     },
+    "unified-sports-execution-interface": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "status": "scaffolded",
+      "completion_path": "sports",
+      "notes": "Scaffolded 2026-02-28. BaseSportsAdapter protocol exists. Betfair (CLOB via UTEI) and Pinnacle adapters planned v1.0.0. NOT required for CeFi/TradFi completion.",
+      "dependencies": [
+        {
+          "name": "unified-trade-execution-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        }
+      ]
+    },
     "unified-defi-execution-interface": {
       "type": "library",
       "arch_tier": "2",
@@ -381,7 +415,7 @@
         "04-architecture",
         "05-infrastructure"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 4,
       "dependencies": [
@@ -448,7 +482,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 5,
       "dependencies": [
@@ -493,7 +527,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 5,
       "dependencies": [
@@ -538,7 +572,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -583,7 +617,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -613,7 +647,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -648,7 +682,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -678,7 +712,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -710,12 +744,33 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
-      "status": "future",
-      "notes": "Sports integration planned post-commercialisation. Repo exists on GitHub but not in this workspace.",
+      "status": "scaffolded",
+      "completion_path": "sports",
+      "notes": "Scaffolded 2026-02-28. Computes pre-match ML features (team form, H2H, referee, venue, weather, market odds). NOT required for CeFi/TradFi completion.",
       "dependencies": [
         {
           "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=1.0.0,<2.0.0",
           "required": true
         }
       ]
@@ -729,7 +784,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 5,
       "dependencies": [
@@ -769,7 +824,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -810,7 +865,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "deployment_note": "One instance per client (separately managed accounts)",
@@ -856,7 +911,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
@@ -905,7 +960,7 @@
       "codex_sections": [
         "03-observability"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -935,7 +990,7 @@
         "02-data",
         "03-observability"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
       "dependencies": [
@@ -964,7 +1019,7 @@
         "01-domain",
         "03-observability"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 7,
       "deployment_note": "Shared service \u2014 serves many clients. One instance per workspace.",
@@ -994,7 +1049,7 @@
         "01-domain",
         "03-observability"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 7,
       "dependencies": [
@@ -1027,8 +1082,8 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 7,
-      "status": "future",
-      "notes": "Backtest vs Live T+1 reconciliation. Not yet built. Daily scheduled, per-client/per-strategy, catches model degradation and execution drift.",
+      "status": "scaffolded",
+      "notes": "Scaffolded 2026-02-28. T+1 backtest vs live recon.",
       "dependencies": [
         {
           "name": "unified-trading-services",
@@ -1047,6 +1102,141 @@
         }
       ]
     },
+    "execution-results-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "04-architecture",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 7,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": [
+        "trading-analytics-ui",
+        "live-health-monitor-ui"
+      ],
+      "proxies_service": "execution-services",
+      "notes": "FastAPI + OAuth middleware. HTTP boundary between execution-services and UIs. P0: replace dict[str, Any] at all API boundaries with TypedDict/Pydantic (p0-exec-results-api-types).",
+      "github_url": "https://github.com/IggyIkenna/execution-results-api",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "market-data-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "04-architecture"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 7,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": [
+        "trading-analytics-ui",
+        "batch-audit-ui"
+      ],
+      "proxies_service": "market-data-processing-service",
+      "notes": "FastAPI + OAuth middleware. Exposes processed market data to UIs. SSE endpoint for live price streaming.",
+      "github_url": "https://github.com/IggyIkenna/market-data-api",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "client-reporting-service": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "04-architecture"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 7,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": [
+        "client-reporting-ui"
+      ],
+      "proxies_service": "pnl-attribution-service",
+      "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients.",
+      "github_url": "https://github.com/IggyIkenna/client-reporting-service",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-services",
+          "version": ">=2.0.0,<3.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        }
+      ]
+    },
+    "strategy-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "control",
+      "doc_standard": "ui-canonical",
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 8,
+      "status": "active",
+      "cluster": "api-services",
+      "notes": "Strategy configuration and deployment UI. Calls strategy-service via FastAPI. OAuth (TRADER role).",
+      "github_url": "https://github.com/IggyIkenna/strategy-ui",
+      "completion_path": "cefi",
+      "dependencies": []
+    },
     "unified-trading-deployment-v3": {
       "type": "infrastructure",
       "arch_tier": "service",
@@ -1054,17 +1244,86 @@
       "codex_sections": [
         "05-infrastructure"
       ],
-      "version": "3.0.0",
+      "version": "0.3.0",
       "version_source": "manual",
       "merge_level": 6,
-      "dependencies": []
+      "dependencies": [],
+      "status": "deprecated-splitting",
+      "notes": "Being split into deployment-engine + deployment-api + deployment-ui + system-integration-tests. See task deployment-v3-four-way-split."
+    },
+    "deployment-engine": {
+      "type": "infrastructure",
+      "arch_tier": "5",
+      "doc_standard": "infrastructure-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 6,
+      "dependencies": [
+        "unified-trading-services",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-domain-client"
+      ],
+      "status": "planned",
+      "notes": "Python orchestrator + CLI + Terraform + configs. Extracted from unified-trading-deployment-v3. Owns Layer 2 (infra verification) via scripts/verify_infra.py."
+    },
+    "deployment-api": {
+      "type": "api-service",
+      "arch_tier": "5",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "07-security"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 7,
+      "dependencies": [
+        "deployment-engine",
+        "unified-trading-services"
+      ],
+      "status": "planned",
+      "notes": "Thin FastAPI wrapper around deployment-engine. GoogleOAuthMiddleware on writes. Triggers Layer 2+3 tests post-deploy."
+    },
+    "deployment-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "deployment",
+      "doc_standard": "ui-canonical",
+      "codex_sections": [
+        "05-infrastructure"
+      ],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 8,
+      "dependencies": [],
+      "status": "planned",
+      "notes": "React UI calling deployment-api. OAuth ADMIN scope for trigger buttons."
+    },
+    "system-integration-tests": {
+      "type": "infrastructure",
+      "arch_tier": "integration",
+      "doc_standard": "infrastructure-canonical",
+      "codex_sections": [
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 9,
+      "dependencies": [],
+      "status": "planned",
+      "notes": "Layer 3a (smoke) + Layer 3b (full E2E) integration tests. Not in the tier DAG — sits above all tiers. Interacts via HTTP/GCS/PubSub only, zero Python imports from services. SSOT: 06-coding-standards/integration-testing-layers.md"
     },
     "unified-trading-codex": {
       "type": "infrastructure",
       "arch_tier": "service",
       "doc_standard": "infrastructure-canonical",
       "codex_sections": [],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "manual",
       "merge_level": 0,
       "dependencies": []
@@ -1078,7 +1337,7 @@
         "01-domain",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1092,7 +1351,7 @@
         "03-observability",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1106,7 +1365,7 @@
         "01-domain",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1120,7 +1379,7 @@
         "03-observability",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "notes": "Hybrid: monitoring dashboard + manual trading control (calls execution-services /manual/instruction)",
@@ -1135,7 +1394,7 @@
         "01-domain",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1149,7 +1408,7 @@
         "03-observability",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1162,7 +1421,7 @@
       "codex_sections": [
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1176,7 +1435,7 @@
         "01-domain",
         "06-coding-standards"
       ],
-      "version": "1.0.0",
+      "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 8,
       "dependencies": []
@@ -1195,6 +1454,89 @@
       "merge_level": 8,
       "notes": "Settlement UI \u2014 empty directory, not yet implemented.",
       "dependencies": []
+    },
+    "unified-trading-pm": {
+      "type": "devops",
+      "arch_tier": "devops",
+      "merge_level": 0,
+      "status": "active",
+      "version": "0.1.0",
+      "description": "Project management SSOT \u2014 workspace-manifest.json, credentials-registry.yaml, plans/ai/, cursor-rules/",
+      "dependencies": [],
+      "completion_path": "all",
+      "notes": "DevOps/PM repo. Contains workspace SSOT (workspace-manifest.json), cursor rules, AI plans. Not a code library."
+    },
+    "deployment-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "merge_level": 8,
+      "status": "scaffolded",
+      "version": "0.1.0",
+      "description": "Deployment management UI \u2014 orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
+      "dependencies": [
+        "deployment-api"
+      ],
+      "cluster": "devops-ui",
+      "completion_path": "cefi",
+      "notes": "UI split from unified-trading-deployment-v3 per ui-service-separation rule. React/TypeScript. Scaffolded 2026-02-28. After four-way split: depends on deployment-api."
+    },
+    "deployment-engine": {
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "merge_level": 0,
+      "status": "planned",
+      "version": "0.1.0",
+      "description": "Deployment orchestration engine \u2014 Python package (orchestrator, catalog, config_loader, backends), Terraform, configs. Layer 2: verify_infra.py (infra connectivity gate).",
+      "dependencies": [
+        "unified-trading-services",
+        "unified-config-interface"
+      ],
+      "completion_path": "cefi",
+      "notes": "Extracted from unified-trading-deployment-v3 four-way split. 06-coding-standards/integration-testing-layers.md"
+    },
+    "deployment-api": {
+      "type": "api-service",
+      "arch_tier": "devops",
+      "merge_level": 0,
+      "status": "planned",
+      "version": "0.1.0",
+      "description": "Deployment API \u2014 thin FastAPI with OAuth; imports deployment-engine; triggers Cloud Build; triggers system-integration-tests post-deploy.",
+      "dependencies": [
+        "deployment-engine"
+      ],
+      "completion_path": "cefi",
+      "notes": "Extracted from unified-trading-deployment-v3 four-way split. Port 8001."
+    },
+    "system-integration-tests": {
+      "type": "test-harness",
+      "arch_tier": "integration",
+      "merge_level": 0,
+      "status": "planned",
+      "version": "0.1.0",
+      "description": "Layer 3a (fast smoke) + Layer 3b (full pipeline smoke). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox.",
+      "dependencies": [
+        "deployment-api",
+        "api-contracts",
+        "unified-internal-contracts"
+      ],
+      "completion_path": "cefi",
+      "notes": "Standalone repo per new-repo-setup.md. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md"
+    },
+    "infra": {
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "merge_level": 0,
+      "status": "active",
+      "version": "0.1.0",
+      "description": "IBKR Gateway Terraform config \u2014 stale standalone dir pending merge into unified-trading-deployment-v3",
+      "dependencies": [
+        "unified-trading-deployment-v3"
+      ],
+      "completion_path": "cefi",
+      "known_violations": [
+        "Should be merged into unified-trading-deployment-v3 infra/ibkr-gateway/ subdirectory"
+      ],
+      "notes": "Contains ibkr-gateway/main.tf Terraform. Tracked as infra-merge-utdv3 task."
     }
   },
   "topologicalOrder": {
@@ -1210,7 +1552,11 @@
           "api-contracts",
           "unified-internal-contracts",
           "unified-reference-data-interface",
-          "unified-trading-codex"
+          "unified-trading-codex",
+          "execution-algo-library",
+          "matching-engine-library",
+          "unified-trading-pm",
+          "infra"
         ]
       },
       {
@@ -1225,24 +1571,23 @@
         "description": "Domain services and pure libraries",
         "repos": [
           "unified-domain-client",
-          "execution-algo-library",
           "unified-feature-calculator-library"
         ]
       },
       {
         "level": 3,
-        "description": "Interfaces and engine libraries",
+        "description": "Interfaces, engine libraries, sports interface",
         "repos": [
           "unified-market-interface",
           "unified-ml-interface",
           "unified-trade-execution-interface",
           "unified-position-interface",
-          "matching-engine-library"
+          "unified-sports-execution-interface"
         ]
       },
       {
         "level": 4,
-        "description": "DeFi interface",
+        "description": "DeFi interface (depends on UMI)",
         "repos": [
           "unified-defi-execution-interface"
         ]
@@ -1270,16 +1615,22 @@
           "pnl-attribution-service",
           "alerting-system",
           "unified-trading-deployment-v3",
-          "execution-services"
+          "deployment-engine",
+          "execution-services",
+          "features-sports-service"
         ]
       },
       {
         "level": 7,
-        "description": "Operational services that depend on execution",
+        "description": "Operational services + API gateway services (FastAPI+OAuth)",
         "repos": [
           "position-balance-monitor-service",
           "risk-and-exposure-service",
-          "strategy-validation-service"
+          "strategy-validation-service",
+          "execution-results-api",
+          "market-data-api",
+          "client-reporting-service",
+          "deployment-api"
         ]
       },
       {
@@ -1294,7 +1645,16 @@
           "logs-dashboard-ui",
           "ml-deployment-ui",
           "onboarding-ui",
-          "settlement-ui"
+          "settlement-ui",
+          "strategy-ui",
+          "deployment-ui"
+        ]
+      },
+      {
+        "level": 9,
+        "description": "Post-deploy validation (integration test harness)",
+        "repos": [
+          "system-integration-tests"
         ]
       }
     ]
@@ -1302,47 +1662,75 @@
   "tier_rules": {
     "0": {
       "allowed_from": [],
-      "description": "Pure leaf \u2014 no inter-library imports"
+      "description": "Pure leaf \u2014 zero inter-library deps. Repos: api-contracts, unified-internal-contracts, unified-config-interface, unified-events-interface, unified-cloud-interface, unified-reference-data-interface, execution-algo-library, matching-engine-library"
     },
     "1": {
       "allowed_from": [
         "0"
       ],
-      "description": "Service runtime \u2014 imports Tier 0 only"
+      "description": "Shared cloud runtime \u2014 imports Tier 0 only. Repos: unified-trading-services (UTS)"
     },
     "2": {
       "allowed_from": [
-        "0"
+        "0",
+        "1"
       ],
-      "description": "Domain libs \u2014 imports Tier 0 only, no Tier 1"
+      "description": "Domain/market interfaces \u2014 imports Tier 0+1, NOT Tier 3. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface"
+    },
+    "3": {
+      "allowed_from": [
+        "0",
+        "1"
+      ],
+      "description": "Domain data client \u2014 cloud storage I/O, imports Tier 0+1. Repos: unified-domain-client (UDC)"
     },
     "service": {
       "allowed_from": [
         "0",
         "1",
-        "2"
+        "2",
+        "3"
       ],
-      "description": "Services import from all tiers"
+      "description": "Services \u2014 import from all library tiers. Never import from another service repo."
+    },
+    "api": {
+      "allowed_from": [
+        "0",
+        "1"
+      ],
+      "description": "API gateway services (FastAPI+OAuth) \u2014 HTTP boundary between services and UIs. Deps: UTS+UCI+UEI only."
     },
     "ui": {
       "allowed_from": [],
-      "description": "TypeScript \u2014 separate QG rules"
+      "description": "TypeScript UIs \u2014 call API services via HTTP/SSE only. Never import Python libraries."
     }
   },
   "futureRepos": {
-    "description": "Repos planned but not yet in workspace",
+    "description": "Repos planned but not yet production-ready (v0.1.0 scaffolds exist in workspace)",
     "repos": [
       {
-        "name": "features-sports-service",
-        "notes": "Sports integration \u2014 post-commercialisation. Repo exists on GitHub but not in workspace."
+        "name": "unified-position-interface",
+        "status": "scaffolded",
+        "notes": "Scaffolded. CanonicalPosition protocol exists. CCXT/OKX/IBKR adapters planned v1.0.0. Required for: execution-services live, position-balance-monitor-service.",
+        "completion_path": "cefi"
       },
       {
-        "name": "unified-position-interface",
-        "notes": "New library for position feeds. Not yet built. Planned consumers: execution-services, position-balance-monitor-service."
+        "name": "features-sports-service",
+        "status": "scaffolded",
+        "notes": "Scaffolded 2026-02-28. Sports feature computation service.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "unified-sports-execution-interface",
+        "status": "scaffolded",
+        "notes": "Scaffolded 2026-02-28. BaseSportsAdapter protocol exists.",
+        "completion_path": "sports"
       },
       {
         "name": "strategy-validation-service",
-        "notes": "Backtest vs Live T+1 reconciliation. Not yet built."
+        "status": "planned",
+        "notes": "Backtest vs Live T+1 reconciliation. Not yet scaffolded.",
+        "completion_path": "cefi"
       }
     ]
   },
@@ -1407,5 +1795,103 @@
         "reason": "Can be published once all libraries are available"
       }
     ]
+  },
+  "completion_paths": {
+    "_description": "Which repos are required for each vertical completion milestone. Unblocked = can be done now; blocked = needs another path's completion first.",
+    "cefi": {
+      "label": "CeFi / TradFi Commercialisation",
+      "milestone": "Batch85 + Live90",
+      "description": "Minimum set for commercial CeFi trading: crypto spot+perp (Binance, OKX, Bybit, Hyperliquid) + traditional equities (IBKR).",
+      "required_libraries": [
+        "api-contracts (CeFi venues: Binance, OKX, Bybit, Hyperliquid, Coinbase, Kraken, IBKR, Deribit, Kalshi)",
+        "unified-internal-contracts",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-cloud-interface",
+        "unified-reference-data-interface",
+        "unified-trading-services",
+        "unified-domain-client",
+        "unified-market-interface",
+        "unified-trade-execution-interface",
+        "execution-algo-library",
+        "unified-ml-interface",
+        "unified-feature-calculator-library",
+        "unified-position-interface (v1.0.0 needed before exec-services + PBM live)"
+      ],
+      "required_services": [
+        "instruments-service",
+        "market-tick-data-handler",
+        "market-data-processing-service",
+        "features-delta-one-service",
+        "features-calendar-service",
+        "features-volatility-service",
+        "ml-training-service",
+        "ml-inference-service",
+        "strategy-service (+ live mode seams)",
+        "execution-services",
+        "pnl-attribution-service",
+        "risk-and-exposure-service",
+        "position-balance-monitor-service",
+        "alerting-system"
+      ],
+      "required_api_services": [
+        "execution-results-api",
+        "market-data-api",
+        "client-reporting-service"
+      ],
+      "required_uis": [
+        "trading-analytics-ui",
+        "live-health-monitor-ui",
+        "onboarding-ui",
+        "client-reporting-ui"
+      ],
+      "not_required": [
+        "features-sports-service",
+        "unified-sports-execution-interface",
+        "features-onchain-service (optional DeFi)",
+        "unified-defi-execution-interface (optional DeFi)",
+        "strategy-ui (optional)",
+        "settlement-ui (optional)",
+        "backtest-ui (optional)",
+        "batch-audit-ui (optional)"
+      ]
+    },
+    "defi": {
+      "label": "DeFi Extension",
+      "milestone": "Post-CeFi",
+      "description": "Adds on-chain protocol support (Uniswap, Aave, Curve, Hyperliquid DEX). Requires CeFi path complete first.",
+      "additional_libraries": [
+        "unified-defi-execution-interface",
+        "api-contracts (DeFi: Uniswap v3/v4, Aave v3, Curve, TheGraph, DeFiLlama)"
+      ],
+      "additional_services": [
+        "features-onchain-service"
+      ],
+      "requires_cefi_path": true
+    },
+    "sports": {
+      "label": "Sports Betting Vertical",
+      "milestone": "Post-commercialisation",
+      "description": "Sports betting as a separate vertical. Does NOT require DeFi. Can be done in parallel with CeFi post-commercialisation.",
+      "additional_libraries": [
+        "unified-sports-execution-interface (v1.0.0 \u2014 BaseSportsAdapter, Betfair, Pinnacle)",
+        "api-contracts (sports: api_football, FootyStats, soccer-football-info, Betfair, Pinnacle, Open Meteo)"
+      ],
+      "additional_services": [
+        "features-sports-service"
+      ],
+      "reuses_from_cefi": [
+        "unified-trading-services",
+        "unified-domain-client",
+        "unified-ml-interface",
+        "unified-feature-calculator-library",
+        "ml-training-service",
+        "ml-inference-service",
+        "strategy-service (sports strategy module)",
+        "pnl-attribution-service"
+      ],
+      "requires_cefi_path": false,
+      "note": "Can develop sports ML pipeline (features-sports-service + api-contracts sports schemas) in parallel with CeFi. Only needs USEI v1.0.0 for live execution."
+    }
   }
 }

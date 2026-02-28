@@ -97,7 +97,7 @@ enhanced_fields = await populate_derived_fields(
 
 ### What LITERALLY Cannot:
 - ❌ Protocol variance without Protocol refactor (PEP 544 limitation)
-- ❌ Decorator in different repo (unified-cloud-services needs separate PR)
+- ❌ Decorator in different repo (unified-trading-services needs separate PR)
 
 ### Best Practice:
 **Manual error handling > Untyped decorators** for type safety
