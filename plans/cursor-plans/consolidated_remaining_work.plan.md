@@ -36,6 +36,12 @@ Before executing any task in this plan:
 8. **Versions**: All repos are 0.x.x until their tier is green on the new CI/CD pipeline. NEVER bump versions manually on branches. GitHub Action bumps on main merge only.
   Completion paths: CeFi/TradFi (primary) → DeFi (extension) → Sports (parallel post-commercialisation).
   See workspace-manifest.json completion_paths section for full required repo lists per path.
+9. **Progressive quickmerge** (use in order for each tier):
+  - `--lint-only`: lint + format only (fastest feedback)
+  - `--unit-only`: lint + type check + unit tests (no integration, no act)
+  - `--qg-only`: full quality gates, no git ops (commit/PR)
+  - `--quick`: full QG + git ops, skip act
+  - (no flags): full validation including act — tier green only when this passes
 
 ---
 
@@ -474,7 +480,8 @@ status: pending
 - id: ssot-runtime-topology-manifest
 content: |
 Formalize deployment runtime topology SSOT in unified-trading-deployment-v3/configs/runtime-topology.yaml and make deployment tooling consume it. Scope: (1) define transport by mode (batch/live) and deployment profile (distributed/co_located_vm), (2) encode hybrid live in-memory allowance for MDPS<-MTDH only under co_located_vm, (3) wire dependency checks to skip GCS when dependency_check=none, (4) update codex TOPOLOGY-DAG.md + configs/README.md + cursor rule to reference runtime-topology.yaml as authoritative.
-status: pending
+COMPLETED: runtime-topology.yaml created at unified-trading-deployment-v3/configs/runtime-topology.yaml
+status: completed
 - id: ssot-success-criteria-update
 content: |
 All checklist.*.yaml success_criteria sections must be updated for new architectural goals: (1) UI is separate repo — not co-located (new arch-ui-separation-rule); (2) Service has no direct cloud SDK imports — all via UCLI/UTS; (3) CLOUD_PROVIDER=aws passes all tests (cloud agnostic); (4) Contract smoke test passes for all producer/consumer pairs; (5) Auth config smoke test passes for local + github + cloudbuild; (6) quality-gates.sh passes with no suppressions in ARCHITECTURAL_VIOLATION category. Use 4 parallel agents (5 checklists each) to backfill.
@@ -517,6 +524,7 @@ PRECONDITION — PHASE 0 MUST BE FULLY COMPLETE FIRST:
   - GitHub Actions dep-branch clone mechanic live
   - Cloud Build feature branch trigger live
   - All versions in workspace-manifest.json reset to 0.x.x
+  - DAG validated and locked (dag-enforcement.mdc cursor rule in place)
 
 For each tier (T0 → T1 → T2 → T3 → T4 → T5 → T6):
 
@@ -547,14 +555,27 @@ For each tier (T0 → T1 → T2 → T3 → T4 → T5 → T6):
     Fix tier violations, type errors, import paths, QG violations.
     Use dep-branch cascade so multi-repo changes stay in sync.
 
-  STEP D — quickmerge --unit-only
-    Fast local check: lint + type check + unit tests only (no integration).
-    Will sometimes fail CI integration tests — that is expected and acceptable.
-    Purpose: catch critical import errors, syntax issues, obvious type breaks early.
+  STEP D — PROGRESSIVE VALIDATION (run in order, fix issues between each)
 
-  STEP E — quickmerge (full)
-    Full validation: lint + type check + unit + integration tests + act simulation.
-    Tier is "green" only when this passes. Do NOT move to next tier until green.
+    D1. quickmerge --lint-only
+        Lint + format only. Fastest feedback. Catches: syntax, import ordering, formatting.
+
+    D2. quickmerge --unit-only
+        Lint + type check + unit tests only (no integration, no act).
+        Catches: import errors, type errors, unit test regressions.
+
+    D3. quickmerge --qg-only
+        Full quality gates (lint + type + all tests + codex checks) but NO git ops (no commit, no PR).
+        Equivalent to running quality-gates.sh but through quickmerge so dep validation still runs.
+        Catches: integration test failures, coverage gaps, codex violations.
+
+    D4. quickmerge --quick
+        Full quality gates + git ops, but SKIP act simulation.
+        Catches: everything except GitHub Actions compatibility.
+
+    D5. quickmerge (full — no flags)
+        Full validation including act simulation.
+        Tier is "green" ONLY when this passes. Do NOT move to next tier until green.
 ```
 
 Max parallel sub-agents: **10**. Annotations show parallelism at each step.
@@ -574,12 +595,28 @@ MUST complete entirely before tier work starts. Runs in 3 parallel streams.
            codex feature-branch-workflow.md,
            workspace-manifest.json versions reset to 0.x.x (2026-02-28)
 
-  STEP A1 — QUICKMERGE PROPAGATION [BLOCKING — do before anything else] [10 agents PARALLEL]:
-    Push updated quickmerge.sh template to ALL 53 repos simultaneously.
-    Each agent handles 5-6 repos: copy template → scripts/quickmerge.sh, commit, push.
-    Use: bash unified-trading-codex/05-infrastructure/quickmerge-templates/sync-all-repos.sh
-    Or agents loop: for each repo → cp template → git commit "chore: sync quickmerge template" → git push
-    ⛔ Nothing else starts until all 53 repos have the new template.
+  STEP A0 — DAG VALIDATION [BLOCKING — precondition for entire plan]:
+    Verify workspace-manifest.json arch_tier fields match canonical DAG.
+    Verify no tier violations in pyproject.toml dependencies.
+    DAG cursor rule (.cursor/rules/dag-enforcement.mdc) must be in place.
+    If DAG has issues: fix them NOW, before any other work starts.
+    Todos from DAG plan:
+      dag-ssot-align — reconcile manifest + topology docs
+      dag-tier-corrections — fix tier numbering mismatches
+      dag-orphan-repos-manifest — add 4 missing API service repos
+      dag-mel-tier-mismatch — fix MEL visual bug in SVG
+
+  STEP A1 — QUICKMERGE + VERSION-BUMP PROPAGATION [BLOCKING — do before anything else] [10 agents PARALLEL]:
+    Push updated quickmerge.sh template AND version-bump.yml to ALL 53 repos simultaneously.
+    Each agent handles 5-6 repos:
+      1. Copy quickmerge template → scripts/quickmerge.sh
+      2. Copy version-bump.yml → .github/workflows/version-bump.yml
+         (auto-triggered on push to main, reads conventional commit prefix, pre-1.0.0 safety)
+      3. Verify pyproject.toml exists with version field (create minimal one if missing)
+      4. git commit "chore: sync quickmerge template + version-bump workflow" → git push
+    ⛔ Nothing else starts until all 53 repos have both templates.
+    Version-bump.yml SSOT: unified-trading-pm/.github/workflows/version-bump.yml (for services/libraries)
+    Note: PM version-bump also updates workspace-manifest.json; other repos bump their own pyproject.toml only.
 
   STEP A2 — COMMIT-MSG HOOKS [4 agents PARALLEL, after A1]:
     ci-conventional-commits-cursor-rule  — add commit-msg hook to all 53 repos
@@ -606,6 +643,9 @@ MUST complete entirely before tier work starts. Runs in 3 parallel streams.
   ── then [2 agents PARALLEL]:
     integration-layer2-infra-verify       — add verify_infra.py to deployment-engine; gate deployment success
     integration-layer3-implement          — implement Layer 3a + 3b in system-integration-tests (sequential)
+  ── then [1 agent]:
+    hybrid-live-seam — implement/document hybrid live in-memory adapter seam for MDPS
+    ssot-runtime-topology-manifest — ✅ DONE: runtime-topology.yaml created + configs README updated
   ── then: ci-temp-manifest-schema (needs deployment-api from above)
 
   STREAM C — QG BASELINE AUDIT (can run concurrently with A and B)
@@ -615,6 +655,26 @@ MUST complete entirely before tier work starts. Runs in 3 parallel streams.
     [10 agents] Run QG baseline on all 30 repos → record in manifest  (after QG files added)
     [5 agents]  Verify cloudbuild.yaml invokes QG inside Docker image (6 repos each)
     aws-compute-stubs-wire + aws-secret-naming-parity + aws-cloudbuild-parity [3 agents PARALLEL]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GLOBAL VIOLATION SWEEP (after Phase 0, before Tier work)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Mechanical find-and-replace violations that block quickmerge everywhere.
+Run ONCE across all repos. Per-tier Step 0 handles complex violations
+(file splitting, Any-type replacement) that require code understanding.
+
+  [10 agents PARALLEL, 5-6 repos each]:
+    Scan ALL repos for:
+      os.getenv("KEY", "")          → config class field or os.environ["KEY"]
+      os.getenv("KEY")              → config class field or os.environ["KEY"]
+      bare except:                  → specific exception type
+      except Exception: pass        → log + reraise
+      print() in source             → logger.info()
+      datetime.now()                → datetime.now(timezone.utc)
+      datetime.utcnow()            → datetime.now(timezone.utc)
+      List[x], Dict[x,y], Tuple[x] → list[x], dict[x,y], tuple[x]
+    Commit: "fix: global violation sweep — mechanical QG fixes"
+    Do NOT attempt: file splitting, Any-type fixes, function extraction (those are per-tier Step 0)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TIER 0 — AC, UIC_INT, UCI, UEI, UCLI, URDI, EAL, MEL
@@ -678,7 +738,8 @@ Single repo — sequential sub-phases.
     lib-phase2-uts-rename-step1 (add unified_trading_services/ re-export package);
     dag-uts-v22-feature-audit (verify GCSEventSink, PubSubEventSink, QueueEventSink, ServiceCLI,
     BatchOrchestrator, @with_retry, setup_service, StateStore, BaseCloudWriter, GracefulShutdownHandler
-    are all implemented); quality-importerror-fallbacks (UTS only)
+    are all implemented); quality-importerror-fallbacks (UTS only);
+    uts-v5-cleanup (clean optional extras to remove tier leakage and stale package names)
 
   STEP D — quickmerge --unit-only
   STEP E — quickmerge full → T1 green gate
@@ -703,7 +764,8 @@ All 7 repos independent of each other at T2 — work in PARALLEL.
     p0-canonical-swap-fix (UIC CanonicalSwap stale installed — bump + reinstall);
     vcr-urdi-parse-raw-umi-stubs (UMI stubs); lib-phase2-udc-rename-step1;
     vcr-new-adapters-cefi-sports; vcr-new-adapters-tradfi-altdata;
-    cohesion-upi-pbm-dependency (UPI adapters feed PBM); quality-importerror-fallbacks (T2 only)
+    cohesion-upi-pbm-dependency (UPI adapters feed PBM); quality-importerror-fallbacks (T2 only);
+    uml-protocol-refactor (define ModelArtifactStore protocol in UML, remove direct UDC imports)
 
   STEP D — quickmerge --unit-only [7 agents PARALLEL]
   STEP E — quickmerge full [7 agents PARALLEL] → T2 green gate
@@ -723,7 +785,8 @@ Single repo — sequential sub-phases.
 
   STEP C — CODE REWRITE:
     lib-phase3-instruments-service-urdi-wire (UDC → URDI wiring — done here as UDC consumer);
-    lib-phase2-rename-step2 (update all consumers after rename)
+    lib-phase2-rename-step2 (update all consumers after rename);
+    udc-artifact-impl (implement GcsModelArtifactStore in UDC, wire in ML services)
 
   STEP D — quickmerge --unit-only
   STEP E — quickmerge full → T3 green gate
