@@ -295,13 +295,13 @@ Use `--category all` to run alignment + hardening + security in one call. Valida
 
 ### Repos (Python + UI with quality-gates.sh)
 
-**Services (14):** instruments-service, market-tick-data-handler, market-data-processing-service, strategy-service, execution-services, ml-training-service, ml-inference-service, features-calendar-service, features-volatility-service, features-delta-one-service, features-onchain-service, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service, alerting-system
+**Services (14):** instruments-service, market-tick-data-handler, market-data-processing-service, strategy-service, execution-service, ml-training-service, ml-inference-service, features-calendar-service, features-volatility-service, features-delta-one-service, features-onchain-service, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service, alerting-system
 
 **Libraries (7):** unified-trading-services, unified-config-interface, unified-events-interface, unified-market-interface, unified-trade-execution-interface, unified-domain-client, execution-algo-library
 
 **Utils (2):** unified-trading-deployment-v3, unified-trading-deployment-v3
 
-**UIs (8):** batch-audit-ui, logs-dashboard-ui, ml-deployment-ui, trading-analytics-ui, client-reporting-ui, live-health-monitor-ui, onboarding-ui, backtest-ui
+**UIs (8):** batch-audit-ui, logs-dashboard-ui, ml-training-ui, trading-analytics-ui, client-reporting-ui, live-health-monitor-ui, onboarding-ui, execution-analytics-ui
 
 **Note:** Repos that intentionally track .env (e.g. market-data-processing-service with `!.env`) — evaluate per repo; standard is .env untracked for local dev.
 
@@ -362,7 +362,7 @@ Use `--category all` to run alignment + hardening + security in one call. Valida
 | market-tick-data-handler | eval | ✓ | ✓ | ✓ | Remove ! | - | ✓ |
 | market-data-processing-service | skip (tracked) | ✓ | ✓ | ✓ | Remove ! | - | ✓ |
 | strategy-service | eval | ✓ | ✓ | ✓ | ok | - | ✓ |
-| execution-services | eval | ✓ | ✓ | ✓ | ok | - | ✓ |
+| execution-service | eval | ✓ | ✓ | ✓ | ok | - | ✓ |
 | ml-training-service | eval | ✓ | ✓ | ✓ | ok | - | ✓ |
 | ml-inference-service | eval | ✓ | ✓ | ✓ | Remove ! | - | ✓ |
 | features-calendar-service | eval | ✓ | ✓ | ✓ | Remove ! | - | ✓ |

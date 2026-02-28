@@ -1,7 +1,7 @@
 # Code Quality Audit — unified-trading-system-repos
 
 **Date:** 2026-02-25  
-**Scope:** 14 Python service repos (instruments-service, market-tick-data-handler, market-data-processing-service, strategy-service, ml-training-service, ml-inference-service, risk-and-exposure-service, execution-services, features-*, pnl-attribution-service, position-balance-monitor-service)
+**Scope:** 14 Python service repos (instruments-service, market-tick-data-handler, market-data-processing-service, strategy-service, ml-training-service, ml-inference-service, risk-and-exposure-service, execution-service, features-*, pnl-attribution-service, position-balance-monitor-service)
 
 ---
 
@@ -26,14 +26,14 @@
 
 | Lines | File |
 |-------|------|
-| 3016 | `execution-services/visualizer-api/app/services/backtest_service.py` |
-| 1510 | `execution-services/tests/live/venues/cefi/test_binance_live_execution.py` |
+| 3016 | `execution-service/visualizer-api/app/services/backtest_service.py` |
+| 1510 | `execution-service/tests/live/venues/cefi/test_binance_live_execution.py` |
 
 ### 1.2 HIGH (>900 lines)
 
 | Lines | File |
 |-------|------|
-| 1280 | `execution-services/visualizer-ui/backend/instruction_api.py` |
+| 1280 | `execution-service/visualizer-ui/backend/instruction_api.py` |
 | 1208 | `market-tick-data-handler/market_data_tick_handler/engine/validation/validation_service.py` |
 | 1192 | `instruments-service/instruments_service/app/core/instruments_service.py` |
 | 1182 | `strategy-service/presentation/create_presentation.py` |
@@ -41,14 +41,14 @@
 | 1175 | `market-tick-data-handler/market_data_tick_handler/engine/venues/databento/databento_client.py` |
 | 1130 | `strategy-service/tests/e2e/test_modernized_strategies_e2e.py` |
 | 1124 | `instruments-service/instruments_service/config/instrument_definitions.py` |
-| 1064 | `execution-services/execution_services/config/grid_generator_old.py` |
-| 1058 | `execution-services/execution_services/cli/backtest_old.py` |
-| 1042 | `execution-services/visualizer-api/app/services/results_service.py` |
-| 1025 | `execution-services/execution_services/benchmark/comparison.py` |
-| 1024 | `execution-services/tests/live/deribit/test_predefined_orders.py` |
+| 1064 | `execution-service/execution_service/config/grid_generator_old.py` |
+| 1058 | `execution-service/execution_service/cli/backtest_old.py` |
+| 1042 | `execution-service/visualizer-api/app/services/results_service.py` |
+| 1025 | `execution-service/execution_service/benchmark/comparison.py` |
+| 1024 | `execution-service/tests/live/deribit/test_predefined_orders.py` |
 | 1015 | `market-tick-data-handler/market_data_tick_handler/cli/handlers/download_handler_original.py` |
 | 1013 | `instruments-service/tests/unit/test_instruments_service.py` |
-| 1008 | `execution-services/execution_services/data/config/trades_builder_old.py` |
+| 1008 | `execution-service/execution_service/data/config/trades_builder_old.py` |
 
 ---
 
@@ -60,22 +60,22 @@
 
 | Lines | Function | File:Line |
 |-------|----------|-----------|
-| 975 | `build_trades_config_impl` | `execution-services/execution_services/data/config/trades_builder_old.py:34` |
-| 689 | `_format_human_readable_error` | `execution-services/visualizer-api/app/services/backtest_service.py:2088` |
-| 600 | `_parse_error` | `execution-services/visualizer-api/app/services/backtest_service.py:736` |
-| 422 | `generate_benchmark_html_report` | `execution-services/execution_services/benchmark/html_report.py:13` |
-| 416 | `generate_html_report` | `execution-services/scripts/benchmark_runners/populate_benchmark_html.py:191` |
-| 410 | `_get_algorithm_configs` | `execution-services/execution_services/benchmark/comparison.py:241` |
+| 975 | `build_trades_config_impl` | `execution-service/execution_service/data/config/trades_builder_old.py:34` |
+| 689 | `_format_human_readable_error` | `execution-service/visualizer-api/app/services/backtest_service.py:2088` |
+| 600 | `_parse_error` | `execution-service/visualizer-api/app/services/backtest_service.py:736` |
+| 422 | `generate_benchmark_html_report` | `execution-service/execution_service/benchmark/html_report.py:13` |
+| 416 | `generate_html_report` | `execution-service/scripts/benchmark_runners/populate_benchmark_html.py:191` |
+| 410 | `_get_algorithm_configs` | `execution-service/execution_service/benchmark/comparison.py:241` |
 
 ### 2.2 HIGH (100–400 lines)
 
 | Lines | Function | File:Line |
 |-------|----------|-----------|
 | 374 | `create_timeframe_candles` | `market-data-processing-service/.../timeframe_candles.py:55` |
-| 339 | `generate_comprehensive_instruction_stream` | `execution-services/scripts/instruction_generation/.../comprehensive_generation.py:7` |
+| 339 | `generate_comprehensive_instruction_stream` | `execution-service/scripts/instruction_generation/.../comprehensive_generation.py:7` |
 | 333 | `create_implementation_section` | `strategy-service/presentation/create_presentation.py:526` |
-| 329 | `build_timeline` | `execution-services/execution_services/results/timeline.py:171` |
-| 326 | `_parse_preflight_error` | `execution-services/visualizer-api/app/services/backtest_service.py:1413` |
+| 329 | `build_timeline` | `execution-service/execution_service/results/timeline.py:171` |
+| 326 | `_parse_preflight_error` | `execution-service/visualizer-api/app/services/backtest_service.py:1413` |
 | 305 | `run_strategy_backtest` | `strategy-service/.../full_pipeline_backtest_service.py:62` |
 | 303 | `run_backtest` | `strategy-service/.../backtest_service.py:58` |
 | 299 | `_execute_instrument_generation` | `instruments-service/.../instrument_handler.py:122` |
@@ -83,12 +83,12 @@
 | 291 | `store_instruments` | `instruments-service/.../cloud_instrument_storage.py:125` |
 | 288 | `parse_arguments` | `market-tick-data-handler/.../parser.py:21` |
 | 283 | `_get_css_styles` | `market-tick-data-handler/scripts/generate_test_report.py:59` |
-| 281 | `main` | `execution-services/execution_services/config/grid_generator_old.py:780` |
-| 281 | `_build_cases` | `execution-services/scripts/runners/run_phasee_fullpath_matrix.py:278` |
+| 281 | `main` | `execution-service/execution_service/config/grid_generator_old.py:780` |
+| 281 | `_build_cases` | `execution-service/scripts/runners/run_phasee_fullpath_matrix.py:278` |
 | 279 | `_load_and_filter_instruments_for_date` | `market-tick-data-handler/.../download_handler_original.py:737` |
 | 276 | `_execute_download` | `market-tick-data-handler/.../download_handler_original.py:460` |
 | 272 | `create_html_presentation` | `strategy-service/presentation/create_presentation.py:861` |
-| 271 | `save_report` | `execution-services/execution_services/results/serializer.py:283` |
+| 271 | `save_report` | `execution-service/execution_service/results/serializer.py:283` |
 | 263 | `fetch_defi_instruments` | `instruments-service/.../defi_processor.py:97` |
 
 ---
@@ -101,7 +101,7 @@
 
 | Lines | Class | File:Line |
 |-------|-------|-----------|
-| 2982 | `BacktestService` | `execution-services/visualizer-api/app/services/backtest_service.py:35` |
+| 2982 | `BacktestService` | `execution-service/visualizer-api/app/services/backtest_service.py:35` |
 | 1135 | `InstrumentsService` | `instruments-service/.../instruments_service.py:58` |
 | 1115 | `ValidationService` | `market-tick-data-handler/.../validation_service.py:35` |
 | 1110 | `DatabentoClient` | `market-tick-data-handler/.../databento_client_original.py:49` |
@@ -111,26 +111,26 @@
 
 | Lines | Class | File:Line |
 |-------|-------|-----------|
-| 1012 | `ResultsService` | `execution-services/visualizer-api/app/services/results_service.py:31` |
-| 993 | `BenchmarkComparator` | `execution-services/execution_services/benchmark/comparison.py:33` |
+| 1012 | `ResultsService` | `execution-service/visualizer-api/app/services/results_service.py:31` |
+| 993 | `BenchmarkComparator` | `execution-service/execution_service/benchmark/comparison.py:33` |
 | 864 | `DownloadHandler` | `market-tick-data-handler/.../download_handler_original.py:152` |
 | 830 | `CCXTService` | `instruments-service/.../engine/venues/ccxt_service.py:31` |
 | 813 | `CCXTService` | `instruments-service/.../utils/ccxt_service.py:31` |
 | 801 | `CandleProcessingService` | `market-data-processing-service/.../candle_processing_service.py:48` |
 | 725 | `RecursiveStakedBasisStrategy` | `strategy-service/.../defi_recursive_basis.py:30` |
-| 721 | `DeFiDataLoader` | `execution-services/execution_services/data/defi_data_loader.py:76` |
-| 716 | `HybridOptimalExecAlgorithm` | `execution-services/.../hybrid_optimal.py:38` |
+| 721 | `DeFiDataLoader` | `execution-service/execution_service/data/defi_data_loader.py:76` |
+| 716 | `HybridOptimalExecAlgorithm` | `execution-service/.../hybrid_optimal.py:38` |
 | 715 | `CeFiInstrumentProcessor` | `instruments-service/.../cefi_processor.py:35` |
 | 714 | `ROECalculator` | `strategy-service/strategy_analysis_presentation/code/roe/calculations.py:18` |
 | 704 | `CandleOrchestrationService` | `market-data-processing-service/.../orchestration_service.py:46` |
 | 700 | `BigQueryQualityGates` | `market-tick-data-handler/.../gcs_quality_gates.py:24` |
 | 687 | `OnChainOrchestrationService` | `features-onchain-service/.../onchain_orchestration.py:17` |
-| 684 | `NodeBuilder` | `execution-services/execution_services/engine/backtest/node_builder.py:26` |
-| 673 | `DataService` | `execution-services/visualizer-api/app/services/data_service.py:52` |
+| 684 | `NodeBuilder` | `execution-service/execution_service/engine/backtest/node_builder.py:26` |
+| 673 | `DataService` | `execution-service/visualizer-api/app/services/data_service.py:52` |
 | 663 | `MarketDataTickHandlerConfig` | `market-tick-data-handler/.../config_settings.py:20` |
 | 657 | `ConfigManager` | `market-tick-data-handler/.../config_manager.py:59` |
 | 626 | `ComprehensiveBacktestService` | `strategy-service/.../comprehensive_backtest_service.py:38` |
-| 626 | `ResultExtractor` | `execution-services/execution_services/results/extractor.py:15` |
+| 626 | `ResultExtractor` | `execution-service/execution_service/results/extractor.py:15` |
 
 ---
 
@@ -149,9 +149,9 @@
 
 | File | Action |
 |------|--------|
-| `execution-services/execution_services/config/grid_generator_old.py` | Delete; migrate to new implementation |
-| `execution-services/execution_services/cli/backtest_old.py` | Delete; migrate to new implementation |
-| `execution-services/execution_services/data/config/trades_builder_old.py` | Delete; migrate to new implementation |
+| `execution-service/execution_service/config/grid_generator_old.py` | Delete; migrate to new implementation |
+| `execution-service/execution_service/cli/backtest_old.py` | Delete; migrate to new implementation |
+| `execution-service/execution_service/data/config/trades_builder_old.py` | Delete; migrate to new implementation |
 
 ---
 
@@ -197,15 +197,15 @@
 
 | Rank | File | Lines | Issues |
 |------|------|-------|--------|
-| 1 | `execution-services/visualizer-api/app/services/backtest_service.py` | 3016 | Critical file size; God class (2982 lines); 3 functions 326–689 lines |
-| 2 | `execution-services/tests/live/venues/cefi/test_binance_live_execution.py` | 1510 | Critical file size |
-| 3 | `execution-services/visualizer-ui/backend/instruction_api.py` | 1280 | High file size |
+| 1 | `execution-service/visualizer-api/app/services/backtest_service.py` | 3016 | Critical file size; God class (2982 lines); 3 functions 326–689 lines |
+| 2 | `execution-service/tests/live/venues/cefi/test_binance_live_execution.py` | 1510 | Critical file size |
+| 3 | `execution-service/visualizer-ui/backend/instruction_api.py` | 1280 | High file size |
 | 4 | `market-tick-data-handler/.../validation_service.py` | 1208 | High file size; God class (1115 lines) |
 | 5 | `instruments-service/.../instruments_service.py` | 1192 | High file size; God class (1135 lines) |
 | 6 | `strategy-service/presentation/create_presentation.py` | 1182 | High file size; 2 functions 272–333 lines |
 | 7 | `market-tick-data-handler/.../databento_client.py` + `_original` | 1175×2 | DRY violation; God class (1110 lines each) |
-| 8 | `execution-services/execution_services/data/config/trades_builder_old.py` | 1008 | Deprecated; function 975 lines |
-| 9 | `execution-services/execution_services/config/grid_generator_old.py` | 1064 | Deprecated |
+| 8 | `execution-service/execution_service/data/config/trades_builder_old.py` | 1008 | Deprecated; function 975 lines |
+| 9 | `execution-service/execution_service/config/grid_generator_old.py` | 1064 | Deprecated |
 | 10 | `instruments-service/.../engine/venues/ccxt_service.py` + `utils/ccxt_service.py` | 860+843 | DRY violation; duplicate CCXTService |
 
 ---

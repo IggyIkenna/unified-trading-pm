@@ -244,7 +244,7 @@ For each of the 11 remaining services (not yet migrated):
 
 **Services to create issues for:**
 
-1. execution-services
+1. execution-service
 2. strategy-service
 3. market-data-processing-service
 4. ml-training-service

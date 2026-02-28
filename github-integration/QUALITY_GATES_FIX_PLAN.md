@@ -9,7 +9,7 @@
 
 ### CRITICAL (Blocking All Tests)
 
-#### 1. execution-services - Python Version Fix
+#### 1. execution-service - Python Version Fix
 
 **Issue:** Python 3.13 installed, needs 3.11.x for NautilusTrader
 
@@ -22,7 +22,7 @@
 **Commands:**
 
 ```bash
-cd execution-services
+cd execution-service
 # Fix pyproject.toml and .python-version
 pyenv install 3.11.9
 pyenv local 3.11.9
@@ -95,7 +95,7 @@ bash scripts/quickmerge.sh "Fix: Update bucket resolution test expectations" --f
 
 ### MEDIUM PRIORITY (Codex Violations)
 
-#### 8. execution-services - Codex Violations in deps/
+#### 8. execution-service - Codex Violations in deps/
 
 **Issue:** print(), os.getenv(), requests in `deps/unified-trading-deployment-v2/`
 
@@ -180,7 +180,7 @@ bash enable-branch-protection.sh --restore /tmp/branch-protection-backup-2026021
 
 | Service                | Issue               | Files                                       | Est. Time |
 | ---------------------- | ------------------- | ------------------------------------------- | --------- |
-| execution-services     | Python 3.11         | pyproject.toml, .python-version             | 15min     |
+| execution-service     | Python 3.11         | pyproject.toml, .python-version             | 15min     |
 | features-delta-one     | venues.yaml         | deps/unified-trading-deployment-v2/configs/ | 5min      |
 | features-volatility    | venues.yaml         | deps/unified-trading-deployment-v2/configs/ | 5min      |
 | features-calendar      | venues.yaml         | deps/unified-trading-deployment-v2/configs/ | 5min      |

@@ -89,7 +89,7 @@
 - Price sanity checks
 - Instrument universe definition
 
-**Current state:** Embedded in `execution-services`  
+**Current state:** Embedded in `execution-service`  
 **Action:** No refactoring needed (assume clean separation already exists)
 
 ### Layer 2: Execution Manager
@@ -98,7 +98,7 @@
 - Order slicing/aggregation
 - Execution algorithm orchestration
 
-**Current state:** `InstructionRouter` in `execution-services`  
+**Current state:** `InstructionRouter` in `execution-service`  
 **Action:** No refactoring needed (assume clean separation already exists)
 
 ---
@@ -172,7 +172,7 @@ exchange-interface/  (new shared package)
 
 ## 🔗 Dependencies
 
-### From execution-services
+### From execution-service
 
 - **Matching engine package** (already exists)
   - Used by: `sim/matching_engine_integration.py`
@@ -180,7 +180,7 @@ exchange-interface/  (new shared package)
 
 ### Consumed by
 
-- **execution-services** (execution manager layer)
+- **execution-service** (execution manager layer)
 - **strategy-service** (if split in future)
 - **live trading services** (position monitor, risk monitor, etc.)
 
@@ -206,7 +206,7 @@ exchange-interface/  (new shared package)
 ## ✅ Alignment Verified
 
 - [x] Covers Layer 3 (Exchange Interface) only
-- [x] Respects existing Layer 1-2 architecture in execution-services
+- [x] Respects existing Layer 1-2 architecture in execution-service
 - [x] Includes both live and simulation adapters
 - [x] Uses env var for mode selection
 - [x] Integrates existing matching engine

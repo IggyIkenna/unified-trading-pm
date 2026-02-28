@@ -338,7 +338,7 @@ Incomplete enumerations make unlisted repos seem irrelevant. The completeness ch
 `**specs/` directory** — deep service-specific content that changes independently of Codex:
 
 - `instruments-service/specs/canonical-instrument-key.md`
-- `execution-services/specs/algorithms.md`
+- `execution-service/specs/algorithms.md`
 - `ml-training-service/specs/model-insights.md`
 - `features-*/specs/feature-catalog.md` (hundreds of features — lives here, not Codex)
 
@@ -422,7 +422,7 @@ done
 
 Junk criteria: `*_SUMMARY.md`, `*_COMPLETE*.md`, `*_REPORT.md`, `*_PLAN.md`, `*VIOLATIONS*.md`, `*REMEDIATION*.md`, `*ROADMAP*.md`, `*GENERATION*.md`, `*ALIGNMENT_COMPLETE*.md`, `*_STATUS*.md` — anything recapping past work rather than defining standards.
 
-**What the deep dive confirmed: Codex sections 01-09 are 98.3% clean (only ~7 files to archive). The biggest concentrations are workspace root, codex root, and service repos (especially execution-services: 44 junk files).**
+**What the deep dive confirmed: Codex sections 01-09 are 98.3% clean (only ~7 files to archive). The biggest concentrations are workspace root, codex root, and service repos (especially execution-service: 44 junk files).**
 
 - **Agent A — Workspace root cleanup (full audit done, exact actions):**
   - **Delete `.github/`** (confuses Cursor background agents; inert quality-gates workflow)
@@ -454,7 +454,7 @@ Junk criteria: `*_SUMMARY.md`, `*_COMPLETE*.md`, `*_REPORT.md`, `*_PLAN.md`, `*V
     - `validators/` (31 Python files) → **KEEP** in codex (production readiness validator system)
     - Root `.md` files → archive except `README.md`, `GLOSSARY.md`
 - **Agent D — Service repos (all 35):**
-  - execution-services: 44 known junk files → delete
+  - execution-service: 44 known junk files → delete
   - ml-training-service: 6 known junk files → delete
   - instruments-service: 3 known junk files (`CODEX_VIOLATIONS_MANIFEST.md`, `SPLIT_SUMMARY.md`, `OPTIMIZATION_PLAN.md`) → delete
   - market-tick-data-handler: 3 known junk files → delete; `issues/` (48 files) → delete (PM repo handles issues)
@@ -756,7 +756,7 @@ Service topology:     deployment-v3/configs/dependencies.yaml
 Service registry:     unified-trading-pm/service-registry.yaml (moved from 11-pm)
 Venue × service:      unified-trading-pm/venue-support-matrix.yaml (moved from 11-pm)
 Features catalog:     features-delta-one-service/docs/FEATURE_SPECIFICATION.md
-Execution algorithms: execution-services/docs/specs/ALGORITHM_PARAMS.md
+Execution algorithms: execution-service/docs/specs/ALGORITHM_PARAMS.md
 Strategy modes:       strategy-service/docs/STRATEGY_MODES.md
 ML models:            ml-training-service/docs/MODEL_CATALOG.md (CREATE - missing)
 API schemas:          api-contracts/ (18 venue API directories)
@@ -774,11 +774,11 @@ This file is the "start here" document. Every drift checker and agent prompt sho
 
 - Add to ml-training-service: `docs/MODEL_CATALOG.md` — list of supported model types (LightGBM at minimum), hyperparameter ranges, which features it consumes (from which feature services), which instruments/strategies it applies to
 - Add to api-contracts/: `README.md` — list all 18 API contract directories, what each covers, when to use VCR vs live in tests
-- Update `04-architecture/deployment-topology-diagrams.md`: add explicit per-client vs shared matrix table (execution-services is per-client; all others are shared with category isolation for CeFi/DeFi/TradFi)
+- Update `04-architecture/deployment-topology-diagrams.md`: add explicit per-client vs shared matrix table (execution-service is per-client; all others are shared with category isolation for CeFi/DeFi/TradFi)
 
 ### Phase 5 — Service Docs Pilot (1 hr, 2 parallel fast agents)
 
-**Deep dive confirmed:** instruments-service and market-tick-data-handler already have CANONICAL docs. execution-services already has a `docs/specs/` dir. The pattern exists — just needs standardizing.
+**Deep dive confirmed:** instruments-service and market-tick-data-handler already have CANONICAL docs. execution-service already has a `docs/specs/` dir. The pattern exists — just needs standardizing.
 
 - Agent A: `instruments-service` — verify 8-canonical complete, create `specs/` from existing SPECS docs (move `docs/INSTRUMENT_SPECIFICATION.md`, `VENUE_ADAPTERS.md`, etc. into `specs/`)
 - Agent B: `market-tick-data-handler` — same; consolidate `issues/` into `specs/issues/` if keeping
@@ -1252,7 +1252,7 @@ Nuances:
 - `latest` tag concept doesn't apply — semver is the tagging strategy
 - No `--rollback-deploy-only` for libraries — rollback means publishing an older version or yanking
 
-#### Template 4: UI (backtest-ui is canonical reference for React/TypeScript)
+#### Template 4: UI (execution-analytics-ui is canonical reference for React/TypeScript)
 
 Files:
 
@@ -1321,7 +1321,7 @@ Before rolling out to all repos, validate the full flow works on the canonical r
 ### 9b: Full rollout — 4 parallel fast agents by repo type
 
 **Agent A: Services with deps (7 repos)**
-instruments-service ✓ (already done in 9a), market-tick-data-handler, market-data-processing-service, execution-services, strategy-service, ml-training-service, ml-inference-service
+instruments-service ✓ (already done in 9a), market-tick-data-handler, market-data-processing-service, execution-service, strategy-service, ml-training-service, ml-inference-service
 
 Checklist per repo:
 
@@ -1355,7 +1355,7 @@ Same as library checklist above, plus:
 - quality-gates.yml: add dep checkout with branch fallback for each path dep
 
 **Agent D: UIs (9 repos)**
-backtest-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui, logs-dashboard-ui, ml-deployment-ui, onboarding-ui, settlement-ui, trading-analytics-ui
+execution-analytics-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui, logs-dashboard-ui, ml-training-ui, onboarding-ui, settlement-ui, trading-analytics-ui
 
 Checklist per UI:
 
@@ -1610,7 +1610,7 @@ Confirmed problems from research:
 
 **setup_cloud_logging (UCS) vs setup_events (UEI):** UCS has its own logging setup. Legacy. Workspace rules say use UEI. Remove setup_cloud_logging from UCS.
 
-**UMI adoption: 5.9% (1/17 services).** Dead code: ALL CeFi adapters (Binance, Coinbase, OKX, Bybit, Deribit) — zero usage. get_market_adapter(), fetch_instruments(), fetch_trades(), CanonicalTrade/CanonicalOrderBook/CanonicalTicker — unused. Services bypassing UMI: 5 services use os.getenv for API keys and direct API calls instead. market-tick-data-handler: direct adapter instantiation (bypasses factory). execution-services: UMI used in tests only.
+**UMI adoption: 5.9% (1/17 services).** Dead code: ALL CeFi adapters (Binance, Coinbase, OKX, Bybit, Deribit) — zero usage. get_market_adapter(), fetch_instruments(), fetch_trades(), CanonicalTrade/CanonicalOrderBook/CanonicalTicker — unused. Services bypassing UMI: 5 services use os.getenv for API keys and direct API calls instead. market-tick-data-handler: direct adapter instantiation (bypasses factory). execution-service: UMI used in tests only.
 
 **UTEI adoption: 22% (2/9 services).** 40%+ of exported functions unused. Execution-services uses UTEI for Deribit (via CCXT), but has a CUSTOM connector for Hyperliquid instead of using UMI/UTEI.
 
@@ -1623,14 +1623,14 @@ Target architecture and PM epic tasks:
 - UCI: true leaf (pure Pydantic, no cloud imports). ConfigStore/TimeSeriesConfigStore/ConfigReloader MOVE to UCS.
 - UCS: removes soft-circular try/except imports of UCI/UEI. Removes setup_cloud_logging (legacy). Removes UnifiedCloudServicesConfig (deprecated). Keeps DataSourceMapping removed (move to UMI only).
 - UMI: remove MarketDataProviderConfig (use UCI). Keep DataSourceMapping. Dead CeFi adapters: either drive adoption or remove. Mandate factory pattern (get_adapter) across all 17 services.
-- UTEI: replace execution-services custom Hyperliquid connector with UMI/UTEI. Drive to 9/9 services.
+- UTEI: replace execution-service custom Hyperliquid connector with UMI/UTEI. Drive to 9/9 services.
 - api-contracts: add to all service pyproject.toml as dep. Import and use in all external API calls and unit tests.
 - All services: add ConfigStore.save_config() call on startup. All batch handlers use TimeSeriesConfigStore.config_for_date().
 - Update dependency matrix to corrected levels: Level 0 = api-contracts + UCI. Level 1 = UCS + UEI. Level 2 = UDS/UMI/UTEI/UML. Level 3+ = services.
 
 **5b. Standard Service Structure Template (new Codex doc + PM restructure plans)**
 
-Reference: instruments-service (97 files, clean) is the canonical example. execution-services (298 files, custom connectors) is what NOT to do.
+Reference: instruments-service (97 files, clean) is the canonical example. execution-service (298 files, custom connectors) is what NOT to do.
 
 Standard structure for all Python services:
 
@@ -1677,7 +1677,7 @@ Standard library import pattern:
 
 NEVER: `google.cloud.*` directly, `boto3.*` directly, `os.getenv()` for API keys, custom venue connectors.
 
-Add to PM: per-service restructure analysis doc for each service that doesn't match this template. execution-services is the highest priority (298 files, custom connectors, 16 cli subdirs). Not for immediate refactor but as a spec for what it should look like.
+Add to PM: per-service restructure analysis doc for each service that doesn't match this template. execution-service is the highest priority (298 files, custom connectors, 16 cli subdirs). Not for immediate refactor but as a spec for what it should look like.
 
 The service checklist in deployment-v3/configs/checklist.*.yaml gets a new Phase 8: "Service Structure Compliance" checking cli/engine/adapters layout, ConfigStore.save_config() on startup, TimeSeriesConfigStore in batch handler, no direct cloud imports.
 
@@ -1807,7 +1807,7 @@ positions = client.get_positions()  # → list[CanonicalPosition]
 
 Consumers:
 
-- **execution-services**: quick per-client reconciliation during live trading
+- **execution-service**: quick per-client reconciliation during live trading
 - **position-balance-monitor-service**: global multi-client reconciliation, one instance serving all clients
 
 UPI replaces any direct exchange position API calls in these services.
@@ -1817,7 +1817,7 @@ UPI replaces any direct exchange position API calls in these services.
 Add to `WORKSPACE-MANIFEST.json` and `DEPENDENCY-MATRIX-CANONICAL.json`:
 
 - `unified-position-interface`: Level 2 (same as UMI, UTEI), depends on api-contracts + UCI + UCS
-- Update consumer entries: execution-services + position-balance-monitor-service now depend on UPI
+- Update consumer entries: execution-service + position-balance-monitor-service now depend on UPI
 
 The canonical client/account model documentation goes into `unified-trading-codex/01-domain/client-model.md` (file already exists — update it) and the account_id format goes into `unified-trading-codex/02-data/instruments-and-api-keys-standard.md` (update to include account canonical format).
 
@@ -1826,9 +1826,9 @@ The canonical client/account model documentation goes into `unified-trading-code
 Research confirmed four distinct UI types with different dependency patterns:
 
 - Monitoring (logs-dashboard-ui, batch-audit-ui): read-only, data from GCS/BigQuery via domain libraries, no service control
-- Analytics (trading-analytics-ui, client-reporting-ui, backtest-ui): read analysis data, backtest-ui wraps execution-services backtest mode tightly
-- Control/Deployment (ml-deployment-ui, onboarding-ui): manage config, deploy models, onboard clients — calls service APIs
-- Hybrid monitoring+control (live-health-monitor-ui): monitoring dashboard that also sends manual trading instructions to execution-services at /manual/instruction
+- Analytics (trading-analytics-ui, client-reporting-ui, execution-analytics-ui): read analysis data, execution-analytics-ui wraps execution-service backtest mode tightly
+- Control/Deployment (ml-training-ui, onboarding-ui): manage config, deploy models, onboard clients — calls service APIs
+- Hybrid monitoring+control (live-health-monitor-ui): monitoring dashboard that also sends manual trading instructions to execution-service at /manual/instruction
 - Not implemented (settlement-ui): empty directory
 
 UI dependency rules by type:
@@ -1847,7 +1847,7 @@ Proposed name: `strategy-validation-service`. The final integration validation l
 The backtest path requires TWO batch runs (user clarification):
 
 - Run 1: Strategy replay — replay T-1 signals assuming perfect fills at signal price. Produces strategy-assumed P&L.
-- Run 2: Execution replay — run execution-services backtest mode on those signals with actual T-1 market microstructure. Produces realistic fills with slippage and market impact.
+- Run 2: Execution replay — run execution-service backtest mode on those signals with actual T-1 market microstructure. Produces realistic fills with slippage and market impact.
 - P&L decomposition: Total live P&L = Strategy alpha (signal quality) + Execution alpha (fill quality vs assumed). Tracking error analysis per dimension.
 
 Architecture:
@@ -1857,7 +1857,7 @@ flowchart TD
     subgraph inputs [T-1 Data Inputs]
         POS["Midnight positions T-1\nposition-balance-monitor GCS output"]
         SIG["Strategy signals T-1\nstrategy-service GCS output\nper client per strategy"]
-        FILLS["Actual fills T-1\nexecution-services GCS"]
+        FILLS["Actual fills T-1\nexecution-service GCS"]
         MKT["Market microstructure T-1\nmarket-data-processing-service GCS"]
         CFG["Config effective on T-1\nTimeSeriesConfigStore.config_for_date\nrequires ConfigStore adoption"]
     end
@@ -1867,11 +1867,11 @@ flowchart TD
     end
 
     subgraph run2 [Run 2: Execution Replay]
-        ER["Run execution-services backtest\non strategy signals from Run 1\nWith T-1 market microstructure\nProduces: realistic fills with slippage\nExecution alpha = realistic fills minus assumed fills"]
+        ER["Run execution-service backtest\non strategy signals from Run 1\nWith T-1 market microstructure\nProduces: realistic fills with slippage\nExecution alpha = realistic fills minus assumed fills"]
     end
 
     subgraph live_path [Live Path]
-        LV["Load actual fills from T-1\nexecution-services output\nActual P&L already happened"]
+        LV["Load actual fills from T-1\nexecution-service output\nActual P&L already happened"]
     end
 
     subgraph decompose [P&L Decomposition and Output]
@@ -1891,13 +1891,13 @@ flowchart TD
 
 Scope: per client, per strategy. Alpha P&L dimension + strategy dimension. ML training excluded (same model for batch and live → expected same output).
 
-Dependencies: execution-services, strategy-service, market-data-processing-service, unified-config-interface (TimeSeriesConfigStore — requires ConfigStore adoption), unified-events-interface, pnl-attribution-service (optional, inline P&L calculation is simpler).
+Dependencies: execution-service, strategy-service, market-data-processing-service, unified-config-interface (TimeSeriesConfigStore — requires ConfigStore adoption), unified-events-interface, pnl-attribution-service (optional, inline P&L calculation is simpler).
 
 Config replay fidelity: requires ConfigStore adoption across all services. Without it, `config_for_date()` returns nothing and backtest uses current config — not T-1 config — breaking the comparison. This is the strongest forcing function for ConfigStore adoption.
 
 Not in scope for v1: ML online vs offline model comparison (same model → expected same output, comparison is trivial).
 
-In WORKSPACE-MANIFEST.json: new service entry at Level 6 (depends on execution-services, strategy-service, market-data-processing-service). In unified-trading-pm: new epic with data flow design, config replay gate, anomaly threshold configuration.
+In WORKSPACE-MANIFEST.json: new service entry at Level 6 (depends on execution-service, strategy-service, market-data-processing-service). In unified-trading-pm: new epic with data flow design, config replay gate, anomaly threshold configuration.
 
 The final validation layer for the entire system. Daily scheduled service that replays what the system *predicted* would happen (backtest) vs what actually *did* happen (live). This is how you catch model degradation, execution issues, data quality problems, and strategy drift before they compound.
 
@@ -1905,9 +1905,9 @@ The final validation layer for the entire system. Daily scheduled service that r
 
 - Scheduled: daily, once per day
 - Scope: per client, per strategy (investment management company context)
-- Starting point: midnight positions from previous day T-1 (taken from execution-services/position-balance-monitor)
-- Backtest path: replay strategy signals from day T through execution-services backtest mode using historical market data
-- Live path: actual fills from execution-services on day T
+- Starting point: midnight positions from previous day T-1 (taken from execution-service/position-balance-monitor)
+- Backtest path: replay strategy signals from day T through execution-service backtest mode using historical market data
+- Live path: actual fills from execution-service on day T
 - Comparison dimensions: Alpha P&L (signal-based P&L) + strategy dimension
 - ML training: NOT included (same model used for both batch and live → expected same output → comparison not meaningful)
 
@@ -1919,15 +1919,15 @@ The final validation layer for the entire system. Daily scheduled service that r
 
 **Data sources it needs:**
 
-- Midnight positions: execution-services or position-balance-monitor-service
+- Midnight positions: execution-service or position-balance-monitor-service
 - Strategy signals from T: strategy-service output (GCS)
-- Live fills from T: execution-services (GCS)
+- Live fills from T: execution-service (GCS)
 - Historical market data: market-tick-data-handler / market-data-processing-service
 - Config effective on T: `TimeSeriesConfigStore.config_for_date(date)` — this is exactly why ConfigStore adoption matters
 
 **Config replay connection:** For the backtest path to match live conditions, it MUST use the same config that was active on day T. This is `TimeSeriesConfigStore.config_for_date(date)` — it returns the config version that was in effect at midnight on T. Without ConfigStore adoption across all services, this replay fidelity is impossible.
 
-**Where it lives:** New service (no existing service can absorb this cleanly). Suggested name: `live-validation-service` or `daily-reconciliation-service`. Depends on: execution-services, strategy-service, pnl-attribution-service, market-data-processing-service, unified-config-interface (TimeSeriesConfigStore).
+**Where it lives:** New service (no existing service can absorb this cleanly). Suggested name: `live-validation-service` or `daily-reconciliation-service`. Depends on: execution-service, strategy-service, pnl-attribution-service, market-data-processing-service, unified-config-interface (TimeSeriesConfigStore).
 
 **Priority:** High — this is the final integration test for the entire pipeline. Add to `unified-trading-pm/work/` as an epic with: service design, data flow, config replay, scheduling, anomaly thresholds.
 

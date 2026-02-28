@@ -76,7 +76,7 @@ unified-domain-client = { path = "../unified-domain-client" }
 - market-tick-data-handler
 - market-data-processing-service
 - strategy-service
-- execution-services
+- execution-service
 - features-* services
 - ml-* services
 

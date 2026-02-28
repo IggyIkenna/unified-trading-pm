@@ -20,7 +20,7 @@ Usage:
     python3 create-all-service-projects.py --all-services
 
     # Create single service project
-    python3 create-all-service-projects.py --service execution-services
+    python3 create-all-service-projects.py --service execution-service
 
     # With custom views
     python3 create-all-service-projects.py --all-services --views "work,cods,waves"
@@ -364,14 +364,14 @@ Examples:
   python3 create-all-service-projects.py --all-services
 
   # Create single service project
-  python3 create-all-service-projects.py --service execution-services
+  python3 create-all-service-projects.py --service execution-service
 
   # With custom views
   python3 create-all-service-projects.py --all-services --views "work,cods,waves"
         """,
     )
 
-    parser.add_argument("--service", type=str, help="Service name (e.g., execution-services)")
+    parser.add_argument("--service", type=str, help="Service name (e.g., execution-service)")
 
     parser.add_argument("--all-services", action="store_true", help="Create projects for all 32 services")
 

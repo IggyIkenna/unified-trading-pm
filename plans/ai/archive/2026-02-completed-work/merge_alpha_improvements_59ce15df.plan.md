@@ -41,13 +41,13 @@ These files document critical assumptions for backtesting simulation:
 
 **Files to copy to main:**
 
-- [execution_services/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md](execution_services/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md) - 1062 lines documenting:
+- [execution_service/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md](execution_service/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md) - 1062 lines documenting:
   - Market execution assumptions per algorithm
   - L1_MBP vs L2_MBP behavior differences
   - Benchmark price sourcing
   - Fill guarantees and slippage modeling
   - Algorithm-specific assumptions (TWAP, VWAP, ICEBERG, etc.)
-- [execution_services/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md](execution_services/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md) - Documents:
+- [execution_service/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md](execution_service/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md) - Documents:
   - Alpha calculation formula (BUY vs SELL)
   - Volume-weighted calculation
   - Net alpha = gross alpha - fees - gas
@@ -190,12 +190,12 @@ flowchart TD
 
 | Action          | Files                                                            |
 | --------------- | ---------------------------------------------------------------- |
-| COPY from alpha | `execution_services/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md`  |
-| COPY from alpha | `execution_services/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md` |
+| COPY from alpha | `execution_service/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md`  |
+| COPY from alpha | `execution_service/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md` |
 | COPY from alpha | `docs/specs/ALGORITHM_PARAMS.md`                                 |
 | COPY from alpha | `docs/EXEC_ALGORITHM_ROUTING_FIX.md`                             |
 | COPY from alpha | `tests/algos/*` (entire directory)                               |
-| KEEP from main  | `execution_services/algorithms/algorithms.py`                    |
+| KEEP from main  | `execution_service/algorithms/algorithms.py`                    |
 | KEEP from main  | `visualizer-ui/*`                                                |
 | KEEP from main  | All infrastructure files                                         |
 | OPTIONAL        | `visualizer/` Streamlit app                                      |

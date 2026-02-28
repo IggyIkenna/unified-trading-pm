@@ -51,8 +51,8 @@ This plan merges alpha-improvements into main by:
 
 | Source (alpha-improvements)                                      | Destination |
 | ---------------------------------------------------------------- | ----------- |
-| `execution_services/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md`  | Same path   |
-| `execution_services/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md` | Same path   |
+| `execution_service/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md`  | Same path   |
+| `execution_service/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md` | Same path   |
 | `docs/specs/ALGORITHM_PARAMS.md`                                 | Same path   |
 | `docs/EXEC_ALGORITHM_ROUTING_FIX.md`                             | Same path   |
 | `tests/algos/*` (entire directory)                               | Same path   |
@@ -66,7 +66,7 @@ These are **new files** that don't exist in main - no conflicts.
 
 ### TWAP Parameter Override Bug Fix (CRITICAL)
 
-**File:** `execution_services/backtest/actors/signal_driven_v3.py`
+**File:** `execution_service/backtest/actors/signal_driven_v3.py`
 
 **Problem:** Config parameters (`horizon_secs`, `interval_secs`) were being overridden by dynamic calculations, causing all backtests to produce identical results regardless of config.
 
@@ -174,12 +174,12 @@ else:
 
 | Action | Path                                                             |
 | ------ | ---------------------------------------------------------------- |
-| COPY   | `execution_services/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md`  |
-| COPY   | `execution_services/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md` |
+| COPY   | `execution_service/algorithms/ALGORITHM_MARKET_ASSUMPTIONS.md`  |
+| COPY   | `execution_service/algorithms/ALPHA_CALCULATION_ASSUMPTIONS.md` |
 | COPY   | `docs/specs/ALGORITHM_PARAMS.md`                                 |
 | COPY   | `docs/EXEC_ALGORITHM_ROUTING_FIX.md`                             |
 | COPY   | `tests/algos/*`                                                  |
-| FIX    | `execution_services/backtest/actors/signal_driven_v3.py`         |
+| FIX    | `execution_service/backtest/actors/signal_driven_v3.py`         |
 | PORT   | Signals & Alpha → `Analysis.tsx`                                 |
 | PORT   | Equity Curve → `Analysis.tsx`                                    |
 | PORT   | Timeline → `DeepDive.tsx`                                        |

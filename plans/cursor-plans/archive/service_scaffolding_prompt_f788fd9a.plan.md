@@ -28,7 +28,7 @@ The body below IS the prompt to paste directly into Claude Code. Copy everything
 - `strategy-service`: broken TODO imports from `unified_domain_client`
 - `ml-training-service` + `ml-inference-service`: import `CloudTarget`, `StandardizedDomainCloudService` from UCS (should come from UDC)
 - 4 services have direct `google-cloud-`* or `boto3` in `pyproject.toml`
-- `execution-services`: extensive `os.environ` / `os.getenv` for API keys (should route via config/library adapters)
+- `execution-service`: extensive `os.environ` / `os.getenv` for API keys (should route via config/library adapters)
 
 **Key cursor rules that use OLD names (agents must follow the PATTERN, not the literal import):**
 
@@ -299,7 +299,7 @@ Additional notes:
     - verify setup_service(sink=GCSEventSink(...)) pattern in main.py
 
 ────────────────────────────────────────────────────────────────
-AGENT 1-D — strategy-service, execution-services, pnl-attribution-service
+AGENT 1-D — strategy-service, execution-service, pnl-attribution-service
 ────────────────────────────────────────────────────────────────
 
 For EACH service in this group, apply the SERVICE HARDENING CHECKLIST (Section 6).
@@ -316,7 +316,7 @@ Additional notes:
     - setup_events (legacy) in main.py → update to setup_service(sink=GCSEventSink(...))
       pattern per event-logging.mdc (with new UTS name)
 
-  execution-services (largest service — 365 files, 661 Python files total):
+  execution-service (largest service — 365 files, 661 Python files total):
     SCOPE LIMIT: Only touch these specific problem areas:
       1. service_config.py: os.getenv calls → use config class fields
       2. utils/gcs_service.py: os.getenv calls → use config class fields
@@ -506,7 +506,7 @@ SECTION 9 — EXECUTION ORDER
     Agent 1-A: instruments-service, market-tick-data-handler, market-data-processing-service
     Agent 1-B: features-delta-one-service, features-calendar-service, features-onchain-service
     Agent 1-C: features-volatility-service, ml-training-service, ml-inference-service
-    Agent 1-D: strategy-service, execution-services, pnl-attribution-service
+    Agent 1-D: strategy-service, execution-service, pnl-attribution-service
 
   Phase 2 (1 agent, after all Phase 1 done):
     Agent 2: QG scaffold audit + hardening across all 12 services

@@ -38,8 +38,8 @@ uv pip install -e unified-defi-execution-interface
 # 4. execution-algo-library
 uv pip install -e execution-algo-library
 
-# 5. Re-install execution-services to pick up new deps
-pip install -e execution-services --no-deps
+# 5. Re-install execution-service to pick up new deps
+pip install -e execution-service --no-deps
 ```
 
 **Uninstall old:** `uv pip uninstall unified-order-interface` (no longer exists)

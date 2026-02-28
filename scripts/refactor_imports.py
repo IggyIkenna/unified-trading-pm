@@ -185,7 +185,7 @@ def main():
         "instruments-service",
         "market-data-processing-service", 
         "strategy-service",
-        "execution-services",
+        "execution-service",
         "position-balance-monitor-service",
         "risk-and-exposure-service"
     ]

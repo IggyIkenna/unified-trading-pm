@@ -1,4 +1,4 @@
-# execution-services: MASTER REFACTORING PLAN
+# execution-service: MASTER REFACTORING PLAN
 
 **Created**: 2026-02-24
 **Status**: Ready for execution
@@ -12,7 +12,7 @@
 - ✅ **Instruction**: Generic term for all action types (trade, swap, lend, stake, etc.)
 - ❌ **Signal**: Old ML-specific term, implies machine learning signal
 - **Source**: strategy-service produces instructions
-- **Mock**: execution-services has local mock for testing in isolation (writes to same bucket as prod for now)
+- **Mock**: execution-service has local mock for testing in isolation (writes to same bucket as prod for now)
 - **Action**: Rename `signal` → `instruction` everywhere in codebase
 
 ### 2. **Results: Separate Library (Batch AND Live)**
@@ -28,7 +28,7 @@
 - **Components**: `BacktestEngineConfig`, `BacktestRunConfig`, `BacktestVenueConfig`
 - **NOT**: Frontend/backend distinction
 - **IS**: Configuration builder for NautilusTrader backtest infrastructure
-- **Location**: `execution_services/backtest/node_builder.py`
+- **Location**: `execution_service/backtest/node_builder.py`
 
 ### 4. **Risk Checker: Package Dependency (NOT HTTP)**
 - **Problem**: HTTP calls are too slow
@@ -145,7 +145,7 @@
     - Move: ResultSerializer, ResultExtractor, result models
     - Works for both batch and live modes
 
-#### Phase 6: Terminology & Config (execution-services)
+#### Phase 6: Terminology & Config (execution-service)
 
 26. ⏳ **Rename Signal → Instruction**
     - Update all files, classes, functions, variables
@@ -183,7 +183,7 @@
     - Use unified-trade-execution-interface
 
 32. ⏳ **Verify Quality Gates** (all 6 repos)
-    - execution-services
+    - execution-service
     - matching-engine-library
     - unified-defi-execution-interface
     - execution-algo-library
@@ -222,7 +222,7 @@
 ## 🏗️ TARGET STRUCTURE
 
 ```
-execution-services/
+execution-service/
 ├── adapters/                    # Thin I/O adapters (<100 lines each)
 │   ├── storage.py              # GCS via StandardizedDomainCloudService
 │   ├── risk_checker.py         # Risk via package dependency (NOT HTTP)
@@ -299,8 +299,8 @@ execution-services/
 
 ## 📚 RELATED DOCUMENTS
 
-1. **Brainstorming**: `.cursor/plans/execution_services_structural_refactoring_brainstorm.md`
-2. **Plan**: `.cursor/plans/execution_services_refactoring_0c597f7f.plan.md`
+1. **Brainstorming**: `.cursor/plans/execution_service_structural_refactoring_brainstorm.md`
+2. **Plan**: `.cursor/plans/execution_service_refactoring_0c597f7f.plan.md`
 3. **Service Structure**: `.cursor/plans/service_structure_standardization_4a4b3ff3.plan.md`
 4. **Structural Analysis**: Previous agent report (agent-xxx)
 5. **Reference**: `instruments-service/` (clean structure example)

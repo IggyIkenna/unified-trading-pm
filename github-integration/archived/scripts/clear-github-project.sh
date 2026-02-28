@@ -176,8 +176,8 @@ interactive_mode() {
                 "live-health-monitor-ui"
                 "batch-audit-ui"
                 "logs-dashboard-ui"
-                "ml-deployment-ui"
-                "backtest-ui"
+                "ml-training-ui"
+                "execution-analytics-ui"
                 "trading-analytics-ui"
                 "settlement-ui"
                 "client-reporting-ui"
@@ -203,7 +203,7 @@ interactive_mode() {
                 "unified-trading-services" "unified-trading-deployment-v2"
                 "unified-trading-codex"
                 "live-health-monitor-ui" "batch-audit-ui" "logs-dashboard-ui"
-                "ml-deployment-ui" "backtest-ui" "trading-analytics-ui"
+                "ml-training-ui" "execution-analytics-ui" "trading-analytics-ui"
                 "settlement-ui" "client-reporting-ui" "strategy-onboarding-ui"
             )
             ;;

@@ -66,7 +66,7 @@ bash 04-run-batch-fix.sh \
 ```bash
 # Copy prompt from AGENT_PROMPT.md
 # Example:
-"Fix all codex violations for execution-services issue #147.
+"Fix all codex violations for execution-service issue #147.
 Follow @WORKFLOW.md for detailed steps."
 ```
 
@@ -102,7 +102,7 @@ All 8 checks from quality gates:
 
 | Repo                           | Issue | Violations |
 | ------------------------------ | ----- | ---------- |
-| execution-services             | #147  | 20         |
+| execution-service             | #147  | 20         |
 | strategy-service               | #23   | 20         |
 | instruments-service            | #58   | 25         |
 | market-data-processing-service | #46   | 14         |
@@ -197,7 +197,7 @@ bash 04-run-batch-fix.sh \
 # Process specific repos only
 bash 04-run-batch-fix.sh \
   --model auto \
-  --repos "execution-services,strategy-service" \
+  --repos "execution-service,strategy-service" \
   --state open
 
 # Preview what would run
@@ -250,7 +250,7 @@ python3 06-generate-manifests.py
 python3 06-generate-manifests.py --dry-run
 
 # Specific repos only
-python3 06-generate-manifests.py --repos "execution-services,strategy-service"
+python3 06-generate-manifests.py --repos "execution-service,strategy-service"
 ```
 
 **What it does:**
@@ -268,8 +268,8 @@ python3 06-generate-manifests.py --repos "execution-services,strategy-service"
 
 ## COD-PRINT: print() statements (5 violations)
 
-- execution_services/main.py:45
-- execution_services/config.py:12 ...
+- execution_service/main.py:45
+- execution_service/config.py:12 ...
 
 ## COD-IMPORT: Imports inside functions (3 violations)
 
@@ -297,7 +297,7 @@ Total violations: 8
 
 ```bash
 python3 utilities/check-codex-violations.py \
-  --repo "IggyIkenna/execution-services" \
+  --repo "IggyIkenna/execution-service" \
   --codex-dir "path/to/unified-trading-codex" \
   --workspace-dir "path/to/workspace" \
   --dry-run \
@@ -332,7 +332,7 @@ violations), see `scripts/core/05-check-file-size-cods.py` (will move to COD-SIZ
 **Example:**
 
 ```
-Fix all codex violations for execution-services issue #147.
+Fix all codex violations for execution-service issue #147.
 
 INFRASTRUCTURE CONTEXT: @WORKFLOW.md sections 1-5
 WORKFLOW: [8 steps...]
@@ -422,7 +422,7 @@ bash 04-run-batch-fix.sh \
 
 ```bash
 # Copy prompt from AGENT_PROMPT.md:
-"Fix all codex violations for execution-services issue #147.
+"Fix all codex violations for execution-service issue #147.
 Follow @WORKFLOW.md for detailed steps."
 ```
 
@@ -449,7 +449,7 @@ bash 04-run-batch-fix.sh \
   --repos "features-calendar-service,features-onchain-service,ml-inference-service" \
   --state open
 
-# Run locally for complex repos (execution-services, unified-trading-deployment-v2)
+# Run locally for complex repos (execution-service, unified-trading-deployment-v2)
 # Use AGENT_PROMPT.md
 ```
 
@@ -469,7 +469,7 @@ bash 04-run-batch-fix.sh \
 - unified-trading-services #52 (not blocked)
 - instruments-service #59 (blocked)
 - strategy-service #25 (blocked)
-- execution-services #150 (blocked)
+- execution-service #150 (blocked)
 - unified-trading-deployment-v2 #127 (blocked)
 - market-tick-data-handler #54 (not blocked)
 

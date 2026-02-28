@@ -7,7 +7,7 @@ WORKSPACE = Path("/Users/ikennaigboaka/Documents/repos/unified-trading-system-re
 
 SERVICES = [
     "instruments-service",
-    "execution-services",
+    "execution-service",
     "market-data-processing-service",
     "market-tick-data-handler",
     "features-volatility-service",

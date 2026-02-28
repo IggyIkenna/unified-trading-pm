@@ -19,7 +19,7 @@ from pathlib import Path
 
 # 13 service repos for Initial Cleanup
 REPOS = [
-    "execution-services",
+    "execution-service",
     "strategy-service",
     "instruments-service",
     "unified-trading-services",

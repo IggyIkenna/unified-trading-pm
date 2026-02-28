@@ -78,7 +78,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     command -v uv &>/dev/null || pip install uv --quiet
     if [ -f "pyproject.toml" ]; then
         # Install workspace path deps first (local dev parity)
-        for dep_dir in "../api-contracts" "../unified-config-interface" "../unified-cloud-interface" "../unified-events-interface"; do
+        for dep_dir in "../unified-api-contracts" "../unified-config-interface" "../unified-cloud-interface" "../unified-events-interface"; do
             if [ -d "$dep_dir" ] && [ -f "$dep_dir/pyproject.toml" ]; then
                 uv pip install -e "$dep_dir" --quiet 2>/dev/null || true
             fi

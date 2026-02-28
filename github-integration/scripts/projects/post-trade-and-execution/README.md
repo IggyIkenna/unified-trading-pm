@@ -14,7 +14,7 @@ This directory contains scripts to automate GitHub Project setup for the Post-Tr
 
 1. Creates GitHub Project with proper fields and views
 2. Creates 2 new service repositories (position-balance-monitor-service, risk-and-exposure-service)
-3. Parses epic breakdown → 20 GitHub issues across 4 repos (2 new + execution-services + live-health-monitor-ui)
+3. Parses epic breakdown → 20 GitHub issues across 4 repos (2 new + execution-service + live-health-monitor-ui)
 4. Links all issues to the project
 5. Provides workflow configuration instructions
 6. Validates setup
@@ -24,7 +24,7 @@ This directory contains scripts to automate GitHub Project setup for the Post-Tr
 
 - NEW: position-balance-monitor-service
 - NEW: risk-and-exposure-service
-- REFACTOR: execution-services (strip to orchestration)
+- REFACTOR: execution-service (strip to orchestration)
 - ENHANCE: live-health-monitor-ui (add manual trading controls)
 
 **Total time:** 40-50 minutes
@@ -67,13 +67,13 @@ bash 01-create-project.sh --org IggyIkenna
 # Output: Project #7 created
 
 # Stage 2: Create repos (Option B - automated)
-# 2 new services + refactor existing execution-services + enhance live-health-monitor-ui
+# 2 new services + refactor existing execution-service + enhance live-health-monitor-ui
 for repo in position-balance-monitor-service risk-and-exposure-service; do
     gh repo create "IggyIkenna/$repo" --private \
         --description "Part of Post-Trade and Execution" \
         --gitignore Python --license MIT
 done
-# Note: execution-services and live-health-monitor-ui already exist (refactor/enhance)
+# Note: execution-service and live-health-monitor-ui already exist (refactor/enhance)
 
 # Stage 3: Create issues (dry run first)
 python 02-create-issues.py \

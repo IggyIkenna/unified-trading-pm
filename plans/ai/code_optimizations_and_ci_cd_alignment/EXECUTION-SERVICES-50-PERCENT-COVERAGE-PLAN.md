@@ -71,13 +71,13 @@
 
 #### 1.1 Update Quality Gate Configuration
 ```bash
-# execution-services/scripts/quality-gates.sh
+# execution-service/scripts/quality-gates.sh
 
 # Update coverage threshold
 MIN_COVERAGE=50  # Changed from 35
 
 # Add coverage reporting enhancements
-COV_ARGS="--cov=execution_services \
+COV_ARGS="--cov=execution_service \
           --cov-config=.coveragerc \
           --cov-report=term-missing \
           --cov-report=html \
@@ -87,7 +87,7 @@ COV_ARGS="--cov=execution_services \
 
 #### 1.2 Create Coverage Analysis Script
 ```bash
-# execution-services/scripts/analyze-coverage.sh
+# execution-service/scripts/analyze-coverage.sh
 #!/bin/bash
 
 set -e
@@ -97,7 +97,7 @@ echo ""
 
 # Run tests with detailed coverage
 python -m pytest tests/unit/ \
-    --cov=execution_services \
+    --cov=execution_service \
     --cov-report=term-missing:skip-covered \
     --cov-report=json \
     -n auto \
@@ -168,7 +168,7 @@ python_functions = ["test_*"]
 
 [tool.coverage.run]
 branch = true
-source = ["execution_services"]
+source = ["execution_service"]
 omit = [
     "*/tests/*",
     "*/test_*.py",
@@ -200,7 +200,7 @@ skip_covered = false
 ```python
 # tests/unit/test_validators_extended.py
 import pytest
-from execution_services.validators import (
+from execution_service.validators import (
     validate_order,
     validate_signal,
     validate_config,
@@ -236,7 +236,7 @@ class TestValidatorsExtended:
 # tests/unit/test_error_handling_comprehensive.py
 import pytest
 from unittest.mock import patch, MagicMock
-from execution_services.exceptions import (
+from execution_service.exceptions import (
     ExecutionError,
     ValidationError,
     RoutingError,
@@ -275,7 +275,7 @@ import pytest
 import json
 import yaml
 from pathlib import Path
-from execution_services.config import (
+from execution_service.config import (
     load_config,
     merge_configs,
     validate_config_schema,
@@ -315,7 +315,7 @@ class TestConfigLoadersExtended:
 # tests/unit/test_engine_comprehensive.py
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from execution_services.engine import (
+from execution_service.engine import (
     ExecutionEngine,
     EngineState,
     EngineConfig
@@ -327,7 +327,7 @@ class TestExecutionEngineComprehensive:
     @pytest.fixture
     def engine(self):
         """Create engine fixture with mocked dependencies."""
-        with patch('execution_services.engine.CloudService') as mock_cloud:
+        with patch('execution_service.engine.CloudService') as mock_cloud:
             mock_cloud.return_value = AsyncMock()
             config = EngineConfig(
                 mode="test",
@@ -371,7 +371,7 @@ class TestExecutionEngineComprehensive:
 # tests/unit/test_signal_processing_extended.py
 import pytest
 import numpy as np
-from execution_services.signals import (
+from execution_service.signals import (
     SignalProcessor,
     SignalAggregator,
     SignalValidator,
@@ -414,7 +414,7 @@ class TestSignalProcessingExtended:
 # tests/unit/test_routing_matrix_comprehensive.py
 import pytest
 import numpy as np
-from execution_services.routing import (
+from execution_service.routing import (
     RoutingMatrix,
     RouteOptimizer,
     RouteCostCalculator
@@ -456,7 +456,7 @@ class TestRoutingMatrixComprehensive:
 # tests/unit/test_cloud_integration_mocked.py
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from execution_services.cloud import (
+from execution_service.cloud import (
     CloudServiceAdapter,
     StorageClient,
     EventPublisher
@@ -468,7 +468,7 @@ class TestCloudIntegrationMocked:
     @pytest.fixture
     def mock_cloud_service(self):
         """Create comprehensive cloud service mocks."""
-        with patch('execution_services.cloud.CloudService') as mock:
+        with patch('execution_service.cloud.CloudService') as mock:
             mock.storage = AsyncMock()
             mock.events = AsyncMock()
             mock.config = Mock()
@@ -498,7 +498,7 @@ class TestCloudIntegrationMocked:
 import pytest
 import json
 from datetime import datetime
-from execution_services.logging import (
+from execution_service.logging import (
     EventLogger,
     LogFormatter,
     LogAggregator
@@ -534,7 +534,7 @@ class TestEventLoggingExtended:
 
 #### 5.1 Test Performance Monitoring
 ```bash
-# execution-services/scripts/monitor-test-performance.sh
+# execution-service/scripts/monitor-test-performance.sh
 #!/bin/bash
 
 set -e
@@ -546,7 +546,7 @@ time python -m pytest tests/unit/ \
     --durations=20 \
     --durations-min=1.0 \
     -n auto \
-    --cov=execution_services \
+    --cov=execution_service \
     --cov-report=term
 
 # Identify slow tests
@@ -591,7 +591,7 @@ def shared_test_data():
 @pytest.fixture(scope="session")
 def mock_cloud_services():
     """Session-scoped cloud service mocks."""
-    with patch('execution_services.cloud.CloudService') as mock:
+    with patch('execution_service.cloud.CloudService') as mock:
         mock.storage = AsyncMock()
         mock.events = AsyncMock()
         yield mock
@@ -663,7 +663,7 @@ def mock_cloud_services():
 
 ```bash
 # 1. Run coverage analysis
-cd execution-services
+cd execution-service
 bash scripts/analyze-coverage.sh
 
 # 2. Update quality gate threshold
@@ -671,13 +671,13 @@ sed -i 's/MIN_COVERAGE=35/MIN_COVERAGE=50/' scripts/quality-gates.sh
 
 # 3. Run quick win test suite
 python -m pytest tests/unit/test_validators*.py tests/unit/test_config*.py \
-    --cov=execution_services --cov-report=term-missing -n auto
+    --cov=execution_service --cov-report=term-missing -n auto
 
 # 4. Run full test suite with new coverage target
 bash scripts/quality-gates.sh --no-fix
 
 # 5. Generate HTML coverage report
-python -m pytest tests/unit/ --cov=execution_services \
+python -m pytest tests/unit/ --cov=execution_service \
     --cov-report=html -n auto
 open htmlcov/index.html
 ```
@@ -701,7 +701,7 @@ def find_untested_functions(module_path):
     # Return untested functions
     pass
 
-# Usage: python tools/find_coverage_gaps.py execution_services/
+# Usage: python tools/find_coverage_gaps.py execution_service/
 ```
 
 ### Test Generator Template
@@ -715,7 +715,7 @@ def generate_test_template(module_path, output_path):
     # Write to output path
     pass
 
-# Usage: python tools/generate_test_template.py execution_services/engine.py
+# Usage: python tools/generate_test_template.py execution_service/engine.py
 ```
 
 ---

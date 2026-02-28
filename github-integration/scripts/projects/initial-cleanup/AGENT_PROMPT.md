@@ -587,10 +587,10 @@ Issue link: https://github.com/IggyIkenna/[REPO_NAME]/issues/[ISSUE_NUMBER]
 
 ### Example Short Prompts
 
-**For execution-services #147:**
+**For execution-service #147:**
 
 ```
-Fix all codex violations for issue #147 in execution-services.
+Fix all codex violations for issue #147 in execution-service.
 
 Follow: @unified-trading-codex/11-project-management/github-integration/scripts/projects/initial-cleanup/AGENT_PROMPT.md
 ```

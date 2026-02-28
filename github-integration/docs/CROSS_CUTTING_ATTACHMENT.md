@@ -35,8 +35,8 @@ GitHub Project Workflows automatically attach issues to multiple projects based 
 
 ```bash
 # check-file-size-cods.py creates issue
-gh issue create --repo IggyIkenna/execution-services \
-  --title "[COD-SIZE] execution_services/engine.py (2340 lines)" \
+gh issue create --repo IggyIkenna/execution-service \
+  --title "[COD-SIZE] execution_service/engine.py (2340 lines)" \
   --label "cod,COD-SIZE,P1-high" \
   --body "..."
 ```
@@ -50,17 +50,17 @@ gh issue create --repo IggyIkenna/execution-services \
 
 **Service Project (Execution Services):**
 
-- Workflow filter: `repo:execution-services`
+- Workflow filter: `repo:execution-service`
 - Issue automatically added to Service Project
 
 #### Result: Issue Appears in BOTH Projects
 
 ```
-Issue #123: [COD-SIZE] execution_services/engine.py (2340 lines)
+Issue #123: [COD-SIZE] execution_service/engine.py (2340 lines)
 
 Appears in:
   - Project #3 (CODs) ✅ via label:cod
-  - Project #4 (Execution Services) ✅ via repo:execution-services
+  - Project #4 (Execution Services) ✅ via repo:execution-service
 ```
 
 ### For Waves (Milestone-Based Features)
@@ -69,8 +69,8 @@ Appears in:
 
 ```bash
 # Delta audit creates issue
-gh issue create --repo IggyIkenna/execution-services \
-  --title "[Gap] execution-services: Add dYdX support" \
+gh issue create --repo IggyIkenna/execution-service \
+  --title "[Gap] execution-service: Add dYdX support" \
   --label "execution,missing_implementation,P1-high" \
   --milestone "Wave1"
 ```
@@ -84,17 +84,17 @@ gh issue create --repo IggyIkenna/execution-services \
 
 **Service Project (Execution Services):**
 
-- Workflow filter: `repo:execution-services`
+- Workflow filter: `repo:execution-service`
 - Issue automatically added to Service Project
 
 #### Result: Issue Appears in BOTH Projects
 
 ```
-Issue #456: [Gap] execution-services: Add dYdX support
+Issue #456: [Gap] execution-service: Add dYdX support
 
 Appears in:
   - Project #1 (Wave 1) ✅ via milestone:Wave1
-  - Project #4 (Execution Services) ✅ via repo:execution-services
+  - Project #4 (Execution Services) ✅ via repo:execution-service
 ```
 
 ## Project Structure
@@ -119,13 +119,13 @@ Appears in:
 
 #### Example: Project #4 - Execution Services
 
-- **Filter:** `repo:execution-services`
-- **Scope:** All issues for execution-services
+- **Filter:** `repo:execution-service`
+- **Scope:** All issues for execution-service
 - **Views:**
-  - **Work Items:** `repo:execution-services -label:cod` (regular work)
-  - **CODs Only:** `repo:execution-services label:cod` (CODs for this service)
-  - **Wave 1 Items:** `repo:execution-services milestone:Wave1` (Wave 1 for this service)
-  - **Epics Only:** `repo:execution-services label:epic -label:cod` (Epic-level work)
+  - **Work Items:** `repo:execution-service -label:cod` (regular work)
+  - **CODs Only:** `repo:execution-service label:cod` (CODs for this service)
+  - **Wave 1 Items:** `repo:execution-service milestone:Wave1` (Wave 1 for this service)
+  - **Epics Only:** `repo:execution-service label:epic -label:cod` (Epic-level work)
 
 ## Benefits
 
@@ -161,16 +161,16 @@ Appears in:
 
 ```bash
 # 1. Script creates issue with cod label
-python3 check-file-size-cods.py --repo execution-services
+python3 check-file-size-cods.py --repo execution-service
 
 # 2. GitHub automatically adds to:
 #    - COD Project (#3) via label:cod
-#    - Execution Services Project (#4) via repo:execution-services
+#    - Execution Services Project (#4) via repo:execution-service
 
 # 3. Developer works on issue in either project view
 
 # 4. Close issue once:
-gh issue close 123 --repo IggyIkenna/execution-services
+gh issue close 123 --repo IggyIkenna/execution-service
 
 # 5. Issue disappears from BOTH projects
 ```
@@ -179,11 +179,11 @@ gh issue close 123 --repo IggyIkenna/execution-services
 
 ```bash
 # 1. Delta audit creates issue with Wave1 milestone
-python3 run-diff-checker.py --repo execution-services
+python3 run-diff-checker.py --repo execution-service
 
 # 2. GitHub automatically adds to:
 #    - Wave 1 Project (#1) via milestone:Wave1
-#    - Execution Services Project (#4) via repo:execution-services
+#    - Execution Services Project (#4) via repo:execution-service
 
 # 3. PM tracks progress in Wave 1 Project
 # 4. Developer works in Service Project
@@ -196,22 +196,22 @@ From Execution Services Project (#4):
 
 **View: All Work**
 
-- Filter: `repo:execution-services`
+- Filter: `repo:execution-service`
 - Shows: CODs, Waves, regular work, epics
 
 **View: CODs Only**
 
-- Filter: `repo:execution-services label:cod`
+- Filter: `repo:execution-service label:cod`
 - Shows: Only CODs for this service
 
 **View: Wave 1 Only**
 
-- Filter: `repo:execution-services milestone:Wave1`
+- Filter: `repo:execution-service milestone:Wave1`
 - Shows: Only Wave 1 work for this service
 
 **View: Regular Work**
 
-- Filter: `repo:execution-services -label:cod -milestone:Wave1`
+- Filter: `repo:execution-service -label:cod -milestone:Wave1`
 - Shows: Only non-COD, non-Wave work
 
 ## Setup Instructions

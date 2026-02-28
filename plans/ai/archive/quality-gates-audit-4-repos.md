@@ -118,7 +118,7 @@
 ### 2. UI smoke tests
 
 - None of these 4 repos are UI repos
-- UI smoke tests: see `quality-gates-ui-typescript.md`; backtest-ui, onboarding-ui, etc. need `tsc --noEmit` + ESLint, not pytest
+- UI smoke tests: see `quality-gates-ui-typescript.md`; execution-analytics-ui, onboarding-ui, etc. need `tsc --noEmit` + ESLint, not pytest
 
 ### 3. Test structure
 

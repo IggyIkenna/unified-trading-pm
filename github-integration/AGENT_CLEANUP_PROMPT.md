@@ -64,13 +64,13 @@ IMPORTANT:
 
 ## Example Usage
 
-### Example 1: execution-services #147
+### Example 1: execution-service #147
 
 ```
-Fix all codex violations for execution-services issue #147.
+Fix all codex violations for execution-service issue #147.
 
 WORKFLOW:
-1. Pull issue #147 from IggyIkenna/execution-services
+1. Pull issue #147 from IggyIkenna/execution-service
 2. Ensure quality gates script is up-to-date (has Check 5: imports inside functions)
 3. Fix all violations listed in the issue
 4. Run quality gates: bash scripts/quality-gates.sh --no-fix

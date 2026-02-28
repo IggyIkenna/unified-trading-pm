@@ -24,22 +24,22 @@
     "slug": "program-dual-cloud-readiness-close-pending-program-gap-criteria-and-schema-defined-checklist-yaml-expansion-and-sync-implementation-pending"
   },
   {
-    "title": "[Delta Audit][execution-services] remove residual position-tracking responsibility",
+    "title": "[Delta Audit][execution-service] remove residual position-tracking responsibility",
     "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
     "milestone": "Live90",
-    "slug": "service-execution-services-remove-residual-position-tracking-responsibility"
+    "slug": "service-execution-service-remove-residual-position-tracking-responsibility"
   },
   {
-    "title": "[Delta Audit][execution-services] integrate with externalized risk/exposure/pnl services",
+    "title": "[Delta Audit][execution-service] integrate with externalized risk/exposure/pnl services",
     "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
     "milestone": "Live90",
-    "slug": "service-execution-services-integrate-with-externalized-risk-exposure-pnl-services"
+    "slug": "service-execution-service-integrate-with-externalized-risk-exposure-pnl-services"
   },
   {
-    "title": "[Delta Audit][execution-services] enforce exchange-interface thin-adapter boundary",
+    "title": "[Delta Audit][execution-service] enforce exchange-interface thin-adapter boundary",
     "labels": ["issue", "P1-high", "lane/audit-remediation", "area/architecture", "owner-default/ikenna"],
     "milestone": "Live90",
-    "slug": "service-execution-services-enforce-exchange-interface-thin-adapter-boundary"
+    "slug": "service-execution-service-enforce-exchange-interface-thin-adapter-boundary"
   },
   {
     "title": "[Delta Audit][strategy-service] extraction plan for embedded responsibilities",

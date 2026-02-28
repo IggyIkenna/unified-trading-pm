@@ -134,7 +134,7 @@
         "area/observability"
       ],
       "milestone": "Commercialization",
-      "slug": "card-10-ml-deployment-ui"
+      "slug": "card-10-ml-training-ui"
     },
     {
       "title": "[Epic] ClientOnboardingReporting: Client Onboarding and Reporting UI",

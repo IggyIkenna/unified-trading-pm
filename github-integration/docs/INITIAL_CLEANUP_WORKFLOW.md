@@ -9,7 +9,7 @@
 **Complex**: 200+ COD issues across 14 repos
 
 - instruments-service: 20 files with COD-SIZE violations
-- execution-services: 15 files with COD-SIZE violations
+- execution-service: 15 files with COD-SIZE violations
 - strategy-service: 10 files with COD-SIZE violations
 - ... (11 more repos)
 
@@ -47,7 +47,7 @@
 
 | Issue | Repo                           | Est. COD Violations |
 | ----- | ------------------------------ | ------------------- |
-| #639  | execution-services             | 15 files            |
+| #639  | execution-service             | 15 files            |
 | #640  | strategy-service               | 10 files            |
 | #641  | instruments-service            | 20 files            |
 | #642  | unified-trading-services       | 5 files             |
@@ -171,7 +171,7 @@ gh pr checks <PR-number>
 14 Repos → 14 Issues → 7 Workers → 2 Batches
 
 Batch 1 (7 repos):
-  Worker 1: execution-services (15 CODs sequential)
+  Worker 1: execution-service (15 CODs sequential)
   Worker 2: strategy-service (10 CODs sequential)
   Worker 3: instruments-service (20 CODs sequential)
   Worker 4: unified-trading-services (5 CODs sequential)
@@ -189,19 +189,19 @@ Batch 2 (7 repos):
   Worker 7: unified-trading-deployment-v2 (3 CODs sequential)
 ```
 
-### Per-Worker Flow (Example: Worker 1 → execution-services)
+### Per-Worker Flow (Example: Worker 1 → execution-service)
 
 ```bash
-# Worker 1 assigned to execution-services (issue #639)
+# Worker 1 assigned to execution-service (issue #639)
 
 # Step 1: Clone to isolated workspace
-/tmp/batch-fix-pool-XXXXXX/execution-services_clone_1/
+/tmp/batch-fix-pool-XXXXXX/execution-service_clone_1/
 
 # Step 2: Scan for COD violations (15 files)
 files_to_fix = [
-    "execution_services/order_manager.py (2100 lines)",
-    "execution_services/position_tracker.py (1850 lines)",
-    "execution_services/risk_manager.py (1750 lines)",
+    "execution_service/order_manager.py (2100 lines)",
+    "execution_service/position_tracker.py (1850 lines)",
+    "execution_service/risk_manager.py (1750 lines)",
     ... (12 more)
 ]
 
@@ -217,9 +217,9 @@ for file in files_to_fix:
     # h. Move to next file
 
 # Step 4: Cleanup workspace
-rm -rf /tmp/batch-fix-pool-XXXXXX/execution-services_clone_1/
+rm -rf /tmp/batch-fix-pool-XXXXXX/execution-service_clone_1/
 
-# Result: 15 PRs for execution-services, all merged
+# Result: 15 PRs for execution-service, all merged
 ```
 
 ---

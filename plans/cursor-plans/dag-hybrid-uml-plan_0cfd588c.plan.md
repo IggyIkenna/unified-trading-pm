@@ -56,7 +56,7 @@ isProject: false
 - Add `UDC` implementation (e.g., `GcsModelArtifactStore`) that satisfies the protocol.
 - Wire `ml-training-service` and `ml-inference-service` to inject the `UDC` implementation.
 - Remove service→service deps from pyproject/manifest:
-  - `execution-services -> instruments-service` (and related service deps)
+  - `execution-service -> instruments-service` (and related service deps)
   - `ml-inference-service -> ml-training-service`
   - `market-tick-data-handler -> instruments-service`
 

@@ -142,7 +142,7 @@ Excludes: tests, scripts, .venv, build, **pycache**
   - unified-trading-deployment-v3 (data_status.py)
   - market-data-processing-service (cloud_data_provider.py)
   - market-tick-data-handler (download_handler.py)
-  - execution-services (visualizer-api data_service.py)
+  - execution-service (visualizer-api data_service.py)
   - instruments-service (comments/docs only)
 
 ### 0.3 Remove UnifiedCloudService Legacy Class
@@ -151,7 +151,7 @@ Excludes: tests, scripts, .venv, build, **pycache**
 - **Repos to update:**
   - unified-trading-services (core refactor)
   - unified-domain-client (factories re-export — update or remove)
-  - execution-services (test_ucs_integration.py — update or remove)
+  - execution-service (test_ucs_integration.py — update or remove)
 
 ### 0.4 Migrate UnifiedCloudServicesConfig to UCI
 

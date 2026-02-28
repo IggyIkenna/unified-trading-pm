@@ -22,7 +22,7 @@ Workspace root: 0 `.md` files at root (no stray docs). Codex root: only GLOSSARY
 | Area | Count | Notes |
 |------|-------|-------|
 | batch/ | 31 entries | Includes meta (_cross-service-concerns, corporate-actions, cross-service), exchange-interface-library, unified-trading-deployment-v3 |
-| live/ | 18 entries | Missing: alerting-system, backtest-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui, logs-dashboard-ui, ml-deployment-ui, settlement-ui, strategy-onboarding-ui, trading-analytics-ui |
+| live/ | 18 entries | Missing: alerting-system, execution-analytics-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui, logs-dashboard-ui, ml-training-ui, settlement-ui, strategy-onboarding-ui, trading-analytics-ui |
 
 ## Deployment-v2 References to Fix
 
@@ -47,15 +47,15 @@ Workspace root: 0 `.md` files at root (no stray docs). Codex root: only GLOSSARY
 | Mode | Count |
 |------|-------|
 | batch/per-service/ | 30 |
-| live/per-service/ | 3 (execution-services, instruments-service, strategy-service) |
+| live/per-service/ | 3 (execution-service, instruments-service, strategy-service) |
 
 **Gap:** Live has 3; batch has 30. Live per-service docs sparse.
 
 ## Deployment-v3 Checklist Coverage
 
-18 entries: corporate-actions, execution-services, features-*-service (4), instruments-service, market-*, ml-*, pnl-attribution, position-balance-monitor, risk-and-exposure, strategy-service, template, unified-trading-services, prerequisites, PRIORITY_SUMMARY
+18 entries: corporate-actions, execution-service, features-*-service (4), instruments-service, market-*, ml-*, pnl-attribution, position-balance-monitor, risk-and-exposure, strategy-service, template, unified-trading-services, prerequisites, PRIORITY_SUMMARY
 
-**Missing from checklist vs manifest:** Most libraries, api-contracts, UIs (backtest-ui, batch-audit-ui, etc.), onboarding-ui, settlement-ui.
+**Missing from checklist vs manifest:** Most libraries, api-contracts, UIs (execution-analytics-ui, batch-audit-ui, etc.), onboarding-ui, settlement-ui.
 
 ## Other Gaps
 
