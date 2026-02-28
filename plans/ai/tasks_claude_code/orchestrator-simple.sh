@@ -40,7 +40,7 @@ REPOS=(
     "unified-trade-execution-interface"
     "unified-domain-client"
     "execution-algo-library"
-    "alerting-system"
+    "alerting-service"
     "unified-trading-deployment-v3"
     "unified-trading-deployment-v3"
 )

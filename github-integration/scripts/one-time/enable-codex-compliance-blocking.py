@@ -27,7 +27,7 @@ NC = "\033[0m"
 WORKSPACE_ROOT = Path(__file__).resolve().parents[5]
 
 REPOS = [
-    "execution-services",
+    "execution-service",
     "strategy-service",
     "instruments-service",
     "unified-trading-services",

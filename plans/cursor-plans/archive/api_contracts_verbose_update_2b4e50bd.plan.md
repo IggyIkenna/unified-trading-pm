@@ -65,7 +65,7 @@ isProject: false
 - **unified-trade-execution-interface:** factory, schemas, base_adapter
 - **position-balance-monitor-service:** account_query_client
 - **risk-and-exposure-service:** models, tests
-- **execution-services:** manual_schemas, manual_instruction_api, specs, nautilus_compatibility
+- **execution-service:** manual_schemas, manual_instruction_api, specs, nautilus_compatibility
 - **settlement-ui, live-health-monitor-ui:** ManualTradingPanel, ManualTradingControls, App
 - **execution-algo-library:** SOR tests
 - **instruments-service:** DEPENDENCIES.md
@@ -89,7 +89,7 @@ isProject: false
 - **OKX v5:** Single base URL; `instType` distinguishes SPOT, MARGIN, SWAP, FUTURES, OPTION. One API for all instrument types. **Validate:** Confirm we always use v5 unified; no legacy spot-only or futures-only endpoints.
 - **Bybit v5:** Single base URL; `category` distinguishes spot, linear, inverse, option. One API for all. **Validate:** Confirm we always use v5 unified; no legacy split.
 
-**Action:** Audit UMI, UTEI, URDI, execution-services for any Bybit/OKX usage. Ensure all use unified v5. Document in api-contracts that we contract the unified API only.
+**Action:** Audit UMI, UTEI, URDI, execution-service for any Bybit/OKX usage. Ensure all use unified v5. Document in api-contracts that we contract the unified API only.
 
 ---
 
@@ -252,7 +252,7 @@ Same as task list; CEX withdrawal excludes Kraken.
 | 10.2 | Delete UMI kraken adapter, factory refs                                     | unified-market-interface          |
 | 10.3 | Delete URDI kraken adapter, factory refs                                    | unified-reference-data-interface  |
 | 10.4 | Remove Kraken from UTEI factory, schemas                                    | unified-trade-execution-interface |
-| 10.5 | Remove from position-balance-monitor, risk-and-exposure, execution-services | Services                          |
+| 10.5 | Remove from position-balance-monitor, risk-and-exposure, execution-service | Services                          |
 | 10.6 | Remove from codex docs, rules, epics, validators                            | unified-trading-codex             |
 | 10.7 | Remove from UI (settlement-ui, live-health-monitor-ui)                      | UIs                               |
 | 10.8 | Remove from unified-trading-pm plans, task lists                            | PM                                |
@@ -338,7 +338,7 @@ Cloud SDKs, Quota, DeFi/MEV, TradFi/VIX — as in original plan.
 | unified-reference-data-interface/                                               | Delete adapters/kraken.py; remove from factory                                                                    |
 | unified-trade-execution-interface/                                              | Remove Kraken from factory, schemas                                                                               |
 | unified-trading-codex/                                                          | Remove Kraken from all docs, rules, epics, validators                                                             |
-| position-balance-monitor-service, risk-and-exposure-service, execution-services | Remove Kraken refs                                                                                                |
+| position-balance-monitor-service, risk-and-exposure-service, execution-service | Remove Kraken refs                                                                                                |
 | settlement-ui, live-health-monitor-ui                                           | Remove Kraken from venue dropdowns                                                                                |
 | unified-trading-pm/                                                             | Remove Kraken from plans, task lists                                                                              |
 
@@ -356,7 +356,7 @@ Cloud SDKs, Quota, DeFi/MEV, TradFi/VIX — as in original plan.
 | **2**  | Kraken removal    | Delete adapters/kraken.py; remove from factory, ws_handlers, data_source_mapping, schemas                                                  | unified-market-interface                                              |
 | **3**  | Kraken removal    | Delete adapters/kraken.py; remove from factory, tests                                                                                      | unified-reference-data-interface                                      |
 | **4**  | Kraken removal    | Remove Kraken from factory, schemas, base_adapter                                                                                          | unified-trade-execution-interface                                     |
-| **5**  | Kraken removal    | Remove from account_query_client, models, manual_schemas, manual_instruction_api, specs, nautilus_compatibility                            | position-balance-monitor, risk-and-exposure, execution-services       |
+| **5**  | Kraken removal    | Remove from account_query_client, models, manual_schemas, manual_instruction_api, specs, nautilus_compatibility                            | position-balance-monitor, risk-and-exposure, execution-service       |
 | **6**  | Kraken removal    | Remove from all docs, rules, epics, validators, subscription-model, architecture                                                           | unified-trading-codex                                                 |
 | **7**  | Kraken removal    | Remove from ManualTradingPanel, ManualTradingControls, App; remove from PM plans, task lists                                               | settlement-ui, live-health-monitor-ui, unified-trading-pm             |
 | **8**  | Kraken removal    | Remove from execution-algo-library SOR, instruments-service DEPENDENCIES, market-tick-data-handler nautilus_schema                         | execution-algo-library, instruments-service, market-tick-data-handler |
@@ -379,7 +379,7 @@ Cloud SDKs, Quota, DeFi/MEV, TradFi/VIX — as in original plan.
 | 2     | UMI                   | Done   | Deleted adapters/kraken.py; updated factory, ws_handlers, data_source_mapping, schemas; 57 tests pass            |
 | 3     | URDI                  | Done   | Deleted adapters/kraken.py; updated factory, tests                                                               |
 | 4     | UTEI                  | Done   | Removed from factory, base_adapter; 39 tests pass                                                                |
-| 5     | Services              | Done   | PBM, risk-and-exposure, execution-services updated                                                               |
+| 5     | Services              | Done   | PBM, risk-and-exposure, execution-service updated                                                               |
 | 6     | Codex                 | Done   | 40+ files; validate-alignment.py keeps forbidden_venues={"KRAKEN"} as guard                                      |
 | 7     | UIs + PM              | Done   | settlement-ui, live-health-monitor-ui, unified-trading-pm plans                                                  |
 | 8     | Algo/instruments/tick | Done   | execution-algo-library, instruments-service, market-tick-data-handler, unified-trading-services                  |
@@ -411,7 +411,7 @@ Cloud SDKs, Quota, DeFi/MEV, TradFi/VIX — as in original plan.
 | **7**  | Cloud SDKs AWS                  | 7.1–7.6: EC2, ECS, S3, Glue, Service Quotas schemas                                                            | api-contracts/cloud_sdks                            |
 | **8**  | Quota handling                  | 8.1–8.5: QuotaBrokerClient, QuotaExceededMessage, VmQuotaShape                                                 | api-contracts, unified-trading-deployment-v3        |
 | **9**  | DeFi / MEV / Transfers          | 9.1–9.5: MEV schemas, protocol SDKs, eth_sendRawTransaction, CEX withdrawal                                    | api-contracts                                       |
-| **10** | Cross-cutting, TradFi           | 11.1–12.6, 10.1–10.4: SCHEMA_VERSIONS.md, endpoints.py, chain validation, Barchart, VIX                        | api-contracts, strategy-service, execution-services |
+| **10** | Cross-cutting, TradFi           | 11.1–12.6, 10.1–10.4: SCHEMA_VERSIONS.md, endpoints.py, chain validation, Barchart, VIX                        | api-contracts, strategy-service, execution-service |
 
 
 **Execution:** 10 agents launched in parallel; all completed.
@@ -564,8 +564,8 @@ Phase 3 agents completed 2026-02-26. See agent reports for Binance, OKX/Bybit, D
 | **2**  | ENDPOINT_SCHEMA_MAP + SCHEMA_VERSIONS | Audit Phase 4 schemas; add any missing ENDPOINT_SCHEMA_MAP entries; add sports venues + new CEX/DeFi venues to SCHEMA_VERSIONS.md                                     |
 | **3**  | check_sdk_version_alignment.py        | Extend script to accept --interface-path for self-check; add all api-contracts consumers (20+ repos) to INTERFACES list                                               |
 | **4**  | Interface quality gates (batch 1)     | Add SDK alignment step to UMI, UTEI, URDI, unified-cloud-interface, unified-trading-services quality-gates.sh                                                         |
-| **5**  | Interface quality gates (batch 2)     | Add SDK alignment step to market-tick-data-handler, instruments-service, execution-services, strategy-service, pnl-attribution-service                                |
-| **6**  | Interface quality gates (batch 3)     | Add SDK alignment step to ml-inference-service, ml-training-service, features-*, position-balance-monitor, risk-and-exposure, market-data-processing, alerting-system |
+| **5**  | Interface quality gates (batch 2)     | Add SDK alignment step to market-tick-data-handler, instruments-service, execution-service, strategy-service, pnl-attribution-service                                |
+| **6**  | Interface quality gates (batch 3)     | Add SDK alignment step to ml-inference-service, ml-training-service, features-*, position-balance-monitor, risk-and-exposure, market-data-processing, alerting-service |
 | **7**  | api-contracts docs consolidation      | Create API_CONTRACTS_CHAIN_OF_EVENTS.md; consolidate SCHEMA_VALIDATION_SUMMARY, README, collected_responses flow; remove/archive obsolete docs                        |
 | **8**  | Interface docs consolidation          | Create INTERFACE_API_CONTRACTS_FLOW.md in UMI, UTEI, URDI; document chain: config → SDK → api-contracts validation → adapter; remove obsolete methods/docs            |
 | **9**  | Codex docs updates                    | Update 02-data, 05-infrastructure/unified-libraries, 06-coding-standards for api-contracts chain, schema-validation, version alignment; add API contracts section     |
@@ -596,8 +596,8 @@ Phase 3 agents completed 2026-02-26. See agent reports for Binance, OKX/Bybit, D
 | 2     | ENDPOINT_SCHEMA_MAP + SCHEMA_VERSIONS | Done   | Sports, Deribit, Hyperliquid, Aster, DeFi sections; BASE_URLS; ENDPOINT_SCHEMA_MAP entries                                                     |
 | 3     | check_sdk_version_alignment           | Done   | --interface-path; INTERFACES extended to 20 repos; api-contracts version check for all consumers                                               |
 | 4     | Quality gates batch 1                 | Done   | UMI, UTEI, URDI, unified-cloud-interface, unified-trading-services                                                                             |
-| 5     | Quality gates batch 2                 | Done   | market-tick-data-handler, instruments-service, execution-services, strategy-service, pnl-attribution-service                                   |
-| 6     | Quality gates batch 3                 | Done   | ml-inference, ml-training, features-*, position-balance-monitor, risk-and-exposure, market-data-processing, alerting-system                    |
+| 5     | Quality gates batch 2                 | Done   | market-tick-data-handler, instruments-service, execution-service, strategy-service, pnl-attribution-service                                   |
+| 6     | Quality gates batch 3                 | Done   | ml-inference, ml-training, features-*, position-balance-monitor, risk-and-exposure, market-data-processing, alerting-service                    |
 | 7     | api-contracts docs                    | Done   | docs/API_CONTRACTS_CHAIN_OF_EVENTS.md; README consolidated; SCHEMA_VALIDATION_SUMMARY.md removed                                               |
 | 8     | Interface docs                        | Done   | UMI, UTEI, URDI docs/INTERFACE_API_CONTRACTS_FLOW.md; CONSOLIDATION_COMPLETE.md, TRADFI_ADAPTERS_CONSOLIDATED.md removed                       |
 | 9     | Codex docs                            | Done   | 02-data/api-contracts-chain.md; schema-governance, dependency-matrix, 06-coding-standards updates                                              |

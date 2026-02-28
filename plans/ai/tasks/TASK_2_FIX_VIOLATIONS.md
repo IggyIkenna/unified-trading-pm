@@ -89,7 +89,7 @@ subagent_type: generalPurpose
 prompt: |
   Fix empty fallbacks and Type Any in 6 services.
   
-  Repos: ml-training-service, ml-inference-service, strategy-service, execution-services, risk-and-exposure-service, position-balance-monitor-service
+  Repos: ml-training-service, ml-inference-service, strategy-service, execution-service, risk-and-exposure-service, position-balance-monitor-service
   
   Same approach as Agent 1.
   
@@ -119,7 +119,7 @@ subagent_type: generalPurpose
 prompt: |
   Fix empty fallbacks and Type Any in 4 deployment repos.
   
-  Repos: unified-trading-deployment-v3, unified-trading-deployment-v3, execution-algo-library, alerting-system
+  Repos: unified-trading-deployment-v3, unified-trading-deployment-v3, execution-algo-library, alerting-service
   
   Same approach as Agent 1.
   
@@ -214,7 +214,7 @@ Resume Agent 1 (fix QG) → Reports back (SUCCESS!)
 - Need dedicated work:
   - ml-training-service: ~20 violations
   - strategy-service: 50+ violations, 195 print statements
-  - execution-services: 60+ violations
+  - execution-service: 60+ violations
 - Tokens: ~53K (~$0.04)
 - Time: ~18 minutes
 
@@ -236,7 +236,7 @@ Resume Agent 1 (fix QG) → Reports back (SUCCESS!)
 - unified-trading-deployment-v3: ~252 violations fixed ✅
 - unified-trading-deployment-v3: ~150 violations fixed ✅
 - execution-algo-library: Clean ✅
-- alerting-system: Not a git repo, clean ✅
+- alerting-service: Not a git repo, clean ✅
 - Tokens: ~60K (~$0.045)
 - Time: ~12 minutes
 
@@ -254,7 +254,7 @@ Resume Agent 1 (fix QG) → Reports back (SUCCESS!)
 ## ⚠️ REMAINING WORK (→ TASK_4)
 - ml-training-service: ~20 violations
 - strategy-service: ~56 violations + 195 print statements
-- execution-services: ~75 violations
+- execution-service: ~75 violations
 - market-data-processing-service: Optional config patterns (→ Context7)
 - features-onchain-service: External API responses (→ Context7)
 

@@ -14,7 +14,7 @@
 | # | Task | Repo | Sub-Agent |
 |---|------|------|-----------|
 | 1 | Remove config fallback + fix path deps + remove quality gates bypass | risk-and-exposure-service | Agent 1 |
-| 2 | Update UCS >=1.5.0 + add test-in-image | pnl-attribution-service, alerting-system | Agent 2 |
+| 2 | Update UCS >=1.5.0 + add test-in-image | pnl-attribution-service, alerting-service | Agent 2 |
 | 3 | Update UCS >=1.5.0 | unified-trading-deployment-v3 | Agent 3 |
 | 4 | Fix path deps (clone to `../`) | ml-inference-service | Agent 1 |
 
@@ -35,7 +35,7 @@ Sub-Agent 1 (risk-and-exposure-service):
 - Fix path deps: quality-gates.yml must clone to `../` not deps/ or ./
 - Remove quality gates bypass: Remove `|| echo "⚠️ Quality gates need work"` from quality gates step
 
-Sub-Agent 2 (pnl-attribution-service, alerting-system):
+Sub-Agent 2 (pnl-attribution-service, alerting-service):
 - Update pyproject.toml: unified-trading-services to >=1.5.0 or >=1.5.0,<2.0.0
 - Add test-in-image pattern to cloudbuild.yaml (see ALIGNMENT_SUMMARY §3 for template)
 
