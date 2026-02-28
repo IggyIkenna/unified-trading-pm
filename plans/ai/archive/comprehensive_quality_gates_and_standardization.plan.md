@@ -9,7 +9,7 @@ todos:
     content: "Phase 1B: Harden 11 service quality gates (basedpyright, E501, codex checks)"
     status: pending
   - id: ui-quality-gates
-    content: "Phase 1C: Add UI quality gates to 3 repos (onboarding-ui, execution-services/visualizer-ui, UTDv2/ui)"
+    content: "Phase 1C: Add UI quality gates to 3 repos (onboarding-ui, execution-service/visualizer-ui, UTDv2/ui)"
     status: pending
   - id: instruments-remove-app-core
     content: "Phase 1D: CRITICAL - Delete instruments-service app/core/ directory (2 compatibility wrappers)"
@@ -163,7 +163,7 @@ Based on fresh investigation (Feb 23, 2026), this plan addresses **quality gate 
 7. ml-training-service — Uses `pyright`, E501 ignored
 8. ml-inference-service — Uses `pyright`, E501 ignored, **uses `pip` not `uv`** (P0!)
 9. strategy-service — Uses `pyright` (informational only, not blocking), has app/core/
-10. execution-services — Uses `pyright` (informational only), uses `pip` in one place
+10. execution-service — Uses `pyright` (informational only), uses `pip` in one place
 11. position-balance-monitor-service — Status unknown (likely hardened)
 
 **Python libraries (2):**
@@ -174,7 +174,7 @@ Based on fresh investigation (Feb 23, 2026), this plan addresses **quality gate 
 **TypeScript UIs (3):**
 
 - onboarding-ui — Missing GitHub workflow
-- execution-services/visualizer-ui — Missing quality-gates.sh, missing workflow, has `strict: false`
+- execution-service/visualizer-ui — Missing quality-gates.sh, missing workflow, has `strict: false`
 - unified-trading-deployment-v3/ui — Missing quality-gates.sh, missing workflow
 
 **Deployment (1):**
@@ -394,7 +394,7 @@ dev = [
 These have hardened quality gates but pyright is "informational only":
 
 1. **strategy-service** — Remove `|| true` or informational flags, make blocking
-2. **execution-services** — Remove `|| true`, fix `pip` → `uv pip` (one occurrence)
+2. **execution-service** — Remove `|| true`, fix `pip` → `uv pip` (one occurrence)
 
 **Category B5: Verify position-balance-monitor (1 repo)**
 
@@ -407,15 +407,15 @@ These have hardened quality gates but pyright is "informational only":
 
 - Missing: `.github/workflows/quality-gates.yml`
 - Already has: `scripts/quality-gates.sh`, `tsconfig.json` with `strict: true`
-- **Action:** Copy GitHub workflow from `backtest-ui`
+- **Action:** Copy GitHub workflow from `execution-analytics-ui`
 
-**execution-services/visualizer-ui (embedded):**
+**execution-service/visualizer-ui (embedded):**
 
-- Missing: `scripts/quality-gates-ui.sh` in execution-services
+- Missing: `scripts/quality-gates-ui.sh` in execution-service
 - Missing: GitHub workflow step for UI
 - Issue: `tsconfig.json` has `strict: false` (should be `true`)
 - **Actions:**
-  1. Create quality-gates-ui.sh in execution-services/scripts/
+  1. Create quality-gates-ui.sh in execution-service/scripts/
   2. Add workflow step to .github/workflows/quality-gates.yml
   3. Update `tsconfig.json` to set `strict: true`
 
@@ -500,7 +500,7 @@ These have hardened quality gates but pyright is "informational only":
 | ml-training-service              | train                                    | 1 operation (stages via --stage flag)          |
 | ml-inference-service             | infer                                    | 1 operation                                    |
 | strategy-service                 | backtest, live_trade                     | 2 operations                                   |
-| execution-services               | execute                                  | 1 operation (event-driven, mode from config)   |
+| execution-service               | execute                                  | 1 operation (event-driven, mode from config)   |
 | risk-and-exposure-service        | compute                                  | 1 operation (mode from config)                 |
 | position-balance-monitor-service | monitor                                  | 1 operation (mode from config)                 |
 | pnl-attribution-service          | compute                                  | 1 operation (mode hardcoded)                   |
@@ -560,7 +560,7 @@ def parse_arguments():
 - Agent 1: instruments-service, market-tick-data-handler, market-data-processing-service
 - Agent 2: features-calendar, features-delta-one, features-volatility, features-onchain
 - Agent 3: ml-training, ml-inference, strategy-service
-- Agent 4: execution-services, risk-and-exposure, position-balance-monitor, pnl-attribution
+- Agent 4: execution-service, risk-and-exposure, position-balance-monitor, pnl-attribution
 
 **Per-service effort:** ~15-20 min each × 4 agents in parallel = ~15-20 min total
 
@@ -971,12 +971,12 @@ rg "DEPRECATED|TODO.*REMOVE|LEGACY|SUPERSEDED" --type py -i
 - Agent 1: market-tick-data-handler, market-data-processing-service, features-volatility-service
 - Agent 2: ml-training-service, ml-inference-service (after P0), features-calendar-service
 - Agent 3: features-delta-one-service, features-onchain-service, position-balance-monitor-service
-- Agent 4: strategy-service, execution-services
+- Agent 4: strategy-service, execution-service
 
 **Wave 1D: UI Repos (3 repos, 3 agents in parallel) — 15 min**
 
 - Agent 1: onboarding-ui (add workflow)
-- Agent 2: execution-services/visualizer-ui (add script, workflow, strict mode)
+- Agent 2: execution-service/visualizer-ui (add script, workflow, strict mode)
 - Agent 3: unified-trading-deployment-v3/ui (add script, workflow)
 
 **Total Phase 1 time:** ~55 min (parallel execution)
@@ -1042,7 +1042,7 @@ rg "app\.core" --type py
 - Agent 1: instruments-service, market-tick-data-handler, market-data-processing-service
 - Agent 2: features-calendar, features-delta-one, features-volatility, features-onchain
 - Agent 3: ml-training, ml-inference, strategy-service
-- Agent 4: execution-services, risk-and-exposure, position-balance-monitor, pnl-attribution
+- Agent 4: execution-service, risk-and-exposure, position-balance-monitor, pnl-attribution
 
 **Each agent updates:**
 1. `cli/parser.py` — Add `--operation` flag, change `--mode` to universal ["batch", "live"]
@@ -1071,7 +1071,7 @@ rg "app\.core" --type py
 - Agent 1: market-tick-data-handler, features-calendar-service, features-delta-one-service
 - Agent 2: features-volatility-service, features-onchain-service, ml-training-service
 - Agent 3: ml-inference-service, risk-and-exposure-service, position-balance-monitor-service
-- Agent 4: pnl-attribution-service, execution-services
+- Agent 4: pnl-attribution-service, execution-service
 
 **Checkpoint:** ALL 14 services have engine/adapters/cli structure, ZERO services have app/core/ remaining
 
@@ -1182,7 +1182,7 @@ rg "app\.core" --type py
 ### Group E: Trading Services (4 repos)
 
 - strategy-service ⚠️ (quality gates partial)
-- execution-services ⚠️ (quality gates partial)
+- execution-service ⚠️ (quality gates partial)
 - risk-and-exposure-service ✅ (done)
 - position-balance-monitor-service ⚠️ (verify)
 
@@ -1194,7 +1194,7 @@ rg "app\.core" --type py
 ### Group G: UI Repos (3 repos)
 
 - onboarding-ui ❌ (needs workflow)
-- execution-services/visualizer-ui ❌ (needs script + workflow + strict)
+- execution-service/visualizer-ui ❌ (needs script + workflow + strict)
 - unified-trading-deployment-v3/ui ❌ (needs script + workflow)
 
 ### Group H: Deployment (1 repo)
@@ -1366,7 +1366,7 @@ if [ $? -ne 0 ]; then
 fi
 ```
 
-1. Fix execution-services: `pip install ruff` → `uv pip install ruff==0.15.0`
+1. Fix execution-service: `pip install ruff` → `uv pip install ruff==0.15.0`
 
 **Step 5: Add tests to low-coverage libraries (if needed)**
 
@@ -1377,9 +1377,9 @@ fi
 
 **Pattern for standalone UIs (onboarding-ui):**
 
-Copy `.github/workflows/quality-gates.yml` from `backtest-ui`.
+Copy `.github/workflows/quality-gates.yml` from `execution-analytics-ui`.
 
-**Pattern for embedded UIs (execution-services/visualizer-ui, UTDv2/ui):**
+**Pattern for embedded UIs (execution-service/visualizer-ui, UTDv2/ui):**
 
 1. Create `scripts/quality-gates-ui.sh`:
 
@@ -1735,7 +1735,7 @@ Summarize delegation pattern, max 100 lines, no business logic.
 7. ml-training-service
 8. ml-inference-service
 9. strategy-service
-10. execution-services
+10. execution-service
 11. position-balance-monitor-service
 
 **Libraries (2):**
@@ -1746,7 +1746,7 @@ Summarize delegation pattern, max 100 lines, no business logic.
 **UIs (3):**
 
 1. onboarding-ui
-2. execution-services/visualizer-ui
+2. execution-service/visualizer-ui
 3. unified-trading-deployment-v3/ui
 
 **Deployment (1):**
@@ -2025,7 +2025,7 @@ Update codex and cursor rules BEFORE rolling out patterns to services. Services 
 
 - `[instruments-service/](instruments-service/)` — 90% complete pilot
 - `[instruments-service/docs/QUALITY_GATE_BYPASS_AUDIT.md](instruments-service/docs/QUALITY_GATE_BYPASS_AUDIT.md)` — Bypass audit template
-- `[backtest-ui/scripts/quality-gates.sh](backtest-ui/scripts/quality-gates.sh)` — UI quality gates reference
+- `[execution-analytics-ui/scripts/quality-gates.sh](execution-analytics-ui/scripts/quality-gates.sh)` — UI quality gates reference
 
 ---
 

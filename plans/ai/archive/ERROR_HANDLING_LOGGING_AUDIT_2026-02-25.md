@@ -233,7 +233,7 @@ return [None if isinstance(r, Exception) else r for r in results]  # download_ba
 
 ## 7. Files Audited
 
-- **Services:** instruments-service, strategy-service, ml-training-service, ml-inference-service, features-volatility-service, features-onchain-service, features-delta-one-service, execution-services
+- **Services:** instruments-service, strategy-service, ml-training-service, ml-inference-service, features-volatility-service, features-onchain-service, features-delta-one-service, execution-service
 - **Libraries:** unified-trading-services, unified-events-interface, unified-config-interface, unified-domain-client
 - **Scripts:** unified-trading-pm/scripts, .cursor/scripts, .lobster/scripts, .cursor/workspace-configs
 

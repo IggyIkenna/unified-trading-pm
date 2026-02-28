@@ -320,7 +320,7 @@ git stash pop  # Reapplies your changes on top of updates
 
 ```bash
 # Get issue number and repo from context
-REPO_NAME="[REPO_NAME]"  # e.g., "execution-services"
+REPO_NAME="[REPO_NAME]"  # e.g., "execution-service"
 ISSUE_NUMBER="[ISSUE_NUMBER]"  # e.g., "147"
 
 # Fetch issue details
@@ -838,12 +838,12 @@ Examples directory is often excluded from quality gates. If not:
 
 ```bash
 # Context
-REPO_NAME="execution-services"
+REPO_NAME="execution-service"
 ISSUE_NUMBER="147"
 
 # Step 1: Get issue
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/execution-services
-gh issue view 147 --repo "IggyIkenna/execution-services"
+cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/execution-service
+gh issue view 147 --repo "IggyIkenna/execution-service"
 
 # Step 2: Ensure latest quality gates
 git stash push -m "Pre-pull safety stash"
@@ -852,7 +852,7 @@ git stash pop || echo "No stash to pop"
 grep -q "Check 5: Imports" scripts/quality-gates.sh || echo "Need to update quality gates!"
 
 # Step 3: Fix violations (example: print statements)
-rg "print\(" --type py --glob "!tests/**" execution_services/
+rg "print\(" --type py --glob "!tests/**" execution_service/
 # ... make fixes ...
 
 # Step 4: Run quality gates
@@ -880,7 +880,7 @@ fi
 # Step 5: Submit PR
 bash scripts/quickmerge.sh \
     "Fix all COD violations for issue #147" \
-    --files "execution_services/main.py execution_services/config.py"
+    --files "execution_service/main.py execution_service/config.py"
 
 # Step 6: Monitor PR
 PR_NUM=$(gh pr list --head "$(git branch --show-current)" --json number --jq '.[0].number')

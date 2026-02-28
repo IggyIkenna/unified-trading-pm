@@ -48,7 +48,7 @@ Strategy:
 ```bash
 Input:
   23 issues across 14 services
-  - execution-services: 10 issues
+  - execution-service: 10 issues
   - instruments-service: 2 issues
   - strategy-service: 2 issues
   - ... (11 other services): 1 issue each
@@ -60,7 +60,7 @@ Strategy: W (5) <= S (14)
   → 1 clone per service (workers reused)
 
 Allocation:
-  execution-services_clone_1 → 10 issues (sequential)
+  execution-service_clone_1 → 10 issues (sequential)
   instruments-service_clone_1 → 2 issues (sequential)
   strategy-service_clone_1 → 2 issues (sequential)
   ... (11 other services) → 1 issue each
@@ -76,7 +76,7 @@ Parallelism: 5 workers processing 14 clones (workers reused)
 ```bash
 Input:
   23 issues across 14 services
-  - execution-services: 10 issues
+  - execution-service: 10 issues
   - instruments-service: 2 issues
   - strategy-service: 2 issues
   - ... (11 other services): 1 issue each
@@ -90,7 +90,7 @@ Strategy: W (50) > S (14)
 Calculation:
   workers_per_service = ceil(50 / 14) = 4
 
-  For execution-services (10 issues):
+  For execution-service (10 issues):
     clones = min(10, 4) = 4
     → 4 clones, each handling 2-3 issues
 
@@ -103,10 +103,10 @@ Calculation:
     → 1 clone per service
 
 Allocation:
-  execution-services_clone_1 → issues [589, 590, 591]
-  execution-services_clone_2 → issues [588, 592]
-  execution-services_clone_3 → issues [587, 593]
-  execution-services_clone_4 → issues [586, 594]
+  execution-service_clone_1 → issues [589, 590, 591]
+  execution-service_clone_2 → issues [588, 592]
+  execution-service_clone_3 → issues [587, 593]
+  execution-service_clone_4 → issues [586, 594]
   instruments-service_clone_1 → issue [537]
   instruments-service_clone_2 → issue [536]
   ... (11 services) → 1 clone each
@@ -121,7 +121,7 @@ Parallelism: 50 workers processing 18 clones (full parallelism)
 
 ```bash
 Input:
-  10 issues for execution-services
+  10 issues for execution-service
 
 Workers: 100
 Services: 1
@@ -131,9 +131,9 @@ Strategy: W (100) > S (1)
   clones = min(10, 100) = 10
 
 Allocation:
-  execution-services_clone_1 → issue 589
-  execution-services_clone_2 → issue 588
-  execution-services_clone_3 → issue 587
+  execution-service_clone_1 → issue 589
+  execution-service_clone_2 → issue 588
+  execution-service_clone_3 → issue 587
   ... (10 clones total)
 
 Total Clones: 10
@@ -204,7 +204,7 @@ for service in services:
 **Example Round-Robin**:
 
 ```
-execution-services (10 issues, 4 clones):
+execution-service (10 issues, 4 clones):
   clone_1 → [589, 593, 597] (issues 0, 4, 8)
   clone_2 → [588, 594, 598] (issues 1, 5, 9)
   clone_3 → [587, 595]      (issues 2, 6)

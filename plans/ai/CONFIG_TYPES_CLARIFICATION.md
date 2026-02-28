@@ -6,7 +6,7 @@
 
 **Purpose**: Parameter optimization, grid search, backtesting variations
 
-**Services**: strategy-service, execution-services, ml-training-service
+**Services**: strategy-service, execution-service, ml-training-service
 
 **Characteristics**:
 - Many configs per run (100s-1000s)

@@ -36,7 +36,7 @@ todos:
     content: "Phase 5a: strategy-service - Add data_catalog.py, dependency_checker.py"
     status: pending
   - id: phase5-execution
-    content: "Phase 5b: execution-services - Add unit tests, E2E for cefi/tradfi, data_catalog.py, dependency_checker.py"
+    content: "Phase 5b: execution-service - Add unit tests, E2E for cefi/tradfi, data_catalog.py, dependency_checker.py"
     status: pending
 isProject: false
 ---
@@ -316,7 +316,7 @@ gs://strategy-store-{domain}-{project_id}/
   backtest_results/{strategy_id}/{run_id}/summary.json
 ```
 
-### 5.2 execution-services
+### 5.2 execution-service
 
 **Current State:** Minimal (2 unit tests), 1 DeFi E2E
 
@@ -378,7 +378,7 @@ Based on dependency flow (upstream to downstream):
 9. **ml-training-service** - Depends on all features (add E2E, catalog, dependency check)
 10. **ml-inference-service** - Depends on training + features (add tests, E2E, catalog)
 11. **strategy-service** - Depends on inference + features (add catalog, dependency check)
-12. **execution-services** - Depends on strategy + market data (add tests, E2E, catalog)
+12. **execution-service** - Depends on strategy + market data (add tests, E2E, catalog)
 
 ---
 

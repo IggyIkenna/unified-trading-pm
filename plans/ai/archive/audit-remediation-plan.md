@@ -47,13 +47,13 @@ ruff UP006/UP035/T201/UP017 applied across all 8 target repos via agents.
 
 ### 2a. ✅ Credential allowlist in .gitignore — DONE
 ### 2b. 🔄 GOOGLE_CLOUD_PROJECT remaining (F8) — 6 prod files
-Still present in execution-services production code:
-- `execution_services/utils/dependency_checker.py:212`
-- `execution_services/service_config.py:426`
-- `execution_services/config/grid_generator.py:1712`
-- `execution_services/visualizer-api/app/core/config.py:35`
-- `execution_services/visualizer-api/app/services/data_service.py:23`
-- `execution_services/visualizer-ui/backend/instruction_api.py:47`
+Still present in execution-service production code:
+- `execution_service/utils/dependency_checker.py:212`
+- `execution_service/service_config.py:426`
+- `execution_service/config/grid_generator.py:1712`
+- `execution_service/visualizer-api/app/core/config.py:35`
+- `execution_service/visualizer-api/app/services/data_service.py:23`
+- `execution_service/visualizer-ui/backend/instruction_api.py:47`
 Fix: Replace `GOOGLE_CLOUD_PROJECT` → `GCP_PROJECT_ID`; update imports to use config class.
 
 ### 2c. ✅ os.getenv empty fallback — DONE (confirmed by wave execution)
@@ -79,10 +79,10 @@ Fix: Replace with `GCP_PROJECT_ID` env var lookup or move to test-only config.
 Progress from 214→130. All key service files done. Remaining in lower-priority scripts.
 ### 3d. ❌ pip install in CI/Dockerfiles (F1) — 50+ instances (count grew)
 **New Dockerfiles added without uv standard:**
-- `execution-services/Dockerfile:42`, `execution-services/visualizer-api/Dockerfile:14,17`
+- `execution-service/Dockerfile:42`, `execution-service/visualizer-api/Dockerfile:14,17`
 - `ml-training-service/Dockerfile:33`, `features-*/Dockerfile:27`
 - `unified-trading-deployment-v3/Dockerfile:63-68`
-- `execution-services/.github/workflows/quality-gates.yml:72`
+- `execution-service/.github/workflows/quality-gates.yml:72`
 Fix: Replace `pip install` → `uv pip install` in all CI and Dockerfiles.
 
 ---
@@ -93,19 +93,19 @@ Fix: Replace `pip install` → `uv pip install` in all CI and Dockerfiles.
 when called from async context. These are P0 runtime crashes.
 
 **BAD instances (not CLI entry points):**
-- `execution_services/backtest/engine.py:773` — `_setup_catalog_and_instrument()` sync method
-- `execution_services/backtest/engine.py:1811` — same file, setup path
-- `execution_services/results/serializer.py:813` — `_upload_to_gcs_sync()` static method
-- `execution_services/data/config_builder.py:1187,1899` — config builder
-- `execution_services/data/config/book_builder.py:207` — book builder
+- `execution_service/backtest/engine.py:773` — `_setup_catalog_and_instrument()` sync method
+- `execution_service/backtest/engine.py:1811` — same file, setup path
+- `execution_service/results/serializer.py:813` — `_upload_to_gcs_sync()` static method
+- `execution_service/data/config_builder.py:1187,1899` — config builder
+- `execution_service/data/config/book_builder.py:207` — book builder
 - `unified_market_interface/adapters/defi/uniswapv2_adapter.py:150` — `fetch_markets()` sync
 - `unified_market_interface/adapters/defi/uniswapv4_adapter.py:164` — same pattern
 
 **OK instances (CLI entry points — leave alone):**
-- `execution_services/cli/handlers/live_execution_handler.py:60`
-- `execution_services/cli/handlers/execute_handler.py:17`
-- `execution_services/cli/batch_backtest.py:96,134`
-- `execution_services/cli/backtest.py:430,469`
+- `execution_service/cli/handlers/live_execution_handler.py:60`
+- `execution_service/cli/handlers/execute_handler.py:17`
+- `execution_service/cli/batch_backtest.py:96,134`
+- `execution_service/cli/backtest.py:430,469`
 
 Fix pattern for sync utility methods wrapping async:
 ```python
@@ -143,8 +143,8 @@ Canonical names: `PERSISTENCE_STARTED` / `PERSISTENCE_COMPLETED` + `DATA_BROADCA
 - `market-data-processing-service/market_data_processing_service/cli/handlers/live_mode_handler.py`
 - `unified-trading-deployment-v3/api/utils/service_utils.py`
 - `unified-trading-deployment-v3/api/utils/service_events.py`
-- `execution-services/execution_services/engine/backtest/runner.py`
-- `execution-services/execution_services/backtest/runner.py`
+- `execution-service/execution_service/engine/backtest/runner.py`
+- `execution-service/execution_service/backtest/runner.py`
 - `market-tick-data-handler/market_data_tick_handler/cli/handlers/download_handler.py`
 - `instruments-service/instruments_service/cli/handlers/instrument_handler.py`
 - `ml-training-service/ml_training_service/cli/main.py`
@@ -160,7 +160,7 @@ Update enum definitions first, then string usages.
 ## Wave 4 — Code quality P1
 
 ### 4a. ❌ Split engine.py (2826 lines → max 900) (F3)
-File: `execution-services/execution_services/backtest/engine.py`
+File: `execution-service/execution_service/backtest/engine.py`
 **Blocked by asyncio.run() fixes in Wave 3e — fix asyncio first, then split.**
 Split plan:
 - `engine/core.py` — BacktestEngine class, main run loop
@@ -178,7 +178,7 @@ Document necessary exceptions in QUALITY_GATE_BYPASS_AUDIT.md.
 ### ⚠️ NEW 4d. validate_timestamp not fail-fast (NEW-3)
 Files:
 - `strategy-service/strategy_service/app/core/cloud_strategy_storage.py:188` — logs warning, doesn't raise
-- `execution-services/execution_services/results/result_formatter.py:470` — logs error, continues
+- `execution-service/execution_service/results/result_formatter.py:470` — logs error, continues
 Fix: Replace `if not result.valid: logger.warning(...)` with:
 ```python
 result = validate_timestamp_date_alignment(df, date=processing_date)
@@ -199,7 +199,7 @@ Fix: Apply google.auth.default() 3-step fallback per gcp-auth-in-tests.mdc.
 ### 5b. ✅ validate_timestamp conditional — partially in Wave 4d above (raises now)
 
 ### ❌ 5c. central-element in tests (F11) — 50+ unchanged
-- `execution-services/tests/` (15+ files)
+- `execution-service/tests/` (15+ files)
 - `unified-trading-services/tests/conftest.py:101`
 - `features-volatility-service/tests/conftest.py:58-64`
 Fix: Replace `"central-element-323112"` → `"test-project"`.
@@ -245,7 +245,7 @@ Add to quality-gates.sh ruff checks:
 1. unified-trading-services — central-element in prod code (F9)
 2. Lifecycle events batch 1 — market-data-processing-service, features-*, position-balance-monitor
 3. asyncio.run() + validate_timestamp — unified-market-interface defi adapters + strategy/exec-services
-4. Lifecycle events batch 2 — instruments-service, market-tick-data-handler, ml-training, execution-services runners
+4. Lifecycle events batch 2 — instruments-service, market-tick-data-handler, ml-training, execution-service runners
 
 **Next pass:**
 5. engine.py split (Wave 4a) — after asyncio cleanup

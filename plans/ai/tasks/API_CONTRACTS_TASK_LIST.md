@@ -153,5 +153,5 @@
 | 6 | Cloud SDKs – GCP (Compute, Cloud Run, GCS, BigQuery) | api-contracts/cloud_sdks, unified-trading-services |
 | 7 | Cloud SDKs – AWS (EC2, ECS, S3, Glue, quotas) | api-contracts/cloud_sdks |
 | 8 | Quota handling – UTD v3 quota broker, message schemas | unified-trading-deployment-v3, api-contracts |
-| 9 | DeFi / MEV / transfers | api-contracts, execution-services |
+| 9 | DeFi / MEV / transfers | api-contracts, execution-service |
 | 10 | TradFi / VIX / Barchart | api-contracts, market-tick-data-handler |

@@ -135,13 +135,13 @@ python run-diff-checker.py --repo IggyIkenna/unified-trading-codex --max-workers
 2. **Parse gap-id markers** from issue bodies:
 
    ```
-   - gap-id: COD-SIZE-execution-services-algorithms
+   - gap-id: COD-SIZE-execution-service-algorithms
    ```
 
 3. **Build index** in memory:
 
    ```python
-   {"COD-SIZE-execution-services-algorithms": "726", ...}
+   {"COD-SIZE-execution-service-algorithms": "726", ...}
    ```
 
 4. **Lookup** is O(1) dictionary access (instant)

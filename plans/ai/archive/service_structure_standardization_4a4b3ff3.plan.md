@@ -71,7 +71,7 @@ isProject: false
 **Quality gates**:
 
 - **Pass**: risk-and-exposure-service; features-delta-one-service; features-volatility-service (lint/type pass; run quality-gates.sh to confirm).
-- **Fail (fix or env)**: market-data-processing (Pyright/UDS types in adapters); pnl-attribution, features-calendar (test ImportError: UnifiedCloudConfig / path deps); features-onchain (test/codex in script); ml-training (unified_ml_interface, coverage); ml-inference (F821 _DepConfig); strategy (pre-existing tests/codex); execution-services (tests, codex); position-balance-monitor (Pyright, Codex indented imports).
+- **Fail (fix or env)**: market-data-processing (Pyright/UDS types in adapters); pnl-attribution, features-calendar (test ImportError: UnifiedCloudConfig / path deps); features-onchain (test/codex in script); ml-training (unified_ml_interface, coverage); ml-inference (F821 _DepConfig); strategy (pre-existing tests/codex); execution-service (tests, codex); position-balance-monitor (Pyright, Codex indented imports).
 
 **Quality-gates run**: Sequential run from deployment-v2 failed on the **first repo** (unified-trading-deployment-v3 itself: lint/codex/tests). The 12 service repos were not reached. Per-service fixes from agents improved path deps, Pyright, and codex; position-balance-monitor and risk-and-exposure pass; others may still have coverage/codex/pre-existing issues.
 
@@ -149,7 +149,7 @@ isProject: false
 | 9   | ml-training-service              | `train_phase1`, `train_phase2`, `train_phase3` | batch, live                    | P1         |
 | 10  | ml-inference-service             | `infer`                                        | batch, live                    | P1         |
 | 11  | strategy-service                 | `backtest`, `live_trade`                       | batch (backtest), live (trade) | P1         |
-| 12  | execution-services               | `execute`                                      | live only (event-driven)       | P2         |
+| 12  | execution-service               | `execute`                                      | live only (event-driven)       | P2         |
 | 13  | risk-and-exposure-service        | `compute`                                      | batch, live                    | P2         |
 | 14  | position-balance-monitor-service | `monitor`                                      | batch, live                    | P1         |
 
@@ -158,8 +158,8 @@ isProject: false
 
 **UI Repos (9)** - TypeScript quality gates only (tsc, ESLint):
 
-- backtest-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui
-- logs-dashboard-ui, ml-deployment-ui, onboarding-ui, settlement-ui, trading-analytics-ui
+- execution-analytics-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui
+- logs-dashboard-ui, ml-training-ui, onboarding-ui, settlement-ui, trading-analytics-ui
 
 **Platform Libraries (6)** - Minimal changes:
 
@@ -733,7 +733,7 @@ CLI must follow this pattern to pass quality gates:
 - risk-and-exposure-service
 - position-balance-monitor-service
 - pnl-attribution-service
-- execution-services
+- execution-service
 
 **Use parallel agents** (4 agents, 3-4 services each) for cross-repo updates.
 

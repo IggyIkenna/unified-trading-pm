@@ -1,9 +1,9 @@
-# execution-services Refactoring Plan
+# execution-service Refactoring Plan
 
 **Plan ID**: 0c597f7f
 **Created**: 2026-02-24
 **Status**: In Progress
-**Related**: execution_services_structural_refactoring_brainstorm.md
+**Related**: execution_service_structural_refactoring_brainstorm.md
 
 ---
 
@@ -45,7 +45,7 @@
 
 ### Phase 1.6: Structural Analysis 🔄 IN PROGRESS
 - ✅ Structural analysis completed (agent-xxx)
-- 🔄 Brainstorming refactoring strategy (see: execution_services_structural_refactoring_brainstorm.md)
+- 🔄 Brainstorming refactoring strategy (see: execution_service_structural_refactoring_brainstorm.md)
 - **Key Findings**:
   - 5 god classes (> 1500 lines, BLOCKING quality gates!)
   - Hard dependencies (direct GCS, no adapters)
@@ -142,7 +142,7 @@
 
 ## Next Steps (Awaiting User Approval)
 
-1. **Review brainstorming doc**: execution_services_structural_refactoring_brainstorm.md
+1. **Review brainstorming doc**: execution_service_structural_refactoring_brainstorm.md
 2. **Discuss open questions** (Q1-Q5 above)
 3. **Agree on approach** (Phase 2.0 quick wins vs full restructure)
 4. **Launch implementation** (fast sub-agents for heavy work)
@@ -151,7 +151,7 @@
 
 ## Related Documents
 
-- **Brainstorming**: `.cursor/plans/execution_services_structural_refactoring_brainstorm.md`
+- **Brainstorming**: `.cursor/plans/execution_service_structural_refactoring_brainstorm.md`
 - **Structural Analysis**: Previous agent report (agent-xxx)
 - **Reference Structure**: `instruments-service/` (clean example)
 - **API Contracts**: `api-contracts/` (for NautilusTrader mocking)

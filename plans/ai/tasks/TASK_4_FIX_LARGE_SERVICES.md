@@ -94,20 +94,20 @@ prompt: |
   ⏱️ TIME: X minutes
 ```
 
-**Sub-Agent 3** (execution-services):
+**Sub-Agent 3** (execution-service):
 ```
 description: Fix execution violations (~75)
 model: fast
 subagent_type: generalPurpose
 prompt: |
-  Fix empty fallbacks and Type Any in execution-services.
+  Fix empty fallbacks and Type Any in execution-service.
   
   VIOLATIONS FOUND:
   - 60+ empty fallbacks (runner, factory, engine, config_builder, catalog, etc.)
   - 15+ Any usages
   
   STEPS:
-  1. cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/execution-services
+  1. cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/execution-service
   2. Create backup: git checkout -b fix-hardening-execution-$(date +%s)
   3. Find violations
   4. Fix with fail loud patterns
@@ -150,7 +150,7 @@ prompt: |
 - [ ] All 3 sub-agents launched
 - [ ] ml-training: ~20 violations → 0
 - [ ] strategy: ~56 violations → 0 (+ print statements fixed)
-- [ ] execution-services: ~75 violations → 0
+- [ ] execution-service: ~75 violations → 0
 - [ ] All tests pass
 - [ ] All quality gates pass
 - [ ] Master reviewed ALL changes

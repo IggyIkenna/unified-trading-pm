@@ -24,7 +24,7 @@ todos:
     content: "Batch 2G: New UMI adapters group 3 — ibkr, fred, ecb, ofr, openbb, yahoo_finance, api_football, footystats, soccer_football, mev; delete empty defi/schemas.py; blacklist github"
     status: pending
   - id: v2-enhanced-error-high-priority
-    content: "Batch 2H: Replace 311 bare excepts with EnhancedError in execution-services (201), instruments-service (62), market-tick-data-handler (48)"
+    content: "Batch 2H: Replace 311 bare excepts with EnhancedError in execution-service (201), instruments-service (62), market-tick-data-handler (48)"
     status: pending
   - id: v2-enhanced-error-remaining
     content: "Batch 3I: EnhancedError rollout for features-delta-one (20), features-onchain (13), features-volatility (12); remove unified-position-interface from .cursorignore"
@@ -42,7 +42,7 @@ isProject: false
 - VCR coverage: 23% (11/48 venues) — 37 venues have schemas, zero cassettes
 - 23 venue schemas have no UMI adapter consuming them
 - `execution-results-api`: zero UIC imports, zero log_events, zero EnhancedError
-- `execution-services`: 201 bare excepts, 108 `dict[str,Any]`, 0 EnhancedError
+- `execution-service`: 201 bare excepts, 108 `dict[str,Any]`, 0 EnhancedError
 - `market-tick-data-handler`: 48 bare excepts, 0 EnhancedError
 - 12 `NotImplementedError` stubs in UMI adapters
 - URDI has no abstract `_parse_raw()` — all 10 adapters bypass contract validation at ingest
@@ -134,7 +134,7 @@ flowchart LR
 
 **H: EnhancedError rollout — highest bare-except services**
 
-- `execution-services` (201 bare excepts): wrap with `EnhancedError(category=SERVER_ERROR, correlation_id=uuid4())`
+- `execution-service` (201 bare excepts): wrap with `EnhancedError(category=SERVER_ERROR, correlation_id=uuid4())`
 - `instruments-service` (62): same pattern
 - `market-tick-data-handler` (48): same + add `log_event` on failures
 

@@ -1,6 +1,6 @@
 ---
 name: Service Bloat Extraction
-overview: Extract code embedded in execution-services and market-tick-data-handler that belongs in shared libraries, delete the duplication that accounts for the bulk of both services' line counts.
+overview: Extract code embedded in execution-service and market-tick-data-handler that belongs in shared libraries, delete the duplication that accounts for the bulk of both services' line counts.
 todos:
   - id: mtdh-delete-engine-dir
     content: "market-tick: delete engine/ directory (~16,522 duplicate lines), update any imports referencing engine.*"
@@ -15,7 +15,7 @@ todos:
     content: "market-tick: migrate barchart_csv_client.py + yahoo_finance_client.py to unified-market-interface"
     status: completed
   - id: exec-extract-visualizer-api
-    content: "execution: move visualizer-api/ to its own repo (backtest-visualizer-service), remove from execution-services"
+    content: "execution: move visualizer-api/ to its own repo (backtest-visualizer-service), remove from execution-service"
     status: completed
   - id: exec-complete-backtest-migration
     content: "execution: migrate all backtest/ imports to engine/backtest/, then delete backtest/ (~7,663 lines)"
@@ -39,12 +39,12 @@ isProject: false
 
 ## Root Causes
 
-Both services are large for three reasons: **identical directory duplication**, **library code living in service code**, and **an embedded separate service** (execution-results-api inside execution-services).
+Both services are large for three reasons: **identical directory duplication**, **library code living in service code**, and **an embedded separate service** (execution-results-api inside execution-service).
 
 
 | Service                  | Total reported | Tests | Scripts | Embedded service | Real source | Recoverable |
 | ------------------------ | -------------- | ----- | ------- | ---------------- | ----------- | ----------- |
-| execution-services       | ~122k          | ~41k  | ~12k    | ~7.8k            | ~61k        | ~25-28k     |
+| execution-service       | ~122k          | ~41k  | ~12k    | ~7.8k            | ~61k        | ~25-28k     |
 | market-tick-data-handler | ~30k source    | —     | ~6.6k   | —                | ~24k        | ~19.8k      |
 
 
@@ -89,7 +89,7 @@ Venue connectivity belongs in `unified-market-interface/unified_market_interface
 
 ---
 
-## Part 2: execution-services
+## Part 2: execution-service
 
 ### 2a. Complete the `backtest/` → `engine/backtest/` migration — saves ~7,663 lines
 
@@ -104,19 +104,19 @@ The migration is half-done. `domain_runners.py` already uses the new path. Legac
 
 Critical files:
 
-- `[execution_services/__init__.py](execution-services/execution_services/__init__.py)` — exports `BacktestEngine`, `StrategyEvaluator`, `SignalDrivenStrategyV3`
-- `[execution_services/cli/backtest.py](execution-services/execution_services/cli/backtest.py)` — 3 import sites
-- `[execution_services/cli/benchmark_compare.py](execution-services/execution_services/cli/benchmark_compare.py)`
-- `[execution_services/results/extractor.py](execution-services/execution_services/results/extractor.py)`
-- `[scripts/runners/run_tradfi_l1_l2_backtests.py](execution-services/scripts/runners/run_tradfi_l1_l2_backtests.py)`
-- `[scripts/runners/run_defi_backtests.py](execution-services/scripts/runners/run_defi_backtests.py)`
-- All test files referencing `execution_services.backtest.*`
+- `[execution_service/__init__.py](execution-service/execution_service/__init__.py)` — exports `BacktestEngine`, `StrategyEvaluator`, `SignalDrivenStrategyV3`
+- `[execution_service/cli/backtest.py](execution-service/execution_service/cli/backtest.py)` — 3 import sites
+- `[execution_service/cli/benchmark_compare.py](execution-service/execution_service/cli/benchmark_compare.py)`
+- `[execution_service/results/extractor.py](execution-service/execution_service/results/extractor.py)`
+- `[scripts/runners/run_tradfi_l1_l2_backtests.py](execution-service/scripts/runners/run_tradfi_l1_l2_backtests.py)`
+- `[scripts/runners/run_defi_backtests.py](execution-service/scripts/runners/run_defi_backtests.py)`
+- All test files referencing `execution_service.backtest.*`
 
 Class renames required: `SignalDrivenStrategyV3` → `InstructionDrivenStrategyV3`, `SignalDrivenV3Config` → `InstructionDrivenV3Config`.
 
-After all imports updated and verified: delete `execution_services/backtest/` entirely.
+After all imports updated and verified: delete `execution_service/backtest/` entirely.
 
-### 2b. Split `visualizer-api/` into new repo `execution-results-api` — saves ~7,807 lines from execution-services
+### 2b. Split `visualizer-api/` into new repo `execution-results-api` — saves ~7,807 lines from execution-service
 
 `visualizer-api/` already has its own `pyproject.toml` (package: `backtest-visualizer-api`) and `Dockerfile`. It is a standalone FastAPI service accidentally living inside this repo.
 
@@ -130,23 +130,23 @@ What moves to new repo:
 - Read-only GCS access (already uses `unified_trading_services.get_storage_client()`)
 - Analysis aggregations on computed results
 
-What stays in execution-services:
+What stays in execution-service:
 
-- Backtest engine and CLI (`execution_services.cli.backtest`) — computation stays here
+- Backtest engine and CLI (`execution_service.cli.backtest`) — computation stays here
 - `config/grid_generator.py` — config generation stays here
 - `utils/dependency_checker.py` — pre-flight stays here
 - All GCS write paths and result serialization
 
-**Decoupling required before split** (the API currently imports 5 things from execution_services):
+**Decoupling required before split** (the API currently imports 5 things from execution_service):
 
 
 | Current coupling                                       | Decouple to                                              |
 | ------------------------------------------------------ | -------------------------------------------------------- |
 | `get_execution_config()`                               | env vars / `unified_config_interface`                    |
 | `GCSConfig`                                            | `unified_trading_services.get_storage_client()` directly |
-| `config.grid_generator` imports                        | HTTP endpoint on execution-services                      |
-| `DependencyChecker`                                    | HTTP endpoint on execution-services                      |
-| Subprocess `python -m execution_services.cli.backtest` | HTTP API call to execution-services                      |
+| `config.grid_generator` imports                        | HTTP endpoint on execution-service                      |
+| `DependencyChecker`                                    | HTTP endpoint on execution-service                      |
+| Subprocess `python -m execution_service.cli.backtest` | HTTP API call to execution-service                      |
 
 
 New repo follows the full setup checklist from the schema ownership plan: `pyproject.toml`, `quality-gates.sh`, `quickmerge.sh`, `Dockerfile`, `workspace-manifest.json` entry.
@@ -155,7 +155,7 @@ Do **after 2a** — `cli/backtest.py` is imported by the API, so the backtest mi
 
 ### 2c. Migrate `venues/` to `unified-defi-execution-interface` / `unified-market-interface` — saves ~3,747 lines
 
-`[execution_services/venues/](execution-services/execution_services/venues/)` contains full venue adapter implementations:
+`[execution_service/venues/](execution-service/execution_service/venues/)` contains full venue adapter implementations:
 
 CeFi (→ `unified-market-interface`):
 
@@ -196,11 +196,11 @@ This makes the library more complete and testable (no NautilusTrader dependency 
 
 ### 2f. Delete duplicate `BaseConnector` from venues/ — saves ~142 lines
 
-`execution_services/venues/base_connector.py` duplicates the `BaseConnector` ABC that already lives in `unified-defi-execution-interface`. The DeFi connectors in the service should import `BaseConnector` from `unified_defi_execution_interface`. Delete the service copy.
+`execution_service/venues/base_connector.py` duplicates the `BaseConnector` ABC that already lives in `unified-defi-execution-interface`. The DeFi connectors in the service should import `BaseConnector` from `unified_defi_execution_interface`. Delete the service copy.
 
 ### 2e. Migrate `orders/` to `unified-trade-execution-interface` — saves ~284 lines
 
-`[execution_services/orders/](execution-services/execution_services/orders/)` — 284 lines. Library already has `UnifiedOrderManager` protocol and `OrderTracker`. Direct migration.
+`[execution_service/orders/](execution-service/execution_service/orders/)` — 284 lines. Library already has `UnifiedOrderManager` protocol and `OrderTracker`. Direct migration.
 
 ---
 
@@ -248,7 +248,7 @@ NautilusTrader v1.221.0 includes built-in adapters for: Binance, Bybit, OKX, Coi
 
 - Task 2d algorithm extraction follows this split — CeFi algorithms thin-wrap Nautilus, DeFi algorithms are standalone library classes
 - Task 2c venue migration is per domain: Deribit → `unified-market-interface` (wraps Nautilus), DeFi → `unified-defi-execution-interface`
-- Sports betting (`execution-services` future): use Nautilus Betfair adapter, no custom connector needed
+- Sports betting (`execution-service` future): use Nautilus Betfair adapter, no custom connector needed
 
 ---
 
@@ -262,12 +262,12 @@ flowchart TD
         C["1c: Schemas to api-contracts\n(-1,819L)"]
         D["1d: Barchart/Yahoo to UMI\n(-486L)"]
     end
-    subgraph exec_independent [execution-services parallel]
+    subgraph exec_independent [execution-service parallel]
         H["2a: Complete backtest migration\n(-7,663L)"]
         I["2c: Venue adapters to UDEI/UMI\n(-3,747L)"]
         K["2e: Orders to UTEI\n(-284L)"]
     end
-    subgraph exec_dependent [execution-services sequential]
+    subgraph exec_dependent [execution-service sequential]
         H --> F["2b: Decouple + split results-api\n(-7,807L)"]
         J["2d: Extract algo calcs to library\n(-5,000L)"]
     end
@@ -310,5 +310,5 @@ flowchart TD
 **After this work:**
 
 - market-tick-data-handler: ~30k source → ~10k (67% reduction)
-- execution-services: ~61k source → ~37k (39% reduction; results API + its tests move to new repo)
+- execution-service: ~61k source → ~37k (39% reduction; results API + its tests move to new repo)
 - **~44,000 lines removed** from these two services alone

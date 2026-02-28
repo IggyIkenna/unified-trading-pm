@@ -20,7 +20,7 @@
 
 ### Trading Services (3)
 11. **strategy-service** - Operations: `backtest`, `live_trade` | Modes: batch (backtest only), live (trade only)
-12. **execution-services** - Operations: `execute` | Modes: live only (event-driven)
+12. **execution-service** - Operations: `execute` | Modes: live only (event-driven)
 13. **risk-and-exposure-service** - Operations: `compute` | Modes: batch, live
 
 ### Monitoring Services (1)
@@ -30,12 +30,12 @@
 
 ## UI Repos (9 TypeScript/React - NO CLI standardization, different quality gates)
 
-15. **backtest-ui** - Backtest visualization
+15. **execution-analytics-ui** - Backtest visualization
 16. **batch-audit-ui** - Batch job monitoring
 17. **client-reporting-ui** - Client reports
 18. **live-health-monitor-ui** - Live system health
 19. **logs-dashboard-ui** - Log aggregation
-20. **ml-deployment-ui** - ML model deployment
+20. **ml-training-ui** - ML model deployment
 21. **onboarding-ui** - Client onboarding
 22. **settlement-ui** - Settlement reconciliation
 23. **trading-analytics-ui** - Trading analytics

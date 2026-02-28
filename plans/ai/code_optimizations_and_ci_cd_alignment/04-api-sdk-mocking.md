@@ -53,11 +53,11 @@ Create a "mock" or "spec" repository that defines API contracts for external ser
 
 3. **Binance** (exchange)
    - Endpoints: markets, tickers, order book, trades
-   - Used by: execution-services, strategy-service
+   - Used by: execution-service, strategy-service
 
 4. **CCXT** (unified exchange interface)
    - Methods: fetch_markets, fetch_ticker, fetch_order_book
-   - Used by: instruments-service, execution-services
+   - Used by: instruments-service, execution-service
 
 5. **The Graph** (DeFi data)
    - Queries: pools, swaps, positions

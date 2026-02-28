@@ -1,7 +1,7 @@
-# execution-services Structural Refactoring: Brainstorming
+# execution-service Structural Refactoring: Brainstorming
 
 **Date**: 2026-02-24
-**Goal**: Transform execution-services from 25% coverage to 50%+ by fixing structural issues
+**Goal**: Transform execution-service from 25% coverage to 50%+ by fixing structural issues
 **Reference**: instruments-service as clean structure example
 
 ---
@@ -39,7 +39,7 @@
 
 ### Current (Messy):
 ```
-execution_services/
+execution_service/
 ├── algorithms/          # 6,537 lines (moving to library)
 ├── backtest/            # 7,293 lines (god classes!)
 ├── data/                # 9,686 lines (mixed concerns)
@@ -53,7 +53,7 @@ execution_services/
 
 ### Proposed (Clean):
 ```
-execution_services/
+execution_service/
 ├── adapters/            # Thin I/O adapters (< 100 lines each)
 │   ├── storage.py       # GCS operations via UCS
 │   ├── risk_service.py  # Risk check HTTP client
@@ -234,7 +234,7 @@ class BacktestEngine:
 
 ### Action 1: Create StorageAdapter (Like instruments-service)
 
-**File**: `execution_services/adapters/storage.py`
+**File**: `execution_service/adapters/storage.py`
 
 **Responsibilities**:
 - Build GCS paths (results, configs, data)
@@ -254,7 +254,7 @@ class BacktestEngine:
 
 ### Action 2: Create RiskChecker (NOT HTTP Client!)
 
-**File**: `execution_services/engine/risk/risk_checker.py`
+**File**: `execution_service/engine/risk/risk_checker.py`
 
 **CRITICAL INSIGHT FROM USER**: Risk checks via HTTP are too slow. Instead, import `risk-and-exposure-service` as a **package dependency** and run calculations locally in a "light operational mode".
 
@@ -266,7 +266,7 @@ class BacktestEngine:
 
 **Pattern**:
 ```python
-# execution_services/engine/risk/risk_checker.py
+# execution_service/engine/risk/risk_checker.py
 from risk_and_exposure_service.engine.calculators import RiskCalculator
 from risk_and_exposure_service.config import RiskConfig
 
@@ -332,7 +332,7 @@ class AlgorithmFactory:
 **Solution 3** (Best): Split `orchestration/__init__.py`
 ```python
 # orchestration/__init__.py
-from execution_services.orchestration.order_tracker import OrderTracker
+from execution_service.orchestration.order_tracker import OrderTracker
 
 # Don't import LiveOrchestrator here
 # Import it explicitly where needed
@@ -515,9 +515,9 @@ def validate(config) -> ValidationResult:
 
 ---
 
-## 🎯 Comparison: execution-services vs instruments-service
+## 🎯 Comparison: execution-service vs instruments-service
 
-| Aspect | instruments-service ✅ | execution-services ❌ |
+| Aspect | instruments-service ✅ | execution-service ❌ |
 |--------|----------------------|---------------------|
 | **Largest file** | 862 lines | 2,681 lines |
 | **Adapters** | Yes (storage_adapter.py) | No (direct GCS) |
@@ -801,7 +801,7 @@ class AlgorithmRegistry:
 - ✅ No god classes (largest: 862 lines)
 - ✅ StandardizedDomainCloudService usage
 
-**Apply to execution-services**:
+**Apply to execution-service**:
 - Create similar adapter structure
 - Break up god classes
 - Use dependency injection
@@ -814,7 +814,7 @@ class AlgorithmRegistry:
 - ✅ Type-safe mocks
 - ✅ VCR for recording/replaying HTTP
 
-**Apply to execution-services**:
+**Apply to execution-service**:
 - Create nautilus/ schemas in api-contracts
 - Mock NautilusTrader types
 - Use in tests instead of real NautilusTrader
@@ -904,7 +904,7 @@ def main():
 | **Grid config** | Param optimization, many configs per run | Domain buckets (`execution-store`) | NOT ConfigStore |
 | **Runtime config** | Service runtime params, slow-changing | `gs://config-store-{proj}/{service}/` | ConfigStore + TimeSeriesConfigStore |
 
-**execution-services has BOTH**:
+**execution-service has BOTH**:
 - Grid config: BacktestEngine parameter grids (keep in domain bucket)
 - Runtime config: Service settings (migrate to ConfigStore)
 
@@ -943,10 +943,10 @@ def instruction_builder():
 - **Max**: 4 concurrent agents
 
 ### 13. **instruments-service as Reference**
-- **Largest file**: 862 lines (vs execution-services 2,681!)
+- **Largest file**: 862 lines (vs execution-service 2,681!)
 - **Adapters**: Thin (storage_adapter.py: 122 lines)
 - **Structure**: Clean (engine/, adapters/, cli/, config/)
-- **Coverage**: ~50%+ (vs execution-services 25%)
+- **Coverage**: ~50%+ (vs execution-service 25%)
 
 ---
 

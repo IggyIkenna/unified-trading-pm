@@ -66,7 +66,7 @@ Systematic hardening of the entire unified trading system with **strict cursor r
 
 **Repos**:
 
-- **Services (14)**: instruments-service, market-tick-data-handler, market-data-processing-service, pnl-attribution-service, features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service, ml-training-service, ml-inference-service, strategy-service, execution-services, risk-and-exposure-service, position-balance-monitor-service
+- **Services (14)**: instruments-service, market-tick-data-handler, market-data-processing-service, pnl-attribution-service, features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service, ml-training-service, ml-inference-service, strategy-service, execution-service, risk-and-exposure-service, position-balance-monitor-service
 - **Libraries (6)**: unified-trading-services, unified-config-interface, unified-events-interface, unified-market-interface, unified-trade-execution-interface, unified-domain-client
 - **Utility (4)**: unified-trading-deployment-v3, unified-trading-deployment-v3, execution-algo-library, alerting-system
 
@@ -376,7 +376,7 @@ bash scripts/quickmerge.sh "Harden [library]: 0 violations (canonical patterns)"
 - **Data (3)**: market-tick-data-handler, market-data-processing-service, pnl-attribution-service
 - **Features (4)**: features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service
 - **ML (2)**: ml-training-service, ml-inference-service
-- **Trading (3)**: strategy-service, execution-services, risk-and-exposure-service
+- **Trading (3)**: strategy-service, execution-service, risk-and-exposure-service
 - **Monitoring (1)**: position-balance-monitor-service
 - **Alert (1)**: alerting-system
 
@@ -424,7 +424,7 @@ Patterns: Same as libraries
 
 **Different Approach**: UIs use TypeScript, not Python.
 
-**Repos**: backtest-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui, logs-dashboard-ui, ml-deployment-ui, onboarding-ui, settlement-ui, trading-analytics-ui
+**Repos**: execution-analytics-ui, batch-audit-ui, client-reporting-ui, live-health-monitor-ui, logs-dashboard-ui, ml-training-ui, onboarding-ui, settlement-ui, trading-analytics-ui
 
 **Quality Gates** (TypeScript-specific):
 
@@ -655,8 +655,8 @@ If quality gates cannot be fixed:
 
 ### Phase 3B (9 UIs)
 
-- backtest-ui, batch-audit-ui, client-reporting-ui
-- live-health-monitor-ui, logs-dashboard-ui, ml-deployment-ui
+- execution-analytics-ui, batch-audit-ui, client-reporting-ui
+- live-health-monitor-ui, logs-dashboard-ui, ml-training-ui
 - onboarding-ui, settlement-ui, trading-analytics-ui
 
 ### Documentation

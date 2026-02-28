@@ -252,7 +252,7 @@ This codebase shows significant technical debt across multiple dimensions. While
 
 1. **Massive `Any` Usage (2,011 occurrences)**
    - **Top offenders:**
-     - execution-services: 485
+     - execution-service: 485
      - unified-market-interface: 265
      - instruments-service: 263
    - **Impact:** Type checking is effectively disabled
@@ -275,7 +275,7 @@ This codebase shows significant technical debt across multiple dimensions. While
 5. **Type Safety Scores by Repo**
    - **95%:** execution-algo-library, matching-engine-library ✅
    - **85%:** unified-domain-client ✅
-   - **45%:** instruments-service, execution-services ❌
+   - **45%:** instruments-service, execution-service ❌
    - **15%:** unified-defi-execution-interface ❌
 
 **Scoring Breakdown:**
@@ -320,7 +320,7 @@ This codebase shows significant technical debt across multiple dimensions. While
    - **Risk:** "Works on my machine" syndrome
 
 4. **Wildcard Imports (2 instances)**
-   - **Location:** execution-services
+   - **Location:** execution-service
    - **Impact:** Namespace pollution, unclear dependencies
    - **Fix:** Explicit imports only
 
@@ -385,7 +385,7 @@ This codebase shows significant technical debt across multiple dimensions. While
    - **464 violations** across 5 repos
    - market-tick-data-handler: 117
    - strategy-service: 139
-   - execution-services: 205
+   - execution-service: 205
    - **Impact:** Poor readability
 
 **Scoring Breakdown:**

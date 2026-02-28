@@ -46,7 +46,7 @@ echo 'YOUR_NEW_TOKEN' | gcloud secrets versions add github-automation-token \
 ```bash
 # Update all 14 repos at once
 cd unified-trading-system-repos
-for repo in execution-services features-calendar-service \
+for repo in execution-service features-calendar-service \
     features-delta-one-service features-onchain-service \
     features-volatility-service instruments-service \
     market-data-processing-service market-tick-data-handler \
@@ -204,7 +204,7 @@ bash enable-branch-protection.sh --restore /tmp/branch-protection-backup-*
 
 ## Known Limitations
 
-### execution-services: Branch Protection Disabled at Repo Level
+### execution-service: Branch Protection Disabled at Repo Level
 
 **Error**: `Branch protection has been disabled on this repository. (HTTP 404)`
 
@@ -212,10 +212,10 @@ bash enable-branch-protection.sh --restore /tmp/branch-protection-backup-*
 
 **Workaround**:
 
-1. Go to: https://github.com/IggyIkenna/execution-services/settings
+1. Go to: https://github.com/IggyIkenna/execution-service/settings
 2. Scroll to "Features"
 3. Ensure "Enforce branch protection rules for administrators" is checked
-4. Then run: `bash enable-branch-protection.sh execution-services`
+4. Then run: `bash enable-branch-protection.sh execution-service`
 
 **Status**: ✅ Manually fixed via UI (2026-02-14)
 

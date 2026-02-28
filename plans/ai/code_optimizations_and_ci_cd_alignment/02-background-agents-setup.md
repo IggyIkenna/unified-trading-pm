@@ -200,7 +200,7 @@ Archive repos you're not actively working on:
 mkdir -p ~/Documents/repos/archived-repos
 
 # Example: Archive old UI repos
-mv backtest-ui ~/Documents/repos/archived-repos/
+mv execution-analytics-ui ~/Documents/repos/archived-repos/
 mv batch-audit-ui ~/Documents/repos/archived-repos/
 ```
 

@@ -317,5 +317,5 @@ flowchart TD
 - Full testing of remaining 13 services (after instruments-service patterns documented)
 - UDC PathRegistry, readers/writers, external tables (Plan 2 udc-path-registry, udc-readers-writers)
 - UMI connectivity framework (BaseWebSocketClient, VenueRateLimiter)
-- UTEI order management migration from execution-services
+- UTEI order management migration from execution-service
 - UFC feature service base unification

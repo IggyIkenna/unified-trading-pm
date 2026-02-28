@@ -105,7 +105,7 @@ todos:
     content: "Complete onboarding-ui: client creation wizard, API key CRUD with Secret Manager backend wired to credentials-registry.yaml, connection test, strategy-account mapping"
     status: pending
   - id: ui-skeleton-assess
-    content: Assess backtest-ui, client-reporting-ui, settlement-ui — what data schemas they need vs what's available; scope SSE integration
+    content: Assess execution-analytics-ui, client-reporting-ui, settlement-ui — what data schemas they need vs what's available; scope SSE integration
     status: pending
   - id: sports-migration-batch1
     content: "Sports migration Phase 1+2: auth status fixes in endpoint_registry + UIC sports canonical schemas (fixture, events, xg, odds, weather, reference)"
@@ -348,7 +348,7 @@ The `underlying`, `instrument_type`, `asset_class` are read from `InstrumentReco
 
 - Directory: `unified-internal-contracts/tests/consumer_tests/`
 - Pattern: for each producer→consumer pair, define a test that asserts the producer schema satisfies the consumer's minimum required fields
-- Key pairs to cover: market-data-service → features-*, execution-services → pnl-attribution, strategy-service → execution-services
+- Key pairs to cover: market-data-service → features-*, execution-service → pnl-attribution, strategy-service → execution-service
 - Use `pytest-pact` or plain pytest with schema field assertions (not full Pact broker)
 
 ### P0-5: Skipped test in UMI

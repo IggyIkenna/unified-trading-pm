@@ -61,7 +61,7 @@ bash enhanced-cleanup-batch-fix.sh \
 ```bash
 bash enhanced-cleanup-batch-fix.sh \
   --model auto \
-  --repos "execution-services,instruments-service" \
+  --repos "execution-service,instruments-service" \
   --state open
 ```
 
@@ -81,7 +81,7 @@ bash enhanced-cleanup-batch-fix.sh \
   State: OPEN
   Require labels: cleanup
 
-  ✅ execution-services #147 - Will process (labels: cod,cleanup)
+  ✅ execution-service #147 - Will process (labels: cod,cleanup)
   ✅ strategy-service #23 - Will process (labels: cod,cleanup)
   ⏭️  unified-trading-services #48 - Skipped (state: CLOSED)
   🔒 instruments-service #59 - Skipped (has 'blocked' label)
@@ -95,7 +95,7 @@ bash enhanced-cleanup-batch-fix.sh \
 
 | Repo                           | Issue | State  | Blocked? |
 | ------------------------------ | ----- | ------ | -------- |
-| execution-services             | #147  | OPEN   | No       |
+| execution-service             | #147  | OPEN   | No       |
 | strategy-service               | #23   | OPEN   | No       |
 | instruments-service            | #58   | OPEN   | No       |
 | unified-trading-services       | #48   | CLOSED | N/A      |
@@ -118,7 +118,7 @@ bash enhanced-cleanup-batch-fix.sh \
 | unified-trading-services      | #52   | OPEN  | No ✅    |
 | instruments-service           | #59   | OPEN  | Yes 🔒   |
 | strategy-service              | #25   | OPEN  | Yes 🔒   |
-| execution-services            | #150  | OPEN  | Yes 🔒   |
+| execution-service            | #150  | OPEN  | Yes 🔒   |
 | unified-trading-deployment-v2 | #127  | OPEN  | Yes 🔒   |
 | market-tick-data-handler      | #54   | OPEN  | No ✅    |
 

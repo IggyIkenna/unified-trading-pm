@@ -87,40 +87,40 @@
       "existing": false
     }
   ],
-  "execution-services": [
+  "execution-service": [
     {
       "subtask_id": "Subtask 3.1",
       "title": "[PostTrade] Extract algo implementations to execution-algo-library",
       "number": "159",
-      "url": "https://github.com/IggyIkenna/execution-services/issues/159",
+      "url": "https://github.com/IggyIkenna/execution-service/issues/159",
       "existing": false
     },
     {
       "subtask_id": "Subtask 3.2",
       "title": "[PostTrade] Refactor to use unified-order-interface venue adapters",
       "number": "160",
-      "url": "https://github.com/IggyIkenna/execution-services/issues/160",
+      "url": "https://github.com/IggyIkenna/execution-service/issues/160",
       "existing": false
     },
     {
       "subtask_id": "Subtask 3.3",
       "title": "[PostTrade] Simplify to orchestration layer",
       "number": "161",
-      "url": "https://github.com/IggyIkenna/execution-services/issues/161",
+      "url": "https://github.com/IggyIkenna/execution-service/issues/161",
       "existing": false
     },
     {
       "subtask_id": "Subtask 3.4",
       "title": "[PostTrade] Manual instruction entry API",
       "number": "162",
-      "url": "https://github.com/IggyIkenna/execution-services/issues/162",
+      "url": "https://github.com/IggyIkenna/execution-service/issues/162",
       "existing": false
     },
     {
       "subtask_id": "Subtask 3.6",
       "title": "[PostTrade] Testing + docs",
       "number": "163",
-      "url": "https://github.com/IggyIkenna/execution-services/issues/163",
+      "url": "https://github.com/IggyIkenna/execution-service/issues/163",
       "existing": false
     }
   ],

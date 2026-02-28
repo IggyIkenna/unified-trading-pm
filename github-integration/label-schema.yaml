@@ -141,7 +141,7 @@ labels:
     color: ededed
 
   - name: service/execution
-    description: "execution-services"
+    description: "execution-service"
     color: ededed
 
   - name: service/cross-service

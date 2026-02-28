@@ -37,7 +37,7 @@ This addendum addresses follow-up questions from the independent audit. It shoul
 
 **Action:** Ensure api-contracts has Databento schemas for all data types (OHLCV-1m, OHLCV-1s, trades, **TBBO**, MBP-1, definition). Add `dataset_id` or `publisher_id` mapping to venue if needed for validation. IBKR schemas already exist (IBKROrder, IBKRPosition, IBKRError).
 
-**TBBO vs MBP-1:** TBBO (Top of Book Bid/Offer) is a distinct Databento schema – trade events plus BBO snapshot before each trade. MBP-1 covers best bid/ask only. execution-services L2_MBP mode expects `tbbo` data. Add `DatabentoTbbo` schema to api-contracts; market-tick-data-handler uses `tbbo` but has no dedicated schema (only MBP-1).
+**TBBO vs MBP-1:** TBBO (Top of Book Bid/Offer) is a distinct Databento schema – trade events plus BBO snapshot before each trade. MBP-1 covers best bid/ask only. execution-service L2_MBP mode expects `tbbo` data. Add `DatabentoTbbo` schema to api-contracts; market-tick-data-handler uses `tbbo` but has no dedicated schema (only MBP-1).
 
 ---
 
