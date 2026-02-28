@@ -600,11 +600,11 @@ BLOCK E — BLOCKED BY B, C (can run parallel with D)
 
 **Tier 2 libraries:** unified-domain-client, unified-market-interface, unified-trade-execution-interface, unified-defi-execution-interface, unified-ml-interface, unified-feature-calculator-library, matching-engine-library, unified-position-interface (future)
 
-**Services:** instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service, features-sports-service (future), ml-training-service, ml-inference-service, strategy-service, execution-services, alerting-system, pnl-attribution-service, position-balance-monitor-service, risk-and-exposure-service, strategy-validation-service
+**Services:** instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service, features-sports-service (future), ml-training-service, ml-inference-service, strategy-service, execution-service, alerting-service, pnl-attribution-service, position-balance-monitor-service, risk-and-exposure-service, strategy-validation-service
 
 **Infrastructure:** unified-trading-deployment-v3, unified-trading-codex
 
-**UIs:** backtest-ui, batch-audit-ui, trading-analytics-ui, live-health-monitor-ui, client-reporting-ui, logs-dashboard-ui, ml-deployment-ui, onboarding-ui, settlement-ui
+**UIs:** execution-analytics-ui, batch-audit-ui, trading-analytics-ui, live-health-monitor-ui, client-reporting-ui, logs-dashboard-ui, ml-training-ui, onboarding-ui, settlement-ui
 
 ### New Repo/Library Setup Pattern (Full Checklist)
 
@@ -696,7 +696,7 @@ When creating a **new UI**:
 
 - **manifest-update**: Add unified-internal-contracts, unified-sports-execution-interface to workspace-manifest.json with deps, tier, merge_level
 - **consumer-update**: Update all services/libraries that import from api_contracts.internal to use unified-internal-contracts
-- **UIC adoption**: Add `unified-internal-contracts` dep + use `LifecycleEventType` in log_event. Done: execution-services, unified-trading-services, market-data-processing-service, instruments-service, market-tick-data-handler, risk-and-exposure-service, features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service, ml-training-service, ml-inference-service, strategy-service, position-balance-monitor-service, pnl-attribution-service, alerting-system. Remaining (if in workspace): features-sports-service, strategy-validation-service.
+- **UIC adoption**: Add `unified-internal-contracts` dep + use `LifecycleEventType` in log_event. Done: execution-service, unified-trading-services, market-data-processing-service, instruments-service, market-tick-data-handler, risk-and-exposure-service, features-calendar-service, features-delta-one-service, features-volatility-service, features-onchain-service, ml-training-service, ml-inference-service, strategy-service, position-balance-monitor-service, pnl-attribution-service, alerting-service. Remaining (if in workspace): features-sports-service, strategy-validation-service.
 
 ### Testing and VCR
 

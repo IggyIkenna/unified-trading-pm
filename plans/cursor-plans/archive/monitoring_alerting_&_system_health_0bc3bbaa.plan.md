@@ -1,6 +1,6 @@
 ---
 name: Monitoring Alerting & System Health
-overview: "Build institutional-grade (Citadel-level+) monitoring and alerting: Prometheus metrics across all services via unified-trading-services shared lib, standalone alerting-system fully built out (AlertRule engine, Slack blocks with Claude Code Slack integration that reads alerts and dispatches follow-up actions, PagerDuty), new market-data-api repo for order book SSE, latency/CPU/memory dashboards in trading-analytics-ui and live-health-monitor-ui, Grafana-export-compatible dashboard JSONs, deployment system refactor (split unified-trading-deployment-v3 backend from UI), ML deployment UI correctly scoped as ML analytics UI, prometheus-metrics codex doc. reportAny=error everywhere."
+overview: "Build institutional-grade (Citadel-level+) monitoring and alerting: Prometheus metrics across all services via unified-trading-services shared lib, standalone alerting-service fully built out (AlertRule engine, Slack blocks with Claude Code Slack integration that reads alerts and dispatches follow-up actions, PagerDuty), new market-data-api repo for order book SSE, latency/CPU/memory dashboards in trading-analytics-ui and live-health-monitor-ui, Grafana-export-compatible dashboard JSONs, deployment system refactor (split unified-trading-deployment-v3 backend from UI), ML deployment UI correctly scoped as ML analytics UI, prometheus-metrics codex doc. reportAny=error everywhere."
 todos:
   - id: prometheus-client-add-to-uts
     content: "Add prometheus-client>=0.21.0 to unified-trading-services/pyproject.toml as a core dependency (not optional). Create unified_trading_services/observability/__init__.py and unified_trading_services/observability/metrics.py with ALL canonical Prometheus metrics defined as module-level globals (see Part 1). Create unified_trading_services/observability/metrics_handler.py with get_metrics_response() → fastapi.Response function. Create unified_trading_services/observability/middleware.py with PrometheusMiddleware (starlette BaseHTTPMiddleware) that auto-records API_REQUEST_LATENCY for every request. Export all from unified_trading_services/__init__.py. Run timeout 120 basedpyright unified_trading_services/ fix all errors. bash scripts/quickmerge.sh 'feat: add prometheus observability module'."
@@ -11,38 +11,38 @@ todos:
     status: done
     completed_at: "2026-02-27"
   - id: metrics-endpoint-fastapi-services
-    content: "Add GET /metrics Prometheus endpoint to ALL FastAPI services that are user-facing or externally consumed. Services: execution-results-api, position-balance-monitor-service, execution-services (manual instruction API), alerting-system (when built out), client-reporting-service (new repo), market-data-api (new repo), unified-trading-deployment-v3. Pattern for each: (1) add sse-starlette and prometheus-client to pyproject.toml via uv add (already in unified-trading-services transitively, but explicit is better). (2) In api/main.py: app.add_middleware(PrometheusMiddleware) from unified_trading_services.observability.middleware. (3) Add @app.get('/metrics') route that returns get_metrics_response(). (4) Instrument service-specific metrics: execution-results-api instruments TRADE_EXECUTION_LATENCY on backtest completion, position-balance-monitor instruments POSITION_NOTIONAL and RECONCILIATION_DRIFT on each reconciliation. (5) quickmerge each repo. NOTE: risk-and-exposure-service FastAPI is being REMOVED (per service/UI separation rule) — do NOT add /metrics there; risk metrics published via unified-events-interface instead."
+    content: "Add GET /metrics Prometheus endpoint to ALL FastAPI services that are user-facing or externally consumed. Services: execution-results-api, position-balance-monitor-service, execution-service (manual instruction API), alerting-service (when built out), client-reporting-api (new repo), market-data-api (new repo), unified-trading-deployment-v3. Pattern for each: (1) add sse-starlette and prometheus-client to pyproject.toml via uv add (already in unified-trading-services transitively, but explicit is better). (2) In api/main.py: app.add_middleware(PrometheusMiddleware) from unified_trading_services.observability.middleware. (3) Add @app.get('/metrics') route that returns get_metrics_response(). (4) Instrument service-specific metrics: execution-results-api instruments TRADE_EXECUTION_LATENCY on backtest completion, position-balance-monitor instruments POSITION_NOTIONAL and RECONCILIATION_DRIFT on each reconciliation. (5) quickmerge each repo. NOTE: risk-and-exposure-service FastAPI is being REMOVED (per service/UI separation rule) — do NOT add /metrics there; risk metrics published via unified-events-interface instead."
     status: done
     completed_at: "2026-02-27"
-  - id: alerting-system-build-out
-    content: "Build out alerting-system from near-empty skeleton (currently only config.py + main.py stubs). This is the central alerting hub — external-facing, runs as always-on FastAPI service. (1) Add to pyproject.toml: fastapi>=0.109, uvicorn[standard], sse-starlette>=1.6.1, aiohttp>=3.13, httpx>=0.28, pyyaml>=6.0, unified-internal-contracts, unified-trading-services, unified-events-interface, unified-config-interface, unified-cloud-interface, anthropic>=0.40 (for Claude Code Slack integration). (2) Build alerting_system/config.py: extend UnifiedCloudConfig, add slack_webhook_url, pagerduty_api_key, email_smtp_host, google_oauth_domain, alert_rules_gcs_path. (3) Build alerting_system/core/rule_engine.py: RuleEngine class — loads AlertRule list from alerting-system/config/default_rules.yaml, polls Prometheus /metrics endpoints from all services every 10s, evaluates each AlertRule condition, fires AlertEvent if threshold breached and cooldown not active, stores last_fired timestamps in memory. (4) Build alerting_system/core/slack_dispatcher.py: sends branded Odum Slack blocks (see Part 2 format), includes 'View in Dashboard' button, color-coded by severity. (5) Build alerting_system/core/claude_slack_agent.py: after sending alert to Slack, also triggers a Claude Code API call (using anthropic SDK) that reads the alert context and posts a follow-up Slack message with: analysis of what caused it, recommended action steps, link to relevant service logs. This gives AI-driven alert triage in Slack. (6) Build alerting_system/api/main.py: FastAPI app with Google OAuth middleware. GET /stream/alerts SSE endpoint (streams AlertEvent to live-health-monitor-ui). POST /alerts/test (ADMIN role, trigger test alert). GET /rules (list AlertRule). POST /rules (create/update AlertRule, ADMIN). GET /health. GET /metrics. (7) Build alerting_system/config/default_rules.yaml (see Part 2 table). (8) quickmerge alerting-system."
+  - id: alerting-service-build-out
+    content: "Build out alerting-service from near-empty skeleton (currently only config.py + main.py stubs). This is the central alerting hub — external-facing, runs as always-on FastAPI service. (1) Add to pyproject.toml: fastapi>=0.109, uvicorn[standard], sse-starlette>=1.6.1, aiohttp>=3.13, httpx>=0.28, pyyaml>=6.0, unified-internal-contracts, unified-trading-services, unified-events-interface, unified-config-interface, unified-cloud-interface, anthropic>=0.40 (for Claude Code Slack integration). (2) Build alerting_service/config.py: extend UnifiedCloudConfig, add slack_webhook_url, pagerduty_api_key, email_smtp_host, google_oauth_domain, alert_rules_gcs_path. (3) Build alerting_service/core/rule_engine.py: RuleEngine class — loads AlertRule list from alerting-service/config/default_rules.yaml, polls Prometheus /metrics endpoints from all services every 10s, evaluates each AlertRule condition, fires AlertEvent if threshold breached and cooldown not active, stores last_fired timestamps in memory. (4) Build alerting_service/core/slack_dispatcher.py: sends branded Odum Slack blocks (see Part 2 format), includes 'View in Dashboard' button, color-coded by severity. (5) Build alerting_service/core/claude_slack_agent.py: after sending alert to Slack, also triggers a Claude Code API call (using anthropic SDK) that reads the alert context and posts a follow-up Slack message with: analysis of what caused it, recommended action steps, link to relevant service logs. This gives AI-driven alert triage in Slack. (6) Build alerting_service/api/main.py: FastAPI app with Google OAuth middleware. GET /stream/alerts SSE endpoint (streams AlertEvent to live-health-monitor-ui). POST /alerts/test (ADMIN role, trigger test alert). GET /rules (list AlertRule). POST /rules (create/update AlertRule, ADMIN). GET /health. GET /metrics. (7) Build alerting_service/config/default_rules.yaml (see Part 2 table). (8) quickmerge alerting-service."
     status: done
     completed_at: "2026-02-27"
   - id: standard-alert-rules-config
-    content: "Create alerting-system/config/default_rules.yaml with all 10 standard alert rules. Each rule: rule_id, name, metric_name (exact Prometheus metric name from metrics.py), condition, threshold, severity, channels list, cooldown_seconds. Rules: (1) recon-drift: reconciliation_drift_usd > 500 → CRITICAL → [SLACK, PAGERDUTY]. (2) circuit-breaker-open: circuit_breaker_state == 2 → FATAL → [SLACK, PAGERDUTY, EMAIL]. (3) position-limit-breach: position_notional_usd > (configured per strategy, use 1000000 default) → CRITICAL → [SLACK, UI]. (4) feature-staleness: feature_staleness_seconds > 300 → WARNING → [SLACK, UI]. (5) dlq-depth: dead_letter_queue_depth > 10 → WARNING → [SLACK]. (6) gcs-latency: gcs_write_latency_seconds > 30 → WARNING → [SLACK]. (7) fill-rate-low: order_fill_rate_pct < 0.80 → CRITICAL → [SLACK, PAGERDUTY]. (8) exec-latency: trade_execution_latency_seconds > 0.5 → WARNING → [SLACK, UI]. (9) pnl-drawdown: pnl_drawdown_pct < -0.05 → CRITICAL → [SLACK, PAGERDUTY, EMAIL]. (10) ibgw-disconnect: ibkr_gateway_connected == 0 → FATAL → [SLACK, PAGERDUTY, EMAIL, UI]. quickmerge alerting-system."
+    content: "Create alerting-service/config/default_rules.yaml with all 10 standard alert rules. Each rule: rule_id, name, metric_name (exact Prometheus metric name from metrics.py), condition, threshold, severity, channels list, cooldown_seconds. Rules: (1) recon-drift: reconciliation_drift_usd > 500 → CRITICAL → [SLACK, PAGERDUTY]. (2) circuit-breaker-open: circuit_breaker_state == 2 → FATAL → [SLACK, PAGERDUTY, EMAIL]. (3) position-limit-breach: position_notional_usd > (configured per strategy, use 1000000 default) → CRITICAL → [SLACK, UI]. (4) feature-staleness: feature_staleness_seconds > 300 → WARNING → [SLACK, UI]. (5) dlq-depth: dead_letter_queue_depth > 10 → WARNING → [SLACK]. (6) gcs-latency: gcs_write_latency_seconds > 30 → WARNING → [SLACK]. (7) fill-rate-low: order_fill_rate_pct < 0.80 → CRITICAL → [SLACK, PAGERDUTY]. (8) exec-latency: trade_execution_latency_seconds > 0.5 → WARNING → [SLACK, UI]. (9) pnl-drawdown: pnl_drawdown_pct < -0.05 → CRITICAL → [SLACK, PAGERDUTY, EMAIL]. (10) ibgw-disconnect: ibkr_gateway_connected == 0 → FATAL → [SLACK, PAGERDUTY, EMAIL, UI]. quickmerge alerting-service."
     status: done
     completed_at: "2026-02-27"
   - id: market-data-api-new-repo
-    content: "Create NEW standalone repo market-data-api following new-repo-setup.mdc. Purpose: order book SSE delivery service. market-tick-data-handler publishes normalized L2 order book updates to Pub/Sub topic ORDERBOOK_UPDATES. market-data-api subscribes and exposes SSE endpoints. (1) gh repo create IggyIkenna/market-data-api --private --clone. Grant CosmicTrader + datado access. (2) Dependencies: fastapi>=0.109, uvicorn[standard], sse-starlette>=1.6.1, google-cloud-pubsub (via unified-cloud-interface), unified-internal-contracts, unified-trading-services, unified-config-interface, unified-events-interface, unified-cloud-interface, google-auth>=2.40. (3) Structure: market_data_api/api/main.py (FastAPI + Google OAuth), market_data_api/core/orderbook_subscriber.py (Pub/Sub subscriber, maintains per-symbol L2 book in memory as dict[str, OrderBookSnapshot]), market_data_api/api/routes/orderbook.py (GET /stream/orderbook?symbol=BTCUSDT&depth=20 SSE endpoint, GET /orderbook/{symbol}/snapshot REST), market_data_api/api/routes/health.py, market_data_api/config.py. (4) OrderBookSnapshot dataclass: symbol, bids list[tuple[float,float]], asks list[tuple[float,float]], timestamp, venue. (5) SSE format: {bids: [[price,qty],...], asks: [[price,qty],...], own_orders: {bid_orders: [{price,qty,order_id}], ask_orders: [...]}, timestamp, venue, spread_bps}. own_orders fetched from execution-services API. (6) Rate limiting: max 10 concurrent SSE subscribers per symbol. (7) GET /metrics Prometheus endpoint. (8) quickmerge market-data-api."
+    content: "Create NEW standalone repo market-data-api following new-repo-setup.mdc. Purpose: order book SSE delivery service. market-tick-data-handler publishes normalized L2 order book updates to Pub/Sub topic ORDERBOOK_UPDATES. market-data-api subscribes and exposes SSE endpoints. (1) gh repo create IggyIkenna/market-data-api --private --clone. Grant CosmicTrader + datado access. (2) Dependencies: fastapi>=0.109, uvicorn[standard], sse-starlette>=1.6.1, google-cloud-pubsub (via unified-cloud-interface), unified-internal-contracts, unified-trading-services, unified-config-interface, unified-events-interface, unified-cloud-interface, google-auth>=2.40. (3) Structure: market_data_api/api/main.py (FastAPI + Google OAuth), market_data_api/core/orderbook_subscriber.py (Pub/Sub subscriber, maintains per-symbol L2 book in memory as dict[str, OrderBookSnapshot]), market_data_api/api/routes/orderbook.py (GET /stream/orderbook?symbol=BTCUSDT&depth=20 SSE endpoint, GET /orderbook/{symbol}/snapshot REST), market_data_api/api/routes/health.py, market_data_api/config.py. (4) OrderBookSnapshot dataclass: symbol, bids list[tuple[float,float]], asks list[tuple[float,float]], timestamp, venue. (5) SSE format: {bids: [[price,qty],...], asks: [[price,qty],...], own_orders: {bid_orders: [{price,qty,order_id}], ask_orders: [...]}, timestamp, venue, spread_bps}. own_orders fetched from execution-service API. (6) Rate limiting: max 10 concurrent SSE subscribers per symbol. (7) GET /metrics Prometheus endpoint. (8) quickmerge market-data-api."
     status: done
     completed_at: "2026-02-27"
   - id: orderbook-viz-ui
     content: "Build /orderbook page in trading-analytics-ui. (1) OrderBookDepthChart component: recharts AreaChart (cumulative depth on Y, price on X). bids side: blue fill (#2563EB). asks side: red fill (#DC2626). Midpoint line: dashed gray with spread label in bps. own bid orders: green dots overlaid. own ask orders: orange dots overlaid. Update in real-time from SSE (EventSource to market-data-api GET /stream/orderbook?symbol={selectedSymbol}). (2) OrderBookTable component: top 10 bid/ask levels each side. Qty column shows our own order qty highlighted [MY ORDER] if order_id matches. Flash animation on price/qty change. (3) TradeTimeline component: scrolling tape of recent fills from execution-results-api GET /stream/fills SSE. Buy=green row, Sell=red row, own fill=bold + ★. Auto-scroll to newest. (4) Symbol selector dropdown: list of active instruments from instruments-service. (5) SpreadIndicator: live spread in bps, target <5bps warning >20bps. (6) npm run typecheck passes. quickmerge trading-analytics-ui."
     status: pending
   - id: latency-plots-ui
-    content: "Build /latency page in trading-analytics-ui. All data from alerting-system GET /metrics?service=execution-services or Prometheus scrape. (1) ExecutionLatencyHistogram: recharts BarChart — buckets [<10ms, 10-50ms, 50-100ms, 100-500ms, >500ms], bars grouped by venue (OKX=blue, Binance=green, Bybit=orange). Threshold line at 500ms (WARNING level). (2) SlippageScatter: recharts ScatterChart — X=order_size_usd, Y=slippage_bps. Color by venue. Tooltip shows instrument, timestamp. Data: GET /api/v1/analysis/slippage from execution-results-api. (3) GatewayRoundtrip: recharts LineChart — IBKR TWS roundtrip latency over last 24h (1-min buckets). Red threshold at 100ms. Data: ibkr_roundtrip_latency_seconds Prometheus gauge. (4) P50/P95/P99 latency summary table above charts. (5) Time range selector: 1h, 6h, 24h, 7d. (6) npm run typecheck passes. quickmerge trading-analytics-ui."
+    content: "Build /latency page in trading-analytics-ui. All data from alerting-service GET /metrics?service=execution-service or Prometheus scrape. (1) ExecutionLatencyHistogram: recharts BarChart — buckets [<10ms, 10-50ms, 50-100ms, 100-500ms, >500ms], bars grouped by venue (OKX=blue, Binance=green, Bybit=orange). Threshold line at 500ms (WARNING level). (2) SlippageScatter: recharts ScatterChart — X=order_size_usd, Y=slippage_bps. Color by venue. Tooltip shows instrument, timestamp. Data: GET /api/v1/analysis/slippage from execution-results-api. (3) GatewayRoundtrip: recharts LineChart — IBKR TWS roundtrip latency over last 24h (1-min buckets). Red threshold at 100ms. Data: ibkr_roundtrip_latency_seconds Prometheus gauge. (4) P50/P95/P99 latency summary table above charts. (5) Time range selector: 1h, 6h, 24h, 7d. (6) npm run typecheck passes. quickmerge trading-analytics-ui."
     status: pending
   - id: system-health-page
-    content: "Build /system-health page in live-health-monitor-ui. Pulls from metrics-aggregator-api (GET /api/system/metrics). (1) ServiceStatusGrid: grid of service cards (all 14+ services). Each card: service name, green/yellow/red status dot (green=heartbeat<30s, yellow=latency_high or warning alerts, red=down or CIRCUIT_BREAKER_OPEN), last heartbeat timestamp. Click → navigate to service detail. Data: alerting-system GET /health, supplemented by Prometheus up{job=service_name} scrape. (2) CPUMemoryTimeSeries: recharts LineChart — multi-line (one per service), selector for which services to show. Y-axis: % usage. Time window: 1h. Threshold lines: 85% RAM=warning, 90%=danger. (3) PubSubLagBars: recharts BarChart — one bar per Pub/Sub topic. Color: green<1s, yellow 1-5s, red>5s. Data: pubsub_message_lag_seconds Prometheus gauge. (4) DLQDepthBadges: grid of topic badges with count. Zero=green badge, any>0=red badge with integer count. Clicking badge shows DLQ messages. (5) GCSWriteThroughput: recharts LineChart — records/min per service. Helps detect stalled writes. (6) Active Alerts panel: SSE from alerting-system GET /stream/alerts — live scrolling AlertEvent list with severity color-coding. (7) npm run typecheck passes. quickmerge live-health-monitor-ui."
+    content: "Build /system-health page in live-health-monitor-ui. Pulls from metrics-aggregator-api (GET /api/system/metrics). (1) ServiceStatusGrid: grid of service cards (all 14+ services). Each card: service name, green/yellow/red status dot (green=heartbeat<30s, yellow=latency_high or warning alerts, red=down or CIRCUIT_BREAKER_OPEN), last heartbeat timestamp. Click → navigate to service detail. Data: alerting-service GET /health, supplemented by Prometheus up{job=service_name} scrape. (2) CPUMemoryTimeSeries: recharts LineChart — multi-line (one per service), selector for which services to show. Y-axis: % usage. Time window: 1h. Threshold lines: 85% RAM=warning, 90%=danger. (3) PubSubLagBars: recharts BarChart — one bar per Pub/Sub topic. Color: green<1s, yellow 1-5s, red>5s. Data: pubsub_message_lag_seconds Prometheus gauge. (4) DLQDepthBadges: grid of topic badges with count. Zero=green badge, any>0=red badge with integer count. Clicking badge shows DLQ messages. (5) GCSWriteThroughput: recharts LineChart — records/min per service. Helps detect stalled writes. (6) Active Alerts panel: SSE from alerting-service GET /stream/alerts — live scrolling AlertEvent list with severity color-coding. (7) npm run typecheck passes. quickmerge live-health-monitor-ui."
     status: pending
   - id: metrics-aggregator-api
-    content: "Build metrics aggregator into live-health-monitor-ui's backend (or add to alerting-system — prefer alerting-system to keep UI backends thin). Add to alerting_system/api/routes/system_metrics.py: GET /api/system/metrics?service={service}&window={1h|6h|24h} endpoint. Implementation: use httpx.AsyncClient to fan-out GET /metrics to all service Prometheus endpoints (URLs from config: METRICS_ENDPOINTS dict in UnifiedCloudConfig). Parse Prometheus text format (use prometheus-client parse_known_metrics or simple regex). Aggregate into {service, cpu_pct, memory_mb, worker_count} time-series. Cache results in memory for 15s to avoid hammering services. Return JSON array of {timestamp, service, metric, value}. Add get_metrics_response() pattern consistent with other services. quickmerge alerting-system."
+    content: "Build metrics aggregator into live-health-monitor-ui's backend (or add to alerting-service — prefer alerting-service to keep UI backends thin). Add to alerting_service/api/routes/system_metrics.py: GET /api/system/metrics?service={service}&window={1h|6h|24h} endpoint. Implementation: use httpx.AsyncClient to fan-out GET /metrics to all service Prometheus endpoints (URLs from config: METRICS_ENDPOINTS dict in UnifiedCloudConfig). Parse Prometheus text format (use prometheus-client parse_known_metrics or simple regex). Aggregate into {service, cpu_pct, memory_mb, worker_count} time-series. Cache results in memory for 15s to avoid hammering services. Return JSON array of {timestamp, service, metric, value}. Add get_metrics_response() pattern consistent with other services. quickmerge alerting-service."
     status: pending
   - id: deployment-service-split
-    content: "Refactor unified-trading-deployment-v3 to cleanly separate: backend API (already exists in api/), UI (already exists in ui/), and config service (extract from api/routes/config.py). (1) The existing unified-trading-deployment-v3/api/ + unified-trading-deployment-v3/ui/ structure is CORRECT — keep co-located (it is the deployment control plane, FastAPI serves the React UI). No repo split needed. (2) Extract config-related routes (StrategyConfig/ExecutionConfig CRUD) from api/routes/config.py into a dedicated api/routes/config_service.py and expose as /api/v1/configs/* routes. These routes are shared with backtest-ui and onboarding-ui. (3) The existing ui/ (React 19, Radix UI, Tailwind, 7 tabs: Deploy, Data Status, Builds, Readiness, Status, Config, History) is the system deployment UI — keep as-is. This is NOT ml-deployment-ui. (4) ml-deployment-ui is ML Analytics & Deployment (separate — see ml-deployment-ui-scope-correct in config plan). (5) Add Google OAuth to unified-trading-deployment-v3 api/auth_middleware.py (already has auth_middleware.py — wire Google OAuth using shared middleware from unified-trading-services). (6) quickmerge unified-trading-deployment-v3."
+    content: "Refactor unified-trading-deployment-v3 to cleanly separate: backend API (already exists in api/), UI (already exists in ui/), and config service (extract from api/routes/config.py). (1) The existing unified-trading-deployment-v3/api/ + unified-trading-deployment-v3/ui/ structure is CORRECT — keep co-located (it is the deployment control plane, FastAPI serves the React UI). No repo split needed. (2) Extract config-related routes (StrategyConfig/ExecutionConfig CRUD) from api/routes/config.py into a dedicated api/routes/config_service.py and expose as /api/v1/configs/* routes. These routes are shared with execution-analytics-ui and onboarding-ui. (3) The existing ui/ (React 19, Radix UI, Tailwind, 7 tabs: Deploy, Data Status, Builds, Readiness, Status, Config, History) is the system deployment UI — keep as-is. This is NOT ml-training-ui. (4) ml-training-ui is ML Analytics & Deployment (separate — see ml-training-ui-scope-correct in config plan). (5) Add Google OAuth to unified-trading-deployment-v3 api/auth_middleware.py (already has auth_middleware.py — wire Google OAuth using shared middleware from unified-trading-services). (6) quickmerge unified-trading-deployment-v3."
     status: pending
   - id: grafana-export
-    content: "Export Grafana-compatible dashboard JSONs (export-only, no live Grafana instance required yet). (1) Create unified-trading-deployment-v3/grafana/ directory. (2) Create grafana/dashboards/trading-overview.json: Grafana dashboard JSON with panels for: trade_execution_latency_seconds heatmap, position_notional_usd gauge per strategy, reconciliation_drift_usd time-series, circuit_breaker_state state timeline, pubsub_message_lag_seconds bar gauge. Use Prometheus data source (variable: ${prometheus_url}). (3) Create grafana/dashboards/system-health.json: CPU/memory time-series per service, GCS write latency, DLQ depth. (4) Create grafana/provisioning/datasources/prometheus.yaml: Grafana provisioning config pointing to ${PROMETHEUS_URL}. (5) Add GET /api/grafana/datasource to alerting-system: implements Grafana SimpleJSON protocol (GET / → capabilities, POST /query → metric values, POST /search → metric names). This allows adding alerting-system as a Grafana data source. (6) Document in unified-trading-codex/03-observability/prometheus-metrics.md. quickmerge unified-trading-deployment-v3 and alerting-system."
+    content: "Export Grafana-compatible dashboard JSONs (export-only, no live Grafana instance required yet). (1) Create unified-trading-deployment-v3/grafana/ directory. (2) Create grafana/dashboards/trading-overview.json: Grafana dashboard JSON with panels for: trade_execution_latency_seconds heatmap, position_notional_usd gauge per strategy, reconciliation_drift_usd time-series, circuit_breaker_state state timeline, pubsub_message_lag_seconds bar gauge. Use Prometheus data source (variable: ${prometheus_url}). (3) Create grafana/dashboards/system-health.json: CPU/memory time-series per service, GCS write latency, DLQ depth. (4) Create grafana/provisioning/datasources/prometheus.yaml: Grafana provisioning config pointing to ${PROMETHEUS_URL}. (5) Add GET /api/grafana/datasource to alerting-service: implements Grafana SimpleJSON protocol (GET / → capabilities, POST /query → metric values, POST /search → metric names). This allows adding alerting-service as a Grafana data source. (6) Document in unified-trading-codex/03-observability/prometheus-metrics.md. quickmerge unified-trading-deployment-v3 and alerting-service."
     status: pending
   - id: prometheus-codex
     content: "Create unified-trading-codex/03-observability/prometheus-metrics.md. Contents: (1) Canonical metric catalog: every metric name, type (Counter/Gauge/Histogram), labels, description, which service records it. (2) Alert rule catalog: all 10 standard rules from default_rules.yaml with threshold rationale. (3) Service → metrics endpoint mapping table: service_name → http://service:port/metrics. (4) Grafana dashboard JSON location: unified-trading-deployment-v3/grafana/dashboards/. (5) How to add a new metric: step-by-step (add to metrics.py, instrument in service, update this doc, add alert rule if needed). (6) Alert triage guide: for each CRITICAL/FATAL alert, what to check and what action to take. (7) Claude Code Slack integration description: how AI triage messages are generated and what they contain. quickmerge unified-trading-codex."
@@ -52,11 +52,11 @@ todos:
     status: done
     completed_at: "2026-02-27"
   - id: e722-ruff-fix
-    content: "Remove E722 from global ruff ignore in execution-services"
+    content: "Remove E722 from global ruff ignore in execution-service"
     status: done
     completed_at: "2026-02-27"
   - id: uv-lock-gitignore
-    content: "Remove uv.lock from .gitignore in pnl-attribution-service and alerting-system"
+    content: "Remove uv.lock from .gitignore in pnl-attribution-service and alerting-service"
     status: done
     completed_at: "2026-02-27"
   - id: thread-pool-bounded
@@ -77,7 +77,7 @@ Cross-references:
 - `end-to-end_completion_master_plan_(v2)_2ce484e2.plan.md` — P0-6 SSE endpoints, P1-19 circuit breaker schema
 - `config,_reporting_&_ui_completion_2c43029e.plan.md` — trading-analytics-ui SSE, live-health-monitor-ui, Google OAuth, service/UI separation
 
-**Updated:** 2026-02-27 — Incorporates: Google OAuth on alerting-system, Claude Code Slack AI triage integration, risk-and-exposure-service FastAPI removal (internal service), new market-data-api repo for order book SSE, deployment-service kept co-located (correct), ml-deployment-ui correctly scoped as ML analytics UI, reportAny=error mandate.
+**Updated:** 2026-02-27 — Incorporates: Google OAuth on alerting-service, Claude Code Slack AI triage integration, risk-and-exposure-service FastAPI removal (internal service), new market-data-api repo for order book SSE, deployment-service kept co-located (correct), ml-training-ui correctly scoped as ML analytics UI, reportAny=error mandate.
 
 ---
 
@@ -103,14 +103,14 @@ Cross-references:
 
 | Component                    | Status                              | Notes                                                                                                                |
 | ---------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `alerting-system` repo       | EXISTS but SKELETON                 | Only config.py + main.py stubs. No actual alerting logic.                                                            |
+| `alerting-service` repo       | EXISTS but SKELETON                 | Only config.py + main.py stubs. No actual alerting logic.                                                            |
 | Slack integration            | EXISTS in risk-and-exposure-service | `alert_manager.py` + `alert_adapter.py` — sends to Slack + PagerDuty. Has rate limiting. Uses `aiohttp`.             |
 | Alert schemas                | PARTIAL in UIC                      | `AlertMessage`, `AlertType` in `risk.py` — NOT `AlertRule`/`AlertEvent` (missing).                                   |
 | Prometheus                   | **MISSING**                         | Zero `prometheus_client` usage anywhere in production code. `market-tick-data-handler` has it in optional deps only. |
 | Order book visualization     | **MISSING**                         | No order book SSE endpoint. `market-tick-data-handler` is CLI-only.                                                  |
 | Latency / CPU / memory plots | **MISSING**                         | No instrumentation.                                                                                                  |
 | Grafana                      | **MISSING**                         | No dashboards, no datasource endpoint.                                                                               |
-| FastAPI in risk service      | EXISTS but should be removed        | `risk_and_exposure_service/api/main.py` — pre-trade checks should be library import in execution-services, not HTTP. |
+| FastAPI in risk service      | EXISTS but should be removed        | `risk_and_exposure_service/api/main.py` — pre-trade checks should be library import in execution-service, not HTTP. |
 
 
 ---
@@ -244,10 +244,10 @@ Services that get `/metrics` endpoint added:
 | Service                          | `/metrics`              | Specific metrics to instrument                                                            |
 | -------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------- |
 | execution-results-api            | ✅ Add                   | API_REQUEST_LATENCY (auto via middleware)                                                 |
-| execution-services               | ✅ Add                   | TRADE_EXECUTION_LATENCY, ORDER_SUBMISSION_COUNTER, ORDER_FILL_RATE, CIRCUIT_BREAKER_STATE |
+| execution-service               | ✅ Add                   | TRADE_EXECUTION_LATENCY, ORDER_SUBMISSION_COUNTER, ORDER_FILL_RATE, CIRCUIT_BREAKER_STATE |
 | position-balance-monitor-service | ✅ Add                   | POSITION_NOTIONAL, RECONCILIATION_DRIFT                                                   |
-| alerting-system                  | ✅ Add                   | API_REQUEST_LATENCY                                                                       |
-| client-reporting-service (new)   | ✅ Add                   | API_REQUEST_LATENCY                                                                       |
+| alerting-service                  | ✅ Add                   | API_REQUEST_LATENCY                                                                       |
+| client-reporting-api (new)   | ✅ Add                   | API_REQUEST_LATENCY                                                                       |
 | market-data-api (new)            | ✅ Add                   | API_REQUEST_LATENCY                                                                       |
 | unified-trading-deployment-v3    | ✅ Add                   | API_REQUEST_LATENCY                                                                       |
 | pnl-attribution-service          | Add CLI metric emission | PNL_DRAWDOWN_PCT updated after each batch run                                             |
@@ -265,7 +265,7 @@ Services that get `/metrics` endpoint added:
 ```
 All services → Prometheus /metrics endpoints
     ↓ (polled every 10s)
-alerting-system RuleEngine
+alerting-service RuleEngine
     ↓ (evaluates AlertRule conditions)
     ├── Slack dispatcher (branded blocks + Claude AI triage message)
     ├── PagerDuty dispatcher (CRITICAL/FATAL only)
@@ -273,11 +273,11 @@ alerting-system RuleEngine
     └── SSE /stream/alerts (live-health-monitor-ui)
 ```
 
-### alerting-system structure (full)
+### alerting-service structure (full)
 
 ```
-alerting-system/
-├── alerting_system/
+alerting-service/
+├── alerting_service/
 │   ├── __init__.py
 │   ├── config.py                        # UnifiedCloudConfig extension
 │   ├── main.py                          # asyncio entrypoint
@@ -302,13 +302,13 @@ alerting-system/
 └── scripts/quality-gates.sh
 ```
 
-### alerting_system/config.py
+### alerting_service/config.py
 
 ```python
 from unified_config_interface import UnifiedCloudConfig
 
 class AlertingSystemConfig(UnifiedCloudConfig):
-    service_name: str = "alerting-system"
+    service_name: str = "alerting-service"
     slack_webhook_url: str                          # required — fail if missing
     pagerduty_routing_key: str | None = None
     email_smtp_host: str | None = None
@@ -326,7 +326,7 @@ class AlertingSystemConfig(UnifiedCloudConfig):
 ### Slack message format (branded Odum blocks)
 
 ```python
-# alerting_system/core/slack_dispatcher.py
+# alerting_service/core/slack_dispatcher.py
 
 SEVERITY_COLORS = {
     "DEBUG": "#808080",
@@ -375,7 +375,7 @@ def build_slack_blocks(event: AlertEvent) -> dict:
 After each CRITICAL/FATAL alert is sent to Slack, `claude_slack_agent.py` makes an **anthropic API call** (claude-3-5-haiku-20241022 for speed) and posts a follow-up Slack thread message with AI-driven triage:
 
 ```python
-# alerting_system/core/claude_slack_agent.py
+# alerting_service/core/claude_slack_agent.py
 
 TRIAGE_SYSTEM_PROMPT = """
 You are an institutional trading system on-call engineer.
@@ -621,11 +621,11 @@ OrderBook page: /orderbook
 
 ```
 GET /api/system/metrics?service={name}&window=1h
-    ← alerting-system /api/system/metrics (aggregates Prometheus from all services)
+    ← alerting-service /api/system/metrics (aggregates Prometheus from all services)
 GET /stream/alerts
-    ← alerting-system /stream/alerts SSE (live AlertEvent stream)
+    ← alerting-service /stream/alerts SSE (live AlertEvent stream)
 GET /rules
-    ← alerting-system /rules (list configured AlertRule)
+    ← alerting-service /rules (list configured AlertRule)
 ```
 
 ### System Health page layout (/system-health)
@@ -634,10 +634,10 @@ GET /rules
 ┌─────────────────────────────── SYSTEM HEALTH ───────────────────────────────┐
 │                                                                               │
 │  Service Status Grid                                                          │
-│  ● execution-results-api  HEALTHY  47ms    ● alerting-system  HEALTHY  12ms  │
+│  ● execution-results-api  HEALTHY  47ms    ● alerting-service  HEALTHY  12ms  │
 │  ● position-balance-mon.  HEALTHY  23ms    ● client-reporting  HEALTHY  89ms │
 │  ⚠ features-volatility    DEGRADED 892ms   ● market-data-api   HEALTHY  5ms  │
-│  ● execution-services     HEALTHY  134ms   ● instruments-svc   HEALTHY  45ms │
+│  ● execution-service     HEALTHY  134ms   ● instruments-svc   HEALTHY  45ms │
 │                                                                               │
 │  CPU & Memory (1h)  [1h▼]                                                    │
 │  [recharts LineChart, multi-service, threshold lines at 85%/90%]              │
@@ -665,13 +665,13 @@ GET /rules
 
 **The existing ui/ already has 7 tabs**: Deploy, Data Status, Builds, Readiness, Status, Config, History. This is the system deployment UI. Keep it.
 
-**ml-deployment-ui** is **NOT** the system deployment UI. It is the ML analytics and model deployment UI (experiments, metrics, promote model to inference service). See `config,_reporting_&_ui_completion` plan `ml-deployment-ui-scope-correct` todo.
+**ml-training-ui** is **NOT** the system deployment UI. It is the ML analytics and model deployment UI (experiments, metrics, promote model to inference service). See `config,_reporting_&_ui_completion` plan `ml-training-ui-scope-correct` todo.
 
 ### What IS needed
 
 1. Add Google OAuth to `unified-trading-deployment-v3/api/auth_middleware.py` — it already has `auth_middleware.py`, wire to `GoogleOAuthMiddleware` from `unified-trading-services`.
 2. Add `/metrics` Prometheus endpoint to `unified-trading-deployment-v3/api/main.py`.
-3. Extract StrategyConfig/ExecutionConfig CRUD into `api/routes/config_service.py` with `/api/v1/configs/`* routes — shared with backtest-ui and onboarding-ui.
+3. Extract StrategyConfig/ExecutionConfig CRUD into `api/routes/config_service.py` with `/api/v1/configs/`* routes — shared with execution-analytics-ui and onboarding-ui.
 4. Add Grafana dashboard JSONs to `unified-trading-deployment-v3/grafana/` directory.
 
 ---
@@ -702,9 +702,9 @@ grafana/
 ## Metric Definitions
 | Metric | Type | Labels | Service | Description |
 |--------|------|--------|---------|-------------|
-| trade_execution_latency_seconds | Histogram | venue, strategy_id, instrument_type | execution-services | Signal to order |
-| orders_submitted_total | Counter | venue, order_type, side | execution-services | Total orders |
-| order_fill_rate_pct | Gauge | venue, strategy_id | execution-services | Rolling 1h fill rate |
+| trade_execution_latency_seconds | Histogram | venue, strategy_id, instrument_type | execution-service | Signal to order |
+| orders_submitted_total | Counter | venue, order_type, side | execution-service | Total orders |
+| order_fill_rate_pct | Gauge | venue, strategy_id | execution-service | Rolling 1h fill rate |
 | position_notional_usd | Gauge | strategy_id, instrument_key | position-balance-monitor | Current notional |
 | reconciliation_drift_usd | Gauge | venue, account_id | position-balance-monitor | Internal vs exchange |
 | feature_staleness_seconds | Gauge | feature_name, service | features-* | Age of latest compute |
@@ -712,26 +712,26 @@ grafana/
 | pubsub_message_lag_seconds | Gauge | topic, service | market-tick-data-handler | Pub/Sub lag |
 | dead_letter_queue_depth | Gauge | topic | market-tick-data-handler | DLQ depth |
 | api_request_latency_seconds | Histogram | service, endpoint, method | all FastAPI | HTTP latency |
-| circuit_breaker_state | Gauge | strategy_id, trigger_type | execution-services | 0=closed,1=half,2=open |
+| circuit_breaker_state | Gauge | strategy_id, trigger_type | execution-service | 0=closed,1=half,2=open |
 | pnl_drawdown_pct | Gauge | strategy_id, client_id | pnl-attribution | Drawdown from peak |
-| ibkr_gateway_connected | Gauge | account_id | execution-services | 1=connected |
-| ibkr_roundtrip_latency_seconds | Histogram | account_id | execution-services | TWS roundtrip |
+| ibkr_gateway_connected | Gauge | account_id | execution-service | 1=connected |
+| ibkr_roundtrip_latency_seconds | Histogram | account_id | execution-service | TWS roundtrip |
 
 ## Service → /metrics Endpoint Map
 | Service | URL |
 |---------|-----|
 | execution-results-api | http://execution-results-api:8080/metrics |
 | position-balance-monitor-service | http://position-balance-monitor:8080/metrics |
-| execution-services | http://execution-services:8080/metrics |
-| alerting-system | http://alerting-system:8080/metrics |
-| client-reporting-service | http://client-reporting-service:8080/metrics |
+| execution-service | http://execution-service:8080/metrics |
+| alerting-service | http://alerting-service:8080/metrics |
+| client-reporting-api | http://client-reporting-api:8080/metrics |
 | market-data-api | http://market-data-api:8080/metrics |
 | unified-trading-deployment-v3 | http://deployment-api:8080/metrics |
 
 ## Alert Triage Guide
 | Alert | First Check | Action |
 |-------|------------|--------|
-| circuit-breaker-open | execution-services logs | Check fill rejection rate, venue connectivity |
+| circuit-breaker-open | execution-service logs | Check fill rejection rate, venue connectivity |
 | recon-drift-critical | position-balance-monitor /reconciliation | Trigger manual reconciliation, check exchange balance |
 | ibgw-disconnect | IB Gateway process | Restart IB Gateway, check TWS session |
 | feature-staleness-warning | features-* service logs | Check GCS write, restart service if stalled |
@@ -745,10 +745,10 @@ grafana/
 **Wave 1 — Foundations (blocking everything)**:
 
 1. `prometheus-client-add-to-uts` — all other metrics work depends on this
-2. `alert-rule-schemas-uic` — blocking alerting-system build
+2. `alert-rule-schemas-uic` — blocking alerting-service build
 
 **Wave 2 — Core Services**:
-3. `alerting-system-build-out` — central hub
+3. `alerting-service-build-out` — central hub
 4. `standard-alert-rules-config`
 5. `metrics-endpoint-fastapi-services`
 6. `market-data-api-new-repo`

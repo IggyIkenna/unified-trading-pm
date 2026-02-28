@@ -364,7 +364,7 @@
           "required": true
         },
         {
-          "name": "execution-services",
+          "name": "execution-service",
           "version": ">=1.0.0,<2.0.0",
           "required": true,
           "rationale": "Receives position updates from execution"
@@ -445,7 +445,7 @@
         }
       ]
     },
-    "execution-services": {
+    "execution-service": {
       "version": "1.0.0",
       "dependencies": [
         {
@@ -706,7 +706,7 @@
         }
       ]
     },
-    "alerting-system": {
+    "alerting-service": {
       "version": "1.0.0",
       "dependencies": [
         {
@@ -788,7 +788,7 @@
       ],
       "notes": "UI service - needs GCS for audit logs"
     },
-    "ml-deployment-ui": {
+    "ml-training-ui": {
       "version": "1.0.0",
       "dependencies": [
         {
@@ -832,7 +832,7 @@
       ],
       "notes": "UI service - needs BigQuery for reports"
     },
-    "backtest-ui": {
+    "execution-analytics-ui": {
       "version": "1.0.0",
       "dependencies": [
         {
@@ -924,10 +924,10 @@
           "features-volatility-service",
           "features-sports-service",
           "pnl-attribution-service",
-          "alerting-system",
+          "alerting-service",
           "corporate-actions",
           "unified-trading-deployment-v3",
-          "execution-services"
+          "execution-service"
         ]
       },
       {
@@ -943,11 +943,11 @@
         "description": "UI services",
         "repos": [
           "batch-audit-ui",
-          "ml-deployment-ui",
+          "ml-training-ui",
           "trading-analytics-ui",
           "live-health-monitor-ui",
           "client-reporting-ui",
-          "backtest-ui",
+          "execution-analytics-ui",
           "logs-dashboard-ui",
           "onboarding-ui"
         ]

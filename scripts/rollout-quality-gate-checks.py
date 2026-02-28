@@ -26,8 +26,8 @@ SERVICE_REPOS = [
     "ml-training-service",
     "ml-inference-service",
     "strategy-service",
-    "execution-services",
-    "alerting-system",
+    "execution-service",
+    "alerting-service",
     "pnl-attribution-service",
     "position-balance-monitor-service",
     "risk-and-exposure-service",
@@ -49,7 +49,7 @@ LIBRARY_REPOS = [
 
 INFRA_REPOS = [
     "api-contracts",
-    "alerting-system",
+    "alerting-service",
 ]
 
 ALL_REPOS = SERVICE_REPOS + LIBRARY_REPOS + INFRA_REPOS

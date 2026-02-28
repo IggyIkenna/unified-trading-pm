@@ -29,8 +29,8 @@
 | # | Task | Repo(s) | Reference |
 |---|------|---------|-----------|
 | 1 | Remove config fallback | risk-and-exposure-service | ALIGNMENT_SUMMARY §1 |
-| 2 | Update UCS version constraints | pnl-attribution-service, alerting-system, unified-trading-deployment-v3 | ALIGNMENT_SUMMARY §2 |
-| 3 | Add test-in-image pattern | alerting-system, pnl-attribution-service | ALIGNMENT_SUMMARY §3 |
+| 2 | Update UCS version constraints | pnl-attribution-service, alerting-service, unified-trading-deployment-v3 | ALIGNMENT_SUMMARY §2 |
+| 3 | Add test-in-image pattern | alerting-service, pnl-attribution-service | ALIGNMENT_SUMMARY §3 |
 | 4 | Fix path deps (clone to `../`) | risk-and-exposure-service, ml-inference-service | ALIGNMENT_SUMMARY §4 |
 | 5 | Remove quality gates bypass | risk-and-exposure-service | ALIGNMENT_SUMMARY §5 |
 
@@ -67,7 +67,7 @@
 | unified-trading-deployment-v3 | P1-C1 | 7 files >1500 LOC, 87 broad excepts |
 | unified-trade-execution-interface | P1-C2 | 43 failed tests |
 | ml-training-service | P1-C3 | 30 failed tests, os.getenv |
-| execution-services | P1-C4 | 1,196 prints, 142 broad excepts, 21% coverage |
+| execution-service | P1-C4 | 1,196 prints, 142 broad excepts, 21% coverage |
 | market-tick-data-handler | P1-C5 | 641 prints, 1574-line file |
 
 **Reference**: `AUDIT_TO_A_GRADE_ROADMAP/PHASE_1_CRITICAL_FIXES.md`, `TASK_INDEX.md`
@@ -141,7 +141,7 @@ class ServiceConfig(UnifiedCloudConfig):
 | "Phase 1" | Meaning |
 |-----------|---------|
 | **CI/CD Phase 1** | Critical alignment (config fallbacks, UCS versions, test-in-image) — ALIGNMENT_SUMMARY |
-| **Audit Phase 1** | 5 critical repos (deployment-v3, order-interface, ml-training, execution-services, market-tick) — PHASE_1_CRITICAL_FIXES |
+| **Audit Phase 1** | 5 critical repos (deployment-v3, order-interface, ml-training, execution-service, market-tick) — PHASE_1_CRITICAL_FIXES |
 
 Use "CI/CD Phase 1" vs "Audit Phase 1" when both are discussed.
 
@@ -160,7 +160,7 @@ Use "CI/CD Phase 1" vs "Audit Phase 1" when both are discussed.
 
 - [ ] risk-and-exposure-service: Remove config fallback, fix path deps, remove quality gates bypass
 - [ ] pnl-attribution-service: Update UCS >=1.5.0, add test-in-image
-- [ ] alerting-system: Update UCS >=1.5.0, add test-in-image
+- [ ] alerting-service: Update UCS >=1.5.0, add test-in-image
 - [ ] unified-trading-deployment-v3: Update UCS >=1.5.0
 - [ ] ml-inference-service: Fix path deps (clone to `../`)
 

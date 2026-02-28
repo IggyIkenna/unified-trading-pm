@@ -54,7 +54,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 - `ml-training-service/` → package: `ml_training_service/`
 - `ml-inference-service/` → package: `ml_inference_service/`
 - `strategy-service/` → package: `strategy_service/`
-- `execution-services/` → package: `execution_services/`
+- `execution-service/` → package: `execution_service/`
 - `risk-and-exposure-service/` → package: `risk_and_exposure_service/`
 - `position-balance-monitor-service/` → package: `position_balance_monitor_service/`
 
@@ -68,7 +68,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 
 ### Utility (4)
 - `execution-algo-library/` → package: `execution_algo_library/`
-- `alerting-system/` → package: `alerting_system/`
+- `alerting-service/` → package: `alerting_service/`
 - `unified-trading-deployment-v3/` → no package (scripts/configs)
 - `unified-trading-deployment-v3/` → no package (scripts/configs)
 

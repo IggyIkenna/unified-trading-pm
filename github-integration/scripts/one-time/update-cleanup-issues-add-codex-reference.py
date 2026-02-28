@@ -20,7 +20,7 @@ NC = "\033[0m"
 
 # Repo -> Issue number mapping
 ISSUES = {
-    "execution-services": 147,
+    "execution-service": 147,
     "strategy-service": 23,
     "instruments-service": 58,
     "unified-trading-services": 48,
