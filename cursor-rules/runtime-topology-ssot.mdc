@@ -2,7 +2,7 @@
 
 RULE: Runtime transport and co-location policy must live in `unified-trading-deployment-v3/configs/runtime-topology.yaml`. Do not hardcode transport behavior in service repos or create service-to-service dependencies for live paths.
 WHY: DAG boundaries stay clean only when runtime deployment topology is declarative and owned by deployment config.
-CODEX: 04-architecture/TOPOLOGY-DAG.md, 04-architecture/batch-live-symmetry.md
+CODEX: 00-SSOT-INDEX.md, 04-architecture/TOPOLOGY-DAG.md, 04-architecture/batch-live-symmetry.md
 
 DO:
 - Keep dependency graph (`dependencies.yaml`) separate from runtime transport (`runtime-topology.yaml`)
