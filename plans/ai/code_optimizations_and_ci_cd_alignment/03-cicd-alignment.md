@@ -53,7 +53,7 @@ Ensure identical behavior across all three stages: Local development, GitHub Act
    env:
      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
      # When building image URLs:
-     UCS_IMAGE: asia-northeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/unified-cloud-services/unified-cloud-services:latest
+     UCS_IMAGE: asia-northeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/unified-trading-services/unified-trading-services:latest
    ```
 
 2. **Set the variable** (one-time per repo) via GitHub CLI from the repo directory:
@@ -278,14 +278,14 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           # Clone path deps (per .cursor/rules/path-dependency-ci.mdc)
-          git clone https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-cloud-services.git ../unified-cloud-services
+          git clone https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-trading-services.git ../unified-trading-services
           git clone https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-config-interface.git ../unified-config-interface
           git clone https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-events-interface.git ../unified-events-interface
 
       - name: Install dependencies
         run: |
           # Install in DAG order
-          uv pip install --system -e ../unified-cloud-services
+          uv pip install --system -e ../unified-trading-services
           uv pip install --system -e ../unified-config-interface
           uv pip install --system -e ../unified-events-interface
           uv pip install --system -e ".[dev]"
@@ -306,12 +306,12 @@ steps:
       - '-c'
       - |
         # Clone dependencies
-        git clone https://github.com/IggyIkenna/unified-cloud-services.git ../unified-cloud-services
+        git clone https://github.com/IggyIkenna/unified-trading-services.git ../unified-trading-services
         git clone https://github.com/IggyIkenna/unified-config-interface.git ../unified-config-interface
         git clone https://github.com/IggyIkenna/unified-events-interface.git ../unified-events-interface
 
         # Install dependencies
-        uv pip install --system -e ../unified-cloud-services
+        uv pip install --system -e ../unified-trading-services
         uv pip install --system -e ../unified-config-interface
         uv pip install --system -e ../unified-events-interface
         uv pip install --system -e ".[dev]"
@@ -347,9 +347,9 @@ REPOS=(
   "features-volatility-service"
   "pnl-attribution-service"
   "alerting-system"
-  "unified-cloud-services"
+  "unified-trading-services"
   "unified-config-interface"
-  "unified-domain-services"
+  "unified-domain-client"
   "unified-events-interface"
   "unified-market-interface"
   "unified-ml-interface"
@@ -742,8 +742,8 @@ fi
 - features-calendar-service, features-delta-one-service
 - features-onchain-service, features-volatility-service
 - pnl-attribution-service, alerting-system
-- unified-cloud-services, unified-config-interface
-- unified-domain-services, unified-events-interface
+- unified-trading-services, unified-config-interface
+- unified-domain-client, unified-events-interface
 - unified-market-interface, unified-ml-interface, unified-trade-execution-interface
 - backtest-ui, trading-analytics-ui, live-health-monitor-ui
 - logs-dashboard-ui, batch-audit-ui, client-reporting-ui
@@ -1036,7 +1036,7 @@ echo "GH_PAT=$GH_PAT" > ~/.secrets
 - Agent 2: execution-services, execution-algo-library, market-data-processing-service, market-tick-data-handler
 - Agent 3: ml-inference-service, ml-training-service, features-calendar-service, features-delta-one-service
 - Agent 4: features-onchain-service, features-volatility-service, pnl-attribution-service, alerting-system
-- Agent 5: unified-cloud-services, unified-config-interface, unified-domain-services, unified-events-interface
+- Agent 5: unified-trading-services, unified-config-interface, unified-domain-client, unified-events-interface
 - Agent 6: unified-market-interface, unified-ml-interface, unified-trade-execution-interface, backtest-ui
 - Agent 7: trading-analytics-ui, live-health-monitor-ui, logs-dashboard-ui, batch-audit-ui
 - Agent 8: client-reporting-ui, ml-deployment-ui, onboarding-ui, settlement-ui

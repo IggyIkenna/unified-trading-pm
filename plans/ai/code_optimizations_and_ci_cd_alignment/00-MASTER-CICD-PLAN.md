@@ -224,7 +224,7 @@ fi
 {
   "name": "instruments-service",
   "dependencies": [
-    {"name": "unified-cloud-services", "path": "../unified-cloud-services"},
+    {"name": "unified-trading-services", "path": "../unified-trading-services"},
     {"name": "unified-config-interface", "path": "../unified-config-interface"}
   ]
 }
@@ -244,12 +244,12 @@ fi
 
 ```
 instruments-service depends on:
-  └─> unified-cloud-services depends on:
+  └─> unified-trading-services depends on:
       └─> unified-config-interface
 
 Cascade order:
   1. unified-config-interface @ my-feature
-  2. unified-cloud-services @ my-feature (after UCI)
+  2. unified-trading-services @ my-feature (after UCI)
   3. instruments-service @ my-feature (after UCS)
 ```
 
@@ -452,8 +452,8 @@ bash scripts/quickmerge.sh "feat: add feature"
 
 **Scenario 2: Branch isolation (single repo)**
 ```bash
-cd unified-cloud-services
-vim unified_cloud_services/core.py
+cd unified-trading-services
+vim unified_trading_services/core.py
 bash scripts/quickmerge.sh "fix: update" --dep-branch "my-fix"
 # ✅ No deps → Simple branch
 ```
@@ -462,7 +462,7 @@ bash scripts/quickmerge.sh "fix: update" --dep-branch "my-fix"
 ```bash
 cd instruments-service
 vim instruments_service/main.py
-vim ../unified-cloud-services/core.py
+vim ../unified-trading-services/core.py
 vim ../unified-config-interface/config.py
 bash scripts/quickmerge.sh "feat: major update" --dep-branch "major"
 # ✅ Cascades: UCI → UCS → instruments

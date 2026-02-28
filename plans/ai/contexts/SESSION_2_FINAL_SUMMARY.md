@@ -72,7 +72,7 @@ def __init__(self, config):
 ```bash
 cd instruments-service && source .venv/bin/activate
 uv pip install -e ../unified-config-interface
-uv pip install -e ../unified-cloud-services
+uv pip install -e ../unified-trading-services
 uv pip install -e ../unified-events-interface
 ```
 
@@ -84,7 +84,7 @@ uv pip install -e ../unified-events-interface
 
 **Solution**: Moved imports to top of file:
 - Line 62: `from instruments_service.config import instruments_config` → moved to imports section
-- Line 910: `from unified_cloud_services import determine_market_category` → moved to imports section (removed duplicate)
+- Line 910: `from unified_trading_services import determine_market_category` → moved to imports section (removed duplicate)
 
 **Remaining**: 18 indented imports in other files (mostly intentional lazy imports for optional deps)
 
@@ -92,7 +92,7 @@ uv pip install -e ../unified-events-interface
 
 **Fixed**:
 - ✅ test_subgraph_service.py: `from instruments_service.utils` → `from unified_market_interface`
-- ✅ test_date_filter_service.py: `from instruments_service.utils` → `from unified_domain_services.instrument_date_filter`
+- ✅ test_date_filter_service.py: `from instruments_service.utils` → `from unified_domain_client.instrument_date_filter`
 - ✅ test_instruments_service.py: Split ErrorWarningCounter import to `from unified_events_interface`
 - ✅ test_bucket_config.py: Marked outdated test as skip (adapter method removed during refactoring)
 - ✅ adapters/__init__.py: Added DataSourceAdapter export

@@ -99,8 +99,8 @@ See canonical dependency matrix:
 
 ```
 Level 0: unified-config-interface, unified-events-interface, api-contracts
-  └─> Level 1: unified-cloud-services (needs config/events)
-      └─> Level 2: unified-domain-services (needs cloud-services + config + events)
+  └─> Level 1: unified-trading-services (needs config/events)
+      └─> Level 2: unified-domain-client (needs cloud-services + config + events)
           └─> Level 3: unified-market-interface (needs domain)
               └─> Level 4: unified-trade-execution-interface (needs market)
                   └─> Level 5: instruments-service (needs all above)
@@ -110,8 +110,8 @@ Level 0: unified-config-interface, unified-events-interface, api-contracts
 1. unified-config-interface @ my-feature
 2. unified-events-interface @ my-feature
 3. api-contracts @ my-feature
-4. unified-cloud-services @ my-feature
-5. unified-domain-services @ my-feature
+4. unified-trading-services @ my-feature
+5. unified-domain-client @ my-feature
 6. unified-market-interface @ my-feature
 7. **instruments-service @ my-feature** ← Current repo
 
@@ -119,7 +119,7 @@ Level 0: unified-config-interface, unified-events-interface, api-contracts
 
 ### 2. Circular Dependency Handling
 
-**unified-cloud-services ↔ unified-domain-services**
+**unified-trading-services ↔ unified-domain-client**
 
 **Problem**:
 - UCS imports from UDS (for domain clients)

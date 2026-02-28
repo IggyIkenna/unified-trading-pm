@@ -6,7 +6,7 @@ todos:
     content: "Fix 00-SSOT-INDEX.md: correct 4 paths (docs/→specs/), update counts (venues 22→25, services 14→15, repos 35→38, api-contracts 18→14), remove duplicate quickmerge entry, fix PM yaml paths, fix quickmerge-architecture.md reference"
     status: pending
   - id: fix-lifecycle-events
-    content: "Fix 03-observability/lifecycle-events.md (P0): replace all deprecated setup_cloud_logging + unified_cloud_services.observability imports with unified_events_interface patterns; update code template; align event counts (batch=11, live=12)"
+    content: "Fix 03-observability/lifecycle-events.md (P0): replace all deprecated setup_cloud_logging + unified_trading_services.observability imports with unified_events_interface patterns; update code template; align event counts (batch=11, live=12)"
     status: pending
   - id: create-external-import-standards
     content: "Create 06-coding-standards/external-import-standards.md: document top-level import rule with correct/wrong examples, resolving stale cursor rule reference"
@@ -52,8 +52,8 @@ The index points to files that don't exist or exist at wrong paths:
 ### Category 3: Critical Codex-vs-Implementation Conflicts (P0)
 
 1. `**[03-observability/lifecycle-events.md](unified-trading-codex/03-observability/lifecycle-events.md)`** still shows **deprecated patterns**:
-  - Shows `from unified_cloud_services import setup_cloud_logging`
-  - Shows `from unified_cloud_services.observability import log_event`
+  - Shows `from unified_trading_services import setup_cloud_logging`
+  - Shows `from unified_trading_services.observability import log_event`
   - Cursor rules correctly require `from unified_events_interface import setup_events, log_event`
   - The actual library exports the new API — the codex template is stale
 2. **All 5 sampled services violate external import standard** — use nested import paths:
@@ -92,8 +92,8 @@ File: `[unified-trading-codex/00-SSOT-INDEX.md](unified-trading-codex/00-SSOT-IN
 
 File: `[unified-trading-codex/03-observability/lifecycle-events.md](unified-trading-codex/03-observability/lifecycle-events.md)`
 
-- Replace all occurrences of `from unified_cloud_services import setup_cloud_logging` with `from unified_events_interface import setup_events`
-- Replace all occurrences of `from unified_cloud_services.observability import log_event` with `from unified_events_interface import log_event`
+- Replace all occurrences of `from unified_trading_services import setup_cloud_logging` with `from unified_events_interface import setup_events`
+- Replace all occurrences of `from unified_trading_services.observability import log_event` with `from unified_events_interface import log_event`
 - Update the code template block to use `setup_events(service_name=..., mode="batch|live")` instead of `setup_cloud_logging(...)`
 - Fix the event count: clarify batch=11, live=12 (cursor rule says "12" without qualification — align both)
 

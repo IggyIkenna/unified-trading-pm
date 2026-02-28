@@ -6,24 +6,24 @@ This script performs systematic find-and-replace operations to update import sta
 from the old implicit format to the new explicit format.
 """
 
+import glob
 import os
 import re
-import glob
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 # Import mappings to apply
 IMPORT_MAPPINGS = {
-    # unified_cloud_services mappings
-    "from unified_cloud_services import get_storage_client": "from unified_cloud_services.core.client_factory import get_storage_client",
-    "from unified_cloud_services import get_secret_client": "from unified_cloud_services.core.client_factory import get_secret_client",
-    "from unified_cloud_services import CloudConfig": "from unified_cloud_services.core.cloud_config import CloudConfig",
-    "from unified_cloud_services import CloudTarget": "from unified_cloud_services.core.cloud_config import CloudTarget",
-    "from unified_cloud_services import UnifiedMonitor": "from unified_cloud_services.core.unified_monitor import UnifiedMonitor",
-    "from unified_cloud_services import StandardizedDomainCloudService": "from unified_cloud_services.domain.standardized_service import StandardizedDomainCloudService",
-    "from unified_cloud_services import setup_cloud_logging": "from unified_cloud_services.core.logging import setup_cloud_logging",
-    "from unified_cloud_services import handle_api_errors": "from unified_cloud_services.core.error_handling import handle_api_errors",
-    "from unified_cloud_services import GracefulShutdownHandler": "from unified_cloud_services.core.signal_handler import GracefulShutdownHandler",
+    # unified_trading_services mappings
+    "from unified_trading_services import get_storage_client": "from unified_trading_services.core.client_factory import get_storage_client",
+    "from unified_trading_services import get_secret_client": "from unified_trading_services.core.client_factory import get_secret_client",
+    "from unified_trading_services import CloudConfig": "from unified_trading_services.core.cloud_config import CloudConfig",
+    "from unified_trading_services import CloudTarget": "from unified_trading_services.core.cloud_config import CloudTarget",
+    "from unified_trading_services import UnifiedMonitor": "from unified_trading_services.core.unified_monitor import UnifiedMonitor",
+    "from unified_trading_services import StandardizedDomainCloudService": "from unified_trading_services.domain.standardized_service import StandardizedDomainCloudService",
+    "from unified_trading_services import setup_cloud_logging": "from unified_trading_services.core.logging import setup_cloud_logging",
+    "from unified_trading_services import handle_api_errors": "from unified_trading_services.core.error_handling import handle_api_errors",
+    "from unified_trading_services import GracefulShutdownHandler": "from unified_trading_services.core.signal_handler import GracefulShutdownHandler",
     
     # unified_events_interface mappings
     "from unified_events_interface import setup_events": "from unified_events_interface.core.events import setup_events",
@@ -35,47 +35,47 @@ IMPORT_MAPPINGS = {
 
 # Additional complex import patterns that need special handling
 COMPLEX_IMPORT_PATTERNS = [
-    # Multi-line import from unified_cloud_services
+    # Multi-line import from unified_trading_services
     (
-        r'from unified_cloud_services import \(\s*([^)]+)\s*\)',
-        lambda match: handle_multiline_unified_cloud_services_import(match.group(1))
+        r'from unified_trading_services import \(\s*([^)]+)\s*\)',
+        lambda match: handle_multiline_unified_trading_services_import(match.group(1))
     ),
     # Single line multiple imports
     (
-        r'from unified_cloud_services import ([^,\n]+(?:,\s*[^,\n]+)*)',
+        r'from unified_trading_services import ([^,\n]+(?:,\s*[^,\n]+)*)',
         handle_single_line_multiple_imports
     )
 ]
 
-def handle_multiline_unified_cloud_services_import(import_content: str) -> str:
-    """Handle multiline import statements from unified_cloud_services."""
+def handle_multiline_unified_trading_services_import(import_content: str) -> str:
+    """Handle multiline import statements from unified_trading_services."""
     imports = [imp.strip() for imp in import_content.split(',') if imp.strip()]
     result_lines = []
     
     for imp in imports:
         imp = imp.strip()
         if imp in ["get_storage_client", "get_secret_client"]:
-            result_lines.append(f"from unified_cloud_services.core.client_factory import {imp}")
+            result_lines.append(f"from unified_trading_services.core.client_factory import {imp}")
         elif imp in ["CloudConfig", "CloudTarget"]:
-            result_lines.append(f"from unified_cloud_services.core.cloud_config import {imp}")
+            result_lines.append(f"from unified_trading_services.core.cloud_config import {imp}")
         elif imp == "UnifiedMonitor":
-            result_lines.append(f"from unified_cloud_services.core.unified_monitor import {imp}")
+            result_lines.append(f"from unified_trading_services.core.unified_monitor import {imp}")
         elif imp == "StandardizedDomainCloudService":
-            result_lines.append(f"from unified_cloud_services.domain.standardized_service import {imp}")
+            result_lines.append(f"from unified_trading_services.domain.standardized_service import {imp}")
         elif imp == "setup_cloud_logging":
-            result_lines.append(f"from unified_cloud_services.core.logging import {imp}")
+            result_lines.append(f"from unified_trading_services.core.logging import {imp}")
         elif imp == "handle_api_errors":
-            result_lines.append(f"from unified_cloud_services.core.error_handling import {imp}")
+            result_lines.append(f"from unified_trading_services.core.error_handling import {imp}")
         elif imp == "GracefulShutdownHandler":
-            result_lines.append(f"from unified_cloud_services.core.signal_handler import {imp}")
+            result_lines.append(f"from unified_trading_services.core.signal_handler import {imp}")
         else:
             # For now, keep unmapped imports as is but add a comment
-            result_lines.append(f"from unified_cloud_services import {imp}  # TODO: Map to explicit import")
+            result_lines.append(f"from unified_trading_services import {imp}  # TODO: Map to explicit import")
     
     return '\n'.join(result_lines)
 
 def handle_single_line_multiple_imports(match) -> str:
-    """Handle single line multiple imports from unified_cloud_services."""
+    """Handle single line multiple imports from unified_trading_services."""
     import_content = match.group(1)
     imports = [imp.strip() for imp in import_content.split(',') if imp.strip()]
     result_lines = []
@@ -83,22 +83,22 @@ def handle_single_line_multiple_imports(match) -> str:
     for imp in imports:
         imp = imp.strip()
         if imp in ["get_storage_client", "get_secret_client"]:
-            result_lines.append(f"from unified_cloud_services.core.client_factory import {imp}")
+            result_lines.append(f"from unified_trading_services.core.client_factory import {imp}")
         elif imp in ["CloudConfig", "CloudTarget"]:
-            result_lines.append(f"from unified_cloud_services.core.cloud_config import {imp}")
+            result_lines.append(f"from unified_trading_services.core.cloud_config import {imp}")
         elif imp == "UnifiedMonitor":
-            result_lines.append(f"from unified_cloud_services.core.unified_monitor import {imp}")
+            result_lines.append(f"from unified_trading_services.core.unified_monitor import {imp}")
         elif imp == "StandardizedDomainCloudService":
-            result_lines.append(f"from unified_cloud_services.domain.standardized_service import {imp}")
+            result_lines.append(f"from unified_trading_services.domain.standardized_service import {imp}")
         elif imp == "setup_cloud_logging":
-            result_lines.append(f"from unified_cloud_services.core.logging import {imp}")
+            result_lines.append(f"from unified_trading_services.core.logging import {imp}")
         elif imp == "handle_api_errors":
-            result_lines.append(f"from unified_cloud_services.core.error_handling import {imp}")
+            result_lines.append(f"from unified_trading_services.core.error_handling import {imp}")
         elif imp == "GracefulShutdownHandler":
-            result_lines.append(f"from unified_cloud_services.core.signal_handler import {imp}")
+            result_lines.append(f"from unified_trading_services.core.signal_handler import {imp}")
         else:
             # For now, keep unmapped imports as is but add a comment
-            result_lines.append(f"from unified_cloud_services import {imp}  # TODO: Map to explicit import")
+            result_lines.append(f"from unified_trading_services import {imp}  # TODO: Map to explicit import")
     
     return '\n'.join(result_lines)
 

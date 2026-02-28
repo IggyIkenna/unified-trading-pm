@@ -36,7 +36,7 @@ Sub-Agent 1 (risk-and-exposure-service):
 - Remove quality gates bypass: Remove `|| echo "⚠️ Quality gates need work"` from quality gates step
 
 Sub-Agent 2 (pnl-attribution-service, alerting-system):
-- Update pyproject.toml: unified-cloud-services to >=1.5.0 or >=1.5.0,<2.0.0
+- Update pyproject.toml: unified-trading-services to >=1.5.0 or >=1.5.0,<2.0.0
 - Add test-in-image pattern to cloudbuild.yaml (see ALIGNMENT_SUMMARY §3 for template)
 
 Sub-Agent 3 (unified-trading-deployment-v3, ml-inference-service):

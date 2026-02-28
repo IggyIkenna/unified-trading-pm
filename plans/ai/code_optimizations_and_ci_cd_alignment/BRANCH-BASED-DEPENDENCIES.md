@@ -3,7 +3,7 @@
 ## Problem Statement
 
 When working on features that span multiple repos, you need to:
-1. Branch unified-cloud-services (e.g., "fix-linter-issue")
+1. Branch unified-trading-services (e.g., "fix-linter-issue")
 2. Branch instruments-service (e.g., "use-new-ucs-api")
 3. Test them together locally
 4. Have GitHub Actions test with same branches
@@ -23,7 +23,7 @@ Docker Image (quality-gates:latest)
   ├─> Tools (ruff, pytest, basedpyright)
   └─> NO application dependencies
 
-Dependencies (unified-cloud-services, etc.)
+Dependencies (unified-trading-services, etc.)
   ├─> Local: Installed from path (MUST be committed)
   ├─> GitHub: Cloned and installed at specific branch/commit
   └─> Cloud Build: Cloned and installed at specific branch/commit
@@ -36,10 +36,10 @@ Dependencies (unified-cloud-services, etc.)
 ### Step 1: Make Changes in Dependency Repo
 
 ```bash
-cd unified-cloud-services
+cd unified-trading-services
 
 # Make changes
-vim unified_cloud_services/some_file.py
+vim unified_trading_services/some_file.py
 
 # Commit changes (REQUIRED before downstream)
 git add -A
@@ -47,7 +47,7 @@ git commit -m "fix: update linter rules"
 
 # Push to branch
 bash scripts/quickmerge.sh "fix: update linter rules"
-# This creates PR for unified-cloud-services on branch like "quickmerge-20260224-123456"
+# This creates PR for unified-trading-services on branch like "quickmerge-20260224-123456"
 ```
 
 ### Step 2: Use Branched Dependency in Downstream Repo
@@ -60,10 +60,10 @@ vim instruments_service/main.py
 
 # Run quickmerge with dependency branch specified
 bash scripts/quickmerge.sh "feat: use new UCS API" \
-  --dep-branches "unified-cloud-services:quickmerge-20260224-123456"
+  --dep-branches "unified-trading-services:quickmerge-20260224-123456"
 
 # What this does:
-# 1. Validates unified-cloud-services @ branch has NO uncommitted changes
+# 1. Validates unified-trading-services @ branch has NO uncommitted changes
 # 2. Runs local quality gates using that branch (from path)
 # 3. Creates PR with branch metadata
 # 4. Runs act with same branch
@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Parse into array
-# Example: "unified-cloud-services:fix-linter,unified-config-interface:main"
+# Example: "unified-trading-services:fix-linter,unified-config-interface:main"
 IFS=',' read -ra DEP_BRANCH_ARRAY <<< "$DEP_BRANCHES"
 
 # Build dependency branch map
@@ -271,7 +271,7 @@ jobs:
         id: deps
         run: |
           # Parse PR body for dependency info
-          # Example: "- **unified-cloud-services**: `fix-linter` @ `abc123`"
+          # Example: "- **unified-trading-services**: `fix-linter` @ `abc123`"
           
           # Default to main if not specified
           echo "ucs_branch=main" >> $GITHUB_OUTPUT
@@ -290,8 +290,8 @@ jobs:
         run: |
           # Clone dependencies at specified branches
           git clone --branch ${{ steps.deps.outputs.ucs_branch }} \
-            https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-cloud-services.git \
-            ../unified-cloud-services
+            https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-trading-services.git \
+            ../unified-trading-services
           
           git clone --branch ${{ steps.deps.outputs.uci_branch }} \
             https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-config-interface.git \
@@ -303,7 +303,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          uv pip install --system -e ../unified-cloud-services
+          uv pip install --system -e ../unified-trading-services
           uv pip install --system -e ../unified-config-interface
           uv pip install --system -e ../unified-events-interface
           uv pip install --system -e ".[dev]"
@@ -327,14 +327,14 @@ Similar approach for `cloudbuild.yaml`.
 ❌ **WRONG** - Baking deps into Docker image:
 ```dockerfile
 # BAD: Includes uncommitted local changes
-COPY ../unified-cloud-services /deps/unified-cloud-services
-RUN pip install /deps/unified-cloud-services
+COPY ../unified-trading-services /deps/unified-trading-services
+RUN pip install /deps/unified-trading-services
 ```
 
 ✅ **CORRECT** - Install at runtime from committed repos:
 ```bash
 docker run -v $WORKSPACE_ROOT:/workspace-root quality-gates:latest bash -c "
-    uv pip install -e /workspace-root/unified-cloud-services  # Uses committed code only
+    uv pip install -e /workspace-root/unified-trading-services  # Uses committed code only
     ruff check .
 "
 ```
@@ -383,7 +383,7 @@ bash scripts/quickmerge.sh "feat: update"
 
 ```bash
 bash scripts/quickmerge.sh "feat: use new API" \
-  --dep-branches "unified-cloud-services:fix-linter-issue"
+  --dep-branches "unified-trading-services:fix-linter-issue"
 # Uses fix-linter-issue branch for UCS, main for others
 ```
 
@@ -416,27 +416,27 @@ bash scripts/quickmerge.sh "feat: use new API" \
 
 ```bash
 # Step 1: Work on dependency
-cd unified-cloud-services
-vim unified_cloud_services/core/service.py
+cd unified-trading-services
+vim unified_trading_services/core/service.py
 bash scripts/quickmerge.sh "feat: add new validation method"
-# PR created: unified-cloud-services#123 on branch quickmerge-20260224-123456
+# PR created: unified-trading-services#123 on branch quickmerge-20260224-123456
 
 # Step 2: Work on downstream repo
 cd ../instruments-service
 vim instruments_service/main.py  # Use new validation method
 bash scripts/quickmerge.sh "feat: use new UCS validation" \
-  --dep-branches "unified-cloud-services:quickmerge-20260224-123456"
+  --dep-branches "unified-trading-services:quickmerge-20260224-123456"
 # PR created: instruments-service#456
 # PR description includes:
 #   Dependencies:
-#     - unified-cloud-services: quickmerge-20260224-123456 @ abc123
+#     - unified-trading-services: quickmerge-20260224-123456 @ abc123
 
 # Step 3: Both PRs test with exact same versions
-# ✅ unified-cloud-services#123 CI passes (tests itself)
+# ✅ unified-trading-services#123 CI passes (tests itself)
 # ✅ instruments-service#456 CI passes (tests with UCS branch)
 
 # Step 4: Merge in order
-# 1. Merge unified-cloud-services#123 to main
+# 1. Merge unified-trading-services#123 to main
 # 2. Update instruments-service PR to use main (or merge as-is)
 # 3. Merge instruments-service#456 to main
 ```

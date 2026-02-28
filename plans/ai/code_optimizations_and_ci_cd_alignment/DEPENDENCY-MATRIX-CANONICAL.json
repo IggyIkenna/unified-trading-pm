@@ -8,8 +8,8 @@
     "api-contracts": "1.0.0",
     "unified-config-interface": "0.3.0",
     "unified-events-interface": "0.2.0",
-    "unified-cloud-services": "2.0.0",
-    "unified-domain-services": "1.0.0",
+    "unified-trading-services": "2.0.0",
+    "unified-domain-client": "1.0.0",
     "unified-market-interface": "1.0.0",
     "unified-ml-interface": "1.0.0",
     "unified-trade-execution-interface": "1.0.0",
@@ -31,7 +31,7 @@
       "version": "0.2.0",
       "dependencies": []
     },
-    "unified-cloud-services": {
+    "unified-trading-services": {
       "version": "2.0.0",
       "dependencies": [
         {
@@ -41,11 +41,11 @@
         }
       ]
     },
-    "unified-domain-services": {
+    "unified-domain-client": {
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -70,7 +70,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -80,7 +80,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -95,12 +95,12 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -120,7 +120,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -140,7 +140,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -165,7 +165,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -189,7 +189,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -204,7 +204,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -219,7 +219,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -234,7 +234,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -259,7 +259,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -269,7 +269,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -299,7 +299,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -319,7 +319,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -339,7 +339,7 @@
           "required": true
         },
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -354,7 +354,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -382,7 +382,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -397,7 +397,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -419,7 +419,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -434,7 +434,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -449,7 +449,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -464,7 +464,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -515,7 +515,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -530,7 +530,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -545,7 +545,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -560,7 +560,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -580,7 +580,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -595,7 +595,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -605,7 +605,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -620,7 +620,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -630,7 +630,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -645,7 +645,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -655,7 +655,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -670,7 +670,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         },
@@ -685,7 +685,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -700,7 +700,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -710,7 +710,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -725,7 +725,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -735,7 +735,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -750,7 +750,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -760,7 +760,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -770,7 +770,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-services",
+          "name": "unified-domain-client",
           "version": ">=1.0.0,<2.0.0",
           "required": true
         }
@@ -781,7 +781,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -792,7 +792,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -803,7 +803,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -814,7 +814,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -825,7 +825,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -836,7 +836,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -847,7 +847,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -858,7 +858,7 @@
       "version": "1.0.0",
       "dependencies": [
         {
-          "name": "unified-cloud-services",
+          "name": "unified-trading-services",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -877,13 +877,13 @@
       {
         "level": 1,
         "description": "Cloud services",
-        "repos": ["unified-cloud-services"]
+        "repos": ["unified-trading-services"]
       },
       {
         "level": 2,
         "description": "Domain services and pure libraries",
         "repos": [
-          "unified-domain-services",
+          "unified-domain-client",
           "execution-algo-library"
         ]
       },
@@ -964,12 +964,12 @@
       },
       {
         "step": 2,
-        "packages": ["unified-cloud-services"],
+        "packages": ["unified-trading-services"],
         "reason": "Depends only on api-contracts"
       },
       {
         "step": 3,
-        "packages": ["unified-domain-services", "execution-algo-library"],
+        "packages": ["unified-domain-client", "execution-algo-library"],
         "reason": "Depend on cloud services"
       },
       {

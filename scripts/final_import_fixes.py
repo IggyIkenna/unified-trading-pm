@@ -10,36 +10,36 @@ from typing import Dict, List
 # Final comprehensive mapping for remaining imports
 FINAL_MAPPINGS = {
     # Dependency checker models
-    "from unified_cloud_services import DependencyStatus  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import DependencyStatus",
-    "from unified_cloud_services import DependencyReport  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import DependencyReport",
-    "from unified_cloud_services import DependencyFailure  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.dependency_checker import DependencyFailure",
+    "from unified_trading_services import DependencyStatus  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import DependencyStatus",
+    "from unified_trading_services import DependencyReport  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import DependencyReport",
+    "from unified_trading_services import DependencyFailure  # TODO: Map to explicit import":
+        "from unified_trading_services.core.dependency_checker import DependencyFailure",
     
     # Error models
-    "from unified_cloud_services import ErrorCategory  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.error import ErrorCategory",
-    "from unified_cloud_services import ErrorContext  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.error import ErrorContext",
-    "from unified_cloud_services import ErrorSeverity  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.error import ErrorSeverity",
+    "from unified_trading_services import ErrorCategory  # TODO: Map to explicit import":
+        "from unified_trading_services.models.error import ErrorCategory",
+    "from unified_trading_services import ErrorContext  # TODO: Map to explicit import":
+        "from unified_trading_services.models.error import ErrorContext",
+    "from unified_trading_services import ErrorSeverity  # TODO: Map to explicit import":
+        "from unified_trading_services.models.error import ErrorSeverity",
     
     # Observability models
-    "from unified_cloud_services import OperationContext  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.observability import OperationContext",
+    "from unified_trading_services import OperationContext  # TODO: Map to explicit import":
+        "from unified_trading_services.models.observability import OperationContext",
     
     # Date utilities
-    "from unified_cloud_services import parse_date  # TODO: Map to explicit import":
-        "from unified_cloud_services.core.date_utils import parse_date",
+    "from unified_trading_services import parse_date  # TODO: Map to explicit import":
+        "from unified_trading_services.core.date_utils import parse_date",
     
     # Other models that might be in different packages or modules
-    "from unified_cloud_services import DownloadTarget  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.download import DownloadTarget",
-    "from unified_cloud_services import OrchestrationResult  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.orchestration import OrchestrationResult",
-    "from unified_cloud_services import ValidationConfig  # TODO: Map to explicit import":
-        "from unified_cloud_services.models.validation import ValidationConfig",
+    "from unified_trading_services import DownloadTarget  # TODO: Map to explicit import":
+        "from unified_trading_services.models.download import DownloadTarget",
+    "from unified_trading_services import OrchestrationResult  # TODO: Map to explicit import":
+        "from unified_trading_services.models.orchestration import OrchestrationResult",
+    "from unified_trading_services import ValidationConfig  # TODO: Map to explicit import":
+        "from unified_trading_services.models.validation import ValidationConfig",
     
     # Config interface models
     "from unified_config_interface import InstrumentType  # TODO: Map to explicit import":
@@ -48,8 +48,8 @@ FINAL_MAPPINGS = {
         "from unified_config_interface.models.venue import Venue",
     
     # Domain services models
-    "from unified_domain_services import InstrumentKey  # TODO: Map to explicit import":
-        "from unified_domain_services.models.instruments import InstrumentKey",
+    "from unified_domain_client import InstrumentKey  # TODO: Map to explicit import":
+        "from unified_domain_client.models.instruments import InstrumentKey",
     
     # Unified feature calculator imports
     "from unified_feature_calculator import FeatureCalculator  # TODO: Map to explicit import":
@@ -68,8 +68,8 @@ FINAL_MAPPINGS = {
         "from unified_market_interface.adapters.fluid import FluidAdapter",
         
     # Cloud services domain functions
-    "from unified_cloud_services import create_market_data_service  # TODO: Map to explicit import":
-        "from unified_cloud_services.domain.services import create_market_data_service",
+    "from unified_trading_services import create_market_data_service  # TODO: Map to explicit import":
+        "from unified_trading_services.domain.services import create_market_data_service",
 }
 
 def find_python_files(repo_path: str) -> List[str]:

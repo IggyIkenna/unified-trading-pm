@@ -1,0 +1,1084 @@
+[
+  {
+    "epic_number": 1,
+    "epic_issue": 2,
+    "epic_title": "ExchangeInterfaceCore: Exchange Interface Package",
+    "milestone": "TechReadiness",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Core Adapter Framework",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create base adapter interface and abstract class",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement retry/idempotency decorator",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Add connection health signaling",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 1.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 4,
+            "title": "Add mode parameter (live/simulation) to adapter interface",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 5,
+            "title": "Implement adapter factory with env-based mode selection",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.5,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Market Data Adapters",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement market stream subscribe/unsubscribe",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 4.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add market data normalization layer",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 3,
+        "title": "Order Management Adapters",
+        "owner": "Ikenna",
+        "priority": "P0-critical",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement order place/cancel/amend",
+            "complexity": "HIGH",
+            "priority": "P0-critical",
+            "risk": "CRITICAL",
+            "hours": 6.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add order status and fill events handler",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.5,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 4,
+        "title": "Simulation Adapter Layer",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create simulation adapter interface (extends base adapter)",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Integrate existing matching engine for order simulation",
+            "complexity": "HIGH",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 6.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement synthetic market data replay for sim mode",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 4,
+            "title": "Add simulation-specific health/status reporting",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 5,
+        "title": "Testing & Documentation",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Write unit tests for adapter interfaces",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "TRIVIAL",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Write integration tests with test venues (live mode)",
+            "complexity": "HIGH",
+            "priority": "P2-medium",
+            "risk": "MODERATE",
+            "hours": 5.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Write integration tests for simulation mode",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "TRIVIAL",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 4,
+            "title": "Document adapter usage, extension patterns, and mode selection",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.5,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 2,
+    "epic_issue": 4,
+    "epic_title": "PositionBalanceTruth: Position and Account Balance Monitor",
+    "milestone": "Batch85",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Core Position Monitor Service",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create position normalization and aggregation engine",
+            "complexity": "HIGH",
+            "priority": "P0-critical",
+            "risk": "CRITICAL",
+            "hours": 8.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement account balance tracking and drift detection",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 4.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 3,
+            "title": "Add canonical position state publisher",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Reconciliation Engine",
+        "owner": "Ikenna",
+        "priority": "P0-critical",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement batch reconciliation logic with threshold bands",
+            "complexity": "HIGH",
+            "priority": "P0-critical",
+            "risk": "CRITICAL",
+            "hours": 6.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add priority refresh signaling for mid-band mismatches",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 3.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement consumer health acknowledgement protocol",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.5,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 3,
+        "title": "Testing & Observability",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Write unit tests for position normalization",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "TRIVIAL",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Write integration tests for reconciliation scenarios",
+            "complexity": "HIGH",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 5.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Add lifecycle events and observability hooks",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 3,
+    "epic_issue": 5,
+    "epic_title": "ExposureControls: Exposure Monitor",
+    "milestone": "Live90",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Exposure Calculation Engine",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement net/gross exposure calculator",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add cross-venue netting logic",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement strategy-level and account-level rollups",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Storage & Observability",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create materialized views for exposure state",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add exposure threshold alerting hooks",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Write tests and documentation",
+            "complexity": "MEDIUM",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 4,
+    "epic_issue": 6,
+    "epic_title": "RiskPolicyEnforcement: Risk Monitor",
+    "milestone": "Live90",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Policy Engine Core",
+        "owner": "Ikenna",
+        "priority": "P0-critical",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement hard-block check engine",
+            "complexity": "HIGH",
+            "priority": "P0-critical",
+            "risk": "CRITICAL",
+            "hours": 6.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add soft-warning check engine",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement override workflow with audit logging",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 3.5,
+            "auto_merge": false,
+            "review": true
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Testing & Documentation",
+        "owner": "Harsh",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Write risk policy scenario tests",
+            "complexity": "HIGH",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 5.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Document policy configuration and override procedures",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 5,
+    "epic_issue": 7,
+    "epic_title": "PnlAttributionCore: PnL Attribution Service",
+    "milestone": "TechReadiness",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Attribution Calculation Engine",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement basis/delta/greeks PnL decomposition",
+            "complexity": "HIGH",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 8.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add funding/lending/borrowing rate PnL components",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement staking reward PnL tracking",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Multi-Dimensional Breakdowns",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Add account/venue/strategy breakdown aggregation",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement dual-base normalization (USD + native)",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.5,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 3,
+        "title": "Testing & Documentation",
+        "owner": "Harsh",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Write PnL component calculation tests",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "TRIVIAL",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Document attribution conventions and residual policy",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 6,
+    "epic_issue": 9,
+    "epic_title": "ObservabilityHardening: Alerting and Monitoring Core",
+    "milestone": "Batch85",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Alert Routing Infrastructure",
+        "owner": "Femi",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Configure PagerDuty integration for critical alerts",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Configure Slack integration for warning alerts",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "TRIVIAL",
+            "hours": 1.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement severity classification and routing logic",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Testing & Validation",
+        "owner": "Femi",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement daily synthetic heartbeat tests",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement weekly failure-injection tests",
+            "complexity": "MEDIUM",
+            "priority": "P2-medium",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Document alerting runbooks and escalation procedures",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 7,
+    "epic_issue": 11,
+    "epic_title": "SecurityRebaseline: Security, Auth, and Hardening Reintroduction",
+    "milestone": "Batch85",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Okta SSO Integration",
+        "owner": "Femi",
+        "priority": "P0-critical",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Configure Okta application and OIDC flows",
+            "complexity": "MEDIUM",
+            "priority": "P0-critical",
+            "risk": "CRITICAL",
+            "hours": 4.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement role-based access control (Admin/Operator/Viewer/ClientViewer/ClientAnalyst)",
+            "complexity": "MEDIUM",
+            "priority": "P0-critical",
+            "risk": "CRITICAL",
+            "hours": 3.5,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 3,
+            "title": "Add SSO middleware to all operator UIs",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 3.0,
+            "auto_merge": false,
+            "review": true
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Service-to-Service Auth",
+        "owner": "Femi",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement VPC-internal service auth baseline",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 3.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Configure least-privilege service accounts",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 3,
+        "title": "Network & Dependency Hardening",
+        "owner": "Femi",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement IP hardening for external surfaces",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add dependency scanning and vulnerability checks",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 8,
+    "epic_issue": 12,
+    "epic_title": "DualCloudReadiness: Dual-Cloud Readiness Program",
+    "milestone": "Live90",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Deployment Checklist YAML Expansion",
+        "owner": "Femi",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Add dual-cloud pass/fail gates to deployment YAMLs",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Sync deployment YAML status with GitHub Projects fields",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "AWS Backup Posture",
+        "owner": "Femi",
+        "priority": "P2-medium",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Document AWS credit application path",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 1.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Create AWS deployment scripts for tier-1 services",
+            "complexity": "HIGH",
+            "priority": "P2-medium",
+            "risk": "MODERATE",
+            "hours": 6.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 9,
+    "epic_issue": 13,
+    "epic_title": "OpsDeploymentUI: Trading Analytics Deployment UI",
+    "milestone": "Live90",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "UI Core & Auth",
+        "owner": "Harsh",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create React/Next.js UI shell with Okta SSO",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement role-based view rendering",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Deployment Status Views",
+        "owner": "Harsh",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create service health/release status dashboard",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add alert visibility and acknowledgement panel",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement rollback controls UI",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "MODERATE",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 10,
+    "epic_issue": 15,
+    "epic_title": "MlDeploymentUI: ML Deployment UI",
+    "milestone": "Commercialization",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Model Registry Integration",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create GCS manifest + BigQuery index schema",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Implement model version listing and metadata display",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Promotion & Rollback Controls",
+        "owner": "Ikenna",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement model promotion workflow with approval chain",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "HIGH",
+            "hours": 4.0,
+            "auto_merge": false,
+            "review": true
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add rollback to prior model version",
+            "complexity": "LOW",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Create inference health monitoring dashboard",
+            "complexity": "MEDIUM",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "epic_number": 11,
+    "epic_issue": 16,
+    "epic_title": "ClientOnboardingReporting: Client Onboarding and Reporting UI",
+    "milestone": "Commercialization",
+    "tasks": [
+      {
+        "task_number": 1,
+        "title": "Onboarding State Machine",
+        "owner": "Harsh",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Implement tenant onboarding workflow state machine",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 4.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Create admin controls for tenant management",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      },
+      {
+        "task_number": 2,
+        "title": "Client Reporting Views",
+        "owner": "Harsh",
+        "priority": "P1-high",
+        "subtasks": [
+          {
+            "subtask_number": 1,
+            "title": "Create position/exposure snapshot views",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 2,
+            "title": "Add PnL attribution summary dashboard",
+            "complexity": "MEDIUM",
+            "priority": "P1-high",
+            "risk": "MODERATE",
+            "hours": 3.5,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 3,
+            "title": "Implement trade/fill log export",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          },
+          {
+            "subtask_number": 4,
+            "title": "Add risk limit/override event visibility",
+            "complexity": "LOW",
+            "priority": "P2-medium",
+            "risk": "TRIVIAL",
+            "hours": 2.0,
+            "auto_merge": true,
+            "review": false
+          }
+        ]
+      }
+    ]
+  }
+]

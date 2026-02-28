@@ -17,7 +17,7 @@
 
 ### 2. UCS Version - 3 repos
 - **pnl-attribution-service, alerting-system, unified-trading-deployment-v3**
-- Change: `unified-cloud-services>=0.5.0,<1.0.0` → `unified-cloud-services>=1.5.0,<2.0.0`
+- Change: `unified-trading-services>=0.5.0,<1.0.0` → `unified-trading-services>=1.5.0,<2.0.0`
 - In pyproject.toml [project.dependencies]
 
 ### 3. Type Checker (pyright → basedpyright) - 11 repos
@@ -48,7 +48,7 @@
 
 ### Agent 2 - Repos: ml-training-service, ml-inference-service, market-data-processing-service, instruments-service, market-tick-data-handler, strategy-service
 
-### Agent 3 - Repos: position-balance-monitor-service, live-health-monitor-ui, execution-services, execution-algo-library, unified-config-interface, unified-domain-services, unified-events-interface, unified-market-interface, unified-trade-execution-interface, unified-ml-interface
+### Agent 3 - Repos: position-balance-monitor-service, live-health-monitor-ui, execution-services, execution-algo-library, unified-config-interface, unified-domain-client, unified-events-interface, unified-market-interface, unified-trade-execution-interface, unified-ml-interface
 
 ### Agent 4 - Verification and remaining repos (batch-audit-ui, client-reporting-ui, etc. if they have cloudbuild/quality-gates)
 
@@ -58,7 +58,7 @@
 
 ### uv lock (completed by subagent)
 - **pnl-attribution-service**: ✅ Resolved 103 packages
-- **alerting-system**: ✅ Resolved 103 packages (unified-cloud-services v1.5.16 → v1.5.17 in lock)
+- **alerting-system**: ✅ Resolved 103 packages (unified-trading-services v1.5.16 → v1.5.17 in lock)
 - **unified-trading-deployment-v3**: ✅ Resolved 148 packages
 **Action:** Commit updated `uv.lock` in each repo (e.g. via quickmerge).
 

@@ -11,7 +11,7 @@
 /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/
 ├── unified-config-interface/     ← DASHES (repo folder)
 ├── unified-events-interface/     ← DASHES
-├── unified-cloud-services/       ← DASHES
+├── unified-trading-services/       ← DASHES
 └── instruments-service/          ← DASHES
 ```
 
@@ -59,12 +59,12 @@ cd unified-config-interface  # ✅ This is the repo folder
 - `position-balance-monitor-service/` → package: `position_balance_monitor_service/`
 
 ### Libraries (6)
-- `unified-cloud-services/` → package: `unified_cloud_services/`
+- `unified-trading-services/` → package: `unified_trading_services/`
 - `unified-config-interface/` → package: `unified_config_interface/`
 - `unified-events-interface/` → package: `unified_events_interface/`
 - `unified-market-interface/` → package: `unified_market_interface/`
 - `unified-trade-execution-interface/` → package: `unified_trade_execution_interface/`
-- `unified-domain-services/` → package: `unified_domain_services/`
+- `unified-domain-client/` → package: `unified_domain_client/`
 
 ### Utility (4)
 - `execution-algo-library/` → package: `execution_algo_library/`

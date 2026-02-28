@@ -1,0 +1,178 @@
+{
+  "epic": "unified-libraries-refactor",
+  "total_issues": 9,
+  "issues": [
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Foundation (Days 1-4)",
+      "body": "## Task: Foundation (Days 1-4)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 1\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "1",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Configuration (Days 5-7)",
+      "body": "## Task: Configuration (Days 5-7)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 2\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "2",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Market Data (Days 8-10)",
+      "body": "## Task: Market Data (Days 8-10)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 3\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing",
+        "blocker:D1-data"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "3",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Order Execution (Days 11-13)",
+      "body": "## Task: Order Execution (Days 11-13)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 4\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "4",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Execution Algorithms (Days 13.5-15)",
+      "body": "## Task: Execution Algorithms (Days 13.5-15)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 4.5\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "4.5",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Migration & Documentation (Day 15)",
+      "body": "## Task: Migration & Documentation (Day 15)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 5\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "5",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Verify (No Changes Needed)",
+      "body": "## Task: Verify (No Changes Needed)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 1\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "1",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Update Imports (Optional, 6-month window)",
+      "body": "## Task: Update Imports (Optional, 6-month window)\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 2\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "2",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    },
+    {
+      "title": "[UNIFIED-LIBRARIES-REFACTOR] Update Tests",
+      "body": "## Task: Update Tests\n\n**Epic:** unified-libraries-refactor\n**Task ID:** 3\n**Owner:** Ikenna\n**Classification:** VALIDATE\n**Priority:** P1\n**Estimated:** 2h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:unified-libraries-refactor",
+        "classification:validate",
+        "priority:p1",
+        "owner:ikenna",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": "ikenna",
+      "metadata": {
+        "epic": "unified-libraries-refactor",
+        "task_id": "3",
+        "classification": "VALIDATE",
+        "estimated_hours": "2h"
+      }
+    }
+  ]
+}

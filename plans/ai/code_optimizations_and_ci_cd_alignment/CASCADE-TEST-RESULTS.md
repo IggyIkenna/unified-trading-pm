@@ -14,23 +14,23 @@ Level 0: unified-config-interface (no deps) ← should skip if no diff
          unified-events-interface (no deps) ← should skip if no diff
          api-contracts (no deps) ← should skip if no diff
 
-Level 1: unified-cloud-services
-         Dependencies: unified-domain-services
+Level 1: unified-trading-services
+         Dependencies: unified-domain-client
          Current Status: 87 files changed (+2730, -7764) from main
          
-Level 2: unified-domain-services  
-         Dependencies: unified-cloud-services, unified-config-interface, unified-events-interface
+Level 2: unified-domain-client  
+         Dependencies: unified-trading-services, unified-config-interface, unified-events-interface
          Current Status: 19 files changed (+390, -230) from main
 
 Level 3: unified-market-interface
-         Dependencies: unified-domain-services, unified-config-interface
+         Dependencies: unified-domain-client, unified-config-interface
          Current Status: 10 files changed from main
 
 Level 4: (none in chain)
 
 Level 5: instruments-service (TEST REPO)
          Dependencies: api-contracts, unified-config-interface, unified-events-interface, 
-                      unified-domain-services, unified-market-interface
+                      unified-domain-client, unified-market-interface
          Current Status: 83 files changed from main
 ```
 
@@ -61,7 +61,7 @@ bash scripts/quickmerge.sh "test: validate 5-level cascade with differential bra
 - ❌ api-contracts (no diff expected)
 - ❌ unified-config-interface (no diff expected)
 - ❌ unified-events-interface (no diff expected)
-- ✅ unified-domain-services (HAS DIFF)
+- ✅ unified-domain-client (HAS DIFF)
 - ✅ unified-market-interface (HAS DIFF)
 
 **Since --dep-branch specified**: Should proceed to cascade mode
@@ -79,19 +79,19 @@ bash scripts/quickmerge.sh "test: validate 5-level cascade with differential bra
 3. **api-contracts** (if diff)
    - Skip if no diff from main
 
-4. **unified-cloud-services**
+4. **unified-trading-services**
    - HAS DIFF → Quickmerge to `cascade-test-2024`
-   - Depends on: unified-domain-services
+   - Depends on: unified-domain-client
    - **PROBLEM**: Circular dependency! UCS needs UDS, but UDS needs UCS
    - **Solution**: Runtime installation handles this
 
-5. **unified-domain-services**
+5. **unified-domain-client**
    - HAS DIFF → Quickmerge to `cascade-test-2024`
-   - Depends on: unified-cloud-services (already on cascade-test-2024)
+   - Depends on: unified-trading-services (already on cascade-test-2024)
 
 6. **unified-market-interface**
    - HAS DIFF → Quickmerge to `cascade-test-2024`
-   - Depends on: unified-domain-services (already on cascade-test-2024)
+   - Depends on: unified-domain-client (already on cascade-test-2024)
 
 7. **instruments-service** (current repo)
    - Quickmerge to `cascade-test-2024`

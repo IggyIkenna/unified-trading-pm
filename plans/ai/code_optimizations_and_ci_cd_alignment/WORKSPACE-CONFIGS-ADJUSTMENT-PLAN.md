@@ -55,8 +55,8 @@ No renames needed for these; only ensure names are consistent and blocks match t
 **Topological order (simplified):**
 
 - **Level 0:** unified-config-interface, unified-events-interface, api-contracts
-- **Level 1:** unified-cloud-services
-- **Level 2:** unified-domain-services, matching-engine-library, execution-algo-library
+- **Level 1:** unified-trading-services
+- **Level 2:** unified-domain-client, matching-engine-library, execution-algo-library
 - **Level 3:** unified-market-interface, unified-ml-interface
 - **Level 4:** unified-trade-execution-interface, unified-defi-execution-interface
 - **Level 5:** instruments-service, strategy-service, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service, features-calendar, features-onchain, features-volatility, ml-training-service, execution-services
@@ -72,51 +72,51 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 ### 3.1 workspace-complete
 
 - Replace `unified-order-interface` with `unified-trade-execution-interface` in folders and `cursorpyright.analysis.extraPaths`.
-- Add from matrix (if not present): `api-contracts`, `matching-engine-library`, `unified-defi-execution-interface`, `unified-ml-interface`, `unified-domain-services` (already in script).
+- Add from matrix (if not present): `api-contracts`, `matching-engine-library`, `unified-defi-execution-interface`, `unified-ml-interface`, `unified-domain-client` (already in script).
 - Ensure extraPaths include every folder that has Python packages (same list as folders, minus .cursor and UIs if not needed for Python).
 - Keep: all UIs, features-delta-one-service, ml-inference-service, deployment, codex, market-tick-data-handler, market-data-processing-service.
 
 ### 3.2 workspace-data-pipeline
 
-- Ensure: unified-domain-services is included (instruments-service depends on it per matrix). Script already has unified-market-interface.
-- Repos: .cursor, codex, deployment v2/v3, unified-cloud-services, unified-events-interface, unified-config-interface, unified-domain-services, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service.
+- Ensure: unified-domain-client is included (instruments-service depends on it per matrix). Script already has unified-market-interface.
+- Repos: .cursor, codex, deployment v2/v3, unified-trading-services, unified-events-interface, unified-config-interface, unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service.
 - No `unified-order-interface`; if any reference exists, use `unified-trade-execution-interface`.
 
 ### 3.3 workspace-features
 
-- Add unified-domain-services (features-* depend on it). Script already has market-tick, market-data-processing, unified-market-interface.
-- Repos: foundation + unified-domain-services, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, features-volatility, features-onchain.
+- Add unified-domain-client (features-* depend on it). Script already has market-tick, market-data-processing, unified-market-interface.
+- Repos: foundation + unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, features-volatility, features-onchain.
 - No order/execution interface needed.
 
 ### 3.4 workspace-ml
 
-- Add unified-domain-services, unified-ml-interface (ml-training-service depends on them per matrix).
-- Repos: foundation + unified-domain-services, unified-ml-interface, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, features-volatility, features-onchain, ml-training-service, ml-inference-service.
+- Add unified-domain-client, unified-ml-interface (ml-training-service depends on them per matrix).
+- Repos: foundation + unified-domain-client, unified-ml-interface, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, features-volatility, features-onchain, ml-training-service, ml-inference-service.
 - Update extraPaths to match.
 
 ### 3.5 workspace-trading
 
 - Replace `unified-order-interface` with `unified-trade-execution-interface` in folders and extraPaths.
-- Add from matrix: unified-domain-services, unified-market-interface (script already has trade-execution-interface and execution-algo-library), matching-engine-library, unified-defi-execution-interface (execution-services deps).
-- Repos: foundation + unified-trade-execution-interface, execution-algo-library, matching-engine-library, unified-defi-execution-interface, unified-domain-services, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, strategy-service, execution-services, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service.
+- Add from matrix: unified-domain-client, unified-market-interface (script already has trade-execution-interface and execution-algo-library), matching-engine-library, unified-defi-execution-interface (execution-services deps).
+- Repos: foundation + unified-trade-execution-interface, execution-algo-library, matching-engine-library, unified-defi-execution-interface, unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, strategy-service, execution-services, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service.
 
 ### 3.6 workspace-libraries
 
 - Replace `unified-order-interface` with `unified-trade-execution-interface`.
 - Add: unified-ml-interface, matching-engine-library, unified-defi-execution-interface, api-contracts.
-- Repos: .cursor, codex, deployment v2/v3, unified-cloud-services, unified-events-interface, unified-config-interface, unified-trade-execution-interface, unified-market-interface, unified-ml-interface, unified-domain-services, execution-algo-library, matching-engine-library, unified-defi-execution-interface, api-contracts.
+- Repos: .cursor, codex, deployment v2/v3, unified-trading-services, unified-events-interface, unified-config-interface, unified-trade-execution-interface, unified-market-interface, unified-ml-interface, unified-domain-client, execution-algo-library, matching-engine-library, unified-defi-execution-interface, api-contracts.
 - extraPaths: same list (for Python packages).
 
 ### 3.7 workspace-full-pipeline
 
-- Add unified-domain-services so strategy and downstream have UDS.
+- Add unified-domain-client so strategy and downstream have UDS.
 - No `unified-order-interface`; ensure naming is unified-trade-execution-interface if any reference is added later.
 - Repos: foundation + instruments, market-tick-data-handler, market-data-processing-service, features-*, ml-training, ml-inference, strategy-service, risk-and-exposure-service, position-balance-monitor-service (no execution-services in this workspace is acceptable; pipeline is data → features → ML → strategy/risk/position).
 
 ### 3.8 workspace-uis
 
 - No change to repo names (no unified-order-interface).
-- Keep: codex, deployment v2/v3, unified-cloud-services, unified-config-interface, and all UI repos. Optional: unified-events-interface if UIs need it.
+- Keep: codex, deployment v2/v3, unified-trading-services, unified-config-interface, and all UI repos. Optional: unified-events-interface if UIs need it.
 
 ### 3.9 workspace-infrastructure
 
@@ -130,7 +130,7 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 1. **Fix script `create-workspace-files.sh`**
    - Use only canonical names: `unified-trade-execution-interface` (never `unified-order-interface`).
    - Add to **workspace-complete** (and elsewhere as above): `api-contracts`, `matching-engine-library`, `unified-defi-execution-interface`, `unified-ml-interface`.
-   - Add **unified-domain-services** to: data-pipeline, features, ml, full-pipeline (and trading/libraries/complete as already or newly specified).
+   - Add **unified-domain-client** to: data-pipeline, features, ml, full-pipeline (and trading/libraries/complete as already or newly specified).
    - For each workspace block, add the same entries to `cursorpyright.analysis.extraPaths` (and any other settings that list repo paths) so they stay in sync with `folders`.
 
 2. **Regenerate all `.code-workspace` files**
@@ -170,12 +170,12 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 | Workspace | Repo count (approx) | Key additions / renames |
 |-----------|---------------------|---------------------------|
 | complete | 35+ | unified-trade-execution-interface; + api-contracts, matching-engine-library, unified-defi-execution-interface, unified-ml-interface |
-| data-pipeline | 11 | unified-domain-services (if missing) |
-| features | 15 | unified-domain-services (if missing) |
-| ml | 14 | unified-domain-services, unified-ml-interface |
-| trading | 20 | unified-trade-execution-interface (rename); + unified-domain-services, matching-engine-library, unified-defi-execution-interface |
+| data-pipeline | 11 | unified-domain-client (if missing) |
+| features | 15 | unified-domain-client (if missing) |
+| ml | 14 | unified-domain-client, unified-ml-interface |
+| trading | 20 | unified-trade-execution-interface (rename); + unified-domain-client, matching-engine-library, unified-defi-execution-interface |
 | libraries | 14 | unified-trade-execution-interface (rename); + unified-ml-interface, matching-engine-library, unified-defi-execution-interface, api-contracts |
-| full-pipeline | 19 | unified-domain-services (if missing) |
+| full-pipeline | 19 | unified-domain-client (if missing) |
 | uis | 14 | No repo renames |
 | infrastructure | 5 | No changes |
 

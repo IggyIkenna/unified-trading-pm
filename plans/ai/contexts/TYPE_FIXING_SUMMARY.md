@@ -14,7 +14,7 @@
 - Cascades to 15+ downstream type errors
 - "None is not awaitable" errors
 
-**Root Cause**: `unified-cloud-services/core/error_handling.py` line 638, 672:
+**Root Cause**: `unified-trading-services/core/error_handling.py` line 638, 672:
 ```python
 except Exception as e:
     logger.error(f"❌ Error in {func.__name__}: {e}")
@@ -150,9 +150,9 @@ pytest tests/unit/ -q
 
 ## 🔍 WHAT I LITERALLY CANNOT FIX
 
-### 1. Decorator Type Hints in unified-cloud-services ❌
+### 1. Decorator Type Hints in unified-trading-services ❌
 
-**Location**: `unified-cloud-services/unified_cloud_services/core/error_handling.py`
+**Location**: `unified-trading-services/unified_trading_services/core/error_handling.py`
 
 **Issue**: `@handle_api_errors` decorator needs proper generic typing:
 ```python
@@ -171,7 +171,7 @@ def handle_api_errors(max_retries: int = 3) -> Callable[[Callable[P, Coroutine[A
 ```
 
 **Why Not Fixed**: 
-- Different repo (unified-cloud-services)
+- Different repo (unified-trading-services)
 - Requires comprehensive decorator refactor
 - Affects all services using these decorators
 - Should be separate PR

@@ -34,10 +34,10 @@ SERVICE_REPOS = [
 ]
 
 LIBRARY_REPOS = [
-    "unified-cloud-services",
+    "unified-trading-services",
     "unified-config-interface",
     "unified-events-interface",
-    "unified-domain-services",
+    "unified-domain-client",
     "unified-market-interface",
     "unified-trade-execution-interface",
     "unified-ml-interface",
@@ -71,11 +71,11 @@ rg "GOOGLE_CLOUD_PROJECT" --type py --glob "!tests/**" --glob "!**/config.py" "$
     },
     {
         "id": "EVENT_LOGGING_OLD",
-        "sentinel": "unified_cloud_services.*log_event|setup_cloud_logging|EL_OLD",
+        "sentinel": "unified_trading_services.*log_event|setup_cloud_logging|EL_OLD",
         "anchor": 'log_success "No GOOGLE_CLOUD_PROJECT usage"',
         "code": '''
 # Old event logging pattern — must use unified_events_interface directly
-EL_OLD=$(rg "from unified_cloud_services[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || true)
+EL_OLD=$(rg "from unified_trading_services[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || true)
 [[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_events_interface import ...'"; echo "$EL_OLD" | head -3; ((V++)); } || log_success "Event logging imports from unified_events_interface"''',
     },
     {
@@ -167,6 +167,61 @@ fi""",
 BYPASS=$(rg "\\|\\|true|\\|\\| true" --glob "**/quality-gates.sh" --glob "**/quality-gates.yml" . 2>/dev/null \\
     | grep -v "^#\\|zombies\\|pyright\\|cleanup" || true)
 [[ -n "$BYPASS" ]] && { log_fail "||true bypass in quality gates — fix the root cause"; echo "$BYPASS" | head -3; ((V++)); } || log_success "No ||true quality gate bypasses"''',
+    },
+    # ── id_conventions: must come from unified-config-interface, not UCS ─────
+    {
+        "id": "ID_CONVENTIONS_UCS",
+        "sentinel": "ID_CONVENTIONS_UCS|id_conventions.*unified_trading_services|generate_strategy_id.*from unified_trading_services",
+        "anchor": 'log_success "No ||true quality gate bypasses"',
+        "code": r'''
+# ID conventions (generate_strategy_id, generate_config_id, etc.) live in unified-config-interface
+ID_CONV=$(rg 'from unified_trading_services import[^#]*?(generate_strategy_id|generate_config_id|parse_strategy_id|parse_config_id|validate_strategy_id|validate_config_id|get_gcs_config_path|get_execution_bucket|get_strategy_bucket|CATEGORIES|MODES|TIMEFRAMES)' \
+    --type py "$SOURCE_DIR/" 2>/dev/null || true)
+[[ -n "$ID_CONV" ]] && { log_fail "ID convention functions must come from unified_config_interface, not unified_trading_services"; echo "$ID_CONV" | head -3; ((V++)); } || log_success "ID convention imports from unified_config_interface"''',
+    },
+    # ── security module: deleted — use UEI log_event instead ─────────────────
+    {
+        "id": "UCS_SECURITY_IMPORT",
+        "sentinel": "UCS_SECURITY|unified_trading_services.*security|security.*unified_trading_services",
+        "anchor": 'log_success "ID convention imports from unified_config_interface"',
+        "code": r'''
+# unified_trading_services.security module was deleted Feb 2026 — use log_event() from unified_events_interface
+SEC=$(rg 'from unified_trading_services.*security|from unified_trading_services import.*[Aa]uth[Ff]ailure|SecurityLogger|config_change_logger|secret_access_logger' \
+    --type py "$SOURCE_DIR/" 2>/dev/null || true)
+[[ -n "$SEC" ]] && { log_fail "unified_trading_services.security is deleted — use log_event('AUTH_FAILURE', ...) from unified_events_interface"; echo "$SEC" | head -3; ((V++)); } || log_success "No deleted security module imports"''',
+    },
+    # ── Domain layer: Service→UDS→UCS boundary ────────────────────────────────
+    {
+        "id": "UCS_DOMAIN_IMPORT",
+        "sentinel": "UCS_DOMAIN|Domain clients must come from unified_domain_client",
+        "anchor": 'log_success "No ||true quality gate bypasses"',
+        "code": r'''
+# Domain clients must come from unified_domain_client, not unified_trading_services
+UCS_DOMAIN=$(rg 'from unified_trading_services import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
+    --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || true)
+[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_domain_client, not unified_trading_services"; echo "$UCS_DOMAIN" | head -5; ((V++)); } || log_success "Domain clients imported from unified_domain_client"''',
+    },
+    # ── GCP auth: ADC pattern enforcement ─────────────────────────────────────
+    {
+        "id": "GCP_AUTH_CREDENTIAL_FILE_SKIP",
+        "sentinel": "BAD_AUTH_SKIP|credential-file skip|No credential-file skip",
+        "anchor": 'log_success "No ||true quality gate bypasses"',
+        "code": r'''
+# GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
+BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION_CREDENTIALS|if not.*gcp_credentials.*pytest\.skip|if not.*cred_file.*pytest\.skip' \
+    --type py tests/ 2>/dev/null \
+    | grep -v "_skip_integration_without_creds\|No GCP credentials.*skipping integration\|No GCP credentials.*skipping Secret Manager\|Could not create/access" \
+    || true)
+[[ -n "$BAD_AUTH_SKIP" ]] && { log_fail "Tests skip due to missing credential file — use google.auth.default() + @pytest.mark.integration instead"; echo "$BAD_AUTH_SKIP" | head -5; ((V++)); } || log_success "No credential-file skip patterns in tests"''',
+    },
+    {
+        "id": "GCP_AUTH_ENV_EXAMPLE",
+        "sentinel": "GOOGLE_APPLICATION_CREDENTIALS.*\\.env\\.example|No GOOGLE_APPLICATION_CREDENTIALS in .env.example",
+        "anchor": 'log_success "No credential-file skip patterns in tests"',
+        "code": r'''
+# .env.example must not contain GOOGLE_APPLICATION_CREDENTIALS (use ADC / GH token / Cloud SA)
+[[ -f ".env.example" ]] && rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
+    && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC)"; ((V++)); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"''',
     },
 ]
 

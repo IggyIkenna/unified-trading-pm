@@ -1,0 +1,136 @@
+{
+  "position-balance-monitor-service": [
+    {
+      "subtask_id": "Subtask 1.1",
+      "title": "[PostTrade] Core position tracking from fills",
+      "number": "1",
+      "url": "https://github.com/IggyIkenna/position-balance-monitor-service/issues/1",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.2",
+      "title": "[PostTrade] Account query integration (unified-order-interface)",
+      "number": "2",
+      "url": "https://github.com/IggyIkenna/position-balance-monitor-service/issues/2",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.3",
+      "title": "[PostTrade] Exchange reconciliation (fetch + compare positions)",
+      "number": "3",
+      "url": "https://github.com/IggyIkenna/position-balance-monitor-service/issues/3",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.4",
+      "title": "[PostTrade] Position state API (for strategy queries)",
+      "number": "4",
+      "url": "https://github.com/IggyIkenna/position-balance-monitor-service/issues/4",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.5",
+      "title": "[PostTrade] Client-level position isolation (multi-tenant)",
+      "number": "5",
+      "url": "https://github.com/IggyIkenna/position-balance-monitor-service/issues/5",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.6",
+      "title": "[PostTrade] Testing + docs",
+      "number": "6",
+      "url": "https://github.com/IggyIkenna/position-balance-monitor-service/issues/6",
+      "existing": false
+    }
+  ],
+  "risk-and-exposure-service": [
+    {
+      "subtask_id": "Subtask 2.1",
+      "title": "[PostTrade] Pre-trade risk checks",
+      "number": "1",
+      "url": "https://github.com/IggyIkenna/risk-and-exposure-service/issues/1",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 2.2",
+      "title": "[PostTrade] Real-time risk monitoring",
+      "number": "2",
+      "url": "https://github.com/IggyIkenna/risk-and-exposure-service/issues/2",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 2.3",
+      "title": "[PostTrade] Exposure aggregation",
+      "number": "3",
+      "url": "https://github.com/IggyIkenna/risk-and-exposure-service/issues/3",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 2.4",
+      "title": "[PostTrade] Exposure limit monitoring",
+      "number": "4",
+      "url": "https://github.com/IggyIkenna/risk-and-exposure-service/issues/4",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 2.5",
+      "title": "[PostTrade] Risk breach alerting",
+      "number": "5",
+      "url": "https://github.com/IggyIkenna/risk-and-exposure-service/issues/5",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 2.6",
+      "title": "[PostTrade] Testing + docs",
+      "number": "6",
+      "url": "https://github.com/IggyIkenna/risk-and-exposure-service/issues/6",
+      "existing": false
+    }
+  ],
+  "execution-services": [
+    {
+      "subtask_id": "Subtask 3.1",
+      "title": "[PostTrade] Extract algo implementations to execution-algo-library",
+      "number": "159",
+      "url": "https://github.com/IggyIkenna/execution-services/issues/159",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 3.2",
+      "title": "[PostTrade] Refactor to use unified-order-interface venue adapters",
+      "number": "160",
+      "url": "https://github.com/IggyIkenna/execution-services/issues/160",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 3.3",
+      "title": "[PostTrade] Simplify to orchestration layer",
+      "number": "161",
+      "url": "https://github.com/IggyIkenna/execution-services/issues/161",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 3.4",
+      "title": "[PostTrade] Manual instruction entry API",
+      "number": "162",
+      "url": "https://github.com/IggyIkenna/execution-services/issues/162",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 3.6",
+      "title": "[PostTrade] Testing + docs",
+      "number": "163",
+      "url": "https://github.com/IggyIkenna/execution-services/issues/163",
+      "existing": false
+    }
+  ],
+  "live-health-monitor-ui": [
+    {
+      "subtask_id": "Subtask 3.5",
+      "title": "[PostTrade] Manual trading controls UI",
+      "number": "1",
+      "url": "https://github.com/IggyIkenna/live-health-monitor-ui/issues/1",
+      "existing": false
+    }
+  ]
+}

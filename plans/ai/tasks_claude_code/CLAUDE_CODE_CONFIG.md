@@ -105,7 +105,7 @@ Before starting, read these files to understand the standards:
 - ✅ Reads workspace `.cursorrules` (workspace-level rules)
 - ✅ Reads `.cursor/rules/*.mdc` (all standards)
 - ✅ Reads `unified-trading-codex/` (canonical patterns)
-- ✅ Sees path dependencies (`unified-cloud-services/`, etc.)
+- ✅ Sees path dependencies (`unified-trading-services/`, etc.)
 - ✅ Full context for better fixes
 
 **Edit Restriction**: Prompt tells agent to ONLY edit target repo:
@@ -156,7 +156,7 @@ cursor .cursor/workspace-configs/workspace-trading.code-workspace
    └─ Reads .cursorrules (workspace root)
    └─ Reads .cursor/rules/*.mdc (workspace root)
    └─ Reads unified-trading-codex/ (standards)
-   └─ Sees path dependencies (unified-cloud-services/, etc.)
+   └─ Sees path dependencies (unified-trading-services/, etc.)
    └─ Edits ONLY its target repo (no conflicts!)
 
 Result: Full context + parallel execution + no conflicts!
@@ -224,3 +224,58 @@ claude --model claude-sonnet-4-5-20250929
 - ✅ Agent CLI automatically reads rules from workspace
 
 **Result**: No more constant prompts + Standards enforced! 🚀
+
+---
+
+## 🐍 Workspace Venv Auto-Activation
+
+Claude Code needs the workspace venv so that `python`, `ruff`, `basedpyright`, `uv`, and `pytest`
+resolve to the correct versions (`ruff==0.15.0`, `basedpyright`, Python 3.13) without manual setup.
+
+### Three-layer approach (all three active):
+
+**Layer 1 — Shell alias (strongest, inherited by all subprocesses)**
+
+```bash
+# In ~/.zshrc — already added
+ccw                  # claude + venv, skip permissions, default model
+ccw-sonnet           # claude-sonnet-4-6 + venv
+ccw-opus             # claude-opus-4-6 + venv
+ccw-think            # claude-sonnet-4-5 + venv + thinking budget 10k
+```
+
+Use `ccw` instead of `claude` when working from the unified-trading-system-repos workspace.
+The shell function `source`s the venv before invoking `claude`, so every bash subprocess
+inherits the activated PATH automatically.
+
+**Layer 2 — `.claude/settings.json` (env vars, automatic for any claude invocation)**
+
+Located at `unified-trading-system-repos/.claude/settings.json`:
+```json
+{
+  "env": {
+    "VIRTUAL_ENV": ".../.venv-workspace",
+    "PATH": ".../.venv-workspace/bin:..."
+  }
+}
+```
+
+This is picked up by `claude` regardless of how it was launched (CLI, IDE, scripts).
+It ensures `VIRTUAL_ENV` is set and `.venv-workspace/bin` is first in PATH.
+
+**Layer 3 — `CLAUDE.md` (session instruction, fallback check)**
+
+`CLAUDE.md` at workspace root tells Claude Code to verify `which python` and `which ruff`
+at the start of every session, and to run `source .venv-workspace/bin/activate` if they
+aren't resolving to the workspace venv.
+
+### Verification
+
+```bash
+# In any Claude Code bash call — should all point to .venv-workspace/bin/
+which python         # .venv-workspace/bin/python
+python --version     # Python 3.13.x
+which ruff           # .venv-workspace/bin/ruff
+ruff --version       # ruff 0.15.0
+which basedpyright   # .venv-workspace/bin/basedpyright
+```

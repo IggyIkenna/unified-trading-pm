@@ -1,0 +1,83 @@
+{
+  "epic": "market-data-infrastructure",
+  "total_issues": 4,
+  "issues": [
+    {
+      "title": "[MARKET-DATA-INFRASTRUCTURE] Batch mode (Tardis/Databento clients)",
+      "body": "## Task: Batch mode (Tardis/Databento clients)\n\n**Epic:** market-data-infrastructure\n**Task ID:** 1.1\n**Owner:** Unknown\n**Classification:** VALIDATE\n**Priority:** P2\n**Estimated:** 1h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:market-data-infrastructure",
+        "classification:validate",
+        "priority:p2",
+        "owner:unknown",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing",
+        "blocker:D1-data"
+      ],
+      "assignee": null,
+      "metadata": {
+        "epic": "market-data-infrastructure",
+        "task_id": "1.1",
+        "classification": "VALIDATE",
+        "estimated_hours": "1h"
+      }
+    },
+    {
+      "title": "[MARKET-DATA-INFRASTRUCTURE] Live mode (WebSocket handlers)",
+      "body": "## Task: Live mode (WebSocket handlers)\n\n**Epic:** market-data-infrastructure\n**Task ID:** 1.2\n**Owner:** Unknown\n**Classification:** VALIDATE\n**Priority:** P2\n**Estimated:** 1h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:market-data-infrastructure",
+        "classification:validate",
+        "priority:p2",
+        "owner:unknown",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": null,
+      "metadata": {
+        "epic": "market-data-infrastructure",
+        "task_id": "1.2",
+        "classification": "VALIDATE",
+        "estimated_hours": "1h"
+      }
+    },
+    {
+      "title": "[MARKET-DATA-INFRASTRUCTURE] Feed normalization via unified-market-interface",
+      "body": "## Task: Feed normalization via unified-market-interface\n\n**Epic:** market-data-infrastructure\n**Task ID:** 1.3\n**Owner:** Unknown\n**Classification:** VALIDATE\n**Priority:** P2\n**Estimated:** 1h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:market-data-infrastructure",
+        "classification:validate",
+        "priority:p2",
+        "owner:unknown",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": null,
+      "metadata": {
+        "epic": "market-data-infrastructure",
+        "task_id": "1.3",
+        "classification": "VALIDATE",
+        "estimated_hours": "1h"
+      }
+    },
+    {
+      "title": "[MARKET-DATA-INFRASTRUCTURE] Testing + docs",
+      "body": "## Task: Testing + docs\n\n**Epic:** market-data-infrastructure\n**Task ID:** 1.4\n**Owner:** Unknown\n**Classification:** VALIDATE\n**Priority:** P2\n**Estimated:** 1h\n**Complexity:** MEDIUM\n\n## Acceptance Criteria\n\n- [ ] Code implemented and tested\n- [ ] Quality gates pass\n- [ ] Documentation updated\n- [ ] Validators pass (if applicable)\n\n---\n*Auto-generated from epic classification: VALIDATE*",
+      "labels": [
+        "epic:market-data-infrastructure",
+        "classification:validate",
+        "priority:p2",
+        "owner:unknown",
+        "blocker:D3-quality-gates",
+        "blocker:D6-testing"
+      ],
+      "assignee": null,
+      "metadata": {
+        "epic": "market-data-infrastructure",
+        "task_id": "1.4",
+        "classification": "VALIDATE",
+        "estimated_hours": "1h"
+      }
+    }
+  ]
+}

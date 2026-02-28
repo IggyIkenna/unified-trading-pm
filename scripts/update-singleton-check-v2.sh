@@ -14,7 +14,7 @@ REPOS=(
     "position-balance-monitor-service"
     "risk-and-exposure-service"
     "market-data-processing-service"
-    "unified-cloud-services"
+    "unified-trading-services"
     "unified-config-interface"
     "unified-events-interface"
     "unified-market-interface"

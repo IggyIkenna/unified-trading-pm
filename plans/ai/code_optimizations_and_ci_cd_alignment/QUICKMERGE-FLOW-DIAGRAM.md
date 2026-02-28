@@ -29,7 +29,7 @@ Developer runs:
   │
   ├─> Check 1: Uncommitted Changes in Path Dependencies
   │   ├─> Read pyproject.toml
-  │   ├─> Find path deps (unified-cloud-services, etc.)
+  │   ├─> Find path deps (unified-trading-services, etc.)
   │   ├─> For each dep: git status --porcelain
   │   └─> ❌ FAIL if uncommitted changes found
   │       Action: "Commit dep FIRST, then re-run quickmerge"
@@ -242,10 +242,10 @@ export OPENAI_API_KEY=sk-...
 
 ### Pre-Flight Audit Fails
 ```
-❌ Error: Uncommitted changes in unified-cloud-services
+❌ Error: Uncommitted changes in unified-trading-services
 
 Fix:
-cd unified-cloud-services
+cd unified-trading-services
 git add -A
 git commit -m "fix: update before downstream merge"
 bash scripts/quickmerge.sh "fix: update before downstream merge"

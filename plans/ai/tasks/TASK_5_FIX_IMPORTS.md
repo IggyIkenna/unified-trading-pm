@@ -13,19 +13,19 @@
 **Import Pattern B (Direct) - ALL services use this**:
 
 ```python
-# Config: Import from unified-cloud-services
-from unified_cloud_services import UnifiedCloudServicesConfig
+# Config: Import from unified-trading-services
+from unified_trading_services import UnifiedCloudServicesConfig
 
 # Events: Import from unified-events-interface  
 from unified_events_interface import setup_events, log_event, ErrorWarningCounter
 
-# Cloud abstractions: Import from unified-cloud-services
-from unified_cloud_services import get_storage_client, get_secret_client
+# Cloud abstractions: Import from unified-trading-services
+from unified_trading_services import get_storage_client, get_secret_client
 ```
 
 **NEVER**:
 - `from unified_config_interface import UnifiedCloudConfig` ❌ (Use UnifiedCloudServicesConfig from UCS)
-- `from unified_cloud_services.observability import ErrorWarningCounter` ❌ (Use UEI)
+- `from unified_trading_services.observability import ErrorWarningCounter` ❌ (Use UEI)
 
 ---
 
@@ -51,26 +51,26 @@ prompt: |
   Fix incorrect library imports across all services.
   
   LIBRARY SEPARATION (Feb 2026):
-  - **Config**: from unified_cloud_services import UnifiedCloudServicesConfig
+  - **Config**: from unified_trading_services import UnifiedCloudServicesConfig
   - **Events**: from unified_events_interface import ErrorWarningCounter, setup_events, log_event
-  - **Cloud**: from unified_cloud_services import get_storage_client, get_secret_client
+  - **Cloud**: from unified_trading_services import get_storage_client, get_secret_client
   
   IMPORT ERRORS TO FIX:
   
   1. **UnifiedCloudConfig → UnifiedCloudServicesConfig**:
      - Search: rg "UnifiedCloudConfig" --type py --glob "!unified-config-interface/**"
      - Replace: UnifiedCloudConfig → UnifiedCloudServicesConfig
-     - Update import: from unified_cloud_services import UnifiedCloudServicesConfig
+     - Update import: from unified_trading_services import UnifiedCloudServicesConfig
   
   2. **ErrorWarningCounter import path**:
-     - OLD: from unified_cloud_services.observability import ErrorWarningCounter
+     - OLD: from unified_trading_services.observability import ErrorWarningCounter
      - NEW: from unified_events_interface import ErrorWarningCounter
-     - Search: rg "from unified_cloud_services.observability import ErrorWarningCounter" --type py
+     - Search: rg "from unified_trading_services.observability import ErrorWarningCounter" --type py
      - Replace with: from unified_events_interface import ErrorWarningCounter
   
   3. **setup_events/log_event** (already correct in most services, verify):
      - Should be: from unified_events_interface import setup_events, log_event
-     - NOT: from unified_cloud_services import setup_events
+     - NOT: from unified_trading_services import setup_events
   
   REPOS TO FIX (check each):
   - instruments-service
@@ -89,13 +89,13 @@ prompt: |
      cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/<repo>
   2. Search for incorrect imports:
      rg "UnifiedCloudConfig[^S]" --type py
-     rg "from unified_cloud_services.observability import ErrorWarningCounter" --type py
+     rg "from unified_trading_services.observability import ErrorWarningCounter" --type py
   3. Fix imports using StrReplace (or sed if many files):
      # UnifiedCloudConfig → UnifiedCloudServicesConfig
      find . -name "*.py" -type f -exec sed -i '' 's/UnifiedCloudConfig/UnifiedCloudServicesConfig/g' {} +
      
      # ErrorWarningCounter import
-     find . -name "*.py" -type f -exec sed -i '' 's/from unified_cloud_services.observability import ErrorWarningCounter/from unified_events_interface import ErrorWarningCounter/g' {} +
+     find . -name "*.py" -type f -exec sed -i '' 's/from unified_trading_services.observability import ErrorWarningCounter/from unified_events_interface import ErrorWarningCounter/g' {} +
   4. Verify no broken imports:
      python -c "from <module> import *; print('✅ Imports OK')"
   5. Run tests: pytest tests/unit/ -x -q (quick check)
@@ -137,7 +137,7 @@ prompt: |
 - Time: ~10 minutes
 
 **Real Issues Identified**:
-1. ~~Per-service .cursorrules outdated (10 services reference UnifiedCloudServicesConfig - should be UnifiedCloudConfig)~~ **FIXED 2026-02-23**: Updated 8 per-service .cursorrules to "extend UnifiedCloudConfig (from unified_config_interface)". unified-cloud-services keeps UnifiedCloudServicesConfig (defines it); features-calendar-service already correct.
+1. ~~Per-service .cursorrules outdated (10 services reference UnifiedCloudServicesConfig - should be UnifiedCloudConfig)~~ **FIXED 2026-02-23**: Updated 8 per-service .cursorrules to "extend UnifiedCloudConfig (from unified_config_interface)". unified-trading-services keeps UnifiedCloudServicesConfig (defines it); features-calendar-service already correct.
 2. Venv path dependencies issue (using site-packages UCI instead of workspace)
 
 **Total Cost**: ~$0.28
@@ -153,11 +153,11 @@ cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
 rg "from unified_config_interface import UnifiedCloudConfig" --type py
 # Should return: 0 results (or only in UCI itself)
 
-rg "from unified_cloud_services.observability import ErrorWarningCounter" --type py
+rg "from unified_trading_services.observability import ErrorWarningCounter" --type py
 # Should return: 0 results
 
 # Verify correct imports exist
-rg "from unified_cloud_services import UnifiedCloudServicesConfig" --type py | wc -l
+rg "from unified_trading_services import UnifiedCloudServicesConfig" --type py | wc -l
 # Should return: 13+ (one per service config file)
 
 rg "from unified_events_interface import ErrorWarningCounter" --type py | wc -l

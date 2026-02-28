@@ -12,7 +12,7 @@
 Enable multiple agents to work on different branches of upstream dependencies simultaneously without conflicts. Each agent's branch uses a specific version of dependencies, tested end-to-end before merging.
 
 ### Current State
-- Agent A and Agent B both modify unified-cloud-services
+- Agent A and Agent B both modify unified-trading-services
 - Both push to main → conflicts
 - Downstream services pull from main → get mixed changes
 - Must merge sequentially (slow)
@@ -44,7 +44,7 @@ Enable multiple agents to work on different branches of upstream dependencies si
 ## 🔍 Current Dependency Graph
 
 ### Upstream Libraries (Shared)
-- unified-cloud-services (no deps)
+- unified-trading-services (no deps)
 - unified-config-interface (depends on UCS)
 - unified-events-interface (depends on UCS, UCI)
 - unified-market-interface (depends on UCS)
@@ -81,7 +81,7 @@ Enable multiple agents to work on different branches of upstream dependencies si
 ### Step 2: Create Branch-Specific Version Script
 
 ```bash
-# unified-cloud-services/scripts/set-branch-version.sh
+# unified-trading-services/scripts/set-branch-version.sh
 #!/bin/bash
 set -e
 
@@ -116,7 +116,7 @@ echo "   Branch: $BRANCH"
 Make executable:
 
 ```bash
-chmod +x unified-cloud-services/scripts/set-branch-version.sh
+chmod +x unified-trading-services/scripts/set-branch-version.sh
 ```
 
 ### Step 3: Update pyproject.toml to Support Branch Dependencies
@@ -129,19 +129,19 @@ name = "instruments-service"
 version = "1.0.0"
 dependencies = [
     # Production dependencies use main branch
-    "unified-cloud-services",
+    "unified-trading-services",
     "unified-config-interface",
     "unified-events-interface",
 ]
 
 [tool.uv.sources]
 # Default: use main branch (for production)
-unified-cloud-services = { git = "https://github.com/IggyIkenna/unified-cloud-services.git", branch = "main" }
+unified-trading-services = { git = "https://github.com/IggyIkenna/unified-trading-services.git", branch = "main" }
 unified-config-interface = { git = "https://github.com/IggyIkenna/unified-config-interface.git", branch = "main" }
 unified-events-interface = { git = "https://github.com/IggyIkenna/unified-events-interface.git", branch = "main" }
 
 # For feature branches, update to:
-# unified-cloud-services = { git = "https://github.com/IggyIkenna/unified-cloud-services.git", branch = "feature-auth" }
+# unified-trading-services = { git = "https://github.com/IggyIkenna/unified-trading-services.git", branch = "feature-auth" }
 ```
 
 ### Step 4: Create Branch Dependency Update Script
@@ -151,14 +151,14 @@ unified-events-interface = { git = "https://github.com/IggyIkenna/unified-events
 #!/bin/bash
 set -e
 
-# Usage: ./scripts/update-branch-deps.sh unified-cloud-services feature-auth
+# Usage: ./scripts/update-branch-deps.sh unified-trading-services feature-auth
 
 REPO=$1
 BRANCH=$2
 
 if [ -z "$REPO" ] || [ -z "$BRANCH" ]; then
     echo "Usage: $0 <repo-name> <branch-name>"
-    echo "Example: $0 unified-cloud-services feature-auth"
+    echo "Example: $0 unified-trading-services feature-auth"
     exit 1
 fi
 
@@ -221,7 +221,7 @@ jobs:
         id: detect-deps
         run: |
           # Extract branch from pyproject.toml
-          UCS_BRANCH=$(grep -A 1 'unified-cloud-services.*git' pyproject.toml | grep 'branch' | cut -d'"' -f2)
+          UCS_BRANCH=$(grep -A 1 'unified-trading-services.*git' pyproject.toml | grep 'branch' | cut -d'"' -f2)
           UCI_BRANCH=$(grep -A 1 'unified-config-interface.*git' pyproject.toml | grep 'branch' | cut -d'"' -f2)
           UEI_BRANCH=$(grep -A 1 'unified-events-interface.*git' pyproject.toml | grep 'branch' | cut -d'"' -f2)
           
@@ -230,7 +230,7 @@ jobs:
           echo "uei_branch=$UEI_BRANCH" >> $GITHUB_OUTPUT
           
           echo "Detected branches:"
-          echo "  unified-cloud-services: $UCS_BRANCH"
+          echo "  unified-trading-services: $UCS_BRANCH"
           echo "  unified-config-interface: $UCI_BRANCH"
           echo "  unified-events-interface: $UEI_BRANCH"
       
@@ -240,8 +240,8 @@ jobs:
         run: |
           # Clone with detected branches
           git clone --branch ${{ steps.detect-deps.outputs.ucs_branch }} \
-            https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-cloud-services.git \
-            ../unified-cloud-services
+            https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-trading-services.git \
+            ../unified-trading-services
           
           git clone --branch ${{ steps.detect-deps.outputs.uci_branch }} \
             https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-config-interface.git \
@@ -254,7 +254,7 @@ jobs:
       - name: Install dependencies
         run: |
           # Install in DAG order
-          uv pip install --system -e ../unified-cloud-services
+          uv pip install --system -e ../unified-trading-services
           uv pip install --system -e ../unified-config-interface
           uv pip install --system -e ../unified-events-interface
           uv pip install --system -e ".[dev]"
@@ -274,29 +274,29 @@ jobs:
 
 1. Create feature branch in upstream:
    ```bash
-   cd unified-cloud-services
+   cd unified-trading-services
    git checkout -b feature-auth
    ./scripts/set-branch-version.sh  # Sets version to 1.3.0-feature-auth.1
    git add pyproject.toml
    git commit -m "Bump version for feature-auth branch"
    ```
 
-2. Make changes to unified-cloud-services
+2. Make changes to unified-trading-services
 
 3. Update downstream service to use feature branch:
    ```bash
    cd instruments-service
    git checkout -b feature-auth-integration
-   ./scripts/update-branch-deps.sh unified-cloud-services feature-auth
+   ./scripts/update-branch-deps.sh unified-trading-services feature-auth
    git add pyproject.toml uv.lock
-   git commit -m "Use unified-cloud-services feature-auth branch"
+   git commit -m "Use unified-trading-services feature-auth branch"
    ```
 
 4. Make changes to instruments-service
 
 5. Push both branches:
    ```bash
-   cd unified-cloud-services
+   cd unified-trading-services
    bash scripts/quickmerge.sh "Add authentication support"
    
    cd instruments-service
@@ -307,22 +307,22 @@ jobs:
 
 1. Create feature branch in upstream:
    ```bash
-   cd unified-cloud-services
+   cd unified-trading-services
    git checkout -b feature-logging
    ./scripts/set-branch-version.sh  # Sets version to 1.3.0-feature-logging.1
    git add pyproject.toml
    git commit -m "Bump version for feature-logging branch"
    ```
 
-2. Make changes to unified-cloud-services
+2. Make changes to unified-trading-services
 
 3. Update downstream service to use feature branch:
    ```bash
    cd market-tick-data-handler
    git checkout -b feature-logging-integration
-   ./scripts/update-branch-deps.sh unified-cloud-services feature-logging
+   ./scripts/update-branch-deps.sh unified-trading-services feature-logging
    git add pyproject.toml uv.lock
-   git commit -m "Use unified-cloud-services feature-logging branch"
+   git commit -m "Use unified-trading-services feature-logging branch"
    ```
 
 4. Make changes to market-tick-data-handler
@@ -335,7 +335,7 @@ jobs:
 
 1. Merge Agent A's upstream:
    ```bash
-   # PR: unified-cloud-services feature-auth → main
+   # PR: unified-trading-services feature-auth → main
    # Wait for CI to pass
    # Merge (squash)
    ```
@@ -344,9 +344,9 @@ jobs:
    ```bash
    # Update instruments-service to use main branch
    cd instruments-service
-   ./scripts/update-branch-deps.sh unified-cloud-services main
+   ./scripts/update-branch-deps.sh unified-trading-services main
    git add pyproject.toml uv.lock
-   git commit -m "Switch to unified-cloud-services main"
+   git commit -m "Switch to unified-trading-services main"
    
    # PR: instruments-service feature-auth-integration → main
    # Wait for CI to pass
@@ -355,7 +355,7 @@ jobs:
 
 3. Merge Agent B's upstream:
    ```bash
-   # PR: unified-cloud-services feature-logging → main
+   # PR: unified-trading-services feature-logging → main
    # Wait for CI to pass
    # Merge (squash)
    ```
@@ -364,9 +364,9 @@ jobs:
    ```bash
    # Update market-tick-data-handler to use main branch
    cd market-tick-data-handler
-   ./scripts/update-branch-deps.sh unified-cloud-services main
+   ./scripts/update-branch-deps.sh unified-trading-services main
    git add pyproject.toml uv.lock
-   git commit -m "Switch to unified-cloud-services main"
+   git commit -m "Switch to unified-trading-services main"
    
    # PR: market-tick-data-handler feature-logging-integration → main
    # Wait for CI to pass
@@ -388,7 +388,7 @@ jobs:
 ### Test 1: Create Feature Branch with Version
 
 ```bash
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-cloud-services
+cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-trading-services
 
 # Create test branch
 git checkout -b test-versioning
@@ -407,14 +407,14 @@ grep "^version =" pyproject.toml
 cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/instruments-service
 
 # Update to use test branch
-./scripts/update-branch-deps.sh unified-cloud-services test-versioning
+./scripts/update-branch-deps.sh unified-trading-services test-versioning
 
 # Verify pyproject.toml updated
-grep -A 1 "unified-cloud-services" pyproject.toml | grep branch
+grep -A 1 "unified-trading-services" pyproject.toml | grep branch
 # Should show: branch = "test-versioning"
 
 # Verify lock file updated
-grep "unified-cloud-services" uv.lock
+grep "unified-trading-services" uv.lock
 ```
 
 ### Test 3: CI Detects Branch
@@ -422,11 +422,11 @@ grep "unified-cloud-services" uv.lock
 ```bash
 # Push changes
 git add pyproject.toml uv.lock
-git commit -m "Test: use unified-cloud-services test-versioning branch"
+git commit -m "Test: use unified-trading-services test-versioning branch"
 git push origin test-branch
 
 # Check GitHub Actions log
-# Should show: "Detected branches: unified-cloud-services: test-versioning"
+# Should show: "Detected branches: unified-trading-services: test-versioning"
 ```
 
 ---

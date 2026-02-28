@@ -9,12 +9,12 @@ instruments-service depends on:
   ├─> api-contracts (level 0)
   ├─> unified-config-interface (level 0)
   ├─> unified-events-interface (level 0)
-  ├─> unified-domain-services (level 2)
-  │   ├─> unified-cloud-services (level 1)
+  ├─> unified-domain-client (level 2)
+  │   ├─> unified-trading-services (level 1)
   │   ├─> unified-config-interface (level 0) ← SHARED
   │   └─> unified-events-interface (level 0) ← SHARED
   └─> unified-market-interface (level 3)
-      ├─> unified-domain-services (level 2) ← SHARED
+      ├─> unified-domain-client (level 2) ← SHARED
       └─> unified-config-interface (level 0) ← SHARED
 ```
 
@@ -34,8 +34,8 @@ def topological_sort(dependency_matrix):
     
     Example: [
         ["api-contracts", "unified-config-interface", "unified-events-interface"],  # Level 0
-        ["unified-cloud-services"],  # Level 1
-        ["unified-domain-services"],  # Level 2
+        ["unified-trading-services"],  # Level 1
+        ["unified-domain-client"],  # Level 2
         ["unified-market-interface"],  # Level 3
         ["instruments-service"]  # Level 5
     ]
@@ -78,10 +78,10 @@ def topological_sort(dependency_matrix):
 - `unified-events-interface`
 
 **Level 1** (depends only on level 0):
-- `unified-cloud-services` (depends on: domain, but circular → runtime only)
+- `unified-trading-services` (depends on: domain, but circular → runtime only)
 
 **Level 2** (depends on level 0-1):
-- `unified-domain-services` (depends on: cloud, config, events)
+- `unified-domain-client` (depends on: cloud, config, events)
 
 **Level 3** (depends on level 0-2):
 - `unified-market-interface` (depends on: domain, config)
@@ -105,7 +105,7 @@ for dep in $(jq -r '.dependencies[].name' .dependency-matrix.json); do
 done
 ```
 
-**Result**: `["api-contracts", "unified-config-interface", "unified-events-interface", "unified-domain-services", "unified-market-interface"]`
+**Result**: `["api-contracts", "unified-config-interface", "unified-events-interface", "unified-domain-client", "unified-market-interface"]`
 
 ---
 
@@ -193,8 +193,8 @@ EOF
 ```json
 [
   ["api-contracts", "unified-config-interface", "unified-events-interface"],
-  ["unified-cloud-services"],
-  ["unified-domain-services"],
+  ["unified-trading-services"],
+  ["unified-domain-client"],
   ["unified-market-interface"]
 ]
 ```
@@ -269,7 +269,7 @@ cascade_quickmerge() {
 
 ### 2. Circular Dependencies (UCS ↔ UDS) ✅ HANDLED
 
-**Problem**: unified-cloud-services imports from unified-domain-services, and vice versa.
+**Problem**: unified-trading-services imports from unified-domain-client, and vice versa.
 
 **Solution**: Runtime installation only
 - Docker has tools only (ruff, pytest, basedpyright)
@@ -282,11 +282,11 @@ cascade_quickmerge() {
 
 ### 3. Shared Dependencies ✅ OPTIMAL
 
-**Scenario**: Both `unified-domain-services` and `unified-market-interface` depend on `unified-config-interface`.
+**Scenario**: Both `unified-domain-client` and `unified-market-interface` depend on `unified-config-interface`.
 
 **Topological sort ensures**:
 - `unified-config-interface` quickmerges FIRST (level 0)
-- Then `unified-domain-services` (level 2) - sees config already on branch
+- Then `unified-domain-client` (level 2) - sees config already on branch
 - Then `unified-market-interface` (level 3) - sees BOTH config and domain on branch
 
 **No race condition** - proper ordering guaranteed!
@@ -338,8 +338,8 @@ bash scripts/quickmerge.sh "test: cascade" --dep-branch "my-feature"
 
 **Expected cascade order**:
 1. **Parallel** (level 0): api-contracts, config, events
-2. **Serial** (level 1): unified-cloud-services
-3. **Serial** (level 2): unified-domain-services
+2. **Serial** (level 1): unified-trading-services
+3. **Serial** (level 2): unified-domain-client
 4. **Serial** (level 3): unified-market-interface
 5. **Serial** (level 5): instruments-service
 

@@ -39,7 +39,7 @@ class InstrumentsService:
 ```bash
 cd instruments-service && source .venv/bin/activate
 uv pip install -e ../unified-config-interface
-uv pip install -e ../unified-cloud-services
+uv pip install -e ../unified-trading-services
 uv pip install -e ../unified-events-interface
 ```
 
@@ -51,7 +51,7 @@ uv pip install -e ../unified-events-interface
 
 **Changes**:
 - Line 62: `from instruments_service.config import instruments_config` → moved to top
-- Line 910: `from unified_cloud_services import determine_market_category` → moved to top (removed duplicate)
+- Line 910: `from unified_trading_services import determine_market_category` → moved to top (removed duplicate)
 
 ---
 

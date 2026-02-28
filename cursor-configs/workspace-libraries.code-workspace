@@ -6,7 +6,7 @@
     {"path": "../../unified-trading-codex", "name": "📚 Codex (Docs)"},
     {"path": "../../unified-trading-deployment-v3", "name": "🚀 Deployment v3"},
     {"path": "../../api-contracts", "name": "📜 API Contracts"},
-    {"path": "../../unified-cloud-services"},
+    {"path": "../../unified-trading-services"},
     {"path": "../../unified-events-interface"},
     {"path": "../../unified-config-interface"},
     {"path": "../../unified-trade-execution-interface"},
@@ -15,7 +15,7 @@
     {"path": "../../execution-algo-library"},
     {"path": "../../matching-engine-library", "name": "⚙️ Matching Engine"},
     {"path": "../../unified-defi-execution-interface", "name": "🔗 DeFi Execution"},
-    {"path": "../../unified-domain-services"}
+    {"path": "../../unified-domain-client"}
   ],
   "settings": {
     "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
@@ -30,7 +30,7 @@
     "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
     "cursorpyright.analysis.extraPaths": [
       "${workspaceFolder}/api-contracts",
-      "${workspaceFolder}/unified-cloud-services",
+      "${workspaceFolder}/unified-trading-services",
       "${workspaceFolder}/unified-events-interface",
       "${workspaceFolder}/unified-config-interface",
       "${workspaceFolder}/unified-trade-execution-interface",
@@ -39,7 +39,7 @@
       "${workspaceFolder}/execution-algo-library",
       "${workspaceFolder}/matching-engine-library",
       "${workspaceFolder}/unified-defi-execution-interface",
-      "${workspaceFolder}/unified-domain-services"
+      "${workspaceFolder}/unified-domain-client"
     ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
