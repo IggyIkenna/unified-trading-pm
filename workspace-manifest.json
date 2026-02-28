@@ -82,7 +82,7 @@
     "deployment-api": "0.1.0",
     "deployment-ui": "0.1.0",
     "system-integration-tests": "0.1.0",
-    "unified-trading-pm": "0.1.0",
+    "unified-trading-pm": "0.2.0",
     "unified-trading-codex": "0.1.0"
   },
   "repositories": {
