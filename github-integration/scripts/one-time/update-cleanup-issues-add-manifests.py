@@ -11,7 +11,7 @@ import sys
 
 # Repo → Issue number mapping from GitHub Project #5 (Initial Cleanup)
 ISSUES = {
-    "execution-services": 147,
+    "execution-service": 147,
     "strategy-service": 23,
     "instruments-service": 58,
     "unified-trading-services": 48,
@@ -28,7 +28,7 @@ ISSUES = {
 
 # Violation counts
 VIOLATION_COUNTS = {
-    "execution-services": 927,
+    "execution-service": 927,
     "strategy-service": 307,
     "instruments-service": 797,
     "unified-trading-services": 396,

@@ -42,7 +42,7 @@ prompt: |
   2. market-data-processing-service  
   3. strategy-service
   4. features-delta-one-service
-  5. execution-services
+  5. execution-service
   6. ml-training-service
   
   Pattern (from cefi_processor.py):
@@ -131,7 +131,7 @@ prompt: |
   - pnl-attribution-service
   - market-tick-data-handler
   - execution-algo-library
-  - alerting-system
+  - alerting-service
   
   Same approach. Target: 0 errors per repo.
   

@@ -14,11 +14,11 @@ echo ""
 # UI repos get UI-specific text
 UI_REPOS=(
   "onboarding-ui"
-  "backtest-ui"
+  "execution-analytics-ui"
   "batch-audit-ui"
   "client-reporting-ui"
   "logs-dashboard-ui"
-  "ml-deployment-ui"
+  "ml-training-ui"
   "ml-training-ui"
   "trading-analytics-ui"
   "live-health-monitor-ui"
@@ -39,7 +39,7 @@ BACKEND_REPOS=(
   "risk-and-exposure-service"
   "pnl-attribution-service"
   "position-balance-monitor-service"
-  "alerting-system"
+  "alerting-service"
 )
 
 # Library repos get library-specific text

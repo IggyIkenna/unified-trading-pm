@@ -6,8 +6,8 @@ set -e
 
 # List of Python repositories to update
 PYTHON_REPOS=(
-    "alerting-system"
-    "api-contracts"
+    "alerting-service"
+    "unified-api-contracts"
     "execution-algo-library"
     "execution-services"
     "features-calendar-service"

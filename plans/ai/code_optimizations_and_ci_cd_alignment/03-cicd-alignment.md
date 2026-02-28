@@ -67,11 +67,11 @@ Ensure identical behavior across all three stages: Local development, GitHub Act
    - ml-inference-service, ml-training-service (quality-gates: UCS image)
    - features-delta-one-service, features-volatility-service, features-onchain-service (batch/target workflows)
    - unified-trading-deployment-v3 (deploy-dashboard, deploy-dashboard-gce-vm)
-   - execution-services (deploy-cloud-run: default when input not provided)
+   - execution-service (deploy-cloud-run: default when input not provided)
 
 4. **Bulk set variable** in all repos (from workspace root, with `gh` authenticated):
    ```bash
-   for repo in ml-inference-service ml-training-service features-delta-one-service features-volatility-service features-onchain-service unified-trading-deployment-v3 execution-services; do
+   for repo in ml-inference-service ml-training-service features-delta-one-service features-volatility-service features-onchain-service unified-trading-deployment-v3 execution-service; do
      (cd "$repo" && gh variable set GCP_PROJECT_ID --body "your-gcp-project-id" && echo "Set in $repo")
    done
    ```
@@ -335,7 +335,7 @@ REPOS=(
   "strategy-service"
   "position-balance-monitor-service"
   "risk-and-exposure-service"
-  "execution-services"
+  "execution-service"
   "execution-algo-library"
   "market-data-processing-service"
   "market-tick-data-handler"
@@ -346,7 +346,7 @@ REPOS=(
   "features-onchain-service"
   "features-volatility-service"
   "pnl-attribution-service"
-  "alerting-system"
+  "alerting-service"
   "unified-trading-services"
   "unified-config-interface"
   "unified-domain-client"
@@ -354,13 +354,13 @@ REPOS=(
   "unified-market-interface"
   "unified-ml-interface"
   "unified-trade-execution-interface"
-  "backtest-ui"
+  "execution-analytics-ui"
   "trading-analytics-ui"
   "live-health-monitor-ui"
   "logs-dashboard-ui"
   "batch-audit-ui"
   "client-reporting-ui"
-  "ml-deployment-ui"
+  "ml-training-ui"
   "onboarding-ui"
   "settlement-ui"
 )
@@ -736,18 +736,18 @@ fi
 
 **Repos to update (32 total):**
 - instruments-service, strategy-service, position-balance-monitor-service
-- risk-and-exposure-service, execution-services, execution-algo-library
+- risk-and-exposure-service, execution-service, execution-algo-library
 - market-data-processing-service, market-tick-data-handler
 - ml-inference-service, ml-training-service
 - features-calendar-service, features-delta-one-service
 - features-onchain-service, features-volatility-service
-- pnl-attribution-service, alerting-system
+- pnl-attribution-service, alerting-service
 - unified-trading-services, unified-config-interface
 - unified-domain-client, unified-events-interface
 - unified-market-interface, unified-ml-interface, unified-trade-execution-interface
-- backtest-ui, trading-analytics-ui, live-health-monitor-ui
+- execution-analytics-ui, trading-analytics-ui, live-health-monitor-ui
 - logs-dashboard-ui, batch-audit-ui, client-reporting-ui
-- ml-deployment-ui, onboarding-ui, settlement-ui
+- ml-training-ui, onboarding-ui, settlement-ui
 
 ### Phase 3: Update Quick Merge Scripts (1-2 hours with 4 parallel agents)
 
@@ -1033,13 +1033,13 @@ echo "GH_PAT=$GH_PAT" > ~/.secrets
 
 #### Agent Assignment (8 agents × 4 repos each):
 - Agent 1: instruments-service, strategy-service, position-balance-monitor-service, risk-and-exposure-service
-- Agent 2: execution-services, execution-algo-library, market-data-processing-service, market-tick-data-handler
+- Agent 2: execution-service, execution-algo-library, market-data-processing-service, market-tick-data-handler
 - Agent 3: ml-inference-service, ml-training-service, features-calendar-service, features-delta-one-service
-- Agent 4: features-onchain-service, features-volatility-service, pnl-attribution-service, alerting-system
+- Agent 4: features-onchain-service, features-volatility-service, pnl-attribution-service, alerting-service
 - Agent 5: unified-trading-services, unified-config-interface, unified-domain-client, unified-events-interface
-- Agent 6: unified-market-interface, unified-ml-interface, unified-trade-execution-interface, backtest-ui
+- Agent 6: unified-market-interface, unified-ml-interface, unified-trade-execution-interface, execution-analytics-ui
 - Agent 7: trading-analytics-ui, live-health-monitor-ui, logs-dashboard-ui, batch-audit-ui
-- Agent 8: client-reporting-ui, ml-deployment-ui, onboarding-ui, settlement-ui
+- Agent 8: client-reporting-ui, ml-training-ui, onboarding-ui, settlement-ui
 
 ### Phase 7: Final Verification (30 min)
 

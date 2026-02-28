@@ -15,7 +15,7 @@ CRITICAL_SERVICES = {
     "instruments-service": 85,
     "market-data-processing-service": 85, 
     "strategy-service": 85,
-    "execution-services": 85,
+    "execution-service": 85,
     "ml-training-service": 85,
     "ml-inference-service": 85,
     "risk-and-exposure-service": 85,
@@ -25,7 +25,7 @@ CRITICAL_SERVICES = {
 
 STANDARD_SERVICES = {
     # 70% coverage for standard services
-    "alerting-system": 70,
+    "alerting-service": 70,
     "features-calendar-service": 70,
     "features-delta-one-service": 70,
     "features-onchain-service": 70,

@@ -68,7 +68,7 @@
 
 **Labels:** `execution`, `epic`, `task`, `subtask`
 
-**Filter:** `repo:execution-services -label:cod`
+**Filter:** `repo:execution-service -label:cod`
 
 **Structure:**
 
@@ -78,7 +78,7 @@
 
 **Repos:**
 
-- `execution-services` (main)
+- `execution-service` (main)
 
 **Views:**
 
@@ -322,7 +322,7 @@
 
 **Repos:**
 
-- `client-reporting-service` (to create)
+- `client-reporting-api` (to create)
 
 **Current Status:** ❌ To Create
 
@@ -391,7 +391,7 @@
 
 **Labels:** `execution-backtest`, `epic`, `task`, `subtask`
 
-**Filter:** `repo:execution-services label:backtest -label:cod`
+**Filter:** `repo:execution-service label:backtest -label:cod`
 
 **Features:**
 
@@ -402,7 +402,7 @@
 
 **Repos:**
 
-- `execution-services` (backtest module)
+- `execution-service` (backtest module)
 
 **Current Status:** ❌ To Create
 
@@ -441,7 +441,7 @@
 | 2   | (Untitled)                  | -         | ❌ Delete   | -                                                        |
 | 3   | CODs                        | Flat      | ✅ Complete | All repos (label:cod)                                    |
 | 4   | Bugs & Issues               | Flat      | ❌ Create   | All repos (label:bug)                                    |
-| 5   | Execution Services          | Hierarchy | ❌ Create   | execution-services                                       |
+| 5   | Execution Services          | Hierarchy | ❌ Create   | execution-service                                       |
 | 6   | Strategy Services           | Hierarchy | ❌ Create   | strategy-service                                         |
 | 7   | Position Monitoring & Risk  | Hierarchy | ❌ Create   | position-monitoring, risk-service                        |
 | 8   | Market Data Pipeline        | Hierarchy | ❌ Create   | market-tick-data-handler, market-data-processing-service |
@@ -450,9 +450,9 @@
 | 11  | ML Inference Services       | Hierarchy | ❌ Create   | ml-inference-service                                     |
 | 12  | ML Deployment Analytics     | Flat      | ❌ Create   | ml-inference-service (analytics)                         |
 | 13  | Settlement & Reconciliation | Hierarchy | ❌ Create   | settlement-service                                       |
-| 14  | Client Reporting            | Flat      | ❌ Create   | client-reporting-service                                 |
+| 14  | Client Reporting            | Flat      | ❌ Create   | client-reporting-api                                 |
 | 15  | Infrastructure & Tooling    | Hierarchy | ❌ Create   | unified-trading-services, unified-trading-deployment-v2  |
-| 16  | Execution Backtest & UI     | Hierarchy | ❌ Create   | execution-services (backtest module)                     |
+| 16  | Execution Backtest & UI     | Hierarchy | ❌ Create   | execution-service (backtest module)                     |
 | 17  | Strategy Backtest & UI      | Hierarchy | ❌ Create   | strategy-service (backtest module)                       |
 
 **Total:** 17 projects (2 exist, 15 to create)

@@ -31,19 +31,19 @@ From `DEPENDENCY-MATRIX-CANONICAL.json`:
 | Repo | In create-workspace-files.sh? | In which workspace(s)? |
 |------|-------------------------------|-------------------------|
 | `api-contracts` | No | Add to **complete**; consider **libraries** (instruments-service dep) |
-| `matching-engine-library` | No | Add to **libraries**, **trading**, **complete** (execution-services dep) |
-| `unified-defi-execution-interface` | No | Add to **libraries**, **trading**, **complete** (execution-services dep) |
+| `matching-engine-library` | No | Add to **libraries**, **trading**, **complete** (execution-service dep) |
+| `unified-defi-execution-interface` | No | Add to **libraries**, **trading**, **complete** (execution-service dep) |
 | `unified-ml-interface` | No | Add to **libraries**, **ml**, **complete** (strategy, ml-training deps) |
 
 ### 1.3 Repos in script/matrix that are “extra” (no matrix entry)
 
 These are valid repos to keep in workspaces but are not in the matrix (or are referenced only as deps):
 
-- `market-tick-data-handler` — referenced by execution-services in matrix; keep in data-pipeline, trading, full-pipeline, complete.
+- `market-tick-data-handler` — referenced by execution-service in matrix; keep in data-pipeline, trading, full-pipeline, complete.
 - `market-data-processing-service` — referenced by risk-and-exposure-service; keep in data-pipeline, features, ml, trading, full-pipeline, complete.
 - `features-delta-one-service` — in script only; keep if repo exists.
 - `ml-inference-service` — in script only; keep if repo exists.
-- `alerting-system` — in infrastructure workspace only; keep.
+- `alerting-service` — in infrastructure workspace only; keep.
 - UI repos, codex, deployment-v2/v3 — keep as today.
 
 No renames needed for these; only ensure names are consistent and blocks match the intended use (see section 3).
@@ -59,7 +59,7 @@ No renames needed for these; only ensure names are consistent and blocks match t
 - **Level 2:** unified-domain-client, matching-engine-library, execution-algo-library
 - **Level 3:** unified-market-interface, unified-ml-interface
 - **Level 4:** unified-trade-execution-interface, unified-defi-execution-interface
-- **Level 5:** instruments-service, strategy-service, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service, features-calendar, features-onchain, features-volatility, ml-training-service, execution-services
+- **Level 5:** instruments-service, strategy-service, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service, features-calendar, features-onchain, features-volatility, ml-training-service, execution-service
 
 **Referenced but not top-level in matrix:** market-tick-data-handler, market-data-processing-service (treat as existing repos in workspace groups).
 
@@ -97,8 +97,8 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 ### 3.5 workspace-trading
 
 - Replace `unified-order-interface` with `unified-trade-execution-interface` in folders and extraPaths.
-- Add from matrix: unified-domain-client, unified-market-interface (script already has trade-execution-interface and execution-algo-library), matching-engine-library, unified-defi-execution-interface (execution-services deps).
-- Repos: foundation + unified-trade-execution-interface, execution-algo-library, matching-engine-library, unified-defi-execution-interface, unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, strategy-service, execution-services, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service.
+- Add from matrix: unified-domain-client, unified-market-interface (script already has trade-execution-interface and execution-algo-library), matching-engine-library, unified-defi-execution-interface (execution-service deps).
+- Repos: foundation + unified-trade-execution-interface, execution-algo-library, matching-engine-library, unified-defi-execution-interface, unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, strategy-service, execution-service, position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service.
 
 ### 3.6 workspace-libraries
 
@@ -111,7 +111,7 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 
 - Add unified-domain-client so strategy and downstream have UDS.
 - No `unified-order-interface`; ensure naming is unified-trade-execution-interface if any reference is added later.
-- Repos: foundation + instruments, market-tick-data-handler, market-data-processing-service, features-*, ml-training, ml-inference, strategy-service, risk-and-exposure-service, position-balance-monitor-service (no execution-services in this workspace is acceptable; pipeline is data → features → ML → strategy/risk/position).
+- Repos: foundation + instruments, market-tick-data-handler, market-data-processing-service, features-*, ml-training, ml-inference, strategy-service, risk-and-exposure-service, position-balance-monitor-service (no execution-service in this workspace is acceptable; pipeline is data → features → ML → strategy/risk/position).
 
 ### 3.8 workspace-uis
 
@@ -120,7 +120,7 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 
 ### 3.9 workspace-infrastructure
 
-- No dependency-matrix repos; keep: .cursor, unified-trading-codex, unified-trading-deployment-v3, unified-trading-deployment-v3, alerting-system.
+- No dependency-matrix repos; keep: .cursor, unified-trading-codex, unified-trading-deployment-v3, unified-trading-deployment-v3, alerting-service.
 - No changes to repo names.
 
 ---

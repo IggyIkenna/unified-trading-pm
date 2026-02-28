@@ -45,7 +45,7 @@ prompt: |
   9. ml-training-service
   10. ml-inference-service
   11. strategy-service
-  12. execution-services
+  12. execution-service
   
   For EACH repo:
   1. cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/<repo>
@@ -122,7 +122,7 @@ prompt: |
   9. position-balance-monitor-service
   10. unified-trading-deployment-v3
   11. unified-trading-deployment-v3
-  12. alerting-system
+  12. alerting-service
   
   Same checks as Sub-Agent 1 (see above).
   Adjust ${SOURCE_DIR} per repo (e.g., unified_trading_services/, unified_config_interface/, etc.)

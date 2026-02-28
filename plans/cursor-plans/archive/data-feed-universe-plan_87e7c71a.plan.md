@@ -81,10 +81,10 @@ todos:
     content: "Expand order types in unified_trade_execution_interface/order_types.py and internal-contracts orders.py: add POST_ONLY (limit modifier — enrichment of LIMIT ensuring maker fill only), TRAILING_STOP_LIMIT (stop trails then places limit), TRAILING_TAKE_PROFIT (stop trails at profit side). Remove generic TRAILING_STOP. Cross-check: Binance, OKX, Bybit, Deribit all support POST_ONLY; Hyperliquid supports TRAILING_STOP_LIMIT. Mark per-venue support as Optional in FeeSchedule/VenueCapabilities."
     status: completed
   - id: p6-uic-adoption-remaining
-    content: "Complete unified-internal-contracts adoption for the remaining 12 services not covered in p6-service-adoption: alerting-system, features-calendar-service, features-delta-one-service, features-onchain-service, features-volatility-service, instruments-service, live-health-monitor-ui (N/A), matching-engine-library, ml-deployment-ui (N/A), settlement-ui (N/A), strategy-service, unified-domain-client. Pattern: add unified-internal-contracts as production dep in pyproject.toml; use LifecycleEventType enum in all log_event() calls (replace bare string literals); adopt EnhancedError at service boundaries."
+    content: "Complete unified-internal-contracts adoption for the remaining 12 services not covered in p6-service-adoption: alerting-service, features-calendar-service, features-delta-one-service, features-onchain-service, features-volatility-service, instruments-service, live-health-monitor-ui (N/A), matching-engine-library, ml-training-ui (N/A), settlement-ui (N/A), strategy-service, unified-domain-client. Pattern: add unified-internal-contracts as production dep in pyproject.toml; use LifecycleEventType enum in all log_event() calls (replace bare string literals); adopt EnhancedError at service boundaries."
     status: completed
-  - id: p6-execution-services-cleanup
-    content: "execution-services: remove all empty except Exception: pass blocks (replace with EnhancedError or let exception propagate); remove duplicate internal schema definitions that duplicate unified-internal-contracts types. execution_services/adapters/defi_adapter.py and algorithm_factory.py are entry points for this cleanup."
+  - id: p6-execution-service-cleanup
+    content: "execution-service: remove all empty except Exception: pass blocks (replace with EnhancedError or let exception propagate); remove duplicate internal schema definitions that duplicate unified-internal-contracts types. execution_service/adapters/defi_adapter.py and algorithm_factory.py are entry points for this cleanup."
     status: completed
   - id: p9-vendor-swap-rationale
     content: "Add unified-trading-codex/04-architecture/venue-adapter-rationale.md documenting: all venues in contracts even if current data sourced from aggregator (Tardis/CCXT/Databento) — enables venue-specific simulation assumptions in matching-engine-library (fees, fill rates, latency). Execution services can swap venue adapters to simulate CCXT vs direct exchange performance discrepancy in backtests. Reference batch-live-symmetry.md."
@@ -126,7 +126,7 @@ todos:
     content: "Wire ExitInstruction into ExecutionOrchestrator (entry phase → fill_confirmed → exit phase). Add InstrumentGuard to LiveOrchestrator pre-order check. Add exit-algo-architecture.md to codex."
     status: completed
   - id: instrument-lifecycle
-    content: "Add InstrumentLifecycleEvent + InstrumentLifecycleEventType to unified-internal-contracts. Add INSTRUMENT_LIFECYCLE Pub/Sub topic. Add InstrumentLifecycleMonitor and InstrumentRefreshScheduler (15min default) to instruments-service. Add --scheduler CLI mode. Add InstrumentGuard to execution-services."
+    content: "Add InstrumentLifecycleEvent + InstrumentLifecycleEventType to unified-internal-contracts. Add INSTRUMENT_LIFECYCLE Pub/Sub topic. Add InstrumentLifecycleMonitor and InstrumentRefreshScheduler (15min default) to instruments-service. Add --scheduler CLI mode. Add InstrumentGuard to execution-service."
     status: completed
   - id: instrument-schema-harden
     content: "Add discriminated model_validator to InstrumentRecord: futures require expiry, options require strike+option_type, bonds require maturity_date. Add DELISTED to InstrumentStatus. Fail loud on schema violation (log INSTRUMENT_SCHEMA_VIOLATION event)."
@@ -601,13 +601,13 @@ These services are not covered in §6 above. Each requires the same two-step pat
 1. Add `unified-internal-contracts` to `pyproject.toml` production deps (remove from test-only)
 2. Replace bare string `log_event("STARTED")` calls with `log_event(LifecycleEventType.STARTED)` enum
 
-Services: `alerting-system`, `features-calendar-service`, `features-delta-one-service`, `features-onchain-service`, `features-volatility-service`, `instruments-service`, `matching-engine-library`, `settlement-ui` (N/A — TypeScript), `strategy-service` (already in §6 above), `unified-domain-client`.
+Services: `alerting-service`, `features-calendar-service`, `features-delta-one-service`, `features-onchain-service`, `features-volatility-service`, `instruments-service`, `matching-engine-library`, `settlement-ui` (N/A — TypeScript), `strategy-service` (already in §6 above), `unified-domain-client`.
 
-### 6c — execution-services Cleanup
+### 6c — execution-service Cleanup
 
 - Remove all `except Exception: pass` blocks — replace with `EnhancedError` or propagate
-- Remove duplicate internal schema definitions in `execution_services/adapters/` that shadow types from `unified-internal-contracts`
-- Entry points: `execution_services/adapters/defi_adapter.py`, `execution_services/adapters/algorithm_factory.py`
+- Remove duplicate internal schema definitions in `execution_service/adapters/` that shadow types from `unified-internal-contracts`
+- Entry points: `execution_service/adapters/defi_adapter.py`, `execution_service/adapters/algorithm_factory.py`
 - Apply `delete-deprecated.mdc`: single code path after cleanup; no parallel old+new schema
 
 ---
@@ -1511,8 +1511,8 @@ unified_defi_execution_interface/gas.py            — delete GasCostModel class
 unified_defi_execution_interface/protocols/morpho.py  — replace dict returns with DeFiLendingPosition
 unified_defi_execution_interface/protocols/aave.py    — same
 unified_defi_execution_interface/protocols/uniswap.py — replace dict returns with DeFiLPPosition
-execution_services/adapters/defi_adapter.py        — remove except Exception: pass; remove duplicate schema definitions
-execution_services/adapters/algorithm_factory.py   — same
+execution_service/adapters/defi_adapter.py        — remove except Exception: pass; remove duplicate schema definitions
+execution_service/adapters/algorithm_factory.py   — same
 pnl_attribution_service/cli/handlers/compute_handler.py — implement TODO stubs
 risk_and_exposure_service/engine/risk_metrics.py   — implement batch risk calculation
 ```
