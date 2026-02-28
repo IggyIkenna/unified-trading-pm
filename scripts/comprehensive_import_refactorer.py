@@ -6,91 +6,91 @@ This script performs systematic find-and-replace operations to update import sta
 from the old implicit format to the new explicit format across all specified repositories.
 """
 
+import argparse
+import glob
 import os
 import re
-import glob
 from pathlib import Path
 from typing import Dict, List, Tuple
-import argparse
 
 # Comprehensive import mappings based on actual package structure
 IMPORT_MAPPINGS = {
-    # ===== unified_cloud_services =====
+    # ===== unified_trading_services =====
     # Client factory functions
-    "from unified_cloud_services import get_storage_client": "from unified_cloud_services.core.client_factory import get_storage_client",
-    "from unified_cloud_services import get_secret_client": "from unified_cloud_services.core.client_factory import get_secret_client",
-    "from unified_cloud_services import get_secret": "from unified_cloud_services.core.client_factory import get_secret",
-    "from unified_cloud_services import download_from_storage": "from unified_cloud_services.core.client_factory import download_from_storage",
-    "from unified_cloud_services import upload_to_storage": "from unified_cloud_services.core.client_factory import upload_to_storage",
-    "from unified_cloud_services import storage_exists": "from unified_cloud_services.core.client_factory import storage_exists",
+    "from unified_trading_services import get_storage_client": "from unified_trading_services.core.client_factory import get_storage_client",
+    "from unified_trading_services import get_secret_client": "from unified_trading_services.core.client_factory import get_secret_client",
+    "from unified_trading_services import get_secret": "from unified_trading_services.core.client_factory import get_secret",
+    "from unified_trading_services import download_from_storage": "from unified_trading_services.core.client_factory import download_from_storage",
+    "from unified_trading_services import upload_to_storage": "from unified_trading_services.core.client_factory import upload_to_storage",
+    "from unified_trading_services import storage_exists": "from unified_trading_services.core.client_factory import storage_exists",
     
     # Cloud configuration
-    "from unified_cloud_services import CloudConfig": "from unified_cloud_services.core.cloud_config import CloudConfig",
-    "from unified_cloud_services import CloudTarget": "from unified_cloud_services.core.cloud_config import CloudTarget",
-    "from unified_cloud_services import CloudProvider": "from unified_cloud_services.core.cloud_config import CloudProvider",
+    "from unified_trading_services import CloudConfig": "from unified_trading_services.core.cloud_config import CloudConfig",
+    "from unified_trading_services import CloudTarget": "from unified_trading_services.core.cloud_config import CloudTarget",
+    "from unified_trading_services import CloudProvider": "from unified_trading_services.core.cloud_config import CloudProvider",
     
     # Monitoring and validation
-    "from unified_cloud_services import UnifiedMonitor": "from unified_cloud_services.core.unified_monitor import UnifiedMonitor",
-    "from unified_cloud_services import monitor_operation": "from unified_cloud_services.core.unified_monitor import monitor_operation",
-    "from unified_cloud_services import track_operation": "from unified_cloud_services.core.unified_monitor import track_operation",
-    "from unified_cloud_services import get_unified_monitor": "from unified_cloud_services.core.unified_monitor import get_unified_monitor",
-    "from unified_cloud_services import validate_dataframe_memory": "from unified_cloud_services.core.unified_monitor import validate_dataframe_memory",
+    "from unified_trading_services import UnifiedMonitor": "from unified_trading_services.core.unified_monitor import UnifiedMonitor",
+    "from unified_trading_services import monitor_operation": "from unified_trading_services.core.unified_monitor import monitor_operation",
+    "from unified_trading_services import track_operation": "from unified_trading_services.core.unified_monitor import track_operation",
+    "from unified_trading_services import get_unified_monitor": "from unified_trading_services.core.unified_monitor import get_unified_monitor",
+    "from unified_trading_services import validate_dataframe_memory": "from unified_trading_services.core.unified_monitor import validate_dataframe_memory",
     
     # Error handling
-    "from unified_cloud_services import handle_api_errors": "from unified_cloud_services.core.error_handling import handle_api_errors",
-    "from unified_cloud_services import handle_storage_errors": "from unified_cloud_services.core.error_handling import handle_storage_errors",
-    "from unified_cloud_services import with_error_handling": "from unified_cloud_services.core.error_handling import with_error_handling",
+    "from unified_trading_services import handle_api_errors": "from unified_trading_services.core.error_handling import handle_api_errors",
+    "from unified_trading_services import handle_storage_errors": "from unified_trading_services.core.error_handling import handle_storage_errors",
+    "from unified_trading_services import with_error_handling": "from unified_trading_services.core.error_handling import with_error_handling",
     
     # Logging
-    "from unified_cloud_services import setup_cloud_logging": "from unified_cloud_services.core.logging import setup_cloud_logging",
-    "from unified_cloud_services import log_with_context": "from unified_cloud_services.core.logging import log_with_context",
-    "from unified_cloud_services import PerformanceLogger": "from unified_cloud_services.core.logging import PerformanceLogger",
+    "from unified_trading_services import setup_cloud_logging": "from unified_trading_services.core.logging import setup_cloud_logging",
+    "from unified_trading_services import log_with_context": "from unified_trading_services.core.logging import log_with_context",
+    "from unified_trading_services import PerformanceLogger": "from unified_trading_services.core.logging import PerformanceLogger",
     
-    # Domain services (legacy paths in unified_cloud_services)
-    "from unified_cloud_services import StandardizedDomainCloudService": "from unified_cloud_services.domain.standardized_service import StandardizedDomainCloudService",
-    "from unified_cloud_services import InstrumentsDomainClient": "from unified_cloud_services.domain.clients import InstrumentsDomainClient",
-    "from unified_cloud_services import MarketDataDomainClient": "from unified_cloud_services.domain.clients import MarketDataDomainClient",
-    "from unified_cloud_services import ExecutionDomainClient": "from unified_cloud_services.domain.clients import ExecutionDomainClient",
-    "from unified_cloud_services import create_instruments_client": "from unified_cloud_services.domain.clients import create_instruments_client",
-    "from unified_cloud_services import create_market_tick_data_client": "from unified_cloud_services.domain.clients import create_market_tick_data_client",
+    # Domain services (legacy paths in unified_trading_services)
+    "from unified_trading_services import StandardizedDomainCloudService": "from unified_trading_services.domain.standardized_service import StandardizedDomainCloudService",
+    "from unified_trading_services import InstrumentsDomainClient": "from unified_trading_services.domain.clients import InstrumentsDomainClient",
+    "from unified_trading_services import MarketDataDomainClient": "from unified_trading_services.domain.clients import MarketDataDomainClient",
+    "from unified_trading_services import ExecutionDomainClient": "from unified_trading_services.domain.clients import ExecutionDomainClient",
+    "from unified_trading_services import create_instruments_client": "from unified_trading_services.domain.clients import create_instruments_client",
+    "from unified_trading_services import create_market_tick_data_client": "from unified_trading_services.domain.clients import create_market_tick_data_client",
     
-    # Domain validation (legacy paths in unified_cloud_services)
-    "from unified_cloud_services import DomainValidationService": "from unified_cloud_services.domain.validation import DomainValidationService",
-    "from unified_cloud_services import DomainValidationConfig": "from unified_cloud_services.domain.validation import DomainValidationConfig",
-    "from unified_cloud_services import validate_timestamp_date_alignment": "from unified_cloud_services.domain.validation import validate_timestamp_date_alignment",
-    
-    # Date validation (functions in unified_cloud_services)
-    "from unified_cloud_services import should_skip_date": "from unified_cloud_services.domain.date_validation import should_skip_date",
-    "from unified_cloud_services import get_earliest_valid_date": "from unified_cloud_services.domain.date_validation import get_earliest_valid_date",
+    # Domain validation (legacy paths in unified_trading_services)
+    "from unified_trading_services import DomainValidationService": "from unified_trading_services.domain.validation import DomainValidationService",
+    "from unified_trading_services import DomainValidationConfig": "from unified_trading_services.domain.validation import DomainValidationConfig",
+    "from unified_trading_services import validate_timestamp_date_alignment": "from unified_domain_client import validate_timestamp_date_alignment",
+
+    # Date validation (moved to unified-domain-client)
+    "from unified_trading_services import should_skip_date": "from unified_domain_client import should_skip_date",
+    "from unified_trading_services import get_earliest_valid_date": "from unified_domain_client import get_earliest_valid_date",
     
     # Signal handling
-    "from unified_cloud_services import GracefulShutdownHandler": "from unified_cloud_services.core.signal_handler import GracefulShutdownHandler",
-    "from unified_cloud_services import setup_graceful_shutdown": "from unified_cloud_services.core.signal_handler import setup_graceful_shutdown",
+    "from unified_trading_services import GracefulShutdownHandler": "from unified_trading_services.core.signal_handler import GracefulShutdownHandler",
+    "from unified_trading_services import setup_graceful_shutdown": "from unified_trading_services.core.signal_handler import setup_graceful_shutdown",
     
     # Dependency checking
-    "from unified_cloud_services import BaseDependencyChecker": "from unified_cloud_services.core.dependency_checker import BaseDependencyChecker",
-    "from unified_cloud_services import DependencyError": "from unified_cloud_services.core.dependency_checker import DependencyError",
-    "from unified_cloud_services import log_dependency_failures": "from unified_cloud_services.core.dependency_checker import log_dependency_failures",
+    "from unified_trading_services import BaseDependencyChecker": "from unified_trading_services.core.dependency_checker import BaseDependencyChecker",
+    "from unified_trading_services import DependencyError": "from unified_trading_services.core.dependency_checker import DependencyError",
+    "from unified_trading_services import log_dependency_failures": "from unified_trading_services.core.dependency_checker import log_dependency_failures",
     
     # Schema definitions and enforcement
-    "from unified_cloud_services import ParquetSchemaEnforcer": "from unified_cloud_services.core.parquet_schema_enforcer import ParquetSchemaEnforcer",
-    "from unified_cloud_services import ColumnSchema": "from unified_cloud_services.models.schema_definition import ColumnSchema",
-    "from unified_cloud_services import SchemaDefinition": "from unified_cloud_services.models.schema_definition import SchemaDefinition",
+    "from unified_trading_services import ParquetSchemaEnforcer": "from unified_trading_services.core.parquet_schema_enforcer import ParquetSchemaEnforcer",
+    "from unified_trading_services import ColumnSchema": "from unified_trading_services.models.schema_definition import ColumnSchema",
+    "from unified_trading_services import SchemaDefinition": "from unified_trading_services.models.schema_definition import SchemaDefinition",
     
     # I/O Writers and Loaders
-    "from unified_cloud_services import BaseGCSWriter": "from unified_cloud_services.io.base_writer import BaseGCSWriter",
-    "from unified_cloud_services import BaseGCSLoader": "from unified_cloud_services.io.base_loader import BaseGCSLoader",
+    "from unified_trading_services import BaseGCSWriter": "from unified_trading_services.io.base_writer import BaseGCSWriter",
+    "from unified_trading_services import BaseGCSLoader": "from unified_trading_services.io.base_loader import BaseGCSLoader",
     
-    # ===== unified_domain_services =====
-    "from unified_domain_services import InstrumentsDomainClient": "from unified_domain_services.clients.instruments import InstrumentsDomainClient",
-    "from unified_domain_services import MarketDataDomainClient": "from unified_domain_services.clients.market_data import MarketDataDomainClient",
-    "from unified_domain_services import DomainValidationService": "from unified_domain_services.validation import DomainValidationService",
-    "from unified_domain_services import validate_timestamp_date_alignment": "from unified_domain_services.timestamp_validation import validate_timestamp_date_alignment",
-    "from unified_domain_services import create_instruments_client": "from unified_domain_services.clients import create_instruments_client",
-    "from unified_domain_services import create_market_tick_data_client": "from unified_domain_services.clients import create_market_tick_data_client",
-    "from unified_domain_services import create_market_candle_data_client": "from unified_domain_services.clients import create_market_candle_data_client",
-    "from unified_domain_services import should_skip_date": "from unified_domain_services.date_utils import should_skip_date",
-    "from unified_domain_services import get_earliest_valid_date": "from unified_domain_services.date_utils import get_earliest_valid_date",
+    # ===== unified_domain_client =====
+    "from unified_domain_client import InstrumentsDomainClient": "from unified_domain_client.clients.instruments import InstrumentsDomainClient",
+    "from unified_domain_client import MarketDataDomainClient": "from unified_domain_client.clients.market_data import MarketDataDomainClient",
+    "from unified_domain_client import DomainValidationService": "from unified_domain_client.validation import DomainValidationService",
+    "from unified_domain_client import validate_timestamp_date_alignment": "from unified_domain_client.timestamp_validation import validate_timestamp_date_alignment",
+    "from unified_domain_client import create_instruments_client": "from unified_domain_client.clients import create_instruments_client",
+    "from unified_domain_client import create_market_tick_data_client": "from unified_domain_client.clients import create_market_tick_data_client",
+    "from unified_domain_client import create_market_candle_data_client": "from unified_domain_client.clients import create_market_candle_data_client",
+    "from unified_domain_client import should_skip_date": "from unified_domain_client.date_utils import should_skip_date",
+    "from unified_domain_client import get_earliest_valid_date": "from unified_domain_client.date_utils import get_earliest_valid_date",
     
     # ===== unified_events_interface =====
     "from unified_events_interface import setup_events": "from unified_events_interface.core.events import setup_events",
@@ -114,15 +114,15 @@ IMPORT_MAPPINGS = {
 
 # Additional complex import patterns that need special handling
 COMPLEX_IMPORT_PATTERNS = [
-    # Multi-line import from unified_cloud_services
+    # Multi-line import from unified_trading_services
     (
-        r'from unified_cloud_services import \(\s*([^)]+)\s*\)',
-        lambda match: handle_multiline_unified_cloud_services_import(match.group(1))
+        r'from unified_trading_services import \(\s*([^)]+)\s*\)',
+        lambda match: handle_multiline_unified_trading_services_import(match.group(1))
     ),
-    # Multi-line import from unified_domain_services
+    # Multi-line import from unified_domain_client
     (
-        r'from unified_domain_services import \(\s*([^)]+)\s*\)',
-        lambda match: handle_multiline_unified_domain_services_import(match.group(1))
+        r'from unified_domain_client import \(\s*([^)]+)\s*\)',
+        lambda match: handle_multiline_unified_domain_client_import(match.group(1))
     ),
     # Single line multiple imports for all unified packages
     (
@@ -131,35 +131,35 @@ COMPLEX_IMPORT_PATTERNS = [
     )
 ]
 
-def handle_multiline_unified_cloud_services_import(import_content: str) -> str:
-    """Handle multiline import statements from unified_cloud_services."""
+def handle_multiline_unified_trading_services_import(import_content: str) -> str:
+    """Handle multiline import statements from unified_trading_services."""
     imports = [imp.strip() for imp in import_content.split(',') if imp.strip()]
     result_lines = []
     
     for imp in imports:
         imp = imp.strip()
-        mapping_key = f"from unified_cloud_services import {imp}"
+        mapping_key = f"from unified_trading_services import {imp}"
         if mapping_key in IMPORT_MAPPINGS:
             result_lines.append(IMPORT_MAPPINGS[mapping_key])
         else:
             # For now, keep unmapped imports as is but add a comment
-            result_lines.append(f"from unified_cloud_services import {imp}  # TODO: Map to explicit import")
+            result_lines.append(f"from unified_trading_services import {imp}  # TODO: Map to explicit import")
     
     return '\n'.join(result_lines)
 
-def handle_multiline_unified_domain_services_import(import_content: str) -> str:
-    """Handle multiline import statements from unified_domain_services."""
+def handle_multiline_unified_domain_client_import(import_content: str) -> str:
+    """Handle multiline import statements from unified_domain_client."""
     imports = [imp.strip() for imp in import_content.split(',') if imp.strip()]
     result_lines = []
     
     for imp in imports:
         imp = imp.strip()
-        mapping_key = f"from unified_domain_services import {imp}"
+        mapping_key = f"from unified_domain_client import {imp}"
         if mapping_key in IMPORT_MAPPINGS:
             result_lines.append(IMPORT_MAPPINGS[mapping_key])
         else:
             # For now, keep unmapped imports as is but add a comment
-            result_lines.append(f"from unified_domain_services import {imp}  # TODO: Map to explicit import")
+            result_lines.append(f"from unified_domain_client import {imp}  # TODO: Map to explicit import")
     
     return '\n'.join(result_lines)
 

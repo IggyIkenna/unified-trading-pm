@@ -72,7 +72,7 @@ SSOT (canonical rules — DO NOT change these):
 
 CANONICAL RULES (from SSOT — use these to fix others):
 1. Config: UnifiedCloudConfig from unified-config-interface (NOT UnifiedCloudServicesConfig)
-2. Logging: setup_events(), log_event() from unified-events-interface (NOT get_logger from unified_cloud_services)
+2. Logging: setup_events(), log_event() from unified-events-interface (NOT get_logger from unified_trading_services)
 3. Coverage: 35% min (quality gates), 80% audit goal (NOT 70-80% as blocking)
 4. File size: Service 900/700, Library 1500/1200 (per templates)
 5. Formatting ref: formatting-standards.md, README (NOT FORMATTING_STANDARDS_MASTER.md — does not exist)

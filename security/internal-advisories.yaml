@@ -1,0 +1,47 @@
+# internal-advisories.yaml — Internal Package Vulnerability Advisories
+#
+# APPEND-ONLY. Never remove entries. Add fixed_in when the vulnerability is resolved.
+# Checked by unified-trading-pm/scripts/check-internal-advisories.sh during quality gates.
+#
+# This file is the source of truth for known vulnerabilities in internal packages.
+# It mirrors the idempotent pattern of manifest_warnings.yaml (bad-release tracking).
+#
+# How to add an advisory:
+#   1. Append a new entry below (do not edit or remove existing entries)
+#   2. Commit to unified-trading-pm main branch
+#   3. All repos will pick up the advisory on next quality gate run
+#
+# How to resolve an advisory:
+#   1. Release a fixed version of the package
+#   2. Add fixed_in: "<version>" to the existing entry (do not remove the entry)
+#
+# Severity levels: CRITICAL | HIGH | MEDIUM | LOW
+#
+# affected_versions uses PEP 440 version specifiers:
+#   "<2.0.0"        — any version strictly below 2.0.0
+#   ">=1.0.0,<2.0.0" — range
+#   "==1.5.0"       — exact version only
+#
+# Fields:
+#   id:               INTERNAL-YYYY-NNN  (sequential within year)
+#   package:          PyPI package name or internal package name
+#   affected_versions: PEP 440 specifier string
+#   fixed_in:         First safe version (omit if not yet fixed)
+#   severity:         CRITICAL | HIGH | MEDIUM | LOW
+#   description:      Brief description of the vulnerability
+#   reported_at:      ISO 8601 date (YYYY-MM-DD)
+#   reported_by:      GitHub username of reporter
+#
+# Example (commented out — nothing is vulnerable initially):
+#
+# advisories:
+#   - id: INTERNAL-2026-001
+#     package: unified-trading-services
+#     affected_versions: "<2.0.0"
+#     fixed_in: "2.0.0"
+#     severity: HIGH
+#     description: "Secret values logged in plaintext in error handler"
+#     reported_at: "2026-02-27"
+#     reported_by: "ikenna"
+
+advisories: []

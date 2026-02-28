@@ -313,7 +313,7 @@ def test_integration_with_real_gcs():
 @pytest.mark.parametrize("input,expected", [
     ("BINANCE", "binance"),
     ("Coinbase", "coinbase"),
-    ("KRAKEN", "kraken"),
+    ("BYBIT", "bybit"),
 ])
 def test_normalize_venue(input, expected):
     """Test venue normalization with multiple inputs."""

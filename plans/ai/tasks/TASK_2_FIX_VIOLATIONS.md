@@ -104,7 +104,7 @@ subagent_type: generalPurpose
 prompt: |
   Fix empty fallbacks and Type Any in 6 libraries.
   
-  Repos: unified-cloud-services, unified-config-interface, unified-events-interface, unified-market-interface, unified-trade-execution-interface, unified-domain-services
+  Repos: unified-trading-services, unified-config-interface, unified-events-interface, unified-market-interface, unified-trade-execution-interface, unified-domain-client
   
   Same approach as Agent 1.
   
@@ -221,10 +221,10 @@ Resume Agent 1 (fix QG) → Reports back (SUCCESS!)
 **Sub-Agent 3** (Libraries - 6 repos):
 - Agent ID: `b58858b5-b4a3-4b68-bc64-00a5bb0b7405`
 - Status: ✅ COMPLETE - ALL CLEAN
-- unified-cloud-services: 16 violations fixed ✅
+- unified-trading-services: 16 violations fixed ✅
 - unified-market-interface: 14 violations fixed ✅
 - unified-trade-execution-interface: 2 violations fixed ✅
-- unified-domain-services: 8 violations fixed ✅
+- unified-domain-client: 8 violations fixed ✅
 - unified-config/events-interface: Already clean ✅
 - Tokens: ~100K (~$0.07)
 - Time: ~18 minutes
@@ -269,7 +269,7 @@ bash scripts/quality-gates.sh --no-fix
 # Exit code: 0 (pass)
 
 # Spot check others
-cd ../unified-cloud-services
+cd ../unified-trading-services
 bash scripts/quality-gates.sh --no-fix
 ```
 

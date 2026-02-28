@@ -91,8 +91,8 @@ Successfully implemented production-grade CI/CD infrastructure with:
 **Repos in chain**:
 - instruments-service
 - unified-market-interface
-- unified-domain-services
-- unified-cloud-services
+- unified-domain-client
+- unified-trading-services
 - unified-config-interface
 - unified-events-interface
 - api-contracts
@@ -113,7 +113,7 @@ bash scripts/quickmerge.sh "test" --dep-branch "cascade-test-2024"
 ❌ api-contracts: DIFFERS from main
 ❌ unified-config-interface: DIFFERS from main
 ❌ unified-events-interface: DIFFERS from main
-❌ unified-domain-services: DIFFERS from main
+❌ unified-domain-client: DIFFERS from main
 ❌ unified-market-interface: DIFFERS from main
 
 ✅ --dep-branch specified: cascade-test-2024
@@ -153,8 +153,8 @@ Environment: development
 **Topological Sort Algorithm**:
 ```
 Level 0 (parallel): api-contracts, config, events
-Level 1 (serial): unified-cloud-services
-Level 2 (serial): unified-domain-services
+Level 1 (serial): unified-trading-services
+Level 2 (serial): unified-domain-client
 Level 3 (serial): unified-market-interface
 Level 5 (serial): instruments-service
 ```
@@ -234,8 +234,8 @@ Level 5 (serial): instruments-service
 5. `IMPLEMENTATION-COMPLETE.md` (this file)
 
 **Dependency Matrices** (7):
-6. `unified-cloud-services/.dependency-matrix.json`
-7. `unified-domain-services/.dependency-matrix.json`
+6. `unified-trading-services/.dependency-matrix.json`
+7. `unified-domain-client/.dependency-matrix.json`
 8. `unified-market-interface/.dependency-matrix.json`
 9. `instruments-service/.dependency-matrix.json`
 10. `unified-config-interface/.dependency-matrix.json` (via agent)
@@ -249,21 +249,21 @@ Level 5 (serial): instruments-service
 16. `.cursor/rules/pr-review-checklist.mdc`
 
 **PR Watcher** (2):
-17. `unified-cloud-services/.github/workflows/pr-watcher.yml`
-18. `unified-cloud-services/.github/scripts/llm-pr-analyzer.sh`
+17. `unified-trading-services/.github/workflows/pr-watcher.yml`
+18. `unified-trading-services/.github/scripts/llm-pr-analyzer.sh`
 
 ---
 
 ### Modified Files (12)
 
 **Infrastructure** (4):
-1. `unified-cloud-services/scripts/quickmerge.sh` - Added Stages 1-4
-2. `unified-domain-services/scripts/quickmerge.sh` - Copied from UCS
+1. `unified-trading-services/scripts/quickmerge.sh` - Added Stages 1-4
+2. `unified-domain-client/scripts/quickmerge.sh` - Copied from UCS
 3. `unified-market-interface/scripts/quickmerge.sh` - Copied from UCS
 4. `instruments-service/scripts/quickmerge.sh` - Copied from UCS
 
 **Alignment Fixes** (6):
-5. `unified-cloud-services/cloudbuild.yaml` - timeout: 600s, E2_HIGHCPU_8
+5. `unified-trading-services/cloudbuild.yaml` - timeout: 600s, E2_HIGHCPU_8
 6. `unified-config-interface/pyproject.toml` - basedpyright
 7. `instruments-service/cli/main.py` - E501 fixes
 8. `instruments-service/cli/parser.py` - E501 fixes
@@ -315,12 +315,12 @@ Level 5 (serial): instruments-service
 
 1. **Commit All Changes** via quickmerge:
    ```bash
-   cd unified-cloud-services
+   cd unified-trading-services
    bash scripts/quickmerge.sh "feat: add CI/CD cascade infrastructure" --skip-tests
    ```
 
 2. **Test PR Watcher**:
-   - Create test PR in unified-cloud-services
+   - Create test PR in unified-trading-services
    - Verify automated comment appears
    - Validate analysis accuracy
 
@@ -394,7 +394,7 @@ Level 5 (serial): instruments-service
 
 ### Implementation
 - **Cursor Rules**: `.cursor/rules/always-use-quickmerge.mdc`
-- **PR Watcher**: `unified-cloud-services/.github/workflows/pr-watcher.yml`
+- **PR Watcher**: `unified-trading-services/.github/workflows/pr-watcher.yml`
 - **Test Results**: `CASCADE-TEST-RESULTS.md`
 
 ---

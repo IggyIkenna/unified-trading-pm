@@ -5,7 +5,7 @@
     {"path": "../../.venv-workspace", "name": "🐍 Venv"},
     {"path": "../../unified-trading-codex", "name": "📚 Codex (Docs)"},
     {"path": "../../unified-trading-deployment-v3", "name": "🚀 Deployment v3"},
-    {"path": "../../unified-cloud-services", "name": "☁️ Cloud Services (Backend APIs)"},
+    {"path": "../../unified-trading-services", "name": "☁️ Cloud Services (Backend APIs)"},
     {"path": "../../unified-config-interface", "name": "⚙️ Config (API configs)"},
     {"path": "../../backtest-ui"},
     {"path": "../../batch-audit-ui"},
@@ -29,7 +29,7 @@
     "cursorpyright.analysis.inlayHints.variableTypes": true,
     "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
     "cursorpyright.analysis.extraPaths": [
-      "${workspaceFolder}/unified-cloud-services",
+      "${workspaceFolder}/unified-trading-services",
       "${workspaceFolder}/unified-config-interface",
       "${workspaceFolder}/backtest-ui",
       "${workspaceFolder}/batch-audit-ui",

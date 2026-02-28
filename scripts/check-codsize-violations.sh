@@ -35,7 +35,7 @@ done
 if [ -z "$REPOS_ARG" ]; then
   REPOS=(
     "instruments-service"
-    "unified-cloud-services"
+    "unified-trading-services"
     "features-delta-one-service"
     "features-volatility-service"
     "features-calendar-service"

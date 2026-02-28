@@ -60,7 +60,7 @@ CONTEXT (Agents read automatically):
 - Workspace .cursorrules (workspace-level rules)
 - .cursor/rules/*.mdc (specific standards)
 - unified-trading-codex/06-coding-standards/ (canonical patterns)
-- Path dependencies (unified-cloud-services, etc.)
+- Path dependencies (unified-trading-services, etc.)
 
 SAFEGUARDS:
 - NEVER: Skip tests, add type: ignore, use .get(x,{}), use Type Any
@@ -195,7 +195,7 @@ Repeat STEP 1-8 for:
 BATCH 6/6: Last 4 repos
 
 Repeat STEP 1-8 for:
-- unified-cloud-services
+- unified-trading-services
 - unified-trade-execution-interface
 - unified-market-interface
 - execution-algo-library

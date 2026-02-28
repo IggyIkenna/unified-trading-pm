@@ -1,0 +1,25 @@
+---
+description: "Integration testing layers 0–3 — contract alignment, schema robustness, infra verify, system smoke"
+alwaysApply: false
+priority: 60
+tags:
+  - testing
+  - integration
+  - contracts
+---
+# Integration Testing Layers
+RULE: Follow the four-layer integration testing methodology. Do not regress the procedure.
+WHY: Layer 0 (AC↔UIC) gates T0; Layer 1 (schema robustness) gates per-tier; Layer 2 (infra) gates deployment; Layer 3a/3b (system smoke) gates post-deploy. Deployment success requires all layers pass.
+CODEX: 06-coding-standards/integration-testing-layers.md
+
+DO:
+  Layer 0: Add test_contract_alignment.py + test_*_alignment.py in api-contracts and unified-internal-contracts (both directions)
+  Layer 1: Add test_schema_robustness.py in each service (required/optional fields, corner cases, fail-fast)
+  Layer 2: Add verify_infra.py in deployment-engine; gate deployment success
+  Layer 3: Implement Layer 3a (fast smoke) then Layer 3b (full pipeline) in system-integration-tests; 3a must pass before 3b
+
+NEVER:
+  Put Layer 3 (cross-service smoke) inside deployment-engine (creates circular dep)
+  Skip Layer 0 in T0 (contract base must be coherent first)
+  Run Layer 3b when Layer 3a fails (sequential gate)
+  Duplicate VCR cassettes — reference api-contracts path

@@ -46,9 +46,9 @@ ALL_REPO_PATHS = [
     "${workspaceFolder}/unified-order-interface",
     "${workspaceFolder}/unified-market-interface",
     "${workspaceFolder}/unified-events-interface",
-    "${workspaceFolder}/unified-domain-services",
+    "${workspaceFolder}/unified-domain-client",
     "${workspaceFolder}/unified-config-interface",
-    "${workspaceFolder}/unified-cloud-services",
+    "${workspaceFolder}/unified-trading-services",
 ]
 
 # Complete strict settings (in proper order)

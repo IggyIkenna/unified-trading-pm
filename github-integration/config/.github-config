@@ -1,0 +1,48 @@
+# ==============================================================================
+# GitHub Configuration - Unified Trading System
+# ==============================================================================
+#
+# This file stores GitHub-specific configuration.
+# Source this file in scripts: source .github-config
+#
+# ==============================================================================
+
+# GitHub Organization
+GITHUB_ORG="IggyIkenna"
+
+# GitHub Project Name
+PROJECT_NAME="Unified Trading System"
+
+# Default Project Number (updated after project creation)
+PROJECT_NUMBER=""
+
+# Repo Prefix (if applicable)
+REPO_PREFIX=""
+
+# ==============================================================================
+# Repo List (for batch operations)
+# ==============================================================================
+
+# Pipeline Services
+PIPELINE_REPOS=(
+    "instruments-service"
+    "market-tick-data-handler"
+    "market-data-processing-service"
+    "features-delta-one-service"
+    "features-volatility-service"
+    "features-onchain-service"
+    "ml-training-service"
+    "ml-inference-service"
+    "strategy-service"
+    "execution-services"
+)
+
+# Platform Services
+PLATFORM_REPOS=(
+    "unified-cloud-services"
+    "unified-trading-deployment-v2"
+    "unified-trading-codex"
+)
+
+# All Repos
+ALL_REPOS=("${PIPELINE_REPOS[@]}" "${PLATFORM_REPOS[@]}")

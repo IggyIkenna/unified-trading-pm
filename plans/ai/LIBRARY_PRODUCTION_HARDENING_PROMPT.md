@@ -2,7 +2,7 @@
 
 **Purpose:** Comprehensive audit and hardening prompt for central shared libraries in the unified trading system.
 
-**Target Libraries:** unified-cloud-services, unified-config-interface, unified-events-interface, unified-domain-services, unified-market-interface, unified-trade-execution-interface, unified-ml-interface, execution-algo-library
+**Target Libraries:** unified-trading-services, unified-config-interface, unified-events-interface, unified-domain-client, unified-market-interface, unified-trade-execution-interface, unified-ml-interface, execution-algo-library
 
 ---
 
@@ -402,7 +402,7 @@ Create these documents for my review:
 
 ### Venues & Data Types
 Check that {UNIFIED_EVENTS_INTERFACE} supports all venues and data types in our universe:
-- CEFI: Binance, Coinbase, Kraken, etc. (see `unified-trading-deployment-v3/configs/venues.yaml`)
+- CEFI: Binance, Coinbase, etc. (see `unified-trading-deployment-v3/configs/venues.yaml`)
 - DEFI: Uniswap, Aave, etc.
 - TRADFI: NYSE, NASDAQ, etc.
 
@@ -474,10 +474,10 @@ A production-ready {UNIFIED_EVENTS_INTERFACE} with:
 
 1. **Copy this template**
 2. **Replace `{UNIFIED_EVENTS_INTERFACE}` with actual library:**
-   - unified-cloud-services
+   - unified-trading-services
    - unified-config-interface
    - unified-events-interface
-   - unified-domain-services
+   - unified-domain-client
    - unified-market-interface
    - unified-trade-execution-interface
    - unified-ml-interface
@@ -520,7 +520,7 @@ A production-ready {UNIFIED_EVENTS_INTERFACE} with:
 
 ---
 
-## EXAMPLE: unified-cloud-services
+## EXAMPLE: unified-trading-services
 
 **Adoption Audit Questions:**
 - Which services use `get_storage_client()`? (should be ALL services with GCS I/O)

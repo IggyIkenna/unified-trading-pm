@@ -14,21 +14,21 @@ Usage:
 
 import argparse
 import ast
+import importlib.util
 import os
 import re
 import sys
-from pathlib import Path
-from typing import List, Tuple, Optional, Set, Dict
-import importlib.util
 from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
 # External packages that should only use top-level imports
 EXTERNAL_PACKAGES = {
     'unified_config_interface',
     'unified_config_service',
     'unified_events_interface',
-    'unified_domain_services',
-    'unified_cloud_services',
+    'unified_domain_client',
+    'unified_trading_services',
     'unified_market_interface',
     'unified_trade_execution_interface',
     'unified_ml_interface',
@@ -40,7 +40,7 @@ EXTERNAL_PACKAGES = {
 # Dependency hierarchy (lower level cannot import from higher level)
 DEPENDENCY_LEVELS = {
     0: {'unified_config_interface', 'unified_events_interface'},
-    1: {'unified_cloud_services', 'unified_domain_services'},
+    1: {'unified_trading_services', 'unified_domain_client'},
     2: {'unified_market_interface', 'unified_trade_execution_interface', 'unified_ml_interface'},
     3: {'execution_algo_library', 'matching_engine_library'},
 }
@@ -48,7 +48,7 @@ DEPENDENCY_LEVELS = {
 # Known circular import risks (bidirectional dependencies)
 CIRCULAR_RISKS = [
     ('unified_market_interface', 'unified_trade_execution_interface'),
-    ('unified_ml_interface', 'unified_domain_services'),
+    ('unified_ml_interface', 'unified_domain_client'),
 ]
 
 # Patterns for detecting deep imports

@@ -1,0 +1,32 @@
+{
+  "market-tick-data-handler": [
+    {
+      "subtask_id": "Subtask 1.1",
+      "title": "[MarketData] Batch mode (Tardis/Databento clients)",
+      "number": "61",
+      "url": "https://github.com/IggyIkenna/market-tick-data-handler/issues/61",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.2",
+      "title": "[MarketData] Live mode (WebSocket handlers)",
+      "number": "62",
+      "url": "https://github.com/IggyIkenna/market-tick-data-handler/issues/62",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.3",
+      "title": "[MarketData] Feed normalization via unified-market-interface",
+      "number": "63",
+      "url": "https://github.com/IggyIkenna/market-tick-data-handler/issues/63",
+      "existing": false
+    },
+    {
+      "subtask_id": "Subtask 1.4",
+      "title": "[MarketData] Testing + docs",
+      "number": "64",
+      "url": "https://github.com/IggyIkenna/market-tick-data-handler/issues/64",
+      "existing": false
+    }
+  ]
+}

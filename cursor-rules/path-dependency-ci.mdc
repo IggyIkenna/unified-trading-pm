@@ -13,10 +13,10 @@ WHY: Local workspace has repos as siblings; CI clone to `../` creates same layou
 CODEX: 06-coding-standards/dependency-management.md
 
 DO:
-  git clone ... ../unified-cloud-services
-  uv pip install --system -e ../unified-cloud-services
+  git clone ... ../unified-trading-services
+  uv pip install --system -e ../unified-trading-services
   uv pip install --system -e ".[dev]"
 
 NEVER:
   Clone to deps/ when pyproject expects ../
-  Add checkout to unified-cloud-services (zero path deps)
+  Add checkout to unified-trading-services (zero path deps)

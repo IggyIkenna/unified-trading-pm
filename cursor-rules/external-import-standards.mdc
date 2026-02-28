@@ -14,8 +14,11 @@ CODEX: 06-coding-standards/README.md#imports, 06-coding-standards/cursor-rules-s
 
 DO:
   from unified_events_interface import setup_events, log_event
-  from unified_domain_services import InstrumentsDomainClient
+  from unified_domain_client import InstrumentsDomainClient
+  from api_contracts import DataSourceMapping
+  from api_contracts.databento.schemas import DatabentoOhlcvBar
+  from api_contracts.ccxt.schemas import CcxtOrder
 
 NEVER:
   from unified_events_interface.core.lifecycle import log_event
-  from unified_cloud_services.storage.gcs import get_storage_client
+  from unified_trading_services.storage.gcs import get_storage_client

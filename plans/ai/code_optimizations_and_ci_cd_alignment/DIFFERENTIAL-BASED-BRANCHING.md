@@ -29,7 +29,7 @@ fi
 
 **Why this matters**:
 ```
-Scenario: You committed changes to unified-cloud-services on branch "test-feature"
+Scenario: You committed changes to unified-trading-services on branch "test-feature"
   - git status --porcelain: Empty ✅ (no uncommitted changes)
   - git diff origin/main: HAS DIFF ❌ (branch differs from main)
 
@@ -81,7 +81,7 @@ bash scripts/quickmerge.sh "feat: new API"
 **Behavior**:
 ```
 Stage 1: Check dependencies vs main
-  ├─> unified-cloud-services: git diff origin/main --quiet
+  ├─> unified-trading-services: git diff origin/main --quiet
   └─> ❌ HAS DIFF
 
 ❌ ERROR MESSAGE:
@@ -90,7 +90,7 @@ Stage 1: Check dependencies vs main
 │ Dependency Conflict Detected                                │
 └─────────────────────────────────────────────────────────────┘
 
-Repository: unified-cloud-services
+Repository: unified-trading-services
 Status: DIFFERS FROM MAIN
 
 Changes detected:
@@ -105,7 +105,7 @@ You CANNOT merge to main with divergent dependencies.
 Choose one:
 
 Option 1: DISCARD local dependency changes (go back to main)
-  cd unified-cloud-services
+  cd unified-trading-services
   git reset --hard origin/main
   cd - && bash scripts/quickmerge.sh "feat: new API"
 
@@ -347,7 +347,7 @@ If you forget --dep-branch:
 
 ```
 ❌ DEPENDENCY CONFLICT DETECTED
-   unified-cloud-services DIFFERS FROM MAIN
+   unified-trading-services DIFFERS FROM MAIN
    
    Use: bash scripts/quickmerge.sh "msg" --dep-branch "my-feature"
 ```
@@ -417,14 +417,14 @@ bash scripts/quickmerge.sh "feat: add validation"
 
 ```bash
 cd instruments-service
-vim ../unified-cloud-services/core.py  # Edit dependency
+vim ../unified-trading-services/core.py  # Edit dependency
 
 bash scripts/quickmerge.sh "feat: update API"
-# ❌ Error: unified-cloud-services differs from main
+# ❌ Error: unified-trading-services differs from main
 # 💡 Suggestion: Use --dep-branch
 
 bash scripts/quickmerge.sh "feat: update API" --dep-branch "my-feature"
-# ✅ Cascade: unified-cloud-services @ my-feature
+# ✅ Cascade: unified-trading-services @ my-feature
 # ✅ Then: instruments-service @ my-feature
 # ✅ Complete isolation
 ```
@@ -435,7 +435,7 @@ bash scripts/quickmerge.sh "feat: update API" --dep-branch "my-feature"
 # Scenario: Feature spans 3 repos
 cd instruments-service
 vim instruments_service/main.py
-vim ../unified-cloud-services/core.py
+vim ../unified-trading-services/core.py
 vim ../unified-config-interface/config.py
 
 # One command handles everything
@@ -443,7 +443,7 @@ bash scripts/quickmerge.sh "feat: major refactor" --dep-branch "refactor-2024"
 
 # Automatic cascade:
 # 1. unified-config-interface @ refactor-2024
-# 2. unified-cloud-services @ refactor-2024
+# 2. unified-trading-services @ refactor-2024
 # 3. instruments-service @ refactor-2024
 
 # All on same branch, complete isolation

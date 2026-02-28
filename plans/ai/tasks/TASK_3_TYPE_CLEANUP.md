@@ -104,12 +104,12 @@ prompt: |
   Fix basedpyright type errors in 6 shared libraries.
   
   Repos (CRITICAL - libraries must be type-clean):
-  - unified-cloud-services
+  - unified-trading-services
   - unified-config-interface
   - unified-events-interface
   - unified-market-interface
   - unified-trade-execution-interface
-  - unified-domain-services
+  - unified-domain-client
   
   Same approach. Libraries set the standard!
   Target: 0 errors per library.
@@ -212,8 +212,8 @@ cd instruments-service && source .venv/bin/activate
 basedpyright instruments_service/ --level warning | grep "error:" | wc -l
 # Target: 0
 
-cd ../unified-cloud-services && source .venv/bin/activate
-basedpyright unified_cloud_services/ --level warning | grep "error:" | wc -l
+cd ../unified-trading-services && source .venv/bin/activate
+basedpyright unified_trading_services/ --level warning | grep "error:" | wc -l
 # Target: 0
 
 cd ../strategy-service && source .venv/bin/activate

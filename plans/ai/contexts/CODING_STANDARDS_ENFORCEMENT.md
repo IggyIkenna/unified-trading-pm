@@ -262,12 +262,12 @@ for item in data:
 
 ```python
 # ❌ BAD: Assume unknown
-from unified_cloud_services import InstrumentsDomainClient
+from unified_trading_services import InstrumentsDomainClient
 
 client = InstrumentsDomainClient(...)
 result: Any = client.get_instruments_for_date(...)
 
-# ✅ GOOD: Check unified-cloud-services source code
+# ✅ GOOD: Check unified-trading-services source code
 # InstrumentsDomainClient.get_instruments_for_date returns pd.DataFrame
 
 import pandas as pd

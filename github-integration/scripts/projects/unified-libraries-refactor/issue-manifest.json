@@ -1,0 +1,286 @@
+{
+  "unified-trading-services": [
+    {
+      "subtask_id": "Subtask 0.1",
+      "title": "[UnifiedLibraries] Create Artifact Registry Python Repository",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 0.2",
+      "title": "[UnifiedLibraries] Grant IAM Permissions for Artifact Registry",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 0.3",
+      "title": "[UnifiedLibraries] Document Local Development Setup for Artifact Registry",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 0.4",
+      "title": "[UnifiedLibraries] Create GitHub Actions Publish Workflow Template",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.1.4",
+      "title": "[UnifiedLibraries] Add get_pubsub_client() to client_factory",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 5.1.1",
+      "title": "[UnifiedLibraries] Add transitive dependencies and re-exports to unified-trading-services",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    }
+  ],
+  "unified-events-interface": [
+    {
+      "subtask_id": "Subtask 1.1.1",
+      "title": "[UnifiedLibraries] Create PubSubClient interface",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.1.2",
+      "title": "[UnifiedLibraries] Implement GCPPubSubClient",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.1.3",
+      "title": "[UnifiedLibraries] Implement AWSPubSubClient",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.2.1",
+      "title": "[UnifiedLibraries] Create library repo structure",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.2.2",
+      "title": "[UnifiedLibraries] Implement observability events (Cloud Logging)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.2.3",
+      "title": "[UnifiedLibraries] Implement coordination events (PubSub)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.2.4",
+      "title": "[UnifiedLibraries] Implement control events (killswitch, config updates)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.2.5",
+      "title": "[UnifiedLibraries] Add setup_events() entrypoint",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 1.2.6",
+      "title": "[UnifiedLibraries] Write comprehensive tests",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.1",
+      "title": "[UnifiedLibraries] Create library repo structure",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.2",
+      "title": "[UnifiedLibraries] Implement config storage backend",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.3",
+      "title": "[UnifiedLibraries] Implement BaseConfig schema",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.4",
+      "title": "[UnifiedLibraries] Implement get_config() function",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.5",
+      "title": "[UnifiedLibraries] Implement config hot-reload (PubSub integration)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.6",
+      "title": "[UnifiedLibraries] Add config validation and migration helpers",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 2.1.7",
+      "title": "[UnifiedLibraries] Write comprehensive tests",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.1",
+      "title": "[UnifiedLibraries] Create library repo structure",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.2",
+      "title": "[UnifiedLibraries] Move external API clients from unified-trading-services",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.3",
+      "title": "[UnifiedLibraries] Move DeFi adapters from unified-trading-services",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.4",
+      "title": "[UnifiedLibraries] Implement canonical trade/orderbook schemas",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.5",
+      "title": "[UnifiedLibraries] Implement normalization layer",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.6",
+      "title": "[UnifiedLibraries] Implement MarketDataFeed interface",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.7",
+      "title": "[UnifiedLibraries] Add venue-specific adapters (Binance, Deribit)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 3.1.8",
+      "title": "[UnifiedLibraries] Write comprehensive tests",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.1",
+      "title": "[UnifiedLibraries] Create library repo structure",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.2",
+      "title": "[UnifiedLibraries] Implement canonical order/fill schemas",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.3",
+      "title": "[UnifiedLibraries] Implement OrderClient interface",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.4",
+      "title": "[UnifiedLibraries] Add venue-specific order adapters (Binance, Deribit)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.5",
+      "title": "[UnifiedLibraries] Implement fill/order status event handling",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.6",
+      "title": "[UnifiedLibraries] Add order validation and risk checks",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 4.1.7",
+      "title": "[UnifiedLibraries] Write comprehensive tests",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 5.1.2",
+      "title": "[UnifiedLibraries] Migrate one service as proof of concept (instruments-service)",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 5.1.3",
+      "title": "[UnifiedLibraries] Update codex documentation",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    },
+    {
+      "subtask_id": "Subtask 5.1.4",
+      "title": "[UnifiedLibraries] Create migration guide for remaining services",
+      "number": null,
+      "url": null,
+      "dry_run": true
+    }
+  ]
+}

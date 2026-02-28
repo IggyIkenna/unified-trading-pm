@@ -111,12 +111,12 @@ prompt: |
   Add 2 quality checks to quality-gates.sh in 12 repos.
   
   Repos (libraries + remaining services):
-  1. unified-cloud-services
+  1. unified-trading-services
   2. unified-config-interface
   3. unified-events-interface
   4. unified-market-interface
   5. unified-trade-execution-interface
-  6. unified-domain-services
+  6. unified-domain-client
   7. execution-algo-library
   8. risk-and-exposure-service
   9. position-balance-monitor-service
@@ -125,7 +125,7 @@ prompt: |
   12. alerting-system
   
   Same checks as Sub-Agent 1 (see above).
-  Adjust ${SOURCE_DIR} per repo (e.g., unified_cloud_services/, unified_config_interface/, etc.)
+  Adjust ${SOURCE_DIR} per repo (e.g., unified_trading_services/, unified_config_interface/, etc.)
   
   RETURN: Table with results per repo + token usage
 ```
@@ -188,11 +188,11 @@ prompt: |
 - Issues: None
 - Special cases handled:
   - position-balance-monitor-service: Uses `CODEX_STATUS` counter (not CODEX_VIOLATIONS)
-  - unified-domain-services: Added CODEX section (was missing)
+  - unified-domain-client: Added CODEX section (was missing)
   - Quote escaping corrected: `[\"']` for bash syntax
 
 **Master Agent Review**:
-- Spot-verified: instruments-service, unified-cloud-services, deployment-v2
+- Spot-verified: instruments-service, unified-trading-services, deployment-v2
 - Both checks working correctly
 - Quality gates run but took 7+ minutes (performance issue noted)
 
@@ -212,7 +212,7 @@ prompt: |
 cd instruments-service && bash scripts/quality-gates.sh --no-fix
 # Expected: CODEX COMPLIANCE FAILED with violation counts
 
-cd ../unified-cloud-services && bash scripts/quality-gates.sh --no-fix
+cd ../unified-trading-services && bash scripts/quality-gates.sh --no-fix
 # Expected: Checks run, violations shown
 
 cd ../unified-trading-deployment-v3 && bash scripts/quality-gates.sh --no-fix

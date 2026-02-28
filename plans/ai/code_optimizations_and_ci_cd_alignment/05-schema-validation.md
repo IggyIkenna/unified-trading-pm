@@ -84,12 +84,12 @@ find . -name "output_schemas.py" -o -name "schemas.py" | grep -v ".venv" | grep 
 ### Part 1: Create Schema Validator Module
 
 ```python
-# unified-cloud-services/validation/schema_validator.py
+# unified-trading-services/validation/schema_validator.py
 """
 Schema validation for GCS and BigQuery data.
 
 Usage:
-    from unified_cloud_services.validation import validate_gcs_schema, validate_bq_schema
+    from unified_trading_services.validation import validate_gcs_schema, validate_bq_schema
     
     # Validate GCS file
     validate_gcs_schema(
@@ -285,7 +285,7 @@ Schema definitions for validation.
 
 These are used by the schema validator to check actual data.
 """
-from unified_cloud_services.validation.schema_validator import SchemaDefinition, SchemaField
+from unified_trading_services.validation.schema_validator import SchemaDefinition, SchemaField
 
 INSTRUMENTS_SCHEMA = SchemaDefinition(
     name="instruments",
@@ -328,7 +328,7 @@ if [ "$QUICK_MODE" != "true" ]; then
     echo "Step 6: Schema Validation..."
     python -c "
 from schemas.validation_schemas import INSTRUMENTS_SCHEMA
-from unified_cloud_services.validation.schema_validator import validate_gcs_schema
+from unified_trading_services.validation.schema_validator import validate_gcs_schema
 
 # Validate latest instruments file
 is_valid, errors = validate_gcs_schema(
@@ -372,7 +372,7 @@ from instruments_service.schemas.validation_schemas import INSTRUMENTS_SCHEMA
 from market_tick_data_handler.schemas.validation_schemas import MARKET_DATA_SCHEMA
 # Add more as needed
 
-from unified_cloud_services.validation.schema_validator import (
+from unified_trading_services.validation.schema_validator import (
     validate_gcs_schema,
     validate_bq_schema
 )
@@ -470,7 +470,7 @@ sample_data = pd.DataFrame({
 sample_data.to_parquet("gs://central-element-323112-unified-trading-data/test/sample.parquet")
 
 # Validate
-from unified_cloud_services.validation.schema_validator import validate_gcs_schema
+from unified_trading_services.validation.schema_validator import validate_gcs_schema
 from instruments_service.schemas.validation_schemas import INSTRUMENTS_SCHEMA
 
 is_valid, errors = validate_gcs_schema(
@@ -513,7 +513,7 @@ print("✅ Schema drift detected correctly")
 
 ## 📊 Success Metrics
 
-- [ ] Schema validator module created in unified-cloud-services
+- [ ] Schema validator module created in unified-trading-services
 - [ ] All services have validation schemas defined
 - [ ] Validation script runs successfully
 - [ ] Can detect missing columns

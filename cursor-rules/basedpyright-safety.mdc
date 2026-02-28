@@ -12,7 +12,7 @@ WHY: 30+ repo workspace — `basedpyright .` consumes 4-16GB RAM and spawns zomb
 CODEX: 06-coding-standards/quality-gates.md
 
 DO:
-  timeout 120 basedpyright unified_cloud_services/
+  timeout 120 basedpyright unified_trading_services/
   cd repo && bash scripts/quality-gates.sh --no-fix  # for audits
 
 NEVER:

@@ -140,6 +140,6 @@ When implementing any architectural change:
 
 **This rule applies to**:
 - All cross-service architectural changes
-- New patterns established in unified-cloud-services
+- New patterns established in unified-trading-services
 - Infrastructure changes in unified-trading-deployment-v3
 - Any change that affects multiple services
