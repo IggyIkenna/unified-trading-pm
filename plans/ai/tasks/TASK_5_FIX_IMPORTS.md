@@ -79,7 +79,7 @@ prompt: |
   - features-* services (4)
   - ml-* services (2)
   - strategy-service
-  - execution-services
+  - execution-service
   - risk-and-exposure-service
   - position-balance-monitor-service
   - pnl-attribution-service

@@ -3,7 +3,7 @@
 Create GitHub Issues from Epic Breakdown
 
 Parses epic-post-trade-and-execution.md and creates 20 GitHub issues
-across 4 repositories (position-balance-monitor-service, risk-and-exposure-service, execution-services, live-health-monitor-ui).
+across 4 repositories (position-balance-monitor-service, risk-and-exposure-service, execution-service, live-health-monitor-ui).
 
 Usage:
     # Dry run (preview):
@@ -155,22 +155,22 @@ def determine_repo(files: str, title: str, subtask_id: str) -> str:
         or "manual trading" in title.lower()
     ):
         return "live-health-monitor-ui"
-    elif "execution-services" in files or "execution_services" in files:
-        return "execution-services"
+    elif "execution-service" in files or "execution_service" in files:
+        return "execution-service"
 
     # Fallback: infer from subtask ID (Task number)
     if "Subtask 1." in subtask_id:  # Task 1: position-monitor
         return "position-balance-monitor-service"
     elif "Subtask 2." in subtask_id:  # Task 2: risk-and-exposure
         return "risk-and-exposure-service"
-    elif "Subtask 3." in subtask_id:  # Task 3: execution-services
+    elif "Subtask 3." in subtask_id:  # Task 3: execution-service
         # Check if UI-related
         if "UI" in title or "manual trading" in title.lower():
             return "live-health-monitor-ui"
-        return "execution-services"
+        return "execution-service"
 
-    # Default to execution-services (most complex)
-    return "execution-services"
+    # Default to execution-service (most complex)
+    return "execution-service"
 
 
 def create_issue_body(subtask: dict[str, Any]) -> str:

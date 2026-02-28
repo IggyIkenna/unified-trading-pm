@@ -69,7 +69,7 @@
 |------|--------|
 | alerting-system | ❌ Missing |
 | api-contracts | ❌ Missing |
-| execution-services | ❌ Missing |
+| execution-service | ❌ Missing |
 | unified-trading-services | ❌ Missing |
 | unified-domain-client | ❌ Missing |
 | unified-feature-calculator-library | ❌ Missing |
@@ -90,7 +90,7 @@
 | ✅ Has | 14 |
 | ❌ Missing | 26 |
 
-**Repos with CONTRIBUTING:** api-contracts, execution-services, features-calendar-service, features-delta-one-service, features-onchain-service, features-volatility-service, instruments-service, market-data-processing-service, market-tick-data-handler, ml-inference-service, ml-training-service, strategy-service, unified-trading-services, unified-trading-deployment-v3, unified-trading-pm (partial).
+**Repos with CONTRIBUTING:** api-contracts, execution-service, features-calendar-service, features-delta-one-service, features-onchain-service, features-volatility-service, instruments-service, market-data-processing-service, market-tick-data-handler, ml-inference-service, ml-training-service, strategy-service, unified-trading-services, unified-trading-deployment-v3, unified-trading-pm (partial).
 
 ### 2.4 CODE_OF_CONDUCT
 
@@ -165,7 +165,7 @@ All repos with `.github/workflows` include `quality-gates.yml` or equivalent.
 | unified-trading-services | 1 |
 | market-tick-data-handler | 117 |
 | strategy-service | 139 |
-| execution-services | 205 |
+| execution-service | 205 |
 | **Total (5 repos)** | **464** |
 
 ### 5.2 __init__.py
@@ -212,7 +212,7 @@ All repos with `.github/workflows` include `quality-gates.yml` or equivalent.
 ### P1 (High)
 
 3. **Add LICENSE to 9 repos**
-   - alerting-system, api-contracts, execution-services, unified-trading-services, unified-domain-client, unified-feature-calculator-library, unified-trading-codex, unified-trading-pm
+   - alerting-system, api-contracts, execution-service, unified-trading-services, unified-domain-client, unified-feature-calculator-library, unified-trading-codex, unified-trading-pm
 
 4. **Add .env.example to 5 repos**
    - api-contracts, settlement-ui, unified-feature-calculator-library, unified-trading-codex, unified-trading-pm
@@ -225,7 +225,7 @@ All repos with `.github/workflows` include `quality-gates.yml` or equivalent.
 
    - market-tick-data-handler: 117
    - strategy-service: 139
-   - execution-services: 205
+   - execution-service: 205
 
 ### P2 (Medium)
 

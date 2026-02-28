@@ -24,7 +24,7 @@ todos:
     content: "Phase 5: Adopt api-contracts in UOI CCXT adapters (and IBKR when present); add VCR in UOI tests"
     status: completed
   - id: phase6-consumers
-    content: "Phase 6: Adopt in market-tick-data-handler, instruments-service, optional MDPS/execution-services; VCR where raw APIs touched"
+    content: "Phase 6: Adopt in market-tick-data-handler, instruments-service, optional MDPS/execution-service; VCR where raw APIs touched"
     status: completed
   - id: contract-vs-reality
     content: Add contract-vs-reality verification (test/script + CI option); validate examples in CI; optional live verification on schedule
@@ -71,7 +71,7 @@ The plan in [04-api-sdk-mocking.md](.cursor/plans/code_optimizations_and_ci_cd_a
 | **market-tick-data-handler**       | Consumes UMI Databento client and has its own `databento_client` calling `timeseries.get_range`. Adopt Databento schemas at response parsing; add VCR for integration/unit tests.      |
 | **market-data-processing-service** | Consumes UMI. Optional: use api-contracts schemas in tests if they hit raw API shapes.                                                                                                 |
 | **instruments-service**            | Uses UMI (market adapters), CCXT (e.g. `utils/ccxt_service.py`), and DeFi/The Graph via UMI. Adopt schemas where it touches raw API/CCXT/Graph responses.                              |
-| **execution-services**             | Uses UOI and UMI. Adopt in tests (VCR) or thin wrappers if they parse raw responses.                                                                                                   |
+| **execution-service**             | Uses UOI and UMI. Adopt in tests (VCR) or thin wrappers if they parse raw responses.                                                                                                   |
 | **strategy-service**               | No UMI/UOI in `pyproject.toml` today; include only if/when it adds exchange/market data dependencies.                                                                                  |
 
 
@@ -112,7 +112,7 @@ flowchart LR
     MTDH[market-tick-data-handler]
     MDPS[market-data-processing-service]
     INST[instruments-service]
-    EXEC[execution-services]
+    EXEC[execution-service]
   end
 
   Databento --> UMI
@@ -222,7 +222,7 @@ This work is **large**; split implementation across **at least four agents** so 
 | **Agent 1** | api-contracts repo (Phase 0 + Phase 1), **CeFi + TradFi contracts** | Create GitHub repo, permissions, layout. Schemas + examples + mocks for **CCXT**, **Binance**, **OKX**, **Bybit**, **Upbit**, **IBKR** (TWS/ib_insync), **Databento**, **Tardis**, **Yahoo Finance**. Focus: market data, order, position, balance, margin, errors, WebSocket where applicable.                                                    |
 | **Agent 2** | **DeFi + aggregator contracts**                                     | Schemas + examples + mocks for **The Graph**, **Alchemy**, **Hyperliquid**, **Aster**, and (when in scope) **1inch**, **0x**, **ParaSwap**, **CoW**. Per-venue market + order/swap + position. Document DeFi execution options in api-contracts repo.                                                                                              |
 | **Agent 3** | **UMI + UOI adoption**, **position-balance-monitor**                | Adopt api-contracts in unified-market-interface (clients + adapters for all venues in scope) and unified-trade-execution-interface (CCXT adapters, IBKR adapter). Ensure position-balance-monitor's use of UOI (get_positions, get_balances, get_margin_info, and all other contracted endpoints) is covered; add VCR in UMI/UOI and position-monitor tests. |
-| **Agent 4** | **Consumer services**, **contract-vs-reality**, **docs/codex**      | market-tick-data-handler, market-data-processing-service, instruments-service, execution-services: adopt schemas/VCR where they touch raw APIs. Contract-vs-reality verification (tests/script + CI). Update codex (API contracts section), cursor rules (api-contracts-usage.mdc), api-contracts README/CONTRIBUTING/per-venue index.             |
+| **Agent 4** | **Consumer services**, **contract-vs-reality**, **docs/codex**      | market-tick-data-handler, market-data-processing-service, instruments-service, execution-service: adopt schemas/VCR where they touch raw APIs. Contract-vs-reality verification (tests/script + CI). Update codex (API contracts section), cursor rules (api-contracts-usage.mdc), api-contracts README/CONTRIBUTING/per-venue index.             |
 
 
 Agents 1 and 2 can run in parallel (different contract sets). Agent 3 can start once Phase 1 layout and at least one venue's contracts exist; Agent 4 can run in parallel with Agent 3 for services that do not depend on Agent 3's UMI/UOI changes. Use task docs in `.cursor/plans/tasks/` and the Task tool with `subagent_type: generalPurpose` (or `explore` for discovery); save agent IDs for resume.
@@ -372,7 +372,7 @@ Use **Context7** for Pydantic v2 (validation, model_config, Field), VCR.py (cass
 
 - **market-tick-data-handler**: In [databento_client.py](market-tick-data-handler/market_data_tick_handler/engine/venues/databento/databento_client.py), after `timeseries.get_range` (or equivalent), parse/validate with api-contracts Databento schemas where the response is first handled. Tests: add VCR for Databento (and Tardis if applicable) in unit/integration tests that currently patch the client. **Use context7** for Databento SDK and VCR when implementing.
 - **instruments-service**: Where it uses CCXT ([ccxt_service.py](instruments-service/instruments_service/utils/ccxt_service.py)) or composes UMI DeFi adapters, use api-contracts schemas for any raw response handling; add VCR in tests that hit CCXT or The Graph. **Use context7** for CCXT and The Graph when touching response parsing.
-- **market-data-processing-service** / **execution-services**: Prefer using only UMI/UOI; add schema usage or VCR only if they have code paths that parse raw Databento/Tardis/CCXT/Graph responses. When adding, **use context7** for the relevant API/client.
+- **market-data-processing-service** / **execution-service**: Prefer using only UMI/UOI; add schema usage or VCR only if they have code paths that parse raw Databento/Tardis/CCXT/Graph responses. When adding, **use context7** for the relevant API/client.
 
 ---
 
@@ -416,7 +416,7 @@ Use **Context7** for Pydantic v2 (validation, model_config, Field), VCR.py (cass
 | **market-tick-data-handler**         | Use Databento schemas at response handling; add VCR for Databento (and Tardis) in tests.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **market-data-processing-service**   | Optional: adopt in tests or where raw API shapes are parsed.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **instruments-service**              | Adopt schemas where CCXT or The Graph responses are parsed; add VCR in tests.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **execution-services**               | Adopt in tests or thin wrappers if they touch raw responses.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **execution-service**               | Adopt in tests or thin wrappers if they touch raw responses.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **strategy-service**                 | Skip unless it gains UMI/UOI or direct exchange/market data usage.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 

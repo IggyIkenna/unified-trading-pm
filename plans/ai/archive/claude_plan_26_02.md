@@ -121,7 +121,7 @@ TIER 4 — Services (uses Tier 0–3)
   ml-training-service
   ml-inference-service         (bug fix: predictions path corrected)
   strategy-service
-  execution-services
+  execution-service
   risk-service
   position-balance-monitor
   pnl-attribution-service
@@ -856,15 +856,15 @@ Part A: UFC Feature Service Base
     FeatureCalculatorRegistry, BaseFeatureCalculator, BaseFeatureService, FeatureModeHandler
 
 Part B: UTEI Order Management — move OMS protocols here
-  If UnifiedOrderManager, OrderTracker, SmartOrderRouter currently live in execution-services/
+  If UnifiedOrderManager, OrderTracker, SmartOrderRouter currently live in execution-service/
   (service repo) rather than the UTEI library:
-    Read execution-services to confirm where they are defined.
+    Read execution-service to confirm where they are defined.
     Create unified-trade-execution-interface/unified_trade_execution_interface/oms/:
       __init__.py
       protocols.py    ← UnifiedOrderManager(Protocol): submit_order, cancel_order, amend_order
       tracker.py      ← OrderTracker: in-memory order state machine (NEW/PENDING/FILLED/CANCELLED)
       router.py       ← SmartOrderRouter(Protocol): route_order(order) -> VenueTarget
-    Delete originals from execution-services/ once UTEI versions are added.
+    Delete originals from execution-service/ once UTEI versions are added.
     Add to UTEI __init__.py: UnifiedOrderManager, OrderTracker, SmartOrderRouter
 
 Part C: Codex TIER-ARCHITECTURE.md
@@ -1095,9 +1095,9 @@ ml-inference-service ADDITIONAL (predictions path bug fix):
   Step 5 — Wire get_reader("ml_models") to load the model.
 
 ────────────────────────────────────────────────────────────────
-AGENT 12 — strategy/risk/position/pnl hardening + execution-services P1 + cross-cutting rollouts
+AGENT 12 — strategy/risk/position/pnl hardening + execution-service P1 + cross-cutting rollouts
 Touches: strategy-service/, risk-service/, position-balance-monitor/, pnl-attribution-service/,
-         execution-services/; PLUS GracefulShutdownHandler + BaseDependencyChecker rollout to
+         execution-service/; PLUS GracefulShutdownHandler + BaseDependencyChecker rollout to
          any services still missing them
 ────────────────────────────────────────────────────────────────
 
@@ -1126,11 +1126,11 @@ pnl-attribution-service:
   Step 3 — Wire get_writer("pnl_attribution") for output.
   Step 4 — Wire DataCompletionChecker.
 
-execution-services Phase 1:
+execution-service Phase 1:
   Step 1 — Fix P0 hardcoded project ID: find any `"central-element-323112"` in source.
            Replace with config.gcp_project_id.
   Step 2 — Wire ServiceCLI, BaseModeHandler (live mode).
-  Step 3 — OMS protocols: ensure execution-services imports UnifiedOrderManager, OrderTracker,
+  Step 3 — OMS protocols: ensure execution-service imports UnifiedOrderManager, OrderTracker,
            SmartOrderRouter from unified_trade_execution_interface (Agent 6 built these).
            Delete any local duplicates.
 

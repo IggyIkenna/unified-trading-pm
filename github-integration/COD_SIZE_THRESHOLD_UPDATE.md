@@ -102,8 +102,8 @@ than closing.
 
 Files still needing refactoring (>1500 lines):
 
-- `execution-services/visualizer-ui/backend/instruction_api.py` (1317 lines)
-- `execution-services/visualizer-api/app/services/backtest_service.py` (3029 lines)
+- `execution-service/visualizer-ui/backend/instruction_api.py` (1317 lines)
+- `execution-service/visualizer-api/app/services/backtest_service.py` (3029 lines)
 
 ## Usage
 

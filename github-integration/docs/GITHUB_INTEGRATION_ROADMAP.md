@@ -310,7 +310,7 @@ Stage 4 validation includes ALL items from 15 service checklists:
 **Core Services:**
 
 - `checklist.unified-trading-services.yaml`
-- `checklist.execution-services.yaml`
+- `checklist.execution-service.yaml`
 - `checklist.strategy-service.yaml`
 
 **Data Pipeline Services:**

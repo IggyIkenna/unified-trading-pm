@@ -12,12 +12,12 @@ from typing import Dict, List
 
 # UI repositories
 UI_REPOS = [
-    "backtest-ui",
+    "execution-analytics-ui",
     "batch-audit-ui", 
     "client-reporting-ui",
     "live-health-monitor-ui",
     "logs-dashboard-ui",
-    "ml-deployment-ui",
+    "ml-training-ui",
     "onboarding-ui",
     "trading-analytics-ui"
 ]
@@ -199,10 +199,10 @@ def check_embedded_uis(workspace_path: Path) -> List[str]:
     """Check for embedded UIs (package.json in subdirectories)."""
     embedded_uis = []
     
-    # Check execution-services/visualizer-ui/
-    execution_services_ui = workspace_path / "execution-services" / "visualizer-ui"
-    if (execution_services_ui / "package.json").exists():
-        embedded_uis.append("execution-services/visualizer-ui")
+    # Check execution-service/visualizer-ui/
+    execution_service_ui = workspace_path / "execution-service" / "visualizer-ui"
+    if (execution_service_ui / "package.json").exists():
+        embedded_uis.append("execution-service/visualizer-ui")
     
     # Check unified-trading-deployment-v3/ui/
     deployment_v2_ui = workspace_path / "unified-trading-deployment-v3" / "ui"

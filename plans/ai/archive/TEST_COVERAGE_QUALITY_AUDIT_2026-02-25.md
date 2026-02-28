@@ -67,7 +67,7 @@
 | features-calendar-service | 3 collection errors |
 | ml-training-service | 52 collection errors |
 | ml-inference-service | 3 collection errors |
-| execution-services | ImportError: MarketDataDomainClient |
+| execution-service | ImportError: MarketDataDomainClient |
 | unified-trading-deployment-v3 | `setup_events()` missing 2 required positional arguments |
 | matching-engine-library | ImportError: cannot import AMMCalculator |
 

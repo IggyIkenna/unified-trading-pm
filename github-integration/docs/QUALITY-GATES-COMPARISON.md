@@ -21,7 +21,7 @@
 | **strategy-service**               | `pytest tests/unit/ --timeout=60`         | `pytest tests/integration/ --timeout=120` + filter  | `pytest tests/e2e/ --timeout=180`         | ❌ Sequential      |
 | **instruments-service**            | `pytest tests/unit/ --timeout=60`         | `pytest tests/integration/ --timeout=120` + ignores | `pytest tests/e2e/ --timeout=180`         | ❌ Sequential      |
 | **market-data-processing-service** | `pytest tests/unit/ --timeout=60 -n auto` | `pytest tests/integration/ --timeout=120 -n auto`   | `pytest tests/e2e/ --timeout=180 -n auto` | ✅ **Parallel**    |
-| **execution-services**             | `pytest tests/unit/` (NO timeout)         | `pytest tests/integration/` + filter                | `pytest tests/e2e/` (NO timeout)          | ❌ Sequential      |
+| **execution-service**             | `pytest tests/unit/` (NO timeout)         | `pytest tests/integration/` + filter                | `pytest tests/e2e/` (NO timeout)          | ❌ Sequential      |
 
 ---
 
@@ -63,7 +63,7 @@
 --timeout=180  # E2E tests (3 min)
 ```
 
-**execution-services** has **NO timeouts**:
+**execution-service** has **NO timeouts**:
 
 ```bash
 python -m pytest tests/unit/ -v --tb=short
@@ -89,7 +89,7 @@ Different repos skip different test categories based on their needs:
 --ignore=tests/integration/test_performance.py \
 -k "not api and not live and not download"
 
-# execution-services
+# execution-service
 -k "not api and not live and not download" \
 -m "not docker_only"
 ```
@@ -109,7 +109,7 @@ env:
   CLOUD_MOCK_MODE: "true"
   GCP_PROJECT_ID: "test-project"
   # Some also add:
-  GCP_PROJECT_ID: "mock-project" # execution-services
+  GCP_PROJECT_ID: "mock-project" # execution-service
 ```
 
 **Consistent** — no issues here.
@@ -131,7 +131,7 @@ env:
 1. **Inconsistent parallelization**:
    - Only `market-data-processing-service` uses `-n auto`
    - Other repos could be 40-60% faster with parallel testing
-2. **Missing timeouts** in `execution-services`:
+2. **Missing timeouts** in `execution-service`:
    - Risk of hanging tests blocking CI
 
 3. **No coverage reporting**:
@@ -167,7 +167,7 @@ env:
   - unified-trading-deployment-v2    ✅ -n auto
 
 ❌ NEEDS pytest-xdist (1 repo):
-  - execution-services               ❌ No pytest-xdist
+  - execution-service               ❌ No pytest-xdist
 ```
 
 **Action:** Add `-n auto` to all repos that have pytest-xdist:
@@ -183,10 +183,10 @@ env:
 
 **Risk:** Tests must be isolated (no shared state, file locks, or race conditions)
 
-### 2. Add Timeouts to execution-services (Recommended)
+### 2. Add Timeouts to execution-service (Recommended)
 
 ```yaml
-# execution-services/.github/workflows/quality-gates.yml
+# execution-service/.github/workflows/quality-gates.yml
 - name: Run unit tests
   run: |
     python -m pytest tests/unit/ -v --tb=short --timeout=60
@@ -307,7 +307,7 @@ bb2d953 Architectural standardization: Python 3.13 + UCS base + uv + quality gat
 ### High Priority
 
 - ✅ Fix workflow syntax errors (DONE)
-- [ ] Add timeouts to `execution-services`
+- [ ] Add timeouts to `execution-service`
 
 ### Medium Priority
 

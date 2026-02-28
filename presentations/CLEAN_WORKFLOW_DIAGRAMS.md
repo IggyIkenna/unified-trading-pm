@@ -273,7 +273,7 @@ flowchart TD
     subgraph Projects["PROJECTS POPULATED"]
         CODProj["COD Project<br/>Filter: label:cod"]
         BugProj["Bugs Project<br/>Filter: label:bug"]
-        ExecProj["Execution Project<br/>Filter: repo:execution-services<br/>-label:cod"]
+        ExecProj["Execution Project<br/>Filter: repo:execution-service<br/>-label:cod"]
         StratProj["Strategy Project<br/>Filter: repo:strategy-service<br/>-label:cod"]
     end
 

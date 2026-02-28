@@ -149,7 +149,7 @@ Create [.cursor/mcp.json](file:///Users/ikennaigboaka/Documents/repos/unified-tr
 9. ml-training-service
 10. ml-inference-service
 11. strategy-service
-12. execution-services
+12. execution-service
 13. risk-and-exposure-service
 14. position-balance-monitor-service
 

@@ -30,7 +30,7 @@ todos:
     content: Create features-sports-service with 19 feature calculators, time horizons (T-24h, T-60m, T-0, HT), batch + live modes
     status: pending
   - id: augment-services-sports
-    content: "Augment 6 services for SPORTS asset class: instruments-service, market-data-processing-service, ml-training-service, ml-inference-service, strategy-service, execution-services"
+    content: "Augment 6 services for SPORTS asset class: instruments-service, market-data-processing-service, ml-training-service, ml-inference-service, strategy-service, execution-service"
     status: pending
   - id: ui-logs-dashboard
     content: "Build logs-dashboard-ui: Real-time log aggregation with Cloud Logging API integration"
@@ -39,7 +39,7 @@ todos:
     content: "Build batch-audit-ui: Batch run auditing with GCS lifecycle events and BigQuery integration"
     status: completed
   - id: ui-ml-deployment
-    content: "Build ml-deployment-ui: ML model deployment management with A/B testing support"
+    content: "Build ml-training-ui: ML model deployment management with A/B testing support"
     status: completed
   - id: ui-trading-analytics
     content: "Build trading-analytics-ui: Live trading performance analytics with equity curve, Sharpe ratio, drawdown charts"
@@ -51,7 +51,7 @@ todos:
     content: "Build client-reporting-ui: Client-facing performance reports with PDF generation"
     status: completed
   - id: augment-uis-sports
-    content: "Augment 3 existing UIs for SPORTS: Add asset_class filter and sports-specific views to strategy-service/frontend, execution-services/visualizer-ui, unified-trading-deployment-v3/ui"
+    content: "Augment 3 existing UIs for SPORTS: Add asset_class filter and sports-specific views to strategy-service/frontend, execution-service/visualizer-ui, unified-trading-deployment-v3/ui"
     status: pending
   - id: docs-readmes
     content: "Create missing READMEs: 01-domain/README.md, 02-data/README.md, 05-infrastructure/live/README.md"
@@ -120,7 +120,7 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
 - **5 unified libraries** completion (2 at 0%, 2 at ~95-98% missing, 1 at 60% missing)
 - **19+ venue adapters** for market and order interfaces (currently 1 partial)
 - **Sports integration** (migrate existing sports-betting-services + create features-sports-service)
-- **6+ UI services** (batch-audit-ui, logs-dashboard-ui, ml-deployment-ui, trading-analytics-ui, settlement-ui, client-reporting-ui)
+- **6+ UI services** (batch-audit-ui, logs-dashboard-ui, ml-training-ui, trading-analytics-ui, settlement-ui, client-reporting-ui)
 - **Documentation gaps** (READMEs, live per-service docs, integration guides)
 
 ---
@@ -322,7 +322,7 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
   - Real-time volatility calculations
   - WebSocket orderbook subscriptions for options
 6. **strategy-service** (batch ✅, live ⏳)
-  - Live instruction emission (stream to execution-services)
+  - Live instruction emission (stream to execution-service)
   - Real-time strategy evaluation
   - Position-aware signal generation
 
@@ -351,13 +351,13 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
   - **Batch mode**: Daily reconciliation from fills + orderbook snapshots
   - **Live mode**: Event-driven reconciliation (on fill events)
   - **Output**: `gs://positions/`, `gs://balances/`
-  - **Integration**: Subscribe to fill events from execution-services
+  - **Integration**: Subscribe to fill events from execution-service
 2. **risk-and-exposure-service** (skeleton only)
   - **Purpose**: Pre-trade risk checks (<100ms)
   - **Batch mode**: Risk report generation
   - **Live mode**: Real-time order validation
   - **Checks**: Position limits, concentration limits, VaR, drawdown, margin
-  - **Integration**: Called by execution-services before order placement
+  - **Integration**: Called by execution-service before order placement
 3. **pnl-attribution-service** (not found in workspace)
   - **Purpose**: P&L attribution (alpha vs beta, per strategy, per instrument)
   - **Batch mode**: Daily P&L reports
@@ -488,7 +488,7 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
   - Add value betting (positive EV vs sharp odds)
   - Add Kelly criterion staking
   - Add sports backtesting logic (stake sizing, commission, P&L)
-6. **execution-services** (add sports venues)
+6. **execution-service** (add sports venues)
   - Add Betfair Exchange API client
   - Add Pinnacle Line API client
   - Add Polymarket CLOB API client
@@ -521,7 +521,7 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
   - **Features**: View batch runs, success/failure rates, data quality checks, rerun failed batches
   - **Stack**: React + TypeScript + Vite
   - **Integration**: GCS (read lifecycle events), BigQuery (aggregate stats)
-3. **ml-deployment-ui** (MEDIUM PRIORITY)
+3. **ml-training-ui** (MEDIUM PRIORITY)
   - **Purpose**: ML model deployment management
   - **Features**: View models, deploy to inference service, A/B testing, model performance metrics
   - **Stack**: React + TypeScript + Vite
@@ -576,7 +576,7 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
   - Add `asset_class` dropdown (CRYPTO, SPORTS, DEFI, TRADFI)
   - Add sports-specific inputs (league, season, bookmaker)
   - Add sports-specific results view (ROI, CLV, Brier score)
-2. **execution-services/visualizer-ui** (backtest analysis)
+2. **execution-service/visualizer-ui** (backtest analysis)
   - Add `asset_class` filter
   - Add sports-specific charts (odds movement, stake sizing, bookmaker comparison)
 3. **unified-trading-deployment-v3/ui** (deployment dashboard)
@@ -737,7 +737,7 @@ Based on comprehensive codebase analysis, the unified trading system has **35 do
 2. Pinnacle
 3. Polymarket
 
-**Implementation**: See Phase 3.3 (augment execution-services)
+**Implementation**: See Phase 3.3 (augment execution-service)
 
 ---
 

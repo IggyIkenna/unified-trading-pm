@@ -29,7 +29,7 @@ third-party SDK imports, it has not fully migrated. Delete the duplicate — don
 | pnl-attribution-service | ~1,036 | ✅ | ✅ | ✅ | ✅ | ✅ Done |
 | features-volatility-service | ~4,331 | ✅ | ✅ | ✅ | ✅ | ✅ Done |
 | features-delta-one-service | ~12,628 | ✅ | ✅ | ✅ | ✅ | ✅ Done |
-| execution-services | ~122,641 | ✅ | ✅ | ✅ | ✅ | ✅ Done 2026-02-26 |
+| execution-service | ~122,641 | ✅ | ✅ | ✅ | ✅ | ✅ Done 2026-02-26 |
 | market-tick-data-handler | ~72,911 | ✅ | ✅ | ✅ | ✅ | ✅ Done 2026-02-26 |
 | instruments-service | ~28,269 | ✅ | ✅ | ✅ | ✅ | ✅ Done 2026-02-26 |
 | strategy-service | ~23,674 | ✅ | ✅ | ✅ | ✅ | ✅ Done 2026-02-26 |
@@ -45,7 +45,7 @@ third-party SDK imports, it has not fully migrated. Delete the duplicate — don
 
 > All services completed 2026-02-26. Details below for reference.
 
-### 1. execution-services (~122,641 lines) ✅ DONE 2026-02-26
+### 1. execution-service (~122,641 lines) ✅ DONE 2026-02-26
 **Priority: P0 — largest service, multiple duplicate implementations**
 
 - [x] Deleted `cli/argument_parser.py` — orphaned (zero callers)
@@ -129,7 +129,7 @@ third-party SDK imports, it has not fully migrated. Delete the duplicate — don
 
 | Service | Completed |
 |---|---|
-| execution-services | ✅ 2026-02-26 |
+| execution-service | ✅ 2026-02-26 |
 | market-tick-data-handler | ✅ 2026-02-26 |
 | instruments-service | ✅ 2026-02-26 |
 | strategy-service | ✅ 2026-02-26 |
@@ -153,10 +153,10 @@ third-party SDK imports, it has not fully migrated. Delete the duplicate — don
 | What | Lines | Service |
 |---|---|---|
 | `cli/parser.py` (pure argparse module) | 657 | market-tick-data-handler |
-| `cli/argument_parser.py` (orphaned duplicate) | ~100 | execution-services |
-| `_find_credentials()` SA-JSON scanner | ~80 | execution-services |
+| `cli/argument_parser.py` (orphaned duplicate) | ~100 | execution-service |
+| `_find_credentials()` SA-JSON scanner | ~80 | execution-service |
 | All `GOOGLE_CLOUD_PROJECT` fallback chains | ~60 | multiple |
-| 3 hardcoded `central-element-323112` blocks | ~30 | execution-services |
+| 3 hardcoded `central-element-323112` blocks | ~30 | execution-service |
 | Backward-compat aliases (GCSStorageService etc.) | ~20 | strategy-service |
 | `get_db_connection_string()` (no callers) | ~40 | market-tick-data-handler |
 | os.getenv API key blocks | ~80 | market-tick-data-handler |
@@ -199,7 +199,7 @@ living inside services, embedded sub-services). Tracked in
 
 **Result**: ~30k → ~10k source lines (**~66% reduction**)
 
-### execution-services
+### execution-service
 
 | What removed | Lines |
 |---|---|
@@ -215,7 +215,7 @@ living inside services, embedded sub-services). Tracked in
 
 | Repo | Lines | Contents |
 |---|---|---|
-| execution-results-api | ~7,807 | Extracted from execution-services visualizer-api/ |
+| execution-results-api | ~7,807 | Extracted from execution-service visualizer-api/ |
 
 ### Libraries Enriched
 
@@ -227,7 +227,7 @@ living inside services, embedded sub-services). Tracked in
 
 ### Test Fixes Applied (2026-02-27)
 
-Fixed 13 test failures in execution-services caused by `signal→instruction` method renames
+Fixed 13 test failures in execution-service caused by `signal→instruction` method renames
 from the `backtest/ → engine/backtest/` migration:
 
 | Test file | Failures fixed | Root cause |

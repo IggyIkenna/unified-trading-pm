@@ -18,11 +18,11 @@ WORKSPACE_CONFIGS_DIR = WORKSPACE_ROOT / ".cursor" / "workspace-configs"
 
 # All service/library paths for extraPaths
 ALL_REPO_PATHS = [
-    "${workspaceFolder}/backtest-ui",
+    "${workspaceFolder}/execution-analytics-ui",
     "${workspaceFolder}/batch-audit-ui",
     "${workspaceFolder}/client-reporting-ui",
     "${workspaceFolder}/execution-algo-library",
-    "${workspaceFolder}/execution-services",
+    "${workspaceFolder}/execution-service",
     "${workspaceFolder}/features-calendar-service",
     "${workspaceFolder}/features-delta-one-service",
     "${workspaceFolder}/features-onchain-service",
@@ -32,7 +32,7 @@ ALL_REPO_PATHS = [
     "${workspaceFolder}/logs-dashboard-ui",
     "${workspaceFolder}/market-data-processing-service",
     "${workspaceFolder}/market-tick-data-handler",
-    "${workspaceFolder}/ml-deployment-ui",
+    "${workspaceFolder}/ml-training-ui",
     "${workspaceFolder}/ml-inference-service",
     "${workspaceFolder}/ml-training-service",
     "${workspaceFolder}/pnl-attribution-service",

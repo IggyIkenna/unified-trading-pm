@@ -109,7 +109,7 @@ python scripts/one-time/enable-codex-compliance-blocking.py
 cd unified-trading-deployment-v2
 
 bash git-quickmerge.sh "Enable codex compliance blocking for cleanup" --all --files \
-  "execution-services/scripts/quality-gates.sh" \
+  "execution-service/scripts/quality-gates.sh" \
   "strategy-service/scripts/quality-gates.sh" \
   "instruments-service/scripts/quality-gates.sh" \
   "unified-trading-services/scripts/quality-gates.sh" \

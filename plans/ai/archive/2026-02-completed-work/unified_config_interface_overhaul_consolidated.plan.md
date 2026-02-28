@@ -218,12 +218,12 @@ When config has **dynamic params** (e.g. instrument subscriptions, take_profit, 
 
 ### 8.1 Grid config dimension (execution, strategy, ML)
 
-For **execution-services**, **strategy-service**, and **ml-training-service**:
+For **execution-service**, **strategy-service**, and **ml-training-service**:
 
 - **Config as shard dimension** — Provide grid of configs linked to each job. User defines path type via CLI: cloud (`gs://`) or local (`file://` or path). Each config = one shard (or config × date = shard).
-- **UTD sharding** — Already in place: `sharding.execution-services.yaml` has `config` dimension (gcs_dynamic), `sharding.strategy-service.yaml` has `config` (gcs_dynamic), `sharding.ml-training-service.yaml` has `config` (gcs_dynamic). UTD lists configs from GCS and assigns one per shard.
+- **UTD sharding** — Already in place: `sharding.execution-service.yaml` has `config` dimension (gcs_dynamic), `sharding.strategy-service.yaml` has `config` (gcs_dynamic), `sharding.ml-training-service.yaml` has `config` (gcs_dynamic). UTD lists configs from GCS and assigns one per shard.
 - **Link to UCI** — Ensure GridConfigGenerator (execution), strategy grid, ML grid generators use UCI for validation and path conventions. They write to domain buckets; UTD picks up. May need shuffling to align with config-interface patterns.
-- **Each service houses its own grid config generator** — execution-services has GridConfigGenerator; strategy-service and ml-training-service have or need equivalent. Output to GCS; UTD reads via sharding config.
+- **Each service houses its own grid config generator** — execution-service has GridConfigGenerator; strategy-service and ml-training-service have or need equivalent. Output to GCS; UTD reads via sharding config.
 
 ### 8.2 Per-day config override (all services)
 
@@ -270,7 +270,7 @@ Config changes fall into two categories:
 
 | Type                       | Services                                                                                | Purpose                                                                                                          | Storage                                                                                                        | Example                                                                  |
 | -------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Mass/iteration configs** | strategy-service, execution-services, ml-training-service                               | Grid search, param optimization — many configs per run, variation-based                                          | `gs://execution-store-{cat}-{proj}/configs/V1/...`, `gs://strategy-store-.../configs/`, `gs://ml-configs-.../` | GridConfigGenerator (execution), strategy param grid, ML hyperparam grid |
+| **Mass/iteration configs** | strategy-service, execution-service, ml-training-service                               | Grid search, param optimization — many configs per run, variation-based                                          | `gs://execution-store-{cat}-{proj}/configs/V1/...`, `gs://strategy-store-.../configs/`, `gs://ml-configs-.../` | GridConfigGenerator (execution), strategy param grid, ML hyperparam grid |
 | **Long-lived configs**     | instruments-service, market-tick-data-handler, market-data-processing, features-*, etc. | Service runtime config — changeable by user, evolves over time (new instruments, venues) but NOT variation-based | `gs://config-store-{proj}/{service}/`                                                                          | max_workers, log_level, venue list, instrument subscriptions             |
 
 
@@ -292,7 +292,7 @@ Config changes fall into two categories:
 
 **Mass/iteration configs** (execution-store, strategy-store, ml-configs):
 
-- **Scripts:** GridConfigGenerator (execution-services), strategy grid scripts, ML grid scripts — generate and upload configs directly to domain buckets.
+- **Scripts:** GridConfigGenerator (execution-service), strategy grid scripts, ML grid scripts — generate and upload configs directly to domain buckets.
 - **UI:** Visualizer ConfigGenerator page calls GridConfigGenerator API → generates configs → uploads to execution-store. UI overlays the script.
 
 ---
@@ -416,11 +416,11 @@ For each phase (or the full overhaul), success means:
 
 ### 1.2 Fix broken imports
 
-- [execution-services/execution_services/backtest/preflight.py](execution-services/execution_services/backtest/preflight.py)
-- [execution-services/visualizer-api/app/services/data_service.py](execution-services/visualizer-api/app/services/data_service.py)
-- [execution-services/visualizer-ui/backend/instruction_api.py](execution-services/visualizer-ui/backend/instruction_api.py)
-- [execution-services/configs/ssot/validate_configs.py](execution-services/configs/ssot/validate_configs.py)
-- [execution-services/execution_services/backtest/engine.py](execution-services/execution_services/backtest/engine.py)
+- [execution-service/execution_service/backtest/preflight.py](execution-service/execution_service/backtest/preflight.py)
+- [execution-service/visualizer-api/app/services/data_service.py](execution-service/visualizer-api/app/services/data_service.py)
+- [execution-service/visualizer-ui/backend/instruction_api.py](execution-service/visualizer-ui/backend/instruction_api.py)
+- [execution-service/configs/ssot/validate_configs.py](execution-service/configs/ssot/validate_configs.py)
+- [execution-service/execution_service/backtest/engine.py](execution-service/execution_service/backtest/engine.py)
 
 ---
 
@@ -540,7 +540,7 @@ Single config per replay job: `--config-schema-version 1.0` loads one config at 
 
 ### 5.4 Grid config dimension + UCI linkage
 
-- **execution-services:** Link GridConfigGenerator and ConfigLoader to UCI validation. Ensure sharding `config` dimension supports cloud (`gs://`) and local paths (CLI `--config-gcs` or `--config-path`). UTD `sharding.execution-services.yaml` already has `config` (gcs_dynamic); add local path support if needed.
+- **execution-service:** Link GridConfigGenerator and ConfigLoader to UCI validation. Ensure sharding `config` dimension supports cloud (`gs://`) and local paths (CLI `--config-gcs` or `--config-path`). UTD `sharding.execution-service.yaml` already has `config` (gcs_dynamic); add local path support if needed.
 - **strategy-service:** Ensure grid config generator exists or complete; write to `gs://strategy-store-.../configs_grid/`; UTD picks up via `sharding.strategy-service.yaml`. Link to UCI.
 - **ml-training-service:** Same pattern; `sharding.ml-training-service.yaml` has `config` (gcs_dynamic). Link grid generator to UCI.
 - **Per-day override:** Add optional `config_overrides/` or `--config-override-day` mechanism so services can load different config per date. Generate override scripts for testing config reload dynamics (e.g. weekends).
@@ -641,7 +641,7 @@ Document all config interface changes and update UTD v2 and codex. Execute after
 
 **Decision: Option A — Single config-management-service.** One backend + UI covering both client/strategy/API keys AND service-level config. config-ui.md and UTD ui/pages/config/ merge into one service.
 
-**Migration:** Much of this exists (GridConfigGenerator, sharding configs, visualizer ConfigGenerator). Plan: audit execution-services, strategy-service, ml-training-service; link grid generators to UCI; ensure UTD sharding picks up configs; add per-day override dimension. See relevant code: `sharding.execution-services.yaml`, `sharding.strategy-service.yaml`, `sharding.ml-training-service.yaml`, `execution_services/config/grid_generator.py`, `visualizer-ui/instruction_api.py` (config-generator), `strategy_service/cli/handlers/batch_handler.py` (config_gcs).
+**Migration:** Much of this exists (GridConfigGenerator, sharding configs, visualizer ConfigGenerator). Plan: audit execution-service, strategy-service, ml-training-service; link grid generators to UCI; ensure UTD sharding picks up configs; add per-day override dimension. See relevant code: `sharding.execution-service.yaml`, `sharding.strategy-service.yaml`, `sharding.ml-training-service.yaml`, `execution_service/config/grid_generator.py`, `visualizer-ui/instruction_api.py` (config-generator), `strategy_service/cli/handlers/batch_handler.py` (config_gcs).
 
 ---
 
@@ -699,7 +699,7 @@ Implements Section 12. Can run after Phase 8 (UCI has unified-events-interface d
 | **unified-trading-codex**         | Modify: `05-infrastructure/unified-libraries/config-interface.md`, `02-data/bucket-naming-and-config.md`, `06-coding-standards/README.md`, `qa-sessions/UNIFIED_CONFIG_OVERVIEW.md`, `04-architecture/batch-live-symmetry.md`; Create: `05-infrastructure/config-management.md`                                                                                               |
 | **unified-domain-client**       | Modify: `schemas/config_schema.py` (re-export), `pyproject.toml`                                                                                                                                                                                                                                                                                                              |
 | **unified-trading-services**        | Modify: `core/config.py` (re-export), `__init__.py`, `pyproject.toml`                                                                                                                                                                                                                                                                                                         |
-| **execution-services**            | Modify: `backtest/preflight.py`, `backtest/engine.py`, `visualizer-api/`, `visualizer-ui/`, `configs/ssot/validate_configs.py`                                                                                                                                                                                                                                                |
+| **execution-service**            | Modify: `backtest/preflight.py`, `backtest/engine.py`, `visualizer-api/`, `visualizer-ui/`, `configs/ssot/validate_configs.py`                                                                                                                                                                                                                                                |
 | **All 14 services**               | Modify: each service's `config.py` — import from UCI; Add/update: `tests/unit/test_config_interface.py` — assert config uses UCI correctly                                                                                                                                                                                                                                    |
 
 

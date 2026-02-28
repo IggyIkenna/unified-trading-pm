@@ -47,13 +47,13 @@
 - `clock.py`: Clock Protocol, MockClock
 - `mocks.py`: Factory functions
 
-**Status**: Exists but execution-services tests still import from `nautilus_trader` directly. Can be used for algorithm unit tests.
+**Status**: Exists but execution-service tests still import from `nautilus_trader` directly. Can be used for algorithm unit tests.
 
 ### 2. unified-trade-execution-interface
 
 - `BaseOrderAdapter`: place_order(), cancel_order(), get_order_status()
 - `CanonicalOrder`, `ExecutionResult`, `ExecutionStatus`
-- execution-services has `OrderAdapter` that delegates to this
+- execution-service has `OrderAdapter` that delegates to this
 
 **Status**: Ready for live order submission. Not used by backtest (backtest uses Nautilus's internal submit_order).
 
@@ -63,11 +63,11 @@
 - **Schemas**: ChildOrder, AlgoConfig, TWAPConfig, VWAPConfig, etc.
 - **Base**: ExecutionAlgorithm (async execute(), get_child_orders())
 
-**Status**: Pure Python, zero Nautilus. execution-services already uses `AdaptiveTWAPCalculator` via `algo_library_adapter`. Can expand usage.
+**Status**: Pure Python, zero Nautilus. execution-service already uses `AdaptiveTWAPCalculator` via `algo_library_adapter`. Can expand usage.
 
 ### 4. Our Own Order Types, Position Tracking
 
-- execution-services has models for instructions, operations
+- execution-service has models for instructions, operations
 - unified-trade-execution-interface has CanonicalOrder
 
 ---
@@ -78,10 +78,10 @@
 
 **Remove**: `ExecAlgorithm` base class, Nautilus algorithm configs
 
-**Add**: Our own `BaseExecutionAlgorithm` in execution-services (or execution-algo-library)
+**Add**: Our own `BaseExecutionAlgorithm` in execution-service (or execution-algo-library)
 
 ```python
-# execution_services/algorithms/base.py
+# execution_service/algorithms/base.py
 from execution_algo_library import ChildOrder
 
 class ExecutionContext:

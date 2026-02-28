@@ -85,7 +85,7 @@ notes: |
 
 Test script on:
 
-- `execution-services`
+- `execution-service`
 - `instruments-service`
 - `strategy-service`
 - `ml-training-service`

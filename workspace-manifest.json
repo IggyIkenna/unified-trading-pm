@@ -1589,7 +1589,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "merge_level": 6,
-      "status": "planned",
+      "status": "SCAFFOLDED",
       "version": "0.1.0",
       "description": "Deployment orchestration engine — Python package (orchestrator, catalog, config_loader, backends), Terraform, configs. Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
@@ -1597,8 +1597,9 @@
         "unified-config-interface"
       ],
       "completion_path": "cefi",
-      "notes": "Extracted from unified-trading-deployment-v3 four-way split. 06-coding-standards/integration-testing-layers.md",
-      "ci_status": "NO_QG",
+      "notes": "Extracted from unified-trading-deployment-v3 four-way split. Scaffolded 2026-02-28. 06-coding-standards/integration-testing-layers.md",
+      "ci_status": "SCAFFOLDED",
+      "github_url": "https://github.com/IggyIkenna/deployment-engine",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1648,20 +1649,20 @@
       "type": "test-harness",
       "arch_tier": "integration",
       "merge_level": 10,
-      "status": "planned",
+      "status": "scaffolded",
       "version": "0.1.0",
-      "description": "Layer 3a (fast smoke) + Layer 3b (full pipeline smoke). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox.",
+      "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports — HTTP/GCS/PubSub only.",
       "dependencies": [
         "deployment-api",
         "unified-api-contracts",
         "unified-internal-contracts"
       ],
       "completion_path": "cefi",
-      "notes": "Standalone repo per new-repo-setup.md. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md",
-      "ci_status": "NO_QG",
+      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md",
+      "ci_status": "SCAFFOLDED",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
+      "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "NO_QG"
     },
@@ -2224,7 +2225,7 @@
         "unified-defi-execution-interface (optional DeFi)",
         "strategy-ui (optional)",
         "settlement-ui (optional)",
-        "backtest-ui (optional)",
+        "execution-analytics-ui (optional)",
         "batch-audit-ui (optional)"
       ]
     },

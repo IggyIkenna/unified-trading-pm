@@ -33,7 +33,7 @@ Do a quick sanity check; do not redo:
 | ml-training-service | `train_phase1`, `train_phase2`, `train_phase3` | batch, live |
 | ml-inference-service | `infer` | batch, live |
 | strategy-service | `backtest`, `live_trade` | batch (backtest), live (live_trade) |
-| execution-services | `execute` | live only |
+| execution-service | `execute` | live only |
 | risk-and-exposure-service | `compute` | batch, live |
 | position-balance-monitor-service | `monitor` | batch, live |
 
@@ -45,7 +45,7 @@ For each assigned service:
 
 ### 1. CLI (Phase 1)
 
-- Add or normalize **--operation** (required, service-specific choices as above) and **--mode** (required, choices: `batch`, `live`; execution-services: `live` only).
+- Add or normalize **--operation** (required, service-specific choices as above) and **--mode** (required, choices: `batch`, `live`; execution-service: `live` only).
 - Batch: support `--start-date`, `--end-date` where applicable. Live: support `--interval` (e.g. minutes) where applicable.
 - In `cli/main.py` (or equivalent): dispatch by `args.operation` to the right handler; then run handler with `args.mode` (batch vs live). No duplicate logic: one code path using `args.operation` and `args.mode`.
 - If the service currently uses subparsers (e.g. `process`, `train`), refactor to flags: `--operation process` / `--operation train_phase1` etc., and `--mode batch` or `--mode live`.
@@ -78,6 +78,6 @@ For each assigned service:
 - **Agent 1**: market-data-processing-service, pnl-attribution-service, features-calendar-service  
 - **Agent 2**: features-delta-one-service, features-volatility-service, features-onchain-service  
 - **Agent 3**: ml-training-service, ml-inference-service, strategy-service  
-- **Agent 4**: execution-services, risk-and-exposure-service, position-balance-monitor-service  
+- **Agent 4**: execution-service, risk-and-exposure-service, position-balance-monitor-service  
 
 Each agent returns: for each service, (1) done / not done, (2) CLI and structure changes summary, (3) quality gates pass/fail and any remaining issues.
