@@ -32,7 +32,7 @@ overview: |
   |-------|-------|------|
   | Layer 0 — Contract alignment | unified-api-contracts, UMI, URDI | Phase 2 T0 STEP B (done) |
   | Layer 1 — Schema robustness  | Per service, tests/unit/test_schema_robustness.py | Folded into each tier STEP B |
-  | Layer 2 — Infra verification | deployment-engine/scripts/verify_infra.py → /infra/health | Post-deploy sandbox |
+  | Layer 2 — Infra verification | deployment-service/scripts/verify_infra.py → /infra/health | Post-deploy sandbox |
   | Layer 3a — Pipeline smoke    | system-integration-tests pytest -m smoke (<5 min) | After L2 passes |
   | Layer 3b — Full E2E          | system-integration-tests pytest -m full_e2e (15–30 min) | After L3a passes |
 
@@ -83,13 +83,13 @@ todos:
     content: "INTEGRATION LAYER 1 — SCHEMA ROBUSTNESS (per service, folded into each tier's STEP B): Each repo tests/unit/test_schema_robustness.py — required field missing → ValidationError; optional absent → passes; wrong type → fails. Written as part of STEP B at each tier for every repo that defines or consumes Pydantic schemas. No separate todos — folded into T4/T5/T6 STEP B work. Note: Layer 0 ran in Phase 2 T0 STEP B."
     status: pending
   - id: p3-integration-layer2
-    content: "INTEGRATION LAYER 2 — INFRASTRUCTURE VERIFICATION (post-deploy, NOT in quickmerge): Add verify_infra.py to deployment-engine/scripts/ (DONE in Phase 1 integration-layer2-infra-verify). Exposed as GET /infra/health in deployment-api. Tests: GCS buckets exist + IAM, PubSub topics + subscriptions, Secret Manager entries. Runs during post-refactor sandbox deploy. REQUIRES: deployment-engine extracted (Phase 1 STREAM B) + all tiers green."
+    content: "INTEGRATION LAYER 2 — INFRASTRUCTURE VERIFICATION (post-deploy, NOT in quickmerge): Add verify_infra.py to deployment-service/scripts/ (DONE in Phase 1 integration-layer2-infra-verify). Exposed as GET /infra/health in deployment-api. Tests: GCS buckets exist + IAM, PubSub topics + subscriptions, Secret Manager entries. Runs during post-refactor sandbox deploy. REQUIRES: deployment-service extracted (Phase 1 STREAM B) + all tiers green."
     status: pending
   - id: p3-integration-layer3
     content: "INTEGRATION LAYER 3 — PIPELINE SMOKE + E2E (system-integration-tests/ repo, post-deploy): Layer 3a (smoke, @pytest.mark.smoke, <5 min): happy path, one date, one venue, one instrument through full pipeline. Layer 3b (full, @pytest.mark.full_e2e, 15–30 min): corner cases, auth, multi-date, perf baseline. Sequential: 3a must pass before 3b. Zero Python imports from services — HTTP/GCS/PubSub interaction only. REQUIRES: system-integration-tests repo (Phase 1 STREAM B) + ALL tiers green + Layer 2 passes."
     status: pending
   - id: p3-postrefactor-sandbox-deploy
-    content: "POST-REFACTOR STEP 1 — SANDBOX DEPLOY: REQUIRES all T0–T6 green + final QG sweep done. postrefactor-sandbox-deploy — deploy all T4 services to GCP sandbox project via deployment-engine CLI. deployment-api must start cleanly on Cloud Run. Do not proceed to Layer 2 until deploy is stable."
+    content: "POST-REFACTOR STEP 1 — SANDBOX DEPLOY: REQUIRES all T0–T6 green + final QG sweep done. postrefactor-sandbox-deploy — deploy all T4 services to GCP sandbox project via deployment-service CLI. deployment-api must start cleanly on Cloud Run. Do not proceed to Layer 2 until deploy is stable."
     status: pending
   - id: p3-postrefactor-layer2-run
     content: "POST-REFACTOR STEP 2 — INFRASTRUCTURE VERIFY: REQUIRES sandbox deploy complete. postrefactor-layer2-run — run GET /infra/health on deployment-api. All checks must pass (buckets, topics, IAM, secrets). If Layer 2 fails: fix infrastructure before proceeding. DO NOT skip to Layer 3."
@@ -155,7 +155,7 @@ At every STEP A (connectivity audit) for each service/API/UI, verify no old name
 
 ## Phase 3 — Service Hardening & Integration Testing
 
-**REQUIRES:** Phase 1 complete (T0–T1 green, deployment structure split, system-integration-tests repo, deployment-engine extracted) AND Phase 2 complete (T2–T3 green, CI/CD live, event contracts validated, all library tiers passing D5).
+**REQUIRES:** Phase 1 complete (T0–T1 green, deployment structure split, system-integration-tests repo, deployment-service extracted) AND Phase 2 complete (T2–T3 green, CI/CD live, event contracts validated, all library tiers passing D5).
 
 ---
 

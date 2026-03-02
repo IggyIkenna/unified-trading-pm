@@ -168,7 +168,7 @@ status: pending
 content: "POST-REFACTOR: Wire T+1 recon output to MiFID/FCA reporting requirements. Map strategy T+1 to transaction reporting, execution T+1 to best execution (RTS 28)."
 status: pending
 - id: manifest-topo-levels-fixed
-content: "DONE: Fix manifest topologicalOrder: UDC to L3, deployment-engine/api to L5 (later revised to L6 in tier-restructure 2026-02-28). WORKSPACE_MANIFEST_DAG.svg rebuilt."
+content: "DONE: Fix manifest topologicalOrder: UDC to L3, deployment-service/api to L5 (later revised to L6 in tier-restructure 2026-02-28). WORKSPACE_MANIFEST_DAG.svg rebuilt."
 status: done
 - id: checklist-templates-all-types
 content: "DONE: Create checklist templates for all component types: checklist.template.service.yaml, checklist.template.api-service.yaml, checklist.template.ui.yaml, checklist.template.library.yaml"
@@ -294,12 +294,12 @@ content: "Refactor unified-trading-deployment-v3: extract config_service.py, add
 status: pending
 - id: deployment-v3-four-way-split
 content: >
-Split unified-trading-deployment-v3 into 4 repos (shared-config dissolved — schemas in AC/UIC, configs in deployment-engine):
-(1) deployment-engine/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract.
-(2) deployment-api/ — thin FastAPI (api/ from UTD V3); imports deployment-engine; GoogleOAuthMiddleware on write endpoints; port 8001.
+Split unified-trading-deployment-v3 into 4 repos (shared-config dissolved — schemas in AC/UIC, configs in deployment-service):
+(1) deployment-service/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract.
+(2) deployment-api/ — thin FastAPI (api/ from UTD V3); imports deployment-service; GoogleOAuthMiddleware on write endpoints; port 8001.
 (3) deployment-ui/ — React UI calling deployment-api; OAuth ADMIN scope for trigger buttons; SSE for status.
 (4) system-integration-tests/ — NEW repo (per new-repo-setup.md). Layer 3a (fast smoke) + Layer 3b (full pipeline smoke). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy.
-Layer 2 (infra verification) lives in deployment-engine/scripts/verify_infra.py — gates deployment success before Layer 3.
+Layer 2 (infra verification) lives in deployment-service/scripts/verify_infra.py — gates deployment success before Layer 3.
 SSOT: unified-trading-codex/06-coding-standards/integration-testing-layers.md
 status: pending
 - id: auth-ibkr-corp-actions
@@ -652,7 +652,7 @@ isProject: true
 
 | Phase       | File                                           | Scope                                                                                                                                              | Done When                                                                                                                          |
 | ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase 1** | `phase1_foundation_prep.plan.md`               | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit                             | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-engine/api/ui/system-integration-tests repos exist |
+| **Phase 1** | `phase1_foundation_prep.plan.md`               | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit                             | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-service/api/ui/system-integration-tests repos exist |
 | **Phase 2** | `phase2_library_tier_hardening.plan.md`        | Global violation sweep, T0→T1→T2→T3 with Step A→B→C→D1→D5 per tier                                                                                 | All T0–T3 repos pass full quickmerge (D5) with act simulation                                                                      |
 | **Phase 3** | `phase3_service_hardening_integration.plan.md` | T4 services (DAG pipeline order), T5 API services, T6 UIs, integration layers (L1–L3), post-refactor sandbox deploy + L2+L3a+L3b + declare healthy | All tiers green; L3b (full e2e) passes; versions bump to 1.0.0                                                                     |
 
@@ -791,12 +791,12 @@ MUST complete entirely before tier work starts. Runs in 3 parallel streams.
     [4 agents PARALLEL]
     arch-exec-services-visualizer-extract  — extract visualizer-ui + visualizer-api from exec-services
     arch-deployment-v3-ui-extract + deployment-v3-four-way-split
-                                           — split UTD V3 → deployment-engine + deployment-api + deployment-ui
-                                           (shared-config dissolved; configs in deployment-engine)
+                                           — split UTD V3 → deployment-service + deployment-api + deployment-ui
+                                           (shared-config dissolved; configs in deployment-service)
     ui-service-separation-audit-full       — audit all remaining services for embedded UI
     integration-system-integration-tests-repo — create system-integration-tests repo per new-repo-setup.md
   ── then [2 agents PARALLEL]:
-    integration-layer2-infra-verify       — add verify_infra.py to deployment-engine; gate deployment success
+    integration-layer2-infra-verify       — add verify_infra.py to deployment-service; gate deployment success
     integration-layer3-implement          — implement Layer 3a + 3b in system-integration-tests (sequential)
   ── then [1 agent]:
     hybrid-live-seam — implement/document hybrid live in-memory adapter seam for MDPS
@@ -1079,11 +1079,11 @@ Cursor rule: .cursor/rules/integration-testing-layers.mdc
     No new todos — folded into existing STEP B per-tier work.
 
   LAYER 2 — INFRASTRUCTURE VERIFICATION (runs post-deploy, NOT in quickmerge)
-    Location: deployment-engine/scripts/verify_infra.py → exposed as GET /infra/health in deployment-api
+    Location: deployment-service/scripts/verify_infra.py → exposed as GET /infra/health in deployment-api
     Tests: GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist
-    REQUIRES: deployment-engine extracted from UTD V3 (Phase 0 Stream B)
+    REQUIRES: deployment-service extracted from UTD V3 (Phase 0 Stream B)
     Todos:
-      integration-layer2-infra-verify — implement verify_infra.py in deployment-engine
+      integration-layer2-infra-verify — implement verify_infra.py in deployment-service
 
   LAYER 3 — PIPELINE SMOKE + E2E (runs post-deploy, after Layer 2 passes)
     Location: system-integration-tests/ (standalone repo, arch_tier: integration)
@@ -1105,13 +1105,13 @@ This is the first time the full system is validated end-to-end under the new arc
 Sequence (strictly ordered):
 
   1. DEPLOYMENT REFACTOR [Phase 0 Stream B, already scheduled]:
-     UTD V3 → deployment-engine + deployment-api + deployment-ui
+     UTD V3 → deployment-service + deployment-api + deployment-ui
      system-integration-tests repo created and scaffolded
      (The deployment refactor itself is NOT tested until this phase — it is built during
      Phase 0 Stream B but cannot be validated until all tiers are green.)
 
   2. DEPLOY TO SANDBOX:
-     Use deployment-engine CLI to deploy all T4 services to GCP sandbox project.
+     Use deployment-service CLI to deploy all T4 services to GCP sandbox project.
      deployment-api must start cleanly on Cloud Run.
 
   3. LAYER 2 — INFRASTRUCTURE VERIFY:
@@ -1133,7 +1133,7 @@ Sequence (strictly ordered):
      Merge staging → main. GitHub Action bumps versions to 1.0.0 (first stable).
 
   Todos (new):
-    postrefactor-sandbox-deploy       — deploy all services to sandbox via deployment-engine
+    postrefactor-sandbox-deploy       — deploy all services to sandbox via deployment-service
     postrefactor-layer2-run           — run GET /infra/health, resolve failures
     postrefactor-layer3a-run          — run pytest -m smoke in system-integration-tests
     postrefactor-layer3b-run          — run pytest -m full_e2e in system-integration-tests
@@ -1385,7 +1385,7 @@ Script: unified-trading-pm/scripts/generate_workspace_dag.py (created)
 Real file: unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg
 Symlink: unified-trading-codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg -> ../../unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg
 WORKSPACE_MANIFEST_DAG.svg regenerated from workspace-manifest.json with corrected topological
-levels (UDC=L3, deployment-engine/api=L6 after 2026-02-28 restructure). All 57 repos shown across 11 levels (L0-L10). xmllint OK.
+levels (UDC=L3, deployment-service/api=L6 after 2026-02-28 restructure). All 57 repos shown across 11 levels (L0-L10). xmllint OK.
 
 # Completed: 2026-02-28
 
@@ -1620,7 +1620,7 @@ All items requiring API keys, OAuth, or Secret Manager work:
 | auth-config-promotion-workflow     | Google OAuth deployed_by                                                      |
 | auth-ml-training-ui                | Google OAuth                                                                  |
 | auth-deployment-service-split      | Google OAuth middleware                                                       |
-| deployment-v3-four-way-split       | deployment-engine + deployment-api + deployment-ui + system-integration-tests |
+| deployment-v3-four-way-split       | deployment-service + deployment-api + deployment-ui + system-integration-tests |
 | auth-ibkr-corp-actions             | PENDING_CASSETTE_AWAITING_AUTH (P1)                                           |
 | auth-endpoint-registry-unvalidated | CassetteStatus enum + SSOT for why venues have no VCR — NOT IN CODEBASE YET   |
 | auth-sports-migration-batch1       | auth status fixes in endpoint_registry                                        |
@@ -1708,7 +1708,7 @@ date: 2026-02-28
 content: |
   Tier level restructure completed 2026-02-28. New structure: L0-L10 (11 levels).
     KEY CHANGES:
-  - deployment-api, deployment-engine: L0 → L6 (own tier between foundational services L5 and bulk services L7)
+  - deployment-api, deployment-service: L0 → L6 (own tier between foundational services L5 and bulk services L7)
   - All former L6 services (features-*, alerting, execution, MDPS, ML inference, PnL, strategy): L6 → L7
   - Former L7 (API gateways + PBM/risk/strategy-validation): L7 → L8
   - Former L8 (all UIs): L8 → L9
@@ -1721,7 +1721,7 @@ content: |
     STALE REFS KNOWN AT TIME OF RESTRUCTURE (fix when encountered):
   - multi-tf_cascade_signal_architecture_3fcd8384.plan.md: mentions merge_level=6 for FMTS (now L7)
   - hft_feature_pipeline_integration_70995051.plan.md: mentions merge_level=6 for FCIS (now L7)
-  - manifest_svg_checklist_alignment_8c9891ba.plan.md: mentions deployment-engine/api to L5 (now L6)
+  - manifest_svg_checklist_alignment_8c9891ba.plan.md: mentions deployment-service/api to L5 (now L6)
   - Any pyproject.toml or README that says "merge_level: 6" for feature services → update to 7
   - Any pyproject.toml or README that says "merge_level: 8" for UI repos → update to 9
     SVG GENERATION:
