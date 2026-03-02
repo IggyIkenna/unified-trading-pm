@@ -3,7 +3,8 @@
 Create GitHub Issues from Epic Breakdown
 
 Parses epic-post-trade-and-execution.md and creates 20 GitHub issues
-across 4 repositories (position-balance-monitor-service, risk-and-exposure-service, execution-service, live-health-monitor-ui).
+across 4 repositories (position-balance-monitor-service,
+risk-and-exposure-service, execution-service, live-health-monitor-ui).
 
 Usage:
     # Dry run (preview):

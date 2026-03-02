@@ -1,25 +1,41 @@
 ---
-description: "Integration testing layers 0–3 — contract alignment, schema robustness, infra verify, system smoke"
+description: "4-layer integration testing strategy — contract alignment, schema robustness, infra verification, pipeline E2E"
 alwaysApply: false
-priority: 60
+priority: 70
 tags:
   - testing
   - integration
-  - contracts
+  - quality-gates
 ---
 # Integration Testing Layers
-RULE: Follow the four-layer integration testing methodology. Do not regress the procedure.
-WHY: Layer 0 (AC↔UIC) gates T0; Layer 1 (schema robustness) gates per-tier; Layer 2 (infra) gates deployment; Layer 3a/3b (system smoke) gates post-deploy. Deployment success requires all layers pass.
-CODEX: 06-coding-standards/integration-testing-layers.md
+
+RULE: 4 testing layers, cumulative (Layer N+1 meaningless if Layer N fails). Each layer has a defined location, trigger, and credential requirement.
+WHY: Prevents silent schema drift, infrastructure provisioning gaps, and pipeline wire mismatches from reaching production.
+CODEX: 06-coding-standards/integration-testing-layers.md (SSOT)
+
+## Quick Reference
+
+| Layer | What | Where | In quickmerge? | Credentials |
+|-------|------|-------|----------------|-------------|
+| 0 | Contract alignment (AC↔UIC schema pairs) | unified-api-contracts + unified-internal-contracts tests/ | Yes | None |
+| 1 | Schema robustness (fail-fast, corner cases) | Each repo: tests/unit/test_schema_robustness.py | Yes | None |
+| 2 | Infrastructure verify (buckets, topics, IAM) | deployment-engine/scripts/verify_infra.py | No (post-deploy) | GCP |
+| 3a | Pipeline smoke (happy path, fast) | system-integration-tests/ `@pytest.mark.smoke` | No (post-deploy) | GCP sandbox |
+| 3b | Full E2E (corner cases, auth, perf) | system-integration-tests/ `@pytest.mark.full_e2e` | No (post-deploy) | GCP sandbox |
+
+## When Writing Tests
+
+Layer 0: If you change a schema in AC or UIC, add or update a contract alignment test in that repo.
+Layer 1: If you add/change a Pydantic model any service consumes, add test_schema_robustness.py tests.
+Layer 2: If you add a new GCS bucket or PubSub topic, add it to verify_infra.py resource list.
+Layer 3: If you add a new service-to-service data flow, add a smoke test in system-integration-tests.
 
 DO:
-  Layer 0: Add test_contract_alignment.py + test_*_alignment.py in unified-api-contracts and unified-internal-contracts (both directions)
-  Layer 1: Add test_schema_robustness.py in each service (required/optional fields, corner cases, fail-fast)
-  Layer 2: Add verify_infra.py in deployment-engine; gate deployment success
-  Layer 3: Implement Layer 3a (fast smoke) then Layer 3b (full pipeline) in system-integration-tests; 3a must pass before 3b
+  Layer 0 in AC/UIC; Layer 1 per-service; Layer 2 in deployment-engine; Layer 3 in system-integration-tests
+  Sequential: 3a passes before 3b runs
+  system-integration-tests interacts via HTTP/GCS/PubSub only — zero Python imports from services
 
 NEVER:
-  Put Layer 3 (cross-service smoke) inside deployment-engine (creates circular dep)
-  Skip Layer 0 in T0 (contract base must be coherent first)
-  Run Layer 3b when Layer 3a fails (sequential gate)
-  Duplicate VCR cassettes — reference unified-api-contracts path
+  Layer 3 tests that import service internals (creates cross-service Python dependency)
+  Skip Layer 0 when modifying schemas ("it's just a field rename")
+  Put infra verification in quickmerge (needs cloud credentials)

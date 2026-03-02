@@ -34,7 +34,19 @@ When defining or updating unified-api-contracts schemas, capture scripts, or ado
 
 ---
 
+## Typed Response Models (MANDATORY)
+
+When an adapter consumes an external API that does NOT have a schema in unified-api-contracts yet:
+
+1. Create `_<provider>_models.py` with frozen Pydantic `BaseModel` classes for the API responses
+2. Use `model_validate()` to parse `response.json()` into typed models at the boundary
+3. Never use `dict[str, Any]` — quality gates now BLOCK this pattern
+4. For PascalCase APIs: `Field(alias="PascalCase")` with `model_config = {"populate_by_name": True}`
+
+**Exemplar:** `unified-sports-execution-interface/adapters/exchanges/_matchbook_models.py`, `_smarkets_models.py`, `_betdaq_models.py`
+
 ## Related
 
-- `.cursor/rules/no-type-any-use-specific.mdc` — Use specific types (contract schemas) instead of `Any` for API responses.
+- `.cursor/rules/no-type-any-use-specific.mdc` — Use specific types (contract schemas) instead of `Any` for API responses. Includes typed response model pattern.
+- `.cursor/rules/contracts-integration.mdc` — Typed response models at API boundaries.
 - `.cursor/rules/path-dependency-ci.mdc` — Checkout and install path deps in CI.

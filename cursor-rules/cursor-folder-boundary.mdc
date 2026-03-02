@@ -2,6 +2,7 @@
 description: .cursor/ folder contains IDE config only — no scripts, plans, or manifests
 globs: [".cursor/**"]
 alwaysApply: true
+priority: 65
 ---
 
 # .cursor/ = IDE Config Working Copies Only
@@ -59,3 +60,4 @@ cd unified-trading-pm && ./scripts/sync-workspace.sh
 ## Reference
 
 Codex: `unified-trading-codex/05-infrastructure/workspace-setup.md`
+CODEX: 05-infrastructure/workspace-root-variable.md

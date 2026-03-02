@@ -239,7 +239,7 @@ def generate_issue_title(repo: str, file_path: str, line_count: int) -> str:
     return f"[COD-SIZE] {repo}/{file_path} ({line_count} lines)"
 
 
-def generate_issue_body(repo: str, file_path: str, line_count: int, threshold: int) -> str:
+def generate_issue_body(repo: str, file_path: str, line_count: int, threshold: int, org: str = DEFAULT_ORG) -> str:
     """Generate issue body with split suggestions."""
     overage = line_count - threshold
     overage_pct = (overage / threshold) * 100

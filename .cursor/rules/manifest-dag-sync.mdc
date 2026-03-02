@@ -18,7 +18,7 @@ tags:
 
 Run the generator:
 ```bash
-python3 scripts/generate_workspace_dag.py
+python3 scripts/manifest/generate_workspace_dag.py
 ```
 
 This produces `WORKSPACE_MANIFEST_DAG.svg` — validates XML output automatically.

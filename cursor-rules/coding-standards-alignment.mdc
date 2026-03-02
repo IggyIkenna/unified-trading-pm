@@ -1,6 +1,7 @@
 ---
 description: "Run alignment agent when editing codex 06-coding-standards SSOT docs"
 alwaysApply: false
+priority: 30
 globs: ["unified-trading-codex/06-coding-standards/**"]
 ---
 
@@ -54,3 +55,5 @@ cd /path/to/unified-trading-system-repos
 ## Future: GitHub Workflow
 
 When PRs touch `unified-trading-codex/06-coding-standards/` SSOT files, run the alignment agent in CI to ensure no contradictions are introduced.
+
+CODEX: 06-coding-standards/README.md (§ Document Map)

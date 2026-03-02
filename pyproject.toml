@@ -15,7 +15,7 @@ select = ["E", "F", "W", "I"]
 "tests/test_generate_workspace_dag.py" = ["E402"]
 
 [tool.basedpyright]
-extraPaths = ["scripts"]
+extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management"]
 pythonVersion = "3.13"
 
 [tool.pytest.ini_options]

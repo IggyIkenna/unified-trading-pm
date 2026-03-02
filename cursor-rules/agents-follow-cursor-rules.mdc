@@ -15,11 +15,11 @@ inherit the parent's always-apply rules.
 
 When launching ANY sub-agent (Task tool, generalPurpose, explore, shell, fast):
 1. ALWAYS include at the TOP of the prompt: "Follow all workspace cursor rules in .cursorrules"
-2. ALWAYS remind: "No summary docs, plans only in unified-trading-pm or unified-trading-pm/plans/ai/"
+2. ALWAYS remind: "See no-summary-docs.mdc for documentation rules; plans only in unified-trading-pm or unified-trading-pm/plans/ai/"
 3. ALWAYS remind: "uv not pip, basedpyright not pyright, quickmerge not git push"
-4. ALWAYS remind: "Delete deprecated code — do not archive in place"
+4. ALWAYS remind: "Delete deprecated code; no parallel code paths — see delete-deprecated.mdc"
 5. ALWAYS remind: "Search unified libraries before implementing anything new"
 
 For multi-step agents: put the rule reminder at the TOP of the prompt, not buried at the end.
 
-CODEX: `06-coding-standards/cursor-rules-system.md`
+CODEX: 06-coding-standards/cursor-rules-system.md

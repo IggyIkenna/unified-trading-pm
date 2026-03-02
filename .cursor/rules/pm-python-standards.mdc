@@ -3,8 +3,8 @@ description: "Python scripts in PM must pass basedpyright + ruff — same standa
 alwaysApply: true
 priority: 75
 globs:
-  - "scripts/*.py"
-  - "github-integration/*.py"
+  - "scripts/**/*.py"
+  - "github-integration/**/*.py"
   - "tests/*.py"
 tags:
   - pm
