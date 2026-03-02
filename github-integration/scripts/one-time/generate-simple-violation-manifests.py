@@ -262,7 +262,7 @@ def generate_manifest(service_name: str, violations: dict) -> str:
             [
                 "### 4. Bare except: Clauses",
                 "",
-                "Specify exception types: `except (ConnectionError, TimeoutError, OSError, ValueError):` or specific exceptions.",
+                "Specify exception types: `except (OSError, ValueError):` or specific exceptions.",
                 "",
                 "```",
             ]

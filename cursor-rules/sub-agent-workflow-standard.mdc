@@ -15,4 +15,4 @@ Sub-agents preserve your context (cursor rules stay fresh) and cost ~10x less th
 
 **Full docs:** `unified-trading-pm/plans/ai/tasks/` (TEMPLATE.md, TOKEN_TRACKING_GUIDE.md, RESUME_PATTERN.md)
 
-CODEX: `06-coding-standards/sub-agent-workflow.md`
+CODEX: 06-coding-standards/sub-agent-workflow.md

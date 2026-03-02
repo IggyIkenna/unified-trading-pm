@@ -12,3 +12,4 @@ WHY: Prevents import failures, test incompatibilities, deployment issues across 
 CODEX: 06-coding-standards/dependency-management.md, .cursor/workspace-configs/check-dependency-alignment.sh
 DO: Update codex first if new dep; update ALL repos; run `uv lock`; use resolve-version-conflicts.py to detect drift
 NEVER: Add dep without codex check; update one repo only; skip uv.lock
+See also: `uv-lock-file.mdc` — how to maintain the lock file (lock file mechanics); this rule covers version selection only.

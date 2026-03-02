@@ -19,9 +19,9 @@ export RED GREEN YELLOW BOLD NC
 
 _lib_script_dir() { cd "$(dirname "${BASH_SOURCE[1]}")" && pwd; }
 
-# Callers set these themselves:
+# Callers set these themselves (adjust ../ depth based on subdirectory):
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-#   PM_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+#   PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"   # from scripts/subdir/
 #   WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
 
 # ── Workspace structure validation ───────────────────────────────────────────

@@ -77,18 +77,6 @@ Ask yourself:
 
 **If it's a recap → DON'T CREATE IT.**
 
-## Plan Placement — Two Places Only
+For plan placement, see `plan-placement.mdc`.
 
-Plans and execution docs go in EXACTLY two places:
-1. `unified-trading-pm/` — permanent, tracked, visible to team
-2. `unified-trading-pm/plans/ai/` — active AI execution plans, current session only
-
-NEVER create plan or execution docs in:
-- Workspace root (`unified-trading-system-repos/*.md`)
-- Codex root (`unified-trading-codex/*.md`)
-- Service repo root or `docs/`
-
-When a `unified-trading-pm/plans/ai/` execution completes:
-- If rollout should be tracked: create entry in `unified-trading-pm`
-- If ephemeral: delete the plan file
-- NEVER create `*_COMPLETE.md` or `*_SUMMARY.md` alongside it
+CODEX: 06-coding-standards/README.md

@@ -28,4 +28,4 @@ In `unified-trading-pm/plans/ai/`: add a per-repo checklist at the bottom of the
 The diff-checker and completeness-checker scripts also catch drift — but
 PM tracking is the FIRST line of defense before scripts even run.
 
-CODEX: `unified-trading-pm` (after 11-pm migration)
+CODEX: 11-project-management/

@@ -1,0 +1,24 @@
+---
+priority: 45
+---
+
+# VCR Cassette Ownership
+
+RULE: unified-api-contracts owns all VCR cassettes. Consumers reference by path — never duplicate.
+WHY: Single source of truth for HTTP mocks; prevents cassette drift across repos.
+CODEX: 02-data/vcr-cassette-ownership.md
+
+DO:
+ # In unified-api-contracts: record once with live API keys
+ uv run python scripts/record_vcr_cassettes.py --venue binance
+
+ # In consumers: use cassette_library_dir fixture or unified-api-contracts path (unified_api_contracts_external/<venue>/mocks/)
+ import vcr
+ cassette_dir = Path("../unified-api-contracts/unified_api_contracts/unified_api_contracts_external")  # or use conftest cassette_library_dir
+ @vcr.use_cassette(str(cassette_dir / "binance/mocks/ticker_24hr.yaml"))
+ def test_binance_ticker(): ...
+
+NEVER:
+ Copy cassettes to consumer repos
+ Record cassettes outside unified-api-contracts
+ Use VCR for WebSocket (different tooling required)

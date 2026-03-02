@@ -17,12 +17,13 @@ Before writing ANY new function, class, adapter, or connector, search these libr
   4. `unified-trading-services` — storage, secrets, pubsub, ConfigStore
   5. `unified-config-interface` — config schema, BaseConfig
   6. `unified-events-interface` — event logging
-  7. `unified-domain-client` — instruments, domain clients
-  8. `unified-api-contracts` — external API schemas, VCR mocks
+  7. `unified-cloud-interface` — cloud primitives, storage client, Tier 0 abstractions
+  8. `unified-domain-client` — instruments, domain clients
+  9. `unified-api-contracts` — external API schemas, VCR mocks
 
 If it EXISTS in a library: USE the library. Do NOT reimplement.
 If the library version is WRONG: FIX the library. Do NOT add a workaround in the service.
 If it is MISSING from a library: ADD it to the library first, then use it.
 
-CODEX: 05-infrastructure/unified-libraries/dependency-matrix.md
+CODEX: 05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md
 See also: `external-import-standards.mdc` — how to import from unified libraries (top-level only); `unified-api-contracts-version-alignment.mdc` — SDK version alignment for unified-api-contracts consumers.

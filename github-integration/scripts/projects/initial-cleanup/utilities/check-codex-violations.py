@@ -244,7 +244,8 @@ def find_coding_standards_violations(codex_root: Path, workspace_root: Path) -> 
                             service=service_name,
                             title=f"asyncio.run() in loop in {relative_path}",
                             description=(
-                                "File contains asyncio.run() inside a loop, which creates a new event loop each iteration. "
+                                "File contains asyncio.run() inside a loop, "
+                                "which creates a new event loop each iteration. "
                                 "Should use asyncio.gather() or run event loop once."
                             ),
                             priority="P1-high",
