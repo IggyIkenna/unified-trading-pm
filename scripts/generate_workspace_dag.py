@@ -7,6 +7,7 @@ Symlink: unified-trading-codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg -> ../
 """
 
 import json
+from html import escape as html_escape
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
@@ -168,19 +169,20 @@ def generate() -> None:
         color = LEVEL_COLORS.get(lvl, "#64748b")
         count = len(levels[lvl])
 
-        ln(f'  <!-- L{lvl}: {desc} ({count} repos) -->')
+        esc_desc = html_escape(desc)
+        ln(f'  <!-- L{lvl}: {esc_desc} ({count} repos) -->')
         ln(f'  <rect x="40" y="{y}" width="2320" height="{bh}" class="level-bg" />')
         ln(f'  <rect x="55" y="{y+8}" width="80" height="22" fill="{color}" class="level-badge" />')
         ln(f'  <text x="95" y="{y+24}" text-anchor="middle" class="level-label">L{lvl}</text>')
-        ln(f'  <text x="150" y="{y+24}" class="desc">{desc} ({count} repos)</text>')
+        ln(f'  <text x="150" y="{y+24}" class="desc">{esc_desc} ({count} repos)</text>')
 
         row_y = y + LVL_HDR_H + LVL_PAD_T
         for row in rows:
             for name, ver, css, bx, w in row:
                 cx = bx + w // 2
                 ln(f'  <rect x="{bx}" y="{row_y}" width="{w}" height="{BOX_H}" class="{css}" />')
-                ln(f'  <text x="{cx}" y="{row_y+18}" text-anchor="middle" class="label">{name}</text>')
-                ln(f'  <text x="{cx}" y="{row_y+30}" text-anchor="middle" class="ver">{ver}</text>')
+                ln(f'  <text x="{cx}" y="{row_y+18}" text-anchor="middle" class="label">{html_escape(name)}</text>')
+                ln(f'  <text x="{cx}" y="{row_y+30}" text-anchor="middle" class="ver">{html_escape(ver)}</text>')
             row_y += ROW_H
 
         y += bh + LVL_GAP
