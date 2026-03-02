@@ -8,10 +8,12 @@ push will work once the repo exists on GitHub (create via gh repo create or GitH
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 DEFAULT_OWNER = "IggyIkenna"
@@ -46,7 +48,8 @@ def get_origin(repo_path: Path) -> str | None:
         )
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip()
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+        logger.debug("Suppressed %s during get origin: %s", type(e).__name__, e)
         pass
     return None
 

@@ -137,7 +137,7 @@ def count_lines(file_path: Path) -> int:
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             return sum(1 for line in f if line.strip())
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         log_warning(f"Could not read {file_path}: {e}")
         return 0
 
@@ -223,7 +223,7 @@ def scan_all_repos(repos: List[str], threshold: int, org: str = DEFAULT_ORG) -> 
                     log_success(f"{repo}: Found {len(large_files)} files >={threshold} lines")
                 else:
                     log_info(f"{repo}: No files >={threshold} lines")
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 log_error(f"Error scanning {repo}: {e}")
 
     return results

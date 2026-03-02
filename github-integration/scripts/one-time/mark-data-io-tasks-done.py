@@ -151,7 +151,7 @@ def main() -> int:
             )
             print(f"  #{num} -> Done")
             updated += 1
-        except Exception as e:
+        except (OSError, PermissionError, ValueError) as e:
             print(f"  #{num} FAILED: {e}")
 
     print(f"\nUpdated {updated} items to Done.")

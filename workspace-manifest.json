@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Unified Trading System — Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-02-28",
-  "notes": "Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 — codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI→UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
+  "lastUpdated": "2026-03-01",
+  "notes": "Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 — codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI→UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -75,6 +75,11 @@
     "unified-feature-calculator-library": "0.1.0",
     "unified-position-interface": "0.1.0",
     "features-sports-service": "0.1.0",
+    "sports-reference-data-service": "0.1.0",
+    "sports-odds-data-service": "0.1.0",
+    "sports-odds-processing-service": "0.1.0",
+    "sports-strategy-service": "0.1.0",
+    "sports-execution-service": "0.1.0",
     "strategy-validation-service": "0.1.0",
     "pnl-attribution-service": "0.1.0",
     "unified-trading-deployment-v3": "0.3.0",
@@ -615,6 +620,16 @@
           "name": "unified-market-interface",
           "version": ">=1.0.0,<2.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-reference-data-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -622,7 +637,8 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "notes": "Now includes sports reference data functionality (merged from sports-reference-data-service 2026-03-01)."
     },
     "market-tick-data-service": {
       "type": "service",
@@ -718,6 +734,11 @@
           "name": "market-tick-data-service",
           "version": ">=1.0.0,<2.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -725,7 +746,8 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "PARTIAL"
+      "quality_gate_status": "PARTIAL",
+      "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01)."
     },
     "features-calendar-service": {
       "type": "service",
@@ -923,6 +945,177 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY"
+    },
+    "sports-reference-data-service": {
+      "type": "service",
+      "arch_tier": "4",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        "unified-api-contracts",
+        "unified-trading-services",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-cloud-interface"
+      ],
+      "github_url": "https://github.com/unified-trading/sports-reference-data-service",
+      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-reference-data-service",
+      "status": "merged-into-instruments-service",
+      "ci_status": "PENDING",
+      "quality_gate_status": "PENDING",
+      "coverage_pct": 0,
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "sports_completion_path": "Phase 1 — skeleton created",
+      "notes": "Archived 2026-03-01: sports reference data functionality consolidated into instruments-service. Original Phase 3 Batch A skeleton."
+    },
+    "sports-odds-data-service": {
+      "type": "service",
+      "arch_tier": "4",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        "unified-api-contracts",
+        "unified-trading-services",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-cloud-interface"
+      ],
+      "github_url": "https://github.com/unified-trading/sports-odds-data-service",
+      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-odds-data-service",
+      "status": "merged-into-features-sports-service",
+      "ci_status": "PENDING",
+      "quality_gate_status": "PENDING",
+      "coverage_pct": 0,
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "sports_completion_path": "Phase 1 — skeleton created",
+      "notes": "Archived 2026-03-01: odds data functionality consolidated into features-sports-service (API clients) and market-data-processing-service (odds processing). Original Phase 3 Batch B skeleton."
+    },
+    "sports-odds-processing-service": {
+      "type": "service",
+      "arch_tier": "4",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        "unified-api-contracts",
+        "unified-trading-services",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-cloud-interface"
+      ],
+      "github_url": "https://github.com/unified-trading/sports-odds-processing-service",
+      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-odds-processing-service",
+      "status": "merged-into-market-data-processing-service",
+      "ci_status": "PENDING",
+      "quality_gate_status": "PENDING",
+      "coverage_pct": 0,
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "sports_completion_path": "Phase 1 — skeleton created",
+      "notes": "Archived 2026-03-01: odds processing functionality consolidated into market-data-processing-service. Original Phase 3 Batch B skeleton."
+    },
+    "sports-strategy-service": {
+      "type": "service",
+      "arch_tier": "4",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "04-architecture",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        "unified-api-contracts",
+        "unified-trading-services",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-cloud-interface",
+        "unified-sports-execution-interface"
+      ],
+      "github_url": "https://github.com/unified-trading/sports-strategy-service",
+      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-strategy-service",
+      "status": "merged-into-strategy-service",
+      "ci_status": "PENDING",
+      "quality_gate_status": "PENDING",
+      "coverage_pct": 0,
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "sports_completion_path": "Phase 1 — skeleton created",
+      "notes": "Archived 2026-03-01: sports strategy functionality consolidated into strategy-service. Original Phase 3 Batch D skeleton."
+    },
+    "sports-execution-service": {
+      "type": "service",
+      "arch_tier": "4",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "04-architecture",
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        "unified-api-contracts",
+        "unified-trading-services",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-cloud-interface",
+        "unified-sports-execution-interface"
+      ],
+      "github_url": "https://github.com/unified-trading/sports-execution-service",
+      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-execution-service",
+      "status": "merged-into-execution-service",
+      "ci_status": "PENDING",
+      "quality_gate_status": "PENDING",
+      "coverage_pct": 0,
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "sports_completion_path": "Phase 1 — skeleton created",
+      "notes": "Archived 2026-03-01: sports execution functionality consolidated into execution-service. Original Phase 3 Batch E skeleton."
+    },
+    "sports-betting-services-previous": {
+      "type": "service",
+      "arch_tier": "deprecated",
+      "doc_standard": "service-canonical",
+      "codex_sections": [],
+      "version": "0.0.0",
+      "version_source": "pyproject.toml",
+      "merge_level": null,
+      "dependencies": [],
+      "status": "deprecated",
+      "description": "Legacy sports betting ML pipeline - decomposed into unified trading system",
+      "ci_status": "N/A",
+      "quality_gate_status": "N/A",
+      "coverage_pct": 0,
+      "testing_level": "none",
+      "skipped_gates": [],
+      "bypass_audit_path": null,
+      "notes": "Deprecated: original monolithic sports betting pipeline. Functionality decomposed into features-sports-service, market-data-processing-service (odds processing), strategy-service (sports strategies), execution-service (bet placement), and instruments-service (reference data)."
     },
     "features-multi-timeframe-service": {
       "type": "service",
@@ -1158,6 +1351,16 @@
           "name": "unified-ml-interface",
           "version": ">=1.0.0,<2.0.0",
           "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -1165,7 +1368,8 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "notes": "Now includes sports strategy functionality (merged from sports-strategy-service 2026-03-01). Supports arbitrage + ML strategy modes for sports."
     },
     "execution-service": {
       "type": "service",
@@ -1217,6 +1421,16 @@
           "name": "execution-algo-library",
           "version": ">=1.0.0,<2.0.0",
           "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=1.0.0,<2.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -1224,7 +1438,8 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters."
     },
     "alerting-service": {
       "type": "service",
@@ -1610,20 +1825,21 @@
       "type": "api-service",
       "arch_tier": "devops",
       "merge_level": 6,
-      "status": "planned",
+      "status": "active",
       "version": "0.1.0",
-      "description": "Deployment API — thin FastAPI with OAuth; imports deployment-engine; triggers Cloud Build; triggers system-integration-tests post-deploy.",
+      "description": "Deployment API — standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
-        "deployment-engine"
+        "unified-cloud-interface",
+        "unified-events-interface"
       ],
       "completion_path": "cefi",
-      "notes": "Extracted from unified-trading-deployment-v3 four-way split. Port 8001.",
-      "ci_status": "NO_QG",
+      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth.",
+      "ci_status": "HAS_QG",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
+      "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "NO_QG"
+      "quality_gate_status": "HAS_QG"
     },
     "deployment-ui": {
       "type": "ui",
@@ -1845,7 +2061,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "merge_level": 0,
-      "status": "active",
+      "status": "archived",
       "version": "0.1.0",
       "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
       "description": "IBKR Gateway Terraform config — stale standalone dir pending merge into unified-trading-deployment-v3",
@@ -1856,7 +2072,7 @@
       "known_violations": [
         "Should be merged into unified-trading-deployment-v3 infra/ibkr-gateway/ subdirectory"
       ],
-      "notes": "Contains ibkr-gateway/main.tf Terraform. Tracked as infra-merge-utdv3 task.",
+      "notes": "Contains ibkr-gateway/main.tf Terraform. Tracked as infra-merge-utdv3 task. Not cloned locally. Source repo on GitHub not available. Archived pending resolution.",
       "ci_status": "NO_QG",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -2104,6 +2320,36 @@
         "status": "planned",
         "notes": "Backtest vs Live T+1 reconciliation. Not yet scaffolded.",
         "completion_path": "cefi"
+      },
+      {
+        "name": "sports-reference-data-service",
+        "status": "merged-into-instruments-service",
+        "notes": "Archived 2026-03-01: merged into instruments-service. Original: Phase 3 Batch A.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-odds-data-service",
+        "status": "merged-into-features-sports-service",
+        "notes": "Archived 2026-03-01: merged into features-sports-service (API clients) and market-data-processing-service (odds processing). Original: Phase 3 Batch B.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-odds-processing-service",
+        "status": "merged-into-market-data-processing-service",
+        "notes": "Archived 2026-03-01: merged into market-data-processing-service. Original: Phase 3 Batch B.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-strategy-service",
+        "status": "merged-into-strategy-service",
+        "notes": "Archived 2026-03-01: merged into strategy-service. Original: Phase 3 Batch D.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-execution-service",
+        "status": "merged-into-execution-service",
+        "notes": "Archived 2026-03-01: merged into execution-service. Original: Phase 3 Batch E.",
+        "completion_path": "sports"
       }
     ]
   },
@@ -2251,7 +2497,12 @@
         "unified-api-contracts (sports: api_football, FootyStats, soccer-football-info, Betfair, Pinnacle, Open Meteo)"
       ],
       "additional_services": [
-        "features-sports-service"
+        "features-sports-service",
+        "sports-odds-data-service",
+        "instruments-service (sports reference data module, merged from sports-reference-data-service)",
+        "market-data-processing-service (sports odds processing module, merged from sports-odds-processing-service)",
+        "strategy-service (sports strategy module, merged from sports-strategy-service)",
+        "execution-service (sports execution module, merged from sports-execution-service)"
       ],
       "reuses_from_cefi": [
         "unified-trading-services",
@@ -2264,7 +2515,7 @@
         "pnl-attribution-service"
       ],
       "requires_cefi_path": false,
-      "note": "Can develop sports ML pipeline (features-sports-service + unified-api-contracts sports schemas) in parallel with CeFi. Only needs USEI v1.0.0 for live execution."
+      "note": "Sports services consolidated 2026-03-01: sports-reference-data-service merged into instruments-service, sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. features-sports-service and unified-sports-execution-interface remain standalone. Can develop sports ML pipeline in parallel with CeFi. Only needs USEI v1.0.0 for live execution."
     }
   }
 }

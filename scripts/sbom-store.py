@@ -16,6 +16,7 @@ Required env vars:
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import sys
@@ -41,14 +42,14 @@ def main() -> None:
     bucket_name = os.environ.get("SBOM_BUCKET", "uts-sbom-audit")
     service_name = os.environ.get("SERVICE_NAME", "unknown")
 
-    try:
-        from unified_trading_services import get_storage_client
-    except ImportError:
+    if importlib.util.find_spec("unified_trading_services") is None:
         print(
-            "⚠️  unified_trading_services not installed — skipping SBOM GCS upload",
+            "unified_trading_services not installed — skipping SBOM GCS upload",
             file=sys.stderr,
         )
         sys.exit(0)
+
+    from unified_trading_services import get_storage_client
 
     with open(audit_file) as f:
         audit_data = json.load(f)
@@ -73,7 +74,7 @@ def main() -> None:
             content_type="application/json",
         )
         print(f"✅ SBOM stored: gs://{bucket_name}/{blob_path}")
-    except Exception as exc:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as exc:
         print(f"⚠️  SBOM upload failed (non-blocking): {exc}", file=sys.stderr)
         sys.exit(0)
 

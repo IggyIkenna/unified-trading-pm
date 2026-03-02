@@ -31,7 +31,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SECRET_NAME="${GITHUB_TOKEN_SECRET:-github-automation-token}"
-GCP_PROJECT="${GCP_PROJECT:-central-element-323112}"
+GCP_PROJECT="${GCP_PROJECT:?GCP_PROJECT required}"
 CHECK_ONLY=false
 QUICK=false
 
