@@ -8,12 +8,14 @@ Run from workspace root.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess
 import sys
 import urllib.error
 import urllib.request
 
+logger = logging.getLogger(__name__)
 # Token: GH_PAT, GITHUB_TOKEN, or gh auth token (GitHub CLI — run gh auth login if prompted)
 GITHUB_API = "https://api.github.com"
 OWNER = "IggyIkenna"
@@ -68,7 +70,8 @@ def get_token() -> str | None:
         )
         if out.returncode == 0 and out.stdout:
             return out.stdout.strip()
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+        logger.debug("Suppressed %s during get token: %s", type(e).__name__, e)
         pass
     return None
 
@@ -97,7 +100,7 @@ def api_request(
             return resp.status, resp.read().decode()
     except urllib.error.HTTPError as e:
         return e.code, (e.read().decode() if e.fp else str(e))
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         return -1, str(e)
 
 

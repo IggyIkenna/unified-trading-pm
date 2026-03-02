@@ -10,7 +10,6 @@ This script ensures:
 
 import json
 from pathlib import Path
-from typing import Any, Dict
 
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent
 WORKSPACE_CONFIGS_DIR = WORKSPACE_ROOT / ".cursor" / "workspace-configs"
@@ -138,7 +137,7 @@ def main() -> None:
     # Also update the root workspace file
     root_workspace = WORKSPACE_ROOT / "unified-trading-system-repos.code-workspace"
     if root_workspace.exists():
-        print(f"\nUpdating root workspace file...")
+        print("\nUpdating root workspace file...")
         update_workspace_file(root_workspace)
 
     print(f"\n✅ Successfully updated {len(workspace_files) + 1} workspace files")

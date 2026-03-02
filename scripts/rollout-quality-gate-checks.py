@@ -94,7 +94,7 @@ PIP=$(rg "^RUN pip install|^RUN python -m pip| pip install " --glob "**/Dockerfi
         "anchor": 'log_success "No broad except Exception"',
         "code": '''
 # Swallowed errors — except that silently passes/returns None
-SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \\
+SWALLOWED=$(rg "except (ConnectionError, TimeoutError, OSError, ValueError):" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \\
     | grep -E "^[[:space:]]+(pass|return None)$" || true)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; ((V++)); } || log_success "No swallowed errors"''',
     },

@@ -11,16 +11,17 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import json
 import sys
 from pathlib import Path
 from typing import Dict, List
 
-try:
-    import yaml
-except ImportError:
+if importlib.util.find_spec("yaml") is None:
     print("ERROR: PyYAML not installed. Run: uv pip install pyyaml")
     sys.exit(1)
+
+import yaml
 
 
 class GitHubIssueGenerator:

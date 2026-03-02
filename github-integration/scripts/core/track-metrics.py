@@ -19,13 +19,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-
+logger = logging.getLogger(__name__)
 @dataclass
 class WorkflowMetrics:
     """Workflow success metrics."""
@@ -287,7 +288,8 @@ def calculate_regeneration_metrics(issues: list[dict]) -> tuple[int, float, int]
                 if count >= 3:
                     max_regen_hits += 1
 
-            except (ValueError, IndexError):
+            except (ValueError, IndexError) as e:
+                logger.debug("Suppressed %s during calculate regeneration metrics: %s", type(e).__name__, e)
                 pass
 
     num_epics = len(epic_regen_counts)
@@ -567,7 +569,7 @@ def main() -> int:
 
         return 0
 
-    except Exception as e:
+    except (OSError, PermissionError, ValueError) as e:
         print(f"Error collecting metrics: {e}", file=sys.stderr)
         return 1
 

@@ -16,7 +16,7 @@ PRIVATE_PACKAGES=(
 )
 
 # GCP Configuration
-GCP_PROJECT="central-element-323112"
+GCP_PROJECT="${GCP_PROJECT:?GCP_PROJECT required}"
 ARTIFACT_REGISTRY_REPO="python-packages"
 ARTIFACT_REGISTRY_LOCATION="us-central1"
 

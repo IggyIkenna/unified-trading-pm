@@ -21,25 +21,25 @@ def get_folder_paths_from_workspace(workspace_config: Dict[str, Any]) -> List[st
     """Extract folder paths from workspace config and convert to extraPaths format."""
     folders = workspace_config.get("folders", [])
     extra_paths = []
-    
+
     for folder in folders:
         path = folder.get("path", "")
         if not path:
             continue
-            
+
         # Convert relative path to workspaceFolder format
         # "../../instruments-service" -> "${workspaceFolder}/instruments-service"
         # "../../.cursor" -> skip (not a Python package)
-        
+
         if path.startswith("../../"):
             folder_name = path.replace("../../", "")
-            
+
             # Skip non-Python folders
             if folder_name in [".cursor", "unified-trading-codex", "unified-trading-deployment-v3"]:
                 continue
-                
+
             extra_paths.append(f"${{workspaceFolder}}/{folder_name}")
-    
+
     return extra_paths
 
 
@@ -51,7 +51,7 @@ def get_strict_settings_template(extra_paths: List[str]) -> Dict[str, Any]:
         "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
         "python.terminal.activateEnvironment": True,
         "python.envFile": "${workspaceFolder}/.env",
-        
+
         # Pylance type checking
         "cursorpyright.analysis.typeCheckingMode": "strict",
         "cursorpyright.analysis.autoSearchPaths": True,
@@ -73,16 +73,16 @@ def get_strict_settings_template(extra_paths: List[str]) -> Dict[str, Any]:
             "reportAny": "warning",
         },
         "cursorpyright.analysis.extraPaths": extra_paths,  # Workspace-specific!
-        
+
         # Python testing
         "python.testing.pytestEnabled": True,
         "python.testing.unittestEnabled": False,
         "python.testing.pytestArgs": ["tests", "-v"],
-        
+
         # File auto-save
         "files.autoSave": "afterDelay",
         "files.autoSaveDelay": 1000,
-        
+
         # Editor formatting - AUTO-FIX ON SAVE
         "editor.formatOnSave": True,
         "editor.codeActionsOnSave": {
@@ -97,7 +97,7 @@ def get_strict_settings_template(extra_paths: List[str]) -> Dict[str, Any]:
                 "source.organizeImports": "explicit",
             },
         },
-        
+
         # Ruff linter
         "ruff.enable": True,
         "ruff.lint.enable": True,
@@ -109,7 +109,7 @@ def get_strict_settings_template(extra_paths: List[str]) -> Dict[str, Any]:
         "ruff.path": [
             "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
         ],
-        
+
         # File exclusions
         "files.exclude": {
             "**/__pycache__": True,
@@ -137,7 +137,7 @@ def get_strict_settings_template(extra_paths: List[str]) -> Dict[str, Any]:
             "**/.venv": True,
             "**/uv.lock": False,
         },
-        
+
         # Editor preferences
         "editor.rulers": [100],
         "editor.tabSize": 4,
@@ -180,7 +180,7 @@ def verify_workspace_file(workspace_file: Path) -> Dict[str, Any]:
         workspace_config = json.load(f)
 
     settings = workspace_config.get("settings", {})
-    
+
     checks = {
         "has_extraPaths": "cursorpyright.analysis.extraPaths" in settings,
         "has_envFile": "python.envFile" in settings,
@@ -196,7 +196,7 @@ def verify_workspace_file(workspace_file: Path) -> Dict[str, Any]:
         "extraPaths_count": len(settings.get("cursorpyright.analysis.extraPaths", [])),
         "folder_count": len(workspace_config.get("folders", [])),
     }
-    
+
     return checks
 
 
@@ -207,7 +207,7 @@ def main() -> None:
     # Get all workspace files
     workspace_files = list(WORKSPACE_CONFIGS_DIR.glob("workspace-*.code-workspace"))
     root_workspace = WORKSPACE_ROOT / "unified-trading-system-repos.code-workspace"
-    
+
     if root_workspace.exists():
         workspace_files.append(root_workspace)
 
@@ -235,7 +235,7 @@ def main() -> None:
         print(f"   📁 Folders: {checks['folder_count']}")
         print(f"   🔗 extraPaths: {checks['extraPaths_count']}")
         print(f"   🔧 Auto-fix on save: {'✅' if checks['has_auto_fix'] else '❌'}")
-        
+
         if not all(v for k, v in checks.items() if k not in ["folder_count", "extraPaths_count"]):
             all_good = False
             for check, result in checks.items():

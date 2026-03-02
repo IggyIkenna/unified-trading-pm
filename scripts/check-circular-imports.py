@@ -13,11 +13,12 @@ Exit code: 0 = clean, 1 = circular imports found.
 """
 
 import ast
+import logging
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-
+logger = logging.getLogger(__name__)
 def get_package_imports(source_dir: Path) -> dict[str, set[str]]:
     """Build import graph: module -> set of internal modules it imports."""
     package = source_dir.name
@@ -30,7 +31,8 @@ def get_package_imports(source_dir: Path) -> dict[str, set[str]]:
 
         try:
             tree = ast.parse(py_file.read_text(encoding="utf-8", errors="ignore"))
-        except SyntaxError:
+        except SyntaxError as e:
+            logger.debug("Skipping item due to %s: %s", type(e).__name__, e)
             continue
 
         for node in ast.walk(tree):

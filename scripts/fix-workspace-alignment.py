@@ -11,7 +11,7 @@ This script ensures all workspace files have:
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict
 
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent
 WORKSPACE_CONFIGS_DIR = WORKSPACE_ROOT / ".cursor" / "workspace-configs"
@@ -57,7 +57,7 @@ STRICT_SETTINGS_ORDERED = {
     "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
     "python.terminal.activateEnvironment": True,
     "python.envFile": "${workspaceFolder}/.env",
-    
+
     # Pylance type checking
     "cursorpyright.analysis.typeCheckingMode": "strict",
     "cursorpyright.analysis.autoSearchPaths": True,
@@ -79,16 +79,16 @@ STRICT_SETTINGS_ORDERED = {
         "reportAny": "warning",
     },
     "cursorpyright.analysis.extraPaths": ALL_REPO_PATHS,
-    
+
     # Python testing
     "python.testing.pytestEnabled": True,
     "python.testing.unittestEnabled": False,
     "python.testing.pytestArgs": ["tests", "-v"],
-    
+
     # File auto-save
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000,
-    
+
     # Editor formatting
     "editor.formatOnSave": True,
     "editor.codeActionsOnSave": {"source.organizeImports": "explicit"},
@@ -100,7 +100,7 @@ STRICT_SETTINGS_ORDERED = {
             "source.organizeImports": "explicit",
         },
     },
-    
+
     # Ruff linter
     "ruff.enable": True,
     "ruff.lint.enable": True,
@@ -112,7 +112,7 @@ STRICT_SETTINGS_ORDERED = {
     "ruff.path": [
         "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
     ],
-    
+
     # File exclusions
     "files.exclude": {
         "**/__pycache__": True,
@@ -140,7 +140,7 @@ STRICT_SETTINGS_ORDERED = {
         "**/.venv": True,
         "**/uv.lock": False,
     },
-    
+
     # Editor preferences
     "editor.rulers": [100],
     "editor.tabSize": 4,
@@ -179,7 +179,7 @@ def verify_workspace_file(workspace_file: Path) -> Dict[str, bool]:
         workspace_config = json.load(f)
 
     settings = workspace_config.get("settings", {})
-    
+
     checks = {
         "has_extraPaths": "cursorpyright.analysis.extraPaths" in settings,
         "has_envFile": "python.envFile" in settings,
@@ -190,7 +190,7 @@ def verify_workspace_file(workspace_file: Path) -> Dict[str, bool]:
         "has_ruff_path": "ruff.path" in settings,
         "extraPaths_count": len(settings.get("cursorpyright.analysis.extraPaths", [])),
     }
-    
+
     return checks
 
 
@@ -201,7 +201,7 @@ def main() -> None:
     # Get all workspace files
     workspace_files = list(WORKSPACE_CONFIGS_DIR.glob("workspace-*.code-workspace"))
     root_workspace = WORKSPACE_ROOT / "unified-trading-system-repos.code-workspace"
-    
+
     if root_workspace.exists():
         workspace_files.append(root_workspace)
 
@@ -225,7 +225,7 @@ def main() -> None:
         checks = verify_workspace_file(workspace_file)
         status = "✅" if all(checks.values()) else "⚠️"
         print(f"{status} {workspace_file.name}")
-        
+
         if not all(checks.values()):
             all_good = False
             for check, result in checks.items():

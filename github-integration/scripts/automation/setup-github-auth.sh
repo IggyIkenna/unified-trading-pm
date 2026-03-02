@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Configuration
 SECRET_NAME="${GITHUB_TOKEN_SECRET:-github-automation-token}"
-GCP_PROJECT="${GCP_PROJECT:-central-element-323112}"
+GCP_PROJECT="${GCP_PROJECT:?GCP_PROJECT required}"
 
 echo "🔐 Setting up GitHub authentication..."
 

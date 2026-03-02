@@ -5,15 +5,14 @@ This script adds missing quality gate scripts to package.json and creates qualit
 """
 
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 # UI repositories
 UI_REPOS = [
     "execution-analytics-ui",
-    "batch-audit-ui", 
+    "batch-audit-ui",
     "client-reporting-ui",
     "live-health-monitor-ui",
     "logs-dashboard-ui",
@@ -86,28 +85,28 @@ def ensure_scripts_in_package_json(package_json_path: Path) -> bool:
     if 'typecheck' not in scripts:
         scripts['typecheck'] = 'tsc --noEmit'
         updated = True
-        print(f"  ➕ Added typecheck script")
+        print("  ➕ Added typecheck script")
 
     # Add lint script if missing (basic fallback)
     if 'lint' not in scripts:
         scripts['lint'] = 'eslint .'
         updated = True
-        print(f"  ➕ Added lint script")
+        print("  ➕ Added lint script")
 
     # Update package.json if we made changes
     if updated:
         data['scripts'] = scripts
         with open(package_json_path, 'w') as f:
             json.dump(data, f, indent=2)
-        print(f"  ✅ Updated package.json scripts")
-    
+        print("  ✅ Updated package.json scripts")
+
     return updated
 
 
 def ensure_tsconfig_exists(repo_path: Path) -> bool:
     """Ensure tsconfig.json exists with basic TypeScript strict configuration."""
     tsconfig_path = repo_path / "tsconfig.json"
-    
+
     if tsconfig_path.exists():
         return False  # Already exists
 
@@ -139,8 +138,8 @@ def ensure_tsconfig_exists(repo_path: Path) -> bool:
 
     with open(tsconfig_path, 'w') as f:
         json.dump(tsconfig_content, f, indent=2)
-    
-    print(f"  📝 Created tsconfig.json with strict TypeScript configuration")
+
+    print("  📝 Created tsconfig.json with strict TypeScript configuration")
     return True
 
 
@@ -148,26 +147,26 @@ def ensure_quality_gates_script_exists(repo_path: Path) -> bool:
     """Ensure scripts/quality-gates.sh exists."""
     scripts_dir = repo_path / "scripts"
     scripts_dir.mkdir(exist_ok=True)
-    
+
     quality_gates_path = scripts_dir / "quality-gates.sh"
-    
+
     if quality_gates_path.exists():
         # Check if it's the correct TypeScript version
         content = quality_gates_path.read_text()
         if "TypeScript/React Quality Gates" in content:
             return False  # Already has correct script
-    
+
     quality_gates_path.write_text(get_quality_gates_script())
     quality_gates_path.chmod(0o755)  # Make executable
-    
-    print(f"  📝 Created scripts/quality-gates.sh")
+
+    print("  📝 Created scripts/quality-gates.sh")
     return True
 
 
 def process_ui_repository(repo_name: str, workspace_path: Path) -> bool:
     """Process a single UI repository to add TypeScript quality gates."""
     print(f"\n🎨 Processing {repo_name}")
-    
+
     repo_path = workspace_path / repo_name
     if not repo_path.exists():
         print(f"  ❌ Repository directory not found: {repo_path}")
@@ -175,18 +174,18 @@ def process_ui_repository(repo_name: str, workspace_path: Path) -> bool:
 
     package_json_path = repo_path / "package.json"
     if not package_json_path.exists():
-        print(f"  ❌ No package.json found - not a TypeScript/Node.js repository")
+        print("  ❌ No package.json found - not a TypeScript/Node.js repository")
         return False
 
     # Update package.json scripts
     updated_package_json = ensure_scripts_in_package_json(package_json_path)
-    
+
     # Ensure tsconfig.json exists
     created_tsconfig = ensure_tsconfig_exists(repo_path)
-    
+
     # Ensure quality-gates.sh script exists
     created_quality_gates = ensure_quality_gates_script_exists(repo_path)
-    
+
     if updated_package_json or created_tsconfig or created_quality_gates:
         print(f"  ✅ {repo_name} updated successfully")
         return True
@@ -198,24 +197,24 @@ def process_ui_repository(repo_name: str, workspace_path: Path) -> bool:
 def check_embedded_uis(workspace_path: Path) -> List[str]:
     """Check for embedded UIs (package.json in subdirectories)."""
     embedded_uis = []
-    
+
     # Check execution-service/visualizer-ui/
     execution_service_ui = workspace_path / "execution-service" / "visualizer-ui"
     if (execution_service_ui / "package.json").exists():
         embedded_uis.append("execution-service/visualizer-ui")
-    
+
     # Check unified-trading-deployment-v3/ui/
     deployment_v2_ui = workspace_path / "unified-trading-deployment-v3" / "ui"
     if (deployment_v2_ui / "package.json").exists():
         embedded_uis.append("unified-trading-deployment-v3/ui")
-        
+
     return embedded_uis
 
 
 def process_embedded_ui(ui_path_str: str, workspace_path: Path) -> bool:
     """Process an embedded UI repository."""
     print(f"\n🎨 Processing embedded UI: {ui_path_str}")
-    
+
     ui_path = workspace_path / Path(ui_path_str)
     if not ui_path.exists():
         print(f"  ❌ Embedded UI directory not found: {ui_path}")
@@ -223,18 +222,18 @@ def process_embedded_ui(ui_path_str: str, workspace_path: Path) -> bool:
 
     package_json_path = ui_path / "package.json"
     if not package_json_path.exists():
-        print(f"  ❌ No package.json found in embedded UI")
+        print("  ❌ No package.json found in embedded UI")
         return False
 
     # Update package.json scripts
     updated_package_json = ensure_scripts_in_package_json(package_json_path)
-    
+
     # Ensure tsconfig.json exists
     created_tsconfig = ensure_tsconfig_exists(ui_path)
-    
-    # Ensure quality-gates.sh script exists  
+
+    # Ensure quality-gates.sh script exists
     created_quality_gates = ensure_quality_gates_script_exists(ui_path)
-    
+
     if updated_package_json or created_tsconfig or created_quality_gates:
         print(f"  ✅ {ui_path_str} updated successfully")
         return True
@@ -248,11 +247,11 @@ def main():
     # Get workspace path
     script_path = Path(__file__).parent.parent
     workspace_path = script_path
-    
+
     print("🎨 Rolling out TypeScript quality gates to all UI repositories")
     print(f"📁 Workspace: {workspace_path}")
     print(f"🖼️  Processing {len(UI_REPOS)} standalone UI repositories")
-    
+
     success_count = 0
     error_count = 0
 
@@ -263,7 +262,7 @@ def main():
                 success_count += 1
             else:
                 error_count += 1
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             print(f"  ❌ Error processing {repo_name}: {e}")
             error_count += 1
 
@@ -277,27 +276,27 @@ def main():
                     success_count += 1
                 else:
                     error_count += 1
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 print(f"  ❌ Error processing {ui_path}: {e}")
                 error_count += 1
     else:
-        print(f"\n🔍 No embedded UIs found")
+        print("\n🔍 No embedded UIs found")
 
-    print(f"\n🎉 TypeScript quality gates rollout complete!")
+    print("\n🎉 TypeScript quality gates rollout complete!")
     print(f"  ✅ Successfully processed: {success_count}")
     print(f"  ❌ Errors: {error_count}")
     print(f"  📊 Total: {success_count + error_count}")
 
     if error_count > 0:
-        print(f"\n⚠️  Some repositories had errors. Please review the output above.")
+        print("\n⚠️  Some repositories had errors. Please review the output above.")
         sys.exit(1)
     else:
-        print(f"\n🎯 All UI repositories now have TypeScript quality gates!")
-        print(f"\n📝 Next steps:")
-        print(f"  1. Run 'npm install' in each UI repo to install dependencies")
-        print(f"  2. Run 'npm run typecheck' to test TypeScript type checking")
-        print(f"  3. Run 'npm run lint' to test ESLint")
-        print(f"  4. Run 'bash scripts/quality-gates.sh' to test full quality gates")
+        print("\n🎯 All UI repositories now have TypeScript quality gates!")
+        print("\n📝 Next steps:")
+        print("  1. Run 'npm install' in each UI repo to install dependencies")
+        print("  2. Run 'npm run typecheck' to test TypeScript type checking")
+        print("  3. Run 'npm run lint' to test ESLint")
+        print("  4. Run 'bash scripts/quality-gates.sh' to test full quality gates")
 
 
 if __name__ == "__main__":

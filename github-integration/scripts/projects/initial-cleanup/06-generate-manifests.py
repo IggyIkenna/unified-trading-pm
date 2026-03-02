@@ -92,7 +92,7 @@ def run_diff_checker(codex_root: Path, workspace_root: Path, service_name: str) 
             print("⚠️  No output file")
             return {"gaps": []}
 
-    except Exception as e:
+    except (OSError, PermissionError, ValueError) as e:
         print(f"❌ ERROR: {e}")
         return {"gaps": [], "error": str(e)}
 

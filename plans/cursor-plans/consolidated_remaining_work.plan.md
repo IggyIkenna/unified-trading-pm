@@ -649,11 +649,13 @@ isProject: true
 
 ### Phase Index (execute in order — do NOT start phase N until phase N-1 is fully done)
 
-| Phase | File | Scope | Done When |
-|---|---|---|---|
-| **Phase 1** | `phase1_foundation_prep.plan.md` | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-engine/api/ui/system-integration-tests repos exist |
-| **Phase 2** | `phase2_library_tier_hardening.plan.md` | Global violation sweep, T0→T1→T2→T3 with Step A→B→C→D1→D5 per tier | All T0–T3 repos pass full quickmerge (D5) with act simulation |
-| **Phase 3** | `phase3_service_hardening_integration.plan.md` | T4 services (DAG pipeline order), T5 API services, T6 UIs, integration layers (L1–L3), post-refactor sandbox deploy + L2+L3a+L3b + declare healthy | All tiers green; L3b (full e2e) passes; versions bump to 1.0.0 |
+
+| Phase       | File                                           | Scope                                                                                                                                              | Done When                                                                                                                          |
+| ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 1** | `phase1_foundation_prep.plan.md`               | Naming cleanup, SSOT docs, CI/CD rollout to 55 repos, deployment structure split (UTD V3 → 4 repos), QG baseline audit                             | All 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live; deployment-engine/api/ui/system-integration-tests repos exist |
+| **Phase 2** | `phase2_library_tier_hardening.plan.md`        | Global violation sweep, T0→T1→T2→T3 with Step A→B→C→D1→D5 per tier                                                                                 | All T0–T3 repos pass full quickmerge (D5) with act simulation                                                                      |
+| **Phase 3** | `phase3_service_hardening_integration.plan.md` | T4 services (DAG pipeline order), T5 API services, T6 UIs, integration layers (L1–L3), post-refactor sandbox deploy + L2+L3a+L3b + declare healthy | All tiers green; L3b (full e2e) passes; versions bump to 1.0.0                                                                     |
+
 
 > **Canonical DAG (SSOT):** workspace-manifest.json → arch_tier field per repo.
 > T0 = AC, UIC_INT, UCI, UEI, UCLI, URDI, EAL, MEL
@@ -1616,7 +1618,7 @@ All items requiring API keys, OAuth, or Secret Manager work:
 | auth-manual-trading-consolidate    | Google OAuth submitted_by                                                     |
 | auth-trading-analytics-ui          | Google OAuth TRADER                                                           |
 | auth-config-promotion-workflow     | Google OAuth deployed_by                                                      |
-| auth-ml-training-ui              | Google OAuth                                                                  |
+| auth-ml-training-ui                | Google OAuth                                                                  |
 | auth-deployment-service-split      | Google OAuth middleware                                                       |
 | deployment-v3-four-way-split       | deployment-engine + deployment-api + deployment-ui + system-integration-tests |
 | auth-ibkr-corp-actions             | PENDING_CASSETTE_AWAITING_AUTH (P1)                                           |
@@ -1700,34 +1702,28 @@ status: pending
 - id: ml-cascade-live-verify
 content: "After CascadeInferenceMode is implemented and ml-inference-service deployed: verify CascadePredictionEvent messages appear on the cascade-predictions PubSub topic. Confirm strategy-service receives and processes them without error."
 status: pending
-
 - id: tier-restructure-conflict-policy
-  status: completed
-  date: 2026-02-28
-  content: |
-    Tier level restructure completed 2026-02-28. New structure: L0-L10 (11 levels).
-    
+status: completed
+date: 2026-02-28
+content: |
+  Tier level restructure completed 2026-02-28. New structure: L0-L10 (11 levels).
     KEY CHANGES:
-    - deployment-api, deployment-engine: L0 → L6 (own tier between foundational services L5 and bulk services L7)
-    - All former L6 services (features-*, alerting, execution, MDPS, ML inference, PnL, strategy): L6 → L7
-    - Former L7 (API gateways + PBM/risk/strategy-validation): L7 → L8
-    - Former L8 (all UIs): L8 → L9
-    - unified-trading-deployment-v3: L6 → L10 (IaC; must deploy last — references all service images)
-    - system-integration-tests: L0 → L10 (runs after full deploy)
-    
+  - deployment-api, deployment-engine: L0 → L6 (own tier between foundational services L5 and bulk services L7)
+  - All former L6 services (features-*, alerting, execution, MDPS, ML inference, PnL, strategy): L6 → L7
+  - Former L7 (API gateways + PBM/risk/strategy-validation): L7 → L8
+  - Former L8 (all UIs): L8 → L9
+  - unified-trading-deployment-v3: L6 → L10 (IaC; must deploy last — references all service images)
+  - system-integration-tests: L0 → L10 (runs after full deploy)
     CONFLICT POLICY: If any plan, README, or pyproject.toml references old merge_level values,
     FIX THEM — do NOT skip. Stale tier refs cause quickmerge cascade to run in wrong order.
-    
     QUICKMERGE NOTE: quickmerge.sh has no hardcoded level numbers — safe. No changes needed.
     Quality gates run per-repo regardless of level; level only affects cascade order.
-    
     STALE REFS KNOWN AT TIME OF RESTRUCTURE (fix when encountered):
-    - multi-tf_cascade_signal_architecture_3fcd8384.plan.md: mentions merge_level=6 for FMTS (now L7)
-    - hft_feature_pipeline_integration_70995051.plan.md: mentions merge_level=6 for FCIS (now L7)
-    - manifest_svg_checklist_alignment_8c9891ba.plan.md: mentions deployment-engine/api to L5 (now L6)
-    - Any pyproject.toml or README that says "merge_level: 6" for feature services → update to 7
-    - Any pyproject.toml or README that says "merge_level: 8" for UI repos → update to 9
-    
+  - multi-tf_cascade_signal_architecture_3fcd8384.plan.md: mentions merge_level=6 for FMTS (now L7)
+  - hft_feature_pipeline_integration_70995051.plan.md: mentions merge_level=6 for FCIS (now L7)
+  - manifest_svg_checklist_alignment_8c9891ba.plan.md: mentions deployment-engine/api to L5 (now L6)
+  - Any pyproject.toml or README that says "merge_level: 6" for feature services → update to 7
+  - Any pyproject.toml or README that says "merge_level: 8" for UI repos → update to 9
     SVG GENERATION:
-    - WORKSPACE_MANIFEST_DAG.svg: regenerate with `python3 unified-trading-pm/scripts/generate_workspace_dag.py`
-    - RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg: separate architectural layer labels (L1-L7), NOT affected by build tiers
+  - WORKSPACE_MANIFEST_DAG.svg: regenerate with `python3 unified-trading-pm/scripts/generate_workspace_dag.py`
+  - RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg: separate architectural layer labels (L1-L7), NOT affected by build tiers

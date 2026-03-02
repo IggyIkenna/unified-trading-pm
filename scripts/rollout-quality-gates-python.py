@@ -4,16 +4,14 @@ Roll out quality gates to all Python repositories.
 This script adds missing quality gate configurations to pyproject.toml files and creates Makefiles.
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 # Repository categorization and coverage thresholds
 CRITICAL_SERVICES = {
     # 85% coverage for critical services (execution, trading, ML)
     "instruments-service": 85,
-    "market-data-processing-service": 85, 
+    "market-data-processing-service": 85,
     "strategy-service": 85,
     "execution-service": 85,
     "ml-training-service": 85,
@@ -206,13 +204,13 @@ def update_pyproject_toml(pyproject_path: Path, repo_name: str, coverage_thresho
 
     # Update/add ruff config if needed
     if not has_ruff_config(pyproject_path):
-        print(f"  🔍 Updating ruff configuration")
+        print("  🔍 Updating ruff configuration")
         # Find existing [tool.ruff] section and replace it
         lines = content.split('\n')
         new_lines = []
         in_ruff_section = False
         ruff_added = False
-        
+
         i = 0
         while i < len(lines):
             line = lines[i]
@@ -230,45 +228,45 @@ def update_pyproject_toml(pyproject_path: Path, repo_name: str, coverage_thresho
             else:
                 new_lines.append(line)
             i += 1
-        
+
         if not ruff_added:
             # No existing ruff section, add it
             new_lines.append("\n" + get_ruff_config())
-        
+
         content = '\n'.join(new_lines)
         updated = True
 
     # Add basedpyright config if missing
     if not has_basedpyright_config(pyproject_path):
-        print(f"  🎯 Adding basedpyright configuration")
+        print("  🎯 Adding basedpyright configuration")
         content += "\n\n" + get_basedpyright_config(source_dir)
         updated = True
 
     if updated:
         pyproject_path.write_text(content)
-        print(f"  ✅ Updated pyproject.toml")
+        print("  ✅ Updated pyproject.toml")
         return True
-    
+
     return False
 
 
 def create_makefile(repo_path: Path, source_dir: str):
     """Create Makefile with quality gates."""
     makefile_path = repo_path / "Makefile"
-    
+
     if not has_quality_gates_makefile(repo_path):
-        print(f"  📝 Creating Makefile with quality gates")
+        print("  📝 Creating Makefile with quality gates")
         makefile_path.write_text(get_makefile_content(source_dir))
-        print(f"  ✅ Created Makefile")
+        print("  ✅ Created Makefile")
         return True
-    
+
     return False
 
 
 def process_repository(repo_name: str, workspace_path: Path):
     """Process a single repository to add quality gates."""
     print(f"\n🔧 Processing {repo_name}")
-    
+
     repo_path = workspace_path / repo_name
     if not repo_path.exists():
         print(f"  ❌ Repository directory not found: {repo_path}")
@@ -276,12 +274,12 @@ def process_repository(repo_name: str, workspace_path: Path):
 
     pyproject_path = repo_path / "pyproject.toml"
     if not pyproject_path.exists():
-        print(f"  ❌ No pyproject.toml found - not a Python repository")
+        print("  ❌ No pyproject.toml found - not a Python repository")
         return False
 
     coverage_threshold = ALL_REPOS.get(repo_name, 70)
     source_dir = get_source_dir_name(repo_name)
-    
+
     # Check if source directory exists
     source_path = repo_path / source_dir
     if not source_path.exists():
@@ -298,7 +296,7 @@ def process_repository(repo_name: str, workspace_path: Path):
 
     updated_pyproject = update_pyproject_toml(pyproject_path, repo_name, coverage_threshold, source_dir)
     created_makefile = create_makefile(repo_path, source_dir)
-    
+
     if updated_pyproject or created_makefile:
         print(f"  ✅ {repo_name} updated successfully")
         return True
@@ -312,14 +310,14 @@ def main():
     # Get workspace path
     script_path = Path(__file__).parent.parent
     workspace_path = script_path
-    
+
     print("🚀 Rolling out quality gates to all Python repositories")
     print(f"📁 Workspace: {workspace_path}")
     print(f"📊 Processing {len(ALL_REPOS)} repositories")
-    
-    print(f"\n📈 Coverage thresholds:")
+
+    print("\n📈 Coverage thresholds:")
     print(f"  🔴 Critical services (85%): {len(CRITICAL_SERVICES)} repos")
-    print(f"  🟡 Standard services (70%): {len(STANDARD_SERVICES)} repos") 
+    print(f"  🟡 Standard services (70%): {len(STANDARD_SERVICES)} repos")
     print(f"  🔵 Shared libraries (70%): {len(SHARED_LIBRARIES)} repos")
     print(f"  🟢 Utility repos (50%): {len(UTILITY_REPOS)} repos")
 
@@ -332,20 +330,20 @@ def main():
                 success_count += 1
             else:
                 error_count += 1
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             print(f"  ❌ Error processing {repo_name}: {e}")
             error_count += 1
 
-    print(f"\n🎉 Quality gates rollout complete!")
+    print("\n🎉 Quality gates rollout complete!")
     print(f"  ✅ Successfully processed: {success_count}")
     print(f"  ❌ Errors: {error_count}")
     print(f"  📊 Total: {success_count + error_count}")
 
     if error_count > 0:
-        print(f"\n⚠️  Some repositories had errors. Please review the output above.")
+        print("\n⚠️  Some repositories had errors. Please review the output above.")
         sys.exit(1)
     else:
-        print(f"\n🎯 All repositories now have quality gates!")
+        print("\n🎯 All repositories now have quality gates!")
 
 
 if __name__ == "__main__":

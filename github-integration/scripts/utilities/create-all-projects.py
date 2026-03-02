@@ -275,7 +275,7 @@ def get_github_token() -> str:
             check=True,
         )
         return result.stdout.strip()
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         print(f"❌ Error: Could not get GitHub token: {e}")
         print("   Set GITHUB_TOKEN env var or run 'gh auth login'")
         sys.exit(1)
