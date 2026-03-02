@@ -6,7 +6,7 @@
     }
   ],
   "settings": {
-    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos/.venv-workspace/bin/python",
     "python.terminal.activateEnvironment": true,
     "python.envFile": "${workspaceFolder}/.env",
     "cursorpyright.analysis.typeCheckingMode": "strict",
@@ -16,9 +16,7 @@
     "cursorpyright.analysis.indexing": true,
     "cursorpyright.analysis.inlayHints.variableTypes": true,
     "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
-    "cursorpyright.analysis.extraPaths": [
-      "${workspaceFolder}/../Downloads/formattings 2"
-    ],
+    "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [
@@ -52,7 +50,7 @@
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": [
-      "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
+      "/Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
     ],
     "files.exclude": {
       "**/__pycache__": true,

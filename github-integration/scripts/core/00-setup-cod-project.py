@@ -157,9 +157,8 @@ def create_cod_label(org: str, repos: list[str], dry_run: bool = False) -> None:
             created += 1
 
     mode = "[DRY RUN] " if dry_run else ""
-    print(
-        f"\n  {mode}Summary: {created} {'would be created' if dry_run else 'created'}, {existing} already exist, {skipped} skipped"
-    )
+    verb = "would be created" if dry_run else "created"
+    print(f"\n  {mode}Summary: {created} {verb}, {existing} already exist, {skipped} skipped")
 
 
 def find_cod_issues(org: str, repos: list[str]) -> list[dict[str, Any]]:
@@ -355,7 +354,10 @@ Auto-managed by setup-cod-project.py
                 "api",
                 "graphql",
                 "-f",
-                f'query=mutation {{ updateProjectV2(input: {{projectId: "{result.get("id")}", readme: "{project_body}"}}) {{ projectV2 {{ id }} }} }}',
+                "query=mutation {{ updateProjectV2(input: {{"
+                f'projectId: "{result.get("id")}", '
+                f'readme: "{project_body}"'
+                "}}) {{ projectV2 {{ id }} }} }}",
             ],
             check=False,
         )
@@ -456,24 +458,6 @@ def setup_project_automation(org: str, project_number: str, dry_run: bool = Fals
 
     print("  ✓ Configuring automation workflows via GraphQL...")
 
-    workflows = [
-        {
-            "name": "Auto-add COD issues",
-            "description": "Automatically add issues with 'cod' label to project",
-            "enabled": True,
-        },
-        {
-            "name": "Auto-status on close",
-            "description": "Move to 'Done' when issue is closed",
-            "enabled": True,
-        },
-        {
-            "name": "Auto-archive after 30 days",
-            "description": "Archive items closed for 30+ days",
-            "enabled": True,
-        },
-    ]
-
     # For now, document the manual steps since GH CLI doesn't fully support workflow automation
     print("  ⚠️  Note: GitHub CLI doesn't yet support full project workflow automation")
     print("  ✓ Created project successfully. Configure automation rules manually:")
@@ -510,12 +494,6 @@ def update_issue_templates(repos_path: Path, dry_run: bool = False) -> None:
         print("  [DRY RUN] Would add this snippet to issue templates:")
         print(template_snippet)
         return
-
-    # Search for issue template files
-    template_patterns = [
-        ".github/ISSUE_TEMPLATE/*.md",
-        ".github/ISSUE_TEMPLATE.md",
-    ]
 
     print("  💡 Manual step required:")
     print("     Add the following snippet to your issue templates:")
@@ -607,7 +585,6 @@ def create_project_filters(org: str, project_number: str, project_title: str, dr
     if isinstance(existing_views_result, dict) and not existing_views_result.get("_error"):
         existing_views = [v.get("name", "") for v in existing_views_result.get("views", [])]
 
-    created = 0
     skipped = 0
 
     for view_config in views_to_create:

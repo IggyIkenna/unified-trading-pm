@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Generate CODEX_VIOLATIONS_MANIFEST.md for each service repo. This is effectively `diff-checker`, but it's without the auto-creation of issues.
+Generate CODEX_VIOLATIONS_MANIFEST.md for each service repo.
+
+This is effectively `diff-checker`, but without the auto-creation of issues.
 
 Runs the diff-checker script per repo and saves a human-readable manifest
 of all codex violations that need fixing.

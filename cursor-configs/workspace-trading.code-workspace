@@ -28,7 +28,7 @@
     {"path": "../../pnl-attribution-service"}
   ],
   "settings": {
-    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos/.venv-workspace/bin/python",
     "python.terminal.activateEnvironment": true,
     "python.envFile": "${workspaceFolder}/.env",
     "cursorpyright.analysis.typeCheckingMode": "strict",
@@ -89,7 +89,7 @@
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": [
-      "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
+      "/Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
     ],
     "files.exclude": {
       "**/__pycache__": true,

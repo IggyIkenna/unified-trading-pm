@@ -115,7 +115,10 @@ PROJECT_DEFINITIONS = {
         "type": "hierarchy",
         "primary_label": "features",
         "additional_labels": ["epic", "task", "subtask"],
-        "filter": "repo:features-calendar-service,features-delta-one-service,features-onchain-service,features-volatility-service -label:cod",
+        "filter": (
+            "repo:features-calendar-service,features-delta-one-service"
+            ",features-onchain-service,features-volatility-service -label:cod"
+        ),
         "repos": [
             "features-calendar-service",
             "features-delta-one-service",
@@ -125,15 +128,26 @@ PROJECT_DEFINITIONS = {
         "views": [
             {
                 "name": "Work Items",
-                "filter": "repo:features-calendar-service,features-delta-one-service,features-onchain-service,features-volatility-service -label:cod",
+                "filter": (
+                    "repo:features-calendar-service,features-delta-one-service"
+                    ",features-onchain-service,features-volatility-service -label:cod"
+                ),
             },
             {
                 "name": "Epics Only",
-                "filter": "repo:features-calendar-service,features-delta-one-service,features-onchain-service,features-volatility-service label:epic -label:cod",
+                "filter": (
+                    "repo:features-calendar-service,features-delta-one-service"
+                    ",features-onchain-service,features-volatility-service"
+                    " label:epic -label:cod"
+                ),
             },
             {
                 "name": "In Progress",
-                "filter": "repo:features-calendar-service,features-delta-one-service,features-onchain-service,features-volatility-service is:open -label:cod",
+                "filter": (
+                    "repo:features-calendar-service,features-delta-one-service"
+                    ",features-onchain-service,features-volatility-service"
+                    " is:open -label:cod"
+                ),
             },
         ],
     },
@@ -340,7 +354,6 @@ def run_graphql_query(token: str, query: str, variables: dict[str, Any] | None =
 def create_project(org: str, project_key: str, project_def: dict[str, Any], dry_run: bool) -> tuple[bool, str]:
     """Create a single GitHub project."""
     title = project_def["title"]
-    description = project_def["description"]
 
     if dry_run:
         print(f"   Would create project: {title}")
@@ -532,8 +545,8 @@ def main():
         print("❌ Error: Must specify --dry-run or --apply")
         sys.exit(1)
 
-    # Get GitHub token
-    token = get_github_token()
+    # Validate GitHub token is available (exits on failure)
+    get_github_token()
 
     # Determine which projects to create
     projects_to_create = args.projects if args.projects else list(PROJECT_DEFINITIONS.keys())

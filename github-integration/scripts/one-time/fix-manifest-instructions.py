@@ -44,10 +44,23 @@ def fix_issue(repo, issue_number):
     old_text = (
         "📄 **[`CODEX_VIOLATIONS_MANIFEST.md`](https://github.com/IggyIkenna/"
         + repo
-        + "/blob/main/CODEX_VIOLATIONS_MANIFEST.md)** contains **ALL violations** you must fix.\n\n**CRITICAL**:\n- ✅ Read the complete manifest from top to bottom"
+        + "/blob/main/CODEX_VIOLATIONS_MANIFEST.md)** contains"
+        " **ALL violations** you must fix.\n\n**CRITICAL**:\n"
+        "- ✅ Read the complete manifest from top to bottom"
     )
 
-    new_text = f"📄 **`CODEX_VIOLATIONS_MANIFEST.md`** (in the repo root) contains **ALL violations** you must fix.\n\n**Location**: \n- 🔗 GitHub: [View online](https://github.com/IggyIkenna/{repo}/blob/main/CODEX_VIOLATIONS_MANIFEST.md)\n- 📂 Local: `./CODEX_VIOLATIONS_MANIFEST.md` or `@CODEX_VIOLATIONS_MANIFEST.md`\n\n**CRITICAL**:\n- ✅ Read the complete manifest from top to bottom (it's in your working directory!)"
+    manifest_url = f"https://github.com/IggyIkenna/{repo}/blob/main/CODEX_VIOLATIONS_MANIFEST.md"
+    new_text = (
+        "📄 **`CODEX_VIOLATIONS_MANIFEST.md`** (in the repo root)"
+        " contains **ALL violations** you must fix.\n\n"
+        "**Location**: \n"
+        f"- 🔗 GitHub: [View online]({manifest_url})\n"
+        "- 📂 Local: `./CODEX_VIOLATIONS_MANIFEST.md`"
+        " or `@CODEX_VIOLATIONS_MANIFEST.md`\n\n"
+        "**CRITICAL**:\n"
+        "- ✅ Read the complete manifest from top to bottom"
+        " (it's in your working directory!)"
+    )
 
     if old_text not in body:
         print("  ⚠️  Already fixed or pattern not found")

@@ -74,9 +74,17 @@ project_id = os.getenv("GCP_PROJECT_ID") or "test-project"
 # ❌ Never use GOOGLE_CLOUD_PROJECT as primary (Cloud Run internal only)
 ```
 
+## AWS: Cloud-Agnostic Unit Tests
+
+- AWS unit tests: mock boto3 fully with MagicMock(spec=...) — must pass without AWS credentials
+- CLOUD_PROVIDER=aws unit tests use MagicMock(spec=S3StorageClient)
+- NEVER skip AWS unit tests due to missing credentials — if a test requires boto3 calls, mock them
+- NEVER delete AWS unit tests
+- Real AWS endpoint tests: mark with @pytest.mark.integration; acceptable to skip without creds
+
 ## Existing SSOT
 
 The canonical implementation lives in `unified-trading-services/tests/conftest.py`.
 Copy `gcp_auth_info`, `gcp_credentials`, and `gcp_project_id` fixtures from there.
 
-Codex: `06-coding-standards/testing.md#gcp-authentication-in-tests-standard`
+CODEX: 06-coding-standards/testing.md#gcp-authentication-in-tests-standard

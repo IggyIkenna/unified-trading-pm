@@ -13,6 +13,7 @@ CODEX: 06-coding-standards/quality-gates.md
 
 DO:
   timeout 120 basedpyright unified_trading_services/
+  run_timeout 120 basedpyright <source_dir>/   # use run_timeout helper — see codex QG template SSOT
   cd repo && bash scripts/quality-gates.sh --no-fix  # for audits
 
 NEVER:

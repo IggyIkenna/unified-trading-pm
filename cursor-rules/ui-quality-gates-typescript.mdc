@@ -42,3 +42,5 @@ UI `quality-gates.sh` MUST run:
 ## Python Repos: Variable Standardization
 
 When editing Python `quality-gates.sh`: use `PYTHON_CMD` with venv detection (see codex template). Migrate away from bare `python3` or inconsistent `$PYTHON`/`$PYTHON_CMD` usage.
+
+CODEX: 06-coding-standards/quality-gates.md
