@@ -57,7 +57,7 @@ If any check fails: STOP. Complete Phase 1 first.
 
 | Source | Path |
 |--------|------|
-| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 57 repos, 11 levels (AUTHORITATIVE) |
+| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
 | Manifest JSON | `unified-trading-pm/workspace-manifest.json` |
 | Tier architecture | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` |
 | Library matrix | `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` |
@@ -147,6 +147,11 @@ If fixing an import failure requires a new feature in a lower-tier library → a
 
 10 parallel agents (5–6 repos each). Three rounds per repo:
 
+**Round 0 — Setup.sh deduplication (before code changes):**
+- Verify `scripts/setup.sh` exists (Phase 1 rollout). If ad-hoc version remains, replace with canonical template from `unified-trading-pm/scripts/setup.sh`
+- Remove duplicated bootstrap logic from `quality-gates.sh`: venv creation, uv bootstrap, `uv lock`, dep install → replace with `source scripts/setup.sh` or guard with `[ -f .setup-stamp ]` check
+- Verify `bash scripts/setup.sh --check` passes before any code changes
+
 **Round 1 — Mechanical replacements (no structural changes):**
 - `os.getenv(KEY, '')` or `os.getenv(KEY)` → `UnifiedCloudConfig` field or `os.environ[KEY]` (empty-string fallback = silent failure = forbidden)
 - `bare except:` → specific typed exception + log + reraise
@@ -170,6 +175,7 @@ timeout 60 ruff check --select C901 . 2>/dev/null
 Files >900 lines: split by Single Responsibility Principle. Each split is its own commit with a clear message explaining what was extracted and why.
 Functions >50 lines: extract named sub-functions for each logical step.
 
+Commit Round 0: `'chore: deduplicate setup logic — quality-gates.sh sources setup.sh'`
 Commit Round 1+2: `'fix: global violation sweep — error handling + mechanical QG fixes'`
 Commit Round 3: `'refactor: split large files by SRP — file size enforcement'`
 
@@ -177,7 +183,7 @@ Commit Round 3: `'refactor: split large files by SRP — file size enforcement'`
 
 Each repo: A → B → C → D1 → D2 → D3 → D4 → D5.
 
-**Step A** — Deploy structure: verify `cloudbuild.yaml`, `quality-gates.sh`, `pyproject.toml`, `.dependency-matrix.json` present and correct. No old names anywhere.
+**Step A** — Deploy structure: verify `cloudbuild.yaml`, `quality-gates.sh`, `setup.sh`, `pyproject.toml`, `.dependency-matrix.json` present and correct. Run `bash scripts/setup.sh --check`. No old names anywhere.
 
 **Step B** — Tests first (write/fix tests before any code rewrite):
 - Integration Layer 0: `test_contract_alignment.py` + `test_ac_uic_alignment.py` in AC; `test_uic_ac_alignment.py` in UIC_INT — must pass before any T1 work
@@ -231,8 +237,10 @@ Same A → B → C → D1–D5:
 
 ## Done Criteria
 
-- [ ] Import smoke test passes in all 57 repos
-- [ ] Global violation sweep committed (Round 1+2) to all 57 repos
+- [ ] `bash scripts/setup.sh --check` passes in all 58 repos
+- [ ] Import smoke test passes in all 58 repos (51 Python + 7 TS verified via setup.sh)
+- [ ] Setup logic deduplicated: quality-gates.sh no longer duplicates venv/deps bootstrap (Round 0)
+- [ ] Global violation sweep committed (Round 1+2) to all 58 repos
 - [ ] Large-file SRP splits committed (Round 3) to all affected repos
 - [ ] All 8 T0 repos pass D5 full quickmerge
 - [ ] Integration Layer 0 tests pass (AC↔UIC schema alignment)
@@ -254,4 +262,9 @@ Same A → B → C → D1–D5:
 - `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` — tier rules
 - `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` — full tier architecture
 - `unified-trading-codex/06-coding-standards/quality-gates.md` — QG template
+- `unified-trading-codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode, fresh env, AGENTS.md)
+- `unified-trading-pm/scripts/setup.sh` — setup.sh SSOT template (supports `--isolated` for standalone repos)
+- `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs
+- `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template for agents/developers
 - `.cursor/rules/delete-deprecated.mdc` — no backward compat, delete old code
+- `.cursor/rules/mandatory-setup-sh.mdc` — every repo must have setup.sh

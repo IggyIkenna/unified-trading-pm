@@ -14,15 +14,19 @@ MANIFEST = SCRIPT_DIR.parent / "workspace-manifest.json"
 OUTPUT = SCRIPT_DIR.parent / "WORKSPACE_MANIFEST_DAG.svg"
 
 LEVEL_COLORS = {
-    0: "#3b82f6",
-    1: "#16a34a",
-    2: "#7c3aed",
-    3: "#ec4899",
-    4: "#dc2626",
-    5: "#ea580c",
-    6: "#0891b2",
-    7: "#06b6d4",
-    8: "#f97316",
+    0: "#1e3a5f",   # PM — dark navy
+    1: "#16a34a",   # Codex — green
+    2: "#3b82f6",   # T0 foundation — blue
+    3: "#7c3aed",   # T1 UTS — purple
+    4: "#8b5cf6",   # T2 interfaces — violet
+    5: "#ec4899",   # T3 core interfaces — pink
+    6: "#dc2626",   # DeFi/sports execution — red
+    7: "#ea580c",   # Foundational services — orange
+    8: "#0891b2",   # Deployment infra — cyan
+    9: "#06b6d4",   # Data-flow services — teal
+    10: "#f97316",  # Operational + API — amber
+    11: "#a855f7",  # UIs — purple
+    12: "#64748b",  # IaC + post-deploy — slate
 }
 
 TYPE_CSS = {
@@ -101,12 +105,18 @@ def generate() -> None:
     total = len(repos)
 
     level_desc: dict[int, str] = {}
-    for entry in data.get("topology", {}).get("merge_order", []):
+    # Read level descriptions from topologicalOrder (SSOT) or legacy topology.merge_order
+    topo_levels = data.get("topologicalOrder", {}).get("levels", [])
+    if not topo_levels:
+        topo_levels = data.get("topology", {}).get("merge_order", [])
+    for entry in topo_levels:
         level_desc[entry["level"]] = entry.get("description", f"Level {entry['level']}")
 
     levels: dict[int, list] = {}
     for name, info in repos.items():
-        lvl = info.get("merge_level", 0)
+        lvl = info.get("merge_level")
+        if lvl is None or lvl < 0:
+            continue  # skip deprecated/null repos
         css = "future" if info.get("status") == "planned" else TYPE_CSS.get(info.get("type", ""), "infra")
         ver = info.get("version", "0.1.0")
         levels.setdefault(lvl, []).append((name, ver, css))
