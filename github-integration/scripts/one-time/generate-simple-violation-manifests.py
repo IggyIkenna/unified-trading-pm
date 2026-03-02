@@ -32,7 +32,12 @@ REPOS = [
 ]
 
 
-def run_rg(pattern: str, service_dir: Path, type_filter: str = "py", exclude_globs: list[str] = None) -> list[str]:
+def run_rg(
+    pattern: str,
+    service_dir: Path,
+    type_filter: str = "py",
+    exclude_globs: list[str] | None = None,
+) -> list[str]:
     """Run ripgrep and return matching lines."""
     try:
         cmd = ["rg", pattern, "--type", type_filter, "--line-number", "."]
@@ -51,13 +56,14 @@ def run_rg(pattern: str, service_dir: Path, type_filter: str = "py", exclude_glo
         )
         # Return non-empty lines (rg returns exit code 1 if no matches)
         return [line for line in result.stdout.split("\n") if line.strip()]
-    except (ConnectionError, TimeoutError, OSError, ValueError):
+    except (OSError, ValueError):
         return []
 
 
-def check_violations(service_dir: Path, service_name: str) -> dict:
+def check_violations(service_dir: Path, service_name: str) -> dict[str, list[str]]:
     """Check all codex violations for a service."""
-    violations = {}
+    _ = service_name  # Used for logging context
+    violations: dict[str, list[str]] = {}
 
     # Exclusions matching quality-gates.sh
     # Quality gates exclude: tests/**, scripts/**
@@ -101,7 +107,7 @@ def check_violations(service_dir: Path, service_name: str) -> dict:
         violations["time_sleep_in_async"] = time_sleep_matches
 
     # Check 8: Files >1500 lines (exclude tests/ and scripts/)
-    large_files = []
+    large_files: list[str] = []
     for py_file in service_dir.rglob("*.py"):
         rel_path = str(py_file.relative_to(service_dir))
         if (
@@ -115,14 +121,14 @@ def check_violations(service_dir: Path, service_name: str) -> dict:
             line_count = len(py_file.read_text().split("\n"))
             if line_count > 1500:
                 large_files.append(f"{py_file.relative_to(service_dir)} ({line_count} lines)")
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.warning("Skipping item during operation: %s", e)
             continue
     if large_files:
         violations["files_too_large"] = large_files
 
     # Check 9: Imports inside functions (exclude tests/ and scripts/)
-    import_in_func_matches = []
+    import_in_func_matches: list[str] = []
     for py_file in service_dir.rglob("*.py"):
         rel_path = str(py_file.relative_to(service_dir))
         if (
@@ -146,7 +152,7 @@ def check_violations(service_dir: Path, service_name: str) -> dict:
                 elif not line.startswith(" ") and not line.startswith("\t") and stripped:
                     # Back at top level
                     in_function = False
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+        except (OSError, ValueError) as e:
             logger.warning("Skipping item during operation: %s", e)
             continue
     if import_in_func_matches:
@@ -155,7 +161,7 @@ def check_violations(service_dir: Path, service_name: str) -> dict:
     return violations
 
 
-def generate_manifest(service_name: str, violations: dict) -> str:
+def generate_manifest(service_name: str, violations: dict[str, list[str]]) -> str:
     """Generate markdown manifest from violations."""
     if not violations:
         return f"""# Codex Violations Manifest: {service_name}
@@ -365,8 +371,8 @@ def generate_manifest(service_name: str, violations: dict) -> str:
     return "\n".join(lines)
 
 
-def main():
-    dry_run = "--dry-run" in sys.argv
+def main() -> int:
+    dry_run: bool = "--dry-run" in sys.argv
 
     script_dir = Path(__file__).parent
     codex_root = script_dir.parent.parent.parent.parent
@@ -381,7 +387,7 @@ def main():
     print("=" * 80)
     print()
 
-    results = {}
+    results: dict[str, dict[str, list[str]]] = {}
 
     for service in REPOS:
         service_dir = workspace_root / service

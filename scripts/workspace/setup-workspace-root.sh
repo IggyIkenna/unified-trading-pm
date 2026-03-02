@@ -72,8 +72,9 @@ get_workspace_root() {
     fi
 
     # Try to detect from script location
-    # This script is in: <workspace>/unified-trading-pm/scripts/workspace/
-    detected_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+    # This script is in: <repos-parent>/unified-trading-system-repos/unified-trading-pm/scripts/workspace/
+    # We want the parent of unified-trading-system-repos/ (4 levels up)
+    detected_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 
     log_info "Detected workspace root: ${BOLD}${detected_root}${NC}"
     echo ""
@@ -142,7 +143,7 @@ EOF
 # ── Update workspace configs ──────────────────────────────────────────────────
 update_workspace_configs() {
     local workspace_root="$1"
-    local configs_dir="${workspace_root}/.cursor/workspace-configs"
+    local configs_dir="${workspace_root}/unified-trading-system-repos/.cursor/workspace-configs"
 
     if [ ! -d "$configs_dir" ]; then
         log_warning "Workspace configs directory not found: ${configs_dir}"

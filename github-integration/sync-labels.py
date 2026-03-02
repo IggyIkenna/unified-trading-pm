@@ -44,9 +44,7 @@ def main() -> int:
         print(f"ERROR: schema file not found: {schema}", file=sys.stderr)
         return 1
 
-    data: dict[str, object] = cast(
-        dict[str, object], yaml.safe_load(schema.read_text(encoding="utf-8")) or {}
-    )
+    data: dict[str, object] = cast(dict[str, object], yaml.safe_load(schema.read_text(encoding="utf-8")) or {})
     raw_labels = data.get("labels", [])
     if not isinstance(raw_labels, list):
         print("ERROR: schema labels must be a list", file=sys.stderr)

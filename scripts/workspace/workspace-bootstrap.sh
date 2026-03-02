@@ -254,11 +254,21 @@ else
     fi
 fi
 
-# Install workspace-level tools
+# Install workspace-level tools and aggregate all repo dependencies
 if [ -d "$WORKSPACE_VENV" ] && [ "$CHECK_ONLY" != true ]; then
     source "$WORKSPACE_VENV/bin/activate" 2>/dev/null || source "$WORKSPACE_VENV/Scripts/activate" 2>/dev/null || true
     if command -v uv &>/dev/null; then
         uv pip install ruff basedpyright --quiet 2>/dev/null && log_ok "Workspace tools (ruff, basedpyright)" || log_warn "Tool install failed"
+    fi
+    # Aggregate and install all repo dependencies into workspace venv
+    AGGREGATE_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py"
+    if [ -f "$AGGREGATE_SCRIPT" ] && [ -n "$PYTHON_CMD" ]; then
+        echo -e "\n  ${BLUE}Aggregating workspace dependencies...${NC}"
+        if "$PYTHON_CMD" "$AGGREGATE_SCRIPT" --resolve 2>&1 | tail -10; then
+            log_ok "Workspace deps aggregated (all repos)"
+        else
+            log_warn "Dependency aggregation had issues (non-fatal)"
+        fi
     fi
 fi
 
