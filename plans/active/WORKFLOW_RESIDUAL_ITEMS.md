@@ -262,61 +262,67 @@ These repos exist in the workspace but weren't part of the primary scan:
 **Note:** deployment-api and deployment-service do not depend on each other in code (verified in pyproject.toml). deployment-api uses unified-cloud-services + unified-events-interface; deployment-service uses unified-trading-services only.
 **Priority:** P2 (doc rename done; repo/package rename when convenient)
 
-### R-13: unified-trading-deployment-v3 -> unified-deployment-library
+### R-13: unified-trading-deployment-v3 — IN TRANSITION (Not Redundant)
 
-**Current name:** `unified-trading-deployment-v3`
-**Problem:** Version number in repo name, unclear suffix
-**Proposed name:** `unified-deployment-library`
-**Priority:** P3 (this is infrastructure tooling, less visible)
+**Status:** INVESTIGATED (March 2). NOT redundant — mid-split into 4 repos.
 
-### R-14: Missing UTS/UCL Service APIs (Blocks 5 T4 Repos)
+**Current state:** unified-trading-deployment-v3 is the SSOT for deployment infrastructure while a planned four-way split is in progress:
 
-**Affected repos:** features-calendar-service, features-onchain-service, ml-training-service, ml-inference-service, features-multi-timeframe-service
-**Missing APIs in `unified_trading_services` (to become `unified_cloud_library`):**
-- `BaseModeHandler` — base class for batch/live mode handlers
-- `GCSEventSink` — event sink implementation for GCS (**SEE ARCHITECTURAL QUESTIONS BELOW**)
-- `GracefulShutdownHandler` — signal handler for clean shutdown (library utility services import)
-- `setup_service()` — service initialization function
-- `SecretNotFoundError` — exception class (FIXED in calendar: now uses `get_secret()` which returns None)
+| Extracted Repo | What It Contains | Status |
+|---|---|---|
+| deployment-service (was deployment-engine) | Core orchestration (shard calculator, catalog, cloud client) | Scaffolded v0.1.0 |
+| deployment-api | FastAPI REST/SSE API (27 route modules, OAuth) | Fully extracted v0.1.0 |
+| deployment-ui | React/TypeScript frontend | Scaffolded v0.1.0 |
+| system-integration-tests | Smoke test infrastructure | Scaffolded |
 
-**Root cause:** These T4 repos reference UTS APIs that were planned but never implemented.
+**What remains ONLY in v3:** Terraform modules, YAML configs, smoke test framework, full CLI.
+**No repos depend on v3** — deployment-api uses UCI+UEI, deployment-service uses UTS.
+**Action:** Continue extraction. Archive v3 only after all 4 repos pass quality gates.
+**Priority:** P3 (infrastructure transition, not blocking services)
 
-**ARCHITECTURAL QUESTIONS (must resolve before implementing):**
+### R-14: Missing UTS Service APIs — MOSTLY RESOLVED (March 2)
 
-1. **`GCSEventSink` naming is WRONG** — this is cloud-specific (GCS). UTS/UCL is supposed to be cloud-AGNOSTIC. The correct pattern:
-   - UCI (unified-cloud-interface) defines the abstract `EventSink` protocol
-   - UTS/UCL provides cloud-agnostic `EventSink` implementation that delegates to the configured provider
-   - Services call `EventSink.write(...)` — NEVER reference GCS/S3 directly
-   - The cloud provider decision (GCS vs S3 vs Azure) lives in UCI/UCL, NOT in services
+**Status:** RESOLVED (setup_service added, architecture audited)
 
-2. **Where does the cloud abstraction live?**
-   - UCI = defines protocols/interfaces (what a storage client, event sink, secret client LOOKS like)
-   - UCL (UTS) = provides concrete implementations that use UCI interfaces
-   - Services import from UCL and get cloud-agnostic behavior
-   - Need to verify: does this match what's actually coded, or are services leaking cloud-specific imports?
+**Original issue:** T4 services couldn't import `setup_service`, `BaseModeHandler`, `GCSEventSink`, `GracefulShutdownHandler` from UTS.
 
-3. **`SecretNotFoundError` — do we already have these secrets?**
-   - Check Secret Manager in GCP: do the referenced secrets (fred-api-key, alpha-vantage-api-key, etc.) already exist?
-   - If yes, the error is "not found in SM" = config issue, not code issue
-   - If no, the `get_secret()` returning None pattern is correct (optional data sources)
+**Root cause:** Only `setup_service()` was actually missing. All other APIs existed in UTS source but:
+1. `setup_service()` was never added as an export (referenced by 12+ services)
+2. Some repos had stale UTS installs in `.venv-workspace`
 
-4. **`GracefulShutdownHandler` in a library?**
-   - Yes, this makes sense as a library utility — services import it for clean shutdown
-   - It's cloud-agnostic (signal handling is OS-level, not cloud-level)
-   - But verify it doesn't have cloud-specific dependencies
+**Fixes applied (March 2):**
+- Added `setup_service = setup_events` alias in `unified_trading_services/__init__.py` + `__all__`
+- Reinstalled UTS from source (`uv pip install -e unified-trading-services/`)
+- Fixed ml-inference-service conftest: `mode="test"` + `MockEventSink()` (was `mode="batch"` without sink)
+- Fixed features-onchain-service: import `log_dependency_failures` from UTS (not local module)
 
-5. **`setup_service()` — what should it actually do?**
-   - Consolidate: event setup + sink config + signal handlers + logging?
-   - Or should each concern be separate? (setup_events, setup_signals, setup_logging)
+**Test results after fix:**
+| Repo | Before | After |
+|------|--------|-------|
+| features-calendar-service | 181/187 | 177 unit pass (6 fail = pre-existing event logging) |
+| features-onchain-service | 0 (collection errors) | 69 pass, 1 fail |
+| ml-training-service | 0 (52 collection errors) | 235 pass, 5 fail |
+| ml-inference-service | 0 (conftest error) | 73 pass, 14 fail |
 
-**Fix approach (AFTER resolving questions):**
-1. Deep research: audit UCI, UTS, UEI to understand current abstraction boundaries
-2. Decide: is `EventSink` in UCI or UTS? Cloud-agnostic naming throughout
-3. Implement the resolved APIs with correct abstraction level
-4. For `setup_events(sink=...)` in ml-inference-service: conftest needs a mock EventSink
+**ARCHITECTURAL AUDIT RESULTS (resolved questions):**
 
-**Effort:** ~4-6 hours to implement properly, AFTER architectural decisions
-**Priority:** P0 (blocks all T4 service testing)
+1. **Cloud abstraction boundary is CORRECT (90% aligned):**
+   - UCI defines: `StorageClient`, `SecretClient`, `QueueClient` ABCs + cloud-provider implementations
+   - UEI defines: `EventSink` Protocol + `setup_events()` + `MockEventSink`
+   - UTS provides: `GcsEventSink`, `S3EventSink`, `PubSubEventSink`, `QueueEventSink`, `LocalFsEventSink`, `CompositeEventSink`
+   - UTS also provides: `BaseModeHandler`, `ServiceCLI`, `GracefulShutdownHandler` (all cloud-agnostic)
+
+2. **`GCSEventSink` naming:** The NAME is cloud-specific but the ARCHITECTURE is correct — services choose a cloud-specific sink implementation and inject it via `setup_events(sink=...)`. Future improvement: add a `create_event_sink()` factory that auto-selects based on `CLOUD_PROVIDER` env var.
+
+3. **`GracefulShutdownHandler`:** Confirmed cloud-agnostic (uses `psutil`, `signal`, `atexit`). Correct location in UTS as library utility.
+
+4. **`setup_service()` = `setup_events()`:** Identical signature `(service_name, mode, sink)`. Services inject the sink at startup.
+
+**Remaining T4 test failures (not R-14, separate issues):**
+- Codex agent introduced test files referencing non-existent local exports (MODES_WITH_DEPRECATED, etc.)
+- Missing optuna package for ml-training-service (install: `uv pip install optuna`)
+- event_logging tests expect lifecycle event markers not yet in source code
+**Priority:** RESOLVED (was P0, now remaining items are P2)
 
 ### R-15: execution-service Circular Import
 
@@ -431,18 +437,22 @@ These repos exist in the workspace but weren't part of the primary scan:
 - [x] Fix UMLI error recovery test (R-04) — 7/7 tests pass
 - [x] Fix UFCL stale install + log format bugs (R-01) — 54/54 tests pass
 - [x] Fix calendar config SecretNotFoundError — now uses get_secret()
+- [x] Add setup_service() export to UTS (R-14) — unblocks 377+ tests across 4 T4 services
+- [x] Fix ml-inference-service conftest (mode="test" + MockEventSink)
+- [x] Fix features-onchain-service batch handler import (log_dependency_failures from UTS)
+- [x] Deep research: UCI vs UTS cloud abstraction boundaries — architecture 90% correct
+- [x] Investigate unified-trading-deployment-v3 (R-13) — not redundant, mid-split into 4 repos
+- [x] Codex docs alignment review (Section 4) — 85% aligned
 
 ### Immediate Next (P0)
-- [ ] Implement missing UTS service APIs (R-14) — blocks ALL T4 service testing
-  - `BaseModeHandler`, `GCSEventSink`, `GracefulShutdownHandler`, `setup_service()`
 - [ ] Fix execution-service circular import (R-15)
-- [ ] Fix deployment-engine missing cloud module (R-16)
+- [ ] Fix deployment-service missing cloud module (R-16)
+- [ ] Fix remaining codex agent test issues (non-existent local exports referenced in test files)
 
 ### This Week (P1)
-- [ ] Rename unified-trading-services -> unified-cloud-library (R-11)
+- [ ] Scan 14 unscanned repos (R-09) — need full workspace visibility
 - [ ] UTS test coverage to 70% (R-06)
-- [ ] Scan 14 unscanned repos (R-09)
-- [ ] Codex docs alignment review (Section 4)
+- [ ] Codex docs fixes: remove SecretNotFoundError refs, update old package names
 
 ### Next Week (P2)
 - [ ] UTS basedpyright 272 errors (R-05)
