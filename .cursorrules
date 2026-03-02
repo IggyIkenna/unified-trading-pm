@@ -1,0 +1,24 @@
+# unified-trading-pm — Workspace Rules
+
+## This Repo
+
+unified-trading-pm is Level 0 (root) in the workspace topology.
+It is NOT a Python package — it is the SSOT template host and workspace management repo.
+
+## Key Rules
+
+1. **SSOT templates** (setup.sh, quality-gates.sh, quickmerge.sh, version-bump.yml) are edited ONLY here, then propagated
+2. **workspace-manifest.json** changes require: `python3 scripts/generate_workspace_dag.py`
+3. **Python scripts** must pass `basedpyright` and `ruff` (line-length 120)
+4. **Tests**: `pytest tests/` (Python) + `bats tests/` (bash)
+5. **Commit via**: `bash scripts/quickmerge.sh "message"` — never `git push` directly
+6. **uv not pip** — always `uv pip install`
+7. **No os.getenv()** — use UnifiedCloudConfig (in service repos; PM scripts may use env vars for CI)
+
+## Repo-Specific Rules
+
+See `.cursor/rules/` for detailed PM-specific rules:
+- `pm-repo-context.mdc` — what this repo is and is not
+- `ssot-template-propagation.mdc` — template edit and propagation workflow
+- `manifest-dag-sync.mdc` — keep DAG SVG in sync with manifest
+- `pm-python-standards.mdc` — Python linting and testing standards

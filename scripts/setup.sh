@@ -46,6 +46,11 @@
 
 set -e
 
+# ── PATH EXTENSIONS (Homebrew, pyenv, etc. — bash doesn't source .zshrc) ────
+for p in /opt/homebrew/bin /usr/local/bin "$HOME/.local/bin" "$HOME/.pyenv/shims"; do
+    [ -d "$p" ] && case ":$PATH:" in *":$p:"*) ;; *) export PATH="$p:$PATH" ;; esac
+done
+
 # ── REPO-SPECIFIC SETTINGS (edit per repo) ──────────────────────────────────
 # Override these in each repo's copy. Only PACKAGE_NAME is required.
 PACKAGE_NAME="${PACKAGE_NAME:-}"        # e.g. "unified_api_contracts" — auto-detected from pyproject.toml if empty
@@ -102,6 +107,10 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 if [ -z "$PACKAGE_NAME" ] && [ -f "pyproject.toml" ]; then
     # Try [project] name field first, convert dashes to underscores
     PACKAGE_NAME=$(grep -A 1 '^\[project\]' pyproject.toml | grep '^name' | sed 's/.*= *"//;s/".*//' | tr '-' '_' 2>/dev/null || echo "")
+    # Verify the package directory actually exists (some repos have pyproject.toml but no Python package)
+    if [ -n "$PACKAGE_NAME" ] && [ ! -d "$PACKAGE_NAME" ] && [ ! -d "src/$PACKAGE_NAME" ]; then
+        PACKAGE_NAME=""
+    fi
 fi
 
 # ── AUTO-DETECT REQUIRED_PYTHON from pyproject.toml ─────────────────────────
@@ -168,7 +177,14 @@ log_step "Virtual environment (.venv)"
 if [ "$IN_CI" = true ]; then
     log_skip "CI mode — venv managed by CI"
 elif [ "$CHECK_ONLY" = true ]; then
-    [ -d ".venv" ] && log_ok ".venv exists" || { log_fail ".venv missing"; ISSUES=$((ISSUES + 1)); }
+    if [ -d ".venv" ]; then
+        log_ok ".venv exists"
+    elif [ -d "../.venv-workspace" ] && [ -f "../.venv-workspace/bin/python" ]; then
+        log_ok ".venv-workspace available (workspace venv)"
+    else
+        log_fail ".venv missing"
+        ISSUES=$((ISSUES + 1))
+    fi
 elif [ -d ".venv" ] && [ "$FORCE" != true ]; then
     # Verify venv Python matches required version
     VENV_PY=$(".venv/bin/python" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1 || echo "")
