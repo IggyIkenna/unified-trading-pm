@@ -16,9 +16,13 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
+
+# Type alias
+JsonDict = dict[str, object]
 
 # 13 service repos for Initial Cleanup
-REPOS = [
+REPOS: list[str] = [
     "execution-service",
     "strategy-service",
     "instruments-service",
@@ -35,10 +39,19 @@ REPOS = [
 ]
 
 
-def run_diff_checker(codex_root: Path, workspace_root: Path, service_name: str) -> dict:
+def _get_gaps(violations: JsonDict) -> list[JsonDict]:
+    """Safely extract gaps list from violations dict."""
+    raw: object = violations.get("gaps", [])
+    if isinstance(raw, list):
+        raw_list: list[object] = cast(list[object], raw)
+        return [cast(JsonDict, item) for item in raw_list if isinstance(item, dict)]
+    return []
+
+
+def run_diff_checker(codex_root: Path, workspace_root: Path, service_name: str) -> JsonDict:
     """Run diff-checker for a specific service and return violations as JSON."""
     # Use the utilities script in this project directory
-    diff_checker_script = (
+    diff_checker_script: Path = (
         codex_root
         / "11-project-management"
         / "github-integration"
@@ -50,9 +63,9 @@ def run_diff_checker(codex_root: Path, workspace_root: Path, service_name: str) 
     )
 
     # Run diff-checker with --dry-run and capture JSON output
-    temp_json = workspace_root / f".temp_{service_name}_violations.json"
+    temp_json: Path = workspace_root / f".temp_{service_name}_violations.json"
 
-    cmd = [
+    cmd: list[str] = [
         "python3",
         str(diff_checker_script),
         "--dry-run",
@@ -69,7 +82,7 @@ def run_diff_checker(codex_root: Path, workspace_root: Path, service_name: str) 
     print(f"  Running diff-checker for {service_name}...", end=" ", flush=True)
 
     try:
-        result = subprocess.run(
+        result: subprocess.CompletedProcess[str] = subprocess.run(
             cmd,
             cwd=workspace_root,
             capture_output=True,
@@ -78,45 +91,46 @@ def run_diff_checker(codex_root: Path, workspace_root: Path, service_name: str) 
         )
 
         if result.returncode != 0:
-            print("❌ FAILED")
+            print("FAILED")
             print(f"Error: {result.stderr}")
             return {"gaps": [], "error": result.stderr}
 
         # Read the JSON output
         if temp_json.exists():
-            violations = json.loads(temp_json.read_text())
+            violations: JsonDict = cast(JsonDict, json.loads(temp_json.read_text()))
             temp_json.unlink()  # Clean up
-            print(f"✅ Found {len(violations.get('gaps', []))} violations")
+            gaps: list[JsonDict] = _get_gaps(violations)
+            print(f"Found {len(gaps)} violations")
             return violations
         else:
-            print("⚠️  No output file")
+            print("No output file")
             return {"gaps": []}
 
     except (OSError, PermissionError, ValueError) as e:
-        print(f"❌ ERROR: {e}")
+        print(f"ERROR: {e}")
         return {"gaps": [], "error": str(e)}
 
 
-def generate_manifest_markdown(service_name: str, violations: dict) -> str:
+def generate_manifest_markdown(service_name: str, violations: JsonDict) -> str:
     """Generate human-readable markdown manifest from violations JSON."""
-    gaps = violations.get("gaps", [])
+    gaps: list[JsonDict] = _get_gaps(violations)
 
     if not gaps:
         return f"""# Codex Violations Manifest: {service_name}
 
-✅ **No violations found!** This service is compliant with all codex standards.
+No violations found! This service is compliant with all codex standards.
 
 Generated: {violations.get("timestamp", "unknown")}
 """
 
     # Group by violation type
-    by_type = {}
+    by_type: dict[str, list[JsonDict]] = {}
     for gap in gaps:
-        gap_type = gap.get("gap_type", "unknown")
+        gap_type: str = str(gap.get("gap_type", "unknown"))
         by_type.setdefault(gap_type, []).append(gap)
 
     # Build markdown
-    lines = [
+    lines: list[str] = [
         f"# Codex Violations Manifest: {service_name}",
         "",
         f"**Total Violations**: {len(gaps)}",
@@ -140,22 +154,23 @@ Generated: {violations.get("timestamp", "unknown")}
     )
 
     # Group by category
-    by_category = {}
+    by_category: dict[str, list[JsonDict]] = {}
     for gap in gaps:
-        category = gap.get("category", "uncategorized")
+        category: str = str(gap.get("category", "uncategorized"))
         by_category.setdefault(category, []).append(gap)
 
-    for category, items in sorted(by_category.items()):
+    for cat_name, cat_items in sorted(by_category.items()):
         lines.extend(
             [
-                f"### {category.replace('_', ' ').title()}",
+                f"### {cat_name.replace('_', ' ').title()}",
                 "",
-                f"**Count**: {len(items)}",
+                f"**Count**: {len(cat_items)}",
                 "",
             ]
         )
 
-        for i, gap in enumerate(items, 1):
+        for i, gap in enumerate(cat_items, 1):
+            auto_fixable: bool = bool(gap.get("auto_fixable", False))
             lines.extend(
                 [
                     f"#### {i}. {gap.get('title', 'Unknown')}",
@@ -163,24 +178,27 @@ Generated: {violations.get("timestamp", "unknown")}
                     f"- **Priority**: {gap.get('priority', 'P3-low')}",
                     f"- **Gap ID**: `{gap.get('gap_id', 'unknown')}`",
                     f"- **Type**: {gap.get('gap_type', 'unknown')}",
-                    f"- **Auto-fixable**: {'✅ Yes' if gap.get('auto_fixable', False) else '❌ No'}",
+                    f"- **Auto-fixable**: {'Yes' if auto_fixable else 'No'}",
                     "",
                     "**Description**:",
-                    gap.get("description", "No description"),
+                    str(gap.get("description", "No description")),
                     "",
                 ]
             )
 
-            affected = gap.get("affected_files", [])
+            raw_affected: object = gap.get("affected_files", [])
+            affected: list[str] = (
+                [str(f) for f in cast(list[object], raw_affected)] if isinstance(raw_affected, list) else []
+            )
             if affected:
                 lines.append("**Affected Files**:")
-                for f in affected[:10]:  # Limit to first 10
-                    lines.append(f"- `{f}`")
+                for af in affected[:10]:  # Limit to first 10
+                    lines.append(f"- `{af}`")
                 if len(affected) > 10:
                     lines.append(f"- ... and {len(affected) - 10} more files")
                 lines.append("")
 
-            codex_ref = gap.get("codex_reference", "")
+            codex_ref: str = str(gap.get("codex_reference", ""))
             if codex_ref:
                 lines.extend(
                     [
@@ -195,16 +213,13 @@ Generated: {violations.get("timestamp", "unknown")}
     return "\n".join(lines)
 
 
-def main():
-    dry_run = "--dry-run" in sys.argv
+def main() -> int:
+    dry_run: bool = "--dry-run" in sys.argv
 
     # Find paths
-    script_dir = Path(__file__).parent
-    # Script is in: unified-trading-codex/11-project-management/github-integration/scripts/one-time/
-    # Codex root: unified-trading-codex/
-    codex_root = script_dir.parent.parent.parent.parent
-    # Workspace root: unified-trading-system-repos/
-    workspace_root = codex_root.parent
+    script_dir: Path = Path(__file__).parent
+    codex_root: Path = script_dir.parent.parent.parent.parent
+    workspace_root: Path = codex_root.parent
 
     print(f"Codex root: {codex_root}")
     print(f"Workspace root: {workspace_root}")
@@ -216,50 +231,53 @@ def main():
     print("=" * 80)
     print()
 
-    results = {}
+    results: dict[str, JsonDict] = {}
 
     # Run diff-checker ONCE for all repos (it scans the entire workspace)
     print("Running diff-checker for entire workspace...")
-    all_violations = run_diff_checker(codex_root, workspace_root, "workspace")
+    all_violations: JsonDict = run_diff_checker(codex_root, workspace_root, "workspace")
 
-    print(f"  Total gaps found across workspace: {len(all_violations.get('gaps', []))}")
+    all_gaps: list[JsonDict] = _get_gaps(all_violations)
+    print(f"  Total gaps found across workspace: {len(all_gaps)}")
     print()
 
     # Now filter and create per-repo manifests
     for service in REPOS:
-        service_dir = workspace_root / service
+        service_dir: Path = workspace_root / service
 
         if not service_dir.exists():
-            print(f"⚠️  SKIP: {service} (directory not found)")
+            print(f"  SKIP: {service} (directory not found)")
             continue
 
         # Filter gaps to only those from this service
-        service_gaps = []
-        for gap in all_violations.get("gaps", []):
-            affected_files = gap.get("affected_files", [])
-            # Check if any affected file belongs to this service
+        service_gaps: list[JsonDict] = []
+        for gap in all_gaps:
+            raw_affected_files: object = gap.get("affected_files", [])
+            affected_files: list[str] = (
+                [str(f) for f in cast(list[object], raw_affected_files)] if isinstance(raw_affected_files, list) else []
+            )
             if any(
-                str(f).startswith(f"{service}/") or str(f).startswith(f"{workspace_root}/{service}/")
-                for f in affected_files
+                af.startswith(f"{service}/") or af.startswith(f"{workspace_root}/{service}/") for af in affected_files
             ):
                 service_gaps.append(gap)
 
-        # Create violations dict for this service
-        service_violations = {"gaps": service_gaps, "timestamp": all_violations.get("timestamp", "unknown")}
+        service_violations: JsonDict = {
+            "gaps": service_gaps,
+            "timestamp": all_violations.get("timestamp", "unknown"),
+        }
 
         results[service] = service_violations
 
         print(f"  {service}: {len(service_gaps)} violations")
 
-        # Generate manifest
-        manifest_md = generate_manifest_markdown(service, service_violations)
-        manifest_path = service_dir / "CODEX_VIOLATIONS_MANIFEST.md"
+        manifest_md: str = generate_manifest_markdown(service, service_violations)
+        manifest_path: Path = service_dir / "CODEX_VIOLATIONS_MANIFEST.md"
 
         if not dry_run:
             manifest_path.write_text(manifest_md)
-            print(f"    → Saved to {manifest_path.relative_to(workspace_root)}")
+            print(f"    Saved to {manifest_path.relative_to(workspace_root)}")
         else:
-            print(f"    → Would save to {manifest_path.relative_to(workspace_root)}")
+            print(f"    Would save to {manifest_path.relative_to(workspace_root)}")
 
         print()
 
@@ -269,11 +287,12 @@ def main():
     print("=" * 80)
     print()
 
-    total_violations = 0
-    for service, violations in results.items():
-        count = len(violations.get("gaps", []))
+    total_violations: int = 0
+    for service, violations_data in results.items():
+        svc_gaps: list[JsonDict] = _get_gaps(violations_data)
+        count: int = len(svc_gaps)
         total_violations += count
-        status = "✅" if count == 0 else f"❌ {count} violations"
+        status: str = "OK" if count == 0 else f"{count} violations"
         print(f"  {service:40s} {status}")
 
     print()
@@ -281,9 +300,9 @@ def main():
     print()
 
     if dry_run:
-        print("🔍 DRY RUN: No files written. Re-run without --dry-run to save manifests.")
+        print("DRY RUN: No files written. Re-run without --dry-run to save manifests.")
     else:
-        print("✅ DONE: Manifests saved to each service directory.")
+        print("DONE: Manifests saved to each service directory.")
 
     return 0
 

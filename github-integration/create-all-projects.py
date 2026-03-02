@@ -24,15 +24,19 @@ import os
 import subprocess
 import sys
 import time
-from typing import Any
+from typing import cast
 
 import requests
+
+# Type aliases
+JsonDict = dict[str, object]
+ProjectDef = dict[str, object]
 
 # ============================================================================
 # PROJECT DEFINITIONS (from PROJECT_STRUCTURE_REFERENCE.md)
 # ============================================================================
 
-PROJECT_DEFINITIONS = {
+PROJECT_DEFINITIONS: dict[str, ProjectDef] = {
     "bugs": {
         "title": "Bugs & Issues",
         "description": "Production failures requiring immediate attention",
@@ -57,8 +61,14 @@ PROJECT_DEFINITIONS = {
         "repos": ["execution-service"],
         "views": [
             {"name": "Work Items", "filter": "repo:execution-service -label:cod"},
-            {"name": "Epics Only", "filter": "repo:execution-service label:epic -label:cod"},
-            {"name": "In Progress", "filter": "repo:execution-service is:open -label:cod"},
+            {
+                "name": "Epics Only",
+                "filter": "repo:execution-service label:epic -label:cod",
+            },
+            {
+                "name": "In Progress",
+                "filter": "repo:execution-service is:open -label:cod",
+            },
         ],
     },
     "strategy": {
@@ -71,8 +81,14 @@ PROJECT_DEFINITIONS = {
         "repos": ["strategy-service"],
         "views": [
             {"name": "Work Items", "filter": "repo:strategy-service -label:cod"},
-            {"name": "Epics Only", "filter": "repo:strategy-service label:epic -label:cod"},
-            {"name": "In Progress", "filter": "repo:strategy-service is:open -label:cod"},
+            {
+                "name": "Epics Only",
+                "filter": "repo:strategy-service label:epic -label:cod",
+            },
+            {
+                "name": "In Progress",
+                "filter": "repo:strategy-service is:open -label:cod",
+            },
         ],
     },
     "risk": {
@@ -95,17 +111,20 @@ PROJECT_DEFINITIONS = {
         "type": "hierarchy",
         "primary_label": "market-data",
         "additional_labels": ["epic", "task", "subtask"],
-        "filter": "repo:market-tick-data-handler,market-data-processing-service -label:cod",
+        "filter": ("repo:market-tick-data-handler,market-data-processing-service -label:cod"),
         "repos": ["market-tick-data-handler", "market-data-processing-service"],
         "views": [
-            {"name": "Work Items", "filter": "repo:market-tick-data-handler,market-data-processing-service -label:cod"},
+            {
+                "name": "Work Items",
+                "filter": ("repo:market-tick-data-handler,market-data-processing-service -label:cod"),
+            },
             {
                 "name": "Epics Only",
-                "filter": "repo:market-tick-data-handler,market-data-processing-service label:epic -label:cod",
+                "filter": ("repo:market-tick-data-handler,market-data-processing-service label:epic -label:cod"),
             },
             {
                 "name": "In Progress",
-                "filter": "repo:market-tick-data-handler,market-data-processing-service is:open -label:cod",
+                "filter": ("repo:market-tick-data-handler,market-data-processing-service is:open -label:cod"),
             },
         ],
     },
@@ -130,7 +149,8 @@ PROJECT_DEFINITIONS = {
                 "name": "Work Items",
                 "filter": (
                     "repo:features-calendar-service,features-delta-one-service"
-                    ",features-onchain-service,features-volatility-service -label:cod"
+                    ",features-onchain-service,features-volatility-service"
+                    " -label:cod"
                 ),
             },
             {
@@ -161,8 +181,14 @@ PROJECT_DEFINITIONS = {
         "repos": ["ml-training-service"],
         "views": [
             {"name": "Work Items", "filter": "repo:ml-training-service -label:cod"},
-            {"name": "Epics Only", "filter": "repo:ml-training-service label:epic -label:cod"},
-            {"name": "In Progress", "filter": "repo:ml-training-service is:open -label:cod"},
+            {
+                "name": "Epics Only",
+                "filter": "repo:ml-training-service label:epic -label:cod",
+            },
+            {
+                "name": "In Progress",
+                "filter": "repo:ml-training-service is:open -label:cod",
+            },
         ],
     },
     "ml-inference": {
@@ -175,8 +201,14 @@ PROJECT_DEFINITIONS = {
         "repos": ["ml-inference-service"],
         "views": [
             {"name": "Work Items", "filter": "repo:ml-inference-service -label:cod"},
-            {"name": "Epics Only", "filter": "repo:ml-inference-service label:epic -label:cod"},
-            {"name": "In Progress", "filter": "repo:ml-inference-service is:open -label:cod"},
+            {
+                "name": "Epics Only",
+                "filter": "repo:ml-inference-service label:epic -label:cod",
+            },
+            {
+                "name": "In Progress",
+                "filter": "repo:ml-inference-service is:open -label:cod",
+            },
         ],
     },
     "ml-analytics": {
@@ -189,7 +221,10 @@ PROJECT_DEFINITIONS = {
         "repos": ["ml-inference-service"],
         "views": [
             {"name": "All Analytics", "filter": "label:ml-analytics"},
-            {"name": "Performance Issues", "filter": "label:ml-analytics label:performance"},
+            {
+                "name": "Performance Issues",
+                "filter": "label:ml-analytics label:performance",
+            },
         ],
     },
     "settlement": {
@@ -202,8 +237,14 @@ PROJECT_DEFINITIONS = {
         "repos": ["settlement-service"],
         "views": [
             {"name": "Work Items", "filter": "label:settlement -label:cod"},
-            {"name": "Epics Only", "filter": "label:settlement label:epic -label:cod"},
-            {"name": "In Progress", "filter": "label:settlement is:open -label:cod"},
+            {
+                "name": "Epics Only",
+                "filter": "label:settlement label:epic -label:cod",
+            },
+            {
+                "name": "In Progress",
+                "filter": "label:settlement is:open -label:cod",
+            },
         ],
     },
     "reporting": {
@@ -216,7 +257,10 @@ PROJECT_DEFINITIONS = {
         "repos": ["client-reporting-api"],
         "views": [
             {"name": "All Reports", "filter": "label:reporting"},
-            {"name": "Custom Queries", "filter": "label:reporting label:custom-query"},
+            {
+                "name": "Custom Queries",
+                "filter": "label:reporting label:custom-query",
+            },
         ],
     },
     "infrastructure": {
@@ -225,17 +269,20 @@ PROJECT_DEFINITIONS = {
         "type": "hierarchy",
         "primary_label": "infrastructure",
         "additional_labels": ["epic", "task", "subtask"],
-        "filter": "repo:unified-trading-services,unified-trading-deployment-v2 -label:cod",
+        "filter": ("repo:unified-trading-services,unified-trading-deployment-v2 -label:cod"),
         "repos": ["unified-trading-services", "unified-trading-deployment-v2"],
         "views": [
-            {"name": "Work Items", "filter": "repo:unified-trading-services,unified-trading-deployment-v2 -label:cod"},
+            {
+                "name": "Work Items",
+                "filter": ("repo:unified-trading-services,unified-trading-deployment-v2 -label:cod"),
+            },
             {
                 "name": "Epics Only",
-                "filter": "repo:unified-trading-services,unified-trading-deployment-v2 label:epic -label:cod",
+                "filter": ("repo:unified-trading-services,unified-trading-deployment-v2 label:epic -label:cod"),
             },
             {
                 "name": "In Progress",
-                "filter": "repo:unified-trading-services,unified-trading-deployment-v2 is:open -label:cod",
+                "filter": ("repo:unified-trading-services,unified-trading-deployment-v2 is:open -label:cod"),
             },
         ],
     },
@@ -248,9 +295,18 @@ PROJECT_DEFINITIONS = {
         "filter": "repo:execution-service label:backtest -label:cod",
         "repos": ["execution-service"],
         "views": [
-            {"name": "Work Items", "filter": "repo:execution-service label:backtest -label:cod"},
-            {"name": "Epics Only", "filter": "repo:execution-service label:backtest label:epic -label:cod"},
-            {"name": "In Progress", "filter": "repo:execution-service label:backtest is:open -label:cod"},
+            {
+                "name": "Work Items",
+                "filter": "repo:execution-service label:backtest -label:cod",
+            },
+            {
+                "name": "Epics Only",
+                "filter": ("repo:execution-service label:backtest label:epic -label:cod"),
+            },
+            {
+                "name": "In Progress",
+                "filter": ("repo:execution-service label:backtest is:open -label:cod"),
+            },
         ],
     },
     "strategy-backtest": {
@@ -262,9 +318,18 @@ PROJECT_DEFINITIONS = {
         "filter": "repo:strategy-service label:backtest -label:cod",
         "repos": ["strategy-service"],
         "views": [
-            {"name": "Work Items", "filter": "repo:strategy-service label:backtest -label:cod"},
-            {"name": "Epics Only", "filter": "repo:strategy-service label:backtest label:epic -label:cod"},
-            {"name": "In Progress", "filter": "repo:strategy-service label:backtest is:open -label:cod"},
+            {
+                "name": "Work Items",
+                "filter": "repo:strategy-service label:backtest -label:cod",
+            },
+            {
+                "name": "Epics Only",
+                "filter": ("repo:strategy-service label:backtest label:epic -label:cod"),
+            },
+            {
+                "name": "In Progress",
+                "filter": ("repo:strategy-service label:backtest is:open -label:cod"),
+            },
         ],
     },
 }
@@ -282,24 +347,24 @@ def get_github_token() -> str:
         return token
 
     try:
-        result = subprocess.run(
+        result: subprocess.CompletedProcess[str] = subprocess.run(
             ["gh", "auth", "token"],
             capture_output=True,
             text=True,
             check=True,
         )
         return result.stdout.strip()
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
-        print(f"❌ Error: Could not get GitHub token: {e}")
+    except (OSError, ValueError) as e:
+        print(f"Error: Could not get GitHub token: {e}")
         print("   Set GITHUB_TOKEN env var or run 'gh auth login'")
         sys.exit(1)
 
 
-def run_gh_command(args: list[str], check: bool = True) -> dict[str, Any] | None:
+def run_gh_command(args: list[str], check: bool = True) -> JsonDict | None:
     """Run a gh CLI command and return parsed JSON output."""
     try:
-        result = subprocess.run(
-            ["gh"] + args,
+        result: subprocess.CompletedProcess[str] = subprocess.run(
+            ["gh", *args],
             capture_output=True,
             text=True,
             check=check,
@@ -307,12 +372,16 @@ def run_gh_command(args: list[str], check: bool = True) -> dict[str, Any] | None
 
         if result.returncode != 0:
             if not check:
-                return {"_error": True, "stderr": result.stderr, "stdout": result.stdout}
+                return {
+                    "_error": True,
+                    "stderr": result.stderr,
+                    "stdout": result.stdout,
+                }
             return None
 
         if result.stdout.strip():
             try:
-                return json.loads(result.stdout)
+                return cast(JsonDict, json.loads(result.stdout))
             except json.JSONDecodeError:
                 return {"_raw": result.stdout.strip()}
 
@@ -320,28 +389,42 @@ def run_gh_command(args: list[str], check: bool = True) -> dict[str, Any] | None
 
     except subprocess.CalledProcessError as e:
         if check:
-            print(f"❌ Command failed: gh {' '.join(args)}")
-            print(f"   Error: {e.stderr}")
+            print(f"Command failed: gh {' '.join(args)}")
+            raw_stderr: object = getattr(e, "stderr", None)
+            stderr_text = (
+                raw_stderr.decode(errors="replace") if isinstance(raw_stderr, bytes) else str(raw_stderr or "")
+            )
+            print(f"   Error: {stderr_text}")
         return None
 
 
-def run_graphql_query(token: str, query: str, variables: dict[str, Any] | None = None) -> dict[str, Any]:
+def run_graphql_query(
+    token: str,
+    query: str,
+    variables: dict[str, str] | None = None,
+) -> JsonDict:
     """Run a GraphQL query against GitHub API."""
-    headers = {
+    headers: dict[str, str] = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
 
-    payload = {"query": query}
+    payload: dict[str, object] = {"query": query}
     if variables:
         payload["variables"] = variables
 
-    response = requests.post("https://api.github.com/graphql", headers=headers, json=payload, timeout=30)
+    response = requests.post(
+        "https://api.github.com/graphql",
+        headers=headers,
+        json=payload,
+        timeout=30,
+    )
     response.raise_for_status()
 
-    data = response.json()
+    data: JsonDict = cast(JsonDict, response.json())
     if "errors" in data:
-        raise Exception(f"GraphQL errors: {data['errors']}")
+        msg = f"GraphQL errors: {data['errors']}"
+        raise ValueError(msg)
 
     return data
 
@@ -351,21 +434,34 @@ def run_graphql_query(token: str, query: str, variables: dict[str, Any] | None =
 # ============================================================================
 
 
-def create_project(org: str, project_key: str, project_def: dict[str, Any], dry_run: bool) -> tuple[bool, str]:
+def create_project(
+    org: str,
+    project_key: str,
+    project_def: ProjectDef,
+    dry_run: bool,
+) -> tuple[bool, str]:
     """Create a single GitHub project."""
-    title = project_def["title"]
+    title = str(project_def.get("title", ""))
 
     if dry_run:
         print(f"   Would create project: {title}")
         return (True, "dry-run")
 
     # Check if project already exists
-    existing = run_gh_command(["project", "list", "--owner", org, "--format", "json"], check=False)
+    existing = run_gh_command(
+        ["project", "list", "--owner", org, "--format", "json"],
+        check=False,
+    )
     if existing and "_error" not in existing:
-        for proj in existing.get("projects", []):
-            if proj.get("title") == title:
-                print(f"   ✅ Project already exists: {title} (#{proj['number']})")
-                return (True, str(proj["number"]))
+        raw_projects = existing.get("projects", [])
+        projects_list: list[object] = cast(list[object], raw_projects) if isinstance(raw_projects, list) else []
+        for proj_raw in projects_list:
+            if isinstance(proj_raw, dict):
+                proj: JsonDict = cast(JsonDict, proj_raw)
+                if str(proj.get("title", "")) == title:
+                    proj_num = str(proj.get("number", ""))
+                    print(f"   Project already exists: {title} (#{proj_num})")
+                    return (True, proj_num)
 
     # Create project
     result = run_gh_command(
@@ -383,43 +479,46 @@ def create_project(org: str, project_key: str, project_def: dict[str, Any], dry_
     )
 
     if result and "_error" not in result:
-        project_number = result.get("number")
-        print(f"   ✅ Created project: {title} (#{project_number})")
-        return (True, str(project_number))
-    else:
-        print(f"   ❌ Failed to create project: {title}")
-        if result:
-            print(f"      Error: {result.get('stderr', 'Unknown error')}")
-        return (False, "")
+        project_number = str(result.get("number", ""))
+        print(f"   Created project: {title} (#{project_number})")
+        return (True, project_number)
+
+    print(f"   Failed to create project: {title}")
+    if result:
+        print(f"      Error: {result.get('stderr', 'Unknown error')}")
+    return (False, "")
 
 
-def create_labels(org: str, project_def: dict[str, Any], dry_run: bool) -> int:
+def create_labels(org: str, project_def: ProjectDef, dry_run: bool) -> int:
     """Create labels for project repos."""
-    labels_to_create = [project_def["primary_label"]] + project_def["additional_labels"]
-    repos = project_def["repos"]
+    primary_label = str(project_def.get("primary_label", ""))
+    raw_additional = project_def.get("additional_labels", [])
+    additional_labels: list[str] = cast(list[str], raw_additional) if isinstance(raw_additional, list) else []
+    labels_to_create: list[str] = [primary_label, *additional_labels]
+    raw_repos = project_def.get("repos", [])
 
-    if repos == "all":
+    target_repos: list[str]
+    if raw_repos == "all":
         # Get all repos
         all_repos_result = run_gh_command(
-            [
-                "repo",
-                "list",
-                org,
-                "--limit",
-                "100",
-                "--json",
-                "name",
-            ],
+            ["repo", "list", org, "--limit", "100", "--json", "name"],
             check=False,
         )
         if not all_repos_result or "_error" in all_repos_result:
-            print(f"   ⚠️ Could not list repos for org: {org}")
+            print(f"   Could not list repos for org: {org}")
             return 0
-        repos = [r["name"] for r in all_repos_result]
+        raw_repo_list = all_repos_result.get("projects", [])
+        if not isinstance(raw_repo_list, list):
+            raw_repo_list = []
+        target_repos = [
+            str(cast(JsonDict, r).get("name", "")) for r in cast(list[object], raw_repo_list) if isinstance(r, dict)
+        ]
+    else:
+        target_repos = cast(list[str], raw_repos) if isinstance(raw_repos, list) else []
 
     created_count = 0
 
-    for repo_name in repos:
+    for repo_name in target_repos:
         repo_full = f"{org}/{repo_name}"
 
         for label_name in labels_to_create:
@@ -430,20 +529,19 @@ def create_labels(org: str, project_def: dict[str, Any], dry_run: bool) -> int:
 
             # Check if label exists
             existing = run_gh_command(
-                [
-                    "label",
-                    "list",
-                    "--repo",
-                    repo_full,
-                    "--json",
-                    "name",
-                ],
+                ["label", "list", "--repo", repo_full, "--json", "name"],
                 check=False,
             )
 
             if existing and "_error" not in existing:
-                if any(lbl["name"] == label_name for lbl in existing):
-                    continue  # Label already exists
+                # The raw output may be a list encoded in _raw
+                raw_val = existing.get("_raw", "")
+                if isinstance(raw_val, str) and raw_val.startswith("["):
+                    label_data: list[object] = cast(list[object], json.loads(raw_val))
+                    if any(
+                        isinstance(lbl, dict) and cast(JsonDict, lbl).get("name") == label_name for lbl in label_data
+                    ):
+                        continue  # Label already exists
 
             # Create label
             result = run_gh_command(
@@ -465,10 +563,16 @@ def create_labels(org: str, project_def: dict[str, Any], dry_run: bool) -> int:
     return created_count
 
 
-def document_manual_steps(project_key: str, project_def: dict[str, Any], project_number: str) -> str:
+def document_manual_steps(
+    project_key: str,
+    project_def: ProjectDef,
+    project_number: str,
+) -> str:
     """Generate manual setup instructions for workflows and views."""
-    title = project_def["title"]
-    views = project_def["views"]
+    title = str(project_def.get("title", ""))
+    raw_views = project_def.get("views", [])
+    views: list[object] = cast(list[object], raw_views) if isinstance(raw_views, list) else []
+    primary_label = str(project_def.get("primary_label", ""))
 
     instructions = f"""
 # Manual Setup Required for Project: {title} (#{project_number})
@@ -481,7 +585,7 @@ Navigate to: https://github.com/users/IggyIkenna/projects/{project_number}/setti
 
 ### Rule 1: Auto-add items
 - **When:** Issues are created or updated
-- **If:** Label = "{project_def["primary_label"]}"
+- **If:** Label = "{primary_label}"
 - **Then:** Add to project
 
 ### Rule 2: Auto-status
@@ -500,29 +604,33 @@ Navigate to: https://github.com/users/IggyIkenna/projects/{project_number}
 
 """
 
-    for idx, view in enumerate(views, 1):
-        instructions += f"""
-### View {idx}: {view["name"]}
+    for idx, view_raw in enumerate(views, 1):
+        if isinstance(view_raw, dict):
+            view: JsonDict = cast(JsonDict, view_raw)
+            view_name = str(view.get("name", ""))
+            view_filter = str(view.get("filter", ""))
+            instructions += f"""
+### View {idx}: {view_name}
 - Click "+ New view"
-- Name: "{view["name"]}"
-- Filter: `{view["filter"]}`
+- Name: "{view_name}"
+- Filter: `{view_filter}`
 - Save view
 """
 
-    instructions += """
+    instructions += f"""
 ---
 
 ## 3. Verify Setup
 
 - [ ] Automation rules created (3 rules)
-- [ ] Views created ({} views)
+- [ ] Views created ({len(views)} views)
 - [ ] Labels exist in target repos
 - [ ] Test: Create issue with label, verify it appears in project
 
 ---
 
 **Estimated time:** 5 minutes
-""".format(len(views))
+"""
 
     return instructions
 
@@ -532,51 +640,57 @@ Navigate to: https://github.com/users/IggyIkenna/projects/{project_number}
 # ============================================================================
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Create all missing GitHub projects")
     parser.add_argument("--org", required=True, help="GitHub organization or user")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without applying")
     parser.add_argument("--apply", action="store_true", help="Apply changes")
     parser.add_argument("--projects", nargs="+", help="Specific projects to create (default: all)")
 
-    args = parser.parse_args()
+    parsed = parser.parse_args()
 
-    if not args.dry_run and not args.apply:
-        print("❌ Error: Must specify --dry-run or --apply")
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
+    apply_flag: bool = bool(getattr(parsed, "apply", False))
+    org: str = str(getattr(parsed, "org", ""))
+    projects_arg: list[str] | None = cast(list[str] | None, getattr(parsed, "projects", None))
+
+    if not dry_run and not apply_flag:
+        print("Error: Must specify --dry-run or --apply")
         sys.exit(1)
 
     # Validate GitHub token is available (exits on failure)
     get_github_token()
 
     # Determine which projects to create
-    projects_to_create = args.projects if args.projects else list(PROJECT_DEFINITIONS.keys())
+    projects_to_create: list[str] = projects_arg if projects_arg else list(PROJECT_DEFINITIONS.keys())
 
     # Validate project keys
-    invalid_keys = [k for k in projects_to_create if k not in PROJECT_DEFINITIONS]
+    invalid_keys: list[str] = [k for k in projects_to_create if k not in PROJECT_DEFINITIONS]
     if invalid_keys:
-        print(f"❌ Error: Invalid project keys: {', '.join(invalid_keys)}")
+        print(f"Error: Invalid project keys: {', '.join(invalid_keys)}")
         print(f"   Valid keys: {', '.join(PROJECT_DEFINITIONS.keys())}")
         sys.exit(1)
 
+    mode_label = "DRY RUN" if dry_run else "APPLY"
     print(f"\n{'=' * 80}")
-    print(f"Create All GitHub Projects - {'DRY RUN' if args.dry_run else 'APPLY'}")
+    print(f"Create All GitHub Projects - {mode_label}")
     print(f"{'=' * 80}\n")
-    print(f"Organization: {args.org}")
+    print(f"Organization: {org}")
     print(f"Projects to create: {len(projects_to_create)}")
     print()
 
     # Summary stats
     total_created = 0
     total_failed = 0
-    manual_steps_files = []
+    manual_steps_files: list[tuple[str, str, str]] = []
 
     # Create each project
     for idx, project_key in enumerate(projects_to_create, 1):
         project_def = PROJECT_DEFINITIONS[project_key]
-        print(f"[{idx}/{len(projects_to_create)}] {project_def['title']}")
+        print(f"[{idx}/{len(projects_to_create)}] {project_def.get('title', '')}")
 
         # Step 1: Create project
-        success, project_number = create_project(args.org, project_key, project_def, args.dry_run)
+        success, project_number = create_project(org, project_key, project_def, dry_run)
 
         if not success:
             total_failed += 1
@@ -585,54 +699,56 @@ def main():
         total_created += 1
 
         # Step 2: Create labels
-        if not args.dry_run:
+        if not dry_run:
             print("   Creating labels...")
-            labels_created = create_labels(args.org, project_def, args.dry_run)
+            labels_created = create_labels(org, project_def, dry_run)
             if labels_created > 0:
-                print(f"   ✅ Created {labels_created} labels")
+                print(f"   Created {labels_created} labels")
 
         # Step 3: Document manual steps
-        if not args.dry_run and project_number != "dry-run":
+        if not dry_run and project_number != "dry-run":
             manual_file = f"/tmp/project-{project_number}-manual-setup.md"
             instructions = document_manual_steps(project_key, project_def, project_number)
 
             with open(manual_file, "w") as f:
                 f.write(instructions)
 
-            manual_steps_files.append((project_def["title"], project_number, manual_file))
-            print(f"   📝 Manual setup guide: {manual_file}")
+            proj_title = str(project_def.get("title", ""))
+            manual_steps_files.append((proj_title, project_number, manual_file))
+            print(f"   Manual setup guide: {manual_file}")
 
         print()
 
         # Rate limit pause
-        if not args.dry_run:
+        if not dry_run:
             time.sleep(1)
 
     # Summary
     print(f"{'=' * 80}")
     print("Summary")
     print(f"{'=' * 80}\n")
-    print(f"✅ Projects created: {total_created}")
-    print(f"❌ Projects failed: {total_failed}")
+    print(f"Projects created: {total_created}")
+    print(f"Projects failed: {total_failed}")
 
     if manual_steps_files:
-        print(f"\n📝 Manual setup required for {len(manual_steps_files)} projects:")
+        print(f"\nManual setup required for {len(manual_steps_files)} projects:")
         for title, number, filepath in manual_steps_files:
             print(f"   - {title} (#{number}): {filepath}")
         print()
         print("Each file contains step-by-step instructions for:")
-        print("   1. Configuring automation workflows (auto-add, auto-status, auto-archive)")
+        print("   1. Configuring automation workflows")
         print("   2. Creating filtered views")
         print("   3. Verification checklist")
         print()
-        print("Estimated time: 5 minutes per project (~{} minutes total)".format(len(manual_steps_files) * 5))
+        total_minutes = len(manual_steps_files) * 5
+        print(f"Estimated time: 5 minutes per project (~{total_minutes} minutes total)")
 
     print(f"\n{'=' * 80}\n")
 
-    if args.dry_run:
-        print("ℹ️ This was a dry run. Run with --apply to create projects.")
+    if dry_run:
+        print("This was a dry run. Run with --apply to create projects.")
     else:
-        print("✅ Done! Check manual setup guides in /tmp/")
+        print("Done! Check manual setup guides in /tmp/")
 
 
 if __name__ == "__main__":

@@ -7,13 +7,13 @@ in market-tick-data-handler repository.
 
 Usage:
     # Dry run (preview):
-    python 02-create-issues.py --org IggyIkenna \\
-        --epic-file "../../epic-breakdowns/epic-market-data-infrastructure.md" \\
+    python 02-create-issues.py --org IggyIkenna \
+        --epic-file "../../epic-breakdowns/epic-market-data-infrastructure.md" \
         --dry-run
 
     # Apply changes:
-    python 02-create-issues.py --org IggyIkenna \\
-        --epic-file "../../epic-breakdowns/epic-market-data-infrastructure.md" \\
+    python 02-create-issues.py --org IggyIkenna \
+        --epic-file "../../epic-breakdowns/epic-market-data-infrastructure.md" \
         --apply
 
 Requires:
@@ -29,13 +29,16 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import cast
+
+# Type alias
+JsonDict = dict[str, object]
 
 
-def run_gh_command(cmd: list[str], check: bool = True) -> dict[str, Any] | str | None:
+def run_gh_command(cmd: list[str], check: bool = True) -> JsonDict | list[object] | str | None:
     """Run a GitHub CLI command and return parsed JSON output."""
     try:
-        result = subprocess.run(
+        result: subprocess.CompletedProcess[str] = subprocess.run(
             cmd,
             check=check,
             capture_output=True,
@@ -45,7 +48,10 @@ def run_gh_command(cmd: list[str], check: bool = True) -> dict[str, Any] | str |
         if result.returncode == 0:
             if result.stdout.strip():
                 try:
-                    return json.loads(result.stdout)
+                    raw_parsed: object = cast(object, json.loads(result.stdout))
+                    if isinstance(raw_parsed, list):
+                        return cast(list[object], raw_parsed)
+                    return cast(JsonDict, raw_parsed)
                 except json.JSONDecodeError:
                     return result.stdout.strip()
             return ""
@@ -56,51 +62,52 @@ def run_gh_command(cmd: list[str], check: bool = True) -> dict[str, Any] | str |
         return None
 
     except subprocess.CalledProcessError as e:
-        print(f"❌ Command failed: {' '.join(cmd)}")
-        print(f"   Error: {e.stderr}")
+        raw_stderr: object = getattr(e, "stderr", None)
+        print(f"  Command failed: {' '.join(cmd)}")
+        print(f"   Error: {raw_stderr}")
         if check:
             raise
         return None
 
 
-def parse_epic_breakdown(epic_file: Path) -> list[dict[str, Any]]:
+def parse_epic_breakdown(epic_file: Path) -> list[JsonDict]:
     """Parse epic breakdown markdown file and extract subtasks."""
-    print(f"\n📊 Parsing epic breakdown: {epic_file}")
+    print(f"\n  Parsing epic breakdown: {epic_file}")
 
     if not epic_file.exists():
-        print(f"❌ Epic file not found: {epic_file}")
+        print(f"  Epic file not found: {epic_file}")
         sys.exit(1)
 
-    content = epic_file.read_text()
+    content: str = epic_file.read_text()
 
     # Extract all subtasks (### Subtask X.Y.Z: Title format)
     subtask_pattern = r"### (Subtask \d+\.\d+(?:\.\d+)?): (.+?)(?=\n\n###|\Z)"
-    subtasks = []
+    subtasks: list[JsonDict] = []
 
     for match in re.finditer(subtask_pattern, content, re.DOTALL):
-        subtask_id = match.group(1)
-        subtask_content = match.group(2)
+        subtask_id: str = match.group(1)
+        subtask_content: str = match.group(2)
 
         # Extract title (first line after subtask ID)
         title_match = re.search(r"^(.+?)$", subtask_content, re.MULTILINE)
-        title = title_match.group(1).strip() if title_match else "Unknown"
+        title: str = title_match.group(1).strip() if title_match else "Unknown"
 
         # Extract fields
-        description = extract_field(subtask_content, "Description")
-        complexity = extract_field(subtask_content, "Complexity")
-        priority = extract_field(subtask_content, "Priority")
-        risk = extract_field(subtask_content, "Risk")
-        estimated = extract_field(subtask_content, "Estimated")
-        files = extract_field(subtask_content, "Files to modify")
-        codex_sections = extract_field(subtask_content, "Codex sections")
-        tests = extract_field(subtask_content, "Tests required")
-        blocking = extract_field(subtask_content, "Blocking")
-        parent = extract_field(subtask_content, "Parent")
+        description: str = extract_field(subtask_content, "Description")
+        complexity: str = extract_field(subtask_content, "Complexity")
+        priority: str = extract_field(subtask_content, "Priority")
+        risk: str = extract_field(subtask_content, "Risk")
+        estimated: str = extract_field(subtask_content, "Estimated")
+        files: str = extract_field(subtask_content, "Files to modify")
+        codex_sections: str = extract_field(subtask_content, "Codex sections")
+        tests: str = extract_field(subtask_content, "Tests required")
+        blocking: str = extract_field(subtask_content, "Blocking")
+        parent: str = extract_field(subtask_content, "Parent")
 
         # Determine target repo from files
-        repo = determine_repo(files, title, subtask_id)
+        repo: str = determine_repo(files, title, subtask_id)
 
-        subtask = {
+        subtask: JsonDict = {
             "id": subtask_id,
             "title": f"[MarketData] {title}",
             "description": description,
@@ -121,14 +128,14 @@ def parse_epic_breakdown(epic_file: Path) -> list[dict[str, Any]]:
     print(f"   Found: {len(subtasks)} subtasks")
 
     # Group by repo
-    repo_counts = {}
-    for subtask in subtasks:
-        repo = subtask["repo"]
-        repo_counts[repo] = repo_counts.get(repo, 0) + 1
+    repo_counts: dict[str, int] = {}
+    for st in subtasks:
+        st_repo: str = str(st.get("repo", ""))
+        repo_counts[st_repo] = repo_counts.get(st_repo, 0) + 1
 
     print("\n   Distribution:")
-    for repo, count in sorted(repo_counts.items()):
-        print(f"     - {repo}: {count} issues")
+    for r_name, r_count in sorted(repo_counts.items()):
+        print(f"     - {r_name}: {r_count} issues")
 
     return subtasks
 
@@ -146,55 +153,56 @@ def determine_repo(files: str, title: str, subtask_id: str) -> str:
     """Determine target repository from files to modify."""
     # All subtasks for market-data-infrastructure go to market-tick-data-handler
     # (single service for this epic)
+    _ = files, title, subtask_id  # Used for other epic variants
     return "market-tick-data-handler"
 
 
-def create_issue_body(subtask: dict[str, Any]) -> str:
+def create_issue_body(subtask: JsonDict) -> str:
     """Generate GitHub issue body from subtask data."""
-    body = f"""## Description
+    body: str = f"""## Description
 
-{subtask["description"]}
+{subtask.get("description", "")}
 
 ## Complexity
 
-{subtask["complexity"]}
+{subtask.get("complexity", "")}
 
 ## Priority
 
-{subtask["priority"]}
+{subtask.get("priority", "")}
 
 ## Risk
 
-{subtask["risk"]}
+{subtask.get("risk", "")}
 
 ## Estimated Hours
 
-{subtask["estimated"]}
+{subtask.get("estimated", "")}
 
 ## Files to Modify
 
-{subtask["files"]}
+{subtask.get("files", "")}
 
 ## Codex References
 
-{subtask["codex_sections"]}
+{subtask.get("codex_sections", "")}
 
 ## Tests Required
 
-{subtask["tests"]}
+{subtask.get("tests", "")}
 
 ## Blocking
 
-{subtask["blocking"]}
+{subtask.get("blocking", "")}
 
 ## Parent
 
-{subtask["parent"]}
+{subtask.get("parent", "")}
 
 ---
 
 **Epic:** Market Data Infrastructure
-**Subtask ID:** {subtask["id"]}
+**Subtask ID:** {subtask.get("id", "")}
 **Label:** `MARKET-DATA-INFRASTRUCTURE`
 """
     return body
@@ -213,19 +221,19 @@ def get_priority_label(priority: str) -> str:
     return "P2-medium"  # Default
 
 
-def create_issues(org: str, subtasks: list[dict[str, Any]], dry_run: bool = True) -> dict[str, list[dict[str, Any]]]:
+def create_issues(org: str, subtasks: list[JsonDict], dry_run: bool = True) -> dict[str, list[JsonDict]]:
     """Create GitHub issues for all subtasks."""
-    print(f"\n📋 {'[DRY RUN] ' if dry_run else ''}Creating issues...")
+    print(f"\n  {'[DRY RUN] ' if dry_run else ''}Creating issues...")
 
-    issue_manifest = {}
+    issue_manifest: dict[str, list[JsonDict]] = {}
 
     for subtask in subtasks:
-        repo = subtask["repo"]
-        title = subtask["title"]
-        body = create_issue_body(subtask)
-        priority_label = get_priority_label(subtask["priority"])
+        repo: str = str(subtask.get("repo", ""))
+        title: str = str(subtask.get("title", ""))
+        body: str = create_issue_body(subtask)
+        priority_label: str = get_priority_label(str(subtask.get("priority", "")))
 
-        print(f"\n  {subtask['id']}: {title}")
+        print(f"\n  {subtask.get('id', '')}: {title}")
         print(f"    Repo: {repo}")
         print(f"    Priority: {priority_label}")
 
@@ -233,7 +241,7 @@ def create_issues(org: str, subtasks: list[dict[str, Any]], dry_run: bool = True
             print(f"    [DRY RUN] Would create issue in {org}/{repo}")
             issue_manifest.setdefault(repo, []).append(
                 {
-                    "subtask_id": subtask["id"],
+                    "subtask_id": str(subtask.get("id", "")),
                     "title": title,
                     "number": None,
                     "url": None,
@@ -261,14 +269,15 @@ def create_issues(org: str, subtasks: list[dict[str, Any]], dry_run: bool = True
         )
 
         if existing and isinstance(existing, list) and len(existing) > 0:
-            issue_number = existing[0]["number"]
-            print(f"    ✅ Issue already exists: #{issue_number}")
+            first_item: JsonDict = cast(JsonDict, existing[0])
+            issue_number_val: str = str(first_item.get("number", ""))
+            print(f"    Issue already exists: #{issue_number_val}")
             issue_manifest.setdefault(repo, []).append(
                 {
-                    "subtask_id": subtask["id"],
+                    "subtask_id": str(subtask.get("id", "")),
                     "title": title,
-                    "number": issue_number,
-                    "url": f"https://github.com/{org}/{repo}/issues/{issue_number}",
+                    "number": issue_number_val,
+                    "url": f"https://github.com/{org}/{repo}/issues/{issue_number_val}",
                     "existing": True,
                 }
             )
@@ -295,25 +304,25 @@ def create_issues(org: str, subtasks: list[dict[str, Any]], dry_run: bool = True
             )
 
             if result:
-                issue_url = result if isinstance(result, str) else result.get("url", "")
-                issue_number = issue_url.split("/")[-1] if issue_url else "unknown"
-                print(f"    ✅ Created issue: #{issue_number}")
+                issue_url: str = str(result) if isinstance(result, str) else str(cast(JsonDict, result).get("url", ""))
+                issue_number_str: str = issue_url.split("/")[-1] if issue_url else "unknown"
+                print(f"    Created issue: #{issue_number_str}")
                 print(f"       {issue_url}")
 
                 issue_manifest.setdefault(repo, []).append(
                     {
-                        "subtask_id": subtask["id"],
+                        "subtask_id": str(subtask.get("id", "")),
                         "title": title,
-                        "number": issue_number,
+                        "number": issue_number_str,
                         "url": issue_url,
                         "existing": False,
                     }
                 )
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
-            print(f"    ❌ Failed to create issue: {e}")
+        except (OSError, ValueError) as e:
+            print(f"    Failed to create issue: {e}")
             issue_manifest.setdefault(repo, []).append(
                 {
-                    "subtask_id": subtask["id"],
+                    "subtask_id": str(subtask.get("id", "")),
                     "title": title,
                     "number": None,
                     "url": None,
@@ -324,13 +333,13 @@ def create_issues(org: str, subtasks: list[dict[str, Any]], dry_run: bool = True
     return issue_manifest
 
 
-def save_manifest(manifest: dict[str, list[dict[str, Any]]], output_file: Path):
+def save_manifest(manifest: dict[str, list[JsonDict]], output_file: Path) -> None:
     """Save issue manifest to JSON file."""
     output_file.write_text(json.dumps(manifest, indent=2))
-    print(f"\n📝 Issue manifest saved to: {output_file}")
+    print(f"\n  Issue manifest saved to: {output_file}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Create GitHub issues from epic breakdown")
     parser.add_argument("--org", default="IggyIkenna", help="GitHub organization/user")
     parser.add_argument("--epic-file", required=True, help="Path to epic breakdown markdown file")
@@ -338,32 +347,38 @@ def main():
     parser.add_argument("--apply", action="store_true", help="Apply changes (create issues)")
     parser.add_argument("--output", default="issue-manifest.json", help="Output file for issue manifest")
 
-    args = parser.parse_args()
+    parsed = parser.parse_args()
 
-    if not args.dry_run and not args.apply:
-        print("❌ Error: Specify either --dry-run or --apply")
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
+    apply_flag: bool = bool(getattr(parsed, "apply", False))
+    org: str = str(getattr(parsed, "org", "IggyIkenna"))
+    epic_file_str: str = str(getattr(parsed, "epic_file", ""))
+    output_str: str = str(getattr(parsed, "output", "issue-manifest.json"))
+
+    if not dry_run and not apply_flag:
+        print("  Error: Specify either --dry-run or --apply")
         sys.exit(1)
 
-    epic_file = Path(args.epic_file)
-    output_file = Path(args.output)
+    epic_file = Path(epic_file_str)
+    output_file = Path(output_str)
 
     print("========================================")
     print("GitHub Issue Creation")
     print("========================================")
-    print(f"Organization: {args.org}")
+    print(f"Organization: {org}")
     print(f"Epic file: {epic_file}")
-    print(f"Mode: {'DRY RUN' if args.dry_run else 'APPLY'}")
+    print(f"Mode: {'DRY RUN' if dry_run else 'APPLY'}")
     print("")
 
     # Parse epic breakdown
-    subtasks = parse_epic_breakdown(epic_file)
+    subtasks: list[JsonDict] = parse_epic_breakdown(epic_file)
 
     if not subtasks:
-        print("\n❌ No subtasks found in epic breakdown")
+        print("\n  No subtasks found in epic breakdown")
         sys.exit(1)
 
     # Create issues
-    issue_manifest = create_issues(args.org, subtasks, dry_run=args.dry_run)
+    issue_manifest: dict[str, list[JsonDict]] = create_issues(org, subtasks, dry_run=dry_run)
 
     # Save manifest
     save_manifest(issue_manifest, output_file)
@@ -372,16 +387,16 @@ def main():
     print("\n========================================")
     print("Summary")
     print("========================================")
-    total_issues = sum(len(issues) for issues in issue_manifest.values())
+    total_issues: int = sum(len(issues) for issues in issue_manifest.values())
     print(f"Total subtasks: {len(subtasks)}")
-    print(f"Issues {'would be created' if args.dry_run else 'created'}: {total_issues}")
+    print(f"Issues {'would be created' if dry_run else 'created'}: {total_issues}")
     print("")
     print("Distribution:")
-    for repo, issues in sorted(issue_manifest.items()):
-        print(f"  - {repo}: {len(issues)} issues")
+    for repo_name, repo_issues in sorted(issue_manifest.items()):
+        print(f"  - {repo_name}: {len(repo_issues)} issues")
     print("")
 
-    if not args.dry_run:
+    if not dry_run:
         print("Next steps:")
         print("  1. Link issues to project (Stage 4):")
         print("     bash 03-link-issues-to-project.sh --project <NUMBER> --issue-manifest issue-manifest.json")

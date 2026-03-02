@@ -60,17 +60,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# ── PM-SPECIFIC: SYNC CURSOR RULES ──────────────────────────────────────────
-# When running from unified-trading-pm, sync workspace cursor rules into
-# the repo before committing so they're always included in the PR.
-SCRIPT_DIR_QM="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR_QM/workspace/sync-rules-push.sh" ]; then
-    echo "=========================================="
-    echo "STAGE 0: Sync Cursor Rules (PM only)"
-    echo "=========================================="
-    bash "$SCRIPT_DIR_QM/workspace/sync-rules-push.sh"
-    echo ""
-fi
+# NOTE: Cursor rules sync was previously done here as Stage 0 (copy-based).
+# Rules are now symlinked (.cursor/rules/ -> unified-trading-pm/cursor-rules/)
+# so no sync step is needed — edits go directly to the git-tracked source.
 
 REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 REPO_NAME=$(basename "$REPO_DIR")
