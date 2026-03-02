@@ -44,7 +44,7 @@ python -c "import unified_domain_client"          # exits 0
 bash unified-domain-client/scripts/setup.sh --check  # exits 0
 
 # Deployment repos exist
-ls deployment-engine/ deployment-api/ deployment-ui/ system-integration-tests/
+ls deployment-service/ deployment-api/ deployment-ui/ system-integration-tests/
 
 # No old names anywhere
 rg 'market-tick-data-handler|client-reporting-api|alerting-service|ml-training-ui|execution-analytics-ui' --type py
@@ -283,7 +283,7 @@ Every service (T4/T5) and UI (T6) follows this pattern:
 
 ```
 ALL TIERS GREEN (T0–T6, D5 each) + Final QG sweep
-  ↓ Step 1: Sandbox deploy — all T4 services via deployment-engine CLI
+  ↓ Step 1: Sandbox deploy — all T4 services via deployment-service CLI
   ↓ Step 2: GET /infra/health — GCS buckets, PubSub topics, IAM, secrets all pass
   ↓ Step 3: pytest -m smoke (system-integration-tests) — happy path, <5 min
   ↓ Step 4: pytest -m full_e2e (system-integration-tests) — corner cases, 15–30 min

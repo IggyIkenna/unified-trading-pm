@@ -51,6 +51,18 @@ def _level_sort_key(lvl: TomlDict) -> int:
     return int(cast(int, raw)) if isinstance(raw, int) else 999
 
 
+def get_repo_folder_path(manifest: TomlDict, repo_name: str) -> Path:
+    """Resolve repo name to workspace folder path (uses folder_name from manifest when present)."""
+    repos_raw = manifest.get("repositories")
+    if isinstance(repos_raw, dict):
+        entry = repos_raw.get(repo_name)
+        if isinstance(entry, dict):
+            folder = entry.get("folder_name")
+            if isinstance(folder, str):
+                return WORKSPACE_ROOT / folder
+    return WORKSPACE_ROOT / repo_name
+
+
 def get_topological_order(manifest: TomlDict) -> list[str]:
     """Extract repos in topological order (T0 first)."""
     topo_raw = manifest.get("topologicalOrder")
@@ -145,6 +157,7 @@ def extract_pkg_name(dep_spec: DepSpec) -> str:
 
 def collect_all_deps(
     repos: list[str],
+    manifest: TomlDict,
 ) -> tuple[dict[str, list[DepSpec]], set[str], dict[str, str]]:
     """Walk all repos, collect and classify dependencies.
 
@@ -158,7 +171,7 @@ def collect_all_deps(
     internal_paths: dict[str, str] = {}
 
     for repo_name in repos:
-        repo_path = WORKSPACE_ROOT / repo_name
+        repo_path = get_repo_folder_path(manifest, repo_name)
         if not repo_path.is_dir():
             continue
 
@@ -369,14 +382,13 @@ def main() -> None:
     manifest = load_manifest()
     topo_order = get_topological_order(manifest)
 
-    repos_raw = manifest.get("repositories")
-    repo_names: list[str] = [str(k) for k in cast(TomlDict, repos_raw).keys()] if isinstance(repos_raw, dict) else []
+    # Use only repos in topologicalOrder.levels (canonical workflow list); excludes archived repos not in levels.
+    repo_names = topo_order
 
-    print(f"  Manifest repos: {len(repo_names)}")
     print(f"  Topological order: {len(topo_order)} repos")
 
-    # Collect deps from all repos
-    external_deps, internal_names, internal_paths = collect_all_deps(repo_names)
+    # Collect deps from all repos in topological order
+    external_deps, internal_names, internal_paths = collect_all_deps(repo_names, manifest)
 
     print(f"  Internal workspace deps: {len(internal_names)}")
     print(f"  External packages: {len(external_deps)}")

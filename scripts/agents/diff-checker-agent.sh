@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Diff Checker Agent
 # Reads deployment-v3/configs/checklist.{service}.yaml
 # Compares to actual service code
 # Outputs GitHub issue JSON for gaps
 # Usage: ./diff-checker-agent.sh [service-name] [--dry-run]
 
-set -e
-WORKSPACE_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+set -euo pipefail
+WORKSPACE_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 DEPLOYMENT_V3="$WORKSPACE_ROOT/unified-trading-deployment-v3"
-MANIFEST="$WORKSPACE_ROOT/.cursor/WORKSPACE-MANIFEST.json"
+MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 TARGET_SERVICE="${1:-}"
 DRY_RUN="${2:-}"
 

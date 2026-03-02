@@ -260,3 +260,9 @@ If empty, re-run:
 bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 source ~/.zshrc
 ```
+
+---
+
+## Workspace dependency pinning
+
+Canonical external dependency versions and propagation: see **unified-trading-codex** `06-coding-standards/dependency-management.md` (§ Workspace-wide dependency pinning) and `unified-trading-pm/workspace-constraints.toml`. Scripts: `resolve-canonical-versions.py`, `propagate-canonical-versions.py`, `aggregate-workspace-deps.py`.

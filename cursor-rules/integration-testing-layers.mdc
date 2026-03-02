@@ -19,7 +19,7 @@ CODEX: 06-coding-standards/integration-testing-layers.md (SSOT)
 |-------|------|-------|----------------|-------------|
 | 0 | Contract alignment (AC↔UIC schema pairs) | unified-api-contracts + unified-internal-contracts tests/ | Yes | None |
 | 1 | Schema robustness (fail-fast, corner cases) | Each repo: tests/unit/test_schema_robustness.py | Yes | None |
-| 2 | Infrastructure verify (buckets, topics, IAM) | deployment-engine/scripts/verify_infra.py | No (post-deploy) | GCP |
+| 2 | Infrastructure verify (buckets, topics, IAM) | deployment-service/scripts/verify_infra.py | No (post-deploy) | GCP |
 | 3a | Pipeline smoke (happy path, fast) | system-integration-tests/ `@pytest.mark.smoke` | No (post-deploy) | GCP sandbox |
 | 3b | Full E2E (corner cases, auth, perf) | system-integration-tests/ `@pytest.mark.full_e2e` | No (post-deploy) | GCP sandbox |
 
@@ -31,7 +31,7 @@ Layer 2: If you add a new GCS bucket or PubSub topic, add it to verify_infra.py 
 Layer 3: If you add a new service-to-service data flow, add a smoke test in system-integration-tests.
 
 DO:
-  Layer 0 in AC/UIC; Layer 1 per-service; Layer 2 in deployment-engine; Layer 3 in system-integration-tests
+  Layer 0 in AC/UIC; Layer 1 per-service; Layer 2 in deployment-service; Layer 3 in system-integration-tests
   Sequential: 3a passes before 3b runs
   system-integration-tests interacts via HTTP/GCS/PubSub only — zero Python imports from services
 
