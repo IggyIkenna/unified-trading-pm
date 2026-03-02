@@ -1,16 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Pre-Flight Audit Agent (LLM-Powered)
 # Uses agent (model: auto - FREE) to audit quality compliance & Cursor rules
 # Runs BEFORE quality gates in quickmerge
 #
 # Usage: ./pre-flight-audit-agent.sh <repo-name>
 
-set -e
+set -euo pipefail
 
 REPO_NAME="$1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-PARSER="$WORKSPACE_ROOT/.cursor/plans/tasks_claude_code/simple-parser.py"
+PARSER="$WORKSPACE_ROOT/unified-trading-pm/plans/tasks/claude-code/simple-parser.py"
 
 # Colors
 GREEN='\033[0;32m'

@@ -145,10 +145,10 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 All items in Stream B are independent — run them in parallel:
 
 1. **arch-visualizer-extract** — Extract `execution-service/visualizer-ui/` → `execution-visualizer-ui` repo; `execution-service/visualizer-api/` → `execution-results-api`. Delete both from `execution-service`. Update `cloudbuild.yaml`.
-2. **arch-deployment-split** — Split `unified-trading-deployment-v3` → `deployment-engine` + `deployment-api` + `deployment-ui` + `system-integration-tests`. Pre-split: fix `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP first.
+2. **arch-deployment-split** — Split `unified-trading-deployment-v3` → `deployment-service` + `deployment-api` + `deployment-ui` + `system-integration-tests`. Pre-split: fix `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP first.
 3. **arch-ui-audit-full** — Find embedded UI artifacts (`ui/`, `frontend/`, `*.tsx`, `*.jsx`, `package.json`) in all service repos. Fix every violation.
 4. **integration-system-tests-repo** — Create `system-integration-tests` repo per `unified-trading-pm/docs/new-repo-setup.md`
-5. **integration-layer2-infra-verify** — Add `deployment-engine/scripts/verify_infra.py`; expose as `GET /infra/health`
+5. **integration-layer2-infra-verify** — Add `deployment-service/scripts/verify_infra.py`; expose as `GET /infra/health`
 6. **infra-merge-utdv3** — Move `ibkr-gateway-infra/ibkr-gateway/` → `unified-trading-deployment-v3/infra/ibkr-gateway/`. Delete `ibkr-gateway-infra/`.
 7. **hybrid-live-seam** — Document + implement in-memory adapter seam for `MDPS←MTDH` (under `co_located_vm` profile only)
 
@@ -175,9 +175,9 @@ All items independent — run in parallel:
 - [ ] `bash scripts/setup.sh --check` passes on all 58 repos
 - [ ] dep-branch clone + Cloud Build feature trigger + GH Action version-bump live
 - [ ] `execution-service` has no `visualizer-ui/` or `visualizer-api/`
-- [ ] `unified-trading-deployment-v3` split into 4 repos (`deployment-engine`, `deployment-api`, `deployment-ui`, `system-integration-tests`)
+- [ ] `unified-trading-deployment-v3` split into 4 repos (`deployment-service`, `deployment-api`, `deployment-ui`, `system-integration-tests`)
 - [ ] No embedded UI artifacts in any Python service repo
-- [ ] `ibkr-gateway-infra/` deleted; Terraform in `deployment-engine/infra/`
+- [ ] `ibkr-gateway-infra/` deleted; Terraform in `deployment-service/infra/`
 - [ ] 4 cursor rules created: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`, `mandatory-setup-sh.mdc`
 - [ ] `ci_status` fields in `workspace-manifest.json` for all 57 repos
 - [ ] QG + import smoke baseline recorded for all repos

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-03-01",
-  "notes": "Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 \u2014 codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI\u2192UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
+  "lastUpdated": "2026-03-02",
+  "notes": "Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services \u2192 unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 \u2014 codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI\u2192UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -56,14 +56,14 @@
     "stable_threshold": "1.0.0+ = passed full quickmerge on main with Phase 0-CI infrastructure in place."
   },
   "versions": {
-    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTS 0.2.2 reflects more history than AC 0.1.0).",
+    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "unified-api-contracts": "0.1.0",
     "unified-internal-contracts": "0.1.0",
     "unified-reference-data-interface": "0.1.0",
     "unified-config-interface": "0.1.1",
     "unified-events-interface": "0.1.0",
     "unified-cloud-interface": "0.1.0",
-    "unified-trading-services": "0.2.2",
+    "unified-trading-library": "0.2.2",
     "unified-domain-client": "0.1.0",
     "unified-market-interface": "0.1.0",
     "unified-ml-interface": "0.1.0",
@@ -75,19 +75,14 @@
     "unified-feature-calculator-library": "0.1.0",
     "unified-position-interface": "0.1.0",
     "features-sports-service": "0.1.0",
-    "sports-reference-data-service": "0.1.0",
-    "sports-odds-data-service": "0.1.0",
-    "sports-odds-processing-service": "0.1.0",
-    "sports-strategy-service": "0.1.0",
-    "sports-execution-service": "0.1.0",
     "strategy-validation-service": "0.1.0",
     "pnl-attribution-service": "0.1.0",
     "unified-trading-deployment-v3": "0.3.0",
-    "deployment-engine": "0.1.0",
+    "deployment-service": "0.1.0",
     "deployment-api": "0.1.0",
     "deployment-ui": "0.1.0",
     "system-integration-tests": "0.1.0",
-    "unified-trading-pm": "0.8.0",
+    "unified-trading-pm": "0.7.0",
     "unified-trading-codex": "0.1.0",
     "execution-service": "0.1.0"
   },
@@ -220,7 +215,7 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY"
     },
-    "unified-trading-services": {
+    "unified-trading-library": {
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
@@ -231,9 +226,9 @@
       "version": "0.2.2",
       "version_source": "pyproject.toml",
       "merge_level": 3,
-      "github_url": "https://github.com/IggyIkenna/unified-trading-services",
-      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-services",
-      "cloud_build_trigger": "unified-trading-services-build",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-library",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
+      "cloud_build_trigger": "unified-trading-library-build",
       "folder_name": "unified-trading-services",
       "status": "active",
       "dependencies": [
@@ -243,7 +238,7 @@
           "required": true
         }
       ],
-      "notes": "GitHub repo renamed from unified-trading-services. Local folder still named unified-trading-services. Package: unified_trading_services (alias) + unified_trading_services (internal).",
+      "notes": "Manifest key renamed from unified-trading-services to unified-trading-library (2026-03-02). Repo/folder may still be unified-trading-services; package: unified_trading_services.",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -265,7 +260,7 @@
       "merge_level": 5,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -381,7 +376,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -415,7 +410,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -450,7 +445,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -493,7 +488,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -518,7 +513,7 @@
       "merge_level": 6,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -565,7 +560,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         }
@@ -597,7 +592,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -651,7 +646,7 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 7,
+      "merge_level": 8,
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
         {
@@ -660,7 +655,7 @@
           "required": true
         },
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -703,10 +698,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -760,10 +755,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -796,10 +791,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -837,10 +832,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -873,10 +868,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -908,13 +903,13 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "status": "scaffolded",
       "completion_path": "sports",
       "notes": "Scaffolded 2026-02-28. Computes pre-match ML features (team form, H2H, referee, venue, weather, market odds). NOT required for CeFi/TradFi completion.",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -946,158 +941,6 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY"
     },
-    "sports-reference-data-service": {
-      "type": "service",
-      "arch_tier": "4",
-      "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "06-coding-standards"
-      ],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "dependencies": [
-        "unified-api-contracts",
-        "unified-trading-services",
-        "unified-config-interface",
-        "unified-events-interface",
-        "unified-cloud-interface"
-      ],
-      "github_url": "https://github.com/unified-trading/sports-reference-data-service",
-      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-reference-data-service",
-      "status": "merged-into-instruments-service",
-      "ci_status": "PENDING",
-      "quality_gate_status": "PENDING",
-      "coverage_pct": 0,
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "sports_completion_path": "Phase 1 \u2014 skeleton created",
-      "notes": "Archived 2026-03-01: sports reference data functionality consolidated into instruments-service. Original Phase 3 Batch A skeleton."
-    },
-    "sports-odds-data-service": {
-      "type": "service",
-      "arch_tier": "4",
-      "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "06-coding-standards"
-      ],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "dependencies": [
-        "unified-api-contracts",
-        "unified-trading-services",
-        "unified-config-interface",
-        "unified-events-interface",
-        "unified-cloud-interface"
-      ],
-      "github_url": "https://github.com/unified-trading/sports-odds-data-service",
-      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-odds-data-service",
-      "status": "merged-into-features-sports-service",
-      "ci_status": "PENDING",
-      "quality_gate_status": "PENDING",
-      "coverage_pct": 0,
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "sports_completion_path": "Phase 1 \u2014 skeleton created",
-      "notes": "Archived 2026-03-01: odds data functionality consolidated into features-sports-service (API clients) and market-data-processing-service (odds processing). Original Phase 3 Batch B skeleton."
-    },
-    "sports-odds-processing-service": {
-      "type": "service",
-      "arch_tier": "4",
-      "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "06-coding-standards"
-      ],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "dependencies": [
-        "unified-api-contracts",
-        "unified-trading-services",
-        "unified-config-interface",
-        "unified-events-interface",
-        "unified-cloud-interface"
-      ],
-      "github_url": "https://github.com/unified-trading/sports-odds-processing-service",
-      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-odds-processing-service",
-      "status": "merged-into-market-data-processing-service",
-      "ci_status": "PENDING",
-      "quality_gate_status": "PENDING",
-      "coverage_pct": 0,
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "sports_completion_path": "Phase 1 \u2014 skeleton created",
-      "notes": "Archived 2026-03-01: odds processing functionality consolidated into market-data-processing-service. Original Phase 3 Batch B skeleton."
-    },
-    "sports-strategy-service": {
-      "type": "service",
-      "arch_tier": "4",
-      "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "dependencies": [
-        "unified-api-contracts",
-        "unified-trading-services",
-        "unified-config-interface",
-        "unified-events-interface",
-        "unified-cloud-interface",
-        "unified-sports-execution-interface"
-      ],
-      "github_url": "https://github.com/unified-trading/sports-strategy-service",
-      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-strategy-service",
-      "status": "merged-into-strategy-service",
-      "ci_status": "PENDING",
-      "quality_gate_status": "PENDING",
-      "coverage_pct": 0,
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "sports_completion_path": "Phase 1 \u2014 skeleton created",
-      "notes": "Archived 2026-03-01: sports strategy functionality consolidated into strategy-service. Original Phase 3 Batch D skeleton."
-    },
-    "sports-execution-service": {
-      "type": "service",
-      "arch_tier": "4",
-      "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "dependencies": [
-        "unified-api-contracts",
-        "unified-trading-services",
-        "unified-config-interface",
-        "unified-events-interface",
-        "unified-cloud-interface",
-        "unified-sports-execution-interface"
-      ],
-      "github_url": "https://github.com/unified-trading/sports-execution-service",
-      "artifact_registry_url": "europe-west2-docker.pkg.dev/project/unified-trading/sports-execution-service",
-      "status": "merged-into-execution-service",
-      "ci_status": "PENDING",
-      "quality_gate_status": "PENDING",
-      "coverage_pct": 0,
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "sports_completion_path": "Phase 1 \u2014 skeleton created",
-      "notes": "Archived 2026-03-01: sports execution functionality consolidated into execution-service. Original Phase 3 Batch E skeleton."
-    },
     "sports-betting-services-previous": {
       "type": "service",
       "arch_tier": "deprecated",
@@ -1128,12 +971,12 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "completion_path": "cefi",
       "notes": "Multi-timeframe feature aggregation service (Layer 3b). Symmetric counterpart to features-cross-instrument-service. Computes cross-TF alignment, structure context, vol compression, and session context features by aggregating delta-one features at 5m/15m/1h/4h/1d per instrument.",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1177,13 +1020,13 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "status": "active",
       "completion_path": "cefi",
       "notes": "Cross-instrument feature aggregation service. Computes regime features (HMM volatility regimes, correlation regimes), cross-venue spreads, realized vs implied vol, cross-asset correlation. Aggregates outputs from features-delta-one-service, features-volatility-service, and market-data-processing-service.",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1226,10 +1069,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 7,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1272,10 +1115,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1319,11 +1162,11 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "deployment_note": "One instance per client (separately managed accounts)",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1384,11 +1227,11 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1451,10 +1294,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1487,10 +1330,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 9,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1522,11 +1365,11 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 10,
+      "merge_level": 9,
       "deployment_note": "Shared service \u2014 serves many clients. One instance per workspace.",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1558,10 +1401,10 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 10,
+      "merge_level": 9,
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1594,12 +1437,12 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 10,
+      "merge_level": 9,
       "status": "scaffolded",
       "notes": "Scaffolded 2026-02-28. T+1 backtest vs live recon.",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1631,7 +1474,7 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 10,
+      "merge_level": 9,
       "status": "active",
       "cluster": "api-services",
       "serves_ui": [
@@ -1644,7 +1487,7 @@
       "completion_path": "cefi",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1676,7 +1519,7 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 10,
+      "merge_level": 9,
       "status": "active",
       "cluster": "api-services",
       "serves_ui": [
@@ -1689,7 +1532,7 @@
       "completion_path": "cefi",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1721,7 +1564,7 @@
       ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 10,
+      "merge_level": 9,
       "status": "active",
       "cluster": "api-services",
       "serves_ui": [
@@ -1733,7 +1576,7 @@
       "completion_path": "cefi",
       "dependencies": [
         {
-          "name": "unified-trading-services",
+          "name": "unified-trading-library",
           "version": ">=2.0.0,<3.0.0",
           "required": true
         },
@@ -1792,7 +1635,7 @@
       "merge_level": 12,
       "dependencies": [],
       "status": "deprecated-splitting",
-      "notes": "Being split into deployment-engine + deployment-api + deployment-ui + system-integration-tests. See task deployment-v3-four-way-split.",
+      "notes": "Being split into deployment-service + deployment-api + deployment-ui + system-integration-tests. See task deployment-v3-four-way-split.",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1800,21 +1643,21 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY"
     },
-    "deployment-engine": {
+    "deployment-service": {
       "type": "infrastructure",
       "arch_tier": "devops",
-      "merge_level": 8,
+      "merge_level": 10,
       "status": "SCAFFOLDED",
       "version": "0.1.0",
-      "description": "Deployment orchestration engine \u2014 Python package (orchestrator, catalog, config_loader, backends), Terraform, configs. Layer 2: verify_infra.py (infra connectivity gate).",
+      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends), Terraform, configs. Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
-        "unified-trading-services",
+        "unified-trading-library",
         "unified-config-interface"
       ],
       "completion_path": "cefi",
       "notes": "Extracted from unified-trading-deployment-v3 four-way split. Scaffolded 2026-02-28. 06-coding-standards/integration-testing-layers.md",
       "ci_status": "SCAFFOLDED",
-      "github_url": "https://github.com/IggyIkenna/deployment-engine",
+      "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1824,7 +1667,7 @@
     "deployment-api": {
       "type": "api-service",
       "arch_tier": "devops",
-      "merge_level": 8,
+      "merge_level": 10,
       "status": "active",
       "version": "0.1.0",
       "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
@@ -2156,9 +1999,9 @@
       },
       {
         "level": 3,
-        "description": "Cloud services runtime (Tier 1)",
+        "description": "Services runtime (Tier 1)",
         "repos": [
-          "unified-trading-services"
+          "unified-trading-library"
         ]
       },
       {
@@ -2171,7 +2014,7 @@
       },
       {
         "level": 5,
-        "description": "Core interfaces (depends on UTEI, UTS, T0)",
+        "description": "Core interfaces (depends on UTEI, UTL, T0)",
         "repos": [
           "unified-domain-client",
           "unified-market-interface",
@@ -2190,23 +2033,13 @@
       },
       {
         "level": 7,
-        "description": "Foundational services (instruments, market-data, ml-training)",
+        "description": "Foundational service (instruments only; no service-domain-data dependency)",
         "repos": [
-          "instruments-service",
-          "market-tick-data-service",
-          "ml-training-service"
+          "instruments-service"
         ]
       },
       {
         "level": 8,
-        "description": "Deployment infrastructure (deployment-api, deployment-engine)",
-        "repos": [
-          "deployment-api",
-          "deployment-engine"
-        ]
-      },
-      {
-        "level": 9,
         "description": "Services with data-flow dependencies",
         "repos": [
           "alerting-service",
@@ -2219,13 +2052,15 @@
           "features-sports-service",
           "features-volatility-service",
           "market-data-processing-service",
+          "market-tick-data-service",
           "ml-inference-service",
+          "ml-training-service",
           "pnl-attribution-service",
           "strategy-service"
         ]
       },
       {
-        "level": 10,
+        "level": 9,
         "description": "Operational services + API gateways",
         "repos": [
           "client-reporting-api",
@@ -2234,6 +2069,14 @@
           "position-balance-monitor-service",
           "risk-and-exposure-service",
           "strategy-validation-service"
+        ]
+      },
+      {
+        "level": 10,
+        "description": "Deployment infrastructure (deployment-api, deployment-service; deploys all services)",
+        "repos": [
+          "deployment-api",
+          "deployment-service"
         ]
       },
       {
@@ -2266,13 +2109,13 @@
   "tier_rules": {
     "0": {
       "allowed_from": [],
-      "description": "Pure leaf \u2014 zero inter-library deps. Repos: unified-api-contracts, unified-internal-contracts, unified-config-interface, unified-events-interface, unified-cloud-interface, unified-reference-data-interface, execution-algo-library, matching-engine-library"
+      "description": "Pure leaf \u2014 zero inter-library deps. Uses doc dependencies (PM, codex) for CI standards. Repos: unified-api-contracts, unified-internal-contracts, unified-config-interface, unified-events-interface, unified-cloud-interface, unified-reference-data-interface, execution-algo-library, matching-engine-library"
     },
     "1": {
       "allowed_from": [
         "0"
       ],
-      "description": "Shared cloud runtime \u2014 imports Tier 0 only. Repos: unified-trading-services (UTS)"
+      "description": "Services runtime (library) \u2014 imports Tier 0 only. Services use UTL for L2. Repos: unified-trading-library (UTL)"
     },
     "2": {
       "allowed_from": [
@@ -2302,7 +2145,7 @@
         "0",
         "1"
       ],
-      "description": "API gateway services (FastAPI+OAuth) \u2014 HTTP boundary between services and UIs. Deps: UTS+UCI+UEI only."
+      "description": "API gateway services (FastAPI+OAuth) \u2014 HTTP boundary between services and UIs. Deps: UTL+UCI+UEI only."
     },
     "ui": {
       "allowed_from": [],
@@ -2390,9 +2233,9 @@
       {
         "step": 2,
         "packages": [
-          "unified-trading-services"
+          "unified-trading-library"
         ],
-        "reason": "Depends only on unified-api-contracts. GitHub repo renamed from unified-trading-services."
+        "reason": "Depends only on unified-api-contracts. GitHub repo renamed from unified-trading-library."
       },
       {
         "step": 3,
@@ -2443,7 +2286,7 @@
         "unified-events-interface",
         "unified-cloud-interface",
         "unified-reference-data-interface",
-        "unified-trading-services",
+        "unified-trading-library",
         "unified-domain-client",
         "unified-market-interface",
         "unified-trade-execution-interface",
@@ -2520,7 +2363,7 @@
         "execution-service (sports execution module, merged from sports-execution-service)"
       ],
       "reuses_from_cefi": [
-        "unified-trading-services",
+        "unified-trading-library",
         "unified-domain-client",
         "unified-ml-interface",
         "unified-feature-calculator-library",

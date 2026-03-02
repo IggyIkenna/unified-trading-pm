@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # LLM-Agnostic Agent Wrapper
 # Detects available LLM tools and uses the best one for fixing issues
 #
@@ -11,7 +11,7 @@
 #
 # Preference order: Cursor (free) > Claude Code > Aider
 
-set -e
+set -euo pipefail
 
 REPO_NAME="$1"
 ERROR_LOG="$2"
@@ -19,7 +19,7 @@ PROMPT="$3"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-PARSER="$WORKSPACE_ROOT/.cursor/plans/tasks_claude_code/simple-parser.py"
+PARSER="$WORKSPACE_ROOT/unified-trading-pm/plans/tasks/claude-code/simple-parser.py"
 
 # Read error log
 ERROR_CONTEXT=$(cat "$ERROR_LOG")

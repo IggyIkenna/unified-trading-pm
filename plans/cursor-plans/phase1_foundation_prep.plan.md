@@ -30,7 +30,7 @@ todos:
     content: "ACTIVE VIOLATION: Extract execution-service embedded UI/API: (1) execution-service/visualizer-ui/ → new repo execution-visualizer-ui; (2) execution-service/visualizer-api/ → merge into execution-results-api or new execution-visualizer-api repo; (3) delete both dirs from execution-service; (4) update cloudbuild.yaml. Task: arch-exec-services-visualizer-extract."
     status: pending
   - id: arch-deployment-split
-    content: "Split unified-trading-deployment-v3 into 4 repos: (1) deployment-engine/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract; (2) deployment-api/ — thin FastAPI, imports deployment-engine, GoogleOAuthMiddleware on write endpoints, port 8001; (3) deployment-ui/ — React UI calling deployment-api, OAuth ADMIN scope, SSE for status (scaffolded already); (4) system-integration-tests/ — NEW repo (per new-repo-setup.md), Layer 3a + 3b. Layer 2 (infra verification) lives in deployment-engine/scripts/verify_infra.py. Tasks: deployment-v3-four-way-split, arch-deployment-v3-ui-extract."
+    content: "Split unified-trading-deployment-v3 into 4 repos: (1) deployment-service/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract; (2) deployment-api/ — thin FastAPI, imports deployment-service, GoogleOAuthMiddleware on write endpoints, port 8001; (3) deployment-ui/ — React UI calling deployment-api, OAuth ADMIN scope, SSE for status (scaffolded already); (4) system-integration-tests/ — NEW repo (per new-repo-setup.md), Layer 3a + 3b. Layer 2 (infra verification) lives in deployment-service/scripts/verify_infra.py. Tasks: deployment-v3-four-way-split, arch-deployment-v3-ui-extract."
     status: pending
   - id: arch-ui-audit-full
     content: "Full audit of all service repos for embedded UI: check for ui/, frontend/, static/, visualiz*, *.tsx, *.jsx, package.json, index.html inside Python service repos. Known violations: execution-service (visualizer-ui + visualizer-api), unified-trading-deployment-v3 (ui/). Check also: alerting-service, market-data-processing-service, client-reporting-api, risk-and-exposure-service. Task: ui-service-separation-audit-full."
@@ -39,7 +39,7 @@ todos:
     content: "Create system-integration-tests repo per new-repo-setup.md: Layer 3a (fast smoke @pytest.mark.smoke, <5 min) + Layer 3b (full @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Zero Python imports from services — HTTP/GCS/PubSub interaction only. SSOT: 06-coding-standards/integration-testing-layers.md. Tasks: integration-system-integration-tests-repo, integration-layer3-implement."
     status: pending
   - id: integration-layer2-infra-verify
-    content: "Add verify_infra.py to deployment-engine/scripts/ after four-way split: checks GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist. Exposed as GET /infra/health in deployment-api. Gates deployment success before Layer 3. Task: integration-layer2-infra-verify."
+    content: "Add verify_infra.py to deployment-service/scripts/ after four-way split: checks GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist. Exposed as GET /infra/health in deployment-api. Gates deployment success before Layer 3. Task: integration-layer2-infra-verify."
     status: pending
   - id: infra-merge-utdv3
     content: "ibkr-gateway-infra/ dir (workspace root) contains ibkr-gateway-infra/ibkr-gateway/ Terraform config (main.tf, variables.tf). Move: ibkr-gateway-infra/ibkr-gateway/ → unified-trading-deployment-v3/infra/ibkr-gateway/ then delete ibkr-gateway-infra/. Update manifest. Task: infra-merge-utdv3."
@@ -285,8 +285,8 @@ Steps:
 
 | New Repo                   | Contents                                                                                                                                           | Tier                |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `deployment-engine`        | Python package: orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/, terraform/, configs/ | **merge_level: 6**  |
-| `deployment-api`           | Thin FastAPI; imports deployment-engine; GoogleOAuthMiddleware on write endpoints; port 8001                                                       | **merge_level: 6**  |
+| `deployment-service`        | Python package: orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/, terraform/, configs/ | **merge_level: 6**  |
+| `deployment-api`           | Thin FastAPI; imports deployment-service; GoogleOAuthMiddleware on write endpoints; port 8001                                                       | **merge_level: 6**  |
 | `deployment-ui`            | React UI → deployment-api; OAuth ADMIN scope; SSE for status (scaffolded)                                                                          | **merge_level: 9**  |
 | `system-integration-tests` | NEW repo; Layer 3a (smoke, <5 min) + Layer 3b (full e2e, 15–30 min)                                                                                | **merge_level: 10** |
 
@@ -295,7 +295,7 @@ Pre-split: split `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP
 
 > **Tier note (2026-02-28):** Merge levels assigned in workspace-manifest.json tier restructure. `unified-trading-deployment-v3` (the monorepo being split) → merge_level: 10 (IaC; deploy last, references all service images). deployment-api/engine at L6 = own tier between foundational services (L5) and bulk services (L7).
 
-Layer 2 infra verification: `deployment-engine/scripts/verify_infra.py` → exposed as `GET /infra/health`.
+Layer 2 infra verification: `deployment-service/scripts/verify_infra.py` → exposed as `GET /infra/health`.
 
 ### arch-ui-audit-full
 
@@ -393,9 +393,9 @@ All of the following must be true before Phase 2 starts:
 - **A2 complete**: All 55 repos have commit-msg hook; all `pyproject.toml` versions are `0.x.x`
 - **A3 complete**: dep-branch clone + Cloud Build feature trigger + GH Action version-bump live
 - **B: visualizer extracted**: `execution-service` has no `visualizer-ui/` or `visualizer-api/`
-- **B: UTD V3 split**: 4 separate repos (`deployment-engine`, `deployment-api`, `deployment-ui`, `system-integration-tests`)
+- **B: UTD V3 split**: 4 separate repos (`deployment-service`, `deployment-api`, `deployment-ui`, `system-integration-tests`)
 - **B: UI audit clean**: No embedded UI artifacts in any Python service repo
-- **B: infra merged**: `ibkr-gateway-infra/` deleted from workspace root; Terraform in `deployment-engine`
+- **B: infra merged**: `ibkr-gateway-infra/` deleted from workspace root; Terraform in `deployment-service`
 - **C: 3 cursor rules created**: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`
 - **C: manifest schema extended**: `ci_status` fields present for all 55 repos
 - **C: QG baseline recorded**: All 30 repos with QG have `ci_status` + `coverage_pct` in manifest
