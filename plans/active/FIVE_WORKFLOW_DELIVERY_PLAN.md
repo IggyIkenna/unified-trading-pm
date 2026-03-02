@@ -36,7 +36,7 @@ gantt
 
 **Goal:** Every repo passes `scripts/quality-gates.sh` locally. CI/CD pipelines scripted.
 
-### Progress: ~70% Complete
+### Progress: ~80% Complete (Libraries done, Services blocked on missing UTS APIs)
 
 ```mermaid
 flowchart LR
@@ -45,16 +45,18 @@ flowchart LR
         A2[UCI File Split 1010->376L]
         A3[Canonical quality-gates.sh Deployed]
         A4[Ruff Lint: 200+ errors fixed]
-        A5[Test Fixes: 500+ tests]
+        A5[Test Fixes: 600+ tests across 10 repos]
         A6[Codex: 6 T4 repos fixed]
         A7[Dep fixes: 10+ repos]
+        A8[T0 Library Tests: UFCL 54/54, UMI 23/23, UMLI 7/7]
+        A9[T4 Verification: All 6 checked, deeper issues found]
     end
 
     subgraph REMAIN["Remaining"]
         B1[basedpyright errors: UTS 272, UMI 2442]
-        B2[Test coverage: UTS 40% -> 70%]
+        B2[Test coverage: UTS 40%, UFCL 49%]
         B3[14 repos unscanned]
-        B4[4 library test failures]
+        B4[Missing UTS APIs block 5 T4 repos]
         B5[Naming: UTS -> UCL rename]
     end
 
@@ -65,9 +67,9 @@ flowchart LR
 
 | Tier | Total | All Pass | Lint Pass | Tests Pass | Codex Pass | Remaining |
 |------|-------|----------|-----------|------------|------------|-----------|
-| T0 Libraries | 8 | 4 | 8 | 4 full, 4 partial | 8 | 4 test fixes |
+| T0 Libraries | 8 | 7 | 8 | 7 full, 1 partial (UDC) | 8 | 1 test fix (UDC) |
 | T1 UTS | 1 | 0 | 1 | 1 (coverage fail) | 1 | Type + coverage |
-| T4 Services | 16 | 3 | 10+ | varies | 10+ | 6 need verification |
+| T4 Services | 16 | 3 | 10+ | 3 pass, 5 blocked by R-14 | 10+ | Missing UTS APIs |
 | T5 APIs | 3 | 1 | 3 | varies | 3 | Type errors |
 | T6 UIs | 4 | 1 | 4 | 1 | 4 | Non-Python projects |
 
