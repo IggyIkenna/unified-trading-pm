@@ -270,7 +270,7 @@ def find_coding_standards_violations(codex_root: Path, workspace_root: Path) -> 
                                 )
                                 break
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                 print(f"Warning: Could not check {py_file}: {e}", file=sys.stderr)
                 continue
 
@@ -656,7 +656,7 @@ def fetch_all_existing_issues(repo: str) -> dict[str, str]:
 
         print(f"  ✓ Found {len(gap_id_to_issue)} issues with gap-id markers")
 
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         print(f"  Warning: Could not fetch existing issues: {e}", file=sys.stderr)
 
     return gap_id_to_issue
@@ -966,7 +966,7 @@ def main() -> int:
                         print(f"  ✓  [{i}/{len(gaps_to_create)}] {gap.gap_id}: Created")
                     else:
                         print(f"  ⚠  [{i}/{len(gaps_to_create)}] {gap.gap_id}: Failed")
-                except Exception as e:
+                except (ConnectionError, TimeoutError, OSError, ValueError) as e:
                     print(f"  ✗  [{i}/{len(gaps_to_create)}] {gap.gap_id}: Error - {e}")
                     results.append(
                         {

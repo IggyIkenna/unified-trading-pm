@@ -10,7 +10,7 @@ echo ""
 echo "📥 Fetching token from GCP Secret Manager..."
 GITHUB_TOKEN=$(gcloud secrets versions access latest \
   --secret=github-automation-token \
-  --project=central-element-323112)
+  --project="${GCP_PROJECT_ID:?GCP_PROJECT_ID required}")
 
 if [ -z "$GITHUB_TOKEN" ]; then
     echo "❌ Failed to fetch token"

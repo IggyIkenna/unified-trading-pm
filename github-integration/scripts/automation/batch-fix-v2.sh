@@ -174,7 +174,7 @@ echo "🔐 Pre-flight: Setting up GitHub authentication from Secret Manager..."
 
 # Configuration
 SECRET_NAME="${GITHUB_TOKEN_SECRET:-github-automation-token}"
-GCP_PROJECT="${GCP_PROJECT:-central-element-323112}"
+GCP_PROJECT="${GCP_PROJECT:?GCP_PROJECT required}"
 GITHUB_TOKEN=""
 
 # Try to fetch GitHub PAT from Secret Manager

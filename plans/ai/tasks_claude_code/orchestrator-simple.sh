@@ -68,7 +68,7 @@ fi
 # Always use API key from Secret Manager (works across machines)
 echo -e "${GRAY}🔐 Fetching API key from Secret Manager...${NC}"
 if command -v gcloud &> /dev/null; then
-    export CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project=central-element-323112 2>/dev/null)
+    export CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="${GCP_PROJECT_ID:?GCP_PROJECT_ID required}" 2>/dev/null)
     if [ -n "$CURSOR_API_KEY" ]; then
         echo -e "${GREEN}✅ API key loaded${NC}"
     else

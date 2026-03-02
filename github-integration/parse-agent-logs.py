@@ -4,8 +4,10 @@ Parse Cursor Agent stream-json logs into human-readable format
 """
 
 import json
+import logging
 import sys
 
+logger = logging.getLogger(__name__)
 # ANSI color codes
 BLUE = "\033[0;34m"
 GREEN = "\033[0;32m"
@@ -26,7 +28,8 @@ def parse_stream(input_stream):
 
         try:
             event = json.loads(line)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            logger.debug("Skipping item due to %s: %s", type(e).__name__, e)
             continue
 
         event_type = event.get("type")

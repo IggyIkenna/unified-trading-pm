@@ -8,10 +8,12 @@ Usage:
     python generate-simple-violation-manifests.py [--dry-run]
 """
 
+import logging
 import subprocess
 import sys
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 # 13 service repos for Initial Cleanup
 REPOS = [
     "execution-service",
@@ -49,7 +51,7 @@ def run_rg(pattern: str, service_dir: Path, type_filter: str = "py", exclude_glo
         )
         # Return non-empty lines (rg returns exit code 1 if no matches)
         return [line for line in result.stdout.split("\n") if line.strip()]
-    except Exception:
+    except (ConnectionError, TimeoutError, OSError, ValueError):
         return []
 
 
@@ -113,7 +115,8 @@ def check_violations(service_dir: Path, service_name: str) -> dict:
             line_count = len(py_file.read_text().split("\n"))
             if line_count > 1500:
                 large_files.append(f"{py_file.relative_to(service_dir)} ({line_count} lines)")
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            logger.warning("Skipping item during operation: %s", e)
             continue
     if large_files:
         violations["files_too_large"] = large_files
@@ -143,7 +146,8 @@ def check_violations(service_dir: Path, service_name: str) -> dict:
                 elif not line.startswith(" ") and not line.startswith("\t") and stripped:
                     # Back at top level
                     in_function = False
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            logger.warning("Skipping item during operation: %s", e)
             continue
     if import_in_func_matches:
         violations["imports_in_functions"] = import_in_func_matches
@@ -258,7 +262,7 @@ def generate_manifest(service_name: str, violations: dict) -> str:
             [
                 "### 4. Bare except: Clauses",
                 "",
-                "Specify exception types: `except Exception:` or specific exceptions.",
+                "Specify exception types: `except (ConnectionError, TimeoutError, OSError, ValueError):` or specific exceptions.",
                 "",
                 "```",
             ]

@@ -6,10 +6,8 @@ This script performs systematic find-and-replace operations to update import sta
 from the old implicit format to the new explicit format.
 """
 
-import glob
 import os
 import re
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 # Import mappings to apply
@@ -24,11 +22,11 @@ IMPORT_MAPPINGS = {
     "from unified_trading_services import setup_cloud_logging": "from unified_trading_services.core.logging import setup_cloud_logging",
     "from unified_trading_services import handle_api_errors": "from unified_trading_services.core.error_handling import handle_api_errors",
     "from unified_trading_services import GracefulShutdownHandler": "from unified_trading_services.core.signal_handler import GracefulShutdownHandler",
-    
+
     # unified_events_interface mappings
     "from unified_events_interface import setup_events": "from unified_events_interface.core.events import setup_events",
     "from unified_events_interface import log_event": "from unified_events_interface.core.events import log_event",
-    
+
     # unified_config_interface mappings
     "from unified_config_interface import UnifiedCloudConfig": "from unified_config_interface.core.config import UnifiedCloudConfig",
 }
@@ -51,7 +49,7 @@ def handle_multiline_unified_trading_services_import(import_content: str) -> str
     """Handle multiline import statements from unified_trading_services."""
     imports = [imp.strip() for imp in import_content.split(',') if imp.strip()]
     result_lines = []
-    
+
     for imp in imports:
         imp = imp.strip()
         if imp in ["get_storage_client", "get_secret_client"]:
@@ -71,7 +69,7 @@ def handle_multiline_unified_trading_services_import(import_content: str) -> str
         else:
             # For now, keep unmapped imports as is but add a comment
             result_lines.append(f"from unified_trading_services import {imp}  # TODO: Map to explicit import")
-    
+
     return '\n'.join(result_lines)
 
 def handle_single_line_multiple_imports(match) -> str:
@@ -79,7 +77,7 @@ def handle_single_line_multiple_imports(match) -> str:
     import_content = match.group(1)
     imports = [imp.strip() for imp in import_content.split(',') if imp.strip()]
     result_lines = []
-    
+
     for imp in imports:
         imp = imp.strip()
         if imp in ["get_storage_client", "get_secret_client"]:
@@ -99,7 +97,7 @@ def handle_single_line_multiple_imports(match) -> str:
         else:
             # For now, keep unmapped imports as is but add a comment
             result_lines.append(f"from unified_trading_services import {imp}  # TODO: Map to explicit import")
-    
+
     return '\n'.join(result_lines)
 
 def find_python_files(repo_path: str) -> List[str]:
@@ -108,11 +106,11 @@ def find_python_files(repo_path: str) -> List[str]:
     for root, dirs, files in os.walk(repo_path):
         # Skip .venv and build directories
         dirs[:] = [d for d in dirs if d not in ['.venv', 'build', '__pycache__', '.git']]
-        
+
         for file in files:
             if file.endswith('.py'):
                 python_files.append(os.path.join(root, file))
-    
+
     return python_files
 
 def refactor_file(file_path: str) -> Tuple[bool, List[str]]:
@@ -120,16 +118,16 @@ def refactor_file(file_path: str) -> Tuple[bool, List[str]]:
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        
+
         original_content = content
         changes_made = []
-        
+
         # Apply simple mappings first
         for old_import, new_import in IMPORT_MAPPINGS.items():
             if old_import in content:
                 content = content.replace(old_import, new_import)
                 changes_made.append(f"{old_import} -> {new_import}")
-        
+
         # Apply complex pattern replacements
         for pattern, handler in COMPLEX_IMPORT_PATTERNS:
             matches = list(re.finditer(pattern, content, re.MULTILINE | re.DOTALL))
@@ -140,33 +138,33 @@ def refactor_file(file_path: str) -> Tuple[bool, List[str]]:
                     replacement = handler
                 content = content[:match.start()] + replacement + content[match.end():]
                 changes_made.append(f"Complex pattern: {match.group(0)} -> multiline replacements")
-        
+
         # Write back if changed
         if content != original_content:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             return True, changes_made
-        
+
         return False, []
-        
-    except Exception as e:
+
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         print(f"Error processing {file_path}: {e}")
         return False, [f"Error: {e}"]
 
 def refactor_repository(repo_path: str) -> Dict[str, any]:
     """Refactor all imports in a repository."""
     print(f"Processing repository: {repo_path}")
-    
+
     python_files = find_python_files(repo_path)
     print(f"Found {len(python_files)} Python files")
-    
+
     results = {
         'total_files': len(python_files),
         'modified_files': 0,
         'changes': {},
         'errors': []
     }
-    
+
     for file_path in python_files:
         was_modified, changes = refactor_file(file_path)
         if was_modified:
@@ -174,24 +172,24 @@ def refactor_repository(repo_path: str) -> Dict[str, any]:
             results['changes'][file_path] = changes
         elif changes:  # Had errors
             results['errors'].append((file_path, changes))
-    
+
     return results
 
 def main():
     """Main function to refactor all specified repositories."""
     base_path = "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos"
-    
+
     repositories = [
         "instruments-service",
-        "market-data-processing-service", 
+        "market-data-processing-service",
         "strategy-service",
         "execution-service",
         "position-balance-monitor-service",
         "risk-and-exposure-service"
     ]
-    
+
     total_results = {}
-    
+
     for repo in repositories:
         repo_path = os.path.join(base_path, repo)
         if os.path.exists(repo_path):
@@ -200,23 +198,23 @@ def main():
         else:
             print(f"Repository not found: {repo_path}")
             total_results[repo] = {"error": "Repository not found"}
-    
+
     # Print summary
     print("\n" + "="*80)
     print("REFACTORING SUMMARY")
     print("="*80)
-    
+
     for repo, results in total_results.items():
         if 'error' in results:
             print(f"\n{repo}: {results['error']}")
             continue
-            
+
         print(f"\n{repo}:")
         print(f"  Total files: {results['total_files']}")
         print(f"  Modified files: {results['modified_files']}")
-        
+
         if results['changes']:
-            print(f"  Changes made:")
+            print("  Changes made:")
             for file_path, changes in list(results['changes'].items())[:5]:  # Show first 5
                 rel_path = os.path.relpath(file_path, base_path)
                 print(f"    {rel_path}:")
@@ -226,7 +224,7 @@ def main():
                     print(f"      ... and {len(changes) - 3} more")
             if len(results['changes']) > 5:
                 print(f"    ... and {len(results['changes']) - 5} more files")
-        
+
         if results['errors']:
             print(f"  Errors: {len(results['errors'])}")
             for file_path, error_msgs in results['errors'][:3]:

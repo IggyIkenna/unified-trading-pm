@@ -7,6 +7,7 @@ Run from workspace root or pass WORKSPACE_ROOT.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import subprocess
@@ -15,6 +16,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
 # Script lives at .../unified-trading-pm/scripts/ensure-repo-collaborators.py
 # Workspace root = parent of unified-trading-pm (contains all 55 repos)
 WORKSPACE_ROOT = os.environ.get(
@@ -38,7 +40,8 @@ def get_origin_url(repo_path: Path) -> str | None:
         )
         if out.returncode == 0 and out.stdout.strip():
             return out.stdout.strip()
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+        logger.debug("Suppressed %s during get origin url: %s", type(e).__name__, e)
         pass
     return None
 
@@ -110,7 +113,7 @@ def add_collaborator(
             if "already exists" in body.lower() or "request" in body.lower():
                 return True, "already added"
         return False, f"HTTP {e.code}: {body[:200]}"
-    except Exception as e:
+    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
         return False, str(e)
 
 

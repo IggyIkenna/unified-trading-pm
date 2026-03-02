@@ -309,7 +309,7 @@ def create_issues(org: str, subtasks: list[dict[str, Any]], dry_run: bool = True
                         "existing": False,
                     }
                 )
-        except Exception as e:
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             print(f"    ❌ Failed to create issue: {e}")
             issue_manifest.setdefault(repo, []).append(
                 {

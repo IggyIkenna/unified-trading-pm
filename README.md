@@ -4,6 +4,20 @@ Project management, workspace tooling, and shared Cursor configuration for the U
 
 ---
 
+## 🚀 Quick Start (New Machine Setup)
+
+Setting up the workspace on a new machine or after path changes (like iCloud sync)?
+
+```bash
+cd /path/to/workspace/unified-trading-pm
+bash scripts/setup-workspace-root.sh
+```
+
+**One command sets up BOTH IDEs:** Cursor + Claude Code workspace configs, conversation history, Python paths.
+📖 **Full docs:** [WORKSPACE_SETUP.md](WORKSPACE_SETUP.md) | [BOTH_IDES_SETUP.md](BOTH_IDES_SETUP.md)
+
+---
+
 ## Required Workspace Structure
 
 This repo **must** be cloned as a sibling directory alongside all other system repos.

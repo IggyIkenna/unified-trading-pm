@@ -290,11 +290,11 @@ from unified_events_interface import log_event  # ✅ Also works
 
 \`\`\`bash
 # New libraries published to:
-asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/
+asia-northeast1-python.pkg.dev/${GCP_PROJECT_ID}/unified-libraries/
 
 # One-time local setup:
 gcloud artifacts print-settings python \\
-    --project=central-element-323112 \\
+    --project=${GCP_PROJECT_ID} \\
     --repository=unified-libraries \\
     --location=asia-northeast1
 \`\`\`
@@ -337,7 +337,7 @@ bash scripts/quality-gates.sh --no-fix  # Verify passes
 # Configure Artifact Registry auth
 gcloud auth application-default login
 gcloud artifacts print-settings python \\
-    --project=central-element-323112 \\
+    --project=${GCP_PROJECT_ID} \\
     --repository=unified-libraries \\
     --location=asia-northeast1
 
