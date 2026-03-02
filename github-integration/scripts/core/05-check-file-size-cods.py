@@ -33,7 +33,7 @@ import json
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import cast
 
 # ==============================================================================
 # Constants
@@ -137,7 +137,7 @@ def count_lines(file_path: Path) -> int:
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             return sum(1 for line in f if line.strip())
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (OSError, ValueError) as e:
         log_warning(f"Could not read {file_path}: {e}")
         return 0
 
@@ -148,7 +148,7 @@ def should_exclude(file_path: Path) -> bool:
     return any(pattern in path_str for pattern in EXCLUDE_PATTERNS)
 
 
-def scan_repo_for_large_files(repo_name: str, threshold: int, org: str = DEFAULT_ORG) -> List[Tuple[str, int]]:
+def scan_repo_for_large_files(repo_name: str, threshold: int, org: str = DEFAULT_ORG) -> list[tuple[str, int]]:
     """
     Scan a single repo for files exceeding threshold.
     Only checks files tracked by git (respects .gitignore).
@@ -162,24 +162,39 @@ def scan_repo_for_large_files(repo_name: str, threshold: int, org: str = DEFAULT
     if not repo_dir.exists():
         log_info(f"Cloning {org}/{repo_name}...")
         # Use list args to avoid shell=True vulnerability
-        clone_cmd = ["git", "clone", "--depth", "1", f"https://github.com/{org}/{repo_name}.git", str(repo_dir)]
+        clone_cmd: list[str] = [
+            "git",
+            "clone",
+            "--depth",
+            "1",
+            f"https://github.com/{org}/{repo_name}.git",
+            str(repo_dir),
+        ]
         try:
             subprocess.run(clone_cmd, check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
-            log_error(f"Failed to clone {repo_name}: {e.stderr}")
+            raw_stderr: object = getattr(e, "stderr", None)
+            log_error(f"Failed to clone {repo_name}: {raw_stderr}")
             return []
 
     # Get list of tracked files from git (respects .gitignore)
-    git_ls_cmd = ["git", "ls-files"]
+    git_ls_cmd: list[str] = ["git", "ls-files"]
     try:
-        result = subprocess.run(git_ls_cmd, check=True, capture_output=True, text=True, cwd=repo_dir)
-        tracked_files = result.stdout.strip().split("\n")
+        result: subprocess.CompletedProcess[str] = subprocess.run(
+            git_ls_cmd,
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=repo_dir,
+        )
+        tracked_files: list[str] = result.stdout.strip().split("\n")
     except subprocess.CalledProcessError as e:
-        log_error(f"Failed to get tracked files from {repo_name}: {e.stderr}")
+        raw_stderr2: object = getattr(e, "stderr", None)
+        log_error(f"Failed to get tracked files from {repo_name}: {raw_stderr2}")
         return []
 
     # Scan tracked files for large files
-    large_files = []
+    large_files: list[tuple[str, int]] = []
 
     for rel_path_str in tracked_files:
         file_path = repo_dir / rel_path_str
@@ -202,14 +217,14 @@ def scan_repo_for_large_files(repo_name: str, threshold: int, org: str = DEFAULT
     return large_files
 
 
-def scan_all_repos(repos: List[str], threshold: int, org: str = DEFAULT_ORG) -> Dict[str, List[Tuple[str, int]]]:
+def scan_all_repos(repos: list[str], threshold: int, org: str = DEFAULT_ORG) -> dict[str, list[tuple[str, int]]]:
     """
     Scan multiple repos in parallel.
 
     Returns:
         Dict mapping repo_name -> list of (file_path, line_count)
     """
-    results = {}
+    results: dict[str, list[tuple[str, int]]] = {}
 
     with ThreadPoolExecutor(max_workers=5) as executor:
         future_to_repo = {executor.submit(scan_repo_for_large_files, repo, threshold, org): repo for repo in repos}
@@ -223,7 +238,7 @@ def scan_all_repos(repos: List[str], threshold: int, org: str = DEFAULT_ORG) -> 
                     log_success(f"{repo}: Found {len(large_files)} files >={threshold} lines")
                 else:
                     log_info(f"{repo}: No files >={threshold} lines")
-            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            except (OSError, ValueError) as e:
                 log_error(f"Error scanning {repo}: {e}")
 
     return results
@@ -301,7 +316,7 @@ This makes the code harder to:
 """
 
 
-def get_existing_issues(org: str, repo: str) -> Dict[str, int]:
+def get_existing_issues(org: str, repo: str) -> dict[str, int]:
     """
     Get existing COD-SIZE issues for a repo.
 
@@ -309,7 +324,7 @@ def get_existing_issues(org: str, repo: str) -> Dict[str, int]:
         Dict mapping issue_title -> issue_number
     """
     # Use list args to avoid shell=True vulnerability
-    cmd = [
+    cmd: list[str] = [
         "gh",
         "issue",
         "list",
@@ -326,18 +341,27 @@ def get_existing_issues(org: str, repo: str) -> Dict[str, int]:
     ]
 
     try:
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        issues = json.loads(result.stdout)
-        return {issue["title"]: issue["number"] for issue in issues}
+        result: subprocess.CompletedProcess[str] = subprocess.run(
+            cmd,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        issues: list[dict[str, object]] = cast(
+            list[dict[str, object]],
+            json.loads(result.stdout),
+        )
+        return {str(issue["title"]): int(str(issue["number"])) for issue in issues}
     except subprocess.CalledProcessError as e:
-        log_error(f"Failed to fetch existing issues: {e.stderr}")
+        raw_stderr: object = getattr(e, "stderr", None)
+        log_error(f"Failed to fetch existing issues: {raw_stderr}")
         return {}
     except json.JSONDecodeError as e:
         log_error(f"Failed to parse issue JSON: {e}")
         return {}
 
 
-def create_issue(org: str, repo: str, title: str, body: str, dry_run: bool = False) -> Optional[int]:
+def create_issue(org: str, repo: str, title: str, body: str, dry_run: bool = False) -> int | None:
     """
     Create a GitHub issue.
 
@@ -349,7 +373,7 @@ def create_issue(org: str, repo: str, title: str, body: str, dry_run: bool = Fal
         return None
 
     # Create issue with labels - use list args to avoid shell=True vulnerability
-    cmd = [
+    cmd: list[str] = [
         "gh",
         "issue",
         "create",
@@ -364,24 +388,31 @@ def create_issue(org: str, repo: str, title: str, body: str, dry_run: bool = Fal
     ]
 
     try:
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True, input=body)
-        issue_url = result.stdout.strip()
-        issue_number = int(issue_url.split("/")[-1])
+        result: subprocess.CompletedProcess[str] = subprocess.run(
+            cmd,
+            check=True,
+            capture_output=True,
+            text=True,
+            input=body,
+        )
+        issue_url: str = result.stdout.strip()
+        issue_number: int = int(issue_url.split("/")[-1])
         log_success(f"Created issue #{issue_number}: {title}")
         return issue_number
     except subprocess.CalledProcessError as e:
-        log_error(f"Failed to create issue: {e.stderr}")
+        raw_stderr: object = getattr(e, "stderr", None)
+        log_error(f"Failed to create issue: {raw_stderr}")
         return None
 
 
-def add_to_project(org: str, issue_number: int, repo: str, project_number: int, dry_run: bool = False):
+def add_to_project(org: str, issue_number: int, repo: str, project_number: int, dry_run: bool = False) -> None:
     """Add issue to COD project."""
     if dry_run:
         log_info(f"[DRY-RUN] Would add #{issue_number} to project {project_number}")
         return
 
     # Use list args to avoid shell=True vulnerability
-    cmd = [
+    cmd: list[str] = [
         "gh",
         "project",
         "item-add",
@@ -396,23 +427,34 @@ def add_to_project(org: str, issue_number: int, repo: str, project_number: int, 
         subprocess.run(cmd, check=True, capture_output=True, text=True)
         log_success(f"Added #{issue_number} to project {project_number}")
     except subprocess.CalledProcessError as e:
-        log_warning(f"Failed to add to project: {e.stderr}")
+        raw_stderr: object = getattr(e, "stderr", None)
+        log_warning(f"Failed to add to project: {raw_stderr}")
 
 
-def update_issue(org: str, repo: str, issue_number: int, new_body: str, dry_run: bool = False):
+def update_issue(org: str, repo: str, issue_number: int, new_body: str, dry_run: bool = False) -> None:
     """Update existing issue body."""
     if dry_run:
         log_info(f"[DRY-RUN] Would update #{issue_number}")
         return
 
     # Use list args to avoid shell=True vulnerability
-    cmd = ["gh", "issue", "edit", str(issue_number), "--repo", f"{org}/{repo}", "--body", "-"]
+    cmd: list[str] = [
+        "gh",
+        "issue",
+        "edit",
+        str(issue_number),
+        "--repo",
+        f"{org}/{repo}",
+        "--body",
+        "-",
+    ]
 
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True, input=new_body)
         log_success(f"Updated issue #{issue_number}")
     except subprocess.CalledProcessError as e:
-        log_error(f"Failed to update issue: {e.stderr}")
+        raw_stderr: object = getattr(e, "stderr", None)
+        log_error(f"Failed to update issue: {raw_stderr}")
 
 
 # ==============================================================================
@@ -422,12 +464,12 @@ def update_issue(org: str, repo: str, issue_number: int, new_body: str, dry_run:
 
 def process_repo(
     repo: str,
-    large_files: List[Tuple[str, int]],
+    large_files: list[tuple[str, int]],
     threshold: int,
     org: str,
     dry_run: bool,
-    max_issues: Optional[int] = None,
-):
+    max_issues: int | None = None,
+) -> None:
     """Process large files in a repo and create/update issues."""
     log_info(f"\nProcessing {org}/{repo}...")
 
@@ -471,43 +513,52 @@ def process_repo(
 # ==============================================================================
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Check file sizes and create COD-SIZE issues", formatter_class=argparse.RawDescriptionHelpFormatter
+        description="Check file sizes and create COD-SIZE issues",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument("--all-repos", action="store_true", help="Scan all 30 repos")
-
     parser.add_argument("--repo", type=str, help="Scan single repo (e.g., instruments-service)")
-
     parser.add_argument(
-        "--threshold", type=int, default=DEFAULT_THRESHOLD, help=f"Line count threshold (default: {DEFAULT_THRESHOLD})"
+        "--threshold",
+        type=int,
+        default=DEFAULT_THRESHOLD,
+        help=f"Line count threshold (default: {DEFAULT_THRESHOLD})",
     )
-
-    parser.add_argument("--org", type=str, default=DEFAULT_ORG, help=f"GitHub organization (default: {DEFAULT_ORG})")
-
+    parser.add_argument(
+        "--org",
+        type=str,
+        default=DEFAULT_ORG,
+        help=f"GitHub organization (default: {DEFAULT_ORG})",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Preview actions without creating issues")
-
     parser.add_argument("--max-issues", type=int, help="Max issues to create per repo (for testing)")
 
-    args = parser.parse_args()
+    parsed = parser.parse_args()
+
+    all_repos_flag: bool = bool(getattr(parsed, "all_repos", False))
+    repo_arg: str = str(getattr(parsed, "repo", "") or "")
+    threshold: int = int(getattr(parsed, "threshold", DEFAULT_THRESHOLD))
+    org: str = str(getattr(parsed, "org", DEFAULT_ORG))
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
+    max_issues_raw: object = getattr(parsed, "max_issues", None)
+    max_issues: int | None = int(str(max_issues_raw)) if max_issues_raw is not None else None
 
     # Validate arguments
-    if not (args.all_repos or args.repo):
+    if not (all_repos_flag or repo_arg):
         parser.error("Must specify --all-repos or --repo")
 
     # Determine repos to scan
-    if args.repo:
-        repos = [args.repo]
-    else:
-        repos = ALL_REPOS
+    repos: list[str] = [repo_arg] if repo_arg else ALL_REPOS
 
     # Scan repos
-    log_info(f"Scanning {len(repos)} repos for files >={args.threshold} lines...")
-    if args.dry_run:
+    log_info(f"Scanning {len(repos)} repos for files >={threshold} lines...")
+    if dry_run:
         log_warning("DRY-RUN MODE: No issues will be created")
 
-    results = scan_all_repos(repos, args.threshold, args.org)
+    results = scan_all_repos(repos, threshold, org)
 
     if not results:
         log_success("No files exceed threshold!")
@@ -517,8 +568,8 @@ def main():
     total_files = sum(len(files) for files in results.values())
     log_info(f"\nFound {total_files} files across {len(results)} repos")
 
-    for repo, large_files in results.items():
-        process_repo(repo, large_files, args.threshold, args.org, args.dry_run, args.max_issues)
+    for repo_name, large_files in results.items():
+        process_repo(repo_name, large_files, threshold, org, dry_run, max_issues)
 
     log_info("\n" + "=" * 70)
     log_success("COD-SIZE check complete!")

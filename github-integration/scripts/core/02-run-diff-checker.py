@@ -25,11 +25,14 @@ import os
 import re
 import subprocess
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import cast
+
+# Type alias
+JsonDict = dict[str, object]
 
 
 @dataclass
@@ -280,7 +283,7 @@ def find_coding_standards_violations(codex_root: Path, workspace_root: Path) -> 
                                 )
                                 break
 
-            except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            except (OSError, ValueError) as e:
                 print(f"Warning: Could not check {py_file}: {e}", file=sys.stderr)
                 continue
 
@@ -391,7 +394,7 @@ def find_domain_event_gaps(codex_root: Path, workspace_root: Path) -> list[Drift
     gaps: list[DriftGap] = []
 
     # Map services to their codex per-service docs
-    service_to_doc = {}
+    service_to_doc: dict[str, Path] = {}
     for mode in ["batch", "live"]:
         per_service_dir = codex_root / "03-observability" / mode / "per-service"
         if per_service_dir.exists():
@@ -483,7 +486,7 @@ def find_domain_event_gaps(codex_root: Path, workspace_root: Path) -> list[Drift
 def extract_domain_events_from_codex(codex_doc: Path) -> set[str]:
     """Parse domain events from codex per-service markdown."""
     content = codex_doc.read_text()
-    events = set()
+    events: set[str] = set()
 
     # Find the "Domain-Specific Events" table
     in_table = False
@@ -507,7 +510,7 @@ def extract_domain_events_from_codex(codex_doc: Path) -> set[str]:
 
 def extract_service_specific_events_from_test(content: str, service_name: str) -> set[str]:
     """Extract events from SERVICE_SPECIFIC_EVENTS dict in test file."""
-    events = set()
+    events: set[str] = set()
 
     # Find the service's entry in SERVICE_SPECIFIC_EVENTS dict
     pattern = rf'"{service_name}":\s*\[(.*?)\]'
@@ -519,7 +522,7 @@ def extract_service_specific_events_from_test(content: str, service_name: str) -
     if match:
         events_str = match.group(1)
         # Extract all quoted strings
-        event_matches = re.findall(r'["\']([A-Z_]+)["\']', events_str)
+        event_matches: list[str] = cast(list[str], re.findall(r'["\']([A-Z_]+)["\']', events_str))
         events = set(event_matches)
 
     return events
@@ -652,21 +655,26 @@ def fetch_all_existing_issues(repo: str) -> dict[str, str]:
             print("  No existing issues found")
             return gap_id_to_issue
 
-        issues = json.loads(result.stdout)
-        print(f"  Loaded {len(issues)} existing open issues")
+        raw_issues: object = cast(object, json.loads(result.stdout))
+        issues_list: list[JsonDict] = (
+            [cast(JsonDict, item) for item in cast(list[object], raw_issues) if isinstance(item, dict)]
+            if isinstance(raw_issues, list)
+            else []
+        )
+        print(f"  Loaded {len(issues_list)} existing open issues")
 
         # Extract gap_id from each issue body
-        for issue in issues:
-            body = issue.get("body", "")
+        for issue in issues_list:
+            body_val: str = str(issue.get("body", ""))
             # Look for "gap-id: XXX" marker
-            match = re.search(r"gap-id:\s*(\S+)", body)
+            match = re.search(r"gap-id:\s*(\S+)", body_val)
             if match:
-                gap_id = match.group(1)
-                gap_id_to_issue[gap_id] = str(issue["number"])
+                gap_id_str: str = match.group(1)
+                gap_id_to_issue[gap_id_str] = str(issue.get("number", ""))
 
-        print(f"  ✓ Found {len(gap_id_to_issue)} issues with gap-id markers")
+        print(f"  Found {len(gap_id_to_issue)} issues with gap-id markers")
 
-    except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+    except (OSError, ValueError) as e:
         print(f"  Warning: Could not fetch existing issues: {e}", file=sys.stderr)
 
     return gap_id_to_issue
@@ -685,7 +693,7 @@ def check_for_existing_issue(gap: DriftGap, existing_issues: dict[str, str]) -> 
     return existing_issues.get(gap.gap_id)
 
 
-def create_github_issue(gap: DriftGap, repo: str, dry_run: bool) -> dict[str, Any]:
+def create_github_issue(gap: DriftGap, repo: str, dry_run: bool) -> JsonDict:
     """
     Create GitHub issue for this gap.
 
@@ -790,10 +798,11 @@ See codex: `{gap.codex_reference}`
         }
 
     except subprocess.CalledProcessError as e:
-        print(f"Error creating issue: {e.stderr}", file=sys.stderr)
+        raw_stderr: object = getattr(e, "stderr", None)
+        print(f"Error creating issue: {raw_stderr}", file=sys.stderr)
         return {
             "action": "error",
-            "error": e.stderr,
+            "error": str(raw_stderr) if raw_stderr is not None else "",
             "gap_id": gap.gap_id,
         }
 
@@ -849,11 +858,32 @@ def ensure_labels_exist(repo: str, workspace_root: Path, dry_run: bool) -> None:
             description,
             "--force",
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
+        label_result: subprocess.CompletedProcess[str] = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+        )
+        if label_result.returncode == 0:
             created += 1
 
-    print(f"🏷️  Ensured {len(labels_to_create)} labels exist ({created} created/updated)")
+    print(f"Ensured {len(labels_to_create)} labels exist ({created} created/updated)")
+
+
+def _gap_to_dict(gap: DriftGap) -> JsonDict:
+    """Convert a DriftGap dataclass to a JSON-serializable dict."""
+    gap_dict: JsonDict = {
+        "gap_id": gap.gap_id,
+        "title": gap.title,
+        "category": gap.category,
+        "priority": gap.priority,
+        "gap_type": gap.gap_type,
+        "description": gap.description,
+        "service": gap.service,
+        "affected_files": gap.affected_files,
+        "codex_reference": gap.codex_reference,
+        "auto_fixable": gap.auto_fixable,
+    }
+    return gap_dict
 
 
 def main() -> int:
@@ -874,12 +904,21 @@ def main() -> int:
         help="Max parallel workers for creating issues (default: 10)",
     )
 
-    args = parser.parse_args()
+    parsed = parser.parse_args()
+
+    # Extract typed args
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
+    repo: str = str(getattr(parsed, "repo", "IggyIkenna/unified-trading-deployment-v2"))
+    max_workers: int = int(getattr(parsed, "max_workers", 10))
+    raw_output_json: object = getattr(parsed, "output_json", None)
+    output_json: Path | None = cast(Path, raw_output_json) if isinstance(raw_output_json, Path) else None
+    raw_codex_dir: object = getattr(parsed, "codex_dir", None)
+    raw_workspace_dir: object = getattr(parsed, "workspace_dir", None)
 
     # Determine paths
-    script_dir = Path(__file__).parent
-    codex_root = args.codex_dir or script_dir.parent.parent
-    workspace_root = args.workspace_dir or codex_root.parent
+    script_dir: Path = Path(__file__).parent
+    codex_root: Path = cast(Path, raw_codex_dir) if isinstance(raw_codex_dir, Path) else script_dir.parent.parent
+    workspace_root: Path = cast(Path, raw_workspace_dir) if isinstance(raw_workspace_dir, Path) else codex_root.parent
 
     if not (codex_root / "06-coding-standards").exists():
         print(f"Error: Could not find codex at {codex_root}", file=sys.stderr)
@@ -887,13 +926,13 @@ def main() -> int:
 
     print(f"Codex root: {codex_root}")
     print(f"Workspace root: {workspace_root}")
-    print(f"Target repo: {args.repo}")
-    print(f"Dry run: {args.dry_run}")
+    print(f"Target repo: {repo}")
+    print(f"Dry run: {dry_run}")
     print()
 
     # Ensure all labels exist before creating issues
-    print("🏷️  Ensuring labels exist...")
-    ensure_labels_exist(args.repo, workspace_root, args.dry_run)
+    print("Ensuring labels exist...")
+    ensure_labels_exist(repo, workspace_root, dry_run)
     print()
 
     # Run checks
@@ -915,30 +954,30 @@ def main() -> int:
     print(f"\nFound {len(all_gaps)} gaps")
 
     # Categorize and prioritize
-    by_priority = {}
+    by_priority: dict[str, list[DriftGap]] = {}
     for gap in all_gaps:
         by_priority.setdefault(gap.priority, []).append(gap)
 
     for priority in ["P0-critical", "P1-high", "P2-medium", "P3-low"]:
-        count = len(by_priority.get(priority, []))
+        count: int = len(by_priority.get(priority, []))
         print(f"  {priority}: {count}")
 
     # Fetch all existing issues once (batched, much faster than 1,209 individual calls)
     print("\nFetching existing issues...")
-    existing_issues = fetch_all_existing_issues(args.repo)
+    existing_issues: dict[str, str] = fetch_all_existing_issues(repo)
 
     # Separate gaps into two groups: existing vs new
-    gaps_to_create = []
-    results = []
-    created_count = 0
-    skipped_count = 0
+    gaps_to_create: list[DriftGap] = []
+    results: list[JsonDict] = []
+    created_count: int = 0
+    skipped_count: int = 0
 
     print("\nChecking which gaps need new issues...")
     for gap in all_gaps:
-        existing_issue = check_for_existing_issue(gap, existing_issues)
+        existing_issue: str | None = check_for_existing_issue(gap, existing_issues)
 
         if existing_issue:
-            print(f"  ⏭  {gap.gap_id}: Already exists (#{existing_issue})")
+            print(f"  SKIP {gap.gap_id}: Already exists (#{existing_issue})")
             skipped_count += 1
             results.append(
                 {
@@ -949,43 +988,46 @@ def main() -> int:
             )
         else:
             gaps_to_create.append(gap)
-            if args.dry_run:
+            if dry_run:
                 # For COD-SIZE issues, show line count from title
                 if gap.gap_id.startswith("COD-SIZE-"):
-                    print(f"  ✓  {gap.gap_id}: Would create issue (dry-run)")
+                    print(f"  OK {gap.gap_id}: Would create issue (dry-run)")
                     print(f"      Title: {gap.title}")
                 else:
-                    print(f"  ✓  {gap.gap_id}: Would create issue (dry-run)")
+                    print(f"  OK {gap.gap_id}: Would create issue (dry-run)")
 
     # Create issues in parallel (if not dry-run and we have gaps to create)
-    if not args.dry_run and gaps_to_create:
-        print(f"\nCreating {len(gaps_to_create)} issues in parallel (max {args.max_workers} workers)...")
+    if not dry_run and gaps_to_create:
+        print(f"\nCreating {len(gaps_to_create)} issues in parallel (max {max_workers} workers)...")
 
-        with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all issue creation tasks
-            future_to_gap = {executor.submit(create_github_issue, gap, args.repo, False): gap for gap in gaps_to_create}
+            future_to_gap: dict[Future[JsonDict], DriftGap] = {
+                executor.submit(create_github_issue, g, repo, False): g for g in gaps_to_create
+            }
 
             # Process completed tasks as they finish
             for i, future in enumerate(as_completed(future_to_gap), 1):
-                gap = future_to_gap[future]
+                current_gap = future_to_gap[future]
                 try:
-                    result = future.result()
-                    results.append(result)
-                    if result.get("action") in {"create", "created"}:
+                    issue_result: JsonDict = future.result()
+                    results.append(issue_result)
+                    action_val: str = str(issue_result.get("action", ""))
+                    if action_val in {"create", "created"}:
                         created_count += 1
-                        print(f"  ✓  [{i}/{len(gaps_to_create)}] {gap.gap_id}: Created")
+                        print(f"  OK [{i}/{len(gaps_to_create)}] {current_gap.gap_id}: Created")
                     else:
-                        print(f"  ⚠  [{i}/{len(gaps_to_create)}] {gap.gap_id}: Failed")
-                except (ConnectionError, TimeoutError, OSError, ValueError) as e:
-                    print(f"  ✗  [{i}/{len(gaps_to_create)}] {gap.gap_id}: Error - {e}")
+                        print(f"  WARN [{i}/{len(gaps_to_create)}] {current_gap.gap_id}: Failed")
+                except (OSError, ValueError) as e:
+                    print(f"  ERR [{i}/{len(gaps_to_create)}] {current_gap.gap_id}: Error - {e}")
                     results.append(
                         {
                             "action": "error",
-                            "gap_id": gap.gap_id,
+                            "gap_id": current_gap.gap_id,
                             "error": str(e),
                         }
                     )
-    elif args.dry_run and gaps_to_create:
+    elif dry_run and gaps_to_create:
         # In dry-run, just count what would be created
         created_count = len(gaps_to_create)
         for gap in gaps_to_create:
@@ -999,62 +1041,35 @@ def main() -> int:
 
     print("\nSummary:")
     print(f"  Total gaps found: {len(all_gaps)}")
-    if args.dry_run:
+    if dry_run:
         print(f"  Issues that would be created: {created_count} (dry-run, not actually created)")
     else:
         print(f"  Issues created: {created_count}")
     print(f"  Issues skipped (already exist): {skipped_count}")
 
     # Write output JSON if requested
-    if args.output_json:
+    if output_json is not None:
         # Convert gaps to JSON-serializable format
-        serializable_gaps = []
+        serializable_gaps: list[JsonDict] = []
         for gap in all_gaps:
-            # Use __dict__ if available, otherwise extract attributes manually
-            if hasattr(gap, "__dict__"):
-                gap_dict = gap.__dict__.copy()
-            elif hasattr(gap, "_asdict"):
-                gap_dict = gap._asdict()  # For namedtuples
-            else:
-                # Fallback: extract common attributes
-                gap_dict = {
-                    "gap_id": getattr(gap, "gap_id", None),
-                    "title": getattr(gap, "title", None),
-                    "category": getattr(gap, "category", None),
-                    "priority": getattr(gap, "priority", None),
-                    "gap_type": getattr(gap, "gap_type", None),
-                    "description": getattr(gap, "description", None),
-                    "affected_files": getattr(gap, "affected_files", []),
-                    "codex_reference": getattr(gap, "codex_reference", None),
-                    "auto_fixable": getattr(gap, "auto_fixable", False),
-                }
-
-            # Ensure all values are JSON-serializable
-            for key, value in list(gap_dict.items()):
-                if isinstance(value, Path):
-                    gap_dict[key] = str(value)
-                elif isinstance(value, set):
-                    gap_dict[key] = list(value)
-                elif isinstance(value, (list, tuple)):
-                    gap_dict[key] = [str(v) if isinstance(v, Path) else v for v in value]
-
+            gap_dict: JsonDict = _gap_to_dict(gap)
             serializable_gaps.append(gap_dict)
 
-        output_data = {
+        output_data: JsonDict = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "codex_root": str(codex_root),
             "workspace_root": str(workspace_root),
-            "target_repo": args.repo,
-            "dry_run": args.dry_run,
+            "target_repo": repo,
+            "dry_run": dry_run,
             "total_gaps": len(all_gaps),
             "gaps_by_priority": {k: len(v) for k, v in by_priority.items()},
             "created_count": created_count,
             "skipped_count": skipped_count,
             "results": results,
-            "gaps": serializable_gaps,  # Add full gaps list for manifest generation
+            "gaps": serializable_gaps,
         }
-        args.output_json.write_text(json.dumps(output_data, indent=2))
-        print(f"\nResults written to {args.output_json}")
+        output_json.write_text(json.dumps(output_data, indent=2))
+        print(f"\nResults written to {output_json}")
 
     return 0
 

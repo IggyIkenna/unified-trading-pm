@@ -25,8 +25,12 @@ import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import cast
 
 logger = logging.getLogger(__name__)
+
+# Type alias
+JsonDict = dict[str, object]
 
 
 @dataclass
@@ -74,8 +78,8 @@ class WorkflowMetrics:
 
 def _run_gh(args: list[str]) -> str:
     """Run gh CLI command and return stdout."""
-    result = subprocess.run(
-        ["gh"] + args,
+    result: subprocess.CompletedProcess[str] = subprocess.run(
+        ["gh", *args],
         capture_output=True,
         text=True,
         check=True,
@@ -83,12 +87,22 @@ def _run_gh(args: list[str]) -> str:
     return result.stdout.strip()
 
 
-def _get_issues_created_in_period(repo: str, days: int) -> list[dict]:
-    """Get all issues created in the last N days."""
-    since_date = datetime.now(timezone.utc) - timedelta(days=days)
-    since_str = since_date.strftime("%Y-%m-%d")
+def _parse_issues(raw: str) -> list[JsonDict]:
+    """Parse JSON string into a list of issue dicts."""
+    if not raw:
+        return []
+    raw_parsed: object = cast(object, json.loads(raw))
+    if isinstance(raw_parsed, list):
+        return [cast(JsonDict, item) for item in cast(list[object], raw_parsed) if isinstance(item, dict)]
+    return []
 
-    result = _run_gh(
+
+def _get_issues_created_in_period(repo: str, days: int) -> list[JsonDict]:
+    """Get all issues created in the last N days."""
+    since_date: datetime = datetime.now(timezone.utc) - timedelta(days=days)
+    since_str: str = since_date.strftime("%Y-%m-%d")
+
+    result: str = _run_gh(
         [
             "issue",
             "list",
@@ -105,15 +119,15 @@ def _get_issues_created_in_period(repo: str, days: int) -> list[dict]:
         ]
     )
 
-    return json.loads(result) if result else []
+    return _parse_issues(result)
 
 
-def _get_pr_checks_in_period(repo: str, days: int) -> list[dict]:
+def _get_pr_checks_in_period(repo: str, days: int) -> list[JsonDict]:
     """Get all PR check runs in the last N days."""
-    since_date = datetime.now(timezone.utc) - timedelta(days=days)
-    since_str = since_date.strftime("%Y-%m-%d")
+    since_date: datetime = datetime.now(timezone.utc) - timedelta(days=days)
+    since_str: str = since_date.strftime("%Y-%m-%d")
 
-    result = _run_gh(
+    result: str = _run_gh(
         [
             "pr",
             "list",
@@ -130,58 +144,78 @@ def _get_pr_checks_in_period(repo: str, days: int) -> list[dict]:
         ]
     )
 
-    return json.loads(result) if result else []
+    return _parse_issues(result)
 
 
-def calculate_drift_metrics(issues: list[dict]) -> tuple[int, int, float]:
+def _get_body(issue: JsonDict) -> str:
+    """Safely get issue body as string."""
+    return str(issue.get("body", ""))
+
+
+def _get_labels(issue: JsonDict) -> list[str]:
+    """Safely get label names from issue."""
+    raw_labels: object = issue.get("labels", [])
+    if isinstance(raw_labels, list):
+        labels_list: list[JsonDict] = [
+            cast(JsonDict, lb) for lb in cast(list[object], raw_labels) if isinstance(lb, dict)
+        ]
+        return [str(lb.get("name", "")) for lb in labels_list]
+    return []
+
+
+def calculate_drift_metrics(issues: list[JsonDict]) -> tuple[int, int, float]:
     """Calculate drift detection metrics."""
-    drift_issues = [i for i in issues if "gap-id:" in i.get("body", "")]
-    gaps_found = len(drift_issues)
+    drift_issues: list[JsonDict] = [i for i in issues if "gap-id:" in _get_body(i)]
+    gaps_found: int = len(drift_issues)
 
     # Check how many were caught by diff checker vs human report
-    caught_before_review = sum(1 for i in drift_issues if "detected by: diff-checker" in i.get("body", "").lower())
+    caught_before_review: int = sum(1 for i in drift_issues if "detected by: diff-checker" in _get_body(i).lower())
 
-    detection_rate = (caught_before_review / gaps_found * 100) if gaps_found > 0 else 0.0
+    detection_rate: float = (caught_before_review / gaps_found * 100) if gaps_found > 0 else 0.0
 
     return gaps_found, caught_before_review, detection_rate
 
 
-def calculate_duplication_metrics(issues: list[dict]) -> tuple[int, int, float]:
+def calculate_duplication_metrics(issues: list[JsonDict]) -> tuple[int, int, float]:
     """Calculate duplication metrics."""
-    total_created = len(issues)
+    total_created: int = len(issues)
 
     # Check for regeneration markers
-    duplicates = sum(
-        1
-        for i in issues
-        if "regeneration-count:" in i.get("body", "")
-        and int(i.get("body", "").split("regeneration-count:")[1].split()[0].strip()) > 0
-    )
+    duplicates: int = 0
+    for i in issues:
+        body: str = _get_body(i)
+        if "regeneration-count:" in body:
+            try:
+                count_str: str = body.split("regeneration-count:")[1].split()[0].strip()
+                if int(count_str) > 0:
+                    duplicates += 1
+            except (ValueError, IndexError):
+                pass
 
-    duplication_rate = (duplicates / total_created * 100) if total_created > 0 else 0.0
+    duplication_rate: float = (duplicates / total_created * 100) if total_created > 0 else 0.0
 
     return total_created, duplicates, duplication_rate
 
 
-def calculate_automation_metrics(issues: list[dict]) -> tuple[int, int, int, int, int, float]:
+def calculate_automation_metrics(issues: list[JsonDict]) -> tuple[int, int, int, int, int, float]:
     """Calculate automation rate by quadrant."""
-    closed_issues = [i for i in issues if i["state"] == "closed"]
-    total_completed = len(closed_issues)
+    closed_issues: list[JsonDict] = [i for i in issues if str(i.get("state", "")) == "closed"]
+    total_completed: int = len(closed_issues)
 
     # Classify by automation quadrant
     # Use labels and body content to determine quadrant
-    total_auto = 0
-    semi_auto_front = 0
-    semi_auto_back = 0
-    full_human = 0
+    total_auto: int = 0
+    semi_auto_front: int = 0
+    semi_auto_back: int = 0
+    full_human: int = 0
 
     for issue in closed_issues:
-        body = issue.get("body", "").lower()
-        labels = [lb["name"] for lb in issue.get("labels", [])]
+        body: str = _get_body(issue).lower()
+        labels: list[str] = _get_labels(issue)
 
         # Determine quadrant based on markers
-        auto_close = "auto-closed" in body
-        review_required = "review required: yes" in body or "uat-required" in labels
+        auto_close: bool = "auto-closed" in body
+        review_required: bool = "review required: yes" in body or "uat-required" in labels
 
         if auto_close and not review_required:
             # Check if it was auto-pickup
@@ -196,7 +230,7 @@ def calculate_automation_metrics(issues: list[dict]) -> tuple[int, int, int, int
             else:
                 full_human += 1
 
-    automation_rate = (total_auto / total_completed * 100) if total_completed > 0 else 0.0
+    automation_rate: float = (total_auto / total_completed * 100) if total_completed > 0 else 0.0
 
     return (
         total_completed,
@@ -208,21 +242,23 @@ def calculate_automation_metrics(issues: list[dict]) -> tuple[int, int, int, int
     )
 
 
-def calculate_cycle_time_metrics(issues: list[dict]) -> tuple[float, float, float, float]:
+def calculate_cycle_time_metrics(issues: list[JsonDict]) -> tuple[float, float, float, float]:
     """Calculate average cycle time by automation type."""
-    closed_issues = [i for i in issues if i["state"] == "closed" and i.get("closedAt")]
+    closed_issues: list[JsonDict] = [i for i in issues if str(i.get("state", "")) == "closed" and i.get("closedAt")]
 
-    total_auto_times = []
-    semi_auto_times = []
-    full_human_times = []
+    total_auto_times: list[float] = []
+    semi_auto_times: list[float] = []
+    full_human_times: list[float] = []
 
     for issue in closed_issues:
-        created = datetime.fromisoformat(issue["createdAt"].replace("Z", "+00:00"))
-        closed = datetime.fromisoformat(issue["closedAt"].replace("Z", "+00:00"))
-        cycle_time = (closed - created).total_seconds() / 86400  # days
+        created_str: str = str(issue.get("createdAt", "")).replace("Z", "+00:00")
+        closed_str: str = str(issue.get("closedAt", "")).replace("Z", "+00:00")
+        created: datetime = datetime.fromisoformat(created_str)
+        closed: datetime = datetime.fromisoformat(closed_str)
+        cycle_time: float = (closed - created).total_seconds() / 86400  # days
 
-        body = issue.get("body", "").lower()
-        labels = [lb["name"] for lb in issue.get("labels", [])]
+        body: str = _get_body(issue).lower()
+        labels: list[str] = _get_labels(issue)
 
         # Classify by automation type
         if "auto-closed" in body and "auto-fixable: yes" in body:
@@ -232,58 +268,57 @@ def calculate_cycle_time_metrics(issues: list[dict]) -> tuple[float, float, floa
         else:
             semi_auto_times.append(cycle_time)
 
-    avg_total_auto = sum(total_auto_times) / len(total_auto_times) if total_auto_times else 0.0
-    avg_semi_auto = sum(semi_auto_times) / len(semi_auto_times) if semi_auto_times else 0.0
-    avg_full_human = sum(full_human_times) / len(full_human_times) if full_human_times else 0.0
-    avg_overall = (
-        sum(total_auto_times + semi_auto_times + full_human_times)
-        / len(total_auto_times + semi_auto_times + full_human_times)
-        if (total_auto_times + semi_auto_times + full_human_times)
-        else 0.0
-    )
+    avg_total_auto: float = sum(total_auto_times) / len(total_auto_times) if total_auto_times else 0.0
+    avg_semi_auto: float = sum(semi_auto_times) / len(semi_auto_times) if semi_auto_times else 0.0
+    avg_full_human: float = sum(full_human_times) / len(full_human_times) if full_human_times else 0.0
+    all_times: list[float] = total_auto_times + semi_auto_times + full_human_times
+    avg_overall: float = sum(all_times) / len(all_times) if all_times else 0.0
 
     return avg_total_auto, avg_semi_auto, avg_full_human, avg_overall
 
 
-def calculate_quality_gate_metrics(prs: list[dict]) -> tuple[int, int, float]:
+def calculate_quality_gate_metrics(prs: list[JsonDict]) -> tuple[int, int, float]:
     """Calculate quality gate pass rate."""
-    total_attempts = len(prs)
+    total_attempts: int = len(prs)
 
-    first_time_pass = sum(
-        1
-        for pr in prs
-        if pr.get("statusCheckRollup")
-        and all(
-            check.get("conclusion") == "success"
-            for check in pr["statusCheckRollup"]
-            if check.get("__typename") == "CheckRun"
-        )
-    )
+    first_time_pass: int = 0
+    for pr in prs:
+        raw_rollup: object = pr.get("statusCheckRollup")
+        if not raw_rollup or not isinstance(raw_rollup, list):
+            continue
+        checks: list[JsonDict] = [cast(JsonDict, c) for c in cast(list[object], raw_rollup) if isinstance(c, dict)]
+        if all(
+            str(check.get("conclusion", "")) == "success"
+            for check in checks
+            if str(check.get("__typename", "")) == "CheckRun"
+        ):
+            first_time_pass += 1
 
-    pass_rate = (first_time_pass / total_attempts * 100) if total_attempts > 0 else 0.0
+    pass_rate: float = (first_time_pass / total_attempts * 100) if total_attempts > 0 else 0.0
 
     return total_attempts, first_time_pass, pass_rate
 
 
-def calculate_regeneration_metrics(issues: list[dict]) -> tuple[int, float, int]:
+def calculate_regeneration_metrics(issues: list[JsonDict]) -> tuple[int, float, int]:
     """Calculate regeneration frequency."""
     # Count total regenerations
-    total_regenerations = 0
-    epic_regen_counts = {}
-    max_regen_hits = 0
+    total_regenerations: int = 0
+    epic_regen_counts: dict[str, int] = {}
+    max_regen_hits: int = 0
 
     for issue in issues:
-        body = issue.get("body", "")
+        body: str = _get_body(issue)
 
         # Extract regeneration count
         if "regeneration-count:" in body:
             try:
-                count = int(body.split("regeneration-count:")[1].split()[0].strip())
+                count_str: str = body.split("regeneration-count:")[1].split()[0].strip()
+                count: int = int(count_str)
                 total_regenerations += count
 
                 # Track by epic
                 if "epic-ref:" in body:
-                    epic_ref = body.split("epic-ref:")[1].split()[0].strip()
+                    epic_ref: str = body.split("epic-ref:")[1].split()[0].strip()
                     epic_regen_counts[epic_ref] = epic_regen_counts.get(epic_ref, 0) + count
 
                 # Track issues hitting max (3)
@@ -291,11 +326,14 @@ def calculate_regeneration_metrics(issues: list[dict]) -> tuple[int, float, int]
                     max_regen_hits += 1
 
             except (ValueError, IndexError) as e:
-                logger.debug("Suppressed %s during calculate regeneration metrics: %s", type(e).__name__, e)
-                pass
+                logger.debug(
+                    "Suppressed %s during calculate regeneration metrics: %s",
+                    type(e).__name__,
+                    e,
+                )
 
-    num_epics = len(epic_regen_counts)
-    avg_per_epic = sum(epic_regen_counts.values()) / num_epics if num_epics > 0 else 0.0
+    num_epics: int = len(epic_regen_counts)
+    avg_per_epic: float = sum(epic_regen_counts.values()) / num_epics if num_epics > 0 else 0.0
 
     return total_regenerations, avg_per_epic, max_regen_hits
 
@@ -305,8 +343,8 @@ def collect_metrics(repo: str, period_days: int) -> WorkflowMetrics:
     print(f"Collecting metrics for {repo} over last {period_days} days...")
 
     # Fetch data
-    issues = _get_issues_created_in_period(repo, period_days)
-    prs = _get_pr_checks_in_period(repo, period_days)
+    issues: list[JsonDict] = _get_issues_created_in_period(repo, period_days)
+    prs: list[JsonDict] = _get_pr_checks_in_period(repo, period_days)
 
     print(f"  Found {len(issues)} issues and {len(prs)} PRs")
 
@@ -361,6 +399,49 @@ def collect_metrics(repo: str, period_days: int) -> WorkflowMetrics:
 
 def format_markdown_report(metrics: WorkflowMetrics) -> str:
     """Format metrics as markdown report."""
+    det_status: str = "PASS" if metrics.drift_detection_rate >= 90 else "WARN"
+    det_analysis: str = (
+        "Strong drift prevention"
+        if metrics.drift_detection_rate >= 90
+        else "Needs improvement - increase diff checker coverage"
+    )
+    dup_status: str = "PASS" if metrics.duplication_rate < 2 else "WARN"
+    dup_analysis: str = (
+        "Excellent duplication prevention"
+        if metrics.duplication_rate < 2
+        else "Review marker system - duplicates detected"
+    )
+    auto_status: str = "PASS" if metrics.automation_rate >= 60 else "WARN"
+    qg_status: str = "PASS" if metrics.quality_gate_pass_rate >= 90 else "WARN"
+    qg_analysis: str = (
+        "Excellent quality - agents understanding standards well"
+        if metrics.quality_gate_pass_rate >= 90
+        else "Review common failures - may need better agent guidance"
+    )
+    regen_status: str = "PASS" if metrics.avg_regenerations_per_epic < 1.5 else "WARN"
+    regen_analysis: str = (
+        "Stable epic generation"
+        if metrics.avg_regenerations_per_epic < 1.5
+        else "Review epic generator - too much churn"
+    )
+
+    max_completed: int = max(metrics.total_tasks_completed, 1)
+    bar_auto: str = "X" * int(metrics.total_automation_tasks / max_completed * 20)
+    bar_front: str = "X" * int(metrics.semi_auto_front_tasks / max_completed * 20)
+    bar_back: str = "X" * int(metrics.semi_auto_back_tasks / max_completed * 20)
+    bar_human: str = "X" * int(metrics.full_human_loop_tasks / max_completed * 20)
+
+    passing: int = sum(
+        [
+            metrics.drift_detection_rate >= 90,
+            metrics.duplication_rate < 2,
+            metrics.automation_rate >= 60,
+            metrics.quality_gate_pass_rate >= 90,
+            metrics.avg_regenerations_per_epic < 1.5,
+        ]
+    )
+    overall_status: str = "HEALTHY" if passing == 5 else "NEEDS ATTENTION"
+
     return f"""# Workflow Metrics Report
 
 **Generated:** {metrics.timestamp}
@@ -373,15 +454,9 @@ def format_markdown_report(metrics: WorkflowMetrics) -> str:
 
 - **Gaps found:** {metrics.drift_gaps_found}
 - **Caught before human review:** {metrics.drift_gaps_caught_before_review}
-- **Detection rate:** {metrics.drift_detection_rate:.1f}% {
-        "✅" if metrics.drift_detection_rate >= 90 else "⚠️"
-    } (target: 90%+)
+- **Detection rate:** {metrics.drift_detection_rate:.1f}% [{det_status}] (target: 90%+)
 
-**Analysis:** {
-        "Strong drift prevention"
-        if metrics.drift_detection_rate >= 90
-        else "Needs improvement - increase diff checker coverage"
-    }
+**Analysis:** {det_analysis}
 
 ---
 
@@ -389,13 +464,9 @@ def format_markdown_report(metrics: WorkflowMetrics) -> str:
 
 - **Total issues created:** {metrics.total_issues_created}
 - **Duplicate issues:** {metrics.duplicate_issues_created}
-- **Duplication rate:** {metrics.duplication_rate:.1f}% {"✅" if metrics.duplication_rate < 2 else "⚠️"} (target: <2%)
+- **Duplication rate:** {metrics.duplication_rate:.1f}% [{dup_status}] (target: <2%)
 
-**Analysis:** {
-        "Excellent duplication prevention"
-        if metrics.duplication_rate < 2
-        else "Review marker system - duplicates detected"
-    }
+**Analysis:** {dup_analysis}
 
 ---
 
@@ -406,22 +477,14 @@ def format_markdown_report(metrics: WorkflowMetrics) -> str:
 - **Semi-auto front (human pickup + auto-close):** {metrics.semi_auto_front_tasks}
 - **Semi-auto back (auto-pickup + human UAT):** {metrics.semi_auto_back_tasks}
 - **Full human loop:** {metrics.full_human_loop_tasks}
-- **Automation rate:** {metrics.automation_rate:.1f}% {"✅" if metrics.automation_rate >= 60 else "⚠️"} (target: 60%+)
+- **Automation rate:** {metrics.automation_rate:.1f}% [{auto_status}] (target: 60%+)
 
 **Distribution:**
 ```
-Total Auto:    {"█" * int(metrics.total_automation_tasks / max(metrics.total_tasks_completed, 1) * 20)} {
-        metrics.total_automation_tasks
-    }
-Semi Front:    {"█" * int(metrics.semi_auto_front_tasks / max(metrics.total_tasks_completed, 1) * 20)} {
-        metrics.semi_auto_front_tasks
-    }
-Semi Back:     {"█" * int(metrics.semi_auto_back_tasks / max(metrics.total_tasks_completed, 1) * 20)} {
-        metrics.semi_auto_back_tasks
-    }
-Full Human:    {"█" * int(metrics.full_human_loop_tasks / max(metrics.total_tasks_completed, 1) * 20)} {
-        metrics.full_human_loop_tasks
-    }
+Total Auto:    {bar_auto} {metrics.total_automation_tasks}
+Semi Front:    {bar_front} {metrics.semi_auto_front_tasks}
+Semi Back:     {bar_back} {metrics.semi_auto_back_tasks}
+Full Human:    {bar_human} {metrics.full_human_loop_tasks}
 ```
 
 ---
@@ -441,61 +504,27 @@ Full Human:    {"█" * int(metrics.full_human_loop_tasks / max(metrics.total_ta
 
 - **Total quickmerge attempts:** {metrics.total_quickmerge_attempts}
 - **First-time pass:** {metrics.first_time_pass}
-- **Pass rate:** {metrics.quality_gate_pass_rate:.1f}% {
-        "✅" if metrics.quality_gate_pass_rate >= 90 else "⚠️"
-    } (target: 90%+)
+- **Pass rate:** {metrics.quality_gate_pass_rate:.1f}% [{qg_status}] (target: 90%+)
 
-**Analysis:** {
-        "Excellent quality - agents understanding standards well"
-        if metrics.quality_gate_pass_rate >= 90
-        else "Review common failures - may need better agent guidance"
-    }
+**Analysis:** {qg_analysis}
 
 ---
 
 ## 6. Regeneration Frequency
 
 - **Total regenerations:** {metrics.total_regenerations}
-- **Average per epic:** {metrics.avg_regenerations_per_epic:.2f} {
-        "✅" if metrics.avg_regenerations_per_epic < 1.5 else "⚠️"
-    } (target: <1.5)
+- **Average per epic:** {metrics.avg_regenerations_per_epic:.2f} [{regen_status}] (target: <1.5)
 - **Issues hitting 3-regen limit:** {metrics.max_regeneration_hit_count}
 
-**Analysis:** {
-        "Stable epic generation"
-        if metrics.avg_regenerations_per_epic < 1.5
-        else "Review epic generator - too much churn"
-    }
+**Analysis:** {regen_analysis}
 
 ---
 
 ## Overall Health Score
 
-{
-        "🟢 HEALTHY"
-        if all(
-            [
-                metrics.drift_detection_rate >= 90,
-                metrics.duplication_rate < 2,
-                metrics.automation_rate >= 60,
-                metrics.quality_gate_pass_rate >= 90,
-                metrics.avg_regenerations_per_epic < 1.5,
-            ]
-        )
-        else "🟡 NEEDS ATTENTION"
-    }
+{overall_status}
 
-**Passing targets:** {
-        sum(
-            [
-                metrics.drift_detection_rate >= 90,
-                metrics.duplication_rate < 2,
-                metrics.automation_rate >= 60,
-                metrics.quality_gate_pass_rate >= 90,
-                metrics.avg_regenerations_per_epic < 1.5,
-            ]
-        )
-    }/5
+**Passing targets:** {passing}/5
 
 ---
 
@@ -503,8 +532,10 @@ Full Human:    {"█" * int(metrics.full_human_loop_tasks / max(metrics.total_ta
 
 """
 
-    # Add recommendations based on metrics
-    recommendations = []
+
+def calculate_recommendations(metrics: WorkflowMetrics) -> list[str]:
+    """Generate recommendations based on metrics."""
+    recommendations: list[str] = []
 
     if metrics.drift_detection_rate < 90:
         recommendations.append("- Expand diff checker coverage to catch more violations")
@@ -534,30 +565,36 @@ def main() -> int:
     parser.add_argument("--output", type=Path, help="Output JSON file")
     parser.add_argument("--report-format", choices=["json", "markdown"], default="json", help="Output format")
 
-    args = parser.parse_args()
+    parsed = parser.parse_args()
+
+    repo: str = str(getattr(parsed, "repo", ""))
+    period_days: int = int(getattr(parsed, "period_days", 7))
+    raw_output: object = getattr(parsed, "output", None)
+    output: Path | None = cast(Path, raw_output) if isinstance(raw_output, Path) else None
+    report_format: str = str(getattr(parsed, "report_format", "json"))
 
     try:
         # Collect metrics
-        metrics = collect_metrics(args.repo, args.period_days)
+        metrics: WorkflowMetrics = collect_metrics(repo, period_days)
 
         # Output based on format
-        if args.report_format == "markdown":
-            report = format_markdown_report(metrics)
-            recommendations = calculate_recommendations(metrics)
-            full_report = report + "\n".join(recommendations) + "\n"
+        if report_format == "markdown":
+            report: str = format_markdown_report(metrics)
+            recommendations: list[str] = calculate_recommendations(metrics)
+            full_report: str = report + "\n".join(recommendations) + "\n"
 
-            if args.output:
-                args.output.write_text(full_report)
-                print(f"\nMarkdown report written to {args.output}")
+            if output is not None:
+                output.write_text(full_report)
+                print(f"\nMarkdown report written to {output}")
             else:
                 print(full_report)
 
         else:  # json
-            metrics_dict = asdict(metrics)
+            metrics_dict: dict[str, object] = cast(dict[str, object], asdict(metrics))
 
-            if args.output:
-                args.output.write_text(json.dumps(metrics_dict, indent=2))
-                print(f"\nJSON metrics written to {args.output}")
+            if output is not None:
+                output.write_text(json.dumps(metrics_dict, indent=2))
+                print(f"\nJSON metrics written to {output}")
             else:
                 print(json.dumps(metrics_dict, indent=2))
 
@@ -574,31 +611,6 @@ def main() -> int:
     except (OSError, PermissionError, ValueError) as e:
         print(f"Error collecting metrics: {e}", file=sys.stderr)
         return 1
-
-
-def calculate_recommendations(metrics: WorkflowMetrics) -> list[str]:
-    """Generate recommendations based on metrics."""
-    recommendations = []
-
-    if metrics.drift_detection_rate < 90:
-        recommendations.append("- Expand diff checker coverage to catch more violations")
-
-    if metrics.duplication_rate >= 2:
-        recommendations.append("- Review marker system - ensure all scripts use consistent markers")
-
-    if metrics.automation_rate < 60:
-        recommendations.append("- Review auto-pickup criteria - may be too conservative")
-
-    if metrics.quality_gate_pass_rate < 90:
-        recommendations.append("- Analyze common quality gate failures and improve agent guidance")
-
-    if metrics.avg_regenerations_per_epic >= 1.5:
-        recommendations.append("- Review epic generator stability - reduce unnecessary regenerations")
-
-    if not recommendations:
-        recommendations.append("- All metrics healthy - continue current practices")
-
-    return recommendations
 
 
 if __name__ == "__main__":

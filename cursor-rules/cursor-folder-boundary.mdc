@@ -11,7 +11,8 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 
 ## What belongs in .cursor/
 
-✅ `rules/` — Cursor rule files (working copies, synced from unified-trading-pm/cursor-rules/)
+✅ `rules/` — SYMLINK to `unified-trading-pm/cursor-rules/` (edits go directly to git)
+✅ `plans/` — SYMLINK to `unified-trading-pm/plans/cursor-plans/`
 ✅ `skills-cursor/` — Cursor skill files
 ✅ `workspace-configs/` — Cursor/VSCode workspace .json configs
 ✅ `plugins/` — Cursor plugin cache (auto-managed)
@@ -25,37 +26,36 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 ❌ Archives → `unified-trading-pm/archive/`
 ❌ Git operations or CI/CD logic
 
-## Cursor Rules Sync Workflow
+## How Rules and Plans Work
 
-Rules live in TWO places:
-- `.cursor/rules/` — your LOCAL working copy (IDE reads from here)
-- `unified-trading-pm/cursor-rules/` — GIT-TRACKED source of truth
+Both `.cursor/rules/` and `.cursor/plans/` are **symlinks** into the PM repo:
 
-**To share your rule changes with the team (one command):**
+```
+.cursor/rules/ -> unified-trading-pm/cursor-rules/     (symlink)
+.cursor/plans/ -> unified-trading-pm/plans/cursor-plans/ (symlink)
+```
+
+This means edits in `.cursor/rules/` directly modify git-tracked files. No sync needed.
+
+**To share rule changes with the team:**
 ```bash
 cd unified-trading-pm
 bash scripts/quickmerge.sh "feat: add rule for X"
-# Stage 0 auto-syncs .cursor/rules/ → cursor-rules/ before committing
-# No separate sync step needed
+# Your edits are already in cursor-rules/ — quickmerge commits them directly
 ```
 
 **To pull latest rules from the team:**
 ```bash
 cd unified-trading-pm && git pull
-./scripts/sync-rules-pull.sh
+# Done — symlink means you immediately see the team's changes
 ```
 
-**To check what's different:**
-```bash
-cd unified-trading-pm && ./scripts/sync-workspace.sh
-```
+## Why symlinks?
 
-## Why this separation?
-
-- `.cursor/` is gitignored at workspace root → changes are NOT tracked
-- `unified-trading-pm/` is a proper git repo → changes ARE tracked, reviewable, shareable
-- Keeps IDE concerns separate from workspace tooling concerns
-- Users can choose whether to sync rules (pull is opt-in, push is explicit)
+- Edits go directly to git-tracked files — no sync drift possible
+- `git pull` immediately gives you the team's latest rules
+- No manual sync scripts needed
+- Same pattern for both rules and plans (consistency)
 
 ## Reference
 

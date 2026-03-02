@@ -75,7 +75,7 @@ def enable_blocking(quality_gates_path: Path) -> bool:
         # Restore backup if failed
         quality_gates_path.write_text(content)
         backup_path.unlink()
-        return None  # Failed
+        return False  # Failed
 
     # Success - remove backup
     backup_path.unlink()

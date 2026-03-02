@@ -69,12 +69,23 @@ validate_workspace_structure() {
         ((errors++))
     fi
 
-    # 3. .cursor/rules/ must exist
-    if [ ! -d "$WORKSPACE_ROOT/.cursor/rules" ]; then
-        echo "${YELLOW}⚠  WARNING: $WORKSPACE_ROOT/.cursor/rules/ does not exist.${NC}" >&2
-        echo "  It will be created on pull, but push has nothing to sync." >&2
-        echo "  Fix: mkdir -p '$WORKSPACE_ROOT/.cursor/rules'" >&2
-        # Not a hard error — pull will create it
+    # 3. .cursor/rules/ must exist (symlink to cursor-rules/)
+    if [ -L "$WORKSPACE_ROOT/.cursor/rules" ]; then
+        # Symlink — verify it points to the right place
+        local rules_target
+        rules_target="$(readlink "$WORKSPACE_ROOT/.cursor/rules")"
+        if [ ! -d "$WORKSPACE_ROOT/.cursor/rules" ]; then
+            echo "${RED}✗ ERROR: .cursor/rules symlink is broken (target: $rules_target)${NC}" >&2
+            echo "  Fix: bash unified-trading-pm/scripts/workspace/setup-cursor-rules-symlink.sh" >&2
+            ((errors++))
+        fi
+    elif [ -d "$WORKSPACE_ROOT/.cursor/rules" ]; then
+        echo "${YELLOW}⚠  WARNING: .cursor/rules/ is a directory, not a symlink.${NC}" >&2
+        echo "  Run: bash unified-trading-pm/scripts/workspace/setup-cursor-rules-symlink.sh" >&2
+        echo "  This will migrate to a symlink (edits go directly to git-tracked source)." >&2
+    elif [ ! -e "$WORKSPACE_ROOT/.cursor/rules" ]; then
+        echo "${YELLOW}⚠  WARNING: .cursor/rules/ does not exist.${NC}" >&2
+        echo "  Fix: bash unified-trading-pm/scripts/workspace/setup-cursor-rules-symlink.sh" >&2
     fi
 
     # 4. unified-trading-pm must be a git repo
@@ -131,39 +142,5 @@ validate_workspace_structure() {
     return 0
 }
 
-# ── Last-sync helpers ─────────────────────────────────────────────────────────
-get_last_sync() {
-    local sync_file="$PM_ROOT/.last-sync"
-    if [ -f "$sync_file" ]; then
-        cat "$sync_file"
-    else
-        echo "never"
-    fi
-}
-
-update_last_sync() {
-    date -u +"%Y-%m-%dT%H:%M:%SZ" > "$PM_ROOT/.last-sync"
-}
-
-# ── Rule diff helpers ─────────────────────────────────────────────────────────
-count_rules_local() {
-    find "$WORKSPACE_ROOT/.cursor/rules" -maxdepth 1 -name "*.mdc" 2>/dev/null | wc -l | tr -d ' '
-}
-
-count_rules_repo() {
-    find "$PM_ROOT/cursor-rules" -maxdepth 1 -name "*.mdc" 2>/dev/null | wc -l | tr -d ' '
-}
-
-# Lists .mdc filenames only in local but not in repo
-rules_only_local() {
-    comm -23 \
-        <(find "$WORKSPACE_ROOT/.cursor/rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort) \
-        <(find "$PM_ROOT/cursor-rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort)
-}
-
-# Lists .mdc filenames only in repo but not in local
-rules_only_repo() {
-    comm -13 \
-        <(find "$WORKSPACE_ROOT/.cursor/rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort) \
-        <(find "$PM_ROOT/cursor-rules" -maxdepth 1 -name "*.mdc" -print0 2>/dev/null | xargs -0 -I{} basename {} | sort)
-}
+# NOTE: Last-sync and rule diff helpers were removed when rules switched
+# from copy-based sync to symlinks. See setup-cursor-rules-symlink.sh.

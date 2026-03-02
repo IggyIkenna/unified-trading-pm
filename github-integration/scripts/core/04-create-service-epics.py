@@ -132,9 +132,7 @@ class Subtask:
         )
 
         if self.checklist_item_id:
-            body_parts.append(
-                f"- [ ] Checklist item {self.checklist_item_id} updated to 'done'"
-            )
+            body_parts.append(f"- [ ] Checklist item {self.checklist_item_id} updated to 'done'")
 
         body_parts.extend(
             [
@@ -190,9 +188,7 @@ class Task:
         )
 
         for i, subtask in enumerate(self.subtasks, 1):
-            body_parts.append(
-                f"{i}. **{subtask.title}** ({subtask.complexity}, {subtask.hours}h)"
-            )
+            body_parts.append(f"{i}. **{subtask.title}** ({subtask.complexity}, {subtask.hours}h)")
 
         body_parts.extend(
             [
@@ -257,9 +253,7 @@ class Epic:
 
         for i, task in enumerate(self.tasks, 1):
             mode_label = f" ({task.mode})" if task.mode else ""
-            body_parts.append(
-                f"{i}. **{task.title}**{mode_label} - {task.total_hours():.1f}h"
-            )
+            body_parts.append(f"{i}. **{task.title}**{mode_label} - {task.total_hours():.1f}h")
 
         body_parts.extend(
             [
@@ -303,9 +297,7 @@ def load_codex_templates() -> dict[str, TemplateDict]:
     return templates
 
 
-def get_template_for_service(
-    service: ServiceDict, templates: dict[str, TemplateDict]
-) -> TemplateDict | None:
+def get_template_for_service(service: ServiceDict, templates: dict[str, TemplateDict]) -> TemplateDict | None:
     """Get codex template for a service."""
     service_type = str(service.get("type", ""))
 
@@ -340,9 +332,7 @@ def get_template_for_service(
     elif service_type == "ui":
         # Handle nested ui_metadata structure
         raw_ui_meta = service.get("ui_metadata", {})
-        ui_meta: dict[str, object] = (
-            cast(dict[str, object], raw_ui_meta) if isinstance(raw_ui_meta, dict) else {}
-        )
+        ui_meta: dict[str, object] = cast(dict[str, object], raw_ui_meta) if isinstance(raw_ui_meta, dict) else {}
         ui_category = str(ui_meta.get("category", "observability"))
         template_key = f"_service-ui-{ui_category}"
 
@@ -395,9 +385,7 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
                 ),
                 Subtask(
                     title="Add CI/CD configs",
-                    description=(
-                        "Add cloudbuild.yaml, quality-gates.yml, quickmerge.sh"
-                    ),
+                    description=("Add cloudbuild.yaml, quality-gates.yml, quickmerge.sh"),
                     complexity="MEDIUM",
                     priority="P1-high",
                     hours=2.5,
@@ -444,24 +432,18 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
                         complexity="MEDIUM",
                         priority="P1-high",
                         hours=3.0,
-                        codex_refs=[
-                            "06-coding-standards/README.md#configuration"
-                        ],
+                        codex_refs=["06-coding-standards/README.md#configuration"],
                     ),
                     Subtask(
                         title="Implement core processing logic",
-                        description=(
-                            f"Service-specific logic for {service_name}"
-                        ),
+                        description=(f"Service-specific logic for {service_name}"),
                         complexity="HIGH",
                         priority="P0-critical",
                         hours=16.0,
                     ),
                     Subtask(
                         title="Add GCS data I/O",
-                        description=(
-                            "Read from input buckets, write to output buckets"
-                        ),
+                        description=("Read from input buckets, write to output buckets"),
                         complexity="MEDIUM",
                         priority="P1-high",
                         hours=6.0,
@@ -469,9 +451,7 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
                     ),
                     Subtask(
                         title="Add data status tracking",
-                        description=(
-                            "Implement manifest files for coverage tracking"
-                        ),
+                        description=("Implement manifest files for coverage tracking"),
                         complexity="MEDIUM",
                         priority="P2-medium",
                         hours=4.0,
@@ -498,9 +478,7 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
                         complexity="HIGH",
                         priority="P0-critical",
                         hours=8.0,
-                        codex_refs=[
-                            "04-architecture/live-market-data-architecture.md"
-                        ],
+                        codex_refs=["04-architecture/live-market-data-architecture.md"],
                     ),
                     Subtask(
                         title="Add real-time processing logic",
@@ -515,15 +493,11 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
                         complexity="MEDIUM",
                         priority="P1-high",
                         hours=6.0,
-                        codex_refs=[
-                            "04-architecture/live-market-data-architecture.md"
-                        ],
+                        codex_refs=["04-architecture/live-market-data-architecture.md"],
                     ),
                     Subtask(
                         title="Add reconnection logic",
-                        description=(
-                            "Handle disconnects with exponential backoff"
-                        ),
+                        description=("Handle disconnects with exponential backoff"),
                         complexity="MEDIUM",
                         priority="P1-high",
                         hours=4.0,
@@ -542,9 +516,7 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
             subtasks=[
                 Subtask(
                     title="Add lifecycle events",
-                    description=(
-                        "STARTED, INGESTING, PROCESSING, COMPLETED, FAILED"
-                    ),
+                    description=("STARTED, INGESTING, PROCESSING, COMPLETED, FAILED"),
                     complexity="MEDIUM",
                     priority="P1-high",
                     hours=3.0,
@@ -552,9 +524,7 @@ def generate_epic_for_missing_service(service: ServiceDict) -> Epic:
                 ),
                 Subtask(
                     title="Add metrics",
-                    description=(
-                        "Counter, Gauge, Histogram for service-specific metrics"
-                    ),
+                    description=("Counter, Gauge, Histogram for service-specific metrics"),
                     complexity="MEDIUM",
                     priority="P1-high",
                     hours=4.0,
@@ -703,9 +673,7 @@ def generate_epic_for_existing_service(
         tasks.append(
             Task(
                 title="Live Mode Implementation",
-                description=(
-                    "Real-time processing (NEW - nothing exists yet)"
-                ),
+                description=("Real-time processing (NEW - nothing exists yet)"),
                 priority="P0-critical",
                 mode="live",
                 subtasks=[
@@ -813,9 +781,7 @@ def ensure_labels_exist(dry_run: bool = False) -> None:
             "--force",  # Update if exists
         ]
 
-        result: subprocess.CompletedProcess[str] = subprocess.run(
-            cmd, capture_output=True, text=True
-        )
+        result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
             if "already exists" in result.stderr.lower():
                 skipped_count += 1
@@ -864,9 +830,7 @@ def create_github_issue(
         print(f"{'=' * 80}\n")
         return None
 
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Failed to create issue: {result.stderr}")
         return None
@@ -898,9 +862,7 @@ def add_to_project(issue_url: str, dry_run: bool) -> bool:
         issue_url,
     ]
 
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         # Silently continue if already added or other error
         return False
@@ -916,9 +878,7 @@ def get_issue_node_id(issue_number: int) -> str | None:
         "--jq",
         ".node_id",
     ]
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         return None
     return result.stdout.strip()
@@ -933,23 +893,16 @@ def check_rate_limit() -> dict[str, object]:
         "--jq",
         ".resources.graphql",
     ]
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         return {"remaining": 0, "limit": 5000, "reset": 0}
     return cast(dict[str, object], json.loads(result.stdout))
 
 
-def link_sub_issue(
-    parent_issue_number: int, sub_issue_number: int, dry_run: bool
-) -> bool:
+def link_sub_issue(parent_issue_number: int, sub_issue_number: int, dry_run: bool) -> bool:
     """Link a sub-issue to its parent using GitHub's GraphQL API."""
     if dry_run:
-        print(
-            f"   [DRY RUN] Would link #{sub_issue_number}"
-            f" as sub-issue of #{parent_issue_number}"
-        )
+        print(f"   [DRY RUN] Would link #{sub_issue_number} as sub-issue of #{parent_issue_number}")
         return True
 
     # Check rate limit before GraphQL call
@@ -963,10 +916,7 @@ def link_sub_issue(
         wait_seconds = max(0, reset_time - int(time.time()))
         print(f"   GraphQL rate limit low ({remaining}/5000 remaining)")
         if wait_seconds > 60:
-            print(
-                f"   Rate limit resets in {int(wait_seconds / 60)} minutes"
-                " - skipping links for now"
-            )
+            print(f"   Rate limit resets in {int(wait_seconds / 60)} minutes - skipping links for now")
             return False
 
     # Get node IDs (required for GraphQL)
@@ -980,7 +930,7 @@ def link_sub_issue(
     # Use GraphQL mutation (REST API doesn't support adding sub-issues)
     query = (
         "mutation {"
-        f'  addSubIssue(input: {{'
+        f"  addSubIssue(input: {{"
         f'    issueId: "{parent_node_id}",'
         f'    subIssueId: "{sub_issue_node_id}"'
         "  }) {"
@@ -991,9 +941,7 @@ def link_sub_issue(
     )
 
     cmd: list[str] = ["gh", "api", "graphql", "-f", f"query={query}"]
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
         if "rate limit" in result.stderr.lower():
@@ -1006,9 +954,7 @@ def link_sub_issue(
     return True
 
 
-def generate_labels_for_service(
-    service: ServiceDict, mode: str | None = None
-) -> list[str]:
+def generate_labels_for_service(service: ServiceDict, mode: str | None = None) -> list[str]:
     """Generate labels for a service."""
     labels: list[str] = [
         "epic",
@@ -1026,13 +972,9 @@ def generate_labels_for_service(
 
     # Asset classes (from nested domain_coverage)
     raw_domain = service.get("domain_coverage", {})
-    domain_coverage: dict[str, object] = (
-        cast(dict[str, object], raw_domain) if isinstance(raw_domain, dict) else {}
-    )
+    domain_coverage: dict[str, object] = cast(dict[str, object], raw_domain) if isinstance(raw_domain, dict) else {}
     raw_asset_classes = domain_coverage.get("asset_classes", [])
-    asset_classes: list[str] = (
-        cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
-    )
+    asset_classes: list[str] = cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
     for asset_class in asset_classes:
         # Normalize label (e.g., CRYPTO_CEFI -> crypto-cefi)
         normalized = asset_class.lower().replace("_", "-")
@@ -1041,9 +983,7 @@ def generate_labels_for_service(
     # UI category (from nested ui_metadata)
     if service_type == "ui":
         raw_ui_meta = service.get("ui_metadata", {})
-        ui_meta: dict[str, object] = (
-            cast(dict[str, object], raw_ui_meta) if isinstance(raw_ui_meta, dict) else {}
-        )
+        ui_meta: dict[str, object] = cast(dict[str, object], raw_ui_meta) if isinstance(raw_ui_meta, dict) else {}
         ui_category = str(ui_meta.get("category", ""))
         if ui_category:
             labels.append(f"ui/{ui_category}")
@@ -1057,9 +997,7 @@ def generate_labels_for_service(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Create service-level epics"
-    )
+    parser = argparse.ArgumentParser(description="Create service-level epics")
     parser.add_argument(
         "--service",
         help="Create epic for single service (e.g., instruments-service)",
@@ -1106,9 +1044,7 @@ def main() -> None:
             sys.exit(1)
     elif all_services:
         raw_svcs = registry.get("services", [])
-        services_to_process = cast(
-            list[ServiceDict], raw_svcs
-        ) if isinstance(raw_svcs, list) else []
+        services_to_process = cast(list[ServiceDict], raw_svcs) if isinstance(raw_svcs, list) else []
 
     print(f"Processing {len(services_to_process)} services...\n")
 
@@ -1133,9 +1069,7 @@ def main() -> None:
 
         if service_exists and checklist:
             print("   Service exists with checklist")
-            epic = generate_epic_for_existing_service(
-                service, checklist, template
-            )
+            epic = generate_epic_for_existing_service(service, checklist, template)
         else:
             print("   Service missing - generating full Epic")
             epic = generate_epic_for_missing_service(service)
@@ -1211,10 +1145,7 @@ def main() -> None:
                 )
 
         subtask_count = sum(len(t.subtasks) for t in epic.tasks)
-        print(
-            f"   Created: 1 Epic, {len(epic.tasks)} Tasks, "
-            f"{subtask_count} Subtasks"
-        )
+        print(f"   Created: 1 Epic, {len(epic.tasks)} Tasks, {subtask_count} Subtasks")
 
     # Summary
     print(f"\n{'=' * 80}")
