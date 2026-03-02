@@ -41,6 +41,7 @@ This means — no exceptions, no shortcuts:
 # Check spot: did UDC pass D5?
 ls unified-domain-client/scripts/quickmerge.sh  # exists
 python -c "import unified_domain_client"          # exits 0
+bash unified-domain-client/scripts/setup.sh --check  # exits 0
 
 # Deployment repos exist
 ls deployment-engine/ deployment-api/ deployment-ui/ system-integration-tests/
@@ -58,7 +59,7 @@ If any check fails: STOP. Complete Phase 1/2 first.
 
 | Source | Path |
 |--------|------|
-| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 57 repos, 11 levels (AUTHORITATIVE) |
+| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
 | Runtime topology | `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` |
 | Service pair flows | `unified-trading-codex/08-workflows/service-pair-flows.md` |
 | Tier architecture | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` |
@@ -179,11 +180,13 @@ T6:          11 UIs in parallel batches of 4         (after ALL T5 D5)
 Every service (T4/T5) and UI (T6) follows this pattern:
 
 **Step A — Connectivity audit + naming check:**
+- `bash scripts/setup.sh --check` exits 0 (environment healthy)
 - Run the naming check commands above (zero hits required)
 - `python -c 'import <package>'` exits 0
 - Zero `os.getenv(API_KEY)`, zero hardcoded URLs, zero direct `requests`/`aiohttp` to venues — all via UDC/UMI/UTEI/URDI
 - `cloudbuild.yaml` image tag uses canonical name
 - AR package name matches `workspace-manifest.json`
+- Populate `AGENTS.md` from template (`unified-trading-pm/templates/AGENTS.md`) with repo-specific caveats, known test failures, and isolation notes
 
 **Step B — Tests first (before any code rewrite):**
 - Write/fix unit tests first
@@ -327,4 +330,6 @@ If any step fails: fix and re-run **that step**. Never skip forward. L3b passing
 - `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` — tier rules
 - `unified-trading-codex/06-coding-standards/integration-testing-layers.md` — 4-layer strategy
 - `unified-trading-codex/04-architecture/batch-live-symmetry.md` — batch/live seam pattern
+- `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs
+- `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template (populate during hardening)
 - `.cursor/rules/delete-deprecated.mdc` — no backward compat

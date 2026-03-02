@@ -46,7 +46,7 @@ Read that file completely before starting any work. Phase 2 cannot start until a
 
 | Source | Path | What it governs |
 |--------|------|-----------------|
-| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` | 57 repos, 11 levels — canonical repo names |
+| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` | 63 repos, 13 levels (L0-L12) — L0=PM, L1=codex, L2+=code repos |
 | Runtime topology | `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` | Runtime service wiring |
 | Manifest JSON | `unified-trading-pm/workspace-manifest.json` | Machine-readable repo registry |
 | SSOT index | `unified-trading-codex/00-SSOT-INDEX.md` | Maps every topic to its canonical doc |
@@ -85,6 +85,7 @@ Any old name anywhere is **immediate technical debt**. Fix at every level the mo
 ## Bottom-Up Rule — Template First, Then Propagate
 
 New CI/CD pattern needed → update `unified-trading-pm/scripts/quickmerge.sh` (SSOT), then propagate.
+New setup pattern needed → update `unified-trading-pm/scripts/setup.sh` (SSOT), then propagate.
 New QG check needed → update `unified-trading-codex/06-coding-standards/quality-gates.md` first, then template, then propagate.
 New cursor rule needed → create in `.cursor/rules/`, then add to `.cursorrules` if always-apply.
 New manifest field needed → update codex schema doc first, then `workspace-manifest.json`.
@@ -116,12 +117,17 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 - Fix MEL visual tier bug in DAG SVG (MEL must show T0)
 - Create `dag-enforcement.mdc` cursor rule (see Stream C)
 
-**A1 — Quickmerge + Version-Bump Rollout** (10 parallel agents, 57 repos, 5–6 repos each):
+**A1 — Quickmerge + Version-Bump + Setup Rollout** (10 parallel agents, 58 repos, 5–6 repos each):
 1. Copy `scripts/quickmerge.sh` from SSOT: `unified-trading-pm/scripts/quickmerge.sh`
 2. Copy `.github/workflows/version-bump.yml` from SSOT: `unified-trading-pm/.github/workflows/version-bump.yml`
-3. Verify `pyproject.toml` has `version` field at `0.x.x`
-4. Verify no old names in `pyproject.toml`, `cloudbuild.yaml`, `quality-gates.sh` — fix if found
-5. `git commit 'chore: sync quickmerge template + version-bump workflow'` → `git push`
+3. Copy `scripts/setup.sh` from SSOT: `unified-trading-pm/scripts/setup.sh` — replace any existing ad-hoc setup.sh
+4. Set `PACKAGE_NAME` in each repo's `setup.sh` (auto-detected from `pyproject.toml` if blank)
+5. Verify `pyproject.toml` has `version` field at `0.x.x`
+6. Verify no old names in `pyproject.toml`, `cloudbuild.yaml`, `quality-gates.sh` — fix if found
+7. Run `bash scripts/setup.sh --check` to verify setup works
+8. `git commit 'chore: sync quickmerge + setup.sh + version-bump templates'` → `git push`
+
+**Repo count note:** 58 git repos exist on disk. 51 have `pyproject.toml` (Python), 12 are TypeScript UIs (have `package.json`). All 58 get quickmerge.sh + version-bump.yml + setup.sh. TypeScript repos skip Python-specific setup steps (venv, uv, pyproject) automatically.
 
 **A2 — Commit-Msg Hooks** (4 parallel agents, after A1):
 - Add commit-msg hook to all 57 repos: validates `feat:|fix:|chore:|docs:|refactor:|test:|ci:|BREAKING CHANGE:` prefix
@@ -153,6 +159,7 @@ All items independent — run in parallel:
 1. Create `.cursor/rules/cloud-agnostic.mdc` — all cloud I/O via `get_storage_client()`, `get_secret_client()`, `GCSEventSink`; `CLOUD_PROVIDER` env var switches provider; test both paths
 2. Create `.cursor/rules/dag-enforcement.mdc` — enforce tier boundaries; CI validates `pyproject.toml` deps vs manifest `arch_tier`
 3. Create `.cursor/rules/ui-service-separation.mdc` — UI code must never live inside a service repo
+4. Create `.cursor/rules/mandatory-setup-sh.mdc` — every repo must have `scripts/setup.sh` from SSOT template
 4. **ci-manifest-status** — Add `ci_status`, `quality_gate_status`, `coverage_pct`, `bypass_audit_path`, `testing_level`, `skipped_gates` to `workspace-manifest.json` for all 57 repos
 5. **ci-add-missing-quality-gates** — Add `quality-gates.sh` to 12 repos missing it (see plan for list)
 6. **ci-qg-baseline-run** — Run QG + import smoke test on all repos; record pass/fail + coverage % as baseline snapshot (do NOT fix failures here — that is Phase 2/3 work)
@@ -163,14 +170,15 @@ All items independent — run in parallel:
 
 ## Done Criteria
 
-- [ ] All 57 repos have `scripts/quickmerge.sh` + `.github/workflows/version-bump.yml`
-- [ ] All 57 repos have commit-msg hook; all `pyproject.toml` at `0.x.x`
+- [ ] All 58 repos have `scripts/quickmerge.sh` + `.github/workflows/version-bump.yml` + `scripts/setup.sh`
+- [ ] All 58 repos have commit-msg hook; all `pyproject.toml` at `0.x.x`
+- [ ] `bash scripts/setup.sh --check` passes on all 58 repos
 - [ ] dep-branch clone + Cloud Build feature trigger + GH Action version-bump live
 - [ ] `execution-service` has no `visualizer-ui/` or `visualizer-api/`
 - [ ] `unified-trading-deployment-v3` split into 4 repos (`deployment-engine`, `deployment-api`, `deployment-ui`, `system-integration-tests`)
 - [ ] No embedded UI artifacts in any Python service repo
 - [ ] `ibkr-gateway-infra/` deleted; Terraform in `deployment-engine/infra/`
-- [ ] 3 cursor rules created: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`
+- [ ] 4 cursor rules created: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`, `mandatory-setup-sh.mdc`
 - [ ] `ci_status` fields in `workspace-manifest.json` for all 57 repos
 - [ ] QG + import smoke baseline recorded for all repos
 - [ ] All 12 repos missing `quality-gates.sh` now have it
@@ -184,7 +192,11 @@ All items independent — run in parallel:
 - `unified-trading-pm/plans/cursor-plans/phase1_foundation_prep.plan.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `unified-trading-pm/scripts/quickmerge.sh` — quickmerge SSOT
+- `unified-trading-pm/scripts/setup.sh` — setup.sh SSOT (idempotent dev environment bootstrap; supports `--isolated` for standalone repos)
+- `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs (clones all repos, tier-order setup)
+- `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template for agents/developers
 - `unified-trading-pm/.github/workflows/version-bump.yml` — version-bump SSOT
+- `unified-trading-codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode, fresh env, AGENTS.md)
 - `unified-trading-codex/00-SSOT-INDEX.md` — canonical SSOT map
 - `unified-trading-codex/06-coding-standards/quality-gates.md` — QG template
 - `unified-trading-pm/docs/new-repo-setup.md` — new repo setup guide
