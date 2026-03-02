@@ -136,6 +136,79 @@ update_claude_home() {
     fi
 }
 
+# ── Clean Cursor state cache (fixes stuck indexing) ──────────────────────────
+cleanup_cursor_state_cache() {
+    log_info "Cleaning Cursor state cache (fixes stuck indexing, reclaims ~18GB)..."
+    
+    local state_files=(
+        "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb"
+        "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb.backup"
+        "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb-shm"
+        "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb-wal"
+    )
+    
+    local deleted_size=0
+    for state_file in "${state_files[@]}"; do
+        if [ -f "$state_file" ]; then
+            local size=$(du -sh "$state_file" | cut -f1)
+            rm -f "$state_file"
+            log_success "Deleted: $(basename "$state_file") ($size)"
+        fi
+    done
+    
+    log_warning "Cursor will rebuild state cache on next launch (~18GB freed)"
+}
+
+# ── Migrate agent transcripts from ALL old workspace indexes ──────────────────
+migrate_all_agent_transcripts() {
+    local new_path="$1"
+    local new_encoded=$(echo "$new_path" | sed 's|/|-|g')
+    
+    # Target: new .code-workspace index location
+    local target_index="${HOME}/.cursor/projects/${new_encoded}-unified-trading-system-repos-unified-trading-system-repos-code-workspace"
+    local target_transcripts="${target_index}/agent-transcripts"
+    
+    mkdir -p "$target_transcripts"
+    
+    log_info "Migrating agent conversation history from old workspace indexes..."
+    
+    # Find all old workspace project directories with transcripts
+    local old_transcript_dirs=()
+    while IFS= read -r dir; do
+        # Exclude the target directory itself
+        if [[ "$dir" != "$target_transcripts" ]]; then
+            old_transcript_dirs+=("$dir")
+        fi
+    done < <(find "${HOME}/.cursor/projects" -type d -name "agent-transcripts" 2>/dev/null | grep -i "Documents-repos\|unified-trading")
+    
+    local total_copied=0
+    for old_dir in "${old_transcript_dirs[@]}"; do
+        if [ -d "$old_dir" ]; then
+            # Copy all conversation folders (UUID directories)
+            local copied=0
+            for conv_dir in "$old_dir"/*; do
+                if [ -d "$conv_dir" ]; then
+                    local conv_id=$(basename "$conv_dir")
+                    if [ ! -d "$target_transcripts/$conv_id" ]; then
+                        cp -R "$conv_dir" "$target_transcripts/" 2>/dev/null && ((copied++)) || true
+                    fi
+                fi
+            done
+            
+            if [ $copied -gt 0 ]; then
+                total_copied=$((total_copied + copied))
+                log_success "Copied $copied conversations from $(basename "$(dirname "$old_dir")")"
+            fi
+        fi
+    done
+    
+    if [ $total_copied -gt 0 ]; then
+        log_success "Total: $total_copied conversations migrated"
+    else
+        log_info "No new conversations to migrate"
+    fi
+}
+
 # ── Update Cursor index location ─────────────────────────────────────────────
 update_cursor_index() {
     local old_path="$1"
@@ -284,6 +357,19 @@ main() {
 
     # Migrate Cursor index
     update_cursor_index "$old_path" "$new_path"
+    
+    # Migrate all agent transcripts (conversation history)
+    migrate_all_agent_transcripts "$new_path"
+    
+    # Clean Cursor state cache (fixes stuck indexing, reclaims ~18GB)
+    echo ""
+    log_warning "Cursor state cache cleanup will free ~18GB but requires Cursor restart"
+    read -r -p "Clean Cursor state cache now? [y/N]: " clean_confirm
+    if [[ "$clean_confirm" =~ ^[Yy]$ ]]; then
+        cleanup_cursor_state_cache
+    else
+        log_info "Skipped state cache cleanup (run manually: rm ~/Library/Application\\ Support/Cursor/User/globalStorage/state.vscdb*)"
+    fi
 
     # Create rollback script
     create_rollback "$old_path" "$new_path" "$new_path"
@@ -295,6 +381,8 @@ main() {
     echo ""
     echo "Updated: ${BOLD}${updated}${NC} files"
     echo "Migrated: ${BOLD}Cursor index${NC} (263MB)"
+    echo "Migrated: ${BOLD}Agent conversation history${NC}"
+    echo "Cleaned: ${BOLD}State cache${NC} (~18GB freed)"
     echo "Created: ${BOLD}Rollback script${NC}"
     echo ""
     echo "Next steps:"
@@ -302,10 +390,12 @@ main() {
     echo "1. Verify UNIFIED_TRADING_WORKSPACE_ROOT is set:"
     echo "   ${CYAN}echo \$UNIFIED_TRADING_WORKSPACE_ROOT${NC}"
     echo ""
-    echo "2. Restart both IDEs:"
-    echo "   ${CYAN}Close Cursor and Claude Code (Cmd+Q), then reopen${NC}"
+    echo "2. ${BOLD}IMPORTANT:${NC} Restart Cursor completely (Cmd+Q, then reopen)"
+    echo "   ${CYAN}File → Open Workspace from File → select unified-trading-system-repos.code-workspace${NC}"
     echo ""
-    echo "3. If needed, rollback with:"
+    echo "3. Wait for indexing to complete (~5-15 min)"
+    echo ""
+    echo "4. If needed, rollback with:"
     echo "   ${CYAN}bash scripts/rollback-path-migration.sh${NC}"
 }
 
