@@ -43,11 +43,11 @@
   <rect x="70" y="227" width="146" height="38" class="devops" />
   <text x="143" y="245" text-anchor="middle" class="label">unified-trading-pm</text>
   <text x="143" y="257" text-anchor="middle" class="ver">0.1.0</text>
-  <!-- L1: Standards & codex — coding standards, architecture docs, quality gate templates. Depends on PM. (1 repos) -->
+  <!-- L1: Standards &amp; codex — coding standards, architecture docs, quality gate templates. Depends on PM. (1 repos) -->
   <rect x="40" y="299" width="2320" height="107" class="level-bg" />
   <rect x="55" y="307" width="80" height="22" fill="#16a34a" class="level-badge" />
   <text x="95" y="323" text-anchor="middle" class="level-label">L1</text>
-  <text x="150" y="323" class="desc">Standards & codex — coding standards, architecture docs, quality gate templates. Depends on PM. (1 repos)</text>
+  <text x="150" y="323" class="desc">Standards &amp; codex — coding standards, architecture docs, quality gate templates. Depends on PM. (1 repos)</text>
   <rect x="70" y="346" width="167" height="38" class="infra" />
   <text x="153" y="364" text-anchor="middle" class="label">unified-trading-codex</text>
   <text x="153" y="376" text-anchor="middle" class="ver">0.1.0</text>
