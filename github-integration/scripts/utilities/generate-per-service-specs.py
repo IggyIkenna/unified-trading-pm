@@ -32,10 +32,13 @@ Usage:
 
 import argparse
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import cast
 
 import yaml
+
+JsonDict = dict[str, object]
 
 # ==============================================================================
 # Constants
@@ -78,20 +81,20 @@ class Colors:
     NC = "\033[0m"  # No Color
 
 
-def log_info(msg: str):
+def log_info(msg: str) -> None:
     print(f"{Colors.BLUE}[INFO]{Colors.NC} {msg}")
 
 
-def log_success(msg: str):
-    print(f"{Colors.GREEN}[✓]{Colors.NC} {msg}")
+def log_success(msg: str) -> None:
+    print(f"{Colors.GREEN}[OK]{Colors.NC} {msg}")
 
 
-def log_warning(msg: str):
-    print(f"{Colors.YELLOW}[⚠]{Colors.NC} {msg}")
+def log_warning(msg: str) -> None:
+    print(f"{Colors.YELLOW}[WARN]{Colors.NC} {msg}")
 
 
-def log_error(msg: str):
-    print(f"{Colors.RED}[✗]{Colors.NC} {msg}")
+def log_error(msg: str) -> None:
+    print(f"{Colors.RED}[ERR]{Colors.NC} {msg}")
 
 
 # ==============================================================================
@@ -99,33 +102,41 @@ def log_error(msg: str):
 # ==============================================================================
 
 
-def load_service_registry() -> List[Dict]:
+def load_service_registry() -> list[JsonDict]:
     """Load and parse service-registry.yaml."""
     if not SERVICE_REGISTRY.exists():
         log_error(f"Service registry not found: {SERVICE_REGISTRY}")
         sys.exit(1)
 
     with open(SERVICE_REGISTRY, "r") as f:
-        data = yaml.safe_load(f)
+        raw: object = cast(object, yaml.safe_load(f))
 
-    services = data.get("services", [])
+    if not isinstance(raw, dict):
+        log_error("Service registry is not a valid YAML mapping")
+        sys.exit(1)
+
+    data: JsonDict = cast(JsonDict, raw)
+    raw_services: object = data.get("services", [])
+    services: list[JsonDict] = []
+    if isinstance(raw_services, list):
+        services = [cast(JsonDict, s) for s in cast(list[object], raw_services) if isinstance(s, dict)]
     log_info(f"Loaded {len(services)} services from registry")
     return services
 
 
-def filter_services_by_priority(services: List[Dict], priority: str) -> List[Dict]:
+def filter_services_by_priority(services: list[JsonDict], priority: str) -> list[JsonDict]:
     """Filter services by priority (P0, P1, P2, P3)."""
-    allowed = PRIORITY_GROUPS.get(priority, [])
+    allowed: list[str] = PRIORITY_GROUPS.get(priority, [])
     if not allowed:
         log_error(f"Invalid priority: {priority}. Must be P0, P1, P2, or P3")
         sys.exit(1)
 
-    filtered = [s for s in services if s.get("priority") in allowed]
+    filtered: list[JsonDict] = [s for s in services if s.get("priority") in allowed]
     log_info(f"Filtered to {len(filtered)} {priority} services")
     return filtered
 
 
-def get_service_by_name(services: List[Dict], name: str) -> Optional[Dict]:
+def get_service_by_name(services: list[JsonDict], name: str) -> JsonDict | None:
     """Get single service by name."""
     for service in services:
         if service.get("service") == name:
@@ -134,30 +145,82 @@ def get_service_by_name(services: List[Dict], name: str) -> Optional[Dict]:
 
 
 # ==============================================================================
+# Safe Accessor Helpers
+# ==============================================================================
+
+
+def _get_str(d: JsonDict, key: str, default: str = "N/A") -> str:
+    """Safely get a string value from a JsonDict."""
+    val: object = d.get(key, default)
+    return str(val) if val is not None else default
+
+
+def _get_bool(d: JsonDict, key: str, default: bool = False) -> bool:
+    """Safely get a boolean value from a JsonDict."""
+    val: object = d.get(key, default)
+    return bool(val)
+
+
+def _get_dict(d: JsonDict, key: str) -> JsonDict:
+    """Safely get a nested dict from a JsonDict."""
+    val: object = d.get(key, {})
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return {}
+
+
+def _get_str_list(d: JsonDict, key: str) -> list[str]:
+    """Safely get a list of strings from a JsonDict."""
+    val: object = d.get(key, [])
+    if isinstance(val, list):
+        return [str(item) for item in cast(list[object], val)]
+    return []
+
+
+def _get_int(d: JsonDict, key: str, default: int = 0) -> int:
+    """Safely get an integer value from a JsonDict."""
+    val: object = d.get(key, default)
+    if isinstance(val, int):
+        return val
+    return default
+
+
+# ==============================================================================
 # Spec File Generation
 # ==============================================================================
 
 
-def generate_domain_spec(service: Dict) -> str:
+def generate_domain_spec(service: JsonDict) -> str:
     """Generate domain specification content."""
-    service_name = service["service"]
-    service_type = service["type"]
+    service_name: str = _get_str(service, "service")
+    service_type: str = _get_str(service, "type")
 
     # Determine batch/live modes
-    data_coverage = service.get("data_coverage", {})
-    batch_mode = data_coverage.get("batch_mode", False)
-    live_mode = data_coverage.get("live_mode", False)
+    data_coverage: JsonDict = _get_dict(service, "data_coverage")
+    batch_mode: bool = _get_bool(data_coverage, "batch_mode")
+    live_mode: bool = _get_bool(data_coverage, "live_mode")
 
     # Domain coverage
-    domain_coverage = service.get("domain_coverage", {})
-    venues = domain_coverage.get("venues", [])
-    asset_classes = domain_coverage.get("asset_classes", [])
+    domain_coverage: JsonDict = _get_dict(service, "domain_coverage")
+    venues: list[str] = _get_str_list(domain_coverage, "venues")
+    asset_classes: list[str] = _get_str_list(domain_coverage, "asset_classes")
 
     # Pipeline-specific metadata
-    pipeline_metadata = service.get("pipeline_metadata", {})
-    upstream_deps = pipeline_metadata.get("upstream_dependencies", [])
+    pipeline_metadata: JsonDict = _get_dict(service, "pipeline_metadata")
+    upstream_deps: list[str] = _get_str_list(pipeline_metadata, "upstream_dependencies")
 
-    content = f"""# Domain Specification: {service_name}
+    priority: str = _get_str(service, "priority")
+    milestone: str = _get_str(service, "milestone")
+    last_updated: str = _get_str(service, "last_updated", "TBD")
+
+    batch_status: str = "Supported" if batch_mode else "Not Supported"
+    live_status: str = "Supported" if live_mode else "Not Supported"
+
+    venues_str: str = chr(10).join([f"- {venue}" for venue in venues]) if venues else "- N/A"
+    ac_str: str = chr(10).join([f"- {ac}" for ac in asset_classes]) if asset_classes else "- N/A"
+    deps_str: str = chr(10).join([f"- `{dep}`" for dep in upstream_deps]) if upstream_deps else "- None"
+
+    content: str = f"""# Domain Specification: {service_name}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -165,26 +228,26 @@ def generate_domain_spec(service: Dict) -> str:
 
 **Service Name:** `{service_name}`
 **Service Type:** `{service_type}`
-**Priority:** `{service.get("priority", "N/A")}`
-**Milestone:** `{service.get("milestone", "N/A")}`
+**Priority:** `{priority}`
+**Milestone:** `{milestone}`
 
 ## Operational Modes
 
-**Batch Mode:** {"✅ Supported" if batch_mode else "❌ Not Supported"}
-**Live Mode:** {"✅ Supported" if live_mode else "❌ Not Supported"}
+**Batch Mode:** {batch_status}
+**Live Mode:** {live_status}
 
 ## Domain Coverage
 
 ### Venues
-{chr(10).join([f"- {venue}" for venue in venues]) if venues else "- N/A"}
+{venues_str}
 
 ### Asset Classes
-{chr(10).join([f"- {ac}" for ac in asset_classes]) if asset_classes else "- N/A"}
+{ac_str}
 
 ## Dependencies
 
 ### Upstream Dependencies
-{chr(10).join([f"- `{dep}`" for dep in upstream_deps]) if upstream_deps else "- None"}
+{deps_str}
 
 ## Business Logic (TODO: Manual Review Required)
 
@@ -229,26 +292,28 @@ def generate_domain_spec(service: Dict) -> str:
 
 ---
 
-**Last Updated:** {service.get("last_updated", "TBD")}
-**Review Status:** 🔴 Needs Review (Auto-Generated Baseline)
+**Last Updated:** {last_updated}
+**Review Status:** Needs Review (Auto-Generated Baseline)
 """
     return content
 
 
-def generate_data_spec(service: Dict) -> str:
+def generate_data_spec(service: JsonDict) -> str:
     """Generate data specification content."""
-    service_name = service["service"]
+    service_name: str = _get_str(service, "service")
 
     # Data coverage
-    data_coverage = service.get("data_coverage", {})
-    start_date = data_coverage.get("start_date", "N/A")
-    end_date = data_coverage.get("end_date", "Ongoing")
+    data_coverage: JsonDict = _get_dict(service, "data_coverage")
+    start_date: str = _get_str(data_coverage, "start_date")
+    end_date: str = _get_str(data_coverage, "end_date", "Ongoing")
 
     # Pipeline metadata
-    pipeline_metadata = service.get("pipeline_metadata", {})
-    output_bucket = pipeline_metadata.get("output_bucket", "N/A")
+    pipeline_metadata: JsonDict = _get_dict(service, "pipeline_metadata")
+    output_bucket: str = _get_str(pipeline_metadata, "output_bucket")
 
-    content = f"""# Data Specification: {service_name}
+    last_updated: str = _get_str(service, "last_updated", "TBD")
+
+    content: str = f"""# Data Specification: {service_name}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -321,17 +386,18 @@ def generate_data_spec(service: Dict) -> str:
 
 ---
 
-**Last Updated:** {service.get("last_updated", "TBD")}
-**Review Status:** 🔴 Needs Review (Auto-Generated Baseline)
+**Last Updated:** {last_updated}
+**Review Status:** Needs Review (Auto-Generated Baseline)
 """
     return content
 
 
-def generate_observability_spec(service: Dict) -> str:
+def generate_observability_spec(service: JsonDict) -> str:
     """Generate observability specification content."""
-    service_name = service["service"]
+    service_name: str = _get_str(service, "service")
+    last_updated: str = _get_str(service, "last_updated", "TBD")
 
-    content = f"""# Observability Specification: {service_name}
+    content: str = f"""# Observability Specification: {service_name}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -423,23 +489,28 @@ setup_service(service_name="{service_name}", mode="batch", sink=GCSEventSink(...
 
 ---
 
-**Last Updated:** {service.get("last_updated", "TBD")}
-**Review Status:** 🔴 Needs Review (Auto-Generated Baseline)
+**Last Updated:** {last_updated}
+**Review Status:** Needs Review (Auto-Generated Baseline)
 """
     return content
 
 
-def generate_architecture_spec(service: Dict) -> str:
+def generate_architecture_spec(service: JsonDict) -> str:
     """Generate architecture specification content."""
-    service_name = service["service"]
-    service_type = service["type"]
+    service_name: str = _get_str(service, "service")
+    service_type: str = _get_str(service, "type")
 
     # Data coverage for batch/live modes
-    data_coverage = service.get("data_coverage", {})
-    batch_mode = data_coverage.get("batch_mode", False)
-    live_mode = data_coverage.get("live_mode", False)
+    data_coverage: JsonDict = _get_dict(service, "data_coverage")
+    batch_mode: bool = _get_bool(data_coverage, "batch_mode")
+    live_mode: bool = _get_bool(data_coverage, "live_mode")
 
-    content = f"""# Architecture Specification: {service_name}
+    last_updated: str = _get_str(service, "last_updated", "TBD")
+
+    batch_status: str = "Supported" if batch_mode else "Not Supported"
+    live_status: str = "Supported" if live_mode else "Not Supported"
+
+    content: str = f"""# Architecture Specification: {service_name}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -449,8 +520,8 @@ def generate_architecture_spec(service: Dict) -> str:
 
 ## Operational Modes
 
-**Batch Mode:** {"✅ Supported" if batch_mode else "❌ Not Supported"}
-**Live Mode:** {"✅ Supported" if live_mode else "❌ Not Supported"}
+**Batch Mode:** {batch_status}
+**Live Mode:** {live_status}
 
 ## Batch-Live Symmetry (TODO: Manual Review Required)
 
@@ -510,33 +581,49 @@ Services supporting both modes MUST maintain 90% code symmetry with only 4 seams
 
 ---
 
-**Last Updated:** {service.get("last_updated", "TBD")}
-**Review Status:** 🔴 Needs Review (Auto-Generated Baseline)
+**Last Updated:** {last_updated}
+**Review Status:** Needs Review (Auto-Generated Baseline)
 """
     return content
 
 
-def generate_infrastructure_spec(service: Dict) -> str:
+def generate_infrastructure_spec(service: JsonDict) -> str:
     """Generate infrastructure specification content."""
-    service_name = service["service"]
+    service_name: str = _get_str(service, "service")
 
     # Infrastructure metadata
-    infrastructure = service.get("infrastructure", {})
-    has_ui = infrastructure.get("has_ui", False)
-    config_paths = infrastructure.get("config_paths", [])
-    credentials = infrastructure.get("credentials", [])
-    deployment = infrastructure.get("deployment", {})
+    infrastructure: JsonDict = _get_dict(service, "infrastructure")
+    has_ui: bool = _get_bool(infrastructure, "has_ui")
+    config_paths: list[str] = _get_str_list(infrastructure, "config_paths")
+    credentials: list[str] = _get_str_list(infrastructure, "credentials")
+    deployment: JsonDict = _get_dict(infrastructure, "deployment")
 
     # Readiness
-    readiness = service.get("readiness", {})
-    test_coverage = readiness.get("test_coverage", 0)
-    test_coverage_target = readiness.get("test_coverage_target", 80)
-    cloud_compat = readiness.get("cloud_compatibility", [])
+    readiness: JsonDict = _get_dict(service, "readiness")
+    test_coverage: int = _get_int(readiness, "test_coverage", 0)
+    test_coverage_target: int = _get_int(readiness, "test_coverage_target", 80)
+    cloud_compat: list[str] = _get_str_list(readiness, "cloud_compatibility")
 
-    coverage_gap = test_coverage_target - test_coverage
-    coverage_status = "✅ Meets Target" if test_coverage >= test_coverage_target else f"🔴 Gap: {coverage_gap}%"
+    coverage_gap: int = test_coverage_target - test_coverage
+    coverage_status: str = "Meets Target" if test_coverage >= test_coverage_target else f"Gap: {coverage_gap}%"
 
-    content = f"""# Infrastructure Specification: {service_name}
+    last_updated: str = _get_str(service, "last_updated", "TBD")
+
+    github_token_required: bool = _get_bool(deployment, "github_token_required")
+    cloud_build_auth: str = _get_str(deployment, "cloud_build_auth")
+    coding_standards_compliant: bool = _get_bool(readiness, "coding_standards_compliant")
+    ui_path: str = _get_str(infrastructure, "ui_path")
+
+    config_paths_str: str = chr(10).join([f"- `{p}`" for p in config_paths]) if config_paths else "- None"
+    credentials_str: str = chr(10).join([f"- {c}" for c in credentials]) if credentials else "- None"
+    cloud_compat_str: str = chr(10).join([f"- {cloud}" for cloud in cloud_compat]) if cloud_compat else "- N/A"
+
+    github_token_str: str = "Yes" if github_token_required else "No"
+    has_ui_str: str = "Yes" if has_ui else "No"
+    ui_path_line: str = f"**UI Path:** `{ui_path}`" if has_ui else ""
+    compliance_str: str = "Compliant" if coding_standards_compliant else "Non-Compliant"
+
+    content: str = f"""# Infrastructure Specification: {service_name}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -545,25 +632,25 @@ def generate_infrastructure_spec(service: Dict) -> str:
 ### Configuration
 
 **Config Paths:**
-{chr(10).join([f"- `{path}`" for path in config_paths]) if config_paths else "- None"}
+{config_paths_str}
 
 **Required Credentials:**
-{chr(10).join([f"- {cred}" for cred in credentials]) if credentials else "- None"}
+{credentials_str}
 
 ### Deployment Type
 
-**GitHub Token Required:** {"✅ Yes" if deployment.get("github_token_required", False) else "❌ No"}
-**Cloud Build Auth:** `{deployment.get("cloud_build_auth", "N/A")}`
+**GitHub Token Required:** {github_token_str}
+**Cloud Build Auth:** `{cloud_build_auth}`
 
 ### UI Component
 
-**Has UI:** {"✅ Yes" if has_ui else "❌ No"}
-{"**UI Path:** `" + infrastructure.get("ui_path", "N/A") + "`" if has_ui else ""}
+**Has UI:** {has_ui_str}
+{ui_path_line}
 
 ## Cloud Compatibility
 
 **Supported Clouds:**
-{chr(10).join([f"- {cloud}" for cloud in cloud_compat]) if cloud_compat else "- N/A"}
+{cloud_compat_str}
 
 ## Quality Metrics
 
@@ -575,7 +662,7 @@ def generate_infrastructure_spec(service: Dict) -> str:
 
 ### Coding Standards
 
-**Compliance:** {"✅ Compliant" if readiness.get("coding_standards_compliant", False) else "🔴 Non-Compliant"}
+**Compliance:** {compliance_str}
 
 ## Service Structure (TODO: Manual Review Required)
 
@@ -623,14 +710,14 @@ def generate_infrastructure_spec(service: Dict) -> str:
 
 ---
 
-**Last Updated:** {service.get("last_updated", "TBD")}
-**Review Status:** 🔴 Needs Review (Auto-Generated Baseline)
+**Last Updated:** {last_updated}
+**Review Status:** Needs Review (Auto-Generated Baseline)
 """
     return content
 
 
 # Map spec types to generator functions
-SPEC_GENERATORS = {
+SPEC_GENERATORS: dict[str, Callable[[JsonDict], str]] = {
     "domain": generate_domain_spec,
     "data": generate_data_spec,
     "observability": generate_observability_spec,
@@ -639,27 +726,27 @@ SPEC_GENERATORS = {
 }
 
 
-def generate_spec_file(service: Dict, spec_type: str, dry_run: bool = False) -> bool:
+def generate_spec_file(service: JsonDict, spec_type: str, dry_run: bool = False) -> bool:
     """
     Generate a single spec file for a service.
 
     Returns:
         True if file was created, False if skipped (already exists)
     """
-    service_name = service["service"]
+    service_name: str = _get_str(service, "service")
 
     # Determine directory (batch vs live)
-    data_coverage = service.get("data_coverage", {})
-    batch_mode = data_coverage.get("batch_mode", False)
-    live_mode = data_coverage.get("live_mode", False)
+    data_coverage: JsonDict = _get_dict(service, "data_coverage")
+    batch_mode: bool = _get_bool(data_coverage, "batch_mode")
+    live_mode: bool = _get_bool(data_coverage, "live_mode")
 
     # Use batch if both, otherwise use the supported mode
-    mode = "batch" if batch_mode else "live" if live_mode else "batch"
+    mode: str = "batch" if batch_mode else "live" if live_mode else "batch"
 
     # Build file path
-    spec_dir = SPEC_DIR_MAP[spec_type]
-    file_dir = CODEX_ROOT / spec_dir / mode / "per-service"
-    file_path = file_dir / f"{service_name}.md"
+    spec_dir: str = SPEC_DIR_MAP[spec_type]
+    file_dir: Path = CODEX_ROOT / spec_dir / mode / "per-service"
+    file_path: Path = file_dir / f"{service_name}.md"
 
     # Check if file already exists (idempotent)
     if file_path.exists():
@@ -667,8 +754,8 @@ def generate_spec_file(service: Dict, spec_type: str, dry_run: bool = False) -> 
         return False
 
     # Generate content
-    generator = SPEC_GENERATORS[spec_type]
-    content = generator(service)
+    generator: Callable[[JsonDict], str] = SPEC_GENERATORS[spec_type]
+    content: str = generator(service)
 
     if dry_run:
         log_info(f"[DRY-RUN] Would create {spec_type}: {file_path.relative_to(CODEX_ROOT)}")
@@ -685,21 +772,23 @@ def generate_spec_file(service: Dict, spec_type: str, dry_run: bool = False) -> 
     return True
 
 
-def generate_all_specs_for_service(service: Dict, dry_run: bool = False) -> Dict[str, int]:
+def generate_all_specs_for_service(service: JsonDict, dry_run: bool = False) -> dict[str, int]:
     """
     Generate all 5 spec files for a service.
 
     Returns:
         Dict with counts: {"created": N, "skipped": N}
     """
-    service_name = service["service"]
+    service_name: str = _get_str(service, "service")
+    svc_type: str = _get_str(service, "type")
+    svc_priority: str = _get_str(service, "priority")
     log_info(f"\n{'=' * 70}")
     log_info(f"Service: {service_name}")
-    log_info(f"Type: {service.get('type')}, Priority: {service.get('priority')}")
+    log_info(f"Type: {svc_type}, Priority: {svc_priority}")
     log_info(f"{'=' * 70}\n")
 
-    created = 0
-    skipped = 0
+    created: int = 0
+    skipped: int = 0
 
     for spec_type in SPEC_TYPES:
         if generate_spec_file(service, spec_type, dry_run):
@@ -715,8 +804,8 @@ def generate_all_specs_for_service(service: Dict, dry_run: bool = False) -> Dict
 # ==============================================================================
 
 
-def main():
-    parser = argparse.ArgumentParser(
+def main() -> None:
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description="Generate per-service specification files (160 total for 32 services)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -744,39 +833,46 @@ Examples:
 
     parser.add_argument("--dry-run", action="store_true", help="Preview what would be created without creating files")
 
-    args = parser.parse_args()
+    parsed: argparse.Namespace = parser.parse_args()
+
+    # Extract args with getattr to avoid Any
+    service_arg: str = str(getattr(parsed, "service", "") or "")
+    all_services_flag: bool = bool(getattr(parsed, "all_services", False))
+    priority_arg: str = str(getattr(parsed, "priority", "") or "")
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
 
     # Validate arguments
-    if not (args.service or args.all_services or args.priority):
+    if not (service_arg or all_services_flag or priority_arg):
         parser.error("Must specify --service, --all-services, or --priority")
 
     # Load services
-    all_services = load_service_registry()
+    all_services: list[JsonDict] = load_service_registry()
 
     # Filter services
-    if args.service:
-        service = get_service_by_name(all_services, args.service)
-        if not service:
-            log_error(f"Service not found: {args.service}")
+    services: list[JsonDict]
+    if service_arg:
+        found: JsonDict | None = get_service_by_name(all_services, service_arg)
+        if not found:
+            log_error(f"Service not found: {service_arg}")
             sys.exit(1)
-        services = [service]
-    elif args.priority:
-        services = filter_services_by_priority(all_services, args.priority)
+        services = [found]
+    elif priority_arg:
+        services = filter_services_by_priority(all_services, priority_arg)
     else:  # --all-services
         services = all_services
 
     # Generate specs
     log_info(f"\n{'=' * 70}")
     log_info(f"Generating specs for {len(services)} services")
-    if args.dry_run:
+    if dry_run:
         log_warning("DRY-RUN MODE: No files will be created")
     log_info(f"{'=' * 70}\n")
 
-    total_created = 0
-    total_skipped = 0
+    total_created: int = 0
+    total_skipped: int = 0
 
-    for service in services:
-        stats = generate_all_specs_for_service(service, args.dry_run)
+    for svc in services:
+        stats: dict[str, int] = generate_all_specs_for_service(svc, dry_run)
         total_created += stats["created"]
         total_skipped += stats["skipped"]
 

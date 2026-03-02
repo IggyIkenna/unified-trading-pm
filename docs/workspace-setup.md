@@ -1,349 +1,262 @@
-# Workspace Setup Guide (SSOT)
+# Workspace Setup Guide
 
-This is the **single source of truth** for setting up the unified trading system multi-repo workspace on a new machine or after path changes (like iCloud sync).
+Single source of truth for setting up the unified trading system workspace.
 
-## Overview
+---
 
-The workspace consists of 52 independent repositories organized under a single parent directory:
+## Prerequisites
 
-```
-<WORKSPACE_ROOT>/
-├── unified-trading-system-repos/    ← Main multi-repo folder
-│   ├── unified-trading-pm/          ← This repo (project management & scripts)
-│   ├── unified-trading-services/    ← Core services library
-│   ├── unified-config-interface/    ← Config schemas
-│   ├── instruments-service/         ← Services...
-│   ├── market-data-service/
-│   └── ...50 more repos
-```
+You need these before starting:
 
-## Quick Setup (New Machine or Colleague)
+- **git** with SSH key configured for github.com (`ssh -T git@github.com` should work)
+- **bash 4+** or **zsh** (macOS ships zsh by default)
+- **macOS** (Homebrew) or **Linux** (apt/yum)
 
-### 1. Clone the workspace
+The bootstrap script installs everything else (Python 3.13, uv, ripgrep, jq, basedpyright).
 
-```bash
-# Choose your workspace location based on machine/OS:
-# - Mac with iCloud: ~/Documents/Documents - Mac/repos
-# - Mac without iCloud: ~/Documents/repos
-# - Linux: ~/repos
-# - Other laptop: ~/Documents/Documents - MacOld/repos
+---
 
-cd /path/to/your/chosen/workspace
-git clone <workspace-url> unified-trading-system-repos
-cd unified-trading-system-repos/unified-trading-pm
-```
+## New Machine Setup (end-to-end)
 
-### 2. Run the workspace setup script
+### Step 1: Clone this repo
+
+Pick a workspace directory. All 63 repos will live side-by-side here.
 
 ```bash
+# Pick ONE of these (or your own location):
+#   Mac with iCloud:    ~/Documents/Documents - Mac/repos
+#   Mac without iCloud: ~/Documents/repos
+#   Linux:              ~/repos
+
+mkdir -p /your/chosen/path/unified-trading-system-repos
+cd /your/chosen/path/unified-trading-system-repos
+git clone git@github.com:IggyIkenna/unified-trading-pm.git
+```
+
+### Step 2: Bootstrap the workspace
+
+This single script does everything: installs system deps, clones all 63 repos from the manifest, creates the workspace venv, and runs per-repo setup in dependency order.
+
+```bash
+bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
+```
+
+What it does (5 phases):
+
+| Phase | What happens |
+|-------|-------------|
+| 1. System deps | Installs Python 3.13, uv, ripgrep, jq via Homebrew/apt |
+| 2. Clone repos | Reads `workspace-manifest.json`, clones all 63 repos via SSH |
+| 3. Workspace venv | Creates `.venv-workspace/` with ruff, basedpyright, pytest, and all repo deps |
+| 4. Per-repo setup | Runs `scripts/setup.sh` in each repo (topological order: T0 first) |
+| 5. Smoke test | Verifies `import <package>` works for every Python repo |
+
+Safe to re-run. Skips repos already cloned and deps already installed.
+
+### Step 3: Set up workspace paths and IDE configs
+
+```bash
+bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
+```
+
+This script auto-detects your workspace path and:
+- Adds `export UNIFIED_TRADING_WORKSPACE_ROOT="/your/path"` to `~/.zshrc` or `~/.bashrc`
+- Updates all Cursor `.code-workspace` files with your machine's path
+- Creates Claude Code conversation symlinks (so old chats carry over between machines)
+- Updates Claude Code permissions in `~/.claude/settings.json`
+
+### Step 4: Set up Cursor rules and plans (symlinks)
+
+```bash
+# Symlink rules (edits go directly to git-tracked cursor-rules/)
+bash unified-trading-pm/scripts/workspace/setup-cursor-rules-symlink.sh
+
+# Symlink plans (edits go directly to git-tracked plans/cursor-plans/)
+bash unified-trading-pm/scripts/workspace/setup-cursor-plans-symlink.sh
+```
+
+After this, your workspace looks like:
+
+```
+unified-trading-system-repos/           <- open this in Cursor
+├── .cursor/
+│   ├── rules/ -> unified-trading-pm/cursor-rules/          <- SYMLINK
+│   └── plans/ -> unified-trading-pm/plans/cursor-plans/    <- SYMLINK
+├── .claude/
+│   └── CLAUDE.md                       <- Claude Code project instructions
+├── .venv-workspace/                    <- shared venv (python, ruff, basedpyright, all deps)
+├── unified-trading-pm/                 <- this repo
+│   ├── cursor-rules/                   <- git-tracked rules (symlinked from .cursor/rules/)
+│   ├── cursor-configs/                 <- git-tracked workspace configs
+│   └── workspace-manifest.json         <- registry of all 63 repos
+├── unified-trading-codex/
+├── instruments-service/
+└── ...60 more repos
+```
+
+### Step 5: Reload shell and restart IDEs
+
+```bash
+source ~/.zshrc   # or ~/.bashrc
+```
+
+Close and reopen **both Cursor and Claude Code** (Cmd+Q). This resolves "Invalid Python interpreter" errors in Cursor.
+
+### Step 6: Verify
+
+```bash
+# Environment
+echo $UNIFIED_TRADING_WORKSPACE_ROOT           # should print your path
+which python                                    # .venv-workspace/bin/python
+which ruff                                      # .venv-workspace/bin/ruff
+which basedpyright                              # .venv-workspace/bin/basedpyright
+
+# Cursor rules symlink works
+ls -la .cursor/rules                            # should show -> .../unified-trading-pm/cursor-rules
+ls .cursor/rules/*.mdc | wc -l                  # should be ~103
+
+# Plans symlink works
+ls -la .cursor/plans                            # should show -> .../unified-trading-pm/plans/cursor-plans
+
+# Quality gates pass on PM repo
+cd unified-trading-pm && bash scripts/quality-gates.sh
+```
+
+---
+
+## How Rules and Plans Work
+
+Both `.cursor/rules/` and `.cursor/plans/` are **symlinks** into the PM repo:
+
+```
+.cursor/rules/ -> unified-trading-pm/cursor-rules/          (symlink)
+.cursor/plans/ -> unified-trading-pm/plans/cursor-plans/     (symlink)
+```
+
+This means:
+- **Edits in `.cursor/rules/` directly modify git-tracked files** in unified-trading-pm
+- **No sync scripts needed** — there's no copy to get out of sync
+- **`git pull` in unified-trading-pm immediately gives you the team's latest** rules and plans
+- **Conflict resolution is standard git** — if two developers edit the same rule, git merge handles it
+
+### Multi-developer workflow
+
+| Scenario | What happens |
+|----------|-------------|
+| You add a new rule, teammate adds a different rule | Both push via quickmerge. `git pull` gives you both. No conflict. |
+| You both edit different lines of the same rule | Git auto-merges. No conflict. |
+| You both edit the same lines of the same rule | Git merge conflict. Resolve locally, then re-push. |
+
+---
+
+## Day-to-Day Workflow
+
+### Push your changes
+
+```bash
+cd unified-trading-pm
+bash scripts/quickmerge.sh "feat: describe your change"
+```
+
+Quickmerge runs a 4-stage pipeline:
+1. **Stage 1**: Dependency validation
+2. **Stage 2**: Pre-flight audit
+3. **Stage 3**: Quality gates (ruff + basedpyright + pytest)
+4. **Stage 4**: Creates PR with auto-merge enabled
+
+Rule edits are committed directly (no sync step) because `.cursor/rules/` is a symlink.
+
+### Pull team's latest
+
+```bash
+cd unified-trading-pm && git pull
+# Done — symlinks mean you immediately see the team's changes
+```
+
+### Work on any service repo
+
+Each repo has the same quickmerge template:
+
+```bash
+cd instruments-service   # or any repo
+bash scripts/quickmerge.sh "fix: describe your change"
+```
+
+---
+
+## Switching Machines
+
+When you move to a different laptop or the workspace path changes (e.g., iCloud sync):
+
+```bash
+# 1. Re-run setup (auto-detects new path)
+cd /new/path/unified-trading-system-repos/unified-trading-pm
 bash scripts/workspace/setup-workspace-root.sh
-```
 
-**That's it!** The script will:
-- ✅ Prompt for your workspace root path (or auto-detect)
-- ✅ Add `UNIFIED_TRADING_WORKSPACE_ROOT` to your shell config (~/.zshrc or ~/.bashrc)
-- ✅ Update all 10 Cursor workspace configurations with your path
-- ✅ Update Claude Code conversation symlinks and permissions
-- ✅ Verify Python interpreter and key repos exist
+# 2. Re-create symlinks
+bash scripts/workspace/setup-cursor-rules-symlink.sh
+bash scripts/workspace/setup-cursor-plans-symlink.sh
 
-### 3. Reload shell and verify
-
-```bash
-source ~/.zshrc  # or ~/.bashrc on Linux
-echo $UNIFIED_TRADING_WORKSPACE_ROOT
-```
-
-### 4. (Optional) Migrate Cursor Index
-
-**Skip 30+ minutes of re-indexing!** Copy your existing index:
-
-```bash
-bash scripts/migrate-cursor-index.sh
-```
-
-See: [index-migration.md](index-migration.md) for details.
-
-### 5. Restart IDEs
-
-Close **both Cursor and Claude Code** completely (Cmd+Q or Ctrl+Q) and reopen. The "Invalid Python interpreter" errors (Cursor) and missing conversations (Claude Code) should be fixed.
-
----
-
-## Why This System Exists
-
-### Problem 1: iCloud Sync Path Changes
-When macOS enables iCloud backup, it moves:
-- `/Users/username/Documents/repos` → `/Users/username/Documents/Documents - Mac/repos`
-
-All hardcoded paths break:
-- **Cursor:** "Invalid Python interpreter" errors
-- **Claude Code:** Missing conversation history (can't find old chats)
-
-### Problem 2: Multiple Machines
-Different developers/machines have different workspace locations:
-- One laptop: `/Users/username/Documents/repos`
-- Another laptop: `/Users/username/Documents/Documents - MacOld/repos`
-- Linux server: `/home/username/repos`
-
-Hardcoded paths don't transfer.
-
-### Solution: Single Environment Variable + Automated Setup
-`UNIFIED_TRADING_WORKSPACE_ROOT` is set once in your shell config. The setup script automatically:
-- Updates all Cursor workspace configs
-- Creates Claude Code conversation symlinks
-- Updates Claude Code permissions
-
-To switch machines, just update one variable and re-run the script.
-
----
-
-## Manual Setup (If Script Fails)
-
-### 1. Add to shell config manually
-
-Edit `~/.zshrc` (Mac/zsh) or `~/.bashrc` (Linux/bash):
-
-```bash
-# macOS zsh
-echo 'export UNIFIED_TRADING_WORKSPACE_ROOT="/Users/YOUR_USERNAME/Documents/Documents - Mac/repos"' >> ~/.zshrc
+# 3. Reload shell and restart both IDEs
 source ~/.zshrc
-
-# Linux bash
-echo 'export UNIFIED_TRADING_WORKSPACE_ROOT="/home/YOUR_USERNAME/repos"' >> ~/.bashrc
-source ~/.bashrc
 ```
 
-### 2. Update workspace configs manually
-
-```bash
-cd ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos/.cursor/workspace-configs
-
-# Replace old paths with new (adjust sed syntax for OS)
-# macOS:
-for file in *.code-workspace; do
-    sed -i '' 's|/OLD/PATH|'"${UNIFIED_TRADING_WORKSPACE_ROOT}"'|g' "$file"
-done
-
-# Linux:
-for file in *.code-workspace; do
-    sed -i 's|/OLD/PATH|'"${UNIFIED_TRADING_WORKSPACE_ROOT}"'|g' "$file"
-done
-```
+The setup script detects old paths in workspace configs and replaces them with the new path.
 
 ---
 
-## Switching Between Machines
+## What Each Script Does
 
-When you move to a different laptop:
-
-### 1. Update the variable (one line edit)
-
-Edit `~/.zshrc` or `~/.bashrc` and change:
-```bash
-export UNIFIED_TRADING_WORKSPACE_ROOT="/path/for/this/machine"
-```
-
-### 2. Re-run the setup script
-```bash
-source ~/.zshrc  # Reload
-cd ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm
-bash scripts/workspace/setup-workspace-root.sh
-```
-
-### 3. Restart both IDEs
-
-All workspace configs and Claude Code conversations will automatically use the new path.
-
----
-
-## Workspace Configurations
-
-10 themed workspace configurations exist in `.cursor/workspace-configs/`:
-
-| Workspace | Description |
-|-----------|-------------|
-| `unified-trading-system-repos.code-workspace` | Default complete workspace |
-| `workspace-complete.code-workspace` | All 52 repos |
-| `workspace-data-pipeline.code-workspace` | Data ingestion repos |
-| `workspace-features.code-workspace` | Feature engineering repos |
-| `workspace-ml.code-workspace` | ML training/inference repos |
-| `workspace-trading.code-workspace` | Trading/execution repos |
-| `workspace-libraries.code-workspace` | Shared library repos |
-| `workspace-infrastructure.code-workspace` | Infrastructure repos |
-| `workspace-full-pipeline.code-workspace` | Complete pipeline view |
-| `workspace-uis.code-workspace` | UI repos |
-
-All automatically reference `UNIFIED_TRADING_WORKSPACE_ROOT`.
-
----
-
-## Python Virtual Environment
-
-The workspace uses a **single shared venv** for all repos: `.venv-workspace/`
-
-### Initial setup (first time only):
-```bash
-cd ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos
-bash .cursor/workspace-configs/setup-workspace-venv-complete.sh
-```
-
-This installs:
-- Python 3.13
-- All development tools (ruff, basedpyright, pytest, uv)
-- All local repos as editable installs
-
-Cursor workspace configs point to:
-```
-${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos/.venv-workspace/bin/python
-```
-
----
-
-## Disk Space Management
-
-### Agent Chat Cleanup
-
-Cursor stores agent chat transcripts in `~/.cursor/projects`. Old chats (>24 hours) can be cleaned:
-
-```bash
-cd ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm
-bash scripts/cleanup-agent-chats.sh
-```
-
-**Expected sizes:**
-- Cursor total: ~1GB
-- Cursor projects: ~270MB (after cleanup)
-
-### Automate Cleanup (Optional)
-
-Add to crontab to run daily at 3 AM:
-```bash
-crontab -e
-# Add this line:
-0 3 * * * bash /full/path/to/unified-trading-pm/scripts/cleanup-agent-chats.sh
-```
+| Script | When to run | What it does |
+|--------|-------------|-------------|
+| `workspace-bootstrap.sh` | New machine (once) | Clones all repos, installs deps, creates venv |
+| `setup-workspace-root.sh` | New machine or path change | Sets env var, updates IDE configs |
+| `setup-cursor-rules-symlink.sh` | New machine (once) | Symlinks `.cursor/rules/` to `cursor-rules/` |
+| `setup-cursor-plans-symlink.sh` | New machine (once) | Symlinks `.cursor/plans/` to `plans/cursor-plans/` |
+| `quickmerge.sh` | To push changes | Full pipeline: lint + test + PR |
 
 ---
 
 ## Troubleshooting
 
-### "Invalid Python interpreter" error after setup
+### "Invalid Python interpreter" in Cursor
 
-**Cause:** Cursor hasn't reloaded the workspace configs yet.
+1. Check: `ls .venv-workspace/bin/python` — does it exist?
+2. If not: `bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-system`
+3. If yes: Close Cursor completely (Cmd+Q) and reopen
 
-**Fix:**
-1. Verify variable is set: `echo $UNIFIED_TRADING_WORKSPACE_ROOT`
-2. Verify Python exists: `ls -la ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos/.venv-workspace/bin/python`
-3. Close Cursor completely (Cmd+Q / Ctrl+Q)
-4. Reopen Cursor
-5. Open one of the workspace configs explicitly: File > Open Workspace from File
+### quality-gates.sh fails with "uv pip install failed"
 
-### "800GB System Settings storage" on Mac
+PM uses the workspace venv, not a local `.venv`. Make sure `.venv-workspace/` exists:
 
-This is **not from Cursor**. It's macOS purgeable space:
-- iCloud optimized storage
-- Time Machine local snapshots
-- System caches
-
-macOS will automatically free this when needed. Check actual usage:
 ```bash
-df -h /
+cd $UNIFIED_TRADING_WORKSPACE_ROOT/unified-trading-system-repos
+ls .venv-workspace/bin/python
 ```
 
-Cursor's actual footprint: ~1GB.
+If missing, re-run the bootstrap script.
 
-### Script says "unified-trading-system-repos not found"
+### .cursor/rules/ is a directory instead of a symlink
 
-You're not in the right directory. The script expects to be run from:
-```
-<workspace-root>/unified-trading-system-repos/unified-trading-pm/
-```
+If you had the old copy-based setup, migrate to symlinks:
 
-Navigate there first:
 ```bash
-cd /path/to/workspace/unified-trading-system-repos/unified-trading-pm
-bash scripts/workspace/setup-workspace-root.sh /path/to/workspace
+bash unified-trading-pm/scripts/workspace/setup-cursor-rules-symlink.sh
 ```
 
-### Workspace configs not updating
+This script migrates any local-only rules into cursor-rules/ before creating the symlink.
 
-The script looks for `*.code-workspace` files in:
-```
-${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos/.cursor/workspace-configs/
-```
+### Script can't find workspace root
 
-If they don't exist, clone the full workspace or copy from another machine.
+Make sure the env var is set:
 
-### Different shell (fish, tcsh, etc.)
-
-The script only supports bash and zsh. For other shells, manually:
-1. Add `export UNIFIED_TRADING_WORKSPACE_ROOT="/your/path"` to your shell config
-2. Manually update `.code-workspace` files with find/replace
-
----
-
-## For Team Collaboration
-
-### New team member setup:
-1. Clone the workspace repos
-2. Run `bash scripts/workspace/setup-workspace-root.sh`
-3. Enter their machine's workspace path when prompted
-4. Restart Cursor
-
-**No manual path editing needed!**
-
-### Sharing workspace configs:
-The workspace configs are git-tracked in `unified-trading-pm`. When you pull updates, re-run:
 ```bash
-bash scripts/workspace/setup-workspace-root.sh
+echo $UNIFIED_TRADING_WORKSPACE_ROOT
 ```
 
-This ensures your local path is maintained while adopting config structure changes.
+If empty, re-run:
 
----
-
-## Related Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/workspace/setup-workspace-root.sh` | Main setup script (this guide) |
-| `scripts/migration/cleanup-agent-chats.sh` | Clean old Cursor agent transcripts |
-| `scripts/workspace/sync-rules-pull.sh` | Pull latest cursor rules from PM repo |
-| `scripts/workspace/sync-workspace.sh` | Check rule sync status |
-
----
-
-## Architecture Context
-
-This workspace contains 52 repositories organized by tier:
-
-- **Tier 0** (leaf libraries): No dependencies on other internal repos
-- **Tier 1** (core services): Depends on Tier 0
-- **Tier 2** (domain libraries): Depends on Tier 0 + Tier 1
-- **Tier 3** (domain clients): Depends on Tier 0-2
-- **Services**: Python services (import Tier 0-3 libs only, never other services)
-- **APIs**: HTTP boundaries (import Tier 0-1 only)
-- **UIs**: TypeScript frontends (never import Python)
-
-See: `workspace-manifest.json` and `WORKSPACE_MANIFEST_DAG.svg` for full dependency graph.
-
----
-
-## Summary
-
-**One command to set up any machine:**
 ```bash
 bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
+source ~/.zshrc
 ```
-
-**One variable to change when switching machines:**
-```bash
-export UNIFIED_TRADING_WORKSPACE_ROOT="/new/path"
-```
-
-**One command to update all configs:**
-```bash
-bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
-```
-
-For questions or issues, see the PM repo or update this doc (SSOT).

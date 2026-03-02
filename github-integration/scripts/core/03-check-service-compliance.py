@@ -292,9 +292,7 @@ def check_missing_services(registry: RegistryDict) -> list[Gap]:
             raw_venues = service.get("venues", [])
             venues: list[str] = cast(list[str], raw_venues) if isinstance(raw_venues, list) else []
             raw_asset_classes = service.get("asset_classes", [])
-            asset_classes: list[str] = (
-                cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
-            )
+            asset_classes: list[str] = cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
             gaps.append(
                 Gap(
                     gap_type="missing_service",
@@ -553,10 +551,7 @@ def generate_implementation_breakdown(
         {
             "type": "checklist_sync",
             "title": f"Update checklist item {item_id} to 'done'",
-            "description": (
-                "Update unified-trading-deployment-v2/configs/"
-                f"checklist.{service_name}.yaml"
-            ),
+            "description": (f"Update unified-trading-deployment-v2/configs/checklist.{service_name}.yaml"),
             "estimated_hours": 0.5,
         }
     )
@@ -645,9 +640,7 @@ def create_github_issue(gap: Gap, dry_run: bool = True) -> str | None:
         print(f"{'=' * 80}\n")
         return None
 
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Failed to create issue: {result.stderr}")
         return None
@@ -676,15 +669,11 @@ def check_existing_issue(gap: Gap) -> bool:
         "100",
     ]
 
-    result: subprocess.CompletedProcess[str] = subprocess.run(
-        cmd, capture_output=True, text=True
-    )
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         return False
 
-    issues: list[dict[str, object]] = cast(
-        list[dict[str, object]], json.loads(result.stdout)
-    )
+    issues: list[dict[str, object]] = cast(list[dict[str, object]], json.loads(result.stdout))
     for issue in issues:
         if gap_id in str(issue.get("body", "")):
             return True
@@ -698,9 +687,7 @@ def check_existing_issue(gap: Gap) -> bool:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Check service compliance against Codex standards"
-    )
+    parser = argparse.ArgumentParser(description="Check service compliance against Codex standards")
     parser.add_argument(
         "--repo",
         help="Check single repo (e.g., IggyIkenna/instruments-service)",
@@ -756,9 +743,7 @@ def main() -> None:
             sys.exit(1)
     elif all_services:
         raw_svcs = registry.get("services", [])
-        services_to_check = cast(
-            list[ServiceDict], raw_svcs
-        ) if isinstance(raw_svcs, list) else []
+        services_to_check = cast(list[ServiceDict], raw_svcs) if isinstance(raw_svcs, list) else []
     elif service_type_arg:
         raw_svcs = registry.get("services", [])
         svcs_list: list[object] = cast(list[object], raw_svcs) if isinstance(raw_svcs, list) else []

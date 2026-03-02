@@ -9,13 +9,14 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 import yaml
 
 
-def _run_gh(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
+def _run_gh(cmd_args: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["gh"] + args,
+        ["gh", *cmd_args],
         capture_output=True,
         text=True,
         check=check,
@@ -31,44 +32,50 @@ def main() -> int:
         help="Path to label-schema.yaml (defaults to sibling file).",
     )
     parser.add_argument("--dry-run", action="store_true", help="Preview only.")
-    args = parser.parse_args()
+    parsed = parser.parse_args()
 
     if yaml is None:
         print("ERROR: PyYAML required. Install with `pip install pyyaml`", file=sys.stderr)
         return 1
 
-    schema = Path(args.schema_path) if args.schema_path else Path(__file__).resolve().parent / "label-schema.yaml"
+    schema_path_raw = str(getattr(parsed, "schema_path", "") or "")
+    schema = Path(schema_path_raw) if schema_path_raw else Path(__file__).resolve().parent / "label-schema.yaml"
     if not schema.exists():
         print(f"ERROR: schema file not found: {schema}", file=sys.stderr)
         return 1
 
-    data = yaml.safe_load(schema.read_text(encoding="utf-8")) or {}
-    labels = data.get("labels", [])
-    if not isinstance(labels, list):
+    data: dict[str, object] = cast(dict[str, object], yaml.safe_load(schema.read_text(encoding="utf-8")) or {})
+    raw_labels = data.get("labels", [])
+    if not isinstance(raw_labels, list):
         print("ERROR: schema labels must be a list", file=sys.stderr)
         return 1
+    labels: list[object] = cast(list[object], raw_labels)
+
+    repo_name: str = str(getattr(parsed, "repo", ""))
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
 
     created = 0
     failed = 0
     for item in labels:
         if not isinstance(item, dict):
             continue
-        name = str(item.get("name", "")).strip()
-        desc = str(item.get("description", "")).strip()
-        color = str(item.get("color", "")).strip().lstrip("#")
+        item_dict: dict[str, object] = cast(dict[str, object], item)
+        name = str(item_dict.get("name", "")).strip()
+        desc = str(item_dict.get("description", "")).strip()
+        color = str(item_dict.get("color", "")).strip().lstrip("#")
         if not name or not color:
             continue
-        if args.dry_run:
+        if dry_run:
             print(f"[DRY-RUN] would upsert label: {name}")
             created += 1
             continue
-        proc = _run_gh(
+        proc: subprocess.CompletedProcess[str] = _run_gh(
             [
                 "label",
                 "create",
                 name,
                 "--repo",
-                args.repo,
+                repo_name,
                 "--description",
                 desc,
                 "--color",

@@ -5,8 +5,9 @@ Fix manifest instructions in cleanup issues - clarify local vs GitHub paths
 
 import json
 import subprocess
+from typing import cast
 
-ISSUES = {
+ISSUES: dict[str, int] = {
     "execution-service": 147,
     "strategy-service": 23,
     "instruments-service": 58,
@@ -23,25 +24,35 @@ ISSUES = {
 }
 
 
-def fix_issue(repo, issue_number):
+def fix_issue(repo: str, issue_number: int) -> bool:
     """Fix the manifest instructions in an issue."""
     print(f"Processing {repo}#{issue_number}...")
 
     # Get current issue body
-    result = subprocess.run(
-        ["gh", "issue", "view", str(issue_number), "--repo", f"IggyIkenna/{repo}", "--json", "body"],
+    result: subprocess.CompletedProcess[str] = subprocess.run(
+        [
+            "gh",
+            "issue",
+            "view",
+            str(issue_number),
+            "--repo",
+            f"IggyIkenna/{repo}",
+            "--json",
+            "body",
+        ],
         capture_output=True,
         text=True,
     )
 
     if result.returncode != 0:
-        print("  ❌ Failed to fetch")
+        print("  Failed to fetch")
         return False
 
-    body = json.loads(result.stdout)["body"]
+    parsed: dict[str, object] = cast(dict[str, object], json.loads(result.stdout))
+    body: str = str(parsed.get("body", ""))
 
     # Replace the manifest section text
-    old_text = (
+    old_text: str = (
         "📄 **[`CODEX_VIOLATIONS_MANIFEST.md`](https://github.com/IggyIkenna/"
         + repo
         + "/blob/main/CODEX_VIOLATIONS_MANIFEST.md)** contains"
@@ -66,11 +77,20 @@ def fix_issue(repo, issue_number):
         print("  ⚠️  Already fixed or pattern not found")
         return True
 
-    new_body = body.replace(old_text, new_text)
+    new_body: str = body.replace(old_text, new_text)
 
     # Update issue
     result = subprocess.run(
-        ["gh", "issue", "edit", str(issue_number), "--repo", f"IggyIkenna/{repo}", "--body", new_body],
+        [
+            "gh",
+            "issue",
+            "edit",
+            str(issue_number),
+            "--repo",
+            f"IggyIkenna/{repo}",
+            "--body",
+            new_body,
+        ],
         capture_output=True,
         text=True,
     )
@@ -83,7 +103,7 @@ def fix_issue(repo, issue_number):
     return True
 
 
-def main():
+def main() -> None:
     print(f"Fixing manifest instructions in {len(ISSUES)} issues...\n")
 
     success = 0

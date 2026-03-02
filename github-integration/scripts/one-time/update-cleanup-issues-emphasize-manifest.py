@@ -11,6 +11,7 @@ Usage:
 import json
 import subprocess
 import sys
+from typing import cast
 
 # Colors
 BLUE = "\033[0;34m"
@@ -20,7 +21,7 @@ RED = "\033[0;31m"
 NC = "\033[0m"
 
 # Repo -> Issue number mapping
-ISSUES = {
+ISSUES: dict[str, int] = {
     "execution-service": 147,
     "strategy-service": 23,
     "instruments-service": 58,
@@ -95,17 +96,17 @@ If any phase fails, fix the issues and run again. Do not run partial checks (lik
 """
 
 
-def get_manifest_link(repo):
+def get_manifest_link(repo: str) -> str:
     """Generate GitHub link to manifest for repo."""
     return f"https://github.com/IggyIkenna/{repo}/blob/main/CODEX_VIOLATIONS_MANIFEST.md"
 
 
-def update_issue(repo, issue_number, dry_run=False):
+def update_issue(repo: str, issue_number: int, dry_run: bool = False) -> bool:
     """Update a single issue with critical instructions."""
     print(f"{BLUE}Processing {repo}#{issue_number}...{NC}")
 
     # Get current issue body
-    result = subprocess.run(
+    result: subprocess.CompletedProcess[str] = subprocess.run(
         [
             "gh",
             "issue",
@@ -124,7 +125,8 @@ def update_issue(repo, issue_number, dry_run=False):
         print(f"{RED}  ❌ Failed to fetch issue: {result.stderr}{NC}")
         return False
 
-    current_body = json.loads(result.stdout)["body"]
+    parsed: dict[str, object] = cast(dict[str, object], json.loads(result.stdout))
+    current_body: str = str(parsed.get("body", ""))
 
     # Check if already updated
     if "🚨 CRITICAL: Complete Fix Instructions" in current_body:
@@ -171,9 +173,9 @@ def update_issue(repo, issue_number, dry_run=False):
     return True
 
 
-def main():
+def main() -> None:
     """Update all cleanup issues."""
-    dry_run = "--dry-run" in sys.argv
+    dry_run: bool = "--dry-run" in sys.argv
 
     if dry_run:
         print(f"{YELLOW}🔍 DRY-RUN MODE{NC}\n")
@@ -181,7 +183,7 @@ def main():
     print(f"{BLUE}Updating {len(ISSUES)} cleanup issues...{NC}\n")
 
     success_count = 0
-    failed = []
+    failed: list[str] = []
 
     for repo, issue_number in ISSUES.items():
         if update_issue(repo, issue_number, dry_run):

@@ -167,8 +167,8 @@ These scripts are in the same directory but serve different purposes:
 
 | Script | Purpose | Category |
 |--------|---------|----------|
-| `sync-rules-pull.sh` | Pull latest cursor rules from PM repo | Rules sync |
-| `sync-workspace.sh` | Check rule sync status | Rules sync |
+| `setup-cursor-rules-symlink.sh` | Symlink .cursor/rules/ to cursor-rules/ | Setup (one-time) |
+| `setup-cursor-plans-symlink.sh` | Symlink .cursor/plans/ to plans/cursor-plans/ | Setup (one-time) |
 | `check-import-patterns.py` | Validate import patterns | Code quality |
 | `check-circular-imports.py` | Detect circular dependencies | Code quality |
 | `coding-standards-align-agent.sh` | AI agent for coding standards | AI workflows |
