@@ -1,142 +1,130 @@
 # unified-trading-pm
 
-Project management, workspace tooling, and shared Cursor configuration for the Unified Trading System.
+Project management, workspace tooling, and shared configuration for the Unified Trading System.
+This is Level 0 (root) in the workspace topology — the SSOT template host and workspace management repo.
 
 ---
 
-## 🚀 Quick Start (New Machine Setup)
-
-Setting up the workspace on a new machine or after path changes (like iCloud sync)?
+## Quick Start
 
 ```bash
-cd /path/to/workspace/unified-trading-pm
-bash scripts/setup-workspace-root.sh
-```
-
-**One command sets up BOTH IDEs:** Cursor + Claude Code workspace configs, conversation history, Python paths.
-📖 **Full docs:** [WORKSPACE_SETUP.md](WORKSPACE_SETUP.md) | [BOTH_IDES_SETUP.md](BOTH_IDES_SETUP.md)
-
----
-
-## Required Workspace Structure
-
-This repo **must** be cloned as a sibling directory alongside all other system repos.
-Scripts infer the workspace root as the **parent directory** of `unified-trading-pm/`.
-
-```
-~/repos/unified-trading-system-repos/     ← workspace root (open THIS in Cursor)
-├── .cursor/
-│   └── rules/                            ← your local Cursor rules (IDE reads here)
-├── .cursorrules                          ← workspace-level Cursor config
-│
-├── unified-trading-pm/                   ← THIS repo (must be a sibling, not the root)
-│   ├── cursor-rules/                     ← git-tracked source of truth for rules
-│   ├── cursor-configs/                   ← git-tracked workspace configs
-│   ├── workspace-manifest.json           ← canonical repo registry
-│   ├── manifest_warnings.yaml            ← bad-release annotations
-│   ├── scripts/                          ← workspace automation scripts
-│   └── plans/ai/                         ← AI execution plans
-│
-├── unified-trading-codex/                ← standards and specifications
-├── unified-trading-deployment-v3/        ← deployment configs
-├── instruments-service/                  ← service repo
-└── ...38+ other repos
-```
-
-**The scripts will error if:**
-- `unified-trading-pm/` IS the workspace root (not a sibling)
-- No `.cursor/` directory exists at the workspace root
-- No known sibling repos exist (wrong clone location)
-- `unified-trading-pm/` is not a git repo
-
----
-
-## First-Time Setup (New Machine)
-
-```bash
-# 1. Clone all repos into a shared workspace root
-mkdir -p ~/repos/unified-trading-system-repos
+# 1. Clone into the workspace root alongside sibling repos
 cd ~/repos/unified-trading-system-repos
 git clone git@github.com:IggyIkenna/unified-trading-pm.git
-git clone git@github.com:IggyIkenna/unified-trading-codex.git
-# ... clone other repos
 
-# 2. Open the workspace root in Cursor (creates .cursor/ automatically)
-cursor .
+# 2. Set up workspace paths and IDE config
+bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 
-# 3. Pull the team's latest Cursor rules into your local .cursor/rules/
-cd unified-trading-pm && git pull
-./scripts/sync-rules-pull.sh
+# 3. Pull the team's Cursor rules into your local .cursor/rules/
+bash unified-trading-pm/scripts/workspace/sync-rules-pull.sh
 
-# 4. (Optional) Set up a GCP dev project
-cd unified-trading-deployment-v3
-./scripts/setup-dev-project.sh <your-dev-project-id>
+# 4. (Optional) Full workspace bootstrap — clones all repos, installs deps
+bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
+```
+
+Full setup guide: [docs/workspace-setup.md](docs/workspace-setup.md) | IDE coordination: [docs/both-ides-setup.md](docs/both-ides-setup.md)
+
+---
+
+## Repo Layout
+
+```
+unified-trading-pm/
+├── workspace-manifest.json        SSOT registry of all 60+ repos (types, deps, versions)
+├── manifest_warnings.yaml         Bad-release annotations (append-only)
+├── WORKSPACE_MANIFEST_DAG.svg     Visual dependency DAG (auto-generated)
+│
+├── docs/                          All documentation
+│   ├── workspace-setup.md         Full workspace setup guide
+│   ├── both-ides-setup.md         Cursor + Claude Code IDE coordination
+│   └── index-migration.md         Cursor index migration guide
+│
+├── scripts/                       Workspace automation
+│   ├── setup.sh                   SSOT template: environment bootstrap
+│   ├── quality-gates.sh           SSOT template: lint + test pipeline
+│   ├── quickmerge.sh              SSOT template: git + PR automation
+│   ├── _workspace-lib.sh          Shared bash helpers
+│   ├── workspace/                 Workspace setup, sync, and bootstrap
+│   ├── propagation/               SSOT template rollout to all repos (4 scripts)
+│   ├── validation/                Code quality, import, and dep checks (10 scripts)
+│   ├── manifest/                  DAG generator and SBOM tools
+│   ├── agents/                    LLM agent wrappers (3 scripts)
+│   ├── repo-management/           GitHub repo and collaborator setup
+│   └── migration/                 One-off migrations and cleanups (4 scripts)
+│
+├── cursor-rules/                  Git-tracked SSOT for all .cursor/rules/*.mdc
+├── cursor-configs/                VS Code workspace profiles
+│
+├── plans/                         Project planning and execution
+│   ├── active/                    Currently executing plans
+│   ├── cicd/                      CI/CD infrastructure plans
+│   ├── cursor-plans/              Cursor agent prompts and architecture plans
+│   └── tasks/                     Agent task definitions (cursor/ + claude-code/)
+│
+├── github-integration/            GitHub Projects automation and issue management
+├── security/                      Internal security advisories (append-only)
+├── templates/                     Per-repo setup templates (AGENTS.md)
+└── tests/                         pytest + bats tests
 ```
 
 ---
 
 ## Day-to-Day Workflow
 
-### Push rule/script/manifest changes to the team
+### Push changes to the team
 
 ```bash
 cd unified-trading-pm
 bash scripts/quickmerge.sh "feat: describe your change"
 ```
 
-This is the **only command you need**. Quickmerge automatically:
-1. Syncs your local `.cursor/rules/` → `cursor-rules/` (Stage 0)
-2. Validates `workspace-manifest.json` is valid JSON
-3. Creates a branch, commits all changes, opens a PR with auto-merge
+Quickmerge automatically syncs Cursor rules, validates the manifest, creates a branch, and opens a PR.
 
-### Pull the team's latest changes
+### Pull the team's latest
 
 ```bash
 cd unified-trading-pm && git pull
-./scripts/sync-rules-pull.sh    # copies cursor-rules/ → your .cursor/rules/
+bash scripts/workspace/sync-rules-pull.sh
 ```
 
-Restart Cursor (or `Developer: Reload Window`) for new rules to take effect.
-
-### Check what's different between your local rules and the repo
+### Check rule drift
 
 ```bash
-cd unified-trading-pm && ./scripts/sync-workspace.sh
+bash scripts/workspace/sync-workspace.sh
 ```
 
 ---
 
-## Contents
+## Key Scripts
 
-| Path | Purpose |
-|---|---|
-| `workspace-manifest.json` | Canonical registry of all 38+ repos — types, deps, versions, doc standards |
-| `manifest_warnings.yaml` | Additive-only bad-release annotations (never delete entries) |
-| `cursor-rules/` | Git-tracked source of truth for all `.cursor/rules/*.mdc` files |
-| `cursor-configs/` | `.cursorrules` and `*.code-workspace` files |
-| `scripts/` | Workspace automation: drift checkers, rollback helper, sync, setup |
-| `plans/ai/` | AI agent execution plans (current and historical) |
-| `plans/` | Human project plans, epics, milestones |
-| `archive/` | Deprecated content preserved for reference |
+| Script | Purpose |
+|--------|---------|
+| `scripts/quickmerge.sh "msg"` | Main command — syncs rules + commits + PR |
+| `scripts/workspace/sync-rules-pull.sh` | Pull team rules into local `.cursor/rules/` |
+| `scripts/workspace/sync-workspace.sh` | Show diff between local and repo rules |
+| `scripts/workspace/workspace-bootstrap.sh` | Full workspace setup from scratch |
+| `scripts/manifest/generate_workspace_dag.py` | Regenerate DAG SVG from manifest |
+| `scripts/quality-gates.sh` | Run full lint + type-check + test pipeline |
 
 ---
 
-## Scripts Reference
+## Required Workspace Structure
 
-| Script | What it does |
-|---|---|
-| `quickmerge.sh "msg"` | **Main command.** Syncs rules + commits + PR. Use for all pm changes. |
-| `sync-rules-pull.sh` | Pull team rules from `cursor-rules/` → `.cursor/rules/` |
-| `sync-rules-push.sh` | Standalone push (rarely needed — quickmerge does this automatically) |
-| `sync-workspace.sh` | Show diff between local rules and repo rules |
-| `rollback.sh <repo> <version>` | Safety-checked deployment rollback helper |
-| `completeness-checker-agent.sh` | Check Codex completeness vs workspace-manifest |
-| `diff-checker-agent.sh` | Check code-to-spec drift |
+This repo **must** be a sibling directory alongside all other system repos:
+
+```
+~/repos/unified-trading-system-repos/     <- workspace root (open in Cursor)
+├── .cursor/rules/                        <- local Cursor rules (IDE reads here)
+├── unified-trading-pm/                   <- THIS repo
+├── unified-trading-codex/                <- standards and specifications
+├── instruments-service/                  <- service repo
+└── ...60+ other repos
+```
 
 ---
 
 ## See Also
 
-- `unified-trading-codex/05-infrastructure/workspace-setup.md` — full workspace setup guide
-- `unified-trading-codex/05-infrastructure/versioning-rollback.md` — versioning and rollback model
-- `unified-trading-codex/05-infrastructure/quickmerge-architecture.md` — CI/CD pipeline diagrams
+- [docs/workspace-setup.md](docs/workspace-setup.md) — full workspace setup guide
+- [docs/both-ides-setup.md](docs/both-ides-setup.md) — Cursor + Claude Code IDE setup
+- `unified-trading-codex/05-infrastructure/` — infrastructure docs, versioning, CI/CD diagrams

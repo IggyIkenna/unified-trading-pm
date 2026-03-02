@@ -16,7 +16,7 @@ When you change `pyproject.toml` (add/remove/update dependencies), you MUST upda
 uv lock
 ```
 
-Then **commit `uv.lock`** with your changes. Quality gates and quickmerge run `uv lock` automatically, so the lock file is kept current when you run them.
+Then **commit `uv.lock`** with your changes. Quickmerge runs quality gates and `uv lock` automatically — always use quickmerge, never quality-gates.sh standalone (see `always-use-quickmerge.mdc`).
 
 ---
 
@@ -41,6 +41,8 @@ Then **commit `uv.lock`** with your changes. Quality gates and quickmerge run `u
 - NEVER add `uv.lock` to `.gitignore` — it must be committed
 - NEVER commit dependency changes without running quickmerge or `uv lock` first
 
+For UV command reference, see `uv-package-manager.mdc`.
+
 ---
 
 ## Path Dependencies in CI
@@ -51,7 +53,10 @@ Repos with path deps need a "Checkout dependencies" step in `quality-gates.yml` 
 
 ## Related
 
-- `.cursor/rules/uv-package-manager.mdc` — UV for all installs
-- `.cursor/rules/always-use-quickmerge.mdc` — Quickmerge includes modified files
-- `.cursor/rules/path-dependency-ci.mdc` — Path deps checkout pattern for CI
-- `unified-trading-codex/06-coding-standards/dependency-management.md`
+- `dependency-version-alignment.mdc` — which versions to use (version selection); this file covers lock file mechanics only
+- `uv-package-manager.mdc` — UV command reference for all installs
+- `always-use-quickmerge.mdc` — Quickmerge includes modified files
+- `path-dependency-ci.mdc` — Path deps checkout pattern for CI
+- `06-coding-standards/dependency-management.md`
+
+CODEX: 06-coding-standards/dependency-management.md

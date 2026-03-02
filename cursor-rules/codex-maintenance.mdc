@@ -11,135 +11,31 @@ tags:
 
 # Codex Maintenance Rule
 
-## When to Update unified-trading-codex
+RULE: Update unified-trading-codex in the same PR as any architectural code change. Code change without codex update = incomplete task.
+WHY: Codex is the single source of truth for all patterns — stale docs cause divergence across 30+ repos.
+CODEX: 06-coding-standards/contribution-guide.md
 
-**ALWAYS update the codex when you**:
-- Add a new architectural pattern (e.g., BaseClient plugin architecture)
-- Make a significant design decision (e.g., adapter lazy loading strategy)
-- Establish a new standard (e.g., 3-level event counters)
-- Deviate from an existing pattern (document WHY in the codex)
-- Refactor cross-service infrastructure (update all affected service docs)
+## When to Update
+
+- New architectural pattern or design decision
+- New standard established (e.g. versioning, event counts)
+- Deviation from existing pattern (document WHY)
+- Cross-service infrastructure refactor
 
 ## Where to Update
 
-**Prefer updating existing files** over creating new ones:
-- `unified-trading-codex/02-data/` - Data patterns, subscription models
-- `unified-trading-codex/04-architecture/` - Service architecture, communication patterns
-- `unified-trading-codex/03-observability/` - Event logging, monitoring
-- `unified-trading-codex/06-coding-standards/` - Code organization principles
+Prefer updating existing files:
+- `02-data/` — data patterns, subscription models
+- `03-observability/` — event logging, monitoring
+- `04-architecture/` — service architecture, communication
+- `06-coding-standards/` — code organization, quality gates
 
-**Only create new files when**:
-- The topic doesn't fit existing structure
-- Detail level requires dedicated document (>500 lines)
-- Creating a formal ADR (Architecture Decision Record)
+Only create new files when topic has no existing home or requires >500 lines.
 
-## Architecture Decision Records (ADRs)
+## DRY Principle
 
-When making significant architectural decisions, add to relevant codex file:
-
-```markdown
-### ADR-YYYY-MM-DD: [Decision Title]
-
-**Context**: What problem are we solving?
-
-**Decision**: What did we decide?
-
-**Consequences**: 
-- ✅ Benefits
-- ⚠️ Trade-offs
-- ❌ Limitations
-
-**Alternatives Considered**:
-1. Option A - Why rejected
-2. Option B - Why rejected
-
-**Status**: Accepted | Superseded by ADR-YYYY-MM-DD
-
-**Affected Services**: List of services impacted
-```
-
-**Example locations**:
-- Adapter patterns → `02-data/subscription-model.md`
-- Event logging → `03-observability/README.md`
-- Mode-driven architecture → `04-architecture/README.md`
-
-## Audit Checklist Updates
-
-**After codex updates, update audit checklist**:
-
-1. If you add a NEW principle → add checklist item to `unified-trading-codex/10-audit/_checklist-template.yaml`:
-   ```yaml
-   - id: "DAT-XX"
-     area: "02-data"
-     title: "New principle title"
-     description: "What services must do to comply"
-     applies_to: "all | specific-services"
-     mode: "batch | live | both"
-     priority: "P0 | P1 | P2 | P3"
-   ```
-
-2. If you change existing principle → update checklist item description
-
-3. After major refactors → re-run audit:
-   ```bash
-   # Update compliance scores in per-service checklists
-   # Document new PASS status for addressed items
-   ```
-
-## DRY Principle Application
-
-**When documenting in codex**:
-- Reference existing patterns, don't duplicate
-- Use includes/links to other sections
-- Keep universal principles in top-level README
-- Only document deviations in per-service files
-
-**Example**:
-```markdown
-# Good (DRY)
-All services follow the BaseClient plugin pattern documented in 
-[02-data/subscription-model.md](../02-data/subscription-model.md#adapter-plugin-pattern).
-
-# Bad (duplicates detail)
-BaseClients provide session management, retries, DNS resilience...
-[repeats 20 lines from subscription-model.md]
-```
+Reference existing patterns rather than duplicating. Link to the section; don't repeat the content. Per-service docs document deviations only — not the universal pattern.
 
 ## Implementation-Alignment Rule
 
-**CRITICAL**: Implementation without a Codex update in the SAME PR = incomplete task.
-
-When implementing any architectural change:
-- The code change and the Codex doc update must be in the same PR
-- The commit message MUST reference which Codex section was updated
-- Example: `feat(instruments): add ConfigStore adoption\n\ndocs(codex): update 06-coding-standards/configuration.md`
-
-## Update Workflow
-
-1. **Make code changes**
-2. **Update codex IN THE SAME PR** (existing file, add ADR if architectural)
-3. **Update cursor rules** (workspace `.cursorrules` or `.cursor/rules/*.mdc`) when codex changes affect agent behavior
-4. **Update audit checklist** (if new principle or compliance change)
-5. **Document in commit message**: "docs(codex): updated 06-coding-standards/[file].md"
-6. **One PR per repo** - codex updates go in unified-trading-codex repo
-
-## What NOT to Do
-
-❌ **Don't create summary docs** (IMPLEMENTATION_SUMMARY.md, STATUS.md)
-❌ **Don't duplicate codex content** in service README files
-❌ **Don't add ADRs for minor changes** (bug fixes, refactors that follow existing patterns)
-❌ **Don't update codex for service-specific implementation details** (those go in service docs/)
-
-## Enforcement
-
-**Quality gate**: Before completing any architectural refactor:
-- [ ] Codex updated (if architectural pattern changed)
-- [ ] ADR added (if significant decision made)
-- [ ] Audit checklist updated (if new principle or compliance change)
-- [ ] Commit message includes codex updates
-
-**This rule applies to**:
-- All cross-service architectural changes
-- New patterns established in unified-trading-services
-- Infrastructure changes in unified-trading-deployment-v3
-- Any change that affects multiple services
+Code change + codex update must be in the same PR. Commit message MUST reference which codex section was updated (e.g. `docs(codex): update 06-coding-standards/configuration.md`).

@@ -1,5 +1,5 @@
 ---
-description: "No backward compatibility - fail fast, clean migrations per codex standards"
+description: "No backward compatibility — see delete-deprecated.mdc (consolidated)"
 alwaysApply: false
 priority: 60
 tags:
@@ -7,8 +7,9 @@ tags:
   - codex-compliance
 ---
 # No Backward Compatibility
-RULE: Never add fallbacks, legacy aliases, or dual-format support. Fail fast with clear error.
-WHY: Violates codex; fallbacks hide migration issues.
-CODEX: 06-coding-standards/README.md, .cursor/rules/delete-deprecated.mdc
-DO: Bump version; update all consumers; remove old code; document migration
-NEVER: try/except import fallbacks; config.old or config.new; alias for backward compat
+
+**All substance is in delete-deprecated.mdc.** This file is a pointer only to avoid duplication.
+
+- No fallbacks, legacy aliases, or dual-format support; fail fast with clear error.
+- DO/NEVER and examples: see `.cursor/rules/delete-deprecated.mdc` (always-apply).
+CODEX: 06-coding-standards/README.md

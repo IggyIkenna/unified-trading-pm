@@ -6,7 +6,7 @@ These scripts help set up and maintain the unified trading system multi-repo wor
 
 ```bash
 cd /path/to/workspace/unified-trading-pm
-bash scripts/setup-workspace-root.sh
+bash scripts/workspace/setup-workspace-root.sh
 ```
 
 This one command:
@@ -15,7 +15,7 @@ This one command:
 - ✅ Verifies Python interpreter exists
 - ✅ Works on both macOS and Linux
 
-**Full documentation:** [../WORKSPACE_SETUP.md](../WORKSPACE_SETUP.md) ← SSOT
+**Full documentation:** [../docs/workspace-setup.md](../docs/workspace-setup.md) ← SSOT
 
 ---
 
@@ -27,13 +27,13 @@ This one command:
 **Usage:**
 ```bash
 # Interactive (prompts for path)
-bash scripts/setup-workspace-root.sh
+bash scripts/workspace/setup-workspace-root.sh
 
 # Direct path
-bash scripts/setup-workspace-root.sh /Users/username/Documents/repos
+bash scripts/workspace/setup-workspace-root.sh /Users/username/Documents/repos
 
 # From anywhere (using env var)
-bash ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm/scripts/setup-workspace-root.sh
+bash ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 ```
 
 **What it does:**
@@ -131,7 +131,7 @@ crontab -e
 ```bash
 # On new machine:
 cd /path/to/workspace/unified-trading-pm
-bash scripts/setup-workspace-root.sh
+bash scripts/workspace/setup-workspace-root.sh
 # Enter the workspace path for THIS machine when prompted
 source ~/.zshrc
 # Restart Cursor
@@ -143,7 +143,7 @@ macOS iCloud moved your files from `/Users/.../Documents/repos` to `/Users/.../D
 
 ```bash
 cd ${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-pm
-bash scripts/setup-workspace-root.sh
+bash scripts/workspace/setup-workspace-root.sh
 # Update the path when prompted
 source ~/.zshrc
 # Restart Cursor
@@ -153,7 +153,7 @@ source ~/.zshrc
 
 **New colleague setup:**
 1. Clone the workspace repos
-2. Run: `bash scripts/setup-workspace-root.sh`
+2. Run: `bash scripts/workspace/setup-workspace-root.sh`
 3. Enter their machine's workspace path
 4. Restart Cursor
 
@@ -182,7 +182,7 @@ These scripts are in the same directory but serve different purposes:
 You're not in the right directory. Navigate to:
 ```bash
 cd /path/to/workspace/unified-trading-system-repos/unified-trading-pm
-bash scripts/setup-workspace-root.sh
+bash scripts/workspace/setup-workspace-root.sh
 ```
 
 ### Variable not set after running script
@@ -234,7 +234,7 @@ The script auto-detects Linux and uses GNU sed syntax. If it still fails:
 bash scripts/cleanup-agent-chats.sh --dry-run
 
 # Test setup script in non-interactive mode
-bash scripts/setup-workspace-root.sh /some/test/path
+bash scripts/workspace/setup-workspace-root.sh /some/test/path
 ```
 
 ### Updating for new shells

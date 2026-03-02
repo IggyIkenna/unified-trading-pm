@@ -12,3 +12,5 @@ central-element-323112-*.json
 **/secrets/
 **/credentials/
 .DS_Store
+*.backup
+__pycache__/

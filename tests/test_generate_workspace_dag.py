@@ -1,4 +1,4 @@
-"""Tests for scripts/generate_workspace_dag.py.
+"""Tests for scripts/manifest/generate_workspace_dag.py.
 
 Verifies manifest parsing, layout logic, SVG generation, and XML validity.
 """
@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-# scripts/ is on extraPaths for basedpyright; add at runtime for pytest too
-sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+# scripts/manifest/ is on extraPaths for basedpyright; add at runtime for pytest too
+sys.path.insert(0, str(Path(__file__).parent.parent / "scripts" / "manifest"))
 
 from generate_workspace_dag import (  # noqa: E402, I001
     JsonDict,

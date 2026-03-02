@@ -11,8 +11,8 @@ tags:
   - package-manager
 ---
 # UV Package Manager
-RULE: Local: uv pip install. Docker/CI: pip or uv (UCS base has uv). Never pip install -e . for local dev.
-WHY: uv 10-100x faster; CI may use pip for Artifact Registry keyring.
-CODEX: 06-coding-standards/dependency-management.md, .cursor/rules/uv-package-manager.mdc
+RULE: Always use uv. No exceptions — not in Docker, not in CI, not in scripts.
+WHY: uv 10-100x faster; consistent tooling everywhere eliminates environment drift.
+CODEX: 06-coding-standards/dependency-management.md
 DO: uv pip install -e ".[dev]"; RUN uv pip install --system in Dockerfile; uv lock
-NEVER: pip install -e .; pip install ruff; python -m pip install
+NEVER: pip install -e .; pip install ruff; python -m pip install; RUN pip install in Dockerfiles

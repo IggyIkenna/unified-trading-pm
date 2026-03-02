@@ -16,3 +16,4 @@ CODEX: 06-coding-standards/README.md#configuration
 DO: Replace any GOOGLE_CLOUD_PROJECT with GCP_PROJECT_ID across all files including config classes
 NEVER: GOOGLE_CLOUD_PROJECT anywhere — not even in config.py, not even as AliasChoices
 ENFORCED BY: quality-gates codex compliance check (blocks merge)
+See also: `no-backward-compatibility.mdc` for the general principle.

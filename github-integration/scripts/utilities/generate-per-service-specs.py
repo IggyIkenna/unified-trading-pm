@@ -533,6 +533,9 @@ def generate_infrastructure_spec(service: Dict) -> str:
     test_coverage_target = readiness.get("test_coverage_target", 80)
     cloud_compat = readiness.get("cloud_compatibility", [])
 
+    coverage_gap = test_coverage_target - test_coverage
+    coverage_status = "✅ Meets Target" if test_coverage >= test_coverage_target else f"🔴 Gap: {coverage_gap}%"
+
     content = f"""# Infrastructure Specification: {service_name}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
@@ -568,7 +571,7 @@ def generate_infrastructure_spec(service: Dict) -> str:
 
 **Current:** {test_coverage}%
 **Target:** {test_coverage_target}%
-**Status:** {"✅ Meets Target" if test_coverage >= test_coverage_target else f"🔴 Gap: {test_coverage_target - test_coverage}%"}
+**Status:** {coverage_status}
 
 ### Coding Standards
 

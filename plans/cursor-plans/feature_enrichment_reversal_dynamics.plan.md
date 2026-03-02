@@ -1,5 +1,5 @@
 ---
-name: "Feature Enrichment — Reversal Dynamics & Citadel-Grade Enrichment"
+name: Feature Enrichment — Reversal Dynamics & Citadel-Grade Enrichment
 overview: |
   Systematic enrichment of the feature engineering pipeline across all tiers.
   Adds ~339 new explicit features (294 binary with auto time_since), auto-diff
@@ -64,40 +64,44 @@ TIER 3: features-multi-timeframe-service (K cross-TF features)
 
 ## Agent Assignment (10 parallel agents)
 
-| Agent | Categories | Files Owned (no overlap) |
-|-------|-----------|-------------------------|
-| 1 | Tier 0: Auto-Diff | UFC library: base.py + tests |
-| 2 | A + N(streaks) | streaks.py + test |
-| 3 | B | candlestick.py + test |
-| 4 | C | NEW signal_confirmation.py + test |
-| 5 | D + F | oscillators.py, technical.py, momentum.py + tests |
-| 6 | H + D(vol) | volatility.py + test |
-| 7 | E + O | NEW confluence.py, NEW anomaly.py + tests |
-| 8 | G + L | volume_analysis.py, volume_flow.py, NEW order_flow_inference.py + tests |
-| 9 | I + N(mkt) | market_structure.py, round_numbers.py, vwap.py + tests |
-| 10 | Integration | parameters.py, __init__.py, docs, Tier 2, Tier 3 |
+
+| Agent | Categories        | Files Owned (no overlap)                                                |
+| ----- | ----------------- | ----------------------------------------------------------------------- |
+| 1     | Tier 0: Auto-Diff | UFC library: base.py + tests                                            |
+| 2     | A + N(streaks)    | streaks.py + test                                                       |
+| 3     | B                 | candlestick.py + test                                                   |
+| 4     | C                 | NEW signal_confirmation.py + test                                       |
+| 5     | D + F             | oscillators.py, technical.py, momentum.py + tests                       |
+| 6     | H + D(vol)        | volatility.py + test                                                    |
+| 7     | E + O             | NEW confluence.py, NEW anomaly.py + tests                               |
+| 8     | G + L             | volume_analysis.py, volume_flow.py, NEW order_flow_inference.py + tests |
+| 9     | I + N(mkt)        | market_structure.py, round_numbers.py, vwap.py + tests                  |
+| 10    | Integration       | parameters.py, **init**.py, docs, Tier 2, Tier 3                        |
+
 
 ## Feature Count Summary (deduplicated)
 
-| Category | Base | Binaries | Auto time_since |
-|----------|------|----------|-----------------|
-| 0. Auto-Diff | ~3,500 | — | — |
-| A. Streak Reversal | 8 | 13 | 13 |
-| B. Cross-Candle | 8 | 15 | 15 |
-| C. N-Bar Confirm | 0 | ~108 | ~108 |
-| D. Indicator Trans | 3 | ~30 | ~30 |
-| E. Confluence | 6 | 12 | 12 |
-| F. Divergences | 2 | 20 | 20 |
-| G. Volume Micro | 7 | 11 | 11 |
-| H. Vol Dynamics | 4 | 10 | 10 |
-| I. S/R Memory | 4 | 14 | 14 |
-| L. Order Flow | 1 | 18 | 18 |
-| N. Trend Exhaust | 0 | 12 | 12 |
-| O. Anomaly | 1 | 13 | 13 |
-| H'. IV/RV (T2) | 0 | 2 | 2 |
-| P. Cross-Inst (T2) | 1 | 5 | 5 |
-| K. Cross-TF (T3) | 0 | 11 | 11 |
-| **Total** | **~3,545** | **~294** | **~294** |
+
+| Category           | Base       | Binaries | Auto time_since |
+| ------------------ | ---------- | -------- | --------------- |
+| 0. Auto-Diff       | ~3,500     | —        | —               |
+| A. Streak Reversal | 8          | 13       | 13              |
+| B. Cross-Candle    | 8          | 15       | 15              |
+| C. N-Bar Confirm   | 0          | ~108     | ~108            |
+| D. Indicator Trans | 3          | ~30      | ~30             |
+| E. Confluence      | 6          | 12       | 12              |
+| F. Divergences     | 2          | 20       | 20              |
+| G. Volume Micro    | 7          | 11       | 11              |
+| H. Vol Dynamics    | 4          | 10       | 10              |
+| I. S/R Memory      | 4          | 14       | 14              |
+| L. Order Flow      | 1          | 18       | 18              |
+| N. Trend Exhaust   | 0          | 12       | 12              |
+| O. Anomaly         | 1          | 13       | 13              |
+| H'. IV/RV (T2)     | 0          | 2        | 2               |
+| P. Cross-Inst (T2) | 1          | 5        | 5               |
+| K. Cross-TF (T3)   | 0          | 11       | 11              |
+| **Total**          | **~3,545** | **~294** | **~294**        |
+
 
 ## Standards
 

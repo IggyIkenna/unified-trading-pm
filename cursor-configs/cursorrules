@@ -2,873 +2,126 @@
 
 ## ⚠️ CRITICAL: Multi-Repo Workspace Context
 
-**This is NOT a monorepo.** This is a **multi-repo workspace** containing **30+ independent repositories**:
-- 14 service repos (instruments-service, market-tick-data-handler, etc.)
-- 8 shared library repos (unified-trading-services, unified-events-interface, unified-config-interface, unified-domain-client, unified-market-interface, unified-trade-execution-interface, unified-ml-interface, execution-algo-library)
-- 8+ UI repos (backtest-ui, batch-audit-ui, live-health-monitor-ui, etc.)
-- 3+ utility repos (unified-trading-deployment-v2, unified-trading-deployment-v3, unified-trading-codex, execution-algo-library)
+**This is NOT a monorepo.** 52 independent repositories (17 services, 17 libraries, 11 UIs, 3 api-services, 3 infrastructure, 1 devops). Each has its own git history, PRs, CI/CD, and `.cursorrules`. See `unified-trading-pm/workspace-manifest.json` for the full registry.
 
-**Key implications:**
-- ✅ Cross-repo operations are PERFECT for parallel agents (2-4 agents, zero conflict risk)
-- ✅ Each repo has independent git history, PRs, and CI/CD
-- ✅ Each repo has its own `.cursorrules` that inherits workspace rules
-- ✅ Shared libraries are imported as local dependencies via path dependencies
+**Cross-repo operations are PERFECT for parallel agents** (up to 4, zero conflict risk). Different repos = always safe to parallelize.
 
-**Known Limitation**: Cursor background agents (cloud VM) have issues with 30+ repo workspaces.
+**Strict linting pre-configured:** Ruff 0.15.0 + Pylance STRICT + basedpyright. Auto-fix on save (⌘S). RED squiggles = will fail CI. One-time setup: `bash .cursor/workspace-configs/setup-workspace-venv-complete.sh`.
 
-**Solution**: Use workspace groups via shell aliases (already in ~/.zshrc):
-- `cursor-complete` - ALL 35 repos (cleaner workspace with .cursor visible, background agents may not work)
-- `cursor-data` through `cursor-infra` - Themed groups (8-13 folders, background agents work)
+**Two-layer rule system:** `.cursor/rules/*.mdc` = enforcement reminders (what Cursor checks). `unified-trading-codex/` = the specification/SSOT (the why and full detail). Both must be consulted.
 
-**For cleaner work:** Use `cursor-complete` instead of your default 30+ repo workspace. It's the same repos but organized cleanly with `.cursor` visible at the top.
-
-**All workspaces pre-configured with STRICT linting:**
-- Auto-save enabled (1s delay)
-- Python 3.13.9 interpreter (`.venv-workspace/`)
-- **Pylance STRICT mode** (unused imports/vars show as RED errors)
-- **Ruff linter 0.15.0** (E,F,W,I rules - E501 enforced, line-length 120)
-- **Pyright in quality gates** (blocking, matches IDE - not mypy)
-- **Auto-fix on save** (⌘S): removes unused imports, organizes imports, formats code
-- Pytest test discovery
-- Type checking + autocomplete
-- **Workspace-specific import paths** (extraPaths matches actual folders in each workspace)
-
-**RED squiggles in IDE = Will fail quality gates in CI**
-**YELLOW squiggles for Any types = Should use specific types**
-**Save file (⌘S) = Auto-fixes RED squiggles (unused imports/vars removed)**
-**This catches quality gate errors BEFORE you push!**
-
-**CRITICAL - Ruff Version Consistency:** All three stages (Local IDE, GitHub Actions, Cloud Build) use `ruff==0.15.0` to prevent formatting conflicts. Workspace venv ensures consistent version.
-
-**CRITICAL - Auto-Fix on Save:** All workspaces have `editor.codeActionsOnSave` with `source.fixAll` and `source.organizeImports` set to "explicit". When you save (⌘S), Cursor automatically:
-1. Removes unused imports (RED → gone)
-2. Removes unused variables (RED → gone)
-3. Organizes imports alphabetically
-4. Formats code with ruff 0.15.0
-
-**No manual formatting needed!** Just save and linting errors are fixed.
-
-**IMPORTANT - One-time setup:** Run `bash .cursor/workspace-configs/setup-workspace-venv-complete.sh` to create the shared virtual environment (~3–5 min). All 9 workspaces use this venv.
-
-**Workspace venv sync:** When adding dependencies to any repo's pyproject.toml, install at BOTH repo and workspace venv levels. See `.cursor/rules/workspace-venv-sync.mdc`.
-
-See `.cursor/workspace-configs/STRICT-LINTING.md` for linting details and `.cursor/workspace-configs/SETTINGS-REFERENCE.md` for full settings documentation.
+---
 
 ## Source of Truth: unified-trading-codex
 
-ALL code changes must comply with unified-trading-codex principles:
-- **Repo**: github.com/IggyIkenna/unified-trading-codex
-- **Local**: `unified-trading-codex/` in this workspace
+ALL code changes must comply with `unified-trading-codex/` principles. Start with the master navigator:
 
-Read before implementing:
-- `06-coding-standards/` -- quality gates, testing, contribution, dependencies
-- `06-coding-standards/quality-gates-ui-typescript.md` -- UI/TypeScript quality gates (tsc, ESLint)
-- `04-architecture/` -- batch-live symmetry, deployment topology, concurrency
-- `03-observability/` -- 3-tier event logging, alerting, monitoring
-- `02-data/` -- schema governance, subscription/publishing, partitioning
-- `01-domain/` -- signal-based strategies, asset classes, client model
+- **`unified-trading-codex/00-SSOT-INDEX.md`** — canonical entry point: maps every topic to its SSOT doc
+- `06-coding-standards/` — quality gates, testing, contribution, dependencies
+- `04-architecture/` — batch-live symmetry, deployment topology, concurrency (TIER-ARCHITECTURE.md)
+- `03-observability/` — 3-tier event logging, alerting, monitoring
+- `02-data/` — schema governance, subscription/publishing, partitioning
 
 ---
 
-## Context7 for External Dependencies
+## ⚠️ CRITICAL: Never Run basedpyright Without Source Dir
 
-When working with external libraries or APIs, append "use context7" to your prompts:
-- Market data APIs (Tardis, Databento, The Graph)
-- Cloud providers (GCP, AWS)
-- ML frameworks (LightGBM, pandas, NumPy)
-- Trading engines (NautilusTrader)
-
-Example: "Optimize pandas aggregation for tick data use context7"
+- ❌ NEVER `basedpyright .` or `basedpyright` (no args) — hangs indefinitely in 30+ repo workspace
+- ✅ ALWAYS `timeout 120 basedpyright <source_dir>/` — see `.cursor/rules/basedpyright-safety.mdc`
 
 ---
 
-## CRITICAL: Fix Root Cause — Never Shortcut Quality Gates
-
-When quality gates fail, FIX THE ROOT CAUSE.
-
-**Only Audited Exceptions May Pass:** basedpyright must pass. Only bypasses explicitly documented in each repo's `QUALITY_GATE_BYPASS_AUDIT.md` (sections 2.1, 2.2, 2.3) are allowed. Never relax rules, add baseline files, or downgrade reportAny/reportUnknown*.
-
-**CRITICAL - Basedpyright Execution Rules:**
-- ❌ NEVER run `basedpyright .` from workspace root - it will hang indefinitely
-- ❌ NEVER run basedpyright on multiple repos in parallel - causes hangs
-- ✅ ALWAYS run per-repo with timeout: `cd <repo> && timeout 60 basedpyright <source_dir>/`
-- ✅ ALWAYS process repos sequentially (one at a time)
-- If timeout fires (>60s), kill process and report which repo failed
-- Run on source directory only, not tests/ (e.g., `basedpyright instruments_service/`)
-
-NEVER:
-- Skip tests to pass gates
-- Add `|| true` to bypass failures
-- Comment out failing tests
-- Remove parallel execution instead of adding pytest-xdist
-
-Codex: `06-coding-standards/quality-gates.md`
-
-**UI repos:** TypeScript UIs run `tsc --noEmit` + ESLint, NOT pyright/ruff/pytest. Codex: `06-coding-standards/quality-gates-ui-typescript.md`, `.cursor/rules/ui-quality-gates-typescript.mdc`
-
-**Quality Gate Performance:** Quality gates must complete in <3 minutes locally. Use pytest-xdist for parallel execution, synthetic fixtures, and skip slow tests in quick mode.
-
----
-
-## Validation Patterns: Pre-Flight and In-Flight
-
-**Pre-flight validation** (before processing starts):
-- Fail fast - raise exceptions, don't proceed
-- Validate config, upstream data, connectivity, resources
-- Use `BaseDependencyChecker` from unified-trading-services
-
-**In-flight validation** (during processing):
-- Fail gracefully - log errors, skip bad records, continue
-- Validate schemas, data quality, timestamps
-- Track validation metrics for monitoring
-
-Codex: `06-coding-standards/validation-patterns.md`
-
----
-
-## Audit Remediation: Systematic Strategy
-
-When addressing audit findings, code quality issues, or technical debt:
-
-**Key Decisions:**
-1. **Empty fallbacks** → Fix ALL (fail loud everywhere) - `.cursor/rules/no-empty-fallbacks.mdc`
-2. **Low coverage (<35%)** → Do tests + linters + epic tasks in parallel - `.cursor/rules/test-coverage-targets.mdc`
-3. **Any types** → Replace ALL with proper types - `.cursor/rules/strict-type-checking.mdc`
-4. **Lazy imports (52+)** → Keep for optional deps (web3, databento, etc)
-
-**Coverage Targets:**
-- 35% minimum (quality gates - blocking)
-- 50% recommended (production readiness)
-- 80% goal (audit readiness for fundraising)
-
-**Execution Strategy:**
-- Use parallel agents for cross-repo work (zero conflicts in multi-repo workspace)
-- Run quality gates before committing (auto-fix + verify)
-- Check production readiness with validators (informational)
-
-Codex: `06-coding-standards/audit-remediation-guide.md`, `.cursor/rules/audit-remediation-strategy.mdc`
-
----
-
-## Configuration: Unified Pattern (Post-Consolidation)
-
-**Single pattern** (Feb 2026 - consolidation complete):
-
-```python
-# ALL services use UnifiedCloudConfig
-# UnifiedCloudConfig now inherits from BaseConfig (unified-config-interface)
-from unified_config_interface import UnifiedCloudConfig
-
-class MyServiceConfig(UnifiedCloudConfig):
- service_name: str = "my-service"
- my_field: str = "value"
-```
-
-**Environment Variable Standard:** Use `GCP_PROJECT_ID` as primary (not `GOOGLE_CLOUD_PROJECT`). Config classes support both for backward compatibility, but always document and use `GCP_PROJECT_ID` first.
-
-**Inheritance chain:**
-- BaseConfig (unified-config-interface) → foundation with .env loading, validation
-- UnifiedCloudConfig (unified-config-interface) → adds 600+ GCP/AWS cloud fields
-- ServiceConfig → service-specific fields
-
-**Benefits:**
-- Single import pattern across all 14 services
-- No fallback patterns or technical debt
-- BaseConfig provides: .env loading, strict validation (configurable), optional fields
-- UnifiedCloudConfig provides: All cloud provider fields, API secrets, resource management
-- Clean dependency chain: unified-config-interface is the source
-
-NEVER: `os.getenv()`, hardcoded project IDs, empty fallbacks, try-except import patterns
-
-**Migration Status**: All 14 services use UnifiedCloudConfig (Feb 2026). No UnifiedCloudServicesConfig references. All fallback patterns removed. See `05-infrastructure/unified-libraries/dependency-matrix.md`.
-
-Codex: `06-coding-standards/README.md#configuration`, `05-infrastructure/unified-libraries/`
-
----
-
-## Cloud-Agnostic: Use Abstractions
-
-```python
-from unified_trading_services import get_storage_client, get_secret_client
-# Note: Domain clients now from unified-domain-client
-from unified_domain_client import InstrumentsDomainClient
-```
-
-NEVER: `from google.cloud import storage`, hardcoded `central-element-323112`
-
-Codex: `05-infrastructure/cloud-agnostic-migration.md`
-
----
-
-## Quality Gates: Three-Stage Consistency
-
-**CRITICAL**: Ruff version must be identical across all three stages:
-- **Local**: `pyproject.toml` dev deps (`ruff==0.15.0`)
-- **GitHub Actions**: `.github/workflows/quality-gates.yml` (`ruff==0.15.0`)
-- **Cloud Build**: Tests run inside Docker image with `.[dev]` deps (`ruff==0.15.0`)
-
-Verify: `cd unified-trading-deployment-v2 && ./scripts/check-ruff-versions.sh`
-
-Codex: `06-coding-standards/quality-gates.md#ruff-version-consistency`
-
----
-
-## Package Manager: UV Only (Never pip)
-
-**CRITICAL**: Use `uv` for ALL Python package installs. NEVER use `pip install` (except one-time `pip install uv` bootstrap).
+## CI/CD: Always Use Quickmerge (Never Standalone Quality Gates)
 
 ```bash
-# Dockerfiles
-RUN uv pip install --system -e ".[dev]"
-
-# Local/CI/Scripts
-uv pip install -e ".[dev]"
-uv pip install ruff==0.15.0
+bash scripts/quickmerge.sh "feat: description"                        # deps match main
+bash scripts/quickmerge.sh "feat: description" --dep-branch "name"   # deps differ
 ```
 
-NEVER: `pip install -e .`, `pip install ruff`, `python -m pip install`
-
-Codex: `06-coding-standards/dependency-management.md`, `.cursor/rules/uv-package-manager.mdc`
+See `.cursor/rules/always-use-quickmerge.mdc`
 
 ---
 
-## Dependency Version Alignment
+## Sub-Agent Rule Inheritance
 
-**Source of Truth:** `unified-trading-codex/06-coding-standards/dependency-management.md`
-
-**When adding/updating dependencies:**
-1. **Check codex first** - Is dependency already standardized?
-2. **Update codex if new** - Add standard version to codex BEFORE updating repos
-3. **Update ALL repos** - Never update just one repo (use parallel agents for 4+ repos)
-4. **Run uv lock** - Must update lock file after pyproject.toml changes
-5. **Monitor drift** - Run `.cursor/workspace-configs/check-dependency-alignment.sh`
-
-**Detection tool:** `.cursor/workspace-configs/resolve-version-conflicts.py` scans repos for misalignments (NOT source of truth).
-
-**Critical versions (ALL repos):**
-- Python: `>=3.13,<3.14`
-- Ruff: `==0.15.0` (exact pin, must match CI)
-- pytest: `>=9.0.1`, pytest-cov: `>=7.0.0`, pytest-asyncio: `>=0.25.0`
-- numpy: `>=2.1.0,<2.4.0`, pandas: `>=2.2.3,<3.0.0`
-
-Codex: `06-coding-standards/dependency-management.md`, `.cursor/rules/dependency-version-alignment.mdc`
+Sub-agents start with FRESH context — always-apply rules are NOT inherited.
+ALWAYS include "Follow all workspace cursor rules in .cursorrules" at the TOP of every sub-agent prompt.
+See `.cursor/rules/agents-follow-cursor-rules.mdc`
 
 ---
 
-## Cloud Build: Test-in-Image Architecture
+## Context7 for External Libraries
 
-**Test the artifact you deploy** - no git clones needed:
-
-1. Pull `unified-trading-services:latest` base image (requires auth)
-2. Build service image (includes source + tests + dev deps)
-3. Run `quality-gates.sh --no-fix --quick` INSIDE the image
-4. Push image ONLY if tests pass
-
-Benefits: prod parity, no GitHub token, ~2-3 min faster
-
-**Shared Libraries Pattern**: For packages published to Artifact Registry (unified-trading-services, unified-events-interface, etc.), Cloud Build uses idempotent package upload with version validation:
-- Stores version→commit mapping in GCS
-- Before upload: checks if version exists with different commit
-- If same commit: skip (idempotent rebuild)
-- If different commit: **FAIL** and require version bump in `pyproject.toml`
-
-Codex: `06-coding-standards/quality-gates.md#cloud-build-architecture-test-in-image`, `.cursor/rules/library-versioning.mdc`
+Append "use context7" for external lib prompts (Tardis, Databento, GCP, pandas, NautilusTrader). See `.cursor/rules/context7-usage.mdc`
 
 ---
 
-## Event Logging: 3-Tier Model (Split Libraries)
+## Workspace Groups: Use for Epic Work
 
-**Pattern B (direct) required for all services — no fallbacks.**
-
-```python
-# REQUIRED: Direct import from unified-events-interface
-from unified_events_interface import setup_events, log_event
-
-setup_events(service_name="my-service", mode="batch")  # or mode="live"
-log_event("STARTED")
-```
-
-**NEVER:**
-- `try: from unified_events_interface ... except: from unified_trading_services.observability`
-- `from unified_trading_services.observability import log_event`
-- `setup_cloud_logging` (use `setup_events` instead)
-
-ALL 11 lifecycle events required. `tests/unit/test_event_logging.py` MUST exist and include `SERVICE_SPECIFIC_EVENTS` populated from your service's per-service doc.
-
-**Migration Status**: 14/14 services migrated (Feb 2026). All fallback patterns removed. See `05-infrastructure/unified-libraries/dependency-matrix.md`.
-
-Codex: `03-observability/lifecycle-events.md`, `03-observability/[batch|live]/per-service/[service-name].md`, `.cursor/rules/event-logging.mdc`, `05-infrastructure/unified-libraries/`
-
----
-
-## Error Handling: Use Decorators
-
-```python
-from unified_trading_services import handle_api_errors, handle_storage_errors
-
-@handle_api_errors(max_retries=3)
-async def fetch():
-    ...
-```
-
-NEVER: bare `except:` without specific handling
-
-Codex: `06-coding-standards/README.md#error-handling`
-
----
-
-## Imports: Top of File Only + External Import Standards
-
-```python
-import asyncio
-import pandas as pd
-
-def my_function():
- # Use imports
-```
-
-NEVER: imports inside functions, try-except fallback implementations
-
-**External Import Standards:** For external dependencies (unified libraries), use top-level imports only:
-
-```python
-# ✅ CORRECT
-from unified_config_service import ConfigValidator
-from unified_events_interface import setup_events
-
-# ❌ WRONG - exposes internal structure, breaks with upstream refactoring
-from unified_config_service.validators.schema import ConfigValidator
-from unified_events_interface.core.logging import setup_events
-```
-
-**Rationale:** Top-level imports allow upstream packages to refactor internal structure without breaking downstream consumers. Makes refactoring easier across 30+ repositories.
-
-Codex: `06-coding-standards/README.md#imports`, `06-coding-standards/external-import-standards.md`, `.cursor/rules/external-import-standards.mdc`
-
----
-
-## Type Hints: Use Specific Types (Not Any)
-
-```python
-# ✅ GOOD: Specific types
-def process(data: dict[str, str]) -> str:
- return data.get("key", "")
-
-# ✅ GOOD: Generic types
-from typing import TypeVar
-T = TypeVar('T')
-
-def cache(key: str, value: T) -> T:
- return value
-
-# ❌ BAD: Any type (shows YELLOW squiggle)
-from typing import Any
-
-def process(data: Any) -> Any:  # Defeats type checking
- return data
-```
-
-**Workspace enforces `reportAny` warnings** - using `Any` shows YELLOW squiggles in IDE.
-
-NEVER: `Any` type unless truly necessary (third-party libs without stubs)
-
-Codex: `.cursor/rules/strict-type-checking.mdc`
-
----
-
-## Type Hints: Use Built-in Generics (Python 3.13+)
-
-```python
-# ✅ GOOD: Built-in generics (Python 3.9+)
-def process(items: list[str]) -> dict[str, int]:
- return {item: len(item) for item in items}
-
-# ✅ GOOD: Nested generics
-results: dict[str, list[tuple[str, int]]] = {}
-
-# ❌ BAD: Legacy typing module generics (fails ruff UP006)
-from typing import List, Dict, Tuple
-
-def process(items: List[str]) -> Dict[str, int]:
- return {item: len(item) for item in items}
-```
-
-**Ruff enforces with UP rules** - `List[`, `Dict[`, `Tuple[` in type annotations fail quality gates.
-
-**Migration Status**: 27/27 Python repos standardized (Feb 2026). ~300+ files, ~1,400+ replacements. Ruff UP rules enforce going forward.
-
-NEVER: `from typing import List, Dict, Tuple, Set, FrozenSet` (use built-in `list`, `dict`, `tuple`, `set`, `frozenset`)
-
-Codex: `.cursor/rules/builtin-generics-standard.mdc`
-
----
-
-## Async HTTP: Use aiohttp, Not requests
-
-```python
-import aiohttp
-
-async def fetch():
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            return await response.json()
-```
-
-NEVER: `requests.get()` in async functions, `asyncio.run()` in loops, `time.sleep()` in async
-
-Codex: `06-coding-standards/PERFORMANCE_STANDARDS.md#async-http`
-
----
-
-## UTC Datetime: Always
-
-```python
-from datetime import datetime, timezone
-
-now = datetime.now(timezone.utc)  # CORRECT
-```
-
-NEVER: `datetime.now()`, `datetime.utcnow()`
-
-Codex: `06-coding-standards/README.md#utc`
-
----
-
-## Testing: 4-Tier Structure + Regression + Quality Standards
-
-### Test Structure
-- `tests/unit/` -- synthetic fixtures (5-20 rows), no real GCS data
-- `tests/integration/` -- minimal data, <120s
-- `tests/e2e/` -- single shard, <180s
-- `tests/smoke/` -- `--max-results 1`
-- Regression: `test_regression_{issue}_{description}` for every bug fix
-
-### Coverage Targets
-- **35% minimum** - pass quality gates (blocking)
-- **50% recommended** - production readiness
-- **80% goal** - audit readiness
-
-### Test Quality Standards
-✅ **DO:**
-- Expand existing test files (don't create test_*_extended.py)
-- Use singleton fixtures from conftest.py (session/module scope)
-- Reuse central imports from conftest (constants, mocks)
-- Mock external dependencies (GCS, APIs)
-- Keep tests fast (<3-4 minutes total)
-
-❌ **NEVER:**
-- Create duplicate test files (test_*_extended.py, test_*_additional.py)
-- Duplicate fixtures across test files
-- Test trivial code (getters with no logic)
-- Use real GCS/API calls in unit tests
-- 500MB fixtures or real data in tests
-
-**See:** `.cursor/rules/test-quality-standards.mdc` for complete guide
-**Codex:** `06-coding-standards/testing.md`
-
----
-
-## ⚠️ RUNTIME VERIFICATION: ALWAYS REQUIRED (P0 BLOCKING GATE)
-
-**CRITICAL - APPLIES TO ALL CODE CHANGES:**
-
-NEVER claim "done", "it works", or "tested" without ACTUAL runtime verification.
-
-**Applies to:**
-- UI changes (React, Vue) → Must run `npm run dev` and check for errors
-- Backend changes (FastAPI, Python) → Must start service and verify no import/startup errors
-- Library changes → Must install and import successfully
-- Script changes → Must run with test inputs and verify output
-- Config changes → Must validate syntax and load in service
-
-**Required verification (ALL changes):**
-1. **Run the code** (start service/dev server/script)
-2. **Wait for full startup** (8-10 seconds minimum for compilation/imports)
-3. **Read terminal output** (full output, not just first line)
-4. **Grep for errors** (case-insensitive: error, failed, exception, import, plugin)
-5. **Verify success messages** (ready, startup complete, OK, etc.)
-6. **Test basic functionality** (health endpoint, UI loads, script produces output)
-7. **Only then claim success**
-
-**Incident (2026-02-21):** Claimed "npm run dev works" without checking terminal for CSS compilation errors. User found error immediately.
-
-**Consequence:** If you claim success without verification, this rule gets stricter.
-
-Codex: `.cursor/rules/runtime-verification-required.mdc` (comprehensive), `.cursor/rules/ui-runtime-validation.mdc` (UI-specific)
-
----
-
-## CI/CD Best Practices: Mandatory Quickmerge Workflow
-
-**ALWAYS use quickmerge. NEVER run quality gates standalone.**
-
-### Quickmerge is Required for ALL Changes
-```bash
-# ✅ CORRECT - Standard workflow (dependencies match main)
-bash scripts/quickmerge.sh "feat: add feature"
-
-# ✅ CORRECT - Differential branching (dependencies differ from main)
-bash scripts/quickmerge.sh "feat: major update" --dep-branch "my-feature"
-
-# ❌ WRONG - Standalone quality gates
-bash scripts/quality-gates.sh
-
-# ❌ WRONG - Manual git operations
-git add -A && git commit && git push
-```
-
-### Canonical Dependency Matrix (Source of Truth)
-**ALL dependency changes must reference:**
-- **File**: `unified-trading-pm/workspace-manifest.json`
-- **Usage**: Check before making dependency changes, understand cascade order
-- **Integration**: Used by quickmerge for automatic dependency cascade
-
-### When to Use --dep-branch
-Quickmerge automatically detects when dependencies differ from main:
-- **Dependencies match main** → Use standard quickmerge (fast)
-- **Dependencies differ + no --dep-branch** → ERROR with guidance
-- **Dependencies differ + --dep-branch** → Complete isolation with cascade
-
-### Environment-Aware CI/CD
-```bash
-# Development environment (safe testing)
-ENVIRONMENT=development → Uses GCP_PROJECT_ID_DEV
-
-# Production environment
-ENVIRONMENT=production → Uses GCP_PROJECT_ID
-
-```
-
-**Branch builds** automatically use `ENVIRONMENT=development` and `GCP_PROJECT_ID_DEV`. Main builds use `GCP_PROJECT_ID`. This is enforced in quickmerge templates.
-
-### GitHub Actions PR Watcher (Mandatory)
-- **Cannot be bypassed** - Runs on every PR automatically
-- **LLM-enhanced validation** - Checks quickmerge usage, dependency alignment, environment config
-- **Auto-blocks** - Prevents merge if critical issues detected
-- **Rich feedback** - Provides specific fix suggestions via PR comments
-
-### CI/CD Pipeline Stages (All Automatic in Quickmerge)
-1. **Dependency Validation** (10s) - Check deps vs main, cascade if needed
-2. **Pre-Flight Audit** (15s) - Codex compliance, auto-fix violations
-3. **Local Quality Gates** (30s) - Docker with ruff, basedpyright, pytest
-4. **Act Simulation** (1-2min) - Exact GitHub Actions simulation with environment-aware project ID
-5. **Auto-Fix** (inline) - LLM agent fixes failures, max 3 attempts
-6. **Push & PR Creation** (5s) - Automated PR with auto-merge enabled
-
-**Total Time**: ~2-5 minutes (all checks, auto-fix if needed)
-
-### Documentation References
-- **CI/CD Rules**: `.cursor/rules/always-use-quickmerge.mdc`, `.cursor/rules/dependency-aware-development.mdc`, `.cursor/rules/pr-review-checklist.mdc`
-- **Master Plan**: `unified-trading-pm/plans/ai/code_optimizations_and_ci_cd_alignment/00-MASTER-CICD-PLAN.md`
-- **Canonical Matrix**: `unified-trading-pm/workspace-manifest.json`
-- **Resolution Strategy**: `unified-trading-pm/plans/ai/code_optimizations_and_ci_cd_alignment/DEPENDENCY-RESOLUTION-STRATEGY.md`
-
----
-
-## Quickmerge: Standard Workflow (Updated)
+Background agents don't work with 30+ repo workspace. Use themed groups (already in `~/.zshrc`):
 
 ```bash
-# Standard usage (dependencies match main)
-bash scripts/quickmerge.sh "feat: add feature"
-
-# Differential branching (dependencies differ from main)
-bash scripts/quickmerge.sh "feat: major update" --dep-branch "feature-name"
-
-# With specific files
-bash scripts/quickmerge.sh "fix: config" --files "config.py tests/test_config.py"
+cursor-data      # Data pipeline epic work
+cursor-features  # Features engineering epic work
+cursor-ml        # ML training/inference epic work
+cursor-trading   # Trading/execution/risk epic work
+cursor-libs      # Library refactor epic work
+cursor-uis       # UI epic work
+cursor-pipeline  # Cross-pipeline epic work
+cursor-infra     # Infrastructure/quality gates epic work
 ```
 
-**NEVER run `bash scripts/quality-gates.sh` standalone** - quickmerge includes all quality gates automatically.
+Epic → Workspace mapping:
+- data-io/market-data epics → `cursor-data`
+- features-* epics → `cursor-features`
+- ml-* epics → `cursor-ml`
+- post-trade/strategy/exchange epics → `cursor-trading`
+- unified-libraries/library-dependency epics → `cursor-libs`
+- *-ui epics → `cursor-uis`
+- batch-live-symmetry epic → `cursor-pipeline`
+- quality-gates/infra epics → `cursor-infra`
 
-When deps change: quality gates auto-update `uv.lock`; include it in `--files` (or quickmerge's `git add -A` picks it up).
-
-**Cursor Team Kit Integration**: Before committing, optionally use `/deslop` to clean AI-generated code slop (see: `06-coding-standards/code-cleanup-deslop.md`). **After quickmerge creates PR, agent MUST automatically start ci-watcher subagent** (no user prompt needed) to monitor CI proactively. Use skills for CI failures (`/fix-ci`, `/loop-on-ci`), review comments (`/get-pr-comments`), or conflicts (`/fix-merge-conflicts`). For UI repos, use `/run-smoke-tests` to validate changes (see: `14-testing-guides/UI_SMOKE_TESTING_GUIDE.md`). Quickmerge remains the standard commit workflow.
-
-NEVER: `git push origin main` (rejected by branch protection), `bash scripts/quality-gates.sh` (use quickmerge)
-
-Codex: `.cursor/rules/git-workflow.mdc`, `.cursor/rules/always-use-quickmerge.mdc`, `06-coding-standards/code-cleanup-deslop.md`, `14-testing-guides/UI_SMOKE_TESTING_GUIDE.md`
-
----
-
-## Batch-Live Symmetry: 90% Shared
-
-Services support `--mode batch|live`. Only 4 seams differ (data source, data sink, persistence thread, trigger). Engine is mode-agnostic.
-
-Codex: `04-architecture/batch-live-symmetry.md`
+See: `.cursor/workspace-configs/WORKSPACE-RECOMMENDATIONS.md`
 
 ---
 
-## Concurrency: MAX_WORKERS
-
-- Batch: parallel dates. I/O-bound=16, CPU-bound=1-3
-- Live: parallel venues. One thread per WebSocket
-- Adaptive: reduce workers at 85% RAM, shutdown at 90%
-
-Codex: `04-architecture/concurrency.md`
-
----
-
-## Schema: Service-Owned + Pre-Upload Validation
-
-Services own `schemas/output_schemas.py`. unified-trading-services owns cross-cutting (events, config).
-
-`validate_timestamp_date_alignment()` before every GCS write.
-
-Codex: `02-data/schema-governance.md`
-
----
-
-## Service Structure Required
-
-- `config.py` or `config/` package, `Dockerfile`, `cloudbuild.yaml`, `quality-gates.yml`, `pyproject.toml`, `.env.example`, `scripts/quickmerge.sh`, `tests/unit/test_event_logging.py`, **`.cursorrules`**
-
----
-
-## Parallel Agent Execution: Always Use for Independent Tasks
-
-**CRITICAL for multi-repo workspace**: When user requests multiple independent tasks, **automatically launch parallel agents** (up to 4 max) without asking.
-
-✅ Cross-repo operations (ALWAYS parallelize - zero conflict risk):
-- "Update repos A, B, C configs" → 3 parallel agents
-- "Check pattern X across all repos" → 4 agents covering 7-8 repos each (30+ repos ÷ 4)
-- "Investigate failures in repos A, B, C" → 3 parallel agents
-- "Add rules to multiple .cursorrules files" → 4 agents for different repos
-
-✅ Same repo, non-overlapping files:
-- "Update main.py, config.py, schema.py in repo A" → 3 parallel agents
-
-❌ Don't parallelize: Same file edits, sequential dependencies, simple tasks.
-
-**Key insight**: Different repos = ALWAYS safe to parallelize.
-
-Codex: `.cursor/rules/parallel-agent-execution.mdc`
-
----
-
-## Workspace Configurations: Use for Epic Work
-
-**Problem**: Background agents (cloud VM) don't work with 30+ repo workspace.
-**Solution**: Use workspace groups (7-12 repos) based on what epic you're working on.
-
-**Quick shortcuts (already in your ~/.zshrc):**
-```bash
-cursor-data       # Data pipeline epic work
-cursor-features   # Features engineering epic work
-cursor-ml         # ML training/inference epic work
-cursor-trading    # Trading/execution/risk epic work
-cursor-libs       # Library refactor epic work
-cursor-uis        # UI epic work
-cursor-pipeline   # Cross-pipeline epic work
-cursor-infra      # Infrastructure/quality gates epic work
-```
-
-**Epic → Workspace Mapping:**
-- data-io-production-readiness-epic.md → `cursor-data`
-- market-data-infrastructure-epic.md → `cursor-data`
-- features-*-epic.md → `cursor-features`
-- ml-*-epic.md → `cursor-ml`
-- post-trade-and-execution-epic.md → `cursor-trading`
-- strategy-*-epic.md → `cursor-trading`
-- unified-libraries-refactor-epic.md → `cursor-libs`
-- library-dependency-alignment-epic.md → `cursor-libs`
-- onboarding-ui-epic.md → `cursor-uis`
-- *-ui-epic.md → `cursor-uis`
-- batch-live-symmetry-implementation-epic.md → `cursor-pipeline` (touches entire pipeline)
-- quality-gates-consistency-epic.md → `cursor-infra`
-- exchange-interface-epic.md → `cursor-trading`
-- sports-integration-epic.md → `cursor-pipeline` OR single-repo
-
-**Each workspace includes:**
-- Foundation repos: codex, deployment-v2, deployment-v3, cloud-services, events, config
-- Service repos: based on epic's actual dependencies
-- Extra libs: market-interface, order-interface, algo-library as needed
-
-**Result**: Background agents work + foundation repos always available.
-
-See: `.cursor/workspace-configs/WORKSPACE-RECOMMENDATIONS.md` for complete mapping.
-
----
-
-## Rule Amnesia Detection: Stop When Rules Are Forgotten
-
-**Red flags indicating Cursor has forgotten workspace rules:**
-- Uses `os.getenv()` instead of UnifiedCloudConfig
-- Uses `pip install` instead of `uv pip install`
-- Suggests `git push origin main` instead of quickmerge.sh
-- Uses event logging fallback patterns
-- Suggests skipping tests or disabling quality gates
-
-**When to stop session:**
-- Immediate: Suggests disabling tests, force-pushing to main, repeated rule violations
-- Consider: Forgets corrections within 5-10 messages, asks questions answered in rules
-
-**How to start fresh:** New chat, explicit rule reminder, or context reset request.
-
-Codex: `.cursor/rules/rule-amnesia-detection.mdc`
-
----
-
-## Production Readiness: Validators
-
-33 automated validators check production readiness across 9 categories (alignment, security, hardening, codex, performance, classification, CI/CD, data, sync).
-
-**Quick Usage:**
-```bash
-# Run all validators
-cd unified-trading-codex/scripts
-./run-all-validators.sh
-
-# Run specific audit
-./audit-security.sh --report security.md
-./audit-alignment.sh --report alignment.md
-./audit-hardening.sh --report hardening.md
-
-# Run specific validator
-cd unified-trading-codex/validators
-python3 run_validators.py --validator SEC-03
-```
-
-**Integration Status:**
-- ✅ instruments-service (Step 5 in quality gates)
-- ✅ market-data-processing-service (Step 5 in quality gates)
-- ✅ strategy-service (Step 5 in quality gates)
-
-**Validators are non-blocking** in quality gates — informational only. They provide visibility into production readiness without blocking development workflow.
-
-**Documentation:**
-- `.cursor/rules/production-readiness-validators.mdc` - Complete reference (33 validators)
-- `.cursor/rules/validator-integration.mdc` - Integration pattern for quality gates
-- `unified-trading-codex/validators/QUICK_REFERENCE.md` - Quick start guide
-- `unified-trading-codex/validators/CI_CD_INTEGRATION_SUMMARY.md` - Integration summary
-
-Codex: `unified-trading-codex/09-production-readiness/`, `unified-trading-codex/validators/`
-
----
-
-## Codex Maintenance
-
-When establishing new patterns, update codex. Then update workspace/per-repo rules to reference new sections.
-
-Codex: `.cursor/rules/codex-maintenance.mdc`, `06-coding-standards/cursor-rules-system.md`
-
----
-
-## Per-Repo Rules
-
-Each service has `.cursorrules` at its root with service-specific patterns (architecture, domain rules, special cases). Cursor reads both workspace and per-repo rules.
-
-Template: `unified-trading-codex/06-coding-standards/cursor-rules-system.md`
-
----
-
-## Python Baseline Policy
-
-- All services use Python 3.13 (`requires-python >=3.13,<3.14`).
-- Cursor/VSCode: Set `python.defaultInterpreterPath` to `python3.13` in workspace settings.
-- Keep `.python-version`, `pyproject.toml`, CI, and quality gates aligned.
-
-Codex: `.cursor/rules/python-version-consistency.mdc`
-
----
-
-## Hook Tooling Policy
-
-- Primary git-hook manager is `prek` using `.pre-commit-config.yaml`
-- After hook config updates, run `prek install` (or `pre-commit install --install-hooks` only for legacy repos)
-- Prefer `pre-commit-hooks` v6+ unless repo-specific constraints require older versions
-
----
-
-## OpenClaw/Lobster Workflows for Multi-Repo Orchestration
-
-**Production-ready workflows** for systematic improvements across all 30+ repos.
-
-### Workflow 1: Harden All Repos
-**Purpose:** Pass quality gates without shortcuts
+## OpenClaw/Lobster Workflows
 
 ```bash
-lobster run .lobster/harden-all-repos.lobster
+lobster run .lobster/harden-all-repos.lobster        # ~60 min: pass quality gates without shortcuts
+lobster run .lobster/improve-test-coverage.lobster   # ~90 min: reach 50% coverage
+lobster run .lobster/complete-ai-epic-tasks.lobster  # ~2-3 hrs: AI epic tasks (591 AI-doable)
 ```
 
-**Time:** ~60 minutes (6 parallel workers on M1)
-
-### Workflow 2: Improve Test Coverage
-**Purpose:** Reach 50% coverage, update quality gates threshold
-
-```bash
-lobster run .lobster/improve-test-coverage.lobster
-```
-
-**Time:** ~90 minutes (6 parallel workers on M1)
-
-### Workflow 3: Complete AI Epic Tasks
-**Purpose:** Complete Harsh-owned tasks, skip human-testing tasks
-
-```bash
-lobster run .lobster/complete-ai-epic-tasks.lobster
-```
-
-**Time:** ~2-3 hours for 20 tasks (6 parallel workers on M1)
-
-**Key features (both workflows):**
-1. **Rules-driven** - Automatically reads:
-   - This `.cursorrules` file for core standards
-   - All `.cursor/rules/*.mdc` files (20+ rules, including `test-quality-standards.mdc`)
-   - `unified-trading-codex/` for architectural patterns
-   - **No hardcoding.** Change rules once, workflows adapt.
-
-2. **Implementation completeness** - Verifies against specs:
-   - Extracts target state from `unified-trading-codex/11-project-management/epics/`
-   - Checks "definition of done" from codex
-   - **No half-baking.** Finish according to specs or warn.
-   - When in doubt: consults epics/ for proper implementation
-
-3. **Test quality** - Follows standards (coverage workflow):
-   - No duplicate test files (test_*_extended.py)
-   - Expands existing test files instead
-   - Uses singleton fixtures from conftest.py
-   - Reuses central imports for performance
-   - See: `.cursor/rules/test-quality-standards.mdc`
-
-4. **AI/Human task separation** - Completes appropriate tasks (epic workflow):
-   - AI-doable: Harsh-owned, IMPLEMENT/VALIDATE, quality gates validation
-   - Human-required: Ikenna-owned, D6/D7 blockers, manual validation
-   - Excludes: Strategy testing, e2e deployment, production validation
-   - See: `.cursor/rules/ai-task-classification.mdc`
-
-**Documentation:** See `.lobster/FOR_AGENTS.md` for quick guide, `.lobster/README.md` for full docs.
-
-**Task Stats:**
-- AI-Doable (Harsh): 591 tasks
-- Human-Required (Ikenna): 161 tasks
-- Unknown: 647 tasks
+See `.lobster/FOR_AGENTS.md` (quick guide), `.lobster/README.md` (full docs).
 
 ---
 
-## Anti-Patterns (Quick Reference)
+## Critical Blocking Rules (Priority ≥ 90)
 
-| Don't | Do |
-|-------|-----|
-| **Claim "done" without runtime verification** | **Run code, wait 8-10s, check terminal for errors, verify output** |
-| **Run quality gates standalone** | **Use quickmerge (includes all quality gates automatically)** |
-| **Dependencies differ but no --dep-branch** | **Use quickmerge --dep-branch for proper isolation and cascade** |
-| Commit deps change without uv.lock | Run quickmerge (auto-runs quality gates + `uv lock`); commit uv.lock |
-| `pip install` (except `pip install uv`) | `uv pip install` |
-| `os.getenv('KEY', '')` | `config.key_name` |
-| `from google.cloud import storage` | `get_storage_client()` |
-| `print()` | `logger.info()` |
-| `datetime.now()` | `datetime.now(timezone.utc)` |
-| Bare `except:` | `@handle_api_errors` |
-| `git push main` or `bash scripts/quality-gates.sh` | `quickmerge.sh` (includes all checks); use `--dep-branch` when deps differ; if CI fails use `/fix-ci` or `/loop-on-ci` |
-| Imports in functions | Imports at top |
-| TODO in code | GitHub issue |
-| File >900 lines | Split by SRP — see `06-coding-standards/file-splitting-guide.md` |
-| Hardcode standards in scripts | **Read from cursor rules** (see `.lobster/` workflow) |
-| Create `test_*_extended.py` files | **Expand existing test files** (see `.cursor/rules/test-quality-standards.mdc`) |
-| Duplicate fixtures across test files | **Use singleton fixtures from conftest.py** |
-| `!central-element-*.json` in .gitignore | **Never allow credential JSON**; use `*credentials*.json` (see quality-gates-audit-factors.mdc) |
-| `central-element-323112` in tests | **Use `test-project`** placeholder (see quality-gates-audit-factors.mdc) |
-| `except Exception:` in production | **Use `@handle_api_errors` or specific exceptions** (see quality-gates-audit-factors.mdc) |
-| Relax reportAny/reportUnknown*, add baselines | **Only audited exceptions pass** — document in QUALITY_GATE_BYPASS_AUDIT.md; fix all other type errors |
-| `basedpyright .` or `basedpyright` (no args) | **`timeout 120 basedpyright <source_dir>/`** (see `.cursor/rules/basedpyright-safety.mdc`) |
-| Run standalone basedpyright for codebase audits | **Run quality gates per repo** (`bash scripts/quality-gates.sh --no-fix`) — same lint + type check, no zombies |
+These rules are BLOCKING — always active, never override without audit:
+
+| Rule | Priority | What it enforces |
+|------|----------|-----------------|
+| `.cursor/rules/no-summary-docs.mdc` | 100 | Never create `*_SUMMARY.md` recap docs |
+| `.cursor/rules/runtime-verification-required.mdc` | 95 | Run code, wait 8-10s, check terminal — never claim "done" without |
+| `.cursor/rules/delete-deprecated.mdc` | 95 | Delete old code; no parallel code paths after refactor |
+| `.cursor/rules/never-revert-local-changes.mdc` | 95 | Never `git reset --hard` or discard uncommitted work |
+| `.cursor/rules/no-type-any-use-specific.mdc` | 90 | No `Any` types — use TypedDict/Protocol/specific types |
+| `.cursor/rules/always-use-quickmerge.mdc` | 85 | `bash scripts/quickmerge.sh` — never standalone quality gates or git push |
+| `.cursor/rules/basedpyright-safety.mdc` | 100 | Always `timeout 120 basedpyright <source_dir>/` — never `basedpyright .` |
+| `.cursor/rules/agents-follow-cursor-rules.mdc` | 95 | Sub-agents need explicit rule reminders — include `.cursorrules` at top |
+
+## Anti-Patterns
+
+See `.cursor/rules/anti-patterns-quick-reference.mdc` for the full table.
+
+---
+## Analysis Rules
+
+When analyzing codebase architecture:
+- EXCLUDE: .venv*, venv/, node_modules/, build/, dist/, *.egg-info/
+- EXCLUDE: Documentation files (*.md) when counting code usage
+- EXCLUDE: Shell scripts when analyzing Python patterns
+- FOCUS: Python source files in service directories only
+- Use: `--glob '!.venv*' --glob '!**/.venv*/**'` with ripgrep
