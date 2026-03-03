@@ -12,7 +12,7 @@
 #   ├── .cursorrules
 #   ├── unified-trading-pm/  ← fake PM repo (with .git/)
 #   │   ├── cursor-rules/
-│   │   ├── cursor-configs/
+#   │   ├── cursor-configs/
 #   │   ├── scripts/ -> symlinked to real scripts (or copied)
 #   │   └── workspace-manifest.json
 #   ├── unified-trading-codex/   ← sibling (just a dir, no .git needed)
@@ -55,11 +55,11 @@ setup_fake_workspace() {
 
     # Copy real scripts into fake PM so they run with correct relative paths
     REAL_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/scripts"
-    cp "$REAL_SCRIPTS_DIR/_workspace-lib.sh"     "$FAKE_PM/scripts/"
-    cp "$REAL_SCRIPTS_DIR/sync-rules-push.sh"    "$FAKE_PM/scripts/"
-    cp "$REAL_SCRIPTS_DIR/sync-rules-pull.sh"    "$FAKE_PM/scripts/"
-    cp "$REAL_SCRIPTS_DIR/sync-workspace.sh"     "$FAKE_PM/scripts/"
-    chmod +x "$FAKE_PM/scripts/"*.sh
+    cp "$REAL_SCRIPTS_DIR/_workspace-lib.sh" "$FAKE_PM/scripts/"
+    for f in sync-rules-push.sh sync-rules-pull.sh sync-workspace.sh; do
+        [ -f "$REAL_SCRIPTS_DIR/$f" ] && cp "$REAL_SCRIPTS_DIR/$f" "$FAKE_PM/scripts/"
+    done
+    chmod +x "$FAKE_PM/scripts/"*.sh 2>/dev/null || true
 
     export FAKE_WORKSPACE FAKE_PM FAKE_CURSOR_RULES FAKE_CURSOR_CONFIGS
     export FAKE_PM_CURSOR_RULES FAKE_PM_CURSOR_CONFIGS

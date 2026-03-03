@@ -47,9 +47,7 @@ jobs:
         run: sudo apt-get install -y shellcheck
 
       - name: Install bats-core
-        run: |
-          git clone https://github.com/bats-core/bats-core.git /tmp/bats-core
-          sudo /tmp/bats-core/install.sh /usr/local
+        uses: bats-core/bats-action@v3.0.0
 
       - name: Run quality gates
         working-directory: unified-trading-pm

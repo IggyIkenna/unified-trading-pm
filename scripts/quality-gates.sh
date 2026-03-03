@@ -343,9 +343,9 @@ if [ "$RUN_TESTS" = true ]; then
     TIMEOUT_ARG=""
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null && TIMEOUT_ARG="--timeout=60"
 
-    # PM-specific: coverage measures scripts/, not a module dir
+    # PM-specific: no coverage (scripts/ is not an importable package; tests use sys.path)
     if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
-        COV_ARGS="--cov=scripts/manifest --cov-report=term-missing --cov-fail-under=0"
+        COV_ARGS=""
     else
         COV_ARGS="--cov=${REPO_MODULE} --cov-report=term-missing --cov-fail-under=${MIN_COVERAGE}"
     fi
@@ -422,6 +422,21 @@ if [ "$RUN_TESTS" = true ]; then
                 log_fail "Smoke tests FAILED"
                 TEST_STATUS=1
             fi
+        fi
+    fi
+
+    # PM-specific: run bats tests (workspace validation)
+    if [ "$RUN_TESTS" = true ] && [ "$REPO_MODULE" = "unified_trading_pm" ]; then
+        if [ -f "tests/test_workspace_lib.bats" ] && command -v bats &>/dev/null; then
+            echo -e "\n${YELLOW}Running bats tests (workspace validation)...${NC}"
+            if bats tests/test_workspace_lib.bats; then
+                log_success "Bats tests PASSED"
+            else
+                log_fail "Bats tests FAILED"
+                TEST_STATUS=1
+            fi
+        elif [ -f "tests/test_workspace_lib.bats" ] && ! command -v bats &>/dev/null; then
+            log_warn "bats not installed — skipping bats tests (install: bats-core/bats-action or brew install bats-core)"
         fi
     fi
 
