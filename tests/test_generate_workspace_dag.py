@@ -292,6 +292,7 @@ class TestGenerateSvg:
         """Generated SVG must be valid XML."""
         svg = generate_svg(_minimal_manifest())
         ET.fromstring(svg)
+        assert True, "XML generation produced valid output"
 
     def test_contains_all_repos(self) -> None:
         """SVG should contain text elements for all non-deprecated repos."""

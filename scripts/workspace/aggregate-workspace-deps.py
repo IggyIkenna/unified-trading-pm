@@ -33,7 +33,9 @@ DepSpec: TypeAlias = str  # e.g. "pydantic>=2.12.5,<3.0.0"
 TomlDict: TypeAlias = dict[str, object]
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
+PM_ROOT = WORKSPACE_ROOT / "unified-trading-pm"
+MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
+CONSTRAINTS_PATH = PM_ROOT / "workspace-constraints.toml"
 VENV_DIR = WORKSPACE_ROOT / ".venv-workspace"
 LOCK_FILE = VENV_DIR / "requirements.lock"
 WORKSPACE_TOOLS = ["ruff==0.15.0", "basedpyright>=1.18.0,<2.0.0", "pytest>=8.0.0"]
@@ -43,6 +45,18 @@ def load_manifest() -> TomlDict:
     """Load workspace manifest and return parsed JSON."""
     with open(MANIFEST_PATH) as f:
         return cast(TomlDict, json.load(f))
+
+
+def load_workspace_constraints() -> dict[str, str]:
+    """Load [dependencies] from workspace-constraints.toml if present. Keys normalized."""
+    if not CONSTRAINTS_PATH.is_file():
+        return {}
+    with open(CONSTRAINTS_PATH, "rb") as f:
+        data = cast(TomlDict, tomllib.load(f))
+    deps = data.get("dependencies")
+    if not isinstance(deps, dict):
+        return {}
+    return {normalize_pkg_name(k): str(v) for k, v in deps.items()}
 
 
 def _level_sort_key(lvl: TomlDict) -> int:
@@ -147,7 +161,10 @@ def normalize_pkg_name(name: str) -> str:
 
 
 def extract_pkg_name(dep_spec: DepSpec) -> str:
-    """Extract package name from a dependency spec like 'pydantic>=2.0'."""
+    """Extract package name from a dependency spec like 'pydantic>=2.0' or 'pkg @ file://...'."""
+    # PEP 508: "name @ url" -> name only
+    if " @ " in dep_spec:
+        return dep_spec.split(" @ ", 1)[0].strip()
     for sep in [">=", "<=", "!=", "==", ">", "<", "~=", "[", ";"]:
         idx = dep_spec.find(sep)
         if idx > 0:
@@ -166,40 +183,59 @@ def collect_all_deps(
         internal_names: set of normalized package names that are workspace deps
         internal_paths: normalized_name -> relative path to repo
     """
-    external_deps: dict[str, list[DepSpec]] = {}
     internal_names: set[str] = set()
     internal_paths: dict[str, str] = {}
 
+    # Pass 1: collect all workspace (path) deps from every repo so we never treat them as external
     for repo_name in repos:
         repo_path = get_repo_folder_path(manifest, repo_name)
         if not repo_path.is_dir():
             continue
-
-        deps, uv_sources = parse_pyproject(repo_path)
-
-        # Identify workspace deps from uv.sources
-        workspace_dep_names: set[str] = set()
+        _deps, uv_sources = parse_pyproject(repo_path)
         for dep_name, rel_path in uv_sources.items():
             norm = normalize_pkg_name(dep_name)
-            workspace_dep_names.add(norm)
             internal_names.add(norm)
             abs_path = (repo_path / rel_path).resolve()
             if abs_path.is_dir():
                 internal_paths[norm] = str(abs_path.relative_to(WORKSPACE_ROOT))
 
-        # Classify deps
+    # Pass 2: collect external deps only (skip anything in internal_names)
+    external_deps: dict[str, list[DepSpec]] = {}
+    for repo_name in repos:
+        repo_path = get_repo_folder_path(manifest, repo_name)
+        if not repo_path.is_dir():
+            continue
+        deps, uv_sources = parse_pyproject(repo_path)
+        workspace_dep_names = {normalize_pkg_name(d) for d in uv_sources}
         for dep_spec in deps:
             pkg_name = extract_pkg_name(dep_spec)
             norm = normalize_pkg_name(pkg_name)
-
             if norm in workspace_dep_names or norm in internal_names:
                 continue
-
             if norm not in external_deps:
                 external_deps[norm] = []
             external_deps[norm].append(dep_spec)
 
+    # Ensure no internal package leaked into external (e.g. repo order)
+    for norm in internal_names:
+        external_deps.pop(norm, None)
+
     return external_deps, internal_names, internal_paths
+
+
+def _dedupe_spec_name(spec: DepSpec) -> DepSpec:
+    """Fix propagate-induced duplicated package names (e.g. aiobotocoreaiobotocore>=2.11.0 -> aiobotocore>=2.11.0)."""
+    for sep in [">=", "<=", "!=", "==", ">", "<", "~="]:
+        idx = spec.find(sep)
+        if idx > 0:
+            name, rest = spec[:idx].strip(), spec[idx:]
+            # If name is exactly two copies of the same string (e.g. ruffruff), use one
+            if len(name) % 2 == 0:
+                half = len(name) // 2
+                if name[:half] == name[half:]:
+                    return name[:half] + rest
+            return spec
+    return spec
 
 
 def pick_tightest_constraint(specs: list[DepSpec]) -> DepSpec:
@@ -223,6 +259,7 @@ def generate_requirements(
     external_deps: dict[str, list[DepSpec]],
     internal_paths: dict[str, str],
     topo_order: list[str],
+    constraints: dict[str, str] | None = None,
 ) -> tuple[list[str], list[str]]:
     """Generate two lists: internal editable installs and external deps."""
     # Internal: editable installs in topological order
@@ -244,12 +281,21 @@ def generate_requirements(
             internal_lines.append(f"-e {rel_path}")
             installed_paths.add(rel_path)
 
-    # External: tightest constraint per package
+    # External: use workspace-constraints.toml when present, else tightest from repos (dedupe name duplication)
+    constraints = constraints or {}
     external_lines: list[str] = []
     for norm_name in sorted(external_deps):
-        specs = external_deps[norm_name]
-        chosen = pick_tightest_constraint(specs)
-        external_lines.append(chosen)
+        if norm_name in constraints:
+            spec = constraints[norm_name]
+        else:
+            spec = pick_tightest_constraint(external_deps[norm_name])
+        external_lines.append(_dedupe_spec_name(spec))
+
+    # Ensure constraint overrides apply (e.g. aiofiles 24.x for tardis-client compatibility)
+    for i, line in enumerate(external_lines):
+        pkg = line.split(">=")[0].split("==")[0].split("<")[0].strip()
+        if normalize_pkg_name(pkg) in constraints:
+            external_lines[i] = constraints[normalize_pkg_name(pkg)]
 
     return internal_lines, external_lines
 
@@ -279,7 +325,12 @@ def write_requirements_file(
     output_path.write_text("\n".join(lines))
 
 
-def run_uv_install(requirements_file: Path, *, dry_run: bool = False) -> bool:
+def run_uv_install(
+    requirements_file: Path,
+    *,
+    dry_run: bool = False,
+    no_deps: bool = False,
+) -> bool:
     """Run uv pip install from the requirements file into .venv-workspace."""
     venv_python = VENV_DIR / "bin" / "python"
     if not venv_python.is_file():
@@ -296,6 +347,8 @@ def run_uv_install(requirements_file: Path, *, dry_run: bool = False) -> bool:
         "-r",
         str(requirements_file),
     ]
+    if no_deps:
+        cmd.append("--no-deps")
 
     if dry_run:
         print(f"\n[DRY RUN] Would run: {' '.join(cmd)}")
@@ -393,12 +446,29 @@ def main() -> None:
     print(f"  Internal workspace deps: {len(internal_names)}")
     print(f"  External packages: {len(external_deps)}")
 
-    # Generate requirements
-    internal_lines, external_lines = generate_requirements(external_deps, internal_paths, topo_order)
+    # Generate requirements (prefer workspace-constraints.toml when present for consistent resolution)
+    constraints = load_workspace_constraints()
+    internal_lines, external_lines = generate_requirements(
+        external_deps, internal_paths, topo_order, constraints=constraints
+    )
 
-    # Write requirements file
+    # Write requirements file (full) and split files for two-phase install
     req_file = VENV_DIR / "requirements.txt"
     write_requirements_file(internal_lines, external_lines, req_file)
+    req_internal = VENV_DIR / "requirements-internal.txt"
+    req_external = VENV_DIR / "requirements-external.txt"
+    req_internal.write_text(
+        "# Internal editable only — install with --no-deps to avoid path/editable URL conflict\n"
+        + "\n".join(internal_lines)
+        + "\n"
+    )
+    external_only_lines = [
+        "# Workspace tools + external only",
+        *WORKSPACE_TOOLS,
+        "",
+        *external_lines,
+    ]
+    req_external.write_text("\n".join(external_only_lines) + "\n")
     print(f"\n  Requirements file: {req_file}")
     print(f"    Internal (editable): {len(internal_lines)} packages")
     print(f"    External: {len(external_lines)} packages")
@@ -415,10 +485,14 @@ def main() -> None:
             print(f"  ... and {len(external_lines) - 20} more")
         return
 
-    # Install
-    success = run_uv_install(req_file)
-    if not success:
-        print("\nInstallation failed.", file=sys.stderr)
+    # Two-phase install: internal with --no-deps first (avoids uv seeing same path as editable and as path dep), then external
+    print("\n  Phase 1: internal editable installs (--no-deps)")
+    if not run_uv_install(req_internal, no_deps=True):
+        print("\nInstallation failed (phase 1).", file=sys.stderr)
+        sys.exit(1)
+    print("  Phase 2: tools + external deps")
+    if not run_uv_install(req_external):
+        print("\nInstallation failed (phase 2).", file=sys.stderr)
         sys.exit(1)
 
     # Freeze lockfile

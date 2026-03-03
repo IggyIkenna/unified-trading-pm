@@ -166,7 +166,7 @@ interactive_mode() {
             ;;
         2)
             repos=(
-                "unified-trading-services"
+                "unified-trading-library"
                 "unified-trading-deployment-v2"
                 "unified-trading-codex"
             )
@@ -200,7 +200,7 @@ interactive_mode() {
                 "strategy-service" "execution-services"
                 "reconciliation-service" "pnl-attribution-service"
                 "position-balance-monitor-service" "exposure-monitor-service"
-                "unified-trading-services" "unified-trading-deployment-v2"
+                "unified-trading-library" "unified-trading-deployment-v2"
                 "unified-trading-codex"
                 "live-health-monitor-ui" "batch-audit-ui" "logs-dashboard-ui"
                 "ml-training-ui" "execution-analytics-ui" "trading-analytics-ui"

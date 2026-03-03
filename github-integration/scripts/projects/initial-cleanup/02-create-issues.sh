@@ -24,7 +24,7 @@ REPOS=(
     "execution-services"
     "strategy-service"
     "instruments-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "market-data-processing-service"
     "ml-training-service"
     "ml-inference-service"
@@ -96,12 +96,12 @@ Check: \`CODEX_VIOLATIONS_MANIFEST.md\` in the repo root.
 - ✅ GitHub Actions pass
 - ✅ Cloud Build passes
 - ✅ Three-environment consistency maintained
-- ✅ No duplicate dependencies (check unified-trading-services first)
+- ✅ No duplicate dependencies (check unified-trading-library first)
 
 ## Important
 
 **If CI fails but local passed:** Fix infrastructure, NOT code!
-- Update GitHub Actions to install unified-trading-services
+- Update GitHub Actions to install unified-trading-library
 - Use python-version-file: 'pyproject.toml'
 - Call bash scripts/quality-gates.sh --no-fix
 

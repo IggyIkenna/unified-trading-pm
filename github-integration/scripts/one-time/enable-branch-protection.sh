@@ -8,7 +8,7 @@
 # Examples:
 #   bash enable-branch-protection.sh --restore /tmp/branch-protection-backup-20260214-120000
 #   bash enable-branch-protection.sh --all
-#   bash enable-branch-protection.sh unified-trading-services
+#   bash enable-branch-protection.sh unified-trading-library
 #
 
 set -euo pipefail
@@ -31,7 +31,7 @@ ALL_REPOS=(
     "ml-training-service"
     "sports-betting-service"
     "strategy-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-trading-deployment-v2"
 )
 

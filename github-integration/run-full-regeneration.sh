@@ -81,7 +81,7 @@ SERVICES=(
     "ml-training-service"
     "ml-inference-service"
     "execution-services"
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-trading-deployment-v2"
 )
 

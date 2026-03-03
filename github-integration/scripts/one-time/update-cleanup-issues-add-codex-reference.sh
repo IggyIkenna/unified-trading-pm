@@ -28,7 +28,7 @@ REPOS=(
     "execution-services"
     "strategy-service"
     "instruments-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "market-data-processing-service"
     "ml-training-service"
     "ml-inference-service"
@@ -44,7 +44,7 @@ ISSUE_NUMBERS=(
     147  # execution-services
     23   # strategy-service
     58   # instruments-service
-    48   # unified-trading-services
+    48   # unified-trading-library
     46   # market-data-processing-service
     38   # ml-training-service
     28   # ml-inference-service

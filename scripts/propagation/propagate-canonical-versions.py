@@ -102,7 +102,7 @@ def _replace_dep_spec(line: str, constraints: dict[str, str]) -> str:
             pkg_name = pkg_spec[:idx].strip()
             norm = normalize_pkg_name(pkg_name)
             if norm in constraints:
-                return f"{prefix}{pkg_name}{constraints[norm]}{suffix}"
+                return f"{prefix}{constraints[norm]}{suffix}"
             return line
     return line
 

@@ -46,7 +46,7 @@ BROKEN_REPOS=(
     "market-data-processing-service"
     "sports-betting-service"
     "strategy-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-trading-deployment-v2"
 )
 

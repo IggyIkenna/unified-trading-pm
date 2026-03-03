@@ -32,6 +32,13 @@ Prefer updating existing files:
 
 Only create new files when topic has no existing home or requires >500 lines.
 
+## Codex vs PM Boundary
+
+Not sure if something belongs in codex or PM? Consult the decision tree:
+CODEX: `13-codex-governance/SSOT-BOUNDARY.md`
+
+Short rule: codex = "what must be true", PM = "what is happening right now". No absolute machine-specific paths in either repo; always use workspace-relative paths.
+
 ## DRY Principle
 
 Reference existing patterns rather than duplicating. Link to the section; don't repeat the content. Per-service docs document deviations only — not the universal pattern.

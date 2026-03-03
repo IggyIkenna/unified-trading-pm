@@ -53,7 +53,7 @@ ALL_REPOS=(
     "unified-trading-codex"
     "execution-services"
     "strategy-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-config-interface"
     "unified-domain-client"
     "unified-events-interface"

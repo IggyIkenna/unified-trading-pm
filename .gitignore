@@ -2,6 +2,7 @@
 # Security - Never commit credentials
 *-credentials.json
 *-service-account.json
+workspace-dev-sa-key.json
 service-account*.json
 credentials*.json
 *secret*.json
@@ -14,3 +15,21 @@ central-element-323112-*.json
 .DS_Store
 *.backup
 __pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+# Python venvs
+.venv/
+venv/
+.venv-workspace/
+# Node / UI
+node_modules/
+.next/
+dist/
+build/
+.turbo/
+# Coverage
+coverage/
+.nyc_output/

@@ -15,7 +15,7 @@ SERVICES=(
     "unified-trading-deployment-v2"
     "features-calendar-service"
     "features-onchain-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "ml-inference-service"
     "ml-training-service"
     "strategy-service"

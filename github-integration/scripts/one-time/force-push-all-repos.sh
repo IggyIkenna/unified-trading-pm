@@ -28,7 +28,7 @@ REPOS=(
     "execution-services"
     "strategy-service"
     "instruments-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "market-data-processing-service"
     "ml-training-service"
     "ml-inference-service"

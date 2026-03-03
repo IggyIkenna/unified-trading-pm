@@ -35,7 +35,7 @@ REPOS=(
   position-balance-monitor-service
   risk-and-exposure-service
   strategy-service
-  unified-trading-services
+  unified-trading-library
   unified-config-interface
   unified-events-interface
   unified-market-interface

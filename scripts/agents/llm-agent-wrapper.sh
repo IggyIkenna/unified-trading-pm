@@ -31,7 +31,7 @@ FULL_PROMPT="WORKSPACE CONTEXT:
 - You have READ access to entire workspace (dependencies, workspace rules)
 - You can ONLY EDIT files in $REPO_NAME/ directory
 - Read workspace .cursorrules and .cursor/rules/*.mdc
-- Read path dependencies (../unified-trading-services, etc.)
+- Read path dependencies (../unified-trading-library, etc.)
 
 TASK FOR $REPO_NAME:
 Fix CI/CD issues reported by pre-push hook (act simulation)
@@ -44,7 +44,7 @@ $PROMPT
 
 CRITICAL RESTRICTIONS:
 - ONLY edit files in $REPO_NAME/ directory
-- DO NOT edit unified-trading-services/ or other repos
+- DO NOT edit unified-trading-library/ or other repos
 - You can read everything, but edit only $REPO_NAME/
 
 IMPORTANT: Only run basedpyright/quality-gates 2-3 times total (not every file) to avoid hanging:

@@ -39,7 +39,7 @@ echo ""
 # Read path dependencies from pyproject.toml
 PATH_DEPS=()
 if [ -f "pyproject.toml" ]; then
-    # Extract path dependencies (e.g., unified-trading-services = { path = "../unified-trading-services", editable = true })
+    # Extract path dependencies (e.g., unified-trading-library = { path = "../unified-trading-library", editable = true })
     while IFS= read -r line; do
         if [[ "$line" =~ path[[:space:]]*=[[:space:]]*\"\.\.\/([^\"]+)\" ]]; then
             dep="${BASH_REMATCH[1]}"

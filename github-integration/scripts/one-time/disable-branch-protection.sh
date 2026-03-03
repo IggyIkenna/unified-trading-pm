@@ -12,7 +12,7 @@
 #
 # Examples:
 #   bash disable-branch-protection.sh --all                    # All repos
-#   bash disable-branch-protection.sh unified-trading-services   # Single repo
+#   bash disable-branch-protection.sh unified-trading-library   # Single repo
 #
 
 set -euo pipefail
@@ -34,7 +34,7 @@ ALL_REPOS=(
     "ml-training-service"
     "sports-betting-service"
     "strategy-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-trading-deployment-v2"
 )
 
