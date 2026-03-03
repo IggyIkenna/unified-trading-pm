@@ -541,27 +541,27 @@ Before closing the issue, verify:
 
 ### Issue: CI fails but local passed
 
-**Root cause:** Infrastructure mismatch  
+**Root cause:** Infrastructure mismatch
 **Fix:** Update GitHub Actions to match local (see Step 9)
 
 ### Issue: Duplicate dependencies
 
-**Root cause:** Service re-specifies dependency already in unified-trading-services  
+**Root cause:** Service re-specifies dependency already in unified-trading-services
 **Fix:** Remove from service pyproject.toml, unified-trading-services already provides it
 
 ### Issue: Quality gates outdated
 
-**Root cause:** Repo missing Check 5 (imports inside functions)  
+**Root cause:** Repo missing Check 5 (imports inside functions)
 **Fix:** Copy quality-gates.sh from unified-trading-services, commit separately (see Step 3)
 
 ### Issue: Tests fail after fixing violations
 
-**Root cause:** Code changes exposed actual bugs or missing test dependencies  
+**Root cause:** Code changes exposed actual bugs or missing test dependencies
 **Fix:** Fix the bugs or add missing deps (pytest-xdist, pytest-cov), never skip tests
 
 ### Issue: Coverage drops below 35%
 
-**Root cause:** Added new code without tests  
+**Root cause:** Added new code without tests
 **Fix:** Add unit tests for the new/changed code
 
 ---

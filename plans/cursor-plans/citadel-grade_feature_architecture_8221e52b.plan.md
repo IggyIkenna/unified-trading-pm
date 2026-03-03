@@ -59,7 +59,6 @@ The existing pipeline is already designed for this: 15,000 raw features → SHAP
 
 ## Critical Gaps Found
 
-
 | Gap                                      | Impact                                                                                              | Effort                         |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------ |
 | 18 of 22 feature groups never fed to ML  | Massive — OI, liquidations, microstructure, candle patterns, volume profile all unused              | Low (just subscription change) |
@@ -68,7 +67,6 @@ The existing pipeline is already designed for this: 15,000 raw features → SHAP
 | No regime-conditional model segmentation | One global model for trending + ranging + high-vol = diluted signal                                 | Medium                         |
 | Windows inconsistent and sparse          | Model can't discover optimal lookback for each signal                                               | Low (parameter change)         |
 | 6 missing calculator concepts            | Trendline geometry, fib levels, supply/demand zones, liq clusters, weekly anchors, cumulative delta | High                           |
-
 
 ---
 

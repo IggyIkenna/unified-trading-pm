@@ -60,7 +60,6 @@ Create [unified-trading-codex/02-data/contracts-scope-and-layout.md](unified-tra
 
 Constraints from [PACKAGE_LAYOUT_AND_SCOPE.md](unified-api-contracts/docs/PACKAGE_LAYOUT_AND_SCOPE.md): AC cannot import UIC; mapping schemas stay in AC; three buckets.
 
-
 | Agent | Scope                | Deliverable                                                                                                           |
 | ----- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **1** | venue_manifest       | Move to `unified_api_contracts_external/venue_manifest/`. Update internal imports.                                    |
@@ -71,7 +70,6 @@ Constraints from [PACKAGE_LAYOUT_AND_SCOPE.md](unified-api-contracts/docs/PACKAG
 | **6** | prime_broker         | Move to `unified_api_contracts_external/prime_broker/`. Update internal imports.                                      |
 | **7** | schemas split        | Move cross-venue content to shared; re-export from schemas; resolve ErrorAction duplicate; leave risk.py for Agent 8. |
 | **8** | Move internal to UIC | Add risk module to unified-internal-contracts; remove schemas/risk.py from AC; ensure no AC→UIC imports.              |
-
 
 ---
 
@@ -106,14 +104,12 @@ Constraints from [PACKAGE_LAYOUT_AND_SCOPE.md](unified-api-contracts/docs/PACKAG
 
 ## Test scope (AC only)
 
-
 | Run in AC                                                      | Do not run in AC                            |
 | -------------------------------------------------------------- | ------------------------------------------- |
-| Schema validation (examples/*.json, Pydantic)                  | VCR replay (test_vcr_replay.py, tests/vcr/) |
+| Schema validation (examples/\*.json, Pydantic)                 | VCR replay (test_vcr_replay.py, tests/vcr/) |
 | Normalisation (BinanceTrade→CanonicalTrade, etc.)              | Live API validation                         |
 | Mapping tests (venue manifest, coverage)                       | Integration tests requiring API keys        |
 | Unit tests (test_contract_alignment, test_normalization, etc.) |                                             |
-
 
 Interfaces (UMI, UTEI, etc.) invoke VCR and live validation; they have connectivity and API keys.
 

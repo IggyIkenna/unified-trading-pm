@@ -21,7 +21,7 @@
 | **strategy-service**               | `pytest tests/unit/ --timeout=60`         | `pytest tests/integration/ --timeout=120` + filter  | `pytest tests/e2e/ --timeout=180`         | ❌ Sequential      |
 | **instruments-service**            | `pytest tests/unit/ --timeout=60`         | `pytest tests/integration/ --timeout=120` + ignores | `pytest tests/e2e/ --timeout=180`         | ❌ Sequential      |
 | **market-data-processing-service** | `pytest tests/unit/ --timeout=60 -n auto` | `pytest tests/integration/ --timeout=120 -n auto`   | `pytest tests/e2e/ --timeout=180 -n auto` | ✅ **Parallel**    |
-| **execution-service**             | `pytest tests/unit/` (NO timeout)         | `pytest tests/integration/` + filter                | `pytest tests/e2e/` (NO timeout)          | ❌ Sequential      |
+| **execution-service**              | `pytest tests/unit/` (NO timeout)         | `pytest tests/integration/` + filter                | `pytest tests/e2e/` (NO timeout)          | ❌ Sequential      |
 
 ---
 

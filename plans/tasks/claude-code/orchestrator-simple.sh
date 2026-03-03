@@ -108,30 +108,30 @@ for ((i=0; i<${#REPOS[@]}; i+=MAX_PARALLEL)); do
     batch=("${REPOS[@]:i:MAX_PARALLEL}")
     batch_num=$((i/MAX_PARALLEL + 1))
     total_batches=$(( (${#REPOS[@]} + MAX_PARALLEL - 1) / MAX_PARALLEL ))
-    
+
     echo -e "${BLUE}━━━ Batch $batch_num/$total_batches (${#batch[@]} repos) ━━━${NC}"
     echo ""
-    
+
     for ((j=0; j<${#batch[@]}; j++)); do
         repo="${batch[j]}"
         repo_num=$((i+j+1))
-        
+
         (  # Run in background for parallel execution
-    
+
     echo -e "${BLUE}[$repo_num/${#REPOS[@]}]${NC} Processing ${BOLD}$repo${NC}..."
-    
+
     # Check directory exists
     if [ ! -d "$WORKSPACE/$repo" ]; then
         echo -e "  ${RED}❌ Directory not found${NC}"
         echo ""
         continue
     fi
-    
+
     cd "$WORKSPACE/$repo"
-    
+
     # Audit
     echo -e "  ${GRAY}🔍 Auditing...${NC}"
-    
+
     if ! command -v basedpyright &> /dev/null; then
         echo -e "  ${YELLOW}⚠️  basedpyright not found, assuming errors exist${NC}"
         ERRORS=999
@@ -147,16 +147,16 @@ for ((i=0; i<${#REPOS[@]}; i+=MAX_PARALLEL)); do
             ERRORS=0
         fi
     fi
-    
+
     if [ "$ERRORS" -eq 0 ]; then
         echo -e "  ${GREEN}✅ No errors, skipping${NC}"
         echo ""
         continue
     fi
-    
+
     echo -e "  ${YELLOW}Found $ERRORS errors${NC}"
     echo -e "  ${GRAY}🔧 Launching cursor agent (2-5 minutes)...${NC}"
-    
+
     # Prepare prompt with workspace context and edit restrictions
     PROMPT="WORKSPACE CONTEXT:
 - Workspace root: $WORKSPACE
@@ -183,11 +183,11 @@ CRITICAL RESTRICTIONS:
 - DO NOT edit unified-trading-codex/, unified-trading-library/, or other repos
 - You can read everything, but edit only $repo/
 "
-    
+
     # Run cursor agent
     LOG_FILE="$LOG_DIR/$repo.log"
     START_TIME=$(date +%s)
-    
+
             # Run standalone agent with pretty printing
             # Use API key if set, otherwise use existing auth
             # Always use stream-json with streaming for live output
@@ -230,10 +230,10 @@ CRITICAL RESTRICTIONS:
                     EXIT_CODE=${PIPESTATUS[0]}
                 fi
             fi
-    
+
     END_TIME=$(date +%s)
     DURATION=$((END_TIME - START_TIME))
-    
+
     if [ $EXIT_CODE -eq 0 ]; then
         echo -e "  ${GREEN}✅ Cursor agent completed (${DURATION}s)${NC}"
     else
@@ -243,10 +243,10 @@ CRITICAL RESTRICTIONS:
         echo ""
         continue
     fi
-    
+
     # Verify
     echo -e "  ${GRAY}🔍 Verifying...${NC}"
-    
+
     if command -v basedpyright &> /dev/null; then
         # Parse "X errors, Y warnings, Z notes" format (macOS compatible)
         # Use 30 second timeout to prevent hanging
@@ -258,19 +258,19 @@ CRITICAL RESTRICTIONS:
         elif ! [[ "$NEW_ERRORS" =~ ^[0-9]+$ ]]; then
             NEW_ERRORS=0
         fi
-        
+
         if [ "$NEW_ERRORS" -eq 0 ]; then
             echo -e "  ${GREEN}✅ Fixed: $ERRORS → 0 errors${NC}"
         else
             echo -e "  ${YELLOW}⚠️  Partial: $ERRORS → $NEW_ERRORS errors${NC}"
         fi
     fi
-    
+
     echo -e "  ${GRAY}📄 Log: $LOG_FILE${NC}"
-    
+
         ) &  # Background process
     done
-    
+
     # Wait for batch to complete
     echo -e "${GRAY}Waiting for batch $batch_num...${NC}"
     wait

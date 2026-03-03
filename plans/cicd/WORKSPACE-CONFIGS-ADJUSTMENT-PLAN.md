@@ -3,6 +3,7 @@
 **Goal:** Align workspace names and repo blocks with the canonical dependency matrix and current repo set. Fix wrong repo names, add new repos from the matrix, and make the setup script the single source of truth.
 
 **References:**
+
 - `.cursor/workspace-configs/` — setup scripts and `*.code-workspace` files
 - `.cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json` — canonical repo list and DAG
 - `.cursor/rules/parallel-agent-execution.mdc` — workspace shortcuts and epic mapping
@@ -13,11 +14,12 @@
 
 ### 1.1 Repo name fix (blocking)
 
-| Current in some workspaces | Canonical (matrix + codebase) | Action |
-|----------------------------|------------------------------|--------|
+| Current in some workspaces | Canonical (matrix + codebase)       | Action             |
+| -------------------------- | ----------------------------------- | ------------------ |
 | `unified-order-interface`  | `unified-trade-execution-interface` | Replace everywhere |
 
 **Affected assets:**
+
 - `workspace-complete.code-workspace` (folders + extraPaths)
 - `workspace-trading.code-workspace` (folders + extraPaths)
 - `workspace-libraries.code-workspace` (folders + extraPaths)
@@ -28,12 +30,12 @@
 
 From `DEPENDENCY-MATRIX-CANONICAL.json`:
 
-| Repo | In create-workspace-files.sh? | In which workspace(s)? |
-|------|-------------------------------|-------------------------|
-| `api-contracts` | No | Add to **complete**; consider **libraries** (instruments-service dep) |
-| `matching-engine-library` | No | Add to **libraries**, **trading**, **complete** (execution-service dep) |
-| `unified-defi-execution-interface` | No | Add to **libraries**, **trading**, **complete** (execution-service dep) |
-| `unified-ml-interface` | No | Add to **libraries**, **ml**, **complete** (strategy, ml-training deps) |
+| Repo                               | In create-workspace-files.sh? | In which workspace(s)?                                                  |
+| ---------------------------------- | ----------------------------- | ----------------------------------------------------------------------- |
+| `api-contracts`                    | No                            | Add to **complete**; consider **libraries** (instruments-service dep)   |
+| `matching-engine-library`          | No                            | Add to **libraries**, **trading**, **complete** (execution-service dep) |
+| `unified-defi-execution-interface` | No                            | Add to **libraries**, **trading**, **complete** (execution-service dep) |
+| `unified-ml-interface`             | No                            | Add to **libraries**, **ml**, **complete** (strategy, ml-training deps) |
 
 ### 1.3 Repos in script/matrix that are “extra” (no matrix entry)
 
@@ -84,7 +86,7 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 
 ### 3.3 workspace-features
 
-- Add unified-domain-client (features-* depend on it). Script already has market-tick, market-data-processing, unified-market-interface.
+- Add unified-domain-client (features-\* depend on it). Script already has market-tick, market-data-processing, unified-market-interface.
 - Repos: foundation + unified-domain-client, unified-market-interface, instruments-service, market-tick-data-handler, market-data-processing-service, features-calendar, features-delta-one, features-volatility, features-onchain.
 - No order/execution interface needed.
 
@@ -111,7 +113,7 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 
 - Add unified-domain-client so strategy and downstream have UDS.
 - No `unified-order-interface`; ensure naming is unified-trade-execution-interface if any reference is added later.
-- Repos: foundation + instruments, market-tick-data-handler, market-data-processing-service, features-*, ml-training, ml-inference, strategy-service, risk-and-exposure-service, position-balance-monitor-service (no execution-service in this workspace is acceptable; pipeline is data → features → ML → strategy/risk/position).
+- Repos: foundation + instruments, market-tick-data-handler, market-data-processing-service, features-\*, ml-training, ml-inference, strategy-service, risk-and-exposure-service, position-balance-monitor-service (no execution-service in this workspace is acceptable; pipeline is data → features → ML → strategy/risk/position).
 
 ### 3.8 workspace-uis
 
@@ -167,16 +169,16 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 
 ## 6. Summary table (target state)
 
-| Workspace | Repo count (approx) | Key additions / renames |
-|-----------|---------------------|---------------------------|
-| complete | 35+ | unified-trade-execution-interface; + api-contracts, matching-engine-library, unified-defi-execution-interface, unified-ml-interface |
-| data-pipeline | 11 | unified-domain-client (if missing) |
-| features | 15 | unified-domain-client (if missing) |
-| ml | 14 | unified-domain-client, unified-ml-interface |
-| trading | 20 | unified-trade-execution-interface (rename); + unified-domain-client, matching-engine-library, unified-defi-execution-interface |
-| libraries | 14 | unified-trade-execution-interface (rename); + unified-ml-interface, matching-engine-library, unified-defi-execution-interface, api-contracts |
-| full-pipeline | 19 | unified-domain-client (if missing) |
-| uis | 14 | No repo renames |
-| infrastructure | 5 | No changes |
+| Workspace      | Repo count (approx) | Key additions / renames                                                                                                                      |
+| -------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| complete       | 35+                 | unified-trade-execution-interface; + api-contracts, matching-engine-library, unified-defi-execution-interface, unified-ml-interface          |
+| data-pipeline  | 11                  | unified-domain-client (if missing)                                                                                                           |
+| features       | 15                  | unified-domain-client (if missing)                                                                                                           |
+| ml             | 14                  | unified-domain-client, unified-ml-interface                                                                                                  |
+| trading        | 20                  | unified-trade-execution-interface (rename); + unified-domain-client, matching-engine-library, unified-defi-execution-interface               |
+| libraries      | 14                  | unified-trade-execution-interface (rename); + unified-ml-interface, matching-engine-library, unified-defi-execution-interface, api-contracts |
+| full-pipeline  | 19                  | unified-domain-client (if missing)                                                                                                           |
+| uis            | 14                  | No repo renames                                                                                                                              |
+| infrastructure | 5                   | No changes                                                                                                                                   |
 
 After implementation, workspace names and repo blocks will match the dependency matrix and the new repo set; `create-workspace-files.sh` will be the single source of truth for generated workspace definitions.

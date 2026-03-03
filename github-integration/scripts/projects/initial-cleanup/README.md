@@ -102,7 +102,7 @@ All 8 checks from quality gates:
 
 | Repo                           | Issue | Violations |
 | ------------------------------ | ----- | ---------- |
-| execution-service             | #147  | 20         |
+| execution-service              | #147  | 20         |
 | strategy-service               | #23   | 20         |
 | instruments-service            | #58   | 25         |
 | market-data-processing-service | #46   | 14         |
@@ -129,8 +129,8 @@ All 8 checks from quality gates:
 
 ### 01-create-project.sh
 
-**Purpose:** Create GitHub Project #5  
-**When to use:** One-time setup  
+**Purpose:** Create GitHub Project #5
+**When to use:** One-time setup
 **Output:** Project number
 
 ```bash
@@ -140,8 +140,8 @@ bash 01-create-project.sh
 
 ### 02-create-issues.sh
 
-**Purpose:** Create cleanup issues in each repo  
-**When to use:** One-time setup (or to create missing issues)  
+**Purpose:** Create cleanup issues in each repo
+**When to use:** One-time setup (or to create missing issues)
 **Dry run:** `--dry-run` flag
 
 ```bash
@@ -161,8 +161,8 @@ bash 02-create-issues.sh --dry-run
 
 ### 03-link-issues-to-project.sh
 
-**Purpose:** Add cleanup issues to Project #5  
-**When to use:** After creating issues  
+**Purpose:** Add cleanup issues to Project #5
+**When to use:** After creating issues
 **Project number:** Default 5 (or specify: `--project-number N`)
 
 ```bash
@@ -174,7 +174,7 @@ bash 03-link-issues-to-project.sh 5
 
 ### 04-run-batch-fix.sh
 
-**Purpose:** Run batch automation with intelligent filtering  
+**Purpose:** Run batch automation with intelligent filtering
 **When to use:** To process multiple issues in parallel
 
 **Features:**
@@ -224,7 +224,7 @@ bash 04-run-batch-fix.sh \
 
 ### 05-verify-completion.sh
 
-**Purpose:** Check completion status and generate report  
+**Purpose:** Check completion status and generate report
 **When to use:** Anytime to check progress
 
 ```bash
@@ -239,7 +239,7 @@ bash 05-verify-completion.sh
 
 ### 06-generate-manifests.py
 
-**Purpose:** Generate CODEX_VIOLATIONS_MANIFEST.md files for all repos  
+**Purpose:** Generate CODEX_VIOLATIONS_MANIFEST.md files for all repos
 **When to use:** After quality gates updates or to refresh violation counts
 
 ```bash
@@ -290,7 +290,7 @@ Total violations: 8
 
 ### utilities/check-codex-violations.py
 
-**Purpose:** Core violation checker (moved from core/02-run-diff-checker.py)  
+**Purpose:** Core violation checker (moved from core/02-run-diff-checker.py)
 **Used by:** 06-generate-manifests.py
 
 **Direct usage (advanced):**
@@ -326,7 +326,7 @@ violations), see `scripts/core/05-check-file-size-cods.py` (will move to COD-SIZ
 
 ### AGENT_PROMPT.md
 
-**Purpose:** Quick copy-paste prompts for local agent execution  
+**Purpose:** Quick copy-paste prompts for local agent execution
 **When to use:** Running one repo at a time with full control
 
 **Example:**
@@ -340,7 +340,7 @@ WORKFLOW: [8 steps...]
 
 ### WORKFLOW.md
 
-**Purpose:** Comprehensive 892-line workflow guide  
+**Purpose:** Comprehensive 892-line workflow guide
 **When to use:** Reference for agents (local or batch)
 
 **Key sections:**
@@ -461,7 +461,7 @@ bash 04-run-batch-fix.sh \
 
 **Blocked by:** Initial Cleanup (this project)
 
-**Scope:** Fix files >1500 lines  
+**Scope:** Fix files >1500 lines
 **Directory:** `scripts/projects/cod-size-refactoring/` (to be created)
 
 **Issues:**
@@ -491,17 +491,17 @@ bash 04-run-batch-fix.sh \
 
 ### Issue: CI fails but local passed
 
-**Root cause:** Infrastructure mismatch  
+**Root cause:** Infrastructure mismatch
 **Fix:** Update GitHub Actions to match local (see WORKFLOW.md Step 6)
 
 ### Issue: Duplicate dependencies
 
-**Root cause:** Service re-specifies dependency already in unified-trading-services  
+**Root cause:** Service re-specifies dependency already in unified-trading-services
 **Fix:** Remove from service pyproject.toml, unified-trading-services already provides it
 
 ### Issue: Quality gates outdated
 
-**Root cause:** Repo missing Check 5 (imports inside functions)  
+**Root cause:** Repo missing Check 5 (imports inside functions)
 **Fix:** Copy quality-gates.sh from unified-trading-services, commit separately
 
 ---

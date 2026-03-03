@@ -5,6 +5,7 @@
 ## Import Patterns (T1/T2)
 
 ### Cloud Primitives (Tier 1)
+
 ```python
 from unified_trading_services import (
     GCSEventSink,
@@ -21,6 +22,7 @@ from unified_trading_services import (
 ```
 
 ### Domain (Tier 2)
+
 ```python
 from unified_domain_client import (
     InstrumentKey,
@@ -31,6 +33,7 @@ from unified_domain_client import (
 ```
 
 ### Event Logging
+
 ```python
 from unified_events_interface import log_event
 from unified_trading_services import GCSEventSink, setup_service
@@ -77,8 +80,8 @@ unified-domain-client = { path = "../unified-domain-client" }
 - market-data-processing-service
 - strategy-service
 - execution-service
-- features-* services
-- ml-* services
+- features-\* services
+- ml-\* services
 
 ## unified-domain-client Package Fix
 

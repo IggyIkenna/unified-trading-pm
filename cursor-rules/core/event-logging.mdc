@@ -22,7 +22,7 @@ UEI defines the EventSink Protocol. GCSEventSink implements it.
 Services import:
   from unified_events_interface import setup_events, log_event, MockEventSink  # Protocol + log
   from unified_trading_services import GCSEventSink  # Implementation
-  
+
 Or use the UTS convenience wrapper:
   from unified_trading_services import setup_service, GCSEventSink, log_event
 
@@ -30,7 +30,7 @@ DO:
   # NEW PATTERN (UTS v2.2.0+) - with sink configuration:
   from unified_trading_services import GCSEventSink, setup_service, log_event
   from unified_events_interface import log_event  # if using UEI directly
-  
+
   setup_service(
       service_name="svc",
       mode="batch",
@@ -40,11 +40,11 @@ DO:
           service_name="svc",
       ),
   )
-  
+
   # LEGACY PATTERN (still supported) - without sink:
   from unified_events_interface import setup_events, log_event
   setup_events(service_name="my-service", mode="batch")
-  
+
   log_event("STARTED"); log_event("VALIDATION_STARTED"); ... log_event("STOPPED")
   log_event("AUTH_FAILURE", metadata={"auth_type": "api_key", "username": "...", "failure_reason": "..."})
   log_event("CONFIG_CHANGED", metadata={"config_file": "...", "changed_by": "...", "authorized": True})

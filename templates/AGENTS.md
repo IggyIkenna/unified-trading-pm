@@ -78,15 +78,18 @@ bash scripts/quickmerge.sh "msg"
 <!-- What works and what doesn't when this repo is cloned standalone -->
 
 **Works in isolation:**
+
 - {e.g., "Unit tests (tests/unit/)"}
 - {e.g., "Import smoke test"}
 - {e.g., "Linting and formatting"}
 
 **Requires workspace:**
+
 - {e.g., "Integration tests (tests/integration/) — need sibling repos installed"}
 - {e.g., "Cross-repo alignment tests (test_ac_uic_alignment.py)"}
 
 **Requires GCP credentials:**
+
 - {e.g., "E2E tests, Secret Manager access, GCS operations"}
 
 ## Architecture Notes
@@ -97,19 +100,19 @@ bash scripts/quickmerge.sh "msg"
 
 ### Key Files
 
-| Path                | Purpose                              |
-| ------------------- | ------------------------------------ |
-| `{src_dir}/`        | Main package source                  |
-| `tests/`            | Test suite (unit + integration)      |
-| `scripts/`          | Setup, quality gates, quickmerge     |
-| `pyproject.toml`    | Project metadata and dependencies    |
+| Path                      | Purpose                           |
+| ------------------------- | --------------------------------- |
+| `{src_dir}/`              | Main package source               |
+| `tests/`                  | Test suite (unit + integration)   |
+| `scripts/`                | Setup, quality gates, quickmerge  |
+| `pyproject.toml`          | Project metadata and dependencies |
 | `.dependency-matrix.json` | Workspace dependency declarations |
 
 ## Troubleshooting
 
-| Symptom | Likely Cause | Fix |
-| ------- | ------------ | --- |
-| `ModuleNotFoundError: {package_name}` | Package not installed | `bash scripts/setup.sh` |
-| Import fails for workspace dep | Isolated mode, dep not installed | `uv pip install -e ../dep-repo` or `--isolated` flag |
-| basedpyright timeout | Large codebase, slow machine | `run_timeout 120 basedpyright {src_dir}/` |
-| Tests fail with credential error | No GCP credentials configured | Set `GOOGLE_APPLICATION_CREDENTIALS` or skip with `-m "not e2e"` |
+| Symptom                               | Likely Cause                     | Fix                                                              |
+| ------------------------------------- | -------------------------------- | ---------------------------------------------------------------- |
+| `ModuleNotFoundError: {package_name}` | Package not installed            | `bash scripts/setup.sh`                                          |
+| Import fails for workspace dep        | Isolated mode, dep not installed | `uv pip install -e ../dep-repo` or `--isolated` flag             |
+| basedpyright timeout                  | Large codebase, slow machine     | `run_timeout 120 basedpyright {src_dir}/`                        |
+| Tests fail with credential error      | No GCP credentials configured    | Set `GOOGLE_APPLICATION_CREDENTIALS` or skip with `-m "not e2e"` |

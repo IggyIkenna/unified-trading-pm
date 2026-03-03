@@ -198,9 +198,9 @@
     }
   ],
   "summary_by_priority": {
-    "P0_critical": {"count": 11, "total_hours": 25},
-    "P1_architecture": {"count": 15, "total_hours": 35},
-    "P2_quality": {"count": 18, "total_hours": 50},
-    "P3_polish": {"count": 14, "total_hours": 120}
+    "P0_critical": { "count": 11, "total_hours": 25 },
+    "P1_architecture": { "count": 15, "total_hours": 35 },
+    "P2_quality": { "count": 18, "total_hours": 50 },
+    "P3_polish": { "count": 14, "total_hours": 120 }
   }
 }

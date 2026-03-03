@@ -24,38 +24,38 @@ bash manage-project.sh delete --project-number 3
 
 ### wipe-project-background.sh
 
-**Replaced**: Feb 2026  
-**Best Feature**: Parallel deletion with `xargs -P 20` (10x faster)  
+**Replaced**: Feb 2026
+**Best Feature**: Parallel deletion with `xargs -P 20` (10x faster)
 **Performance**: 30 seconds to wipe 650 issues (vs 5 minutes sequential)
 
 ### clear-github-project.sh
 
-**Replaced**: Feb 2026  
-**Best Feature**: Flexible CLI with `--repo`, `--all`, `--close|--delete` options  
+**Replaced**: Feb 2026
+**Best Feature**: Flexible CLI with `--repo`, `--all`, `--close|--delete` options
 **Feature**: Interactive mode for user-friendly operation
 
 ### wipe-and-regenerate-project.sh
 
-**Replaced**: Feb 2026  
-**Best Feature**: Safety confirmations before destructive operations  
+**Replaced**: Feb 2026
+**Best Feature**: Safety confirmations before destructive operations
 **Feature**: Orchestration of wipe + regenerate workflow
 
 ### create-project-fully-automated.sh
 
-**Replaced**: Feb 2026  
-**Best Feature**: GraphQL API for project creation (faster, more reliable)  
+**Replaced**: Feb 2026
+**Best Feature**: GraphQL API for project creation (faster, more reliable)
 **Feature**: Idempotent design (checks if project exists before creating)
 
 ### delete-and-recreate-project.sh
 
-**Replaced**: Feb 2026  
-**Best Feature**: Comprehensive prerequisite checks  
+**Replaced**: Feb 2026
+**Best Feature**: Comprehensive prerequisite checks
 **Feature**: Complete project deletion with confirmations
 
 ### run-full-regeneration.sh
 
-**Replaced**: Feb 2026  
-**Best Feature**: Orchestration of multiple scripts  
+**Replaced**: Feb 2026
+**Best Feature**: Orchestration of multiple scripts
 **Feature**: Progress tracking and error handling
 
 ## Why These Were Replaced

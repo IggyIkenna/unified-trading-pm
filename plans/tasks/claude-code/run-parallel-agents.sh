@@ -65,7 +65,7 @@ echo ""
 PIDS=()
 for repo in "${REPOS[@]}"; do
     echo "🚀 Launching agent for: $repo"
-    
+
     # Enhanced prompt with workspace context and edit restrictions
     ENHANCED_PROMPT="WORKSPACE CONTEXT:
 - Workspace root: $WORKSPACE_ROOT
@@ -89,7 +89,7 @@ IMPORTANT: Only run basedpyright 2-3 times total (not every 5 files) to avoid ha
 - Once mid-way to check progress
 - Once at end to verify 0 errors
 "
-    
+
     # Launch agent in background, save output to log
     (
         agent --api-key "$CURSOR_API_KEY" \
@@ -103,11 +103,11 @@ IMPORTANT: Only run basedpyright 2-3 times total (not every 5 files) to avoid ha
             "$ENHANCED_PROMPT" \
             2>&1 | python3 "$PARSER" | tee "/tmp/agent-${repo}.log"
     ) &
-    
+
     PIDS+=($!)
     echo "   PID: $! | Log: /tmp/agent-${repo}.log"
     echo ""
-    
+
     # Stagger launches by 2 seconds to avoid thundering herd
     if [ ${#PIDS[@]} -lt ${#REPOS[@]} ]; then
         sleep 2
@@ -130,11 +130,11 @@ echo ""
 for i in "${!PIDS[@]}"; do
     pid=${PIDS[$i]}
     repo=${REPOS[$i]}
-    
+
     echo "⏳ Waiting for $repo (PID: $pid)..."
     wait $pid
     exit_code=$?
-    
+
     if [ $exit_code -eq 0 ]; then
         echo "✅ $repo completed successfully"
     else
