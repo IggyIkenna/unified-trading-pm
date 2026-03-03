@@ -308,8 +308,13 @@ if [ "$RUN_LINT" = true ] && [ "$SKIP_TYPECHECK" != true ]; then
 
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${REPO_NAME}"
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
-    echo "Running: run_timeout 120 $BASEDPYRIGHT_CMD ${REPO_MODULE}/"
-    if run_timeout 120 $BASEDPYRIGHT_CMD "${REPO_MODULE}/" 2>&1 | tee /tmp/pyright_qg.log; then
+    if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
+        TYPECHECK_DIRS="scripts/ github-integration/"
+    else
+        TYPECHECK_DIRS="${REPO_MODULE}/"
+    fi
+    echo "Running: run_timeout 120 $BASEDPYRIGHT_CMD $TYPECHECK_DIRS"
+    if run_timeout 120 $BASEDPYRIGHT_CMD $TYPECHECK_DIRS 2>&1 | tee /tmp/pyright_qg.log; then
         log_success "Type checking PASSED"
         PYRIGHT_STATUS=0
     else
