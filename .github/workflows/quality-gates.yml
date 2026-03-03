@@ -31,7 +31,7 @@ jobs:
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install ruff==0.15.0 basedpyright pytest pytest-asyncio pytest-mock pytest-timeout pytest-xdist
+          uv pip install ruff==0.15.0 basedpyright pytest pytest-asyncio pytest-mock pytest-timeout pytest-xdist pytest-cov
 
       - name: Simulate sibling workspace layout
         # Scripts infer workspace root as parent of unified-trading-pm/.
