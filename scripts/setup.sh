@@ -15,29 +15,48 @@
 #   source scripts/setup.sh            # Setup + activate venv in current shell
 #
 # What this script does (in order):
-#   1. Validate Python version (>=3.13,<3.14 — or repo-specific override)
-#   2. Validate architecture (Apple Silicon: reject x86_64 Python on ARM)
-#   3. Create .venv if missing (uv venv)
-#   4. Activate .venv
-#   5. Bootstrap uv (the only pip install allowed)
-#   6. Run uv lock if pyproject.toml changed (skip if uv.lock is current)
-#   7. Install local path dependencies from .dependency-matrix.json
-#   8. Install project + dev deps (uv pip install -e ".[dev]")
-#   9. Verify ripgrep available (required by quality-gates.sh)
-#  10. Verify ruff version matches workspace standard (0.15.0)
-#  11. Import smoke test (python -c "import <package>")
-#  12. Detect GCP credentials (informational, non-blocking)
+#
+#   ── REPO TYPE DETECTION (runs first) ──────────────────────────────────────
+#   Detects repo type before any setup steps:
+#     UI repo:     package.json present, no pyproject.toml → npm install path
+#     Python repo: pyproject.toml present → Python venv path (steps 1-13)
+#
+#   ── UI REPO PATH (React/TypeScript) ───────────────────────────────────────
+#   UI.1. Check Node.js version
+#   UI.2. Run npm install (idempotent: skips if node_modules newer than package.json)
+#   UI.3. Check TypeScript / tsc available
+#   → exits 0 after UI setup (never falls through to Python steps)
+#
+#   ── PYTHON REPO PATH ──────────────────────────────────────────────────────
+#    1. Validate Python version (>=3.13,<3.14 — or repo-specific override)
+#    2. Architecture check (macOS only, local dev only — skipped in CI)
+#       Rejects x86_64 Python on Apple Silicon (Rosetta) — ARM64 required
+#    3. Bootstrap uv (the only pip install allowed; must run before venv creation)
+#    4. Create .venv if missing or version mismatch (uv venv)
+#    5. Activate .venv (source .venv/bin/activate)
+#    6. Run uv lock if pyproject.toml changed (skipped if uv.lock is current)
+#    7. Install local path dependencies from .dependency-matrix.json
+#       Installs jq automatically (apt/brew) if needed; exits 1 if jq unavailable
+#    8. Install project + dev deps (uv pip install -e ".[dev]")
+#    9. Verify ripgrep available (required by quality-gates.sh) — always runs
+#   10. Verify ruff version matches workspace standard (0.15.0) — always runs
+#   11. Import smoke test (python -c "import <package>") — always runs
+#   12. GCP credentials check — informational only, never blocks; never reads
+#       SA JSON files from repo root (use ADC: gcloud auth application-default login)
+#   13. Print known caveats from AGENTS.md (if present)
 #
 # Idempotency:
-#   - .venv creation: skipped if .venv/ exists and Python version matches
+#   - UI:  node_modules skipped if package.json not newer than node_modules/
+#   - .venv creation: skipped if .venv/ exists with correct Python version
 #   - uv lock: skipped if uv.lock is newer than pyproject.toml
 #   - Dep install: skipped if .setup-stamp is newer than pyproject.toml + uv.lock
-#   - Each step prints SKIP or OK, never re-does work unnecessarily
+#   - Each step prints [SKIP] or [OK], never re-does work unnecessarily
+#   - --force bypasses all skip checks and reinstalls from scratch
 #
-# CI detection:
-#   In CI (GITHUB_ACTIONS, CI, CLOUD_BUILD set), steps 1-8 are skipped —
-#   CI environments manage their own Python, venv, and deps.
-#   Steps 9-11 (verification) always run.
+# CI detection (GITHUB_ACTIONS, CI, or CLOUD_BUILD set):
+#   Python repo: steps 1-8 (install/setup) are skipped — CI manages its own env.
+#   Steps 9-13 (verification) always run.
+#   UI repo: npm install step is skipped — CI manages node_modules.
 #
 # Exit codes:
 #   0 = success
@@ -129,6 +148,81 @@ fi
 SETUP_STAMP="$PROJECT_ROOT/.setup-stamp"
 ISSUES=0
 
+# ── REPO TYPE DETECTION ─────────────────────────────────────────────────────
+# UI repos (React/TypeScript): have package.json, no pyproject.toml
+# Python repos: have pyproject.toml (may also have package.json for tooling)
+IS_UI_REPO=false
+if [ -f "package.json" ] && [ ! -f "pyproject.toml" ]; then
+    IS_UI_REPO=true
+fi
+
+# ── UI REPO FLOW ─────────────────────────────────────────────────────────────
+# For UI repos, skip all Python steps and run npm install instead, then exit.
+if [ "$IS_UI_REPO" = true ]; then
+    echo -e "  ${BLUE}UI repo detected (package.json, no pyproject.toml)${NC}"
+
+    log_step "Node.js version"
+    if command -v node &>/dev/null; then
+        NODE_VER=$(node --version 2>&1)
+        log_ok "Node $NODE_VER"
+    else
+        log_fail "Node.js not found — install: https://nodejs.org or: brew install node"
+        ISSUES=$((ISSUES + 1))
+        [ "$CHECK_ONLY" = true ] || exit 1
+    fi
+
+    log_step "npm / node_modules"
+    if [ "$IN_CI" = true ]; then
+        log_skip "CI mode — dependencies managed by CI"
+    elif [ "$CHECK_ONLY" = true ]; then
+        if [ -d "node_modules" ]; then
+            log_ok "node_modules exists"
+        else
+            log_fail "node_modules missing — run: npm install"
+            ISSUES=$((ISSUES + 1))
+        fi
+    elif [ -d "node_modules" ] && [ "$FORCE" != true ]; then
+        # Re-install only if package.json is newer than node_modules
+        if [ "package.json" -nt "node_modules" ]; then
+            log_warn "package.json changed — running npm install"
+            npm install --silent
+            log_ok "npm install complete"
+        else
+            log_skip "node_modules up to date"
+        fi
+    else
+        npm install --silent
+        log_ok "npm install complete"
+    fi
+
+    log_step "TypeScript / build tools"
+    if [ -f "node_modules/.bin/tsc" ]; then
+        TSC_VER=$(node_modules/.bin/tsc --version 2>&1 || echo "installed")
+        log_ok "tsc $TSC_VER"
+    else
+        log_warn "tsc not found in node_modules (will be available after npm install)"
+    fi
+
+    echo ""
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    if [ "$ISSUES" -gt 0 ]; then
+        echo -e "${RED}  $ISSUES issue(s) found${NC}"
+        echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        [ "$CHECK_ONLY" = true ] && exit 2 || exit 1
+    else
+        echo -e "${GREEN}  Setup complete — $REPO_NAME ready (UI repo)${NC}"
+        echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo "  Next steps:"
+        echo "    npm run dev                            # Start dev server"
+        echo "    bash scripts/quality-gates.sh          # Run quality gates"
+        echo "    bash scripts/quickmerge.sh \"message\"   # Full merge pipeline"
+        echo ""
+    fi
+    exit 0
+fi
+# ── END UI REPO FLOW — Python repo continues below ──────────────────────────
+
 # ── [1] PYTHON VERSION ─────────────────────────────────────────────────────
 log_step "Python version (requires $REQUIRED_PYTHON)"
 
@@ -153,10 +247,12 @@ else
     [ "$CHECK_ONLY" = true ] || exit 1
 fi
 
-# ── [2] ARCHITECTURE CHECK (Apple Silicon) ──────────────────────────────────
+# ── [2] ARCHITECTURE CHECK (Apple Silicon — local dev only) ─────────────────
 log_step "Architecture check"
 
-if [[ "$OSTYPE" == "darwin"* ]] && [ -n "$PYTHON_CMD" ]; then
+if [ "$IN_CI" = true ]; then
+    log_skip "CI mode — CI runs on Linux, arch check not applicable"
+elif [[ "$OSTYPE" == "darwin"* ]] && [ -n "$PYTHON_CMD" ]; then
     ARCH=$(uname -m)
     PY_ARCH=$("$PYTHON_CMD" -c "import platform; print(platform.machine())" 2>/dev/null || echo "unknown")
     if [ "$ARCH" = "arm64" ] && [ "$PY_ARCH" = "x86_64" ]; then
@@ -171,7 +267,21 @@ else
     log_skip "Not macOS or no Python — skipping arch check"
 fi
 
-# ── [3] VENV CREATION ──────────────────────────────────────────────────────
+# ── [3] BOOTSTRAP UV (before venv creation — venv creation needs uv) ────────
+log_step "Bootstrap uv"
+
+if [ "$IN_CI" = true ]; then
+    log_skip "CI mode"
+elif [ "$CHECK_ONLY" = true ]; then
+    command -v uv &>/dev/null && log_ok "uv available" || { log_fail "uv not found"; ISSUES=$((ISSUES + 1)); }
+elif command -v uv &>/dev/null; then
+    log_skip "uv already installed ($(uv --version 2>&1 | head -1))"
+else
+    "$PYTHON_CMD" -m pip install uv --quiet 2>/dev/null
+    log_ok "Installed uv"
+fi
+
+# ── [4] VENV CREATION ──────────────────────────────────────────────────────
 log_step "Virtual environment (.venv)"
 
 if [ "$IN_CI" = true ]; then
@@ -186,22 +296,21 @@ elif [ "$CHECK_ONLY" = true ]; then
         ISSUES=$((ISSUES + 1))
     fi
 elif [ -d ".venv" ] && [ "$FORCE" != true ]; then
-    # Verify venv Python matches required version
     VENV_PY=$(".venv/bin/python" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1 || echo "")
     if [ "$VENV_PY" = "$REQUIRED_PYTHON" ]; then
         log_skip ".venv exists (Python $VENV_PY)"
     else
         log_warn ".venv has Python $VENV_PY, need $REQUIRED_PYTHON — recreating"
         rm -rf .venv
-        command -v uv &>/dev/null && uv venv .venv --python "$PYTHON_CMD" || "$PYTHON_CMD" -m venv .venv
+        uv venv .venv --python "$PYTHON_CMD" 2>/dev/null || "$PYTHON_CMD" -m venv .venv
         log_ok "Recreated .venv with Python $REQUIRED_PYTHON"
     fi
 else
-    command -v uv &>/dev/null && uv venv .venv --python "$PYTHON_CMD" 2>/dev/null || "$PYTHON_CMD" -m venv .venv
+    uv venv .venv --python "$PYTHON_CMD" 2>/dev/null || "$PYTHON_CMD" -m venv .venv
     log_ok "Created .venv"
 fi
 
-# ── [4] ACTIVATE VENV ──────────────────────────────────────────────────────
+# ── [5] ACTIVATE VENV ──────────────────────────────────────────────────────
 log_step "Activate .venv"
 
 if [ "$IN_CI" = true ]; then
@@ -218,20 +327,6 @@ else
     log_fail "No .venv/bin/activate found"
     ISSUES=$((ISSUES + 1))
     [ "$CHECK_ONLY" = true ] || exit 1
-fi
-
-# ── [5] BOOTSTRAP UV ───────────────────────────────────────────────────────
-log_step "Bootstrap uv"
-
-if [ "$IN_CI" = true ]; then
-    log_skip "CI mode"
-elif [ "$CHECK_ONLY" = true ]; then
-    command -v uv &>/dev/null && log_ok "uv available" || { log_fail "uv not found"; ISSUES=$((ISSUES + 1)); }
-elif command -v uv &>/dev/null; then
-    log_skip "uv already installed"
-else
-    pip install uv --quiet 2>/dev/null
-    log_ok "Installed uv"
 fi
 
 # ── [6] UV LOCK ─────────────────────────────────────────────────────────────
@@ -254,32 +349,46 @@ log_step "Local path dependencies"
 
 if [ "$IN_CI" = true ] || [ "$CHECK_ONLY" = true ]; then
     log_skip "CI/check mode"
-elif [ "$ISOLATED" = true ]; then
-    log_skip "Isolated mode — skipping workspace path deps"
-    if [ -f ".dependency-matrix.json" ]; then
-        DEPS=$(command -v jq &>/dev/null && jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
+elif [ ! -f ".dependency-matrix.json" ]; then
+    log_skip "No .dependency-matrix.json"
+else
+    # jq is required to parse .dependency-matrix.json — install if missing
+    if ! command -v jq &>/dev/null; then
+        log_warn "jq not found — attempting install..."
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y jq --quiet 2>/dev/null && log_ok "Installed jq via apt" || { log_fail "jq install failed — run: sudo apt-get install jq"; ISSUES=$((ISSUES + 1)); exit 1; }
+        elif command -v brew &>/dev/null; then
+            brew install jq --quiet 2>/dev/null && log_ok "Installed jq via brew" || { log_fail "jq install failed — run: brew install jq"; ISSUES=$((ISSUES + 1)); exit 1; }
+        else
+            log_fail "jq required but not installable — install manually: https://jqlang.github.io/jq/download/"
+            ISSUES=$((ISSUES + 1))
+            exit 1
+        fi
+    fi
+
+    if [ "$ISOLATED" = true ]; then
+        log_skip "Isolated mode — skipping workspace path deps"
+        DEPS=$(jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
         if [ -n "$DEPS" ]; then
             log_warn "This repo depends on: $DEPS"
             log_warn "In isolated mode, install them from Artifact Registry (uv pip install <dep>)"
             log_warn "Some tests requiring these deps will fail — this is expected"
         fi
-    fi
-elif [ -f ".dependency-matrix.json" ] && command -v jq &>/dev/null; then
-    DEPS=$(jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
-    if [ -n "$DEPS" ]; then
-        for dep in $DEPS; do
-            DEP_PATH="$WORKSPACE_ROOT/$dep"
-            if [ -d "$DEP_PATH" ] && [ -f "$DEP_PATH/pyproject.toml" ]; then
-                uv pip install -e "$DEP_PATH" --quiet 2>/dev/null && log_ok "$dep" || log_warn "$dep install failed"
-            else
-                log_warn "$dep not found at $DEP_PATH — install from Artifact Registry if needed"
-            fi
-        done
     else
-        log_skip "No dependencies in .dependency-matrix.json"
+        DEPS=$(jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
+        if [ -n "$DEPS" ]; then
+            for dep in $DEPS; do
+                DEP_PATH="$WORKSPACE_ROOT/$dep"
+                if [ -d "$DEP_PATH" ] && [ -f "$DEP_PATH/pyproject.toml" ]; then
+                    uv pip install -e "$DEP_PATH" --quiet 2>/dev/null && log_ok "$dep" || log_warn "$dep install failed"
+                else
+                    log_warn "$dep not found at $DEP_PATH — install from Artifact Registry if needed"
+                fi
+            done
+        else
+            log_skip "No dependencies listed in .dependency-matrix.json"
+        fi
     fi
-else
-    log_skip "No .dependency-matrix.json or jq not available"
 fi
 
 # ── [8] PROJECT DEPS ───────────────────────────────────────────────────────
@@ -358,10 +467,9 @@ log_step "GCP credentials (informational)"
 
 if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ] && [ -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
     log_ok "GOOGLE_APPLICATION_CREDENTIALS set"
-elif ls "$PROJECT_ROOT"/central-element-*.json &>/dev/null 2>&1; then
-    log_ok "Service account JSON found in repo root"
 else
-    log_warn "No GCP credentials detected (set GOOGLE_APPLICATION_CREDENTIALS or place SA JSON in repo root)"
+    log_warn "No GCP credentials detected — run: gcloud auth application-default login"
+    log_warn "Never place SA JSON files in the repo root (use ADC or Secret Manager)"
 fi
 
 # ── [13] KNOWN CAVEATS (per-repo) ─────────────────────────────────────────

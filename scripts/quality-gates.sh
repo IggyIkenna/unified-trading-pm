@@ -56,46 +56,29 @@ REPO_ROOT="$(dirname "$PROJECT_ROOT")"
 cd "$PROJECT_ROOT"
 
 # ============================================================================
-# ENSURE ENVIRONMENT (venv + uv + deps) — skip in CI
+# ENSURE ENVIRONMENT — delegated entirely to setup.sh (single owner)
+# setup.sh handles: Python version check, venv create/activate, uv lock,
+# path deps (.dependency-matrix.json), uv pip install -e ".[dev]", CI detection.
+# quality-gates.sh only selects the right venv to use.
 # ============================================================================
-# PM-specific: use workspace venv if available (PM is not a Python package)
 WORKSPACE_VENV="$REPO_ROOT/.venv-workspace"
 if [ "$REPO_MODULE" = "unified_trading_pm" ] && [ -d "$WORKSPACE_VENV/bin" ]; then
+    # PM repo: use workspace venv (PM is not an installable Python package)
     export PATH="$WORKSPACE_VENV/bin:$PATH"
     log_success "Using workspace venv (PM is not an installable package)"
 elif [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
-    command -v uv &>/dev/null || pip install uv --quiet
-    if [ -f "pyproject.toml" ]; then
-        uv lock 2>/dev/null || true
-        if [ -f "uv.lock" ] && ! git diff --quiet uv.lock 2>/dev/null; then
-            log_warn "uv.lock was updated — include it in your commit."
-        fi
-    fi
-    if [ ! -d ".venv" ]; then
-        log_warn "Creating .venv..."
-        uv venv .venv
-    fi
-    if [ -f ".venv/bin/activate" ]; then
-        source .venv/bin/activate
-    elif [ -f ".venv/Scripts/activate" ]; then
-        source .venv/Scripts/activate
-    fi
-    command -v uv &>/dev/null || pip install uv --quiet
-    if [ -f "pyproject.toml" ]; then
-        # Install workspace path deps first (local dev parity)
-        for dep_dir in "../unified-api-contracts" "../unified-config-interface" "../unified-cloud-interface" "../unified-events-interface"; do
-            if [ -d "$dep_dir" ] && [ -f "$dep_dir/pyproject.toml" ]; then
-                uv pip install -e "$dep_dir" --quiet 2>/dev/null || true
-            fi
-        done
-        uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || {
-            log_fail "uv pip install failed — dev deps required for quality gates"
-            exit 1
-        }
+    # Local dev: ensure environment via setup.sh — all installs live there
+    if [ -f "$SCRIPT_DIR/setup.sh" ]; then
+        source "$SCRIPT_DIR/setup.sh"
+    else
+        log_fail "scripts/setup.sh not found — environment not ready."
+        log_fail "Fix: cp unified-trading-pm/scripts/setup.sh scripts/setup.sh"
+        exit 1
     fi
 fi
+# CI (GITHUB_ACTIONS / CI / CLOUD_BUILD): venv and deps managed by CI — nothing to do here.
 
-# Python binary
+# Python binary — pick up whichever venv setup.sh activated (or CI's Python)
 if [ -f ".venv/bin/python" ]; then
     PYTHON_CMD=".venv/bin/python"
 elif [ -f ".venv/Scripts/python.exe" ]; then
