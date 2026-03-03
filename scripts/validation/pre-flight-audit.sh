@@ -133,13 +133,32 @@ else
     fi
     
     # Check 3: Large files (>1500 lines)
-    large_files=$(find . -name "*.py" -not -path "./tests/*" -not -path "./scripts/*" -exec wc -l {} + 2>/dev/null | awk '$1 > 1500 {print $2}' | head -5)
+    large_files=$(find . -name "*.py" -not -path "./tests/*" -not -path "./scripts/*" -exec wc -l {} + 2>/dev/null | awk '$1 > 1500 && $2 != "total" {print $2}' | head -5)
     if [ -n "$large_files" ]; then
         echo -e "    ${YELLOW}⚠️  Large files found (>1500 lines):${NC}"
         echo "$large_files" | sed 's/^/       /'
         echo "       Consider splitting large files"
     else
         echo -e "    ${GREEN}✅ No files >1500 lines${NC}"
+    fi
+
+    # Check 4: Directories with >30 files (exclude gitignored + .cursor)
+    big_dirs=""
+    while IFS= read -r dir; do
+        git check-ignore -q "$dir" 2>/dev/null && continue
+        [[ "$dir" == ./.cursor* ]] && continue
+        count=$(find "$dir" -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$count" -gt 30 ] 2>/dev/null; then
+            big_dirs="${big_dirs}${dir} (${count} files)
+"
+        fi
+    done < <(find . -type d -not -path './.git*' 2>/dev/null)
+    if [ -n "$big_dirs" ]; then
+        echo -e "    ${YELLOW}⚠️  Directories with >30 files:${NC}"
+        echo "$big_dirs" | sed 's/^/       /'
+        echo "       Consider splitting into subdirectories"
+    else
+        echo -e "    ${GREEN}✅ No directories >30 files${NC}"
     fi
 fi
 
