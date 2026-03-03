@@ -68,3 +68,14 @@ Scope identifies which component changed:
 - commit-msg hook (pre-commit): validates format before commit is created
 - quickmerge.sh Stage 0: validates COMMIT_MSG format, exits 1 if not conventional
 - GitHub Actions version-bump.yml: reads type prefix from squash-merge commit
+
+## Breaking Changes in Internal Libraries/Services
+
+When a library or service makes a breaking API change that forces consumers to update their code,
+use `feat!:` (bang) or include `BREAKING CHANGE:` in the commit footer. This triggers a **major**
+version bump (e.g. `1.4.2` → `2.0.0`) in the CI.
+
+Consumers of that library MUST then update their `pyproject.toml` version constraint and fix
+call sites before their next merge to main.
+
+See full protocol: `cursor-rules/dependencies/breaking-change-major-version-protocol.mdc`
