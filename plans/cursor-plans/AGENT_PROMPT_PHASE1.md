@@ -10,8 +10,8 @@ No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git push.
 basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths.
 Search unified libraries before implementing anything new.
 
-WORKSPACE_ROOT=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
-All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos
+All Python/pytest/ruff/basedpyright/QG commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
 
 ---
 
@@ -20,6 +20,7 @@ All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .ve
 > **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every PR. Build accordingly.**
 
 This means:
+
 - No TODO comments in production code — open a GitHub issue instead
 - No magic numbers or hardcoded strings — use constants from UCI/AC
 - No skipped tests — every code path tested, every skip documented with issue link
@@ -44,12 +45,12 @@ Read that file completely before starting any work. Phase 2 cannot start until a
 
 ## SSOT — Read These First
 
-| Source | Path | What it governs |
-|--------|------|-----------------|
-| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` | 63 repos, 13 levels (L0-L12) — L0=PM, L1=codex, L2+=code repos |
-| Runtime topology | `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` | Runtime service wiring |
-| Manifest JSON | `unified-trading-pm/workspace-manifest.json` | Machine-readable repo registry |
-| SSOT index | `unified-trading-codex/00-SSOT-INDEX.md` | Maps every topic to its canonical doc |
+| Source                 | Path                                                                        | What it governs                                                |
+| ---------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg`                             | 63 repos, 13 levels (L0-L12) — L0=PM, L1=codex, L2+=code repos |
+| Runtime topology       | `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` | Runtime service wiring                                         |
+| Manifest JSON          | `unified-trading-pm/workspace-manifest.json`                                | Machine-readable repo registry                                 |
+| SSOT index             | `unified-trading-codex/00-SSOT-INDEX.md`                                    | Maps every topic to its canonical doc                          |
 
 ---
 
@@ -57,16 +58,17 @@ Read that file completely before starting any work. Phase 2 cannot start until a
 
 Any old name anywhere is **immediate technical debt**. Fix at every level the moment you see it.
 
-| Wrong (old) | Canonical |
-|-------------|-----------|
-| `market-tick-data-handler` | `market-tick-data-service` |
-| `client-reporting-api` | `client-reporting-api` |
-| `alerting-service` | `alerting-service` |
+| Wrong (old)                       | Canonical                          |
+| --------------------------------- | ---------------------------------- |
+| `market-tick-data-handler`        | `market-tick-data-service`         |
+| `client-reporting-api`            | `client-reporting-api`             |
+| `alerting-service`                | `alerting-service`                 |
 | `position-balance-monitor` (bare) | `position-balance-monitor-service` |
-| `ml-training-ui` | `ml-training-ui` |
-| `execution-analytics-ui` | `execution-analytics-ui` |
+| `ml-training-ui`                  | `ml-training-ui`                   |
+| `execution-analytics-ui`          | `execution-analytics-ui`           |
 
 **Every rename must be complete at ALL levels simultaneously:**
+
 1. GitHub repo name
 2. GCP Artifact Registry package name + all `cloudbuild.yaml` image tags
 3. Cloud Build trigger name
@@ -97,9 +99,11 @@ New manifest field needed → update codex schema doc first, then `workspace-man
 ## Pure Import Smoke Test (run during Stream C QG baseline)
 
 In every Python repo, as part of `ci-qg-baseline-run`:
+
 ```bash
 python -c "import <package_name>" 2>&1
 ```
+
 Failure = P0 blocking issue. Record in manifest `ci_status` as `FAILING: import_error`.
 Import failures cascade — they block all other tests. Record all failures before touching anything else.
 
@@ -112,12 +116,14 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 ### Stream A — CI/CD (BLOCKING: Phase 2 cannot start until A3 complete)
 
 **A0 — DAG Validation** (precondition for A1):
+
 - Verify all `workspace-manifest.json` `arch_tier` fields match `WORKSPACE_MANIFEST_DAG.svg`
 - Verify 4 API service repos present in manifest (ERA, MDA, CRA + check for 4th)
 - Fix MEL visual tier bug in DAG SVG (MEL must show T0)
 - Create `dag-enforcement.mdc` cursor rule (see Stream C)
 
 **A1 — Quickmerge + Version-Bump + Setup Rollout** (10 parallel agents, 58 repos, 5–6 repos each):
+
 1. Copy `scripts/quickmerge.sh` from SSOT: `unified-trading-pm/scripts/quickmerge.sh`
 2. Copy `.github/workflows/version-bump.yml` from SSOT: `unified-trading-pm/.github/workflows/version-bump.yml`
 3. Copy `scripts/setup.sh` from SSOT: `unified-trading-pm/scripts/setup.sh` — replace any existing ad-hoc setup.sh
@@ -130,12 +136,14 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 **Repo count note:** 58 git repos exist on disk. 51 have `pyproject.toml` (Python), 12 are TypeScript UIs (have `package.json`). All 58 get quickmerge.sh + version-bump.yml + setup.sh. TypeScript repos skip Python-specific setup steps (venv, uv, pyproject) automatically.
 
 **A2 — Commit-Msg Hooks** (4 parallel agents, after A1):
+
 - Add commit-msg hook to all 57 repos: validates `feat:|fix:|chore:|docs:|refactor:|test:|ci:|BREAKING CHANGE:` prefix
 - Verify all `pyproject.toml` at `0.x.x` (not pre-bumped)
 - Confirm GCP AR accepts PEP 440 `+local` versions
 - Add `refactor_scope` field to workspace-manifest schema
 
 **A3 — CI/CD Pipeline Wiring** (3 parallel agents, after A2):
+
 - `${DEP_BRANCH:-main}` + `git ls-remote` fallback in all `quality-gates.yml`
 - Cloud Build feature branch trigger + version inject (`+feat.BRANCH_SHA`)
 - GH Action version bump: reads squash-merge commit prefix → bumps semver on main merge
@@ -160,11 +168,11 @@ All items independent — run in parallel:
 2. Create `.cursor/rules/dag-enforcement.mdc` — enforce tier boundaries; CI validates `pyproject.toml` deps vs manifest `arch_tier`
 3. Create `.cursor/rules/ui-service-separation.mdc` — UI code must never live inside a service repo
 4. Create `.cursor/rules/mandatory-setup-sh.mdc` — every repo must have `scripts/setup.sh` from SSOT template
-4. **ci-manifest-status** — Add `ci_status`, `quality_gate_status`, `coverage_pct`, `bypass_audit_path`, `testing_level`, `skipped_gates` to `workspace-manifest.json` for all 57 repos
-5. **ci-add-missing-quality-gates** — Add `quality-gates.sh` to 12 repos missing it (see plan for list)
-6. **ci-qg-baseline-run** — Run QG + import smoke test on all repos; record pass/fail + coverage % as baseline snapshot (do NOT fix failures here — that is Phase 2/3 work)
-7. **ci-cloudbuild-audit** — Verify all `cloudbuild.yaml` run tests INSIDE Docker image (not standalone pytest)
-8. **ci-aws-parity** — AWS compute stubs, secret naming parity, `buildspec.aws.yaml` for all repos with `cloudbuild.yaml`
+5. **ci-manifest-status** — Add `ci_status`, `quality_gate_status`, `coverage_pct`, `bypass_audit_path`, `testing_level`, `skipped_gates` to `workspace-manifest.json` for all 57 repos
+6. **ci-add-missing-quality-gates** — Add `quality-gates.sh` to 12 repos missing it (see plan for list)
+7. **ci-qg-baseline-run** — Run QG + import smoke test on all repos; record pass/fail + coverage % as baseline snapshot (do NOT fix failures here — that is Phase 2/3 work)
+8. **ci-cloudbuild-audit** — Verify all `cloudbuild.yaml` run tests INSIDE Docker image (not standalone pytest)
+9. **ci-aws-parity** — AWS compute stubs, secret naming parity, `buildspec.aws.yaml` for all repos with `cloudbuild.yaml`
 
 ---
 
