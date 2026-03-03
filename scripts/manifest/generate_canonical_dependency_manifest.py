@@ -16,13 +16,12 @@ from __future__ import annotations
 
 import json
 import sys
+import tomllib
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast
-
-import tomllib
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
@@ -69,11 +68,13 @@ def write_manifest_json(constraints: dict[str, str]) -> None:
     """Write canonical-dependency-manifest.json (external packages only)."""
     # Normalize to list of {name, versionRange} for stable order and clarity
     packages = [
-        {"name": name, "versionRange": spec}
-        for name, spec in sorted(constraints.items(), key=lambda x: x[0].lower())
+        {"name": name, "versionRange": spec} for name, spec in sorted(constraints.items(), key=lambda x: x[0].lower())
     ]
     manifest = {
-        "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. Single source of truth. Internal/private repos are in workspace-manifest.json.",
+        "description": (
+            "Canonical list of external (PyPI) dependency version ranges for the workspace. "
+            "SSOT. Internal/private repos are in workspace-manifest.json."
+        ),
         "sourceFile": "workspace-constraints.toml",
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
@@ -125,9 +126,9 @@ def generate_svg(constraints: dict[str, str]) -> str:
     ln(CSS)
     ln("</style></defs>")
     ln(f'<rect class="bg" x="0" y="0" width="{SVG_W}" height="{svg_h}" />')
-    ln(f'<text x="40" y="32" class="title">Canonical External Dependencies</text>')
+    ln('<text x="40" y="32" class="title">Canonical External Dependencies</text>')
     ln(
-        f'<text x="40" y="50" class="subtitle">'
+        '<text x="40" y="50" class="subtitle">'
         "SSOT: unified-trading-pm/canonical-dependency-manifest.json. "
         "External packages only; internal repos in workspace-manifest.json.</text>"
     )
@@ -143,11 +144,18 @@ def generate_svg(constraints: dict[str, str]) -> str:
             spec_show = spec if len(spec) <= 28 else spec[:25] + "..."
             ln(f'  <rect x="{px}" y="{y}" width="{w}" height="{BOX_H}" class="pkg-box" />')
             ln(f'  <text x="{px + w // 2}" y="{y + 14}" text-anchor="middle" class="label">{html_escape(name)}</text>')
-            ln(f'  <text x="{px + w // 2}" y="{y + 26}" text-anchor="middle" class="ver">{html_escape(spec_show)}</text>')
+            ln(
+                f'  <text x="{px + w // 2}" y="{y + 26}" text-anchor="middle" class="ver">'
+                f"{html_escape(spec_show)}</text>"
+            )
         y += ROW_H + LVL_GAP
 
     footer_y = y + 20
-    ln(f'<text x="40" y="{footer_y}" class="footer">Pin new external deps to these ranges. See 06-coding-standards/dependency-management.md and cursor rule canonical-external-deps.mdc.</text>')
+    ln(
+        f'<text x="40" y="{footer_y}" class="footer">'
+        "Pin new external deps to these ranges. See 06-coding-standards/dependency-management.md "
+        "and cursor rule canonical-external-deps.mdc.</text>"
+    )
     ln("</svg>")
     return "\n".join(out) + "\n"
 
