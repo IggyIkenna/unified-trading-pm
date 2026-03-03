@@ -10,8 +10,8 @@ No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git push.
 basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths.
 Search unified libraries before implementing anything new.
 
-WORKSPACE_ROOT=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
-All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos
+All Python/pytest/ruff/basedpyright/QG commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
 
 ---
 
@@ -20,6 +20,7 @@ All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .ve
 > **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every PR. Build accordingly.**
 
 This means — no exceptions, no shortcuts:
+
 - **No silent errors** — every `except` block must reraise, raise a typed error, or log at ERROR + reraise. `pass` is a build failure.
 - **No empty fallbacks** — `os.getenv(KEY, '')` silently fails in production; forbidden. Use `UnifiedCloudConfig` or `os.environ[KEY]` (raises on missing).
 - **No untyped code** — every function parameter, return type, and class field has a type annotation. `Any` is forbidden unless documented in `QUALITY_GATE_BYPASS_AUDIT.md`.
@@ -55,34 +56,34 @@ If any check fails: STOP. Complete Phase 1 first.
 
 ## SSOT
 
-| Source | Path |
-|--------|------|
+| Source                 | Path                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
-| Manifest JSON | `unified-trading-pm/workspace-manifest.json` |
-| Tier architecture | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` |
-| Library matrix | `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` |
+| Manifest JSON          | `unified-trading-pm/workspace-manifest.json`                                                                                   |
+| Tier architecture      | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`                                                                   |
+| Library matrix         | `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`                                       |
 
 **Library tier map:**
 
-| Abbrev | Repo | Tier |
-|--------|------|------|
-| AC | unified-api-contracts | T0 |
-| UIC_INT | unified-internal-contracts | T0 |
-| UCI | unified-config-interface | T0 |
-| UEI | unified-events-interface | T0 |
-| UCLI | unified-cloud-interface | T0 |
-| URDI | unified-reference-data-interface | T0 |
-| EAL | execution-algo-library | T0 |
-| MEL | matching-engine-library | T0 |
-| UTS | unified-trading-services | T1 |
-| UMI | unified-market-interface | T2 |
-| UTEI | unified-trade-execution-interface | T2 |
-| UML | unified-ml-interface | T2 |
-| UFC | unified-feature-calculator-library | T2 |
-| UPI | unified-position-interface | T2 |
-| UDEI | unified-defi-execution-interface | T2 |
-| USEI | unified-sports-execution-interface | T2 |
-| UDC | unified-domain-client | T3 |
+| Abbrev  | Repo                               | Tier |
+| ------- | ---------------------------------- | ---- |
+| AC      | unified-api-contracts              | T0   |
+| UIC_INT | unified-internal-contracts         | T0   |
+| UCI     | unified-config-interface           | T0   |
+| UEI     | unified-events-interface           | T0   |
+| UCLI    | unified-cloud-interface            | T0   |
+| URDI    | unified-reference-data-interface   | T0   |
+| EAL     | execution-algo-library             | T0   |
+| MEL     | matching-engine-library            | T0   |
+| UTS     | unified-trading-services           | T1   |
+| UMI     | unified-market-interface           | T2   |
+| UTEI    | unified-trade-execution-interface  | T2   |
+| UML     | unified-ml-interface               | T2   |
+| UFC     | unified-feature-calculator-library | T2   |
+| UPI     | unified-position-interface         | T2   |
+| UDEI    | unified-defi-execution-interface   | T2   |
+| USEI    | unified-sports-execution-interface | T2   |
+| UDC     | unified-domain-client              | T3   |
 
 ---
 
@@ -98,16 +99,16 @@ Any rename must be complete at ALL levels: pyproject.toml, Python package dir, a
 
 > If a code change requires new functionality that does not exist in a library, add it to the correct library FIRST. Never define schemas, error types, event names, or contracts inline in a higher-tier repo.
 
-| If you need... | Add to first | Tier |
-|----------------|-------------|------|
-| New error schema / typed exception | `unified-api-contracts` (AC) | T0 |
-| New internal event / domain contract | `unified-internal-contracts` (UIC_INT) | T0 |
-| New lifecycle event name | `unified-events-interface` (UEI) | T0 |
-| New config field | `unified-config-interface` (UCI) | T0 |
-| New cloud primitive | `unified-cloud-interface` (UCLI) | T0 |
-| New reference data protocol | `unified-reference-data-interface` (URDI) | T0 |
-| New market schema / adapter protocol | `unified-market-interface` (UMI) | T2 |
-| New domain entity | `unified-domain-client` (UDC) | T3 |
+| If you need...                       | Add to first                              | Tier |
+| ------------------------------------ | ----------------------------------------- | ---- |
+| New error schema / typed exception   | `unified-api-contracts` (AC)              | T0   |
+| New internal event / domain contract | `unified-internal-contracts` (UIC_INT)    | T0   |
+| New lifecycle event name             | `unified-events-interface` (UEI)          | T0   |
+| New config field                     | `unified-config-interface` (UCI)          | T0   |
+| New cloud primitive                  | `unified-cloud-interface` (UCLI)          | T0   |
+| New reference data protocol          | `unified-reference-data-interface` (URDI) | T0   |
+| New market schema / adapter protocol | `unified-market-interface` (UMI)          | T2   |
+| New domain entity                    | `unified-domain-client` (UDC)             | T3   |
 
 **Workflow:** Add to library → run D5 → bump version → cascade `--dep-branch` to all consumers → use in higher tier. Never skip a step. Never add a workaround in the consuming repo.
 
@@ -117,14 +118,14 @@ Any rename must be complete at ALL levels: pyproject.toml, Python package dir, a
 
 Every repo follows this ladder. Fix each step before running the next.
 
-| Step | Command | ~Time | Catches |
-|------|---------|-------|---------|
-| Import smoke | `python -c "import <pkg>"` | 2s | Broken `__init__`, circular imports, missing installed deps |
-| D1 | `bash scripts/quickmerge.sh "msg" --lint-only` | 30s | Syntax, import ordering, line length, formatting |
-| D2 | `bash scripts/quickmerge.sh "msg" --unit-only` | ~2 min | Type errors, unit test failures, import-time errors |
-| D3 | `bash scripts/quickmerge.sh "msg" --qg-only` | ~5 min | Integration failures, coverage gaps — no git ops, safe to retry |
-| D4 | `bash scripts/quickmerge.sh "msg" --quick` | ~8 min | Full QG + git branch ops, no act simulation |
-| D5 | `bash scripts/quickmerge.sh "msg"` | ~15 min | Full pipeline with act simulation — **the only gate that counts** |
+| Step         | Command                                        | ~Time   | Catches                                                           |
+| ------------ | ---------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| Import smoke | `python -c "import <pkg>"`                     | 2s      | Broken `__init__`, circular imports, missing installed deps       |
+| D1           | `bash scripts/quickmerge.sh "msg" --lint-only` | 30s     | Syntax, import ordering, line length, formatting                  |
+| D2           | `bash scripts/quickmerge.sh "msg" --unit-only` | ~2 min  | Type errors, unit test failures, import-time errors               |
+| D3           | `bash scripts/quickmerge.sh "msg" --qg-only`   | ~5 min  | Integration failures, coverage gaps — no git ops, safe to retry   |
+| D4           | `bash scripts/quickmerge.sh "msg" --quick`     | ~8 min  | Full QG + git branch ops, no act simulation                       |
+| D5           | `bash scripts/quickmerge.sh "msg"`             | ~15 min | Full pipeline with act simulation — **the only gate that counts** |
 
 **Invariant:** Never declare a tier green until D5 passes. `--quick` alone is not sufficient.
 
@@ -135,10 +136,12 @@ Every repo follows this ladder. Fix each step before running the next.
 ### Step 0A — Import Smoke Test (global, all 57 repos, run first)
 
 10 parallel agents (5–6 repos each):
+
 ```bash
 cd <repo> && source WORKSPACE_ROOT/.venv-workspace/bin/activate
 python -c "import <package_name>" 2>&1
 ```
+
 Record every failure before touching anything else. These are P0 issues — fix them before any other work. Broken imports cascade: they make every other test fail.
 
 If fixing an import failure requires a new feature in a lower-tier library → apply the bottom-up rule: add to library first, run D5, then fix the import.
@@ -148,11 +151,13 @@ If fixing an import failure requires a new feature in a lower-tier library → a
 10 parallel agents (5–6 repos each). Three rounds per repo:
 
 **Round 0 — Setup.sh deduplication (before code changes):**
+
 - Verify `scripts/setup.sh` exists (Phase 1 rollout). If ad-hoc version remains, replace with canonical template from `unified-trading-pm/scripts/setup.sh`
 - Remove duplicated bootstrap logic from `quality-gates.sh`: venv creation, uv bootstrap, `uv lock`, dep install → replace with `source scripts/setup.sh` or guard with `[ -f .setup-stamp ]` check
 - Verify `bash scripts/setup.sh --check` passes before any code changes
 
 **Round 1 — Mechanical replacements (no structural changes):**
+
 - `os.getenv(KEY, '')` or `os.getenv(KEY)` → `UnifiedCloudConfig` field or `os.environ[KEY]` (empty-string fallback = silent failure = forbidden)
 - `bare except:` → specific typed exception + log + reraise
 - `except Exception: pass` → log with full context (message, traceback, correlation_id) + reraise
@@ -166,12 +171,14 @@ If fixing an import failure requires a new feature in a lower-tier library → a
 Every `except` block must do one of: (a) reraise, (b) raise a typed replacement error, (c) log at ERROR with full context + reraise. If the correct typed error class doesn't exist in AC or UIC_INT → add it there first (bottom-up rule), then use it.
 
 **Round 3 — File and function size:**
+
 ```bash
 # Files > 900 lines — must be split by SRP:
 find . -name "*.py" ! -path "./.venv*" ! -path "*/tests/*" | xargs wc -l 2>/dev/null | sort -rn | awk '$1 > 900 {print}'
 # Complexity check (functions > 10 cyclomatic = candidate for split):
 timeout 60 ruff check --select C901 . 2>/dev/null
 ```
+
 Files >900 lines: split by Single Responsibility Principle. Each split is its own commit with a clear message explaining what was extracted and why.
 Functions >50 lines: extract named sub-functions for each logical step.
 
@@ -186,11 +193,13 @@ Each repo: A → B → C → D1 → D2 → D3 → D4 → D5.
 **Step A** — Deploy structure: verify `cloudbuild.yaml`, `quality-gates.sh`, `setup.sh`, `pyproject.toml`, `.dependency-matrix.json` present and correct. Run `bash scripts/setup.sh --check`. No old names anywhere.
 
 **Step B** — Tests first (write/fix tests before any code rewrite):
+
 - Integration Layer 0: `test_contract_alignment.py` + `test_ac_uic_alignment.py` in AC; `test_uic_ac_alignment.py` in UIC_INT — must pass before any T1 work
 - All schema todos (ic-greeks-position-schema, ic-pnl-breakdown-schema, ic-circuit-breaker-schema, etc.)
 - Coverage floor: every module ≥60%; critical modules ≥80%
 
 **Step C** — Code rewrite:
+
 - URDI: REST adapters, `get_secret_client` via UCLI, rate limiting, `@with_retry`
 - MEL: zero inter-library deps (remove any UTS/UCI imports)
 - Fix MEL tier in DAG SVG (must show T0)
@@ -205,6 +214,7 @@ Each repo: A → B → C → D1 → D2 → D3 → D4 → D5.
 Same A → B → C → D1–D5:
 
 **Step C key tasks:**
+
 - Remove `create_instruments_client`, `create_market_candle_data_client`, `StandardizedDomainCloudService` re-exports from `__init__.py`
 - UTS dual-publish rename: add `unified_trading_services/` re-export; cascade to ALL 14 services + 7 T2 libs via `--dep-branch`; delete old import path immediately
 - Verify all of these exist and are tested: `GCSEventSink`, `PubSubEventSink`, `QueueEventSink`, `ServiceCLI`, `BatchOrchestrator`, `@with_retry`, `setup_service`, `StateStore`, `BaseCloudWriter`, `GracefulShutdownHandler`
