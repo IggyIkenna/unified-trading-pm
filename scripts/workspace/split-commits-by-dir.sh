@@ -24,31 +24,30 @@ echo ""
 echo "Step 2: Commit and push scripts/..."
 git add scripts/
 git commit -m "chore: pre-flight symlinks, quickmerge workspace-manifest deps"
-git push origin main --no-verify
+git -c pack.window=0 -c pack.depth=0 push origin main --no-verify
 
 echo ""
 echo "Step 3: Commit and push plans/..."
 git add plans/
 git commit -m "chore: plans active"
-git push origin main --no-verify
+git -c pack.window=0 -c pack.depth=0 push origin main --no-verify
 
 echo ""
 echo "Step 4: Commit and push cursor-rules/..."
 git add cursor-rules/
 git commit -m "feat: cursor rules by category"
-git push origin main --no-verify
+git -c pack.window=0 -c pack.depth=0 push origin main --no-verify
 
 echo ""
 echo "Step 5: Commit and push github-integration/..."
 git add github-integration/
 git commit -m "chore: github-integration cleanup, remove need_to_be_sorted, archive"
-git push origin main --no-verify
+git -c pack.window=0 -c pack.depth=0 push origin main --no-verify
 
 echo ""
-echo "Step 6: Commit and push QUALITY_GATE_BYPASS_AUDIT.md..."
+echo "Step 6: Commit and push QUALITY_GATE_BYPASS_AUDIT.md (skip if already pushed)..."
 git add QUALITY_GATE_BYPASS_AUDIT.md
-git commit -m "chore: update QUALITY_GATE_BYPASS_AUDIT"
-git push origin main --no-verify
+git diff --cached --quiet || { git commit -m "chore: update QUALITY_GATE_BYPASS_AUDIT" && git -c pack.window=0 -c pack.depth=0 push origin main --no-verify; }
 
 echo ""
 echo "Done. Resume iCloud: sudo pkill -SIGCONT -x nsurlsessiond"
