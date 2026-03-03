@@ -8,7 +8,7 @@
 
 ## PROMPT TEMPLATE (Replace `{UNIFIED_EVENTS_INTERFACE}` with actual library)
 
-```
+````
 You are an AI agent whose sole responsibility is to audit and harden the **unified cloud servcies** repository to production-ready standards with 70%+ test coverage.
 
 ---
@@ -436,13 +436,14 @@ def dump_to_csv(data, max_lines: int | None = None):
     if max_lines == 0:
         return  # Disabled in prod
     # ... dump logic
-```
+````
 
 ---
 
 ## BATCH-LIVE SYMMETRY (If Applicable)
 
 If {UNIFIED_EVENTS_INTERFACE} supports both batch and live modes:
+
 - 90% code shared (mode-agnostic engine)
 - Only 4 seams differ: data source, data sink, persistence thread, trigger
 - Clearly document what live deviates on
@@ -453,6 +454,7 @@ If {UNIFIED_EVENTS_INTERFACE} supports both batch and live modes:
 ## FINAL DELIVERABLE
 
 A production-ready {UNIFIED_EVENTS_INTERFACE} with:
+
 - ✅ 70%+ test coverage
 - ✅ Zero quality gate failures
 - ✅ Zero type errors
@@ -466,6 +468,7 @@ A production-ready {UNIFIED_EVENTS_INTERFACE} with:
 **Are we clear? Ready for the audit of where we are and where we're going?**
 
 **Write me the 7 required output documents (ADOPTION_AUDIT.md, CONSISTENCY_VIOLATIONS.md, DUPLICATION_REPORT.md, TECHNICAL_DEBT.md, COVERAGE_PLAN.md, DOWNSTREAM_ENFORCEMENT.md, PRODUCTION_READINESS_CHECKLIST.md) with detailed tasks. No task should be >1 hour of wall time with 1 agent. In practice you will run parallel agents. It's all going to be done by AI (you) so take that into account in your time estimates.**
+
 ```
 
 ---
@@ -571,3 +574,4 @@ A production-ready {UNIFIED_EVENTS_INTERFACE} with:
 - ✅ 70%+ test coverage
 - ✅ Published to Artifact Registry
 - ✅ Ready for production deployment
+```

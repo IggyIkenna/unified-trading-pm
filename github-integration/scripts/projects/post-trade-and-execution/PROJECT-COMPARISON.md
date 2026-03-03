@@ -71,7 +71,7 @@
 
 ### 1. Epic-Based Issue Creation
 
-**Initial Cleanup:** Manual issue list in script  
+**Initial Cleanup:** Manual issue list in script
 **Unified Libraries:** Parsed from epic breakdown markdown
 
 ```python
@@ -87,7 +87,7 @@ Auto-detects target repo from "Files to modify" field.
 
 ### 2. Phase-Based Organization
 
-**Initial Cleanup:** Flat list of repos  
+**Initial Cleanup:** Flat list of repos
 **Unified Libraries:** 5 phases (0-4) with clear dependencies
 
 ```bash
@@ -98,7 +98,7 @@ bash run-batch-fix.sh --model auto --phase 2  # Then config interface
 
 ### 3. Priority-Based Filtering
 
-**Initial Cleanup:** Simple label filtering  
+**Initial Cleanup:** Simple label filtering
 **Unified Libraries:** P0/P1/P2/P3 priority levels
 
 ```bash
@@ -108,7 +108,7 @@ bash run-batch-fix.sh --model auto --priority P0-critical --max-parallel 5
 
 ### 4. Completion Reporting
 
-**Initial Cleanup:** Simple open/closed count  
+**Initial Cleanup:** Simple open/closed count
 **Unified Libraries:** Phase-based and repo-based progress
 
 ```
@@ -121,7 +121,7 @@ By Phase:
 
 ### 5. Additional Setup Automation
 
-**Initial Cleanup:** Manual project setup  
+**Initial Cleanup:** Manual project setup
 **Unified Libraries:** Automated setup with verification
 
 - `04-copy-workflows.sh` - Workflow configuration guide

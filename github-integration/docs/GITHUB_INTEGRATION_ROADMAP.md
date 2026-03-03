@@ -1,7 +1,7 @@
 # GitHub Integration: Comprehensive Roadmap & Script Reference
 
-**Version:** 3.1  
-**Last Updated:** 2026-02-13 (Expanded Stage 4 + Cursor CLI Integration)  
+**Version:** 3.1
+**Last Updated:** 2026-02-13 (Expanded Stage 4 + Cursor CLI Integration)
 **Status:** Living Document
 
 ---

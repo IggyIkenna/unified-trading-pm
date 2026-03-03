@@ -8,33 +8,33 @@
 
 ### File Count
 
-| Component | Files | What It Uses | Replacement |
-|-----------|-------|--------------|-------------|
-| **algorithms/impl/** | 4 files | ExecAlgorithm, spawn_market, submit_order, cache, clock, Order, Bar, BarType, InstrumentId, Quantity, Price | execution-algo-library + our BaseExecutionAlgorithm |
-| **algorithms/registry.py** | 1 file | ExecAlgorithmConfig, ExecAlgorithm | Our registry with our base |
-| **backtest/engine.py** | 1 file | BacktestNode, ParquetDataCatalog, InstrumentId, Venue, OrderBookDeltas, is_backtest_force_stop | **BLOCKER** - Our own backtest engine |
-| **backtest/node_builder.py** | 1 file | BacktestEngineConfig, BacktestRunConfig, ImportableExecAlgorithmConfig, ImportableStrategyConfig, BuiltinTWAP | Our config builder |
-| **backtest/actors/** | 4 files | Strategy, StrategyConfig, Bar, TradeTick, OrderFilled, PositionOpened, PositionClosed | Our strategy/actor layer |
-| **data/** | 7 files | ParquetDataCatalog, TradeTick, Bar, OrderBookDeltas, InstrumentId, BacktestDataConfig | Our catalog + data types |
-| **engine/** | 3 files | ParquetDataCatalog, Bar, InstrumentId | Our catalog |
-| **instruments/factory.py** | 1 file | ParquetDataCatalog | Our instrument factory |
-| **tests/** | 6 files | Bar, BarType, Quantity, ClientOrderId, OrderStatus, TradeTick, AggressorSide | api-contracts/nautilus mocks |
-| **Total** | **21+ files** | | |
+| Component                    | Files         | What It Uses                                                                                                  | Replacement                                         |
+| ---------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **algorithms/impl/**         | 4 files       | ExecAlgorithm, spawn_market, submit_order, cache, clock, Order, Bar, BarType, InstrumentId, Quantity, Price   | execution-algo-library + our BaseExecutionAlgorithm |
+| **algorithms/registry.py**   | 1 file        | ExecAlgorithmConfig, ExecAlgorithm                                                                            | Our registry with our base                          |
+| **backtest/engine.py**       | 1 file        | BacktestNode, ParquetDataCatalog, InstrumentId, Venue, OrderBookDeltas, is_backtest_force_stop                | **BLOCKER** - Our own backtest engine               |
+| **backtest/node_builder.py** | 1 file        | BacktestEngineConfig, BacktestRunConfig, ImportableExecAlgorithmConfig, ImportableStrategyConfig, BuiltinTWAP | Our config builder                                  |
+| **backtest/actors/**         | 4 files       | Strategy, StrategyConfig, Bar, TradeTick, OrderFilled, PositionOpened, PositionClosed                         | Our strategy/actor layer                            |
+| **data/**                    | 7 files       | ParquetDataCatalog, TradeTick, Bar, OrderBookDeltas, InstrumentId, BacktestDataConfig                         | Our catalog + data types                            |
+| **engine/**                  | 3 files       | ParquetDataCatalog, Bar, InstrumentId                                                                         | Our catalog                                         |
+| **instruments/factory.py**   | 1 file        | ParquetDataCatalog                                                                                            | Our instrument factory                              |
+| **tests/**                   | 6 files       | Bar, BarType, Quantity, ClientOrderId, OrderStatus, TradeTick, AggressorSide                                  | api-contracts/nautilus mocks                        |
+| **Total**                    | **21+ files** |                                                                                                               |                                                     |
 
 ### What Nautilus Provides (By Category)
 
-| Nautilus Component | Usage | Replacement |
-|--------------------|-------|-------------|
-| **ExecAlgorithm** base class | 4 algorithm impls inherit | Our `BaseExecutionAlgorithm` (simple interface) |
-| **spawn_market()** | Create child market order from parent | Our `create_child_order()` returning `ChildOrder` |
-| **submit_order()** | Send order to venue | `OrderAdapter` (unified-trade-execution-interface) |
-| **cache** | order(), instrument(), bar(), trade_tick(), order_book() | Our `ExecutionContext` (dict/dataclass with market data) |
-| **clock** | utc_now(), set_time_alert(), cancel_timer() | `datetime.now(timezone.utc)` + `asyncio.create_task()` or `threading.Timer` |
-| **Order, Position, Instrument** | Nautilus model types | api-contracts/nautilus schemas OR our own |
-| **Bar, BarType, BarSpecification** | OHLCV data | Our `OHLCVBar` dataclass |
-| **TradeTick** | Last trade price | Our `TradeTick` dataclass |
-| **ParquetDataCatalog** | Store/query backtest data | Our Parquet catalog (PyArrow) OR keep Nautilus format for compatibility |
-| **BacktestNode** | Event loop, tick processing, order matching | **Our own backtest engine** (largest effort) |
+| Nautilus Component                 | Usage                                                    | Replacement                                                                 |
+| ---------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **ExecAlgorithm** base class       | 4 algorithm impls inherit                                | Our `BaseExecutionAlgorithm` (simple interface)                             |
+| **spawn_market()**                 | Create child market order from parent                    | Our `create_child_order()` returning `ChildOrder`                           |
+| **submit_order()**                 | Send order to venue                                      | `OrderAdapter` (unified-trade-execution-interface)                          |
+| **cache**                          | order(), instrument(), bar(), trade_tick(), order_book() | Our `ExecutionContext` (dict/dataclass with market data)                    |
+| **clock**                          | utc_now(), set_time_alert(), cancel_timer()              | `datetime.now(timezone.utc)` + `asyncio.create_task()` or `threading.Timer` |
+| **Order, Position, Instrument**    | Nautilus model types                                     | api-contracts/nautilus schemas OR our own                                   |
+| **Bar, BarType, BarSpecification** | OHLCV data                                               | Our `OHLCVBar` dataclass                                                    |
+| **TradeTick**                      | Last trade price                                         | Our `TradeTick` dataclass                                                   |
+| **ParquetDataCatalog**             | Store/query backtest data                                | Our Parquet catalog (PyArrow) OR keep Nautilus format for compatibility     |
+| **BacktestNode**                   | Event loop, tick processing, order matching              | **Our own backtest engine** (largest effort)                                |
 
 ---
 
@@ -106,10 +106,12 @@ class BaseExecutionAlgorithm:
 ```
 
 **Interface for algorithms**:
+
 - Input: Parent order (our schema), ExecutionContext (market data), submit_fn (callback to submit child)
 - Output: None (algorithms call submit_fn for each child order)
 
 **Migration**: Refactor adaptive_twap, vwap, almgren_chriss, hybrid_optimal to use our base. Each algorithm:
+
 1. Uses execution-algo-library for schedule calculation (AdaptiveTWAPCalculator, etc.)
 2. Uses our ExecutionContext for market data (bars, ticks)
 3. Uses submit_fn (or OrderAdapter) for order submission
@@ -119,7 +121,8 @@ class BaseExecutionAlgorithm:
 
 **Remove**: `spawn_market()`, `submit_order()` (Nautilus methods)
 
-**Use**: 
+**Use**:
+
 - **Live**: `OrderAdapter` (unified-trade-execution-interface) - already exists
 - **Backtest**: Our backtest engine's simulated order router (see Phase 4)
 
@@ -130,6 +133,7 @@ class BaseExecutionAlgorithm:
 **Remove**: `clock.set_time_alert()`, `clock.cancel_timer()`, `clock.utc_now()`
 
 **Use**:
+
 - `datetime.now(timezone.utc)` for current time
 - `asyncio.create_task(asyncio.sleep(interval); callback())` for scheduled slices
 - Or `threading.Timer` for sync context
@@ -141,13 +145,14 @@ class BaseExecutionAlgorithm:
 
 **Options**:
 
-| Option | Effort | Risk | Recommendation |
-|--------|--------|------|----------------|
-| **A) Build our own backtest engine** | 6-10 weeks | Medium | Full control, no Nautilus |
-| **B) Keep Nautilus for backtest only** | 0 weeks (Phase 4) | Low | Hybrid: our algorithms for live, Nautilus for backtest |
-| **C) Use different library** (e.g., Backtrader, Zipline) | 4-6 weeks | High | Different API, may not fit |
+| Option                                                   | Effort            | Risk   | Recommendation                                         |
+| -------------------------------------------------------- | ----------------- | ------ | ------------------------------------------------------ |
+| **A) Build our own backtest engine**                     | 6-10 weeks        | Medium | Full control, no Nautilus                              |
+| **B) Keep Nautilus for backtest only**                   | 0 weeks (Phase 4) | Low    | Hybrid: our algorithms for live, Nautilus for backtest |
+| **C) Use different library** (e.g., Backtrader, Zipline) | 4-6 weeks         | High   | Different API, may not fit                             |
 
 **What our backtest engine would need**:
+
 1. **Event loop**: Process ticks/bars in time order
 2. **Data catalog**: Parquet storage (we can keep Nautilus's Parquet schema for data compatibility, or define our own)
 3. **Order matching**: L1_MBP (mid-price from bars) or L2_MBP (order book simulation)
@@ -156,10 +161,12 @@ class BaseExecutionAlgorithm:
 6. **Result extraction**: Timeline, PnL, execution alpha (we have ResultExtractor, TimelineBuilder)
 
 **Data flow today**:
+
 - GCS → UCSDataLoader → our converter → ParquetDataCatalog (Nautilus format) → BacktestNode
 - We could: GCS → our loader → our catalog (Parquet, our schema) → our engine
 
 **ParquetDataCatalog**: Nautilus uses a specific Parquet layout. We have two choices:
+
 1. **Keep Nautilus format**: Build our engine to read Nautilus Parquet (less work on data pipeline)
 2. **Our format**: Define our Parquet schema, update converter to write our format (cleaner long-term)
 
@@ -178,39 +185,39 @@ class BaseExecutionAlgorithm:
 
 ## LOC Impact (Estimate)
 
-| Category | Remove | Add | Net |
-|----------|--------|-----|-----|
-| Algorithm Nautilus wrappers | ~1,200 | ~400 (our base + adapters) | -800 |
-| Backtest engine (if we build) | ~800 (node_builder, engine glue) | ~2,500 (our engine) | +1,700 |
-| Data catalog | ~200 (PatchedParquetDataCatalog) | ~300 (our catalog) | +100 |
-| Tests (Nautilus imports) | ~150 | ~100 (api-contracts) | -50 |
-| **Total (full removal)** | **~2,350** | **~3,300** | **+950** |
-| **Total (hybrid: keep backtest)** | **~1,200** | **~400** | **-800** |
+| Category                          | Remove                           | Add                        | Net      |
+| --------------------------------- | -------------------------------- | -------------------------- | -------- |
+| Algorithm Nautilus wrappers       | ~1,200                           | ~400 (our base + adapters) | -800     |
+| Backtest engine (if we build)     | ~800 (node_builder, engine glue) | ~2,500 (our engine)        | +1,700   |
+| Data catalog                      | ~200 (PatchedParquetDataCatalog) | ~300 (our catalog)         | +100     |
+| Tests (Nautilus imports)          | ~150                             | ~100 (api-contracts)       | -50      |
+| **Total (full removal)**          | **~2,350**                       | **~3,300**                 | **+950** |
+| **Total (hybrid: keep backtest)** | **~1,200**                       | **~400**                   | **-800** |
 
 ---
 
 ## Effort Estimate
 
-| Phase | Scope | Duration |
-|-------|-------|----------|
-| **Phase 1** | Replace algorithm base, refactor 4 algorithms | 2-3 weeks |
-| **Phase 2** | Replace order submission (with Phase 1) | (included) |
-| **Phase 3** | Replace timing (with Phase 1) | (included) |
-| **Phase 4a** | Keep Nautilus for backtest only (hybrid) | 0 weeks |
-| **Phase 4b** | Build our own backtest engine | 6-10 weeks |
-| **Total (Hybrid)** | Phases 1-3 only | **3-4 weeks** |
-| **Total (Full removal)** | Phases 1-4b | **9-14 weeks** |
+| Phase                    | Scope                                         | Duration       |
+| ------------------------ | --------------------------------------------- | -------------- |
+| **Phase 1**              | Replace algorithm base, refactor 4 algorithms | 2-3 weeks      |
+| **Phase 2**              | Replace order submission (with Phase 1)       | (included)     |
+| **Phase 3**              | Replace timing (with Phase 1)                 | (included)     |
+| **Phase 4a**             | Keep Nautilus for backtest only (hybrid)      | 0 weeks        |
+| **Phase 4b**             | Build our own backtest engine                 | 6-10 weeks     |
+| **Total (Hybrid)**       | Phases 1-3 only                               | **3-4 weeks**  |
+| **Total (Full removal)** | Phases 1-4b                                   | **9-14 weeks** |
 
 ---
 
 ## Risks
 
-| Risk | Mitigation |
-|------|------------|
-| **Backtest engine bugs** | Start with L1_MBP only (simpler); add L2_MBP later. Extensive unit tests for fill simulation. |
-| **Data format migration** | Option: Keep reading Nautilus Parquet format initially; migrate schema later. |
-| **Regression in execution alpha** | Compare our engine results vs Nautilus on same data; add regression tests. |
-| **Timing/scheduling edge cases** | Replicate Nautilus's timer behavior in tests; document any differences. |
+| Risk                              | Mitigation                                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Backtest engine bugs**          | Start with L1_MBP only (simpler); add L2_MBP later. Extensive unit tests for fill simulation. |
+| **Data format migration**         | Option: Keep reading Nautilus Parquet format initially; migrate schema later.                 |
+| **Regression in execution alpha** | Compare our engine results vs Nautilus on same data; add regression tests.                    |
+| **Timing/scheduling edge cases**  | Replicate Nautilus's timer behavior in tests; document any differences.                       |
 
 ---
 
@@ -226,6 +233,7 @@ class BaseExecutionAlgorithm:
 - **Effort**: 3-4 weeks
 
 **Implementation**: Create `NautilusExecAlgorithmAdapter` that:
+
 1. Wraps our `BaseExecutionAlgorithm` (e.g., AdaptiveTWAPOurs)
 2. On Nautilus `on_order`: calls our algorithm with ExecutionContext (built from Nautilus cache/clock)
 3. Our algorithm yields ChildOrder objects

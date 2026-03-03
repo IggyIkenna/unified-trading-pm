@@ -4,30 +4,30 @@ Reference for granting GitHub repo access. Access is managed on GitHub (per-repo
 
 ## Principals to grant access
 
-| Principal     | Type   |
-|---------------|--------|
-| **datadodo**  | User or team |
+| Principal        | Type         |
+| ---------------- | ------------ |
+| **datadodo**     | User or team |
 | **CosmicTrader** | User or team |
 
 ## Repositories (11)
 
 Grant **datadodo** and **CosmicTrader** access to these repos:
 
-| # | Repo | GitHub URL |
-|---|------|------------|
-| 1 | alerting-service | https://github.com/IggyIkenna/alerting-service |
-| 2 | deployment-api | https://github.com/IggyIkenna/deployment-api |
-| 3 | deployment-service | https://github.com/IggyIkenna/deployment-service |
-| 4 | execution-analytics-ui | https://github.com/IggyIkenna/execution-analytics-ui |
-| 5 | execution-visualizer-ui | https://github.com/IggyIkenna/execution-visualizer-ui |
-| 6 | features-multi-timeframe-service | https://github.com/IggyIkenna/features-multi-timeframe-service |
-| 7 | ml-training-ui | https://github.com/IggyIkenna/ml-training-ui |
-| 8 | system-integration-tests | https://github.com/IggyIkenna/system-integration-tests |
-| 9 | unified-api-contracts | https://github.com/IggyIkenna/unified-api-contracts |
-| 10 | unified-cloud-interface | https://github.com/IggyIkenna/unified-cloud-interface |
-| 11 | unified-trading-ui-auth | https://github.com/IggyIkenna/unified-trading-ui-auth |
+| #   | Repo                             | GitHub URL                                                     |
+| --- | -------------------------------- | -------------------------------------------------------------- |
+| 1   | alerting-service                 | https://github.com/IggyIkenna/alerting-service                 |
+| 2   | deployment-api                   | https://github.com/IggyIkenna/deployment-api                   |
+| 3   | deployment-service               | https://github.com/IggyIkenna/deployment-service               |
+| 4   | execution-analytics-ui           | https://github.com/IggyIkenna/execution-analytics-ui           |
+| 5   | execution-visualizer-ui          | https://github.com/IggyIkenna/execution-visualizer-ui          |
+| 6   | features-multi-timeframe-service | https://github.com/IggyIkenna/features-multi-timeframe-service |
+| 7   | ml-training-ui                   | https://github.com/IggyIkenna/ml-training-ui                   |
+| 8   | system-integration-tests         | https://github.com/IggyIkenna/system-integration-tests         |
+| 9   | unified-api-contracts            | https://github.com/IggyIkenna/unified-api-contracts            |
+| 10  | unified-cloud-interface          | https://github.com/IggyIkenna/unified-cloud-interface          |
+| 11  | unified-trading-ui-auth          | https://github.com/IggyIkenna/unified-trading-ui-auth          |
 
-*Note: `unified-cloud-interface`, `deployment-api`, `system-integration-tests`, `execution-analytics-ui`, and `ml-training-ui` may not have `github_url` in `workspace-manifest.json`; URLs above use the same owner. Adjust if your org or repo names differ.*
+_Note: `unified-cloud-interface`, `deployment-api`, `system-integration-tests`, `execution-analytics-ui`, and `ml-training-ui` may not have `github_url` in `workspace-manifest.json`; URLs above use the same owner. Adjust if your org or repo names differ._
 
 ## How to grant access (GitHub)
 

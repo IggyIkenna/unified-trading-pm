@@ -52,7 +52,7 @@ Run issues one at a time:
 ./run-cleanup-batch-fix.sh --model auto --max-parallel 1 --sequential
 ```
 
-**Pros**: Zero race conditions  
+**Pros**: Zero race conditions
 **Cons**: Slower (no parallelism)
 
 ### Solution 3: Use Safe Wrapper with Locking

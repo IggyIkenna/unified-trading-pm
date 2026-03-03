@@ -1,4 +1,3 @@
-
 # MASTER CI/CD PLAN - Production-Grade Development Workflow
 
 **Status**: ⬜ Ready to Implement
@@ -13,6 +12,7 @@
 **Goal**: Zero-surprise merges with production-grade CI/CD infrastructure.
 
 **What We're Building**:
+
 1. **Unified Quickmerge** - Single command for all quality checks
 2. **Differential Branching** - Smart branch isolation when needed
 3. **Cascading Dependencies** - Automatic multi-repo coordination
@@ -27,26 +27,31 @@
 ## 🎯 Core Principles
 
 ### 1. **ALWAYS Use Quickmerge** (Enforced)
+
 - ✅ Cursor rules mandate quickmerge
 - ✅ GitHub Actions watcher blocks bypasses
 - ✅ One workflow, zero exceptions
 
 ### 2. **Main by Default, Branch When Necessary** (Smart)
+
 - ✅ Use main if all deps match `origin/main`
 - ✅ Auto-detect diffs, force `--dep-branch` decision
 - ✅ Complete isolation on branch
 
 ### 3. **Fail Fast, Fix Automatically** (Efficient)
+
 - ✅ Dependency validation FIRST (cheapest check)
 - ✅ Pre-flight audit catches Codex violations
 - ✅ LLM auto-fixes when possible
 
 ### 4. **Dev ≠ Prod** (Safe)
+
 - ✅ Separate GCP projects for dev/prod
 - ✅ Environment-aware workflows
 - ✅ Safe experimentation
 
 ### 5. **GitHub Actions is Final Safety Net** (Mandatory)
+
 - ✅ LLM-enhanced watcher reviews ALL PRs
 - ✅ Blocks if issues detected
 - ✅ Provides rich context + fix suggestions
@@ -135,6 +140,7 @@ jobs:
 ```
 
 **What LLM Watcher Checks**:
+
 - ✅ Did they use quickmerge? (check commit message)
 - ✅ Is environment config correct? (dev vs prod)
 - ✅ Are dependencies properly cascaded?
@@ -143,6 +149,7 @@ jobs:
 - ✅ Proper branch strategy used?
 
 **Output**:
+
 - 💬 PR comment with rich context
 - 🔧 Specific fix suggestions
 - ❌ Blocks merge if critical issues
@@ -208,11 +215,11 @@ fi
 
 #### Three Modes
 
-| Mode | Condition | Behavior |
-|------|-----------|----------|
-| **Main** | All deps match main | Fast, simple, no branch overhead |
-| **Error** | Deps differ, no `--dep-branch` | Blocks with guidance |
-| **Branch Isolation** | `--dep-branch` specified | Complete isolation, cascade |
+| Mode                 | Condition                      | Behavior                         |
+| -------------------- | ------------------------------ | -------------------------------- |
+| **Main**             | All deps match main            | Fast, simple, no branch overhead |
+| **Error**            | Deps differ, no `--dep-branch` | Blocks with guidance             |
+| **Branch Isolation** | `--dep-branch` specified       | Complete isolation, cascade      |
 
 ---
 
@@ -224,8 +231,14 @@ fi
 {
   "name": "instruments-service",
   "dependencies": [
-    {"name": "unified-trading-services", "path": "../unified-trading-services"},
-    {"name": "unified-config-interface", "path": "../unified-config-interface"}
+    {
+      "name": "unified-trading-services",
+      "path": "../unified-trading-services"
+    },
+    {
+      "name": "unified-config-interface",
+      "path": "../unified-config-interface"
+    }
   ]
 }
 ```
@@ -262,6 +275,7 @@ Cascade order:
 **Catches bypasses**: If someone doesn't use quickmerge, watcher detects it.
 
 **Example**:
+
 ```bash
 # Developer bypasses quickmerge
 git add -A
@@ -339,6 +353,7 @@ fi
 ### **Phase 1: Core Infrastructure** (3-4h, 4 agents)
 
 #### Agent 1: Docker & Act Setup
+
 - [ ] Create `quality-gates:latest` Docker image (tools only)
 - [ ] Push to Artifact Registry
 - [ ] Install `act` tool
@@ -346,6 +361,7 @@ fi
 - [ ] Test in 2-3 repos
 
 #### Agent 2: Pre-Flight & Cascade Scripts
+
 - [ ] Create `.dependency-matrix.json` template
 - [ ] Create `pre-flight-audit.sh` (differential check)
 - [ ] Create `cascade-dependencies.sh` (topological sort)
@@ -353,6 +369,7 @@ fi
 - [ ] Test cascade in multi-level dependency tree
 
 #### Agent 3: Dev Environment Support
+
 - [ ] Create `.env` template (ENVIRONMENT variable)
 - [ ] Add to all 32 repos
 - [ ] Set `GCP_PROJECT_ID_DEV` repo variable
@@ -360,6 +377,7 @@ fi
 - [ ] Update workflows to use env-aware project ID
 
 #### Agent 4: GitHub Actions Watcher
+
 - [ ] Create `llm-pr-watcher.sh`
 - [ ] Create workflow `.github/workflows/pr-watcher.yml`
 - [ ] Test in 2-3 repos
@@ -372,6 +390,7 @@ fi
 Update `scripts/quickmerge.sh` in all 32 repos:
 
 **Changes**:
+
 - [ ] Add differential dependency check (Stage 1)
 - [ ] Add pre-flight audit (Stage 2)
 - [ ] Add local quality gates - Docker (Stage 3)
@@ -389,6 +408,7 @@ Update `scripts/quickmerge.sh` in all 32 repos:
 Update `.github/workflows/quality-gates.yml` in all 32 repos:
 
 **Changes**:
+
 - [ ] Add environment-aware project ID
 - [ ] Add branch-aware dependency cloning
 - [ ] Add PR watcher workflow
@@ -403,6 +423,7 @@ Update `.github/workflows/quality-gates.yml` in all 32 repos:
 Update `cloudbuild.yaml` in affected repos:
 
 **Changes**:
+
 - [ ] Add environment-aware project ID
 - [ ] Add dependency polling (wait for branch packages)
 - [ ] Test in dev environment
@@ -432,6 +453,7 @@ Update/create in `.cursor/rules/`:
 - [ ] **Update existing rules** to reference quickmerge
 
 **Existing rules to update**:
+
 - `quality-gates-*.mdc` → Point to quickmerge
 - `path-dependency-ci.mdc` → Mention cascade
 - Any rule mentioning quality gates directly
@@ -443,6 +465,7 @@ Update/create in `.cursor/rules/`:
 #### Test Scenarios
 
 **Scenario 1: Normal main workflow**
+
 ```bash
 cd instruments-service
 vim instruments_service/main.py
@@ -451,6 +474,7 @@ bash scripts/quickmerge.sh "feat: add feature"
 ```
 
 **Scenario 2: Branch isolation (single repo)**
+
 ```bash
 cd unified-trading-services
 vim unified_trading_services/core.py
@@ -459,6 +483,7 @@ bash scripts/quickmerge.sh "fix: update" --dep-branch "my-fix"
 ```
 
 **Scenario 3: Multi-repo cascade**
+
 ```bash
 cd instruments-service
 vim instruments_service/main.py
@@ -469,6 +494,7 @@ bash scripts/quickmerge.sh "feat: major update" --dep-branch "major"
 ```
 
 **Scenario 4: Dev environment**
+
 ```bash
 cd instruments-service
 echo "ENVIRONMENT=development" > .env
@@ -477,6 +503,7 @@ bash scripts/quickmerge.sh "test: dev mode"
 ```
 
 **Scenario 5: Bypass attempt (caught by watcher)**
+
 ```bash
 cd instruments-service
 git add -A
@@ -493,6 +520,7 @@ gh pr create
 ## ✅ Success Metrics
 
 ### Core CI/CD
+
 - [ ] All three stages use same Python 3.13
 - [ ] All three stages use same ruff 0.15.0
 - [ ] All three stages use same pytest version
@@ -500,6 +528,7 @@ gh pr create
 - [ ] Local/GitHub/Cloud Build use same committed code
 
 ### Quickmerge
+
 - [ ] Differential check works (detects committed+uncommitted diffs)
 - [ ] Cascade works (multi-level dependency tree)
 - [ ] Act simulation catches GitHub-specific issues
@@ -507,12 +536,14 @@ gh pr create
 - [ ] Quickmerge complete in <5 minutes
 
 ### Dev Environment
+
 - [ ] `.env` in all 32 repos
 - [ ] `GCP_PROJECT_ID_DEV` repo variable set
 - [ ] Workflows use environment-aware project ID
 - [ ] Dev mode tested successfully
 
 ### GitHub Actions Watcher
+
 - [ ] Watcher runs on all PRs
 - [ ] Detects quickmerge bypasses
 - [ ] Detects environment config issues
@@ -520,12 +551,14 @@ gh pr create
 - [ ] Blocks PRs with critical issues
 
 ### Documentation
+
 - [ ] Codex docs updated (4+ docs)
 - [ ] Cursor rules updated (4+ rules)
 - [ ] Existing rules reference quickmerge
 - [ ] All docs consistent with implementation
 
 ### Results
+
 - [ ] Zero "works locally, fails in CI" issues
 - [ ] Zero accidental main pollution (differential check)
 - [ ] Zero manual dep coordination (cascade)
@@ -548,6 +581,7 @@ If issues arise:
 ## 📚 Related Files
 
 ### Created During Planning
+
 - `UNIFIED-QUICKMERGE-TEMPLATE.sh` - Template
 - `QUICKMERGE-FLOW-DIAGRAM.md` - Visual guide
 - `BRANCH-BASED-DEPENDENCIES.md` - Branch mechanics
@@ -556,6 +590,7 @@ If issues arise:
 - `00-MASTER-CICD-PLAN.md` - This file
 
 ### To Be Created
+
 - `.dependency-matrix.json` (32 repos)
 - `.env` (32 repos)
 - `llm-pr-watcher.sh` (shared)
@@ -591,15 +626,15 @@ If issues arise:
 
 ## 📊 Estimated Timeline
 
-| Phase | Duration | Parallelism | Wall Time |
-|-------|----------|-------------|-----------|
-| Phase 1: Core Infrastructure | 3-4h | 4 agents | 1h |
-| Phase 2: Unified Quickmerge | 2-3h | 8 agents | 30min |
-| Phase 3: GitHub Actions | 2-3h | 8 agents | 30min |
-| Phase 4: Cloud Build | 1-2h | 2 agents | 1h |
-| Phase 5: Documentation | 1-2h | 2 agents | 1h |
-| Phase 6: Validation | 1h | 4 agents | 30min |
-| **Total** | **10-15h** | **Up to 8 agents** | **~5 hours wall time** |
+| Phase                        | Duration   | Parallelism        | Wall Time              |
+| ---------------------------- | ---------- | ------------------ | ---------------------- |
+| Phase 1: Core Infrastructure | 3-4h       | 4 agents           | 1h                     |
+| Phase 2: Unified Quickmerge  | 2-3h       | 8 agents           | 30min                  |
+| Phase 3: GitHub Actions      | 2-3h       | 8 agents           | 30min                  |
+| Phase 4: Cloud Build         | 1-2h       | 2 agents           | 1h                     |
+| Phase 5: Documentation       | 1-2h       | 2 agents           | 1h                     |
+| Phase 6: Validation          | 1h         | 4 agents           | 30min                  |
+| **Total**                    | **10-15h** | **Up to 8 agents** | **~5 hours wall time** |
 
 With efficient parallel execution: **Can complete in single work session (5-6 hours)**
 

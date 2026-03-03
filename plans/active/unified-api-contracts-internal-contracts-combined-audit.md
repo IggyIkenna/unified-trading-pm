@@ -31,9 +31,9 @@ isProject: false
 
 **Dependencies:** Only pydantic; no dependency on AC. Tier 0. OK.
 
-**Alignment tests:** test_uic_ac_alignment.py imports from unified_api_contracts.internal.*; obsolete once AC.internal is removed.
+**Alignment tests:** test_uic_ac_alignment.py imports from unified_api_contracts.internal.\*; obsolete once AC.internal is removed.
 
-**schema_registry.json:** Remove entries for unified_api_contracts.internal.* when AC.internal is deleted.
+**schema_registry.json:** Remove entries for unified_api_contracts.internal.\* when AC.internal is deleted.
 
 **Verdict:** UIC is already internal-only and well-scoped.
 
@@ -49,7 +49,7 @@ isProject: false
 
 **Normalised in AC:** Make unified_normalised_contracts self-contained (Option A: own definitions in AC; Option B: UIC depends on AC and re-exports).
 
-**VCR / live capture:** Move collected_responses/ and generated_schemas/ responsibility to the six interfaces (integration tests). Remove or relocate from AC: collect_responses.py, capture_api_responses.py, validate_schemas.py (live/--generate-schemas), verify_contracts_vs_reality*.py. AC keeps only schemas and static examples.
+**VCR / live capture:** Move collected_responses/ and generated_schemas/ responsibility to the six interfaces (integration tests). Remove or relocate from AC: collect_responses.py, capture_api_responses.py, validate_schemas.py (live/--generate-schemas), verify_contracts_vs_reality\*.py. AC keeps only schemas and static examples.
 
 **Docs and SSOT updates:** (1) Codex 00-SSOT-INDEX.md — AC = contracts only; VCR/live validation in the six interfaces; add internal contracts row. (2) Codex 05-infrastructure/contracts-integration.md — same. (3) Codex 02-data (VCR/schema ownership) — interfaces record/validate; AC holds schemas and examples. (4) Cursor rules: vcr-ownership.mdc (interfaces do VCR; list six), unified-api-contracts-usage.mdc (live verification in interfaces), contracts-integration.mdc (one line on six interfaces). (5) AC README/docs — point live validation to interfaces.
 

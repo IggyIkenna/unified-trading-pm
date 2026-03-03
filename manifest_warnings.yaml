@@ -11,4 +11,4 @@
 #   flagged_at: "<ISO timestamp>"
 #   safe_alternative: "<semver>"  # recommended rollback target
 
-warnings: []  # empty to start - add entries here when releases are flagged
+warnings: [] # empty to start - add entries here when releases are flagged

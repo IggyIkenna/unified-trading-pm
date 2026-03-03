@@ -170,7 +170,7 @@ A gradient boosted tree splits on thresholds. If feature B is a monotonic functi
 - `vol_percentile_{window}` — percentile rank of vol vs rolling window (monotonic of raw vol)
 - Any `_zscore_` suffixed features — GBT finds the threshold on raw data
 - Any `_normalized_` features where normalization is just `(x - mean) / std`
-- `return_percentile_5bar` as a percentile *rank* — monotonic of raw return (keep if using as a learning-to-rank target, not as a feature)
+- `return_percentile_5bar` as a percentile _rank_ — monotonic of raw return (keep if using as a learning-to-rank target, not as a feature)
 
 **Keep — these look similar but are NOT monotonic transforms:**
 
@@ -184,7 +184,7 @@ A gradient boosted tree splits on thresholds. If feature B is a monotonic functi
 
 ### Rule 2: Multi-Horizon Binary Encoding Replaces Raw "Time Since"
 
-**Important implementation note:** Both `features_delta_one_service/app/calculators/base.py` (pandas) and `features_cross_instrument_service/app/calculators/base_calculator.py` (Polars) already auto-generate raw `time_since_{event}` integers from any binary column via `_add_time_since_events()`. Multi-horizon binary encoding is a *replacement* for this output, not filling a missing capability. Implementation requires adding a `_add_event_horizon_binaries()` method to both base class variants, either replacing `_add_time_since_events()` or running both in parallel if raw time_since is still needed for other purposes.
+**Important implementation note:** Both `features_delta_one_service/app/calculators/base.py` (pandas) and `features_cross_instrument_service/app/calculators/base_calculator.py` (Polars) already auto-generate raw `time_since_{event}` integers from any binary column via `_add_time_since_events()`. Multi-horizon binary encoding is a _replacement_ for this output, not filling a missing capability. Implementation requires adding a `_add_event_horizon_binaries()` method to both base class variants, either replacing `_add_time_since_events()` or running both in parallel if raw time_since is still needed for other purposes.
 
 Raw `time_since_swing_high = 15` tells the tree an integer. It has to waste multiple splits to learn "fresh vs stale." Instead, create binary indicators at a range of lookback windows. The tree can then split on `swing_high_in_last_5_bars = 1 AND swing_high_in_last_20_bars = 0` in a single node.
 
@@ -295,32 +295,27 @@ demand_zone_proximity_atr     = (close - demand_zone_top) / atr_14
 
 ### What is Done (scaffolded/implemented)
 
-
-| Workstream               | Status        | Features                                                                                                                                                                                                                                                                                                  |
-| ------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tier 1 MDPS              | ✅ Implemented | trade_size_p10/50/90/99, spread_volatility_15s, book_pressure_gradient, whale_trade_count, effective_to_quoted_ratio, liq_inter_time_*, volume_clock_*                                                                                                                                                    |
-| Tier 1 delta-one         | ✅ Implemented | amihud_illiquidity_*, vpin_*, kyles_lambda_*, spread_breach, imbalance_extreme, extreme_bid_imbalance, extreme_ask_imbalance (all binary — auto-generate time_since via delta-one base class; candidates for multi-horizon binary expansion), time_to_volume_{1000,5000,10000} (volume clock, continuous) |
-| Tier 2 cross-instrument  | ✅ Implemented | regime_hmm_state, regime_changepoint, cross_venue_spreads, rv_iv_ratio, cross_asset_correlation                                                                                                                                                                                                           |
-| Tier 3 TradFi vol        | ✅ Implemented | atm_iv_30d, skew_25d, term_structure_slope, vol_surface_convexity                                                                                                                                                                                                                                         |
-| Tier 4 external adapters | ✅ Implemented | CryptoPanic, LunarCrush, CryptoQuant, DefiLlama, FRED, Yahoo Finance                                                                                                                                                                                                                                      |
-| Tier 5 incremental book  | ✅ Implemented | order_cancellation_rate, iceberg_order_count, arrival_rate_level_*                                                                                                                                                                                                                                        |
-| Schemas/contracts        | ✅ Done        | CanonicalOptionQuote, CanonicalBookUpdate, CrossInstrumentFeatures                                                                                                                                                                                                                                        |
-| Manifest/topology/DAGs   | ✅ Done        | Workspace manifest, runtime topology, SVGs, topology-dag                                                                                                                                                                                                                                                  |
-
+| Workstream               | Status         | Features                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tier 1 MDPS              | ✅ Implemented | trade*size_p10/50/90/99, spread_volatility_15s, book_pressure_gradient, whale_trade_count, effective_to_quoted_ratio, liq_inter_time*_, volume*clock*_                                                                                                                                                        |
+| Tier 1 delta-one         | ✅ Implemented | amihud*illiquidity*\_, vpin\_\_, kyles*lambda*\*, spread*breach, imbalance_extreme, extreme_bid_imbalance, extreme_ask_imbalance (all binary — auto-generate time_since via delta-one base class; candidates for multi-horizon binary expansion), time_to_volume*{1000,5000,10000} (volume clock, continuous) |
+| Tier 2 cross-instrument  | ✅ Implemented | regime_hmm_state, regime_changepoint, cross_venue_spreads, rv_iv_ratio, cross_asset_correlation                                                                                                                                                                                                               |
+| Tier 3 TradFi vol        | ✅ Implemented | atm_iv_30d, skew_25d, term_structure_slope, vol_surface_convexity                                                                                                                                                                                                                                             |
+| Tier 4 external adapters | ✅ Implemented | CryptoPanic, LunarCrush, CryptoQuant, DefiLlama, FRED, Yahoo Finance                                                                                                                                                                                                                                          |
+| Tier 5 incremental book  | ✅ Implemented | order*cancellation_rate, iceberg_order_count, arrival_rate_level*\*                                                                                                                                                                                                                                           |
+| Schemas/contracts        | ✅ Done        | CanonicalOptionQuote, CanonicalBookUpdate, CrossInstrumentFeatures                                                                                                                                                                                                                                            |
+| Manifest/topology/DAGs   | ✅ Done        | Workspace manifest, runtime topology, SVGs, topology-dag                                                                                                                                                                                                                                                      |
 
 ### What is NOT Done — Split by Plan
 
 **Covered in this plan (setup + unit tests):**
-
 
 | Task                                                     | Todo ID                        |
 | -------------------------------------------------------- | ------------------------------ |
 | Unit tests for HFT calculators (mock-based, no live I/O) | `hft-unit-tests`               |
 | Document required API keys in credentials-registry.yaml  | `hft-provision-api-keys-setup` |
 
-
 **Moved to `consolidated_remaining_work.plan.md` (deployment + hardening):**
-
 
 | Task                                                                                              | Blocker               |
 | ------------------------------------------------------------------------------------------------- | --------------------- |
@@ -332,7 +327,6 @@ demand_zone_proximity_atr     = (close - demand_zone_top) / atr_14
 | Data completeness checks (DataCompletionChecker)                                                  | Backfill first        |
 | Live mode PubSub/GCS smoke test                                                                   | Deploy first          |
 | features-cross-instrument-service hardening (quality gates, integration tests, live verification) | Deploy first          |
-
 
 ### GBT Anti-Pattern Fix for Existing HFT Features
 
@@ -432,7 +426,6 @@ LAYER 5 — Strategy
 
 Symmetric counterpart to `features-cross-instrument-service`:
 
-
 |              | cross-instrument-service            | multi-timeframe-service            |
 | ------------ | ----------------------------------- | ---------------------------------- |
 | Aggregation  | Many instruments × 1 TF             | 1 instrument × many TFs            |
@@ -441,7 +434,6 @@ Symmetric counterpart to `features-cross-instrument-service`:
 | Pattern      | BaseFeatureCalculator + registry    | Same                               |
 | GCS path     | `features/cross_instrument/...`     | `features/multi_timeframe/...`     |
 | PubSub topic | `features-cross-instrument-{group}` | `features-multi-timeframe-{group}` |
-
 
 ### Calculators
 
@@ -775,8 +767,6 @@ flowchart TD
     SS --> Signal[TradeSignal]
 ```
 
-
-
 ---
 
 ## Section 9: Testing Policy
@@ -807,22 +797,18 @@ Everything above covers feature engineering and ML changes. This section covers 
 
 All external APIs follow the same pattern: schemas in `unified-api-contracts/unified_api_contracts/external/{source}/schemas.py`, API key in Secret Manager.
 
-
 | Source        | Purpose                                         | Schema file                                                       | Key needed                            |
 | ------------- | ----------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------- |
 | Coinglass     | Liquidation heatmap for `liquidation_levels.py` | `external/coinglass/schemas.py`                                   | `coinglass-api-key` in Secret Manager |
 | CoinGecko     | BTC dominance (`btc_dominance_pct`)             | `external/coingecko/schemas.py`                                   | None (free global endpoint)           |
 | Databento CME | CME gap detection (`cme_gap` calculator)        | Verify `DatabentoOhlcvBar` covers CME futures dataset `GLBX.MDP3` | Existing `databento-api-key`          |
 
-
 ### New Internal Contracts
-
 
 | Schema                                                          | Location                                                                            | Pattern                                                            |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | `CrossTimeframeFeatures`                                        | `unified-internal-contracts/unified_internal_contracts/features/cross_timeframe.py` | Mirror `CrossInstrumentFeatures`                                   |
 | `CascadePredictionEvent`, `PredictionSnapshot`, `CascadeConfig` | `unified-ml-interface` (Tier 2)                                                     | Tier 2 library, consumed by both ml-inference and strategy-service |
-
 
 ### New Repo: features-multi-timeframe-service
 
@@ -846,7 +832,7 @@ Cloud Build trigger in deployment-v3
 
 ### Runtime Topology Additions (exact YAML to add)
 
-`**runtime-topology.yaml` — service_flows:**
+`**runtime-topology.yaml` — service_flows:\*\*
 
 ```yaml
 - producer: features-delta-one-service
@@ -868,14 +854,20 @@ Cloud Build trigger in deployment-v3
     live: { transport: pubsub }
 ```
 
-`**sharding_config.yaml`:**
+`**sharding_config.yaml`:\*\*
 
 ```yaml
 features-multi-timeframe-service:
   batch:
     dimensions: [category, feature_category, date]
     category_values: [cefi, defi, tradfi]
-    feature_category_values: [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]
+    feature_category_values:
+      [
+        tf_momentum_alignment,
+        tf_structure_context,
+        tf_vol_compression,
+        tf_session_context,
+      ]
   live:
     dimensions: [feature_category]
     topic_template: "features-multi-timeframe-{feature_category}"
@@ -885,7 +877,6 @@ features-multi-timeframe-service:
 ---
 
 ## Section 11: Phasing
-
 
 | Phase | What                                                                                                                                     | Effort | Dependency                |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------- |

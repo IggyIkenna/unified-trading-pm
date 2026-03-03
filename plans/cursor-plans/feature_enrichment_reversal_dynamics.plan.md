@@ -64,7 +64,6 @@ TIER 3: features-multi-timeframe-service (K cross-TF features)
 
 ## Agent Assignment (10 parallel agents)
 
-
 | Agent | Categories        | Files Owned (no overlap)                                                |
 | ----- | ----------------- | ----------------------------------------------------------------------- |
 | 1     | Tier 0: Auto-Diff | UFC library: base.py + tests                                            |
@@ -78,9 +77,7 @@ TIER 3: features-multi-timeframe-service (K cross-TF features)
 | 9     | I + N(mkt)        | market_structure.py, round_numbers.py, vwap.py + tests                  |
 | 10    | Integration       | parameters.py, **init**.py, docs, Tier 2, Tier 3                        |
 
-
 ## Feature Count Summary (deduplicated)
-
 
 | Category           | Base       | Binaries | Auto time_since |
 | ------------------ | ---------- | -------- | --------------- |
@@ -101,7 +98,6 @@ TIER 3: features-multi-timeframe-service (K cross-TF features)
 | P. Cross-Inst (T2) | 1          | 5        | 5               |
 | K. Cross-TF (T3)   | 0          | 11       | 11              |
 | **Total**          | **~3,545** | **~294** | **~294**        |
-
 
 ## Standards
 

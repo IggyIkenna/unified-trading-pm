@@ -95,7 +95,7 @@ bash enhanced-cleanup-batch-fix.sh \
 
 | Repo                           | Issue | State  | Blocked? |
 | ------------------------------ | ----- | ------ | -------- |
-| execution-service             | #147  | OPEN   | No       |
+| execution-service              | #147  | OPEN   | No       |
 | strategy-service               | #23   | OPEN   | No       |
 | instruments-service            | #58   | OPEN   | No       |
 | unified-trading-services       | #48   | CLOSED | N/A      |
@@ -118,7 +118,7 @@ bash enhanced-cleanup-batch-fix.sh \
 | unified-trading-services      | #52   | OPEN  | No ✅    |
 | instruments-service           | #59   | OPEN  | Yes 🔒   |
 | strategy-service              | #25   | OPEN  | Yes 🔒   |
-| execution-service            | #150  | OPEN  | Yes 🔒   |
+| execution-service             | #150  | OPEN  | Yes 🔒   |
 | unified-trading-deployment-v2 | #127  | OPEN  | Yes 🔒   |
 | market-tick-data-handler      | #54   | OPEN  | No ✅    |
 

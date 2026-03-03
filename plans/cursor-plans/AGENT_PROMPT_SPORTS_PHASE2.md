@@ -22,6 +22,7 @@ All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .ve
 > **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every PR. Build accordingly.**
 
 This means — no exceptions, no shortcuts:
+
 - **No silent errors** — every `except` block must reraise, raise a typed error, or log at ERROR + reraise. `pass` is a build failure.
 - **No empty fallbacks** — `os.getenv(KEY, '')` silently fails in production; forbidden. Use `UnifiedCloudConfig` or `os.environ[KEY]` (raises on missing).
 - **No untyped code** — every function parameter, return type, and class field has a type annotation. `Any` is forbidden unless documented in `QUALITY_GATE_BYPASS_AUDIT.md`.
@@ -67,16 +68,16 @@ If any check fails: STOP. Complete Sports Phase 1 first.
 
 ## SSOT
 
-| Source | Path |
-|--------|------|
-| Sports AC schemas | `unified-api-contracts/unified_api_contracts/sports/` |
-| BookmakerRegistry | `unified-api-contracts/unified_api_contracts/sports/canonical/bookmaker.py` |
-| USEI base protocols | `unified-sports-execution-interface/unified_sports_execution_interface/base.py` |
-| Existing feature logic | `SPORTS_REPO/footballbets/features/` — 14 calculators to port |
-| Existing odds downloader | `SPORTS_REPO/footballbets/arbitrage/odds.py` — OddsApiAdapter source of truth |
-| Existing client impls | `SPORTS_REPO/footballbets/clients/` — adapter implementations to port |
-| Tier architecture | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` |
-| Batch/live symmetry | `unified-trading-codex/04-architecture/batch-live-symmetry.md` |
+| Source                   | Path                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| Sports AC schemas        | `unified-api-contracts/unified_api_contracts/sports/`                           |
+| BookmakerRegistry        | `unified-api-contracts/unified_api_contracts/sports/canonical/bookmaker.py`     |
+| USEI base protocols      | `unified-sports-execution-interface/unified_sports_execution_interface/base.py` |
+| Existing feature logic   | `SPORTS_REPO/footballbets/features/` — 14 calculators to port                   |
+| Existing odds downloader | `SPORTS_REPO/footballbets/arbitrage/odds.py` — OddsApiAdapter source of truth   |
+| Existing client impls    | `SPORTS_REPO/footballbets/clients/` — adapter implementations to port           |
+| Tier architecture        | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`                    |
+| Batch/live symmetry      | `unified-trading-codex/04-architecture/batch-live-symmetry.md`                  |
 
 ---
 
@@ -97,6 +98,7 @@ async def test_betfair_get_odds_returns_canonical_odds(betfair_adapter):
 Cassette files live in `tests/cassettes/`. Record once from real API (or hand-craft realistic JSON/HTML). After recording, tests NEVER make live calls — CI always uses cassettes.
 
 For Playwright scrapers, use `responses` library or hand-crafted HTML fixtures in `tests/fixtures/html/`:
+
 ```python
 @pytest.mark.unit
 async def test_skybet_parses_html_odds(skybet_adapter, skybet_html_fixture):
@@ -122,14 +124,14 @@ If any new config field is needed (e.g., `sports_betfair_api_key`, `sports_playw
 
 ## Testing Progression
 
-| Step | Command | Catches |
-|------|---------|---------|
-| Import smoke | `python -c "import <pkg>"` | Broken `__init__`, circular imports |
-| D1 | `--lint-only` | Syntax, formatting, import order |
-| D2 | `--unit-only` | Type errors, unit test failures |
-| D3 | `--qg-only` | Coverage gaps — no git, safe to retry |
-| D4 | `--quick` | Full QG + git ops, no act |
-| D5 | (no flags) | Full pipeline — the only gate that counts |
+| Step         | Command                    | Catches                                   |
+| ------------ | -------------------------- | ----------------------------------------- |
+| Import smoke | `python -c "import <pkg>"` | Broken `__init__`, circular imports       |
+| D1           | `--lint-only`              | Syntax, formatting, import order          |
+| D2           | `--unit-only`              | Type errors, unit test failures           |
+| D3           | `--qg-only`                | Coverage gaps — no git, safe to retry     |
+| D4           | `--quick`                  | Full QG + git ops, no act                 |
+| D5           | (no flags)                 | Full pipeline — the only gate that counts |
 
 ---
 
@@ -206,11 +208,13 @@ Export from `unified_api_contracts/sports/__init__.py`. Write unit tests. Run `u
 **2A — BetfairAdapter** (`adapters/exchanges/betfair.py`)
 
 Dependencies to add to `unified-sports-execution-interface/pyproject.toml`:
+
 ```toml
 "betfairlightweight>=3.14,<4.0"
 ```
 
 Implementation requirements:
+
 - `get_odds()`: calls `betfairlightweight` client → `list_runner_book()` → parses available back/lay prices → returns `list[CanonicalOdds]`
 - Map Betfair market types to `OddsType`: `MATCH_ODDS` → `H2H`, `OVER_UNDER_25` → `OVER_UNDER`, etc.
 - `place_bet()`: constructs `PlaceInstruction` → `place_orders()` → returns `BetExecution`
@@ -221,6 +225,7 @@ Implementation requirements:
 - Every HTTP error → `BookmakerUnavailableError`; every bet rejection → `BetRejectedError`
 
 VCR cassettes at `tests/cassettes/betfair_*.yaml`. Tests:
+
 ```
 test_betfair_get_odds_h2h.py
 test_betfair_place_bet_success.py
@@ -233,6 +238,7 @@ test_betfair_maps_market_types.py
 **2B — SmarketsAdapter** (`adapters/exchanges/smarkets.py`)
 
 Smarkets REST API at `https://api.smarkets.com/v3/`. Requires `aiohttp`.
+
 - `get_odds()`: `GET /events/?sport=football` → filter by fixture → `GET /markets/{id}/quotes/` → `list[CanonicalOdds]`
 - `place_bet()`: `POST /orders/` with `{"market": ..., "quantity": ..., "price": ..., "side": "buy"|"sell"}`
 - Auth: Bearer token via `UnifiedCloudConfig.sports_smarkets_api_key`
@@ -241,6 +247,7 @@ Smarkets REST API at `https://api.smarkets.com/v3/`. Requires `aiohttp`.
 **2C — MatchbookAdapter** (`adapters/exchanges/matchbook.py`)
 
 Matchbook REST API at `https://api.matchbook.com/edge/rest/`.
+
 - `get_odds()`: `GET /events?sport=soccer` → `GET /events/{id}/markets` → parse runners → `list[CanonicalOdds]`
 - `place_bet()`: `POST /offers`
 - Auth: `UnifiedCloudConfig.sports_matchbook_username` + `sports_matchbook_api_key` (Basic Auth)
@@ -248,6 +255,7 @@ Matchbook REST API at `https://api.matchbook.com/edge/rest/`.
 **2D — BetdaqAdapter** (`adapters/exchanges/betdaq.py`)
 
 Betdaq REST API at `https://api.betdaq.com/v2.0/`.
+
 - `get_odds()`: `GET /Sport/GetTopLevelEvents` → `GET /Market/GetPricesForMarkets` → parse
 - `place_bet()`: `POST /Betting/PlaceOrdersWithReceipt`
 - Auth: `UnifiedCloudConfig.sports_betdaq_api_key` + `sports_betdaq_username`
@@ -259,6 +267,7 @@ Betdaq REST API at `https://api.betdaq.com/v2.0/`.
 **3A — PinnacleAdapter** (`adapters/bookmaker_api/pinnacle.py`)
 
 Pinnacle Sports API at `https://api.pinnacle.com/v1/`.
+
 - `get_odds()`: `GET /odds?sportId=29&leagueIds=...` (soccer sportId=29) → parse lines → `list[CanonicalOdds]`
 - `get_fixtures_with_odds()`: `GET /fixtures?sportId=29&leagueIds=...`
 - Read-only (odds provider only, no bet placement via API)
@@ -271,6 +280,7 @@ Pinnacle Sports API at `https://api.pinnacle.com/v1/`.
 Port from `SPORTS_REPO/footballbets/arbitrage/odds.py`. This adapter wraps The Odds API v4.
 
 Key differences from the existing implementation:
+
 - Remove PostgreSQL storage — return `list[CanonicalOdds]` directly
 - Remove `ThreadPoolExecutor` — use `asyncio` + `aiohttp`
 - Remove hardcoded API key — use `UnifiedCloudConfig.sports_odds_api_key`
@@ -331,6 +341,7 @@ class OddsApiAdapter:
 ### Step 4 — Implement Scraper Adapters (4 parallel sub-agents, 3-4 scrapers each)
 
 **Dependencies to add to `unified-sports-execution-interface/pyproject.toml`:**
+
 ```toml
 "playwright>=1.40,<2.0",
 "httpx>=0.27,<1.0",
@@ -422,6 +433,7 @@ class SkyBetAdapter:
 ```
 
 **Scraper test pattern (HTML fixture files):**
+
 ```
 tests/
   fixtures/
@@ -438,6 +450,7 @@ tests/
 ```
 
 Each scraper test:
+
 ```python
 @pytest.fixture
 def skybet_html(tmp_path) -> str:
@@ -477,6 +490,7 @@ real-time odds independent of The Odds API latency (~2–5 min delay). Both coex
 After all USEI adapters are implemented and D5 passes, add sports to `unified-market-interface`.
 
 Create `unified-market-interface/unified_market_interface/sports/`:
+
 ```
 sports/
   __init__.py
@@ -485,6 +499,7 @@ sports/
 ```
 
 `protocol.py`:
+
 ```python
 """Sports market adapter protocol — unified interface for sports odds and execution."""
 
@@ -511,6 +526,7 @@ class SportsMarketAdapter(Protocol):
 ```
 
 `registry.py`:
+
 ```python
 """Factory for creating sports market adapters by bookmaker key."""
 
@@ -535,6 +551,7 @@ def adapter_for_bookmaker(key: str) -> SportsMarketAdapter:
 ```
 
 Update `unified-market-interface/pyproject.toml` to add USEI dependency:
+
 ```toml
 "unified-sports-execution-interface>=0.2.0,<1.0.0",
 ```
@@ -552,6 +569,7 @@ Read `SPORTS_REPO/footballbets/features/` fully before starting. Port all 14 cal
 models from GCS/PubSub (as `CanonicalFixture`, `CanonicalOdds`, etc.) and return typed feature dicts.
 
 **Feature output schema** — add to `unified-api-contracts/sports/canonical/features.py`:
+
 ```python
 class SportsFeatureVector(BaseModel):
     """Complete ML feature vector for a single fixture."""
@@ -650,6 +668,7 @@ class SportsFeatureVector(BaseModel):
 Add `SportsFeatureVector` to `unified-api-contracts/sports/__init__.py`. Run `unified-api-contracts` D5.
 
 **Calculator porting pattern** (same for all 14):
+
 ```python
 # features_sports_service/calculators/team.py
 """Team form and performance feature calculator."""
@@ -680,6 +699,7 @@ class TeamFeatureCalculator:
 ```
 
 Create `features_sports_service/calculators/`:
+
 ```
 calculators/
   __init__.py
@@ -701,6 +721,7 @@ calculators/
 ```
 
 `pipeline.py`:
+
 ```python
 class FeaturePipeline:
     """
@@ -732,6 +753,7 @@ class FeaturePipeline:
 ```
 
 **Tests for feature calculators:**
+
 ```
 tests/unit/calculators/
   test_team_calculator.py         # fixture with known results → assert expected feature values

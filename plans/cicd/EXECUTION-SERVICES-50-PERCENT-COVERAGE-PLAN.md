@@ -1,11 +1,11 @@
 # Execution Services >50% Quality Gate Coverage Plan
 
-**Status**: ⬜ Ready to Execute  
-**Current Coverage**: 36%  
-**Target Coverage**: >50%  
-**Code Base Size**: 727,860 lines of Python  
-**Existing Tests**: 1,068 unit tests  
-**Timeline**: 2-3 days with parallel execution  
+**Status**: ⬜ Ready to Execute
+**Current Coverage**: 36%
+**Target Coverage**: >50%
+**Code Base Size**: 727,860 lines of Python
+**Existing Tests**: 1,068 unit tests
+**Timeline**: 2-3 days with parallel execution
 **Priority**: P0 - Critical for audit compliance
 
 ---
@@ -13,12 +13,14 @@
 ## 📊 Current State Analysis
 
 ### Coverage Metrics
+
 - **Current**: 36% (10,833/16,828 lines covered)
 - **Target**: >50% (need to cover ~2,600 more lines)
 - **Gap**: 14% coverage increase needed
 - **Quality Gate Threshold**: Currently set to 35% (MIN_COVERAGE)
 
 ### Test Infrastructure
+
 - ✅ pytest-xdist already configured (parallel execution with `-n auto`)
 - ✅ Quality gates script exists and functional
 - ✅ Unit tests: 1,068 tests in tests/unit/
@@ -27,6 +29,7 @@
 - ⚠️ Coverage configuration: Uses `.coveragerc` for exclusions
 
 ### Key Coverage Gaps (Based on File Analysis)
+
 - Core engine components (likely <30% coverage)
 - Signal processing modules
 - Routing and execution algorithms
@@ -40,24 +43,28 @@
 ## 🎯 Strategy: Four-Pronged Approach
 
 ### 1. **Quick Wins** (Day 1: +5-7% coverage)
+
 - Focus on high-impact, low-complexity modules
 - Add tests for utility functions and validators
 - Cover error handling paths
 - Test configuration loaders
 
 ### 2. **Core Component Coverage** (Day 2: +5-6% coverage)
+
 - Engine initialization and lifecycle
 - Signal model processing
 - Routing matrix calculations
 - Results aggregation
 
 ### 3. **Integration Points** (Day 2-3: +3-4% coverage)
+
 - Cloud service interactions (mocked)
 - Event logging flows
 - Preflight validation chains
 - Mode adapter transitions
 
 ### 4. **Performance Optimization** (Ongoing)
+
 - Parallel test execution optimization
 - Test fixture sharing
 - Mock heavy dependencies
@@ -70,6 +77,7 @@
 ### Phase 1: Infrastructure Setup (2-3 hours)
 
 #### 1.1 Update Quality Gate Configuration
+
 ```bash
 # execution-service/scripts/quality-gates.sh
 
@@ -86,6 +94,7 @@ COV_ARGS="--cov=execution_service \
 ```
 
 #### 1.2 Create Coverage Analysis Script
+
 ```bash
 # execution-service/scripts/analyze-coverage.sh
 #!/bin/bash
@@ -141,6 +150,7 @@ echo "HTML report: file://$(pwd)/htmlcov/index.html"
 ```
 
 #### 1.3 Optimize Test Performance
+
 ```toml
 # pyproject.toml updates
 [tool.pytest.ini_options]
@@ -197,6 +207,7 @@ skip_covered = false
 ### Phase 2: Quick Win Tests (Day 1, 4-6 hours)
 
 #### 2.1 Utility and Validator Tests
+
 ```python
 # tests/unit/test_validators_extended.py
 import pytest
@@ -209,20 +220,20 @@ from execution_service.validators import (
 
 class TestValidatorsExtended:
     """Extended validator test coverage for quick wins."""
-    
+
     def test_validate_order_edge_cases(self):
         """Test order validation edge cases."""
         # Add 20+ test cases for different order types
         # Focus on error paths and boundary conditions
         pass
-    
+
     def test_validate_signal_comprehensive(self):
         """Comprehensive signal validation tests."""
         # Test all signal types
         # Test malformed signals
         # Test signal transformations
         pass
-    
+
     def test_config_validation_matrix(self):
         """Test configuration validation matrix."""
         # Test all config combinations
@@ -232,6 +243,7 @@ class TestValidatorsExtended:
 ```
 
 #### 2.2 Error Handling Coverage
+
 ```python
 # tests/unit/test_error_handling_comprehensive.py
 import pytest
@@ -245,7 +257,7 @@ from execution_service.exceptions import (
 
 class TestErrorHandlingComprehensive:
     """Comprehensive error handling test coverage."""
-    
+
     @pytest.mark.parametrize("error_type,error_code", [
         (ExecutionError, "EXE001"),
         (ValidationError, "VAL001"),
@@ -259,7 +271,7 @@ class TestErrorHandlingComprehensive:
         # Test error recovery
         # Test error logging
         pass
-    
+
     def test_error_aggregation(self):
         """Test error aggregation and reporting."""
         # Test multiple error scenarios
@@ -269,6 +281,7 @@ class TestErrorHandlingComprehensive:
 ```
 
 #### 2.3 Configuration Loader Tests
+
 ```python
 # tests/unit/test_config_loaders_extended.py
 import pytest
@@ -284,22 +297,22 @@ from execution_service.config import (
 
 class TestConfigLoadersExtended:
     """Extended configuration loader tests."""
-    
+
     def test_load_config_formats(self, tmp_path):
         """Test loading configs from different formats."""
         # JSON config
-        # YAML config  
+        # YAML config
         # TOML config
         # Environment variables
         pass
-    
+
     def test_config_inheritance(self):
         """Test configuration inheritance and overrides."""
         # Base config
         # Environment-specific overrides
         # Runtime overrides
         pass
-    
+
     def test_config_validation_schema(self):
         """Test configuration schema validation."""
         # Valid schemas
@@ -311,6 +324,7 @@ class TestConfigLoadersExtended:
 ### Phase 3: Core Component Tests (Day 2, 6-8 hours)
 
 #### 3.1 Engine Component Tests
+
 ```python
 # tests/unit/test_engine_comprehensive.py
 import pytest
@@ -323,7 +337,7 @@ from execution_service.engine import (
 
 class TestExecutionEngineComprehensive:
     """Comprehensive execution engine test coverage."""
-    
+
     @pytest.fixture
     def engine(self):
         """Create engine fixture with mocked dependencies."""
@@ -335,18 +349,18 @@ class TestExecutionEngineComprehensive:
                 timeout=300
             )
             return ExecutionEngine(config)
-    
+
     async def test_engine_lifecycle(self, engine):
         """Test complete engine lifecycle."""
         # Initialization
         # Start
         # Process signals
         # Pause
-        # Resume  
+        # Resume
         # Stop
         # Cleanup
         pass
-    
+
     async def test_engine_state_transitions(self, engine):
         """Test all engine state transitions."""
         # IDLE -> RUNNING
@@ -355,7 +369,7 @@ class TestExecutionEngineComprehensive:
         # RUNNING -> ERROR
         # ERROR -> IDLE
         pass
-    
+
     @pytest.mark.parametrize("signal_count", [1, 10, 100, 1000])
     async def test_engine_signal_processing(self, engine, signal_count):
         """Test engine signal processing at different scales."""
@@ -367,6 +381,7 @@ class TestExecutionEngineComprehensive:
 ```
 
 #### 3.2 Signal Processing Tests
+
 ```python
 # tests/unit/test_signal_processing_extended.py
 import pytest
@@ -380,7 +395,7 @@ from execution_service.signals import (
 
 class TestSignalProcessingExtended:
     """Extended signal processing test coverage."""
-    
+
     def test_signal_transformation_pipeline(self):
         """Test complete signal transformation pipeline."""
         # Raw signal input
@@ -389,7 +404,7 @@ class TestSignalProcessingExtended:
         # Aggregation
         # Validation
         pass
-    
+
     @pytest.mark.parametrize("aggregation_method", [
         "mean", "median", "weighted_avg", "exponential"
     ])
@@ -399,7 +414,7 @@ class TestSignalProcessingExtended:
         # Apply aggregation
         # Verify results
         pass
-    
+
     def test_signal_validation_rules(self):
         """Test all signal validation rules."""
         # Range validation
@@ -410,6 +425,7 @@ class TestSignalProcessingExtended:
 ```
 
 #### 3.3 Routing Matrix Tests
+
 ```python
 # tests/unit/test_routing_matrix_comprehensive.py
 import pytest
@@ -422,7 +438,7 @@ from execution_service.routing import (
 
 class TestRoutingMatrixComprehensive:
     """Comprehensive routing matrix test coverage."""
-    
+
     def test_routing_matrix_construction(self):
         """Test routing matrix construction."""
         # Empty matrix
@@ -430,7 +446,7 @@ class TestRoutingMatrixComprehensive:
         # Dense matrix
         # Dynamic updates
         pass
-    
+
     def test_route_optimization_algorithms(self):
         """Test route optimization algorithms."""
         # Shortest path
@@ -438,7 +454,7 @@ class TestRoutingMatrixComprehensive:
         # Maximum liquidity
         # Balanced optimization
         pass
-    
+
     @pytest.mark.parametrize("matrix_size", [10, 100, 1000])
     def test_routing_performance(self, matrix_size):
         """Test routing performance at different scales."""
@@ -452,6 +468,7 @@ class TestRoutingMatrixComprehensive:
 ### Phase 4: Integration Point Tests (Day 2-3, 4-6 hours)
 
 #### 4.1 Cloud Service Mocks
+
 ```python
 # tests/unit/test_cloud_integration_mocked.py
 import pytest
@@ -464,7 +481,7 @@ from execution_service.cloud import (
 
 class TestCloudIntegrationMocked:
     """Mocked cloud service integration tests."""
-    
+
     @pytest.fixture
     def mock_cloud_service(self):
         """Create comprehensive cloud service mocks."""
@@ -473,7 +490,7 @@ class TestCloudIntegrationMocked:
             mock.events = AsyncMock()
             mock.config = Mock()
             yield mock
-    
+
     async def test_storage_operations(self, mock_cloud_service):
         """Test all storage operations with mocks."""
         # Upload
@@ -482,7 +499,7 @@ class TestCloudIntegrationMocked:
         # Delete
         # Batch operations
         pass
-    
+
     async def test_event_publishing(self, mock_cloud_service):
         """Test event publishing with mocks."""
         # Single events
@@ -493,6 +510,7 @@ class TestCloudIntegrationMocked:
 ```
 
 #### 4.2 Event Logging Tests
+
 ```python
 # tests/unit/test_event_logging_extended.py
 import pytest
@@ -506,7 +524,7 @@ from execution_service.logging import (
 
 class TestEventLoggingExtended:
     """Extended event logging test coverage."""
-    
+
     def test_event_logger_formats(self):
         """Test different log formats."""
         # JSON format
@@ -514,14 +532,14 @@ class TestEventLoggingExtended:
         # Plain text
         # Custom formats
         pass
-    
+
     def test_log_aggregation(self):
         """Test log aggregation and batching."""
         # Time-based aggregation
         # Size-based aggregation
         # Priority-based aggregation
         pass
-    
+
     def test_log_filtering(self):
         """Test log filtering and routing."""
         # Level filtering
@@ -533,6 +551,7 @@ class TestEventLoggingExtended:
 ### Phase 5: Performance & Optimization (Ongoing)
 
 #### 5.1 Test Performance Monitoring
+
 ```bash
 # execution-service/scripts/monitor-test-performance.sh
 #!/bin/bash
@@ -560,6 +579,7 @@ python -m pytest tests/unit/ --durations=0 --durations-min=1.0 -q
 ```
 
 #### 5.2 Parallel Execution Optimization
+
 ```python
 # tests/conftest.py additions
 import pytest
@@ -568,10 +588,10 @@ from _pytest.nodes import Item
 
 def pytest_collection_modifyitems(config: Config, items: list[Item]) -> None:
     """Optimize test collection and grouping for parallel execution."""
-    
+
     # Group tests by module for better parallelization
     items.sort(key=lambda item: item.module.__name__)
-    
+
     # Mark slow tests
     for item in items:
         if "integration" in item.nodeid:
@@ -601,24 +621,25 @@ def mock_cloud_services():
 
 ## 🎯 Coverage Targets by Component
 
-| Component | Current | Target | Priority | Effort |
-|-----------|---------|--------|----------|--------|
-| Validators | ~25% | 70% | High | Low |
-| Config Loaders | ~30% | 65% | High | Low |
-| Error Handling | ~20% | 60% | High | Medium |
-| Engine Core | ~35% | 55% | Critical | High |
-| Signal Processing | ~30% | 50% | Critical | High |
-| Routing Matrix | ~25% | 50% | High | Medium |
-| Cloud Integration | ~40% | 55% | Medium | Low |
-| Event Logging | ~35% | 50% | Medium | Low |
-| Slippage Protection | ~20% | 45% | Medium | Medium |
-| Mode Adapters | ~25% | 45% | Low | Medium |
+| Component           | Current | Target | Priority | Effort |
+| ------------------- | ------- | ------ | -------- | ------ |
+| Validators          | ~25%    | 70%    | High     | Low    |
+| Config Loaders      | ~30%    | 65%    | High     | Low    |
+| Error Handling      | ~20%    | 60%    | High     | Medium |
+| Engine Core         | ~35%    | 55%    | Critical | High   |
+| Signal Processing   | ~30%    | 50%    | Critical | High   |
+| Routing Matrix      | ~25%    | 50%    | High     | Medium |
+| Cloud Integration   | ~40%    | 55%    | Medium   | Low    |
+| Event Logging       | ~35%    | 50%    | Medium   | Low    |
+| Slippage Protection | ~20%    | 45%    | Medium   | Medium |
+| Mode Adapters       | ~25%    | 45%    | Low      | Medium |
 
 ---
 
 ## 📊 Success Metrics
 
 ### Coverage Metrics
+
 - [ ] Overall coverage >50% (from 36%)
 - [ ] Core components >55% coverage
 - [ ] Utility functions >70% coverage
@@ -626,12 +647,14 @@ def mock_cloud_services():
 - [ ] No critical paths <40% coverage
 
 ### Performance Metrics
+
 - [ ] All tests complete in <5 minutes (300s)
 - [ ] Parallel execution using all CPU cores
 - [ ] No individual test >5s (mark as slow if needed)
 - [ ] Test collection <10s
 
 ### Quality Metrics
+
 - [ ] All tests follow naming conventions
 - [ ] Proper use of fixtures and mocks
 - [ ] No test interdependencies
@@ -643,16 +666,19 @@ def mock_cloud_services():
 ## 🔄 Execution Timeline
 
 ### Day 1 (8-10 hours)
+
 - **Morning (3-4h)**: Infrastructure setup + coverage analysis
 - **Afternoon (5-6h)**: Quick win tests (validators, config, errors)
 - **Expected Coverage**: 36% → 41-43%
 
 ### Day 2 (8-10 hours)
+
 - **Morning (4-5h)**: Core component tests (engine, signals)
 - **Afternoon (4-5h)**: Routing and integration tests
 - **Expected Coverage**: 41-43% → 47-49%
 
 ### Day 3 (4-6 hours)
+
 - **Morning (2-3h)**: Final push on uncovered areas
 - **Afternoon (2-3h)**: Performance optimization + validation
 - **Expected Coverage**: 47-49% → 50-52%
@@ -687,6 +713,7 @@ open htmlcov/index.html
 ## 🔧 Tooling & Automation
 
 ### Coverage Gap Finder
+
 ```python
 # tools/find_coverage_gaps.py
 import ast
@@ -705,6 +732,7 @@ def find_untested_functions(module_path):
 ```
 
 ### Test Generator Template
+
 ```python
 # tools/generate_test_template.py
 def generate_test_template(module_path, output_path):
@@ -723,12 +751,14 @@ def generate_test_template(module_path, output_path):
 ## ⚠️ Risk Mitigation
 
 ### Risks
+
 1. **Test Quality**: Avoid writing low-quality tests just for coverage
 2. **Performance Impact**: Monitor test execution time
 3. **Flaky Tests**: Ensure tests are deterministic
 4. **Mock Complexity**: Keep mocks simple and maintainable
 
 ### Mitigations
+
 1. **Code Review**: All test PRs require review
 2. **Performance Gates**: 5-minute timeout enforced
 3. **Test Stability**: Run tests 3x before merge
@@ -749,14 +779,16 @@ def generate_test_template(module_path, output_path):
 ## ✅ Checklist for Completion
 
 ### Infrastructure
+
 - [ ] Coverage analysis script created
 - [ ] Quality gate threshold updated to 50%
 - [ ] Test performance monitoring in place
 - [ ] Parallel execution optimized
 
 ### Test Coverage
+
 - [ ] Validators >70% coverage
-- [ ] Config loaders >65% coverage  
+- [ ] Config loaders >65% coverage
 - [ ] Error handling >60% coverage
 - [ ] Engine core >55% coverage
 - [ ] Signal processing >50% coverage
@@ -764,6 +796,7 @@ def generate_test_template(module_path, output_path):
 - [ ] Overall coverage >50%
 
 ### Quality
+
 - [ ] All tests run in <5 minutes
 - [ ] No flaky tests
 - [ ] Clear test documentation
@@ -771,6 +804,7 @@ def generate_test_template(module_path, output_path):
 - [ ] Mock patterns established
 
 ### Documentation
+
 - [ ] Coverage report published
 - [ ] Test guidelines updated
 - [ ] Team training completed
@@ -778,7 +812,8 @@ def generate_test_template(module_path, output_path):
 
 ---
 
-**Next Steps**: 
+**Next Steps**:
+
 1. Run coverage analysis to identify specific gaps
 2. Start with quick win tests (Day 1)
 3. Progress to core components (Day 2)

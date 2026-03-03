@@ -1,9 +1,10 @@
 # Task: Service Structure Standardization (12 Services)
 
-**Source plan**: `.cursor/plans/service_structure_standardization_4a4b3ff3.plan.md`  
+**Source plan**: `.cursor/plans/service_structure_standardization_4a4b3ff3.plan.md`
 **Scope**: All 14 Python services EXCEPT instruments-service and market-tick-data-handler → **12 services**.
 
 **Codex refs**:
+
 - `unified-trading-codex/06-coding-standards/cli-standards.md` — CLI pattern (--operation, --mode)
 - `unified-trading-codex/06-coding-standards/service-structure-standards.md` — engine/, adapters/, cli/
 - `unified-trading-codex/06-coding-standards/thin-adapters-pattern.md` — Adapters <100 lines, delegate to UCS/UMI/UCI/UEI
@@ -22,20 +23,20 @@ Do a quick sanity check; do not redo:
 
 ## Services and Operations (from codex)
 
-| Service | Operations | Mode |
-|---------|------------|------|
-| market-data-processing-service | `process` | batch, live |
-| pnl-attribution-service | `compute` | batch, live |
-| features-calendar-service | `compute` | batch, live |
-| features-delta-one-service | `compute` | batch, live |
-| features-volatility-service | `compute` | batch, live |
-| features-onchain-service | `compute` | batch, live |
-| ml-training-service | `train_phase1`, `train_phase2`, `train_phase3` | batch, live |
-| ml-inference-service | `infer` | batch, live |
-| strategy-service | `backtest`, `live_trade` | batch (backtest), live (live_trade) |
-| execution-service | `execute` | live only |
-| risk-and-exposure-service | `compute` | batch, live |
-| position-balance-monitor-service | `monitor` | batch, live |
+| Service                          | Operations                                     | Mode                                |
+| -------------------------------- | ---------------------------------------------- | ----------------------------------- |
+| market-data-processing-service   | `process`                                      | batch, live                         |
+| pnl-attribution-service          | `compute`                                      | batch, live                         |
+| features-calendar-service        | `compute`                                      | batch, live                         |
+| features-delta-one-service       | `compute`                                      | batch, live                         |
+| features-volatility-service      | `compute`                                      | batch, live                         |
+| features-onchain-service         | `compute`                                      | batch, live                         |
+| ml-training-service              | `train_phase1`, `train_phase2`, `train_phase3` | batch, live                         |
+| ml-inference-service             | `infer`                                        | batch, live                         |
+| strategy-service                 | `backtest`, `live_trade`                       | batch (backtest), live (live_trade) |
+| execution-service                | `execute`                                      | live only                           |
+| risk-and-exposure-service        | `compute`                                      | batch, live                         |
+| position-balance-monitor-service | `monitor`                                      | batch, live                         |
 
 ---
 
@@ -75,9 +76,9 @@ For each assigned service:
 
 ## Agent Assignments (4 agents, 3 services each)
 
-- **Agent 1**: market-data-processing-service, pnl-attribution-service, features-calendar-service  
-- **Agent 2**: features-delta-one-service, features-volatility-service, features-onchain-service  
-- **Agent 3**: ml-training-service, ml-inference-service, strategy-service  
-- **Agent 4**: execution-service, risk-and-exposure-service, position-balance-monitor-service  
+- **Agent 1**: market-data-processing-service, pnl-attribution-service, features-calendar-service
+- **Agent 2**: features-delta-one-service, features-volatility-service, features-onchain-service
+- **Agent 3**: ml-training-service, ml-inference-service, strategy-service
+- **Agent 4**: execution-service, risk-and-exposure-service, position-balance-monitor-service
 
 Each agent returns: for each service, (1) done / not done, (2) CLI and structure changes summary, (3) quality gates pass/fail and any remaining issues.

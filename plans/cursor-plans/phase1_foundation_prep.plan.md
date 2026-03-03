@@ -89,28 +89,26 @@ isProject: true
 
 When any component is renamed, the change is **complete** only when ALL of the following are updated. No shortcuts, no aliases, no backward compatibility shims.
 
-
-| Level                               | What to Change                                                                                                                                  |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **GitHub repo name**                | Rename via GitHub settings; update all links                                                                                                    |
-| **Artifact Registry**               | Rename GCP AR package; update all `cloudbuild.yaml` publisher + consumer `--tag` lines                                                          |
-| **CI/CD triggers**                  | Cloud Build trigger name must match repo name; update `version-bump.yml` `push:` branch filters                                                 |
-| `**pyproject.toml`**                | `[project] name` field; all `[project.dependencies]` entries in dependent repos                                                                 |
-| **Python package dir**              | Rename `market_tick_data_handler/` → `market_tick_data_service/`; update `__init__.py`                                                          |
-| **All imports**                     | `from market_tick_data_handler import ...` → `from market_tick_data_service import ...` across ALL 57 repos (run `rg` to find every occurrence) |
-| `**workspace-manifest.json`**       | `name`, `github_url`, `artifact_registry_url`, `package_name` — all 4 fields                                                                    |
-| `**runtime-topology.yaml**`         | All service name references                                                                                                                     |
-| **Deployment checklists**           | `unified-trading-deployment-v3/configs/checklist.*.yaml`                                                                                        |
-| `**RUNTIME_TOPOLOGY_DECISIONS.md`** | All narrative references                                                                                                                        |
-| **Cursor rules**                    | Any `.cursor/rules/*.mdc` mentioning old name (`rg` search)                                                                                     |
-| **Codex docs**                      | All `unified-trading-codex/**/*.md` mentioning old name (`rg` search)                                                                           |
-| **Docker image tags**               | `gcr.io/…/<old-name>:$TAG` → `gcr.io/…/<new-name>:$TAG`                                                                                         |
-| **Cloud Run service name**          | Requires redeploy + deletion of old Cloud Run service                                                                                           |
-| **PubSub topics**                   | Any topic named after old service → rename + update all publishers/subscribers                                                                  |
-| **Secret Manager**                  | Any secrets keyed to old service name                                                                                                           |
-| **Environment variables**           | `SERVICE_NAME`, `APP_NAME`, any env var using old name                                                                                          |
-| **Phase plans + PM docs**           | This plan and all `unified-trading-pm/plans/` docs                                                                                              |
-
+| Level                                 | What to Change                                                                                                                                  |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GitHub repo name**                  | Rename via GitHub settings; update all links                                                                                                    |
+| **Artifact Registry**                 | Rename GCP AR package; update all `cloudbuild.yaml` publisher + consumer `--tag` lines                                                          |
+| **CI/CD triggers**                    | Cloud Build trigger name must match repo name; update `version-bump.yml` `push:` branch filters                                                 |
+| `**pyproject.toml`\*\*                | `[project] name` field; all `[project.dependencies]` entries in dependent repos                                                                 |
+| **Python package dir**                | Rename `market_tick_data_handler/` → `market_tick_data_service/`; update `__init__.py`                                                          |
+| **All imports**                       | `from market_tick_data_handler import ...` → `from market_tick_data_service import ...` across ALL 57 repos (run `rg` to find every occurrence) |
+| `**workspace-manifest.json`\*\*       | `name`, `github_url`, `artifact_registry_url`, `package_name` — all 4 fields                                                                    |
+| `**runtime-topology.yaml**`           | All service name references                                                                                                                     |
+| **Deployment checklists**             | `unified-trading-deployment-v3/configs/checklist.*.yaml`                                                                                        |
+| `**RUNTIME_TOPOLOGY_DECISIONS.md`\*\* | All narrative references                                                                                                                        |
+| **Cursor rules**                      | Any `.cursor/rules/*.mdc` mentioning old name (`rg` search)                                                                                     |
+| **Codex docs**                        | All `unified-trading-codex/**/*.md` mentioning old name (`rg` search)                                                                           |
+| **Docker image tags**                 | `gcr.io/…/<old-name>:$TAG` → `gcr.io/…/<new-name>:$TAG`                                                                                         |
+| **Cloud Run service name**            | Requires redeploy + deletion of old Cloud Run service                                                                                           |
+| **PubSub topics**                     | Any topic named after old service → rename + update all publishers/subscribers                                                                  |
+| **Secret Manager**                    | Any secrets keyed to old service name                                                                                                           |
+| **Environment variables**             | `SERVICE_NAME`, `APP_NAME`, any env var using old name                                                                                          |
+| **Phase plans + PM docs**             | This plan and all `unified-trading-pm/plans/` docs                                                                                              |
 
 ### NEVER (no exceptions)
 
@@ -121,18 +119,16 @@ When any component is renamed, the change is **complete** only when ALL of the f
 
 ### Current Known Renames (SSOT as of 2026-02-28)
 
-
 | Old Name                         | Canonical Name                     | Scope                              |
 | -------------------------------- | ---------------------------------- | ---------------------------------- |
 | `market-tick-data-handler`       | `market-tick-data-service`         | All levels                         |
-| `client-reporting-api`       | `client-reporting-api`             | All levels                         |
-| `alerting-service`                | `alerting-service`                 | All levels                         |
+| `client-reporting-api`           | `client-reporting-api`             | All levels                         |
+| `alerting-service`               | `alerting-service`                 | All levels                         |
 | `position-balance-monitor`       | `position-balance-monitor-service` | All levels                         |
-| `ml-training-ui`               | `ml-training-ui`                   | All levels                         |
-| `execution-analytics-ui`                    | `execution-analytics-ui`           | All levels (repo renamed/replaced) |
+| `ml-training-ui`                 | `ml-training-ui`                   | All levels                         |
+| `execution-analytics-ui`         | `execution-analytics-ui`           | All levels (repo renamed/replaced) |
 | `market_tick_data_handler` (pkg) | `market_tick_data_service`         | Python imports                     |
-| `client_reporting_api` (pkg) | `client_reporting_api`             | Python imports                     |
-
+| `client_reporting_api` (pkg)     | `client_reporting_api`             | Python imports                     |
 
 Stream A `ci-quickmerge-rollout` and `ci-commit-msg-hooks` tasks MUST include verifying none of the old names above appear in `pyproject.toml`, `cloudbuild.yaml`, or `quality-gates.sh` in each repo.
 
@@ -282,14 +278,12 @@ Steps:
 
 ### arch-deployment-split (four-way split of unified-trading-deployment-v3)
 
-
 | New Repo                   | Contents                                                                                                                                           | Tier                |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `deployment-service`        | Python package: orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/, terraform/, configs/ | **merge_level: 6**  |
-| `deployment-api`           | Thin FastAPI; imports deployment-service; GoogleOAuthMiddleware on write endpoints; port 8001                                                       | **merge_level: 6**  |
+| `deployment-service`       | Python package: orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/, terraform/, configs/ | **merge_level: 6**  |
+| `deployment-api`           | Thin FastAPI; imports deployment-service; GoogleOAuthMiddleware on write endpoints; port 8001                                                      | **merge_level: 6**  |
 | `deployment-ui`            | React UI → deployment-api; OAuth ADMIN scope; SSE for status (scaffolded)                                                                          | **merge_level: 9**  |
 | `system-integration-tests` | NEW repo; Layer 3a (smoke, <5 min) + Layer 3b (full e2e, 15–30 min)                                                                                | **merge_level: 10** |
-
 
 Pre-split: split `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP before extract.
 
@@ -301,7 +295,7 @@ Layer 2 infra verification: `deployment-service/scripts/verify_infra.py` → exp
 
 Full sweep of all 17 service repos for embedded UI artifacts:
 
-- Patterns: `ui/`, `frontend/`, `static/`, `visualiz`*, `*.tsx`, `*.jsx`, `package.json`, `index.html`
+- Patterns: `ui/`, `frontend/`, `static/`, `visualiz`_, `_.tsx`, `\*.jsx`, `package.json`, `index.html`
 - Known violations: `execution-service`, `unified-trading-deployment-v3`
 - Also check: `alerting-service`, `market-data-processing-service`, `client-reporting-api`, `risk-and-exposure-service`
 
@@ -330,13 +324,11 @@ Allowed ONLY under `co_located_vm` deployment profile (see `runtime-topology.yam
 
 ### Cursor Rules to Create
 
-
 | Rule file                   | Purpose                                                                      |
 | --------------------------- | ---------------------------------------------------------------------------- |
 | `cloud-agnostic.mdc`        | All cloud I/O via abstraction layer; CLOUD_PROVIDER env var; test both paths |
 | `dag-enforcement.mdc`       | Enforce tier boundaries; CI validates pyproject.toml vs manifest arch_tier   |
 | `ui-service-separation.mdc` | UI code must never live inside a service repo                                |
-
 
 ### Manifest Schema Extension
 

@@ -7,6 +7,7 @@ Copy this prompt to the next agent to roll out the iCloud migration script acros
 ## Script Location (SSOT)
 
 **Absolute path:**
+
 ```
 /Users/ikennaigboaka/Library/Mobile Documents/com~apple~CloudDocs/Documents/Documents - Mac/repos/unified-trading-system-repos/unified-trading-pm/scripts/icloud-migrate-commit.sh
 ```

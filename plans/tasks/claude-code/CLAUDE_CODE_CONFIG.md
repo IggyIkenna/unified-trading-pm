@@ -3,6 +3,7 @@
 ## 🚀 Quick Start (TL;DR)
 
 **One-time setup** (already done):
+
 ```json
 ~/.claude/config.json:
 {
@@ -11,6 +12,7 @@
 ```
 
 **Launch Claude Code**:
+
 ```bash
 claude --model claude-sonnet-4-5-20250929
 ```
@@ -30,12 +32,14 @@ claude --model claude-sonnet-4-5-20250929 --dangerously-skip-permissions
 ```
 
 **What --dangerously-skip-permissions does**:
+
 - Bypasses ALL permission checks (bash, read, write, MCP)
 - No prompts, fully non-interactive
 - Fastest way to run
 - Recommended only for trusted workspaces
 
 **Alternative** (safer):
+
 ```bash
 claude --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions
 ```
@@ -55,6 +59,7 @@ claude --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions
 ```
 
 **What this does**:
+
 - Applies to ALL Claude Code sessions (persistent)
 - No need for `--dangerously-skip-permissions` flag
 - Just launch: `claude --model claude-sonnet-4-5-20250929`
@@ -69,6 +74,7 @@ claude --model claude-sonnet-4-5-20250929 --permission-mode bypassPermissions
 ### ❌ The Problem
 
 Claude Code does NOT automatically read:
+
 - `.cursorrules`
 - `.cursor/rules/*.mdc`
 - `unified-trading-codex/`
@@ -97,11 +103,13 @@ Before starting, read these files to understand the standards:
 ### Full Workspace Root (Recommended)
 
 **New pattern** (v10+): Agent CLI uses workspace root:
+
 ```bash
 --workspace /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
 ```
 
 **Benefits**:
+
 - ✅ Reads workspace `.cursorrules` (workspace-level rules)
 - ✅ Reads `.cursor/rules/*.mdc` (all standards)
 - ✅ Reads `unified-trading-codex/` (canonical patterns)
@@ -109,6 +117,7 @@ Before starting, read these files to understand the standards:
 - ✅ Full context for better fixes
 
 **Edit Restriction**: Prompt tells agent to ONLY edit target repo:
+
 ```
 "You can read everything, but ONLY edit files in unified-config-interface/ directory"
 ```
@@ -125,6 +134,7 @@ cursor .cursor/workspace-configs/workspace-trading.code-workspace
 ```
 
 **What this does**:
+
 - Cursor’s **multi-root workspace** = only the folders listed in that `.code-workspace` file.
 - File tree, search, and “files in workspace” are limited to those roots (e.g. trading repos + .cursor + codex + deployment-v3 + .github + .venv-workspace).
 - **You do not need different “doc Claudes” per workspace.** The same `.cursorrules` and `.cursor/rules/*.mdc` apply; Cursor still loads them from the `.cursor` folder that is one of the roots.
@@ -133,6 +143,7 @@ cursor .cursor/workspace-configs/workspace-trading.code-workspace
 **Summary**: Open the themed `.code-workspace` (e.g. `workspace-trading`) → Cursor/Claude see only those folders + shared .cursor/codex/deployment. No extra config per workspace.
 
 ### Claude Code CLI
+
 - ❌ Does NOT automatically read cursor rules
 - ❌ Needs explicit file paths in prompt
 - ✅ Can read files when told to
@@ -165,12 +176,14 @@ Result: Full context + parallel execution + no conflicts!
 ### Why This Works
 
 **Different repos = Zero conflict risk**:
+
 - Agent 1 edits `unified-config-interface/` only
 - Agent 2 edits `unified-events-interface/` only
 - Agent 3 edits `instruments-service/` only
 - Agent 4 edits `market-tick-data-handler/` only
 
 **All agents see same context**:
+
 - Same workspace root
 - Same codex standards
 - Same workspace rules
@@ -183,12 +196,14 @@ Result: Full context + parallel execution + no conflicts!
 ## 🎯 Best Practice Workflow
 
 1. **Configure Claude Code** (one-time):
+
    ```bash
    # Config file already created at ~/.claude/config.json
    # Restart Claude Code to pick up changes
    ```
 
 2. **Launch Claude Code with explicit instructions**:
+
    ```bash
    claude --model claude-sonnet-4-5-20250929
 
@@ -215,10 +230,12 @@ claude --model claude-sonnet-4-5-20250929
 ## ✅ Summary
 
 **To stop questions**:
+
 - ✅ Config file created: `~/.claude/config.json`
 - ✅ Restart Claude Code to apply
 
 **To follow cursor rules**:
+
 - ✅ Updated prompt includes "READ THESE FIRST"
 - ✅ Claude Code will read rules before starting
 - ✅ Agent CLI automatically reads rules from workspace
@@ -251,6 +268,7 @@ inherits the activated PATH automatically.
 **Layer 2 — `.claude/settings.json` (env vars, automatic for any claude invocation)**
 
 Located at `unified-trading-system-repos/.claude/settings.json`:
+
 ```json
 {
   "env": {

@@ -42,7 +42,7 @@ echo ""
 
 run_act() {
     echo "[$ATTEMPT/$MAX_ATTEMPTS] Running act quality-gates..."
-    
+
     # Run act and capture output
     if act -j quality-gates --secret-file ~/.secrets > "$ACT_OUTPUT" 2>&1; then
         echo "✅ Act quality-gates PASSED"
@@ -66,18 +66,18 @@ fi
 # Auto-fix loop
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
     ATTEMPT=$((ATTEMPT + 1))
-    
+
     echo ""
     echo "🤖 Attempting auto-fix with LLM agent (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
-    
+
     # Call LLM agent wrapper
     if bash "$WORKSPACE_ROOT/.cursor/scripts/llm-agent-wrapper.sh" \
         "$REPO_NAME" \
         "$ERROR_LOG" \
         "Fix the CI/CD errors reported by act quality-gates. Run quality gates locally to verify fixes."; then
-        
+
         echo "✅ LLM agent completed fixes"
-        
+
         # Re-run act to verify
         if run_act; then
             echo ""

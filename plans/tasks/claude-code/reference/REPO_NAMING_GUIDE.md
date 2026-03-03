@@ -7,6 +7,7 @@
 ## 🎯 The Pattern
 
 ### Repo Folder (with DASHES)
+
 ```
 /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/
 ├── unified-config-interface/     ← DASHES (repo folder)
@@ -16,6 +17,7 @@
 ```
 
 ### Python Package (with UNDERSCORES)
+
 ```
 unified-config-interface/
 └── unified_config_interface/     ← UNDERSCORES (Python package)
@@ -29,11 +31,13 @@ unified-config-interface/
 ## ⚠️ Common Mistake
 
 **Wrong** (trying to cd into package):
+
 ```bash
 cd unified_config_interface  # ❌ This is the Python package, not repo!
 ```
 
 **Correct** (cd into repo):
+
 ```bash
 cd unified-config-interface  # ✅ This is the repo folder
 ```
@@ -43,6 +47,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 ## 📋 All 24 Repos
 
 ### Services (14)
+
 - `instruments-service/` → package: `instruments_service/`
 - `market-tick-data-handler/` → package: `market_tick_data_handler/`
 - `market-data-processing-service/` → package: `market_data_processing_service/`
@@ -59,6 +64,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 - `position-balance-monitor-service/` → package: `position_balance_monitor_service/`
 
 ### Libraries (6)
+
 - `unified-trading-services/` → package: `unified_trading_services/`
 - `unified-config-interface/` → package: `unified_config_interface/`
 - `unified-events-interface/` → package: `unified_events_interface/`
@@ -67,6 +73,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 - `unified-domain-client/` → package: `unified_domain_client/`
 
 ### Utility (4)
+
 - `execution-algo-library/` → package: `execution_algo_library/`
 - `alerting-service/` → package: `alerting_service/`
 - `unified-trading-deployment-v3/` → no package (scripts/configs)
@@ -106,11 +113,13 @@ basedpyright --level warning unified_config_interface/
 ## 💡 Quick Reference for Claude Code
 
 **When orchestrating, always**:
+
 1. `cd` into repo folder (with dashes)
 2. Run basedpyright (it finds package automatically)
 3. Use repo folder path for `agent --workspace`
 
 **Example**:
+
 ```bash
 cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface
 basedpyright --level warning  # Checks unified_config_interface/ package
@@ -121,9 +130,9 @@ agent --workspace $(pwd) "fix"  # Uses repo folder path
 
 ## ✅ Summary
 
-**Repo folders**: Use DASHES (unified-config-interface)  
-**Python packages**: Use UNDERSCORES (unified_config_interface)  
-**For agent CLI**: Use repo folder path (dashes)  
+**Repo folders**: Use DASHES (unified-config-interface)
+**Python packages**: Use UNDERSCORES (unified_config_interface)
+**For agent CLI**: Use repo folder path (dashes)
 **For basedpyright**: Run from repo folder (finds package automatically)
 
 **This is standard Python convention!**
