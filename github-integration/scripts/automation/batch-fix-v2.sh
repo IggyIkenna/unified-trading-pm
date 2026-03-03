@@ -82,9 +82,9 @@ if [ ! -d "$WORKSPACE_ROOT/unified-trading-codex" ]; then
     exit 1
 fi
 
-if [ ! -d "$WORKSPACE_ROOT/unified-trading-services" ]; then
-    echo "⚠️  Warning: unified-trading-services not found in $WORKSPACE_ROOT"
-    echo "   Tests may fail. Clone it with: gh repo clone IggyIkenna/unified-trading-services"
+if [ ! -d "$WORKSPACE_ROOT/unified-trading-library" ]; then
+    echo "⚠️  Warning: unified-trading-library not found in $WORKSPACE_ROOT"
+    echo "   Tests may fail. Clone it with: gh repo clone IggyIkenna/unified-trading-library"
 fi
 
 # Parse arguments
@@ -449,12 +449,12 @@ for service in "${!SERVICE_CLONE_COUNTS[@]}"; do
             git clone --quiet "$source_codex_repo" "$clone_workspace/unified-trading-codex" 2>&1 | grep -v "^Cloning" || true
         fi
 
-        # Clone unified-trading-services (needed for tests and dependencies)
-        source_ucs_repo="${WORKSPACE_ROOT}/unified-trading-services"
+        # Clone unified-trading-library (needed for tests and dependencies)
+        source_ucs_repo="${WORKSPACE_ROOT}/unified-trading-library"
         if [ -d "$source_ucs_repo" ]; then
             # Remove existing directory if present (from interrupted previous run)
-            rm -rf "$clone_workspace/unified-trading-services" 2>/dev/null || true
-            git clone --quiet "$source_ucs_repo" "$clone_workspace/unified-trading-services" 2>&1 | grep -v "^Cloning" || true
+            rm -rf "$clone_workspace/unified-trading-library" 2>/dev/null || true
+            git clone --quiet "$source_ucs_repo" "$clone_workspace/unified-trading-library" 2>&1 | grep -v "^Cloning" || true
         fi
 
         if [ -d "$clone_workspace/$service" ]; then

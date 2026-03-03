@@ -266,3 +266,21 @@ source ~/.zshrc
 ## Workspace dependency pinning
 
 Canonical external dependency versions and propagation: see **unified-trading-codex** `06-coding-standards/dependency-management.md` (§ Workspace-wide dependency pinning) and `unified-trading-pm/workspace-constraints.toml`. Scripts: `resolve-canonical-versions.py`, `propagate-canonical-versions.py`, `aggregate-workspace-deps.py`.
+
+### Canonical deps flow
+
+Prerequisite: ensure `uv` is installed (`pip install uv` once; workspace-bootstrap.sh does this if missing). Then run from **workspace root** (with `.venv-workspace` activated or Python 3.13 + uv on PATH):
+
+```bash
+# 1) Generate canonical constraints (tightest range per external package)
+python unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+
+# 2) Apply to all repos and run uv lock per repo
+python unified-trading-pm/scripts/propagation/propagate-canonical-versions.py --apply
+# Optional: add --commit to git add/commit pyproject.toml + uv.lock per repo
+
+# 3) Install workspace venv and freeze exact versions to requirements.lock
+python unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py --resolve
+```
+
+Without `--resolve`, aggregate-workspace-deps uses the existing `.venv-workspace/requirements.lock` for a fast re-install.

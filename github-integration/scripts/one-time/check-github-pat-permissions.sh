@@ -9,7 +9,7 @@
 set -euo pipefail
 
 ORG="IggyIkenna"
-TEST_REPO="unified-trading-services"  # Use a known repo for testing
+TEST_REPO="unified-trading-library"  # Use a known repo for testing
 
 echo "🔍 Checking GitHub PAT permissions..."
 echo ""

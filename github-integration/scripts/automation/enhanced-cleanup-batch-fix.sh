@@ -16,7 +16,7 @@ CLEANUP_ISSUES=(
     "execution-services:147"
     "strategy-service:23"
     "instruments-service:58"
-    "unified-trading-services:48"
+    "unified-trading-library:48"
     "market-data-processing-service:46"
     "ml-training-service:38"
     "ml-inference-service:28"

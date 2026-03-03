@@ -178,9 +178,9 @@ ${ISSUE_BODY}
 
 5. **Install dependencies** (if in a clone environment):
    \`\`\`bash
-   # Install unified-trading-services if available in workspace
-   if [ -d "../unified-trading-services" ]; then
-       cd ../unified-trading-services && uv pip install -e . && cd ../${SERVICE_NAME}
+   # Install unified-trading-library if available in workspace
+   if [ -d "../unified-trading-library" ]; then
+       cd ../unified-trading-library && uv pip install -e . && cd ../${SERVICE_NAME}
    fi
    \`\`\`
 

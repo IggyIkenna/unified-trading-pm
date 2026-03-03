@@ -39,7 +39,7 @@ _lib_script_dir() { cd "$(dirname "${BASH_SOURCE[1]}")" && pwd; }
 #   ├── unified-trading-codex/        ← must exist (canonical standards)
 #   └── <other repos>/
 
-KNOWN_SIBLING_REPOS=("unified-trading-codex" "instruments-service" "unified-trading-services" "unified-trading-deployment-v3")
+KNOWN_SIBLING_REPOS=("unified-trading-codex" "instruments-service" "unified-trading-library" "unified-trading-deployment-v3")
 
 validate_workspace_structure() {
     local errors=0

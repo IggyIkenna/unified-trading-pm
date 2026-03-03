@@ -36,11 +36,11 @@ gantt
 
 **Goal:** Every repo passes `scripts/quality-gates.sh` locally. CI/CD pipelines scripted.
 
-### Progress: ~80% Complete (Libraries done, Services blocked on missing UTS APIs)
+### Progress: ~90% Complete (March 3 update)
 
 ```mermaid
 flowchart LR
-    subgraph DONE["Completed (March 2)"]
+    subgraph DONE["Completed (March 2-3)"]
         A1[UCS->UTS Rename Gaps Fixed]
         A2[UCI File Split 1010->376L]
         A3[Canonical quality-gates.sh Deployed]
@@ -49,15 +49,20 @@ flowchart LR
         A6[Codex: 6 T4 repos fixed]
         A7[Dep fixes: 10+ repos]
         A8[T0 Library Tests: UFCL 54/54, UMI 23/23, UMLI 7/7]
-        A9[T4 Verification: All 6 checked, deeper issues found]
+        A9[deployment-service: 402/402 pass]
+        A10[deployment-api: 115/115 pass]
+        A11[deployment-ui: 29/29 pass]
+        A12[Agent syntax damage cleaned: 7+ repos 70+ files]
+        A13[UTS shim fixed: sys.modules aliasing]
     end
 
-    subgraph REMAIN["Remaining"]
+    subgraph REMAIN["Remaining (~98 test failures)"]
         B1[basedpyright errors: UTS 272, UMI 2442]
         B2[Test coverage: UTS 40%, UFCL 49%]
         B3[14 repos unscanned]
-        B4[Missing UTS APIs block 5 T4 repos]
-        B5[Naming: UTS -> UCL rename]
+        B4[UFCL naming mismatch blocks 2 feature services]
+        B5[DependencyChecker missing in 2 services]
+        B6[execution-service: 57 fail - VWAP/sports/mocks]
     end
 
     DONE --> REMAIN
@@ -69,11 +74,19 @@ flowchart LR
 |------|-------|----------|-----------|------------|------------|-----------|
 | T0 Libraries | 8 | 7 | 8 | 7 full, 1 partial (UDC) | 8 | 1 test fix (UDC) |
 | T1 UTS | 1 | 0 | 1 | 1 (coverage fail) | 1 | Type + coverage |
-| T4 Services | 16 | 3 | 10+ | 3 pass, 5 blocked by R-14 | 10+ | Missing UTS APIs |
+| T4 Services | 16 | 6 | 10+ | deployment-*: 3/3 pass, 5 more running | 10+ | See TEST_FAILURE_ACTION_PLAN.md |
 | T5 APIs | 3 | 1 | 3 | varies | 3 | Type errors |
-| T6 UIs | 4 | 1 | 4 | 1 | 4 | Non-Python projects |
+| T6 UIs | 4 | 2 | 4 | 2 | 4 | Non-Python projects |
 
-### Detailed Status: See WORKFLOW_RESIDUAL_ITEMS.md
+### March 3 Achievements
+- **deployment-service**: 85 failures → 0 (402 pass, 27 skip)
+- **deployment-api**: 3 failures → 0 (115 pass, 1 skip)
+- **deployment-ui**: Created 3 test files, 29/29 pass
+- **Agent damage cleanup**: Restored 70+ files across 7 repos from git
+- **UTS backward-compat shim**: Rewrote with sys.modules aliasing
+- **UMI syntax**: Fixed 7 remaining f-string damaged files
+
+### Detailed Status: See WORKFLOW_RESIDUAL_ITEMS.md and TEST_FAILURE_ACTION_PLAN.md
 
 ---
 

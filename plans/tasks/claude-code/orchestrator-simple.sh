@@ -33,7 +33,7 @@ REPOS=(
     "execution-services"
     "risk-and-exposure-service"
     "position-balance-monitor-service"
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-config-interface"
     "unified-events-interface"
     "unified-market-interface"
@@ -180,7 +180,7 @@ Target: 0 errors.
 
 CRITICAL RESTRICTIONS:
 - ONLY edit files in $repo/ directory
-- DO NOT edit unified-trading-codex/, unified-trading-services/, or other repos
+- DO NOT edit unified-trading-codex/, unified-trading-library/, or other repos
 - You can read everything, but edit only $repo/
 "
     
