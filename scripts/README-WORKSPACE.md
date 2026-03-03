@@ -81,6 +81,26 @@ crontab -e
 
 ---
 
+### `line-count-by-language.sh`
+**Purpose:** Count lines of code for the whole workspace by language (Python, TypeScript, bash, etc.), ignore venv/node_modules, and split **test** vs **non-test** files.
+
+**Requires:** [cloc](https://github.com/AlDanial/cloc) — `brew install cloc`
+
+**Usage:**
+```bash
+# From workspace root (or set UNIFIED_TRADING_WORKSPACE_ROOT):
+bash unified-trading-pm/scripts/line-count-by-language.sh
+```
+
+**What it does:**
+- **Full codebase** — breakdown by language (Python, TypeScript, JavaScript, bash, etc.), excluding `.venv`, `node_modules`, `build`, `dist`, `.git`, etc.
+- **Test files only** — same breakdown for files matching: `test_*.py`, `*_test.py`, `tests/`, `__tests__/`, `*.test.ts`, `*.spec.ts`, `test_*.sh`, `*_test.sh`
+- **Non-test (source) only** — same breakdown for everything that is not a test file
+
+**Excluded dirs:** `.venv`, `.venv-workspace`, `node_modules`, `build`, `dist`, `__pycache__`, `.git`, `.ruff_cache`, `.mypy_cache`, `htmlcov`
+
+---
+
 ### `migrate-cursor-index.sh`
 **Purpose:** Copy Cursor codebase index from old path to new path - skip 30+ minutes of re-indexing!
 

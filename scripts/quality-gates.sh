@@ -19,7 +19,7 @@
 # Requirements:
 #   - Python 3.13 (>=3.13,<3.14)
 #   - ruff, basedpyright, pytest, pytest-asyncio, pytest-mock, pytest-xdist, ripgrep
-#   - unified-trading-services available (local or via GH_PAT)
+#   - unified-trading-library available (local or via GH_PAT)
 #
 # Codex: unified-trading-codex/06-coding-standards/README.md
 #
@@ -745,7 +745,7 @@ else
 fi
 
 # Check 22: Old event logging pattern
-EL_OLD=$(rg "from unified_trading_services[. ].*(log_event|setup_events|setup_cloud_logging|observability)" \
+EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_cloud_logging|observability)" \
     --type py --glob "!tests/**" "$SOURCE_DIR" 2>/dev/null || true)
 if [ -n "$EL_OLD" ]; then
     log_fail "Old event logging import — use 'from unified_events_interface import ...'"
@@ -756,10 +756,10 @@ else
 fi
 
 # Check 23: Domain clients from wrong package
-UCS_DOMAIN=$(rg 'from unified_trading_services import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|create_instruments_client|create_execution_client)' \
+UCS_DOMAIN=$(rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|create_instruments_client|create_execution_client)' \
     --type py --glob "!tests/**" "$SOURCE_DIR" 2>/dev/null || true)
 if [ -n "$UCS_DOMAIN" ]; then
-    log_fail "Domain clients must come from unified_domain_client, not unified_trading_services"
+    log_fail "Domain clients must come from unified_domain_client, not unified_trading_library"
     echo "$UCS_DOMAIN" | head -3
     CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
 else
@@ -767,10 +767,10 @@ else
 fi
 
 # Check 24: ID conventions from wrong package
-ID_CONV=$(rg 'from unified_trading_services import[^#]*?(generate_strategy_id|generate_config_id|CATEGORIES|MODES|TIMEFRAMES)' \
+ID_CONV=$(rg 'from unified_trading_library import[^#]*?(generate_strategy_id|generate_config_id|CATEGORIES|MODES|TIMEFRAMES)' \
     --type py "$SOURCE_DIR" 2>/dev/null || true)
 if [ -n "$ID_CONV" ]; then
-    log_fail "ID convention functions must come from unified_config_interface, not unified_trading_services"
+    log_fail "ID convention functions must come from unified_config_interface, not unified_trading_library"
     echo "$ID_CONV" | head -3
     CODEX_VIOLATIONS=$((CODEX_VIOLATIONS + 1))
 else

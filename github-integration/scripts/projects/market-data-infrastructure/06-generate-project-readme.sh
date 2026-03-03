@@ -87,7 +87,7 @@ cat <<EOF
 
 ## Overview
 
-**Goal**: Split monolithic unified-trading-services into focused libraries while preserving cloud-agnostic foundation.
+**Goal**: Split monolithic unified-trading-library into focused libraries while preserving cloud-agnostic foundation.
 
 **Approach**: Option A (Full Separation) with phased delivery over 3 days.
 
@@ -115,7 +115,7 @@ cat <<EOF
 - \`unified-order-interface\` - Private order execution normalization
 
 **Existing:**
-- \`unified-trading-services\` - Cloud-agnostic API (GCP ↔ AWS translation)
+- \`unified-trading-library\` - Cloud-agnostic API (GCP ↔ AWS translation)
 
 ### Issue Breakdown (~4 subtasks)
 
@@ -126,7 +126,7 @@ cat <<EOF
   - Publish workflow template
 
 - **Phase 1 (Events Interface)**: ~13 issues
-  - PubSub abstraction in unified-trading-services
+  - PubSub abstraction in unified-trading-library
   - Create unified-events-interface repo
   - Migrate event logging code
   - Add re-exports for backward compat
@@ -271,14 +271,14 @@ Closes #<ISSUE_NUMBER>
 
 **Services work with ZERO code changes:**
 
-1. **unified-trading-services** lists new libraries as dependencies
-2. Services depend on unified-trading-services
+1. **unified-trading-library** lists new libraries as dependencies
+2. Services depend on unified-trading-library
 3. Services get new libraries **transitively** via \`uv pip install\`
 4. **Re-exports** provide backward compatibility for 6 months
 
 \`\`\`python
 # Services continue using old imports (works via re-exports)
-from unified_trading_services import log_event  # ✅ Works
+from unified_trading_library import log_event  # ✅ Works
 
 # New imports also work (for early adopters)
 from unified_events_interface import log_event  # ✅ Also works
@@ -301,8 +301,8 @@ gcloud artifacts print-settings python \\
 
 ### Cloud-Agnosticism
 
-**Only unified-trading-services touches cloud providers**:
-- New libraries use unified-trading-services abstractions internally
+**Only unified-trading-library touches cloud providers**:
+- New libraries use unified-trading-library abstractions internally
 - Services continue to be cloud-agnostic
 - GCP ↔ AWS translation stays in one place
 
@@ -351,7 +351,7 @@ uv pip install unified-events-interface
 
 - ✅ All 4 subtasks completed
 - ✅ 4 new library repos created and published
-- ✅ unified-trading-services refactored with re-exports
+- ✅ unified-trading-library refactored with re-exports
 - ✅ All services work with ZERO code changes (backward compat)
 - ✅ Quality gates passing across all repos
 - ✅ Infrastructure updated (Artifact Registry, workflows, docs)

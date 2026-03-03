@@ -95,13 +95,15 @@ Fields: league_id, name, country, tier (1-3), classification (Prediction/Referen
 
 Load from GCS Parquet, validate against `TeamMapping` schema from AC.
 
-### Gap 5: Feature Tracking Registry → features-sports-service
+### Gap 5: Feature Tracking Registry → features-sports-service — COMPLETE
 
 **Source**: `footballbets/features/tracking/` — 14 modules, ~500+ features with status tracking
 **Target**: `features-sports-service/features_sports_service/tracking/`
 
-Recreate as Pydantic-based feature registry. Status enum: COMPLETE, DATA_NEEDED, TESTED, BLOCKED, NOT_STARTED.
+Recreated as Pydantic-based feature registry. Status enum: COMPLETE, DATA_NEEDED, TESTED, BLOCKED, NOT_STARTED.
 CI integration: validate declared features match computed output.
+
+**Completed (2026-03-02):** Expanded from 14 → 24 tracking modules, 420 → 998 features. 10 new calculators added (team_style, manager, referee_interaction, ht_sequencing, schedule_fatigue, promoted_team, market_efficiency, market_structure, price_dynamics, synthetic_xg). SportsFeatureVector in unified-api-contracts expanded to 1077 fields. 773 tests pass. Status: 614 TESTED, 249 COMPLETE, 77 DATA_NEEDED, 52 NOT_STARTED, 6 BLOCKED.
 
 ### Gap 6: Provider CLI Handlers → features-sports-service
 

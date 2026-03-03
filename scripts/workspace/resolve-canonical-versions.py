@@ -173,7 +173,8 @@ def main() -> None:
         "[dependencies]",
     ]
     for name in sorted(canonical):
-        toml_lines.append(f'{name} = "{canonical[name]}"')
+        key = f'"{name}"' if "[" in name or "]" in name else name
+        toml_lines.append(f'{key} = "{canonical[name]}"')
     toml_lines.append("")
     CONSTRAINTS_FILE.parent.mkdir(parents=True, exist_ok=True)
     CONSTRAINTS_FILE.write_text("\n".join(toml_lines))

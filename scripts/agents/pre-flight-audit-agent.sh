@@ -42,7 +42,7 @@ Pre-flight audit BEFORE running quality gates. Check for violations and fix them
 
 STAGE 1: Path Dependency Audit
 1. Read $REPO_NAME/pyproject.toml
-2. Find all path dependencies (e.g., unified-trading-services = { path = \"../unified-trading-services\" })
+2. Find all path dependencies (e.g., unified-trading-library = { path = \"../unified-trading-library\" })
 3. For EACH path dependency:
    - Change to that repo directory
    - Run: git status --porcelain
@@ -90,7 +90,7 @@ Read .cursor/rules/*.mdc and check for common violations:
 
 CRITICAL RESTRICTIONS:
 - ONLY edit files in $REPO_NAME/ directory
-- DO NOT edit unified-trading-services/ or other repos
+- DO NOT edit unified-trading-library/ or other repos
 - You can read everything, but edit only $REPO_NAME/
 - AUTO-FIX only simple violations (E722, Docker defaults)
 - REPORT complex issues (large files, hardcoded IDs)

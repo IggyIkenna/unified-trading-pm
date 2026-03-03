@@ -8,7 +8,7 @@
 # Options:
 #   --model <model>        AI model to use (required)
 #   --max-parallel <n>     Max parallel workers (default: 5)
-#   --repos <list>         Comma-separated repo names to filter (e.g., "unified-trading-services,market-tick-data-handler")
+#   --repos <list>         Comma-separated repo names to filter (e.g., "unified-trading-library,market-tick-data-handler")
 #   --issues "<list>"      Custom issues (overrides default cleanup issues)
 #   --dry-run             Preview what would be done
 #
@@ -16,11 +16,11 @@
 #   # All cleanup issues
 #   bash run-cleanup-batch-fix.sh --model auto --max-parallel 5
 #
-#   # Just unified-trading-services
-#   bash run-cleanup-batch-fix.sh --model auto --repos unified-trading-services
+#   # Just unified-trading-library
+#   bash run-cleanup-batch-fix.sh --model auto --repos unified-trading-library
 #
 #   # Custom issues
-#   bash run-cleanup-batch-fix.sh --model auto --issues "unified-trading-services:48 market-tick-data-handler:51"
+#   bash run-cleanup-batch-fix.sh --model auto --issues "unified-trading-library:48 market-tick-data-handler:51"
 #
 
 set -euo pipefail

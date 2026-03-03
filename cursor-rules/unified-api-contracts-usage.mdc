@@ -6,7 +6,7 @@ globs: ["**/*.py", "**/unified-api-contracts/**"]
 
 # Unified API Contracts Usage
 
-**Full specification:** `unified-trading-codex/06-coding-standards/unified-api-contracts.md`
+**Full specification (codex):** `unified-trading-codex/02-data/contracts-scope-and-layout.md`, `05-infrastructure/contracts-integration.md`
 
 ---
 
@@ -30,7 +30,7 @@ When defining or updating unified-api-contracts schemas, capture scripts, or ado
 ## Dependency and CI
 
 - Consumers depend on unified-api-contracts via path dependency `../unified-api-contracts` and clone it to `../unified-api-contracts` in CI (see path-dependency-ci.mdc).
-- Contract-vs-reality: normal CI validates all `examples/*.json` against Pydantic models; optional live verification when `LIVE_API_VERIFICATION=1`.
+- Contract-vs-reality: normal CI validates all `examples/*.json` against Pydantic models. Live verification and response collection run in the interfaces (UMI, UTEI, USEI, URDI, UPI, UCI), not in AC — interfaces hold API keys and perform integration tests.
 
 ---
 

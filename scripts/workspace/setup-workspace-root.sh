@@ -332,7 +332,7 @@ verify_setup() {
     # Check key repos exist
     local key_repos=(
         "unified-trading-pm"
-        "unified-trading-services"
+        "unified-trading-library"
         "unified-config-interface"
     )
 

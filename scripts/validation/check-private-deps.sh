@@ -6,7 +6,7 @@ set -e
 
 # Private packages published to Artifact Registry
 PRIVATE_PACKAGES=(
-    "unified-trading-services"
+    "unified-trading-library"
     "unified-config-interface"
     "unified-events-interface"
     "unified-domain-client"

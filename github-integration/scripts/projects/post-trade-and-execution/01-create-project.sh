@@ -19,7 +19,7 @@ set -euo pipefail
 # Defaults
 ORG="${ORG:-IggyIkenna}"
 PROJECT_NAME="Post-Trade and Execution"
-PROJECT_DESCRIPTION="Split unified-trading-services into focused libraries (events, config, market, order) with backward compatibility"
+PROJECT_DESCRIPTION="Split unified-trading-library into focused libraries (events, config, market, order) with backward compatibility"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do

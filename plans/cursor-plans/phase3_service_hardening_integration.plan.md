@@ -140,7 +140,7 @@ At every STEP A (connectivity audit) for each service/API/UI, verify no old name
 | `market-tick-data-handler` → `**market-tick-data-service`**         | All levels | T4 Batch B STEP A |
 | `client-reporting-api` → `**client-reporting-api`**                 | All levels | T5 STEP A         |
 | `alerting-service` → `**alerting-service`**                         | All levels | T4 Batch F STEP A |
-| `position-balance-monitor` → `**position-balance-monitor-service**` | All levels | T4 Batch F STEP A |
+| `position-balance-monitor` → `**position-balance-monitor-service`** | All levels | T4 Batch F STEP A |
 | `ml-training-ui` → `**ml-training-ui**`                             | All levels | T6 Agent 7        |
 | `execution-analytics-ui` → `**execution-analytics-ui**`             | All levels | T6 Agent 11       |
 

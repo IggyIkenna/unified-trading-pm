@@ -36,7 +36,7 @@
 #
 # advisories:
 #   - id: INTERNAL-2026-001
-#     package: unified-trading-services
+#     package: unified-trading-library
 #     affected_versions: "<2.0.0"
 #     fixed_in: "2.0.0"
 #     severity: HIGH
