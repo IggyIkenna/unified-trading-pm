@@ -15,6 +15,24 @@ jobs:
         with:
           path: unified-trading-pm
 
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install ripgrep
+        run: sudo apt-get install -y ripgrep
+
+      - name: Install PM dev deps (ruff, basedpyright, pytest)
+        working-directory: unified-trading-pm
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install ruff==0.15.0 basedpyright pytest pytest-asyncio pytest-mock pytest-timeout pytest-xdist
+
       - name: Simulate sibling workspace layout
         # Scripts infer workspace root as parent of unified-trading-pm/.
         # In CI the checkout lands at $GITHUB_WORKSPACE/unified-trading-pm,
@@ -35,4 +53,6 @@ jobs:
 
       - name: Run quality gates
         working-directory: unified-trading-pm
-        run: bash scripts/quality-gates.sh
+        run: |
+          source .venv/bin/activate
+          bash scripts/quality-gates.sh

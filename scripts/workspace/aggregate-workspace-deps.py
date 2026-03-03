@@ -485,7 +485,8 @@ def main() -> None:
             print(f"  ... and {len(external_lines) - 20} more")
         return
 
-    # Two-phase install: internal with --no-deps first (avoids uv seeing same path as editable and as path dep), then external
+    # Two-phase install: internal with --no-deps first (avoids uv seeing same path as
+    # editable and as path dep), then external
     print("\n  Phase 1: internal editable installs (--no-deps)")
     if not run_uv_install(req_internal, no_deps=True):
         print("\nInstallation failed (phase 1).", file=sys.stderr)

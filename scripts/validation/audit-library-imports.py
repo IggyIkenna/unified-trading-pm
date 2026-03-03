@@ -183,7 +183,7 @@ def scan_file(file_path: Path) -> tuple[List[ImportInfo], List[Dict[str, str]]]:
         auditor.visit(tree)
         return auditor.imports, auditor.storageclient_issues
 
-    except (SyntaxError, UnicodeDecodeError) as e:
+    except (SyntaxError, UnicodeDecodeError):
         # Skip files that can't be parsed
         return [], []
 
@@ -269,9 +269,16 @@ def generate_recommendation(
     if service_name in tier_1_services:
         tier = 1
         if has_fallbacks:
-            recommendation = f"🔥 MIGRATE IMMEDIATELY - Complex service with {len(fallback_patterns)} fallback pattern(s). Remove fallbacks and use direct imports."
+            n = len(fallback_patterns)
+            recommendation = (
+                f"🔥 MIGRATE IMMEDIATELY - Complex service with {n} fallback pattern(s). "
+                "Remove fallbacks and use direct imports."
+            )
         elif num_split_libs >= 1:
-            recommendation = f"✅ ALREADY USING {num_split_libs} split lib(s) directly. Complete migration by adding to pyproject.toml and updating CI workflow."
+            recommendation = (
+                f"✅ ALREADY USING {num_split_libs} split lib(s) directly. "
+                "Complete migration by adding to pyproject.toml and updating CI workflow."
+            )
         else:
             recommendation = (
                 "🔥 MIGRATE IMMEDIATELY - Complex service should use direct imports for clearer architecture."
@@ -293,7 +300,10 @@ def generate_recommendation(
     else:  # Tier 3
         tier = 3
         if has_fallbacks:
-            recommendation = f"💡 KEEP TRANSITIVE - Simple service. Fallback patterns are fine. ({len(fallback_patterns)} fallback(s) detected)"
+            n = len(fallback_patterns)
+            recommendation = (
+                f"💡 KEEP TRANSITIVE - Simple service. Fallback patterns are fine. ({n} fallback(s) detected)"
+            )
         else:
             recommendation = "💡 KEEP TRANSITIVE - Simple service. Transitive dependencies sufficient."
 
@@ -480,9 +490,10 @@ def main():
         print(f"Scanning {service_path.name}...", end=" ")
         report = audit_service(service_path)
         reports.append(report)
-        print(
-            f"✅ ({len(report.direct_imports)} direct, {len(report.fallback_patterns)} fallback, {len(report.storageclient_issues)} StorageClient issues)"
-        )
+        direct = len(report.direct_imports)
+        fallback = len(report.fallback_patterns)
+        storage = len(report.storageclient_issues)
+        print(f"✅ ({direct} direct, {fallback} fallback, {storage} StorageClient issues)")
 
     # Print human-readable report
     print_report(reports)
