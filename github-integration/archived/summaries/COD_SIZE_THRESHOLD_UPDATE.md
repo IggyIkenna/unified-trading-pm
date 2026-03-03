@@ -5,11 +5,13 @@
 
 ## Summary
 
-Updated the file size threshold from 400 lines to 1500 lines across the entire codebase. The 1500-line limit is a hard maximum for centralized scripts and large adapters. The ideal target remains <500 lines for most modules.
+Updated the file size threshold from 400 lines to 1500 lines across the entire codebase. The 1500-line limit is a hard
+maximum for centralized scripts and large adapters. The ideal target remains <500 lines for most modules.
 
 ## Rationale
 
-- **400 lines was too restrictive** for legitimate centralized scripts (e.g., instrument handlers, market data processors)
+- **400 lines was too restrictive** for legitimate centralized scripts (e.g., instrument handlers, market data
+  processors)
 - **1500 lines provides flexibility** while still catching truly problematic files
 - **Most files 400-1500 lines are acceptable** as centralized utilities
 - **Files >1500 lines still need refactoring** (e.g., 3000-line backtest service)
@@ -93,7 +95,8 @@ Updated the file size threshold from 400 lines to 1500 lines across the entire c
 
 All issues for files between 400-1500 lines are **deleted** (not closed).
 
-**Rationale:** These issues aren't "fixed" - they're **invalid** because we changed the standard. Deleting is cleaner than closing.
+**Rationale:** These issues aren't "fixed" - they're **invalid** because we changed the standard. Deleting is cleaner
+than closing.
 
 ### Issues Kept Open
 
@@ -106,7 +109,8 @@ Files still needing refactoring (>1500 lines):
 
 ### IMPORTANT: Run Diff Checker First
 
-⚠️ **The bulk-close script only works with EXISTING GitHub issues.** If you have files >1500 lines that don't have issues yet (like `instruments-service/instrument_processing_service.py` with 2,431 lines), they won't be caught.
+⚠️ **The bulk-close script only works with EXISTING GitHub issues.** If you have files >1500 lines that don't have
+issues yet (like `instruments-service/instrument_processing_service.py` with 2,431 lines), they won't be caught.
 
 **Recommended workflow:**
 

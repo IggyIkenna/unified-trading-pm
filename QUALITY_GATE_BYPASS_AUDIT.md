@@ -1,5 +1,7 @@
 # Quality Gate Bypass Audit
 
+<!-- e2e version-bump flow test -->
+
 ## 1. PM Repo — Non-Standard Structure (Audited Exception)
 
 **unified-trading-pm** is not a deployable package. It is the project management, docs, and scripts canonical repo. Quality gates apply PM-specific handling:

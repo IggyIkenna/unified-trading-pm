@@ -19,7 +19,7 @@
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
 #
 # Pipeline:
-#   1. Dependency validation (.dependency-matrix.json)
+#   1. Dependency validation (workspace-manifest.json)
 #   2. Pre-flight audit (always runs — never skipped)
 #   3. Local quality gates (two-phase: auto-fix → verify)
 #   4. Act simulation (default; skip with --quick)
@@ -97,16 +97,17 @@ if [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/nul
 fi
 
 # ============================================================================
-# STAGE 1: DEPENDENCY VALIDATION
+# STAGE 1: DEPENDENCY VALIDATION (workspace-manifest.json SSOT)
 # ============================================================================
 echo "=========================================="
 echo "STAGE 1: Dependency Validation"
 echo "=========================================="
 
-if [ -f ".dependency-matrix.json" ]; then
-    DEPS=$(jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
+MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+if [ -f "$MANIFEST_PATH" ]; then
+    DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?' "$MANIFEST_PATH" 2>/dev/null || echo "")
     if [ -n "$DEPS" ]; then
-        echo "Checking dependencies vs origin/main..."
+        echo "Checking dependencies vs origin/main (from workspace-manifest.json)..."
         HAS_DIFF=false
         LAST_DEP_PATH=""
         for dep in $DEPS; do
@@ -147,10 +148,10 @@ if [ -f ".dependency-matrix.json" ]; then
             echo "✅ --dep-branch specified: $DEP_BRANCH (branch isolation mode)"
         fi
     else
-        echo "✅ No dependencies found in .dependency-matrix.json"
+        echo "✅ No dependencies for $REPO_NAME (workspace-manifest.json)"
     fi
 else
-    echo "✅ No .dependency-matrix.json (no path dependencies)"
+    echo "⚠️  workspace-manifest.json not found at $MANIFEST_PATH (skipping dependency validation)"
 fi
 
 echo ""

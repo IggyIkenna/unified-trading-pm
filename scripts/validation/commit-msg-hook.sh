@@ -46,13 +46,19 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Allow merge commits (git pull/merge creates these; no conventional format)
+if [[ "$first_line" == Merge* ]]; then
+    echo -e "${GREEN}✅ Merge commit (allowed)${NC}"
+    exit 0
+fi
+
 # Valid conventional commit pattern
 # Supports:
 # - Basic types: feat:, fix:, chore:, docs:, refactor:, test:, ci:
 # - Scoped types: feat(scope):, fix(api):
 # - Breaking changes: feat!:, fix!:, feat(api)!:
 # - BREAKING CHANGE as type: BREAKING CHANGE:
-PATTERN='^(feat|fix|chore|docs|refactor|test|ci|BREAKING CHANGE)(\([^)]+\))?!?:\s.+'
+PATTERN='^(feat|fix|chore|docs|refactor|test|ci|BREAKING CHANGE)(\([^)]+\))?!?:[[:space:]].+'
 
 if [[ "$first_line" =~ $PATTERN ]]; then
     echo -e "${GREEN}✅ Commit message follows conventional commit format${NC}"
