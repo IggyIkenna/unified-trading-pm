@@ -338,7 +338,9 @@ def main():
                 "timestamp": datetime.now().isoformat(),
                 "log_dir": str(log_dir.resolve()),
                 "failed_days": failed_days,
-                "retry_command": f"python scripts/download_10_days_same_symbols.py --no-dry-run --retry-from {abs_path}",
+                "retry_command": (
+                    f"python scripts/download_10_days_same_symbols.py --no-dry-run --retry-from {abs_path}"
+                ),
             },
             f,
             indent=2,

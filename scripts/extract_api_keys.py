@@ -10,8 +10,8 @@ Usage: from workspace root:
 Output: api_keys at workspace root. Do not commit this file; add api_keys to .gitignore if the root is ever a repo.
 """
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 # Workspace root = parent of unified-trading-pm
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
