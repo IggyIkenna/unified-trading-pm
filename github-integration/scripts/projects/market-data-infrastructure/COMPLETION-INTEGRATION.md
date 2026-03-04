@@ -1,7 +1,7 @@
 # Market Data Infrastructure - Epic Completion and Codex Integration
 
-**Epic:** Market Data Infrastructure (Project #8)  
-**Purpose:** Ensure epic learnings are properly integrated into Codex after completion  
+**Epic:** Market Data Infrastructure (Project #8)
+**Purpose:** Ensure epic learnings are properly integrated into Codex after completion
 **When:** After all 4 subtasks complete (100% verified)
 
 ---

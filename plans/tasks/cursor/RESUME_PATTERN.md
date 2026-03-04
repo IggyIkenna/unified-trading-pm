@@ -1,6 +1,6 @@
 # Resume Pattern - Iterative Sub-Agent Feedback
 
-**Purpose**: Keep sub-agent context across iterations (massive token savings)  
+**Purpose**: Keep sub-agent context across iterations (massive token savings)
 **When**: Sub-agent needs corrections, improvements, or gets stuck
 
 **⚠️ CRITICAL: RESUME IS MANDATORY FOR CORRECTIONS** - Never launch new agent when you can resume!
@@ -12,6 +12,7 @@
 ## 🎯 THE PROBLEM (Why Resume is MANDATORY)
 
 **❌ WITHOUT RESUME** (Wasteful - launch new agent each time):
+
 ```
 Agent 1: Fix orchestrator.py
          ↓ (uses 150K tokens, reads all files)
@@ -26,6 +27,7 @@ Master wasted tokens + money by not using resume!
 ```
 
 **✅ WITH RESUME** (Efficient - MANDATORY pattern):
+
 ```
 Agent 1: Fix orchestrator.py
          ↓ (uses 150K tokens, reads all files)
@@ -65,15 +67,15 @@ resume: agent-abc-123  ← Use saved ID
 model: fast
 prompt: |
   Your previous work reduced errors from 328 → 150.
-  
+
   Issue: Still have 150 decorator-related errors.
-  
+
   Solution: Look at cefi_processor.py lines 135-166 (manual retry pattern).
   Apply this EXACT pattern to all remaining @handle_api_errors decorators.
-  
+
   Verify: basedpyright orchestrator.py | grep error | wc -l
   Target: 0 errors
-  
+
   RETURN:
   Errors: 150 → X
   Tokens this iteration: YK (should be small - you kept context!)
@@ -87,18 +89,21 @@ prompt: |
 ### Typical Iteration Costs:
 
 **Initial Launch** (Fresh context):
+
 - Read files: 80K
 - Apply fixes: 50K
 - Run tests: 20K
 - **Total: 150K tokens**
 
 **Resume Iteration** (Keeps context):
+
 - Read your feedback: 5K
 - Apply corrections: 15K
 - Re-run tests: 10K
 - **Total: 30K tokens** (80% savings!)
 
 **Multiple Iterations**:
+
 - 3 fresh agents: 150K × 3 = 450K tokens
 - 1 agent + 2 resumes: 150K + 30K + 30K = 210K tokens
 - **Savings: 240K tokens (53%!)**
@@ -108,6 +113,7 @@ prompt: |
 ## 🎓 WHEN TO RESUME (Mandatory Decision Tree)
 
 ### ✅ MUST RESUME When:
+
 - Sub-agent reports partial success (e.g., 328 → 150 errors remaining)
 - Master review finds violations (patterns don't match canonical standards)
 - Tests fail (sub-agent needs specific test failure guidance)
@@ -118,6 +124,7 @@ prompt: |
 **In ALL these cases: Resume with targeted feedback, NEVER launch new agent!**
 
 ### ❌ DON'T RESUME (Launch new agent):
+
 - Sub-agent completely failed (wrong file, wrong approach, crash)
 - Need different sub-agent (different repo/task entirely)
 - Agent finished successfully (0 errors, tests pass, quality gates pass)
@@ -132,6 +139,7 @@ prompt: |
 ### Real Scenario: orchestrator.py (328 errors)
 
 **Iteration 1** (Initial launch):
+
 ```
 Launch Agent 1: Fix orchestrator.py
 
@@ -144,6 +152,7 @@ Agent returns:
 ```
 
 **Iteration 2** (Resume with guidance):
+
 ```
 Resume agent-orch-001:
 
@@ -158,6 +167,7 @@ Agent returns:
 ```
 
 **Iteration 3** (Resume with pattern):
+
 ```
 Resume agent-orch-001:
 
@@ -203,6 +213,7 @@ Agent 2 (aggregator.py):
 ```
 
 **Tracking checklist**:
+
 - [ ] Agent ID saved at launch
 - [ ] Initial iteration tokens recorded
 - [ ] Each resume iteration tokens recorded (incremental, not cumulative)
@@ -215,6 +226,7 @@ Agent 2 (aggregator.py):
 ## 🎯 BEST PRACTICES
 
 ### 1. Save All Agent IDs
+
 ```
 # At task start, create tracking file:
 echo "Agent 1: agent-abc-123" > agent_ids.txt
@@ -222,6 +234,7 @@ echo "Agent 2: agent-def-456" >> agent_ids.txt
 ```
 
 ### 2. Give Specific Feedback
+
 ```
 # ❌ Vague:
 "Fix the remaining errors"
@@ -232,6 +245,7 @@ Replace with manual retry pattern from cefi_processor.py lines 135-166."
 ```
 
 ### 3. Verify Progress
+
 ```
 # After each resume, check error count decreased
 basedpyright file.py | grep error | wc -l
@@ -240,6 +254,7 @@ basedpyright file.py | grep error | wc -l
 ```
 
 ### 4. Know When to Stop
+
 ```
 # Stop resuming after 3-4 iterations
 # If not converging, launch fresh agent with better instructions
@@ -252,10 +267,12 @@ basedpyright file.py | grep error | wc -l
 ### Task 3 Example (3 agents, possible iterations):
 
 **Best Case** (no iterations needed):
+
 - 3 agents × 120K avg = 360K tokens
 - Cost: ~$0.25
 
 **Typical** (1-2 iterations per agent):
+
 - Agent 1: 165K + 45K + 35K = 245K
 - Agent 2: 85K (no resume needed)
 - Agent 3: 50K + 20K = 70K
@@ -263,6 +280,7 @@ basedpyright file.py | grep error | wc -l
 - Cost: ~$0.28
 
 **Worst Case** (many iterations):
+
 - Agent 1: 165K + 45K + 35K + 30K + 25K = 300K
 - Agent 2: 85K + 30K = 115K
 - Agent 3: 50K + 20K + 15K = 85K
@@ -276,6 +294,7 @@ basedpyright file.py | grep error | wc -l
 ## ✅ SUMMARY
 
 **Resume Pattern**:
+
 - Saves 40-60% tokens per iteration
 - Keeps sub-agent context
 - Enables iterative improvement

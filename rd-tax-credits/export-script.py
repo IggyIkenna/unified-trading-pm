@@ -8,7 +8,8 @@ from issue bodies.
 
 Usage:
     python export-script.py --start-date 2024-01-01 --end-date 2024-12-31 --output exports/rd-claim-2024.csv
-    python export-script.py --start-date 2024-01-01 --end-date 2024-12-31 --output exports/rd-claim-2024.csv --repo unified-trading-deployment-v3
+    python export-script.py --start-date 2024-01-01 --end-date 2024-12-31 \
+        --output exports/rd-claim-2024.csv --repo unified-trading-deployment-v3
     python export-script.py --start-date 2024-01-01 --end-date 2024-12-31 --output exports/rd-claim-2024.csv --all-repos
 
 Requirements:
@@ -286,7 +287,8 @@ def get_issue_area(labels: List[Dict]) -> str:
     """
     Determine issue area from labels.
 
-    Maps to codex areas: domain, data, observability, architecture, infrastructure, coding, security, workflows, analysis
+    Maps to codex areas: domain, data, observability, architecture, infrastructure,
+    coding, security, workflows, analysis
     """
     label_names = [label["name"].lower() for label in labels]
 

@@ -15,6 +15,7 @@ bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 ```
 
 This one command:
+
 1. ✅ Updates shell config (`UNIFIED_TRADING_WORKSPACE_ROOT`)
 2. ✅ Updates 10 Cursor workspace configs
 3. ✅ Creates Claude Code conversation symlinks
@@ -27,11 +28,13 @@ Then restart **both IDEs** (Cmd+Q and reopen).
 ## What It Fixes
 
 ### Cursor Issues
+
 - ❌ "Invalid Python interpreter" errors
 - ❌ Can't find workspace venv
 - ❌ Linter/formatter paths broken
 
 ### Claude Code Issues
+
 - ❌ Missing conversation history
 - ❌ Can't see past chats (112 conversations)
 - ❌ Permission errors for workspace access
@@ -41,12 +44,16 @@ Then restart **both IDEs** (Cmd+Q and reopen).
 ## How It Works
 
 ### For Cursor
+
 Updates all 10 `.code-workspace` files in `.cursor/workspace-configs/`:
+
 - `python.defaultInterpreterPath` → new path
 - `ruff.path` → new path
 
 ### For Claude Code
+
 1. **Conversation Symlinks:**
+
    ```
    Old: ~/.claude/projects/-Users-...-Documents-repos-...
    New: ~/.claude/projects/-Users-...-Documents-Documents - Mac-repos-...
@@ -72,6 +79,7 @@ Updates all 10 `.code-workspace` files in `.cursor/workspace-configs/`:
 ## Before and After
 
 ### Before (Manual Setup)
+
 ❌ Update Cursor workspace configs (10 files)
 ❌ Create Claude Code symlink manually
 ❌ Edit Claude Code settings.json manually
@@ -79,6 +87,7 @@ Updates all 10 `.code-workspace` files in `.cursor/workspace-configs/`:
 ❌ Test each separately
 
 ### After (One Command)
+
 ✅ Run: `bash scripts/workspace/setup-workspace-root.sh`
 ✅ Restart both IDEs
 ✅ Everything works
@@ -88,17 +97,20 @@ Updates all 10 `.code-workspace` files in `.cursor/workspace-configs/`:
 ## What Gets Updated
 
 ### Shell Config (~/.zshrc or ~/.bashrc)
+
 ```bash
 export UNIFIED_TRADING_WORKSPACE_ROOT="/Users/.../Documents - Mac/repos"
 ```
 
 ### Cursor (10 files)
+
 - `unified-trading-system-repos.code-workspace`
 - `workspace-complete.code-workspace`
 - `workspace-data-pipeline.code-workspace`
 - ... 7 more workspace configs
 
 ### Claude Code (2 things)
+
 - Symlink: `~/.claude/projects/-Users-...-Documents - Mac-repos-...` → old path
 - Settings: `~/.claude/settings.json` permissions array
 
@@ -109,11 +121,13 @@ export UNIFIED_TRADING_WORKSPACE_ROOT="/Users/.../Documents - Mac/repos"
 After running the script and restarting:
 
 ### Check Cursor
+
 1. Open Cursor
 2. Check Python interpreter (bottom right) - should show Python 3.13.9
 3. No "Invalid Python interpreter" errors
 
 ### Check Claude Code
+
 1. Open Claude Code
 2. Load your workspace
 3. Click conversation history - all 112 conversations appear
@@ -124,16 +138,19 @@ After running the script and restarting:
 ## Switching Between Machines
 
 **Your current Mac:**
+
 ```bash
 export UNIFIED_TRADING_WORKSPACE_ROOT="/Users/.../Documents - Mac/repos"
 ```
 
 **Your other laptop:**
+
 ```bash
 export UNIFIED_TRADING_WORKSPACE_ROOT="/Users/.../Documents - MacOld/repos"
 ```
 
 **To switch:**
+
 1. Edit `~/.zshrc` with the new path
 2. Run: `source ~/.zshrc`
 3. Run: `bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh`
@@ -146,13 +163,17 @@ export UNIFIED_TRADING_WORKSPACE_ROOT="/Users/.../Documents - MacOld/repos"
 ## If You Only Have One IDE
 
 ### Only using Cursor?
+
 The script handles it gracefully:
+
 ```
 ℹ Claude Code not installed (no ~/.claude directory)
 ```
+
 Skips Claude Code setup automatically.
 
 ### Only using Claude Code?
+
 The script still works - just ignore the Cursor config updates.
 
 ---
@@ -162,6 +183,7 @@ The script still works - just ignore the Cursor config updates.
 ### "Cursor works but Claude Code still missing conversations"
 
 **Check symlink exists:**
+
 ```bash
 ls -la ~/.claude/projects/ | grep "Documents - Mac"
 ```
@@ -169,6 +191,7 @@ ls -la ~/.claude/projects/ | grep "Documents - Mac"
 Should show a symlink (`→`) pointing to the old path.
 
 **If missing, create manually:**
+
 ```bash
 cd ~/.claude/projects
 ln -s './-Users-USERNAME-Documents-repos-unified-trading-system-repos' \
@@ -178,11 +201,13 @@ ln -s './-Users-USERNAME-Documents-repos-unified-trading-system-repos' \
 ### "Claude Code works but Cursor shows Invalid Python"
 
 **Check workspace root variable:**
+
 ```bash
 echo $UNIFIED_TRADING_WORKSPACE_ROOT
 ```
 
 **Re-run setup:**
+
 ```bash
 bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 ```
@@ -194,6 +219,7 @@ bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 Claude Code settings update needs Python3 to safely modify JSON.
 
 **Workaround (manual):**
+
 ```bash
 # Edit ~/.claude/settings.json
 # Add your new workspace path to the "allow" array under "permissions"

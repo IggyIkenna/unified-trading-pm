@@ -44,6 +44,7 @@ cp -R Users-USERNAME-Documents-repos-unified-trading-system-repos/* \
 ### What's Stored Locally
 
 **In `~/.cursor/projects/<workspace-path>/`:**
+
 - File paths and metadata
 - Tool execution cache
 - Terminal history
@@ -62,10 +63,12 @@ cp -R Users-USERNAME-Documents-repos-unified-trading-system-repos/* \
 ## Why It Works
 
 Your files are **exactly the same** - just at a different root path:
+
 - Old: `/Users/.../Documents/repos/unified-trading-system-repos/`
 - New: `/Users/.../Documents/Documents - Mac/repos/unified-trading-system-repos/`
 
 The **relative paths** are identical:
+
 - `unified-trading-services/src/...` (same in both)
 - `unified-config-interface/src/...` (same in both)
 
@@ -80,6 +83,7 @@ So the index **content** is still valid - only the root path changed.
 **Wait 2-3 minutes** - Cursor may be verifying the index against current files.
 
 **Check:** Settings → Indexing & Docs
+
 - If it says "Indexing..." with progress, it's working
 - Progress should be much faster than 0% → 100%
 - Likely just checking changed files
@@ -89,6 +93,7 @@ So the index **content** is still valid - only the root path changed.
 **Cursor may have invalidated it** due to path mismatch.
 
 **Solutions:**
+
 1. Close Cursor
 2. Re-run migration: `bash scripts/migrate-cursor-index.sh`
 3. Open Cursor again
@@ -96,6 +101,7 @@ So the index **content** is still valid - only the root path changed.
 ### "Want to force fresh index"
 
 Delete the new index folder and let Cursor rebuild:
+
 ```bash
 # Close Cursor first!
 rm -rf ~/.cursor/projects/Users-USERNAME-Documents-Documents-Mac-repos-unified-trading-system-repos/
@@ -108,11 +114,13 @@ Then reopen Cursor (will re-index from scratch).
 ## Storage Savings
 
 **Without migration:**
+
 - Full re-index: ~30-45 minutes
 - High CPU usage during indexing
 - Battery drain on laptop
 
 **With migration:**
+
 - Instant or 1-5 minute verification
 - Low CPU usage
 - Minimal battery impact
@@ -150,12 +158,14 @@ When sharing this workspace setup with colleagues:
 ### What Gets Updated
 
 When you copy the index, Cursor needs to:
+
 1. ✅ Verify file hashes (fast - local check)
 2. ✅ Match with cloud embeddings (fast - hash lookup)
 3. ⚠️ Re-index changed files (if any)
 4. ⚠️ Update absolute paths (quick string replace)
 
 This is **much faster** than:
+
 1. ❌ Scan all files
 2. ❌ Read all content
 3. ❌ Generate embeddings

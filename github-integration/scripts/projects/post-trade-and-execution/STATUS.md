@@ -1,6 +1,6 @@
 # Post-Trade and Execution - Project Setup Status
 
-**Last Updated:** 2026-02-17 (Status Updated After Testing & PR Tracking)  
+**Last Updated:** 2026-02-17 (Status Updated After Testing & PR Tracking)
 **Status:** ~50% COMPLETE, 2/3 Services Core Implementation Done, PRs Tracked
 
 ---
@@ -67,12 +67,12 @@
 
 ## Service Completion Summary
 
-| Service                     | Issues Complete | Issues Remaining | Implementation % | PRs             |
-| --------------------------- | --------------- | ---------------- | ---------------- | --------------- |
-| position-balance-monitor    | 3/6             | 3                | ~50%             | PR #7           |
-| risk-and-exposure           | 4/6             | 2                | ~70%             | PR #7           |
+| Service                    | Issues Complete | Issues Remaining | Implementation % | PRs             |
+| -------------------------- | --------------- | ---------------- | ---------------- | --------------- |
+| position-balance-monitor   | 3/6             | 3                | ~50%             | PR #7           |
+| risk-and-exposure          | 4/6             | 2                | ~70%             | PR #7           |
 | execution-service refactor | 0/6             | 6                | ~0%              | None            |
-| **TOTAL**                   | **7/18**        | **11**           | **~40%**         | **2 major PRs** |
+| **TOTAL**                  | **7/18**        | **11**           | **~40%**         | **2 major PRs** |
 
 **Note**: Core implementations (position tracking, reconciliation, risk checks, monitoring) are done but pending issues
 for APIs, alerting, and docs.
@@ -154,12 +154,12 @@ for APIs, alerting, and docs.
 
 ## Completion Summary
 
-| Service                     | Issues | PRs        | Complete | Remaining                | % Done  |
-| --------------------------- | ------ | ---------- | -------- | ------------------------ | ------- |
-| position-balance-monitor    | 6      | #7, #8     | 3/6      | 3 (API, isolation, docs) | 50%     |
-| risk-and-exposure           | 6      | #7, #8, #9 | 4/6      | 2 (alerting, docs)       | 67%     |
+| Service                    | Issues | PRs        | Complete | Remaining                | % Done  |
+| -------------------------- | ------ | ---------- | -------- | ------------------------ | ------- |
+| position-balance-monitor   | 6      | #7, #8     | 3/6      | 3 (API, isolation, docs) | 50%     |
+| risk-and-exposure          | 6      | #7, #8, #9 | 4/6      | 2 (alerting, docs)       | 67%     |
 | execution-service refactor | 6      | None       | 0/6      | 6 (all tasks)            | 0%      |
-| **TOTAL**                   | **18** | **5**      | **7/18** | **11**                   | **39%** |
+| **TOTAL**                  | **18** | **5**      | **7/18** | **11**                   | **39%** |
 
 **Key**: Core implementations exist but pending completion items (APIs, alerting, docs, refactor)
 

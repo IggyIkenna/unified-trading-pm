@@ -1,8 +1,8 @@
 # 07: Quality Gates Performance
 
-**Status**: ⬜ Not Started  
-**Priority**: P2 (Faster feedback loops)  
-**Estimated Time**: 2-3 hours  
+**Status**: ⬜ Not Started
+**Priority**: P2 (Faster feedback loops)
+**Estimated Time**: 2-3 hours
 **Expected Benefit**: 5-10 min/run, 30+ min/day saved
 
 ---
@@ -12,12 +12,14 @@
 Optimize quality gate execution to complete in <3 minutes (per codex standards). Use parallel execution, selective testing, and caching to speed up feedback loops.
 
 ### Current State
+
 - Quality gates take 5-15 minutes
 - Run all tests every time
 - No caching of dependencies
 - Sequential execution
 
 ### Target State
+
 - Quality gates complete in <3 minutes
 - Parallel test execution (pytest-xdist)
 - Selective testing (only changed files)
@@ -113,14 +115,14 @@ fi
 if [ "$SELECTIVE" = "true" ]; then
     echo "Detecting changed files..."
     CHANGED_FILES=$(git diff --name-only main...HEAD | grep "\.py$" | grep -v "tests/" || true)
-    
+
     if [ -z "$CHANGED_FILES" ]; then
         echo "No Python files changed, running all tests"
         TEST_ARGS=""
     else
         echo "Changed files:"
         echo "$CHANGED_FILES"
-        
+
         # Convert file paths to test paths
         TEST_PATHS=""
         for file in $CHANGED_FILES; do
@@ -131,7 +133,7 @@ if [ "$SELECTIVE" = "true" ]; then
                 TEST_PATHS="$TEST_PATHS $TEST_FILE"
             fi
         done
-        
+
         if [ -z "$TEST_PATHS" ]; then
             echo "No corresponding test files found, running all tests"
             TEST_ARGS=""
@@ -140,7 +142,7 @@ if [ "$SELECTIVE" = "true" ]; then
             TEST_ARGS="$TEST_PATHS"
         fi
     fi
-    
+
     pytest -n auto $TEST_ARGS --cov=instruments_service --cov-report=term-missing
 else
     # Run all tests
@@ -163,11 +165,11 @@ SELECTIVE=true bash scripts/quality-gates.sh
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Cache uv dependencies
         uses: actions/cache@v3
         with:
@@ -177,7 +179,7 @@ jobs:
           key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-
-      
+
       - name: Cache ruff
         uses: actions/cache@v3
         with:
@@ -185,7 +187,7 @@ jobs:
           key: ${{ runner.os }}-ruff-${{ hashFiles('**/*.py') }}
           restore-keys: |
             ${{ runner.os }}-ruff-
-      
+
       # Rest of workflow...
 ```
 
@@ -202,7 +204,7 @@ import pytest
 def test_full_pipeline_integration():
     """
     Full end-to-end pipeline test.
-    
+
     Marked as slow - skipped in quick mode.
     """
     # Test implementation
@@ -212,7 +214,7 @@ def test_full_pipeline_integration():
 def test_databento_api_real():
     """
     Real API call to Databento.
-    
+
     Marked as slow - skipped in quick mode.
     """
     # Test implementation
@@ -242,10 +244,10 @@ echo "Step 1-2: Running ruff (parallel)..."
 (
     ruff format instruments_service/ tests/ &
     RUFF_FORMAT_PID=$!
-    
+
     ruff check --fix instruments_service/ tests/ &
     RUFF_CHECK_PID=$!
-    
+
     wait $RUFF_FORMAT_PID
     wait $RUFF_CHECK_PID
 )
@@ -279,39 +281,39 @@ for service in "${SERVICES[@]}"; do
         echo "⚠️  Skipping $service (not found)"
         continue
     fi
-    
+
     echo "Benchmarking $service..."
     cd "$service"
-    
+
     # Time total
     TOTAL_START=$(date +%s)
-    
+
     # Time ruff
     RUFF_START=$(date +%s)
     ruff format . > /dev/null 2>&1 || true
     ruff check --fix . > /dev/null 2>&1 || true
     RUFF_END=$(date +%s)
     RUFF_TIME=$((RUFF_END - RUFF_START))
-    
+
     # Time basedpyright
     PYRIGHT_START=$(date +%s)
     basedpyright . > /dev/null 2>&1 || true
     PYRIGHT_END=$(date +%s)
     PYRIGHT_TIME=$((PYRIGHT_END - PYRIGHT_START))
-    
+
     # Time pytest
     PYTEST_START=$(date +%s)
     pytest -n auto -m "not slow" > /dev/null 2>&1 || true
     PYTEST_END=$(date +%s)
     PYTEST_TIME=$((PYTEST_END - PYTEST_START))
-    
+
     TOTAL_END=$(date +%s)
     TOTAL_TIME=$((TOTAL_END - TOTAL_START))
-    
+
     echo "$service,$TOTAL_TIME,$RUFF_TIME,$PYRIGHT_TIME,$PYTEST_TIME" >> "../$RESULTS_FILE"
-    
+
     echo "  Total: ${TOTAL_TIME}s (Ruff: ${RUFF_TIME}s, Pyright: ${PYRIGHT_TIME}s, Pytest: ${PYTEST_TIME}s)"
-    
+
     cd ..
 done
 
@@ -379,18 +381,21 @@ time bash scripts/quality-gates.sh --quick
 ## 📊 Success Metrics
 
 ### Before Optimization
+
 - Total time: 5-15 minutes
 - Ruff: 10-15s
 - Basedpyright: 15-20s
 - Pytest: 120-180s (sequential)
 
 ### After Optimization
+
 - [ ] Total time: <3 minutes (target)
 - [ ] Ruff: 5-8s (parallel format + check)
 - [ ] Basedpyright: 10-15s (unchanged)
 - [ ] Pytest: 30-60s (parallel, quick mode)
 
 ### Additional Metrics
+
 - [ ] Parallel execution enabled (pytest-xdist)
 - [ ] Slow tests marked and skippable
 - [ ] Selective testing works

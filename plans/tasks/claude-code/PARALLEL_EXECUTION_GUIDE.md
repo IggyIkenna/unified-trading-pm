@@ -2,7 +2,7 @@
 
 ## 🚀 The Big Improvement (v10)
 
-**Before**: Sequential, limited context  
+**Before**: Sequential, limited context
 **After**: Parallel (4x), full workspace context
 
 ---
@@ -20,12 +20,14 @@
 ### Why This Works
 
 **Full Context**:
+
 - ✅ Agents see `unified-trading-codex/` (canonical patterns)
 - ✅ Agents see workspace `.cursorrules` (workspace-level rules)
 - ✅ Agents see `.cursor/rules/*.mdc` (all standards)
 - ✅ Agents see path dependencies (`unified-trading-services/`, etc.)
 
 **No Conflicts**:
+
 - ✅ Agent 1 edits only `unified-config-interface/`
 - ✅ Agent 2 edits only `unified-events-interface/`
 - ✅ Agent 3 edits only `instruments-service/`
@@ -37,11 +39,11 @@
 
 ## 📊 Performance Comparison
 
-| Approach | Time | Context | Parallelism | Cost |
-|----------|------|---------|-------------|------|
-| **Sequential (old)** | 60 min | Single repo | 1 at a time | $0 |
-| **Bash orchestrator** | 30 min | Single repo | 10 at a time | $0 |
-| **Claude Code parallel (v10)** | 15-20 min | Full workspace | 4 at a time | $0 |
+| Approach                       | Time      | Context        | Parallelism  | Cost |
+| ------------------------------ | --------- | -------------- | ------------ | ---- |
+| **Sequential (old)**           | 60 min    | Single repo    | 1 at a time  | $0   |
+| **Bash orchestrator**          | 30 min    | Single repo    | 10 at a time | $0   |
+| **Claude Code parallel (v10)** | 15-20 min | Full workspace | 4 at a time  | $0   |
 
 **Winner**: Claude Code parallel (v10) - Best of both worlds!
 
@@ -56,12 +58,14 @@ bash run-agent.sh <repo-name> "<prompt>"
 ```
 
 **What it does**:
+
 1. Sets workspace to root (full context)
 2. Enhances prompt with edit restrictions
 3. Launches agent CLI
 4. Pretty-prints output
 
 **Usage**:
+
 ```bash
 bash run-agent.sh unified-config-interface "Fix all basedpyright errors"
 ```
@@ -73,6 +77,7 @@ bash run-parallel-agents.sh <repo1> <repo2> <repo3> <repo4> "<prompt>"
 ```
 
 **What it does**:
+
 1. Validates max 4 repos
 2. Gets API key (shared across agents)
 3. Launches 4 agents in parallel (2s stagger)
@@ -81,6 +86,7 @@ bash run-parallel-agents.sh <repo1> <repo2> <repo3> <repo4> "<prompt>"
 6. Reports results
 
 **Usage**:
+
 ```bash
 bash run-parallel-agents.sh \
     unified-config-interface \
@@ -97,6 +103,7 @@ bash run-parallel-agents.sh \
 ### Batch Structure (6 batches × 4 repos)
 
 **Batch 1**:
+
 ```bash
 bash run-parallel-agents.sh \
     unified-config-interface \
@@ -107,6 +114,7 @@ bash run-parallel-agents.sh \
 ```
 
 **Batch 2**:
+
 ```bash
 bash run-parallel-agents.sh \
     market-data-processing-service \
@@ -125,16 +133,19 @@ bash run-parallel-agents.sh \
 ### Resource Considerations
 
 **Each agent uses**:
+
 - ~2-4 GB RAM
 - ~50-100% CPU (during active work)
 - Network bandwidth (API calls)
 
 **4 agents in parallel**:
+
 - ~8-16 GB RAM total
 - Manageable on most machines
 - Good balance of speed vs resources
 
 **More than 4**:
+
 - Risk of OOM (out of memory)
 - Slower due to resource contention
 - Diminishing returns
@@ -142,6 +153,7 @@ bash run-parallel-agents.sh \
 ### API Rate Limits
 
 With `--model auto` (FREE tier):
+
 - Cursor might have concurrent request limits
 - 4 simultaneous seems safe
 - 10+ might hit rate limits
@@ -153,11 +165,13 @@ With `--model auto` (FREE tier):
 ### Live Monitoring
 
 **Each agent logs to**:
+
 ```bash
 /tmp/agent-{repo-name}.log
 ```
 
 **Monitor in real-time**:
+
 ```bash
 # Terminal 1
 tail -f /tmp/agent-unified-config-interface.log
@@ -175,6 +189,7 @@ tail -f /tmp/agent-market-tick-data-handler.log
 ### After Completion
 
 **Check all logs**:
+
 ```bash
 for repo in unified-config-interface unified-events-interface instruments-service market-tick-data-handler; do
     echo "=== $repo ==="
@@ -234,6 +249,7 @@ claude --model claude-sonnet-4-5-20250929
 ### Phase 2: Execute (Paste into Claude Code)
 
 Paste the prompt from `CLAUDE_CODE_TASK.md` which includes:
+
 - Read workspace rules first
 - Launch 6 batches of 4 repos each
 - Verify after each batch
@@ -249,11 +265,13 @@ Claude Code will show progress for all 4 agents simultaneously.
 ## 💰 Cost & Time Savings
 
 ### Sequential (Old)
+
 - Time: 60 minutes (24 repos × 2.5 min)
 - Context: Single repo (limited)
 - Cost: $0
 
 ### Parallel (v10)
+
 - Time: 15-20 minutes (6 batches × 3 min)
 - Context: Full workspace (codex, dependencies, rules)
 - Cost: $0
@@ -267,11 +285,13 @@ Claude Code will show progress for all 4 agents simultaneously.
 ### Edit Restrictions Are Critical
 
 The prompt explicitly tells each agent:
+
 ```
 "You can ONLY EDIT files in {repo}/ directory"
 ```
 
 **Why**: Prevents agents from editing:
+
 - Other repos (conflicts)
 - Codex (source of truth)
 - Shared libraries (breaks other repos)
@@ -279,6 +299,7 @@ The prompt explicitly tells each agent:
 ### Workspace Root Is Critical
 
 Using workspace root gives agents access to:
+
 - `unified-trading-codex/` - Canonical patterns
 - Path dependencies - `unified-trading-services/`, etc.
 - Workspace rules - `.cursorrules`, `.cursor/rules/*.mdc`
@@ -290,6 +311,7 @@ Using workspace root gives agents access to:
 ## 🎉 Summary
 
 **v10 Innovation**:
+
 - ✅ Parallel execution (4 agents)
 - ✅ Full workspace context (codex, dependencies, rules)
 - ✅ Edit restrictions (no conflicts)

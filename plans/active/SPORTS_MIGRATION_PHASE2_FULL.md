@@ -13,13 +13,13 @@ Port **all** logic from `sports-betting-services` into UTS: all venues, all feat
 
 ## Source inventory (sports-betting-services)
 
-| Area | Modules | Lines (approx) | UTS destination |
-|------|---------|----------------|-----------------|
-| Core | config, database, models, mapping, feature_models, logging_service | 2308+320+259+462+127 | FSS config; schemas in FSS + UAC; data_loader in FSS |
-| Features | base, data_loader, team, team_oop, h2h, league, season_context, referee, goal_timing, weather, venue_context, odds, halftime, player_lineup, poisson_xg, multisource_xg, advanced_stats, pipeline_test | 250–1528 each | FSS `features_sports_service/features/` (split team, base) |
-| Arbitrage | analyze (script), analyze_bookmaker_vig, generate_report, odds (loader) | 260–552 | FSS `features_sports_service/arb/` (vig, arb_detection); strategy service consumes |
-| Clients | api_football, footystats, open_meteo, soccer_football, understat | — | UAC schemas + UDC/URDI or FSS data adapters (unit-test with mocks) |
-| Execution | — | — | USEI: Betfair, Pinnacle adapters |
+| Area      | Modules                                                                                                                                                                                                | Lines (approx)       | UTS destination                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | ---------------------------------------------------------------------------------- |
+| Core      | config, database, models, mapping, feature_models, logging_service                                                                                                                                     | 2308+320+259+462+127 | FSS config; schemas in FSS + UAC; data_loader in FSS                               |
+| Features  | base, data_loader, team, team_oop, h2h, league, season_context, referee, goal_timing, weather, venue_context, odds, halftime, player_lineup, poisson_xg, multisource_xg, advanced_stats, pipeline_test | 250–1528 each        | FSS `features_sports_service/features/` (split team, base)                         |
+| Arbitrage | analyze (script), analyze_bookmaker_vig, generate_report, odds (loader)                                                                                                                                | 260–552              | FSS `features_sports_service/arb/` (vig, arb_detection); strategy service consumes |
+| Clients   | api_football, footystats, open_meteo, soccer_football, understat                                                                                                                                       | —                    | UAC schemas + UDC/URDI or FSS data adapters (unit-test with mocks)                 |
+| Execution | —                                                                                                                                                                                                      | —                    | USEI: Betfair, Pinnacle adapters                                                   |
 
 ## Strategy vs execution
 

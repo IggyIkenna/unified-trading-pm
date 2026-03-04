@@ -872,7 +872,11 @@
       {
         "level": 0,
         "description": "Foundation - no dependencies",
-        "repos": ["unified-config-interface", "unified-events-interface", "api-contracts"]
+        "repos": [
+          "unified-config-interface",
+          "unified-events-interface",
+          "api-contracts"
+        ]
       },
       {
         "level": 1,
@@ -882,10 +886,7 @@
       {
         "level": 2,
         "description": "Domain services and pure libraries",
-        "repos": [
-          "unified-domain-client",
-          "execution-algo-library"
-        ]
+        "repos": ["unified-domain-client", "execution-algo-library"]
       },
       {
         "level": 3,
@@ -959,7 +960,11 @@
     "steps": [
       {
         "step": 1,
-        "packages": ["api-contracts", "unified-config-interface", "unified-events-interface"],
+        "packages": [
+          "api-contracts",
+          "unified-config-interface",
+          "unified-events-interface"
+        ],
         "reason": "Foundation packages with no dependencies"
       },
       {
@@ -974,7 +979,12 @@
       },
       {
         "step": 4,
-        "packages": ["unified-market-interface", "unified-ml-interface", "unified-trade-execution-interface", "matching-engine-library"],
+        "packages": [
+          "unified-market-interface",
+          "unified-ml-interface",
+          "unified-trade-execution-interface",
+          "matching-engine-library"
+        ],
         "reason": "Depend on domain services"
       },
       {

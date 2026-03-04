@@ -18,6 +18,7 @@ git checkout main
 ```
 
 ### NEVER Rules:
+
 - ❌ NEVER skip tests or add `|| true`
 - ❌ NEVER add `@pytest.mark.skip` without documented reason
 - ❌ NEVER use `git reset --hard` on conflicts
@@ -27,6 +28,7 @@ git checkout main
 - ❌ NEVER auto-commit (report back first)
 
 ### MUST DO Rules:
+
 - ✅ Fix root causes (not symptoms)
 - ✅ Test frequently
 - ✅ Document exceptions in QUALITY_GATE_BYPASS_AUDIT.md
@@ -36,7 +38,7 @@ git checkout main
 
 ## 📋 TASK STRUCTURE
 
-```markdown
+````markdown
 # Task: [Task Name]
 
 **Goal**: [One sentence]
@@ -50,6 +52,7 @@ git checkout main
 ## Sub-Agent Allocation:
 
 Agent 1: [Description]
+
 - Files: [list]
 - Task: [specific]
 
@@ -65,6 +68,8 @@ Agent 1: [Description]
 ```bash
 [Commands to verify success]
 ```
+````
+
 ```
 
 ---
@@ -76,3 +81,4 @@ See `TASK_1_ADD_QUALITY_CHECKS.md`, `TASK_2_FIX_VIOLATIONS.md`, `TASK_3_TYPE_CLE
 ---
 
 **Use this template to create new executable task docs**
+```

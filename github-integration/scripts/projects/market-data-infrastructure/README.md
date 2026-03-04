@@ -1,7 +1,7 @@
 # Market Data Infrastructure - Project Setup Scripts
 
-**Project**: GitHub Project #8 (TBD)  
-**Epic**: Market Data Infrastructure  
+**Project**: GitHub Project #8 (TBD)
+**Epic**: Market Data Infrastructure
 **Issues**: 4 subtasks in 1 repo (market-tick-data-handler)
 
 ---
@@ -658,6 +658,6 @@ continue using old patterns and documentation will be outdated.
 
 ---
 
-**Last Updated:** 2026-02-14  
-**Maintainer:** Ikenna  
+**Last Updated:** 2026-02-14
+**Maintainer:** Ikenna
 **Status:** Ready for use

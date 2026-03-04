@@ -21,11 +21,13 @@ CATEGORY | CRITERION | STATUS | EVIDENCE
 Where STATUS = `PASS` | `WARN` | `FAIL` | `N/A`.
 
 At the end, output:
+
 - Overall grade: PASS (0 FAILs) / CONDITIONAL (≥1 WARNs, 0 FAILs) / FAIL (≥1 FAILs)
 - Top 10 blocking findings with file:line references
 - Technical debt trajectory vs previous audit (if available)
 
 **Key SSOT references for auditors:**
+
 - Repo registry & DAG: `unified-trading-pm/workspace-manifest.json`
 - Runtime topology: `unified-trading-deployment-v3/configs/runtime-topology.yaml`
 - Tier architecture: `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
@@ -47,23 +49,23 @@ At the end, output:
 
 Validates that `workspace-manifest.json` is complete, consistent, and authoritative as the code DAG SSOT.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 1.1 | All repo directories under workspace root are registered in `workspace-manifest.json` `repositories` | YES |
-| 1.2 | No orphan directories (directories in workspace root not listed in manifest, excluding `.venv*`, `.cursor`, `archive`) | YES |
-| 1.3 | Every repo has `type` field set correctly (library / service / api-service / ui / infrastructure / documentation) | YES |
-| 1.4 | Every repo has `arch_tier` matching codex `TIER-ARCHITECTURE.md` (0/1/2/3/service/api/ui) | YES |
-| 1.5 | Every repo has `doc_standard` matching its type (service-canonical / library-canonical / ui-canonical / infrastructure-canonical) | WARN |
-| 1.6 | `topologicalOrder` covers all active repos and respects tier constraints (T0 at lower levels than T1, etc.) | YES |
-| 1.7 | No `>=1.0.0` versions in any `pyproject.toml` — versions_policy requires all pre-stable (`0.x.x`) until full CI pipeline validates | YES |
-| 1.8 | `pyproject.toml` versions match manifest `versions` section | YES |
-| 1.9 | `dependencies` for each repo list only repos at lower or equal tier | YES |
-| 1.10 | `status` field present and accurate for all repos (active / scaffolded / planned / archived) | WARN |
-| 1.11 | `ci_status` and `quality_gate_status` fields populated and reflect current state | WARN |
-| 1.12 | `coverage_pct` field populated for repos with tests (not all zeros) | WARN |
-| 1.13 | `completion_path` fields accurately tag CeFi / DeFi / Sports / TradFi scope | WARN |
-| 1.14 | Archived repos removed from `repositories` and noted in `notes` or `removedEntries` | WARN |
-| 1.15 | Manifest `lastUpdated` within 7 days of audit date | WARN |
+| #    | Criterion                                                                                                                          | Blocking |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 1.1  | All repo directories under workspace root are registered in `workspace-manifest.json` `repositories`                               | YES      |
+| 1.2  | No orphan directories (directories in workspace root not listed in manifest, excluding `.venv*`, `.cursor`, `archive`)             | YES      |
+| 1.3  | Every repo has `type` field set correctly (library / service / api-service / ui / infrastructure / documentation)                  | YES      |
+| 1.4  | Every repo has `arch_tier` matching codex `TIER-ARCHITECTURE.md` (0/1/2/3/service/api/ui)                                          | YES      |
+| 1.5  | Every repo has `doc_standard` matching its type (service-canonical / library-canonical / ui-canonical / infrastructure-canonical)  | WARN     |
+| 1.6  | `topologicalOrder` covers all active repos and respects tier constraints (T0 at lower levels than T1, etc.)                        | YES      |
+| 1.7  | No `>=1.0.0` versions in any `pyproject.toml` — versions_policy requires all pre-stable (`0.x.x`) until full CI pipeline validates | YES      |
+| 1.8  | `pyproject.toml` versions match manifest `versions` section                                                                        | YES      |
+| 1.9  | `dependencies` for each repo list only repos at lower or equal tier                                                                | YES      |
+| 1.10 | `status` field present and accurate for all repos (active / scaffolded / planned / archived)                                       | WARN     |
+| 1.11 | `ci_status` and `quality_gate_status` fields populated and reflect current state                                                   | WARN     |
+| 1.12 | `coverage_pct` field populated for repos with tests (not all zeros)                                                                | WARN     |
+| 1.13 | `completion_path` fields accurately tag CeFi / DeFi / Sports / TradFi scope                                                        | WARN     |
+| 1.14 | Archived repos removed from `repositories` and noted in `notes` or `removedEntries`                                                | WARN     |
+| 1.15 | Manifest `lastUpdated` within 7 days of audit date                                                                                 | WARN     |
 
 ---
 
@@ -71,20 +73,20 @@ Validates that `workspace-manifest.json` is complete, consistent, and authoritat
 
 Validates the 5-tier dependency model from `TIER-ARCHITECTURE.md` and cursor rule `dag-enforcement.mdc` (priority 90).
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 2.1 | T0 repos (unified-api-contracts, unified-internal-contracts, unified-config-interface, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library) have zero internal workspace dependencies | YES |
-| 2.2 | T1 repos (unified-trading-services, unified-reference-data-interface) depend only on T0 repos | YES |
-| 2.3 | T2 repos (unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface) depend only on T0+T1 | YES |
-| 2.4 | T3 (unified-domain-client) depends only on T0+T1 — never on T2 or service-tier packages | YES |
-| 2.5 | Service repos NEVER import another service as a Python package dependency in `pyproject.toml` | YES |
-| 2.6 | No circular dependencies in the `pyproject.toml` DAG (graph is acyclic) | YES |
-| 2.7 | API repos (execution-results-api, market-data-api, client-reporting-api) import only T0+T1 — never T2/T3/service packages | YES |
-| 2.8 | UI repos are TypeScript-only — never declare Python package dependencies | YES |
-| 2.9 | Service-to-service interaction is only via messaging / APIs / storage per `runtime-topology.yaml` — no direct Python imports | YES |
-| 2.10 | `pyproject.toml` path sources use `../repo-name` pattern (not `deps/` or absolute paths) | YES |
-| 2.11 | `WORKSPACE_MANIFEST_DAG.svg` is regenerated and matches current manifest content | WARN |
-| 2.12 | No upward-tier violations (e.g., T2 importing T3, library importing service) | YES |
+| #    | Criterion                                                                                                                                                                                                                                               | Blocking |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 2.1  | T0 repos (unified-api-contracts, unified-internal-contracts, unified-config-interface, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library) have zero internal workspace dependencies                    | YES      |
+| 2.2  | T1 repos (unified-trading-services, unified-reference-data-interface) depend only on T0 repos                                                                                                                                                           | YES      |
+| 2.3  | T2 repos (unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface) depend only on T0+T1 | YES      |
+| 2.4  | T3 (unified-domain-client) depends only on T0+T1 — never on T2 or service-tier packages                                                                                                                                                                 | YES      |
+| 2.5  | Service repos NEVER import another service as a Python package dependency in `pyproject.toml`                                                                                                                                                           | YES      |
+| 2.6  | No circular dependencies in the `pyproject.toml` DAG (graph is acyclic)                                                                                                                                                                                 | YES      |
+| 2.7  | API repos (execution-results-api, market-data-api, client-reporting-api) import only T0+T1 — never T2/T3/service packages                                                                                                                               | YES      |
+| 2.8  | UI repos are TypeScript-only — never declare Python package dependencies                                                                                                                                                                                | YES      |
+| 2.9  | Service-to-service interaction is only via messaging / APIs / storage per `runtime-topology.yaml` — no direct Python imports                                                                                                                            | YES      |
+| 2.10 | `pyproject.toml` path sources use `../repo-name` pattern (not `deps/` or absolute paths)                                                                                                                                                                | YES      |
+| 2.11 | `WORKSPACE_MANIFEST_DAG.svg` is regenerated and matches current manifest content                                                                                                                                                                        | WARN     |
+| 2.12 | No upward-tier violations (e.g., T2 importing T3, library importing service)                                                                                                                                                                            | YES      |
 
 ---
 
@@ -92,22 +94,22 @@ Validates the 5-tier dependency model from `TIER-ARCHITECTURE.md` and cursor rul
 
 Checks that `00-SSOT-INDEX.md` is accurate, no duplicate implementations exist, and the SSOT placement principle is respected.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 3.1 | Every entry in `00-SSOT-INDEX.md` points to a file that exists and contains current content | YES |
-| 3.2 | No duplicate schema definitions across repos (e.g., `ModelVariantConfig` in only one location) | YES |
-| 3.3 | No duplicate cloud service abstractions (single config class name: `UnifiedCloudConfig` from `unified-config-interface`) | YES |
-| 3.4 | Config class naming standardized — no `UnifiedCloudServicesConfig` from `unified_trading_services` in any repo | YES |
-| 3.5 | Cursor rules source of truth is `unified-trading-pm/cursor-rules/`, synced to `.cursor/rules/` via symlink (not copies) | YES |
-| 3.6 | Quality gate scripts (`scripts/quality-gates.sh`) across all repos aligned with canonical template from codex — no template drift | YES |
-| 3.7 | Runtime topology SSOT: `runtime-topology.yaml` is sole authority for messaging/storage/API interaction policy — not duplicated in service configs | YES |
-| 3.8 | Venue catalog SSOT: `deployment-v3/configs/venues.yaml` — not duplicated in service-level venue lists | YES |
-| 3.9 | No parallel code paths (old + new schema, old + new import) — `delete-deprecated.mdc` (priority 95) enforced | YES |
-| 3.10 | No `_old.py`, `_legacy.py`, `_deprecated.py` files in any active repo | YES |
-| 3.11 | Event field definitions live in `unified-internal-contracts` only — not redefined in services | YES |
-| 3.12 | No copy-paste test templates diverging across repos (e.g., `test_event_logging.py` variants) | WARN |
-| 3.13 | Documentation references machine-readable SSOTs, never duplicates them (SSOT placement principle) | WARN |
-| 3.14 | No deployment-engine / deployment-v3 code duplication — single canonical location for deployment logic | YES |
+| #    | Criterion                                                                                                                                         | Blocking |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 3.1  | Every entry in `00-SSOT-INDEX.md` points to a file that exists and contains current content                                                       | YES      |
+| 3.2  | No duplicate schema definitions across repos (e.g., `ModelVariantConfig` in only one location)                                                    | YES      |
+| 3.3  | No duplicate cloud service abstractions (single config class name: `UnifiedCloudConfig` from `unified-config-interface`)                          | YES      |
+| 3.4  | Config class naming standardized — no `UnifiedCloudServicesConfig` from `unified_trading_services` in any repo                                    | YES      |
+| 3.5  | Cursor rules source of truth is `unified-trading-pm/cursor-rules/`, synced to `.cursor/rules/` via symlink (not copies)                           | YES      |
+| 3.6  | Quality gate scripts (`scripts/quality-gates.sh`) across all repos aligned with canonical template from codex — no template drift                 | YES      |
+| 3.7  | Runtime topology SSOT: `runtime-topology.yaml` is sole authority for messaging/storage/API interaction policy — not duplicated in service configs | YES      |
+| 3.8  | Venue catalog SSOT: `deployment-v3/configs/venues.yaml` — not duplicated in service-level venue lists                                             | YES      |
+| 3.9  | No parallel code paths (old + new schema, old + new import) — `delete-deprecated.mdc` (priority 95) enforced                                      | YES      |
+| 3.10 | No `_old.py`, `_legacy.py`, `_deprecated.py` files in any active repo                                                                             | YES      |
+| 3.11 | Event field definitions live in `unified-internal-contracts` only — not redefined in services                                                     | YES      |
+| 3.12 | No copy-paste test templates diverging across repos (e.g., `test_event_logging.py` variants)                                                      | WARN     |
+| 3.13 | Documentation references machine-readable SSOTs, never duplicates them (SSOT placement principle)                                                 | WARN     |
+| 3.14 | No deployment-engine / deployment-v3 code duplication — single canonical location for deployment logic                                            | YES      |
 
 ---
 
@@ -115,20 +117,20 @@ Checks that `00-SSOT-INDEX.md` is accurate, no duplicate implementations exist, 
 
 Checks `canonical-dependency-manifest.json`, `workspace-constraints.toml`, and version consistency.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 4.1 | `canonical-dependency-manifest.json` lists all external PyPI packages used across workspace | YES |
-| 4.2 | `workspace-constraints.toml` defines single canonical range per external package | YES |
-| 4.3 | No version conflicts: each external package has one version range across all repos | YES |
-| 4.4 | All dependency versions bounded (no unbounded `>=X` without upper bound on critical deps) — pattern: `>=X.Y.Z,<X+1.0.0` | WARN |
-| 4.5 | `uv` used as package manager everywhere — no bare `pip install` in any script or Dockerfile | YES |
-| 4.6 | `uv.lock` committed and up to date in all Python repos | YES |
-| 4.7 | `pyproject.toml` is canonical dependency source — no `requirements.txt` as parallel source | WARN |
-| 4.8 | Dev dependencies separated from production (`[project.optional-dependencies.dev]`) | WARN |
-| 4.9 | Internal workspace dependencies use `>=0.x.0` editable path references | YES |
-| 4.10 | Build system standardized (consistent `requires-python` spec across repos) | WARN |
-| 4.11 | `propagate-canonical-versions.py` has been run and all repos aligned with workspace constraints | WARN |
-| 4.12 | No completely unpinned dependencies (bare package names without any version spec) | YES |
+| #    | Criterion                                                                                                               | Blocking |
+| ---- | ----------------------------------------------------------------------------------------------------------------------- | -------- |
+| 4.1  | `canonical-dependency-manifest.json` lists all external PyPI packages used across workspace                             | YES      |
+| 4.2  | `workspace-constraints.toml` defines single canonical range per external package                                        | YES      |
+| 4.3  | No version conflicts: each external package has one version range across all repos                                      | YES      |
+| 4.4  | All dependency versions bounded (no unbounded `>=X` without upper bound on critical deps) — pattern: `>=X.Y.Z,<X+1.0.0` | WARN     |
+| 4.5  | `uv` used as package manager everywhere — no bare `pip install` in any script or Dockerfile                             | YES      |
+| 4.6  | `uv.lock` committed and up to date in all Python repos                                                                  | YES      |
+| 4.7  | `pyproject.toml` is canonical dependency source — no `requirements.txt` as parallel source                              | WARN     |
+| 4.8  | Dev dependencies separated from production (`[project.optional-dependencies.dev]`)                                      | WARN     |
+| 4.9  | Internal workspace dependencies use `>=0.x.0` editable path references                                                  | YES      |
+| 4.10 | Build system standardized (consistent `requires-python` spec across repos)                                              | WARN     |
+| 4.11 | `propagate-canonical-versions.py` has been run and all repos aligned with workspace constraints                         | WARN     |
+| 4.12 | No completely unpinned dependencies (bare package names without any version spec)                                       | YES      |
 
 ---
 
@@ -136,18 +138,18 @@ Checks `canonical-dependency-manifest.json`, `workspace-constraints.toml`, and v
 
 Checks `doc_standards` from manifest, canonical docs compliance, and documentation quality.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 5.1 | Every service repo has all `service-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md, QUALITY_GATE_BYPASS_AUDIT.md | YES |
-| 5.2 | Every library repo has all `library-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md | YES |
-| 5.3 | Every UI repo has all `ui-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md | WARN |
-| 5.4 | No stub documentation files (3 lines or fewer, just "TODO", or empty) in required doc locations | WARN |
-| 5.5 | No summary/overview docs that duplicate information already in SSOT (`no-summary-docs.mdc`, priority 100) | WARN |
-| 5.6 | Docs use `{project_id}` placeholders — no hardcoded project IDs or bucket names | YES |
-| 5.7 | `AGENTS.md` exists for repos with non-obvious setup quirks (recommended, not required) | WARN |
-| 5.8 | Codex section references in manifest `codex_sections` match actual codex directory structure | WARN |
-| 5.9 | No embedded UI artifacts in service repos (no `package.json`, `frontend/`, `dist/` in Python service repos) | YES |
-| 5.10 | `specs/` directories, if present, do not have diverged copies of files also in `docs/` | WARN |
+| #    | Criterion                                                                                                                                                                                                                                   | Blocking |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 5.1  | Every service repo has all `service-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md, QUALITY_GATE_BYPASS_AUDIT.md | YES      |
+| 5.2  | Every library repo has all `library-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md                                                                         | YES      |
+| 5.3  | Every UI repo has all `ui-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md                                                                                                              | WARN     |
+| 5.4  | No stub documentation files (3 lines or fewer, just "TODO", or empty) in required doc locations                                                                                                                                             | WARN     |
+| 5.5  | No summary/overview docs that duplicate information already in SSOT (`no-summary-docs.mdc`, priority 100)                                                                                                                                   | WARN     |
+| 5.6  | Docs use `{project_id}` placeholders — no hardcoded project IDs or bucket names                                                                                                                                                             | YES      |
+| 5.7  | `AGENTS.md` exists for repos with non-obvious setup quirks (recommended, not required)                                                                                                                                                      | WARN     |
+| 5.8  | Codex section references in manifest `codex_sections` match actual codex directory structure                                                                                                                                                | WARN     |
+| 5.9  | No embedded UI artifacts in service repos (no `package.json`, `frontend/`, `dist/` in Python service repos)                                                                                                                                 | YES      |
+| 5.10 | `specs/` directories, if present, do not have diverged copies of files also in `docs/`                                                                                                                                                      | WARN     |
 
 ---
 
@@ -155,20 +157,20 @@ Checks `doc_standards` from manifest, canonical docs compliance, and documentati
 
 Checks that cursor rules are complete, consistent, enforced, and synced.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 6.1 | All blocking cursor rules (priority ≥ 90) are present and active: `basedpyright-safety` (100), `no-summary-docs` (100), `no-type-any-use-specific` (90), `dag-enforcement` (90), `runtime-verification-required` (95), `delete-deprecated` (95), `never-revert-local-changes` (95), `agents-follow-cursor-rules` (95) | YES |
-| 6.2 | `.cursor/rules/` is a symlink to `unified-trading-pm/cursor-rules/` — not a copy | YES |
-| 6.3 | No cursor rules contradict codex standards (rules are enforcement reminders, codex is specification) | YES |
-| 6.4 | Each cursor rule has `CODEX:` reference linking to the codex document it derives from | WARN |
-| 6.5 | `basedpyright` never run as bare `basedpyright .` — always with explicit source dir + `timeout 120` | YES |
-| 6.6 | `never-revert-local-changes.mdc` enforced: no `git reset --hard` in any script or agent prompt | YES |
-| 6.7 | `always-use-quickmerge.mdc` (priority 85) enforced: all pushes via `bash scripts/quickmerge.sh`, never standalone quality gates or bare `git push` | YES |
-| 6.8 | Sub-agents receive blocking rules explicitly per `agents-follow-cursor-rules.mdc` | YES |
-| 6.9 | Rule priority ordering is internally consistent (100 > 95 > 90 > 85 > ...) | WARN |
-| 6.10 | No deprecated or conflicting rules remain in `.cursor/rules/` | WARN |
-| 6.11 | `.cursorrules` file at workspace root references cursor rules directory and codex correctly | WARN |
-| 6.12 | `alwaysApply: true` rules do not require glob patterns (they apply everywhere by definition) | WARN |
+| #    | Criterion                                                                                                                                                                                                                                                                                                             | Blocking |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 6.1  | All blocking cursor rules (priority ≥ 90) are present and active: `basedpyright-safety` (100), `no-summary-docs` (100), `no-type-any-use-specific` (90), `dag-enforcement` (90), `runtime-verification-required` (95), `delete-deprecated` (95), `never-revert-local-changes` (95), `agents-follow-cursor-rules` (95) | YES      |
+| 6.2  | `.cursor/rules/` is a symlink to `unified-trading-pm/cursor-rules/` — not a copy                                                                                                                                                                                                                                      | YES      |
+| 6.3  | No cursor rules contradict codex standards (rules are enforcement reminders, codex is specification)                                                                                                                                                                                                                  | YES      |
+| 6.4  | Each cursor rule has `CODEX:` reference linking to the codex document it derives from                                                                                                                                                                                                                                 | WARN     |
+| 6.5  | `basedpyright` never run as bare `basedpyright .` — always with explicit source dir + `timeout 120`                                                                                                                                                                                                                   | YES      |
+| 6.6  | `never-revert-local-changes.mdc` enforced: no `git reset --hard` in any script or agent prompt                                                                                                                                                                                                                        | YES      |
+| 6.7  | `always-use-quickmerge.mdc` (priority 85) enforced: all pushes via `bash scripts/quickmerge.sh`, never standalone quality gates or bare `git push`                                                                                                                                                                    | YES      |
+| 6.8  | Sub-agents receive blocking rules explicitly per `agents-follow-cursor-rules.mdc`                                                                                                                                                                                                                                     | YES      |
+| 6.9  | Rule priority ordering is internally consistent (100 > 95 > 90 > 85 > ...)                                                                                                                                                                                                                                            | WARN     |
+| 6.10 | No deprecated or conflicting rules remain in `.cursor/rules/`                                                                                                                                                                                                                                                         | WARN     |
+| 6.11 | `.cursorrules` file at workspace root references cursor rules directory and codex correctly                                                                                                                                                                                                                           | WARN     |
+| 6.12 | `alwaysApply: true` rules do not require glob patterns (they apply everywhere by definition)                                                                                                                                                                                                                          | WARN     |
 
 ---
 
@@ -176,18 +178,18 @@ Checks that cursor rules are complete, consistent, enforced, and synced.
 
 Checks for documentation drift between codex standards and actual implementations.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 7.1 | All bucket names match parameterized pattern from codex — not hardcoded | YES |
-| 7.2 | Venue names use canonical form from `venues.yaml` (e.g., `BINANCE-SPOT` / `BINANCE-FUTURES`, not `BINANCE`) | WARN |
-| 7.3 | Lifecycle event names match canonical list in `03-observability/lifecycle-events.md` — no custom event names like `INGESTING_DATA` | YES |
-| 7.4 | Import routing matches `TIER-ARCHITECTURE.md` import routing map (symbols imported from correct source package) | YES |
-| 7.5 | Package names in code match current names (not old aliases: `unified-trading-services` not `unified-cloud-services`) | WARN |
-| 7.6 | Dockerfile base images use `unified-trading-services:latest` — no `unified-cloud-services:latest` references | WARN |
-| 7.7 | Config classes extend `UnifiedCloudConfig` or `BaseServiceConfig` per codex — no `UnifiedCloudServicesConfig` | YES |
-| 7.8 | Service structure follows codex pattern: engine / adapters / CLI separation | WARN |
-| 7.9 | Codex references to repo names are current (no `unified-trading-deployment-v2`, `market-tick-data-handler`, `corporate-actions`) | WARN |
-| 7.10 | Architectural changes accompanied by codex doc update in same PR | WARN |
+| #    | Criterion                                                                                                                          | Blocking |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 7.1  | All bucket names match parameterized pattern from codex — not hardcoded                                                            | YES      |
+| 7.2  | Venue names use canonical form from `venues.yaml` (e.g., `BINANCE-SPOT` / `BINANCE-FUTURES`, not `BINANCE`)                        | WARN     |
+| 7.3  | Lifecycle event names match canonical list in `03-observability/lifecycle-events.md` — no custom event names like `INGESTING_DATA` | YES      |
+| 7.4  | Import routing matches `TIER-ARCHITECTURE.md` import routing map (symbols imported from correct source package)                    | YES      |
+| 7.5  | Package names in code match current names (not old aliases: `unified-trading-services` not `unified-cloud-services`)               | WARN     |
+| 7.6  | Dockerfile base images use `unified-trading-services:latest` — no `unified-cloud-services:latest` references                       | WARN     |
+| 7.7  | Config classes extend `UnifiedCloudConfig` or `BaseServiceConfig` per codex — no `UnifiedCloudServicesConfig`                      | YES      |
+| 7.8  | Service structure follows codex pattern: engine / adapters / CLI separation                                                        | WARN     |
+| 7.9  | Codex references to repo names are current (no `unified-trading-deployment-v2`, `market-tick-data-handler`, `corporate-actions`)   | WARN     |
+| 7.10 | Architectural changes accompanied by codex doc update in same PR                                                                   | WARN     |
 
 ---
 
@@ -197,122 +199,127 @@ Checks for documentation drift between codex standards and actual implementation
 
 ## SECTION 8 — LINTING, FORMATTING & QUALITY GATES
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 8.1 | Ruff linter runs with zero errors (`ruff check --no-fix`) | YES |
-| 8.2 | Ruff formatter is applied (`ruff format --check`) | YES |
-| 8.3 | Line length ≤ 100 chars enforced (E501 in ruff config, not globally ignored) | YES |
-| 8.4 | No bare `except:` or `except Exception: pass` (E722 not in global ruff ignore) | YES |
-| 8.5 | No `# noqa` or `# type: ignore` used to hide architectural violations — each must be documented in QUALITY_GATE_BYPASS_AUDIT.md | YES |
-| 8.6 | basedpyright passes with `typeCheckingMode: "strict"` and `reportAny: "error"` — run via `timeout 120 basedpyright <source_dir>/` | YES |
-| 8.7 | Import order correct — stdlib → third-party → local; no imports inside functions (except `TYPE_CHECKING` blocks) | YES |
-| 8.8 | `scripts/quality-gates.sh` exists and matches canonical template from codex (`quality-gates-service-template.sh` or `quality-gates-library-template.sh`) | YES |
-| 8.9 | No `|| true` or similar bypasses in quality gate CI workflows (`quality-gates.yml`, `quality-gates-simple.yml`) | YES |
-| 8.10 | McCabe complexity ≤ 10 enforced in ruff config | WARN |
-| 8.11 | Ruff config uses standard rule selection (`["E", "F", "W", "I"]` minimum) — not `["I"]` only | YES |
-| 8.12 | `QUALITY_GATE_BYPASS_AUDIT.md` exists at repo root, is either empty (all gates pass) or contains only genuine unsolvable exceptions with justification — no stale or unjustified entries | YES |
-| 8.13 | No wildcard imports (`from X import *`) in production code | YES |
+| #    | Criterion                                                                                                                                                                                | Blocking |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- | --- |
+| 8.1  | Ruff linter runs with zero errors (`ruff check --no-fix`)                                                                                                                                | YES      |
+| 8.2  | Ruff formatter is applied (`ruff format --check`)                                                                                                                                        | YES      |
+| 8.3  | Line length ≤ 100 chars enforced (E501 in ruff config, not globally ignored)                                                                                                             | YES      |
+| 8.4  | No bare `except:` or `except Exception: pass` (E722 not in global ruff ignore)                                                                                                           | YES      |
+| 8.5  | No `# noqa` or `# type: ignore` used to hide architectural violations — each must be documented in QUALITY_GATE_BYPASS_AUDIT.md                                                          | YES      |
+| 8.6  | basedpyright passes with `typeCheckingMode: "strict"` and `reportAny: "error"` — run via `timeout 120 basedpyright <source_dir>/`                                                        | YES      |
+| 8.7  | Import order correct — stdlib → third-party → local; no imports inside functions (except `TYPE_CHECKING` blocks)                                                                         | YES      |
+| 8.8  | `scripts/quality-gates.sh` exists and matches canonical template from codex (`quality-gates-service-template.sh` or `quality-gates-library-template.sh`)                                 | YES      |
+| 8.9  | No `                                                                                                                                                                                     |          | true` or similar bypasses in quality gate CI workflows (`quality-gates.yml`, `quality-gates-simple.yml`) | YES |
+| 8.10 | McCabe complexity ≤ 10 enforced in ruff config                                                                                                                                           | WARN     |
+| 8.11 | Ruff config uses standard rule selection (`["E", "F", "W", "I"]` minimum) — not `["I"]` only                                                                                             | YES      |
+| 8.12 | `QUALITY_GATE_BYPASS_AUDIT.md` exists at repo root, is either empty (all gates pass) or contains only genuine unsolvable exceptions with justification — no stale or unjustified entries | YES      |
+| 8.13 | No wildcard imports (`from X import *`) in production code                                                                                                                               | YES      |
+| 8.14 | `.pre-commit-config.yaml` exists in repo root with ruff (`v0.15.0`), prettier (`3.6.2`), and pre-commit-hooks (`v6.0.0`) — matching canonical instruments-service template               | YES      |
+| 8.15 | Pre-commit hooks installed via `prek install` — `.git/hooks/pre-commit` exists and delegates to pre-commit                                                                               | YES      |
+| 8.16 | Prettier configured to format TypeScript/JSON/Markdown/YAML (`types_or: [ts, tsx, javascript, jsx, json, markdown, yaml]`)                                                               | WARN     |
+| 8.17 | Library repos include `bump-library-version` pre-commit hook; non-library repos (services, UIs, PM) omit it                                                                              | YES      |
+| 8.18 | `pre-commit run --all-files` exits 0 on clean repo (no trailing whitespace, no missing newlines, ruff clean)                                                                             | YES      |
 
 ---
 
 ## SECTION 9 — TYPE SAFETY
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 9.1 | No `Any` types except in documented bypass audit file | YES |
-| 9.2 | All dict parameters typed as `dict[str, SpecificType]`, not `dict[str, Any]` | YES |
-| 9.3 | No `TypedDict` fields typed as `Any` | YES |
-| 9.4 | Protocol types used for duck typing instead of `Any` | WARN |
-| 9.5 | TypeVar used for generic functions instead of `Any` | WARN |
-| 9.6 | Built-in generics used: `list[X]`, `dict[K,V]`, `tuple[X,...]` — not `typing.List`, `typing.Dict` | WARN |
-| 9.7 | `pyrightconfig.json` exists with `typeCheckingMode: "strict"` — not "basic" or "off" | YES |
-| 9.8 | `pyrightconfig.json` `include` paths match actual source directories (not typos like `execution_services` vs `execution_service`) | YES |
-| 9.9 | No production files excluded from type checking in `pyrightconfig.json` exclude list | YES |
-| 9.10 | `reportAny` set to `"error"` not `"warning"` in pyrightconfig | YES |
-| 9.11 | No bare `dict` / `list` annotations without type parameters (use `dict[str, X]`, `list[X]`) | WARN |
+| #    | Criterion                                                                                                                         | Blocking |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 9.1  | No `Any` types except in documented bypass audit file                                                                             | YES      |
+| 9.2  | All dict parameters typed as `dict[str, SpecificType]`, not `dict[str, Any]`                                                      | YES      |
+| 9.3  | No `TypedDict` fields typed as `Any`                                                                                              | YES      |
+| 9.4  | Protocol types used for duck typing instead of `Any`                                                                              | WARN     |
+| 9.5  | TypeVar used for generic functions instead of `Any`                                                                               | WARN     |
+| 9.6  | Built-in generics used: `list[X]`, `dict[K,V]`, `tuple[X,...]` — not `typing.List`, `typing.Dict`                                 | WARN     |
+| 9.7  | `pyrightconfig.json` exists with `typeCheckingMode: "strict"` — not "basic" or "off"                                              | YES      |
+| 9.8  | `pyrightconfig.json` `include` paths match actual source directories (not typos like `execution_services` vs `execution_service`) | YES      |
+| 9.9  | No production files excluded from type checking in `pyrightconfig.json` exclude list                                              | YES      |
+| 9.10 | `reportAny` set to `"error"` not `"warning"` in pyrightconfig                                                                     | YES      |
+| 9.11 | No bare `dict` / `list` annotations without type parameters (use `dict[str, X]`, `list[X]`)                                       | WARN     |
 
 ---
 
 ## SECTION 10 — SECURITY & SECRETS
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 10.1 | No API keys, passwords, or credentials hardcoded anywhere in source | YES |
-| 10.2 | All secrets retrieved via `get_secret_client()` from `unified-cloud-interface` — not `os.getenv()` with empty fallback | YES |
-| 10.3 | No credential JSON files in repository (`.gitignore` covers `*credentials*.json`) | YES |
-| 10.4 | No hardcoded project IDs — parameterized via config class | YES |
-| 10.5 | `GOOGLE_CLOUD_PROJECT` not used as primary env var (use `GCP_PROJECT_ID`) | YES |
-| 10.6 | No `verify=False` in HTTP clients (no auth bypass flags in production code) | YES |
-| 10.7 | No `.env` files tracked in git — only `.env.example` with placeholder values | YES |
-| 10.8 | No `pickle.load`, `joblib.load`, `jsonpickle.decode` from untrusted sources — use safe serialization | YES |
-| 10.9 | No command injection: user inputs sanitized before `subprocess` / `gcloud` calls | YES |
-| 10.10 | No SQL injection: no f-string interpolation in SQL queries | YES |
-| 10.11 | All API services authenticated — no unauthenticated POST/PUT/DELETE endpoints in production | YES |
-| 10.12 | No mock authentication in production code (e.g., `"client-{anything}-key"` accepted as valid) | YES |
-| 10.13 | FastAPI Swagger/OpenAPI docs disabled in production environments (only enabled in dev/staging) | WARN |
-| 10.14 | No verbose error tracebacks returned to HTTP clients in production — sanitized error responses only | WARN |
-| 10.15 | No hardcoded CORS origins — parameterized via config, not `allow_origins=["*"]` or hardcoded domains | WARN |
-| 10.16 | PII fields tagged in schema definitions (`pii: True` metadata or equivalent) | WARN |
-| 10.17 | AUTH_FAILURE events logged with `auth_type`, `username`, `failure_reason` — no silent auth failure | YES |
-| 10.18 | SECRET_ACCESSED events logged with `secret_name`, `caller_identity`, `success` | WARN |
-| 10.19 | CONFIG_CHANGED events logged with `config_file`, `changed_by`, `authorized` | WARN |
+| #     | Criterion                                                                                                              | Blocking |
+| ----- | ---------------------------------------------------------------------------------------------------------------------- | -------- |
+| 10.1  | No API keys, passwords, or credentials hardcoded anywhere in source                                                    | YES      |
+| 10.2  | All secrets retrieved via `get_secret_client()` from `unified-cloud-interface` — not `os.getenv()` with empty fallback | YES      |
+| 10.3  | No credential JSON files in repository (`.gitignore` covers `*credentials*.json`)                                      | YES      |
+| 10.4  | No hardcoded project IDs — parameterized via config class                                                              | YES      |
+| 10.5  | `GOOGLE_CLOUD_PROJECT` not used as primary env var (use `GCP_PROJECT_ID`)                                              | YES      |
+| 10.6  | No `verify=False` in HTTP clients (no auth bypass flags in production code)                                            | YES      |
+| 10.7  | No `.env` files tracked in git — only `.env.example` with placeholder values                                           | YES      |
+| 10.8  | No `pickle.load`, `joblib.load`, `jsonpickle.decode` from untrusted sources — use safe serialization                   | YES      |
+| 10.9  | No command injection: user inputs sanitized before `subprocess` / `gcloud` calls                                       | YES      |
+| 10.10 | No SQL injection: no f-string interpolation in SQL queries                                                             | YES      |
+| 10.11 | All API services authenticated — no unauthenticated POST/PUT/DELETE endpoints in production                            | YES      |
+| 10.12 | No mock authentication in production code (e.g., `"client-{anything}-key"` accepted as valid)                          | YES      |
+| 10.13 | FastAPI Swagger/OpenAPI docs disabled in production environments (only enabled in dev/staging)                         | WARN     |
+| 10.14 | No verbose error tracebacks returned to HTTP clients in production — sanitized error responses only                    | WARN     |
+| 10.15 | No hardcoded CORS origins — parameterized via config, not `allow_origins=["*"]` or hardcoded domains                   | WARN     |
+| 10.16 | PII fields tagged in schema definitions (`pii: True` metadata or equivalent)                                           | WARN     |
+| 10.17 | AUTH_FAILURE events logged with `auth_type`, `username`, `failure_reason` — no silent auth failure                     | YES      |
+| 10.18 | SECRET_ACCESSED events logged with `secret_name`, `caller_identity`, `success`                                         | WARN     |
+| 10.19 | CONFIG_CHANGED events logged with `config_file`, `changed_by`, `authorized`                                            | WARN     |
 
 ---
 
 ## SECTION 11 — ERROR HANDLING & RESILIENCE
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 11.1 | No empty `except Exception: pass` blocks in production code | YES |
-| 11.2 | Every error type has an assigned strategy: retry / fail-fast / exit-job / exit-process / circuit-breaker | YES |
-| 11.3 | Transient errors (rate limit, network blip) use bounded retry with exponential backoff | YES |
-| 11.4 | Fatal errors (config corrupt, unrecoverable) trigger clean shutdown with FAILED lifecycle event | YES |
-| 11.5 | Circuit breakers used for upstream dependencies that fail repeatedly | WARN |
-| 11.6 | All external API errors normalized to typed error schema — no raw exception propagation across boundaries | YES |
-| 11.7 | Validation failures at API boundaries route to dead-letter queue — never silently passed through | YES |
-| 11.8 | `EnhancedError` (or equivalent typed error) used at all service boundaries — no bare `Exception` | YES |
-| 11.9 | Dead-letter records include `correlation_id` and `trace_id` for cross-service incident reconstruction | WARN |
-| 11.10 | No `try/except ImportError` fallback imports — fail loud on missing dependencies | YES |
-| 11.11 | Exception logging uses `logger.exception()` — not `logger.info(f"Error: {e}")` (preserves tracebacks) | WARN |
-| 11.12 | No silent `return None` in except blocks without logging the error | YES |
+| #     | Criterion                                                                                                 | Blocking |
+| ----- | --------------------------------------------------------------------------------------------------------- | -------- |
+| 11.1  | No empty `except Exception: pass` blocks in production code                                               | YES      |
+| 11.2  | Every error type has an assigned strategy: retry / fail-fast / exit-job / exit-process / circuit-breaker  | YES      |
+| 11.3  | Transient errors (rate limit, network blip) use bounded retry with exponential backoff                    | YES      |
+| 11.4  | Fatal errors (config corrupt, unrecoverable) trigger clean shutdown with FAILED lifecycle event           | YES      |
+| 11.5  | Circuit breakers used for upstream dependencies that fail repeatedly                                      | WARN     |
+| 11.6  | All external API errors normalized to typed error schema — no raw exception propagation across boundaries | YES      |
+| 11.7  | Validation failures at API boundaries route to dead-letter queue — never silently passed through          | YES      |
+| 11.8  | `EnhancedError` (or equivalent typed error) used at all service boundaries — no bare `Exception`          | YES      |
+| 11.9  | Dead-letter records include `correlation_id` and `trace_id` for cross-service incident reconstruction     | WARN     |
+| 11.10 | No `try/except ImportError` fallback imports — fail loud on missing dependencies                          | YES      |
+| 11.11 | Exception logging uses `logger.exception()` — not `logger.info(f"Error: {e}")` (preserves tracebacks)     | WARN     |
+| 11.12 | No silent `return None` in except blocks without logging the error                                        | YES      |
 
 ---
 
 ## SECTION 12 — OBSERVABILITY & LOGGING
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 12.1 | No `print()` statements in production code — all output through structured logger | YES |
-| 12.2 | All 11 batch lifecycle events emitted in correct order: STARTED → VALIDATION_STARTED → VALIDATION_COMPLETED → DATA_INGESTION_STARTED → DATA_INGESTION_COMPLETED → PROCESSING_STARTED → PROCESSING_COMPLETED → PERSISTENCE_STARTED → PERSISTENCE_COMPLETED → STOPPED / FAILED | YES |
-| 12.3 | All 12 live lifecycle events emitted (batch events plus DATA_BROADCAST) | YES |
-| 12.4 | Service never exits without logging STOPPED or FAILED | YES |
-| 12.5 | No `setup_cloud_logging` — use structured event logging via `unified_events_interface` | YES |
-| 12.6 | `setup_events(service_name=...)` called in every service's CLI entrypoint | YES |
-| 12.7 | `datetime.now(timezone.utc)` used — never `datetime.now()`, `datetime.utcnow()`, or `datetime.today()` | YES |
-| 12.8 | All timestamps in stored schemas are timezone-aware UTC | YES |
-| 12.9 | No `logging.basicConfig()` in library code (clobbers root logger configuration) | YES |
-| 12.10 | No f-string logging (`logger.info(f"...")`) — use lazy `%s` formatting or `extra={}` for structured data | WARN |
-| 12.11 | Events logged with structured metadata (not free-form strings) | WARN |
-| 12.12 | Correlation IDs propagated through all events for trace reconstruction | WARN |
-| 12.13 | Health check endpoints standardized: consistent path (`/health`) and response shape (`{"status": "healthy"}`) across all services | WARN |
-| 12.14 | Metrics / health checks exist for live services | WARN |
+| #     | Criterion                                                                                                                                                                                                                                                                    | Blocking |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 12.1  | No `print()` statements in production code — all output through structured logger                                                                                                                                                                                            | YES      |
+| 12.2  | All 11 batch lifecycle events emitted in correct order: STARTED → VALIDATION_STARTED → VALIDATION_COMPLETED → DATA_INGESTION_STARTED → DATA_INGESTION_COMPLETED → PROCESSING_STARTED → PROCESSING_COMPLETED → PERSISTENCE_STARTED → PERSISTENCE_COMPLETED → STOPPED / FAILED | YES      |
+| 12.3  | All 12 live lifecycle events emitted (batch events plus DATA_BROADCAST)                                                                                                                                                                                                      | YES      |
+| 12.4  | Service never exits without logging STOPPED or FAILED                                                                                                                                                                                                                        | YES      |
+| 12.5  | No `setup_cloud_logging` — use structured event logging via `unified_events_interface`                                                                                                                                                                                       | YES      |
+| 12.6  | `setup_events(service_name=...)` called in every service's CLI entrypoint                                                                                                                                                                                                    | YES      |
+| 12.7  | `datetime.now(timezone.utc)` used — never `datetime.now()`, `datetime.utcnow()`, or `datetime.today()`                                                                                                                                                                       | YES      |
+| 12.8  | All timestamps in stored schemas are timezone-aware UTC                                                                                                                                                                                                                      | YES      |
+| 12.9  | No `logging.basicConfig()` in library code (clobbers root logger configuration)                                                                                                                                                                                              | YES      |
+| 12.10 | No f-string logging (`logger.info(f"...")`) — use lazy `%s` formatting or `extra={}` for structured data                                                                                                                                                                     | WARN     |
+| 12.11 | Events logged with structured metadata (not free-form strings)                                                                                                                                                                                                               | WARN     |
+| 12.12 | Correlation IDs propagated through all events for trace reconstruction                                                                                                                                                                                                       | WARN     |
+| 12.13 | Health check endpoints standardized: consistent path (`/health`) and response shape (`{"status": "healthy"}`) across all services                                                                                                                                            | WARN     |
+| 12.14 | Metrics / health checks exist for live services                                                                                                                                                                                                                              | WARN     |
 
 ---
 
 ## SECTION 13 — CONFIGURATION & ENVIRONMENT
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 13.1 | No `os.getenv()` in service code — all config via typed config class (e.g., Pydantic BaseSettings) | YES |
-| 13.2 | No `os.getenv('KEY', '')` empty fallbacks — required values must fail loudly if absent | YES |
-| 13.3 | No `os.environ["KEY"]` at module level / import time — deferred to config class initialization | YES |
-| 13.4 | Config class validates all required fields at startup — not lazily on first use | YES |
-| 13.5 | No hardcoded environment-specific values (bucket names, topic names, project IDs) | YES |
-| 13.6 | Bucket / topic names parameterized by environment (e.g., `market-data-{category}-{project_id}`) | YES |
-| 13.7 | Config extends `UnifiedCloudConfig` from `unified-config-interface` per codex | YES |
-| 13.8 | `CLOUD_PROVIDER` env var respected for GCP/AWS switching (`cloud-agnostic.mdc`) | WARN |
-| 13.9 | `MAX_WORKERS` set based on workload type: I/O-bound=16, CPU-bound=1-3 | WARN |
-| 13.10 | `.env.example` exists documenting all required env vars with placeholder values | WARN |
+| #     | Criterion                                                                                          | Blocking |
+| ----- | -------------------------------------------------------------------------------------------------- | -------- |
+| 13.1  | No `os.getenv()` in service code — all config via typed config class (e.g., Pydantic BaseSettings) | YES      |
+| 13.2  | No `os.getenv('KEY', '')` empty fallbacks — required values must fail loudly if absent             | YES      |
+| 13.3  | No `os.environ["KEY"]` at module level / import time — deferred to config class initialization     | YES      |
+| 13.4  | Config class validates all required fields at startup — not lazily on first use                    | YES      |
+| 13.5  | No hardcoded environment-specific values (bucket names, topic names, project IDs)                  | YES      |
+| 13.6  | Bucket / topic names parameterized by environment (e.g., `market-data-{category}-{project_id}`)    | YES      |
+| 13.7  | Config extends `UnifiedCloudConfig` from `unified-config-interface` per codex                      | YES      |
+| 13.8  | `CLOUD_PROVIDER` env var respected for GCP/AWS switching (`cloud-agnostic.mdc`)                    | WARN     |
+| 13.9  | `MAX_WORKERS` set based on workload type: I/O-bound=16, CPU-bound=1-3                              | WARN     |
+| 13.10 | `.env.example` exists documenting all required env vars with placeholder values                    | WARN     |
 
 ---
 
@@ -320,57 +327,57 @@ Checks for documentation drift between codex standards and actual implementation
 
 ### 14.1 Batch-Live Symmetry
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 14.1.1 | Service supports `--mode batch|live` with a single shared engine (≥90% shared logic) | YES |
-| 14.1.2 | No `if mode == "batch": ... else: ...` inside engine business logic | YES |
-| 14.1.3 | Only 4 seams differ by mode: data source, data sink, persistence, trigger | YES |
-| 14.1.4 | Business logic, validation, schema, event logging are mode-agnostic | YES |
+| #      | Criterion                                                                 | Blocking                                              |
+| ------ | ------------------------------------------------------------------------- | ----------------------------------------------------- | --- |
+| 14.1.1 | Service supports `--mode batch                                            | live` with a single shared engine (≥90% shared logic) | YES |
+| 14.1.2 | No `if mode == "batch": ... else: ...` inside engine business logic       | YES                                                   |
+| 14.1.3 | Only 4 seams differ by mode: data source, data sink, persistence, trigger | YES                                                   |
+| 14.1.4 | Business logic, validation, schema, event logging are mode-agnostic       | YES                                                   |
 
 ### 14.2 Service Architecture
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 14.2.1 | Services are thin orchestrators — no business logic in CLI or main entry point | WARN |
-| 14.2.2 | Engine / adapters / CLI structure enforced | WARN |
-| 14.2.3 | Adapters are thin — delegate normalization to unified libraries, not reimplemented per-service | YES |
-| 14.2.4 | No duplicate schema definitions that already exist in shared contracts library | YES |
-| 14.2.5 | No parallel code paths (old + new schema, old + new import) — single source of truth per function | YES |
-| 14.2.6 | Deprecated code deleted, not commented out or aliased | YES |
+| #      | Criterion                                                                                         | Blocking |
+| ------ | ------------------------------------------------------------------------------------------------- | -------- |
+| 14.2.1 | Services are thin orchestrators — no business logic in CLI or main entry point                    | WARN     |
+| 14.2.2 | Engine / adapters / CLI structure enforced                                                        | WARN     |
+| 14.2.3 | Adapters are thin — delegate normalization to unified libraries, not reimplemented per-service    | YES      |
+| 14.2.4 | No duplicate schema definitions that already exist in shared contracts library                    | YES      |
+| 14.2.5 | No parallel code paths (old + new schema, old + new import) — single source of truth per function | YES      |
+| 14.2.6 | Deprecated code deleted, not commented out or aliased                                             | YES      |
 
 ### 14.3 Cloud-Agnostic Abstractions
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 14.3.1 | Cloud I/O through `get_storage_client()`, `get_secret_client()` from `unified-cloud-interface` — no direct `from google.cloud import` in production code | YES |
-| 14.3.2 | No direct `from google.cloud import pubsub_v1` — use `unified-cloud-interface` PubSub abstraction | YES |
-| 14.3.3 | No direct `import boto3` in production code (except within `unified-cloud-interface` implementations) | YES |
-| 14.3.4 | GCS paths use `key=value` format (`day={date}`, `timeframe={tf}`) with day-first ordering | YES |
+| #      | Criterion                                                                                                                                                | Blocking |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 14.3.1 | Cloud I/O through `get_storage_client()`, `get_secret_client()` from `unified-cloud-interface` — no direct `from google.cloud import` in production code | YES      |
+| 14.3.2 | No direct `from google.cloud import pubsub_v1` — use `unified-cloud-interface` PubSub abstraction                                                        | YES      |
+| 14.3.3 | No direct `import boto3` in production code (except within `unified-cloud-interface` implementations)                                                    | YES      |
+| 14.3.4 | GCS paths use `key=value` format (`day={date}`, `timeframe={tf}`) with day-first ordering                                                                | YES      |
 
 ### 14.4 Async & Concurrency
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 14.4.1 | `aiohttp` used for HTTP in async contexts — no `requests.get()` inside `async def` | YES |
-| 14.4.2 | `asyncio.sleep()` used — not `time.sleep()` in async functions | YES |
-| 14.4.3 | No `asyncio.run()` called inside a running event loop | YES |
-| 14.4.4 | `ClientSession` reused — not created per-request | WARN |
-| 14.4.5 | `ThreadPoolExecutor` always given `max_workers` limit | YES |
+| #      | Criterion                                                                          | Blocking |
+| ------ | ---------------------------------------------------------------------------------- | -------- |
+| 14.4.1 | `aiohttp` used for HTTP in async contexts — no `requests.get()` inside `async def` | YES      |
+| 14.4.2 | `asyncio.sleep()` used — not `time.sleep()` in async functions                     | YES      |
+| 14.4.3 | No `asyncio.run()` called inside a running event loop                              | YES      |
+| 14.4.4 | `ClientSession` reused — not created per-request                                   | WARN     |
+| 14.4.5 | `ThreadPoolExecutor` always given `max_workers` limit                              | YES      |
 
 ---
 
 ## SECTION 15 — FILE SIZE & COMPLEXITY
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 15.1 | No source file exceeds 900 lines (warn at 700) | YES |
-| 15.2 | No function exceeds 100 lines | WARN |
-| 15.3 | No method (inside class) exceeds 50 lines | WARN |
-| 15.4 | No class exceeds 500 lines | WARN |
-| 15.5 | Files split by Single Responsibility Principle (no god files mixing adapters + schemas + CLI) | WARN |
-| 15.6 | No functions over 200 lines in production code (extreme oversized — automatic FAIL) | YES |
-| 15.7 | No near-duplicate files serving the same purpose in different locations | WARN |
-| 15.8 | Static data extracted to YAML/JSON — not inline Python dicts >500 lines | WARN |
+| #    | Criterion                                                                                     | Blocking |
+| ---- | --------------------------------------------------------------------------------------------- | -------- |
+| 15.1 | No source file exceeds 900 lines (warn at 700)                                                | YES      |
+| 15.2 | No function exceeds 100 lines                                                                 | WARN     |
+| 15.3 | No method (inside class) exceeds 50 lines                                                     | WARN     |
+| 15.4 | No class exceeds 500 lines                                                                    | WARN     |
+| 15.5 | Files split by Single Responsibility Principle (no god files mixing adapters + schemas + CLI) | WARN     |
+| 15.6 | No functions over 200 lines in production code (extreme oversized — automatic FAIL)           | YES      |
+| 15.7 | No near-duplicate files serving the same purpose in different locations                       | WARN     |
+| 15.8 | Static data extracted to YAML/JSON — not inline Python dicts >500 lines                       | WARN     |
 
 ---
 
@@ -378,69 +385,69 @@ Checks for documentation drift between codex standards and actual implementation
 
 ### 16.1 Schema Ownership
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 16.1.1 | Three-tier schema separation: external (api-contracts) → normalized (canonical) → internal (service) | YES |
-| 16.1.2 | Each service owns its output schema — not defined in shared library | YES |
-| 16.1.3 | `validate_timestamp_date_alignment()` called before every storage write | YES |
-| 16.1.4 | `schema_version` field present on all internal contract models | WARN |
-| 16.1.5 | `SchemaRegistry` documents compatibility matrix for all versioned schemas | WARN |
-| 16.1.6 | Breaking changes (field removal, type narrowing, Optional→required) require version bump | YES |
+| #      | Criterion                                                                                            | Blocking |
+| ------ | ---------------------------------------------------------------------------------------------------- | -------- |
+| 16.1.1 | Three-tier schema separation: external (api-contracts) → normalized (canonical) → internal (service) | YES      |
+| 16.1.2 | Each service owns its output schema — not defined in shared library                                  | YES      |
+| 16.1.3 | `validate_timestamp_date_alignment()` called before every storage write                              | YES      |
+| 16.1.4 | `schema_version` field present on all internal contract models                                       | WARN     |
+| 16.1.5 | `SchemaRegistry` documents compatibility matrix for all versioned schemas                            | WARN     |
+| 16.1.6 | Breaking changes (field removal, type narrowing, Optional→required) require version bump             | YES      |
 
 ### 16.2 External API Contracts
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 16.2.1 | Every external API response parsed through a Pydantic model before any processing | YES |
-| 16.2.2 | Per-venue schemas exist for all data types the system consumes | YES |
-| 16.2.3 | VCR cassettes exist for all external API interactions used in tests | WARN |
-| 16.2.4 | VCR cassette coverage ≥ 80% of external endpoints (not relying on live calls in CI) | WARN |
-| 16.2.5 | Consumer-driven contract tests: consuming services declare `consumed_schemas.py` | WARN |
-| 16.2.6 | `unified-api-contracts` version alignment checked per consumer | WARN |
+| #      | Criterion                                                                           | Blocking |
+| ------ | ----------------------------------------------------------------------------------- | -------- |
+| 16.2.1 | Every external API response parsed through a Pydantic model before any processing   | YES      |
+| 16.2.2 | Per-venue schemas exist for all data types the system consumes                      | YES      |
+| 16.2.3 | VCR cassettes exist for all external API interactions used in tests                 | WARN     |
+| 16.2.4 | VCR cassette coverage ≥ 80% of external endpoints (not relying on live calls in CI) | WARN     |
+| 16.2.5 | Consumer-driven contract tests: consuming services declare `consumed_schemas.py`    | WARN     |
+| 16.2.6 | `unified-api-contracts` version alignment checked per consumer                      | WARN     |
 
 ### 16.3 Canonical Schema Completeness
 
 Verify the following data type groups have canonical schemas with appropriate Optional fields:
 
-| Data Type | Required Fields | Optional Pattern |
-|-----------|----------------|-----------------|
-| Trade | instrument_key, venue, timestamp, price, size, side, trade_id | is_liquidation |
-| OrderBook | instrument_key, venue, timestamp, bids, asks, levels | — |
-| OHLCV | instrument_key, venue, timestamp, interval, open/high/low/close, volume, source_enum | vwap, trade_count |
-| DerivativeTicker | instrument_key, venue, timestamp, mark_price, index_price | funding_rate, open_interest |
-| Liquidation | instrument_key, venue, timestamp, side, price, size | order_id |
-| OptionsChain | underlying, expiry, strike, put_call, bid, ask | iv, greeks, oi, volume |
-| LiquidityPool | pool_address, protocol, chain, token0/1, fee_tier, reserves, tvl | apy, tick fields (V3) |
-| LendingRate | protocol, chain, asset, supply_apy, borrow_apy_variable | borrow_apy_stable |
-| OraclePrice | feed_id, protocol, asset, price, publish_time | confidence |
-| InstrumentRecord | instrument_key, venue, asset_class, instrument_type, base, quote | expiry, strike, pool_address |
-| Position (CeFi) | instrument_key, venue, side, size, entry_price, mark_price, unrealized_pnl | liquidation_price |
-| Position (DeFi LP) | pool_address, protocol, token amounts, liquidity, fee_income | in_range, tick bounds |
+| Data Type          | Required Fields                                                                      | Optional Pattern             |
+| ------------------ | ------------------------------------------------------------------------------------ | ---------------------------- |
+| Trade              | instrument_key, venue, timestamp, price, size, side, trade_id                        | is_liquidation               |
+| OrderBook          | instrument_key, venue, timestamp, bids, asks, levels                                 | —                            |
+| OHLCV              | instrument_key, venue, timestamp, interval, open/high/low/close, volume, source_enum | vwap, trade_count            |
+| DerivativeTicker   | instrument_key, venue, timestamp, mark_price, index_price                            | funding_rate, open_interest  |
+| Liquidation        | instrument_key, venue, timestamp, side, price, size                                  | order_id                     |
+| OptionsChain       | underlying, expiry, strike, put_call, bid, ask                                       | iv, greeks, oi, volume       |
+| LiquidityPool      | pool_address, protocol, chain, token0/1, fee_tier, reserves, tvl                     | apy, tick fields (V3)        |
+| LendingRate        | protocol, chain, asset, supply_apy, borrow_apy_variable                              | borrow_apy_stable            |
+| OraclePrice        | feed_id, protocol, asset, price, publish_time                                        | confidence                   |
+| InstrumentRecord   | instrument_key, venue, asset_class, instrument_type, base, quote                     | expiry, strike, pool_address |
+| Position (CeFi)    | instrument_key, venue, side, size, entry_price, mark_price, unrealized_pnl           | liquidation_price            |
+| Position (DeFi LP) | pool_address, protocol, token amounts, liquidity, fee_income                         | in_range, tick bounds        |
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 16.3.1 | All consumed data types have a canonical schema | YES |
-| 16.3.2 | Absent fields (venue does not provide) are `Optional` — not absent from schema | YES |
-| 16.3.3 | `source` enum on OHLCV: `NATIVE_CANDLE | COMPUTED_FROM_TICKS` | WARN |
-| 16.3.4 | No monolithic position schema mixing CeFi + DeFi | WARN |
+| #      | Criterion                                                                      | Blocking             |
+| ------ | ------------------------------------------------------------------------------ | -------------------- | ---- |
+| 16.3.1 | All consumed data types have a canonical schema                                | YES                  |
+| 16.3.2 | Absent fields (venue does not provide) are `Optional` — not absent from schema | YES                  |
+| 16.3.3 | `source` enum on OHLCV: `NATIVE_CANDLE                                         | COMPUTED_FROM_TICKS` | WARN |
+| 16.3.4 | No monolithic position schema mixing CeFi + DeFi                               | WARN                 |
 
 ### 16.4 Dead-Letter & DLQ
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 16.4.1 | Dead-letter queue exists for failed validation records | YES |
-| 16.4.2 | `DeadLetterRecord` schema includes: original_payload, error_type, error_message, venue, timestamp | YES |
-| 16.4.3 | `correlation_id` and `trace_id` in `DeadLetterRecord` for tracing | WARN |
-| 16.4.4 | DLQ depth monitored and alerted | WARN |
+| #      | Criterion                                                                                         | Blocking |
+| ------ | ------------------------------------------------------------------------------------------------- | -------- |
+| 16.4.1 | Dead-letter queue exists for failed validation records                                            | YES      |
+| 16.4.2 | `DeadLetterRecord` schema includes: original_payload, error_type, error_message, venue, timestamp | YES      |
+| 16.4.3 | `correlation_id` and `trace_id` in `DeadLetterRecord` for tracing                                 | WARN     |
+| 16.4.4 | DLQ depth monitored and alerted                                                                   | WARN     |
 
 ### 16.5 Connectivity & Lifecycle Schemas
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 16.5.1 | WebSocket lifecycle schemas exist per venue: connect, disconnect, reconnect, error, ping/pong, subscribe ack | WARN |
-| 16.5.2 | REST connectivity error schemas exist: timeout, rate limit, maintenance mode, connection refused | WARN |
-| 16.5.3 | `SCHEMA_VERSIONS.md` exists documenting which external SDK versions schemas were validated against | WARN |
-| 16.5.4 | Endpoint-to-schema association matrix documented: every schema class tied to its source endpoint/channel | WARN |
+| #      | Criterion                                                                                                    | Blocking |
+| ------ | ------------------------------------------------------------------------------------------------------------ | -------- |
+| 16.5.1 | WebSocket lifecycle schemas exist per venue: connect, disconnect, reconnect, error, ping/pong, subscribe ack | WARN     |
+| 16.5.2 | REST connectivity error schemas exist: timeout, rate limit, maintenance mode, connection refused             | WARN     |
+| 16.5.3 | `SCHEMA_VERSIONS.md` exists documenting which external SDK versions schemas were validated against           | WARN     |
+| 16.5.4 | Endpoint-to-schema association matrix documented: every schema class tied to its source endpoint/channel     | WARN     |
 
 ---
 
@@ -448,32 +455,32 @@ Verify the following data type groups have canonical schemas with appropriate Op
 
 ### 17.1 Python Testing
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 17.1.1 | Test coverage ≥ 70% (unit + integration) per codex canonical target | YES |
-| 17.1.2 | `tests/unit/test_event_logging.py` exists and is not skipped | YES |
-| 17.1.3 | Unit tests never skip due to missing cloud credentials — mocks used instead | YES |
-| 17.1.4 | GCP auth uses `google.auth.default()` pattern — not `pytest.skip` on missing credentials file | YES |
-| 17.1.5 | Integration tests marked `@pytest.mark.integration` and skipped gracefully without credentials | YES |
-| 17.1.6 | No `central-element-323112` or real project IDs in tests — use `test-project` placeholder | YES |
-| 17.1.7 | No tests with zero assertions (`assert True` placeholders or empty test functions) | YES |
-| 17.1.8 | No duplicate fixtures across test files — singleton fixtures in `conftest.py` | WARN |
-| 17.1.9 | `conftest.py` exists with autouse `mock_secret_client` fixture | WARN |
-| 17.1.10 | VCR cassettes used for external API tests — no live calls in CI | WARN |
-| 17.1.11 | Python version alignment: workflows, Cloud Build, local quality gates, and `pyproject.toml` all specify same Python version (3.13) | YES |
+| #       | Criterion                                                                                                                          | Blocking |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 17.1.1  | Test coverage ≥ 70% (unit + integration) per codex canonical target                                                                | YES      |
+| 17.1.2  | `tests/unit/test_event_logging.py` exists and is not skipped                                                                       | YES      |
+| 17.1.3  | Unit tests never skip due to missing cloud credentials — mocks used instead                                                        | YES      |
+| 17.1.4  | GCP auth uses `google.auth.default()` pattern — not `pytest.skip` on missing credentials file                                      | YES      |
+| 17.1.5  | Integration tests marked `@pytest.mark.integration` and skipped gracefully without credentials                                     | YES      |
+| 17.1.6  | No `central-element-323112` or real project IDs in tests — use `test-project` placeholder                                          | YES      |
+| 17.1.7  | No tests with zero assertions (`assert True` placeholders or empty test functions)                                                 | YES      |
+| 17.1.8  | No duplicate fixtures across test files — singleton fixtures in `conftest.py`                                                      | WARN     |
+| 17.1.9  | `conftest.py` exists with autouse `mock_secret_client` fixture                                                                     | WARN     |
+| 17.1.10 | VCR cassettes used for external API tests — no live calls in CI                                                                    | WARN     |
+| 17.1.11 | Python version alignment: workflows, Cloud Build, local quality gates, and `pyproject.toml` all specify same Python version (3.13) | YES      |
 
 ### 17.2 TypeScript Testing & Quality Gates
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 17.2.1 | UI repos have `scripts/quality-gates.sh` using TypeScript checks (not Python ruff/basedpyright) | YES |
-| 17.2.2 | `tsconfig.json` has `strict: true`, `noImplicitAny: true`, `strictNullChecks: true`, `strictFunctionTypes: true` | YES |
-| 17.2.3 | `tsc --noEmit` passes with zero errors (TypeScript equivalent of basedpyright strict) | YES |
-| 17.2.4 | `package.json` has `"typecheck": "tsc --noEmit"` and `"lint": "eslint ."` scripts | YES |
-| 17.2.5 | ESLint configured and passing (`npm run lint`) | YES |
-| 17.2.6 | UI repos have at least smoke tests (vitest or Playwright) | WARN |
-| 17.2.7 | No Python quality gate tools (ruff, basedpyright, pytest) in UI repo scripts | YES |
-| 17.2.8 | `package.json` `name` field matches repo name (no stale names like `backtest-ui`) | WARN |
+| #      | Criterion                                                                                                        | Blocking |
+| ------ | ---------------------------------------------------------------------------------------------------------------- | -------- |
+| 17.2.1 | UI repos have `scripts/quality-gates.sh` using TypeScript checks (not Python ruff/basedpyright)                  | YES      |
+| 17.2.2 | `tsconfig.json` has `strict: true`, `noImplicitAny: true`, `strictNullChecks: true`, `strictFunctionTypes: true` | YES      |
+| 17.2.3 | `tsc --noEmit` passes with zero errors (TypeScript equivalent of basedpyright strict)                            | YES      |
+| 17.2.4 | `package.json` has `"typecheck": "tsc --noEmit"` and `"lint": "eslint ."` scripts                                | YES      |
+| 17.2.5 | ESLint configured and passing (`npm run lint`)                                                                   | YES      |
+| 17.2.6 | UI repos have at least smoke tests (vitest or Playwright)                                                        | WARN     |
+| 17.2.7 | No Python quality gate tools (ruff, basedpyright, pytest) in UI repo scripts                                     | YES      |
+| 17.2.8 | `package.json` `name` field matches repo name (no stale names like `backtest-ui`)                                | WARN     |
 
 ---
 
@@ -485,76 +492,76 @@ Verify the following data type groups have canonical schemas with appropriate Op
 
 Validates `runtime-topology.yaml` against actual implementations.
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 18.1 | `runtime-topology.yaml` version field current and matches deployed version | YES |
-| 18.2 | All service clusters in topology match manifest service repos (no phantom services, no missing services) | YES |
-| 18.3 | Transport modes per edge match actual implementations: batch=GCS, live=PubSub, co_located=in_memory | YES |
-| 18.4 | Service-to-service flows listed in `service_flows` match actual data dependencies in code | YES |
-| 18.5 | PubSub topic naming follows templates defined in topology | WARN |
-| 18.6 | All services persist to GCS regardless of transport mode (dual write in live mode) | YES |
-| 18.7 | Redis used only by execution-service for hot transient state — not as transport or persistence | WARN |
-| 18.8 | `RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` regenerated and matches current topology | WARN |
-| 18.9 | No service-to-service Python imports that should be runtime interactions per topology | YES |
-| 18.10 | Co-location rules match deployment config (only services in `co_located_vm` profile share in_memory transport) | WARN |
+| #     | Criterion                                                                                                      | Blocking |
+| ----- | -------------------------------------------------------------------------------------------------------------- | -------- |
+| 18.1  | `runtime-topology.yaml` version field current and matches deployed version                                     | YES      |
+| 18.2  | All service clusters in topology match manifest service repos (no phantom services, no missing services)       | YES      |
+| 18.3  | Transport modes per edge match actual implementations: batch=GCS, live=PubSub, co_located=in_memory            | YES      |
+| 18.4  | Service-to-service flows listed in `service_flows` match actual data dependencies in code                      | YES      |
+| 18.5  | PubSub topic naming follows templates defined in topology                                                      | WARN     |
+| 18.6  | All services persist to GCS regardless of transport mode (dual write in live mode)                             | YES      |
+| 18.7  | Redis used only by execution-service for hot transient state — not as transport or persistence                 | WARN     |
+| 18.8  | `RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` regenerated and matches current topology                                 | WARN     |
+| 18.9  | No service-to-service Python imports that should be runtime interactions per topology                          | YES      |
+| 18.10 | Co-location rules match deployment config (only services in `co_located_vm` profile share in_memory transport) | WARN     |
 
 ---
 
 ## SECTION 19 — DATA FEED UNIVERSE COMPLETENESS
 
-*Applicable to systems with multi-venue market data ingestion.*
+_Applicable to systems with multi-venue market data ingestion._
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 19.1 | api-contracts schema exists for every data type per supported venue | YES |
-| 19.2 | Normalizer function exists in adapter for each confirmed data type | YES |
-| 19.3 | Confirmed data types have VCR cassette test (not live call) | WARN |
-| 19.4 | Absent data types documented in `VenueCapabilities` — not just missing | YES |
-| 19.5 | Canonical output identical whether data sourced from aggregator (Tardis/CCXT) or direct exchange WS | YES |
-| 19.6 | Source choice is a config concern, not hardcoded in engine | YES |
-| 19.7 | DeFi schemas support V2/V3/V4 liquidity pools (V3-specific fields Optional) | WARN |
-| 19.8 | Lending schemas include: supply APY, borrow APY, utilization, health factor, LTV | WARN |
-| 19.9 | Oracle price schemas cover both Pyth and Chainlink formats | WARN |
-| 19.10 | Order lifecycle state machine: `PENDING_NEW → NEW → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED / EXPIRED` | WARN |
-| 19.11 | Sports data schemas: LiveOddsUpdate, LiveMatchState, bookmaker schemas (22 bookmakers in USEI) | WARN |
-| 19.12 | Per-venue order type support declared in `VenueCapabilities` schema | WARN |
+| #     | Criterion                                                                                                       | Blocking |
+| ----- | --------------------------------------------------------------------------------------------------------------- | -------- |
+| 19.1  | api-contracts schema exists for every data type per supported venue                                             | YES      |
+| 19.2  | Normalizer function exists in adapter for each confirmed data type                                              | YES      |
+| 19.3  | Confirmed data types have VCR cassette test (not live call)                                                     | WARN     |
+| 19.4  | Absent data types documented in `VenueCapabilities` — not just missing                                          | YES      |
+| 19.5  | Canonical output identical whether data sourced from aggregator (Tardis/CCXT) or direct exchange WS             | YES      |
+| 19.6  | Source choice is a config concern, not hardcoded in engine                                                      | YES      |
+| 19.7  | DeFi schemas support V2/V3/V4 liquidity pools (V3-specific fields Optional)                                     | WARN     |
+| 19.8  | Lending schemas include: supply APY, borrow APY, utilization, health factor, LTV                                | WARN     |
+| 19.9  | Oracle price schemas cover both Pyth and Chainlink formats                                                      | WARN     |
+| 19.10 | Order lifecycle state machine: `PENDING_NEW → NEW → PARTIALLY_FILLED → FILLED / CANCELLED / REJECTED / EXPIRED` | WARN     |
+| 19.11 | Sports data schemas: LiveOddsUpdate, LiveMatchState, bookmaker schemas (22 bookmakers in USEI)                  | WARN     |
+| 19.12 | Per-venue order type support declared in `VenueCapabilities` schema                                             | WARN     |
 
 ---
 
 ## SECTION 20 — TECHNICAL DEBT TRACKING
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 20.1 | `# type: ignore` suppression count tracked per repo and trending downward from previous audit | WARN |
-| 20.2 | `Any` type usage count tracked per repo and trending downward | YES |
-| 20.3 | Skipped test count tracked with justification for each skip | WARN |
-| 20.4 | `except ImportError` fallback count tracked (target: zero in production code) | YES |
-| 20.5 | `except Exception: pass` count tracked (target: zero) | YES |
-| 20.6 | Files exceeding 900-line limit tracked with refactoring plan | WARN |
-| 20.7 | Functions exceeding 200-line limit tracked with split plan | WARN |
-| 20.8 | Missing return type annotations tracked (target: <20% missing) | WARN |
-| 20.9 | Dead code (unused functions, commented-out blocks) tracked and scheduled for removal | WARN |
-| 20.10 | `QUALITY_GATE_BYPASS_AUDIT.md` workspace aggregate at codex level (`10-audit/QUALITY_GATE_BYPASS_AUDIT.md`) updated quarterly | WARN |
-| 20.11 | Per-repo `QUALITY_GATE_BYPASS_AUDIT.md` entries are either empty or contain only genuine unsolvable exceptions — no stale entries, no lazy bypasses | YES |
-| 20.12 | Coverage thresholds below 70% tracked per repo with remediation timeline | WARN |
+| #     | Criterion                                                                                                                                           | Blocking |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 20.1  | `# type: ignore` suppression count tracked per repo and trending downward from previous audit                                                       | WARN     |
+| 20.2  | `Any` type usage count tracked per repo and trending downward                                                                                       | YES      |
+| 20.3  | Skipped test count tracked with justification for each skip                                                                                         | WARN     |
+| 20.4  | `except ImportError` fallback count tracked (target: zero in production code)                                                                       | YES      |
+| 20.5  | `except Exception: pass` count tracked (target: zero)                                                                                               | YES      |
+| 20.6  | Files exceeding 900-line limit tracked with refactoring plan                                                                                        | WARN     |
+| 20.7  | Functions exceeding 200-line limit tracked with split plan                                                                                          | WARN     |
+| 20.8  | Missing return type annotations tracked (target: <20% missing)                                                                                      | WARN     |
+| 20.9  | Dead code (unused functions, commented-out blocks) tracked and scheduled for removal                                                                | WARN     |
+| 20.10 | `QUALITY_GATE_BYPASS_AUDIT.md` workspace aggregate at codex level (`10-audit/QUALITY_GATE_BYPASS_AUDIT.md`) updated quarterly                       | WARN     |
+| 20.11 | Per-repo `QUALITY_GATE_BYPASS_AUDIT.md` entries are either empty or contain only genuine unsolvable exceptions — no stale entries, no lazy bypasses | YES      |
+| 20.12 | Coverage thresholds below 70% tracked per repo with remediation timeline                                                                            | WARN     |
 
 ---
 
 ## SECTION 21 — SAFETY & RISK CONTROLS
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 21.1 | Position limits enforced before order submission | YES |
-| 21.2 | Margin state checked before every leveraged trade | YES |
-| 21.3 | `MarginState` fields all non-optional and required from every adapter | YES |
-| 21.4 | Gas cost estimated before every DeFi transaction — never unlimited gas | YES |
-| 21.5 | Slippage tolerance enforced on all DEX swaps | YES |
-| 21.6 | `health_factor` checked before additional borrowing (DeFi) | YES |
-| 21.7 | Liquidation threshold monitored with alerts | WARN |
-| 21.8 | Circuit breaker exists for P&L drawdown limits | WARN |
-| 21.9 | All order amounts validated against tick size and lot size constraints | YES |
-| 21.10 | Kill switch topology matches `runtime-topology.yaml` `kill_switches` section | WARN |
-| 21.11 | Regulatory retention periods defined for trade records (min 7 years for most jurisdictions) | WARN |
+| #     | Criterion                                                                                   | Blocking |
+| ----- | ------------------------------------------------------------------------------------------- | -------- |
+| 21.1  | Position limits enforced before order submission                                            | YES      |
+| 21.2  | Margin state checked before every leveraged trade                                           | YES      |
+| 21.3  | `MarginState` fields all non-optional and required from every adapter                       | YES      |
+| 21.4  | Gas cost estimated before every DeFi transaction — never unlimited gas                      | YES      |
+| 21.5  | Slippage tolerance enforced on all DEX swaps                                                | YES      |
+| 21.6  | `health_factor` checked before additional borrowing (DeFi)                                  | YES      |
+| 21.7  | Liquidation threshold monitored with alerts                                                 | WARN     |
+| 21.8  | Circuit breaker exists for P&L drawdown limits                                              | WARN     |
+| 21.9  | All order amounts validated against tick size and lot size constraints                      | YES      |
+| 21.10 | Kill switch topology matches `runtime-topology.yaml` `kill_switches` section                | WARN     |
+| 21.11 | Regulatory retention periods defined for trade records (min 7 years for most jurisdictions) | WARN     |
 
 ---
 
@@ -564,39 +571,40 @@ Validates `runtime-topology.yaml` against actual implementations.
 
 ## SECTION 22 — CI/CD & QUICKMERGE PIPELINE
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 22.1 | Quality gates run INSIDE the built Docker image — not by cloning source in CI | YES |
-| 22.2 | Image pushed only after tests pass | YES |
-| 22.3 | Library version bumped only by GitHub Action (`version-bump.yml`) on merge — not manual | YES |
-| 22.4 | Branch protection blocks direct push to main | YES |
-| 22.5 | Quickmerge used for all pushes — never standalone quality gates or bare `git push` | YES |
-| 22.6 | `--dep-branch` used in quickmerge when dependencies differ from main | YES |
-| 22.7 | Pre-flight audit runs before quality gates (path dependency uncommitted changes check) | WARN |
-| 22.8 | No git token or SA key embedded in Dockerfile or Cloud Build YAML | YES |
-| 22.9 | `uv.lock` committed alongside `pyproject.toml` changes | YES |
-| 22.10 | CI clones path deps to `../repo-name` with `${DEP_BRANCH:-main}` fallback per `path-dependency-ci.mdc` | YES |
-| 22.11 | Conventional commit messages used (`feat:` / `fix:` / `chore:`) | WARN |
-| 22.12 | `quality-gates.yml` GitHub Actions workflow exists and runs on PRs — no repos with zero CI enforcement | YES |
+| #     | Criterion                                                                                                                                                   | Blocking |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 22.1  | Quality gates run INSIDE the built Docker image — not by cloning source in CI                                                                               | YES      |
+| 22.2  | Image pushed only after tests pass                                                                                                                          | YES      |
+| 22.3  | Library version bumped only by GitHub Action (`version-bump.yml`) on merge — not manual                                                                     | YES      |
+| 22.4  | Branch protection blocks direct push to main                                                                                                                | YES      |
+| 22.5  | Quickmerge used for all pushes — never standalone quality gates or bare `git push`                                                                          | YES      |
+| 22.6  | `--dep-branch` used in quickmerge when dependencies differ from main                                                                                        | YES      |
+| 22.7  | Pre-flight audit runs before quality gates (path dependency uncommitted changes check)                                                                      | WARN     |
+| 22.8  | No git token or SA key embedded in Dockerfile or Cloud Build YAML                                                                                           | YES      |
+| 22.9  | `uv.lock` committed alongside `pyproject.toml` changes                                                                                                      | YES      |
+| 22.10 | CI clones path deps to `../repo-name` with `${DEP_BRANCH:-main}` fallback per `path-dependency-ci.mdc`                                                      | YES      |
+| 22.11 | Conventional commit messages used (`feat:` / `fix:` / `chore:`)                                                                                             | WARN     |
+| 22.12 | `quality-gates.yml` GitHub Actions workflow exists and runs on PRs — no repos with zero CI enforcement                                                      | YES      |
+| 22.13 | Pre-commit hooks fire automatically during quickmerge's `git commit` step (Stage 5) — ruff auto-fix, prettier, and file checks run before commit is created | YES      |
 
 ---
 
 ## SECTION 23 — DOCKER & DEPLOYMENT STANDARDS
 
-| # | Criterion | Blocking |
-|---|-----------|----------|
-| 23.1 | Multi-stage Docker build pattern followed per codex `05-infrastructure/docker.md` | YES |
-| 23.2 | Python 3.13 base image used (matching `pyproject.toml` `requires-python`) | YES |
-| 23.3 | Non-root user (`appuser`) in all Dockerfiles — no running as root in production | YES |
-| 23.4 | `.dockerignore` exists in all repos with Dockerfiles | YES |
-| 23.5 | `HEALTHCHECK` directive in every service Dockerfile | WARN |
-| 23.6 | No `GH_PAT` or secrets persisted in final image layer (multi-stage build cleans build args) | YES |
-| 23.7 | `uv pip install` used in Dockerfiles — no bare `pip install` | YES |
-| 23.8 | Dev dependencies NOT included in production images | WARN |
-| 23.9 | Dockerfile exists for all deployable services and API services | YES |
-| 23.10 | `tini` or equivalent init process used for proper signal handling | WARN |
-| 23.11 | All service Dockerfiles use `unified-trading-services:latest` base image (not `unified-cloud-services`) | YES |
-| 23.12 | Terraform configs exist for all production services (or documented exception) | WARN |
+| #     | Criterion                                                                                               | Blocking |
+| ----- | ------------------------------------------------------------------------------------------------------- | -------- |
+| 23.1  | Multi-stage Docker build pattern followed per codex `05-infrastructure/docker.md`                       | YES      |
+| 23.2  | Python 3.13 base image used (matching `pyproject.toml` `requires-python`)                               | YES      |
+| 23.3  | Non-root user (`appuser`) in all Dockerfiles — no running as root in production                         | YES      |
+| 23.4  | `.dockerignore` exists in all repos with Dockerfiles                                                    | YES      |
+| 23.5  | `HEALTHCHECK` directive in every service Dockerfile                                                     | WARN     |
+| 23.6  | No `GH_PAT` or secrets persisted in final image layer (multi-stage build cleans build args)             | YES      |
+| 23.7  | `uv pip install` used in Dockerfiles — no bare `pip install`                                            | YES      |
+| 23.8  | Dev dependencies NOT included in production images                                                      | WARN     |
+| 23.9  | Dockerfile exists for all deployable services and API services                                          | YES      |
+| 23.10 | `tini` or equivalent init process used for proper signal handling                                       | WARN     |
+| 23.11 | All service Dockerfiles use `unified-trading-services:latest` base image (not `unified-cloud-services`) | YES      |
+| 23.12 | Terraform configs exist for all production services (or documented exception)                           | WARN     |
 
 ---
 
@@ -634,6 +642,10 @@ import boto3 (production)              | rg "import boto3" --type py (excl tests
 logging.basicConfig() in libraries     | rg "logging\.basicConfig" --type py (excl tests)          | YES
 from X import * (wildcard)             | rg "from \w+ import \*" --type py (excl __init__)         | YES
 logger.info(f" (f-string logging)     | rg 'logger\.\w+\(f"' --type py                            | WARN
+.pre-commit-config.yaml missing        | ls .pre-commit-config.yaml (each repo root)               | YES
+bump-library-version in non-library    | grep "bump-library-version" .pre-commit-config.yaml (svc) | WARN
+prettier version mismatch             | grep "prettier@" .pre-commit-config.yaml (expect 3.6.2)   | WARN
+ruff pre-commit rev mismatch          | grep "rev: v" .pre-commit-config.yaml (expect v0.15.0)    | YES
 ```
 
 ---
@@ -642,13 +654,14 @@ logger.info(f" (f-string logging)     | rg 'logger\.\w+\(f"' --type py          
 
 ### Scoring Guide
 
-| Grade | Criteria |
-|-------|----------|
-| **PASS** | 0 FAIL items |
+| Grade                | Criteria                                |
+| -------------------- | --------------------------------------- |
+| **PASS**             | 0 FAIL items                            |
 | **CONDITIONAL PASS** | 0 FAIL, ≤5 WARN (with remediation plan) |
-| **FAIL** | ≥1 FAIL item |
+| **FAIL**             | ≥1 FAIL item                            |
 
 **Automatic FAIL triggers (any one is sufficient):**
+
 - Hardcoded API key or credential in source
 - `except Exception: pass` in production code
 - Validation failure silently passed through (no dead-letter)
