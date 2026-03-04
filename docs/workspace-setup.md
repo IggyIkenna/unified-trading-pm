@@ -64,6 +64,7 @@ This script auto-detects your workspace path and:
 
 - Adds `export UNIFIED_TRADING_WORKSPACE_ROOT="/your/path"` to `~/.zshrc` or `~/.bashrc`
 - Updates all Cursor `.code-workspace` files with your machine's path
+- Enforces git auto-fetch every 180 s and SCM repo limit of 100 in every workspace config
 - Creates Claude Code conversation symlinks (so old chats carry over between machines)
 - Updates Claude Code permissions in `~/.claude/settings.json`
 
