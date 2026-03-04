@@ -241,7 +241,34 @@ echo "=========================================="
 
 if [ "$QUICK" = true ]; then
     echo "[$REPO_NAME] --quick: Skipping act simulation"
-elif command -v act &>/dev/null; then
+else
+    # Auto-install act if not present (Linux or macOS)
+    if ! command -v act &>/dev/null; then
+        OS="$(uname -s)"
+        echo "[$REPO_NAME] act not found — installing for $OS..."
+        if [ "$OS" = "Darwin" ]; then
+            if command -v brew &>/dev/null; then
+                brew install act
+            else
+                echo "[$REPO_NAME] ❌ Homebrew not found. Install it first: https://brew.sh" >&2
+                exit 1
+            fi
+        elif [ "$OS" = "Linux" ]; then
+            INSTALL_DIR="${HOME}/.local/bin"
+            mkdir -p "$INSTALL_DIR"
+            curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b "$INSTALL_DIR"
+            export PATH="$INSTALL_DIR:$PATH"
+        else
+            echo "[$REPO_NAME] ❌ Unsupported OS ($OS) — install act manually: https://github.com/nektos/act" >&2
+            exit 1
+        fi
+    fi
+
+    if ! command -v act &>/dev/null; then
+        echo "[$REPO_NAME] ❌ act installation failed — cannot run CI simulation" >&2
+        exit 1
+    fi
+
     ACT_SECRETS=""
     [ -f ~/.secrets ] && ACT_SECRETS="--secret-file ~/.secrets"
     if act -j quality-gates $ACT_SECRETS 2>/dev/null; then
@@ -249,8 +276,6 @@ elif command -v act &>/dev/null; then
     else
         echo "[$REPO_NAME] ⚠️  Act simulation failed (continuing — CI will be the authoritative check)"
     fi
-else
-    echo "[$REPO_NAME] ⚠️  act not installed (skipping — install: brew install act)"
 fi
 
 echo ""
