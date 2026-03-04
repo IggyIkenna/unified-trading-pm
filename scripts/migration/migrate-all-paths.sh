@@ -139,14 +139,14 @@ update_claude_home() {
 # ── Clean Cursor state cache (fixes stuck indexing) ──────────────────────────
 cleanup_cursor_state_cache() {
     log_info "Cleaning Cursor state cache (fixes stuck indexing, reclaims ~18GB)..."
-    
+
     local state_files=(
         "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb"
         "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb.backup"
         "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb-shm"
         "${HOME}/Library/Application Support/Cursor/User/globalStorage/state.vscdb-wal"
     )
-    
+
     local deleted_size=0
     for state_file in "${state_files[@]}"; do
         if [ -f "$state_file" ]; then
@@ -155,7 +155,7 @@ cleanup_cursor_state_cache() {
             log_success "Deleted: $(basename "$state_file") ($size)"
         fi
     done
-    
+
     log_warning "Cursor will rebuild state cache on next launch (~18GB freed)"
 }
 
@@ -163,15 +163,15 @@ cleanup_cursor_state_cache() {
 migrate_all_agent_transcripts() {
     local new_path="$1"
     local new_encoded=$(echo "$new_path" | sed 's|/|-|g')
-    
+
     # Target: new .code-workspace index location
     local target_index="${HOME}/.cursor/projects/${new_encoded}-unified-trading-system-repos-unified-trading-system-repos-code-workspace"
     local target_transcripts="${target_index}/agent-transcripts"
-    
+
     mkdir -p "$target_transcripts"
-    
+
     log_info "Migrating agent conversation history from old workspace indexes..."
-    
+
     # Find all old workspace project directories with transcripts
     local old_transcript_dirs=()
     while IFS= read -r dir; do
@@ -180,7 +180,7 @@ migrate_all_agent_transcripts() {
             old_transcript_dirs+=("$dir")
         fi
     done < <(find "${HOME}/.cursor/projects" -type d -name "agent-transcripts" 2>/dev/null | grep -i "Documents-repos\|unified-trading")
-    
+
     local total_copied=0
     for old_dir in "${old_transcript_dirs[@]}"; do
         if [ -d "$old_dir" ]; then
@@ -194,14 +194,14 @@ migrate_all_agent_transcripts() {
                     fi
                 fi
             done
-            
+
             if [ $copied -gt 0 ]; then
                 total_copied=$((total_copied + copied))
                 log_success "Copied $copied conversations from $(basename "$(dirname "$old_dir")")"
             fi
         fi
     done
-    
+
     if [ $total_copied -gt 0 ]; then
         log_success "Total: $total_copied conversations migrated"
     else
@@ -357,10 +357,10 @@ main() {
 
     # Migrate Cursor index
     update_cursor_index "$old_path" "$new_path"
-    
+
     # Migrate all agent transcripts (conversation history)
     migrate_all_agent_transcripts "$new_path"
-    
+
     # Clean Cursor state cache (fixes stuck indexing, reclaims ~18GB)
     echo ""
     log_warning "Cursor state cache cleanup will free ~18GB but requires Cursor restart"

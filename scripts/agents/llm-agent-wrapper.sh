@@ -61,19 +61,19 @@ detect_llm_tool() {
         echo "cursor"
         return
     fi
-    
+
     # Preference 2: Claude Code CLI
     if command -v claude >/dev/null 2>&1 && [ -n "$ANTHROPIC_API_KEY" ]; then
         echo "claude"
         return
     fi
-    
+
     # Preference 3: Aider
     if command -v aider >/dev/null 2>&1; then
         echo "aider"
         return
     fi
-    
+
     echo "none"
 }
 
@@ -82,17 +82,17 @@ LLM_TOOL=$(detect_llm_tool)
 case "$LLM_TOOL" in
     cursor)
         echo "🤖 Using Cursor CLI agent (model: auto - FREE)"
-        
+
         # Get API key (never use world-readable temp file)
         if [ -z "${CURSOR_API_KEY:-}" ]; then
             PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key}"
             CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
             export CURSOR_API_KEY
         fi
-        
+
         # Set up environment
         export PATH="$HOME/.local/bin:$PATH"
-        
+
         # Use agent CLI with same flags as run-agent.sh
         agent --api-key "$CURSOR_API_KEY" \
             --print \
@@ -105,30 +105,30 @@ case "$LLM_TOOL" in
             "$FULL_PROMPT" \
             2>&1 | python3 "$PARSER"
         ;;
-    
+
     claude)
         echo "🤖 Using Claude Code CLI"
-        
+
         # Use Claude Code CLI
         claude \
             --model claude-sonnet-4-5-20250929 \
             --dangerously-skip-permissions \
             "$FULL_PROMPT"
         ;;
-    
+
     aider)
         echo "🤖 Using Aider"
-        
+
         # Change to repo directory for Aider
         cd "$WORKSPACE_ROOT/$REPO_NAME"
-        
+
         # Use Aider
         aider \
             --model sonnet \
             --yes-always \
             --message "$FULL_PROMPT"
         ;;
-    
+
     none)
         echo "❌ No LLM tool available"
         echo ""

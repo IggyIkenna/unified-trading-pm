@@ -187,7 +187,7 @@ echo ""
 if [ "$WATCH_MODE" = true ]; then
     echo "Watch mode enabled (default) - will auto-fix if act fails"
     echo ""
-    
+
     # Call pre-push watcher (includes act + auto-fix)
     if bash "$WORKSPACE_ROOT/.cursor/scripts/pre-push-watcher.sh"; then
         echo -e "${GREEN}✅ Act simulation PASSED${NC}"
@@ -203,7 +203,7 @@ if [ "$WATCH_MODE" = true ]; then
 else
     echo "Watch mode disabled (--no-watch) - running act without auto-fix"
     echo ""
-    
+
     # Run act directly (no auto-fix)
     if act -j quality-gates --secret-file ~/.secrets; then
         echo -e "${GREEN}✅ Act simulation PASSED${NC}"

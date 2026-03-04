@@ -104,38 +104,47 @@ The **remote must be clean** after push. Ensure:
    - Create or update workspace root `.cursorignore` with patterns from [Workspace Root .cursorignore](#workspace-root-cursorignore)
 
 5. **Detect tracked junk** (no filesystem scan):
+
    ```bash
    git ls-files -z -- ".venv/*" "venv/*" "__pycache__/*" "node_modules/*" ".next/*" "dist/*" "build/*" ".turbo/*" ".venv-workspace/*" ".pytest_cache/*" ".mypy_cache/*" ".ruff_cache/*" "htmlcov/*" | wc -c
    ```
+
    If non-zero, remove from index (cached only, not disk):
+
    ```bash
    git rm -r --cached --ignore-unmatch .venv venv __pycache__ node_modules .next dist build .turbo .venv-workspace .pytest_cache .mypy_cache .ruff_cache htmlcov
    ```
 
 6. **Stage in safe order:**
+
    ```bash
    git add .gitignore .cursorignore
    git add -A
    ```
 
 7. **Sanity check before commit:**
+
    ```bash
    git status -sb
    git diff --cached --stat
    ```
+
    If the stat looks huge/unexpected (e.g. millions of lines from .venv), STOP and report.
 
 8. **Commit locally to main:**
+
    ```bash
    git commit -m "WIP: savepoint (pre-move from iCloud)" --no-verify
    ```
 
 9. **Push to remote:**
+
    ```bash
    git push origin main
    ```
 
 10. **Clone to ~/Code** (run from local machine, not iCloud):
+
     ```bash
     REPO_NAME=$(basename "$ROOT")
     REMOTE_URL=$(git remote get-url origin)
@@ -280,10 +289,12 @@ git push -u origin main
 ### Batch for 61 repos
 
 **Option A: One agent per repo**
+
 - Launch 4–8 agents in parallel, each with `REPO_PATH` set to a different repo.
 - Prepend to prompt: `REPO_PATH=/path/to/repo-X. cd $REPO_PATH. Then execute steps 1–11.`
 
 **Option B: Single agent with loop**
+
 - Provide list of repo paths.
 - Agent loops: for each path, cd there, run steps 1–10 (through push).
 - Step 11 (clone): run once at end, looping over remote URLs from each repo.

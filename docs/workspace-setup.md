@@ -43,13 +43,13 @@ bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
 
 What it does (5 phases):
 
-| Phase | What happens |
-|-------|-------------|
-| 1. System deps | Installs Python 3.13, uv, ripgrep, jq via Homebrew/apt |
-| 2. Clone repos | Reads `workspace-manifest.json`, clones all 63 repos via SSH |
+| Phase             | What happens                                                                  |
+| ----------------- | ----------------------------------------------------------------------------- |
+| 1. System deps    | Installs Python 3.13, uv, ripgrep, jq via Homebrew/apt                        |
+| 2. Clone repos    | Reads `workspace-manifest.json`, clones all 63 repos via SSH                  |
 | 3. Workspace venv | Creates `.venv-workspace/` with ruff, basedpyright, pytest, and all repo deps |
-| 4. Per-repo setup | Runs `scripts/setup.sh` in each repo (topological order: T0 first) |
-| 5. Smoke test | Verifies `import <package>` works for every Python repo |
+| 4. Per-repo setup | Runs `scripts/setup.sh` in each repo (topological order: T0 first)            |
+| 5. Smoke test     | Verifies `import <package>` works for every Python repo                       |
 
 Safe to re-run. Skips repos already cloned and deps already installed.
 
@@ -60,6 +60,7 @@ bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 ```
 
 This script auto-detects your workspace path and:
+
 - Adds `export UNIFIED_TRADING_WORKSPACE_ROOT="/your/path"` to `~/.zshrc` or `~/.bashrc`
 - Updates all Cursor `.code-workspace` files with your machine's path
 - Creates Claude Code conversation symlinks (so old chats carry over between machines)
@@ -134,6 +135,7 @@ Both `.cursor/rules/` and `.cursor/plans/` are **symlinks** into the PM repo:
 ```
 
 This means:
+
 - **Edits in `.cursor/rules/` directly modify git-tracked files** in unified-trading-pm
 - **No sync scripts needed** — there's no copy to get out of sync
 - **`git pull` in unified-trading-pm immediately gives you the team's latest** rules and plans
@@ -141,11 +143,11 @@ This means:
 
 ### Multi-developer workflow
 
-| Scenario | What happens |
-|----------|-------------|
+| Scenario                                           | What happens                                                      |
+| -------------------------------------------------- | ----------------------------------------------------------------- |
 | You add a new rule, teammate adds a different rule | Both push via quickmerge. `git pull` gives you both. No conflict. |
-| You both edit different lines of the same rule | Git auto-merges. No conflict. |
-| You both edit the same lines of the same rule | Git merge conflict. Resolve locally, then re-push. |
+| You both edit different lines of the same rule     | Git auto-merges. No conflict.                                     |
+| You both edit the same lines of the same rule      | Git merge conflict. Resolve locally, then re-push.                |
 
 ---
 
@@ -159,6 +161,7 @@ bash scripts/quickmerge.sh "feat: describe your change"
 ```
 
 Quickmerge runs a 4-stage pipeline:
+
 1. **Stage 1**: Dependency validation
 2. **Stage 2**: Pre-flight audit
 3. **Stage 3**: Quality gates (ruff + basedpyright + pytest)
@@ -207,13 +210,13 @@ The setup script detects old paths in workspace configs and replaces them with t
 
 ## What Each Script Does
 
-| Script | When to run | What it does |
-|--------|-------------|-------------|
-| `workspace-bootstrap.sh` | New machine (once) | Clones all repos, installs deps, creates venv |
-| `setup-workspace-root.sh` | New machine or path change | Sets env var, updates IDE configs |
-| `setup-cursor-rules-symlink.sh` | New machine (once) | Symlinks `.cursor/rules/` to `cursor-rules/` |
-| `setup-cursor-plans-symlink.sh` | New machine (once) | Symlinks `.cursor/plans/` to `plans/cursor-plans/` |
-| `quickmerge.sh` | To push changes | Full pipeline: lint + test + PR |
+| Script                          | When to run                | What it does                                       |
+| ------------------------------- | -------------------------- | -------------------------------------------------- |
+| `workspace-bootstrap.sh`        | New machine (once)         | Clones all repos, installs deps, creates venv      |
+| `setup-workspace-root.sh`       | New machine or path change | Sets env var, updates IDE configs                  |
+| `setup-cursor-rules-symlink.sh` | New machine (once)         | Symlinks `.cursor/rules/` to `cursor-rules/`       |
+| `setup-cursor-plans-symlink.sh` | New machine (once)         | Symlinks `.cursor/plans/` to `plans/cursor-plans/` |
+| `quickmerge.sh`                 | To push changes            | Full pipeline: lint + test + PR                    |
 
 ---
 

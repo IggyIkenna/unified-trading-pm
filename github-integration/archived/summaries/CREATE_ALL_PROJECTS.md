@@ -1,8 +1,8 @@
 # Create All GitHub Projects - Automation Script
 
-**Script:** `create-all-projects.py`  
-**Purpose:** Automate creation of 15 missing GitHub projects with labels and setup guides  
-**Python:** 3.13+  
+**Script:** `create-all-projects.py`
+**Purpose:** Automate creation of 15 missing GitHub projects with labels and setup guides
+**Python:** 3.13+
 **Dependencies:** `gh` CLI, `requests` library
 
 ---
@@ -233,19 +233,19 @@ PROJECT_DEFINITIONS = {
 
 ### Common Issues
 
-**Issue:** `gh: command not found`  
+**Issue:** `gh: command not found`
 **Fix:** Install GitHub CLI: `brew install gh`
 
-**Issue:** `Not authenticated with GitHub`  
+**Issue:** `Not authenticated with GitHub`
 **Fix:** Run `gh auth login`
 
-**Issue:** `Project already exists`  
+**Issue:** `Project already exists`
 **Behavior:** Script skips creation, reports existing project number
 
-**Issue:** `Label already exists`  
+**Issue:** `Label already exists`
 **Behavior:** Script skips label creation (idempotent)
 
-**Issue:** `Rate limit exceeded`  
+**Issue:** `Rate limit exceeded`
 **Fix:** Script automatically pauses 1 second between projects. For stricter limits, increase sleep time in script.
 
 ---
@@ -443,22 +443,22 @@ bash manage-cods.sh create-all-projects --dry-run
 
 ### Script Hangs
 
-**Cause:** Rate limiting or network issue  
+**Cause:** Rate limiting or network issue
 **Fix:** Interrupt (Ctrl+C), re-run (idempotent)
 
 ### "Project already exists" for All Projects
 
-**Cause:** Projects were created previously  
+**Cause:** Projects were created previously
 **Action:** Check project URLs, verify they're correct
 
 ### Labels Not Created
 
-**Cause:** Repo issues disabled or repo doesn't exist  
+**Cause:** Repo issues disabled or repo doesn't exist
 **Fix:** Check repo exists and has issues enabled: `gh repo view <org>/<repo>`
 
 ### Manual Setup Guide Missing
 
-**Cause:** Project number not returned (API error)  
+**Cause:** Project number not returned (API error)
 **Fix:** Check console output for error message, manual create project
 
 ---

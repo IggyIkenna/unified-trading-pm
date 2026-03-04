@@ -113,37 +113,33 @@ isProject: true
 
 At every STEP A (connectivity audit) for each service/API/UI, verify no old name appears in:
 
-
 | Level                              | Check                                                                        |
 | ---------------------------------- | ---------------------------------------------------------------------------- |
 | **Repo GitHub name**               | Must match `workspace-manifest.json` `name` field                            |
-| `**pyproject.toml` `name`**        | Must match canonical name                                                    |
+| `**pyproject.toml` `name`\*\*      | Must match canonical name                                                    |
 | **Python package dir**             | `market_tick_data_handler/` is wrong; `market_tick_data_service/` is correct |
 | **All imports in this repo**       | `rg old_name .` — must return zero hits after fix                            |
 | **All imports in dependent repos** | Every consumer must be updated in same `--dep-branch` cascade                |
-| `**cloudbuild.yaml` image tag**    | `gcr.io/…/<service-name>:$TAG` must use canonical name                       |
+| `**cloudbuild.yaml` image tag\*\*  | `gcr.io/…/<service-name>:$TAG` must use canonical name                       |
 | **Cloud Build trigger**            | Name must match repo name                                                    |
 | **Artifact Registry**              | Package name must match canonical name                                       |
-| `**runtime-topology.yaml`**        | Service name in topology config must match                                   |
-| `**workspace-manifest.json`**      | `name`, `github_url`, `artifact_registry_url`, `package_name`                |
+| `**runtime-topology.yaml`\*\*      | Service name in topology config must match                                   |
+| `**workspace-manifest.json`\*\*    | `name`, `github_url`, `artifact_registry_url`, `package_name`                |
 | **Deployment checklists**          | `unified-trading-deployment-v3/configs/checklist.*.yaml`                     |
 | **Cursor rules + codex docs**      | `rg` for old names; fix every hit                                            |
 | **PubSub topic names**             | Any topic named after old service name must be renamed                       |
 | **Secret Manager**                 | Any secret keyed to old service name                                         |
 
-
 ### Known Renames Still Pending Code-Level Fix at Phase 3 Start
 
-
-| Old                                                                 | Canonical  | Fix where         |
-| ------------------------------------------------------------------- | ---------- | ----------------- |
-| `market-tick-data-handler` → `**market-tick-data-service`**         | All levels | T4 Batch B STEP A |
-| `client-reporting-api` → `**client-reporting-api`**                 | All levels | T5 STEP A         |
-| `alerting-service` → `**alerting-service`**                         | All levels | T4 Batch F STEP A |
-| `position-balance-monitor` → `**position-balance-monitor-service`** | All levels | T4 Batch F STEP A |
-| `ml-training-ui` → `**ml-training-ui**`                             | All levels | T6 Agent 7        |
-| `execution-analytics-ui` → `**execution-analytics-ui**`             | All levels | T6 Agent 11       |
-
+| Old                                                                   | Canonical  | Fix where         |
+| --------------------------------------------------------------------- | ---------- | ----------------- |
+| `market-tick-data-handler` → `**market-tick-data-service`\*\*         | All levels | T4 Batch B STEP A |
+| `client-reporting-api` → `**client-reporting-api`\*\*                 | All levels | T5 STEP A         |
+| `alerting-service` → `**alerting-service`\*\*                         | All levels | T4 Batch F STEP A |
+| `position-balance-monitor` → `**position-balance-monitor-service`\*\* | All levels | T4 Batch F STEP A |
+| `ml-training-ui` → `**ml-training-ui**`                               | All levels | T6 Agent 7        |
+| `execution-analytics-ui` → `**execution-analytics-ui**`               | All levels | T6 Agent 11       |
 
 ### NEVER
 
@@ -211,7 +207,6 @@ Every service follows the same 5-step progression:
 
 ### Integration Layers Summary
 
-
 | Layer                        | Scope                                 | Trigger             | Owner                        |
 | ---------------------------- | ------------------------------------- | ------------------- | ---------------------------- |
 | Layer 0 — Contract alignment | unified-api-contracts, UMI, URDI      | Phase 2 T0 STEP B   | Phase 2                      |
@@ -219,7 +214,6 @@ Every service follows the same 5-step progression:
 | Layer 2 — Infra verification | GCS, PubSub, SM, IAM                  | Post-sandbox-deploy | deployment-api /infra/health |
 | Layer 3a — Pipeline smoke    | system-integration-tests -m smoke     | After L2 passes     | <5 min                       |
 | Layer 3b — Full E2E          | system-integration-tests -m full_e2e  | After L3a passes    | 15–30 min                    |
-
 
 ---
 

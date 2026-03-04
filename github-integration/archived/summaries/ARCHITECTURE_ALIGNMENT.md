@@ -89,7 +89,7 @@
 - Price sanity checks
 - Instrument universe definition
 
-**Current state:** Embedded in `execution-service`  
+**Current state:** Embedded in `execution-service`
 **Action:** No refactoring needed (assume clean separation already exists)
 
 ### Layer 2: Execution Manager
@@ -98,7 +98,7 @@
 - Order slicing/aggregation
 - Execution algorithm orchestration
 
-**Current state:** `InstructionRouter` in `execution-service`  
+**Current state:** `InstructionRouter` in `execution-service`
 **Action:** No refactoring needed (assume clean separation already exists)
 
 ---
@@ -214,6 +214,6 @@ exchange-interface/  (new shared package)
 
 ---
 
-**Last Updated:** 2026-02-12  
-**Validated With:** User architecture clarification  
+**Last Updated:** 2026-02-12
+**Validated With:** User architecture clarification
 **Related Issues:** #153-#174 (Epic 1 updated breakdown)

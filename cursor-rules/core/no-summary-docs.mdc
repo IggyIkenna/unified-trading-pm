@@ -59,7 +59,7 @@ Ask yourself:
 
 ❌ After fixing a bug, DON'T create:
 - BUG_123_FIX_SUMMARY.md
-- SUB_ISSUE_FIX_SUMMARY.md  
+- SUB_ISSUE_FIX_SUMMARY.md
 - GRAPHQL_SUB_ISSUE_SOLUTION.md
 
 ✅ Instead:

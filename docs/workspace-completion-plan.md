@@ -9,6 +9,7 @@ deployment v3 four-way split completion, and service dependency corrections.
 **Workspace size:** 60 repos (was 58 — added execution-visualizer-ui and unified-trading-ui-auth)
 
 **Success criteria:**
+
 - Every repo passes quality gates (except codex, PM, and truly scaffolded repos)
 - `unified-trading-deployment-v3` fully archived (all code in the 4 split repos)
 - No ghost/phantom dependencies anywhere
@@ -23,26 +24,27 @@ deployment v3 four-way split completion, and service dependency corrections.
 
 All changes applied to `unified-trading-pm/workspace-manifest.json`:
 
-| # | Task | Status |
-|---|---|---|
-| 0.1 | Add `status: "active"` to 35 repos | DONE |
-| 0.2 | Fix `deployment-service` entry (folder_name) | DONE (removed after Phase 1 rename) |
-| 0.3 | Add 3 missing repos to manifest | DONE — execution-visualizer-ui, unified-trading-ui-auth added. Now 60 repos. |
-| 0.4 | Normalize `"SCAFFOLDED"` → `"scaffolded"` | DONE |
-| 0.5 | Add missing metadata to 6 repos | DONE |
-| 0.6 | Normalize dependency format | DONE |
-| 0.7 | Remove `ibkr-gateway-infra` from topo order L2 | DONE |
-| 0.8 | Remove service-to-service deps from manifest | DONE — market-data-processing-service, market-tick-data-service deps removed |
-| 0.9 | Update stale QG statuses | DONE |
-| 0.10 | Sync manifest versions to pyproject.toml | DONE — 16 repos synced |
-| 0.11 | Sync manifest dependency arrays with pyproject.toml | DONE |
-| 0.12 | Fix PM version to 0.7.0 | DONE |
+| #    | Task                                                | Status                                                                       |
+| ---- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 0.1  | Add `status: "active"` to 35 repos                  | DONE                                                                         |
+| 0.2  | Fix `deployment-service` entry (folder_name)        | DONE (removed after Phase 1 rename)                                          |
+| 0.3  | Add 3 missing repos to manifest                     | DONE — execution-visualizer-ui, unified-trading-ui-auth added. Now 60 repos. |
+| 0.4  | Normalize `"SCAFFOLDED"` → `"scaffolded"`           | DONE                                                                         |
+| 0.5  | Add missing metadata to 6 repos                     | DONE                                                                         |
+| 0.6  | Normalize dependency format                         | DONE                                                                         |
+| 0.7  | Remove `ibkr-gateway-infra` from topo order L2      | DONE                                                                         |
+| 0.8  | Remove service-to-service deps from manifest        | DONE — market-data-processing-service, market-tick-data-service deps removed |
+| 0.9  | Update stale QG statuses                            | DONE                                                                         |
+| 0.10 | Sync manifest versions to pyproject.toml            | DONE — 16 repos synced                                                       |
+| 0.11 | Sync manifest dependency arrays with pyproject.toml | DONE                                                                         |
+| 0.12 | Fix PM version to 0.7.0                             | DONE                                                                         |
 
 ---
 
 ## Phase 1: Rename `deployment-engine/` → `deployment-service/` — COMPLETED
 
 All steps completed:
+
 1. Directory renamed on disk
 2. pyproject.toml: `name = "deployment-service"`
 3. Python package: `deployment_engine/` → `deployment_service/`
@@ -57,6 +59,7 @@ All steps completed:
 ## Phase 2: The Big UTL Rename — COMPLETED
 
 ### Phase 2a: Rename UTL repo — DONE
+
 - Directory: `unified-trading-services/` → `unified-trading-library/`
 - Python package: `unified_trading_services/` → `unified_trading_library/`
 - `unified_cloud_services/` directory DELETED entirely
@@ -65,6 +68,7 @@ All steps completed:
 - quality-gates.sh, pyrightconfig.json, Dockerfile, cloudbuild.yaml, docs all updated
 
 ### Phase 2b: Update all 34 consumer repos — DONE
+
 - All pyproject.toml files: `unified-trading-services` → `unified-trading-library`
 - All pyproject.toml files: `unified-cloud-services` removed entirely
 - All `[tool.uv.sources]` paths updated
@@ -72,12 +76,14 @@ All steps completed:
 - 4 parallel agents processed all 34 repos
 
 ### Phase 2c: Ghost dependencies fixed — DONE
+
 - features-volatility-service: `unified-domain-services` → `unified-domain-client`
 - features-volatility-service: `api-contracts` → `unified-api-contracts`
 - unified-cloud-interface: removed unused `unified-api-contracts` dep
 - unified-reference-data-interface: removed 2 unused deps, added missing `unified-events-interface`
 
 ### Phase 2d: Manifest and QG cleanup — DONE
+
 - `folder_name: "unified-trading-services"` removed from manifest
 - ~65 quality-gates.sh files updated (codex compliance check patterns)
 - 11 PM scripts + 3 workspace config scripts updated
@@ -88,21 +94,26 @@ All steps completed:
 ## Phase 3: REPO_MODULE QG Fixes — COMPLETED
 
 ### 3a: REPO_MODULE fixes — DONE
+
 - execution-service: `REPO_MODULE="execution_service"` (was `execution_services`)
 - alerting-service: `REPO_MODULE="alerting_service"` (was `alerting_system`)
 - Note: 6 other repos already had correct modules via SOURCE_DIR/SOURCE_DIRS variables
 
 ### 3b: cloudbuild.yaml additions — DONE
+
 8 repos got new cloudbuild.yaml files:
+
 - unified-internal-contracts, unified-sports-execution-interface, unified-feature-calculator-library
 - unified-ml-interface, features-sports-service, execution-results-api, market-data-api, client-reporting-api
 
 ### 3c: ImportError fixes — DONE
+
 - features-delta-one-service `batch_handler.py`: removed try/except fallback, replaced with direct imports
 - unified-config-interface `loaders.py`: removed try/except around log_event call
 - execution-visualizer-ui: already clean (no changes needed)
 
 ### 3d: UI package.json name fixes — DONE
+
 - execution-analytics-ui: `backtest-ui` → `execution-analytics-ui`
 - execution-visualizer-ui: `backtest-visualizer-ui` → `execution-visualizer-ui`
 - ml-training-ui: `ml-deployment-ui` → `ml-training-ui`
@@ -112,39 +123,48 @@ All steps completed:
 ## Phase 4: Deployment Split Completion — IN PROGRESS (separate session)
 
 ### 4a: deployment-api — Finalize
+
 **Status:** Partially done. Repo exists on disk, has source code, but needs:
+
 1. `git init` + initial commit + push to GitHub
 2. Migrate relevant unit tests from monolith
 3. Run quality gates, verify green
 4. Update manifest: `ci_status` → `HAS_QG`, `testing_level` → `unit`
 
 ### 4b: deployment-service — Complete Extraction
+
 **Status:** ~50% extracted. Still needed from monolith:
 
 **Replace stubs with full implementations:**
+
 - `backends/aws_batch.py` (14KB, currently 35B stub)
 - `backends/cloud_run.py` (21KB, currently 39B stub)
 
 **Extract missing modules from `unified_trading_deployment/`:**
+
 - `advisor.py`, `runtime_topology_validator.py`, `smoke_test_framework.py`
 - `dependencies.py`, `deployment_config.py`
 - `calculators/`, `cli/`, `cli_modules/`, `cli_commands/`
 - `cloud/`, `config/`, `services/`, `utils/`
 
 **Extract supporting assets:**
+
 - `configs/` (83 YAML files)
 - `scripts/` (52 operational scripts)
 - `terraform/` (193 files)
 - `templates/` (CI/CD templates)
 
 **Merge overlapping modules** (compare with monolith, take more complete version):
+
 - `cli.py`, `config_loader.py`, `monitor.py`, `orchestrator.py`, `shard_builder.py`, `shard_calculator.py`
 - Backend files: `aws.py`, `gcp.py`, `provider_factory.py`, `vm.py`
 
 ### 4c: deployment-ui — Full Migration
+
 **Status:** Scaffold complete with React Router, Google OAuth, clean page structure. Now has full TS tooling (Playwright, ESLint, vitest, prettier, strict TS). Needs monolith UI feature migration.
 
 **Strategy:** Keep scaffold structure + port 16K LOC monolith features:
+
 - Port monolith's 1134-line API client → `api/client.ts`
 - Port monolith's 447-line types → `types/index.ts`
 - Port 14 major components (DeployForm, DeploymentDetails, DataStatusTab, etc.)
@@ -152,13 +172,17 @@ All steps completed:
 - Add Radix UI, lucide-react, tailwindcss deps
 
 ### 4d: system-integration-tests — Expand
+
 **Status:** 10 test functions across 4 files (structurally sound). Low priority.
+
 - Add cloudbuild.yaml
 - Add more smoke tests per service
 - Wire post-deploy trigger from deployment-api
 
 ### 4e: Archive unified-trading-deployment-v3
+
 **Status:** Blocked on 4a-4d completion.
+
 1. Verify all code accounted for in 4 split repos
 2. Delete all source code from monolith
 3. Keep only README pointing to 4 new repos
@@ -168,12 +192,12 @@ All steps completed:
 
 ## Phase 5: Architectural Cleanup — MOSTLY COMPLETED
 
-| # | Task | Status |
-|---|---|---|
-| 5.1 | Address Tier 0 purity | DONE — Reclassified `unified-reference-data-interface` from Tier 0 to Tier 1. Removed 2 unused deps (`unified-api-contracts`, `unified-config-interface`), added missing `unified-events-interface`. Updated manifest `arch_tier` and `tier_rules`. |
-| 5.2 | Document Tier 2→3 known violations | Acknowledged — `unified-market-interface` and `unified-ml-interface` → `unified-domain-client` (Tier 3). Already flagged as `known_violations` in manifest. |
-| 5.3 | UI QG approach | DONE — See Phase 5.3 details below |
-| 5.4 | Coverage tracking | PENDING — All repos show 0% coverage. Need to either record actual numbers or adjust threshold. |
+| #   | Task                               | Status                                                                                                                                                                                                                                              |
+| --- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5.1 | Address Tier 0 purity              | DONE — Reclassified `unified-reference-data-interface` from Tier 0 to Tier 1. Removed 2 unused deps (`unified-api-contracts`, `unified-config-interface`), added missing `unified-events-interface`. Updated manifest `arch_tier` and `tier_rules`. |
+| 5.2 | Document Tier 2→3 known violations | Acknowledged — `unified-market-interface` and `unified-ml-interface` → `unified-domain-client` (Tier 3). Already flagged as `known_violations` in manifest.                                                                                         |
+| 5.3 | UI QG approach                     | DONE — See Phase 5.3 details below                                                                                                                                                                                                                  |
+| 5.4 | Coverage tracking                  | PENDING — All repos show 0% coverage. Need to either record actual numbers or adjust threshold.                                                                                                                                                     |
 
 ### Phase 5.3: UI Quality Gates — COMPLETED
 
@@ -182,6 +206,7 @@ All steps completed:
 The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check → vitest → Playwright → security
 
 **13 UI repos on disk (all fully aligned):**
+
 1. batch-audit-ui
 2. client-reporting-ui
 3. deployment-ui
@@ -198,16 +223,16 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 
 **Tooling added to repos that were missing it:**
 
-| Gap | Repos Fixed |
-|---|---|
-| Vitest added | batch-audit-ui, client-reporting-ui, execution-analytics-ui, execution-visualizer-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos) |
-| Playwright added | deployment-ui, strategy-ui, unified-trading-ui-auth (3 repos) |
-| ESLint added | execution-visualizer-ui, unified-trading-ui-auth (2 repos) |
-| Prettier added | batch-audit-ui, client-reporting-ui, deployment-ui, execution-visualizer-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos) |
-| TypeScript strict | execution-visualizer-ui (`strict: false` → `strict: true`) |
-| .eslintrc.cjs created | execution-visualizer-ui, unified-trading-ui-auth |
-| playwright.config.ts created | deployment-ui, strategy-ui, unified-trading-ui-auth |
-| Smoke test scaffolds created | deployment-ui, strategy-ui, unified-trading-ui-auth |
+| Gap                          | Repos Fixed                                                                                                                                                                                   |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vitest added                 | batch-audit-ui, client-reporting-ui, execution-analytics-ui, execution-visualizer-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos) |
+| Playwright added             | deployment-ui, strategy-ui, unified-trading-ui-auth (3 repos)                                                                                                                                 |
+| ESLint added                 | execution-visualizer-ui, unified-trading-ui-auth (2 repos)                                                                                                                                    |
+| Prettier added               | batch-audit-ui, client-reporting-ui, deployment-ui, execution-visualizer-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos)          |
+| TypeScript strict            | execution-visualizer-ui (`strict: false` → `strict: true`)                                                                                                                                    |
+| .eslintrc.cjs created        | execution-visualizer-ui, unified-trading-ui-auth                                                                                                                                              |
+| playwright.config.ts created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                           |
+| Smoke test scaffolds created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                           |
 
 **All 13 repos now have:** Playwright, ESLint, vitest, prettier, TypeScript strict, TS-aware quality-gates.sh
 
@@ -216,6 +241,7 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 ## Remaining Work
 
 ### High Priority
+
 1. **Phase 4: Deployment split completion** (in separate session — see deployment-split-audit below)
    - deployment-api: git init, tests, push
    - deployment-service: extract remaining ~50% from monolith
@@ -224,10 +250,12 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
    - Archive unified-trading-deployment-v3
 
 ### Medium Priority
+
 2. **Run TS quality gates** in each UI repo to verify they pass (`cd <repo> && bash scripts/quality-gates.sh`)
 3. **Manifest dep sync:** Re-validate after deployment split completes
 
 ### Recently Completed (this session)
+
 - **Coverage tracking (Phase 5.4):** DONE — Synced `coverage_pct` in manifest from `MIN_COVERAGE` values in each repo's QG script. 43 Python repos updated (most to 70, some with custom thresholds like 35 or 40). UI repos remain at 0 (no Python coverage). These are floor values — actual coverage may be higher.
 - **Tier 2→3 violations:** RESOLVED — Phantom dependencies. Neither `unified-market-interface` nor `unified-ml-interface` actually import `unified-domain-client` in code or pyproject.toml. The dependency existed only in the manifest as a tracking artifact. Removed from both repos' manifest entries, cleared `known_violations`.
 - **npm install in UI repos:** Running (installs newly added vitest, Playwright, ESLint, prettier deps)
@@ -278,19 +306,20 @@ Audit completed 2026-03-02. Key findings for the agent working on Phase 4:
 
 ### Extraction Status
 
-| Component | Monolith | deployment-service | deployment-api | deployment-ui | Status |
-|---|---|---|---|---|---|
-| Backends (compute) | aws_batch, cloud_run, aws_ec2 | All 14 files extracted | — | — | Complete |
-| Cloud clients | query, storage | Simplified versions | gcs wrapper | — | Complete |
-| Orchestrator | orchestrator.py | Full extraction | — | — | Complete |
-| API routes | 30 files in api/ | — | 27 route files | — | Extracted (verify no duplicates) |
-| UI | 16 TS files | — | — | 10 files (scaffold only) | Needs full migration |
-| CLI | cli/, cli_modules/, cli_commands/ | Partial (cli.py only) | — | — | Incomplete |
-| Configs | 83 YAML files | Not extracted | Not extracted | — | Still in monolith |
-| Terraform | 136 .tf files | Not extracted | Not extracted | — | Still in monolith |
-| Tests | 49 files | 3 files | 1 file | — | Needs migration |
+| Component          | Monolith                          | deployment-service     | deployment-api | deployment-ui            | Status                           |
+| ------------------ | --------------------------------- | ---------------------- | -------------- | ------------------------ | -------------------------------- |
+| Backends (compute) | aws_batch, cloud_run, aws_ec2     | All 14 files extracted | —              | —                        | Complete                         |
+| Cloud clients      | query, storage                    | Simplified versions    | gcs wrapper    | —                        | Complete                         |
+| Orchestrator       | orchestrator.py                   | Full extraction        | —              | —                        | Complete                         |
+| API routes         | 30 files in api/                  | —                      | 27 route files | —                        | Extracted (verify no duplicates) |
+| UI                 | 16 TS files                       | —                      | —              | 10 files (scaffold only) | Needs full migration             |
+| CLI                | cli/, cli_modules/, cli_commands/ | Partial (cli.py only)  | —              | —                        | Incomplete                       |
+| Configs            | 83 YAML files                     | Not extracted          | Not extracted  | —                        | Still in monolith                |
+| Terraform          | 136 .tf files                     | Not extracted          | Not extracted  | —                        | Still in monolith                |
+| Tests              | 49 files                          | 3 files                | 1 file         | —                        | Needs migration                  |
 
 ### Critical Issues
+
 1. **deployment-api has no .git** — needs `git init` + initial commit
 2. **Direct google.cloud imports** in deployment-api routes (cloud_builds.py, deployment_state.py, service_status.py) — should use unified-cloud-interface
 3. **Direct boto3 imports** in deployment-service backends — should use abstractions
@@ -299,6 +328,7 @@ Audit completed 2026-03-02. Key findings for the agent working on Phase 4:
 6. **Test coverage fragmented** — monolith has 49 test files, split repos have minimal
 
 ### Cloud Abstraction Gaps
+
 - `deployment-api/routes/cloud_builds.py`: raw `from google.cloud.devtools import cloudbuild_v1`
 - `deployment-api/routes/service_status.py`: raw `from google.cloud import secretmanager`
 - `deployment-api/routes/deployment_state.py`: raw `from google.cloud import run_v2`
@@ -306,11 +336,14 @@ Audit completed 2026-03-02. Key findings for the agent working on Phase 4:
 - `deployment-service/backends/aws*.py`: raw `import boto3`
 
 ### Contract Types Needing Centralization
+
 From deployment-api (move to unified-api-contracts):
+
 - BuildInfoDict, TriggerDict, TriggersResponseDict, BuildHistoryResponseDict
 - QualityGatesStatusDict, LibraryStatusDict, DependencyIssueDict
 - CategoryTimestampDict, DataTimestampResultDict, DeploymentInfoDict
 - CodePushInfoDict, RecentBuildDict, TriggerRunResultDict
 
 From monolith (move to unified-internal-contracts):
+
 - SmokeTestResultDict, FailedShardDict, SmokeTestReportDict

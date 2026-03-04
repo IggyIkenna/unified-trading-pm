@@ -1,6 +1,6 @@
 # Quality Gates Fix Plan - All Services
 
-**Status:** Branch protection DISABLED for 10 repos  
+**Status:** Branch protection DISABLED for 10 repos
 **Backup:** `/tmp/branch-protection-backup-20260214-134431`
 
 ---
@@ -180,7 +180,7 @@ bash enable-branch-protection.sh --restore /tmp/branch-protection-backup-2026021
 
 | Service                | Issue               | Files                                       | Est. Time |
 | ---------------------- | ------------------- | ------------------------------------------- | --------- |
-| execution-service     | Python 3.11         | pyproject.toml, .python-version             | 15min     |
+| execution-service      | Python 3.11         | pyproject.toml, .python-version             | 15min     |
 | features-delta-one     | venues.yaml         | deps/unified-trading-deployment-v2/configs/ | 5min      |
 | features-volatility    | venues.yaml         | deps/unified-trading-deployment-v2/configs/ | 5min      |
 | features-calendar      | venues.yaml         | deps/unified-trading-deployment-v2/configs/ | 5min      |

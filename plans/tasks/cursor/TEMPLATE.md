@@ -8,8 +8,8 @@
 
 ## Task: [YOUR TASK NAME]
 
-**Goal**: [One sentence goal]  
-**Method**: X fast sub-agents MANDATORY (Task tool)  
+**Goal**: [One sentence goal]
+**Method**: X fast sub-agents MANDATORY (Task tool)
 **Time**: X hours
 
 **⚠️ SUB-AGENTS REQUIRED**: Master orchestrates ONLY, never edits directly!
@@ -54,33 +54,36 @@ Launch [X] Task sub-agents in parallel:
 
 **Sub-Agent 1**:
 ```
+
 description: [5-10 word description]
 model: fast
 subagent_type: generalPurpose
 prompt: |
-  [Detailed task for this agent]
-  
-  Files: [list]
-  
-  Steps:
-  1. [Step 1]
-  2. [Step 2]
-  
-  Verify: [commands]
-  
-  RETURN (REQUIRED):
-  ✅ Status: [Success/Issues]
-  📊 Metrics: Fixed X items, Y tests, Z errors
-  💰 TOKENS USED: Check your context at end and report total tokens consumed
-  ⏱️ Time: X minutes
-  🔒 Backup: [branch name]
-  
-  Example:
-  ✅ Status: Success
-  📊 Metrics: Fixed 15 violations, 37 tests pass, 0 errors
-  💰 TOKENS: 45K input + 12K output = 57K total
-  ⏱️ Time: 25 minutes
-  🔒 Backup: fix-standards-1708713234
+[Detailed task for this agent]
+
+Files: [list]
+
+Steps:
+
+1. [Step 1]
+2. [Step 2]
+
+Verify: [commands]
+
+RETURN (REQUIRED):
+✅ Status: [Success/Issues]
+📊 Metrics: Fixed X items, Y tests, Z errors
+💰 TOKENS USED: Check your context at end and report total tokens consumed
+⏱️ Time: X minutes
+🔒 Backup: [branch name]
+
+Example:
+✅ Status: Success
+📊 Metrics: Fixed 15 violations, 37 tests pass, 0 errors
+💰 TOKENS: 45K input + 12K output = 57K total
+⏱️ Time: 25 minutes
+🔒 Backup: fix-standards-1708713234
+
 ```
 
 **[Repeat for each sub-agent]**
@@ -99,27 +102,30 @@ prompt: |
 
 **How to resume**:
 ```
+
 Resume Task sub-agent [X]:
 
 description: Continue fixing [specific issue]
 subagent_type: generalPurpose
-resume: [agent-id-from-initial-launch]  ← MUST use same ID
+resume: [agent-id-from-initial-launch] ← MUST use same ID
 model: fast
 prompt: |
-  Your previous work: [summary of progress, e.g., 328 → 150 errors]
-  
-  Issue found in master review: [Specific problem with example]
-  
-  Solution (explicit guidance):
-  1. [Exact pattern to use with code snippet]
-  2. [Verification command]
-  
-  Target: [Specific metric, e.g., 150 → 0 errors]
-  
-  RETURN:
-  Progress: [metric before] → [metric after]
-  Tokens this iteration: XK (incremental, not cumulative)
-```
+Your previous work: [summary of progress, e.g., 328 → 150 errors]
+
+Issue found in master review: [Specific problem with example]
+
+Solution (explicit guidance):
+
+1. [Exact pattern to use with code snippet]
+2. [Verification command]
+
+Target: [Specific metric, e.g., 150 → 0 errors]
+
+RETURN:
+Progress: [metric before] → [metric after]
+Tokens this iteration: XK (incremental, not cumulative)
+
+````
 
 **Resume benefits** (vs launching new agent):
 - Agent keeps ALL context (no re-reading files)
@@ -161,7 +167,7 @@ prompt: |
 
 ```bash
 [Commands to verify complete success]
-```
+````
 
 ---
 
@@ -176,13 +182,16 @@ prompt: |
 **REQUIRED: Track at Sonnet 4.5 level and sub-agent level**
 
 ### Master Agent (Sonnet 4.5):
+
 - Starting tokens: [check at start]
 - Ending tokens: [check at end]
 - Used: [end - start]
 - Cost estimate: $X (at $X per 1M tokens)
 
 ### Sub-Agents (Fast Model):
+
 **Sub-Agent 1**:
+
 - Agent ID: [save for resume]
 - Initial tokens: XK
 - Resume iterations: Y (if any)
@@ -190,6 +199,7 @@ prompt: |
 - Cost: $X
 
 **Sub-Agent 2**:
+
 - Agent ID: [save for resume]
 - Tokens used: [from agent report]
 - Cost: $X
@@ -197,11 +207,13 @@ prompt: |
 [Repeat for each sub-agent]
 
 ### Total Session:
+
 - Master agent: XK tokens ($Y)
 - Sub-agents: XK tokens total ($Y)
 - **Grand total: XK tokens ($Z)**
 
 ### Cost Breakdown:
+
 - Sonnet 4.5 rate: $X per 1M input, $Y per 1M output
 - Fast model rate: $X per 1M input, $Y per 1M output
 - Total session cost: **$Z**

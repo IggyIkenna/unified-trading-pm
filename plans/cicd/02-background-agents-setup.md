@@ -1,8 +1,8 @@
 # 02: Background Agents Setup
 
-**Status**: ⬜ Not Started  
-**Priority**: P0 (Critical for parallel work)  
-**Estimated Time**: 1-2 hours (debugging required)  
+**Status**: ⬜ Not Started
+**Priority**: P0 (Critical for parallel work)
+**Estimated Time**: 1-2 hours (debugging required)
 **Expected Benefit**: 3-4x faster multi-repo operations
 
 ---
@@ -12,16 +12,19 @@
 Background agents (cloud VM agents) enable parallel execution of tasks but currently don't work in your 30+ repo workspace. This document diagnoses the issue and provides solutions.
 
 ### Current State
+
 - 30+ repo workspace in Cursor
 - Background agents fail to start or hang
 - Must use sequential execution (slow)
 
 ### Target State
+
 - Background agents work reliably
 - Can launch 4 parallel agents for cross-repo work
 - 3-4x faster for multi-repo operations
 
 ### Known Issue
+
 Per workspace rules: "Cursor background agents (cloud VM) have issues with 30+ repo workspaces."
 
 ---
@@ -83,6 +86,7 @@ cat .cursorignore | head -20
 ```
 
 **Known limits**:
+
 - 30+ repos may exceed background agent capacity
 - Large repos (>1GB each) can cause issues
 - Missing .cursorignore can include too many files
@@ -144,12 +148,14 @@ cursor-infra
    - 7-12 repos total (under background agent limit)
 
 **Pros**:
+
 - ✅ Background agents work reliably
 - ✅ Faster Cursor startup
 - ✅ Cleaner workspace organization
 - ✅ Foundation repos always available
 
 **Cons**:
+
 - ⚠️ Must switch workspaces for different epics
 - ⚠️ Can't see all 30+ repos at once
 
@@ -232,10 +238,12 @@ Agent 4: Check unified-trading-services for pattern X
 ```
 
 **Pros**:
+
 - ✅ Works regardless of workspace size
 - ✅ No cloud VM dependency
 
 **Cons**:
+
 - ⚠️ Uses your local machine resources
 - ⚠️ Slower than cloud VM agents
 
@@ -315,11 +323,13 @@ If workspace groups don't work:
 ### Issue: "Background agent failed to start"
 
 **Possible causes**:
+
 1. Workspace too large (30+ repos)
 2. Cursor version too old
 3. Network issues (cloud VM can't connect)
 
 **Solutions**:
+
 1. Use workspace groups (cursor-data, cursor-features, etc.)
 2. Update Cursor to latest version
 3. Check internet connection
@@ -327,11 +337,13 @@ If workspace groups don't work:
 ### Issue: "Background agent hangs indefinitely"
 
 **Possible causes**:
+
 1. Agent trying to read too many files
 2. Workspace indexing incomplete
 3. Memory limits exceeded
 
 **Solutions**:
+
 1. Add more patterns to .cursorignore
 2. Wait for workspace indexing to complete (check status bar)
 3. Use smaller workspace groups
@@ -339,11 +351,13 @@ If workspace groups don't work:
 ### Issue: "Can't resume background agent"
 
 **Possible causes**:
+
 1. Agent ID expired (cloud VM shut down)
 2. Agent completed and exited
 3. Network disconnection
 
 **Solutions**:
+
 1. Launch fresh agent (can't resume after VM shutdown)
 2. Check agent status before resuming
 3. Reconnect to internet
@@ -377,16 +391,19 @@ If workspace groups don't work:
 Document your findings here:
 
 ### Attempt 1: [Date]
-- **Action**: 
-- **Result**: 
-- **Next step**: 
+
+- **Action**:
+- **Result**:
+- **Next step**:
 
 ### Attempt 2: [Date]
-- **Action**: 
-- **Result**: 
-- **Next step**: 
+
+- **Action**:
+- **Result**:
+- **Next step**:
 
 ### Attempt 3: [Date]
-- **Action**: 
-- **Result**: 
-- **Next step**: 
+
+- **Action**:
+- **Result**:
+- **Next step**:

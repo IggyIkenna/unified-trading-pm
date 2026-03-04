@@ -7,7 +7,7 @@
 #
 # Valid types:
 # - feat: A new feature
-# - fix: A bug fix  
+# - fix: A bug fix
 # - chore: Maintenance, dependencies, build changes
 # - docs: Documentation changes
 # - refactor: Code change that neither fixes a bug nor adds a feature
