@@ -425,7 +425,7 @@ main() {
   echo "   ${CYAN}bash ${workspace_root}/unified-trading-system-repos/.cursor/workspace-configs/setup-workspace-venv-complete.sh${NC}"
   echo ""
 
-  log_info "Documentation: ${workspace_root}/unified-trading-pm/WORKSPACE_SETUP.md"
+  log_info "Documentation: ${workspace_root}/unified-trading-system-repos/unified-trading-pm/docs/workspace-setup.md"
 }
 
 # Run main if not sourced
