@@ -31,7 +31,7 @@ ACT_OUTPUT=$(mktemp /tmp/act-output-XXXXXX.log)
 
 # Cleanup on exit
 cleanup() {
-    rm -f "$ERROR_LOG" "$ACT_OUTPUT"
+  rm -f "$ERROR_LOG" "$ACT_OUTPUT"
 }
 trap cleanup EXIT
 
@@ -41,52 +41,52 @@ echo "Max attempts: $MAX_ATTEMPTS"
 echo ""
 
 run_act() {
-    echo "[$ATTEMPT/$MAX_ATTEMPTS] Running act quality-gates..."
+  echo "[$ATTEMPT/$MAX_ATTEMPTS] Running act quality-gates..."
 
-    # Run act and capture output
-    if act -j quality-gates --secret-file ~/.secrets > "$ACT_OUTPUT" 2>&1; then
-        echo "✅ Act quality-gates PASSED"
-        cat "$ACT_OUTPUT"
-        return 0
-    else
-        echo "❌ Act quality-gates FAILED"
-        cat "$ACT_OUTPUT"
-        cat "$ACT_OUTPUT" > "$ERROR_LOG"
-        return 1
-    fi
+  # Run act and capture output
+  if act -j quality-gates --secret-file ~/.secrets >"$ACT_OUTPUT" 2>&1; then
+    echo "✅ Act quality-gates PASSED"
+    cat "$ACT_OUTPUT"
+    return 0
+  else
+    echo "❌ Act quality-gates FAILED"
+    cat "$ACT_OUTPUT"
+    cat "$ACT_OUTPUT" >"$ERROR_LOG"
+    return 1
+  fi
 }
 
 # Initial attempt
 if run_act; then
-    echo ""
-    echo "✅ Pre-push hook passed on first attempt"
-    exit 0
+  echo ""
+  echo "✅ Pre-push hook passed on first attempt"
+  exit 0
 fi
 
 # Auto-fix loop
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    ATTEMPT=$((ATTEMPT + 1))
+  ATTEMPT=$((ATTEMPT + 1))
 
-    echo ""
-    echo "🤖 Attempting auto-fix with LLM agent (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
+  echo ""
+  echo "🤖 Attempting auto-fix with LLM agent (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
 
-    # Call LLM agent wrapper
-    if bash "$WORKSPACE_ROOT/.cursor/scripts/llm-agent-wrapper.sh" \
-        "$REPO_NAME" \
-        "$ERROR_LOG" \
-        "Fix the CI/CD errors reported by act quality-gates. Run quality gates locally to verify fixes."; then
+  # Call LLM agent wrapper
+  if bash "$WORKSPACE_ROOT/.cursor/scripts/llm-agent-wrapper.sh" \
+    "$REPO_NAME" \
+    "$ERROR_LOG" \
+    "Fix the CI/CD errors reported by act quality-gates. Run quality gates locally to verify fixes."; then
 
-        echo "✅ LLM agent completed fixes"
+    echo "✅ LLM agent completed fixes"
 
-        # Re-run act to verify
-        if run_act; then
-            echo ""
-            echo "✅ Pre-push hook passed after auto-fix (attempt $ATTEMPT/$MAX_ATTEMPTS)"
-            exit 0
-        fi
-    else
-        echo "❌ LLM agent failed to fix issues"
+    # Re-run act to verify
+    if run_act; then
+      echo ""
+      echo "✅ Pre-push hook passed after auto-fix (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+      exit 0
     fi
+  else
+    echo "❌ LLM agent failed to fix issues"
+  fi
 done
 
 echo ""

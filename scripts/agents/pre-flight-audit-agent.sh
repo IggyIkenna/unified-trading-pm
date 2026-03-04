@@ -21,10 +21,10 @@ echo ""
 
 # Check for API key (never write to world-readable temp file)
 if [ -z "${CURSOR_API_KEY:-}" ]; then
-    PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key from Secret Manager}"
-    echo "Getting API key from Secret Manager..."
-    CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
-    export CURSOR_API_KEY
+  PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key from Secret Manager}"
+  echo "Getting API key from Secret Manager..."
+  CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project="$PROJECT_ID")
+  export CURSOR_API_KEY
 fi
 export CURSOR_API_KEY
 export PATH="$HOME/.local/bin:$PATH"
@@ -109,23 +109,23 @@ Be efficient with tool calls.
 # Run agent
 echo "Running audit agent..."
 agent --api-key "$CURSOR_API_KEY" \
-    --print \
-    --model auto \
-    --trust \
-    --force \
-    --output-format stream-json \
-    --stream-partial-output \
-    --workspace "$WORKSPACE_ROOT" \
-    "$AUDIT_PROMPT" \
-    2>&1 | python3 "$PARSER"
+  --print \
+  --model auto \
+  --trust \
+  --force \
+  --output-format stream-json \
+  --stream-partial-output \
+  --workspace "$WORKSPACE_ROOT" \
+  "$AUDIT_PROMPT" \
+  2>&1 | python3 "$PARSER"
 
 exit_code=$?
 
 echo ""
 if [ $exit_code -eq 0 ]; then
-    echo -e "${GREEN}✅ Pre-Flight Audit Agent completed${NC}"
+  echo -e "${GREEN}✅ Pre-Flight Audit Agent completed${NC}"
 else
-    echo "❌ Pre-Flight Audit Agent failed (exit code: $exit_code)"
+  echo "❌ Pre-Flight Audit Agent failed (exit code: $exit_code)"
 fi
 
 exit $exit_code

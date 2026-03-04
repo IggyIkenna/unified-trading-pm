@@ -21,20 +21,20 @@ PROJECT_NAME="Initial Cleanup"
 
 # 14 service repos
 REPOS=(
-    "execution-services"
-    "strategy-service"
-    "instruments-service"
-    "unified-trading-library"
-    "market-data-processing-service"
-    "ml-training-service"
-    "ml-inference-service"
-    "features-delta-one-service"
-    "features-volatility-service"
-    "features-calendar-service"
-    "features-onchain-service"
-    "market-tick-data-handler"
-    "portfolio-manager-service"
-    "unified-trading-deployment-v2"
+  "execution-services"
+  "strategy-service"
+  "instruments-service"
+  "unified-trading-library"
+  "market-data-processing-service"
+  "ml-training-service"
+  "ml-inference-service"
+  "features-delta-one-service"
+  "features-volatility-service"
+  "features-calendar-service"
+  "features-onchain-service"
+  "market-tick-data-handler"
+  "portfolio-manager-service"
+  "unified-trading-deployment-v2"
 )
 
 echo "========================================="
@@ -65,13 +65,13 @@ query {
 }' --jq '.data.user.projectsV2.nodes[] | select(.title == "'"$PROJECT_NAME"'") | .number' 2>/dev/null || echo "")
 
 if [ -n "$EXISTING_PROJECT" ]; then
-    echo "✅ Project already exists: #$EXISTING_PROJECT"
-    PROJECT_NUMBER=$EXISTING_PROJECT
+  echo "✅ Project already exists: #$EXISTING_PROJECT"
+  PROJECT_NUMBER=$EXISTING_PROJECT
 else
-    # Create project using GraphQL API (user project, not org)
-    OWNER_ID=$(gh api user --jq .node_id)
+  # Create project using GraphQL API (user project, not org)
+  OWNER_ID=$(gh api user --jq .node_id)
 
-    PROJECT_DATA=$(gh api graphql -f query='
+  PROJECT_DATA=$(gh api graphql -f query='
       mutation {
         createProjectV2(input: {
           ownerId: "'"$OWNER_ID"'"
@@ -85,8 +85,8 @@ else
         }
       }' --jq '.data.createProjectV2.projectV2')
 
-    PROJECT_NUMBER=$(echo "$PROJECT_DATA" | jq -r '.number')
-    echo "✅ Project created: #$PROJECT_NUMBER"
+  PROJECT_NUMBER=$(echo "$PROJECT_DATA" | jq -r '.number')
+  echo "✅ Project created: #$PROJECT_NUMBER"
 fi
 
 echo ""
@@ -121,13 +121,13 @@ echo ""
 ISSUE_NUMBERS=()
 
 for repo in "${REPOS[@]}"; do
-    echo "Creating issue for $repo..."
+  echo "Creating issue for $repo..."
 
-    # Issue title
-    TITLE="[CLEANUP] Fix all COD violations in $repo"
+  # Issue title
+  TITLE="[CLEANUP] Fix all COD violations in $repo"
 
-    # Issue body
-    BODY="## Objective
+  # Issue body
+  BODY="## Objective
 
 Fix **all** Code-Owned Debt (COD) violations in \`$repo\`.
 
@@ -180,35 +180,35 @@ Attached to: **Initial Cleanup** (#$PROJECT_NUMBER)
 
 **Note**: This is a meta-issue. Individual COD fixes will be handled as part of this cleanup task."
 
-    # Check if issue already exists
-    EXISTING_ISSUE=$(gh issue list \
-        --repo "$ORG/$repo" \
-        --search "\"$TITLE\" in:title" \
-        --json number \
-        --jq '.[0].number' 2>/dev/null || echo "")
+  # Check if issue already exists
+  EXISTING_ISSUE=$(gh issue list \
+    --repo "$ORG/$repo" \
+    --search "\"$TITLE\" in:title" \
+    --json number \
+    --jq '.[0].number' 2>/dev/null || echo "")
 
-    if [ -n "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
-        echo "  ✅ Issue already exists: #$EXISTING_ISSUE"
-        ISSUE_NUMBER=$EXISTING_ISSUE
-    else
-        # Create issue
-        ISSUE_NUMBER=$(gh issue create \
-            --repo "$ORG/$repo" \
-            --title "$TITLE" \
-            --body "$BODY" \
-            --label "cod,cleanup" \
-            --assignee "@me" \
-            2>&1 | grep -o "[0-9]*$")
+  if [ -n "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
+    echo "  ✅ Issue already exists: #$EXISTING_ISSUE"
+    ISSUE_NUMBER=$EXISTING_ISSUE
+  else
+    # Create issue
+    ISSUE_NUMBER=$(gh issue create \
+      --repo "$ORG/$repo" \
+      --title "$TITLE" \
+      --body "$BODY" \
+      --label "cod,cleanup" \
+      --assignee "@me" \
+      2>&1 | grep -o "[0-9]*$")
 
-        echo "  ✅ Created issue: #$ISSUE_NUMBER"
-    fi
+    echo "  ✅ Created issue: #$ISSUE_NUMBER"
+  fi
 
-    ISSUE_NUMBERS+=("$ISSUE_NUMBER")
+  ISSUE_NUMBERS+=("$ISSUE_NUMBER")
 
-    # Add to project
-    gh project item-add "$PROJECT_NUMBER" --owner "$ORG" --url "https://github.com/$ORG/$repo/issues/$ISSUE_NUMBER" 2>/dev/null || true
+  # Add to project
+  gh project item-add "$PROJECT_NUMBER" --owner "$ORG" --url "https://github.com/$ORG/$repo/issues/$ISSUE_NUMBER" 2>/dev/null || true
 
-    sleep 0.5  # Rate limiting
+  sleep 0.5 # Rate limiting
 done
 
 echo ""
@@ -221,9 +221,9 @@ echo "Issues created: ${#ISSUE_NUMBERS[@]}"
 echo ""
 echo "Issue numbers:"
 for i in "${!ISSUE_NUMBERS[@]}"; do
-    repo="${REPOS[$i]}"
-    issue="${ISSUE_NUMBERS[$i]}"
-    printf "  #%-5s → %s\n" "$issue" "$repo"
+  repo="${REPOS[$i]}"
+  issue="${ISSUE_NUMBERS[$i]}"
+  printf "  #%-5s → %s\n" "$issue" "$repo"
 done
 echo ""
 

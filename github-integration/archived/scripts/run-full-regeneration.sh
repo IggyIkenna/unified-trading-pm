@@ -48,9 +48,9 @@ echo ""
 python3 "$SCRIPT_DIR/create-service-epics.py" --all-services
 
 if [ $? -ne 0 ]; then
-    echo ""
-    echo -e "${RED}❌ Epic generation failed!${NC}"
-    exit 1
+  echo ""
+  echo -e "${RED}❌ Epic generation failed!${NC}"
+  exit 1
 fi
 
 echo ""
@@ -70,36 +70,36 @@ echo ""
 
 # Get list of all service repos
 SERVICES=(
-    "instruments-service"
-    "market-tick-data-handler"
-    "market-data-processing-service"
-    "features-calendar-service"
-    "features-volatility-service"
-    "features-delta-one-service"
-    "features-onchain-service"
-    "strategy-service"
-    "ml-training-service"
-    "ml-inference-service"
-    "execution-services"
-    "unified-trading-library"
-    "unified-trading-deployment-v2"
+  "instruments-service"
+  "market-tick-data-handler"
+  "market-data-processing-service"
+  "features-calendar-service"
+  "features-volatility-service"
+  "features-delta-one-service"
+  "features-onchain-service"
+  "strategy-service"
+  "ml-training-service"
+  "ml-inference-service"
+  "execution-services"
+  "unified-trading-library"
+  "unified-trading-deployment-v2"
 )
 
 TOTAL_VIOLATIONS=0
 
 for service in "${SERVICES[@]}"; do
-    echo -e "\n${BLUE}Scanning: $service${NC}"
+  echo -e "\n${BLUE}Scanning: $service${NC}"
 
-    # Run diff checker (dry-run first to count violations)
-    VIOLATIONS=$(python3 "$SCRIPT_DIR/run-diff-checker.py" --repo "IggyIkenna/$service" --dry-run 2>/dev/null | grep -c "Found violation" || echo "0")
+  # Run diff checker (dry-run first to count violations)
+  VIOLATIONS=$(python3 "$SCRIPT_DIR/run-diff-checker.py" --repo "IggyIkenna/$service" --dry-run 2>/dev/null | grep -c "Found violation" || echo "0")
 
-    if [ "$VIOLATIONS" -gt 0 ]; then
-        echo -e "  ${YELLOW}⚠️  Found $VIOLATIONS violations - creating issues${NC}"
-        python3 "$SCRIPT_DIR/run-diff-checker.py" --repo "IggyIkenna/$service"
-        TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + VIOLATIONS))
-    else
-        echo -e "  ${GREEN}✅ No violations found${NC}"
-    fi
+  if [ "$VIOLATIONS" -gt 0 ]; then
+    echo -e "  ${YELLOW}⚠️  Found $VIOLATIONS violations - creating issues${NC}"
+    python3 "$SCRIPT_DIR/run-diff-checker.py" --repo "IggyIkenna/$service"
+    TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + VIOLATIONS))
+  else
+    echo -e "  ${GREEN}✅ No violations found${NC}"
+  fi
 done
 
 # ============================================================================
@@ -117,9 +117,9 @@ echo -e "${GREEN}✅ Phase 3: Code standards violations scanned${NC}"
 echo ""
 
 if [ $TOTAL_VIOLATIONS -gt 0 ]; then
-    echo -e "${YELLOW}📊 Total coding standards violations found: $TOTAL_VIOLATIONS${NC}"
+  echo -e "${YELLOW}📊 Total coding standards violations found: $TOTAL_VIOLATIONS${NC}"
 else
-    echo -e "${GREEN}🎉 No coding standards violations found!${NC}"
+  echo -e "${GREEN}🎉 No coding standards violations found!${NC}"
 fi
 
 echo ""

@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""Validate that workspace constraints resolve without dependency conflicts.
+
+1. Optionally regenerate workspace-constraints.toml from pyproject.toml (resolve-canonical-versions)
+2. Run uv pip compile to verify no transitive conflicts
+3. Optionally regenerate canonical-dependency-manifest.json
+
+Usage:
+    python validate-dependency-conflicts.py              # validate existing constraints
+    python validate-dependency-conflicts.py --regenerate # regenerate constraints first
+    python validate-dependency-conflicts.py --quiet
+
+Exit: 0 = resolves, 1 = conflict or error.
+"""
+
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PM_ROOT = SCRIPT_DIR.parent.parent
+WORKSPACE_ROOT = PM_ROOT.parent
+RESOLVE_SCRIPT = PM_ROOT / "scripts" / "workspace" / "resolve-canonical-versions.py"
+VALIDATE_SCRIPT = PM_ROOT / "scripts" / "workspace" / "validate-workspace-constraints.py"
+GENERATE_CANONICAL = PM_ROOT / "scripts" / "manifest" / "generate_canonical_dependency_manifest.py"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--regenerate", action="store_true", help="Run resolve-canonical-versions first")
+    parser.add_argument("--quiet", "-q", action="store_true")
+    args = parser.parse_args()
+
+    if args.regenerate:
+        if not RESOLVE_SCRIPT.is_file():
+            print(f"ERROR: {RESOLVE_SCRIPT} not found", file=sys.stderr)
+            return 1
+        r = subprocess.run(
+            [sys.executable, str(RESOLVE_SCRIPT)], cwd=str(WORKSPACE_ROOT), capture_output=not args.quiet, text=True
+        )
+        if r.returncode != 0:
+            if not args.quiet and r.stderr:
+                print(r.stderr, file=sys.stderr)
+            return 1
+
+    if not VALIDATE_SCRIPT.is_file():
+        print(f"ERROR: {VALIDATE_SCRIPT} not found", file=sys.stderr)
+        return 1
+    r = subprocess.run(
+        [sys.executable, str(VALIDATE_SCRIPT)] + (["-q"] if args.quiet else []),
+        cwd=str(WORKSPACE_ROOT),
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode != 0:
+        print("ERROR: Workspace constraints do not resolve. Dependency conflict detected.", file=sys.stderr)
+        if r.stderr:
+            print(r.stderr, file=sys.stderr)
+        return 1
+
+    if not args.quiet:
+        print("OK: Workspace constraints resolve without conflicts.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

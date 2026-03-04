@@ -15,8 +15,8 @@ ISSUE_NUMBER="${1:-}"
 REASON="${2:-Already fixed - file is compliant with coding standards}"
 
 if [ -z "$ISSUE_NUMBER" ]; then
-    echo "Usage: bash close-fixed-issue.sh <ISSUE_NUMBER> \"<reason>\""
-    exit 1
+  echo "Usage: bash close-fixed-issue.sh <ISSUE_NUMBER> \"<reason>\""
+  exit 1
 fi
 
 CODEX_ISSUE_REPO="IggyIkenna/unified-trading-codex"

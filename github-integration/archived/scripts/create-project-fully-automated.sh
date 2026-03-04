@@ -31,10 +31,10 @@ log_warning() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 # ==============================================================================
 
 create_project() {
-    log_info "Creating project: $PROJECT_NAME"
+  log_info "Creating project: $PROJECT_NAME"
 
-    # Create project (returns project ID)
-    PROJECT_ID=$(gh api graphql -f query='
+  # Create project (returns project ID)
+  PROJECT_ID=$(gh api graphql -f query='
       mutation {
         createProjectV2(input: {
           ownerId: "'$(gh api user -q .node_id)'"
@@ -48,7 +48,7 @@ create_project() {
         }
       }' --jq '.data.createProjectV2.projectV2.id')
 
-    PROJECT_NUMBER=$(gh api graphql -f query='
+  PROJECT_NUMBER=$(gh api graphql -f query='
       mutation {
         createProjectV2(input: {
           ownerId: "'$(gh api user -q .node_id)'"
@@ -60,9 +60,9 @@ create_project() {
         }
       }' --jq '.data.createProjectV2.projectV2.number')
 
-    log_success "Created project #$PROJECT_NUMBER (ID: $PROJECT_ID)"
-    echo "$PROJECT_ID" > /tmp/uts_project_id.txt
-    echo "$PROJECT_NUMBER" > /tmp/uts_project_number.txt
+  log_success "Created project #$PROJECT_NUMBER (ID: $PROJECT_ID)"
+  echo "$PROJECT_ID" >/tmp/uts_project_id.txt
+  echo "$PROJECT_NUMBER" >/tmp/uts_project_number.txt
 }
 
 # ==============================================================================
@@ -70,12 +70,12 @@ create_project() {
 # ==============================================================================
 
 add_custom_fields() {
-    log_info "Adding custom fields"
+  log_info "Adding custom fields"
 
-    local project_id=$(cat /tmp/uts_project_id.txt)
+  local project_id=$(cat /tmp/uts_project_id.txt)
 
-    # Status field (Single Select)
-    gh api graphql -f query='
+  # Status field (Single Select)
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -94,12 +94,12 @@ add_custom_fields() {
             id
           }
         }
-      }' > /dev/null
+      }' >/dev/null
 
-    log_success "Added Status field"
+  log_success "Added Status field"
 
-    # Priority field
-    gh api graphql -f query='
+  # Priority field
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -116,12 +116,12 @@ add_custom_fields() {
             id
           }
         }
-      }' > /dev/null
+      }' >/dev/null
 
-    log_success "Added Priority field"
+  log_success "Added Priority field"
 
-    # Service field
-    gh api graphql -f query='
+  # Service field
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -138,12 +138,12 @@ add_custom_fields() {
             id
           }
         }
-      }' > /dev/null
+      }' >/dev/null
 
-    log_success "Added Service field"
+  log_success "Added Service field"
 
-    # Milestone field
-    gh api graphql -f query='
+  # Milestone field
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -160,12 +160,12 @@ add_custom_fields() {
             id
           }
         }
-      }' > /dev/null
+      }' >/dev/null
 
-    log_success "Added Milestone field"
+  log_success "Added Milestone field"
 
-    # Estimated Hours field (Number)
-    gh api graphql -f query='
+  # Estimated Hours field (Number)
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -176,9 +176,9 @@ add_custom_fields() {
             id
           }
         }
-      }' > /dev/null
+      }' >/dev/null
 
-    log_success "Added Estimated Hours field"
+  log_success "Added Estimated Hours field"
 }
 
 # ==============================================================================
@@ -186,22 +186,22 @@ add_custom_fields() {
 # ==============================================================================
 
 main() {
-    echo "===================================================================="
-    echo "Fully Automated Project Creation"
-    echo "===================================================================="
-    echo "Organization: $GITHUB_ORG"
-    echo "Project: $PROJECT_NAME"
-    echo ""
+  echo "===================================================================="
+  echo "Fully Automated Project Creation"
+  echo "===================================================================="
+  echo "Organization: $GITHUB_ORG"
+  echo "Project: $PROJECT_NAME"
+  echo ""
 
-    create_project
-    add_custom_fields
+  create_project
+  add_custom_fields
 
-    local project_number=$(cat /tmp/uts_project_number.txt)
+  local project_number=$(cat /tmp/uts_project_number.txt)
 
-    log_success "Project created successfully!"
-    echo ""
-    echo "Project URL: https://github.com/orgs/$GITHUB_ORG/projects/$project_number"
-    echo ""
+  log_success "Project created successfully!"
+  echo ""
+  echo "Project URL: https://github.com/orgs/$GITHUB_ORG/projects/$project_number"
+  echo ""
 }
 
 main

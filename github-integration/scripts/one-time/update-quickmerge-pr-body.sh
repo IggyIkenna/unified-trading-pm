@@ -6,43 +6,43 @@ set -e
 WORKSPACE_ROOT="/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos"
 
 SERVICES=(
-    "instruments-service"
-    "execution-services"
-    "market-data-processing-service"
-    "market-tick-data-handler"
-    "features-volatility-service"
-    "features-delta-one-service"
-    "unified-trading-deployment-v2"
-    "features-calendar-service"
-    "features-onchain-service"
-    "unified-trading-library"
-    "ml-inference-service"
-    "ml-training-service"
-    "strategy-service"
+  "instruments-service"
+  "execution-services"
+  "market-data-processing-service"
+  "market-tick-data-handler"
+  "features-volatility-service"
+  "features-delta-one-service"
+  "unified-trading-deployment-v2"
+  "features-calendar-service"
+  "features-onchain-service"
+  "unified-trading-library"
+  "ml-inference-service"
+  "ml-training-service"
+  "strategy-service"
 )
 
 echo "🔧 Updating quickmerge.sh scripts to include issue refs in PR body..."
 echo ""
 
 for service in "${SERVICES[@]}"; do
-    SCRIPT_PATH="$WORKSPACE_ROOT/$service/scripts/quickmerge.sh"
+  SCRIPT_PATH="$WORKSPACE_ROOT/$service/scripts/quickmerge.sh"
 
-    if [ ! -f "$SCRIPT_PATH" ]; then
-        echo "⏭️  Skipping $service (no quickmerge.sh)"
-        continue
-    fi
+  if [ ! -f "$SCRIPT_PATH" ]; then
+    echo "⏭️  Skipping $service (no quickmerge.sh)"
+    continue
+  fi
 
-    # Check if already updated
-    if grep -q "ISSUE_REFS=" "$SCRIPT_PATH"; then
-        echo "✅ $service (already updated)"
-        continue
-    fi
+  # Check if already updated
+  if grep -q "ISSUE_REFS=" "$SCRIPT_PATH"; then
+    echo "✅ $service (already updated)"
+    continue
+  fi
 
-    # Create backup
-    cp "$SCRIPT_PATH" "$SCRIPT_PATH.bak"
+  # Create backup
+  cp "$SCRIPT_PATH" "$SCRIPT_PATH.bak"
 
-    # Use Python for safer multiline replacement
-    python3 - "$SCRIPT_PATH" << 'PYEOF'
+  # Use Python for safer multiline replacement
+  python3 - "$SCRIPT_PATH" <<'PYEOF'
 import sys
 script_path = sys.argv[1]
 
@@ -80,13 +80,13 @@ else:
     sys.exit(1)
 PYEOF
 
-    if [ $? -eq 0 ]; then
-        echo "✅ $service"
-        rm "$SCRIPT_PATH.bak"
-    else
-        echo "❌ $service (failed - restored backup)"
-        mv "$SCRIPT_PATH.bak" "$SCRIPT_PATH"
-    fi
+  if [ $? -eq 0 ]; then
+    echo "✅ $service"
+    rm "$SCRIPT_PATH.bak"
+  else
+    echo "❌ $service (failed - restored backup)"
+    mv "$SCRIPT_PATH.bak" "$SCRIPT_PATH"
+  fi
 done
 
 echo ""

@@ -22,42 +22,42 @@ ORG="IggyIkenna"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --from)
-            FROM_PROJECT="$2"
-            shift 2
-            ;;
-        --to)
-            TO_PROJECT="$2"
-            shift 2
-            ;;
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        -h|--help)
-            echo "Usage: bash 04-copy-workflows.sh --from <template-number> --to <new-number>"
-            echo ""
-            echo "Options:"
-            echo "  --from  Template project number (default: 5 for Initial Cleanup)"
-            echo "  --to    New project number to configure (required)"
-            echo "  --org   GitHub user/org (default: IggyIkenna)"
-            echo ""
-            echo "Example:"
-            echo "  bash 04-copy-workflows.sh --from 5 --to 6"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --from)
+      FROM_PROJECT="$2"
+      shift 2
+      ;;
+    --to)
+      TO_PROJECT="$2"
+      shift 2
+      ;;
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    -h | --help)
+      echo "Usage: bash 04-copy-workflows.sh --from <template-number> --to <new-number>"
+      echo ""
+      echo "Options:"
+      echo "  --from  Template project number (default: 5 for Initial Cleanup)"
+      echo "  --to    New project number to configure (required)"
+      echo "  --org   GitHub user/org (default: IggyIkenna)"
+      echo ""
+      echo "Example:"
+      echo "  bash 04-copy-workflows.sh --from 5 --to 6"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
 done
 
 # Validate
 if [ -z "$TO_PROJECT" ]; then
-    echo "Error: --to is required"
-    exit 1
+  echo "Error: --to is required"
+  exit 1
 fi
 
 echo "========================================="
@@ -78,9 +78,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_SCRIPT="$SCRIPT_DIR/../../utilities/copy-project-workflows.sh"
 
 if [ ! -f "$BASE_SCRIPT" ]; then
-    echo "❌ Base script not found: $BASE_SCRIPT"
-    echo "   Expected: unified-trading-codex/11-project-management/github-integration/scripts/utilities/copy-project-workflows.sh"
-    exit 1
+  echo "❌ Base script not found: $BASE_SCRIPT"
+  echo "   Expected: unified-trading-codex/11-project-management/github-integration/scripts/utilities/copy-project-workflows.sh"
+  exit 1
 fi
 
 # Run base script

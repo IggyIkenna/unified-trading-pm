@@ -35,7 +35,7 @@ else
 fi
 
 ISSUES_FILE="/tmp/diff-checker-issues.json"
-echo "[]" > "$ISSUES_FILE"
+echo "[]" >"$ISSUES_FILE"
 
 for service in "${SERVICES[@]}"; do
   CHECKLIST="$DEPLOYMENT_V3/configs/checklist.${service}.yaml"
@@ -79,7 +79,7 @@ for service in "${SERVICES[@]}"; do
         --arg body "$(printf "## Service Readiness Gaps: %s\n\n%s" "$service" "$(printf '%s\n' "${GAPS[@]}" | sed 's/^/- /')")" \
         --argjson labels '["service-readiness","auto-generated"]' \
         '{title: $title, body: $body, labels: $labels}')
-      jq --argjson issue "$ISSUE" '. += [$issue]' "$ISSUES_FILE" > /tmp/issues_tmp.json && mv /tmp/issues_tmp.json "$ISSUES_FILE"
+      jq --argjson issue "$ISSUE" '. += [$issue]' "$ISSUES_FILE" >/tmp/issues_tmp.json && mv /tmp/issues_tmp.json "$ISSUES_FILE"
     fi
   else
     echo "  ✅ No gaps for $service"

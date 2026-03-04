@@ -26,19 +26,19 @@ NC='\033[0m' # No Color
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../../.." && pwd)}"
 
 REPOS=(
-    "execution-services"
-    "strategy-service"
-    "instruments-service"
-    "unified-trading-library"
-    "market-data-processing-service"
-    "ml-training-service"
-    "ml-inference-service"
-    "features-delta-one-service"
-    "features-volatility-service"
-    "features-calendar-service"
-    "features-onchain-service"
-    "market-tick-data-handler"
-    "unified-trading-deployment-v2"
+  "execution-services"
+  "strategy-service"
+  "instruments-service"
+  "unified-trading-library"
+  "market-data-processing-service"
+  "ml-training-service"
+  "ml-inference-service"
+  "features-delta-one-service"
+  "features-volatility-service"
+  "features-calendar-service"
+  "features-onchain-service"
+  "market-tick-data-handler"
+  "unified-trading-deployment-v2"
 )
 
 echo -e "${BLUE}========================================"
@@ -56,62 +56,62 @@ echo ""
 read -p "Continue? (y/n) " -n 1 -r
 echo ""
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
+  echo "Aborted."
+  exit 0
 fi
 
 UPDATED=0
 SKIPPED=0
 
 for repo in "${REPOS[@]}"; do
-    QUALITY_GATES="$WORKSPACE_ROOT/$repo/scripts/quality-gates.sh"
+  QUALITY_GATES="$WORKSPACE_ROOT/$repo/scripts/quality-gates.sh"
 
-    if [ ! -f "$QUALITY_GATES" ]; then
-        echo -e "${YELLOW}⏭️  Skipping $repo (no quality-gates.sh)${NC}"
-        SKIPPED=$((SKIPPED + 1))
-        continue
-    fi
+  if [ ! -f "$QUALITY_GATES" ]; then
+    echo -e "${YELLOW}⏭️  Skipping $repo (no quality-gates.sh)${NC}"
+    SKIPPED=$((SKIPPED + 1))
+    continue
+  fi
 
-    # Check if already blocking
-    if ! grep -q "warn only - not blocking" "$QUALITY_GATES"; then
-        echo -e "${GREEN}✅ $repo (already blocking)${NC}"
-        SKIPPED=$((SKIPPED + 1))
-        continue
-    fi
+  # Check if already blocking
+  if ! grep -q "warn only - not blocking" "$QUALITY_GATES"; then
+    echo -e "${GREEN}✅ $repo (already blocking)${NC}"
+    SKIPPED=$((SKIPPED + 1))
+    continue
+  fi
 
-    echo -e "${BLUE}🔧 Updating $repo...${NC}"
+  echo -e "${BLUE}🔧 Updating $repo...${NC}"
 
-    # Create backup
-    cp "$QUALITY_GATES" "$QUALITY_GATES.backup"
+  # Create backup
+  cp "$QUALITY_GATES" "$QUALITY_GATES.backup"
 
-    # Read the file
-    CONTENT=$(cat "$QUALITY_GATES")
+  # Read the file
+  CONTENT=$(cat "$QUALITY_GATES")
 
-    # Replace warn-only with blocking
-    NEW_CONTENT=$(echo "$CONTENT" | sed \
-        -e 's/echo -e "Codex:    \${YELLOW}⚠️  FAILED (warn only - not blocking)\${NC}"/echo -e "Codex:    \${RED}❌ FAILED\${NC}"\n    OVERALL_STATUS=1/' \
-        -e '/# Codex violations (print, os\.getenv, datetime\.now, etc\.) are non-blocking for now/d')
+  # Replace warn-only with blocking
+  NEW_CONTENT=$(echo "$CONTENT" | sed \
+    -e 's/echo -e "Codex:    \${YELLOW}⚠️  FAILED (warn only - not blocking)\${NC}"/echo -e "Codex:    \${RED}❌ FAILED\${NC}"\n    OVERALL_STATUS=1/' \
+    -e '/# Codex violations (print, os\.getenv, datetime\.now, etc\.) are non-blocking for now/d')
 
-    # Write back
-    echo "$NEW_CONTENT" > "$QUALITY_GATES"
+  # Write back
+  echo "$NEW_CONTENT" >"$QUALITY_GATES"
 
-    # Verify the change
-    if grep -q "warn only - not blocking" "$QUALITY_GATES"; then
-        echo -e "  ${RED}❌ Failed to update - restoring backup${NC}"
-        mv "$QUALITY_GATES.backup" "$QUALITY_GATES"
-        continue
-    fi
+  # Verify the change
+  if grep -q "warn only - not blocking" "$QUALITY_GATES"; then
+    echo -e "  ${RED}❌ Failed to update - restoring backup${NC}"
+    mv "$QUALITY_GATES.backup" "$QUALITY_GATES"
+    continue
+  fi
 
-    # Check if update was successful
-    if grep -q "❌ FAILED" "$QUALITY_GATES" && ! grep -q "warn only" "$QUALITY_GATES"; then
-        echo -e "  ${GREEN}✅ Updated successfully${NC}"
-        rm "$QUALITY_GATES.backup"
-        UPDATED=$((UPDATED + 1))
-    else
-        echo -e "  ${YELLOW}⚠️  Unexpected result - check manually${NC}"
-        # Keep backup for manual review
-        UPDATED=$((UPDATED + 1))
-    fi
+  # Check if update was successful
+  if grep -q "❌ FAILED" "$QUALITY_GATES" && ! grep -q "warn only" "$QUALITY_GATES"; then
+    echo -e "  ${GREEN}✅ Updated successfully${NC}"
+    rm "$QUALITY_GATES.backup"
+    UPDATED=$((UPDATED + 1))
+  else
+    echo -e "  ${YELLOW}⚠️  Unexpected result - check manually${NC}"
+    # Keep backup for manual review
+    UPDATED=$((UPDATED + 1))
+  fi
 done
 
 echo ""
