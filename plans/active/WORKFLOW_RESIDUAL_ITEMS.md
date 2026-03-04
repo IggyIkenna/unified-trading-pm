@@ -232,6 +232,8 @@ These repos exist in the workspace but weren't part of the primary scan:
 
 ### R-11: unified-trading-services -> unified-cloud-library
 
+> **SUPERSEDED:** Manifest already renamed to `unified-trading-library` (UTL) on 2026-03-02. No further action needed.
+
 **Current name:** `unified-trading-services` (was `unified-cloud-services` before that)
 **Problem:** It's a library (imported by 37+ repos), NOT a service. Has no main entrypoint. Provides cloud provider abstractions.
 **Proposed name:** `unified-cloud-library`

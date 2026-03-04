@@ -52,6 +52,13 @@ log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname "$PROJECT_ROOT")"
+REPO_NAME="$(basename "$PROJECT_ROOT")"
+# Auto-detect REPO_MODULE when using symlinked template (codex -> PM)
+if [[ "$REPO_NAME" == "unified-trading-codex" ]]; then
+    REPO_MODULE="codex"
+elif [[ "$REPO_NAME" == "unified-trading-pm" ]]; then
+    REPO_MODULE="unified_trading_pm"
+fi
 
 cd "$PROJECT_ROOT"
 
@@ -62,10 +69,11 @@ cd "$PROJECT_ROOT"
 # quality-gates.sh only selects the right venv to use.
 # ============================================================================
 WORKSPACE_VENV="$REPO_ROOT/.venv-workspace"
-if [ "$REPO_MODULE" = "unified_trading_pm" ] && [ -d "$WORKSPACE_VENV/bin" ]; then
-    # PM repo: use workspace venv (PM is not an installable Python package)
-    export PATH="$WORKSPACE_VENV/bin:$PATH"
-    log_success "Using workspace venv (PM is not an installable package)"
+if [ "$REPO_MODULE" = "unified_trading_pm" ] || [ "$REPO_MODULE" = "codex" ]; then
+    if [ -d "$WORKSPACE_VENV/bin" ]; then
+        export PATH="$WORKSPACE_VENV/bin:$PATH"
+        log_success "Using workspace venv ($REPO_MODULE is not an installable package)"
+    fi
 elif [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     # Local dev: ensure environment via setup.sh — all installs live there
     if [ -f "$SCRIPT_DIR/setup.sh" ]; then
@@ -90,7 +98,6 @@ else
 fi
 PYTHON_VERSION="$($PYTHON_CMD --version 2>&1)"
 
-REPO_NAME=$(basename "$PROJECT_ROOT")
 echo -e "${BLUE}======================================================================${NC}"
 echo -e "${BLUE}$(echo "$REPO_NAME" | tr '[:lower:]' '[:upper:]') QUALITY GATES${NC}"
 echo -e "${BLUE}======================================================================${NC}"
@@ -139,9 +146,12 @@ CONFIG_STATUS=0
 
 # ── GIT-AWARE MODE ───────────────────────────────────────────────────────────
 # When files are staged (quickmerge --files), check ONLY staged .py files
-# PM-specific: scripts/ and github-integration/ instead of module dir
+# PM/codex: scripts/ and repo-specific dirs (not a Python module)
 if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
     SOURCE_DIRS="scripts/ github-integration/ tests/"
+elif [ "$REPO_MODULE" = "codex" ]; then
+    SOURCE_DIRS="scripts/ validators/"
+    [ -d "tests" ] && SOURCE_DIRS="$SOURCE_DIRS tests/"
 else
     SOURCE_DIRS="${REPO_MODULE}/ tests/"
 fi
@@ -177,10 +187,24 @@ fi
 
 # ripgrep required for codex compliance
 if ! command -v rg &>/dev/null; then
-    log_fail "ripgrep (rg) required — brew install ripgrep (macOS) / apt install ripgrep (Linux)"
+    log_fail "ripgrep (rg) required — run: ./bootstrap.sh (or brew install ripgrep / apt install ripgrep)"
     CONFIG_STATUS=1
 else
     log_success "ripgrep available"
+fi
+
+# shfmt and shellcheck required for bash — FAIL if missing (no skip)
+if ! command -v shfmt &>/dev/null; then
+    log_fail "shfmt required — run: ./bootstrap.sh (or brew install shfmt / apt install shfmt)"
+    CONFIG_STATUS=1
+else
+    log_success "shfmt available"
+fi
+if ! command -v shellcheck &>/dev/null; then
+    log_fail "shellcheck required — run: ./bootstrap.sh (or brew install shellcheck / apt install shellcheck)"
+    CONFIG_STATUS=1
+else
+    log_success "shellcheck available"
 fi
 
 # Ruff version check
@@ -250,6 +274,35 @@ if [ "$RUN_LINT" = true ]; then
         log_fail "Linting FAILED"
         LINT_STATUS=1
     fi
+
+    # Bash: shfmt + shellcheck (shfmt and shellcheck required — fail if missing, see STEP 0)
+    if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
+        BASH_DIRS="scripts/ github-integration/"
+    elif [ "$REPO_MODULE" = "codex" ]; then
+        BASH_DIRS="scripts/ validators/"
+    else
+        BASH_DIRS="scripts/"
+    fi
+    SH_FILES=$(find $BASH_DIRS -name "*.sh" -type f 2>/dev/null | tr '
+' ' ')
+    if [ -n "$SH_FILES" ]; then
+        echo -e "
+${YELLOW}Bash: shfmt + shellcheck${NC}"
+        if [ "$AUTO_FIX" = true ]; then
+            shfmt -w -i 2 -ci -bn $BASH_DIRS 2>/dev/null || true
+        else
+            if ! shfmt -d -i 2 -ci -bn $BASH_DIRS 2>/dev/null; then
+                log_fail "Bash format FAILED (run without --no-fix to auto-format)"
+                LINT_STATUS=1
+            fi
+        fi
+        if ! shellcheck $SH_FILES 2>/dev/null; then
+            log_fail "Bash lint FAILED (shellcheck)"
+            LINT_STATUS=1
+        else
+            log_success "Bash lint PASSED"
+        fi
+    fi
 fi
 
 # ============================================================================
@@ -293,6 +346,8 @@ if [ "$RUN_LINT" = true ] && [ "$SKIP_TYPECHECK" != true ]; then
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
     if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
         TYPECHECK_DIRS="scripts/ github-integration/"
+    elif [ "$REPO_MODULE" = "codex" ]; then
+        TYPECHECK_DIRS="scripts/ validators/"
     else
         TYPECHECK_DIRS="${REPO_MODULE}/"
     fi
@@ -374,8 +429,8 @@ if [ "$RUN_TESTS" = true ]; then
                 log_fail "Unit tests FAILED"
                 TEST_STATUS=1
             fi
-        elif [ -d "tests" ] && [ "$REPO_MODULE" = "unified_trading_pm" ]; then
-            # PM-specific: tests are in tests/ directly, not tests/unit/
+        elif [ -d "tests" ] && { [ "$REPO_MODULE" = "unified_trading_pm" ] || [ "$REPO_MODULE" = "codex" ]; }; then
+            # PM/codex: tests are in tests/ directly, not tests/unit/
             if $PYTHON_CMD -m pytest tests/ -v --tb=short $COV_ARGS $TIMEOUT_ARG $PARALLEL_FLAG; then
                 log_success "Tests PASSED"
             else
@@ -431,8 +486,8 @@ if [ "$RUN_TESTS" = true ]; then
         fi
     fi
 
-    # Import sanity check (skip for PM — not an importable package)
-    if [ "$REPO_MODULE" != "unified_trading_pm" ]; then
+    # Import sanity check (skip for PM/codex — not importable packages)
+    if [ "$REPO_MODULE" != "unified_trading_pm" ] && [ "$REPO_MODULE" != "codex" ]; then
         echo -e "\n${YELLOW}Running import sanity check...${NC}"
         if $PYTHON_CMD -c "import ${REPO_MODULE}; print('✅ Top-level import works')" 2>/dev/null; then
             log_success "Import check PASSED"
@@ -451,9 +506,9 @@ echo "----------------------------------------------------------------------"
 
 CODEX_VIOLATIONS=0
 
-# PM-specific: skip codex service-level checks (PM is automation, not a service)
-if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
-    log_success "PM repo — codex service checks skipped (automation scripts, not service code)"
+# PM/codex: skip codex service-level checks (automation scripts, not service code)
+if [ "$REPO_MODULE" = "unified_trading_pm" ] || [ "$REPO_MODULE" = "codex" ]; then
+    log_success "$REPO_MODULE — codex service checks skipped (automation scripts, not service code)"
     CODEX_STATUS=0
 else
 
@@ -463,7 +518,7 @@ if ! command -v rg &>/dev/null; then
 fi
 
 # Derive prod source dir
-if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
+if [ "$REPO_MODULE" = "unified_trading_pm" ] || [ "$REPO_MODULE" = "codex" ]; then
     SOURCE_DIR="scripts/"
 else
     SOURCE_DIR="${REPO_MODULE}/"
