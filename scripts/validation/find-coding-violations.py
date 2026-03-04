@@ -22,7 +22,14 @@ import argparse
 import re
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import TypedDict, override
+
+
+class CheckResult(TypedDict):
+    name: str
+    count: int
+    hits: list[tuple[str, int, str]]
+
 
 # Workspace root (parent of unified-trading-codex)
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -78,7 +85,7 @@ class ViolationChecker:
         """Return True if this line should be excluded (false positive)."""
         return False
 
-    def run_ripgrep(self, pattern: str, additional_args: list[str] = None) -> list[tuple[str, int, str]]:
+    def run_ripgrep(self, pattern: str, additional_args: list[str] | None = None) -> list[tuple[str, int, str]]:
         """Run ripgrep and return (filepath, line_num, content) tuples."""
         cmd = ["rg", pattern, "--type", "py", "-n"]
 
@@ -118,7 +125,7 @@ class ViolationChecker:
 
         return hits
 
-    def check(self) -> dict[str, Any]:
+    def check(self) -> CheckResult:
         """Run check and return results."""
         raise NotImplementedError
 
@@ -139,25 +146,19 @@ class PrintChecker(ViolationChecker):
             return True
         return False
 
-    def check(self) -> dict[str, Any]:
+    @override
+    def check(self) -> CheckResult:
         hits = self.run_ripgrep(r"print\(")
-        return {
-            "name": "print() statements",
-            "count": len(hits),
-            "hits": hits,
-        }
+        return {"name": "print() statements", "count": len(hits), "hits": hits}
 
 
 class OsGetenvChecker(ViolationChecker):
     """Find os.getenv() in production code."""
 
-    def check(self) -> dict[str, Any]:
+    @override
+    def check(self) -> CheckResult:
         hits = self.run_ripgrep(r"os\.getenv")
-        return {
-            "name": "os.getenv() usage",
-            "count": len(hits),
-            "hits": hits,
-        }
+        return {"name": "os.getenv() usage", "count": len(hits), "hits": hits}
 
 
 class IndentedImportChecker(ViolationChecker):
@@ -271,14 +272,11 @@ class IndentedImportChecker(ViolationChecker):
                 return True
         return False
 
-    def check(self) -> dict[str, Any]:
+    @override
+    def check(self) -> CheckResult:
         # Match indented import or from...import (excludes module-level)
         hits = self.run_ripgrep(r"^[[:space:]]+import |^[[:space:]]+from .* import")
-        return {
-            "name": "Indented imports",
-            "count": len(hits),
-            "hits": hits,
-        }
+        return {"name": "Indented imports", "count": len(hits), "hits": hits}
 
 
 class NaiveDatetimeChecker(ViolationChecker):
@@ -294,49 +292,41 @@ class NaiveDatetimeChecker(ViolationChecker):
             return True
         return False
 
-    def check(self) -> dict[str, Any]:
+    @override
+    def check(self) -> CheckResult:
         patterns = [
-            (r"datetime\.now\(\)", "datetime.now()"),
-            (r"datetime\.utcnow\(\)", "datetime.utcnow()"),
+            r"datetime\.now\(\)",
+            r"datetime\.utcnow\(\)",
         ]
-
-        all_hits = []
-        for pattern, label in patterns:
-            hits = self.run_ripgrep(pattern)
-            all_hits.extend(hits)
-
-        return {
-            "name": "Naive datetime usage",
-            "count": len(all_hits),
-            "hits": all_hits,
-        }
+        all_hits: list[tuple[str, int, str]] = []
+        for pattern in patterns:
+            all_hits.extend(self.run_ripgrep(pattern))
+        return {"name": "Naive datetime usage", "count": len(all_hits), "hits": all_hits}
 
 
 class BareExceptChecker(ViolationChecker):
     """Find bare except: clauses."""
 
+    @override
     def should_exclude_line(self, content: str) -> bool:
         """Exclude except: that's in comments or has a type."""
         stripped = content.strip()
         if stripped.startswith("#"):
             return True
-        # Has exception type (except (ConnectionError, TimeoutError, OSError, ValueError):, except ValueError:)
         if re.match(r"except\s+\w+", stripped):
             return True
         return False
 
-    def check(self) -> dict[str, Any]:
+    @override
+    def check(self) -> CheckResult:
         hits = self.run_ripgrep(r"except:")
-        return {
-            "name": "Bare except clauses",
-            "count": len(hits),
-            "hits": hits,
-        }
+        return {"name": "Bare except clauses", "count": len(hits), "hits": hits}
 
 
 class HardcodedPathChecker(ViolationChecker):
     """Find hardcoded path literals."""
 
+    @override
     def should_exclude_line(self, content: str) -> bool:
         """Exclude common false positives."""
         stripped = content.strip()
@@ -358,14 +348,11 @@ class HardcodedPathChecker(ViolationChecker):
             return True
         return False
 
-    def check(self) -> dict[str, Any]:
+    @override
+    def check(self) -> CheckResult:
         # Find absolute paths like "/path/to/file"
         hits = self.run_ripgrep(r'"/[^"]+/[^"]+"')
-        return {
-            "name": "Hardcoded paths",
-            "count": len(hits),
-            "hits": hits[:50],  # Limit to first 50 (can be many)
-        }
+        return {"name": "Hardcoded paths", "count": len(hits), "hits": hits[:50]}
 
 
 # Registry of all checkers
@@ -379,7 +366,7 @@ ALL_CHECKERS = {
 }
 
 
-def scan_single_repo(repo_path: Path, check_names: list[str] = None) -> dict[str, Any]:
+def scan_single_repo(repo_path: Path, check_names: list[str] | None = None) -> dict[str, CheckResult]:
     """Scan a single repo for violations."""
     if check_names is None:
         check_names = list(ALL_CHECKERS.keys())
@@ -400,7 +387,7 @@ def scan_single_repo(repo_path: Path, check_names: list[str] = None) -> dict[str
 def print_results(
     repo_name: str,
     repo_path: Path,
-    results: dict[str, Any],
+    results: dict[str, CheckResult],
     verbose: bool = False,
     full_report: bool = False,
 ):
