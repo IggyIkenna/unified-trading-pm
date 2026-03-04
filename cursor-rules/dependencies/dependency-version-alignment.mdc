@@ -7,7 +7,7 @@ tags:
   - versioning
 ---
 # Dependency Version Alignment
-RULE: Check codex and workspace-constraints.toml before adding/updating deps. Use version ranges from unified-trading-pm/workspace-constraints.toml (SSOT for external deps).
+RULE: Check codex and workspace-constraints.toml (Python) or workspace-constraints-node.json (Node/frontend) before adding/updating deps. Use version ranges from the appropriate SSOT.
 WHY: Prevents import failures, test incompatibilities, deployment issues across 30+ repos.
 CODEX: 06-coding-standards/dependency-management.md, .cursor/workspace-configs/check-dependency-alignment.sh
 DO: Update codex first if new dep; update ALL repos; run `uv lock`; run resolve-canonical-versions.py (validates via uv pip compile); use resolve-version-conflicts.py to detect drift

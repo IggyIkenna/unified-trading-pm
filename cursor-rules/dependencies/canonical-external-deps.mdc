@@ -13,7 +13,9 @@ RULE: When adding or updating an **external** (PyPI) dependency in any repo, use
 
 WHY: Prevents version drift across 30+ repos; one global list (JSON + SVG) for visibility and tooling. Workspace-manifest.json pins internal/private repos; this manifest pins external packages.
 
-**SSOT:** `unified-trading-pm/workspace-constraints.toml` — last valid external dependency ranges. Validated by `validate-workspace-constraints.py` (uv pip compile) to catch transitive conflicts (e.g. pandas→numpy). Derived: `canonical-dependency-manifest.json`, `CANONICAL_DEPENDENCY_MANIFEST.svg`.
+**SSOT (Python):** `unified-trading-pm/workspace-constraints.toml` — last valid external dependency ranges. Validated by `validate-workspace-constraints.py` (uv pip compile) to catch transitive conflicts (e.g. pandas→numpy). Derived: `canonical-dependency-manifest.json`, `CANONICAL_DEPENDENCY_MANIFEST.svg`.
+
+**SSOT (Node/frontend):** `unified-trading-pm/workspace-constraints-node.json` — canonical npm ranges for UI repos. Validated by `scripts/workspace/validate-workspace-constraints-node.py`. Use `peerDependencyGroups.eslint8` when on eslint@8.
 
 CODEX: 06-coding-standards/dependency-management.md (§ Workspace-wide dependency pinning, § Canonical dependency manifest).
 
