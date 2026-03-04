@@ -1,8 +1,8 @@
 # Handoff Guide: Unified Trading System - Epics 1-3
 
-**To**: Harsh  
-**From**: Ikenna  
-**Date**: 2026-02-15  
+**To**: Harsh
+**From**: Ikenna
+**Date**: 2026-02-15
 **Status**: Ready to execute
 
 ---

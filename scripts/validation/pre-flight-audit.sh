@@ -56,18 +56,18 @@ else
         echo "    - $dep"
     done
     echo ""
-    
+
     # Check each dependency for uncommitted changes
     for dep in "${PATH_DEPS[@]}"; do
         dep_path="$WORKSPACE_ROOT/$dep"
-        
+
         if [ ! -d "$dep_path" ]; then
             echo -e "  ${YELLOW}⚠️  $dep: Directory not found (skipping)${NC}"
             continue
         fi
-        
+
         cd "$dep_path"
-        
+
         # Check for uncommitted changes
         if [ -n "$(git status --porcelain)" ]; then
             echo -e "  ${RED}❌ $dep: HAS UNCOMMITTED CHANGES${NC}"
@@ -84,7 +84,7 @@ else
         else
             echo -e "  ${GREEN}✅ $dep: Clean (no uncommitted changes)${NC}"
         fi
-        
+
         cd "$REPO_DIR"
     done
 fi
@@ -111,10 +111,10 @@ if [ -f "$AUDIT_FACTORS" ]; then
     fi
 else
     echo "  Creating quick audit factors check..."
-    
+
     # Quick inline checks for common issues
     echo "  Checking for common violations..."
-    
+
     # Check 1: E722 in global ignore
     if grep -q "^ignore = \[.*\"E722\"" pyproject.toml 2>/dev/null; then
         echo -e "    ${RED}❌ E722 (bare except) in global ignore${NC}"
@@ -123,7 +123,7 @@ else
     else
         echo -e "    ${GREEN}✅ E722 not in global ignore${NC}"
     fi
-    
+
     # Check 2: Hardcoded project IDs in tests
     if grep -r "central-element-323112" tests/ 2>/dev/null | grep -v "# test-project acceptable" > /dev/null; then
         echo -e "    ${YELLOW}⚠️  Hardcoded GCP project ID found in tests${NC}"
@@ -131,7 +131,7 @@ else
     else
         echo -e "    ${GREEN}✅ No hardcoded project IDs in tests${NC}"
     fi
-    
+
     # Check 3: Large files (>1500 lines)
     large_files=$(find . -name "*.py" -not -path "./tests/*" -not -path "./scripts/*" -exec wc -l {} + 2>/dev/null | awk '$1 > 1500 && $2 != "total" {print $2}' | head -5)
     if [ -n "$large_files" ]; then

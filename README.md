@@ -97,14 +97,14 @@ bash scripts/workspace/sync-workspace.sh
 
 ## Key Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/quickmerge.sh "msg"` | Main command — syncs rules + commits + PR |
-| `scripts/workspace/sync-rules-pull.sh` | Pull team rules into local `.cursor/rules/` |
-| `scripts/workspace/sync-workspace.sh` | Show diff between local and repo rules |
-| `scripts/workspace/workspace-bootstrap.sh` | Full workspace setup from scratch |
-| `scripts/manifest/generate_workspace_dag.py` | Regenerate DAG SVG from manifest |
-| `scripts/quality-gates.sh` | Run full lint + type-check + test pipeline |
+| Script                                       | Purpose                                     |
+| -------------------------------------------- | ------------------------------------------- |
+| `scripts/quickmerge.sh "msg"`                | Main command — syncs rules + commits + PR   |
+| `scripts/workspace/sync-rules-pull.sh`       | Pull team rules into local `.cursor/rules/` |
+| `scripts/workspace/sync-workspace.sh`        | Show diff between local and repo rules      |
+| `scripts/workspace/workspace-bootstrap.sh`   | Full workspace setup from scratch           |
+| `scripts/manifest/generate_workspace_dag.py` | Regenerate DAG SVG from manifest            |
+| `scripts/quality-gates.sh`                   | Run full lint + type-check + test pipeline  |
 
 ---
 

@@ -11,40 +11,40 @@
 
 ### Completed Today
 
-| Category | Count | Details |
-|----------|-------|---------|
-| Repos with all quality gates passing | 8+ | UEI, UAC, UCI, UCI-Config, RES, FCIS, UI-Auth, instruments-service |
-| Ruff lint fixes | 200+ | deployment-api (96), features-sports-service (46), UTS (1), UAC, UMI |
-| Test fixes | 500+ | UClI (44/44), UCI (79/82), UFCL (54/54), instruments-service (122/122), UTS (292/292), UMLI (7/7), UMI (23/23) |
-| Codex compliance fixes | 6 repos | features-calendar, features-onchain, ml-training, ml-inference, execution-service, deployment-service |
-| Infrastructure fixes | 10+ | Dependency names, pyproject.toml, quality-gates.sh scripts, compat layers |
-| UCS -> UTS rename gaps | Fixed | ConfigReloader export, _CloudStorageMixin/_CloudBatchMixin compat, GOOGLE_CLOUD_PROJECT removal |
-| T0 library test fixes | 3 repos | UFCL (stale install + log format), UMLI (error recovery logic), UMI (USEI install + registry) |
+| Category                             | Count   | Details                                                                                                        |
+| ------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------- |
+| Repos with all quality gates passing | 8+      | UEI, UAC, UCI, UCI-Config, RES, FCIS, UI-Auth, instruments-service                                             |
+| Ruff lint fixes                      | 200+    | deployment-api (96), features-sports-service (46), UTS (1), UAC, UMI                                           |
+| Test fixes                           | 500+    | UClI (44/44), UCI (79/82), UFCL (54/54), instruments-service (122/122), UTS (292/292), UMLI (7/7), UMI (23/23) |
+| Codex compliance fixes               | 6 repos | features-calendar, features-onchain, ml-training, ml-inference, execution-service, deployment-service          |
+| Infrastructure fixes                 | 10+     | Dependency names, pyproject.toml, quality-gates.sh scripts, compat layers                                      |
+| UCS -> UTS rename gaps               | Fixed   | ConfigReloader export, \_CloudStorageMixin/\_CloudBatchMixin compat, GOOGLE_CLOUD_PROJECT removal              |
+| T0 library test fixes                | 3 repos | UFCL (stale install + log format), UMLI (error recovery logic), UMI (USEI install + registry)                  |
 
 ### What's Passing vs Failing (Tier by Tier)
 
 #### T0 — Pure Leaf Libraries (8 repos)
 
-| Repo | Lint | Tests | Codex | Blocking Issue |
-|------|------|-------|-------|----------------|
-| unified-events-interface | PASS | 40/40 | PASS | None |
-| unified-api-contracts | PASS | 764/764 | PASS | None |
-| unified-cloud-interface | PASS | 44/44 | PASS | None |
-| unified-feature-calculator-library | PASS | 54/54 | PASS | FIXED: stale install + log format bugs. Coverage 49% (see R-06) |
-| unified-config-interface | PASS | 79/79 | PASS | None |
-| unified-domain-client | PASS | 0/1 | PASS | 1 test: missing trading params (see R-02) |
-| unified-market-interface | PASS | 23/23 | PASS | FIXED: installed USEI, added resolve_adapter_class() |
-| unified-ml-interface | PASS | 7/7 | PASS | FIXED: error recovery test now stores after recovery |
+| Repo                               | Lint | Tests   | Codex | Blocking Issue                                                  |
+| ---------------------------------- | ---- | ------- | ----- | --------------------------------------------------------------- |
+| unified-events-interface           | PASS | 40/40   | PASS  | None                                                            |
+| unified-api-contracts              | PASS | 764/764 | PASS  | None                                                            |
+| unified-cloud-interface            | PASS | 44/44   | PASS  | None                                                            |
+| unified-feature-calculator-library | PASS | 54/54   | PASS  | FIXED: stale install + log format bugs. Coverage 49% (see R-06) |
+| unified-config-interface           | PASS | 79/79   | PASS  | None                                                            |
+| unified-domain-client              | PASS | 0/1     | PASS  | 1 test: missing trading params (see R-02)                       |
+| unified-market-interface           | PASS | 23/23   | PASS  | FIXED: installed USEI, added resolve_adapter_class()            |
+| unified-ml-interface               | PASS | 7/7     | PASS  | FIXED: error recovery test now stores after recovery            |
 
 #### T1 — unified-trading-services (1 repo)
 
-| Gate | Status | Details |
-|------|--------|---------|
-| Config | PASS | |
-| Lint | PASS | Fixed I001 import sort |
-| Type | FAIL | 272 pre-existing basedpyright errors (see R-05) |
-| Tests | 292 pass, 0 fail | But coverage at 40% vs 70% threshold (see R-06) |
-| Codex | PASS | Fixed GOOGLE_CLOUD_PROJECT refs |
+| Gate   | Status           | Details                                         |
+| ------ | ---------------- | ----------------------------------------------- |
+| Config | PASS             |                                                 |
+| Lint   | PASS             | Fixed I001 import sort                          |
+| Type   | FAIL             | 272 pre-existing basedpyright errors (see R-05) |
+| Tests  | 292 pass, 0 fail | But coverage at 40% vs 70% threshold (see R-06) |
+| Codex  | PASS             | Fixed GOOGLE_CLOUD_PROJECT refs                 |
 
 #### T2 — Interface Libraries (7 repos)
 
@@ -56,41 +56,41 @@ See UDC row in T0 table.
 
 #### T4 — Services (16 repos)
 
-| Repo | QG Status | Blocking Issue |
-|------|-----------|----------------|
-| instruments-service | PASSING (122/122 tests) | None |
-| risk-and-exposure-service | ALL GATES PASS | None |
-| features-cross-instrument-service | ALL GATES PASS | None |
-| features-sports-service | Lint PASS, Tests 773 pass (56 pre-existing CLI failures) | 914 basedpyright errors (pre-existing; 0 in calculators/ + tracking/). Feature expansion COMPLETE: 998 features, 27 calculators, 24 tracking modules. |
-| features-volatility-service | Lint PASS | Pre-existing test failures (vol surface calc) |
-| features-calendar-service | 181 pass, 6 fail | Missing UTS APIs (setup_service, BaseModeHandler) + events (R-14) |
-| features-onchain-service | 2 collection errors | Same batch handler UTS API issue (R-14) |
-| features-multi-timeframe-service | Deps fixed | Need full QG verification |
-| ml-training-service | 52 collection errors | Multiple missing UTS/event interface imports (R-14) |
-| ml-inference-service | conftest error | setup_events() requires sink= parameter (R-14) |
-| execution-service | 1044 pass, 61 fail | FIXED: circular imports resolved (R-15). Remaining: pre-existing test failures |
-| deployment-service | 2/2 pass | FIXED: missing modules extracted from v3 (R-16) |
-| market-tick-data-service | Deps partially fixed | UMI dep was wrong name |
-| strategy-validation-service | Python version fixed | Need full QG verification |
-| alerting-service | Deps fixed (uv sources) | Need full QG verification |
-| sports-betting-execution-service | MISSING | Not needed — see R-10 |
+| Repo                              | QG Status                                                | Blocking Issue                                                                                                                                        |
+| --------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| instruments-service               | PASSING (122/122 tests)                                  | None                                                                                                                                                  |
+| risk-and-exposure-service         | ALL GATES PASS                                           | None                                                                                                                                                  |
+| features-cross-instrument-service | ALL GATES PASS                                           | None                                                                                                                                                  |
+| features-sports-service           | Lint PASS, Tests 773 pass (56 pre-existing CLI failures) | 914 basedpyright errors (pre-existing; 0 in calculators/ + tracking/). Feature expansion COMPLETE: 998 features, 27 calculators, 24 tracking modules. |
+| features-volatility-service       | Lint PASS                                                | Pre-existing test failures (vol surface calc)                                                                                                         |
+| features-calendar-service         | 181 pass, 6 fail                                         | Missing UTS APIs (setup_service, BaseModeHandler) + events (R-14)                                                                                     |
+| features-onchain-service          | 2 collection errors                                      | Same batch handler UTS API issue (R-14)                                                                                                               |
+| features-multi-timeframe-service  | Deps fixed                                               | Need full QG verification                                                                                                                             |
+| ml-training-service               | 52 collection errors                                     | Multiple missing UTS/event interface imports (R-14)                                                                                                   |
+| ml-inference-service              | conftest error                                           | setup_events() requires sink= parameter (R-14)                                                                                                        |
+| execution-service                 | 1044 pass, 61 fail                                       | FIXED: circular imports resolved (R-15). Remaining: pre-existing test failures                                                                        |
+| deployment-service                | 2/2 pass                                                 | FIXED: missing modules extracted from v3 (R-16)                                                                                                       |
+| market-tick-data-service          | Deps partially fixed                                     | UMI dep was wrong name                                                                                                                                |
+| strategy-validation-service       | Python version fixed                                     | Need full QG verification                                                                                                                             |
+| alerting-service                  | Deps fixed (uv sources)                                  | Need full QG verification                                                                                                                             |
+| sports-betting-execution-service  | MISSING                                                  | Not needed — see R-10                                                                                                                                 |
 
 #### T5 — APIs (3 repos)
 
-| Repo | QG Status | Blocking Issue |
-|------|-----------|----------------|
-| deployment-api | Lint PASS (96 fixed) | 5298 basedpyright errors (pre-existing) |
-| market-data-api | Clean | None |
-| execution-results-api | Deps fixed | Need verification |
+| Repo                  | QG Status            | Blocking Issue                          |
+| --------------------- | -------------------- | --------------------------------------- |
+| deployment-api        | Lint PASS (96 fixed) | 5298 basedpyright errors (pre-existing) |
+| market-data-api       | Clean                | None                                    |
+| execution-results-api | Deps fixed           | Need verification                       |
 
 #### T6 — UIs (4 repos)
 
-| Repo | QG Status | Blocking Issue |
-|------|-----------|----------------|
-| unified-trading-ui-auth | ALL GATES PASS | None |
-| deployment-ui | QG script fixed | Non-Python project |
-| strategy-ui | QG script fixed | Non-Python project |
-| execution-visualizer-ui | npm issue | Pre-existing |
+| Repo                    | QG Status       | Blocking Issue     |
+| ----------------------- | --------------- | ------------------ |
+| unified-trading-ui-auth | ALL GATES PASS  | None               |
+| deployment-ui           | QG script fixed | Non-Python project |
+| strategy-ui             | QG script fixed | Non-Python project |
+| execution-visualizer-ui | npm issue       | Pre-existing       |
 
 ---
 
@@ -134,13 +134,14 @@ See UDC row in T0 table.
 **Repo:** unified-trading-services
 **Scope:** 272 errors, 1390 warnings across the entire package
 **Key error patterns:**
+
 - `reportAttributeAccessIssue` — config classes missing attributes (get_cloud_target, is_test_environment)
 - `reportArgumentType` — None passed where str expected in id_conventions.py
 - `reportUnknownMemberType` — untyped list operations in periods.py
 - `reportAny` — some Any type usage remaining
-**Fix approach:** Systematic type annotation work. Start with the most-imported modules: `core/config.py`, `core/cloud_constants.py`, `utils/id_conventions.py`, `utils/periods.py`.
-**Effort:** ~2-3 hours focused type annotation work
-**Priority:** P2 (pre-existing debt, doesn't block runtime)
+  **Fix approach:** Systematic type annotation work. Start with the most-imported modules: `core/config.py`, `core/cloud_constants.py`, `utils/id_conventions.py`, `utils/periods.py`.
+  **Effort:** ~2-3 hours focused type annotation work
+  **Priority:** P2 (pre-existing debt, doesn't block runtime)
 
 ### R-06: UTS Test Coverage 40% vs 70% Threshold
 
@@ -149,26 +150,27 @@ See UDC row in T0 table.
 **Target:** 70% minimum
 **Gap:** Need ~1900 additional lines covered
 **Key uncovered modules:**
+
 - `core/cloud_storage_service.py` (870 lines, 0% covered — needs mocked GCS tests)
 - `core/cloud_base_service.py` (complex, needs mocked service tests)
 - `domain/standardized_service.py` (743 lines, low coverage)
 - `core/error_handling.py` (762 lines, ~50% covered)
 - `ml/model_registry.py` (needs mocked GCS/BQ tests)
 - `testing/` modules (0% — they're test helpers, consider excluding from coverage)
-**Quick win:** Exclude `unified_trading_services/testing/` from coverage measurement — these are test utilities, not production code. Would immediately boost coverage by ~3-5%.
-**Fix approach:** Write unit tests for cloud_storage_service.py and error_handling.py first (highest line count). Use mocked GCS/BQ clients.
-**Effort:** ~4-6 hours of test writing
-**Priority:** P1 (quality gate failure)
+  **Quick win:** Exclude `unified_trading_services/testing/` from coverage measurement — these are test utilities, not production code. Would immediately boost coverage by ~3-5%.
+  **Fix approach:** Write unit tests for cloud_storage_service.py and error_handling.py first (highest line count). Use mocked GCS/BQ clients.
+  **Effort:** ~4-6 hours of test writing
+  **Priority:** P1 (quality gate failure)
 
 ### R-07: Pre-existing basedpyright Errors Across Workspace
 
-| Repo | Error Count | Priority |
-|------|-------------|----------|
-| deployment-api | 5,298 | P3 (generated code patterns) |
-| unified-market-interface | 2,442 | P2 (heavy GCP SDK type complexity) |
-| features-sports-service | 784 | P2 (new code, should be cleaner) |
-| unified-trading-services | 272 | P2 (foundational library) |
-| instruments-service | ~1,521 | P3 |
+| Repo                     | Error Count | Priority                           |
+| ------------------------ | ----------- | ---------------------------------- |
+| deployment-api           | 5,298       | P3 (generated code patterns)       |
+| unified-market-interface | 2,442       | P2 (heavy GCP SDK type complexity) |
+| features-sports-service  | 784         | P2 (new code, should be cleaner)   |
+| unified-trading-services | 272         | P2 (foundational library)          |
+| instruments-service      | ~1,521      | P3                                 |
 
 **Fix approach:** Focus on UTS (272) and FSS (784) first since they're smaller and more impactful. UMI and deployment-api have massive type debt from GCP SDK return types — defer to Workflow 2.
 **Priority:** P2/P3 (doesn't block runtime, but blocks strict CI/CD)
@@ -177,20 +179,21 @@ See UDC row in T0 table.
 
 **Status:** VERIFIED (March 2). All 6 repos have test failures due to missing UTS APIs (R-14).
 
-| Repo | Tests Pass | Blocking Issue |
-|------|-----------|----------------|
-| features-calendar-service | 181/187 | Missing UTS APIs + SecretNotFoundError (fixed: now uses get_secret) |
-| features-onchain-service | 0 (2 errors) | Batch handler imports missing UTS APIs |
-| ml-training-service | 0 (52 errors) | Multiple missing UTS/event imports |
-| ml-inference-service | 0 | setup_events() requires sink= |
-| execution-service | 1044/1105 | FIXED: 3 circular import chains resolved (R-15) |
-| deployment-service | 2/2 | FIXED: 7 subpackages extracted from v3 (R-16) |
+| Repo                      | Tests Pass    | Blocking Issue                                                      |
+| ------------------------- | ------------- | ------------------------------------------------------------------- |
+| features-calendar-service | 181/187       | Missing UTS APIs + SecretNotFoundError (fixed: now uses get_secret) |
+| features-onchain-service  | 0 (2 errors)  | Batch handler imports missing UTS APIs                              |
+| ml-training-service       | 0 (52 errors) | Multiple missing UTS/event imports                                  |
+| ml-inference-service      | 0             | setup_events() requires sink=                                       |
+| execution-service         | 1044/1105     | FIXED: 3 circular import chains resolved (R-15)                     |
+| deployment-service        | 2/2           | FIXED: 7 subpackages extracted from v3 (R-16)                       |
 
 **Codex fixes are valid** — the test failures stem from missing library-tier APIs (R-14), not from the codex changes.
 
 ### R-09: Repos Not Scanned in Workflow 1
 
 These repos exist in the workspace but weren't part of the primary scan:
+
 - market-data-processing-service
 - strategy-service
 - pnl-attribution-service
@@ -213,6 +216,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 
 **Was listed as "MISSING" in T4 scan.**
 **Status:** NOT NEEDED. The functionality is distributed across:
+
 - `unified-sports-execution-interface` (USEI) — exchange adapters (Betfair, Smarkets, Matchbook, Betdaq), scraper adapters (13 bookmakers)
 - `features-sports-service` (FSS) — feature computation (batch + live)
 - `instruments-service` — sports instruments (leagues, fixtures, teams)
@@ -234,6 +238,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 **Python package:** `unified_cloud_library`
 
 **Rename scope:**
+
 1. GitHub repo rename: `gh repo rename unified-cloud-library`
 2. Directory rename: `unified-trading-services/` -> `unified-cloud-library/`
 3. Python package rename: `unified_trading_services/` -> `unified_cloud_library/`
@@ -254,6 +259,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 **Status:** Manifest, codex, PM docs, cursor-rules, and DAG now use "deployment-service". Naming is consistent in all documentation and scripts.
 
 **Remaining (optional):** To fully rename the repo and package:
+
 1. GitHub repo rename: `deployment-engine` → `deployment-service`
 2. Local directory rename: `deployment-engine/` → `deployment-service/`
 3. pyproject.toml: `name = "deployment-service"`, package `deployment_service`
@@ -268,12 +274,12 @@ These repos exist in the workspace but weren't part of the primary scan:
 
 **Current state:** unified-trading-deployment-v3 is the SSOT for deployment infrastructure while a planned four-way split is in progress:
 
-| Extracted Repo | What It Contains | Status |
-|---|---|---|
-| deployment-service (was deployment-engine) | Core orchestration (shard calculator, catalog, cloud client) | Scaffolded v0.1.0 |
-| deployment-api | FastAPI REST/SSE API (27 route modules, OAuth) | Fully extracted v0.1.0 |
-| deployment-ui | React/TypeScript frontend | Scaffolded v0.1.0 |
-| system-integration-tests | Smoke test infrastructure | Scaffolded |
+| Extracted Repo                             | What It Contains                                             | Status                 |
+| ------------------------------------------ | ------------------------------------------------------------ | ---------------------- |
+| deployment-service (was deployment-engine) | Core orchestration (shard calculator, catalog, cloud client) | Scaffolded v0.1.0      |
+| deployment-api                             | FastAPI REST/SSE API (27 route modules, OAuth)               | Fully extracted v0.1.0 |
+| deployment-ui                              | React/TypeScript frontend                                    | Scaffolded v0.1.0      |
+| system-integration-tests                   | Smoke test infrastructure                                    | Scaffolded             |
 
 **What remains ONLY in v3:** Terraform modules, YAML configs, smoke test framework, full CLI.
 **No repos depend on v3** — deployment-api uses UCI+UEI, deployment-service uses UTS.
@@ -287,10 +293,12 @@ These repos exist in the workspace but weren't part of the primary scan:
 **Original issue:** T4 services couldn't import `setup_service`, `BaseModeHandler`, `GCSEventSink`, `GracefulShutdownHandler` from UTS.
 
 **Root cause:** Only `setup_service()` was actually missing. All other APIs existed in UTS source but:
+
 1. `setup_service()` was never added as an export (referenced by 12+ services)
 2. Some repos had stale UTS installs in `.venv-workspace`
 
 **Fixes applied (March 2):**
+
 - Added `setup_service = setup_events` alias in `unified_trading_services/__init__.py` + `__all__`
 - Reinstalled UTS from source (`uv pip install -e unified-trading-services/`)
 - Fixed ml-inference-service conftest: `mode="test"` + `MockEventSink()` (was `mode="batch"` without sink)
@@ -319,21 +327,24 @@ These repos exist in the workspace but weren't part of the primary scan:
 4. **`setup_service()` = `setup_events()`:** Identical signature `(service_name, mode, sink)`. Services inject the sink at startup.
 
 **Remaining T4 test failures (not R-14, separate issues):**
+
 - Codex agent introduced test files referencing non-existent local exports (MODES_WITH_DEPRECATED, etc.)
 - Missing optuna package for ml-training-service (install: `uv pip install optuna`)
 - event_logging tests expect lifecycle event markers not yet in source code
-**Priority:** RESOLVED (was P0, now remaining items are P2)
+  **Priority:** RESOLVED (was P0, now remaining items are P2)
 
 ### R-15: execution-service Circular Import — FIXED
 
 **Repo:** execution-service
 **Status:** FIXED (March 2)
 **Root cause:** THREE separate circular import chains:
+
 1. `definitions_loader.py` → `instruction_validator.py` → `utils.domain` → `instruments/factory.py` → `definitions_loader.py` (via `DataNotFoundError`)
 2. `config_builder.py` → `catalog_cache.py` → `gcs_cache_helper.py` → `catalog_cache.py` (via `GCS_CATALOG_CACHE_BUCKET` constant)
 3. Missing `VENUE_CATEGORY_MAP` and Prometheus metrics imports from UTL
 
 **Fixes applied:**
+
 - Created `execution_service/exceptions.py` with centralized exception classes (DataNotFoundError, InstructionValidationError, ConfigValidationError)
 - Updated 5 files to import from `exceptions.py` instead of `instruction_validator.py`
 - Made `gcs_cache_helper.py` use lazy import for `GCS_CATALOG_CACHE_BUCKET`
@@ -351,15 +362,17 @@ These repos exist in the workspace but weren't part of the primary scan:
 **Root cause:** Incomplete extraction from unified-trading-deployment-v3. Multiple subpackages referenced but never copied.
 
 **Missing modules found and extracted:**
+
 1. `deployment_service/deployment_config.py` — created (extends UnifiedCloudConfig with deployment-specific fields)
-2. `deployment_service/config/` — 4 files (base_config.py, config_validator.py, env_substitutor.py, __init__.py)
-3. `deployment_service/calculators/` — 4 files (base_calculator.py, shard_dimensions.py, shard_distribution.py, __init__.py)
+2. `deployment_service/config/` — 4 files (base_config.py, config_validator.py, env_substitutor.py, **init**.py)
+3. `deployment_service/calculators/` — 4 files (base_calculator.py, shard_dimensions.py, shard_distribution.py, **init**.py)
 4. `deployment_service/dependencies.py` — DependencyGraph class
-5. `deployment_service/backends/services/` — 4 files (vm_config.py, vm_lifecycle.py, vm_monitoring.py, __init__.py)
+5. `deployment_service/backends/services/` — 4 files (vm_config.py, vm_lifecycle.py, vm_monitoring.py, **init**.py)
 6. Fixed `vm_config.py` import: `from unified_trading_deployment.deployment_config` → `from deployment_service.deployment_config`
 7. Fixed `deployment_service/pyproject.toml` — typos in dependencies (doubled names: `pyyamlpyyaml` etc.)
 
 **Still missing (not blocking tests):**
+
 - `deployment_service/cli/handlers/` — 4 handler modules (CLI not tested)
 
 **Result:** 2/2 tests pass (was 0/2 with missing module errors)
@@ -373,13 +386,13 @@ These repos exist in the workspace but weren't part of the primary scan:
 
 ### Critical Misalignments Found
 
-| Issue | Location | Fix |
-|-------|----------|-----|
-| `SecretNotFoundError` referenced but doesn't exist | testing.md lines 318-323 | Remove or mark PLANNED |
-| `setup_service()` referenced but doesn't exist | TIER-ARCHITECTURE.md, README.md, testing.md | Mark as PLANNED |
-| Old package `unified_cloud_services` in examples | testing.md lines 318, 359, 369 | Update to `unified_trading_services` |
-| `deployment-service` used but repo is `deployment-engine` | integration-testing-layers.md, TOPOLOGY-DAG.md, UI-DEPENDENCY-MATRIX.md | Update to `deployment-engine` |
-| "17 pipeline service repos" count is wrong | README.md (04-architecture) | Should be 13 per DAG |
+| Issue                                                     | Location                                                                | Fix                                  |
+| --------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------ |
+| `SecretNotFoundError` referenced but doesn't exist        | testing.md lines 318-323                                                | Remove or mark PLANNED               |
+| `setup_service()` referenced but doesn't exist            | TIER-ARCHITECTURE.md, README.md, testing.md                             | Mark as PLANNED                      |
+| Old package `unified_cloud_services` in examples          | testing.md lines 318, 359, 369                                          | Update to `unified_trading_services` |
+| `deployment-service` used but repo is `deployment-engine` | integration-testing-layers.md, TOPOLOGY-DAG.md, UI-DEPENDENCY-MATRIX.md | Update to `deployment-engine`        |
+| "17 pipeline service repos" count is wrong                | README.md (04-architecture)                                             | Should be 13 per DAG                 |
 
 ### Correctly Aligned
 
@@ -393,11 +406,11 @@ These repos exist in the workspace but weren't part of the primary scan:
 
 ### Aspirational Items Needing PLANNED Callouts
 
-| Item | Status | Should Say |
-|------|--------|------------|
-| `setup_service()` | Not implemented | PLANNED: consolidates setup_events + sink |
-| `SecretNotFoundError` | Not implemented | PLANNED: stricter secret validation |
-| UCS→UTS rename | Complete | Change "⚠️ in progress" to "✅ complete" |
+| Item                  | Status          | Should Say                                |
+| --------------------- | --------------- | ----------------------------------------- |
+| `setup_service()`     | Not implemented | PLANNED: consolidates setup_events + sink |
+| `SecretNotFoundError` | Not implemented | PLANNED: stricter secret validation       |
+| UCS→UTS rename        | Complete        | Change "⚠️ in progress" to "✅ complete"  |
 
 ### Action Items for Codex Fixes
 
@@ -414,11 +427,13 @@ These repos exist in the workspace but weren't part of the primary scan:
 ### Workflow 2: Manifest + CI/CD (March 3)
 
 **Pre-requisites from Workflow 1 not yet met:**
+
 - [ ] All repos have quality gates scripted (14 unscanned repos — R-09)
 - [ ] Naming settled before encoding in CI/CD (R-11, R-12, R-13)
 - [ ] basedpyright errors in foundational libs (UTS 272, UMI 2442) — acceptable as known debt
 
 **New items for Workflow 2:**
+
 - [ ] GitHub Actions workflow templates for all repo tiers
 - [ ] Manifest levels 0-14 definition and enforcement
 - [ ] AWS provider implementations in UCI (currently GCP-only)
@@ -427,6 +442,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 ### Workflow 3: UAT + Deploy (March 4-5)
 
 **Pre-requisites:**
+
 - [ ] deployment-service codex PASS (DONE as of today)
 - [ ] All feature services produce correct output
 - [ ] Event pipeline (UEI) working end-to-end
@@ -434,6 +450,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 ### Workflow 4: ML Pipeline (March 5-10)
 
 **Pre-requisites:**
+
 - [x] ml-training-service codex PASS (DONE)
 - [x] ml-inference-service codex PASS (DONE)
 - [x] UFCL auto-diff test fixed (R-01 DONE)
@@ -444,6 +461,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 ### Workflow 5: Autonomous Agents (March 10-31)
 
 **Pre-requisites:**
+
 - [ ] All upstream workflows complete
 - [ ] Sports live mode (SPORTS_MIGRATION_GAP_FIX.md Part B)
 - [ ] Cross-instrument features working
@@ -454,6 +472,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 ## 6. Action Items — Prioritized
 
 ### Completed (March 2)
+
 - [x] UTS quality gate fixes (lint, codex, conftest, test patches) — 292/292 tests pass
 - [x] 6 T4 repos codex compliance fixes
 - [x] Verify 6 codex-fixed repos full QG status (R-08) — all have deeper issues (R-14)
@@ -469,6 +488,7 @@ These repos exist in the workspace but weren't part of the primary scan:
 - [x] Codex docs alignment review (Section 4) — 85% aligned
 
 ### Completed (March 2 — Continued Session)
+
 - [x] Fix execution-service circular imports (R-15) — 3 chains fixed, 1044 pass
 - [x] Fix deployment-service missing modules (R-16) — 7 subpackages extracted from v3, 2/2 pass
 - [x] Created backward-compat shim for unified_trading_services (sys.modules aliasing)
@@ -476,20 +496,24 @@ These repos exist in the workspace but weren't part of the primary scan:
 - [x] Fixed Prometheus metrics label mismatch in orchestrator.py
 
 ### Immediate Next (P0)
+
 - [ ] Fix remaining codex agent test issues (non-existent local exports referenced in test files)
 
 ### This Week (P1)
+
 - [ ] Scan 14 unscanned repos (R-09) — need full workspace visibility
 - [ ] UTS test coverage to 70% (R-06)
 - [ ] Codex docs fixes: remove SecretNotFoundError refs, update old package names
 
 ### Next Week (P2)
+
 - [ ] UTS basedpyright 272 errors (R-05)
 - [ ] FSS basedpyright 784 errors
 - [ ] deployment-service repo/folder/pyproject rename (R-12 remaining; doc rename DONE)
 - [ ] UMI basedpyright 2442 errors
 
 ### Deferred (P3)
+
 - [ ] deployment-api basedpyright 5298 errors
 - [ ] unified-trading-deployment-v3 rename (R-13)
 - [ ] instruments-service basedpyright ~1521 errors

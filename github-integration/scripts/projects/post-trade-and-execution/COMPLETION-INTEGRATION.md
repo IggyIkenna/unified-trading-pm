@@ -1,7 +1,7 @@
 # Post-Trade and Execution - Epic Completion and Codex Integration
 
-**Epic:** Post-Trade and Execution (Project #7)  
-**Purpose:** Ensure epic learnings are properly integrated into Codex after completion  
+**Epic:** Post-Trade and Execution (Project #7)
+**Purpose:** Ensure epic learnings are properly integrated into Codex after completion
 **When:** After all 20 subtasks complete (100% verified)
 
 ---

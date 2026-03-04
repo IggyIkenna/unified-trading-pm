@@ -1,7 +1,7 @@
 # Branch Protection Management
 
-**Status**: ✅ Fixed (2026-02-14)  
-**Issue**: Backup/restore was broken due to read-only fields in backup format  
+**Status**: ✅ Fixed (2026-02-14)
+**Issue**: Backup/restore was broken due to read-only fields in backup format
 **Fix**: `disable-branch-protection.sh` now uses `jq` to save only writable fields
 
 ---

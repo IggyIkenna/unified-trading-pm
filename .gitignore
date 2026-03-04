@@ -31,5 +31,8 @@ dist/
 build/
 .turbo/
 # Coverage
+.coverage
+.coverage.*
 coverage/
+htmlcov/
 .nyc_output/

@@ -12,6 +12,7 @@ which basedpyright  # must be .venv-workspace/bin/basedpyright
 ```
 
 If any tool resolves outside `.venv-workspace/bin/`, run:
+
 ```bash
 source /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/activate
 ```
@@ -22,6 +23,7 @@ If that worked, the checks above will pass without manual activation.**
 ## Rules: Read Before Coding
 
 Read these before making ANY code changes:
+
 1. `.cursorrules` — workspace standards (uv not pip, quickmerge not git push, etc.)
 2. `.cursor/rules/no-empty-fallbacks.mdc` — no try/except fallback imports
 3. `.cursor/rules/no-type-any-use-specific.mdc` — no Any types
@@ -45,8 +47,9 @@ Never run `basedpyright .` from workspace root — always run per-repo with time
 ## Analysis Rules
 
 When analyzing codebase architecture:
+
 - EXCLUDE: .venv*, venv/, node_modules/, build/, dist/, *.egg-info/
-- EXCLUDE: Documentation files (*.md) when counting code usage
+- EXCLUDE: Documentation files (\*.md) when counting code usage
 - EXCLUDE: Shell scripts when analyzing Python patterns
 - FOCUS: Python source files in service directories only
 - Use: `--glob '!.venv*' --glob '!**/.venv*/**'` with ripgrep

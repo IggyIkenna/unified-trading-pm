@@ -3,9 +3,9 @@
 
 # Roadmap: Live Production (45.7% → 90.0%)
 
-**Current State:** 45.7% live readiness  
-**Target:** 90.0% live readiness  
-**Gap:** 44.3 percentage points  
+**Current State:** 45.7% live readiness
+**Target:** 90.0% live readiness
+**Gap:** 44.3 percentage points
 **Last Updated:** 2026-02-11
 
 ---
@@ -45,16 +45,16 @@ Dual-cloud note:
 **Objective:** Eliminate critical blockers specific to live trading. Assumes batch P0 items (SEC-05, COD-20) already
 resolved.
 
-**Estimated Completion:** 4 weeks  
+**Estimated Completion:** 4 weeks
 **Risk Level:** CRITICAL (these block live trading)
 
 ### 1.1 Client Credential Isolation (DOM-04, SEC-06)
 
-**Priority:** P0  
-**Status:** PLANNED  
+**Priority:** P0
+**Status:** PLANNED
 **Effort:** 48 hours
 
-**Description:**  
+**Description:**
 No architecture exists for isolating client credentials. All services use a single service account. For live trading,
 each client must have isolated credentials to prevent cross-client access and meet regulatory requirements.
 
@@ -111,11 +111,11 @@ each client must have isolated credentials to prevent cross-client access and me
 
 ### 1.2 Live Position Reconciliation (WRK-04)
 
-**Priority:** P0  
-**Status:** PLANNED  
+**Priority:** P0
+**Status:** PLANNED
 **Effort:** 64 hours
 
-**Description:**  
+**Description:**
 Batch position reconciliation (WRK-03) runs EOD. Live trading requires continuous reconciliation (every 5 minutes) with
 real-time alerting on breaks.
 
@@ -174,11 +174,11 @@ real-time alerting on breaks.
 
 ### 1.3 DATA_READY Event System (BATCH-04 Live Extension)
 
-**Priority:** P0  
-**Status:** PLANNED  
+**Priority:** P0
+**Status:** PLANNED
 **Effort:** 32 hours
 
-**Description:**  
+**Description:**
 Batch services use DATA_READY events to coordinate pipeline execution. Live services need similar coordination but with
 real-time streaming triggers instead of file-based triggers.
 
@@ -232,11 +232,11 @@ real-time streaming triggers instead of file-based triggers.
 
 ### 1.4 Disaster Recovery Procedures (WRK-01, WRK-02)
 
-**Priority:** P0  
-**Status:** PLANNED  
+**Priority:** P0
+**Status:** PLANNED
 **Effort:** 40 hours
 
-**Description:**  
+**Description:**
 No disaster recovery procedures exist. For live trading, we need documented procedures for service failures, data
 corruption, GCP outages, and erroneous trade scenarios.
 
@@ -288,11 +288,11 @@ corruption, GCP outages, and erroneous trade scenarios.
 
 ### 1.5 Rollback Procedures (WRK-06)
 
-**Priority:** P0  
-**Status:** PLANNED  
+**Priority:** P0
+**Status:** PLANNED
 **Effort:** 24 hours
 
-**Description:**  
+**Description:**
 No rollback procedures exist. For live trading, we need fast rollback capability if a deployment causes issues.
 
 **Affected Services:** ALL (live deployments)
@@ -349,16 +349,16 @@ No rollback procedures exist. For live trading, we need fast rollback capability
 
 **Objective:** Implement live modes for all pipeline services and enhance observability.
 
-**Estimated Completion:** 6 weeks  
+**Estimated Completion:** 6 weeks
 **Risk Level:** MEDIUM
 
 ### 2.1 Live Mode for market-tick-data-service (LIVE-01)
 
-**Priority:** P1  
-**Status:** PARTIAL (batch exists, live mode skeleton exists)  
+**Priority:** P1
+**Status:** PARTIAL (batch exists, live mode skeleton exists)
 **Effort:** 48 hours
 
-**Description:**  
+**Description:**
 Market-tick-data-handler currently runs batch mode only. Need live mode to connect to exchange WebSockets and stream
 tick data.
 
@@ -397,11 +397,11 @@ tick data.
 
 ### 2.2 Live Mode for market-data-processing-service (LIVE-02)
 
-**Priority:** P1  
-**Status:** PLANNED (batch exists, embedded package pattern designed)  
+**Priority:** P1
+**Status:** PLANNED (batch exists, embedded package pattern designed)
 **Effort:** 40 hours
 
-**Description:**  
+**Description:**
 Market-data-processing-service will not have standalone live deployment. It will be embedded as a package in feature
 services. Need to ensure embedded mode works with live tick streams.
 
@@ -437,11 +437,11 @@ services. Need to ensure embedded mode works with live tick streams.
 
 ### 2.3 Live Mode for features-delta-one-service (LIVE-03)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 48 hours
 
-**Description:**  
+**Description:**
 Features-delta-one-service is highest priority for live trading (equity and crypto features). Must embed MDPS and MTHD
 as packages and compute features in real-time.
 
@@ -479,11 +479,11 @@ as packages and compute features in real-time.
 
 ### 2.4 Live Mode for features-volatility-service (LIVE-04)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 40 hours
 
-**Description:**  
+**Description:**
 Volatility features for options strategies. Lower priority than delta-one but still needed for volatility arbitrage.
 
 **Work Items:** (Similar structure to features-delta-one)
@@ -498,11 +498,11 @@ Volatility features for options strategies. Lower priority than delta-one but st
 
 ### 2.5 Live Mode for features-onchain-service (LIVE-05)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 40 hours
 
-**Description:**  
+**Description:**
 On-chain features for crypto strategies. Embeds MDPS and MTHD, adds on-chain data from The Graph.
 
 **Work Items:** (Similar structure to features-delta-one)
@@ -517,11 +517,11 @@ On-chain features for crypto strategies. Embeds MDPS and MTHD, adds on-chain dat
 
 ### 2.6 Live Mode for ml-inference-service (LIVE-06)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 32 hours
 
-**Description:**  
+**Description:**
 ML inference for signal generation. Must load model once at startup, run inference on streaming features.
 
 **Work Items:**
@@ -557,11 +557,11 @@ ML inference for signal generation. Must load model once at startup, run inferen
 
 ### 2.7 Live Mode for strategy-service (LIVE-07)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 48 hours
 
-**Description:**  
+**Description:**
 Strategy service is highest priority (generates trade signals). Must embed features-delta-one and ml-inference packages.
 
 **Work Items:**
@@ -598,11 +598,11 @@ Strategy service is highest priority (generates trade signals). Must embed featu
 
 ### 2.8 Alerting System (OBS-14)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 40 hours
 
-**Description:**  
+**Description:**
 No alerting system exists. For live trading, need Slack and PagerDuty integration for critical alerts.
 
 **Work Items:**
@@ -645,11 +645,11 @@ No alerting system exists. For live trading, need Slack and PagerDuty integratio
 
 ### 2.9 Monitoring UI (OBS-15)
 
-**Priority:** P1  
-**Status:** PLANNED  
+**Priority:** P1
+**Status:** PLANNED
 **Effort:** 60 hours
 
-**Description:**  
+**Description:**
 No real-time monitoring UI exists. For live trading, need dashboard showing positions, P&L, system health.
 
 **Work Items:**
@@ -710,16 +710,16 @@ No real-time monitoring UI exists. For live trading, need dashboard showing posi
 
 **Objective:** Improve operational readiness and performance.
 
-**Estimated Completion:** 4 weeks  
+**Estimated Completion:** 4 weeks
 **Risk Level:** LOW (can defer to post-launch)
 
 ### 3.1 Performance Benchmarking (ANL-05)
 
-**Priority:** P2  
-**Status:** PLANNED  
+**Priority:** P2
+**Status:** PLANNED
 **Effort:** 40 hours
 
-**Description:**  
+**Description:**
 No performance benchmarks exist. Need to establish latency and throughput baselines for live trading.
 
 **Work Items:**
@@ -759,11 +759,11 @@ No performance benchmarks exist. Need to establish latency and throughput baseli
 
 ### 3.2 Multi-Region Deployment (INF-07)
 
-**Priority:** P2  
-**Status:** PLANNED  
+**Priority:** P2
+**Status:** PLANNED
 **Effort:** 48 hours
 
-**Description:**  
+**Description:**
 All services currently deployed to single region (us-central1). For production-grade reliability, deploy critical
 services to multiple regions with automatic failover.
 
@@ -805,11 +805,11 @@ services to multiple regions with automatic failover.
 
 ### 3.3 Cost Optimization (ANL-06)
 
-**Priority:** P2  
-**Status:** PLANNED  
+**Priority:** P2
+**Status:** PLANNED
 **Effort:** 32 hours
 
-**Description:**  
+**Description:**
 Live trading will incur higher costs (always-on services vs batch). Need to optimize costs before scaling to many
 clients.
 
@@ -844,11 +844,11 @@ clients.
 
 ### 3.4 Compliance Audit Trail (WRK-05)
 
-**Priority:** P2  
-**Status:** PLANNED  
+**Priority:** P2
+**Status:** PLANNED
 **Effort:** 24 hours
 
-**Description:**  
+**Description:**
 For regulatory compliance, need immutable audit trail of all trades, orders, and position changes.
 
 **Work Items:**
@@ -993,5 +993,5 @@ After completing all phases, re-run audit to verify:
 4. **Week 21:** Start Phase 3 operational excellence
 5. **Week 24:** Re-run audit, prepare for first client go-live
 
-**Owner:** Engineering Lead  
+**Owner:** Engineering Lead
 **Stakeholders:** All service owners, DevOps, Trading Operations, Compliance

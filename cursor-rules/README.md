@@ -8,22 +8,22 @@ Rules are organized by category. Cursor loads recursively from subdirectories.
 
 ## Directory Structure
 
-| Directory | Contents |
-|-----------|----------|
-| **core/** | alwaysApply rules — always active, easy to find |
-| **quality-gates/** | Quality gates, basedpyright, ruff, limits |
-| **testing/** | Test standards, coverage, integration layers |
-| **ci-cd/** | CI/CD setup, quickmerge, Cloud Build |
-| **architecture/** | DAG, batch-live, service structure |
-| **imports/** | External imports, contracts, API usage |
-| **config/** | ConfigStore, project IDs, workspace |
-| **dependencies/** | Dep management, versions, uv |
-| **documentation/** | Codex, plans, adding rules |
-| **ui/** | UI setup, TypeScript quality gates |
-| **services/** | Service setup, ServiceCLI |
-| **standards/** | Coding standards, anti-patterns |
-| **workflow/** | Agents, rollout, PR review |
-| **misc/** | Observability, validators, sync |
+| Directory          | Contents                                        |
+| ------------------ | ----------------------------------------------- |
+| **core/**          | alwaysApply rules — always active, easy to find |
+| **quality-gates/** | Quality gates, basedpyright, ruff, limits       |
+| **testing/**       | Test standards, coverage, integration layers    |
+| **ci-cd/**         | CI/CD setup, quickmerge, Cloud Build            |
+| **architecture/**  | DAG, batch-live, service structure              |
+| **imports/**       | External imports, contracts, API usage          |
+| **config/**        | ConfigStore, project IDs, workspace             |
+| **dependencies/**  | Dep management, versions, uv                    |
+| **documentation/** | Codex, plans, adding rules                      |
+| **ui/**            | UI setup, TypeScript quality gates              |
+| **services/**      | Service setup, ServiceCLI                       |
+| **standards/**     | Coding standards, anti-patterns                 |
+| **workflow/**      | Agents, rollout, PR review                      |
+| **misc/**          | Observability, validators, sync                 |
 
 ---
 
@@ -35,14 +35,14 @@ All rules in **core/** have `alwaysApply: true` — they are always active regar
 
 ## Priority Tier Guide
 
-| Priority | Tier | Meaning |
-|----------|------|---------|
-| P100 | Blocking | No-summary-docs: violations block task completion |
-| P95 | Structure | Plan-placement: controls where artifacts go |
-| P90 | Safety | Runtime verification, never-revert, basedpyright-safety |
-| P80 | Standards | Coding standards, import rules, type rules |
-| P70 | Maintenance | Codex updates, rollout tracking, deprecation |
-| P50 | Informational | Workflow guidance, sub-agent patterns |
+| Priority | Tier          | Meaning                                                 |
+| -------- | ------------- | ------------------------------------------------------- |
+| P100     | Blocking      | No-summary-docs: violations block task completion       |
+| P95      | Structure     | Plan-placement: controls where artifacts go             |
+| P90      | Safety        | Runtime verification, never-revert, basedpyright-safety |
+| P80      | Standards     | Coding standards, import rules, type rules              |
+| P70      | Maintenance   | Codex updates, rollout tracking, deprecation            |
+| P50      | Informational | Workflow guidance, sub-agent patterns                   |
 
 ---
 

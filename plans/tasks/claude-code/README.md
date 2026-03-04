@@ -18,13 +18,14 @@ claude --model claude-sonnet-4-5-20250929
 # It will launch 4 agents in parallel per batch
 ```
 
-**Pros**: 
+**Pros**:
+
 - Smart orchestration (can adapt, resume, analyze)
 - 4x faster (parallel execution)
 - Full workspace context (codex, dependencies, rules)
 - No conflicts (each agent edits only its repo)
 
-**Time**: 15-20 minutes (6 batches × 3 min)  
+**Time**: 15-20 minutes (6 batches × 3 min)
 **Cost**: $0 (FREE)
 
 ---
@@ -43,11 +44,12 @@ cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
 ./.cursor/plans/tasks_claude_code/orchestrator-simple.sh
 ```
 
-**Pros**: Fully automated, no manual steps, 10 parallel agents, **now with full workspace context + enhanced prompts + `--force` flag**  
-**Cons**: Less smart (can't adapt or resume)  
+**Pros**: Fully automated, no manual steps, 10 parallel agents, **now with full workspace context + enhanced prompts + `--force` flag**
+**Cons**: Less smart (can't adapt or resume)
 **Cost**: $0 (FREE)
 
 **Note**: As of v10, orchestrator scripts now use the same improvements as Claude Code approach:
+
 - ✅ Full workspace context (`--workspace /path/to/workspace-root`)
 - ✅ Enhanced prompts with edit restrictions
 - ✅ `--force` flag for auto-approval
@@ -57,11 +59,11 @@ cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
 
 ## 💰 Cost Summary
 
-| Component | Cost |
-|-----------|------|
-| Claude Code CLI (claude-sonnet-4-5-20250929) | **$0** (FREE with Claude Pro) |
-| Agent CLI (model: auto) | **$0** (FREE with Cursor Ultra) |
-| **Total** | **$0** (100% FREE!) |
+| Component                                    | Cost                            |
+| -------------------------------------------- | ------------------------------- |
+| Claude Code CLI (claude-sonnet-4-5-20250929) | **$0** (FREE with Claude Pro)   |
+| Agent CLI (model: auto)                      | **$0** (FREE with Cursor Ultra) |
+| **Total**                                    | **$0** (100% FREE!)             |
 
 **vs All-Cursor**: $80+ (infinite savings!)
 
@@ -77,6 +79,7 @@ bash .cursor/plans/tasks_claude_code/kill-zombies.sh
 ```
 
 **Prevention**: As of v10.1, all scripts now include:
+
 - 30-second timeouts for basedpyright calls (orchestrator scripts)
 - Agent prompts limit basedpyright runs to 2-3 times total
 - Claude Code task includes kill-zombies.sh at start + timeout helper
@@ -88,6 +91,7 @@ bash .cursor/plans/tasks_claude_code/kill-zombies.sh
 ## 📁 Files
 
 **Main**:
+
 - `README.md` (this file) - Overview
 - `START.md` - Quick start guide
 - `CLAUDE_CODE_TASK.md` - Claude Code approach ⭐ **v10: Parallel + full context (2025-02-24)**
@@ -101,6 +105,7 @@ bash .cursor/plans/tasks_claude_code/kill-zombies.sh
 - `STRUCTURE_COMPARISON.md` - Before vs After
 
 **Reference**:
+
 - `PARALLEL_EXECUTION_GUIDE.md` - Parallel execution explained ⭐ **NEW**
 - `reference/COMPLETE_GUIDE.md` - Comprehensive documentation
 - `reference/CLAUDE_CODE_ORCHESTRATION.md` - Pattern explanation
@@ -111,11 +116,13 @@ bash .cursor/plans/tasks_claude_code/kill-zombies.sh
 ## 🚀 Quick Start
 
 **Simplest** (bash):
+
 ```bash
 ./.cursor/plans/tasks_claude_code/orchestrator-test.sh
 ```
 
 **Smartest + Fastest** (Claude Code with parallel):
+
 ```bash
 claude --model claude-sonnet-4-5-20250929
 # Then paste CLAUDE_CODE_TASK.md (v10: 4 agents in parallel!)

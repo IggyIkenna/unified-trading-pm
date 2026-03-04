@@ -1,7 +1,7 @@
 # Fallback Merge Safety Mechanism
 
-**Status**: ✅ Implemented (2026-02-14)  
-**Script**: `batch-fix-v2.sh`  
+**Status**: ✅ Implemented (2026-02-14)
+**Script**: `batch-fix-v2.sh`
 **Feature**: Automatic local backup when quickmerge fails to create PR
 
 ---
@@ -334,7 +334,7 @@ To verify the feature works:
 
 ## Credits
 
-**Suggested by**: User (2026-02-14)  
+**Suggested by**: User (2026-02-14)
 **Context**: "While we're getting all these quick merge issues, we could do a double merge so we could also merge to the
 local main that we copied from. Since we're only doing one repo of each worker, it just stops us losing the changes."
 
