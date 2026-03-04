@@ -343,11 +343,17 @@ if [ "$RUN_TESTS" = true ]; then
     TIMEOUT_ARG=""
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null && TIMEOUT_ARG="--timeout=60"
 
-    # PM-specific: coverage measures scripts/, not a module dir
-    if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
-        COV_ARGS="--cov=scripts/manifest --cov-report=term-missing --cov-fail-under=0"
+    # Coverage args — only set if pytest-cov is installed
+    COV_ARGS=""
+    if $PYTHON_CMD -c "import pytest_cov" 2>/dev/null; then
+        # PM-specific: coverage measures scripts/, not a module dir
+        if [ "$REPO_MODULE" = "unified_trading_pm" ]; then
+            COV_ARGS="--cov=scripts/manifest --cov-report=term-missing --cov-fail-under=0"
+        else
+            COV_ARGS="--cov=${REPO_MODULE} --cov-report=term-missing --cov-fail-under=${MIN_COVERAGE}"
+        fi
     else
-        COV_ARGS="--cov=${REPO_MODULE} --cov-report=term-missing --cov-fail-under=${MIN_COVERAGE}"
+        log_warn "pytest-cov not installed — skipping coverage (install: uv pip install pytest-cov)"
     fi
 
     if [ "$QUICK_MODE" = true ]; then
