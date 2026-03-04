@@ -46,13 +46,13 @@ trap 'rm -f "$TEST_LIST" "$FULL_LIST" "$NON_TEST_LIST"' EXIT
 
 find . -type f \
   \( -path '*/.venv*' -o -path '*/.venv-workspace*' -o -path '*/node_modules*' \
-     -o -path '*/.git*' -o -path '*/build*' -o -path '*/dist*' \
-     -o -path '*/__pycache__*' -o -path '*/htmlcov*' \) -prune -o \
+  -o -path '*/.git*' -o -path '*/build*' -o -path '*/dist*' \
+  -o -path '*/__pycache__*' -o -path '*/htmlcov*' \) -prune -o \
   \( -name 'test_*.py' -o -name '*_test.py' -o -path '*/tests/*' \
-     -o -path '*/__tests__/*' -o -name '*.test.ts' -o -name '*.spec.ts' \
-     -o -name '*.test.tsx' -o -name '*.spec.tsx' \
-     -o -name 'test_*.sh' -o -name '*_test.sh' -o -path '*/test/*' \) \
-  -print 2>/dev/null | sed 's|^\./||' > "$TEST_LIST"
+  -o -path '*/__tests__/*' -o -name '*.test.ts' -o -name '*.spec.ts' \
+  -o -name '*.test.tsx' -o -name '*.spec.tsx' \
+  -o -name 'test_*.sh' -o -name '*_test.sh' -o -path '*/test/*' \) \
+  -print 2>/dev/null | sed 's|^\./||' >"$TEST_LIST"
 
 TEST_COUNT=$(grep -c . "$TEST_LIST" 2>/dev/null || true)
 if [[ "$TEST_COUNT" -gt 0 ]]; then
@@ -64,12 +64,12 @@ fi
 # --- Non-test files (all minus test patterns) ---
 find . -type f \
   \( -path '*/.venv*' -o -path '*/.venv-workspace*' -o -path '*/node_modules*' \
-     -o -path '*/.git*' -o -path '*/build*' -o -path '*/dist*' \
-     -o -path '*/__pycache__*' -o -path '*/htmlcov*' -o -path '*/.ruff_cache*' \) -prune -o \
+  -o -path '*/.git*' -o -path '*/build*' -o -path '*/dist*' \
+  -o -path '*/__pycache__*' -o -path '*/htmlcov*' -o -path '*/.ruff_cache*' \) -prune -o \
   \( -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \
-     -o -name '*.sh' -o -name '*.bash' \) -print 2>/dev/null | sed 's|^\./||' | sort -u > "$FULL_LIST"
+  -o -name '*.sh' -o -name '*.bash' \) -print 2>/dev/null | sed 's|^\./||' | sort -u >"$FULL_LIST"
 
-comm -23 <(sort -u "$FULL_LIST") <(sort -u "$TEST_LIST") > "$NON_TEST_LIST" 2>/dev/null || true
+comm -23 <(sort -u "$FULL_LIST") <(sort -u "$TEST_LIST") >"$NON_TEST_LIST" 2>/dev/null || true
 
 NON_TEST_COUNT=$(grep -c . "$NON_TEST_LIST" 2>/dev/null || true)
 if [[ "$NON_TEST_COUNT" -gt 0 ]]; then

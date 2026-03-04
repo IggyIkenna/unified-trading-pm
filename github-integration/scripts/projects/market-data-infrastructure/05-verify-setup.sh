@@ -21,37 +21,37 @@ PROJECT_NUMBER=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --project)
-            PROJECT_NUMBER="$2"
-            shift 2
-            ;;
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        -h|--help)
-            echo "Usage: bash 05-verify-setup.sh --project <number> [--org <org>]"
-            echo ""
-            echo "Options:"
-            echo "  --project  GitHub project number (required)"
-            echo "  --org      GitHub organization/user (default: IggyIkenna)"
-            echo ""
-            echo "Example:"
-            echo "  bash 05-verify-setup.sh --project 8"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --project)
+      PROJECT_NUMBER="$2"
+      shift 2
+      ;;
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    -h | --help)
+      echo "Usage: bash 05-verify-setup.sh --project <number> [--org <org>]"
+      echo ""
+      echo "Options:"
+      echo "  --project  GitHub project number (required)"
+      echo "  --org      GitHub organization/user (default: IggyIkenna)"
+      echo ""
+      echo "Example:"
+      echo "  bash 05-verify-setup.sh --project 8"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
 done
 
 # Validate
 if [ -z "$PROJECT_NUMBER" ]; then
-    echo "Error: --project is required"
-    exit 1
+  echo "Error: --project is required"
+  exit 1
 fi
 
 echo "========================================="
@@ -81,15 +81,15 @@ query {
 }' 2>/dev/null || echo "")
 
 if [ -z "$PROJECT_DATA" ] || [ "$PROJECT_DATA" == "null" ]; then
-    echo "  ❌ FAILED: Project #$PROJECT_NUMBER not found"
-    ((CHECKS_FAILED++))
-    exit 1
+  echo "  ❌ FAILED: Project #$PROJECT_NUMBER not found"
+  ((CHECKS_FAILED++))
+  exit 1
 else
-    PROJECT_TITLE=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.title')
-    PROJECT_URL=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.url')
-    echo "  ✅ PASSED: $PROJECT_TITLE"
-    echo "     URL: $PROJECT_URL"
-    ((CHECKS_PASSED++))
+  PROJECT_TITLE=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.title')
+  PROJECT_URL=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.url')
+  echo "  ✅ PASSED: $PROJECT_TITLE"
+  echo "     URL: $PROJECT_URL"
+  ((CHECKS_PASSED++))
 fi
 echo ""
 
@@ -98,17 +98,17 @@ echo "Check 2: Issues linked to project..."
 ISSUE_COUNT=$(gh project item-list "$PROJECT_NUMBER" --owner "$ORG" --format json --limit 100 2>/dev/null | jq '. | length' || echo "0")
 
 if [ "$ISSUE_COUNT" -eq 0 ]; then
-    echo "  ⚠️  WARNING: No issues found in project"
-    echo "     Run: python 02-create-issues.py --apply"
-    echo "     Then: bash 03-link-issues-to-project.sh --project $PROJECT_NUMBER"
-    ((CHECKS_WARNING++))
+  echo "  ⚠️  WARNING: No issues found in project"
+  echo "     Run: python 02-create-issues.py --apply"
+  echo "     Then: bash 03-link-issues-to-project.sh --project $PROJECT_NUMBER"
+  ((CHECKS_WARNING++))
 elif [ "$ISSUE_COUNT" -lt 51 ]; then
-    echo "  ⚠️  WARNING: Only $ISSUE_COUNT issues found (expected 51)"
-    echo "     Some issues may not be linked yet"
-    ((CHECKS_WARNING++))
+  echo "  ⚠️  WARNING: Only $ISSUE_COUNT issues found (expected 51)"
+  echo "     Some issues may not be linked yet"
+  ((CHECKS_WARNING++))
 else
-    echo "  ✅ PASSED: $ISSUE_COUNT issues linked"
-    ((CHECKS_PASSED++))
+  echo "  ✅ PASSED: $ISSUE_COUNT issues linked"
+  ((CHECKS_PASSED++))
 fi
 echo ""
 
@@ -120,23 +120,23 @@ SAMPLE_ISSUES=$(gh project item-list "$PROJECT_NUMBER" --owner "$ORG" --format j
 LABEL_COUNT=$(echo "$SAMPLE_ISSUES" | jq '[.[] | select(.labels != null) | select(.labels | contains(["MARKET-DATA-INFRASTRUCTURE"]))] | length' || echo "0")
 
 if [ "$LABEL_COUNT" -eq 0 ]; then
-    echo "  ⚠️  WARNING: No issues with MARKET-DATA-INFRASTRUCTURE label found"
-    echo "     Issues may need labels applied"
-    ((CHECKS_WARNING++))
+  echo "  ⚠️  WARNING: No issues with MARKET-DATA-INFRASTRUCTURE label found"
+  echo "     Issues may need labels applied"
+  ((CHECKS_WARNING++))
 else
-    echo "  ✅ PASSED: Issues have MARKET-DATA-INFRASTRUCTURE label"
-    ((CHECKS_PASSED++))
+  echo "  ✅ PASSED: Issues have MARKET-DATA-INFRASTRUCTURE label"
+  ((CHECKS_PASSED++))
 fi
 
 # Check priority labels
 PRIORITY_COUNT=$(echo "$SAMPLE_ISSUES" | jq '[.[] | select(.labels != null) | select(.labels | map(select(startswith("P0") or startswith("P1") or startswith("P2") or startswith("P3"))) | length > 0)] | length' || echo "0")
 
 if [ "$PRIORITY_COUNT" -eq 0 ]; then
-    echo "  ⚠️  WARNING: No priority labels (P0-P3) found"
-    ((CHECKS_WARNING++))
+  echo "  ⚠️  WARNING: No priority labels (P0-P3) found"
+  ((CHECKS_WARNING++))
 else
-    echo "  ✅ PASSED: Issues have priority labels"
-    ((CHECKS_PASSED++))
+  echo "  ✅ PASSED: Issues have priority labels"
+  ((CHECKS_PASSED++))
 fi
 echo ""
 
@@ -158,17 +158,17 @@ query {
 }' --jq '.data.user.projectV2.workflows.totalCount' 2>/dev/null || echo "0")
 
 if [ "$WORKFLOW_COUNT" -eq 0 ]; then
-    echo "  ⚠️  WARNING: No workflows configured"
-    echo "     Run: bash 04-copy-workflows.sh --from 5 --to $PROJECT_NUMBER"
-    echo "     Then manually configure 8 workflows in GitHub UI"
-    ((CHECKS_WARNING++))
+  echo "  ⚠️  WARNING: No workflows configured"
+  echo "     Run: bash 04-copy-workflows.sh --from 5 --to $PROJECT_NUMBER"
+  echo "     Then manually configure 8 workflows in GitHub UI"
+  ((CHECKS_WARNING++))
 elif [ "$WORKFLOW_COUNT" -lt 8 ]; then
-    echo "  ⚠️  WARNING: Only $WORKFLOW_COUNT workflows configured (expected 8)"
-    echo "     Complete workflow configuration in GitHub UI"
-    ((CHECKS_WARNING++))
+  echo "  ⚠️  WARNING: Only $WORKFLOW_COUNT workflows configured (expected 8)"
+  echo "     Complete workflow configuration in GitHub UI"
+  ((CHECKS_WARNING++))
 else
-    echo "  ✅ PASSED: $WORKFLOW_COUNT workflows configured"
-    ((CHECKS_PASSED++))
+  echo "  ✅ PASSED: $WORKFLOW_COUNT workflows configured"
+  ((CHECKS_PASSED++))
 fi
 echo ""
 
@@ -186,26 +186,26 @@ echo "  ❌ Failed:   $CHECKS_FAILED"
 echo ""
 
 if [ $CHECKS_FAILED -gt 0 ]; then
-    echo "❌ Verification FAILED"
-    echo "   Fix failed checks above before proceeding"
-    exit 1
+  echo "❌ Verification FAILED"
+  echo "   Fix failed checks above before proceeding"
+  exit 1
 elif [ $CHECKS_WARNING -gt 0 ]; then
-    echo "⚠️  Verification PASSED with warnings"
-    echo "   Consider addressing warnings for complete setup"
-    exit 0
+  echo "⚠️  Verification PASSED with warnings"
+  echo "   Consider addressing warnings for complete setup"
+  exit 0
 else
-    echo "✅ Verification PASSED"
-    echo "   Project is ready for development!"
-    echo ""
-    echo "Next steps:"
-    echo "  1. View project:"
-    echo "     gh project view $PROJECT_NUMBER --owner $ORG --web"
-    echo ""
-    echo "  2. Generate project README:"
-    echo "     bash 06-generate-project-readme.sh --project $PROJECT_NUMBER > PROJECT_README.md"
-    echo ""
-    echo "  3. Start working on issues!"
-    echo ""
+  echo "✅ Verification PASSED"
+  echo "   Project is ready for development!"
+  echo ""
+  echo "Next steps:"
+  echo "  1. View project:"
+  echo "     gh project view $PROJECT_NUMBER --owner $ORG --web"
+  echo ""
+  echo "  2. Generate project README:"
+  echo "     bash 06-generate-project-readme.sh --project $PROJECT_NUMBER > PROJECT_README.md"
+  echo ""
+  echo "  3. Start working on issues!"
+  echo ""
 fi
 
 echo "========================================="

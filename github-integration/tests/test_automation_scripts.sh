@@ -25,31 +25,31 @@ TESTS_FAILED=0
 # ==============================================================================
 
 assert_success() {
-    local test_name="$1"
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} $test_name"
-        ((TESTS_PASSED++))
-        return 0
-    else
-        echo -e "${RED}✗${NC} $test_name"
-        ((TESTS_FAILED++))
-        return 1
-    fi
+  local test_name="$1"
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓${NC} $test_name"
+    ((TESTS_PASSED++))
+    return 0
+  else
+    echo -e "${RED}✗${NC} $test_name"
+    ((TESTS_FAILED++))
+    return 1
+  fi
 }
 
 assert_file_executable() {
-    local file="$1"
-    local test_name="$2"
+  local file="$1"
+  local test_name="$2"
 
-    if [ -x "$file" ]; then
-        echo -e "${GREEN}✓${NC} $test_name"
-        ((TESTS_PASSED++))
-        return 0
-    else
-        echo -e "${RED}✗${NC} $test_name"
-        ((TESTS_FAILED++))
-        return 1
-    fi
+  if [ -x "$file" ]; then
+    echo -e "${GREEN}✓${NC} $test_name"
+    ((TESTS_PASSED++))
+    return 0
+  else
+    echo -e "${RED}✗${NC} $test_name"
+    ((TESTS_FAILED++))
+    return 1
+  fi
 }
 
 # ==============================================================================
@@ -73,34 +73,34 @@ echo "Test 2: Usage messages displayed on missing arguments"
 
 output=$(bash "$AUTO_FIX" 2>&1 || true)
 if echo "$output" | grep -q "Usage:"; then
-    echo -e "${GREEN}✓${NC} auto-fix-issue.sh shows usage"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} auto-fix-issue.sh shows usage"
+  ((TESTS_PASSED++))
 else
-    echo -e "${YELLOW}⊘${NC} auto-fix-issue.sh usage check skipped"
+  echo -e "${YELLOW}⊘${NC} auto-fix-issue.sh usage check skipped"
 fi
 
 output=$(bash "$BATCH_FIX" 2>&1 || true)
 if echo "$output" | grep -q "Usage:\|usage"; then
-    echo -e "${GREEN}✓${NC} batch-fix.sh shows usage"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} batch-fix.sh shows usage"
+  ((TESTS_PASSED++))
 else
-    echo -e "${YELLOW}⊘${NC} batch-fix.sh usage check skipped"
+  echo -e "${YELLOW}⊘${NC} batch-fix.sh usage check skipped"
 fi
 
 output=$(bash "$BATCH_FIX_V2" 2>&1 || true)
 if echo "$output" | grep -q "Usage:\|usage"; then
-    echo -e "${GREEN}✓${NC} batch-fix-v2.sh shows usage"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} batch-fix-v2.sh shows usage"
+  ((TESTS_PASSED++))
 else
-    echo -e "${YELLOW}⊘${NC} batch-fix-v2.sh usage check skipped"
+  echo -e "${YELLOW}⊘${NC} batch-fix-v2.sh usage check skipped"
 fi
 
 output=$(bash "$CLOSE_FIXED" 2>&1 || true)
 if echo "$output" | grep -q "Usage:\|usage"; then
-    echo -e "${GREEN}✓${NC} close-fixed-issue.sh shows usage"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} close-fixed-issue.sh shows usage"
+  ((TESTS_PASSED++))
 else
-    echo -e "${YELLOW}⊘${NC} close-fixed-issue.sh usage check skipped"
+  echo -e "${YELLOW}⊘${NC} close-fixed-issue.sh usage check skipped"
 fi
 
 # Test 3: Scripts have proper structure
@@ -109,23 +109,23 @@ echo "Test 3: Scripts have proper structure"
 
 # Check for shebang
 if head -1 "$AUTO_FIX" | grep -q "^#!/"; then
-    echo -e "${GREEN}✓${NC} auto-fix-issue.sh has shebang"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} auto-fix-issue.sh has shebang"
+  ((TESTS_PASSED++))
 fi
 
 if head -1 "$BATCH_FIX" | grep -q "^#!/"; then
-    echo -e "${GREEN}✓${NC} batch-fix.sh has shebang"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} batch-fix.sh has shebang"
+  ((TESTS_PASSED++))
 fi
 
 if head -1 "$BATCH_FIX_V2" | grep -q "^#!/"; then
-    echo -e "${GREEN}✓${NC} batch-fix-v2.sh has shebang"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} batch-fix-v2.sh has shebang"
+  ((TESTS_PASSED++))
 fi
 
 if head -1 "$CLOSE_FIXED" | grep -q "^#!/"; then
-    echo -e "${GREEN}✓${NC} close-fixed-issue.sh has shebang"
-    ((TESTS_PASSED++))
+  echo -e "${GREEN}✓${NC} close-fixed-issue.sh has shebang"
+  ((TESTS_PASSED++))
 fi
 
 # ==============================================================================
@@ -141,9 +141,9 @@ echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 echo ""
 
 if [ $TESTS_FAILED -eq 0 ]; then
-    echo -e "${GREEN}All tests passed!${NC}"
-    exit 0
+  echo -e "${GREEN}All tests passed!${NC}"
+  exit 0
 else
-    echo -e "${RED}Some tests failed${NC}"
-    exit 1
+  echo -e "${RED}Some tests failed${NC}"
+  exit 1
 fi

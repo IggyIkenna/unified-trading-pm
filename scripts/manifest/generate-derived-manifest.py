@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+"""Extract dependencies from all pyproject.toml files and generate a derived manifest.
+
+Reads workspace-manifest.json for repo list and topological order, then parses each
+repo's pyproject.toml to extract:
+  - Internal deps (path deps from [tool.uv.sources] or inline path = "...")
+  - External deps (PyPI packages with version specs)
+
+Outputs: unified-trading-pm/derived-dependency-manifest.json
+
+Usage:
+    python generate-derived-manifest.py
+    python generate-derived-manifest.py -o /path/to/output.json
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any, cast
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib  # type: ignore[no-reuse-def]
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PM_ROOT = SCRIPT_DIR.parent.parent
+WORKSPACE_ROOT = PM_ROOT.parent
+MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
+CONSTRAINTS_PATH = PM_ROOT / "workspace-constraints.toml"
+DEFAULT_OUTPUT = PM_ROOT / "derived-dependency-manifest.json"
+
+INTERNAL_PREFIXES = ("unified-", "unified_", "execution-algo", "matching-engine")
+
+
+def load_manifest() -> dict[str, Any]:
+    with open(MANIFEST_PATH) as f:
+        return cast(dict[str, Any], json.load(f))
+
+
+def _level_sort_key(lvl: dict[str, Any]) -> int:
+    raw = lvl.get("level")
+    return int(raw) if isinstance(raw, (int, float)) else 999
+
+
+def get_topological_order(manifest: dict[str, Any]) -> list[str]:
+    topo_raw = manifest.get("topologicalOrder")
+    if not isinstance(topo_raw, dict):
+        return []
+    levels_raw = topo_raw.get("levels")
+    if not isinstance(levels_raw, list):
+        return []
+    ordered: list[str] = []
+    for level in sorted(levels_raw, key=_level_sort_key):
+        repos = level.get("repos")
+        if isinstance(repos, list):
+            for r in repos:
+                if isinstance(r, str):
+                    ordered.append(r)
+    return ordered
+
+
+def get_repo_folder_path(manifest: dict[str, Any], repo_name: str) -> Path:
+    repos = manifest.get("repositories")
+    if isinstance(repos, dict):
+        entry = repos.get(repo_name)
+        if isinstance(entry, dict) and isinstance(entry.get("folder_name"), str):
+            return WORKSPACE_ROOT / entry["folder_name"]
+    return WORKSPACE_ROOT / repo_name
+
+
+def normalize_pkg_name(name: str) -> str:
+    base = re.sub(r"\[.*?\]", "", name)
+    return base.lower().replace("_", "-").strip()
+
+
+def extract_pkg_name(dep_spec: str) -> str:
+    if " @ " in dep_spec:
+        return dep_spec.split(" @ ", 1)[0].strip()
+    for sep in [">=", "<=", "!=", "==", ">", "<", "~=", "[", ";"]:
+        idx = dep_spec.find(sep)
+        if idx > 0:
+            return dep_spec[:idx].strip()
+    return dep_spec.strip()
+
+
+def is_internal_package(name: str) -> bool:
+    norm = normalize_pkg_name(name)
+    return any(norm.startswith(p.replace("_", "-")) for p in INTERNAL_PREFIXES)
+
+
+def parse_pyproject(repo_path: Path) -> tuple[dict[str, str], dict[str, list[str]]]:
+    pyproject = repo_path / "pyproject.toml"
+    if not pyproject.is_file():
+        return {}, {}
+
+    with open(pyproject, "rb") as f:
+        data = cast(dict[str, Any], tomllib.load(f))
+
+    deps_raw: list[str] = []
+    project = data.get("project")
+    if isinstance(project, dict):
+        raw = project.get("dependencies")
+        if isinstance(raw, list):
+            deps_raw.extend(str(d) for d in raw)
+        opt = project.get("optional-dependencies")
+        if isinstance(opt, dict):
+            dev = opt.get("dev")
+            if isinstance(dev, list):
+                deps_raw.extend(str(d) for d in dev)
+
+    uv_sources: dict[str, str] = {}
+    tool = data.get("tool")
+    if isinstance(tool, dict):
+        uv = tool.get("uv")
+        if isinstance(uv, dict):
+            sources = uv.get("sources")
+            if isinstance(sources, dict):
+                for k, v in sources.items():
+                    if isinstance(v, dict) and isinstance(v.get("path"), str):
+                        uv_sources[normalize_pkg_name(k)] = v["path"]
+
+    internal_deps: dict[str, str] = {k: "path" for k in uv_sources}
+    external_deps: dict[str, list[str]] = {}
+
+    for dep in deps_raw:
+        if "path" in dep and ("../" in dep or "..\\\\" in dep):
+            m = re.match(r"([a-zA-Z0-9_-]+)\s*=", dep)
+            if m:
+                internal_deps[normalize_pkg_name(m.group(1))] = "path"
+            continue
+        name = extract_pkg_name(dep)
+        norm = normalize_pkg_name(name)
+        if norm in uv_sources or is_internal_package(name):
+            internal_deps[norm] = dep
+        else:
+            if norm not in external_deps:
+                external_deps[norm] = []
+            external_deps[norm].append(dep)
+
+    return internal_deps, external_deps
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT))
+    args = parser.parse_args()
+    output_path = Path(args.output)
+
+    if not MANIFEST_PATH.is_file():
+        print(f"ERROR: Manifest not found: {MANIFEST_PATH}", file=sys.stderr)
+        sys.exit(1)
+
+    manifest = load_manifest()
+    topo_order = get_topological_order(manifest)
+    repos_data: dict[str, dict[str, Any]] = {}
+
+    for repo_name in topo_order:
+        repo_path = get_repo_folder_path(manifest, repo_name)
+        if not repo_path.is_dir():
+            repos_data[repo_name] = {"skipped": True, "reason": "not a directory"}
+            continue
+        internal, external = parse_pyproject(repo_path)
+        repos_data[repo_name] = {
+            "internal_deps": dict(sorted(internal.items())),
+            "external_deps": {k: list(set(v)) for k, v in sorted(external.items())},
+            "internal_count": len(internal),
+            "external_count": len(external),
+        }
+
+    constraints: dict[str, str] = {}
+    if CONSTRAINTS_PATH.is_file():
+        with open(CONSTRAINTS_PATH, "rb") as f:
+            cdata = cast(dict[str, Any], tomllib.load(f))
+        deps = cdata.get("dependencies")
+        if isinstance(deps, dict):
+            constraints = {k: str(v) for k, v in deps.items()}
+
+    derived = {
+        "description": "Derived from pyproject.toml. Compare to workspace-manifest.json.",
+        "source": "scripts/manifest/generate-derived-manifest.py",
+        "repositories": repos_data,
+        "canonical_external_constraints": constraints,
+    }
+    output_path.write_text(json.dumps(derived, indent=2) + "\n")
+    print(f"Wrote {output_path}")
+
+
+if __name__ == "__main__":
+    main()

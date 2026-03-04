@@ -26,40 +26,40 @@ MODEL=""
 VERBOSE=false
 
 if [ -z "$ISSUE_NUMBER" ]; then
-    echo "Usage: bash auto-fix-issue.sh <ISSUE_NUMBER> [--dry-run] [--interactive] [--model <model>]"
-    echo ""
-    echo "Available models:"
-    echo "  - gpt-4o-mini           (FREE: 500 requests/day - recommended for code standards)"
-    echo "  - gpt-5                 (OpenAI GPT-5)"
-    echo "  - sonnet-4              (Anthropic Claude Sonnet 4)"
-    echo "  - sonnet-4-thinking     (Claude Sonnet 4 with extended reasoning)"
-    echo "  - (or any model from: cursor agent --list-models)"
-    exit 1
+  echo "Usage: bash auto-fix-issue.sh <ISSUE_NUMBER> [--dry-run] [--interactive] [--model <model>]"
+  echo ""
+  echo "Available models:"
+  echo "  - gpt-4o-mini           (FREE: 500 requests/day - recommended for code standards)"
+  echo "  - gpt-5                 (OpenAI GPT-5)"
+  echo "  - sonnet-4              (Anthropic Claude Sonnet 4)"
+  echo "  - sonnet-4-thinking     (Claude Sonnet 4 with extended reasoning)"
+  echo "  - (or any model from: cursor agent --list-models)"
+  exit 1
 fi
 
 shift
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        --interactive)
-            INTERACTIVE=true
-            shift
-            ;;
-        --model)
-            MODEL="$2"
-            shift 2
-            ;;
-        --verbose|-v)
-            VERBOSE=true
-            shift
-            ;;
-        *)
-            shift
-            ;;
-    esac
+  case "$1" in
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    --interactive)
+      INTERACTIVE=true
+      shift
+      ;;
+    --model)
+      MODEL="$2"
+      shift 2
+      ;;
+    --verbose | -v)
+      VERBOSE=true
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
 done
 
 CODEX_ISSUE_REPO="IggyIkenna/unified-trading-codex"
@@ -73,16 +73,16 @@ echo ""
 
 # Parse issue (supports "repo:number" or just "number")
 if [[ "$ISSUE_NUMBER" == *":"* ]]; then
-    # Format: repo:number (e.g., "execution-services:147")
-    SERVICE_NAME="${ISSUE_NUMBER%%:*}"
-    ACTUAL_ISSUE_NUMBER="${ISSUE_NUMBER##*:}"
-    ISSUE_REPO="$ORG/$SERVICE_NAME"
-    echo "📋 Fetching issue #$ACTUAL_ISSUE_NUMBER from $ISSUE_REPO..."
+  # Format: repo:number (e.g., "execution-services:147")
+  SERVICE_NAME="${ISSUE_NUMBER%%:*}"
+  ACTUAL_ISSUE_NUMBER="${ISSUE_NUMBER##*:}"
+  ISSUE_REPO="$ORG/$SERVICE_NAME"
+  echo "📋 Fetching issue #$ACTUAL_ISSUE_NUMBER from $ISSUE_REPO..."
 else
-    # Standard format - fetch from codex repo
-    ACTUAL_ISSUE_NUMBER="$ISSUE_NUMBER"
-    ISSUE_REPO="$CODEX_ISSUE_REPO"
-    echo "📋 Fetching issue #$ACTUAL_ISSUE_NUMBER from $ISSUE_REPO..."
+  # Standard format - fetch from codex repo
+  ACTUAL_ISSUE_NUMBER="$ISSUE_NUMBER"
+  ISSUE_REPO="$CODEX_ISSUE_REPO"
+  echo "📋 Fetching issue #$ACTUAL_ISSUE_NUMBER from $ISSUE_REPO..."
 fi
 
 ISSUE_JSON=$(gh issue view "$ACTUAL_ISSUE_NUMBER" --repo "$ISSUE_REPO" --json number,title,body,labels)
@@ -97,24 +97,24 @@ echo ""
 
 # Extract service name from title if not already from repo:number format
 if [[ "$ISSUE_NUMBER" == *":"* ]]; then
-    # Already have SERVICE_NAME from parsing
-    :
+  # Already have SERVICE_NAME from parsing
+  :
 else
-    # Extract from title (format: [service-name] ...)
-    SERVICE_NAME=$(echo "$ISSUE_TITLE" | grep -o '\[.*\]' | tr -d '[]' | head -1)
+  # Extract from title (format: [service-name] ...)
+  SERVICE_NAME=$(echo "$ISSUE_TITLE" | grep -o '\[.*\]' | tr -d '[]' | head -1)
 fi
 
 if [ -z "$SERVICE_NAME" ]; then
-    echo "❌ Could not extract service name from issue title"
-    echo "   Expected format: [service-name] GAP-ID: Description"
-    exit 1
+  echo "❌ Could not extract service name from issue title"
+  echo "   Expected format: [service-name] GAP-ID: Description"
+  exit 1
 fi
 
 # Skip if service name is "Subtask", "Task", or "Epic" (these are hierarchy issues, not service issues)
 if [[ "$SERVICE_NAME" =~ ^(Subtask|Task|Epic)$ ]]; then
-    echo "⚠️  Skipping hierarchy issue: $ISSUE_TITLE"
-    echo "   This is not a service-specific issue."
-    exit 0
+  echo "⚠️  Skipping hierarchy issue: $ISSUE_TITLE"
+  echo "   This is not a service-specific issue."
+  exit 0
 fi
 
 echo "🎯 Target Service: $SERVICE_NAME"
@@ -123,12 +123,12 @@ echo ""
 
 # Verify service exists
 if [ ! -d "$WORKSPACE_ROOT/$SERVICE_NAME" ]; then
-    echo "❌ Service directory not found: $WORKSPACE_ROOT/$SERVICE_NAME"
-    exit 1
+  echo "❌ Service directory not found: $WORKSPACE_ROOT/$SERVICE_NAME"
+  exit 1
 fi
 
 # Build agent prompt
-read -r -d '' AGENT_PROMPT << EOF || true
+read -r -d '' AGENT_PROMPT <<EOF || true
 Implement GitHub Issue #${ACTUAL_ISSUE_NUMBER} from ${ISSUE_REPO}
 
 **IMPORTANT: Check if Already Fixed**
@@ -234,126 +234,126 @@ gh pr view <PR_NUMBER> --repo ${ISSUE_REPO} | grep "Fixes.*#${ACTUAL_ISSUE_NUMBE
 EOF
 
 if [ "$DRY_RUN" = true ]; then
-    echo "📄 Generated Prompt:"
-    echo "========================================================================"
-    echo "$AGENT_PROMPT"
-    echo "========================================================================"
+  echo "📄 Generated Prompt:"
+  echo "========================================================================"
+  echo "$AGENT_PROMPT"
+  echo "========================================================================"
+  echo ""
+  if [ -n "$MODEL" ]; then
+    echo "🤖 Model: $MODEL"
     echo ""
-    if [ -n "$MODEL" ]; then
-        echo "🤖 Model: $MODEL"
-        echo ""
-    fi
-    echo "✅ Dry run complete. To execute, remove --dry-run flag."
-    exit 0
+  fi
+  echo "✅ Dry run complete. To execute, remove --dry-run flag."
+  exit 0
 fi
 
 # Execute Cursor Agent
 echo "🚀 Starting Cursor Agent..."
 if [ -n "$MODEL" ]; then
-    echo "🤖 Model: $MODEL"
+  echo "🤖 Model: $MODEL"
 fi
 echo ""
 
 # Retry wrapper for cursor agent (handles race conditions on config file)
 run_cursor_agent_with_retry() {
-    local max_retries=3
-    local retry_count=0
-    local wait_time=2
+  local max_retries=3
+  local retry_count=0
+  local wait_time=2
 
-    while [ $retry_count -lt $max_retries ]; do
-        if [ $retry_count -gt 0 ]; then
-            echo "⚠️  Retry $retry_count/$max_retries (waiting ${wait_time}s)..."
-            sleep $wait_time
-            wait_time=$((wait_time * 2))  # Exponential backoff
-        fi
+  while [ $retry_count -lt $max_retries ]; do
+    if [ $retry_count -gt 0 ]; then
+      echo "⚠️  Retry $retry_count/$max_retries (waiting ${wait_time}s)..."
+      sleep $wait_time
+      wait_time=$((wait_time * 2)) # Exponential backoff
+    fi
 
-        # Try to run cursor agent
-        if "$@"; then
-            return 0
-        fi
+    # Try to run cursor agent
+    if "$@"; then
+      return 0
+    fi
 
-        local exit_code=$?
+    local exit_code=$?
 
-        # Check if it's the config file race condition error
-        if grep -q "ENOENT.*cli-config.json" /tmp/cursor-agent-error.log 2>/dev/null; then
-            echo "⚠️  Config file race condition detected, retrying..."
-            retry_count=$((retry_count + 1))
-            continue
-        fi
+    # Check if it's the config file race condition error
+    if grep -q "ENOENT.*cli-config.json" /tmp/cursor-agent-error.log 2>/dev/null; then
+      echo "⚠️  Config file race condition detected, retrying..."
+      retry_count=$((retry_count + 1))
+      continue
+    fi
 
-        # Other errors, don't retry
-        return $exit_code
-    done
+    # Other errors, don't retry
+    return $exit_code
+  done
 
-    echo "❌ Failed after $max_retries retries"
-    return 1
+  echo "❌ Failed after $max_retries retries"
+  return 1
 }
 
 # Safe cursor agent wrapper (with file locking to prevent race conditions)
 SAFE_WRAPPER="$(dirname "$0")/safe-cursor-agent.sh"
 if [ -f "$SAFE_WRAPPER" ]; then
-    CURSOR_CMD="bash $SAFE_WRAPPER"
+  CURSOR_CMD="bash $SAFE_WRAPPER"
 else
-    CURSOR_CMD="cursor agent"
-    echo "⚠️  Safe wrapper not found, using direct cursor agent (may have race conditions)"
+  CURSOR_CMD="cursor agent"
+  echo "⚠️  Safe wrapper not found, using direct cursor agent (may have race conditions)"
 fi
 
 # Execute cursor agent
 if [ "$INTERACTIVE" = true ]; then
-    # Interactive mode
-    if [ -n "$MODEL" ]; then
-        $CURSOR_CMD \
-            --force \
-            --workspace "$WORKSPACE_ROOT" \
-            --model "$MODEL" \
-            "$AGENT_PROMPT"
-    else
-        $CURSOR_CMD \
-            --force \
-            --workspace "$WORKSPACE_ROOT" \
-            "$AGENT_PROMPT"
-    fi
+  # Interactive mode
+  if [ -n "$MODEL" ]; then
+    $CURSOR_CMD \
+      --force \
+      --workspace "$WORKSPACE_ROOT" \
+      --model "$MODEL" \
+      "$AGENT_PROMPT"
+  else
+    $CURSOR_CMD \
+      --force \
+      --workspace "$WORKSPACE_ROOT" \
+      "$AGENT_PROMPT"
+  fi
 else
-    # Headless mode
-    # Choose output format based on verbosity
-    if [ "$VERBOSE" = true ]; then
-        # Verbose: stream-json piped through parser
-        OUTPUT_FORMAT="stream-json"
-        PARSER="$(dirname "$0")/parse-agent-logs.py"
+  # Headless mode
+  # Choose output format based on verbosity
+  if [ "$VERBOSE" = true ]; then
+    # Verbose: stream-json piped through parser
+    OUTPUT_FORMAT="stream-json"
+    PARSER="$(dirname "$0")/parse-agent-logs.py"
 
-        if [ -n "$MODEL" ]; then
-            $CURSOR_CMD \
-                --print \
-                --force \
-                --workspace "$WORKSPACE_ROOT" \
-                --model "$MODEL" \
-                --output-format "$OUTPUT_FORMAT" \
-                "$AGENT_PROMPT" | python3 "$PARSER"
-        else
-            $CURSOR_CMD \
-                --print \
-                --force \
-                --workspace "$WORKSPACE_ROOT" \
-                --output-format "$OUTPUT_FORMAT" \
-                "$AGENT_PROMPT" | python3 "$PARSER"
-        fi
+    if [ -n "$MODEL" ]; then
+      $CURSOR_CMD \
+        --print \
+        --force \
+        --workspace "$WORKSPACE_ROOT" \
+        --model "$MODEL" \
+        --output-format "$OUTPUT_FORMAT" \
+        "$AGENT_PROMPT" | python3 "$PARSER"
     else
-        # Normal: clean text output
-        if [ -n "$MODEL" ]; then
-            $CURSOR_CMD \
-                --print \
-                --force \
-                --workspace "$WORKSPACE_ROOT" \
-                --model "$MODEL" \
-                "$AGENT_PROMPT"
-        else
-            $CURSOR_CMD \
-                --print \
-                --force \
-                --workspace "$WORKSPACE_ROOT" \
-                "$AGENT_PROMPT"
-        fi
+      $CURSOR_CMD \
+        --print \
+        --force \
+        --workspace "$WORKSPACE_ROOT" \
+        --output-format "$OUTPUT_FORMAT" \
+        "$AGENT_PROMPT" | python3 "$PARSER"
     fi
+  else
+    # Normal: clean text output
+    if [ -n "$MODEL" ]; then
+      $CURSOR_CMD \
+        --print \
+        --force \
+        --workspace "$WORKSPACE_ROOT" \
+        --model "$MODEL" \
+        "$AGENT_PROMPT"
+    else
+      $CURSOR_CMD \
+        --print \
+        --force \
+        --workspace "$WORKSPACE_ROOT" \
+        "$AGENT_PROMPT"
+    fi
+  fi
 fi
 
 EXIT_CODE=$?
@@ -361,16 +361,16 @@ EXIT_CODE=$?
 echo ""
 echo "========================================================================"
 if [ $EXIT_CODE -eq 0 ]; then
-    echo "✅ Agent completed successfully"
-    echo ""
-    echo "Next steps:"
-    echo "1. Verify PR was created: gh pr list --repo ${ISSUE_REPO}"
-    echo "2. Check issue status: gh issue view ${ACTUAL_ISSUE_NUMBER} --repo ${ISSUE_REPO}"
-    echo "3. Monitor PR merge and issue auto-close"
+  echo "✅ Agent completed successfully"
+  echo ""
+  echo "Next steps:"
+  echo "1. Verify PR was created: gh pr list --repo ${ISSUE_REPO}"
+  echo "2. Check issue status: gh issue view ${ACTUAL_ISSUE_NUMBER} --repo ${ISSUE_REPO}"
+  echo "3. Monitor PR merge and issue auto-close"
 else
-    echo "❌ Agent failed with exit code: $EXIT_CODE"
-    echo ""
-    echo "Check the output above for errors"
+  echo "❌ Agent failed with exit code: $EXIT_CODE"
+  echo ""
+  echo "Check the output above for errors"
 fi
 echo "========================================================================"
 

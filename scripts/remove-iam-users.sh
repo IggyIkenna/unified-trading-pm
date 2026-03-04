@@ -27,8 +27,14 @@ USERS_TO_REMOVE=(
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dry-run) DRY_RUN=1; shift ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
   esac
 done
 
@@ -45,10 +51,10 @@ echo ""
 POLICY_FILE=$(mktemp)
 trap 'rm -f "$POLICY_FILE"' EXIT
 
-gcloud projects get-iam-policy "$PROJECT_ID" --format=json > "$POLICY_FILE"
+gcloud projects get-iam-policy "$PROJECT_ID" --format=json >"$POLICY_FILE"
 
 # Remove each user from every binding; write updated policy to new file
-python3 << PY
+python3 <<PY
 import json
 with open("$POLICY_FILE") as f:
     policy = json.load(f)

@@ -19,8 +19,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ADVISORIES_FILE="$SCRIPT_DIR/../../security/internal-advisories.yaml"
 
 if [[ ! -f "$ADVISORIES_FILE" ]]; then
-    echo "⚠️  internal-advisories.yaml not found at $ADVISORIES_FILE — skipping internal advisory check"
-    exit 0
+  echo "⚠️  internal-advisories.yaml not found at $ADVISORIES_FILE — skipping internal advisory check"
+  exit 0
 fi
 
 python3 - "$ADVISORIES_FILE" <<'PYEOF'

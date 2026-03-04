@@ -50,14 +50,32 @@ SKIP_TYPECHECK=""
 QUICK=false
 
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --files)         FILES_ARG="$2";  shift 2 ;;
-        --dep-branch)    DEP_BRANCH="$2"; shift 2 ;;
-        --skip-tests)    SKIP_TESTS="--skip-tests"; shift ;;
-        --skip-typecheck) SKIP_TYPECHECK="--skip-typecheck"; shift ;;
-        --quick)         QUICK=true; shift ;;
-        *)               COMMIT_MSG="$1"; shift ;;
-    esac
+  case "$1" in
+    --files)
+      FILES_ARG="$2"
+      shift 2
+      ;;
+    --dep-branch)
+      DEP_BRANCH="$2"
+      shift 2
+      ;;
+    --skip-tests)
+      SKIP_TESTS="--skip-tests"
+      shift
+      ;;
+    --skip-typecheck)
+      SKIP_TYPECHECK="--skip-typecheck"
+      shift
+      ;;
+    --quick)
+      QUICK=true
+      shift
+      ;;
+    *)
+      COMMIT_MSG="$1"
+      shift
+      ;;
+  esac
 done
 
 # NOTE: Cursor rules sync was previously done here as Stage 0 (copy-based).
@@ -71,29 +89,29 @@ cd "$REPO_DIR"
 # ── ACTIVATE VENV ─────────────────────────────────────────────────────────────
 VENV_ACTIVATED=0
 if [ -f ".venv/bin/activate" ]; then
-    source .venv/bin/activate
-    VENV_ACTIVATED=1
-    echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
+  source .venv/bin/activate
+  VENV_ACTIVATED=1
+  echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
 elif [ -f ".venv/Scripts/activate" ]; then
-    source .venv/Scripts/activate
-    VENV_ACTIVATED=1
-    echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
+  source .venv/Scripts/activate
+  VENV_ACTIVATED=1
+  echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
 else
-    echo "[$REPO_NAME] ⚠️  No .venv found — using system Python"
+  echo "[$REPO_NAME] ⚠️  No .venv found — using system Python"
 fi
 
 # ── INSTALL DEPS ──────────────────────────────────────────────────────────────
 if [ -f "pyproject.toml" ]; then
-    echo "[$REPO_NAME] Installing project dependencies..."
-    command -v uv >/dev/null 2>&1 || pip install uv --quiet
-    uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || true
+  echo "[$REPO_NAME] Installing project dependencies..."
+  command -v uv >/dev/null 2>&1 || pip install uv --quiet
+  uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || true
 fi
 
 # ── EARLY EXIT: nothing to commit ─────────────────────────────────────────────
 git fetch origin main --quiet 2>/dev/null || true
 if [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
-    echo "[$REPO_NAME] Nothing to commit — exiting fast"
-    exit 0
+  echo "[$REPO_NAME] Nothing to commit — exiting fast"
+  exit 0
 fi
 
 # ============================================================================
@@ -105,53 +123,53 @@ echo "=========================================="
 
 MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 if [ -f "$MANIFEST_PATH" ]; then
-    DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?' "$MANIFEST_PATH" 2>/dev/null || echo "")
-    if [ -n "$DEPS" ]; then
-        echo "Checking dependencies vs origin/main (from workspace-manifest.json)..."
-        HAS_DIFF=false
-        LAST_DEP_PATH=""
-        for dep in $DEPS; do
-            dep_path="$WORKSPACE_ROOT/$dep"
-            if [ -d "$dep_path" ]; then
-                cd "$dep_path"
-                git fetch origin main --quiet 2>/dev/null || true
-                if ! git diff origin/main --quiet 2>/dev/null; then
-                    HAS_DIFF=true
-                    LAST_DEP_PATH="$dep_path"
-                    echo "❌ $dep: DIFFERS from main"
-                else
-                    echo "✅ $dep: Matches main"
-                fi
-                cd "$REPO_DIR"
-            fi
-        done
-
-        if [ "$HAS_DIFF" = "true" ] && [ -z "$DEP_BRANCH" ]; then
-            echo ""
-            echo "═══════════════════════════════════════════════════════"
-            echo "❌ DEPENDENCY CONFLICT DETECTED"
-            echo "═══════════════════════════════════════════════════════"
-            echo ""
-            echo "Dependencies differ from main, but no --dep-branch specified."
-            echo ""
-            echo "Option 1: DISCARD local dependency changes"
-            echo "  cd $LAST_DEP_PATH && git reset --hard origin/main"
-            echo ""
-            echo "Option 2: USE BRANCH ISOLATION (recommended)"
-            echo "  bash scripts/quickmerge.sh \"$COMMIT_MSG\" --dep-branch \"my-feature\""
-            echo ""
-            echo "═══════════════════════════════════════════════════════"
-            exit 1
+  DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?' "$MANIFEST_PATH" 2>/dev/null || echo "")
+  if [ -n "$DEPS" ]; then
+    echo "Checking dependencies vs origin/main (from workspace-manifest.json)..."
+    HAS_DIFF=false
+    LAST_DEP_PATH=""
+    for dep in $DEPS; do
+      dep_path="$WORKSPACE_ROOT/$dep"
+      if [ -d "$dep_path" ]; then
+        cd "$dep_path"
+        git fetch origin main --quiet 2>/dev/null || true
+        if ! git diff origin/main --quiet 2>/dev/null; then
+          HAS_DIFF=true
+          LAST_DEP_PATH="$dep_path"
+          echo "❌ $dep: DIFFERS from main"
+        else
+          echo "✅ $dep: Matches main"
         fi
+        cd "$REPO_DIR"
+      fi
+    done
 
-        if [ -n "$DEP_BRANCH" ]; then
-            echo "✅ --dep-branch specified: $DEP_BRANCH (branch isolation mode)"
-        fi
-    else
-        echo "✅ No dependencies for $REPO_NAME (workspace-manifest.json)"
+    if [ "$HAS_DIFF" = "true" ] && [ -z "$DEP_BRANCH" ]; then
+      echo ""
+      echo "═══════════════════════════════════════════════════════"
+      echo "❌ DEPENDENCY CONFLICT DETECTED"
+      echo "═══════════════════════════════════════════════════════"
+      echo ""
+      echo "Dependencies differ from main, but no --dep-branch specified."
+      echo ""
+      echo "Option 1: DISCARD local dependency changes"
+      echo "  cd $LAST_DEP_PATH && git reset --hard origin/main"
+      echo ""
+      echo "Option 2: USE BRANCH ISOLATION (recommended)"
+      echo "  bash scripts/quickmerge.sh \"$COMMIT_MSG\" --dep-branch \"my-feature\""
+      echo ""
+      echo "═══════════════════════════════════════════════════════"
+      exit 1
     fi
+
+    if [ -n "$DEP_BRANCH" ]; then
+      echo "✅ --dep-branch specified: $DEP_BRANCH (branch isolation mode)"
+    fi
+  else
+    echo "✅ No dependencies for $REPO_NAME (workspace-manifest.json)"
+  fi
 else
-    echo "⚠️  workspace-manifest.json not found at $MANIFEST_PATH (skipping dependency validation)"
+  echo "⚠️  workspace-manifest.json not found at $MANIFEST_PATH (skipping dependency validation)"
 fi
 
 echo ""
@@ -164,48 +182,48 @@ echo "STAGE 2: Pre-flight Audit"
 echo "=========================================="
 
 if [ -f "$WORKSPACE_ROOT/.cursor/scripts/pre-flight-audit.sh" ]; then
-    if bash "$WORKSPACE_ROOT/.cursor/scripts/pre-flight-audit.sh" "$REPO_NAME"; then
-        echo "[$REPO_NAME] ✅ Pre-flight audit PASSED"
-    else
-        echo "[$REPO_NAME] ❌ Pre-flight audit FAILED"
-        exit 1
-    fi
+  if bash "$WORKSPACE_ROOT/.cursor/scripts/pre-flight-audit.sh" "$REPO_NAME"; then
+    echo "[$REPO_NAME] ✅ Pre-flight audit PASSED"
+  else
+    echo "[$REPO_NAME] ❌ Pre-flight audit FAILED"
+    exit 1
+  fi
 else
-    echo "[$REPO_NAME] ⚠️  pre-flight-audit.sh not found (skipping)"
+  echo "[$REPO_NAME] ⚠️  pre-flight-audit.sh not found (skipping)"
 fi
 
 echo ""
 
 # ── ENVIRONMENT AUTO-DETECT ───────────────────────────────────────────────────
 if [ -f ".env" ]; then
-    set -a
-    grep -v '^#' .env | grep '=' | while IFS='=' read -r k _; do
-        export "$k"
-    done 2>/dev/null || true
-    set +a
+  set -a
+  grep -v '^#' .env | grep '=' | while IFS='=' read -r k _; do
+    export "$k"
+  done 2>/dev/null || true
+  set +a
 fi
 
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
 if [ -z "${ENVIRONMENT:-}" ]; then
-    if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
-        export ENVIRONMENT="production"
-    else
-        export ENVIRONMENT="development"
-        export GCP_PROJECT_ID="${GCP_PROJECT_ID_DEV:-${GCP_PROJECT_ID:-}}"
-        echo "[$REPO_NAME] 🟡 BRANCH MODE: using dev project (branch: $CURRENT_BRANCH)"
-    fi
+  if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
+    export ENVIRONMENT="production"
+  else
+    export ENVIRONMENT="development"
+    export GCP_PROJECT_ID="${GCP_PROJECT_ID_DEV:-${GCP_PROJECT_ID:-}}"
+    echo "[$REPO_NAME] 🟡 BRANCH MODE: using dev project (branch: $CURRENT_BRANCH)"
+  fi
 fi
 
 # ── EARLY EXIT: identical to main ─────────────────────────────────────────────
 git fetch origin main --quiet 2>/dev/null || true
 if git rev-parse origin/main &>/dev/null && [ -z "$(git diff origin/main 2>/dev/null)" ]; then
-    echo "[$REPO_NAME] No differences from main — nothing to merge"
-    exit 0
+  echo "[$REPO_NAME] No differences from main — nothing to merge"
+  exit 0
 fi
 
 if [ -z "$(git status --porcelain)" ]; then
-    echo "[$REPO_NAME] No changes to commit"
-    exit 0
+  echo "[$REPO_NAME] No changes to commit"
+  exit 0
 fi
 
 # ============================================================================
@@ -217,17 +235,17 @@ echo "=========================================="
 echo ""
 
 if [ -f "scripts/quality-gates.sh" ]; then
-    echo "[$REPO_NAME] Phase 1: auto-fix (ruff format + ruff check --fix)..."
-    bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK
+  echo "[$REPO_NAME] Phase 1: auto-fix (ruff format + ruff check --fix)..."
+  bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK
 
-    echo "[$REPO_NAME] Phase 2: verify (--no-fix mode)..."
-    if ! bash scripts/quality-gates.sh --no-fix $SKIP_TESTS $SKIP_TYPECHECK; then
-        echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
-        exit 1
-    fi
-    echo "[$REPO_NAME] ✅ Quality gates PASSED"
+  echo "[$REPO_NAME] Phase 2: verify (--no-fix mode)..."
+  if ! bash scripts/quality-gates.sh --no-fix $SKIP_TESTS $SKIP_TYPECHECK; then
+    echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
+    exit 1
+  fi
+  echo "[$REPO_NAME] ✅ Quality gates PASSED"
 else
-    echo "[$REPO_NAME] ⚠️  No quality-gates.sh found (skipping quality gate check)"
+  echo "[$REPO_NAME] ⚠️  No quality-gates.sh found (skipping quality gate check)"
 fi
 
 echo ""
@@ -240,42 +258,42 @@ echo "STAGE 4: Act Simulation"
 echo "=========================================="
 
 if [ "$QUICK" = true ]; then
-    echo "[$REPO_NAME] --quick: Skipping act simulation"
+  echo "[$REPO_NAME] --quick: Skipping act simulation"
 else
-    # Auto-install act if not present (Linux or macOS)
-    if ! command -v act &>/dev/null; then
-        OS="$(uname -s)"
-        echo "[$REPO_NAME] act not found — installing for $OS..."
-        if [ "$OS" = "Darwin" ]; then
-            if command -v brew &>/dev/null; then
-                brew install act
-            else
-                echo "[$REPO_NAME] ❌ Homebrew not found. Install it first: https://brew.sh" >&2
-                exit 1
-            fi
-        elif [ "$OS" = "Linux" ]; then
-            INSTALL_DIR="${HOME}/.local/bin"
-            mkdir -p "$INSTALL_DIR"
-            curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b "$INSTALL_DIR"
-            export PATH="$INSTALL_DIR:$PATH"
-        else
-            echo "[$REPO_NAME] ❌ Unsupported OS ($OS) — install act manually: https://github.com/nektos/act" >&2
-            exit 1
-        fi
-    fi
-
-    if ! command -v act &>/dev/null; then
-        echo "[$REPO_NAME] ❌ act installation failed — cannot run CI simulation" >&2
+  # Auto-install act if not present (Linux or macOS)
+  if ! command -v act &>/dev/null; then
+    OS="$(uname -s)"
+    echo "[$REPO_NAME] act not found — installing for $OS..."
+    if [ "$OS" = "Darwin" ]; then
+      if command -v brew &>/dev/null; then
+        brew install act
+      else
+        echo "[$REPO_NAME] ❌ Homebrew not found. Install it first: https://brew.sh" >&2
         exit 1
-    fi
-
-    ACT_SECRETS=""
-    [ -f ~/.secrets ] && ACT_SECRETS="--secret-file ~/.secrets"
-    if act -j quality-gates $ACT_SECRETS 2>/dev/null; then
-        echo "[$REPO_NAME] ✅ Act simulation PASSED"
+      fi
+    elif [ "$OS" = "Linux" ]; then
+      INSTALL_DIR="${HOME}/.local/bin"
+      mkdir -p "$INSTALL_DIR"
+      curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b "$INSTALL_DIR"
+      export PATH="$INSTALL_DIR:$PATH"
     else
-        echo "[$REPO_NAME] ⚠️  Act simulation failed (continuing — CI will be the authoritative check)"
+      echo "[$REPO_NAME] ❌ Unsupported OS ($OS) — install act manually: https://github.com/nektos/act" >&2
+      exit 1
     fi
+  fi
+
+  if ! command -v act &>/dev/null; then
+    echo "[$REPO_NAME] ❌ act installation failed — cannot run CI simulation" >&2
+    exit 1
+  fi
+
+  ACT_SECRETS=""
+  [ -f ~/.secrets ] && ACT_SECRETS="--secret-file ~/.secrets"
+  if act -j quality-gates $ACT_SECRETS 2>/dev/null; then
+    echo "[$REPO_NAME] ✅ Act simulation PASSED"
+  else
+    echo "[$REPO_NAME] ⚠️  Act simulation failed (continuing — CI will be the authoritative check)"
+  fi
 fi
 
 echo ""
@@ -291,20 +309,20 @@ echo ""
 # Stash all changes (including untracked) before branch switch
 RESTORE_STASH=0
 if [ -n "$(git status --porcelain)" ]; then
-    echo "[$REPO_NAME] Stashing changes..."
-    git stash push -u -m "quickmerge-$$" --quiet
-    RESTORE_STASH=1
+  echo "[$REPO_NAME] Stashing changes..."
+  git stash push -u -m "quickmerge-$$" --quiet
+  RESTORE_STASH=1
 fi
 
 git fetch origin main --quiet
 
 # Create branch
 if [ -n "$DEP_BRANCH" ]; then
-    BRANCH="$DEP_BRANCH"
-    echo "[$REPO_NAME] Using specified branch: $BRANCH"
+  BRANCH="$DEP_BRANCH"
+  echo "[$REPO_NAME] Using specified branch: $BRANCH"
 else
-    BRANCH="auto/$(date +%Y%m%d-%H%M%S)-$$"
-    echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
+  BRANCH="auto/$(date +%Y%m%d-%H%M%S)-$$"
+  echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
 fi
 
 git checkout -b "$BRANCH" origin/main --quiet
@@ -312,7 +330,7 @@ echo ""
 
 # Restore stash on new branch
 if [ "$RESTORE_STASH" = 1 ] && git stash list | grep -q "quickmerge-$$"; then
-    git stash pop --quiet
+  git stash pop --quiet
 fi
 
 # Stage files: --files for selective add, else add all
@@ -320,25 +338,25 @@ sync 2>/dev/null || true
 sleep 0.3
 
 if [ -n "$FILES_ARG" ]; then
-    ADDED_ANY=0
-    for f in $FILES_ARG; do
-        if [ -e "$f" ]; then
-            git add "$f"
-            ADDED_ANY=1
-        else
-            echo "[$REPO_NAME] ⚠️  Path not found: $f"
-        fi
-    done
-    if [ "$ADDED_ANY" = 0 ]; then
-        echo "[$REPO_NAME] ❌ No valid paths from --files. Nothing to commit."
-        exit 1
+  ADDED_ANY=0
+  for f in $FILES_ARG; do
+    if [ -e "$f" ]; then
+      git add "$f"
+      ADDED_ANY=1
+    else
+      echo "[$REPO_NAME] ⚠️  Path not found: $f"
     fi
-    if [ -z "$(git diff --cached --name-only)" ]; then
-        echo "[$REPO_NAME] ❌ No changes in --files paths. Nothing to commit."
-        exit 1
-    fi
+  done
+  if [ "$ADDED_ANY" = 0 ]; then
+    echo "[$REPO_NAME] ❌ No valid paths from --files. Nothing to commit."
+    exit 1
+  fi
+  if [ -z "$(git diff --cached --name-only)" ]; then
+    echo "[$REPO_NAME] ❌ No changes in --files paths. Nothing to commit."
+    exit 1
+  fi
 else
-    git add -A
+  git add -A
 fi
 
 git commit -m "$COMMIT_MSG" --quiet
@@ -352,14 +370,14 @@ PR_BODY="Automated PR. Will auto-merge once quality gates pass.
 ${ISSUE_REFS}"
 
 PR_URL=$(gh pr create \
-    --title "$COMMIT_MSG" \
-    --body "$PR_BODY" \
-    --base main \
-    --head "$BRANCH" 2>/dev/null)
+  --title "$COMMIT_MSG" \
+  --body "$PR_BODY" \
+  --base main \
+  --head "$BRANCH" 2>/dev/null)
 
 PR_NUM=$(echo "$PR_URL" | grep -o "[0-9]*$" || echo "")
 if [ -n "$PR_NUM" ]; then
-    gh pr merge "$PR_NUM" --auto --squash --delete-branch 2>/dev/null || true
+  gh pr merge "$PR_NUM" --auto --squash --delete-branch 2>/dev/null || true
 fi
 
 echo "[$REPO_NAME] ✅ PR created: $PR_URL (auto-merge enabled)"

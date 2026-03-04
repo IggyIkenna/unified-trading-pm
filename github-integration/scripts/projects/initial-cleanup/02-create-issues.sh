@@ -14,26 +14,26 @@ DRY_RUN=false
 
 # Parse arguments
 if [ "${1:-}" = "--dry-run" ]; then
-    DRY_RUN=true
-    echo "🔍 DRY RUN MODE"
-    echo ""
+  DRY_RUN=true
+  echo "🔍 DRY RUN MODE"
+  echo ""
 fi
 
 # 13 service repos (portfolio-manager-service removed - not in current workspace)
 REPOS=(
-    "execution-services"
-    "strategy-service"
-    "instruments-service"
-    "unified-trading-library"
-    "market-data-processing-service"
-    "ml-training-service"
-    "ml-inference-service"
-    "features-delta-one-service"
-    "features-volatility-service"
-    "features-calendar-service"
-    "features-onchain-service"
-    "market-tick-data-handler"
-    "unified-trading-deployment-v2"
+  "execution-services"
+  "strategy-service"
+  "instruments-service"
+  "unified-trading-library"
+  "market-data-processing-service"
+  "ml-training-service"
+  "ml-inference-service"
+  "features-delta-one-service"
+  "features-volatility-service"
+  "features-calendar-service"
+  "features-onchain-service"
+  "market-tick-data-handler"
+  "unified-trading-deployment-v2"
 )
 
 echo "========================================="
@@ -47,12 +47,12 @@ CREATED=0
 EXISTING=0
 
 for repo in "${REPOS[@]}"; do
-    echo "📝 $repo..."
+  echo "📝 $repo..."
 
-    TITLE="[CLEANUP] Fix all COD violations in $repo"
+  TITLE="[CLEANUP] Fix all COD violations in $repo"
 
-    # Create issue body
-    BODY="## Objective
+  # Create issue body
+  BODY="## Objective
 
 Fix **all** codex violations in \`$repo\`.
 
@@ -112,39 +112,39 @@ See: @unified-trading-codex/11-project-management/github-integration/scripts/pro
 - \`cod\`: Code-Owned Debt
 - \`cleanup\`: Initial cleanup task"
 
-    # Check if issue already exists
-    EXISTING_ISSUE=$(gh issue list \
-        --repo "$ORG/$repo" \
-        --search "\"$TITLE\" in:title" \
-        --json number \
-        --jq '.[0].number' 2>/dev/null || echo "")
+  # Check if issue already exists
+  EXISTING_ISSUE=$(gh issue list \
+    --repo "$ORG/$repo" \
+    --search "\"$TITLE\" in:title" \
+    --json number \
+    --jq '.[0].number' 2>/dev/null || echo "")
 
-    if [ -n "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
-        echo "  ✅ Already exists: #$EXISTING_ISSUE"
-        EXISTING=$((EXISTING + 1))
+  if [ -n "$EXISTING_ISSUE" ] && [ "$EXISTING_ISSUE" != "null" ]; then
+    echo "  ✅ Already exists: #$EXISTING_ISSUE"
+    EXISTING=$((EXISTING + 1))
+  else
+    if [ "$DRY_RUN" = true ]; then
+      echo "  🔍 Would create issue"
     else
-        if [ "$DRY_RUN" = true ]; then
-            echo "  🔍 Would create issue"
-        else
-            # Ensure labels exist
-            gh label create "cod" --repo "$ORG/$repo" --color "d73a4a" --description "Code-Owned Debt" 2>/dev/null || true
-            gh label create "cleanup" --repo "$ORG/$repo" --color "0e8a16" --description "Initial cleanup task" 2>/dev/null || true
+      # Ensure labels exist
+      gh label create "cod" --repo "$ORG/$repo" --color "d73a4a" --description "Code-Owned Debt" 2>/dev/null || true
+      gh label create "cleanup" --repo "$ORG/$repo" --color "0e8a16" --description "Initial cleanup task" 2>/dev/null || true
 
-            # Create issue
-            ISSUE_NUMBER=$(gh issue create \
-                --repo "$ORG/$repo" \
-                --title "$TITLE" \
-                --body "$BODY" \
-                --label "cod,cleanup" \
-                --assignee "@me" \
-                2>&1 | grep -o "[0-9]*$")
+      # Create issue
+      ISSUE_NUMBER=$(gh issue create \
+        --repo "$ORG/$repo" \
+        --title "$TITLE" \
+        --body "$BODY" \
+        --label "cod,cleanup" \
+        --assignee "@me" \
+        2>&1 | grep -o "[0-9]*$")
 
-            echo "  ✅ Created: #$ISSUE_NUMBER"
-            CREATED=$((CREATED + 1))
-        fi
+      echo "  ✅ Created: #$ISSUE_NUMBER"
+      CREATED=$((CREATED + 1))
     fi
+  fi
 
-    sleep 0.5  # Rate limiting
+  sleep 0.5 # Rate limiting
 done
 
 echo ""

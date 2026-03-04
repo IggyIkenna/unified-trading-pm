@@ -61,7 +61,7 @@ while IFS= read -r email; do
       break
     fi
   done
-done <<< "$USER_EMAILS"
+done <<<"$USER_EMAILS"
 
 if [[ -z "$FOUND" ]]; then
   echo "  (none matched keywords: ${KEYWORDS[*]})"

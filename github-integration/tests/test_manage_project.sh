@@ -22,32 +22,32 @@ TESTS_FAILED=0
 # ==============================================================================
 
 assert_success() {
-    local test_name="$1"
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} $test_name"
-        ((TESTS_PASSED++))
-        return 0
-    else
-        echo -e "${RED}✗${NC} $test_name"
-        ((TESTS_FAILED++))
-        return 1
-    fi
+  local test_name="$1"
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓${NC} $test_name"
+    ((TESTS_PASSED++))
+    return 0
+  else
+    echo -e "${RED}✗${NC} $test_name"
+    ((TESTS_FAILED++))
+    return 1
+  fi
 }
 
 assert_exit_code() {
-    local expected=$1
-    local actual=$2
-    local test_name="$3"
+  local expected=$1
+  local actual=$2
+  local test_name="$3"
 
-    if [ "$actual" -eq "$expected" ]; then
-        echo -e "${GREEN}✓${NC} $test_name (exit code: $actual)"
-        ((TESTS_PASSED++))
-        return 0
-    else
-        echo -e "${RED}✗${NC} $test_name (expected: $expected, got: $actual)"
-        ((TESTS_FAILED++))
-        return 1
-    fi
+  if [ "$actual" -eq "$expected" ]; then
+    echo -e "${GREEN}✓${NC} $test_name (exit code: $actual)"
+    ((TESTS_PASSED++))
+    return 0
+  else
+    echo -e "${RED}✗${NC} $test_name (expected: $expected, got: $actual)"
+    ((TESTS_FAILED++))
+    return 1
+  fi
 }
 
 # ==============================================================================
@@ -61,10 +61,10 @@ echo ""
 # Test 1: Script exists and is executable
 echo "Test 1: Script exists and is executable"
 if [ -x "$MANAGE_PROJECT" ]; then
-    assert_success "Script is executable"
+  assert_success "Script is executable"
 else
-    echo -e "${RED}✗${NC} Script not executable: $MANAGE_PROJECT"
-    ((TESTS_FAILED++))
+  echo -e "${RED}✗${NC} Script not executable: $MANAGE_PROJECT"
+  ((TESTS_FAILED++))
 fi
 
 # Test 2: Help message works
@@ -114,9 +114,9 @@ echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 echo ""
 
 if [ $TESTS_FAILED -eq 0 ]; then
-    echo -e "${GREEN}All tests passed!${NC}"
-    exit 0
+  echo -e "${GREEN}All tests passed!${NC}"
+  exit 0
 else
-    echo -e "${RED}Some tests failed${NC}"
-    exit 1
+  echo -e "${RED}Some tests failed${NC}"
+  exit 1
 fi

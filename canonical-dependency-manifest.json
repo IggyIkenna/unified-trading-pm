@@ -1,7 +1,7 @@
 {
-  "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. Single source of truth. Internal/private repos are in workspace-manifest.json.",
+  "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-02T16:45:38.935445+00:00",
+  "generatedAt": "2026-03-04T13:16:02.690955+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "name": "aiofiles",
-      "versionRange": "aiofiles>=23.2.1,<24.0.0"
+      "versionRange": "aiofiles>=23.2.1,<25.0.0"
     },
     {
       "name": "aiohttp",
@@ -65,7 +65,7 @@
       "versionRange": "boto3>=1.40.70,<2.0.0"
     },
     {
-      "name": "boto3-stubs[s3,secretsmanager]",
+      "name": "boto3_stubs[s3,secretsmanager]",
       "versionRange": "boto3-stubs[s3,secretsmanager]>=1.35.0,<2.0.0"
     },
     {
@@ -125,28 +125,24 @@
       "versionRange": "gcloud-aio-storage>=9.0.0,<10.0.0"
     },
     {
-      "name": "google_api_python_client",
-      "versionRange": "google-api-python-client>=2.0.0,<3.0.0"
+      "name": "gcsfs",
+      "versionRange": "gcsfs>=2024.2.0"
     },
     {
       "name": "google_auth",
       "versionRange": "google-auth>=2.40.0,<3.0.0"
     },
     {
+      "name": "google_cloud_bigquery",
+      "versionRange": "google-cloud-bigquery>=3.40.0"
+    },
+    {
       "name": "google_cloud_build",
       "versionRange": "google-cloud-build>=3.0.0,<4.0.0"
     },
     {
-      "name": "google_cloud_compute",
-      "versionRange": "google-cloud-compute>=1.0.0,<2.0.0"
-    },
-    {
       "name": "google_cloud_pubsub",
       "versionRange": "google-cloud-pubsub>=2.28.0,<3.0.0"
-    },
-    {
-      "name": "google_cloud_run",
-      "versionRange": "google-cloud-run>=0.15.0,<1.0.0"
     },
     {
       "name": "google_cloud_secret_manager",
@@ -230,7 +226,7 @@
     },
     {
       "name": "pandas_gbq",
-      "versionRange": "pandas-gbq"
+      "versionRange": "pandas-gbq>=0.28.0,<1.0.0"
     },
     {
       "name": "pandas_stubs",
@@ -263,6 +259,10 @@
     {
       "name": "prometheus_client",
       "versionRange": "prometheus-client>=0.20.0,<1.0.0"
+    },
+    {
+      "name": "psutil",
+      "versionRange": "psutil>=5.9.0"
     },
     {
       "name": "psycopg2_binary",

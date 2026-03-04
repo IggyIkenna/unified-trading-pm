@@ -23,31 +23,31 @@ PROJECT_DESCRIPTION="Split unified-trading-library into focused libraries (event
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        --name)
-            PROJECT_NAME="$2"
-            shift 2
-            ;;
-        -h|--help)
-            echo "Usage: bash 01-create-project.sh [--org <org>] [--name <project-name>]"
-            echo ""
-            echo "Options:"
-            echo "  --org   GitHub organization/user (default: IggyIkenna)"
-            echo "  --name  Project name (default: Market Data Infrastructure)"
-            echo ""
-            echo "Example:"
-            echo "  bash 01-create-project.sh --org IggyIkenna"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    --name)
+      PROJECT_NAME="$2"
+      shift 2
+      ;;
+    -h | --help)
+      echo "Usage: bash 01-create-project.sh [--org <org>] [--name <project-name>]"
+      echo ""
+      echo "Options:"
+      echo "  --org   GitHub organization/user (default: IggyIkenna)"
+      echo "  --name  Project name (default: Market Data Infrastructure)"
+      echo ""
+      echo "Example:"
+      echo "  bash 01-create-project.sh --org IggyIkenna"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
 done
 
 echo "========================================="
@@ -74,13 +74,13 @@ query {
 }' --jq '.data.user.projectsV2.nodes[] | select(.title == "'"$PROJECT_NAME"'") | .number' 2>/dev/null || echo "")
 
 if [ -n "$EXISTING_PROJECT" ]; then
-    echo "✅ Project already exists: #$EXISTING_PROJECT"
-    echo "   URL: https://github.com/users/$ORG/projects/$EXISTING_PROJECT"
-    echo ""
-    echo "Skipping creation. Use this project number for subsequent steps."
-    echo ""
-    echo "Project Number: $EXISTING_PROJECT"
-    exit 0
+  echo "✅ Project already exists: #$EXISTING_PROJECT"
+  echo "   URL: https://github.com/users/$ORG/projects/$EXISTING_PROJECT"
+  echo ""
+  echo "Skipping creation. Use this project number for subsequent steps."
+  echo ""
+  echo "Project Number: $EXISTING_PROJECT"
+  exit 0
 fi
 
 # Step 2: Create project
@@ -135,7 +135,7 @@ mutation {
       }
     }
   }
-}' > /dev/null 2>&1 || echo "⚠️  Priority field may already exist"
+}' >/dev/null 2>&1 || echo "⚠️  Priority field may already exist"
 
 # Add Type field (single select)
 gh api graphql -f query='
@@ -157,7 +157,7 @@ mutation {
       }
     }
   }
-}' > /dev/null 2>&1 || echo "⚠️  Type field may already exist"
+}' >/dev/null 2>&1 || echo "⚠️  Type field may already exist"
 
 # Add Estimated Hours field (number)
 gh api graphql -f query='
@@ -174,7 +174,7 @@ mutation {
       }
     }
   }
-}' > /dev/null 2>&1 || echo "⚠️  Estimated Hours field may already exist"
+}' >/dev/null 2>&1 || echo "⚠️  Estimated Hours field may already exist"
 
 echo "✅ Custom fields added"
 echo ""
