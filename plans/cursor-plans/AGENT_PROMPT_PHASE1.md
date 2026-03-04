@@ -48,7 +48,7 @@ Read that file completely before starting any work. Phase 2 cannot start until a
 | Source                 | Path                                                                        | What it governs                                                |
 | ---------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg`                             | 63 repos, 13 levels (L0-L12) — L0=PM, L1=codex, L2+=code repos |
-| Runtime topology       | `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` | Runtime service wiring                                         |
+| Runtime topology       | `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` | Runtime service wiring                                         |
 | Manifest JSON          | `unified-trading-pm/workspace-manifest.json`                                | Machine-readable repo registry                                 |
 | SSOT index             | `unified-trading-codex/00-SSOT-INDEX.md`                                    | Maps every topic to its canonical doc                          |
 
@@ -157,7 +157,7 @@ All items in Stream B are independent — run them in parallel:
 3. **arch-ui-audit-full** — Find embedded UI artifacts (`ui/`, `frontend/`, `*.tsx`, `*.jsx`, `package.json`) in all service repos. Fix every violation.
 4. **integration-system-tests-repo** — Create `system-integration-tests` repo per `unified-trading-pm/docs/new-repo-setup.md`
 5. **integration-layer2-infra-verify** — Add `deployment-service/scripts/verify_infra.py`; expose as `GET /infra/health`
-6. **infra-merge-utdv3** — Move `ibkr-gateway-infra/ibkr-gateway/` → `unified-trading-deployment-v3/infra/ibkr-gateway/`. Delete `ibkr-gateway-infra/`.
+6. **infra-merge-utdv3** — Move `ibkr-gateway-infra/ibkr-gateway/` → `deployment-service/infra/ibkr-gateway/`. Delete `ibkr-gateway-infra/`.
 7. **hybrid-live-seam** — Document + implement in-memory adapter seam for `MDPS←MTDH` (under `co_located_vm` profile only)
 
 ### Stream C — QG Baseline Audit (parallel with A + B)

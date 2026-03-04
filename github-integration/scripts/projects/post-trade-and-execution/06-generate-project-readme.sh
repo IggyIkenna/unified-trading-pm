@@ -21,37 +21,37 @@ PROJECT_NUMBER=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --project)
-            PROJECT_NUMBER="$2"
-            shift 2
-            ;;
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        -h|--help)
-            echo "Usage: bash 06-generate-project-readme.sh --project <number> [--org <org>]"
-            echo ""
-            echo "Options:"
-            echo "  --project  GitHub project number (required)"
-            echo "  --org      GitHub organization/user (default: IggyIkenna)"
-            echo ""
-            echo "Example:"
-            echo "  bash 06-generate-project-readme.sh --project 7 > PROJECT_README.md"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --project)
+      PROJECT_NUMBER="$2"
+      shift 2
+      ;;
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    -h | --help)
+      echo "Usage: bash 06-generate-project-readme.sh --project <number> [--org <org>]"
+      echo ""
+      echo "Options:"
+      echo "  --project  GitHub project number (required)"
+      echo "  --org      GitHub organization/user (default: IggyIkenna)"
+      echo ""
+      echo "Example:"
+      echo "  bash 06-generate-project-readme.sh --project 7 > PROJECT_README.md"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
 done
 
 # Validate
 if [ -z "$PROJECT_NUMBER" ]; then
-    echo "Error: --project is required" >&2
-    exit 1
+  echo "Error: --project is required" >&2
+  exit 1
 fi
 
 # Fetch project data
@@ -68,8 +68,8 @@ query {
 }' 2>/dev/null || echo "")
 
 if [ -z "$PROJECT_DATA" ] || [ "$PROJECT_DATA" == "null" ]; then
-    echo "Error: Project #$PROJECT_NUMBER not found" >&2
-    exit 1
+  echo "Error: Project #$PROJECT_NUMBER not found" >&2
+  exit 1
 fi
 
 PROJECT_TITLE=$(echo "$PROJECT_DATA" | jq -r '.data.user.projectV2.title')

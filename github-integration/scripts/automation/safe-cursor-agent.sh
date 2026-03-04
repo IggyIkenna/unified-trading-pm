@@ -13,56 +13,56 @@
 set -euo pipefail
 
 LOCK_DIR="/tmp/cursor-agent-startup.lock"
-LOCK_TIMEOUT=120  # Max seconds to wait for lock (must be > STARTUP_DELAY × max_parallel)
-STARTUP_DELAY=10  # Keep lock for 10s (covers config file access at startup)
+LOCK_TIMEOUT=120 # Max seconds to wait for lock (must be > STARTUP_DELAY × max_parallel)
+STARTUP_DELAY=10 # Keep lock for 10s (covers config file access at startup)
 
 # Acquire lock with timeout using mkdir (atomic operation)
 acquire_lock() {
-    local start_time=$(date +%s)
+  local start_time=$(date +%s)
 
-    while true; do
-        # Try to create lock directory (atomic operation)
-        if mkdir "$LOCK_DIR" 2>/dev/null; then
-            return 0  # Lock acquired
-        fi
+  while true; do
+    # Try to create lock directory (atomic operation)
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+      return 0 # Lock acquired
+    fi
 
-        # Check timeout
-        local elapsed=$(($(date +%s) - start_time))
-        if [ $elapsed -ge $LOCK_TIMEOUT ]; then
-            echo "ERROR: Failed to acquire startup lock after ${LOCK_TIMEOUT}s" >&2
-            return 1
-        fi
+    # Check timeout
+    local elapsed=$(($(date +%s) - start_time))
+    if [ $elapsed -ge $LOCK_TIMEOUT ]; then
+      echo "ERROR: Failed to acquire startup lock after ${LOCK_TIMEOUT}s" >&2
+      return 1
+    fi
 
-        # Check if lock is stale (older than 15 seconds - something went wrong)
-        if [ -d "$LOCK_DIR" ]; then
-            local lock_age=$(($(date +%s) - $(stat -f %m "$LOCK_DIR" 2>/dev/null || stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0)))
-            if [ $lock_age -gt 15 ]; then
-                # Stale lock, remove it
-                rmdir "$LOCK_DIR" 2>/dev/null || true
-                continue
-            fi
-        fi
+    # Check if lock is stale (older than 15 seconds - something went wrong)
+    if [ -d "$LOCK_DIR" ]; then
+      local lock_age=$(($(date +%s) - $(stat -f %m "$LOCK_DIR" 2>/dev/null || stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0)))
+      if [ $lock_age -gt 15 ]; then
+        # Stale lock, remove it
+        rmdir "$LOCK_DIR" 2>/dev/null || true
+        continue
+      fi
+    fi
 
-        # Wait before retry (with small jitter)
-        sleep $(awk 'BEGIN{srand(); print 0.1 + (rand() * 0.1)}')
-    done
+    # Wait before retry (with small jitter)
+    sleep $(awk 'BEGIN{srand(); print 0.1 + (rand() * 0.1)}')
+  done
 }
 
 # Release lock
 release_lock() {
-    rmdir "$LOCK_DIR" 2>/dev/null || true
+  rmdir "$LOCK_DIR" 2>/dev/null || true
 }
 
 # Acquire lock
 if ! acquire_lock; then
-    exit 1
+  exit 1
 fi
 
 # Start a background timer to release the lock after STARTUP_DELAY
 # This runs in parallel with the agent
 (
-    sleep "$STARTUP_DELAY"
-    release_lock
+  sleep "$STARTUP_DELAY"
+  release_lock
 ) &
 TIMER_PID=$!
 

@@ -13,8 +13,8 @@ GITHUB_TOKEN=$(gcloud secrets versions access latest \
   --project="${GCP_PROJECT_ID:?GCP_PROJECT_ID required}")
 
 if [ -z "$GITHUB_TOKEN" ]; then
-    echo "❌ Failed to fetch token"
-    exit 1
+  echo "❌ Failed to fetch token"
+  exit 1
 fi
 
 echo "✅ Token fetched successfully (${#GITHUB_TOKEN} characters)"
@@ -28,12 +28,12 @@ echo "$GITHUB_TOKEN" | gh auth login --with-token
 echo ""
 echo "🧪 Testing authentication..."
 if gh auth status; then
-    echo ""
-    echo "✅ Successfully authenticated using GCP Secret Manager!"
-    echo ""
-    echo "Now you can run automation scripts:"
-    echo "  bash run-cleanup-batch-fix.sh --model auto --max-parallel 7"
+  echo ""
+  echo "✅ Successfully authenticated using GCP Secret Manager!"
+  echo ""
+  echo "Now you can run automation scripts:"
+  echo "  bash run-cleanup-batch-fix.sh --model auto --max-parallel 7"
 else
-    echo "❌ Authentication failed"
-    exit 1
+  echo "❌ Authentication failed"
+  exit 1
 fi

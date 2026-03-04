@@ -61,7 +61,7 @@ If any check fails: STOP. Complete Phase 1/2 first.
 | Source                 | Path                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
-| Runtime topology       | `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`                                                    |
+| Runtime topology       | `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`                                                    |
 | Service pair flows     | `unified-trading-codex/08-workflows/service-pair-flows.md`                                                                     |
 | Tier architecture      | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`                                                                   |
 | Batch/live symmetry    | `unified-trading-codex/04-architecture/batch-live-symmetry.md`                                                                 |
@@ -340,7 +340,7 @@ If any step fails: fix and re-run **that step**. Never skip forward. L3b passing
 
 - `unified-trading-pm/plans/cursor-plans/phase3_service_hardening_integration.plan.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
-- `unified-trading-deployment-v3/configs/runtime-topology.yaml` — runtime topology
+- `deployment-service/configs/runtime-topology.yaml` — runtime topology
 - `unified-trading-codex/08-workflows/service-pair-flows.md` — service-to-service data flows
 - `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` — tier rules
 - `unified-trading-codex/06-coding-standards/integration-testing-layers.md` — 4-layer strategy

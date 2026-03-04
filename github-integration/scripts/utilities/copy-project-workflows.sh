@@ -19,42 +19,42 @@ ORG="IggyIkenna"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --from)
-            FROM_PROJECT="$2"
-            shift 2
-            ;;
-        --to)
-            TO_PROJECT="$2"
-            shift 2
-            ;;
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        -h|--help)
-            echo "Usage: bash copy-project-workflows.sh --from <template-number> --to <new-number>"
-            echo ""
-            echo "Options:"
-            echo "  --from  Template project number (e.g., 3 for COD project)"
-            echo "  --to    New project number to configure"
-            echo "  --org   GitHub user/org (default: IggyIkenna)"
-            echo ""
-            echo "Example:"
-            echo "  bash copy-project-workflows.sh --from 3 --to 5"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --from)
+      FROM_PROJECT="$2"
+      shift 2
+      ;;
+    --to)
+      TO_PROJECT="$2"
+      shift 2
+      ;;
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    -h | --help)
+      echo "Usage: bash copy-project-workflows.sh --from <template-number> --to <new-number>"
+      echo ""
+      echo "Options:"
+      echo "  --from  Template project number (e.g., 3 for COD project)"
+      echo "  --to    New project number to configure"
+      echo "  --org   GitHub user/org (default: IggyIkenna)"
+      echo ""
+      echo "Example:"
+      echo "  bash copy-project-workflows.sh --from 3 --to 5"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
 done
 
 # Validate
 if [ -z "$FROM_PROJECT" ] || [ -z "$TO_PROJECT" ]; then
-    echo "Error: --from and --to are required"
-    exit 1
+  echo "Error: --from and --to are required"
+  exit 1
 fi
 
 echo "========================================="
@@ -97,9 +97,9 @@ echo "Workflows found: $WORKFLOW_COUNT"
 echo ""
 
 if [ "$WORKFLOW_COUNT" -eq 0 ]; then
-    echo "⚠️  No workflows found on template project"
-    echo "   Either project #$FROM_PROJECT doesn't exist or has no workflows"
-    exit 1
+  echo "⚠️  No workflows found on template project"
+  echo "   Either project #$FROM_PROJECT doesn't exist or has no workflows"
+  exit 1
 fi
 
 # Display workflows
@@ -156,124 +156,124 @@ echo ""
 
 # Map workflow names to configuration instructions
 echo "$WORKFLOWS" | jq -r '.data.user.projectV2.workflows.nodes[] | .name' | while read -r workflow_name; do
-    echo "────────────────────────────────────────"
-    echo "Workflow: $workflow_name"
-    echo "────────────────────────────────────────"
-    echo ""
+  echo "────────────────────────────────────────"
+  echo "Workflow: $workflow_name"
+  echo "────────────────────────────────────────"
+  echo ""
 
-    case "$workflow_name" in
-        "Auto-add to project")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Auto-add to project'"
-            echo "  2. Set filter:"
-            echo "     - Label: 'cleanup' (or 'cod' for COD project)"
-            echo "  3. Action: Add to this project"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Issues with 'cleanup' label auto-add to project"
-            ;;
-        "Auto-add sub-issues to project")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Auto-add to project'"
-            echo "  2. Set filter:"
-            echo "     - Issue type: Sub-issue"
-            echo "  3. Action: Add to this project"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Sub-issues auto-add to project"
-            ;;
-        "Item closed")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Auto-archive items'"
-            echo "  2. Set trigger:"
-            echo "     - When: Item closed"
-            echo "  3. Action: Set status to 'Done'"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Closed issues move to 'Done' status"
-            ;;
-        "Pull request merged")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Auto-close items'"
-            echo "  2. Set trigger:"
-            echo "     - When: Pull request merged"
-            echo "     - Filter: Pull request closes issue"
-            echo "  3. Action: Close linked issues"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Issues auto-close when PRs merge"
-            echo ""
-            echo "⭐ CRITICAL: This workflow enables auto-close on PR merge!"
-            ;;
-        "Auto-close issue")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Auto-close items'"
-            echo "  2. Set trigger:"
-            echo "     - When: Pull request merged"
-            echo "     - Filter: Pull request closes linked item"
-            echo "  3. Action: Close item"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Project items close when PRs merge"
-            ;;
-        "Auto-archive items")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Auto-archive items'"
-            echo "  2. Set trigger:"
-            echo "     - When: Item status = 'Done'"
-            echo "     - Wait: 30 days"
-            echo "  3. Action: Archive item"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Completed items archive after 30 days"
-            ;;
-        "Item added to project")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Set status'"
-            echo "  2. Set trigger:"
-            echo "     - When: Item added to project"
-            echo "  3. Action: Set status to 'Todo'"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: New items default to 'Todo' status"
-            ;;
-        "Pull request linked to issue")
-            echo "Type: Built-in workflow"
-            echo ""
-            echo "Configuration:"
-            echo "  1. Click: 'Create workflow' → 'Set status'"
-            echo "  2. Set trigger:"
-            echo "     - When: Pull request linked to issue"
-            echo "  3. Action: Set status to 'In Progress'"
-            echo "  4. Click: 'Save workflow'"
-            echo ""
-            echo "Result: Issues move to 'In Progress' when PR linked"
-            ;;
-        *)
-            echo "Type: Custom workflow"
-            echo ""
-            echo "⚠️  Unknown workflow: $workflow_name"
-            echo "    Check template project #$FROM_PROJECT for configuration"
-            ;;
-    esac
+  case "$workflow_name" in
+    "Auto-add to project")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Auto-add to project'"
+      echo "  2. Set filter:"
+      echo "     - Label: 'cleanup' (or 'cod' for COD project)"
+      echo "  3. Action: Add to this project"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Issues with 'cleanup' label auto-add to project"
+      ;;
+    "Auto-add sub-issues to project")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Auto-add to project'"
+      echo "  2. Set filter:"
+      echo "     - Issue type: Sub-issue"
+      echo "  3. Action: Add to this project"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Sub-issues auto-add to project"
+      ;;
+    "Item closed")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Auto-archive items'"
+      echo "  2. Set trigger:"
+      echo "     - When: Item closed"
+      echo "  3. Action: Set status to 'Done'"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Closed issues move to 'Done' status"
+      ;;
+    "Pull request merged")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Auto-close items'"
+      echo "  2. Set trigger:"
+      echo "     - When: Pull request merged"
+      echo "     - Filter: Pull request closes issue"
+      echo "  3. Action: Close linked issues"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Issues auto-close when PRs merge"
+      echo ""
+      echo "⭐ CRITICAL: This workflow enables auto-close on PR merge!"
+      ;;
+    "Auto-close issue")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Auto-close items'"
+      echo "  2. Set trigger:"
+      echo "     - When: Pull request merged"
+      echo "     - Filter: Pull request closes linked item"
+      echo "  3. Action: Close item"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Project items close when PRs merge"
+      ;;
+    "Auto-archive items")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Auto-archive items'"
+      echo "  2. Set trigger:"
+      echo "     - When: Item status = 'Done'"
+      echo "     - Wait: 30 days"
+      echo "  3. Action: Archive item"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Completed items archive after 30 days"
+      ;;
+    "Item added to project")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Set status'"
+      echo "  2. Set trigger:"
+      echo "     - When: Item added to project"
+      echo "  3. Action: Set status to 'Todo'"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: New items default to 'Todo' status"
+      ;;
+    "Pull request linked to issue")
+      echo "Type: Built-in workflow"
+      echo ""
+      echo "Configuration:"
+      echo "  1. Click: 'Create workflow' → 'Set status'"
+      echo "  2. Set trigger:"
+      echo "     - When: Pull request linked to issue"
+      echo "  3. Action: Set status to 'In Progress'"
+      echo "  4. Click: 'Save workflow'"
+      echo ""
+      echo "Result: Issues move to 'In Progress' when PR linked"
+      ;;
+    *)
+      echo "Type: Custom workflow"
+      echo ""
+      echo "⚠️  Unknown workflow: $workflow_name"
+      echo "    Check template project #$FROM_PROJECT for configuration"
+      ;;
+  esac
 
-    echo ""
-    echo "Press Enter for next workflow..."
-    read -r
+  echo ""
+  echo "Press Enter for next workflow..."
+  read -r
 done
 
 # Summary

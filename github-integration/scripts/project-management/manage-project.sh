@@ -48,19 +48,19 @@ DRY_RUN=false
 # ==============================================================================
 
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+  echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 log_success() {
-    echo -e "${GREEN}[✓]${NC} $1"
+  echo -e "${GREEN}[✓]${NC} $1"
 }
 
 log_error() {
-    echo -e "${RED}[✗]${NC} $1"
+  echo -e "${RED}[✗]${NC} $1"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[⚠]${NC} $1"
+  echo -e "${YELLOW}[⚠]${NC} $1"
 }
 
 # ==============================================================================
@@ -68,29 +68,29 @@ log_warning() {
 # ==============================================================================
 
 check_prerequisites() {
-    # Check gh CLI
-    if ! command -v gh &> /dev/null; then
-        log_error "gh CLI not found. Install: brew install gh"
-        exit 1
-    fi
+  # Check gh CLI
+  if ! command -v gh &>/dev/null; then
+    log_error "gh CLI not found. Install: brew install gh"
+    exit 1
+  fi
 
-    # Check auth
-    if ! gh auth status &> /dev/null; then
-        log_error "gh CLI not authenticated. Run: gh auth login"
-        exit 1
-    fi
+  # Check auth
+  if ! gh auth status &>/dev/null; then
+    log_error "gh CLI not authenticated. Run: gh auth login"
+    exit 1
+  fi
 
-    # Check python3
-    if ! command -v python3 &> /dev/null; then
-        log_error "python3 not found. Install python3"
-        exit 1
-    fi
+  # Check python3
+  if ! command -v python3 &>/dev/null; then
+    log_error "python3 not found. Install python3"
+    exit 1
+  fi
 
-    # Check jq
-    if ! command -v jq &> /dev/null; then
-        log_error "jq not found. Install: brew install jq"
-        exit 1
-    fi
+  # Check jq
+  if ! command -v jq &>/dev/null; then
+    log_error "jq not found. Install: brew install jq"
+    exit 1
+  fi
 }
 
 # ==============================================================================
@@ -98,25 +98,25 @@ check_prerequisites() {
 # ==============================================================================
 
 cmd_create() {
-    log_info "Creating project: $PROJECT_NAME"
-    echo ""
+  log_info "Creating project: $PROJECT_NAME"
+  echo ""
 
-    # Check if project already exists (idempotent)
-    local existing_project=$(gh project list --owner "$ORG" --limit 100 2>/dev/null | \
-        awk -F'\t' -v name="$PROJECT_NAME" '$2 == name {print $1; exit}')
+  # Check if project already exists (idempotent)
+  local existing_project=$(gh project list --owner "$ORG" --limit 100 2>/dev/null \
+    | awk -F'\t' -v name="$PROJECT_NAME" '$2 == name {print $1; exit}')
 
-    if [[ -n "$existing_project" ]]; then
-        log_warning "Project '$PROJECT_NAME' already exists (ID: $existing_project)"
-        log_info "Skipping creation (idempotent)"
-        echo "$existing_project"
-        return 0
-    fi
+  if [[ -n "$existing_project" ]]; then
+    log_warning "Project '$PROJECT_NAME' already exists (ID: $existing_project)"
+    log_info "Skipping creation (idempotent)"
+    echo "$existing_project"
+    return 0
+  fi
 
-    # Get owner node ID
-    local owner_id=$(gh api user -q .node_id)
+  # Get owner node ID
+  local owner_id=$(gh api user -q .node_id)
 
-    # Create project using GraphQL API
-    local result=$(gh api graphql -f query='
+  # Create project using GraphQL API
+  local result=$(gh api graphql -f query='
       mutation {
         createProjectV2(input: {
           ownerId: "'"$owner_id"'"
@@ -130,24 +130,24 @@ cmd_create() {
         }
       }' 2>/dev/null)
 
-    local project_id=$(echo "$result" | jq -r '.data.createProjectV2.projectV2.id')
-    local project_number=$(echo "$result" | jq -r '.data.createProjectV2.projectV2.number')
-    local project_url=$(echo "$result" | jq -r '.data.createProjectV2.projectV2.url')
+  local project_id=$(echo "$result" | jq -r '.data.createProjectV2.projectV2.id')
+  local project_number=$(echo "$result" | jq -r '.data.createProjectV2.projectV2.number')
+  local project_url=$(echo "$result" | jq -r '.data.createProjectV2.projectV2.url')
 
-    if [[ -z "$project_id" ]] || [[ "$project_id" == "null" ]]; then
-        log_error "Failed to create project"
-        exit 1
-    fi
+  if [[ -z "$project_id" ]] || [[ "$project_id" == "null" ]]; then
+    log_error "Failed to create project"
+    exit 1
+  fi
 
-    log_success "Created project #$project_number"
-    log_info "URL: $project_url"
-    echo ""
+  log_success "Created project #$project_number"
+  log_info "URL: $project_url"
+  echo ""
 
-    # Add custom fields
-    log_info "Adding custom fields..."
+  # Add custom fields
+  log_info "Adding custom fields..."
 
-    # Status field
-    gh api graphql -f query='
+  # Status field
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -164,12 +164,12 @@ cmd_create() {
         }) {
           projectV2Field { id }
         }
-      }' > /dev/null 2>&1
+      }' >/dev/null 2>&1
 
-    log_success "Added Status field"
+  log_success "Added Status field"
 
-    # Priority field
-    gh api graphql -f query='
+  # Priority field
+  gh api graphql -f query='
       mutation {
         createProjectV2Field(input: {
           projectId: "'"$project_id"'"
@@ -184,13 +184,13 @@ cmd_create() {
         }) {
           projectV2Field { id }
         }
-      }' > /dev/null 2>&1
+      }' >/dev/null 2>&1
 
-    log_success "Added Priority field"
+  log_success "Added Priority field"
 
-    echo ""
-    log_success "Project creation complete!"
-    echo "$project_number"
+  echo ""
+  log_success "Project creation complete!"
+  echo "$project_number"
 }
 
 # ==============================================================================
@@ -198,62 +198,62 @@ cmd_create() {
 # ==============================================================================
 
 cmd_wipe() {
-    log_info "Wiping GitHub Project #$PROJECT_NUMBER"
+  log_info "Wiping GitHub Project #$PROJECT_NUMBER"
+  echo ""
+
+  # Safety confirmation
+  if [[ "$NO_CONFIRM" != "true" ]]; then
+    log_warning "This will DELETE ALL ISSUES from Project #$PROJECT_NUMBER"
+    log_warning "Issues will be PERMANENTLY DELETED"
     echo ""
+    read -p "Are you sure? Type 'yes' to confirm: " confirmation
 
-    # Safety confirmation
-    if [[ "$NO_CONFIRM" != "true" ]]; then
-        log_warning "This will DELETE ALL ISSUES from Project #$PROJECT_NUMBER"
-        log_warning "Issues will be PERMANENTLY DELETED"
-        echo ""
-        read -p "Are you sure? Type 'yes' to confirm: " confirmation
-
-        if [[ "$confirmation" != "yes" ]]; then
-            log_info "Aborted by user"
-            exit 0
-        fi
-        echo ""
+    if [[ "$confirmation" != "yes" ]]; then
+      log_info "Aborted by user"
+      exit 0
     fi
-
-    # Step 1: Delete all issues in parallel (20 at a time)
-    log_info "Step 1/2: Deleting all issues (parallel)..."
-
-    local all_issues=$(gh issue list --repo "$ORG/$REPO" --state all --limit 1000 --json number --jq '.[].number' 2>/dev/null || true)
-
-    if [ -n "$all_issues" ]; then
-        local issue_count=$(echo "$all_issues" | wc -l | tr -d ' ')
-        log_info "Found $issue_count issues to delete"
-
-        # Parallel deletion using xargs -P 20 (30 seconds for 650 issues vs 5 minutes sequential)
-        echo "$all_issues" | xargs -P 20 -I {} gh issue delete {} --repo "$ORG/$REPO" --yes 2>/dev/null || true
-
-        log_success "Deleted $issue_count issues"
-    else
-        log_info "No issues to delete"
-    fi
-
     echo ""
+  fi
 
-    # Step 2: Clear project board items in parallel
-    log_info "Step 2/2: Clearing project board (parallel)..."
+  # Step 1: Delete all issues in parallel (20 at a time)
+  log_info "Step 1/2: Deleting all issues (parallel)..."
 
-    local project_items=$(gh project item-list "$PROJECT_NUMBER" --owner "$ORG" --format json --limit 1000 2>/dev/null | \
-        jq -r '.items[].id' 2>/dev/null || true)
+  local all_issues=$(gh issue list --repo "$ORG/$REPO" --state all --limit 1000 --json number --jq '.[].number' 2>/dev/null || true)
 
-    if [ -n "$project_items" ]; then
-        local item_count=$(echo "$project_items" | wc -l | tr -d ' ')
-        log_info "Found $item_count project items"
+  if [ -n "$all_issues" ]; then
+    local issue_count=$(echo "$all_issues" | wc -l | tr -d ' ')
+    log_info "Found $issue_count issues to delete"
 
-        # Parallel removal using xargs -P 20
-        echo "$project_items" | xargs -P 20 -I {} gh project item-delete "$PROJECT_NUMBER" --owner "$ORG" --id {} 2>/dev/null || true
+    # Parallel deletion using xargs -P 20 (30 seconds for 650 issues vs 5 minutes sequential)
+    echo "$all_issues" | xargs -P 20 -I {} gh issue delete {} --repo "$ORG/$REPO" --yes 2>/dev/null || true
 
-        log_success "Removed $item_count items"
-    else
-        log_info "No project items to remove"
-    fi
+    log_success "Deleted $issue_count issues"
+  else
+    log_info "No issues to delete"
+  fi
 
-    echo ""
-    log_success "Project wipe complete!"
+  echo ""
+
+  # Step 2: Clear project board items in parallel
+  log_info "Step 2/2: Clearing project board (parallel)..."
+
+  local project_items=$(gh project item-list "$PROJECT_NUMBER" --owner "$ORG" --format json --limit 1000 2>/dev/null \
+    | jq -r '.items[].id' 2>/dev/null || true)
+
+  if [ -n "$project_items" ]; then
+    local item_count=$(echo "$project_items" | wc -l | tr -d ' ')
+    log_info "Found $item_count project items"
+
+    # Parallel removal using xargs -P 20
+    echo "$project_items" | xargs -P 20 -I {} gh project item-delete "$PROJECT_NUMBER" --owner "$ORG" --id {} 2>/dev/null || true
+
+    log_success "Removed $item_count items"
+  else
+    log_info "No project items to remove"
+  fi
+
+  echo ""
+  log_success "Project wipe complete!"
 }
 
 # ==============================================================================
@@ -261,33 +261,33 @@ cmd_wipe() {
 # ==============================================================================
 
 cmd_regenerate() {
-    log_info "Regenerating Project #$PROJECT_NUMBER"
-    echo ""
+  log_info "Regenerating Project #$PROJECT_NUMBER"
+  echo ""
 
-    # Step 1: Wipe
-    log_info "Phase 1/2: Wiping project..."
-    cmd_wipe
+  # Step 1: Wipe
+  log_info "Phase 1/2: Wiping project..."
+  cmd_wipe
 
-    echo ""
-    log_info "Waiting 5 seconds for GitHub API to settle..."
-    sleep 5
-    echo ""
+  echo ""
+  log_info "Waiting 5 seconds for GitHub API to settle..."
+  sleep 5
+  echo ""
 
-    # Step 2: Regenerate issues
-    log_info "Phase 2/2: Generating issues..."
+  # Step 2: Regenerate issues
+  log_info "Phase 2/2: Generating issues..."
 
-    local script_dir="$(dirname "${BASH_SOURCE[0]}")/../core"
+  local script_dir="$(dirname "${BASH_SOURCE[0]}")/../core"
 
-    if [ -f "$script_dir/04-create-service-epics.py" ]; then
-        python3 "$script_dir/04-create-service-epics.py" --all-services
-        log_success "Issues generated"
-    else
-        log_warning "create-service-epics.py not found at $script_dir/04-create-service-epics.py"
-        log_info "You'll need to manually generate issues"
-    fi
+  if [ -f "$script_dir/04-create-service-epics.py" ]; then
+    python3 "$script_dir/04-create-service-epics.py" --all-services
+    log_success "Issues generated"
+  else
+    log_warning "create-service-epics.py not found at $script_dir/04-create-service-epics.py"
+    log_info "You'll need to manually generate issues"
+  fi
 
-    echo ""
-    log_success "Project regeneration complete!"
+  echo ""
+  log_success "Project regeneration complete!"
 }
 
 # ==============================================================================
@@ -295,46 +295,46 @@ cmd_regenerate() {
 # ==============================================================================
 
 cmd_delete() {
-    log_info "Deleting GitHub Project #$PROJECT_NUMBER"
+  log_info "Deleting GitHub Project #$PROJECT_NUMBER"
+  echo ""
+
+  # Safety confirmation
+  if [[ "$NO_CONFIRM" != "true" ]]; then
+    log_warning "This will PERMANENTLY DELETE Project #$PROJECT_NUMBER"
+    log_warning "This action CANNOT be undone"
     echo ""
+    read -p "Are you sure? Type 'DELETE' to confirm: " confirmation
 
-    # Safety confirmation
-    if [[ "$NO_CONFIRM" != "true" ]]; then
-        log_warning "This will PERMANENTLY DELETE Project #$PROJECT_NUMBER"
-        log_warning "This action CANNOT be undone"
-        echo ""
-        read -p "Are you sure? Type 'DELETE' to confirm: " confirmation
-
-        if [[ "$confirmation" != "DELETE" ]]; then
-            log_info "Aborted by user"
-            exit 0
-        fi
-        echo ""
+    if [[ "$confirmation" != "DELETE" ]]; then
+      log_info "Aborted by user"
+      exit 0
     fi
+    echo ""
+  fi
 
-    # Get project GraphQL ID
-    local project_id=$(gh project view "$PROJECT_NUMBER" --owner "$ORG" --format json --jq '.id' 2>/dev/null)
+  # Get project GraphQL ID
+  local project_id=$(gh project view "$PROJECT_NUMBER" --owner "$ORG" --format json --jq '.id' 2>/dev/null)
 
-    if [[ -z "$project_id" ]] || [[ "$project_id" == "null" ]]; then
-        log_error "Project #$PROJECT_NUMBER not found"
-        exit 1
-    fi
+  if [[ -z "$project_id" ]] || [[ "$project_id" == "null" ]]; then
+    log_error "Project #$PROJECT_NUMBER not found"
+    exit 1
+  fi
 
-    # Delete project using GraphQL API
-    local result=$(gh api graphql -f query='
+  # Delete project using GraphQL API
+  local result=$(gh api graphql -f query='
       mutation {
         deleteProjectV2(input: {projectId: "'"$project_id"'"}) {
           projectV2 { id }
         }
       }' 2>/dev/null)
 
-    if echo "$result" | jq -e '.data.deleteProjectV2' &>/dev/null; then
-        log_success "Deleted project #$PROJECT_NUMBER"
-    else
-        log_error "Failed to delete project"
-        log_info "You may need to delete manually at: https://github.com/orgs/$ORG/projects"
-        exit 1
-    fi
+  if echo "$result" | jq -e '.data.deleteProjectV2' &>/dev/null; then
+    log_success "Deleted project #$PROJECT_NUMBER"
+  else
+    log_error "Failed to delete project"
+    log_info "You may need to delete manually at: https://github.com/orgs/$ORG/projects"
+    exit 1
+  fi
 }
 
 # ==============================================================================
@@ -342,7 +342,7 @@ cmd_delete() {
 # ==============================================================================
 
 show_usage() {
-    cat << EOF
+  cat <<EOF
 Unified GitHub Project Management Script
 
 USAGE:
@@ -390,39 +390,39 @@ COMMAND="${1:-}"
 shift || true
 
 if [[ -z "$COMMAND" ]]; then
-    show_usage
-    exit 1
+  show_usage
+  exit 1
 fi
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case $1 in
-        --name)
-            PROJECT_NAME="$2"
-            shift 2
-            ;;
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        --project-number)
-            PROJECT_NUMBER="$2"
-            shift 2
-            ;;
-        --no-confirm)
-            NO_CONFIRM=true
-            shift
-            ;;
-        --dry-run)
-            DRY_RUN=true
-            shift
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            show_usage
-            exit 1
-            ;;
-    esac
+  case $1 in
+    --name)
+      PROJECT_NAME="$2"
+      shift 2
+      ;;
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    --project-number)
+      PROJECT_NUMBER="$2"
+      shift 2
+      ;;
+    --no-confirm)
+      NO_CONFIRM=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      show_usage
+      exit 1
+      ;;
+  esac
 done
 
 # ==============================================================================
@@ -432,45 +432,45 @@ done
 check_prerequisites
 
 case "$COMMAND" in
-    create)
-        if [[ -z "$PROJECT_NAME" ]]; then
-            log_error "Missing required option: --name"
-            show_usage
-            exit 1
-        fi
-        cmd_create
-        ;;
+  create)
+    if [[ -z "$PROJECT_NAME" ]]; then
+      log_error "Missing required option: --name"
+      show_usage
+      exit 1
+    fi
+    cmd_create
+    ;;
 
-    wipe)
-        if [[ -z "$PROJECT_NUMBER" ]]; then
-            log_error "Missing required option: --project-number"
-            show_usage
-            exit 1
-        fi
-        cmd_wipe
-        ;;
+  wipe)
+    if [[ -z "$PROJECT_NUMBER" ]]; then
+      log_error "Missing required option: --project-number"
+      show_usage
+      exit 1
+    fi
+    cmd_wipe
+    ;;
 
-    regenerate)
-        if [[ -z "$PROJECT_NUMBER" ]]; then
-            log_error "Missing required option: --project-number"
-            show_usage
-            exit 1
-        fi
-        cmd_regenerate
-        ;;
+  regenerate)
+    if [[ -z "$PROJECT_NUMBER" ]]; then
+      log_error "Missing required option: --project-number"
+      show_usage
+      exit 1
+    fi
+    cmd_regenerate
+    ;;
 
-    delete)
-        if [[ -z "$PROJECT_NUMBER" ]]; then
-            log_error "Missing required option: --project-number"
-            show_usage
-            exit 1
-        fi
-        cmd_delete
-        ;;
+  delete)
+    if [[ -z "$PROJECT_NUMBER" ]]; then
+      log_error "Missing required option: --project-number"
+      show_usage
+      exit 1
+    fi
+    cmd_delete
+    ;;
 
-    *)
-        log_error "Unknown command: $COMMAND"
-        show_usage
-        exit 1
-        ;;
+  *)
+    log_error "Unknown command: $COMMAND"
+    show_usage
+    exit 1
+    ;;
 esac
