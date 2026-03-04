@@ -9,22 +9,22 @@
 set -euo pipefail
 
 ORG="IggyIkenna"
-PROJECT_NUMBER="${1:-5}"  # Default: Project #5
+PROJECT_NUMBER="${1:-5}" # Default: Project #5
 
 REPOS=(
-    "execution-services"
-    "strategy-service"
-    "instruments-service"
-    "unified-trading-library"
-    "market-data-processing-service"
-    "ml-training-service"
-    "ml-inference-service"
-    "features-delta-one-service"
-    "features-volatility-service"
-    "features-calendar-service"
-    "features-onchain-service"
-    "market-tick-data-handler"
-    "unified-trading-deployment-v2"
+  "execution-services"
+  "strategy-service"
+  "instruments-service"
+  "unified-trading-library"
+  "market-data-processing-service"
+  "ml-training-service"
+  "ml-inference-service"
+  "features-delta-one-service"
+  "features-volatility-service"
+  "features-calendar-service"
+  "features-onchain-service"
+  "market-tick-data-handler"
+  "unified-trading-deployment-v2"
 )
 
 echo "========================================="
@@ -36,30 +36,30 @@ LINKED=0
 ALREADY_LINKED=0
 
 for repo in "${REPOS[@]}"; do
-    echo "🔗 $repo..."
+  echo "🔗 $repo..."
 
-    # Find cleanup issue
-    ISSUE_NUMBER=$(gh issue list \
-        --repo "$ORG/$repo" \
-        --label "cleanup" \
-        --json number \
-        --jq '.[0].number' 2>/dev/null || echo "")
+  # Find cleanup issue
+  ISSUE_NUMBER=$(gh issue list \
+    --repo "$ORG/$repo" \
+    --label "cleanup" \
+    --json number \
+    --jq '.[0].number' 2>/dev/null || echo "")
 
-    if [ -z "$ISSUE_NUMBER" ] || [ "$ISSUE_NUMBER" = "null" ]; then
-        echo "  ⚠️  No cleanup issue found"
-        continue
-    fi
+  if [ -z "$ISSUE_NUMBER" ] || [ "$ISSUE_NUMBER" = "null" ]; then
+    echo "  ⚠️  No cleanup issue found"
+    continue
+  fi
 
-    # Add to project
-    if gh project item-add "$PROJECT_NUMBER" --owner "$ORG" --url "https://github.com/$ORG/$repo/issues/$ISSUE_NUMBER" 2>/dev/null; then
-        echo "  ✅ Linked #$ISSUE_NUMBER"
-        LINKED=$((LINKED + 1))
-    else
-        echo "  ℹ️  Already linked #$ISSUE_NUMBER"
-        ALREADY_LINKED=$((ALREADY_LINKED + 1))
-    fi
+  # Add to project
+  if gh project item-add "$PROJECT_NUMBER" --owner "$ORG" --url "https://github.com/$ORG/$repo/issues/$ISSUE_NUMBER" 2>/dev/null; then
+    echo "  ✅ Linked #$ISSUE_NUMBER"
+    LINKED=$((LINKED + 1))
+  else
+    echo "  ℹ️  Already linked #$ISSUE_NUMBER"
+    ALREADY_LINKED=$((ALREADY_LINKED + 1))
+  fi
 
-    sleep 0.3
+  sleep 0.3
 done
 
 echo ""

@@ -17,37 +17,37 @@ PROJECT_NUMBER=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --project-number)
-            PROJECT_NUMBER="$2"
-            shift 2
-            ;;
-        --org)
-            ORG="$2"
-            shift 2
-            ;;
-        -h|--help)
-            echo "Usage: bash setup-project-workflows.sh --project-number <number> [--org <org>]"
-            echo ""
-            echo "Options:"
-            echo "  --project-number  GitHub project number (required)"
-            echo "  --org             GitHub organization/user (default: IggyIkenna)"
-            echo ""
-            echo "Example:"
-            echo "  bash setup-project-workflows.sh --project-number 5 --org IggyIkenna"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --project-number)
+      PROJECT_NUMBER="$2"
+      shift 2
+      ;;
+    --org)
+      ORG="$2"
+      shift 2
+      ;;
+    -h | --help)
+      echo "Usage: bash setup-project-workflows.sh --project-number <number> [--org <org>]"
+      echo ""
+      echo "Options:"
+      echo "  --project-number  GitHub project number (required)"
+      echo "  --org             GitHub organization/user (default: IggyIkenna)"
+      echo ""
+      echo "Example:"
+      echo "  bash setup-project-workflows.sh --project-number 5 --org IggyIkenna"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
 done
 
 # Validate
 if [ -z "$PROJECT_NUMBER" ]; then
-    echo "Error: --project-number is required"
-    exit 1
+  echo "Error: --project-number is required"
+  exit 1
 fi
 
 # Get project details

@@ -1,0 +1,3 @@
+# Exclude scripts that shfmt cannot parse (complex multi-line strings)
+[scripts/one-time/update-cleanup-issues-add-codex-reference.sh]
+ignore = true

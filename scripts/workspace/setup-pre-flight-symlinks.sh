@@ -14,8 +14,8 @@ WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
 TARGET="$PM_ROOT/scripts/validation/pre-flight-audit.sh"
 
 if [ ! -f "$TARGET" ]; then
-    echo "[ERROR] SSOT not found: $TARGET"
-    exit 1
+  echo "[ERROR] SSOT not found: $TARGET"
+  exit 1
 fi
 
 # 1. .cursor/scripts (for quickmerge)
@@ -35,13 +35,13 @@ for r in m.get('repositories', {}):
 
 count=0
 for repo in $repos; do
-    scripts_dir="$WORKSPACE_ROOT/$repo/scripts"
-    if [ -d "$scripts_dir" ]; then
-        link="$scripts_dir/pre-flight-audit.sh"
-        rm -f "$link"
-        ln -sf "../unified-trading-pm/scripts/validation/pre-flight-audit.sh" "$link"
-        echo "  $repo/scripts/pre-flight-audit.sh"
-        ((count++)) || true
-    fi
+  scripts_dir="$WORKSPACE_ROOT/$repo/scripts"
+  if [ -d "$scripts_dir" ]; then
+    link="$scripts_dir/pre-flight-audit.sh"
+    rm -f "$link"
+    ln -sf "../unified-trading-pm/scripts/validation/pre-flight-audit.sh" "$link"
+    echo "  $repo/scripts/pre-flight-audit.sh"
+    ((count++)) || true
+  fi
 done
 echo "[OK] $count repos linked"

@@ -31,13 +31,13 @@ query {
 }' --jq '.data.user.projectsV2.nodes[] | select(.title == "'"$PROJECT_NAME"'") | .number' 2>/dev/null || echo "")
 
 if [ -n "$EXISTING_PROJECT" ]; then
-    echo "✅ Project already exists: #$EXISTING_PROJECT"
-    PROJECT_NUMBER=$EXISTING_PROJECT
+  echo "✅ Project already exists: #$EXISTING_PROJECT"
+  PROJECT_NUMBER=$EXISTING_PROJECT
 else
-    # Create project
-    OWNER_ID=$(gh api user --jq .node_id)
+  # Create project
+  OWNER_ID=$(gh api user --jq .node_id)
 
-    PROJECT_DATA=$(gh api graphql -f query='
+  PROJECT_DATA=$(gh api graphql -f query='
       mutation {
         createProjectV2(input: {
           ownerId: "'"$OWNER_ID"'"
@@ -51,8 +51,8 @@ else
         }
       }' --jq '.data.createProjectV2.projectV2')
 
-    PROJECT_NUMBER=$(echo "$PROJECT_DATA" | jq -r '.number')
-    echo "✅ Project created: #$PROJECT_NUMBER"
+  PROJECT_NUMBER=$(echo "$PROJECT_DATA" | jq -r '.number')
+  echo "✅ Project created: #$PROJECT_NUMBER"
 fi
 
 echo ""

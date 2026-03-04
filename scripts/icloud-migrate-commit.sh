@@ -13,7 +13,10 @@ cd "$(git rev-parse --show-toplevel)"
 RESUME_FROM=1
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --resume-from) RESUME_FROM="${2:-1}"; shift 2 ;;
+    --resume-from)
+      RESUME_FROM="${2:-1}"
+      shift 2
+      ;;
     *) shift ;;
   esac
 done

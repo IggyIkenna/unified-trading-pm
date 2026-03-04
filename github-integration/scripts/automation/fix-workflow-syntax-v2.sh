@@ -10,16 +10,16 @@
 set -uo pipefail
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <repo-path>"
-    exit 1
+  echo "Usage: $0 <repo-path>"
+  exit 1
 fi
 
 REPO_PATH="$1"
 WORKFLOW_FILE="$REPO_PATH/.github/workflows/quality-gates.yml"
 
 if [ ! -f "$WORKFLOW_FILE" ]; then
-    echo "❌ No workflow file: $WORKFLOW_FILE"
-    exit 1
+  echo "❌ No workflow file: $WORKFLOW_FILE"
+  exit 1
 fi
 
 echo "🔧 Fixing: $(basename "$REPO_PATH")"

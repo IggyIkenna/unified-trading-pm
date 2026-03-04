@@ -26,37 +26,37 @@ echo ""
 # ============================================================================
 
 fix_and_push() {
-    local service=$1
-    local issue_number=$2
-    local commit_msg=$3
+  local service=$1
+  local issue_number=$2
+  local commit_msg=$3
 
-    echo "📝 Committing changes..."
-    if git add -A && git commit -m "$commit_msg" --no-verify; then
-        echo "  ✅ Committed"
-    else
-        echo "  ℹ️  No changes to commit"
-    fi
+  echo "📝 Committing changes..."
+  if git add -A && git commit -m "$commit_msg" --no-verify; then
+    echo "  ✅ Committed"
+  else
+    echo "  ℹ️  No changes to commit"
+  fi
 
-    echo "📤 Force pushing to main..."
-    if git push --force origin main 2>&1; then
-        echo "  ✅ Pushed"
-        return 0
-    else
-        echo "  ❌ Push failed"
-        return 1
-    fi
+  echo "📤 Force pushing to main..."
+  if git push --force origin main 2>&1; then
+    echo "  ✅ Pushed"
+    return 0
+  else
+    echo "  ❌ Push failed"
+    return 1
+  fi
 }
 
 close_issue() {
-    local service=$1
-    local issue_number=$2
+  local service=$1
+  local issue_number=$2
 
-    echo "🔒 Closing issue #$issue_number..."
-    if gh issue close "$issue_number" --repo "$ORG/$service" --comment "✅ Fixed all quality gate violations. All tests passing." 2>/dev/null; then
-        echo "  ✅ Issue #$issue_number closed"
-    else
-        echo "  ⚠️  Could not close issue (may need manual close)"
-    fi
+  echo "🔒 Closing issue #$issue_number..."
+  if gh issue close "$issue_number" --repo "$ORG/$service" --comment "✅ Fixed all quality gate violations. All tests passing." 2>/dev/null; then
+    echo "  ✅ Issue #$issue_number closed"
+  else
+    echo "  ⚠️  Could not close issue (may need manual close)"
+  fi
 }
 
 # ============================================================================
@@ -64,65 +64,65 @@ close_issue() {
 # ============================================================================
 
 fix_market_data_processing() {
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "🔧 market-data-processing-service #46"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔧 market-data-processing-service #46"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-    cd "$WORKSPACE_ROOT/market-data-processing-service"
+  cd "$WORKSPACE_ROOT/market-data-processing-service"
 
-    echo "📋 Issue: Invalid workflow YAML (duplicate 'run' at line 65)"
+  echo "📋 Issue: Invalid workflow YAML (duplicate 'run' at line 65)"
 
-    # Check if workflow file exists and has issue
-    if [ -f ".github/workflows/quality-gates.yml" ]; then
-        echo "📝 Fixing workflow YAML..."
-        # This needs manual inspection - just flag it
-        echo "⚠️  Manual fix required: .github/workflows/quality-gates.yml line 65"
-        echo "   Remove duplicate 'run' property"
-        return 1
-    fi
+  # Check if workflow file exists and has issue
+  if [ -f ".github/workflows/quality-gates.yml" ]; then
+    echo "📝 Fixing workflow YAML..."
+    # This needs manual inspection - just flag it
+    echo "⚠️  Manual fix required: .github/workflows/quality-gates.yml line 65"
+    echo "   Remove duplicate 'run' property"
+    return 1
+  fi
 }
 
 fix_instruments_service() {
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "🔧 instruments-service #58"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔧 instruments-service #58"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-    cd "$WORKSPACE_ROOT/instruments-service"
+  cd "$WORKSPACE_ROOT/instruments-service"
 
-    echo "📋 Issue: test_bucket_resolution_fixture_integration fails"
-    echo "   Expected 'cefi' in bucket name, got 'instruments-store-test'"
+  echo "📋 Issue: test_bucket_resolution_fixture_integration fails"
+  echo "   Expected 'cefi' in bucket name, got 'instruments-store-test'"
 
-    # Need to review test expectations
-    echo "⚠️  Manual fix required: Review test expectations in tests/unit/test_bucket_config.py"
-    return 1
+  # Need to review test expectations
+  echo "⚠️  Manual fix required: Review test expectations in tests/unit/test_bucket_config.py"
+  return 1
 }
 
 fix_features_onchain() {
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "🔧 features-onchain-service #27"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔧 features-onchain-service #27"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-    cd "$WORKSPACE_ROOT/features-onchain-service"
+  cd "$WORKSPACE_ROOT/features-onchain-service"
 
-    echo "📋 Issues:"
-    echo "   1. print() in examples/fear_greed_parser.py"
-    echo "   2. requests library in async code (examples/, scripts/)"
+  echo "📋 Issues:"
+  echo "   1. print() in examples/fear_greed_parser.py"
+  echo "   2. requests library in async code (examples/, scripts/)"
 
-    # Fix print() statements in examples (these are OK in examples/)
-    echo "ℹ️  print() in examples/ are acceptable for example scripts"
-    echo "ℹ️  requests in examples/ are acceptable for example scripts"
-    echo "✅ Codex violations in examples/ can be ignored"
+  # Fix print() statements in examples (these are OK in examples/)
+  echo "ℹ️  print() in examples/ are acceptable for example scripts"
+  echo "ℹ️  requests in examples/ are acceptable for example scripts"
+  echo "✅ Codex violations in examples/ can be ignored"
 
-    # Venues.yaml already fixed
-    echo "✅ venues.yaml symlink already created"
+  # Venues.yaml already fixed
+  echo "✅ venues.yaml symlink already created"
 
-    if fix_and_push "features-onchain-service" "27" "Fix: Add venues.yaml symlink for smoke tests
+  if fix_and_push "features-onchain-service" "27" "Fix: Add venues.yaml symlink for smoke tests
 
 Refs #27"; then
-        close_issue "features-onchain-service" "27"
-        return 0
-    fi
-    return 1
+    close_issue "features-onchain-service" "27"
+    return 0
+  fi
+  return 1
 }
 
 # ============================================================================
@@ -139,14 +139,14 @@ echo "════════════════════════�
 echo ""
 
 for service_issue in "features-delta-one-service:34" "features-volatility-service:25" \
-                      "features-calendar-service:37" "features-onchain-service:27"; do
-    IFS=':' read -r service issue <<< "$service_issue"
-    TOTAL_SERVICES=$((TOTAL_SERVICES + 1))
+  "features-calendar-service:37" "features-onchain-service:27"; do
+  IFS=':' read -r service issue <<<"$service_issue"
+  TOTAL_SERVICES=$((TOTAL_SERVICES + 1))
 
-    echo "✅ $service #$issue - venues.yaml symlink already pushed"
-    close_issue "$service" "$issue"
-    FIXED=$((FIXED + 1))
-    echo ""
+  echo "✅ $service #$issue - venues.yaml symlink already pushed"
+  close_issue "$service" "$issue"
+  FIXED=$((FIXED + 1))
+  echo ""
 done
 
 # Services requiring manual fixes

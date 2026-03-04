@@ -41,8 +41,6 @@ REPOS=(
     "unified-domain-client"
     "execution-algo-library"
     "alerting-service"
-    "unified-trading-deployment-v3"
-    "unified-trading-deployment-v3"
 )
 
 # Colors

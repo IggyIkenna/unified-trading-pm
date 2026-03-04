@@ -16,33 +16,33 @@ WORKSPACE_ROOT="$(cd "$CODEX_ROOT/.." && pwd)"
 
 # All service repos
 ALL_REPOS=(
-    "execution-services"
-    "strategy-service"
-    "instruments-service"
-    "unified-trading-library"
-    "market-data-processing-service"
-    "ml-training-service"
-    "ml-inference-service"
-    "features-delta-one-service"
-    "features-volatility-service"
-    "features-calendar-service"
-    "features-onchain-service"
-    "market-tick-data-handler"
-    "unified-trading-deployment-v2"
+  "execution-services"
+  "strategy-service"
+  "instruments-service"
+  "unified-trading-library"
+  "market-data-processing-service"
+  "ml-training-service"
+  "ml-inference-service"
+  "features-delta-one-service"
+  "features-volatility-service"
+  "features-calendar-service"
+  "features-onchain-service"
+  "market-tick-data-handler"
+  "unified-trading-deployment-v2"
 )
 
 # Parse arguments
 FILTER_REPOS=""
 if [ "${1:-}" = "--repos" ]; then
-    FILTER_REPOS="$2"
-    shift 2
+  FILTER_REPOS="$2"
+  shift 2
 fi
 
 # Determine which repos to process
 if [ -n "$FILTER_REPOS" ]; then
-    IFS=',' read -ra REPOS <<< "$FILTER_REPOS"
+  IFS=',' read -ra REPOS <<<"$FILTER_REPOS"
 else
-    REPOS=("${ALL_REPOS[@]}")
+  REPOS=("${ALL_REPOS[@]}")
 fi
 
 echo "════════════════════════════════════════════════════════════════════════"
@@ -58,11 +58,11 @@ mkdir -p "$BACKUP_DIR"
 
 echo "📁 Step 1: Backing up current manifests..."
 for repo in "${REPOS[@]}"; do
-    manifest="$WORKSPACE_ROOT/$repo/CODEX_VIOLATIONS_MANIFEST.md"
-    if [ -f "$manifest" ]; then
-        cp "$manifest" "$BACKUP_DIR/${repo}_MANIFEST.md"
-        echo "  ✓ $repo"
-    fi
+  manifest="$WORKSPACE_ROOT/$repo/CODEX_VIOLATIONS_MANIFEST.md"
+  if [ -f "$manifest" ]; then
+    cp "$manifest" "$BACKUP_DIR/${repo}_MANIFEST.md"
+    echo "  ✓ $repo"
+  fi
 done
 echo ""
 
@@ -85,58 +85,58 @@ TOTAL_BEFORE=0
 TOTAL_AFTER=0
 
 for repo in "${REPOS[@]}"; do
-    manifest="$WORKSPACE_ROOT/$repo/CODEX_VIOLATIONS_MANIFEST.md"
-    backup="$BACKUP_DIR/${repo}_MANIFEST.md"
+  manifest="$WORKSPACE_ROOT/$repo/CODEX_VIOLATIONS_MANIFEST.md"
+  backup="$BACKUP_DIR/${repo}_MANIFEST.md"
 
-    # Count violations in new manifest
-    if [ -f "$manifest" ]; then
-        AFTER=$(grep -c "^#### [0-9]" "$manifest" 2>/dev/null || echo "0")
-        # Alternative: extract from "**Total Violations**:" line
-        if [ "$AFTER" = "0" ]; then
-            AFTER=$(grep "^\*\*Total Violations\*\*:" "$manifest" 2>/dev/null | grep -oE '[0-9]+' || echo "0")
-        fi
+  # Count violations in new manifest
+  if [ -f "$manifest" ]; then
+    AFTER=$(grep -c "^#### [0-9]" "$manifest" 2>/dev/null || echo "0")
+    # Alternative: extract from "**Total Violations**:" line
+    if [ "$AFTER" = "0" ]; then
+      AFTER=$(grep "^\*\*Total Violations\*\*:" "$manifest" 2>/dev/null | grep -oE '[0-9]+' || echo "0")
+    fi
+  else
+    AFTER="N/A"
+  fi
+
+  # Count violations in old manifest
+  if [ -f "$backup" ]; then
+    BEFORE=$(grep -c "^#### [0-9]" "$backup" 2>/dev/null || echo "0")
+    if [ "$BEFORE" = "0" ]; then
+      BEFORE=$(grep "^\*\*Total Violations\*\*:" "$backup" 2>/dev/null | grep -oE '[0-9]+' || echo "0")
+    fi
+  else
+    BEFORE="N/A"
+  fi
+
+  # Calculate change
+  if [ "$BEFORE" != "N/A" ] && [ "$AFTER" != "N/A" ]; then
+    CHANGE=$((AFTER - BEFORE))
+    if [ "$CHANGE" -lt 0 ]; then
+      CHANGE_STR="✅ $CHANGE" # Improvement
+    elif [ "$CHANGE" -gt 0 ]; then
+      CHANGE_STR="⚠️  +$CHANGE" # Regression
     else
-        AFTER="N/A"
+      CHANGE_STR="   -" # No change
     fi
 
-    # Count violations in old manifest
-    if [ -f "$backup" ]; then
-        BEFORE=$(grep -c "^#### [0-9]" "$backup" 2>/dev/null || echo "0")
-        if [ "$BEFORE" = "0" ]; then
-            BEFORE=$(grep "^\*\*Total Violations\*\*:" "$backup" 2>/dev/null | grep -oE '[0-9]+' || echo "0")
-        fi
-    else
-        BEFORE="N/A"
-    fi
+    TOTAL_BEFORE=$((TOTAL_BEFORE + BEFORE))
+    TOTAL_AFTER=$((TOTAL_AFTER + AFTER))
+  else
+    CHANGE_STR="   NEW"
+  fi
 
-    # Calculate change
-    if [ "$BEFORE" != "N/A" ] && [ "$AFTER" != "N/A" ]; then
-        CHANGE=$((AFTER - BEFORE))
-        if [ "$CHANGE" -lt 0 ]; then
-            CHANGE_STR="✅ $CHANGE"  # Improvement
-        elif [ "$CHANGE" -gt 0 ]; then
-            CHANGE_STR="⚠️  +$CHANGE"  # Regression
-        else
-            CHANGE_STR="   -"  # No change
-        fi
-
-        TOTAL_BEFORE=$((TOTAL_BEFORE + BEFORE))
-        TOTAL_AFTER=$((TOTAL_AFTER + AFTER))
-    else
-        CHANGE_STR="   NEW"
-    fi
-
-    printf "%-40s %8s  %8s  %10s\n" "$repo" "$BEFORE" "$AFTER" "$CHANGE_STR"
+  printf "%-40s %8s  %8s  %10s\n" "$repo" "$BEFORE" "$AFTER" "$CHANGE_STR"
 done
 
 echo "────────────────────────────────────────────────────────────────────────"
 TOTAL_CHANGE=$((TOTAL_AFTER - TOTAL_BEFORE))
 if [ "$TOTAL_CHANGE" -lt 0 ]; then
-    TOTAL_CHANGE_STR="✅ $TOTAL_CHANGE (improved!)"
+  TOTAL_CHANGE_STR="✅ $TOTAL_CHANGE (improved!)"
 elif [ "$TOTAL_CHANGE" -gt 0 ]; then
-    TOTAL_CHANGE_STR="⚠️  +$TOTAL_CHANGE (regression)"
+  TOTAL_CHANGE_STR="⚠️  +$TOTAL_CHANGE (regression)"
 else
-    TOTAL_CHANGE_STR="   - (no change)"
+  TOTAL_CHANGE_STR="   - (no change)"
 fi
 printf "%-40s %8s  %8s  %s\n" "TOTAL" "$TOTAL_BEFORE" "$TOTAL_AFTER" "$TOTAL_CHANGE_STR"
 echo ""
@@ -144,10 +144,10 @@ echo ""
 # Step 4: Show which repos are now clean
 echo "✨ Step 4: Clean repos (0 violations)..."
 for repo in "${REPOS[@]}"; do
-    manifest="$WORKSPACE_ROOT/$repo/CODEX_VIOLATIONS_MANIFEST.md"
-    if [ -f "$manifest" ] && grep -q "No violations found" "$manifest" 2>/dev/null; then
-        echo "  ✅ $repo"
-    fi
+  manifest="$WORKSPACE_ROOT/$repo/CODEX_VIOLATIONS_MANIFEST.md"
+  if [ -f "$manifest" ] && grep -q "No violations found" "$manifest" 2>/dev/null; then
+    echo "  ✅ $repo"
+  fi
 done
 echo ""
 

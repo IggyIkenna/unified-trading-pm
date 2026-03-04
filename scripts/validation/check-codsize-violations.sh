@@ -45,7 +45,7 @@ if [ -z "$REPOS_ARG" ]; then
   mapfile -t REPOS < <(jq -r '.repositories | keys[]' "$MANIFEST")
 else
   # Split repos string into array
-  IFS=' ' read -ra REPOS <<< "$REPOS_ARG"
+  IFS=' ' read -ra REPOS <<<"$REPOS_ARG"
 fi
 
 echo "=== COD-SIZE Violation Scanner ==="
@@ -73,9 +73,9 @@ for repo in "${REPOS[@]}"; do
     ! -path "*/build/*" \
     ! -path "*/dist/*" \
     ! -path "*/htmlcov/*" \
-    -exec wc -l {} \; 2>/dev/null | \
-    awk -v thresh="$THRESHOLD" '$1 > thresh {printf "%4d lines: %s\n", $1, $2}' | \
-    sort -rn)
+    -exec wc -l {} \; 2>/dev/null \
+    | awk -v thresh="$THRESHOLD" '$1 > thresh {printf "%4d lines: %s\n", $1, $2}' \
+    | sort -rn)
 
   if [ -n "$violations" ]; then
     count=$(echo "$violations" | wc -l | tr -d ' ')
