@@ -10,8 +10,8 @@ No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git push.
 basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths.
 Search unified libraries before implementing anything new.
 
-WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos
-All Python/pytest/ruff/basedpyright/QG commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+WORKSPACE_ROOT=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
+All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
 
 ---
 

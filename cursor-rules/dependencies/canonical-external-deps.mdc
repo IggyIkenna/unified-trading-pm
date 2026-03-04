@@ -13,17 +13,17 @@ RULE: When adding or updating an **external** (PyPI) dependency in any repo, use
 
 WHY: Prevents version drift across 30+ repos; one global list (JSON + SVG) for visibility and tooling. Workspace-manifest.json pins internal/private repos; this manifest pins external packages.
 
-SSOT: `unified-trading-pm/canonical-dependency-manifest.json` (generated from workspace-constraints.toml). Visual: `unified-trading-pm/CANONICAL_DEPENDENCY_MANIFEST.svg`.
+**SSOT:** `unified-trading-pm/workspace-constraints.toml` — last valid external dependency ranges. Validated by `validate-workspace-constraints.py` (uv pip compile) to catch transitive conflicts (e.g. pandas→numpy). Derived: `canonical-dependency-manifest.json`, `CANONICAL_DEPENDENCY_MANIFEST.svg`.
 
 CODEX: 06-coding-standards/dependency-management.md (§ Workspace-wide dependency pinning, § Canonical dependency manifest).
 
 DO:
-  Check canonical-dependency-manifest.json (or workspace-constraints.toml) before adding a dependency — use the listed version range.
-  For a package not in the manifest: add it in one repo with a sensible range, then run resolve-canonical-versions.py → propagate --apply → generate_canonical_dependency_manifest.py so the manifest and SVG are updated.
+  Check workspace-constraints.toml (or canonical-dependency-manifest.json) before adding a dependency — use the listed version range.
+  For a package not in the manifest: add it in one repo with a sensible range, then run resolve-canonical-versions.py (runs validate-workspace-constraints.py) → propagate --apply → generate_canonical_dependency_manifest.py so the manifest and SVG are updated.
   Run scripts from workspace root: resolve-canonical-versions.py, propagate-canonical-versions.py --apply, aggregate-workspace-deps.py --resolve, then scripts/manifest/generate_canonical_dependency_manifest.py.
 
 NEVER:
   Add an external dependency with a version range that contradicts the canonical manifest without going through the resolve/propagate flow (and updating the manifest).
-  Assume a package version — look it up in unified-trading-pm/canonical-dependency-manifest.json or workspace-constraints.toml.
+  Assume a package version — look it up in unified-trading-pm/workspace-constraints.toml or canonical-dependency-manifest.json.
 
 See also: dependency-version-alignment.mdc (codex check); uv-lock-file.mdc (lock after changes).

@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 # Diff Checker Agent
-# Reads deployment-v3/configs/checklist.{service}.yaml
+# Reads deployment-service/configs/checklist.{service}.yaml
 # Compares to actual service code
 # Outputs GitHub issue JSON for gaps
 # Usage: ./diff-checker-agent.sh [service-name] [--dry-run]
 
 set -euo pipefail
 WORKSPACE_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-DEPLOYMENT_V3="$WORKSPACE_ROOT/unified-trading-deployment-v3"
+DEPLOYMENT_SERVICE="$WORKSPACE_ROOT/deployment-service"
 MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 TARGET_SERVICE="${1:-}"
 DRY_RUN="${2:-}"
 
 echo "Diff Checker Agent"
-echo "Deployment: $DEPLOYMENT_V3"
+echo "Deployment: $DEPLOYMENT_SERVICE"
 echo ""
 
-if [ ! -d "$DEPLOYMENT_V3" ]; then
-  echo "ERROR: unified-trading-deployment-v3 not found"
+if [ ! -d "$DEPLOYMENT_SERVICE" ]; then
+  echo "ERROR: deployment-service not found"
   exit 1
 fi
 
@@ -38,7 +38,7 @@ ISSUES_FILE="/tmp/diff-checker-issues.json"
 echo "[]" > "$ISSUES_FILE"
 
 for service in "${SERVICES[@]}"; do
-  CHECKLIST="$DEPLOYMENT_V3/configs/checklist.${service}.yaml"
+  CHECKLIST="$DEPLOYMENT_SERVICE/configs/checklist.${service}.yaml"
   SERVICE_DIR="$WORKSPACE_ROOT/$service"
 
   [ ! -f "$CHECKLIST" ] && echo "SKIP: No checklist for $service" && continue

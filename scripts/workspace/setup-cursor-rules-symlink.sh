@@ -76,3 +76,21 @@ ls -la "$SYMLINK_PATH"
 echo ""
 RULE_COUNT=$(find "$TARGET_DIR" -maxdepth 1 -name "*.mdc" 2>/dev/null | wc -l | tr -d ' ')
 echo "Rule files: $RULE_COUNT .mdc files"
+
+# PM repo: ensure .cursor/rules -> ../cursor-rules (single symlink, not per-file symlinks)
+PM_RULES="$WORKSPACE_ROOT/unified-trading-pm/.cursor/rules"
+PM_CURSOR_RULES="$WORKSPACE_ROOT/unified-trading-pm/cursor-rules"
+if [ -d "$PM_CURSOR_RULES" ]; then
+    if [ -d "$PM_RULES" ] && [ ! -L "$PM_RULES" ]; then
+        echo ""
+        echo "[PM] Replacing .cursor/rules directory with symlink to ../cursor-rules"
+        rm -rf "$PM_RULES"
+        mkdir -p "$(dirname "$PM_RULES")"
+        ln -sf ../cursor-rules "$PM_RULES"
+        echo "[OK] unified-trading-pm/.cursor/rules -> ../cursor-rules"
+    elif [ -L "$PM_RULES" ] && [ "$(readlink "$PM_RULES")" != "../cursor-rules" ]; then
+        rm "$PM_RULES"
+        ln -sf ../cursor-rules "$PM_RULES"
+        echo "[OK] unified-trading-pm/.cursor/rules -> ../cursor-rules"
+    fi
+fi

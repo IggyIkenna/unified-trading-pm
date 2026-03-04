@@ -1,0 +1,57 @@
+# Paths to remove from git history (matches unified-trading-pm .gitignore)
+# Used with: git filter-repo --paths-from-file <this-file> --invert-paths --force
+#
+# Security-critical (credentials, secrets)
+glob:*-credentials.json
+glob:*-service-account.json
+literal:workspace-dev-sa-key.json
+glob:service-account*.json
+glob:credentials*.json
+glob:*secret*.json
+glob:central-element-323112-*.json
+literal:.env
+literal:.env.local
+glob:.env.*.local
+regex:.*/secrets/.*
+regex:.*/credentials/.*
+#
+# System / build artifacts
+literal:.DS_Store
+glob:*.backup
+regex:.*/__pycache__/.*
+glob:*.pyc
+regex:.*/\.pytest_cache/.*
+regex:.*/\.mypy_cache/.*
+regex:.*/\.hypothesis/.*
+regex:.*/\.ruff_cache/.*
+regex:.*/\.cache/.*
+regex:^data/.*
+regex:.*/data/.*
+#
+# Python venvs
+regex:.*/\.venv/.*
+regex:^\.venv/.*
+regex:.*/venv/.*
+regex:^venv/.*
+regex:.*/\.venv-workspace/.*
+regex:^\.venv-workspace/.*
+#
+# Node / UI
+regex:.*/node_modules/.*
+regex:^node_modules/.*
+regex:.*/\.next/.*
+regex:^\.next/.*
+regex:.*/dist/.*
+regex:^dist/.*
+regex:.*/build/.*
+regex:^build/.*
+regex:.*/\.turbo/.*
+regex:^\.turbo/.*
+#
+# Coverage / logs
+regex:.*/coverage/.*
+regex:^coverage/.*
+regex:.*/\.nyc_output/.*
+regex:^\.nyc_output/.*
+regex:.*/logs/.*
+regex:^logs/.*

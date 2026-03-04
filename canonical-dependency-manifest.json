@@ -1,7 +1,7 @@
 {
-  "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. Single source of truth. Internal/private repos are in workspace-manifest.json.",
+  "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-02T16:45:38.935445+00:00",
+  "generatedAt": "2026-03-04T09:37:27.470973+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -10,11 +10,11 @@
     },
     {
       "name": "aiofiles",
-      "versionRange": "aiofiles>=23.2.1,<24.0.0"
+      "versionRange": "aiofiles>=23.2.1"
     },
     {
       "name": "aiohttp",
-      "versionRange": "aiohttp>=3.13.2,<4.0.0"
+      "versionRange": "aiohttp>=3.9.0,<4.0.0"
     },
     {
       "name": "aioresponses",
@@ -22,11 +22,7 @@
     },
     {
       "name": "alembic",
-      "versionRange": "alembic>=1.13.0,<2.0.0"
-    },
-    {
-      "name": "anthropic",
-      "versionRange": "anthropic>=0.40.0,<1.0.0"
+      "versionRange": "alembic>=1.13.0"
     },
     {
       "name": "asyncio_mqtt",
@@ -38,7 +34,7 @@
     },
     {
       "name": "asyncpg",
-      "versionRange": "asyncpg>=0.31.0,<0.32.0"
+      "versionRange": "asyncpg>=0.29.0"
     },
     {
       "name": "bandit",
@@ -49,23 +45,15 @@
       "versionRange": "basedpyright>=1.21.0,<2.0.0"
     },
     {
-      "name": "beautifulsoup4",
-      "versionRange": "beautifulsoup4>=4.12,<5.0"
-    },
-    {
-      "name": "betfairlightweight",
-      "versionRange": "betfairlightweight>=2.20,<3.0"
-    },
-    {
       "name": "binance_futures_connector",
-      "versionRange": "binance-futures-connector>=2.0.0,<3.0.0"
+      "versionRange": "binance-futures-connector>=1.0.0"
     },
     {
       "name": "boto3",
       "versionRange": "boto3>=1.40.70,<2.0.0"
     },
     {
-      "name": "boto3-stubs[s3,secretsmanager]",
+      "name": "boto3_stubs[s3,secretsmanager]",
       "versionRange": "boto3-stubs[s3,secretsmanager]>=1.35.0,<2.0.0"
     },
     {
@@ -73,12 +61,8 @@
       "versionRange": "botocore>=1.34.0,<2.0.0"
     },
     {
-      "name": "cachetools",
-      "versionRange": "cachetools>=5.0.0,<6.0.0"
-    },
-    {
       "name": "ccxt",
-      "versionRange": "ccxt>=4.5.24,<5.0.0"
+      "versionRange": "ccxt>=4.5.24"
     },
     {
       "name": "click",
@@ -86,7 +70,7 @@
     },
     {
       "name": "databento",
-      "versionRange": "databento>=0.32.0"
+      "versionRange": "databento>=0.40.0"
     },
     {
       "name": "db_dtypes",
@@ -106,7 +90,7 @@
     },
     {
       "name": "fastapi",
-      "versionRange": "fastapi>=0.110.0,<1.0.0"
+      "versionRange": "fastapi>=0.109.0,<1.0.0"
     },
     {
       "name": "fastparquet",
@@ -122,7 +106,7 @@
     },
     {
       "name": "gcloud_aio_storage",
-      "versionRange": "gcloud-aio-storage>=9.0.0,<10.0.0"
+      "versionRange": "gcloud-aio-storage>=9.0.0"
     },
     {
       "name": "google_api_python_client",
@@ -130,15 +114,31 @@
     },
     {
       "name": "google_auth",
-      "versionRange": "google-auth>=2.40.0,<3.0.0"
+      "versionRange": "google-auth>=2.25.2"
     },
     {
-      "name": "google_cloud_build",
-      "versionRange": "google-cloud-build>=3.0.0,<4.0.0"
+      "name": "google_auth_httplib2",
+      "versionRange": "google-auth-httplib2>=0.2.0"
+    },
+    {
+      "name": "google_auth_oauthlib",
+      "versionRange": "google-auth-oauthlib>=1.2.0"
+    },
+    {
+      "name": "google_cloud_bigquery",
+      "versionRange": "google-cloud-bigquery>=3.40.0"
+    },
+    {
+      "name": "google_cloud_bigquery_storage",
+      "versionRange": "google-cloud-bigquery-storage>=2.24.0"
     },
     {
       "name": "google_cloud_compute",
       "versionRange": "google-cloud-compute>=1.0.0,<2.0.0"
+    },
+    {
+      "name": "google_cloud_logging",
+      "versionRange": "google-cloud-logging>=3.8.0"
     },
     {
       "name": "google_cloud_pubsub",
@@ -158,15 +158,7 @@
     },
     {
       "name": "greenlet",
-      "versionRange": "greenlet>=3.0.0,<4.0.0"
-    },
-    {
-      "name": "gunicorn",
-      "versionRange": "gunicorn>=21.0.0,<22.0.0"
-    },
-    {
-      "name": "hmmlearn",
-      "versionRange": "hmmlearn>=0.3.0"
+      "versionRange": "greenlet>=3.0.0"
     },
     {
       "name": "httpx",
@@ -185,10 +177,6 @@
       "versionRange": "jinja2>=3.0.0,<4.0.0"
     },
     {
-      "name": "joblib",
-      "versionRange": "joblib>=1.3.0,<2.0.0"
-    },
-    {
       "name": "jsonpickle",
       "versionRange": "jsonpickle>=3.0.0,<4.0.0"
     },
@@ -197,32 +185,24 @@
       "versionRange": "lightgbm>=4.0.0"
     },
     {
-      "name": "lxml",
-      "versionRange": "lxml>=5.0,<6.0"
-    },
-    {
       "name": "lz4",
       "versionRange": "lz4>=4.3.0"
     },
     {
-      "name": "matplotlib",
-      "versionRange": "matplotlib>=3.9.0,<4.0.0"
-    },
-    {
       "name": "mypy",
-      "versionRange": "mypy>=1.13.0,<2.0.0"
+      "versionRange": "mypy>=1.19.1"
     },
     {
       "name": "nautilus_trader",
-      "versionRange": "nautilus-trader>=1.221.0,<2.0.0"
+      "versionRange": "nautilus-trader>=1.221.0"
     },
     {
       "name": "numba",
-      "versionRange": "numba>=0.62.1,<1.0.0"
+      "versionRange": "numba>=0.62.1"
     },
     {
       "name": "numpy",
-      "versionRange": "numpy>=2.3.0,<2.4.0"
+      "versionRange": "numpy>=2.1.0,<2.5.0"
     },
     {
       "name": "pandas",
@@ -241,16 +221,12 @@
       "versionRange": "pip-audit>=2.7.0"
     },
     {
-      "name": "playwright",
-      "versionRange": "playwright>=1.40,<2.0"
-    },
-    {
       "name": "plotly",
       "versionRange": "plotly>=6.4.0"
     },
     {
       "name": "polars",
-      "versionRange": "polars>=1.37.0,<2.0.0"
+      "versionRange": "polars>=1.37.0"
     },
     {
       "name": "pre_commit",
@@ -261,12 +237,8 @@
       "versionRange": "prek>=0.3.0,<1.0.0"
     },
     {
-      "name": "prometheus_client",
-      "versionRange": "prometheus-client>=0.20.0,<1.0.0"
-    },
-    {
       "name": "psycopg2_binary",
-      "versionRange": "psycopg2-binary>=2.9.9,<3.0.0"
+      "versionRange": "psycopg2-binary>=2.9.9"
     },
     {
       "name": "pyarrow",
@@ -322,7 +294,7 @@
     },
     {
       "name": "python_multipart",
-      "versionRange": "python-multipart>=0.0.9,<1.0.0"
+      "versionRange": "python-multipart>=0.0.9"
     },
     {
       "name": "pytz",
@@ -342,39 +314,31 @@
     },
     {
       "name": "rich",
-      "versionRange": "rich>=14.2.0,<16.0.0"
+      "versionRange": "rich>=14.2.0,<15.0.0"
     },
     {
       "name": "ruff",
-      "versionRange": "ruff==0.15.0"
-    },
-    {
-      "name": "ruptures",
-      "versionRange": "ruptures>=1.1.0"
+      "versionRange": "ruff>=0.15.0"
     },
     {
       "name": "scikit_learn",
-      "versionRange": "scikit-learn>=1.5.0,<2.0.0"
+      "versionRange": "scikit-learn>=1.8.0,<2.0.0"
+    },
+    {
+      "name": "scikit_learn_stubs",
+      "versionRange": "scikit-learn-stubs>=0.0.3,<1.0.0"
     },
     {
       "name": "scipy",
-      "versionRange": "scipy>=1.14.0,<2.0.0"
+      "versionRange": "scipy>=1.17.0"
     },
     {
       "name": "shellcheck_py",
       "versionRange": "shellcheck-py>=0.9.0.6"
     },
     {
-      "name": "slowapi",
-      "versionRange": "slowapi>=0.1.9,<1.0.0"
-    },
-    {
       "name": "sqlalchemy",
-      "versionRange": "sqlalchemy>=2.0.0,<3.0.0"
-    },
-    {
-      "name": "sse_starlette",
-      "versionRange": "sse-starlette>=1.6.1,<2.0.0"
+      "versionRange": "sqlalchemy>=2.0.0"
     },
     {
       "name": "structlog",
@@ -398,15 +362,43 @@
     },
     {
       "name": "typer",
-      "versionRange": "typer>=0.9.0,<1.0.0"
+      "versionRange": "typer>=0.9.0"
     },
     {
       "name": "types_requests",
       "versionRange": "types-requests>=2.32.0,<3.0.0"
     },
     {
+      "name": "unified_api_contracts",
+      "versionRange": "unified-api-contracts"
+    },
+    {
+      "name": "unified_cloud_interface",
+      "versionRange": "unified-cloud-interface"
+    },
+    {
+      "name": "unified_domain_services",
+      "versionRange": "unified-domain-services>=0.1.0"
+    },
+    {
+      "name": "unified_internal_contracts",
+      "versionRange": "unified-internal-contracts"
+    },
+    {
+      "name": "unified_market_interface",
+      "versionRange": "unified-market-interface>=0.3.0"
+    },
+    {
+      "name": "unified_trading_library",
+      "versionRange": "unified-trading-library>=0.4.0,<1.0.0"
+    },
+    {
+      "name": "uvicorn",
+      "versionRange": "uvicorn[standard]"
+    },
+    {
       "name": "uvicorn[standard]",
-      "versionRange": "uvicorn[standard]>=0.27.0,<1.0.0"
+      "versionRange": "uvicorn[standard]>=0.27.0"
     },
     {
       "name": "vcrpy",
@@ -418,7 +410,7 @@
     },
     {
       "name": "websockets",
-      "versionRange": "websockets>=14.0,<15.0.0"
+      "versionRange": "websockets>=14.0"
     },
     {
       "name": "yfinance",
@@ -429,5 +421,5 @@
       "versionRange": "zstandard>=0.22.0"
     }
   ],
-  "count": 106
+  "count": 104
 }

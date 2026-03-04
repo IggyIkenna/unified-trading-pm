@@ -17,7 +17,6 @@ REPOS=(
   deployment-api
   deployment-service
   execution-analytics-ui
-  execution-visualizer-ui
   features-multi-timeframe-service
   ml-training-ui
   system-integration-tests

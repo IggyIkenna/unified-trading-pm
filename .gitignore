@@ -18,8 +18,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .mypy_cache/
+.hypothesis/
 .ruff_cache/
 .cache/
+data/
 # Python venvs
 .venv/
 venv/
@@ -36,3 +38,4 @@ build/
 coverage/
 htmlcov/
 .nyc_output/
+logs/

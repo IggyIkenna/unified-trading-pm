@@ -92,6 +92,44 @@ fi
 echo ""
 
 # ==========================================
+# Stage 1b: scripts/setup.sh required
+# ==========================================
+
+echo "Stage 1b: Checking scripts/setup.sh..."
+if [ -f "$REPO_DIR/scripts/setup.sh" ]; then
+    echo -e "  ${GREEN}✅ scripts/setup.sh exists${NC}"
+else
+    echo -e "  ${RED}❌ scripts/setup.sh NOT FOUND${NC}"
+    echo "     Every repo must have scripts/setup.sh (SSOT: unified-trading-pm/scripts/setup.sh)"
+    echo "     Fix: cp unified-trading-pm/scripts/setup.sh $REPO_NAME/scripts/setup.sh"
+    ERRORS=$((ERRORS + 1))
+fi
+echo ""
+
+# ==========================================
+# Stage 1c: External dependency alignment (Python repos)
+# ==========================================
+
+if [ -f "$REPO_DIR/pyproject.toml" ]; then
+    echo "Stage 1c: Checking external dependency alignment..."
+    PM_DIR="$WORKSPACE_ROOT/unified-trading-pm"
+    ALIGN_SCRIPT="$PM_DIR/scripts/check_external_dependency_alignment.py"
+    if [ -f "$ALIGN_SCRIPT" ]; then
+        if python3 "$ALIGN_SCRIPT" --repo "$REPO_NAME" 2>/dev/null; then
+            echo -e "  ${GREEN}✅ External deps aligned with canonical-dependency-manifest.json${NC}"
+        else
+            echo -e "  ${RED}❌ External dependency alignment FAILED${NC}"
+            echo "     Run: python unified-trading-pm/scripts/check_external_dependency_alignment.py --repo $REPO_NAME"
+            echo "     Or fix: python unified-trading-pm/scripts/fix_external_dependency_alignment.py --repo $REPO_NAME --apply"
+            ERRORS=$((ERRORS + 1))
+        fi
+    else
+        echo -e "  ${YELLOW}⚠️  Alignment script not found (skipping)${NC}"
+    fi
+    echo ""
+fi
+
+# ==========================================
 # Stage 2: Quality Audit
 # ==========================================
 

@@ -14,6 +14,7 @@ DO:
  uv lock && uv pip install -e <repo>/ (from workspace root with venv active)
  Update workspace-manifest.json, dependent repos' pyproject.toml
  bash scripts/quickmerge.sh per repo
+ Add GH_PAT via `echo "$(gh auth token)" | gh secret set GH_PAT --repo IggyIkenna/<repo>` (Python repos that clone deps)
 
 NEVER:
  Create repo without team access setup

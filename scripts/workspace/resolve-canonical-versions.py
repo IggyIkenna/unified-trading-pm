@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -179,6 +180,16 @@ def main() -> None:
     CONSTRAINTS_FILE.parent.mkdir(parents=True, exist_ok=True)
     CONSTRAINTS_FILE.write_text("\n".join(toml_lines))
     print(f"Wrote {CONSTRAINTS_FILE} ({len(canonical)} packages)")
+
+    # Validate constraints resolve (catches transitive conflicts)
+    validate_script = (
+        WORKSPACE_ROOT / "unified-trading-pm" / "scripts" / "workspace" / "validate-workspace-constraints.py"
+    )
+    if validate_script.is_file():
+        r = subprocess.run(["python", str(validate_script), "-q"], cwd=WORKSPACE_ROOT, capture_output=True, text=True)
+        if r.returncode != 0:
+            print(r.stderr, file=sys.stderr)
+            sys.exit(1)
 
     report_text = "\n".join(report_lines)
     if args.report:

@@ -39,11 +39,13 @@
 #       Installs jq automatically (apt/brew) if needed; exits 1 if jq unavailable
 #    8. Install project + dev deps (uv pip install -e ".[dev]")
 #    9. Verify ripgrep available (required by quality-gates.sh) — always runs
-#   10. Verify ruff version matches workspace standard (0.15.0) — always runs
-#   11. Import smoke test (python -c "import <package>") — always runs
-#   12. GCP credentials check — informational only, never blocks; never reads
+#   10. Verify bats-core available (required for shell script tests) — always runs
+#   11. Verify ruff version matches workspace standard (0.15.0) — always runs
+#   12. Import smoke test (python -c "import <package>") — always runs
+#   13. GCP credentials check — informational only, never blocks; never reads
 #       SA JSON files from repo root (use ADC: gcloud auth application-default login)
-#   13. Print known caveats from AGENTS.md (if present)
+#
+#   14. Print known caveats from AGENTS.md (if present)
 #
 # Idempotency:
 #   - UI:  node_modules skipped if package.json not newer than node_modules/
@@ -55,7 +57,7 @@
 #
 # CI detection (GITHUB_ACTIONS, CI, or CLOUD_BUILD set):
 #   Python repo: steps 1-8 (install/setup) are skipped — CI manages its own env.
-#   Steps 9-13 (verification) always run.
+#   Steps 9-14 (verification) always run.
 #   UI repo: npm install step is skipped — CI manages node_modules.
 #
 # Exit codes:
@@ -424,9 +426,40 @@ else
     ISSUES=$((ISSUES + 1))
 fi
 
-# ── [10] RUFF VERSION ──────────────────────────────────────────────────────
-log_step "ruff version (workspace standard: $REQUIRED_RUFF)"
 
+# ── [10] BATS (shell test framework — required for quality-gates.sh) ─────────
+log_step "bats-core (required for shell script tests)"
+
+if command -v bats &>/dev/null; then
+    log_ok "bats $(bats --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo 'installed')"
+elif [ "$IN_CI" = true ]; then
+    log_skip "CI mode — bats installed by workflow"
+elif [ "$CHECK_ONLY" = true ]; then
+    command -v bats &>/dev/null && log_ok "bats available" || { log_fail "bats not found"; ISSUES=$((ISSUES + 1)); }
+else
+    log_warn "bats not found — attempting install..."
+    BATS_INSTALLED=false
+    if command -v brew &>/dev/null; then
+        brew install bats-core 2>/dev/null && BATS_INSTALLED=true
+    elif command -v apt-get &>/dev/null; then
+        sudo apt-get update -qq 2>/dev/null; sudo apt-get install -y bats 2>/dev/null && BATS_INSTALLED=true
+    elif command -v apt &>/dev/null; then
+        sudo apt update -qq 2>/dev/null; sudo apt install -y bats 2>/dev/null && BATS_INSTALLED=true
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y bats-core 2>/dev/null && BATS_INSTALLED=true
+    elif command -v yum &>/dev/null; then
+        sudo yum install -y bats-core 2>/dev/null && BATS_INSTALLED=true
+    fi
+    if [ "$BATS_INSTALLED" = true ]; then
+        log_ok "Installed bats"
+    else
+        log_fail "bats required — install: brew install bats-core (macOS), apt install bats (Debian/Ubuntu), or dnf install bats-core (Fedora)"
+        ISSUES=$((ISSUES + 1))
+    fi
+fi
+
+# ── [11] RUFF VERSION ──────────────────────────────────────────────────────
+log_step "ruff version (workspace standard: $REQUIRED_RUFF)"
 RUFF_CMD=""
 [ -f ".venv/bin/ruff" ] && RUFF_CMD=".venv/bin/ruff"
 [ -z "$RUFF_CMD" ] && command -v ruff &>/dev/null && RUFF_CMD="ruff"
@@ -442,7 +475,7 @@ else
     log_warn "ruff not found — will be installed with dev deps"
 fi
 
-# ── [11] IMPORT SMOKE TEST ─────────────────────────────────────────────────
+# ── [12] IMPORT SMOKE TEST ─────────────────────────────────────────────────
 log_step "Import smoke test"
 
 if [ -n "$PACKAGE_NAME" ]; then
@@ -462,7 +495,7 @@ else
     log_skip "PACKAGE_NAME not set and could not auto-detect"
 fi
 
-# ── [12] GCP CREDENTIALS (informational) ───────────────────────────────────
+# ── [13] GCP CREDENTIALS (informational) ───────────────────────────────────
 log_step "GCP credentials (informational)"
 
 if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ] && [ -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
@@ -472,7 +505,7 @@ else
     log_warn "Never place SA JSON files in the repo root (use ADC or Secret Manager)"
 fi
 
-# ── [13] KNOWN CAVEATS (per-repo) ─────────────────────────────────────────
+# ── [14] KNOWN CAVEATS (per-repo) ─────────────────────────────────────────
 # If AGENTS.md exists, print a summary of known caveats for this repo.
 # This helps AI agents and new developers understand what to expect.
 if [ -f "AGENTS.md" ]; then
