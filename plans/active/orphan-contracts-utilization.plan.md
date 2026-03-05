@@ -2,7 +2,7 @@
 
 **Status:** Complete
 **Created:** 2026-03-04
-**Related:** unified-trading-codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md
+**Related:** unified-trading-codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md. Schema normalization completion plan — UAC normalization coverage (all external schemas → canonical) is part of contracts utilization; orphan schemas without normalizers are in scope.
 
 ---
 
@@ -37,6 +37,7 @@ Schemas in unified-api-contracts and unified-internal-contracts that are not imp
 1. Phase 1: Add unit tests for all UIC/UAC schemas (Option B)
 2. Phase 2: Per-schema — ML types migrate (A); feature types migrate if aligned
 3. Phase 3: Deprecate confirmed superseded (C)
+4. Phase 4: Align with schema normalization completion — ensure orphan external schemas get normalizers per UAC ideology.
 
 ---
 

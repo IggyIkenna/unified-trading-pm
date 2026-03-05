@@ -43,6 +43,7 @@ overview: |
   ## Cross-references
   - Phase 1: phase1_foundation_prep.plan.md
   - Phase 2: phase2_library_tier_hardening.plan.md
+  - Schema normalization: execution-service and other services consuming venue data must use UAC normalizers; canonical-only contract. See schema normalization completion plan.
 todos:
   - id: t4a-instruments-service
     content: "T4 BATCH A — INSTRUMENTS-SERVICE (IS) [gates all other services]: STEP A: lib-phase4-connectivity-audit (IS as pilot — verify zero os.getenv(API_KEY), hardcoded URLs, direct requests/aiohttp to venues; all connectivity via UDC/UMI/UTEI/URDI); lib-phase7-instruments-service-validation (IS validation gate: uv pip install -e .[dev]; quality-gates.sh; verify imports from unified_trading_services + unified_domain_client; document patterns for remaining 13 services). STEP B: Tests — verify IS import smoke test (python -c 'import instruments_service' exits 0); VCR cassettes via URDI. STEP C: lib-phase6-service-code-adjustment (IS); exec-svc-cross-svc-deps (fix IS service→service dep — IS currently declares instruments-service as dep from market-tick-data-service; fix: extract shared schemas to AC or UIC_INT); lib-phase3-instruments-service-urdi-wire (replace direct exchange REST calls with get_reference_adapter(venue).get_instruments()); qg-upload-events-legacy (IS cloud_instrument_storage.py: UPLOAD_STARTED/UPLOAD_COMPLETED → PERSISTENCE_STARTED/PERSISTENCE_COMPLETED). STEPS D→E: quickmerge --lint-only → --unit-only → --qg-only → --quick → full (D5 = IS green gate)."

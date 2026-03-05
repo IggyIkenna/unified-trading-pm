@@ -70,6 +70,8 @@ PM (plans, manifest) → Codex (specs) → Code (implemented) → **Tested** (qu
 
 **Deployable** ≠ working code: data availability verified, deployment stages passed, data catalogue filled, recovery documented, security audit trails. Audit prompt gives A+ when everything is documented and verifiable.
 
+**Schema normalization checkpoint:** UAC is SSOT for canonical schemas; interfaces use UAC normalizers; no raw venue data flows to services. Reference: schema normalization completion plan.
+
 ---
 
 ## 2. Deployment Topology and Checklists
