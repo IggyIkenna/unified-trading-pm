@@ -1,12 +1,12 @@
 ---
 name: Visualizer to Analytics UI Port
-overview: Port execution-visualizer-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM plans and codex, and full integration with execution-results-api and execution-service domain data.
+overview: Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM plans and codex, and full integration with execution-results-api and execution-service domain data.
 todos:
   - id: infra-setup
     content: "Add infrastructure dependencies to execution-analytics-ui: axios, @tanstack/react-query, zustand, recharts, tailwind css, postcss. Configure Vite proxy /api → http://localhost:8002. Add @/ path alias. Configure authApiClient (axios + auth interceptor). Add api/types.ts aligned with execution-results-api schemas (ResultSummary, ResultsResponse, ExecutionAlpha). Fix GridResult → ResultSummary schema mismatch."
     status: completed
   - id: p0-pages
-    content: "Port P0 core analytics pages from execution-visualizer-ui: (1) LoadResults — browse GCS/local results, bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore, filterStore) and React Query hooks."
+    content: "Port P0 core analytics pages from execution-analytics-ui: (1) LoadResults — browse GCS/local results, bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore, filterStore) and React Query hooks."
     status: completed
   - id: p1-run-backtest
     content: "Port P1 RunBacktest page: single/batch backtest execution, job status polling. Uses /backtest/run, /backtest/batch, /backtest/status/{job_id}, /config/sources, /config/system/cores endpoints."
@@ -15,7 +15,7 @@ todos:
     content: "Port P2 domain data browsing pages: InstrumentDefinitions (/data/instruments), InstructionAvailability (/data/strategies, /data/instructions), ConfigBrowser (/data/configs), ConfigGenerator (stub — returns 501, defer or scaffold)."
     status: completed
   - id: p3-market-data
-    content: "Port P3 MarketTickData page from execution-visualizer-ui: browse and chart tick data via market-data-api (/data/tick-data, /data/tick-data/instruments, /data/tick-data/ticks, port 8003)."
+    content: "Port P3 MarketTickData page from execution-analytics-ui: browse and chart tick data via market-data-api (/data/tick-data, /data/tick-data/instruments, /data/tick-data/ticks, port 8003)."
     status: completed
   - id: quality-gates
     content: "Ensure TypeScript quality gates pass: Vitest unit tests, ESLint, Prettier. Add Playwright smoke tests for LoadResults, Analysis, DeepDive pages. Verify no Python in repo (ui-no-python-quality-gates.mdc). Auth: all API calls pass Bearer token via axios interceptor using @unified-trading/ui-auth authContext."
@@ -23,7 +23,7 @@ todos:
 isProject: false
 ---
 
-# Port execution-visualizer-ui to execution-analytics-ui for 100% Audit Grade
+# Port execution-analytics-ui to execution-analytics-ui for 100% Audit Grade
 
 ## Context
 
@@ -32,7 +32,7 @@ isProject: false
 **Current state:**
 
 - **execution-analytics-ui:** 2 pages (Login, GridResults), auth via `@unified-trading/ui-auth`, single `GET /api/v1/results` with schema mismatch
-- **execution-visualizer-ui:** 11 pages, full execution-results-api integration, no auth
+- **execution-analytics-ui:** 11 pages, full execution-results-api integration, no auth
 - **execution-results-api:** Full API (results, analysis, backtest, config, data, fills SSE)
 - **execution-service:** Produces domain data (summary.json, execution_alpha.json, orders/fills/equity parquet) to GCS; execution-results-api reads it
 
@@ -51,31 +51,31 @@ isProject: false
 
 | Page                    | Source                                                                               | Purpose                                                          | execution-results-api Endpoints                                                                    |
 | ----------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **LoadResults**         | [LoadResults.tsx](execution-visualizer-ui/src/pages/LoadResults.tsx)                 | Browse GCS/local results, bucket/prefix selection, list results  | `/results`, `/results/buckets`, `/results/prefixes`, `/results/local-default-directory`, `/health` |
-| **Analysis**            | [Analysis.tsx](execution-visualizer-ui/src/pages/Analysis.tsx)                       | Alpha distribution histogram, execution alpha bars, equity curve | `/results`, `/results/execution_alpha`                                                             |
-| **DeepDive**            | [DeepDive.tsx](execution-visualizer-ui/src/pages/DeepDive.tsx)                       | Per-result alpha, fills, orders, timeline tabs                   | `/results/{id}`, `/results/execution_alpha`                                                        |
-| **AlgorithmComparison** | [AlgorithmComparison.tsx](execution-visualizer-ui/src/pages/AlgorithmComparison.tsx) | Compare algorithms (bar/radar charts)                            | `/results`, `/results/execution_alpha`                                                             |
+| **LoadResults**         | [LoadResults.tsx](execution-analytics-ui/src/pages/LoadResults.tsx)                 | Browse GCS/local results, bucket/prefix selection, list results  | `/results`, `/results/buckets`, `/results/prefixes`, `/results/local-default-directory`, `/health` |
+| **Analysis**            | [Analysis.tsx](execution-analytics-ui/src/pages/Analysis.tsx)                       | Alpha distribution histogram, execution alpha bars, equity curve | `/results`, `/results/execution_alpha`                                                             |
+| **DeepDive**            | [DeepDive.tsx](execution-analytics-ui/src/pages/DeepDive.tsx)                       | Per-result alpha, fills, orders, timeline tabs                   | `/results/{id}`, `/results/execution_alpha`                                                        |
+| **AlgorithmComparison** | [AlgorithmComparison.tsx](execution-analytics-ui/src/pages/AlgorithmComparison.tsx) | Compare algorithms (bar/radar charts)                            | `/results`, `/results/execution_alpha`                                                             |
 
 ### P1 — Execution Backtest Management
 
 | Page            | Source                                                               | Purpose                                | execution-results-api Endpoints                                                                            |
 | --------------- | -------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **RunBacktest** | [RunBacktest.tsx](execution-visualizer-ui/src/pages/RunBacktest.tsx) | Run single/batch backtests, job status | `/backtest/run`, `/backtest/batch`, `/backtest/status/{job_id}`, `/config/sources`, `/config/system/cores` |
+| **RunBacktest** | [RunBacktest.tsx](execution-analytics-ui/src/pages/RunBacktest.tsx) | Run single/batch backtests, job status | `/backtest/run`, `/backtest/batch`, `/backtest/status/{job_id}`, `/config/sources`, `/config/system/cores` |
 
 ### P2 — Domain Data Browsing (execution-service domain)
 
 | Page                        | Source                                                                                       | Purpose                                           | execution-results-api Endpoints                                    |
 | --------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
-| **InstrumentDefinitions**   | [InstrumentDefinitions.tsx](execution-visualizer-ui/src/pages/InstrumentDefinitions.tsx)     | Browse instruments (UDC via execution-service)    | `/data/instruments`, `/data/instruments/data`                      |
-| **InstructionAvailability** | [InstructionAvailability.tsx](execution-visualizer-ui/src/pages/InstructionAvailability.tsx) | Browse strategy instructions                      | `/data/strategies`, `/data/instructions`                           |
-| **ConfigBrowser**           | [ConfigBrowser.tsx](execution-visualizer-ui/src/pages/ConfigBrowser.tsx)                     | Browse and validate configs                       | `/data/configs`, `/data/configs/content`, `/data/configs/validate` |
-| **ConfigGenerator**         | [ConfigGenerator.tsx](execution-visualizer-ui/src/pages/ConfigGenerator.tsx)                 | Generate configs (API returns 501; stub or defer) | `/config/generate`, `/config/generate-all`                         |
+| **InstrumentDefinitions**   | [InstrumentDefinitions.tsx](execution-analytics-ui/src/pages/InstrumentDefinitions.tsx)     | Browse instruments (UDC via execution-service)    | `/data/instruments`, `/data/instruments/data`                      |
+| **InstructionAvailability** | [InstructionAvailability.tsx](execution-analytics-ui/src/pages/InstructionAvailability.tsx) | Browse strategy instructions                      | `/data/strategies`, `/data/instructions`                           |
+| **ConfigBrowser**           | [ConfigBrowser.tsx](execution-analytics-ui/src/pages/ConfigBrowser.tsx)                     | Browse and validate configs                       | `/data/configs`, `/data/configs/content`, `/data/configs/validate` |
+| **ConfigGenerator**         | [ConfigGenerator.tsx](execution-analytics-ui/src/pages/ConfigGenerator.tsx)                 | Generate configs (API returns 501; stub or defer) | `/config/generate`, `/config/generate-all`                         |
 
 ### P3 — Market Data (market-data-api)
 
 | Page               | Source                                                                     | Purpose                    | API                                                                       |
 | ------------------ | -------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------- |
-| **MarketTickData** | [MarketTickData.tsx](execution-visualizer-ui/src/pages/MarketTickData.tsx) | Browse and chart tick data | `/data/tick-data`, `/data/tick-data/instruments`, `/data/tick-data/ticks` |
+| **MarketTickData** | [MarketTickData.tsx](execution-analytics-ui/src/pages/MarketTickData.tsx) | Browse and chart tick data | `/data/tick-data`, `/data/tick-data/instruments`, `/data/tick-data/ticks` |
 
 ---
 
@@ -83,8 +83,8 @@ isProject: false
 
 | Component          | Source                                         | Notes                                                                                               |
 | ------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **API client**     | `execution-visualizer-ui/src/api/client.ts`    | Axios base URL; adapt for `authFetchJson` or Bearer token from `@unified-trading/ui-auth`           |
-| **API types**      | `execution-visualizer-ui/src/api/types.ts`     | `ResultSummary`, `ExecutionAlpha`, `FilterOptions`, etc. — align with execution-results-api schemas |
+| **API client**     | `execution-analytics-ui/src/api/client.ts`    | Axios base URL; adapt for `authFetchJson` or Bearer token from `@unified-trading/ui-auth`           |
+| **API types**      | `execution-analytics-ui/src/api/types.ts`     | `ResultSummary`, `ExecutionAlpha`, `FilterOptions`, etc. — align with execution-results-api schemas |
 | **Zustand stores** | `resultsStore.ts`, `filterStore.ts`            | Results list, filters (category, asset, strategy, mode, timeframe, algorithm)                       |
 | **React Query**    | `@tanstack/react-query`                        | Server state, caching for buckets, results, execution_alpha, job status                             |
 | **Recharts**       | BarChart, ComposedChart, AreaChart, RadarChart | Alpha distribution, equity, fills, algorithm comparison                                             |
@@ -118,7 +118,7 @@ isProject: false
 
 ## Deployment API (Optional)
 
-execution-visualizer-ui uses `deployment-dashboard` (Cloud Run) for mass cloud deploy (`/api/deployments`, `/api/service-status/execution-services/`\*). For RunBacktest mass deploy, execution-analytics-ui may need this. Defer to P1 completion; add if RunBacktest mass-deploy is required for audit.
+execution-analytics-ui uses `deployment-dashboard` (Cloud Run) for mass cloud deploy (`/api/deployments`, `/api/service-status/execution-services/`\*). For RunBacktest mass deploy, execution-analytics-ui may need this. Defer to P1 completion; add if RunBacktest mass-deploy is required for audit.
 
 ---
 
@@ -198,5 +198,5 @@ flowchart TB
 
 ## Out of Scope
 
-- **execution-visualizer-ui repo:** After port, deprecate or archive; execution-analytics-ui becomes single source
-- **execution-service/visualizer-ui:** Extraction tracked separately; this plan ports from execution-visualizer-ui (already extracted) into execution-analytics-ui
+- **execution-analytics-ui repo:** After port, deprecate or archive; execution-analytics-ui becomes single source
+- **execution-service/visualizer-ui:** Extraction tracked separately; this plan ports from execution-analytics-ui (already extracted) into execution-analytics-ui

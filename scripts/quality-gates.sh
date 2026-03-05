@@ -129,7 +129,8 @@ if [ "$RUN_LINT" = true ]; then
     run_timeout 30 $RUFF_CMD check --line-length 120 $SOURCE_DIRS && log_success "Lint PASSED" || { log_fail "Lint FAILED"; exit 1; }
 fi
 
-# =====================================================================if [ "$RUN_TESTS" = true ]; then
+# ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
+if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }

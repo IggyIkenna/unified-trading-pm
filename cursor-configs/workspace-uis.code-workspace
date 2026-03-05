@@ -30,7 +30,7 @@
       "path": "../../deployment-ui"
     },
     {
-      "path": "../../execution-visualizer-ui"
+      "path": "../../execution-analytics-ui"
     },
     {
       "path": "../../live-health-monitor-ui"
@@ -83,7 +83,7 @@
       "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/execution-results-api",
       "${workspaceFolder}/execution-service",
-      "${workspaceFolder}/execution-visualizer-ui",
+      "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/features-calendar-service",
       "${workspaceFolder}/features-cross-instrument-service",
       "${workspaceFolder}/features-delta-one-service",
@@ -144,7 +144,7 @@
       "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/execution-results-api",
       "${workspaceFolder}/execution-service",
-      "${workspaceFolder}/execution-visualizer-ui",
+      "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/features-calendar-service",
       "${workspaceFolder}/features-cross-instrument-service",
       "${workspaceFolder}/features-delta-one-service",

@@ -17,7 +17,7 @@ REPOS=(
   deployment-api
   deployment-service
   execution-analytics-ui
-  execution-visualizer-ui
+  execution-analytics-ui
   features-multi-timeframe-service
   ibkr-gateway-infra
   ml-training-ui
