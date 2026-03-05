@@ -19,4 +19,5 @@ DO:
 NEVER:
  Copy cassettes to consumer repos
  Use VCR for WebSocket (different tooling required)
+ Use standard HTTP VCR for IBKR/TWS — TWS uses a proprietary socket protocol; mock at ib_insync object level instead (see ibkr-gateway-single-source.mdc)
  Run collect_responses / validate_schemas / live verification from AC (interfaces do that)
