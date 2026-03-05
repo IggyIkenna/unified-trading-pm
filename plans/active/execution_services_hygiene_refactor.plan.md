@@ -21,7 +21,7 @@ todos:
     content: "DAY 3.4 — Resolve 67 ARCHITECTURAL_VIOLATION suppressions: Fix root causes (service→service deps, tier violations); remove type: ignore where possible; ci-arch-violations-fix."
     status: pending
   - id: day3-cross-svc-deps
-    content: "DAY 3.5 — exec-svc-cross-svc-deps: Remove execution-service→market-tick-data-service, →risk-and-exposure-service, →instruments-service. Extract shared schemas to unified-api-contracts or unified-internal-contracts."
+    content: "DAY 3.5 — exec-svc-cross-svc-deps: Remove execution-service→market-tick-data-service, →risk-and-exposure-service, →instruments-service. Extract shared schemas to unified-api-contracts or unified-internal-contracts. When using venue data (orders, fills, trades), use UAC normalizers — execution-service must receive canonical types only. See schema normalization completion plan."
     status: pending
   - id: day3-other-hygiene
     content: "DAY 3.6 — Other hygiene: qg-exec-services-smoke-import (get_storage_client from unified-cloud-interface); qg-central-element-test-code (test-project placeholder); qg-pip-audit-exec-services; qg-exec-services-codex-18."
@@ -44,6 +44,8 @@ isProject: true
 **Execution order:** Day 3 → Day 4
 **Reference:** [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) — t4e-strategy-execution todo
 
+**Schema normalization:** UAC as normalization layer; interfaces return canonical only. See schema normalization completion plan.
+
 ---
 
 ## 1. Hygiene and Refactor
@@ -54,7 +56,7 @@ isProject: true
 | Bare excepts            | 201     | Proper handling (@handle_api_errors, specific exceptions) | quality-gates, strict-quality-gates.mdc     |
 | ARCHITECTURAL_VIOLATION | 67      | Fix root causes, remove suppressions                      | ci-arch-violations-fix                      |
 | ImportError fallbacks   | 25      | Fail-loud                                                 | quality-importerror-fallbacks               |
-| Service→service deps    | 3       | 0 (extract to AC/UIC)                                     | exec-svc-cross-svc-deps                     |
+| Service→service deps    | 3       | 0 (extract to AC/UIC); use UAC normalizers for venue data | exec-svc-cross-svc-deps                     |
 
 ### Phase 3 Execution-Service Todos (from t4e-strategy-execution)
 
