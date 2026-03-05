@@ -81,7 +81,7 @@
     "deployment-api": "0.1.0",
     "deployment-ui": "0.1.0",
     "system-integration-tests": "0.1.0",
-    "unified-trading-pm": "1.0.0",
+    "unified-trading-pm": "1.0.1",
     "unified-trading-codex": "0.1.0",
     "execution-service": "0.1.0",
     "execution-visualizer-ui": "0.1.0",
