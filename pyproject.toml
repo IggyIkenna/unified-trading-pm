@@ -3,6 +3,9 @@ name = "unified-trading-pm"
 version = "1.0.1"
 requires-python = ">=3.13,<3.14"
 description = "Unified Trading System - Project Management"
+dependencies = [
+    "tomli-w>=1.0.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -13,6 +16,8 @@ dev = [
     "pytest-xdist<4.0.0,>=3.6.0",
     "pytest-cov<8.0.0,>=7.0.0",
     "ruff==0.15.0",
+    "pip-audit>=2.7.0,<3.0.0",
+    "bandit>=1.7.0,<2.0.0",
 ]
 
 [tool.ruff]

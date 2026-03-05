@@ -14,6 +14,6 @@ tags:
 # UI Smoke Tests and Deslop
 RULE: Before UI commits: run type-check + lint; optionally /run-smoke-tests (Playwright) and /deslop (clean AI slop).
 WHY: Validates critical flows and removes AI-generated code slop before merge.
-CODEX: 14-testing-guides/UI_SMOKE_TESTING_GUIDE.md, 06-coding-standards/code-cleanup-deslop.md
+CODEX: 04-architecture/pipeline-service-layers.md, 06-coding-standards/code-cleanup-deslop.md
 DO: Use `/run-smoke-tests` for UI changes; `/deslop` before commit; `npm run smoketest` manually
 NEVER: Skip type-check/lint for UI; commit without smoke tests for major UI changes

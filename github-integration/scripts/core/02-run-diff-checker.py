@@ -886,7 +886,61 @@ def _gap_to_dict(gap: DriftGap) -> JsonDict:
     return gap_dict
 
 
+def find_validator_violations(workspace_root: Path) -> list[DriftGap]:
+    """
+    Run PM validators (manifest, checklist, plan links) and convert failures to DriftGaps.
+    Phase 7: Refactor diff-checker to use validators.
+    """
+    gaps: list[DriftGap] = []
+    workspace_root = workspace_root.resolve()
+    pm_root = workspace_root / "unified-trading-pm"
+    validators_dir = pm_root / "scripts" / "validators"
+    if not validators_dir.exists():
+        return gaps
+
+    validator_checks = [
+        ("validate_workspace_manifest.py", "workspace-manifest.json", "plans_to_deployable Phase 1"),
+        ("validate_checklist_phase9.py", "checklist phase_9", "plans_to_deployable checklist-enhancements"),
+        ("validate_plan_links.py", "plans/active links", "plans_to_deployable Phase 0b"),
+    ]
+    for script_name, title, codex_ref in validator_checks:
+        script = validators_dir / script_name
+        if not script.exists():
+            continue
+        args_list = [sys.executable, str(script)]
+        if script_name == "validate_checklist_phase9.py":
+            configs = workspace_root / "deployment-service" / "configs"
+            if configs.is_dir():
+                args_list.extend(["--configs", str(configs)])
+        elif script_name == "validate_plan_links.py":
+            args_list.extend(["--workspace-root", str(workspace_root)])
+        result = subprocess.run(
+            args_list,
+            cwd=str(pm_root),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if result.returncode != 0:
+            gaps.append(
+                DriftGap(
+                    gap_id=f"VALIDATOR-{script_name}",
+                    gap_type="standards_violation",
+                    category="data",
+                    service="unified-trading-pm",
+                    title=f"Validator failed: {title}",
+                    description=result.stderr or result.stdout or "Validator exited non-zero",
+                    priority="P1-high",
+                    codex_reference=codex_ref,
+                    affected_files=[str(script)],
+                    auto_fixable=False,
+                )
+            )
+    return gaps
+
+
 def main() -> int:
+
     parser = argparse.ArgumentParser(description="Daily diff checker: codex vs codebase")
     parser.add_argument("--dry-run", action="store_true", help="Preview without creating issues")
     parser.add_argument(
@@ -950,6 +1004,9 @@ def main() -> int:
 
     print("  - Checking architecture...")
     all_gaps.extend(find_architecture_gaps(codex_root, workspace_root))
+
+    print("  - Running validators (manifest, checklist, plan links)...")
+    all_gaps.extend(find_validator_violations(workspace_root))
 
     print(f"\nFound {len(all_gaps)} gaps")
 

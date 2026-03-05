@@ -15,16 +15,13 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any, cast
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib  # type: ignore[no-reuse-def]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
@@ -145,8 +142,6 @@ def parse_pyproject(repo_path: Path) -> tuple[dict[str, str], dict[str, list[str
 
 
 def main() -> None:
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT))
     args = parser.parse_args()

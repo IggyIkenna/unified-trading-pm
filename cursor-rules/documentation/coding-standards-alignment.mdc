@@ -35,7 +35,7 @@ cd /path/to/unified-trading-system-repos
 |------|------|
 | Config class | `UnifiedCloudConfig` from unified-config-interface |
 | Logging | `setup_events()`, `log_event()` from unified-events-interface |
-| Coverage | 35% min (quality gates), 80% audit goal |
+| Coverage | 70% min (quality gates), 80% audit goal |
 | File size | Service: 900/700; Library: 1500/1200 |
 | Formatting ref | `formatting-standards.md` (not FORMATTING_STANDARDS_MASTER) |
 

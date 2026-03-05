@@ -15,3 +15,10 @@ WHY: Empty fallbacks hide configuration errors and make debugging impossible.
 CODEX: 06-coding-standards/validation-patterns.md, .cursor/rules/hardening-standards.mdc
 DO: Use `os.environ["KEY"]` or raise ValueError; Pydantic required fields; explicit validation
 NEVER: `os.getenv("KEY", "")`; `config.bucket or ""`; defensive isinstance to hide type errors
+
+## No try/except ImportError Fallbacks
+RULE: Never wrap library imports in `try/except ImportError` to provide a fallback implementation. Fail loud at import time if a required dependency is missing.
+WHY: Silent import fallbacks hide missing dependencies, make debugging impossible, and mask architectural violations.
+SCOPE: This rule applies to ALL tiers (T0–T3, services, UIs). There is NO tier-specific exception. The Tier 3 carve-out in earlier codex docs has been removed. See `unified-trading-codex/06-coding-standards/README.md` for the updated rule.
+DO: Import the library directly; declare it in pyproject.toml dependencies; let the import fail if absent
+NEVER: `try: import some_lib\nexcept ImportError: some_lib = None`; conditional feature flags based on import success

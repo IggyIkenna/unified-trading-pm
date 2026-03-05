@@ -58,7 +58,7 @@
 | Repo                           | Status        | Notes                                                                                                                                               |
 | ------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | market-data-processing-service | Partial       | Lint/Pyright/Tests PASS; Codex: empty fallbacks, imports inside functions, broad except, empty dict/list remain. CLI/Docker use --operation/--mode. |
-| pnl-attribution-service        | Fail (tests)  | ImportError UnifiedCloudConfig from unified_config_interface (dependency/export in UCI or UCS). CLI/Docker OK.                                      |
+| pnl-attribution-service        | Fail (tests)  | ImportError UnifiedCloudConfig from unified_config_interface (dependency/export in UCI or UTL). CLI/Docker OK.                                      |
 | features-calendar-service      | Not fully run | CLI has --operation/--mode; run full quality-gates and fix failures.                                                                                |
 | features-onchain-service       | **PASS**      | get_config fix, coverage + omit, tests.                                                                                                             |
 | ml-training-service            | **PASS**      | CLI defaults, coverage omit; path deps in place.                                                                                                    |
@@ -86,7 +86,7 @@
 
 | Repo                           | Status        | Notes                                                                                                                                                                                                                   |
 | ------------------------------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| pnl-attribution-service        | **PASS (CI)** | CI install order: UCI before UCS so UnifiedCloudConfig import works. Local use repo venv.                                                                                                                               |
+| pnl-attribution-service        | **PASS (CI)** | CI install order: UCI before UTL so UnifiedCloudConfig import works. Local use repo venv.                                                                                                                               |
 | market-data-processing-service | **Improved**  | Empty fallbacks and broad except fixed or bypassed; empty dict/list in constant maps may still be flagged.                                                                                                              |
 | features-calendar-service      | **Improved**  | E2E config (project_id), .gitignore, except, imports exclusions; CLI/Docker commented for deployment-v3.                                                                                                                |
 | strategy-service               | **PASS**      | print() removed; imports moved or whitelisted; quality-gates --no-fix --quick passes. Docker CMD uses --operation/--mode.                                                                                               |

@@ -12,11 +12,12 @@ Scripts to check and validate dependency alignment between pyproject.toml, works
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `generate-derived-manifest.py` | Extract internal + external deps from all pyproject.toml; output derived-dependency-manifest.json |
-| `check-dependency-alignment.py` | Compare derived vs workspace-manifest (internal) and canonical-dependency-manifest (external) |
-| `validate-dependency-conflicts.py` | Run uv pip compile to detect transitive conflicts in workspace-constraints.toml |
+| Script                                 | Purpose                                                                                            |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `generate-derived-manifest.py`         | Extract internal + external deps from all pyproject.toml; output derived-dependency-manifest.json  |
+| `check-dependency-alignment.py`        | Compare derived vs workspace-manifest (internal) and canonical-dependency-manifest (external)      |
+| `fix-internal-dependency-alignment.py` | Code-use scan: add deps where code imports; remove where not used. Use `--apply` to write changes. |
+| `validate-dependency-conflicts.py`     | Run uv pip compile to detect transitive conflicts in workspace-constraints.toml                    |
 
 ## Usage
 
@@ -28,6 +29,10 @@ python scripts/manifest/generate-derived-manifest.py
 python scripts/manifest/check-dependency-alignment.py
 python scripts/manifest/check-dependency-alignment.py --repo instruments-service
 python scripts/manifest/check-dependency-alignment.py --json
+
+# Fix internal alignment (code uses -> add; else remove)
+python scripts/manifest/fix-internal-dependency-alignment.py         # dry run
+python scripts/manifest/fix-internal-dependency-alignment.py --apply  # apply changes
 
 # Validate constraints resolve (no conflicts)
 python scripts/manifest/validate-dependency-conflicts.py

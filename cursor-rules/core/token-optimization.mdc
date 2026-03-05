@@ -38,7 +38,7 @@ SUB-AGENT POLICY:
 
 ## When to Launch Parallel Agents
 
-ALWAYS launch parallel agents (up to 4 per turn) for independent tasks — see parallel-agent-execution.mdc.
+ALWAYS launch parallel agents (up to 10 per turn) for independent tasks — see parallel-agent-execution.mdc.
 
 PARALLEL: cross-repo searches, doc/API research, multi-area code scans, large plan updates with distinct sections
 SEQUENTIAL: tasks with output dependencies, single-file edits, quick reads (use Read tool directly)

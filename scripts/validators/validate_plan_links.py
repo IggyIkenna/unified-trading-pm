@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Validate no broken relative links in plans/active/*.plan.md.
+
+Phase 0b: plans_to_deployable_unified_audit.plan.md
+GATE: no broken relative links in any active plans/active/ .plan.md file.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--plans-dir", type=Path, default=Path(__file__).resolve().parent.parent.parent / "plans" / "active"
+    )
+    parser.add_argument("--workspace-root", type=Path, default=Path(__file__).resolve().parent.parent.parent.parent)
+    args = parser.parse_args()
+
+    plans_dir = args.plans_dir.resolve()
+    ws_root = args.workspace_root.resolve()
+    if not plans_dir.is_dir():
+        print(f"Skip: {plans_dir} not found", file=sys.stderr)
+        return 0
+
+    broken: list[tuple[str, str]] = []
+    for path in plans_dir.glob("*.plan.md"):
+        content = path.read_text()
+        for m in re.finditer(r"\]\(([^)]+)\)", content):
+            link = m.group(1).strip()
+            if link.startswith("http") or link.startswith("#") or " " in link:
+                continue
+            if link.startswith(".cursor/") or link.startswith("deployment-service/"):
+                target = ws_root / link
+            elif "/" in link and not link.startswith("."):
+                target = ws_root / link.split("/")[0]
+            else:
+                target = (plans_dir / link).resolve()
+            if not target.exists():
+                broken.append((str(path.relative_to(plans_dir.parent)), link))
+
+    if broken:
+        for f, link in broken:
+            print(f"BROKEN: {f} -> {link}", file=sys.stderr)
+        return 1
+    print("OK: No broken links in plans/active/*.plan.md")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

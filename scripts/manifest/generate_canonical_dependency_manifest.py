@@ -169,7 +169,7 @@ def main() -> None:
 
     write_manifest_json(constraints)
     svg_content = generate_svg(constraints)
-    ET.fromstring(svg_content)
+    ET.fromstring(svg_content)  # nosec B314 — validates our own generated SVG, not untrusted input
     SVG_PATH.write_text(svg_content)
     print(f"Wrote {SVG_PATH}")
 

@@ -122,7 +122,7 @@ Use this to assign repos to **data**, **features**, **ml**, **trading**, **libra
 
 ### 3.9 workspace-infrastructure
 
-- No dependency-matrix repos; keep: .cursor, unified-trading-codex, unified-trading-deployment-v3, unified-trading-deployment-v3, alerting-service.
+- No legacy dependency-matrix repos (use workspace-manifest.json); keep: .cursor, unified-trading-codex, unified-trading-deployment-v3, unified-trading-deployment-v3, alerting-service.
 - No changes to repo names.
 
 ---
