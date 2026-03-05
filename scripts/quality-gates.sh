@@ -296,8 +296,8 @@ if [ "$RUN_LINT" = true ] && [ "$SKIP_TYPECHECK" != true ]; then
     else
         TYPECHECK_DIRS="${REPO_MODULE}/"
     fi
-    echo "Running: run_timeout 120 $BASEDPYRIGHT_CMD $TYPECHECK_DIRS"
-    if run_timeout 120 $BASEDPYRIGHT_CMD $TYPECHECK_DIRS 2>&1 | tee /tmp/pyright_qg.log; then
+    echo "Running: run_timeout 120 ${BASEDPYRIGHT_CMD:?basedpyright required} $TYPECHECK_DIRS"
+    if run_timeout 120 "${BASEDPYRIGHT_CMD:?basedpyright required}" $TYPECHECK_DIRS 2>&1 | tee /tmp/pyright_qg.log; then
         log_success "Type checking PASSED"
         PYRIGHT_STATUS=0
     else
