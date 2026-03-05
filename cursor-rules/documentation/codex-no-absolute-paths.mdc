@@ -6,6 +6,8 @@ alwaysApply: false
 
 # No Absolute Paths in Documentation
 
+CODEX: 13-codex-governance/SSOT-BOUNDARY.md
+
 **Rule:** All file paths in documentation in unified-trading-codex and unified-trading-pm must be workspace-relative. Absolute paths are never acceptable.
 
 ## Forbidden patterns

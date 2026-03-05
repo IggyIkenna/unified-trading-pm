@@ -1,0 +1,102 @@
+# Active Plans Index
+
+**Canonical workflow:** [plans_to_deployable_unified_audit.plan.md](plans_to_deployable_unified_audit.plan.md) (Plans → Code → Tested → Deployable)
+**Phase 0:** [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md) — Must complete before Phase 1
+**Phase 0 Audit Remediation:** [phase0_audit_remediation.plan.md](phase0_audit_remediation.plan.md) — Fixes all FAIL/WARN findings from 2026-03-04 audit; blocks Phase 1
+**Sprint end:** March 12th (plans + portable backtests) | **Live trading week:** March 20th
+**Per-repo checklist:** deployment-service/configs/ — runtime-topology, checklist phases 1–7
+
+---
+
+## 26 Canonical Plans (Execution Order)
+
+| #   | Plan                                                                                         | Day   | Scope                                          |
+| --- | -------------------------------------------------------------------------------------------- | ----- | ---------------------------------------------- |
+| 0   | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md)                 | 0     | All repos                                      |
+| 0a  | [phase0_audit_remediation.plan.md](phase0_audit_remediation.plan.md)                         | 0     | 13 FAIL + 16 WARN repos — audit-driven fixes   |
+| 1   | [plans_to_deployable_unified_audit.plan.md](plans_to_deployable_unified_audit.plan.md)       | 1     | PM, Codex, all                                 |
+| 2   | [aws_migration.plan.md](aws_migration.plan.md)                                               | 1–2   | All (early)                                    |
+| 3   | [dependency_governance.plan.md](dependency_governance.plan.md)                               | 1     | All repos — pyproject.toml / uv.lock alignment |
+| 4   | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md)                             | 2     | T0–T1, deployment                              |
+| 5   | [documentation_standards_enforcement.plan.md](documentation_standards_enforcement.plan.md)   | 2–3   | All service + library repos                    |
+| 6   | [citadel_grade_feature_architecture.plan.md](citadel_grade_feature_architecture.plan.md)     | 2–3   | UFC, FDS, ML                                   |
+| 7   | [multi_tf_cascade_signal_architecture.plan.md](multi_tf_cascade_signal_architecture.plan.md) | 2–3   | ML, features                                   |
+| 10  | [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md)               | 4     | Libraries                                      |
+| 11  | [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md)                 | 4–5   | UAC, UIC orphan schemas                        |
+| 11a | [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)                           | 4–5   | All 60+ Python repos — pytest collect-only     |
+| 12  | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) | 5–6   | Services, UIs                                  |
+| 13  | [master_pre_deployment_plan_chain.plan.md](master_pre_deployment_plan_chain.plan.md)         | 1 ref | Order chain                                    |
+| 14  | [workspace_quickmerge_validation.plan.md](workspace_quickmerge_validation.plan.md)           | 4     | All                                            |
+| 15  | [strict_basedpyright_compliance.plan.md](strict_basedpyright_compliance.plan.md)             | 5     | T0–T3, services                                |
+| 16  | [coding_standards_codex_audit.plan.md](coding_standards_codex_audit.plan.md)                 | 5     | All                                            |
+| 17  | [sports_migration_gap_fix.plan.md](sports_migration_gap_fix.plan.md)                         | 4–5   | Sports                                         |
+| 18  | [sports_migration_phase2_full.plan.md](sports_migration_phase2_full.plan.md)                 | 5–6   | Sports                                         |
+| 19  | [coverage_70_percent.plan.md](coverage_70_percent.plan.md)                                   | 6     | Tiers split                                    |
+| 20  | [unit_tests_and_test_failure_action.plan.md](unit_tests_and_test_failure_action.plan.md)     | 7     | All                                            |
+| 21  | [api_keys_and_auth.plan.md](api_keys_and_auth.plan.md)                                       | 6     | All, api-contracts                             |
+| 22  | [observability_and_health_endpoints.plan.md](observability_and_health_endpoints.plan.md)     | 6–7   | All API services + long-running services       |
+| 23  | [safety_and_risk_controls.plan.md](safety_and_risk_controls.plan.md)                         | 6–8   | execution-service, risk-and-exposure-service   |
+| 24  | [e2e_smoke_and_portable_backtests.plan.md](e2e_smoke_and_portable_backtests.plan.md)         | 8–9   | Integration, strategies                        |
+| 25  | [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md)                   | 11–12 | All                                            |
+
+---
+
+## Supporting Plans
+
+| Plan                                                                         | Description                                                               |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md) | Test and utilise orphan schemas. See CONTRACTS_SEPARATION_AUDIT.md        |
+| [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)           | Ensure all Python repos pass pytest --collect-only -q for audit readiness |
+
+---
+
+## Blockers
+
+Each blocker has a **type** label:
+
+- `[PLAN_TODO]` — blocked by a specific incomplete todo in another plan
+- `[EXTERNAL]` — requires external action (obtain API key, partner agreement, sign-up)
+- `[STUB]` — an implementation stub that must be fully built before this unblocks
+- `[INFRA]` — infrastructure/provisioning not yet done
+
+| Blocker                                                                                | Type                    | Affects                                                                                                                                                   | Specific Dependency                                                                                                                                                                                      | Resolution                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 0 gate not passed                                                                | `[PLAN_TODO]`           | All of Phase 1, 2, 3                                                                                                                                      | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md) § todo `p0-gate-check`                                                                                                      | All repos must pass all 5 checks (QG, basedpyright, os.getenv scan, Any scan, cloud-agnostic scan) + QUALITY_GATE_BYPASS_AUDIT.md up to date                                                                                  |
+| Phase 1 Stream A (A1) — quickmerge not rolled out to all 55 repos                      | `[PLAN_TODO]`           | phase2_library_tier_hardening, phase3_service_hardening_integration                                                                                       | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md) § todo `ci-quickmerge-rollout`                                                                                                          | 55 repos need scripts/quickmerge.sh + .github/workflows/version-bump.yml; nothing in Phase 2 starts until A1 complete                                                                                                         |
+| Phase 1 Stream A (A3) — CI/CD pipeline not wired                                       | `[PLAN_TODO]`           | phase2_library_tier_hardening                                                                                                                             | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md) § todo `ci-pipeline-wiring`                                                                                                             | dep-branch clone + Cloud Build feature trigger + GH Action version-bump must be live before Phase 2                                                                                                                           |
+| Phase 1 Stream B — deployment-service not extracted from unified-trading-deployment-v3 | `[PLAN_TODO]`           | phase3_service_hardening_integration (Layer 2 infra verify), e2e_smoke_and_portable_backtests                                                             | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md) § todo `arch-deployment-split`                                                                                                          | deployment-service/scripts/verify_infra.py does not exist until the four-way split is done; Layer 2 is impossible until then                                                                                                  |
+| Phase 1 Stream B — system-integration-tests repo not created                           | `[PLAN_TODO]`           | phase3_service_hardening_integration (Layer 3a/3b), e2e_smoke_and_portable_backtests                                                                      | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md) § todo `integration-system-tests-repo`                                                                                                  | Layer 3a smoke + Layer 3b full E2E run in this repo; repo must be created per new-repo-setup.md                                                                                                                               |
+| Phase 1 complete — Phase 2 blocked                                                     | `[PLAN_TODO]`           | phase2_library_tier_hardening                                                                                                                             | All of phase1_foundation_prep.plan.md Stream A todos (`ci-dag-validation`, `ci-quickmerge-rollout`, `ci-commit-msg-hooks`, `ci-pipeline-wiring`) must be complete                                        | Tier N-1 must be fully green before Tier N; Stream A is the hard blocker                                                                                                                                                      |
+| Phase 2 complete — Phase 3 blocked                                                     | `[PLAN_TODO]`           | phase3_service_hardening_integration                                                                                                                      | All library tiers (T0→T3) must pass D5 (full quickmerge with act simulation) — see [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md) § todo `t3-udc-progressive-validation` | Never touch service tiers until all library tiers green                                                                                                                                                                       |
+| API keys missing in SM — Phase 3 venues                                                | `[EXTERNAL]`            | api_keys_and_auth.plan.md (Phase 3), sports_migration_gap_fix, sports_migration_phase2_full, citadel_grade_feature_architecture (liquidation-levels todo) | [api_keys_and_auth.plan.md](api_keys_and_auth.plan.md) § todo `phase-3-keys`                                                                                                                             | pinnacle.com/affiliates, the-odds-api.com, api-football.com (RapidAPI), glassnode.com, arkhamintelligence.com, footystats.org — must obtain accounts/subscriptions and add secrets to GCP Secret Manager                      |
+| API keys missing in SM — Phase 4 venues                                                | `[EXTERNAL]`            | api_keys_and_auth.plan.md (Phase 4)                                                                                                                       | [api_keys_and_auth.plan.md](api_keys_and_auth.plan.md) § todo `phase-4-blockers`                                                                                                                         | betfair, kalshi, coinbase, smarkets, betdaq — may require partner agreements; some non-HTTP (WS/TWS) with no VCR strategy yet                                                                                                 |
+| IBKR key not in SM + TWS VCR strategy undefined                                        | `[EXTERNAL]` + `[STUB]` | api_keys_and_auth.plan.md Phase 2 WS, execution_services_hygiene_refactor                                                                                 | [api_keys_and_auth.plan.md](api_keys_and_auth.plan.md) § todo `phase-2-ws` (ibkr row)                                                                                                                    | TWS socket protocol — VCR not applicable; need mock TWS gateway design decision before cassettes possible                                                                                                                     |
+| RC-1: UFCL naming aliases not added to unified-feature-calculator-library              | `[STUB]`                | unit_tests_and_test_failure_action.plan.md (Phase 1 quick wins), features-calendar-service, features-onchain-service                                      | [unit_tests_and_test_failure_action.plan.md](unit_tests_and_test_failure_action.plan.md) § RC-1                                                                                                          | UFCL exports `FeatureCalculator` but services import `BaseFeatureCalculator`, `BaseFeatureService`, `FeatureCalculatorRegistry`; aliases must be added to UFCL `__init__.py` to unblock 9 collection errors + 7 test failures |
+| RC-2: DependencyChecker not implemented in ml-inference-service and execution-service  | `[STUB]`                | unit_tests_and_test_failure_action.plan.md (Phase 1 quick wins), ml-inference-service                                                                     | [unit_tests_and_test_failure_action.plan.md](unit_tests_and_test_failure_action.plan.md) § RC-2                                                                                                          | Tests expect `<service>.engine.validation.dependency_checker.DependencyChecker` but module was never implemented; must choose: implement in service, move to shared library, or delete planned-but-abandoned tests            |
+| Background agents fail on 30+ repos                                                    | `[STUB]`                | cicd/02-background-agents-setup                                                                                                                           | Root cause not yet determined; no active plan tracks this investigation                                                                                                                                  | Needs dedicated triage: check GH Actions logs for pattern; may be token expiry, rate limits, or repo permission issue                                                                                                         |
+| Phase 3 not complete — observability and safety plans blocked                          | `[PLAN_TODO]`           | observability_and_health_endpoints.plan.md, safety_and_risk_controls.plan.md                                                                              | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) § todo `p3-service-hardening`                                                                               | Service architecture must be clean before adding /readiness, Prometheus, circuit breakers, kill switch; avoid wiring safety controls into structurally broken services                                                        |
+| USEI v1 (Betfair + Pinnacle) not ready — sports circuit breaker blocked                | `[PLAN_TODO]`           | safety_and_risk_controls.plan.md § todo `risk-circuit-breaker` (sports path)                                                                              | [sports_migration_phase2_full.plan.md](sports_migration_phase2_full.plan.md) § todo `usei-adapters`                                                                                                      | Circuit breaker and kill switch for sports venue adapters cannot be tested until USEI v1 adapters exist; non-sports path can proceed                                                                                          |
+| MiFID/FCA event taxonomy not fully defined in lifecycle-events.md                      | `[STUB]`                | observability_and_health_endpoints.plan.md § todo `obs-compliance-events`                                                                                 | unified-trading-codex/03-observability/lifecycle-events.md — AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED must be listed as canonical event names                                                       | Compliance event audit cannot verify correct event_type usage until canonical names are defined in codex                                                                                                                      |
+
+---
+
+## Per-Repo Pre-Deployment Checklist
+
+SSOT: deployment-service/configs/
+
+- Checklist phases 1–7
+- runtime-topology.yaml
+- RUNTIME_TOPOLOGY_DECISIONS.md
+
+---
+
+## Archive Cross-Reference
+
+| Archived                                                                                       | Superseded by                                        |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| E2E_SMOKE_PLAN, PORTABLE_BACKTESTS_PLAN                                                        | E2E_SMOKE_AND_PORTABLE_BACKTESTS_PLAN                |
+| VCR_CREDENTIAL_RECORDING_PLAN                                                                  | api_keys_and_auth.plan.md                            |
+| UNIT_TESTS_ALL_PASSING_PLAN, TEST_FAILURE_ACTION_PLAN                                          | UNIT_TESTS_AND_TEST_FAILURE_ACTION_PLAN              |
+| TESTED_AND_DEPLOYABLE_GATE_CRITERIA                                                            | plans_to_deployable §§8–9                            |
+| unified-api-contracts-internal-contracts-combined-audit                                        | trading_system_audit_prompt.plan.md (AC/UIC section) |
+| ac_package_layout_refactor, feature_enrichment_reversal_dynamics, sports_migration_master_plan | See archive/README.md                                |

@@ -12,7 +12,7 @@ tags:
   - security
 ---
 # Quality Gates Audit Factors
-RULE: P1 blocking: no credential JSON in gitignore; test-project not central-element; no broad except Exception; no Any without audit. P2: 35% coverage; pip-audit; validators.
+RULE: P1 blocking: no credential JSON in gitignore; test-project not central-element; no broad except Exception; no Any without audit. P2: 70% coverage; pip-audit; validators.
 WHY: Audit readiness; only QUALITY_GATE_BYPASS_AUDIT.md exceptions may pass.
 CODEX: 06-coding-standards/quality-gates.md, QUALITY_GATE_BYPASS_AUDIT.md
 DO: Use @handle_api_errors; Protocol/TypedDict; *credentials*.json in gitignore; test-project in tests

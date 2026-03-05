@@ -19,17 +19,9 @@ import argparse
 import json
 import re
 import sys
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-
-try:
-    import tomllib
-except ImportError:
-    try:
-        import tomli as tomllib  # type: ignore[no-reuse-def]
-    except ImportError:
-        print("ERROR: Python 3.11+ required (tomllib) or install tomli: uv pip install tomli")
-        sys.exit(1)
 
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet

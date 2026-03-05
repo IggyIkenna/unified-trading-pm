@@ -35,7 +35,8 @@
 #    4. Create .venv if missing or version mismatch (uv venv)
 #    5. Activate .venv (source .venv/bin/activate)
 #    6. Run uv lock if pyproject.toml changed (skipped if uv.lock is current)
-#    7. Install local path dependencies from .dependency-matrix.json
+#    7. Install local path dependencies from workspace-manifest.json (SSOT)
+#       Reads unified-trading-pm/workspace-manifest.json; installs sibling repos
 #       Installs jq automatically (apt/brew) if needed; exits 1 if jq unavailable
 #    8. Install project + dev deps (uv pip install -e ".[dev]")
 #    9. Verify ripgrep available (required by quality-gates.sh) — always runs
@@ -347,12 +348,14 @@ fi
 # ── [7] LOCAL PATH DEPENDENCIES ─────────────────────────────────────────────
 log_step "Local path dependencies"
 
+MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+
 if [ "$IN_CI" = true ] || [ "$CHECK_ONLY" = true ]; then
     log_skip "CI/check mode"
-elif [ ! -f ".dependency-matrix.json" ]; then
-    log_skip "No .dependency-matrix.json"
+elif [ ! -f "$MANIFEST_PATH" ]; then
+    log_skip "No workspace-manifest.json at $MANIFEST_PATH"
 else
-    # jq is required to parse .dependency-matrix.json — install if missing
+    # jq is required to parse workspace-manifest.json — install if missing
     if ! command -v jq &>/dev/null; then
         log_warn "jq not found — attempting install..."
         if command -v apt-get &>/dev/null; then
@@ -366,28 +369,26 @@ else
         fi
     fi
 
+    DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?.name // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
+
     if [ "$ISOLATED" = true ]; then
         log_skip "Isolated mode — skipping workspace path deps"
-        DEPS=$(jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
         if [ -n "$DEPS" ]; then
             log_warn "This repo depends on: $DEPS"
             log_warn "In isolated mode, install them from Artifact Registry (uv pip install <dep>)"
             log_warn "Some tests requiring these deps will fail — this is expected"
         fi
+    elif [ -n "$DEPS" ]; then
+        for dep in $DEPS; do
+            DEP_PATH="$WORKSPACE_ROOT/$dep"
+            if [ -d "$DEP_PATH" ] && [ -f "$DEP_PATH/pyproject.toml" ]; then
+                uv pip install -e "$DEP_PATH" --quiet 2>/dev/null && log_ok "$dep" || log_warn "$dep install failed"
+            else
+                log_warn "$dep not found at $DEP_PATH — install from Artifact Registry if needed"
+            fi
+        done
     else
-        DEPS=$(jq -r '.dependencies[].name' .dependency-matrix.json 2>/dev/null || echo "")
-        if [ -n "$DEPS" ]; then
-            for dep in $DEPS; do
-                DEP_PATH="$WORKSPACE_ROOT/$dep"
-                if [ -d "$DEP_PATH" ] && [ -f "$DEP_PATH/pyproject.toml" ]; then
-                    uv pip install -e "$DEP_PATH" --quiet 2>/dev/null && log_ok "$dep" || log_warn "$dep install failed"
-                else
-                    log_warn "$dep not found at $DEP_PATH — install from Artifact Registry if needed"
-                fi
-            done
-        else
-            log_skip "No dependencies listed in .dependency-matrix.json"
-        fi
+        log_skip "No dependencies for $REPO_NAME in workspace-manifest.json"
     fi
 fi
 
@@ -443,6 +444,22 @@ else
 fi
 
 # ── [11] IMPORT SMOKE TEST ─────────────────────────────────────────────────
+log_step "pytest deps (required by quality-gates.sh)"
+if [ -d "tests" ]; then
+  PY_CMD="${PYTHON_CMD:-python3}"
+  [ -f ".venv/bin/python" ] && PY_CMD=".venv/bin/python"
+  for mod in pytest pytest_cov pytest_timeout xdist; do
+    if $PY_CMD -c "import $mod" 2>/dev/null; then
+      log_ok "$mod"
+    else
+      log_fail "$mod not found — add to pyproject.toml [project.optional-dependencies] dev: pytest, pytest-cov, pytest-xdist, pytest-timeout"
+      ISSUES=$((ISSUES + 1))
+    fi
+  done
+else
+  log_skip "No tests/ — pytest deps optional"
+fi
+
 log_step "Import smoke test"
 
 if [ -n "$PACKAGE_NAME" ]; then

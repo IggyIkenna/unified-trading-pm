@@ -1,22 +1,61 @@
 {
   "folders": [
-    {"path": "../../.cursor", "name": "⚙️ Cursor Config"},
-    {"path": "../../.github", "name": "🔀 GitHub / CI"},
-    {"path": "../../.venv-workspace", "name": "🐍 Venv"},
-    {"path": "../../unified-trading-codex", "name": "📚 Codex (Docs)"},
-    {"path": "../../unified-trading-deployment-v3", "name": "🚀 Deployment v3"},
-    {"path": "../../unified-trading-services", "name": "☁️ Cloud Services"},
-    {"path": "../../unified-events-interface", "name": "📡 Events"},
-    {"path": "../../unified-config-interface", "name": "⚙️ Config"},
-    {"path": "../../unified-domain-client", "name": "📦 Domain Services"},
-    {"path": "../../unified-market-interface", "name": "📊 Market Interface"},
-    {"path": "../../api-contracts", "name": "📜 API Contracts"},
-    {"path": "../../instruments-service"},
-    {"path": "../../market-tick-data-handler"},
-    {"path": "../../market-data-processing-service"}
+    {
+      "path": "../..",
+      "name": "\ud83d\udcc1 Workspace Root"
+    },
+    {
+      "path": "../../.cursor",
+      "name": "\u2699\ufe0f Cursor Config"
+    },
+    {
+      "path": "../../.venv-workspace",
+      "name": "\ud83d\udc0d Venv"
+    },
+    {
+      "path": "../../unified-trading-codex",
+      "name": "\ud83d\udcda Codex"
+    },
+    {
+      "path": "../../unified-trading-pm",
+      "name": "\ud83d\udccb PM"
+    },
+    {
+      "path": "../../instruments-service"
+    },
+    {
+      "path": "../../market-data-api"
+    },
+    {
+      "path": "../../market-data-processing-service"
+    },
+    {
+      "path": "../../market-tick-data-service"
+    },
+    {
+      "path": "../../features-calendar-service"
+    },
+    {
+      "path": "../../features-cross-instrument-service"
+    },
+    {
+      "path": "../../features-delta-one-service"
+    },
+    {
+      "path": "../../features-multi-timeframe-service"
+    },
+    {
+      "path": "../../features-onchain-service"
+    },
+    {
+      "path": "../../features-sports-service"
+    },
+    {
+      "path": "../../features-volatility-service"
+    }
   ],
   "settings": {
-    "python.defaultInterpreterPath": "/Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
     "python.terminal.activateEnvironment": true,
     "python.envFile": "${workspaceFolder}/.env",
     "cursorpyright.analysis.typeCheckingMode": "strict",
@@ -26,16 +65,130 @@
     "cursorpyright.analysis.indexing": true,
     "cursorpyright.analysis.inlayHints.variableTypes": true,
     "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
+    "cursorpyright.analysis.reportAny": "error",
+    "cursorpyright.analysis.reportUnknownMemberType": "error",
+    "cursorpyright.analysis.reportUnknownVariableType": "error",
     "cursorpyright.analysis.extraPaths": [
-      "${workspaceFolder}/unified-trading-services",
-      "${workspaceFolder}/unified-events-interface",
-      "${workspaceFolder}/unified-config-interface",
-      "${workspaceFolder}/unified-domain-client",
-      "${workspaceFolder}/unified-market-interface",
-      "${workspaceFolder}/api-contracts",
+      "${workspaceFolder}/alerting-service",
+      "${workspaceFolder}/batch-audit-ui",
+      "${workspaceFolder}/client-reporting-api",
+      "${workspaceFolder}/client-reporting-ui",
+      "${workspaceFolder}/deployment-api",
+      "${workspaceFolder}/deployment-service",
+      "${workspaceFolder}/deployment-ui",
+      "${workspaceFolder}/execution-algo-library",
+      "${workspaceFolder}/execution-analytics-ui",
+      "${workspaceFolder}/execution-results-api",
+      "${workspaceFolder}/execution-service",
+      "${workspaceFolder}/execution-visualizer-ui",
+      "${workspaceFolder}/features-calendar-service",
+      "${workspaceFolder}/features-cross-instrument-service",
+      "${workspaceFolder}/features-delta-one-service",
+      "${workspaceFolder}/features-multi-timeframe-service",
+      "${workspaceFolder}/features-onchain-service",
+      "${workspaceFolder}/features-sports-service",
+      "${workspaceFolder}/features-volatility-service",
+      "${workspaceFolder}/ibkr-gateway-infra",
       "${workspaceFolder}/instruments-service",
-      "${workspaceFolder}/market-tick-data-handler",
-      "${workspaceFolder}/market-data-processing-service"
+      "${workspaceFolder}/live-health-monitor-ui",
+      "${workspaceFolder}/logs-dashboard-ui",
+      "${workspaceFolder}/market-data-api",
+      "${workspaceFolder}/market-data-processing-service",
+      "${workspaceFolder}/market-tick-data-service",
+      "${workspaceFolder}/matching-engine-library",
+      "${workspaceFolder}/ml-inference-service",
+      "${workspaceFolder}/ml-training-service",
+      "${workspaceFolder}/ml-training-ui",
+      "${workspaceFolder}/onboarding-ui",
+      "${workspaceFolder}/pnl-attribution-service",
+      "${workspaceFolder}/position-balance-monitor-service",
+      "${workspaceFolder}/risk-and-exposure-service",
+      "${workspaceFolder}/settlement-ui",
+      "${workspaceFolder}/strategy-service",
+      "${workspaceFolder}/strategy-ui",
+      "${workspaceFolder}/strategy-validation-service",
+      "${workspaceFolder}/system-integration-tests",
+      "${workspaceFolder}/trading-analytics-ui",
+      "${workspaceFolder}/unified-api-contracts",
+      "${workspaceFolder}/unified-cloud-interface",
+      "${workspaceFolder}/unified-config-interface",
+      "${workspaceFolder}/unified-defi-execution-interface",
+      "${workspaceFolder}/unified-domain-client",
+      "${workspaceFolder}/unified-events-interface",
+      "${workspaceFolder}/unified-feature-calculator-library",
+      "${workspaceFolder}/unified-internal-contracts",
+      "${workspaceFolder}/unified-market-interface",
+      "${workspaceFolder}/unified-ml-interface",
+      "${workspaceFolder}/unified-position-interface",
+      "${workspaceFolder}/unified-reference-data-interface",
+      "${workspaceFolder}/unified-sports-execution-interface",
+      "${workspaceFolder}/unified-trade-execution-interface",
+      "${workspaceFolder}/unified-trading-codex",
+      "${workspaceFolder}/unified-trading-deployment-v3",
+      "${workspaceFolder}/unified-trading-library",
+      "${workspaceFolder}/unified-trading-pm",
+      "${workspaceFolder}/unified-trading-ui-auth"
+    ],
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/alerting-service",
+      "${workspaceFolder}/batch-audit-ui",
+      "${workspaceFolder}/client-reporting-api",
+      "${workspaceFolder}/client-reporting-ui",
+      "${workspaceFolder}/deployment-api",
+      "${workspaceFolder}/deployment-service",
+      "${workspaceFolder}/deployment-ui",
+      "${workspaceFolder}/execution-algo-library",
+      "${workspaceFolder}/execution-analytics-ui",
+      "${workspaceFolder}/execution-results-api",
+      "${workspaceFolder}/execution-service",
+      "${workspaceFolder}/execution-visualizer-ui",
+      "${workspaceFolder}/features-calendar-service",
+      "${workspaceFolder}/features-cross-instrument-service",
+      "${workspaceFolder}/features-delta-one-service",
+      "${workspaceFolder}/features-multi-timeframe-service",
+      "${workspaceFolder}/features-onchain-service",
+      "${workspaceFolder}/features-sports-service",
+      "${workspaceFolder}/features-volatility-service",
+      "${workspaceFolder}/ibkr-gateway-infra",
+      "${workspaceFolder}/instruments-service",
+      "${workspaceFolder}/live-health-monitor-ui",
+      "${workspaceFolder}/logs-dashboard-ui",
+      "${workspaceFolder}/market-data-api",
+      "${workspaceFolder}/market-data-processing-service",
+      "${workspaceFolder}/market-tick-data-service",
+      "${workspaceFolder}/matching-engine-library",
+      "${workspaceFolder}/ml-inference-service",
+      "${workspaceFolder}/ml-training-service",
+      "${workspaceFolder}/ml-training-ui",
+      "${workspaceFolder}/onboarding-ui",
+      "${workspaceFolder}/pnl-attribution-service",
+      "${workspaceFolder}/position-balance-monitor-service",
+      "${workspaceFolder}/risk-and-exposure-service",
+      "${workspaceFolder}/settlement-ui",
+      "${workspaceFolder}/strategy-service",
+      "${workspaceFolder}/strategy-ui",
+      "${workspaceFolder}/strategy-validation-service",
+      "${workspaceFolder}/system-integration-tests",
+      "${workspaceFolder}/trading-analytics-ui",
+      "${workspaceFolder}/unified-api-contracts",
+      "${workspaceFolder}/unified-cloud-interface",
+      "${workspaceFolder}/unified-config-interface",
+      "${workspaceFolder}/unified-defi-execution-interface",
+      "${workspaceFolder}/unified-domain-client",
+      "${workspaceFolder}/unified-events-interface",
+      "${workspaceFolder}/unified-feature-calculator-library",
+      "${workspaceFolder}/unified-internal-contracts",
+      "${workspaceFolder}/unified-market-interface",
+      "${workspaceFolder}/unified-ml-interface",
+      "${workspaceFolder}/unified-position-interface",
+      "${workspaceFolder}/unified-reference-data-interface",
+      "${workspaceFolder}/unified-sports-execution-interface",
+      "${workspaceFolder}/unified-trade-execution-interface",
+      "${workspaceFolder}/unified-trading-codex",
+      "${workspaceFolder}/unified-trading-deployment-v3",
+      "${workspaceFolder}/unified-trading-library",
+      "${workspaceFolder}/unified-trading-pm",
+      "${workspaceFolder}/unified-trading-ui-auth"
     ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
@@ -60,12 +213,19 @@
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lint.select": [
+      "E",
+      "F",
+      "W",
+      "I"
+    ],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
-    "ruff.path": [
-      "/Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos/.venv-workspace/bin/ruff"
+    "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
+    "ruff.format.args": [
+      "--line-length",
+      "120"
     ],
     "files.exclude": {
       "**/__pycache__": true,
@@ -93,7 +253,9 @@
       "**/.venv": true,
       "**/uv.lock": false
     },
-    "editor.rulers": [100],
+    "editor.rulers": [
+      100
+    ],
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,

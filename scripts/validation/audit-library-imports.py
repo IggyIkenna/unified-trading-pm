@@ -164,7 +164,7 @@ class ImportAuditor(ast.NodeVisitor):
                     {
                         "method": ".bucket()",
                         "file": self.file_path,
-                        "line": node.lineno,
+                        "line": str(node.lineno),
                         "context": "StorageClient has no .bucket() method (GCP-specific)",
                     }
                 )

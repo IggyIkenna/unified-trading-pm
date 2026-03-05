@@ -20,6 +20,7 @@ PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
 MANIFEST="$PM_ROOT/workspace-manifest.json"
 
+
 GITIGNORE_BLOCK='
 # Heavy/build artifacts (sync-all-to-main)
 .coverage
@@ -60,6 +61,7 @@ skip=0
 
 for repo in "${REPOS[@]}"; do
   dir="$WORKSPACE_ROOT/$repo"
+
   [[ "$repo" = "execution-visualizer-ui" ]] && dir="$WORKSPACE_ROOT/execution-analytics-ui"
   [[ ! -d "$dir" ]] && echo "  (skip) $repo — not in workspace" && ((skip++)) && continue
   [[ ! -d "$dir/.git" ]] && echo "  (skip) $repo — not a git repo" && ((skip++)) && continue

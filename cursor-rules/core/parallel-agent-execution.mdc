@@ -7,7 +7,7 @@ tags: [agents, parallelization]
 
 # Parallel Agent Execution
 
-RULE: When user requests multiple tasks that don't share files, automatically launch parallel agents (max 4). Different repos = always safe to parallelize.
+RULE: When user requests multiple tasks that don't share files, automatically launch parallel agents (max 10). Different repos = always safe to parallelize.
 WHY: 30+ repo workspace — cross-repo operations are ideal for parallel agents; zero file conflict risk.
 CODEX: 06-coding-standards/sub-agent-workflow.md
 
