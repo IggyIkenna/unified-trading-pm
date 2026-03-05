@@ -126,7 +126,13 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
-      "dependencies": [],
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
+        }
+      ],
       "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
       "status": "active",
       "notes": "Internal message schemas, topic names, request/response/error contracts. NO cloud SDKs.",
@@ -244,7 +250,23 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
       "cloud_build_trigger": "unified-trading-library-build",
       "status": "active",
-      "dependencies": [],
+      "dependencies": [
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.3,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        }
+      ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 70,
@@ -644,6 +666,11 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -767,11 +794,6 @@
         },
         {
           "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "features-calendar-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
