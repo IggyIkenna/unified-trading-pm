@@ -92,7 +92,7 @@
     "deployment-ui": "0.1.0",
     "system-integration-tests": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
-    "unified-trading-pm": "1.0.1",
+    "unified-trading-pm": "1.1.0",
     "unified-trading-codex": "0.1.0",
     "execution-service": "0.1.0",
     "unified-trading-ui-auth": "0.1.0"
