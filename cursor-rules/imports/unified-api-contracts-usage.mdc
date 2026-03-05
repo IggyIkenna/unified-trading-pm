@@ -16,8 +16,10 @@ CODEX: unified-trading-codex/02-data/contracts-scope-and-layout.md
 ## When to Use unified-api-contracts
 
 1. **External API response parsing** — Use unified-api-contracts Pydantic schemas wherever code parses raw responses from Databento, Tardis, CCXT, The Graph, OKX, Bybit, Upbit, Yahoo Finance, Alchemy, Hyperliquid, Aster, IBKR, etc. Validate or parse with the contract schema, then map to internal/canonical types.
-2. **Tests** — Use VCR cassettes from `unified-api-contracts/<venue>/mocks/` when testing code that calls those APIs. Prefer cassettes over live calls or heavy mocks for deterministic, fast tests.
-3. **New venues or endpoint types** — Add schemas (and optionally examples and mocks) in the unified-api-contracts repo before or with the adapter implementation. Do not add fallbacks or duplicate contract logic in services.
+2. **Normalization (mandatory)** — After `model_validate()` at the API boundary, map to canonical types via UAC normalizers. Interfaces must return canonical types only — never raw. Scope: all response types (trades, orderbooks, orders, fills, tickers, positions, balances, liquidations, funding, OHLCV, market info, errors, WebSocket, sports, alt data).
+3. **Domain split** — Prefer canonical with optional fields; use sub-types only when structures are incompatible; group by instruction type (TRADE, SWAP, LEND, BORROW, etc.).
+4. **Tests** — Use VCR cassettes from `unified-api-contracts/<venue>/mocks/` when testing code that calls those APIs. Prefer cassettes over live calls or heavy mocks for deterministic, fast tests.
+5. **New venues or endpoint types** — Add schemas (and optionally examples and mocks) in the unified-api-contracts repo before or with the adapter implementation. Do not add fallbacks or duplicate contract logic in services.
 
 ---
 
@@ -50,6 +52,7 @@ When an adapter consumes an external API that does NOT have a schema in unified-
 
 ## Related
 
+- Schema normalization completion plan; codex 02-data/contracts-scope-and-layout.md § Normalization ideology.
 - `.cursor/rules/no-type-any-use-specific.mdc` — Use specific types (contract schemas) instead of `Any` for API responses. Includes typed response model pattern.
 - `.cursor/rules/contracts-integration.mdc` — Typed response models at API boundaries.
 - `.cursor/rules/path-dependency-ci.mdc` — Checkout and install path deps in CI.

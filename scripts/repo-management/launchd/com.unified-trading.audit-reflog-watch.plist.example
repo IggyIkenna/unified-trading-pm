@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.unified-trading.audit-reflog-watch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>WORKSPACE_ROOT_PLACEHOLDER/unified-trading-pm/scripts/repo-management/watch-and-audit-reflog.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>WORKSPACE_ROOT_PLACEHOLDER</string>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/audit-reflog-watch.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/audit-reflog-watch.log</string>
+</dict>
+</plist>
