@@ -27,7 +27,7 @@ todos:
     content: "STEP A3 — CI/CD PIPELINE [3 agents PARALLEL, after A2]: ci-github-actions-dep-branch-clone (${DEP_BRANCH:-main} + git ls-remote fallback in all quality-gates.yml); ci-cloud-build-feature-branch-trigger + ci-cloud-build-feature-version-inject; ci-auto-version-bump-github-action (GH Action bumps version on main merge from commit prefix). Then after Stream B: ci-temp-manifest-schema."
     status: pending
   - id: arch-visualizer-extract
-    content: "ACTIVE VIOLATION: Extract execution-service embedded UI/API: (1) execution-service/visualizer-ui/ → new repo execution-visualizer-ui; (2) execution-service/visualizer-api/ → merge into execution-results-api or new execution-visualizer-api repo; (3) delete both dirs from execution-service; (4) update cloudbuild.yaml. Task: arch-exec-services-visualizer-extract."
+    content: "ACTIVE VIOLATION: Extract execution-service embedded UI/API: (1) execution-service/visualizer-ui/ → new repo execution-analytics-ui; (2) execution-service/visualizer-api/ → merge into execution-results-api or new execution-visualizer-api repo; (3) delete both dirs from execution-service; (4) update cloudbuild.yaml. Task: arch-exec-services-visualizer-extract."
     status: pending
   - id: arch-deployment-split
     content: "Split unified-trading-deployment-v3 into 4 repos: (1) deployment-service/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract; (2) deployment-api/ — thin FastAPI, imports deployment-service, GoogleOAuthMiddleware on write endpoints, port 8001; (3) deployment-ui/ — React UI calling deployment-api, OAuth ADMIN scope, SSE for status (scaffolded already); (4) system-integration-tests/ — NEW repo (per new-repo-setup.md), Layer 3a + 3b. Layer 2 (infra verification) lives in deployment-service/scripts/verify_infra.py. Tasks: deployment-v3-four-way-split, arch-deployment-v3-ui-extract."
@@ -270,7 +270,7 @@ Three parallel sub-tasks:
 
 Steps:
 
-1. `execution-service/visualizer-ui/` → new repo `execution-visualizer-ui`
+1. `execution-service/visualizer-ui/` → new repo `execution-analytics-ui`
 2. `execution-service/visualizer-api/` → merge into `execution-results-api` OR new `execution-visualizer-api`
 3. Delete both dirs from `execution-service`
 4. Update `execution-service/cloudbuild.yaml`

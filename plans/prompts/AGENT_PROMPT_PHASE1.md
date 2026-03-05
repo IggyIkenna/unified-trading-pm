@@ -152,7 +152,7 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 
 All items in Stream B are independent — run them in parallel:
 
-1. **arch-visualizer-extract** — Extract `execution-service/visualizer-ui/` → `execution-visualizer-ui` repo; `execution-service/visualizer-api/` → `execution-results-api`. Delete both from `execution-service`. Update `cloudbuild.yaml`.
+1. **arch-visualizer-extract** — Extract `execution-service/visualizer-ui/` → `execution-analytics-ui` repo; `execution-service/visualizer-api/` → `execution-results-api`. Delete both from `execution-service`. Update `cloudbuild.yaml`.
 2. **arch-deployment-split** — Split `unified-trading-deployment-v3` → `deployment-service` + `deployment-api` + `deployment-ui` + `system-integration-tests`. Pre-split: fix `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP first.
 3. **arch-ui-audit-full** — Find embedded UI artifacts (`ui/`, `frontend/`, `*.tsx`, `*.jsx`, `package.json`) in all service repos. Fix every violation.
 4. **integration-system-tests-repo** — Create `system-integration-tests` repo per `unified-trading-pm/docs/new-repo-setup.md`

@@ -6,7 +6,7 @@ Four parallel audits identified 6 major work streams needed to bring the workspa
 manifest hygiene, QG fixes, the UTL big rename, unified-cloud-services elimination,
 deployment v3 four-way split completion, and service dependency corrections.
 
-**Workspace size:** 60 repos (was 58 — added execution-visualizer-ui and unified-trading-ui-auth)
+**Workspace size:** 60 repos (was 58 — added execution-analytics-ui and unified-trading-ui-auth)
 
 **Success criteria:**
 
@@ -28,7 +28,7 @@ All changes applied to `unified-trading-pm/workspace-manifest.json`:
 | ---- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 0.1  | Add `status: "active"` to 35 repos                  | DONE                                                                         |
 | 0.2  | Fix `deployment-service` entry (folder_name)        | DONE (removed after Phase 1 rename)                                          |
-| 0.3  | Add 3 missing repos to manifest                     | DONE — execution-visualizer-ui, unified-trading-ui-auth added. Now 60 repos. |
+| 0.3  | Add 3 missing repos to manifest                     | DONE — execution-analytics-ui, unified-trading-ui-auth added. Now 60 repos. |
 | 0.4  | Normalize `"SCAFFOLDED"` → `"scaffolded"`           | DONE                                                                         |
 | 0.5  | Add missing metadata to 6 repos                     | DONE                                                                         |
 | 0.6  | Normalize dependency format                         | DONE                                                                         |
@@ -110,12 +110,12 @@ All steps completed:
 
 - features-delta-one-service `batch_handler.py`: removed try/except fallback, replaced with direct imports
 - unified-config-interface `loaders.py`: removed try/except around log_event call
-- execution-visualizer-ui: already clean (no changes needed)
+- execution-analytics-ui: already clean (no changes needed)
 
 ### 3d: UI package.json name fixes — DONE
 
 - execution-analytics-ui: `backtest-ui` → `execution-analytics-ui`
-- execution-visualizer-ui: `backtest-visualizer-ui` → `execution-visualizer-ui`
+- execution-analytics-ui: `backtest-visualizer-ui` → `execution-analytics-ui`
 - ml-training-ui: `ml-deployment-ui` → `ml-training-ui`
 
 ---
@@ -211,7 +211,7 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 2. client-reporting-ui
 3. deployment-ui
 4. execution-analytics-ui
-5. execution-visualizer-ui
+5. execution-analytics-ui
 6. live-health-monitor-ui
 7. logs-dashboard-ui
 8. ml-training-ui
@@ -225,12 +225,12 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 
 | Gap                          | Repos Fixed                                                                                                                                                                                   |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vitest added                 | batch-audit-ui, client-reporting-ui, execution-analytics-ui, execution-visualizer-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos) |
+| Vitest added                 | batch-audit-ui, client-reporting-ui, execution-analytics-ui, execution-analytics-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos) |
 | Playwright added             | deployment-ui, strategy-ui, unified-trading-ui-auth (3 repos)                                                                                                                                 |
-| ESLint added                 | execution-visualizer-ui, unified-trading-ui-auth (2 repos)                                                                                                                                    |
-| Prettier added               | batch-audit-ui, client-reporting-ui, deployment-ui, execution-visualizer-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos)          |
-| TypeScript strict            | execution-visualizer-ui (`strict: false` → `strict: true`)                                                                                                                                    |
-| .eslintrc.cjs created        | execution-visualizer-ui, unified-trading-ui-auth                                                                                                                                              |
+| ESLint added                 | execution-analytics-ui, unified-trading-ui-auth (2 repos)                                                                                                                                    |
+| Prettier added               | batch-audit-ui, client-reporting-ui, deployment-ui, execution-analytics-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos)          |
+| TypeScript strict            | execution-analytics-ui (`strict: false` → `strict: true`)                                                                                                                                    |
+| .eslintrc.cjs created        | execution-analytics-ui, unified-trading-ui-auth                                                                                                                                              |
 | playwright.config.ts created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                           |
 | Smoke test scaffolds created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                           |
 
@@ -280,13 +280,13 @@ rg "unified-cloud-services|unified-domain-services|api-contracts" --glob '*/pypr
 # Expected: zero results
 
 # UI repos: verify all have TS QG script
-for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui execution-visualizer-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
+for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
     grep -q "QUALITY GATES (UI)" "$repo/scripts/quality-gates.sh" && echo "$repo: OK" || echo "$repo: MISSING"
 done
 # Expected: all OK
 
 # UI repos: verify full tooling
-for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui execution-visualizer-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
+for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
     ok=true
     grep -q '"@playwright/test"' "$repo/package.json" || ok=false
     grep -q '"eslint"' "$repo/package.json" || ok=false
