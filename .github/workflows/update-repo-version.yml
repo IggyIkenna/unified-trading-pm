@@ -1,0 +1,63 @@
+name: update-repo-version
+
+# Receives repository_dispatch from individual repos after their version-bump.
+# Updates workspace-manifest.json versions map with the new version.
+# Triggered by: version-bump workflows in library/service repos.
+# Requires: PM_DISPATCH_TOKEN secret in the dispatching repo (PAT with repo scope).
+
+on:
+  repository_dispatch:
+    types: [version-bump]
+
+permissions:
+  contents: write
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Update workspace-manifest.json
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          VERSION="${{ github.event.client_payload.version }}"
+
+          if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
+            echo "Missing repo or version in client_payload. Skipping."
+            exit 0
+          fi
+
+          echo "Updating workspace-manifest.json: $REPO → $VERSION"
+
+          # Update the version entry if it exists
+          if grep -q "\"${REPO}\"" workspace-manifest.json; then
+            sed -i "s/\"${REPO}\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"${REPO}\": \"${VERSION}\"/" workspace-manifest.json
+            echo "Updated $REPO to $VERSION"
+          else
+            echo "Repo $REPO not found in workspace-manifest.json versions — skipping."
+            exit 0
+          fi
+
+          echo "REPO=$REPO" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No changes to workspace-manifest.json. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): update ${{ env.REPO }} to ${{ env.VERSION }} [skip ci]"
+          git push
