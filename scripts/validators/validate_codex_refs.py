@@ -34,6 +34,15 @@ NON_CODEX_PREFIXES = (
 )
 
 
+def _clean_path(p: str) -> str:
+    p = p.split("#")[0].strip().strip("'`")
+    p = re.sub(r"\s*\(§[^)]*\)\s*$", "", p)
+    p = re.sub(r"\s*\(§.*", "", p)  # unclosed (§
+    p = re.sub(r"\. See also:.*$", "", p)
+    p = re.sub(r"\s*\(SSOT\)\s*$", "", p)
+    return p.strip()
+
+
 def extract_codex_paths(text: str) -> list[str]:
     paths: list[str] = []
     for pat in CODEX_PATTERNS:
@@ -50,10 +59,11 @@ def extract_codex_paths(text: str) -> list[str]:
                         part = None
                         break
                 if part:
-                    part = part.split("#")[0].strip()
+                    part = _clean_path(part)
                     if part.startswith("unified-trading-codex/"):
                         part = part[len("unified-trading-codex/"):]
-                    paths.append(part)
+                    if part:
+                        paths.append(part)
     return paths
 
 
@@ -101,7 +111,10 @@ def main() -> int:
         with open(manifest_path) as f:
             manifest = json.load(f)
         for name, meta in manifest.get("repositories", {}).items():
-            tier = str(meta.get("arch_tier", ""))
+            arch_tier = meta.get("arch_tier")
+            if arch_tier is None:
+                continue
+            tier = str(arch_tier)
             if tier not in ("0", "1", "2"):
                 continue
             repo_path = ws_root / name
@@ -124,12 +137,14 @@ def main() -> int:
                     continue
                 try:
                     content = fpath.read_text()
-                except Exception:
+                except OSError:
                     continue
                 rel = fpath.relative_to(ws_root)
                 for i, line in enumerate(content.splitlines(), 1):
                     for path_str in extract_codex_paths(line):
                         if not path_str or any(path_str.startswith(p) for p in NON_CODEX_PREFIXES):
+                            continue
+                        if "/" not in path_str and not path_str.endswith(".md") and not path_str.endswith(".sh"):
                             continue
                         resolved = resolve_codex_path(path_str, codex_root)
                         if resolved is None:
