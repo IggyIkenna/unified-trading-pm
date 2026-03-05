@@ -48,6 +48,7 @@ DEP_BRANCH=""
 SKIP_TESTS=""
 SKIP_TYPECHECK=""
 QUICK=false
+NO_PR=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -69,6 +70,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --quick)
       QUICK=true
+      shift
+      ;;
+    --no-pr)
+      NO_PR=true
+      shift
+      ;;
+    --unit-only)
+      QUICK=true
+      NO_PR=true
       shift
       ;;
     *)
@@ -107,9 +117,9 @@ if [ -f "pyproject.toml" ]; then
   uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || true
 fi
 
-# ── EARLY EXIT: nothing to commit ─────────────────────────────────────────────
+# ── EARLY EXIT: nothing to commit (skip when --no-pr) ─────────────────────────────────────────────
 git fetch origin main --quiet 2>/dev/null || true
-if [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
+if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
   echo "[$REPO_NAME] Nothing to commit — exiting fast"
   exit 0
 fi
@@ -123,7 +133,7 @@ echo "=========================================="
 
 MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 if [ -f "$MANIFEST_PATH" ]; then
-  DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?' "$MANIFEST_PATH" 2>/dev/null || echo "")
+  DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?.name // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
   if [ -n "$DEPS" ]; then
     echo "Checking dependencies vs origin/main (from workspace-manifest.json)..."
     HAS_DIFF=false
@@ -151,11 +161,11 @@ if [ -f "$MANIFEST_PATH" ]; then
       echo "═══════════════════════════════════════════════════════"
       echo ""
       echo "Dependencies differ from main, but no --dep-branch specified."
+      echo "Your local dependency changes are intentional — do NOT discard them."
       echo ""
-      echo "Option 1: DISCARD local dependency changes"
-      echo "  cd $LAST_DEP_PATH && git reset --hard origin/main"
+      echo "Use --dep-branch NAME to create a branch for your dependency changes,"
+      echo "then proceed. Quickmerge will cascade changes to the named branch:"
       echo ""
-      echo "Option 2: USE BRANCH ISOLATION (recommended)"
       echo "  bash scripts/quickmerge.sh \"$COMMIT_MSG\" --dep-branch \"my-feature\""
       echo ""
       echo "═══════════════════════════════════════════════════════"
@@ -175,21 +185,54 @@ fi
 echo ""
 
 # ============================================================================
+# STAGE 1.5: PM DEPENDENCY ALIGNMENT (unified-trading-pm only)
+# ============================================================================
+if [ "$REPO_NAME" = "unified-trading-pm" ]; then
+  echo "=========================================="
+  echo "STAGE 1.5: Dependency Alignment (PM)"
+  echo "=========================================="
+  ALIGN_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/check-dependency-alignment.py"
+  if [ -f "$ALIGN_SCRIPT" ]; then
+    cd "$WORKSPACE_ROOT"
+    source .venv-workspace/bin/activate 2>/dev/null || true
+    python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>/dev/null || true
+    if python "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
+      echo "[$REPO_NAME] ✅ Dependency alignment PASSED"
+    else
+      echo "[$REPO_NAME] ❌ Dependency alignment FAILED"
+      echo ""
+      echo "Run before pushing PM:"
+      echo "  python unified-trading-pm/scripts/manifest/generate-derived-manifest.py"
+      echo "  python unified-trading-pm/scripts/manifest/check-dependency-alignment.py --json"
+      echo "  python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply  # if internal mismatches"
+      echo ""
+      echo "See: unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md"
+      cd "$REPO_DIR"
+      exit 1
+    fi
+    cd "$REPO_DIR"
+  fi
+  echo ""
+fi
+
+# ============================================================================
 # STAGE 2: PRE-FLIGHT AUDIT (always runs — never skipped)
 # ============================================================================
 echo "=========================================="
 echo "STAGE 2: Pre-flight Audit"
 echo "=========================================="
 
-if [ -f "$WORKSPACE_ROOT/.cursor/scripts/pre-flight-audit.sh" ]; then
-  if bash "$WORKSPACE_ROOT/.cursor/scripts/pre-flight-audit.sh" "$REPO_NAME"; then
+PREFLIGHT_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/validation/pre-flight-audit.sh"
+if [ -f "$PREFLIGHT_SCRIPT" ]; then
+  if bash "$PREFLIGHT_SCRIPT" "$REPO_NAME"; then
     echo "[$REPO_NAME] ✅ Pre-flight audit PASSED"
   else
     echo "[$REPO_NAME] ❌ Pre-flight audit FAILED"
     exit 1
   fi
 else
-  echo "[$REPO_NAME] ⚠️  pre-flight-audit.sh not found (skipping)"
+  echo "[$REPO_NAME] ❌ pre-flight-audit.sh not found at $PREFLIGHT_SCRIPT — required"
+  exit 1
 fi
 
 echo ""
@@ -214,19 +257,27 @@ if [ -z "${ENVIRONMENT:-}" ]; then
   fi
 fi
 
-# ── EARLY EXIT: identical to main ─────────────────────────────────────────────
+# ── EARLY EXIT: identical to main (skip when --no-pr) ─────────────────────────────────────────────
 git fetch origin main --quiet 2>/dev/null || true
-if git rev-parse origin/main &>/dev/null && [ -z "$(git diff origin/main 2>/dev/null)" ]; then
-  echo "[$REPO_NAME] No differences from main — nothing to merge"
-  exit 0
-fi
+if [ "$NO_PR" != "true" ]; then
+  if git rev-parse origin/main &>/dev/null && [ -z "$(git diff origin/main 2>/dev/null)" ]; then
+    echo "[$REPO_NAME] No differences from main — nothing to merge"
+    exit 0
+  fi
 
-if [ -z "$(git status --porcelain)" ]; then
-  echo "[$REPO_NAME] No changes to commit"
-  exit 0
+  if [ -z "$(git status --porcelain)" ]; then
+    echo "[$REPO_NAME] No changes to commit"
+    exit 0
+  fi
 fi
 
 # ============================================================================
+# Run setup.sh first to ensure deps (incl. pytest) are installed
+if [ -f "scripts/setup.sh" ]; then
+  echo "[$REPO_NAME] Ensuring env ready (setup.sh)..."
+  bash scripts/setup.sh --check 2>/dev/null || bash scripts/setup.sh
+fi
+
 # STAGE 3: LOCAL QUALITY GATES (two-phase: auto-fix → verify)
 # ============================================================================
 echo "=========================================="
@@ -245,6 +296,20 @@ if [ -f "scripts/quality-gates.sh" ]; then
   fi
   echo "[$REPO_NAME] ✅ Quality gates PASSED"
 else
+  # Strict check: repos that require quality gates must have scripts/quality-gates.sh
+  REPO_TYPE=""
+  QG_STATUS=""
+  if [ -f "${MANIFEST_PATH:-}" ]; then
+    REPO_TYPE=$(jq -r '.repositories["'"$REPO_NAME"'"] | .type // empty' "$MANIFEST_PATH" 2>/dev/null)
+    QG_STATUS=$(jq -r '.repositories["'"$REPO_NAME"'"] | .quality_gate_status // empty' "$MANIFEST_PATH" 2>/dev/null)
+  fi
+  QG_REQUIRED_TYPES="library service api-service infrastructure devops test-harness"
+  if [ -n "$REPO_TYPE" ] && [ -n "$QG_STATUS" ] && \
+     echo "$QG_REQUIRED_TYPES" | grep -qw "$REPO_TYPE" && \
+     [ "$QG_STATUS" != "NO_QG" ]; then
+    echo "[$REPO_NAME] ❌ quality-gates.sh required: type=$REPO_TYPE, quality_gate_status=$QG_STATUS (add scripts/quality-gates.sh or set quality_gate_status=NO_QG in manifest)" >&2
+    exit 1
+  fi
   echo "[$REPO_NAME] ⚠️  No quality-gates.sh found (skipping quality gate check)"
 fi
 
@@ -299,8 +364,11 @@ fi
 echo ""
 
 # ============================================================================
-# STAGE 5: CREATE PR
+# STAGE 5: CREATE PR (skip with --no-pr or --unit-only)
 # ============================================================================
+if [ "$NO_PR" = true ]; then
+  echo "[$REPO_NAME] --no-pr: Skipping PR creation"
+else
 echo "=========================================="
 echo "STAGE 5: Create PR"
 echo "=========================================="
@@ -383,3 +451,4 @@ fi
 echo "[$REPO_NAME] ✅ PR created: $PR_URL (auto-merge enabled)"
 echo "[$REPO_NAME] Staying on branch $BRANCH — PR will auto-merge when CI passes"
 echo "[$REPO_NAME] To sync with main after merge: git checkout main && git pull"
+fi

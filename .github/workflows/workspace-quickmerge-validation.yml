@@ -1,0 +1,67 @@
+name: workspace-quickmerge-validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly on Sunday 02:00 UTC
+    - cron: "0 2 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          path: unified-trading-pm
+
+      - name: Clone canary repos (levels 0-2)
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          cd $GITHUB_WORKSPACE
+          MANIFEST="unified-trading-pm/workspace-manifest.json"
+          # Use GH_PAT for private repos (full repo access); fallback to GITHUB_TOKEN
+          TOKEN="${GH_PAT:-$GITHUB_TOKEN}"
+          for repo in $(jq -r ".topologicalOrder.levels[0:3][].repos[]?" "$MANIFEST" 2>/dev/null | sort -u); do
+            [ "$repo" = "unified-trading-pm" ] && continue
+            [ -d "$repo" ] && continue
+            url=$(jq -r --arg r "$repo" '.repositories[$r].github_url // empty' "$MANIFEST")
+            if [ -n "$url" ]; then
+              if [ -n "$TOKEN" ]; then
+                # Inject token for auth (https://token@github.com/org/repo)
+                auth_url=$(echo "$url" | sed "s|https://github.com/|https://x-access-token:${TOKEN}@github.com/|")
+                git clone --depth 1 "$auth_url" "$repo" 2>/dev/null || echo "  Skip $repo (clone failed)"
+              else
+                git clone --depth 1 "$url" "$repo" 2>/dev/null || echo "  Skip $repo (clone failed)"
+              fi
+            fi
+          done
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Run workspace quickmerge validation
+        run: |
+          cd unified-trading-pm
+          bash scripts/validate-workspace-quickmerge.sh || true
+
+      - name: Upload matrix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: quickmerge-matrix
+          path: unified-trading-pm/artifacts/quickmerge-matrix.json
+          if-no-files-found: ignore
+
+      - name: Workflow summary
+        run: |
+          if [ -f unified-trading-pm/artifacts/quickmerge-matrix.json ]; then
+            echo "## Workspace Quickmerge Validation" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Repo | Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+            jq -r '.repos[] | "| \(.repo) | \(.status) |"' unified-trading-pm/artifacts/quickmerge-matrix.json >> $GITHUB_STEP_SUMMARY
+          fi

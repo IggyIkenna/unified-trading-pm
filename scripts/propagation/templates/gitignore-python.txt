@@ -1,0 +1,42 @@
+# Python repo .gitignore template
+# Reference: instruments-service, unified-trading-library
+
+# Security - Never commit credentials
+*-credentials.json
+*-service-account.json
+workspace-dev-sa-key.json
+service-account*.json
+credentials*.json
+*secret*.json
+central-element-323112-*.json
+.env
+.env.local
+.env.*.local
+**/secrets/
+**/credentials/
+.DS_Store
+*.backup
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+.ruff_cache/
+.cache/
+.venv/
+venv/
+.venv-workspace/
+
+# Coverage
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+.nyc_output/
+
+# Data and logs
+data/
+logs/
+coverage.xml

@@ -17,14 +17,155 @@
 
 ---
 
-## 2.1 File Size Exceptions
+## 1.1 Version Policy Exception — `unified-trading-pm` at `1.0.0`
 
-None.
+**Repo:** `unified-trading-pm`
+**Version in manifest:** `1.0.0`
+
+**Justification:** `unified-trading-pm` is a documentation and orchestration repo — it is NOT a deployable Python package (no Cloud Run service, no installable library). The `versions_policy` rule (all versions `<1.0.0` until first stable quickmerge CI pass) applies exclusively to deployable service and library packages. `unified-trading-pm` version `1.0.0` denotes stable SSOT status — it is the single source of truth for workspace manifest, cursor rules, plans, and PM scripts. Version `1.0.0` here signals maturity of the SSOT role, not a Python package release milestone. This is exempt from the pre-1.0.0 policy.
+
+**Audit trail:** Added 2026-03-04 per PM-F2 audit finding.
+
+---
+
+## 2. Excluded Paths — Legacy and Tooling Directories
+
+The following directories are excluded from the file-size and function-size quality gate checks. They are PM tooling and archive files, not deployable code.
+
+| Path                  | Reason                                                                                                                                                                                                                                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/archive/`       | Historical documentation archive. `models.py` (3621L) is a snapshot of a deprecated sports-features domain model kept for reference only. Not deployed, not imported.                                                                                                                                 |
+| `github-integration/` | One-time and ongoing PM automation scripts for GitHub Projects/Issues workflows. These are long single-file scripts by design (no shared module), and they are not deployed or imported as Python packages. Max file `04-create-service-epics.py` (1167L) is a single-script GitHub API orchestrator. |
+| `rd-tax-credits/`     | R&D tax credit export utilities. `export-script.py` `main()` is 168L (exceeds 100L function limit) — it is a one-time reporting tool with a large argparse block followed by a reporting loop. Not deployed, not imported as a package.                                                               |
+
+**Audit trail:** Added 2026-03-04.
+
+---
+
+## 2.1 File Size Exceptions — Explicitly Excluded Paths
+
+See §2 above for `docs/archive/` and `github-integration/` exclusions.
 
 ## 2.2 Ruff Exceptions
 
 None.
 
+---
+
+## 2.5 Bandit `#nosec` Suppressions
+
+| File                                                                   | Rule | Suppression    | Justification                                                                                                                                                                                       |
+| ---------------------------------------------------------------------- | ---- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/manifest/generate_canonical_dependency_manifest.py:172`       | B314 | `# nosec B314` | `ET.fromstring()` is called on SVG content generated entirely by our own `generate_svg()` function — not on untrusted external input. Used only to validate well-formedness before writing to disk. |
+| `scripts/manifest/generate_workspace_dag.py:394`                       | B314 | `# nosec B314` | Same as above — SVG is generated internally and validated before disk write.                                                                                                                        |
+| `scripts/repo-management/create-github-repos-and-collaborators.py:103` | B310 | `# nosec B310` | `urllib.request.urlopen` is called with a hardcoded `https://api.github.com/` URL via a `Request` object. No user-controlled URL schemes possible.                                                  |
+| `scripts/repo-management/ensure-repo-collaborators.py:104`             | B310 | `# nosec B310` | Same as above — hardcoded GitHub API https endpoint only.                                                                                                                                           |
+
+**Audit trail:** Added 2026-03-04.
+
 ## 2.3 Basedpyright Exceptions
 
-None.
+| File                                                    | Line | Code                                                   | Justification                                                                                                               |
+| ------------------------------------------------------- | ---- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/manifest/fix-internal-dependency-alignment.py` | 23   | `import tomli_w  # type: ignore[reportMissingImports]` | `tomli-w` is in PM dependencies; Act/CI type-check env may not resolve it. Runtime works; type ignore documents the bypass. |
+
+**Audit trail:** Added 2026-03-04 (dependency governance S4).
+
+---
+
+## 2.6 Quality Gate Check — `grep -v` Exclusions
+
+Some checks produce false positives against files whose content is pattern-search code (not violations). These exclusions are applied in `scripts/quality-gates.sh`:
+
+| Check                      | Excluded File                                        | Reason                                                                                                                                                                                      |
+| -------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Bare `except:`             | `scripts/validation/find-coding-violations.py`       | This script searches for `except:` as a string literal in its rg command arguments. The rg match is on the script source text of the search pattern, not on a real bare except.             |
+| Deep unified lib imports   | `scripts/validation/find-coding-violations.py`       | This script contains example import strings like `"from unified_trading_services.core.config import"` as search pattern literals, not as actual imports.                                    |
+| `GOOGLE_CLOUD_PROJECT`     | `scripts/propagation/rollout-quality-gate-checks.py` | This migration script contains `GOOGLE_CLOUD_PROJECT` as a sentinel string for the checks it REMOVES from target repos. It is the script that eliminates the violation, not a source of it. |
+| `pip install`              | `scripts/agents/llm-agent-wrapper.sh`                | This shell script contains an `echo` statement displaying install instructions for users. It is documentation output, not an actual pip install invocation.                                 |
+| `pip install` (self-match) | `scripts/quality-gates.sh` itself                    | The rg command pattern `                                                                                                                                                                    | pip install ` matches the line in the quality-gates.sh that runs the check. Excluded to prevent self-referential false positive. |
+
+**Audit trail:** Added 2026-03-04.
+
+---
+
+## 2.4 os.getenv() Exceptions — github-integration/ CI/CD Scripts
+
+**Rule bypassed:** No `os.getenv()` — use `UnifiedCloudConfig` (codex §06 / `no-os-getenv` rule).
+
+**Scope:** `github-integration/` scripts only. These are PM orchestration scripts that drive GitHub API workflows and must authenticate via environment-injected tokens (e.g. `GITHUB_TOKEN`, `GH_TOKEN`). They run outside any cloud context and cannot use `get_secret_client()`, which requires a live GCP runtime.
+
+| File                                                                                      | Line | Call                                                 | Justification                                                                                            |
+| ----------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `github-integration/scripts/utilities/create-all-projects.py`                             | 345  | `os.getenv("GITHUB_TOKEN")`                          | GitHub API token for project creation — must come from CI environment variable, no GCP runtime available |
+| `github-integration/scripts/projects/initial-cleanup/utilities/check-codex-violations.py` | 894  | `os.getenv("GITHUB_REPO", ...)`                      | GitHub repo name for API calls — env var override pattern for local dev vs CI                            |
+| `github-integration/scripts/core/02-run-diff-checker.py`                                  | 894  | `os.getenv("GITHUB_REPO", ...)`                      | GitHub repo name for API calls — env var override pattern for local dev vs CI                            |
+| `github-integration/scripts/one-time/setup-cod-project-workflows.py`                      | 38   | `os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")` | GitHub API token with `GH_TOKEN`/`GITHUB_TOKEN` dual-fallback — standard GitHub Actions pattern          |
+
+**Rationale:** `github-integration/` scripts are pure CI/CD automation that orchestrate GitHub Projects, issues, and workflow triggers. They have no access to GCP Secret Manager (no service account, no ADC in the CI environment where they run). Reading GitHub credentials from environment variables is the correct and intentional approach for this architecture boundary. `UnifiedCloudConfig` and `get_secret_client()` are for deployed cloud services, not for PM orchestration scripts.
+
+**Architecture boundary:** This exception applies exclusively to `github-integration/` scripts. All other production service and library code must use `UnifiedCloudConfig` (config values) or `get_secret_client()` (secrets/API keys).
+
+**Audit trail:** Added 2026-03-04 per quality-gate failure analysis.
+
+---
+
+## 2.9 Broad `except Exception` — Manifest/Workspace Parsing Scripts
+
+**Rule bypassed:** No `except Exception:` — use specific exception types.
+
+**Scope:** The following scripts are excluded from the broad-except check:
+
+- `scripts/check_external_dependency_alignment.py` — parses semver specifiers and pyproject.toml files; broad except catches malformed input
+- `scripts/fix_external_dependency_alignment.py` — same as above
+- `scripts/manifest/fix-internal-dependency-alignment.py` — parses imports from source files; broad except handles partial parses
+
+**Rationale:** These are PM tooling scripts that parse external files (pyproject.toml, Python source). Parsing can fail with many different exception types (syntax errors, encoding errors, malformed TOML). Using `except Exception: pass` or `except Exception: return fallback` here is appropriate to maintain resilience — the scripts are best-effort tools, not production services with SLAs. The "specific exception" rule applies to production services where silent failures are dangerous.
+
+**Audit trail:** Added 2026-03-04.
+
+---
+
+## 2.7 Empty Dict/List Fallback — Manifest and Workspace Parsing Scripts
+
+**Rule bypassed:** No `.get("key", {})` / `.get("key", [])` empty fallbacks.
+
+**Scope:** The following script directories are excluded from the empty dict/list fallback check:
+
+- `scripts/manifest/` — JSON manifest parsing (optional sections may be absent)
+- `scripts/workspace/` — workspace manifest traversal
+- `scripts/migration/` — migration scripts parsing structured JSON output
+- `scripts/propagation/` — rollout scripts parsing quality gate result JSON
+- `scripts/repo-management/` — repo management scripts parsing manifest JSON
+- `scripts/check_external_dependency_alignment.py`, `scripts/fix_external_dependency_alignment.py`
+
+**Rationale:** These scripts parse JSON manifest files where certain sections (`dependencies`, `repositories`, `sources`) are genuinely optional. `.get("key", [])` returning an empty list when a key is absent is correct and intentional — a missing section means "no items", not an error. The "fail fast" rule applies to API response fields and config values in production services, not to manifest file traversal in PM tooling scripts.
+
+**Audit trail:** Added 2026-03-04.
+
+---
+
+## 2.8 Import Inside Function — `scripts/manifest/sbom-store.py`
+
+**Rule bypassed:** No imports inside functions.
+
+**File:** `scripts/manifest/sbom-store.py` line 54: `from unified_trading_services import get_storage_client`
+
+**Rationale:** This import is intentionally deferred and guarded by `importlib.util.find_spec("unified_trading_services")` on line 47. If `unified_trading_services` is not installed (e.g., when running quality gates without the full workspace), the script exits gracefully instead of raising `ImportError`. This is the correct pattern for optional/conditional dependencies in PM tooling scripts that are non-blocking (called with `|| :` in quality-gates.sh).
+
+**Audit trail:** Added 2026-03-04.
+
+---
+
+## 2. Dependency Governance Audit — Known uv.lock / Path Dep Issues (S4.6)
+
+**Audit:** dependency_governance.plan.md (2026-03-05)
+
+| Repo                                       | Issue                                                        | Resolution                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| unified-trading-library                    | uv lock fails: `unified-cloud-services[aws]` not in registry | Dep references external package; add to workspace-constraints or use path dep |
+| features-cross-instrument-service          | uv lock fails: `unified-cloud-interface` path dep            | Run `uv lock` from workspace root with path deps installed                    |
+| system-integration-tests                   | `.venv` invalid (no Python executable)                       | Remove `.venv` and run `uv sync` from workspace                               |
+| 20 internal manifest↔pyproject mismatches | fix-internal-dependency-alignment.py needs tomli_w           | `uv pip install tomli-w` then run fix script                                  |
+
+**Rationale:** Path deps and workspace-local packages require workspace context for resolution. Documented for S4 audit traceability.

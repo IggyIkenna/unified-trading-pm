@@ -1,0 +1,47 @@
+---
+description: "Never push PM without dependency alignment — internal + external must match manifest"
+alwaysApply: false
+priority: 70
+tags:
+  - dependencies
+  - pm
+  - alignment
+---
+# PM Push: Dependency Alignment Required
+
+RULE: Never push or merge unified-trading-pm unless dependency alignment passes. Internal deps (code uses → add; else remove) and external deps (version ranges vs canonical) must be aligned before any PM commit lands.
+WHY: PM owns workspace-manifest.json and canonical-dependency-manifest.json — SSOT for all repos. Pushing misaligned PM propagates drift across 30+ repos.
+CODEX: 06-coding-standards/dependency-management.md (§ Workspace-wide dependency pinning)
+SSOT: 00-SSOT-INDEX.md → Workspace external dependency versions, Canonical external dependency manifest
+PM: unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md
+
+## Before pushing PM
+
+1. **Regenerate derived manifest**
+   ```bash
+   python unified-trading-pm/scripts/manifest/generate-derived-manifest.py
+   ```
+
+2. **Check alignment**
+   ```bash
+   python unified-trading-pm/scripts/manifest/check-dependency-alignment.py --json
+   ```
+   Must report `"aligned": true` with 0 issues.
+
+3. **Fix internal mismatches (if any)**
+   ```bash
+   python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply
+   ```
+   Then fix external mismatches (propagate-canonical-versions or manual pyproject edits).
+
+4. **Verify again**
+   ```bash
+   python unified-trading-pm/scripts/manifest/check-dependency-alignment.py --json
+   ```
+
+## Quickmerge
+
+When running quickmerge in unified-trading-pm, the alignment check runs automatically (Stage 1.5). If it fails, fix alignment before retrying.
+
+DO: Run alignment before PM push; use fix-internal-dependency-alignment --apply when code-use scan finds add/remove actions
+NEVER: Push PM with alignment mismatches; skip alignment "for now"

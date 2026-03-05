@@ -11,7 +11,7 @@ tags:
 
 RULE: Interfaces and services that depend on unified-api-contracts must run `check_sdk_version_alignment.py` in quality gates. If an interface uses an SDK (databento, ccxt, ib_insync, tardis-client), its version must align with unified-api-contracts [schema-validation].
 WHY: Prevents schema drift; ensures interfaces validate against correct schema versions.
-CODEX: 02-data/schema-governance.md, 05-infrastructure/unified-libraries/dependency-matrix.md
+CODEX: 02-data/schema-governance.md, 05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md
 
 DO:
   Add SDK alignment step to quality-gates.sh

@@ -7,5 +7,6 @@
   "reportUnknownMemberType": "none",
   "reportUnknownParameterType": "none",
   "reportUnnecessaryComparison": "warning",
-  "reportUnreachable": "warning"
+  "reportUnreachable": "warning",
+  "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py"]
 }

@@ -28,7 +28,7 @@ bash scripts/setup.sh --check
 
 ### Workspace Dependencies
 
-<!-- List repos this package depends on (from .dependency-matrix.json) -->
+<!-- List repos this package depends on (from workspace-manifest.json (SSOT)) -->
 <!-- In isolated mode, these are skipped — install from Artifact Registry if needed -->
 
 - `{dep_repo_1}` — {what_it_provides}
@@ -100,13 +100,13 @@ bash scripts/quickmerge.sh "msg"
 
 ### Key Files
 
-| Path                      | Purpose                           |
-| ------------------------- | --------------------------------- |
-| `{src_dir}/`              | Main package source               |
-| `tests/`                  | Test suite (unit + integration)   |
-| `scripts/`                | Setup, quality gates, quickmerge  |
-| `pyproject.toml`          | Project metadata and dependencies |
-| `.dependency-matrix.json` | Workspace dependency declarations |
+| Path                             | Purpose                           |
+| -------------------------------- | --------------------------------- |
+| `{src_dir}/`                     | Main package source               |
+| `tests/`                         | Test suite (unit + integration)   |
+| `scripts/`                       | Setup, quality gates, quickmerge  |
+| `pyproject.toml`                 | Project metadata and dependencies |
+| `workspace-manifest.json (SSOT)` | Workspace dependency declarations |
 
 ## Troubleshooting
 
