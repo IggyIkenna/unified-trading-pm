@@ -6,8 +6,7 @@ name: update-repo-version
 #   (b) Bumps PM's own pyproject.toml patch version (so PM version tracks manifest changes)
 #   (c) Dispatches dependency-update events to all downstream repos that depend on the bumped repo
 #
-# Requires: PM_DISPATCH_TOKEN secret in PM repo — PAT with repo scope for all workspace repos.
-# Dispatching repos require: PM_DISPATCH_TOKEN secret — PAT with repo scope for unified-trading-pm.
+# Requires: GH_PAT secret in PM repo and all dispatching repos — full-repo PAT for cross-repo dispatch.
 
 on:
   repository_dispatch:
@@ -113,10 +112,10 @@ jobs:
           set -euo pipefail
 
           OWNER="${{ github.repository_owner }}"
-          TOKEN="${{ secrets.PM_DISPATCH_TOKEN }}"
+          TOKEN="${{ secrets.GH_PAT }}"
 
           if [ -z "$TOKEN" ]; then
-            echo "PM_DISPATCH_TOKEN not set — skipping downstream dispatch. Set this secret to enable cascade updates."
+            echo "GH_PAT not set — skipping downstream dispatch."
             exit 0
           fi
 
