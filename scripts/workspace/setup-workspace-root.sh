@@ -238,6 +238,105 @@ update_workspace_configs() {
   fi
 }
 
+# ── Enforce git settings in all workspace configs ────────────────────────────
+ensure_git_settings() {
+  local workspace_root="$1"
+  local configs_dir="${workspace_root}/unified-trading-system-repos/.cursor/workspace-configs"
+  local vscode_ws="${workspace_root}/unified-trading-system-repos/workspace-vscode.code-workspace"
+
+  log_info "Enforcing git auto-fetch (180s) and SCM repo limit (100) in workspace configs..."
+
+  local updated_count=0
+
+  # ── Pure-JSON configs in .cursor/workspace-configs/ ────────────────────────
+  if command -v python3 >/dev/null 2>&1 && [ -d "$configs_dir" ]; then
+    for config_file in "$configs_dir"/*.code-workspace; do
+      [ -f "$config_file" ] || continue
+      result=$(python3 - "$config_file" <<'PYEOF'
+import json, sys
+
+filepath = sys.argv[1]
+with open(filepath) as f:
+    data = json.load(f)
+
+settings = data.setdefault("settings", {})
+changed = False
+
+for key, val in {
+    "git.autofetch": True,
+    "git.autofetchPeriod": 180,
+    "scm.repositories.visible": 100,
+    "git.maxRepositoryCount": 100,
+}.items():
+    if settings.get(key) != val:
+        settings[key] = val
+        changed = True
+
+if changed:
+    with open(filepath, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    print("updated")
+else:
+    print("ok")
+PYEOF
+)
+      if [ "$result" = "updated" ]; then
+        log_success "Git settings applied: $(basename "$config_file")"
+        ((updated_count++))
+      fi
+    done
+  else
+    [ -d "$configs_dir" ] || log_warning "Workspace configs dir not found: ${configs_dir}"
+    command -v python3 >/dev/null 2>&1 || log_warning "Python3 not found — skipping JSON git settings enforcement"
+  fi
+
+  # ── workspace-vscode.code-workspace (JSONC — targeted sed) ─────────────────
+  if [ -f "$vscode_ws" ]; then
+    local vscode_changed=false
+
+    _sed_i() {
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "$@"
+      else
+        sed -i "$@"
+      fi
+    }
+
+    # autofetchPeriod: update existing value or insert after git.autofetch line
+    if grep -q '"git\.autofetchPeriod"' "$vscode_ws"; then
+      _sed_i 's|"git\.autofetchPeriod": [0-9]*|"git.autofetchPeriod": 180|' "$vscode_ws"
+      vscode_changed=true
+    elif grep -q '"git\.autofetch"' "$vscode_ws"; then
+      _sed_i 's|"git\.autofetch": true|"git.autofetch": true,\n\t\t"git.autofetchPeriod": 180|' "$vscode_ws"
+      vscode_changed=true
+    fi
+
+    # scm.repositories.visible: update if present
+    if grep -q '"scm\.repositories\.visible"' "$vscode_ws"; then
+      _sed_i 's|"scm\.repositories\.visible": [0-9]*|"scm.repositories.visible": 100|' "$vscode_ws"
+      vscode_changed=true
+    fi
+
+    # git.maxRepositoryCount: update if present
+    if grep -q '"git\.maxRepositoryCount"' "$vscode_ws"; then
+      _sed_i 's|"git\.maxRepositoryCount": [0-9]*|"git.maxRepositoryCount": 100|' "$vscode_ws"
+      vscode_changed=true
+    fi
+
+    if [ "$vscode_changed" = true ]; then
+      log_success "Git settings applied: workspace-vscode.code-workspace"
+      ((updated_count++))
+    fi
+  fi
+
+  if [ "$updated_count" -eq 0 ]; then
+    log_info "All workspace configs already have correct git settings"
+  else
+    log_success "Enforced git settings in ${updated_count} workspace config(s)"
+  fi
+}
+
 # ── Update Claude Code ───────────────────────────────────────────────────────
 update_claude_code() {
   local workspace_root="$1"
@@ -398,6 +497,10 @@ main() {
   update_workspace_configs "$workspace_root"
   echo ""
 
+  # Enforce git auto-fetch and SCM settings
+  ensure_git_settings "$workspace_root"
+  echo ""
+
   # Update Claude Code
   update_claude_code "$workspace_root"
   echo ""
@@ -425,7 +528,7 @@ main() {
   echo "   ${CYAN}bash ${workspace_root}/unified-trading-system-repos/.cursor/workspace-configs/setup-workspace-venv-complete.sh${NC}"
   echo ""
 
-  log_info "Documentation: ${workspace_root}/unified-trading-pm/WORKSPACE_SETUP.md"
+  log_info "Documentation: ${workspace_root}/unified-trading-system-repos/unified-trading-pm/docs/workspace-setup.md"
 }
 
 # Run main if not sourced
