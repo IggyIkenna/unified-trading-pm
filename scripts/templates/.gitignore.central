@@ -1,7 +1,3 @@
-# --- Keep these (do not ignore): uv.lock, package.json, .env.example, tsconfig.json ---
-# --- Repo-specific exceptions (add below; sync preserves this section) ---
-!github-integration/data/
-
 # =============================================================================
 # Central .gitignore — workspace SSOT (Python + React/TS + security)
 # Copy to repo root as .gitignore. Source: unified-trading-pm/scripts/templates/
