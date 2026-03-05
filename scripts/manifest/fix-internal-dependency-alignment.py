@@ -13,14 +13,10 @@ import ast
 import json
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib  # type: ignore[no-reuse-def]
-
-import tomli_w
+import tomli_w  # type: ignore[reportMissingImports]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
@@ -213,7 +209,7 @@ def main() -> int:
         cwd=str(WORKSPACE_ROOT),
     )
     data = json.loads(r.stdout)
-    issues = [i for i in data.get("issues", []) if "internal" in i.get("type", "")]
+    issues = [i for i in data.get("issues", []) if "internal" in str(i.get("type") or "")]
 
     actions: list[dict] = []
     for i in issues:
@@ -288,7 +284,7 @@ def main() -> int:
             cwd=str(WORKSPACE_ROOT),
         )
         verify = json.loads(r2.stdout)
-        internal_issues = [i for i in verify.get("issues", []) if "internal" in i.get("type", "")]
+        internal_issues = [i for i in verify.get("issues", []) if "internal" in str(i.get("type") or "")]
         if internal_issues:
             print(f"Verification failed: {len(internal_issues)} internal mismatch(es) remaining.", file=sys.stderr)
             for i in internal_issues:

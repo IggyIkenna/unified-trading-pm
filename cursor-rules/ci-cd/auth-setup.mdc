@@ -12,3 +12,5 @@ WHY: Eliminates service account key files; reduces security risk; follows GCP be
 CODEX: 05-infrastructure/auth-setup.md
 DO: Use gcloud auth application-default login; store secrets in Secret Manager; rotate keys every 90 days
 NEVER: Commit service account keys; use long-lived tokens without rotation; hardcode API keys in code
+
+GH_PAT verification: `bash unified-trading-pm/scripts/repo-management/verify-gh-pat-secrets.sh` — checks all workspace repos have GH_PAT secret.

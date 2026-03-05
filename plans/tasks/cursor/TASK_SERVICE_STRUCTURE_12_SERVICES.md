@@ -7,7 +7,7 @@
 
 - `unified-trading-codex/06-coding-standards/cli-standards.md` — CLI pattern (--operation, --mode)
 - `unified-trading-codex/06-coding-standards/service-structure-standards.md` — engine/, adapters/, cli/
-- `unified-trading-codex/06-coding-standards/thin-adapters-pattern.md` — Adapters <100 lines, delegate to UCS/UMI/UCI/UEI
+- `unified-trading-codex/06-coding-standards/thin-adapters-pattern.md` — Adapters <100 lines, delegate to UTL/UMI/UCI/UEI
 
 ---
 
@@ -56,7 +56,7 @@ For each assigned service:
 
 - Create `{service_module}/engine/` and `{service_module}/adapters/` if missing.
 - Move business logic from `app/core/` (or equivalent) into `engine/` (orchestrators, processors, validation). **No I/O in engine**: no GCS, no API calls, no storage.
-- Extract I/O into **thin** adapters in `adapters/`: e.g. `data_source.py`, `data_sink.py` (or `storage_adapter.py`). Adapters must delegate to unified-trading-services (e.g. `get_storage_client`), unified-market-interface, unified-config-interface, unified-events-interface. Each adapter file <100 lines; no business logic.
+- Extract I/O into **thin** adapters in `adapters/`: e.g. `data_source.py`, `data_sink.py` (or `storage_adapter.py`). Adapters must delegate to unified-trading-library (e.g. `get_storage_client`), unified-market-interface, unified-config-interface, unified-events-interface. Each adapter file <100 lines; no business logic.
 - Ensure `engine/` has **zero** imports from `adapters/`. Dependencies point inward: adapters → engine.
 - Keep or add `cli/handlers/` for operation-specific handlers; each handler orchestrates engine + adapters. If the service has only one entry (e.g. one batch handler), one handler under `cli/handlers/` is fine (e.g. `compute_handler.py`).
 - features-calendar-service: plan says it has `cli/batch_handler.py` only — move to `cli/handlers/` (e.g. `batch_handler.py` or `compute_handler.py`) for consistency.

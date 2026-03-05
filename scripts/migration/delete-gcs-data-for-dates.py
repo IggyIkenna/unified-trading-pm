@@ -23,6 +23,7 @@ import argparse
 import os
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 # Ensure unified-trading-services is on path (sibling in workspace)
@@ -282,8 +283,6 @@ def main() -> None:
             sys.exit(0)
 
     print("\nDeleting (parallel by bucket, batch API per bucket)...")
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-
     deleted_total = 0
     with ThreadPoolExecutor(max_workers=6) as ex:
         futures = {

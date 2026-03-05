@@ -143,15 +143,15 @@
 
 ## Sub-Agent Research Areas (10 agents)
 
-| Agent | Focus                                                                                                          | Repos / Paths                                      |
-| ----- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| 1     | Market data / feed – Databento, Tardis, Yahoo, Barchart                                                        | api-contracts, market-tick-data-handler            |
-| 2     | Orders / positions – CeFi (Binance-spot, Binance-usdm, Binance-coinm, OKX, Bybit, Upbit, Coinbase), IBKR, DeFi | api-contracts, unified-trade-execution-interface   |
-| 3     | Reference data – instrument types, venue matrix                                                                | api-contracts, instruments-service                 |
-| 4     | Exchange status / WebSocket / FIX lifecycle                                                                    | api-contracts, per-venue schemas                   |
-| 5     | Error handling – per-venue errors, rate limits                                                                 | api-contracts/schemas/errors.py                    |
-| 6     | Cloud SDKs – GCP (Compute, Cloud Run, GCS, BigQuery)                                                           | api-contracts/cloud_sdks, unified-trading-services |
-| 7     | Cloud SDKs – AWS (EC2, ECS, S3, Glue, quotas)                                                                  | api-contracts/cloud_sdks                           |
-| 8     | Quota handling – UTD v3 quota broker, message schemas                                                          | unified-trading-deployment-v3, api-contracts       |
-| 9     | DeFi / MEV / transfers                                                                                         | api-contracts, execution-service                   |
-| 10    | TradFi / VIX / Barchart                                                                                        | api-contracts, market-tick-data-handler            |
+| Agent | Focus                                                                                                          | Repos / Paths                                     |
+| ----- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 1     | Market data / feed – Databento, Tardis, Yahoo, Barchart                                                        | api-contracts, market-tick-data-handler           |
+| 2     | Orders / positions – CeFi (Binance-spot, Binance-usdm, Binance-coinm, OKX, Bybit, Upbit, Coinbase), IBKR, DeFi | api-contracts, unified-trade-execution-interface  |
+| 3     | Reference data – instrument types, venue matrix                                                                | api-contracts, instruments-service                |
+| 4     | Exchange status / WebSocket / FIX lifecycle                                                                    | api-contracts, per-venue schemas                  |
+| 5     | Error handling – per-venue errors, rate limits                                                                 | api-contracts/schemas/errors.py                   |
+| 6     | Cloud SDKs – GCP (Compute, Cloud Run, GCS, BigQuery)                                                           | api-contracts/cloud_sdks, unified-trading-library |
+| 7     | Cloud SDKs – AWS (EC2, ECS, S3, Glue, quotas)                                                                  | api-contracts/cloud_sdks                          |
+| 8     | Quota handling – UTD v3 quota broker, message schemas                                                          | unified-trading-deployment-v3, api-contracts      |
+| 9     | DeFi / MEV / transfers                                                                                         | api-contracts, execution-service                  |
+| 10    | TradFi / VIX / Barchart                                                                                        | api-contracts, market-tick-data-handler           |

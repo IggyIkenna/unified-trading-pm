@@ -19,6 +19,7 @@ REPOS=(
   execution-analytics-ui
   execution-visualizer-ui
   features-multi-timeframe-service
+  ibkr-gateway-infra
   ml-training-ui
   system-integration-tests
   unified-api-contracts

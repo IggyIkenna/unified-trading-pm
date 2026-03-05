@@ -113,7 +113,7 @@ Before starting, read these files to understand the standards:
 - ✅ Reads workspace `.cursorrules` (workspace-level rules)
 - ✅ Reads `.cursor/rules/*.mdc` (all standards)
 - ✅ Reads `unified-trading-codex/` (canonical patterns)
-- ✅ Sees path dependencies (`unified-trading-services/`, etc.)
+- ✅ Sees path dependencies (`unified-trading-library/`, etc.)
 - ✅ Full context for better fixes
 
 **Edit Restriction**: Prompt tells agent to ONLY edit target repo:
@@ -167,7 +167,7 @@ cursor .cursor/workspace-configs/workspace-trading.code-workspace
    └─ Reads .cursorrules (workspace root)
    └─ Reads .cursor/rules/*.mdc (workspace root)
    └─ Reads unified-trading-codex/ (standards)
-   └─ Sees path dependencies (unified-trading-services/, etc.)
+   └─ Sees path dependencies (unified-trading-library/, etc.)
    └─ Edits ONLY its target repo (no conflicts!)
 
 Result: Full context + parallel execution + no conflicts!
