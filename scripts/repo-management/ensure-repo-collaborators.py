@@ -101,7 +101,7 @@ def add_collaborator(
         },
     )
     try:
-        resp = cast(HTTPResponse, urllib.request.urlopen(req, timeout=30))
+        resp = cast(HTTPResponse, urllib.request.urlopen(req, timeout=30))  # nosec B310 — URL is GitHub API hardcoded https endpoint
         # 204 = no content, added/updated
         if resp.status in (204, 200):
             return True, "ok"

@@ -60,3 +60,23 @@ When analyzing codebase architecture:
 rg "pattern" --type py --glob '!.venv*' --glob '!build' --glob '!tests'
 grep -r "pattern" --include="*.py" --exclude-dir=".venv*" --exclude-dir="tests"
 ```
+
+## Workspace Configs (Canonical in PM)
+
+- **Canonical:** `unified-trading-pm/cursor-configs/`
+- **Symlink:** `.cursor/workspace-configs` → `unified-trading-pm/cursor-configs`
+- **Setup:** `bash unified-trading-pm/scripts/workspace/setup-workspace-config-symlink.sh`
+
+**Workspaces:**
+
+- `unified-trading-system-repos.code-workspace` — full (all 59 manifest repos)
+- `workspace-libraries` — T0–T2 libraries
+- `workspace-uis` — UI repos
+- `workspace-trading` — execution, strategy, risk
+- `workspace-data-pipeline` — instruments, market data, features
+- `workspace-ml` — ML services
+- `workspace-features` — feature services
+- `workspace-infrastructure` — deployment, infra
+- `workspace-complete` / `workspace-full-pipeline` — all repos
+
+All paths use `${workspaceFolder}` — portable across users. Strict basedpyright (reportAny, reportUnknownMemberType, reportUnknownVariableType = error).

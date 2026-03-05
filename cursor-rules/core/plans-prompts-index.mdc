@@ -1,0 +1,49 @@
+---
+description: "SSOT for where agent prompts and task entry points live"
+alwaysApply: false
+priority: 90
+tags:
+  - plans
+  - prompts
+  - tasks
+---
+
+# Plans Prompts Index — SSOT for Prompts
+
+RULE: Prompts and task entry points live in `unified-trading-pm/plans/`. This rule is the SSOT for their locations.
+
+WHY: Scattered prompts cause drift; a single index ensures agents and humans find the right entry point.
+
+## Phase Prompts
+
+| Prompt | Path |
+|--------|------|
+| Phase 1 | `unified-trading-pm/plans/prompts/AGENT_PROMPT_PHASE1.md` |
+| Phase 2 | `unified-trading-pm/plans/prompts/AGENT_PROMPT_PHASE2.md` |
+| Phase 3 | `unified-trading-pm/plans/prompts/AGENT_PROMPT_PHASE3.md` |
+
+## Sports
+
+| Prompt | Path |
+|--------|------|
+| Sports Phase 2 | `unified-trading-pm/plans/prompts/AGENT_PROMPT_SPORTS_PHASE2.md` |
+
+## Task Entry Points
+
+| Tool | Entry Point |
+|------|-------------|
+| Cursor | `unified-trading-pm/plans/tasks/cursor/START_HERE.md` |
+| Claude Code | `unified-trading-pm/plans/tasks/claude-code/START.md` |
+
+## DO
+
+- Reference these paths when launching agents or assigning tasks
+- Add new prompts to `plans/prompts/` and update this index
+- Use `START_HERE.md` (Cursor) or `START.md` (Claude Code) as the task entry point
+
+## NEVER
+
+- Create prompts in service repos, codex, or workspace root
+- Assume prompts live elsewhere without checking this index
+
+CODEX: 06-coding-standards/cursor-rules-system.md. See also: plan-placement.mdc.

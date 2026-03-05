@@ -40,6 +40,15 @@ jobs:
           source .venv/bin/activate
           uv pip install ruff==0.15.0 basedpyright pytest pytest-asyncio pytest-mock pytest-timeout pytest-xdist pytest-cov
 
+      - name: Checkout Codex (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/unified-trading-codex
+          path: unified-trading-codex
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+        continue-on-error: true
+
       - name: Simulate sibling workspace layout
         # Scripts infer workspace root as parent of unified-trading-pm/.
         # In CI the checkout lands at $GITHUB_WORKSPACE/unified-trading-pm,
@@ -48,7 +57,6 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/.cursor/rules"
           touch "$GITHUB_WORKSPACE/.cursorrules"
-          mkdir -p "$GITHUB_WORKSPACE/unified-trading-codex"
 
       - name: Install shellcheck
         run: |

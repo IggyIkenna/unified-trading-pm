@@ -1,7 +1,19 @@
 # Pre-commit hooks - auto-format on commit
-# Setup: pip install prek && prek install
+# Setup: prek install (or pre-commit install --install-hooks)
+# Conventional commits enforced via commit-msg hook.
+
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
 
 repos:
+  # Conventional commit validation (feat:/fix:/chore:/docs:/refactor:/test:/ci:)
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.2.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
   # Ruff - Fast Python linter AND formatter
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.0

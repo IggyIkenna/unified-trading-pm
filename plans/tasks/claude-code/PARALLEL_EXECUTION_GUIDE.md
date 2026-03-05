@@ -24,7 +24,7 @@
 - ✅ Agents see `unified-trading-codex/` (canonical patterns)
 - ✅ Agents see workspace `.cursorrules` (workspace-level rules)
 - ✅ Agents see `.cursor/rules/*.mdc` (all standards)
-- ✅ Agents see path dependencies (`unified-trading-services/`, etc.)
+- ✅ Agents see path dependencies (`unified-trading-library/`, etc.)
 
 **No Conflicts**:
 
@@ -301,7 +301,7 @@ The prompt explicitly tells each agent:
 Using workspace root gives agents access to:
 
 - `unified-trading-codex/` - Canonical patterns
-- Path dependencies - `unified-trading-services/`, etc.
+- Path dependencies - `unified-trading-library/`, etc.
 - Workspace rules - `.cursorrules`, `.cursor/rules/*.mdc`
 
 **Without workspace root**: Agents can't see standards or dependencies!

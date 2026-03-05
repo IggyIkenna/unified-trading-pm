@@ -225,7 +225,7 @@ fi
 
 ### **3. Cascading Dependencies**
 
-#### Dependency Matrix (`.dependency-matrix.json`)
+#### Dependency Matrix (`workspace-manifest.json`)
 
 ```json
 {
@@ -246,7 +246,7 @@ fi
 #### Cascade Algorithm
 
 ```
-1. Build dependency graph (read all .dependency-matrix.json)
+1. Build dependency graph (read all workspace-manifest.json)
 2. Topological sort (lowest deps first)
 3. For each dep with diff from main:
    → Quickmerge to --dep-branch
@@ -362,7 +362,7 @@ fi
 
 #### Agent 2: Pre-Flight & Cascade Scripts
 
-- [ ] Create `.dependency-matrix.json` template
+- [ ] Create `workspace-manifest.json` template
 - [ ] Create `pre-flight-audit.sh` (differential check)
 - [ ] Create `cascade-dependencies.sh` (topological sort)
 - [ ] Create `llm-agent-wrapper.sh`
@@ -591,7 +591,7 @@ If issues arise:
 
 ### To Be Created
 
-- `.dependency-matrix.json` (32 repos)
+- `workspace-manifest.json` (32 repos)
 - `.env` (32 repos)
 - `llm-pr-watcher.sh` (shared)
 - Updated quickmerge.sh (32 repos)

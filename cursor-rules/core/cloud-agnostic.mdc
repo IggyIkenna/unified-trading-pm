@@ -15,3 +15,10 @@ ENV: CLOUD_PROVIDER env var switches provider (gcp|aws). GCP is primary; AWS is 
 DO: from unified_cloud_interface import get_storage_client, get_secret_client
 NEVER: from google.cloud import storage; import boto3
 TEST: Both GCP and AWS paths must be tested in test_cloud_agnostic_paths.py
+
+## Protocol and Interface Naming (Cloud-Agnostic)
+- Public-facing protocol/interface class names MUST use `Cloud*` prefix: `CloudStorageClient`, `CloudModelArtifactStore`, `CloudEventSink`
+- Provider implementation classes MAY use cloud-specific names: `GCSStorageClient`, `S3StorageClient` (inside `providers/gcp.py`, `providers/aws.py`)
+- NEVER use `GCS*`, `S3*`, or `GCP*` in any Protocol, ABC, or abstract class name
+- NEVER use `GCS*`, `S3*`, or `GCP*` in any public re-export (`__init__.py`)
+- Rationale: protocols define the contract (cloud-agnostic); implementations fulfill it (cloud-specific)
