@@ -43,13 +43,14 @@ bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
 
 What it does (5 phases):
 
-| Phase             | What happens                                                                  |
-| ----------------- | ----------------------------------------------------------------------------- |
-| 1. System deps    | Installs Python 3.13, uv, ripgrep, jq via Homebrew/apt                        |
-| 2. Clone repos    | Reads `workspace-manifest.json`, clones all 63 repos via SSH                  |
-| 3. Workspace venv | Creates `.venv-workspace/` with ruff, basedpyright, pytest, and all repo deps |
-| 4. Per-repo setup | Runs `scripts/setup.sh` in each repo (topological order: T0 first)            |
-| 5. Smoke test     | Verifies `import <package>` works for every Python repo                       |
+| Phase             | What happens                                                                   |
+| ----------------- | ------------------------------------------------------------------------------ |
+| 1. System deps    | Installs Python 3.13, uv, ripgrep, jq via Homebrew/apt                         |
+| 2. Clone repos    | Reads `workspace-manifest.json`, clones all 63 repos via SSH                   |
+| 3. Workspace venv | Creates `.venv-workspace/` with ruff, basedpyright, pytest, and all repo deps  |
+| 4. Per-repo setup | Runs `scripts/setup.sh` in each repo (topological order: T0 first)             |
+| 5. Smoke test     | Verifies `import <package>` works for every Python repo                        |
+| 6. IDE symlinks   | Creates `.cursor/rules/` and `.cursor/plans/` symlinks into unified-trading-pm |
 
 Safe to re-run. Skips repos already cloned and deps already installed.
 
@@ -63,10 +64,13 @@ This script auto-detects your workspace path and:
 
 - Adds `export UNIFIED_TRADING_WORKSPACE_ROOT="/your/path"` to `~/.zshrc` or `~/.bashrc`
 - Updates all Cursor `.code-workspace` files with your machine's path
+- Enforces git auto-fetch every 180 s and SCM repo limit of 100 in every workspace config
 - Creates Claude Code conversation symlinks (so old chats carry over between machines)
 - Updates Claude Code permissions in `~/.claude/settings.json`
 
 ### Step 4: Set up Cursor rules and plans (symlinks)
+
+The bootstrap script (Step 2) now runs this automatically as Phase 6. If you need to re-run it manually:
 
 ```bash
 # Symlink rules (edits go directly to git-tracked cursor-rules/)
@@ -114,7 +118,7 @@ which basedpyright                              # .venv-workspace/bin/basedpyrig
 
 # Cursor rules symlink works
 ls -la .cursor/rules                            # should show -> .../unified-trading-pm/cursor-rules
-ls .cursor/rules/*.mdc | wc -l                  # should be ~103
+find .cursor/rules -name "*.mdc" | wc -l        # should be ~108 (rules are in subdirectories)
 
 # Plans symlink works
 ls -la .cursor/plans                            # should show -> .../unified-trading-pm/plans/cursor-plans

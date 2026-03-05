@@ -380,6 +380,12 @@ if [ -n "$SMOKE_FAILURES" ]; then
   echo -e "$SMOKE_FAILURES"
 fi
 
+# ── PHASE 6: CURSOR/CLAUDE SYMLINKS ───────────────────────────────────────
+log_phase 6 "IDE Symlinks (Cursor rules + plans)"
+
+bash "$SCRIPT_DIR/setup-cursor-rules-symlink.sh" && log_ok "Cursor rules symlink ready" || log_warn "Cursor rules symlink failed (run manually)"
+bash "$SCRIPT_DIR/setup-cursor-plans-symlink.sh" && log_ok "Cursor plans symlink ready" || log_warn "Cursor plans symlink failed (run manually)"
+
 # ── FINAL SUMMARY ─────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

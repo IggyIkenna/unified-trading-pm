@@ -1,0 +1,15 @@
+---
+description: "Use Context7 MCP for up-to-date external library documentation"
+alwaysApply: false
+priority: 20
+tags:
+  - context7
+  - external-libraries
+  - documentation
+---
+# Context7 Usage
+RULE: When working with any external library, add `use context7` to your prompt to fetch current docs via the Context7 MCP server.
+WHY: Training data may be outdated; Context7 fetches live, version-accurate docs for the library in use.
+DO: Add `use context7` whenever using FastAPI, SQLAlchemy, Redis, Pydantic, httpx, or any third-party package.
+NEVER: Rely on training-data knowledge alone for external library APIs — always fetch with Context7.
+EXAMPLE: "How do I configure async sessions in SQLAlchemy? use context7"
