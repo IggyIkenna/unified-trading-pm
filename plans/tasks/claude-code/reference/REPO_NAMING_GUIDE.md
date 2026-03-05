@@ -12,7 +12,7 @@
 /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/
 ├── unified-config-interface/     ← DASHES (repo folder)
 ├── unified-events-interface/     ← DASHES
-├── unified-trading-services/       ← DASHES
+├── unified-trading-library/       ← DASHES
 └── instruments-service/          ← DASHES
 ```
 
@@ -65,7 +65,7 @@ cd unified-config-interface  # ✅ This is the repo folder
 
 ### Libraries (6)
 
-- `unified-trading-services/` → package: `unified_trading_services/`
+- `unified-trading-library/` → package: `unified_trading_library/`
 - `unified-config-interface/` → package: `unified_config_interface/`
 - `unified-events-interface/` → package: `unified_events_interface/`
 - `unified-market-interface/` → package: `unified_market_interface/`

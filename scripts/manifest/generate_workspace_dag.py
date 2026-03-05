@@ -391,7 +391,7 @@ def generate(
     svg_content = generate_svg(data)
 
     # Validate output is well-formed XML before writing
-    ET.fromstring(svg_content)
+    ET.fromstring(svg_content)  # nosec B314 — validates our own generated SVG, not untrusted input
 
     dst.write_text(svg_content)
     print(f"Generated: {dst}")

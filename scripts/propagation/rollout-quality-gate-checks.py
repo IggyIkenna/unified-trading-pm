@@ -10,6 +10,7 @@ Usage:
 """
 
 import argparse
+import re
 from pathlib import Path
 from typing import TypeAlias
 
@@ -394,8 +395,6 @@ CHECKS = [
 
 def file_has_check(content: str, sentinel: str) -> bool:
     """Check if a sentinel pattern already exists in the file."""
-    import re
-
     return bool(re.search(sentinel, content, re.IGNORECASE))
 
 
@@ -530,8 +529,8 @@ def main() -> None:
 
         added_val = qg_result.get("added", [])
         added_list: list[str] = added_val if isinstance(added_val, list) else []
-        status_val = qg_result.get("status", "")
-        status = str(status_val)
+        status_val = qg_result.get("status")
+        status = str(status_val or "unknown")
         joined = ", ".join(str(a) for a in added_list) if added_list else "none"
         print(f"    quality-gates: {status} ({len(added_list)} added: {joined})")
         print(f"    basedpyright:  {bp_result}")

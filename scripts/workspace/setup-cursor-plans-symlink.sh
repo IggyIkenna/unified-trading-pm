@@ -60,6 +60,22 @@ fi
 ln -s "$TARGET_DIR" "$SYMLINK_PATH"
 echo "[OK] Created symlink: .cursor/plans -> $TARGET_DIR"
 
+# Ensure cursor-plans and active in repo symlink to .cursor/plans (so Cursor can execute)
+PM_PLANS="$WORKSPACE_ROOT/unified-trading-pm/plans"
+for name in cursor-plans active; do
+  p="$PM_PLANS/$name"
+  if [ -L "$p" ]; then
+    t=$(readlink "$p")
+    if [ "$t" != "../../.cursor/plans" ]; then
+      rm "$p" && ln -s ../../.cursor/plans "$p" && echo "[OK] $name -> ../../.cursor/plans"
+    fi
+  elif [ -d "$p" ] && [ "$name" = "cursor-plans" ]; then
+    echo "[OK] cursor-plans is real directory (canonical)"
+  elif [ ! -e "$p" ]; then
+    ln -s ../../.cursor/plans "$p" && echo "[OK] Created $name -> ../../.cursor/plans"
+  fi
+done
+
 # Verify
 echo ""
 echo "Verification:"

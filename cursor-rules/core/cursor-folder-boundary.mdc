@@ -12,7 +12,7 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 ## What belongs in .cursor/
 
 ✅ `rules/` — SYMLINK to `unified-trading-pm/cursor-rules/` (edits go directly to git)
-✅ `plans/` — SYMLINK to `unified-trading-pm/plans/cursor-plans/`
+✅ `plans/` — SYMLINK to `unified-trading-pm/plans/active/`
 ✅ `skills-cursor/` — Cursor skill files
 ✅ `workspace-configs/` — Cursor/VSCode workspace .json configs
 ✅ `plugins/` — Cursor plugin cache (auto-managed)
@@ -26,13 +26,26 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 ❌ Archives → `unified-trading-pm/archive/`
 ❌ Git operations or CI/CD logic
 
+## Canonical Location (Repo) — Symlink Direction
+
+**The original/canonical files live in the repo.** `.cursor/` contains symlinks that point TO the repo. This enables sharing: clone the repo → run setup script → symlinks created. No need for the same workspace structure.
+
+| Location | Role |
+|----------|------|
+| `unified-trading-pm/cursor-rules/` | Canonical rules (git-tracked) |
+| `unified-trading-pm/plans/active/` | Canonical plans (git-tracked) |
+| `.cursor/rules` | Symlink → `unified-trading-pm/cursor-rules/` |
+| `.cursor/plans` | Symlink → `unified-trading-pm/plans/active/` |
+
+**Setup:** `bash unified-trading-pm/scripts/workspace/setup-active-symlink.sh` and `setup-cursor-rules-symlink.sh`
+
 ## How Rules and Plans Work
 
 Both `.cursor/rules/` and `.cursor/plans/` are **symlinks** into the PM repo:
 
 ```
 .cursor/rules/ -> unified-trading-pm/cursor-rules/     (symlink)
-.cursor/plans/ -> unified-trading-pm/plans/cursor-plans/ (symlink)
+.cursor/plans/ -> unified-trading-pm/plans/active/ (symlink)
 ```
 
 This means edits in `.cursor/rules/` directly modify git-tracked files. No sync needed.

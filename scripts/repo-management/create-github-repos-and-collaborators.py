@@ -100,7 +100,7 @@ def api_request(
         },
     )
     try:
-        resp = cast(HTTPResponse, urllib.request.urlopen(req, timeout=30))
+        resp = cast(HTTPResponse, urllib.request.urlopen(req, timeout=30))  # nosec B310 — URL is GitHub API hardcoded https endpoint
         return resp.status, resp.read().decode()
     except urllib.error.HTTPError as e:
         return e.code, (e.read().decode() if e.fp else str(e))

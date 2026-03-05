@@ -1,0 +1,23 @@
+# Node/UI repo .gitignore template
+# Reference: instruments-service, unified-trading-library
+
+# Security - Never commit credentials
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.backup
+
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+dist/
+build/
+.turbo/
+out/
+
+# Coverage
+.nyc_output/
+coverage/

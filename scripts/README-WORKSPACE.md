@@ -207,13 +207,15 @@ Done! No manual path editing needed.
 
 These scripts are in the same directory but serve different purposes:
 
-| Script                            | Purpose                                       | Category         |
-| --------------------------------- | --------------------------------------------- | ---------------- |
-| `setup-cursor-rules-symlink.sh`   | Symlink .cursor/rules/ to cursor-rules/       | Setup (one-time) |
-| `setup-cursor-plans-symlink.sh`   | Symlink .cursor/plans/ to plans/cursor-plans/ | Setup (one-time) |
-| `check-import-patterns.py`        | Validate import patterns                      | Code quality     |
-| `check-circular-imports.py`       | Detect circular dependencies                  | Code quality     |
-| `coding-standards-align-agent.sh` | AI agent for coding standards                 | AI workflows     |
+| Script                                      | Purpose                                                 | Category         |
+| ------------------------------------------- | ------------------------------------------------------- | ---------------- |
+| `setup-cursor-rules-symlink.sh`             | Symlink .cursor/rules/ to cursor-rules/                 | Setup (one-time) |
+| `setup-cursor-plans-symlink.sh`             | Symlink .cursor/plans/ to plans/cursor-plans/           | Setup (one-time) |
+| `check-import-patterns.py`                  | Validate import patterns                                | Code quality     |
+| `check-circular-imports.py`                 | Detect circular dependencies                            | Code quality     |
+| `coding-standards-align-agent.sh`           | AI agent for coding standards                           | AI workflows     |
+| `repo-management/verify-gh-pat-secrets.sh`  | Verify GH_PAT in all workspace repos                    | Auth/CI          |
+| `repo-management/force-push-all-to-main.sh` | Force-push local main to origin (branch protection off) | Repo ops         |
 
 ---
 

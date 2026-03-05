@@ -58,7 +58,7 @@ def main() -> int:
     if CANONICAL_PATH.is_file():
         c = load_json(CANONICAL_PATH)
         for p in c.get("externalPackages", []):
-            canonical[normalize(p["name"])] = p.get("versionRange", "")
+            canonical[normalize(p["name"])] = str(p.get("versionRange") or "")
 
     repos = derived.get("repositories", {})
     if args.repo:
@@ -75,7 +75,7 @@ def main() -> int:
             continue
         manifest_entry = manifest_repos.get(repo_name, {})
         manifest_deps = {
-            normalize(d["name"]): d.get("version", "")
+            normalize(d["name"]): str(d.get("version") or "")
             for d in manifest_entry.get("dependencies", [])
             if isinstance(d, dict) and "name" in d
         }

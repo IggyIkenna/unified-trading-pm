@@ -28,7 +28,7 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # Add market-tick-data-service to path
@@ -138,8 +138,6 @@ _DAY_SUCCESS_RE = re.compile(
 
 def _parse_per_day_from_log(log_path: str, task: DownloadTask) -> dict[str, str]:
     """Parse log file for per-day success/failure. Returns {date: 'ok'|'failed'|'unknown'}."""
-    from datetime import timedelta
-
     per_day: dict[str, str] = {}
     # Initialize all days in range as unknown
     start = datetime.strptime(task.start_date, "%Y-%m-%d").date()
@@ -244,7 +242,7 @@ def main():
 
     dry_run = args.dry_run and not args.no_dry_run
     force = getattr(args, "force", False)
-    log_dir = Path(args.log_dir or f"logs/download_10_days_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    log_dir = Path(args.log_dir or f"logs/download_10_days_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}")
     log_dir.mkdir(parents=True, exist_ok=True)
 
     if args.retry_from:
@@ -311,7 +309,7 @@ def main():
                 failed_days.append({"task": task.id, "date": date})
 
     report = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "dry_run": dry_run,
         "total": len(results),
         "passed": passed,
@@ -335,7 +333,7 @@ def main():
     with open(failed_days_path, "w") as f:
         json.dump(
             {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "log_dir": str(log_dir.resolve()),
                 "failed_days": failed_days,
                 "retry_command": (
