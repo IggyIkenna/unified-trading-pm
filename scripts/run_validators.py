@@ -81,8 +81,14 @@ def main() -> int:
     if args.scope == "all":
         failed |= run_plan_links_validator()
     if args.check_codex_refs:
-        # Phase 8: placeholder - implement when codex-ref tracking exists
-        print("--check-codex-refs: not yet implemented (Approach A: validator only)")
+        script = VALIDATORS_DIR / "validate_codex_refs.py"
+        if script.is_file():
+            failed |= subprocess.run(
+                [sys.executable, str(script), "--workspace-root", str(WORKSPACE_ROOT)],
+                cwd=str(PM_ROOT),
+            ).returncode
+        else:
+            print("Skip: validate_codex_refs.py not found", file=sys.stderr)
     return min(failed, 1)
 
 

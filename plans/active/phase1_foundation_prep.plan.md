@@ -31,13 +31,13 @@ todos:
     status: pending
   - id: arch-deployment-split
     content: "Split unified-trading-deployment-v3 into 4 repos: (1) deployment-service/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract; (2) deployment-api/ — thin FastAPI, imports deployment-service, GoogleOAuthMiddleware on write endpoints, port 8001; (3) deployment-ui/ — React UI calling deployment-api, OAuth ADMIN scope, SSE for status (scaffolded already); (4) system-integration-tests/ — NEW repo (per new-repo-setup.md), Layer 3a + 3b. Layer 2 (infra verification) lives in deployment-service/scripts/verify_infra.py. Tasks: deployment-v3-four-way-split, arch-deployment-v3-ui-extract."
-    status: pending
+    status: done
   - id: arch-ui-audit-full
     content: "Full audit of all service repos for embedded UI: check for ui/, frontend/, static/, visualiz*, *.tsx, *.jsx, package.json, index.html inside Python service repos. Known violations: execution-service (visualizer-ui + visualizer-api), unified-trading-deployment-v3 (ui/). Check also: alerting-service, market-data-processing-service, client-reporting-api, risk-and-exposure-service. Task: ui-service-separation-audit-full."
     status: pending
   - id: integration-system-tests-repo
     content: "Create system-integration-tests repo per new-repo-setup.md: Layer 3a (fast smoke @pytest.mark.smoke, <5 min) + Layer 3b (full @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Zero Python imports from services — HTTP/GCS/PubSub interaction only. SSOT: 06-coding-standards/integration-testing-layers.md. Tasks: integration-system-integration-tests-repo, integration-layer3-implement."
-    status: pending
+    status: done
   - id: integration-layer2-infra-verify
     content: "Add verify_infra.py to deployment-service/scripts/ after four-way split: checks GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist. Exposed as GET /infra/health in deployment-api. Gates deployment success before Layer 3. Task: integration-layer2-infra-verify."
     status: pending
