@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Sync all workspace repos to main: ensure .gitignore, commit all changes, force-push
+# Sync all workspace repos to main: commit any uncommitted changes, then force-push
 #
 # 1. Ensures .gitignore has heavy-file exclusions (.coverage, .venv, node_modules, etc.)
-# 2. git add -A (respects .gitignore)
-# 3. git commit if changes
+# 2. git add -A (stages all local changes, respects .gitignore)
+# 3. git commit if there are staged changes
 # 4. git push --force origin main
+#
+# Safe to run periodically in background (e.g. cron, launchd).
 #
 # Usage: bash sync-all-to-main.sh [--dry-run] [--limit N]
 # Run from: workspace root or unified-trading-pm/scripts/repo-management/
@@ -57,6 +59,8 @@ skip=0
 
 for repo in "${REPOS[@]}"; do
   dir="$WORKSPACE_ROOT/$repo"
+  # execution-visualizer-ui → execution-analytics-ui (same repo, renamed)
+  [[ "$repo" = "execution-visualizer-ui" ]] && dir="$WORKSPACE_ROOT/execution-analytics-ui"
   [[ ! -d "$dir" ]] && echo "  (skip) $repo — not in workspace" && ((skip++)) && continue
   [[ ! -d "$dir/.git" ]] && echo "  (skip) $repo — not a git repo" && ((skip++)) && continue
 
@@ -78,8 +82,8 @@ for repo in "${REPOS[@]}"; do
 
   cd "$dir"
   git add -A 2>/dev/null || true
-  if ! git diff --cached --quiet 2>/dev/null; then
-    git commit --trailer "Made-with: Cursor" --no-verify -m "chore: sync local changes" 2>/dev/null || true
+  if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+    git commit --no-verify -m "chore: sync local changes" 2>/dev/null || true
   fi
   if ! git rev-parse --verify main >/dev/null 2>&1; then
     echo "  (skip) $repo — no main branch"

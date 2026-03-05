@@ -2102,7 +2102,8 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
       "skipped_gates": [],
-      "quality_gate_status": "NO_QG"
+      "quality_gate_status": "NO_QG",
+      "github_url": "https://github.com/IggyIkenna/execution-analytics-ui"
     },
     "unified-trading-ui-auth": {
       "type": "library",
@@ -2143,7 +2144,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "NO_TESTS",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/execution-analytics-ui"
     },
     "ml-training-ui": {
       "type": "ui",
