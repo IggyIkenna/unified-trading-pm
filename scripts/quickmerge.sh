@@ -106,6 +106,10 @@ elif [ -f ".venv/Scripts/activate" ]; then
   source .venv/Scripts/activate
   VENV_ACTIVATED=1
   echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
+elif [ -f "${WORKSPACE_ROOT}/.venv-workspace/bin/activate" ]; then
+  source "${WORKSPACE_ROOT}/.venv-workspace/bin/activate"
+  VENV_ACTIVATED=1
+  echo "[$REPO_NAME] Using .venv-workspace (Python $(python --version 2>&1))"
 else
   echo "[$REPO_NAME] ⚠️  No .venv found — using system Python"
 fi
