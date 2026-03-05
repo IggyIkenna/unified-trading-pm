@@ -21,8 +21,8 @@ OUTPUT_FILE = WORKSPACE_ROOT / "api_keys"
 ENV_PATHS = [
     "unified-trading-deployment-v3/.env",
     "unified-trading-deployment-v3/.env.local",
-    "execution-visualizer-ui/.env",
-    "execution-visualizer-ui/.env.local",
+    "execution-analytics-ui/.env",
+    "execution-analytics-ui/.env.local",
     "market-data-processing-service/.env",
     "execution-service/.env",
     "unified-trading-services/.env",

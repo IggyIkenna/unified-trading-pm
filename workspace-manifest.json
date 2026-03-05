@@ -94,7 +94,6 @@
     "unified-trading-pm": "1.0.1",
     "unified-trading-codex": "0.1.0",
     "execution-service": "0.1.0",
-    "execution-visualizer-ui": "0.1.0",
     "unified-trading-ui-auth": "0.1.0"
   },
   "repositories": {
@@ -102,7 +101,10 @@
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "merge_level": 2,
@@ -122,7 +124,10 @@
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
@@ -141,7 +146,10 @@
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "02-data"],
+      "codex_sections": [
+        "05-infrastructure",
+        "02-data"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
@@ -178,7 +186,10 @@
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
       "version": "0.1.3",
       "version_source": "pyproject.toml",
       "merge_level": 3,
@@ -201,7 +212,10 @@
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": ["03-observability", "05-infrastructure"],
+      "codex_sections": [
+        "03-observability",
+        "05-infrastructure"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
@@ -218,7 +232,10 @@
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
@@ -236,7 +253,10 @@
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
       "version": "0.4.0",
       "version_source": "pyproject.toml",
       "merge_level": 3,
@@ -257,7 +277,11 @@
       "type": "library",
       "arch_tier": "3",
       "doc_standard": "library-canonical",
-      "codex_sections": ["01-domain", "02-data", "05-infrastructure"],
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "05-infrastructure"
+      ],
       "version": "0.1.12",
       "version_source": "pyproject.toml",
       "merge_level": 5,
@@ -303,7 +327,10 @@
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 4,
@@ -320,7 +347,10 @@
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 2,
@@ -338,7 +368,10 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 4,
@@ -356,7 +389,10 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["02-data", "05-infrastructure"],
+      "codex_sections": [
+        "02-data",
+        "05-infrastructure"
+      ],
       "version": "0.3.0",
       "version_source": "pyproject.toml",
       "merge_level": 5,
@@ -400,7 +436,9 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure"],
+      "codex_sections": [
+        "05-infrastructure"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 5,
@@ -428,7 +466,10 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "merge_level": 5,
@@ -461,7 +502,10 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 6,
@@ -487,7 +531,10 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "merge_level": 6,
@@ -505,7 +552,10 @@
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "codex_sections": [
+        "04-architecture",
+        "05-infrastructure"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 5,
@@ -604,7 +654,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -658,7 +712,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -702,7 +760,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -750,7 +812,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -793,7 +859,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -831,7 +901,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -879,7 +953,10 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability"],
+      "codex_sections": [
+        "02-data",
+        "03-observability"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -949,7 +1026,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -985,7 +1066,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -1026,7 +1111,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -1069,7 +1158,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -1179,7 +1272,11 @@
       "folder_name": "execution-service",
       "github_url": "https://github.com/IggyIkenna/execution-service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
+      "codex_sections": [
+        "01-domain",
+        "03-observability",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -1260,7 +1357,9 @@
       "arch_tier": "service",
       "doc_standard": "service-canonical",
       "github_url": "https://github.com/IggyIkenna/alerting-service",
-      "codex_sections": ["03-observability"],
+      "codex_sections": [
+        "03-observability"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -1298,7 +1397,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "02-data", "03-observability"],
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "03-observability"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
@@ -1346,7 +1449,10 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "03-observability"],
+      "codex_sections": [
+        "01-domain",
+        "03-observability"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
@@ -1400,7 +1506,10 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "03-observability"],
+      "codex_sections": [
+        "01-domain",
+        "03-observability"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
@@ -1438,7 +1547,11 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "02-data", "04-architecture"],
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
@@ -1473,13 +1586,19 @@
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "codex_sections": [
+        "04-architecture",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": ["trading-analytics-ui", "live-health-monitor-ui"],
+      "serves_ui": [
+        "trading-analytics-ui",
+        "live-health-monitor-ui"
+      ],
       "proxies_service": "execution-service",
       "notes": "FastAPI + OAuth middleware. HTTP boundary between execution-service and UIs. P0: replace dict[str, Any] at all API boundaries with TypedDict/Pydantic (p0-exec-results-api-types).",
       "github_url": "https://github.com/IggyIkenna/execution-results-api",
@@ -1517,13 +1636,19 @@
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "04-architecture"],
+      "codex_sections": [
+        "02-data",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": ["trading-analytics-ui", "batch-audit-ui"],
+      "serves_ui": [
+        "trading-analytics-ui",
+        "batch-audit-ui"
+      ],
       "proxies_service": "market-data-processing-service",
       "notes": "FastAPI + OAuth middleware. Exposes processed market data to UIs. SSE endpoint for live price streaming.",
       "github_url": "https://github.com/IggyIkenna/market-data-api",
@@ -1556,13 +1681,18 @@
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "04-architecture"],
+      "codex_sections": [
+        "01-domain",
+        "04-architecture"
+      ],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": ["client-reporting-ui"],
+      "serves_ui": [
+        "client-reporting-ui"
+      ],
       "proxies_service": "pnl-attribution-service",
       "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients.",
       "github_url": "https://github.com/IggyIkenna/client-reporting-api",
@@ -1601,7 +1731,10 @@
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1622,7 +1755,9 @@
       "type": "infrastructure",
       "arch_tier": "service",
       "doc_standard": "infrastructure-canonical",
-      "codex_sections": ["05-infrastructure"],
+      "codex_sections": [
+        "05-infrastructure"
+      ],
       "version": "0.3.0",
       "version_source": "manual",
       "merge_level": 12,
@@ -1668,7 +1803,9 @@
       "quality_gate_status": "FAILING",
       "doc_standard": "infrastructure-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": ["05-infrastructure"]
+      "codex_sections": [
+        "05-infrastructure"
+      ]
     },
     "deployment-api": {
       "type": "api-service",
@@ -1716,7 +1853,9 @@
       "quality_gate_status": "HAS_QG",
       "doc_standard": "api-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": ["05-infrastructure"]
+      "codex_sections": [
+        "05-infrastructure"
+      ]
     },
     "deployment-ui": {
       "type": "ui",
@@ -1725,7 +1864,9 @@
       "status": "scaffolded",
       "version": "0.1.0",
       "description": "Deployment management UI \u2014 orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
-      "dependencies": ["deployment-api"],
+      "dependencies": [
+        "deployment-api"
+      ],
       "cluster": "devops-ui",
       "completion_path": "cefi",
       "notes": "UI split from unified-trading-deployment-v3 per ui-service-separation rule. React/TypeScript. Scaffolded 2026-02-28. After four-way split: depends on deployment-api.",
@@ -1737,7 +1878,9 @@
       "quality_gate_status": "NO_QG",
       "doc_standard": "ui-canonical",
       "version_source": "package.json",
-      "codex_sections": ["05-infrastructure"],
+      "codex_sections": [
+        "05-infrastructure"
+      ],
       "github_url": "https://github.com/IggyIkenna/deployment-ui"
     },
     "system-integration-tests": {
@@ -1762,7 +1905,10 @@
       "quality_gate_status": "NO_QG",
       "doc_standard": "test-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
       "github_url": "https://github.com/IggyIkenna/system-integration-tests"
     },
     "unified-trading-codex": {
@@ -1773,7 +1919,9 @@
       "version": "0.1.0",
       "version_source": "manual",
       "merge_level": 1,
-      "dependencies": ["unified-trading-pm"],
+      "dependencies": [
+        "unified-trading-pm"
+      ],
       "notes": "Standards & codex repo. Coding standards, architecture docs, quality gate templates. Depends on PM for workspace-manifest.json, setup.sh template, cursor rules. CI infrastructure dep for ALL repos.",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 70,
@@ -1788,7 +1936,10 @@
       "arch_tier": "ui",
       "ui_type": "monitoring",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["03-observability", "06-coding-standards"],
+      "codex_sections": [
+        "03-observability",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1806,7 +1957,10 @@
       "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1824,7 +1978,10 @@
       "arch_tier": "ui",
       "ui_type": "hybrid",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["03-observability", "06-coding-standards"],
+      "codex_sections": [
+        "03-observability",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1843,7 +2000,10 @@
       "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1861,7 +2021,10 @@
       "arch_tier": "ui",
       "ui_type": "monitoring",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["03-observability", "06-coding-standards"],
+      "codex_sections": [
+        "03-observability",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1879,7 +2042,10 @@
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1897,7 +2063,10 @@
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1931,31 +2100,13 @@
       "version_source": "pyproject.toml",
       "codex_sections": []
     },
-    "execution-visualizer-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "analytics",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "status": "active",
-      "description": "Execution visualizer UI -- backtest and live execution visualization with Python backend (instruction_api, routes). React/TypeScript + Vite.",
-      "dependencies": [],
-      "ci_status": "NO_QG",
-      "coverage_pct": 0,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
-      "skipped_gates": [],
-      "quality_gate_status": "NO_QG",
-      "github_url": "https://github.com/IggyIkenna/execution-analytics-ui"
-    },
     "unified-trading-ui-auth": {
       "type": "library",
       "arch_tier": "ui",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["06-coding-standards"],
+      "codex_sections": [
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1974,7 +2125,10 @@
       "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
+      "codex_sections": [
+        "01-domain",
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -1993,7 +2147,9 @@
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": ["06-coding-standards"],
+      "codex_sections": [
+        "06-coding-standards"
+      ],
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
@@ -2013,12 +2169,16 @@
       {
         "level": 0,
         "description": "Project management \u2014 pure root (manifest, templates, scripts, cursor rules). No dependencies.",
-        "repos": ["unified-trading-pm"]
+        "repos": [
+          "unified-trading-pm"
+        ]
       },
       {
         "level": 1,
         "description": "Standards & codex \u2014 coding standards, architecture docs, quality gate templates. Depends on PM.",
-        "repos": ["unified-trading-codex"]
+        "repos": [
+          "unified-trading-codex"
+        ]
       },
       {
         "level": 2,
@@ -2035,7 +2195,10 @@
       {
         "level": 3,
         "description": "Services runtime (Tier 1)",
-        "repos": ["unified-config-interface", "unified-trading-library"]
+        "repos": [
+          "unified-config-interface",
+          "unified-trading-library"
+        ]
       },
       {
         "level": 4,
@@ -2067,7 +2230,9 @@
       {
         "level": 7,
         "description": "Foundational service (instruments only; no service-domain-data dependency)",
-        "repos": ["instruments-service"]
+        "repos": [
+          "instruments-service"
+        ]
       },
       {
         "level": 8,
@@ -2105,7 +2270,10 @@
       {
         "level": 10,
         "description": "Deployment infrastructure (deployment-api, deployment-service; deploys all services)",
-        "repos": ["deployment-api", "deployment-service"]
+        "repos": [
+          "deployment-api",
+          "deployment-service"
+        ]
       },
       {
         "level": 11,
@@ -2115,7 +2283,6 @@
           "client-reporting-ui",
           "deployment-ui",
           "execution-analytics-ui",
-          "execution-visualizer-ui",
           "live-health-monitor-ui",
           "logs-dashboard-ui",
           "ml-training-ui",
@@ -2129,7 +2296,9 @@
       {
         "level": 12,
         "description": "IaC + post-deploy validation (deploy last; references all service images)",
-        "repos": ["system-integration-tests"]
+        "repos": [
+          "system-integration-tests"
+        ]
       }
     ]
   },
@@ -2139,23 +2308,39 @@
       "description": "Pure leaf \u2014 zero inter-library deps. Uses doc dependencies (PM, codex) for CI standards. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library"
     },
     "1": {
-      "allowed_from": ["0"],
+      "allowed_from": [
+        "0"
+      ],
       "description": "Services runtime (library) \u2014 imports Tier 0 only. Services use UTL for L2. Repos: unified-trading-library (UTL), unified-reference-data-interface, unified-config-interface (UCI)"
     },
     "2": {
-      "allowed_from": ["0", "1"],
+      "allowed_from": [
+        "0",
+        "1"
+      ],
       "description": "Domain/market interfaces \u2014 imports Tier 0+1, NOT Tier 3. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface"
     },
     "3": {
-      "allowed_from": ["0", "1"],
+      "allowed_from": [
+        "0",
+        "1"
+      ],
       "description": "Domain data client \u2014 cloud storage I/O, imports Tier 0+1. Repos: unified-domain-client (UDC)"
     },
     "service": {
-      "allowed_from": ["0", "1", "2", "3"],
+      "allowed_from": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
       "description": "Services \u2014 import from all library tiers. Never import from another service repo."
     },
     "api": {
-      "allowed_from": ["0", "1"],
+      "allowed_from": [
+        "0",
+        "1"
+      ],
       "description": "API gateway services (FastAPI+OAuth) \u2014 HTTP boundary between services and UIs. Deps: UTL+UCI+UEI only."
     },
     "ui": {
@@ -2242,7 +2427,10 @@
       },
       {
         "step": 2,
-        "packages": ["unified-config-interface", "unified-trading-library"],
+        "packages": [
+          "unified-config-interface",
+          "unified-trading-library"
+        ],
         "reason": "Tier 1 packages. UCI depends on UEI. UTL depends on T0 libs."
       },
       {
@@ -2274,7 +2462,9 @@
       },
       {
         "step": 6,
-        "packages": ["All services"],
+        "packages": [
+          "All services"
+        ],
         "reason": "Can be published once all libraries are available"
       }
     ]
@@ -2286,7 +2476,7 @@
       "milestone": "Batch85 + Live90",
       "description": "Minimum set for commercial CeFi trading: crypto spot+perp (Binance, OKX, Bybit, Hyperliquid) + traditional equities (IBKR).",
       "required_libraries": [
-        "unified-api-contracts (CeFi venues: Binance, OKX, Bybit, Hyperliquid, Coinbase, Kraken, IBKR, Deribit, Kalshi)",
+        "unified-api-contracts (CeFi venues: Binance, OKX, Bybit, Hyperliquid, Coinbase, IBKR, Deribit, Kalshi)",
         "unified-internal-contracts",
         "unified-config-interface",
         "unified-events-interface",
@@ -2347,7 +2537,9 @@
         "unified-defi-execution-interface",
         "unified-api-contracts (DeFi: Uniswap v3/v4, Aave v3, Curve, TheGraph, DeFiLlama)"
       ],
-      "additional_services": ["features-onchain-service"],
+      "additional_services": [
+        "features-onchain-service"
+      ],
       "requires_cefi_path": true
     },
     "sports": {

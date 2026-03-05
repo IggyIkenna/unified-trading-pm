@@ -2826,12 +2826,6 @@
       "internal_count": 0,
       "external_count": 0
     },
-    "execution-visualizer-ui": {
-      "internal_deps": {},
-      "external_deps": {},
-      "internal_count": 0,
-      "external_count": 0
-    },
     "live-health-monitor-ui": {
       "internal_deps": {},
       "external_deps": {},

@@ -3,21 +3,25 @@
 # Run from repo root. Pause iCloud first for speed: sudo pkill -SIGSTOP -x nsurlsessiond
 #
 # If Step 1 hangs (iCloud), run this manually in another terminal and wait:
-#   rm -f .git/index.lock && git reset --soft origin/main && git reset
-# Then re-run this script with: SKIP_RESET=1 bash scripts/workspace/split-commits-by-dir.sh
+#   git stash push -u -m "split-commits" && git fetch origin main && git branch -f main origin/main && git checkout main && git stash pop && git restore --staged .
+# Then re-run this script with: SKIP_SYNC=1 bash scripts/workspace/split-commits-by-dir.sh
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-if [[ -z "${SKIP_RESET:-}" ]]; then
-  echo "Step 1: Reset to origin/main, keep all changes unstaged..."
-  echo "(If this hangs, Ctrl+C, run the reset manually, then: SKIP_RESET=1 bash $0)"
+if [[ -z "${SKIP_SYNC:-}" ]]; then
+  echo "Step 1: Stash changes, sync main to origin/main, restore changes unstaged..."
+  echo "(If this hangs, Ctrl+C, run the sync manually, then: SKIP_SYNC=1 bash $0)"
   rm -f .git/index.lock
-  git reset --soft origin/main
-  git reset
+  git fetch origin main
+  git stash push -u -m "split-commits-by-dir"
+  git branch -f main origin/main
+  git checkout main
+  git stash pop
+  git restore --staged .
 else
-  echo "Skipping reset (SKIP_RESET=1). Assuming working tree has unstaged changes."
+  echo "Skipping sync (SKIP_SYNC=1). Assuming working tree has unstaged changes."
 fi
 
 echo ""

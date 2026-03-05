@@ -23,7 +23,7 @@ REPOS=(alerting-service archive batch-audit-ui client-reporting-api client-repor
   unified-market-interface unified-ml-interface unified-position-interface
   unified-reference-data-interface unified-sports-execution-interface unified-trade-execution-interface
   unified-trading-codex unified-trading-library unified-trading-pm
-  unified-trading-ui-auth execution-visualizer-ui)
+  unified-trading-ui-auth execution-analytics-ui)
 
 for repo in "${REPOS[@]}"; do
   src="$ICLOUD/$repo"
