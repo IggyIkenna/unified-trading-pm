@@ -138,7 +138,7 @@ This means:
 
 - **Edits in `.cursor/rules/` directly modify git-tracked files** in unified-trading-pm
 - **No sync scripts needed** — there's no copy to get out of sync
-- **`git pull` in unified-trading-pm immediately gives you the team's latest** rules and plans
+- `**git pull` in unified-trading-pm immediately gives you the team's latest\*\* rules and plans
 - **Conflict resolution is standard git** — if two developers edit the same rule, git merge handles it
 
 ### Multi-developer workflow

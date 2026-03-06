@@ -2,6 +2,14 @@
 
 Scripts to check and validate dependency alignment between pyproject.toml, workspace-manifest.json, and workspace-constraints.toml.
 
+## Source of Truth (Critical)
+
+**External dependencies:** `workspace-constraints.toml` → `canonical-dependency-manifest.json` is the SSOT. All repos must follow it.
+
+- **Do NOT** run `resolve-canonical-versions.py` to "fix" alignment — it derives the canonical from repo pyproject.toml, which defeats the purpose.
+- When alignment fails: update **repos** to match the canonical (via `fix_external_dependency_alignment.py --apply`).
+- If the canonical needs to change (e.g. workspace-wide upgrade): edit `workspace-constraints.toml` deliberately, regenerate canonical, then run the fix script.
+
 ## Workflow
 
 ```
@@ -41,7 +49,8 @@ python scripts/manifest/validate-dependency-conflicts.py --regenerate  # regener
 
 ## Related Scripts
 
-- `scripts/workspace/resolve-canonical-versions.py` — generates workspace-constraints.toml from pyproject.toml
+- `scripts/workspace/resolve-canonical-versions.py` — generates workspace-constraints.toml from repo pyproject.toml files. **Use only for intentional sync** (e.g. migration); not for fixing alignment.
 - `scripts/workspace/validate-workspace-constraints.py` — uv pip compile validation
 - `scripts/manifest/generate_canonical_dependency_manifest.py` — generates canonical-dependency-manifest.json from workspace-constraints.toml
-- `scripts/check_external_dependency_alignment.py` — checks repo pyproject vs canonical-dependency-manifest (external only)
+- `scripts/manifest/check_external_dependency_alignment.py` — checks repo pyproject vs canonical-dependency-manifest (external only)
+- `scripts/manifest/fix_external_dependency_alignment.py` — updates repos to match canonical; use `--apply` to write changes
