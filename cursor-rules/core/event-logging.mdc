@@ -7,53 +7,36 @@ tags: [observability, event-logging]
 
 # Event Logging
 
-RULE: Use `setup_events()` and `log_event()` from unified-events-interface. 11 lifecycle events required for batch / live mode replaces UPLOAD_STARTED/COMPLETED with DATA_BROADCAST + PERSISTENCE_STARTED + PERSISTENCE_COMPLETED. `tests/unit/test_event_logging.py` MUST exist and never be skipped.
-NOTE: CONNECTION_ESTABLISHED is a service-specific domain event (not a lifecycle event); see per-service live observability docs in 03-observability/live/per-service/.
+RULE: Use `setup_events()` and `log_event()` from unified-events-interface. 11 lifecycle events required for batch / live mode. `tests/unit/test_event_logging.py` MUST exist and never be skipped.
 WHY: UTD v2 parses events for real-time progress, debugging, and cost optimization.
 CODEX: 03-observability/lifecycle-events.md
 
-**UTS v2.2.0 Event Sinks:** GCSEventSink, PubSubEventSink, CompositeEventSink, MockEventSink available via setup_service() wrapper.
+**GCSEventSink:** Lives in UTS (Tier 1), not UEI. UEI defines the EventSink Protocol. GCSEventSink implements it.
 
-## Source of GCSEventSink
+## Import pattern
 
-GCSEventSink LIVES IN UTS (Tier 1), NOT in UEI (Tier 0).
-UEI defines the EventSink Protocol. GCSEventSink implements it.
+```python
+from unified_trading_services import GCSEventSink, setup_service, log_event
+# OR from unified_events_interface import setup_events, log_event (legacy)
+```
 
-Services import:
-  from unified_events_interface import setup_events, log_event, MockEventSink  # Protocol + log
-  from unified_trading_services import GCSEventSink  # Implementation
+## setup_service pattern (UTS v2.2.0+)
 
-Or use the UTS convenience wrapper:
-  from unified_trading_services import setup_service, GCSEventSink, log_event
+```python
+setup_service(service_name="svc", mode="batch", sink=GCSEventSink(project_id=config.gcp_project_id, bucket=config.events_bucket, service_name="svc"))
+log_event("STARTED"); log_event("VALIDATION_STARTED"); ... log_event("STOPPED")
+```
 
-DO:
-  # NEW PATTERN (UTS v2.2.0+) - with sink configuration:
-  from unified_trading_services import GCSEventSink, setup_service, log_event
-  from unified_events_interface import log_event  # if using UEI directly
+Full patterns: CODEX 03-observability/lifecycle-events.md
 
-  setup_service(
-      service_name="svc",
-      mode="batch",
-      sink=GCSEventSink(
-          project_id=config.gcp_project_id,
-          bucket=config.events_bucket,
-          service_name="svc",
-      ),
-  )
+## DO
 
-  # LEGACY PATTERN (still supported) - without sink:
-  from unified_events_interface import setup_events, log_event
-  setup_events(service_name="my-service", mode="batch")
+log_event("STARTED"); log_event("VALIDATION_STARTED"); ... log_event("STOPPED")
+log_event("AUTH_FAILURE", metadata={...}); log_event("CONFIG_CHANGED", metadata={...}); log_event("SECRET_ACCESSED", metadata={...})
 
-  log_event("STARTED"); log_event("VALIDATION_STARTED"); ... log_event("STOPPED")
-  log_event("AUTH_FAILURE", metadata={"auth_type": "api_key", "username": "...", "failure_reason": "..."})
-  log_event("CONFIG_CHANGED", metadata={"config_file": "...", "changed_by": "...", "authorized": True})
-  log_event("SECRET_ACCESSED", metadata={"secret_name": "...", "caller_identity": "...", "success": True})
+## NEVER
 
-NEVER:
-  from unified_trading_services.observability import log_event
-  from unified_trading_services.security import AuthFailureLogger  # module deleted Feb 2026
-  from unified_trading_services.security import ConfigChangeLogger  # module deleted Feb 2026
-  from unified_trading_services.security import SecretAccessLogger  # module deleted Feb 2026
-  setup_cloud_logging
-  Exit without logging STOPPED or FAILED
+- `from unified_trading_services.observability import log_event`
+- `from unified_trading_services.security import AuthFailureLogger` (deleted Feb 2026)
+- `setup_cloud_logging`
+- Exit without logging STOPPED or FAILED
