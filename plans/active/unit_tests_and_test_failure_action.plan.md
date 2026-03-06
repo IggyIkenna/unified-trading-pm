@@ -62,15 +62,15 @@ After fixing deployment-service (0 fail), deployment-api (0 fail), deployment-ui
 
 **Impact:** features-calendar-service (9 errors), features-onchain-service (7 fails + 1 error)
 **Root cause:** Services import `BaseFeatureCalculator`, `BaseFeatureService`, `FeatureCalculatorRegistry` from `unified_feature_calculator`, but UFCL only exports `FeatureCalculator`.
-**Fix:** Add aliases in UFCL `__init__.py`:
+**Status:** DONE — UFCL already exports `BaseFeatureCalculator`, `BaseFeatureService`,
+`FeatureCalculatorRegistry` directly from `service_base`. No alias was created.
 
-```python
-BaseFeatureCalculator = FeatureCalculator  # backward compat alias
-```
-
-Or create `BaseFeatureService` and `FeatureCalculatorRegistry` as proper classes.
-**Effort:** 1h
-**Priority:** HIGH — unblocks 2 services entirely
+> **Note:** The original fix guidance below (backward compat alias) is superseded and must NOT be
+> followed. Creating `BaseFeatureCalculator = FeatureCalculator  # backward compat alias` violates
+> `cursor-rules/core/no-backward-compat-shims.mdc`. The actual fix was a direct export from
+> `service_base`, not an alias.
+**Effort:** Done
+**Priority:** HIGH — already resolved, unblocked 2 services entirely
 
 ### RC-2: Missing DependencyChecker Module (22 failures + 4 collection errors)
 
@@ -112,7 +112,10 @@ C. Delete tests if DependencyChecker is no longer planned
 
 **Impact:** execution-service `test_gcs_write.py` (5), `test_execution_cloud_service.py` (4)
 **Root cause:** Integration tests try to use real GCS client; cloud service tests mock wrong paths after UCS->UTS rename.
-**Fix:** Update mock targets from `unified_cloud_services.*` to `unified_trading_services.*` or mock at the correct abstraction level.
+**Fix:** `unified_cloud_services` does not exist. Update mock targets based on what is being mocked:
+- Cloud I/O (GCS reads/writes, storage ops) → mock `unified_cloud_interface.*`
+- UTS business logic / service orchestration → mock `unified_trading_services.*`
+Do NOT use `unified_cloud_services.*` — this package does not exist in the workspace.
 **Effort:** 1h
 **Priority:** MEDIUM
 
