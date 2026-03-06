@@ -7,16 +7,16 @@ todos:
     status: completed
   - id: replace-time-since-with-binary-horizons
     content: "Replace all raw time_since_* integer features with multi-horizon binary encoding: for each event (swing_high, swing_low, bos, choch, supply_zone_entry, demand_zone_entry, round_number_touch, liq_event, regime_change, weekly_anchor_touch), add binary indicators: event_in_last_{1,3,5,10,20,50}_bars. These let GBT discover recency windows it cannot find from a raw integer."
-    status: pending
+    status: completed
   - id: add-explicit-binary-thresholds
     content: "For known-meaningful thresholds, add explicit binary indicators alongside the continuous feature: rsi_overbought (rsi>70), rsi_oversold (rsi<30), funding_extreme_pos (>0.1%), funding_extreme_neg (<-0.1%), vol_high_vs_30d (>75th pct of 30d), vol_low_vs_30d (<25th pct), liq_cascade_active (liq_intensity>3), bos_fresh (bos_in_last_3_bars), choch_fresh (choch_in_last_5_bars). These collapse multi-split decisions to a single split."
-    status: pending
+    status: completed
   - id: hft-unit-tests
     content: "Write unit tests for all HFT feature calculators using mocks based on API contracts schemas. Mock external API responses using unified-api-contracts schemas (DatabentoOhlcvBar, CanonicalOptionQuote, CanonicalBookUpdate, CryptoPanicResponse, LunarCrushResponse). Verify: new MDPS columns (trade_size_p10-p99, spread_volatility_15s, bid/ask_pressure_gradient, whale_trade_count, effective_to_quoted_spread_ratio, liq_inter_time_*, volume_clock_*), features-delta-one columns (amihud_illiquidity_*, vpin_*, kyles_lambda_*), cross-instrument output columns match CrossInstrumentFeatures schema. pytest only, no live I/O, no quality gates."
-    status: pending
+    status: completed
   - id: hft-provision-api-keys-setup
     content: "Document required API keys in credentials-registry.yaml: Databento (databento-api-key, ~$100-500/mo), CryptoPanic (cryptopanic-api-key), LunarCrush (lunarcrush-api-key), CryptoQuant (cryptoquant-api-key), Coinglass (coinglass-api-key). DefiLlama, Yahoo Finance, FRED are free. Setup only — provisioning and live verification goes to consolidated_remaining_work.plan.md."
-    status: pending
+    status: completed
   - id: feed-all-22-groups
     content: "HIGHEST ROI (no new code): Update ml-training-service to subscribe to all 22 feature groups, not just 4 (technical_indicators, market_structure, returns, targets). Add all remaining groups including round_numbers, microstructure, funding_oi, liquidations, futures_basis, volume_flow. Calendar service actual registered names: temporal, economic_events, yield_curve, dxy_momentum, sentiment. Onchain groups: stablecoin_dominance, fear_greed."
     status: completed
@@ -76,7 +76,7 @@ todos:
     status: completed
   - id: ml-subscribe-mtf-features
     content: Update ml-training-service and ml-inference-service to subscribe to features-multi-timeframe-service output topics alongside delta-one and cross-instrument feature topics.
-    status: pending
+    status: completed
   - id: regime-conditional-models
     content: "Add regime-conditional model segmentation: split training data by volatility_regime (low/normal/high), train 3 specialist LightGBM models. LOW_VOL: mean-reversion, S/R, fib confluence dominate. NORMAL: momentum ratios, trendline slopes. HIGH_VOL: liq_intensity, funding_extreme, oi_acceleration, round numbers. Route inference to specialist based on current regime."
     status: completed
@@ -91,7 +91,7 @@ todos:
     status: completed
   - id: strategy-subscribe-cascade
     content: Update strategy-service to subscribe to CascadePredictionEvent topic. Uses cascade_confidence_score + cascade_aligned flag — does NOT re-implement cross-TF logic.
-    status: pending
+    status: completed
   - id: cascade-meta-model-training
     content: "Phase 2: Stage 10 in ml-training-service: CascadeMetaModelTrainer — inputs are base predictions across all TFs + multi-TF features from features-multi-timeframe-service + regime features. Target: Sharpe-adjusted swing outcome. ModelType.META_CASCADE. SHAP reveals which TF dominates per regime."
     status: completed
@@ -142,13 +142,13 @@ todos:
     status: completed
   - id: mtf-service-unit-tests
     content: "Write unit tests for all MTF calculators (tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context). Mock all delta-one feature inputs using MagicMock(spec=delta_one output DataFrame schema). Test: output column presence, binary indicator ranges [0,1], ratio features non-negative, session context timing logic. Use pytest fixtures from conftest.py based on CrossTimeframeFeatures schema. Do NOT run quality gates."
-    status: pending
+    status: completed
   - id: mtf-service-schema-contract-test
     content: "Write schema contract tests for MTF service: verify output_schemas.py columns match CrossTimeframeFeatures internal contract spec exactly (same field names, types, nullability). pytest only, no live I/O. This is a unit-level contract test, not a deployment test. Full integration and live PubSub/GCS verification goes to consolidated_remaining_work.plan.md."
     status: completed
   - id: mtf-service-github-collaborators
     content: Add features-multi-timeframe-service to unified-trading-pm/scripts/create-github-repos-and-collaborators.py REPOS_TO_CREATE list. Add datadodo and CosmicTrader as collaborators with admin permission. Run script to create repo and set access.
-    status: pending
+    status: completed
   - id: mtf-service-cloud-build-trigger
     content: "Add Cloud Build trigger for features-multi-timeframe-service in deployment-service: trigger on push to main at path features-multi-timeframe-service/**. Mirror features-cross-instrument-service Cloud Build trigger config."
     status: completed

@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: multi-timeframe-stacking
     content: "Add multi-timeframe context stacking to features-delta-one-service: each model operating at timeframe T also receives higher-TF structural features (market_structure + momentum from 4h when running 1h model, etc.) as suffix-renamed columns (_4h, _1d)"
-    status: pending
+    status: completed
   - id: cross-asset-features
     content: "Add CrossAssetFeatures calculator: BTC return context for all instruments (btc_return_1h/4h/1d, btc_vol_regime, btc_dominance_pct/roc), relative performance vs BTC (symbol_vs_btc_return, symbol_beta_vs_btc_50, rolling_correlation_btc_20/50), stablecoin_dominance_roc as risk-on signal"
     status: completed
