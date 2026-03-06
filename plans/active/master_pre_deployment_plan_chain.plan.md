@@ -3,7 +3,7 @@ name: Master Pre-Deployment Plan Chain
 overview: Ordered plan sequence (1–9) with parallel-work split for 2 people. CI/CD resolves conflicts. Deadlines: plans complete March 12, live trading week March 20.
 todos:
   - id: plans-1-2-7
-    content: Week 1 — Workspace quickmerge, UI validation, portable backtests DUE
+    content: "Week 1 — Workspace quickmerge validation, UI validation DUE. NOTE: Plan 7 (portable backtests) runs Days 8–9 (start of Week 2) — see e2e_smoke_and_portable_backtests.plan.md which states 'Day 8–9 in execution sequence'. Week 1 deadline applies to Plans 1–2 only."
     status: pending
   - id: plans-3-4
     content: "Weeks 2–3 — Phase 2 library tier hardening: coverage 70% + strict basedpyright. INVARIANT: T0 must reach D5 green before T1 starts; T1 before T2; T2 before T3. Each tier is a full day minimum. Global violation sweep (p2-global-violation-sweep) runs ONCE across all repos before tier work begins. Realistic span: T0 Day 2, T1 Day 3, T2 Days 4–5, T3 Day 6. Person A: T0–T2 (library-heavy); Person B: T2–T3 (interface-heavy). See phase2_library_tier_hardening.plan.md INVARIANT section."
@@ -102,9 +102,10 @@ When both touch same repo:
 ## Execution Flow
 
 ```
-Week 1 (Mar 1–7):  Plans 1–2, 7 (quickmerge validation, UI, portable backtests DUE)
+Week 1 (Mar 1–7):  Plans 1–2 (quickmerge validation, UI validation DUE)
                    Phase 0 audit remediation (parallel companion — blocks Phase 1)
-Week 2 (Mar 8–11): Phase 2 T0 global sweep → T0 D5 green → T1 D5 green
+Week 2 (Mar 8–11): Plan 7 (portable backtests: Day 8–9 per e2e_smoke_and_portable_backtests.plan.md)
+                   Phase 2 T0 global sweep → T0 D5 green → T1 D5 green
                    [INVARIANT: T0 must fully green before T1 starts — no shortcuts]
 Week 3 (Mar 11–14): Phase 2 T2 D5 green → T3 D5 green
                    Plans 5–6 (coding standards, unit tests) begin after T0+T1 green
