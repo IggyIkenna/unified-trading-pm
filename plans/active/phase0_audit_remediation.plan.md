@@ -47,6 +47,8 @@ These are **two parallel Phase 0 companions, not competing plans:**
 
 **There is no circularity.** Enforcement DISCOVERS violations → remediation FIXES them → enforcement's gate check VERIFIES they are fixed. Both complete before Phase 1 starts.
 
+> **Sequencing mandate (J3):** (1) Enforcement gates added in WARN mode first (no merge block); (2) Remediation PRs merged while enforcement warns; (3) Enforcement switched to BLOCK mode only after all remediation PRs merge. This ordering is mandatory and is NOT implied by `blockedBy` alone — must be explicitly followed.
+
 ## Context
 
 A full-system audit (2026-03-04) scored the workspace **Grade D** across 53 repos.
@@ -393,8 +395,10 @@ All 5 files ≤ 900 lines. `rg "# type: ignore" execution_service/ --type py | w
 
 - `scripts/test_unified_cloud_integration.py:206` — `"central-element-323112"`
 
-**Fix:** Replace with `os.environ.get("GCP_PROJECT_ID", "test-project")` inside test
-scripts, or use `get_project_id()` helper from env.py pattern above.
+**Fix:** Replace with `get_project_id()` helper from `scripts/_env.py` (same pattern as
+TASK 4.1, which raises RuntimeError if absent — no silent fallback).
+Do NOT use `os.environ.get("GCP_PROJECT_ID", "test-project")` — the `"test-project"` default
+is a banned silent fallback (no-empty-fallbacks.mdc). Fail loud if the env var is absent.
 
 **os.environ (20+ in scripts):** Apply same `_env.py` helper pattern.
 

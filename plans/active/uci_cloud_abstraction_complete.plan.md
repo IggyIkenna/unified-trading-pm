@@ -8,6 +8,9 @@ todos:
   - id: p0-script-violations
     content: "Fix direct GCS/BQ SDK imports in deployment-service scripts and ml-training-service scripts."
     status: completed
+  - id: p0-utl-cloud-layer-symbol-deletion
+    content: "CloudTarget and StandardizedDomainCloudService must be FULLY DELETED from UTL source and __all__ — no # deprecated: comments permitted (delete-deprecated.mdc). Steps: (1) rg 'CloudTarget|StandardizedDomainCloudService' --type py across all repos to find remaining consumers; (2) migrate all consumers to UCI protocol alternatives (get_data_sink, get_data_source); (3) delete both symbols entirely from unified_trading_library/__init__.py and all source files. No deprecation comment phase."
+    status: pending
   - id: p0-utl-cloud-layer
     content: "Remove UTL parallel cloud layer (cloud_auth_factory, aws_clients, storage_abstraction, secret_abstraction); migrate all callers to UCI."
     status: completed
@@ -288,11 +291,15 @@ phases:
 install:
 runtime-versions:
 python: 3.13
-commands: - pip install uv - uv pip install -e ".[dev]"
+commands:
+        - curl -LsSf https://astral.sh/uv/install.sh | sh
+        - uv pip install -e ".[dev]"
 pre_build:
-commands: - bash scripts/quickmerge.sh --quality-gates-only
+  commands:
+        - bash scripts/quickmerge.sh --qg-only
 build:
-commands: - bash scripts/quality-gates.sh
+  commands:
+        - bash scripts/quickmerge.sh
 artifacts:
 files: [ "**/*" ]
 Repo scope: all repos in workspace-manifest.json with type=library or type=service.

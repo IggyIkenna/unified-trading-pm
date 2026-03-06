@@ -3,7 +3,7 @@
 **ID:** quality_gate_hardening
 **Status:** active
 **Day:** 2–3 (runs alongside #2a and #2b)
-**Scope:** All 52 Python repos — quality gate scripts, codex, violations audit
+**Scope:** All 59 repos per workspace manifest (`unified-trading-system-repos.code-workspace`) — quality gate scripts, codex, violations audit. Note: recount before each sweep; repo count may grow.
 **Prerequisite:** None — can run in parallel with #2a and #2b
 
 ---

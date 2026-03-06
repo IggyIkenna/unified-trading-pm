@@ -81,6 +81,12 @@ class ConfigStore(Protocol):
     """Load / save service configuration and secrets."""
     def get(self, key: str) -> str: ...
     def set(self, key: str, value: str) -> None: ...
+
+# ⚠️ IMPORTANT: ConfigStore is NOT added to unified-cloud-interface (UCI).
+# Per cursor-rules/config/config-store-usage.mdc, ConfigStore lives in
+# unified_trading_services (UTL T1). Import as:
+#   from unified_trading_services import ConfigStore
+# NEVER: from unified_cloud_interface import ConfigStore
 ```
 
 ### Deployment-Injected Config Schema

@@ -23,7 +23,7 @@ isProject: false
 # Strict Basedpyright Compliance Plan
 
 **Order:** 4 (see master_pre_deployment_plan_chain.plan.md)
-**SSOT:** trading_system_audit_prompt.plan.md.md §6.5, §8.6, §9.7, §9.10
+**SSOT:** trading_system_audit_prompt.plan.md §6.5, §8.6, §9.7, §9.10
 
 ---
 
@@ -43,6 +43,10 @@ isProject: false
 - No dict[str, Any] in public API
 - Run timeout 120 basedpyright / (never basedpyright .)
 - Exclude build/, dist/, .venv/
+
+> **Safe Invocation (B3):** Always run `run_timeout 120 basedpyright <source_dir>/` (e.g., `timeout 120 basedpyright execution_service/`).
+> NEVER run `basedpyright .` from workspace root or any directory without an explicit source dir and timeout.
+> Omitting the source dir causes basedpyright to scan all files including venvs; omitting timeout causes hangs on large repos.
 
 ---
 
