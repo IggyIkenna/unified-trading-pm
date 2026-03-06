@@ -217,7 +217,8 @@
       "skipped_gates": [],
       "quality_gate_status": "PASSING",
       "status": "active",
-      "infra_primitives": ["UnifiedCloudConfig"]
+      "infra_primitives": ["UnifiedCloudConfig"],
+      "github_url": "https://github.com/IggyIkenna/unified-config-interface"
     },
     "unified-events-interface": {
       "type": "library",
@@ -235,7 +236,8 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "infra_primitives": ["setup_events", "log_event"]
+      "infra_primitives": ["setup_events", "log_event"],
+      "github_url": "https://github.com/IggyIkenna/unified-events-interface"
     },
     "unified-cloud-interface": {
       "type": "library",
@@ -274,7 +276,8 @@
         "get_data_source",
         "get_event_bus",
         "get_service_mode"
-      ]
+      ],
+      "github_url": "https://github.com/IggyIkenna/unified-cloud-interface"
     },
     "unified-trading-library": {
       "type": "library",
@@ -386,7 +389,8 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"]
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/execution-algo-library"
     },
     "matching-engine-library": {
       "type": "library",
@@ -405,7 +409,8 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"]
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/matching-engine-library"
     },
     "unified-feature-calculator-library": {
       "type": "library",
@@ -469,7 +474,8 @@
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
       "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"]
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/unified-market-interface"
     },
     "unified-ml-interface": {
       "type": "library",
@@ -498,7 +504,8 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"]
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/unified-ml-interface"
     },
     "unified-trade-execution-interface": {
       "type": "library",
@@ -532,7 +539,8 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"]
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/unified-trade-execution-interface"
     },
     "unified-sports-execution-interface": {
       "type": "library",
@@ -683,7 +691,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/instruments-service"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -806,7 +815,8 @@
           "cache"
         ],
         "protocol_default_set": "gcp_live"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/market-data-processing-service"
     },
     "features-calendar-service": {
       "type": "service",
@@ -859,7 +869,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/features-calendar-service"
     },
     "features-delta-one-service": {
       "type": "service",
@@ -902,7 +913,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/features-delta-one-service"
     },
     "features-volatility-service": {
       "type": "service",
@@ -955,7 +967,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/features-volatility-service"
     },
     "features-onchain-service": {
       "type": "service",
@@ -1008,7 +1021,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/features-onchain-service"
     },
     "features-sports-service": {
       "type": "service",
@@ -1199,7 +1213,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/ml-training-service"
     },
     "ml-inference-service": {
       "type": "service",
@@ -1262,7 +1277,8 @@
           "cache"
         ],
         "protocol_default_set": "gcp_live"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/ml-inference-service"
     },
     "strategy-service": {
       "type": "service",
@@ -1327,7 +1343,8 @@
           "cache"
         ],
         "protocol_default_set": "gcp_live"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/strategy-service"
     },
     "execution-service": {
       "type": "service",
@@ -1516,7 +1533,8 @@
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/pnl-attribution-service"
     },
     "position-balance-monitor-service": {
       "type": "service",
@@ -1580,7 +1598,8 @@
           "cache"
         ],
         "protocol_default_set": "gcp_live"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/position-balance-monitor-service"
     },
     "risk-and-exposure-service": {
       "type": "service",
@@ -1623,7 +1642,8 @@
         "mode": "live",
         "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/risk-and-exposure-service"
     },
     "strategy-validation-service": {
       "type": "service",
@@ -1846,25 +1866,8 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
       "skipped_gates": ["terraform-validate"],
-      "quality_gate_status": "EXEMPT"
-    },
-    "unified-trading-deployment-v3": {
-      "type": "infrastructure",
-      "arch_tier": "service",
-      "doc_standard": "infrastructure-canonical",
-      "codex_sections": ["05-infrastructure"],
-      "version": "0.3.0",
-      "version_source": "manual",
-      "merge_level": 12,
-      "dependencies": [],
-      "status": "archived",
-      "notes": "ARCHIVED 2026-03-03. Split into deployment-service + deployment-api + deployment-ui + system-integration-tests. Archive removed 2026-03-04; migration complete.",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 70,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "EXEMPT",
+      "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -1956,7 +1959,8 @@
         "mode": "live",
         "capabilities_needed": ["event_bus", "cache"],
         "protocol_default_set": "gcp_live"
-      }
+      },
+      "github_url": "https://github.com/IggyIkenna/deployment-api"
     },
     "deployment-ui": {
       "type": "ui",
@@ -2021,7 +2025,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "NO_TESTS",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-codex"
     },
     "batch-audit-ui": {
       "type": "ui",
@@ -2039,7 +2044,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/batch-audit-ui"
     },
     "trading-analytics-ui": {
       "type": "ui",
@@ -2057,7 +2063,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/trading-analytics-ui"
     },
     "live-health-monitor-ui": {
       "type": "ui",
@@ -2076,7 +2083,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/live-health-monitor-ui"
     },
     "client-reporting-ui": {
       "type": "ui",
@@ -2094,7 +2102,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/client-reporting-ui"
     },
     "logs-dashboard-ui": {
       "type": "ui",
@@ -2112,7 +2121,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/logs-dashboard-ui"
     },
     "onboarding-ui": {
       "type": "ui",
@@ -2130,7 +2140,8 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/onboarding-ui"
     },
     "settlement-ui": {
       "type": "ui",
@@ -2149,7 +2160,8 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/settlement-ui"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -2169,7 +2181,8 @@
       "quality_gate_status": "NO_TESTS",
       "doc_standard": "infrastructure-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": []
+      "codex_sections": [],
+      "github_url": "https://github.com/IggyIkenna/unified-trading-pm"
     },
     "unified-trading-ui-auth": {
       "type": "library",
@@ -2193,7 +2206,8 @@
         "RequireAuth",
         "authFetch",
         "useAuthToken"
-      ]
+      ],
+      "github_url": "https://github.com/IggyIkenna/unified-trading-ui-auth"
     },
     "execution-analytics-ui": {
       "type": "ui",
@@ -2230,7 +2244,115 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "EXEMPT",
-      "status": "active"
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/ml-training-ui"
+    },
+    "features-commodity-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "completion_path": "tradfi",
+      "notes": "Config-driven commodity fundamental factor engine. FACTOR_REGISTRY + IC calibration + 4-state HMM regime detection + CommoditySignal composition and publishing. EIA/CFTC/BakerHughes/OpenMeteo/Yahoo data sources.",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.3,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<2.0.0",
+          "required": true
+        }
+      ],
+      "github_url": "https://github.com/IggyIkenna/features-commodity-service",
+      "ci_status": "NOT_CONFIGURED",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "NOT_CONFIGURED",
+      "status": "scaffolded",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
+        "protocol_default_set": "gcp_batch"
+      }
+    },
+    "trading-agent-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "completion_path": "tradfi",
+      "notes": "Autonomous 7-loop micro-loop trading agent supervisor for TradFi commodity options/futures. Subscribes to CommoditySignal, ranks strategies via StrategySpec catalog in ConfigStore, routes through PreTradeCheckEngine to execution-service. Blockers: ibkr-config-in-ucc (L3 end-to-end), risk-circuit-breaker (PnLMonitor hook).",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<2.0.0",
+          "required": true
+        }
+      ],
+      "github_url": "https://github.com/IggyIkenna/trading-agent-service",
+      "ci_status": "NOT_CONFIGURED",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "NOT_CONFIGURED",
+      "status": "scaffolded",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "data_source",
+          "data_sink",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     }
   },
   "topologicalOrder": {
@@ -2313,7 +2435,9 @@
           "ml-inference-service",
           "ml-training-service",
           "pnl-attribution-service",
-          "strategy-service"
+          "strategy-service",
+          "features-commodity-service",
+          "trading-agent-service"
         ]
       },
       {
