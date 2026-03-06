@@ -131,15 +131,15 @@ isProject: true
 
 This plan covers four distinct concerns not addressed by existing schema plans:
 
-| Concern | This Plan | Related Existing Plan |
-|---|---|---|
-| Canonical shape quality (groupings, field consistency, optional fields) | ✓ Phase 1 | — |
-| UIC adoption across services (who imports what) | ✓ Phase 2 | — |
-| Cross-contract deduplication resolution | ✓ Phase 3 | SCHEMA_CONTRACTS_AUDIT.md (found the violations; this plan resolves them) |
-| SoC cursor rule + quality gate enforcement | ✓ Phase 4 | quality_gate_hardening.plan.md (adds STEP 5.12) |
-| SCHEMA_GOVERNANCE.md codex doc | ✓ Phase 5 | — |
-| Normalization coverage per data provider | — | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md) |
-| Schema placement violations (finding them) | — | [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md) |
+| Concern                                                                 | This Plan | Related Existing Plan                                                                  |
+| ----------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------- |
+| Canonical shape quality (groupings, field consistency, optional fields) | ✓ Phase 1 | —                                                                                      |
+| UIC adoption across services (who imports what)                         | ✓ Phase 2 | —                                                                                      |
+| Cross-contract deduplication resolution                                 | ✓ Phase 3 | SCHEMA_CONTRACTS_AUDIT.md (found the violations; this plan resolves them)              |
+| SoC cursor rule + quality gate enforcement                              | ✓ Phase 4 | quality_gate_hardening.plan.md (adds STEP 5.12)                                        |
+| SCHEMA_GOVERNANCE.md codex doc                                          | ✓ Phase 5 | —                                                                                      |
+| Normalization coverage per data provider                                | —         | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md) |
+| Schema placement violations (finding them)                              | —         | [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)             |
 
 ---
 
@@ -149,11 +149,11 @@ This plan covers four distinct concerns not addressed by existing schema plans:
 
 **Location:** `unified-api-contracts/unified_api_contracts/unified_normalised_contracts/`
 
-| File | Key Classes | Potential Fragments |
-|---|---|---|
-| `domain.py` | CanonicalTrade, CanonicalTicker, CanonicalDerivativeTicker, CanonicalOhlcvBar, CanonicalFundingRate, CanonicalLiquidation, CanonicalPosition, CanonicalBalance, CanonicalOrderBook, InstrumentWarehouseRow, **MarketTrade**, **OrderBookSnapshot5**, **ProcessedCandle** | MarketTrade vs CanonicalTrade; OrderBookSnapshot5 vs CanonicalOrderBook; ProcessedCandle vs CanonicalOhlcvBar |
-| `execution.py` | CanonicalOrder, CanonicalFill, ExecutionInstruction, ExecutionResult | None known |
-| `errors.py` | CanonicalError, CanonicalRateLimitError | None known |
+| File           | Key Classes                                                                                                                                                                                                                                                              | Potential Fragments                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `domain.py`    | CanonicalTrade, CanonicalTicker, CanonicalDerivativeTicker, CanonicalOhlcvBar, CanonicalFundingRate, CanonicalLiquidation, CanonicalPosition, CanonicalBalance, CanonicalOrderBook, InstrumentWarehouseRow, **MarketTrade**, **OrderBookSnapshot5**, **ProcessedCandle** | MarketTrade vs CanonicalTrade; OrderBookSnapshot5 vs CanonicalOrderBook; ProcessedCandle vs CanonicalOhlcvBar |
+| `execution.py` | CanonicalOrder, CanonicalFill, ExecutionInstruction, ExecutionResult                                                                                                                                                                                                     | None known                                                                                                    |
+| `errors.py`    | CanonicalError, CanonicalRateLimitError                                                                                                                                                                                                                                  | None known                                                                                                    |
 
 ### 1.2 Fragment Investigation Guidance
 
@@ -163,29 +163,29 @@ This plan covers four distinct concerns not addressed by existing schema plans:
 
 ### 1.3 Field Consistency Standards (Target)
 
-| Field | Canonical Target Type | Rationale |
-|---|---|---|
-| timestamp | `int` (Unix ms) | Consistent with market data standards; nanoseconds only for HFT/latency schemas |
-| price | `str` (JSON) or `Decimal` | Never `float` in canonical layer; str preserves venue precision |
-| quantity/size | `str` or `Decimal` | Never `float` |
-| venue | `str` (lowercase slug) | e.g., `"binance"`, `"deribit"` |
-| instrument_key | `str` | Canonical identifier; `symbol` = venue-specific raw field |
+| Field          | Canonical Target Type     | Rationale                                                                       |
+| -------------- | ------------------------- | ------------------------------------------------------------------------------- |
+| timestamp      | `int` (Unix ms)           | Consistent with market data standards; nanoseconds only for HFT/latency schemas |
+| price          | `str` (JSON) or `Decimal` | Never `float` in canonical layer; str preserves venue precision                 |
+| quantity/size  | `str` or `Decimal`        | Never `float`                                                                   |
+| venue          | `str` (lowercase slug)    | e.g., `"binance"`, `"deribit"`                                                  |
+| instrument_key | `str`                     | Canonical identifier; `symbol` = venue-specific raw field                       |
 
 ### 1.4 Normalizer Coverage Matrix (Template)
 
-| Venue | Trade | OrderBook | OHLCV | Ticker | Deriv Ticker | Order/Fill | Instrument |
-|---|---|---|---|---|---|---|---|
-| binance | | | | | | | |
-| bybit | | | | | | | |
-| okx | | | | | | | |
-| deribit | | | | | | | |
-| hyperliquid | | | | | | | |
-| databento | | | | | | | |
-| tardis | | | | | | | |
-| kalshi | | | | | | | |
-| polymarket | | | | | | | |
+| Venue       | Trade | OrderBook | OHLCV | Ticker | Deriv Ticker | Order/Fill | Instrument |
+| ----------- | ----- | --------- | ----- | ------ | ------------ | ---------- | ---------- |
+| binance     |       |           |       |        |              |            |            |
+| bybit       |       |           |       |        |              |            |            |
+| okx         |       |           |       |        |              |            |            |
+| deribit     |       |           |       |        |              |            |            |
+| hyperliquid |       |           |       |        |              |            |            |
+| databento   |       |           |       |        |              |            |            |
+| tardis      |       |           |       |        |              |            |            |
+| kalshi      |       |           |       |        |              |            |            |
+| polymarket  |       |           |       |        |              |            |            |
 
-*To be filled by p1-normalizer-completeness todo.*
+_To be filled by p1-normalizer-completeness todo._
 
 ---
 
@@ -193,23 +193,23 @@ This plan covers four distinct concerns not addressed by existing schema plans:
 
 ### 2.1 UIC Domain Summary (108 classes across 24 files)
 
-| Module | Class Count | Domain |
-|---|---|---|
-| events.py | ~26 | Lifecycle event types + envelopes |
-| pubsub.py | ~17 | Internal Pub/Sub message schemas |
-| risk.py | ~15 | Risk metrics, alerts, pre-trade checks |
-| ml.py | ~10 | Model metadata, training, inference |
-| features.py | 6 | Feature records (delta-one, cross-instrument, etc.) |
-| market_data/ (6 files) | ~19 | OHLCV, book, option quote, options chain + UAC re-exports |
-| positions/ (4 files) | 5 | CeFi + DeFi positions |
-| reference/ (2 files) | 6 | InstrumentRecord, InstrumentDefinition, enums |
-| alerting/ | 1 | AlertEvent |
-| connectivity/ | 7 | WebSocket lifecycle events |
-| schemas/errors.py | 6 | Error classification, DLQ |
-| schemas/audit.py | 2 | Audit retention + requirements |
-| messaging.py | 2 | MessagingScope, MessagingTopic (enums) |
-| defi.py | 2 | GasCostEstimate |
-| reporting/ | 1 | FeeStructure |
+| Module                 | Class Count | Domain                                                    |
+| ---------------------- | ----------- | --------------------------------------------------------- |
+| events.py              | ~26         | Lifecycle event types + envelopes                         |
+| pubsub.py              | ~17         | Internal Pub/Sub message schemas                          |
+| risk.py                | ~15         | Risk metrics, alerts, pre-trade checks                    |
+| ml.py                  | ~10         | Model metadata, training, inference                       |
+| features.py            | 6           | Feature records (delta-one, cross-instrument, etc.)       |
+| market_data/ (6 files) | ~19         | OHLCV, book, option quote, options chain + UAC re-exports |
+| positions/ (4 files)   | 5           | CeFi + DeFi positions                                     |
+| reference/ (2 files)   | 6           | InstrumentRecord, InstrumentDefinition, enums             |
+| alerting/              | 1           | AlertEvent                                                |
+| connectivity/          | 7           | WebSocket lifecycle events                                |
+| schemas/errors.py      | 6           | Error classification, DLQ                                 |
+| schemas/audit.py       | 2           | Audit retention + requirements                            |
+| messaging.py           | 2           | MessagingScope, MessagingTopic (enums)                    |
+| defi.py                | 2           | GasCostEstimate                                           |
+| reporting/             | 1           | FeeStructure                                              |
 
 ### 2.2 domain/ Population Plan (Target)
 
@@ -234,23 +234,23 @@ unified_internal_contracts/domain/
 
 ### 3.1 InstrumentRecord Conflict
 
-| | UAC (InstrumentWarehouseRow) | UIC (InstrumentRecord) |
-|---|---|---|
-| Fields | 76 (float, raw symbols, venue mappings) | 31 (Decimal, normalised) |
-| Purpose | GCS parquet storage row | URDI adapter output contract |
-| Consumers | instruments-service (reads from GCS) | unified-reference-data-interface (adapter output) |
-| Resolution | Keep as InstrumentWarehouseRow (rename confirmed) | Keep as InstrumentRecord (URDI adapter SSOT) |
+|            | UAC (InstrumentWarehouseRow)                      | UIC (InstrumentRecord)                            |
+| ---------- | ------------------------------------------------- | ------------------------------------------------- |
+| Fields     | 76 (float, raw symbols, venue mappings)           | 31 (Decimal, normalised)                          |
+| Purpose    | GCS parquet storage row                           | URDI adapter output contract                      |
+| Consumers  | instruments-service (reads from GCS)              | unified-reference-data-interface (adapter output) |
+| Resolution | Keep as InstrumentWarehouseRow (rename confirmed) | Keep as InstrumentRecord (URDI adapter SSOT)      |
 
 **Decision:** These are intentionally different shapes serving different layers. Rename removes confusion. No merge required.
 
 ### 3.2 Interface Adapter Duplicate Summary
 
-| Interface Repo | Duplicate Count | UAC Target |
-|---|---|---|
-| unified-sports-execution-interface | 34 models | `unified_api_contracts_external/{venue}/schemas.py` per venue |
-| unified-market-interface | 51 models (_deribit_models.py, _defi_graph_models.py) | `unified_api_contracts_external/deribit/schemas.py` + defi adapters |
-| unified-ml-interface | 2 models (ModelVariantConfig, ModelMetadata) | `unified_internal_contracts/ml.py` (UIC, not UAC) |
-| unified-domain-client | 1 model (InstrumentKey) | `unified_internal_contracts/reference/` |
+| Interface Repo                     | Duplicate Count                                         | UAC Target                                                          |
+| ---------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------- |
+| unified-sports-execution-interface | 34 models                                               | `unified_api_contracts_external/{venue}/schemas.py` per venue       |
+| unified-market-interface           | 51 models (\_deribit_models.py, \_defi_graph_models.py) | `unified_api_contracts_external/deribit/schemas.py` + defi adapters |
+| unified-ml-interface               | 2 models (ModelVariantConfig, ModelMetadata)            | `unified_internal_contracts/ml.py` (UIC, not UAC)                   |
+| unified-domain-client              | 1 model (InstrumentKey)                                 | `unified_internal_contracts/reference/`                             |
 
 ---
 
@@ -313,21 +313,22 @@ done
 
 ## Phase 5 — Verification Checklist
 
-| Check | Command | Pass Condition |
-|---|---|---|
-| UAC canonical type-clean | `run_timeout 120 basedpyright unified-api-contracts/unified_api_contracts/unified_normalised_contracts/` | 0 errors |
-| UIC type-clean | `run_timeout 120 basedpyright unified-internal-contracts/unified_internal_contracts/` | 0 errors |
-| UIC adoption | `python unified-internal-contracts/scripts/check_uic_adoption.py` | 0 orphaned schemas |
-| Schema name collisions | STEP 5.12 in quality gate | 0 warnings |
-| Schema registry | `python -c "import json; r=json.load(open('schema_registry.json')); print(len(r))"` | All entries resolve |
-| Duplicate resolution | Review SCHEMA_CONTRACTS_AUDIT.md DUPLICATE section | 16/16 resolved |
-| Conflict resolution | InstrumentRecord naming documented | Decision recorded |
+| Check                    | Command                                                                                                  | Pass Condition      |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------- |
+| UAC canonical type-clean | `run_timeout 120 basedpyright unified-api-contracts/unified_api_contracts/unified_normalised_contracts/` | 0 errors            |
+| UIC type-clean           | `run_timeout 120 basedpyright unified-internal-contracts/unified_internal_contracts/`                    | 0 errors            |
+| UIC adoption             | `python unified-internal-contracts/scripts/check_uic_adoption.py`                                        | 0 orphaned schemas  |
+| Schema name collisions   | STEP 5.12 in quality gate                                                                                | 0 warnings          |
+| Schema registry          | `python -c "import json; r=json.load(open('schema_registry.json')); print(len(r))"`                      | All entries resolve |
+| Duplicate resolution     | Review SCHEMA_CONTRACTS_AUDIT.md DUPLICATE section                                                       | 16/16 resolved      |
+| Conflict resolution      | InstrumentRecord naming documented                                                                       | Decision recorded   |
 
 ---
 
 ## Dependency
 
 Feeds into:
+
 - [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md) (plan #11) — adoption matrix informs orphan remediation priorities
 - [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md) (plan #11b) — normalizer completeness gaps from p1-normalizer-completeness go here
 - [quality_gate_hardening.plan.md](quality_gate_hardening.plan.md) (plan #2c) — STEP 5.12 to be added per p4-quality-gate-step-512
