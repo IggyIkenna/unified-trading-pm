@@ -6,13 +6,13 @@ todos:
     content: Set MIN_COVERAGE=70 in scripts/quality-gates.sh per repo
     status: completed
   - id: run-pytest-coverage
-    content: "PARTIALLY DONE (2026-03-06): T0 libs verified: unified-internal-contracts=99%, unified-events-interface=97%. 14 UI/infra repos marked EXEMPT (N/A) in workspace-manifest.json. Remaining below 70%: unified-market-interface=40% (BLOCKER: local venv has outdated unified_api_contracts missing CanonicalFundingRate), client-reporting-api=18% (BLOCKER: venv dep mismatch), features-volatility-service=35% (BLOCKER: unified_internal_contracts missing from repo .venv), features-delta-one-service=0% (PARTIAL QG — needs investigation), features-cross-instrument-service=0% (PARTIAL QG), ml-training-service=35% (not yet attempted). Root cause for most blockers: per-repo venvs have stale dependency versions. Resolution: run 'uv sync' in each repo to update deps, then re-run tests."
+    content: "PARTIALLY DONE (2026-03-06): T0 libs verified: unified-internal-contracts=99%, unified-events-interface=97%. 14 UI/infra repos marked EXEMPT (N/A) in workspace-manifest.json. features-delta-one-service FIXED: 70.72% (commit 4285483). Remaining below 70%: unified-market-interface=40% (BLOCKER: local venv has outdated unified_api_contracts missing CanonicalFundingRate), client-reporting-api=18% (BLOCKER: venv dep mismatch), features-volatility-service=35% (BLOCKER: unified_internal_contracts missing from repo .venv), features-cross-instrument-service=0% (PARTIAL QG — uv sync fails, unified-cloud-interface not in PyPI), ml-training-service=35% (not yet attempted)."
     status: pending
   - id: add-tests
-    content: "PARTIALLY DONE (2026-03-06): T0 libs got new tests (unified-internal-contracts: tests/unit/test_instrument_definition.py added — 70 tests, 99.73%; unified-events-interface: tests/unit/test_missing_coverage.py added — 47 tests, 97%). T2 and services blocked by venv dep issues (see run-pytest-coverage). Next: uv sync each repo + add tests for remaining below-70% Python repos."
+    content: "PARTIALLY DONE (2026-03-06): T0 libs: unified-internal-contracts=99.73%, unified-events-interface=97%. features-delta-one-service: 70.72% (8 new test files — polars optimizations, timeframe resampler, numba kernels, output schemas, futures roll adjuster, multi-period features, trendline, weekly anchors, validate_args; also fixed Dict import bug in multi_period_features.py). Remaining: unified-market-interface, client-reporting-api, features-volatility-service, features-cross-instrument-service, ml-training-service all blocked by per-repo venv dep mismatches."
     status: pending
   - id: t0-t1-first
-    content: "DONE T0 (2026-03-06): unified-internal-contracts=99%, unified-events-interface=97%. T1 (UTL, UCI, URDI) already above 70% per manifest. T2 unified-market-interface=40% BLOCKED. Services blocked. Resume after per-repo uv sync resolves dep mismatches."
+    content: "DONE T0 (2026-03-06): unified-internal-contracts=99%, unified-events-interface=97%. T1 (UTL, UCI, URDI) already above 70% per manifest. T2 unified-market-interface=40% BLOCKED. Services: features-delta-one-service=71% DONE. Others blocked by venv dep mismatches."
     status: pending
 isProject: false
 ---
