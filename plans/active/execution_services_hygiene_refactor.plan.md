@@ -128,8 +128,8 @@ isProject: true
 - [ ] Full quickmerge with act simulation (D5) passes
 - [ ] All missing files recovered and service runs
 - [ ] Adapter model placement: audit for any `_<venue>_models.py` files inside execution_service/;
-  any found must be moved to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py`
-  per `cursor-rules/imports/adapter-models-belong-in-uac.mdc`
+      any found must be moved to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py`
+      per `cursor-rules/imports/adapter-models-belong-in-uac.mdc`
 
 > **Note:** `qg-*` identifiers in Day 3.6 (qg-exec-services-smoke-import, qg-exec-services-codex-18,
 > qg-pip-audit-exec-services) are quickmerge check labels — always invoke via

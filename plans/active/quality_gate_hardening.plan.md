@@ -142,7 +142,7 @@ Allowed ONLY in files with `# config-bootstrap` comment or UCI factory.py
   - Any approved `# noqa: UCI-direct-sdk` exceptions with expiry dates
   - Repos that currently fail gates with a fix deadline
   - Tracking TODOs for violations that need plan items before fix
-  _(Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root — confirmed session 4)_
+    _(Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root — confirmed session 4)_
 - [x] `p3-bypass-audit-update` — After P1 fixes, update the audit file to reflect zero unapproved violations _(Done: zero unapproved exceptions; inspect_gcs_data_schema.py excluded by design — root ops script outside SOURCE_DIR)_
 
 ### P4 — CI enforcement
