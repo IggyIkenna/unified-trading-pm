@@ -2,78 +2,75 @@
   "folders": [
     {
       "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "name": "\ud83d\udcc1 Workspace Root",
     },
     {
       "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "name": "\u2699\ufe0f Cursor Config",
     },
     {
       "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "name": "\ud83d\udc0d Venv",
     },
     {
       "path": "../../unified-trading-codex",
-      "name": "\ud83d\udcda Codex"
+      "name": "\ud83d\udcda Codex",
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "name": "\ud83d\udccb PM",
     },
     {
-      "path": "../../unified-api-contracts"
+      "path": "../../unified-api-contracts",
     },
     {
-      "path": "../../unified-internal-contracts"
+      "path": "../../unified-internal-contracts",
     },
     {
-      "path": "../../unified-cloud-interface"
+      "path": "../../unified-cloud-interface",
     },
     {
-      "path": "../../unified-config-interface"
+      "path": "../../unified-config-interface",
     },
     {
-      "path": "../../unified-events-interface"
+      "path": "../../unified-events-interface",
     },
     {
-      "path": "../../unified-reference-data-interface"
+      "path": "../../unified-reference-data-interface",
     },
     {
-      "path": "../../unified-trading-library"
+      "path": "../../unified-trading-library",
     },
     {
-      "path": "../../unified-domain-client"
+      "path": "../../unified-domain-client",
     },
     {
-      "path": "../../unified-market-interface"
+      "path": "../../unified-market-interface",
     },
     {
-      "path": "../../unified-ml-interface"
+      "path": "../../unified-ml-interface",
     },
     {
-      "path": "../../unified-trade-execution-interface"
+      "path": "../../unified-trade-execution-interface",
     },
     {
-      "path": "../../unified-sports-execution-interface"
+      "path": "../../unified-sports-execution-interface",
     },
     {
-      "path": "../../unified-defi-execution-interface"
+      "path": "../../unified-defi-execution-interface",
     },
     {
-      "path": "../../matching-engine-library"
+      "path": "../../matching-engine-library",
     },
     {
-      "path": "../../execution-algo-library"
+      "path": "../../execution-algo-library",
     },
     {
-      "path": "../../unified-feature-calculator-library"
+      "path": "../../unified-feature-calculator-library",
     },
     {
-      "path": "../../unified-position-interface"
+      "path": "../../unified-position-interface",
     },
-    {
-      "path": "../../unified-trading-deployment-v3"
-    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -145,10 +142,9 @@
       "${workspaceFolder}/unified-sports-execution-interface",
       "${workspaceFolder}/unified-trade-execution-interface",
       "${workspaceFolder}/unified-trading-codex",
-      "${workspaceFolder}/unified-trading-deployment-v3",
       "${workspaceFolder}/unified-trading-library",
       "${workspaceFolder}/unified-trading-pm",
-      "${workspaceFolder}/unified-trading-ui-auth"
+      "${workspaceFolder}/unified-trading-ui-auth",
     ],
     "python.analysis.extraPaths": [
       "${workspaceFolder}/alerting-service",
@@ -206,48 +202,36 @@
       "${workspaceFolder}/unified-sports-execution-interface",
       "${workspaceFolder}/unified-trade-execution-interface",
       "${workspaceFolder}/unified-trading-codex",
-      "${workspaceFolder}/unified-trading-deployment-v3",
       "${workspaceFolder}/unified-trading-library",
       "${workspaceFolder}/unified-trading-pm",
-      "${workspaceFolder}/unified-trading-ui-auth"
+      "${workspaceFolder}/unified-trading-ui-auth",
     ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-      "tests",
-      "-v"
-    ],
+    "python.testing.pytestArgs": ["tests", "-v"],
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000,
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": [
-      "E",
-      "F",
-      "W",
-      "I"
-    ],
+    "ruff.lint.select": ["E", "F", "W", "I"],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": [
-      "--line-length",
-      "120"
-    ],
+    "ruff.format.args": ["--line-length", "120"],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -256,7 +240,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -265,22 +249,20 @@
       "**/.hg/store/**": true,
       "**/.pixi/**": true,
       "**/.venv/**": true,
-      "**/.venv.backup/**": true
+      "**/.venv.backup/**": true,
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
-    "editor.rulers": [
-      100
-    ],
+    "editor.rulers": [100],
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true
-  }
+    "files.trimFinalNewlines": true,
+  },
 }

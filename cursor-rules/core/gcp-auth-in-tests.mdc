@@ -40,7 +40,7 @@ def gcp_auth_info():
     # 2. ADC (local dev + Cloud Build)
     try:
         credentials, project = default()
-        project_id = project or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
+        project_id = project or os.getenv("GCP_PROJECT_ID") or os.getenv("GCP_PROJECT_ID")
         return credentials, project_id or "test-project", None
     except DefaultCredentialsError:
         pass
@@ -71,7 +71,7 @@ Unit tests must run without any credentials — use mocks (`pytest-mock`, `unitt
 # ✅ Always use GCP_PROJECT_ID (primary env var)
 project_id = os.getenv("GCP_PROJECT_ID") or "test-project"
 
-# ❌ Never use GOOGLE_CLOUD_PROJECT as primary (Cloud Run internal only)
+# ❌ Never use GCP_PROJECT_ID as primary (Cloud Run internal only)
 ```
 
 ## AWS: Cloud-Agnostic Unit Tests

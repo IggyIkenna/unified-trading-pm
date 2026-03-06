@@ -18,7 +18,7 @@
 | Test fixes                           | 500+    | UClI (44/44), UCI (79/82), UFCL (54/54), instruments-service (122/122), UTS (292/292), UMLI (7/7), UMI (23/23) |
 | Codex compliance fixes               | 6 repos | features-calendar, features-onchain, ml-training, ml-inference, execution-service, deployment-service          |
 | Infrastructure fixes                 | 10+     | Dependency names, pyproject.toml, quality-gates.sh scripts, compat layers                                      |
-| UCS -> UTS rename gaps               | Fixed   | ConfigReloader export, \_CloudStorageMixin/\_CloudBatchMixin compat, GOOGLE_CLOUD_PROJECT removal              |
+| UCS -> UTS rename gaps               | Fixed   | ConfigReloader export, \_CloudStorageMixin/\_CloudBatchMixin compat, GCP_PROJECT_ID removal                    |
 | T0 library test fixes                | 3 repos | UFCL (stale install + log format), UMLI (error recovery logic), UMI (USEI install + registry)                  |
 
 ### What's Passing vs Failing (Tier by Tier)
@@ -44,7 +44,7 @@
 | Lint   | PASS             | Fixed I001 import sort                          |
 | Type   | FAIL             | 272 pre-existing basedpyright errors (see R-05) |
 | Tests  | 292 pass, 0 fail | But coverage at 40% vs 70% threshold (see R-06) |
-| Codex  | PASS             | Fixed GOOGLE_CLOUD_PROJECT refs                 |
+| Codex  | PASS             | Fixed GCP_PROJECT_ID refs                       |
 
 #### T2 — Interface Libraries (7 repos)
 

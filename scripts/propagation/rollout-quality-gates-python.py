@@ -50,7 +50,7 @@ UTILITY_REPOS = {
     "api-contracts": 50,
     "mr_report": 50,
     "unified-trading-codex": 50,
-    "unified-trading-deployment-v3": 50,
+    "deployment-service": 50,
 }
 
 ALL_REPOS = {**CRITICAL_SERVICES, **STANDARD_SERVICES, **SHARED_LIBRARIES, **UTILITY_REPOS}
