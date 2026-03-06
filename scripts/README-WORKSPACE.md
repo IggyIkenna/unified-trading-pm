@@ -216,12 +216,11 @@ These scripts are in the same directory but serve different purposes:
 | `coding-standards-align-agent.sh`           | AI agent for coding standards                           | AI workflows     |
 | `repo-management/verify-gh-pat-secrets.sh`  | Verify GH_PAT in all workspace repos                    | Auth/CI          |
 | `repo-management/force-push-all-to-main.sh` | Force-push local main to origin (branch protection off) | Repo ops         |
-| `repo-management/audit-reflog-resets.sh`   | Audit all repos for reset/reset --hard in reflog        | Safety / review  |
+| `repo-management/audit-reflog-resets.sh`    | Audit all repos for reset/reset --hard in reflog        | Safety / review  |
 
 **Schedule (macOS):** `bash unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog.sh` then `launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`. Runs every 10 min. Uses `run-audit-reflog-with-alert.sh` (macOS notification on failure). **Cancel:** `launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`. **Full doc:** `docs/audit-reflog-scheduled-job.md`
 
 ---
-
 
 ## Troubleshooting
 

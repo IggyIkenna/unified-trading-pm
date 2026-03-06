@@ -93,15 +93,15 @@
 
 ---
 
-## 8. Quota Handling (UTD v3)
+## 8. Quota Handling (deployment-service)
 
-| DO  | Priority | Description                                                             | Source                        |
-| --- | -------- | ----------------------------------------------------------------------- | ----------------------------- |
-| 8.1 | P1       | Add QuotaBrokerClient request/response schemas (acquire, release)       | unified-trading-deployment-v3 |
-| 8.2 | P1       | Add quota-exceeded message schemas (reason, retry_after_seconds)        | UTD v3 worker_manager         |
-| 8.3 | P1       | Add vm_quota_shape_from_compute_config output schema                    | UTD v3 quota_requirements     |
-| 8.4 | P1       | Add GCP write quota (WRITE_QUOTA_PER_MINUTE, WRITE_QUOTA_BUFFER) schema | UTD v3 config                 |
-| 8.5 | P2       | Document quota broker API contract for api-contracts                    | quota_broker_client           |
+| DO  | Priority | Description                                                             | Source                    |
+| --- | -------- | ----------------------------------------------------------------------- | ------------------------- |
+| 8.1 | P1       | Add QuotaBrokerClient request/response schemas (acquire, release)       | deployment-service        |
+| 8.2 | P1       | Add quota-exceeded message schemas (reason, retry_after_seconds)        | UTD v3 worker_manager     |
+| 8.3 | P1       | Add vm_quota_shape_from_compute_config output schema                    | UTD v3 quota_requirements |
+| 8.4 | P1       | Add GCP write quota (WRITE_QUOTA_PER_MINUTE, WRITE_QUOTA_BUFFER) schema | UTD v3 config             |
+| 8.5 | P2       | Document quota broker API contract for api-contracts                    | quota_broker_client       |
 
 ---
 
@@ -152,6 +152,6 @@
 | 5     | Error handling – per-venue errors, rate limits                                                                 | api-contracts/schemas/errors.py                   |
 | 6     | Cloud SDKs – GCP (Compute, Cloud Run, GCS, BigQuery)                                                           | api-contracts/cloud_sdks, unified-trading-library |
 | 7     | Cloud SDKs – AWS (EC2, ECS, S3, Glue, quotas)                                                                  | api-contracts/cloud_sdks                          |
-| 8     | Quota handling – UTD v3 quota broker, message schemas                                                          | unified-trading-deployment-v3, api-contracts      |
+| 8     | Quota handling – quota broker, message schemas                                                                 | deployment-service, api-contracts                 |
 | 9     | DeFi / MEV / transfers                                                                                         | api-contracts, execution-service                  |
 | 10    | TradFi / VIX / Barchart                                                                                        | api-contracts, market-tick-data-handler           |

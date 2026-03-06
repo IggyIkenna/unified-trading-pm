@@ -28,7 +28,6 @@ every audit finding into a concrete, ordered task with file-level evidence.
 
 ## Plan Metadata
 
-
 | Field       | Value                                                                    |
 | ----------- | ------------------------------------------------------------------------ |
 | **Plan ID** | phase0_audit_remediation                                                 |
@@ -36,7 +35,6 @@ every audit finding into a concrete, ordered task with file-level evidence.
 | **Blocks**  | Phase 1 stream A, B, C                                                   |
 | **Scope**   | 13 FAIL repos + 16 WARN repos                                            |
 | **Gate**    | All FAIL items resolved; all WARN items resolved or deferred with ticket |
-
 
 ---
 
@@ -170,8 +168,8 @@ with a default of `dict(os.environ)` at call site (loader receives a snapshot, n
 - All `os.environ.get("KEY")` → `UnifiedCloudConfig().field_name`
 - Extend `UnifiedCloudConfig` with any missing fields needed
 - `aws_clients.py:23` → remove `try/except ImportError`; if boto3 is optional, declare it
-as an optional extra in pyproject.toml and guard with `importlib.util.find_spec("boto3") is not None`
-at module level (no fallback mock — fail loud)
+  as an optional extra in pyproject.toml and guard with `importlib.util.find_spec("boto3") is not None`
+  at module level (no fallback mock — fail loud)
 - `testing/test_config_helpers.py` os.environ usage is acceptable (test helper, not prod)
 
 **Done:** `rg "os\.environ" unified_trading_library/ --type py --glob '!**/testing/**' --glob '!**/tests/**'` = 0.
@@ -190,9 +188,9 @@ at module level (no fallback mock — fail loud)
 **Fix:**
 
 - `_openbb_types.py`: Remove `try/except ImportError`. If openbb is optional, use
-`importlib.util.find_spec("openbb")` guard with a hard `raise ImportError(...)` message.
+  `importlib.util.find_spec("openbb")` guard with a hard `raise ImportError(...)` message.
 - `examples/` os.environ usage: acceptable in examples — add `# noqa: S105` or move to
-test fixtures, but do NOT suppress with `# type: ignore`.
+  test fixtures, but do NOT suppress with `# type: ignore`.
 
 **Done:** `rg "except ImportError" features_delta_one_service/ --type py` = 0.
 
@@ -219,7 +217,7 @@ In tests, pass `testing_mode=True` explicitly. Remove all `PYTEST_CURRENT_TEST` 
 - Legitimate pandas/ccxt/tardis API gaps → create `py.typed` stubs or use `cast()`
 - Architectural violations → fix root cause, never suppress
 - Target: reduce to ≤5 documented instances, each with a `# type: ignore[specific-code]`
-comment referencing a GitHub issue
+  comment referencing a GitHub issue
 
 **Done:** `rg "os\.environ\|PYTEST_CURRENT_TEST" instruments_service/app/ --type py` = 0.
 `rg "# type: ignore" instruments_service/ --type py | wc -l` ≤ 5.
@@ -411,9 +409,9 @@ Replace with `cast()` where appropriate. Document any remaining with `[specific-
 **Grade:** B
 
 - `base_adapter.py:342,582` — replace `config: Any | None = None` with a typed Protocol
-or `BaseAdapterConfig` TypedDict
+  or `BaseAdapterConfig` TypedDict
 - `config.py:477` — `os.environ.get("VM_INSTANCE_NAME")` for VM detection is acceptable
-at the config boundary only; annotate with `# config-bootstrap: VM detection`
+  at the config boundary only; annotate with `# config-bootstrap: VM detection`
 
 ---
 
@@ -423,7 +421,7 @@ at the config boundary only; annotate with `# config-bootstrap: VM detection`
 
 - `strategy-ui`: Add `.env.development` and `.env.` (except `.env.example`) to `.gitignore`
 - `batch-audit-ui/src/App.tsx:8-9`: Add code comment explaining placeholder defaults are
-intentional for `VITE_SKIP_AUTH=true` dev mode
+  intentional for `VITE_SKIP_AUTH=true` dev mode
 
 ---
 
@@ -450,7 +448,6 @@ If all calls already use `datetime.now(UTC)` → mark PASS, no change needed.
 
 All of the following must be true before Phase 1 Stream A starts:
 
-
 | Check                                    | Command                                                                                                                                                                     | Expected                                          |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | No os.environ in prod library source     | `rg "os\.environ" unified-cloud-interface/ unified-config-interface/ unified-trading-library/ --type py --glob '!**/tests/**' --glob '!**/testing/**'`                      | 0 results (except documented bootstrap functions) |
@@ -459,15 +456,13 @@ All of the following must be true before Phase 1 Stream A starts:
 | No secrets in git                        | `git -C trading-analytics-ui ls-files .env`                                                                                                                                 | empty                                             |
 | No time.sleep in async                   | `rg "time\.sleep" deployment-api/ --type py`                                                                                                                                | 0 results                                         |
 | No pip install in Dockerfiles            | `grep -r "pip install" /Dockerfile                                                                                                                                          | grep -v "pip install uv"`                         |
-| File size check                          | `find . -name "*.py" -not -path "*/.venv"                                                                                                                                   | xargs wc -l                                       |
+| File size check                          | `find . -name "_.py" -not -path "_/.venv"                                                                                                                                   | xargs wc -l                                       |
 | type:ignore total                        | `rg "# type: ignore" --type py --glob '!**/tests/**' --glob '!/.venv/'                                                                                                      | wc -l`                                            |
 | quality-gates.sh passes                  | Run per-repo quality-gates                                                                                                                                                  | All repos green                                   |
-
 
 ---
 
 ## Files to Create/Modify (Summary)
-
 
 | Action | Path                                                                                     |
 | ------ | ---------------------------------------------------------------------------------------- |
@@ -501,7 +496,6 @@ All of the following must be true before Phase 1 Stream A starts:
 | CREATE | `trading-analytics-ui/.env.example`                                                      |
 | MODIFY | `trading-analytics-ui/.gitignore`                                                        |
 | MODIFY | `strategy-ui/.gitignore`                                                                 |
-
 
 ---
 

@@ -61,7 +61,7 @@ def extract_codex_paths(text: str) -> list[str]:
                 if part:
                     part = _clean_path(part)
                     if part.startswith("unified-trading-codex/"):
-                        part = part[len("unified-trading-codex/"):]
+                        part = part[len("unified-trading-codex/") :]
                     if part:
                         paths.append(part)
     return paths

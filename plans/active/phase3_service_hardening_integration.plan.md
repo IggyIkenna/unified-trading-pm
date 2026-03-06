@@ -130,7 +130,7 @@ At every STEP A (connectivity audit) for each service/API/UI, verify no old name
 | **Artifact Registry**              | Package name must match canonical name                                       |
 | `**runtime-topology.yaml`\*\*      | Service name in topology config must match                                   |
 | `**workspace-manifest.json`\*\*    | `name`, `github_url`, `artifact_registry_url`, `package_name`                |
-| **Deployment checklists**          | `unified-trading-deployment-v3/configs/checklist.*.yaml`                     |
+| **Deployment checklists**          | `deployment-service/configs/checklist.*.yaml`                                |
 | **Cursor rules + codex docs**      | `rg` for old names; fix every hit                                            |
 | **PubSub topic names**             | Any topic named after old service name must be renamed                       |
 | **Secret Manager**                 | Any secret keyed to old service name                                         |

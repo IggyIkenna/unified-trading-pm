@@ -19,8 +19,10 @@ OUTPUT_FILE = WORKSPACE_ROOT / "api_keys"
 
 # Relative paths to .env and .env.local under workspace (all KEY=value pairs are extracted, no allowlist)
 ENV_PATHS = [
-    "unified-trading-deployment-v3/.env",
-    "unified-trading-deployment-v3/.env.local",
+    "deployment-service/.env",
+    "deployment-service/.env.local",
+    "deployment-api/.env",
+    "deployment-api/.env.local",
     "execution-analytics-ui/.env",
     "execution-analytics-ui/.env.local",
     "market-data-processing-service/.env",

@@ -126,7 +126,7 @@ class TestBoxWidth:
 
     def test_long_name_scales(self) -> None:
         """Long names should exceed the minimum."""
-        result = box_width("unified-trading-deployment-v3")
+        result = box_width("unified-trading-codex-deployment-v3")
         assert result > 130
 
     def test_empty_name(self) -> None:
