@@ -6,10 +6,10 @@ todos:
     content: Week 1 — Workspace quickmerge, UI validation, portable backtests DUE
     status: pending
   - id: plans-3-4
-    content: Week 2 — Coverage 70%, strict basedpyright (parallel by tier)
+    content: "Weeks 2–3 — Phase 2 library tier hardening: coverage 70% + strict basedpyright. INVARIANT: T0 must reach D5 green before T1 starts; T1 before T2; T2 before T3. Each tier is a full day minimum. Global violation sweep (p2-global-violation-sweep) runs ONCE across all repos before tier work begins. Realistic span: T0 Day 2, T1 Day 3, T2 Days 4–5, T3 Day 6. Person A: T0–T2 (library-heavy); Person B: T2–T3 (interface-heavy). See phase2_library_tier_hardening.plan.md INVARIANT section."
     status: pending
   - id: plans-5-6-6a-8
-    content: Week 3 — Coding standards audit, unit tests, Arb structure check, AWS migration
+    content: "Week 3 (overlap with Phase 2 T3) + Week 4 — Coding standards audit, unit tests, arb structure check, AWS migration. NOTE: Plans 5–6 cannot start until Phase 2 T0+T1 are green (Week 2). Plans 6a and 8 can run in parallel once T2 is green. Phase 3 service hardening begins in Week 3 after all library tiers (T0–T3) reach D5."
     status: pending
   - id: plan-9-audit
     content: "Week 4 — Full audit (trading_system_audit_prompt.plan.md all sections PASS); live trading week SUCCESS. SUCCESS DEFINITION: (1) PnL: breakeven or better across the 5-day week (total net PnL ≥ 0); (2) Reliability: ≤3 unhandled exceptions logged across all services; zero circuit breaker trips; (3) Execution: all orders placed within 500ms of signal emission (measured via execution_alpha.json latency field); (4) Coverage: at least one completed live trade per strategy category (sports arb, CEFI ML signal, TradFi ML signal, at least one DeFi MVP); (5) Audit: trading_system_audit_prompt.plan.md achieves grade A or better (no FAIL items, ≤3 WARN)."
@@ -102,11 +102,19 @@ When both touch same repo:
 ## Execution Flow
 
 ```
-Week 1 (to Mar 12): Plans 1–2, 7 (portable backtests DUE)
-Week 2: Plans 3–4 (Parallel by tier)
-Week 3: Plans 5–6, 6a (Arb structure), 8 (Parallel by tier)
-Week 4 (to Mar 20): Plan 9 (Full audit); live trading week SUCCESS
+Week 1 (Mar 1–7):  Plans 1–2, 7 (quickmerge validation, UI, portable backtests DUE)
+                   Phase 0 audit remediation (parallel companion — blocks Phase 1)
+Week 2 (Mar 8–11): Phase 2 T0 global sweep → T0 D5 green → T1 D5 green
+                   [INVARIANT: T0 must fully green before T1 starts — no shortcuts]
+Week 3 (Mar 11–14): Phase 2 T2 D5 green → T3 D5 green
+                   Plans 5–6 (coding standards, unit tests) begin after T0+T1 green
+                   Plans 6a, 8 (arb check, AWS) after T2 green
+Week 4 (Mar 15–20): Phase 3 service hardening begins (after all T0–T3 green)
+                   Plan 9 (full audit) gating live trading week
+Live trading week: March 20
 ```
+
+> **Phase 2 invariant (from phase2_library_tier_hardening.plan.md):** Never touch tier N until tier N-1 is fully green (all D5 passes). T0→T1→T2→T3 is a hard sequential constraint — parallelism is within a tier only (repos within T0 can be parallel; repos in T1 can run in parallel after ALL T0 repos pass D5). The master chain timeline above reflects this constraint. Plans 3–4 (Coverage + basedpyright) map 1:1 to Phase 2 and span Weeks 2–3.
 
 ---
 
