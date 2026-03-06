@@ -37,7 +37,7 @@ The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling
 | `.cursor/rules` | Symlink → `unified-trading-pm/cursor-rules/` |
 | `.cursor/plans` | Symlink → `unified-trading-pm/plans/active/` |
 
-**Setup:** `bash unified-trading-pm/scripts/workspace/setup-active-symlink.sh` and `setup-cursor-rules-symlink.sh`
+**Setup:** `bash unified-trading-pm/scripts/workspace/setup-active-symlink.sh`, `setup-cursor-rules-symlink.sh`, `setup-repo-cursor-rules-symlinks.sh` (per-repo rules)
 
 ## How Rules and Plans Work
 
