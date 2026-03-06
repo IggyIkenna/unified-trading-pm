@@ -16,7 +16,7 @@ todos:
     status: pending
   - id: stream2-utl-fds
     content: "Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py."
-    status: pending
+    status: done
   - id: stream3-instruments-strategy-mlt-deploy
     content: "Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore; strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async."
     status: pending
@@ -38,12 +38,12 @@ blockedBy:
 
 These are **two parallel Phase 0 companions, not competing plans:**
 
-| | phase0_standards_enforcement | phase0_audit_remediation (this plan) |
-|---|---|---|
-| **Role** | Runs QG scans, establishes baseline, verifies fixes | Fixes each FAIL/WARN item with file-level evidence |
-| **Output** | Pass/fail per repo; QUALITY_GATE_BYPASS_AUDIT.md | Fixed code committed in Stream order |
-| **Gate** | p0-gate-check verifies all fixes are in | N/A — enforcement gate is the final arbiter |
-| **Start** | Day 0, parallel with remediation | Day 0, can begin after Stream 1 scan results |
+|            | phase0_standards_enforcement                        | phase0_audit_remediation (this plan)               |
+| ---------- | --------------------------------------------------- | -------------------------------------------------- |
+| **Role**   | Runs QG scans, establishes baseline, verifies fixes | Fixes each FAIL/WARN item with file-level evidence |
+| **Output** | Pass/fail per repo; QUALITY_GATE_BYPASS_AUDIT.md    | Fixed code committed in Stream order               |
+| **Gate**   | p0-gate-check verifies all fixes are in             | N/A — enforcement gate is the final arbiter        |
+| **Start**  | Day 0, parallel with remediation                    | Day 0, can begin after Stream 1 scan results       |
 
 **There is no circularity.** Enforcement DISCOVERS violations → remediation FIXES them → enforcement's gate check VERIFIES they are fixed. Both complete before Phase 1 starts.
 
