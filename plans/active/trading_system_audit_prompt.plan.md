@@ -176,35 +176,40 @@ Checks `canonical-dependency-manifest.json`, `workspace-constraints.toml`, and v
 
 Checks `doc_standards` from manifest, canonical docs compliance, and documentation quality.
 
-| #    | Criterion                                                                                                                                                                                                                                   | Blocking |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 5.1  | Every service repo has all `service-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md, QUALITY_GATE_BYPASS_AUDIT.md | YES      |
-| 5.2  | Every library repo has all `library-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md                                                                         | YES      |
-| 5.3  | Every UI repo has all `ui-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md                                                                                                              | WARN     |
-| 5.4  | No stub documentation files (3 lines or fewer, just "TODO", or empty) in required doc locations                                                                                                                                             | WARN     |
-| 5.5  | No summary/overview docs that duplicate information already in SSOT (`no-summary-docs.mdc`, priority 100)                                                                                                                                   | WARN     |
-| 5.6  | Docs use `{project_id}` placeholders — no hardcoded project IDs or bucket names                                                                                                                                                             | YES      |
-| 5.7  | `AGENTS.md` exists for repos with non-obvious setup quirks (recommended, not required)                                                                                                                                                      | WARN     |
-| 5.8  | Codex section references in manifest `codex_sections` match actual codex directory structure                                                                                                                                                | WARN     |
-| 5.9  | No embedded UI artifacts in service repos (no `package.json`, `frontend/`, `dist/` in Python service repos)                                                                                                                                 | YES      |
-| 5.10 | `specs/` directories, if present, do not have diverged copies of files also in `docs/`                                                                                                                                                      | WARN     |
+| #    | Criterion                                                                                                                                                                                                                                                                                                                                                                             | Blocking |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 5.1  | Every service repo has all `service-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md, QUALITY_GATE_BYPASS_AUDIT.md                                                                                                                                           | YES      |
+| 5.2  | Every library repo has all `library-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md                                                                                                                                                                                                                   | YES      |
+| 5.3  | Every UI repo has all `ui-canonical` required docs: README.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md                                                                                                                                                                                                                                                        | WARN     |
+| 5.4  | No stub documentation files (3 lines or fewer, just "TODO", or empty) in required doc locations                                                                                                                                                                                                                                                                                       | WARN     |
+| 5.5  | No summary/overview docs that duplicate information already in SSOT (`no-summary-docs.mdc`, priority 100)                                                                                                                                                                                                                                                                             | WARN     |
+| 5.6  | Docs use `{project_id}` placeholders — no hardcoded project IDs or bucket names                                                                                                                                                                                                                                                                                                       | YES      |
+| 5.7  | `AGENTS.md` exists for repos with non-obvious setup quirks (recommended, not required)                                                                                                                                                                                                                                                                                                | WARN     |
+| 5.8  | Codex section references in manifest `codex_sections` match actual codex directory structure                                                                                                                                                                                                                                                                                          | WARN     |
+| 5.9  | No embedded UI artifacts in service repos — no `package.json`, `tsconfig.json`, `frontend/`, `dist/`, `visualizer-ui/`, `visualizer-api/`, `static/`, `templates/` dirs in Python service repos. Search: `find <repo> -maxdepth 3 \( -name "package.json" -o -name "tsconfig.json" -o -type d -name "visualizer-ui" -o -type d -name "visualizer-api" -o -type d -name "frontend" \)` | YES      |
+| 5.10 | `specs/` directories, if present, do not have diverged copies of files also in `docs/`                                                                                                                                                                                                                                                                                                | WARN     |
 
 ---
 
 ## 5a. Cloud Isolation Audit (Hard Gates — must pass before Phase 2+)
 
 STEP 5.10 — No direct cloud SDK imports outside UCI providers:
-  PASS gate: rg 'from google.cloud|import boto3|import botocore' --type py --glob '!.venv*' --glob '!unified-cloud-interface/**' = 0 matches
+PASS gate: rg 'from google.cloud|import boto3|import botocore' --type py --glob '!.venv\*' --glob '!unified-cloud-interface/\*\*' = 0 matches
 
 STEP 5.11 — No protocol-leaking symbols in service code:
-  PASS gate: rg 'CloudTarget|StandardizedDomainCloudService|upload_to_gcs_batch|gcs_bucket=|bigquery_dataset=' --type py --glob '!.venv*' --glob '!tests/**' = 0 matches in service repos
+PASS gate: rg 'CloudTarget|StandardizedDomainCloudService|upload_to_gcs_batch|gcs_bucket=|bigquery_dataset=' --type py --glob '!.venv\*' --glob '!tests/\*\*' = 0 matches in service repos
+Per-repo enforcement: `scripts/quality-gates.sh` must include STEP 5.11 check as hard-fail (not warn). Verify with: grep -q "STEP 5.11\|CloudTarget\|upload_to_gcs_batch" scripts/quality-gates.sh
 
 STEP 5.12 — No hardcoded cloud protocol names in service source:
-  PASS gate: rg 'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b' --type py --glob '!.venv*' --glob '!tests/**' --glob '!scripts/**' = 0 matches
+PASS gate: rg 'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b' --type py --glob '!.venv\*' --glob '!tests/**' --glob '!scripts/**' = 0 matches
 
-UTL gate: [project.dependencies] in unified-trading-library/pyproject.toml has no google-cloud-* or boto3 (only in [project.optional-dependencies.gcp/aws])
+STEP 5.13 — Services use ServiceMode + PROTOCOL*\* env vars for deployment injection:
+PASS gate: Services that have live/batch modes use `SERVICE_MODE` env var (not hardcoded string); cloud routing via `PROTOCOL_DATA_SINK*\*` env vars injected at deploy time, not in source.
+Verify: rg 'SERVICE_MODE|PROTOCOL_DATA_SINK' deployment-service/configs/ -- presence confirms injection pattern
 
-All 4 checks must be PASS before any Phase 2+ work begins on a repo.
+UTL gate: [project.dependencies] in unified-trading-library/pyproject.toml has no google-cloud-\* or boto3 (only in [project.optional-dependencies.gcp/aws])
+
+All 5 checks must be PASS before any Phase 2+ work begins on a repo.
 
 ---
 
@@ -471,22 +476,23 @@ Checks for documentation drift between codex standards and actual implementation
 
 ## SECTION 12 — OBSERVABILITY & LOGGING
 
-| #     | Criterion                                                                                                                                                                                                                                                                    | Blocking |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 12.1  | No `print()` statements in production code — all output through structured logger                                                                                                                                                                                            | YES      |
-| 12.2  | All 11 batch lifecycle events emitted in correct order: STARTED → VALIDATION_STARTED → VALIDATION_COMPLETED → DATA_INGESTION_STARTED → DATA_INGESTION_COMPLETED → PROCESSING_STARTED → PROCESSING_COMPLETED → PERSISTENCE_STARTED → PERSISTENCE_COMPLETED → STOPPED / FAILED | YES      |
-| 12.3  | All 12 live lifecycle events emitted (batch events plus DATA_BROADCAST)                                                                                                                                                                                                      | YES      |
-| 12.4  | Service never exits without logging STOPPED or FAILED                                                                                                                                                                                                                        | YES      |
-| 12.5  | No `setup_cloud_logging` — use structured event logging via `unified_events_interface`                                                                                                                                                                                       | YES      |
-| 12.6  | `setup_events(service_name=...)` called in every service's CLI entrypoint                                                                                                                                                                                                    | YES      |
-| 12.7  | `datetime.now(timezone.utc)` used — never `datetime.now()`, `datetime.utcnow()`, or `datetime.today()`                                                                                                                                                                       | YES      |
-| 12.8  | All timestamps in stored schemas are timezone-aware UTC                                                                                                                                                                                                                      | YES      |
-| 12.9  | No `logging.basicConfig()` in library code (clobbers root logger configuration)                                                                                                                                                                                              | YES      |
-| 12.10 | No f-string logging (`logger.info(f"...")`) — use lazy `%s` formatting or `extra={}` for structured data                                                                                                                                                                     | WARN     |
-| 12.11 | Events logged with structured metadata (not free-form strings)                                                                                                                                                                                                               | WARN     |
-| 12.12 | Correlation IDs propagated through all events for trace reconstruction                                                                                                                                                                                                       | WARN     |
-| 12.13 | Health check endpoints standardized: consistent path (`/health`) and response shape (`{"status": "healthy"}`) across all services                                                                                                                                            | WARN     |
-| 12.14 | Metrics / health checks exist for live services                                                                                                                                                                                                                              | WARN     |
+| #     | Criterion                                                                                                                                                                                                                                                                    | Blocking        |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------- | ---- |
+| 12.1  | No `print()` statements in production code — all output through structured logger                                                                                                                                                                                            | YES             |
+| 12.2  | All 11 batch lifecycle events emitted in correct order: STARTED → VALIDATION_STARTED → VALIDATION_COMPLETED → DATA_INGESTION_STARTED → DATA_INGESTION_COMPLETED → PROCESSING_STARTED → PROCESSING_COMPLETED → PERSISTENCE_STARTED → PERSISTENCE_COMPLETED → STOPPED / FAILED | YES             |
+| 12.3  | All 12 live lifecycle events emitted (batch events plus DATA_BROADCAST)                                                                                                                                                                                                      | YES             |
+| 12.4  | Service never exits without logging STOPPED or FAILED                                                                                                                                                                                                                        | YES             |
+| 12.5  | No `setup_cloud_logging` — use structured event logging via `unified_events_interface`                                                                                                                                                                                       | YES             |
+| 12.6  | `setup_events(service_name=...)` called in every service's CLI entrypoint                                                                                                                                                                                                    | YES             |
+| 12.7  | `datetime.now(timezone.utc)` used — never `datetime.now()`, `datetime.utcnow()`, or `datetime.today()`                                                                                                                                                                       | YES             |
+| 12.8  | All timestamps in stored schemas are timezone-aware UTC                                                                                                                                                                                                                      | YES             |
+| 12.9  | No `logging.basicConfig()` in library code (clobbers root logger configuration)                                                                                                                                                                                              | YES             |
+| 12.10 | No f-string logging (`logger.info(f"...")`) — use lazy `%s` formatting or `extra={}` for structured data                                                                                                                                                                     | WARN            |
+| 12.11 | Events logged with structured metadata (not free-form strings)                                                                                                                                                                                                               | WARN            |
+| 12.12 | Correlation IDs propagated through all events for trace reconstruction. End-to-end test (`test_correlation_id_e2e.py`) in `system-integration-tests/` or per-service `tests/integration/` verifying `correlation_id` flows from API ingress → service → PubSub → consumer    | WARN            |
+| 12.13 | Health check endpoints standardized: consistent path (`/health`) and response shape (`{"status": "healthy"}`) across all services                                                                                                                                            | WARN            |
+| 12.14 | Prometheus metrics exported by all T4–T6 service repos — each exports minimum: `requests_total`, `processing_duration_seconds`, `errors_total`. Verify: `grep -r "prometheus_client" <service>/`                                                                             | WARN            |
+| 12.15 | AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED compliance events logged in every service that handles auth or config changes (per lifecycle-events.md). Verify per service: `rg "AUTH_FAILURE                                                                                 | SECRET_ACCESSED | CONFIG_CHANGED" <service>/` | WARN |
 
 ---
 
@@ -511,12 +517,13 @@ Checks for documentation drift between codex standards and actual implementation
 
 ### 14.1 Batch-Live Symmetry
 
-| #      | Criterion                                                                 | Blocking                                              |
-| ------ | ------------------------------------------------------------------------- | ----------------------------------------------------- | --- |
-| 14.1.1 | Service supports `--mode batch                                            | live` with a single shared engine (≥90% shared logic) | YES |
-| 14.1.2 | No `if mode == "batch": ... else: ...` inside engine business logic       | YES                                                   |
-| 14.1.3 | Only 4 seams differ by mode: data source, data sink, persistence, trigger | YES                                                   |
-| 14.1.4 | Business logic, validation, schema, event logging are mode-agnostic       | YES                                                   |
+| #      | Criterion                                                                                                                                                                                                                             | Blocking                                              |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | --- |
+| 14.1.1 | Service supports `--mode batch                                                                                                                                                                                                        | live` with a single shared engine (≥90% shared logic) | YES |
+| 14.1.2 | No `if mode == "batch": ... else: ...` inside engine business logic                                                                                                                                                                   | YES                                                   |
+| 14.1.3 | Only 4 seams differ by mode: data source, data sink, persistence, trigger                                                                                                                                                             | YES                                                   |
+| 14.1.4 | Business logic, validation, schema, event logging are mode-agnostic                                                                                                                                                                   | YES                                                   |
+| 14.1.5 | Batch-live seam test exists (`tests/unit/test_batch_live_seams.py` or `test_service_modes.py`) — calls engine with mock `DataSink` in BATCH mode and mock PubSub source in LIVE mode; asserts identical output schema from both paths | YES                                                   |
 
 ### 14.2 Service Architecture
 
@@ -531,12 +538,15 @@ Checks for documentation drift between codex standards and actual implementation
 
 ### 14.3 Cloud-Agnostic Abstractions
 
-| #      | Criterion                                                                                                                                                | Blocking |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 14.3.1 | Cloud I/O through `get_storage_client()`, `get_secret_client()` from `unified-cloud-interface` — no direct `from google.cloud import` in production code | YES      |
-| 14.3.2 | No direct `from google.cloud import pubsub_v1` — use `unified-cloud-interface` PubSub abstraction                                                        | YES      |
-| 14.3.3 | No direct `import boto3` in production code (except within `unified-cloud-interface` implementations)                                                    | YES      |
-| 14.3.4 | GCS paths use `key=value` format (`day={date}`, `timeframe={tf}`) with day-first ordering                                                                | YES      |
+| #      | Criterion                                                                                                                                                                                                                                                                                                                                       | Blocking |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 14.3.1 | Cloud I/O through `get_storage_client()`, `get_secret_client()` from `unified-cloud-interface` — no direct `from google.cloud import` in production code                                                                                                                                                                                        | YES      |
+| 14.3.2 | No direct `from google.cloud import pubsub_v1` — use `unified-cloud-interface` PubSub abstraction                                                                                                                                                                                                                                               | YES      |
+| 14.3.3 | No direct `import boto3` in production code (except within `unified-cloud-interface` implementations)                                                                                                                                                                                                                                           | YES      |
+| 14.3.4 | GCS paths use `key=value` format (`day={date}`, `timeframe={tf}`) with day-first ordering                                                                                                                                                                                                                                                       | YES      |
+| 14.3.5 | No protocol-leaking symbols in service source — banned: `CloudTarget`, `upload_to_gcs_batch`, `gcs_bucket=`, `bigquery_dataset=`, `StandardizedDomainCloudService`. Use `DataSink`/`EventBus` ABCs from `unified-cloud-interface`. Search: `rg 'CloudTarget\|upload_to_gcs_batch\|gcs_bucket=\|bigquery_dataset=' --type py --glob '!tests/**'` | YES      |
+| 14.3.6 | Services declare runtime mode via `SERVICE_MODE` env var (`LIVE`/`BATCH`) — not hardcoded. Cloud routing injected via `PROTOCOL_DATA_SINK_*` env vars at deploy time, never in source.                                                                                                                                                          | YES      |
+| 14.3.7 | Quality gate STEP 5.11 (protocol-leaking symbols check) is present as hard-fail in `scripts/quality-gates.sh` for all service repos                                                                                                                                                                                                             | YES      |
 
 ### 14.4 Async & Concurrency
 
@@ -552,16 +562,17 @@ Checks for documentation drift between codex standards and actual implementation
 
 ## SECTION 15 — FILE SIZE & COMPLEXITY
 
-| #    | Criterion                                                                                     | Blocking |
-| ---- | --------------------------------------------------------------------------------------------- | -------- |
-| 15.1 | No source file exceeds 900 lines (warn at 700)                                                | YES      |
-| 15.2 | No function exceeds 100 lines                                                                 | WARN     |
-| 15.3 | No method (inside class) exceeds 50 lines                                                     | WARN     |
-| 15.4 | No class exceeds 500 lines                                                                    | WARN     |
-| 15.5 | Files split by Single Responsibility Principle (no god files mixing adapters + schemas + CLI) | WARN     |
-| 15.6 | No functions over 200 lines in production code (extreme oversized — automatic FAIL)           | YES      |
-| 15.7 | No near-duplicate files serving the same purpose in different locations                       | WARN     |
-| 15.8 | Static data extracted to YAML/JSON — not inline Python dicts >500 lines                       | WARN     |
+| #    | Criterion                                                                                                                                                                                                            | Blocking |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 15.1 | No source file exceeds 900 lines (warn at 700)                                                                                                                                                                       | YES      |
+| 15.2 | No function exceeds 100 lines                                                                                                                                                                                        | WARN     |
+| 15.3 | No method (inside class) exceeds 50 lines                                                                                                                                                                            | WARN     |
+| 15.4 | No class exceeds 500 lines                                                                                                                                                                                           | WARN     |
+| 15.5 | Files split by Single Responsibility Principle (no god files mixing adapters + schemas + CLI)                                                                                                                        | WARN     |
+| 15.6 | No functions over 200 lines in production code (extreme oversized — automatic FAIL)                                                                                                                                  | YES      |
+| 15.7 | No near-duplicate files serving the same purpose in different locations                                                                                                                                              | WARN     |
+| 15.8 | Static data extracted to YAML/JSON — not inline Python dicts >500 lines                                                                                                                                              | WARN     |
+| 15.9 | All known files that legitimately exceed size limits (e.g., generated schema files: `aws_schemas.py` 1424L, `venue_manifest.py` 1058L) are documented in `QUALITY_GATE_BYPASS_AUDIT.md` — no undocumented exceptions | WARN     |
 
 ---
 
@@ -569,14 +580,16 @@ Checks for documentation drift between codex standards and actual implementation
 
 ### 16.1 Schema Ownership
 
-| #      | Criterion                                                                                            | Blocking |
-| ------ | ---------------------------------------------------------------------------------------------------- | -------- |
-| 16.1.1 | Three-tier schema separation: external (api-contracts) → normalized (canonical) → internal (service) | YES      |
-| 16.1.2 | Each service owns its output schema — not defined in shared library                                  | YES      |
-| 16.1.3 | `validate_timestamp_date_alignment()` called before every storage write                              | YES      |
-| 16.1.4 | `schema_version` field present on all internal contract models                                       | WARN     |
-| 16.1.5 | `SchemaRegistry` documents compatibility matrix for all versioned schemas                            | WARN     |
-| 16.1.6 | Breaking changes (field removal, type narrowing, Optional→required) require version bump             | YES      |
+| #      | Criterion                                                                                                                                                                                                                                                                                  | Blocking |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 16.1.1 | Three-tier schema separation: external (api-contracts) → normalized (canonical) → internal (service)                                                                                                                                                                                       | YES      |
+| 16.1.2 | Each service owns its output schema — not defined in shared library                                                                                                                                                                                                                        | YES      |
+| 16.1.3 | `validate_timestamp_date_alignment()` called before every storage write                                                                                                                                                                                                                    | YES      |
+| 16.1.4 | `schema_version` field present on all internal contract models                                                                                                                                                                                                                             | WARN     |
+| 16.1.5 | `SchemaRegistry` documents compatibility matrix for all versioned schemas                                                                                                                                                                                                                  | WARN     |
+| 16.1.6 | Breaking changes (field removal, type narrowing, Optional→required) require version bump                                                                                                                                                                                                   | YES      |
+| 16.1.7 | Service output schemas consumed cross-service live in `unified-internal-contracts domain/<service>/` — not in the producing service's own `output_schemas.py`. Verify: `rg 'from <service_name>.*output_schemas' --type py --glob '!tests/**'` returns 0 matches across consuming services | YES      |
+| 16.1.8 | Layer 0 contract-alignment tests (`test_contract_alignment.py`, `test_ac_uic_alignment.py`) are EXECUTED in the owning interface repos (unified-market-interface, unified-cloud-interface, unified-reference-data-interface) — not just defined in AC                                      | YES      |
 
 ### 16.2 External API Contracts
 
@@ -639,19 +652,21 @@ Verify the following data type groups have canonical schemas with appropriate Op
 
 ### 17.1 Python Testing
 
-| #       | Criterion                                                                                                                          | Blocking |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 17.1.1  | Test coverage ≥ 70% (unit + integration) per codex canonical target                                                                | YES      |
-| 17.1.2  | `tests/unit/test_event_logging.py` exists and is not skipped                                                                       | YES      |
-| 17.1.3  | Unit tests never skip due to missing cloud credentials — mocks used instead                                                        | YES      |
-| 17.1.4  | GCP auth uses `google.auth.default()` pattern — not `pytest.skip` on missing credentials file                                      | YES      |
-| 17.1.5  | Integration tests marked `@pytest.mark.integration` and skipped gracefully without credentials                                     | YES      |
-| 17.1.6  | No `central-element-323112` or real project IDs in tests — use `test-project` placeholder                                          | YES      |
-| 17.1.7  | No tests with zero assertions (`assert True` placeholders or empty test functions)                                                 | YES      |
-| 17.1.8  | No duplicate fixtures across test files — singleton fixtures in `conftest.py`                                                      | WARN     |
-| 17.1.9  | `conftest.py` exists with autouse `mock_secret_client` fixture                                                                     | WARN     |
-| 17.1.10 | VCR cassettes used for external API tests — no live calls in CI                                                                    | WARN     |
-| 17.1.11 | Python version alignment: workflows, Cloud Build, local quality gates, and `pyproject.toml` all specify same Python version (3.13) | YES      |
+| #       | Criterion                                                                                                                                                                                                                                       | Blocking |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 17.1.1  | Test coverage ≥ 70% (unit + integration) per codex canonical target                                                                                                                                                                             | YES      |
+| 17.1.2  | `tests/unit/test_event_logging.py` exists and is not skipped                                                                                                                                                                                    | YES      |
+| 17.1.3  | Unit tests never skip due to missing cloud credentials — mocks used instead                                                                                                                                                                     | YES      |
+| 17.1.4  | GCP auth uses `google.auth.default()` pattern — not `pytest.skip` on missing credentials file                                                                                                                                                   | YES      |
+| 17.1.5  | Integration tests marked `@pytest.mark.integration` and skipped gracefully without credentials                                                                                                                                                  | YES      |
+| 17.1.6  | No `central-element-323112` or real project IDs in tests — use `test-project` placeholder                                                                                                                                                       | YES      |
+| 17.1.7  | No tests with zero assertions (`assert True` placeholders or empty test functions)                                                                                                                                                              | YES      |
+| 17.1.8  | No duplicate fixtures across test files — singleton fixtures in `conftest.py`                                                                                                                                                                   | WARN     |
+| 17.1.9  | `conftest.py` exists with autouse `mock_secret_client` fixture                                                                                                                                                                                  | WARN     |
+| 17.1.10 | VCR cassettes used for external API tests — no live calls in CI                                                                                                                                                                                 | WARN     |
+| 17.1.11 | Python version alignment: workflows, Cloud Build, local quality gates, and `pyproject.toml` all specify same Python version (3.13)                                                                                                              | YES      |
+| 17.1.12 | Layer 1.5 per-component integration tests exist in `tests/integration/` per service repo — at least one `test_<component>_integration.py` using mocked direct dependencies (`@pytest.mark.integration`). These tests BLOCK quickmerge (D3 gate) | YES      |
+| 17.1.13 | Layer 1.5 tests are included in `scripts/quickmerge.sh` integration step — not skipped by default. Verify: `grep -q "integration\|Layer 1.5\|pytest.*integration" scripts/quickmerge.sh`                                                        | YES      |
 
 ### 17.2 TypeScript Testing & Quality Gates
 
@@ -733,19 +748,20 @@ _Applicable to systems with multi-venue market data ingestion._
 
 ## SECTION 21 — SAFETY & RISK CONTROLS
 
-| #     | Criterion                                                                                   | Blocking |
-| ----- | ------------------------------------------------------------------------------------------- | -------- |
-| 21.1  | Position limits enforced before order submission                                            | YES      |
-| 21.2  | Margin state checked before every leveraged trade                                           | YES      |
-| 21.3  | `MarginState` fields all non-optional and required from every adapter                       | YES      |
-| 21.4  | Gas cost estimated before every DeFi transaction — never unlimited gas                      | YES      |
-| 21.5  | Slippage tolerance enforced on all DEX swaps                                                | YES      |
-| 21.6  | `health_factor` checked before additional borrowing (DeFi)                                  | YES      |
-| 21.7  | Liquidation threshold monitored with alerts                                                 | WARN     |
-| 21.8  | Circuit breaker exists for P&L drawdown limits                                              | WARN     |
-| 21.9  | All order amounts validated against tick size and lot size constraints                      | YES      |
-| 21.10 | Kill switch topology matches `runtime-topology.yaml` `kill_switches` section                | WARN     |
-| 21.11 | Regulatory retention periods defined for trade records (min 7 years for most jurisdictions) | WARN     |
+| #     | Criterion                                                                                                                                                                                        | Blocking |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 21.1  | Position limits enforced before order submission                                                                                                                                                 | YES      |
+| 21.2  | Margin state checked before every leveraged trade                                                                                                                                                | YES      |
+| 21.3  | `MarginState` fields all non-optional and required from every adapter                                                                                                                            | YES      |
+| 21.4  | Gas cost estimated before every DeFi transaction — never unlimited gas                                                                                                                           | YES      |
+| 21.5  | Slippage tolerance enforced on all DEX swaps                                                                                                                                                     | YES      |
+| 21.6  | `health_factor` checked before additional borrowing (DeFi)                                                                                                                                       | YES      |
+| 21.7  | Liquidation threshold monitored with alerts                                                                                                                                                      | WARN     |
+| 21.8  | Circuit breaker exists for P&L drawdown limits                                                                                                                                                   | WARN     |
+| 21.9  | All order amounts validated against tick size and lot size constraints                                                                                                                           | YES      |
+| 21.10 | Kill switch topology matches `runtime-topology.yaml` `kill_switches` section                                                                                                                     | WARN     |
+| 21.11 | Regulatory retention periods defined for trade records (min 7 years for most jurisdictions)                                                                                                      | WARN     |
+| 21.12 | Sports execution path risk controls (circuit breaker, preflight checks, kill switch) are explicitly marked N/A until USEI v1 adapters (Betfair, Pinnacle) are implemented — not silently omitted | WARN     |
 
 ---
 
@@ -830,6 +846,11 @@ logger.info(f" (f-string logging)     | rg 'logger\.\w+\(f"' --type py          
 bump-library-version in non-library    | grep "bump-library-version" .pre-commit-config.yaml (svc) | WARN
 prettier version mismatch             | grep "prettier@" .pre-commit-config.yaml (expect 3.6.2)   | WARN
 ruff pre-commit rev mismatch          | grep "rev: v" .pre-commit-config.yaml (expect v0.15.0)    | YES
+verify=False in HTTP clients          | rg "verify=False" --type py (excl tests)                  | YES
+mock auth in production               | rg '"client-.*-key"\|mock.*auth\|fake.*token' --type py (excl tests) | YES
+CloudTarget in service code           | rg "CloudTarget" --type py (excl tests, UCI, UTL)         | YES
+upload_to_gcs_batch in service code   | rg "upload_to_gcs_batch" --type py (excl tests, UTL)      | YES
+output_schemas.py cross-service import| rg "from \w+_service.*output_schemas" --type py           | YES
 ```
 
 ---
