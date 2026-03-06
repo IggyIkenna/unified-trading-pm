@@ -3,8 +3,12 @@ name: update-repo-version
 # Receives repository_dispatch from individual repos after their version-bump.
 # Actions:
 #   (a) Updates workspace-manifest.json with the new repo version
+#       - branch=main → updates versions map (stable)
+#       - branch=staging → updates staging_versions map (converging)
 #   (b) Bumps PM's own pyproject.toml patch version (so PM version tracks manifest changes)
 #   (c) Dispatches dependency-update events to all downstream repos that depend on the bumped repo
+#       - Includes bump_type so downstream can route: MAJOR → PR to staging; MINOR/PATCH → direct commit
+#       - On MAJOR bump from staging: sets staging_status.locked = true
 #
 # Requires: GH_PAT secret in PM repo and all dispatching repos — full-repo PAT for cross-repo dispatch.
 
@@ -15,6 +19,12 @@ on:
 permissions:
   contents: write
 
+# Prevent race conditions when multiple repos dispatch version-bump simultaneously.
+# cancel-in-progress: false ensures all dispatches are processed, just serialized.
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
@@ -22,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
       - name: Update manifest, bump PM version, compute dependents
@@ -32,6 +42,8 @@ jobs:
 
           REPO="${{ github.event.client_payload.repo }}"
           VERSION="${{ github.event.client_payload.version }}"
+          BRANCH="${{ github.event.client_payload.branch }}"
+          BRANCH="${BRANCH:-main}"  # default to main if not provided
 
           if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
             echo "Missing repo or version in client_payload. Skipping."
@@ -39,7 +51,7 @@ jobs:
             exit 0
           fi
 
-          echo "Updating workspace-manifest.json: $REPO → $VERSION"
+          echo "Updating workspace-manifest.json: $REPO → $VERSION (branch=${BRANCH})"
 
           # (a) Update the bumped repo's version entry
           if ! grep -q "\"${REPO}\"" workspace-manifest.json; then
@@ -48,27 +60,94 @@ jobs:
             exit 0
           fi
 
-          sed -i "s/\"${REPO}\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"${REPO}\": \"${VERSION}\"/" workspace-manifest.json
+          # Update the correct version section based on branch
+          python3 - <<PYEOF
+          import json
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          repo = "${REPO}"
+          version = "${VERSION}"
+          branch = "${BRANCH}"
+          version_parts = version.split(".")
+          major = int(version_parts[0])
+          bump_type = "major" if major > 0 else "patch"  # simplified; will be overridden below
+
+          # Determine bump_type by comparing with current version
+          if branch == "staging":
+              current = manifest.get("staging_versions", {}).get(repo) or manifest.get("versions", {}).get(repo, "0.0.0")
+          else:
+              current = manifest.get("versions", {}).get(repo, "0.0.0")
+
+          cur_parts = current.split(".")
+          cur_major, cur_minor, cur_patch = int(cur_parts[0]), int(cur_parts[1]), int(cur_parts[2])
+          new_major, new_minor, new_patch = int(version_parts[0]), int(version_parts[1]), int(version_parts[2])
+
+          if new_major > cur_major:
+              bump_type = "major"
+          elif new_minor > cur_minor:
+              bump_type = "minor"
+          else:
+              bump_type = "patch"
+
+          # Update the appropriate section
+          if branch == "staging":
+              if "staging_versions" not in manifest:
+                  manifest["staging_versions"] = {}
+              manifest["staging_versions"][repo] = version
+              # If major bump on staging, set staging_status.locked
+              if bump_type == "major":
+                  import datetime
+                  manifest["staging_status"]["locked"] = True
+                  manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
+                  manifest["staging_status"]["locked_reason"] = f"Major bump cascade: {repo}={version}"
+                  manifest["staging_status"]["lock_version"] = version
+                  print(f"STAGING LOCKED: major bump {repo}={version}")
+          else:
+              manifest["versions"][repo] = version
+
+          # Always write bump_type to a temp file for the shell to read
+          with open("/tmp/bump_type.txt", "w") as f:
+              f.write(bump_type)
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print(f"Updated {repo} → {version} (branch={branch}, bump_type={bump_type})")
+          PYEOF
+
+          BUMP_TYPE=$(cat /tmp/bump_type.txt)
 
           # (b) Bump PM's own patch version in pyproject.toml
           CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml)
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          NEW_PATCH=$((PATCH + 1))
-          NEW_PM_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+          IFS='.' read -r PMAJOR PMINOR PPATCH <<< "$CURRENT"
+          NEW_PPATCH=$((PPATCH + 1))
+          NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
           sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_PM_VERSION}\"/" pyproject.toml
 
           # Also update PM's own version entry in the manifest
-          sed -i "s/\"unified-trading-pm\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"unified-trading-pm\": \"${NEW_PM_VERSION}\"/" workspace-manifest.json
+          python3 -c "
+          import json
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+          m['versions']['unified-trading-pm'] = '${NEW_PM_VERSION}'
+          with open('workspace-manifest.json', 'w') as f:
+              json.dump(m, f, indent=2, ensure_ascii=False)
+              f.write('\n')
+          "
 
           echo "PM version: $CURRENT → $NEW_PM_VERSION"
 
-          # (c) Find all direct dependents and build their new constraint
+          # (c) Find all direct dependents and build their new constraint (include bump_type)
           python3 - > /tmp/dependents.txt <<PYEOF
           import json, sys
           with open("workspace-manifest.json") as f:
               m = json.load(f)
           repo = "${REPO}"
           version = "${VERSION}"
+          bump_type = "${BUMP_TYPE}"
           parts = version.split(".")
           major = int(parts[0])
           minor = int(parts[1])
@@ -76,10 +155,10 @@ jobs:
               for dep in data.get("dependencies", []):
                   if dep.get("name") == repo:
                       constraint = f">={major}.{minor}.0,<{major+1}.0.0"
-                      print(json.dumps({"repo": name, "dep_name": repo, "dep_version": version, "constraint": constraint}))
+                      print(json.dumps({"repo": name, "dep_name": repo, "dep_version": version, "constraint": constraint, "bump_type": bump_type}))
           PYEOF
 
-          echo "Dependents of $REPO:"
+          echo "Dependents of $REPO (bump_type=$BUMP_TYPE):"
           while IFS= read -r line; do
             [ -z "$line" ] && continue
             dep_repo=$(echo "$line" | python3 -c "import json,sys; print(json.load(sys.stdin)['repo'])")
@@ -88,6 +167,8 @@ jobs:
 
           echo "repo=$REPO" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "bump_type=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
           echo "pm_version=$NEW_PM_VERSION" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
@@ -126,6 +207,7 @@ jobs:
             DEP_NAME=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dep_name'])")
             DEP_VERSION=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['dep_version'])")
             CONSTRAINT=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['constraint'])")
+            BUMP_TYPE=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('bump_type', 'patch'))")
 
             echo "Dispatching dependency-update to $DEPENDENT_REPO: $DEP_NAME=$DEP_VERSION (constraint: $CONSTRAINT)"
 
@@ -133,7 +215,7 @@ jobs:
               -H "Authorization: Bearer $TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$OWNER/$DEPENDENT_REPO/dispatches" \
-              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\"}}")
+              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\", \"bump_type\": \"$BUMP_TYPE\"}}")
 
             if [ "$HTTP_STATUS" = "204" ]; then
               echo "  ✅ Dispatched to $DEPENDENT_REPO"

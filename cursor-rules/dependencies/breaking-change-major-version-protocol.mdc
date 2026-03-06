@@ -15,6 +15,23 @@ CODEX: 06-coding-standards/feature-branch-workflow.md, 04-architecture/TIER-ARCH
 
 ---
 
+## The Breaking Change Test (apply this before choosing your commit prefix)
+
+Ask: **"Would a consumer's existing code, without any changes on their side, fail basedpyright type check, fail unit tests, or produce incorrect behavior after I merge this?"**
+
+- YES → `feat!:` or `BREAKING CHANGE:` — use `--to-staging` in quickmerge
+- NO  → `feat:` (new capability) or `fix:` (bug fix) — PR goes directly to main
+
+The **cascade is selective**: only repos that actually import the changed repo receive a
+`dependency-update` dispatch from PM. A T5 change only cascades to repos whose
+`workspace-manifest.json` dependency list includes it — not all 60 repos. The dispatch chain
+walks the actual dependency graph, not the tier level.
+
+**Who decides it's breaking:** The developer making the change. Basedpyright will catch type-level
+breaks at the consumer; runtime breaks (config key renames, schema column drops) require developer
+judgment. When in doubt, mark it breaking — the cost of a false negative (silent breakage at a
+consumer) is higher than the cost of a false positive (extra QG run).
+
 ## What Counts as a Breaking Change
 
 A change is BREAKING (requires major bump) when **any consumer repo must change their code, config, scripts, or schema handling** to adopt it.
@@ -169,7 +186,10 @@ bash scripts/quickmerge.sh "feat!(unified-domain-client): rename instrument_key 
 # Major bump — breaking message bus schema
 bash scripts/quickmerge.sh "feat!(unified-events-interface): rename UPLOAD_STARTED event to DATA_BROADCAST"
 
-# Major bump with dep-branch isolation (when deps also have local changes)
+# Major bump — use --to-staging (breaking change path): cascade through staging, SIT validates, then main
+bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy API" --to-staging
+
+# Major bump with dep-branch isolation (when deps also have local changes, feature mode only)
 bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy API" --dep-branch "feat/v2-adapters"
 
 # Minor bump — new feature, backward compatible
@@ -189,7 +209,7 @@ bash scripts/quickmerge.sh "docs(unified-market-interface): update venue adapter
 
 If a repo is still at `0.x.x`, the CI treats **major bumps as minor** (never auto-jumps to `1.0.0`). This is intentional — `0.x.x` signals an unstable API where breaking changes are expected.
 
-To graduate a repo to `1.0.0`, directly edit `pyproject.toml` to `version = "1.0.0"` and commit with `chore:`. This is a one-time manual act — the CI will not do it automatically. From `1.0.0` onwards, normal semver bump rules apply.
+The graduation to `1.0.0` requires all plan items for that repo complete AND full staging → main convergence. `1.0.0` is never set manually in a PR — the next breaking change after the repo is declared stable will cross the major boundary via the CI GitHub Action. Contact the team lead before graduating any repo.
 
 ---
 
@@ -209,7 +229,15 @@ T2 consumers: same decision — does this change T2's public API?
 T3 / Service consumers: same decision
 ```
 
-Use `--dep-branch` in quickmerge to cascade the change across tiers in a single coordinated branch.
+Use `--to-staging` in quickmerge to cascade the breaking change through staging. Only repos that
+actually depend on the changed tier receive a `dependency-update` dispatch — the cascade is selective
+by the actual dependency graph in `workspace-manifest.json`, not by tier level alone.
+
+**PM's role:** PM receives the version-bump dispatch, updates the manifest, and dispatches
+`dependency-update` to direct dependents of the changed repo. Each hop in the cascade only
+touches repos with a dependency edge to the changed thing. SIT (last in topological order)
+serves as the final convergence validator. Once SIT passes, staging-to-main promotes all
+staging versions to stable.
 
 ---
 

@@ -453,7 +453,7 @@ def create_project(
         check=False,
     )
     if existing and "_error" not in existing:
-        raw_projects = existing.get("projects", [])
+        raw_projects = existing.get("projects") or []
         projects_list: list[object] = cast(list[object], raw_projects) if isinstance(raw_projects, list) else []
         for proj_raw in projects_list:
             if isinstance(proj_raw, dict):
@@ -492,10 +492,10 @@ def create_project(
 def create_labels(org: str, project_def: ProjectDef, dry_run: bool) -> int:
     """Create labels for project repos."""
     primary_label = str(project_def.get("primary_label", ""))
-    raw_additional = project_def.get("additional_labels", [])
+    raw_additional = project_def.get("additional_labels") or []
     additional_labels: list[str] = cast(list[str], raw_additional) if isinstance(raw_additional, list) else []
     labels_to_create: list[str] = [primary_label, *additional_labels]
-    raw_repos = project_def.get("repos", [])
+    raw_repos = project_def.get("repos") or []
 
     target_repos: list[str]
     if raw_repos == "all":
@@ -507,7 +507,7 @@ def create_labels(org: str, project_def: ProjectDef, dry_run: bool) -> int:
         if not all_repos_result or "_error" in all_repos_result:
             print(f"   Could not list repos for org: {org}")
             return 0
-        raw_repo_list = all_repos_result.get("projects", [])
+        raw_repo_list = all_repos_result.get("projects") or []
         if not isinstance(raw_repo_list, list):
             raw_repo_list = []
         target_repos = [
@@ -570,7 +570,7 @@ def document_manual_steps(
 ) -> str:
     """Generate manual setup instructions for workflows and views."""
     title = str(project_def.get("title", ""))
-    raw_views = project_def.get("views", [])
+    raw_views = project_def.get("views") or []
     views: list[object] = cast(list[object], raw_views) if isinstance(raw_views, list) else []
     primary_label = str(project_def.get("primary_label", ""))
 
@@ -640,56 +640,52 @@ Navigate to: https://github.com/users/IggyIkenna/projects/{project_number}
 # ============================================================================
 
 
-def main() -> None:
+def _parse_args() -> argparse.Namespace:
+    """Parse and return CLI arguments."""
     parser = argparse.ArgumentParser(description="Create all missing GitHub projects")
     parser.add_argument("--org", required=True, help="GitHub organization or user")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without applying")
     parser.add_argument("--apply", action="store_true", help="Apply changes")
     parser.add_argument("--projects", nargs="+", help="Specific projects to create (default: all)")
+    return parser.parse_args()
 
-    parsed = parser.parse_args()
 
+def _validate_args(parsed: argparse.Namespace) -> None:
+    """Validate parsed args; exits on failure."""
     dry_run: bool = bool(getattr(parsed, "dry_run", False))
     apply_flag: bool = bool(getattr(parsed, "apply", False))
-    org: str = str(getattr(parsed, "org", ""))
-    projects_arg: list[str] | None = cast(list[str] | None, getattr(parsed, "projects", None))
-
     if not dry_run and not apply_flag:
         print("Error: Must specify --dry-run or --apply")
         sys.exit(1)
-
-    # Validate GitHub token is available (exits on failure)
     get_github_token()
 
-    # Determine which projects to create
-    projects_to_create: list[str] = projects_arg if projects_arg else list(PROJECT_DEFINITIONS.keys())
 
-    # Validate project keys
+def _resolve_projects_to_create(parsed: argparse.Namespace) -> list[str]:
+    """Resolve and validate project keys to create."""
+    projects_arg: list[str] | None = cast(list[str] | None, getattr(parsed, "projects", None))
+    projects_to_create: list[str] = projects_arg if projects_arg else list(PROJECT_DEFINITIONS.keys())
     invalid_keys: list[str] = [k for k in projects_to_create if k not in PROJECT_DEFINITIONS]
     if invalid_keys:
         print(f"Error: Invalid project keys: {', '.join(invalid_keys)}")
         print(f"   Valid keys: {', '.join(PROJECT_DEFINITIONS.keys())}")
         sys.exit(1)
+    return projects_to_create
 
-    mode_label = "DRY RUN" if dry_run else "APPLY"
-    print(f"\n{'=' * 80}")
-    print(f"Create All GitHub Projects - {mode_label}")
-    print(f"{'=' * 80}\n")
-    print(f"Organization: {org}")
-    print(f"Projects to create: {len(projects_to_create)}")
-    print()
 
-    # Summary stats
+def _create_projects_loop(
+    org: str,
+    projects_to_create: list[str],
+    dry_run: bool,
+) -> tuple[int, int, list[tuple[str, str, str]]]:
+    """Create each project; returns (total_created, total_failed, manual_steps_files)."""
     total_created = 0
     total_failed = 0
     manual_steps_files: list[tuple[str, str, str]] = []
 
-    # Create each project
     for idx, project_key in enumerate(projects_to_create, 1):
         project_def = PROJECT_DEFINITIONS[project_key]
         print(f"[{idx}/{len(projects_to_create)}] {project_def.get('title', '')}")
 
-        # Step 1: Create project
         success, project_number = create_project(org, project_key, project_def, dry_run)
 
         if not success:
@@ -698,32 +694,35 @@ def main() -> None:
 
         total_created += 1
 
-        # Step 2: Create labels
         if not dry_run:
             print("   Creating labels...")
             labels_created = create_labels(org, project_def, dry_run)
             if labels_created > 0:
                 print(f"   Created {labels_created} labels")
 
-        # Step 3: Document manual steps
         if not dry_run and project_number != "dry-run":
             manual_file = f"/tmp/project-{project_number}-manual-setup.md"
             instructions = document_manual_steps(project_key, project_def, project_number)
-
             with open(manual_file, "w") as f:
                 f.write(instructions)
-
             proj_title = str(project_def.get("title", ""))
             manual_steps_files.append((proj_title, project_number, manual_file))
             print(f"   Manual setup guide: {manual_file}")
 
         print()
-
-        # Rate limit pause
         if not dry_run:
             time.sleep(1)
 
-    # Summary
+    return (total_created, total_failed, manual_steps_files)
+
+
+def _print_summary(
+    total_created: int,
+    total_failed: int,
+    manual_steps_files: list[tuple[str, str, str]],
+    dry_run: bool,
+) -> None:
+    """Print final summary."""
     print(f"{'=' * 80}")
     print("Summary")
     print(f"{'=' * 80}\n")
@@ -749,6 +748,26 @@ def main() -> None:
         print("This was a dry run. Run with --apply to create projects.")
     else:
         print("Done! Check manual setup guides in /tmp/")
+
+
+def main() -> None:
+    parsed = _parse_args()
+    _validate_args(parsed)
+
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
+    org: str = str(getattr(parsed, "org", ""))
+    projects_to_create = _resolve_projects_to_create(parsed)
+
+    mode_label = "DRY RUN" if dry_run else "APPLY"
+    print(f"\n{'=' * 80}")
+    print(f"Create All GitHub Projects - {mode_label}")
+    print(f"{'=' * 80}\n")
+    print(f"Organization: {org}")
+    print(f"Projects to create: {len(projects_to_create)}")
+    print()
+
+    total_created, total_failed, manual_steps_files = _create_projects_loop(org, projects_to_create, dry_run)
+    _print_summary(total_created, total_failed, manual_steps_files, dry_run)
 
 
 if __name__ == "__main__":

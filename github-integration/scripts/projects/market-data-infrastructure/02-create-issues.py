@@ -221,114 +221,155 @@ def get_priority_label(priority: str) -> str:
     return "P2-medium"  # Default
 
 
-def create_issues(org: str, subtasks: list[JsonDict], dry_run: bool = True) -> dict[str, list[JsonDict]]:
+def _build_issue_specs(subtasks: list[JsonDict]) -> list[JsonDict]:
+    """Build list of issue specs from subtasks."""
+    specs: list[JsonDict] = []
+    for subtask in subtasks:
+        specs.append(
+            {
+                "subtask": subtask,
+                "repo": str(subtask.get("repo", "")),
+                "title": str(subtask.get("title", "")),
+                "body": create_issue_body(subtask),
+                "priority_label": get_priority_label(str(subtask.get("priority", ""))),
+            }
+        )
+    return specs
+
+
+def _find_existing_issue(org: str, repo: str, title: str) -> str | None:
+    """Check if issue with title exists; return number or None."""
+    existing = run_gh_command(
+        [
+            "gh",
+            "issue",
+            "list",
+            "--repo",
+            f"{org}/{repo}",
+            "--search",
+            f'"{title}" in:title',
+            "--json",
+            "number,title",
+            "--limit",
+            "1",
+        ],
+        check=False,
+    )
+    if existing and isinstance(existing, list) and len(existing) > 0:
+        first_item: JsonDict = cast(JsonDict, existing[0])
+        return str(first_item.get("number", ""))
+    return None
+
+
+def _create_single_issue_on_github(
+    org: str,
+    repo: str,
+    title: str,
+    body: str,
+    priority_label: str,
+    epic_label: str,
+) -> tuple[str, str]:
+    """Create issue via gh CLI; returns (number, url). Raises on failure."""
+    result = run_gh_command(
+        [
+            "gh",
+            "issue",
+            "create",
+            "--repo",
+            f"{org}/{repo}",
+            "--title",
+            title,
+            "--body",
+            body,
+            "--label",
+            f"{epic_label},{priority_label}",
+            "--assignee",
+            "@me",
+        ]
+    )
+    if result:
+        issue_url: str = str(result) if isinstance(result, str) else str(cast(JsonDict, result).get("url", ""))
+        issue_number: str = issue_url.split("/")[-1] if issue_url else "unknown"
+        return (issue_number, issue_url)
+    raise ValueError("gh issue create returned no result")
+
+
+def _process_single_issue(
+    org: str,
+    spec: JsonDict,
+    dry_run: bool,
+    epic_label: str,
+) -> JsonDict:
+    """Process one issue spec: dry run, existing, or create. Returns manifest entry."""
+    subtask: JsonDict = cast(JsonDict, spec["subtask"])
+    repo: str = str(spec["repo"])
+    title: str = str(spec["title"])
+    body: str = str(spec["body"])
+    priority_label: str = str(spec["priority_label"])
+    subtask_id: str = str(subtask.get("id", ""))
+
+    print(f"\n  {subtask_id}: {title}")
+    print(f"    Repo: {repo}")
+    print(f"    Priority: {priority_label}")
+
+    if dry_run:
+        print(f"    [DRY RUN] Would create issue in {org}/{repo}")
+        return {
+            "subtask_id": subtask_id,
+            "title": title,
+            "number": None,
+            "url": None,
+            "dry_run": True,
+        }
+
+    existing_num = _find_existing_issue(org, repo, title)
+    if existing_num:
+        print(f"    Issue already exists: #{existing_num}")
+        return {
+            "subtask_id": subtask_id,
+            "title": title,
+            "number": existing_num,
+            "url": f"https://github.com/{org}/{repo}/issues/{existing_num}",
+            "existing": True,
+        }
+
+    try:
+        num, url = _create_single_issue_on_github(org, repo, title, body, priority_label, epic_label)
+        print(f"    Created issue: #{num}")
+        print(f"       {url}")
+        return {
+            "subtask_id": subtask_id,
+            "title": title,
+            "number": num,
+            "url": url,
+            "existing": False,
+        }
+    except (OSError, ValueError) as e:
+        print(f"    Failed to create issue: {e}")
+        return {
+            "subtask_id": subtask_id,
+            "title": title,
+            "number": None,
+            "url": None,
+            "error": str(e),
+        }
+
+
+def create_issues(
+    org: str,
+    subtasks: list[JsonDict],
+    dry_run: bool = True,
+    epic_label: str = "MARKET-DATA-INFRASTRUCTURE",
+) -> dict[str, list[JsonDict]]:
     """Create GitHub issues for all subtasks."""
     print(f"\n  {'[DRY RUN] ' if dry_run else ''}Creating issues...")
-
     issue_manifest: dict[str, list[JsonDict]] = {}
+    specs: list[JsonDict] = _build_issue_specs(subtasks)
 
-    for subtask in subtasks:
-        repo: str = str(subtask.get("repo", ""))
-        title: str = str(subtask.get("title", ""))
-        body: str = create_issue_body(subtask)
-        priority_label: str = get_priority_label(str(subtask.get("priority", "")))
-
-        print(f"\n  {subtask.get('id', '')}: {title}")
-        print(f"    Repo: {repo}")
-        print(f"    Priority: {priority_label}")
-
-        if dry_run:
-            print(f"    [DRY RUN] Would create issue in {org}/{repo}")
-            issue_manifest.setdefault(repo, []).append(
-                {
-                    "subtask_id": str(subtask.get("id", "")),
-                    "title": title,
-                    "number": None,
-                    "url": None,
-                    "dry_run": True,
-                }
-            )
-            continue
-
-        # Check if issue already exists
-        existing = run_gh_command(
-            [
-                "gh",
-                "issue",
-                "list",
-                "--repo",
-                f"{org}/{repo}",
-                "--search",
-                f'"{title}" in:title',
-                "--json",
-                "number,title",
-                "--limit",
-                "1",
-            ],
-            check=False,
-        )
-
-        if existing and isinstance(existing, list) and len(existing) > 0:
-            first_item: JsonDict = cast(JsonDict, existing[0])
-            issue_number_val: str = str(first_item.get("number", ""))
-            print(f"    Issue already exists: #{issue_number_val}")
-            issue_manifest.setdefault(repo, []).append(
-                {
-                    "subtask_id": str(subtask.get("id", "")),
-                    "title": title,
-                    "number": issue_number_val,
-                    "url": f"https://github.com/{org}/{repo}/issues/{issue_number_val}",
-                    "existing": True,
-                }
-            )
-            continue
-
-        # Create issue
-        try:
-            result = run_gh_command(
-                [
-                    "gh",
-                    "issue",
-                    "create",
-                    "--repo",
-                    f"{org}/{repo}",
-                    "--title",
-                    title,
-                    "--body",
-                    body,
-                    "--label",
-                    f"MARKET-DATA-INFRASTRUCTURE,{priority_label}",
-                    "--assignee",
-                    "@me",
-                ]
-            )
-
-            if result:
-                issue_url: str = str(result) if isinstance(result, str) else str(cast(JsonDict, result).get("url", ""))
-                issue_number_str: str = issue_url.split("/")[-1] if issue_url else "unknown"
-                print(f"    Created issue: #{issue_number_str}")
-                print(f"       {issue_url}")
-
-                issue_manifest.setdefault(repo, []).append(
-                    {
-                        "subtask_id": str(subtask.get("id", "")),
-                        "title": title,
-                        "number": issue_number_str,
-                        "url": issue_url,
-                        "existing": False,
-                    }
-                )
-        except (OSError, ValueError) as e:
-            print(f"    Failed to create issue: {e}")
-            issue_manifest.setdefault(repo, []).append(
-                {
-                    "subtask_id": str(subtask.get("id", "")),
-                    "title": title,
-                    "number": None,
-                    "url": None,
-                    "error": str(e),
-                }
-            )
+    for spec in specs:
+        repo: str = str(spec["repo"])
+        entry: JsonDict = _process_single_issue(org, spec, dry_run, epic_label)
+        issue_manifest.setdefault(repo, []).append(entry)
 
     return issue_manifest
 
@@ -378,7 +419,9 @@ def main() -> None:
         sys.exit(1)
 
     # Create issues
-    issue_manifest: dict[str, list[JsonDict]] = create_issues(org, subtasks, dry_run=dry_run)
+    issue_manifest: dict[str, list[JsonDict]] = create_issues(
+        org, subtasks, dry_run=dry_run, epic_label="MARKET-DATA-INFRASTRUCTURE"
+    )
 
     # Save manifest
     save_manifest(issue_manifest, output_file)

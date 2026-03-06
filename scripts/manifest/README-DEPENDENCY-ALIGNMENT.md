@@ -54,3 +54,13 @@ python scripts/manifest/validate-dependency-conflicts.py --regenerate  # regener
 - `scripts/manifest/generate_canonical_dependency_manifest.py` — generates canonical-dependency-manifest.json from workspace-constraints.toml
 - `scripts/manifest/check_external_dependency_alignment.py` — checks repo pyproject vs canonical-dependency-manifest (external only)
 - `scripts/manifest/fix_external_dependency_alignment.py` — updates repos to match canonical; use `--apply` to write changes
+
+## Tier DAG Enforcement (fix-internal)
+
+`fix-internal-dependency-alignment.py` enforces the tier rule: **no repo may import from a higher or equal tier.**
+
+- **Used + tier OK** → add to manifest or pyproject
+- **Unused** → remove (orphaned)
+- **Used + tier violation** → report `TIER_VIOLATION`, exit 1; requires architectural change
+
+If you see `TIER_VIOLATION`, move shared code to a lower tier or restructure the dependency.

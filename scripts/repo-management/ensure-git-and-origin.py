@@ -24,7 +24,7 @@ def get_folders_from_manifest() -> list[tuple[str, str]]:
     """Return [(manifest_key, folder_name)] for repos that have a folder in workspace."""
     with open(MANIFEST_PATH) as f:
         manifest = cast(dict[str, object], json.load(f))
-    repos = cast(dict[str, dict[str, str]], manifest.get("repositories", {}))
+    repos = cast(dict[str, dict[str, str]], (manifest.get("repositories") or {}))
     out: list[tuple[str, str]] = []
     for name, data in repos.items():
         folder = str(data.get("folder_name", name))
