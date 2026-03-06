@@ -91,13 +91,11 @@ Known pattern: UAC schemas re-exported via UIC `market_data/__init__.py` must ha
 - **schema_governance_full_audit.plan.md** (plans/active/): active plan for normalization quality, UIC adoption, dedup
 - **schema_registry.json**: 4 stale entries fixed 2026-03-06 ✅
 
-## P0 Canonical Field Issues (data loss — requires UAC fix)
+## P0 Canonical Field Issues (all fixed 2026-03-06)
 
 | Schema | Issue | File | Status |
 |---|---|---|---|
-| `CanonicalFundingRate` | `predicted_rate` field missing — silently dropped | `unified_normalised_contracts/domain.py` | pending |
-| `CanonicalOhlcvBar` | `open/high/low/close` are `float` — should be `Decimal` | `unified_normalised_contracts/domain.py` | pending |
-| `CanonicalDerivativeTicker` | `adl_rank` field missing — ADL rank dropped | `unified_normalised_contracts/domain.py` | pending |
-| `CanonicalFundingRate` | `next_funding_time` → should be `next_funding_timestamp` | `unified_normalised_contracts/domain.py` | pending |
-
-See plan todos: `p1b-canonical-funding-rate-predicted-rate`, `p1b-ohlcv-decimal-precision`, `p1b-derivative-ticker-adl-rank`, `p1b-funding-timestamp-rename`.
+| `CanonicalFundingRate` | `predicted_rate` missing — silently dropped | `unified_normalised_contracts/domain.py` | ✅ Fixed 2026-03-06 |
+| `CanonicalOhlcvBar` | `open/high/low/close` were `float` — precision loss | `unified_normalised_contracts/domain.py` | ✅ Fixed 2026-03-06 — now `Decimal` |
+| `CanonicalDerivativeTicker` | `adl_rank` missing — ADL rank dropped | `unified_normalised_contracts/domain.py` | ✅ Fixed 2026-03-06 |
+| `CanonicalFundingRate` + `CanonicalDerivativeTicker` | `next_funding_time` → `next_funding_timestamp` | `unified_normalised_contracts/domain.py` | ✅ Fixed 2026-03-06 — normalizers updated |
