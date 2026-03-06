@@ -64,23 +64,23 @@ ALL_REPOS = SERVICE_REPOS + LIBRARY_REPOS + INFRA_REPOS
 CHECKS = [
     # ── Existing checks already in template (verify idempotently) ────────────
     {
-        "id": "GOOGLE_CLOUD_PROJECT",
-        "sentinel": "GOOGLE_CLOUD_PROJECT",
+        "id": "GCP_PROJECT_ID",
+        "sentinel": "GCP_PROJECT_ID",
         "anchor": 'log_success "No hardcoded project ID in production"',
         "code": (
-            "\n# GOOGLE_CLOUD_PROJECT is legacy — only GCP_PROJECT_ID is canonical\n"
-            'rg "GOOGLE_CLOUD_PROJECT" --type py --glob "!tests/**"'
+            "\n# GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical\n"
+            'rg "GCP_PROJECT_ID" --type py --glob "!tests/**"'
             ' --glob "!**/config.py" "$SOURCE_DIR/" 2>/dev/null \\\n'
             "    && { log_fail "
-            '"Use GCP_PROJECT_ID not GOOGLE_CLOUD_PROJECT'
+            '"Use GCP_PROJECT_ID not GCP_PROJECT_ID'
             ' (except config.py backward compat)"; ((V++)); }'
-            ' || log_success "No GOOGLE_CLOUD_PROJECT usage"'
+            ' || log_success "No GCP_PROJECT_ID usage"'
         ),
     },
     {
         "id": "EVENT_LOGGING_OLD",
         "sentinel": "unified_trading_services.*log_event|setup_cloud_logging|EL_OLD",
-        "anchor": 'log_success "No GOOGLE_CLOUD_PROJECT usage"',
+        "anchor": 'log_success "No GCP_PROJECT_ID usage"',
         "code": (
             "\n# Old event logging pattern — must use unified_events_interface directly\n"
             'EL_OLD=$(rg "from unified_trading_services[. ]'

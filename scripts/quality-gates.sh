@@ -282,10 +282,10 @@ rg "central-element-323112" tests/ 2>/dev/null \
 rg "central-element-323112" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; ((V++)); } || log_success "No hardcoded project ID in production"
 
-# GOOGLE_CLOUD_PROJECT is legacy — only GCP_PROJECT_ID is canonical
-GCP_OLD=$(rg "GOOGLE_CLOUD_PROJECT" --type py --glob "!tests/**" --glob "!**/config.py" "$SOURCE_DIR/" 2>/dev/null \
+# GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
+GCP_OLD=$(rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "rollout-quality-gate-checks\.py\|sbom-store\.py" || :)
-[[ -n "$GCP_OLD" ]] && { log_fail "Use GCP_PROJECT_ID not GOOGLE_CLOUD_PROJECT (except config.py backward compat)"; echo "$GCP_OLD" | head -3; ((V++)); } || log_success "No GOOGLE_CLOUD_PROJECT usage"
+[[ -n "$GCP_OLD" ]] && { log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; echo "$GCP_OLD" | head -3; ((V++)); } || log_success "No GCP_PROJECT_ID usage"
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
 # Acceptable: pytest.skip inside _skip_integration_without_creds autouse fixture (integration marker pattern)

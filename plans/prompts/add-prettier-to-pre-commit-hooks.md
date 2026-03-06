@@ -76,7 +76,7 @@ Place this block **after the ruff block and before the basic file checks block**
 | 26  | `unified-order-interface`           |
 | 27  | `unified-trade-execution-interface` |
 | 28  | `unified-trading-deployment-v2`     |
-| 29  | `unified-trading-deployment-v3`     |
+| 29  | `deployment-service`                |
 | 30  | `unified-trading-services`          |
 
 ---

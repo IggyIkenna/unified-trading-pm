@@ -204,10 +204,7 @@ def check_embedded_uis(workspace_path: Path) -> list[str]:
     if (execution_service_ui / "package.json").exists():
         embedded_uis.append("execution-service/visualizer-ui")
 
-    # Check unified-trading-deployment-v3/ui/
-    deployment_v2_ui = workspace_path / "unified-trading-deployment-v3" / "ui"
-    if (deployment_v2_ui / "package.json").exists():
-        embedded_uis.append("unified-trading-deployment-v3/ui")
+    # unified-trading-deployment-v3/ui/ violation resolved (2026-03-03): extracted to deployment-ui repo
 
     return embedded_uis
 

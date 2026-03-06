@@ -1,2 +1,7 @@
-# Repos to ignore (verified/fixed). One per line.
-unified-trading-pm
+# Per-commit ignore (intentional discard). One per line.
+# Format: repo:commit_hash (e.g. deployment-api:b103671)
+# Add the hash from the audit output when you intentionally reset and discard work.
+# Legacy: repo only (no colon) = ignore whole repo.
+890c67d3c31a29c4b523fc957e73a1412a941e32
+f298cb78b5a1c64ff9932428cf3d659bac8ea44c
+68a03b202f472ab16772990b85f32cf5053faa13

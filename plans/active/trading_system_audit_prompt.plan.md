@@ -415,7 +415,7 @@ Checks for documentation drift between codex standards and actual implementation
 | 10.2  | All secrets retrieved via `get_secret_client()` from `unified-cloud-interface` — not `os.getenv()` with empty fallback | YES      |
 | 10.3  | No credential JSON files in repository (`.gitignore` covers `*credentials*.json`)                                      | YES      |
 | 10.4  | No hardcoded project IDs — parameterized via config class                                                              | YES      |
-| 10.5  | `GOOGLE_CLOUD_PROJECT` not used as primary env var (use `GCP_PROJECT_ID`)                                              | YES      |
+| 10.5  | `GCP_PROJECT_ID` not used as primary env var (use `GCP_PROJECT_ID`)                                                    | YES      |
 | 10.6  | No `verify=False` in HTTP clients (no auth bypass flags in production code)                                            | YES      |
 | 10.7  | No `.env` files tracked in git — only `.env.example` with placeholder values                                           | YES      |
 | 10.8  | No `pickle.load`, `joblib.load`, `jsonpickle.decode` from untrusted sources — use safe serialization                   | YES      |
@@ -798,7 +798,7 @@ Any (unaudited)                        | rg ": Any|-> Any" --type py            
 pip install (in scripts/Dockerfiles)   | rg "pip install" scripts/ Dockerfile                      | YES
 git push origin main                   | rg "git push origin main"                                 | YES
 git reset --hard                       | rg "git reset --hard"                                     | YES
-GOOGLE_CLOUD_PROJECT                   | rg "GOOGLE_CLOUD_PROJECT" --type py                       | YES
+GCP_PROJECT_ID                   | rg "GCP_PROJECT_ID" --type py                       | YES
 hardcoded project ID                   | rg "central-element|my-project-id" --type py              | YES
 _old.py / _legacy.py files            | find . -name "*_old.py" -o -name "*_legacy.py"            | YES
 try/except ImportError                 | rg "except ImportError" --type py                         | YES

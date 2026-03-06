@@ -58,7 +58,7 @@ def _resolve_credentials_path() -> str | None:
         return str(p.resolve())
     # Search common locations for the credentials filename
     name = p.name
-    for base in (UCS_PATH, WORKSPACE_ROOT / "unified-trading-deployment-v3", REPO_ROOT):
+    for base in (UCS_PATH, WORKSPACE_ROOT / "deployment-service", REPO_ROOT):
         candidate = base / name
         if candidate.exists():
             return str(candidate.resolve())

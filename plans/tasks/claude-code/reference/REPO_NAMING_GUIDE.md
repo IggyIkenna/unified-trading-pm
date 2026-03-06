@@ -76,8 +76,8 @@ cd unified-config-interface  # ✅ This is the repo folder
 
 - `execution-algo-library/` → package: `execution_algo_library/`
 - `alerting-service/` → package: `alerting_service/`
-- `unified-trading-deployment-v3/` → no package (scripts/configs)
-- `unified-trading-deployment-v3/` → no package (scripts/configs)
+- `deployment-service/` → package: `deployment_service/`
+- `deployment-api/` → package: `deployment_api/`
 
 ---
 

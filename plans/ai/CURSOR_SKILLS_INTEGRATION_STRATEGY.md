@@ -12,15 +12,16 @@ Integrate Cursor skills so agents automatically apply the right workflows when p
 
 **Pattern:** One skill per plan category (or per high-value workflow).
 
-| Plan category | Skill name | Trigger terms |
-|---------------|------------|---------------|
-| Schema normalization | schema-normalization-plan | schema normalization, output_schemas, Pydantic |
-| Quality gates / quickmerge | quickmerge-workflow | quickmerge, quality gates, merge |
-| Deployment / hardening | deployment-hardening | deployment, hardening, phase3 |
-| Lobster multi-repo | lobster-multi-repo | lobster, 30 repos, systematic |
-| Audit remediation | audit-remediation | audit, remediation, technical debt |
+| Plan category              | Skill name                | Trigger terms                                  |
+| -------------------------- | ------------------------- | ---------------------------------------------- |
+| Schema normalization       | schema-normalization-plan | schema normalization, output_schemas, Pydantic |
+| Quality gates / quickmerge | quickmerge-workflow       | quickmerge, quality gates, merge               |
+| Deployment / hardening     | deployment-hardening      | deployment, hardening, phase3                  |
+| Lobster multi-repo         | lobster-multi-repo        | lobster, 30 repos, systematic                  |
+| Audit remediation          | audit-remediation         | audit, remediation, technical debt             |
 
 **Skill structure:**
+
 - Follow all workspace cursor rules
 - Read plan from unified-trading-pm/plans/active/
 - Use sub-agents for multi-repo; uv not pip; quickmerge not git push
@@ -37,11 +38,11 @@ Integrate Cursor skills so agents automatically apply the right workflows when p
 
 ## 3. Workflow Skills (Chained Actions)
 
-| Workflow | Key steps |
-|----------|-----------|
-| Quickmerge | Check --dep-branch if deps differ; run quickmerge; never git reset --hard |
-| Quality gates | Run per-repo; timeout 120 basedpyright source_dir; no standalone basedpyright . |
-| Plan execution | Read plan; create todos; launch sub-agents with rule reminder |
+| Workflow       | Key steps                                                                       |
+| -------------- | ------------------------------------------------------------------------------- |
+| Quickmerge     | Check --dep-branch if deps differ; run quickmerge; never git reset --hard       |
+| Quality gates  | Run per-repo; timeout 120 basedpyright source_dir; no standalone basedpyright . |
+| Plan execution | Read plan; create todos; launch sub-agents with rule reminder                   |
 
 ---
 
