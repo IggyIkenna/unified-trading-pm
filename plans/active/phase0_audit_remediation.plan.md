@@ -1,19 +1,57 @@
 ---
-name: ""
-overview: ""
-todos: []
-isProject: false
+name: "Phase 0 — Audit Remediation"
+overview: |
+  Companion to phase0_standards_enforcement.plan.md. Runs IN PARALLEL with enforcement during Phase 0.
+  Converts every FAIL/WARN audit finding into a concrete, ordered task with file-level evidence.
+  DOES NOT replace enforcement — enforcement scans and verifies; this plan fixes what enforcement finds.
+
+  Sequencing: enforcement runs first (or concurrently) to establish the FAIL/WARN list.
+  Remediation fixes FAIL items in Stream order (Stream 1→2→3→4→5). enforcement's p0-gate-check
+  verifies remediation is complete. Both must reach DONE before Phase 1 starts.
+
+  BLOCKS: Phase 1 Stream A, B, C — same gate as enforcement.
+todos:
+  - id: stream1-secrets-uci-uci-config
+    content: "Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig bootstrap pattern; unified-config-interface 1 os.environ in loaders.py."
+    status: pending
+  - id: stream2-utl-fds
+    content: "Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py."
+    status: pending
+  - id: stream3-instruments-strategy-mlt-deploy
+    content: "Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore; strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async."
+    status: pending
+  - id: stream4-exec-mtds-sports
+    content: "Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139 type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service _registry_data_b.py 1570L split."
+    status: pending
+  - id: stream5-warn-cleanup
+    content: "Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore; market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ verification."
+    status: pending
+isProject: true
+blockedBy:
+  - plan: phase0_standards_enforcement.plan.md
+    reason: "Enforcement scan identifies the FAIL/WARN items that this plan fixes. Stream 1 can begin as soon as the initial scan is complete — does not need full enforcement to be done."
 ---
 
 # Phase 0 — Audit Remediation Plan
+
+## Relationship to phase0_standards_enforcement.plan.md
+
+These are **two parallel Phase 0 companions, not competing plans:**
+
+| | phase0_standards_enforcement | phase0_audit_remediation (this plan) |
+|---|---|---|
+| **Role** | Runs QG scans, establishes baseline, verifies fixes | Fixes each FAIL/WARN item with file-level evidence |
+| **Output** | Pass/fail per repo; QUALITY_GATE_BYPASS_AUDIT.md | Fixed code committed in Stream order |
+| **Gate** | p0-gate-check verifies all fixes are in | N/A — enforcement gate is the final arbiter |
+| **Start** | Day 0, parallel with remediation | Day 0, can begin after Stream 1 scan results |
+
+**There is no circularity.** Enforcement DISCOVERS violations → remediation FIXES them → enforcement's gate check VERIFIES they are fixed. Both complete before Phase 1 starts.
 
 ## Context
 
 A full-system audit (2026-03-04) scored the workspace **Grade D** across 53 repos.
 13 repos have FAIL status; 16 have WARN. Phase 1 cannot start until all FAIL items are
-resolved and WARN items are either fixed or formally deferred. This plan is a
-Phase 0 blocker companion to `phase0_standards_enforcement.plan.md` — it converts
-every audit finding into a concrete, ordered task with file-level evidence.
+resolved and WARN items are either fixed or formally deferred.
 
 **Automatic-FAIL triggers found:**
 
