@@ -882,11 +882,11 @@
         }
       ],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 0,
+      "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "PARTIAL",
+      "quality_gate_status": "PASSING",
       "status": "active",
       "service_declaration": {
         "mode": "batch",
