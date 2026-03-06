@@ -67,7 +67,8 @@ skip=0
 for repo in "${REPOS[@]}"; do
   dir="$WORKSPACE_ROOT/$repo"
 
-  [[ ! -d "$dir" ]] || [[ ! -d "$dir/.git" ]] && continue
+  [[ ! -d "$dir" ]] && echo "  (skip) $repo — not in workspace" && ((skip++)) && continue
+  [[ ! -d "$dir/.git" ]] && echo "  (skip) $repo — not a git repo" && ((skip++)) && continue
 
   if [[ "$DRY_RUN" = true ]]; then
     echo "  [dry] $repo"
