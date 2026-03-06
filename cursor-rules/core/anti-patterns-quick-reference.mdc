@@ -37,4 +37,4 @@ tags:
 | Run standalone basedpyright for codebase audits | **Run quality gates per repo** (`bash scripts/quality-gates.sh --no-fix`) — same lint + type check, no zombies |
 | Keep parallel code paths after refactor (old + new schema/import) | **Single code path; delete old; tests under new structure only** — see delete-deprecated.mdc |
 
-CODEX: 06-coding-standards/README.md
+Full detail: unified-trading-codex/06-coding-standards/README.md
