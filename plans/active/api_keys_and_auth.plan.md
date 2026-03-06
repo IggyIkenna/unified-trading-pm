@@ -46,7 +46,6 @@ isProject: false
 
 ## Rules (per instruments-domain-and-api-keys.mdc)
 
-
 | Rule                                                                 | Enforcement                                        |
 | -------------------------------------------------------------------- | -------------------------------------------------- |
 | All secrets via `get_secret_client(project_id=..., secret_name=...)` | BLOCKING                                           |
@@ -54,11 +53,9 @@ isProject: false
 | No `os.environ.get("TARDIS_API_KEY")` or similar                     | BLOCKING                                           |
 | No hardcoded API keys                                                | BLOCKING (audit 10.1)                              |
 
-
 ---
 
 ## SSOT References
-
 
 | Document                                                                       | Purpose                                     |
 | ------------------------------------------------------------------------------ | ------------------------------------------- |
@@ -66,7 +63,6 @@ isProject: false
 | unified-api-contracts vcr_endpoints.py                                         | Cassette definitions; key_env per venue     |
 | [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md) §10 | Security audit checklist (10.1–10.19)       |
 | api-contracts/scripts/record_vcr_cassettes.py                                  | Record script                               |
-
 
 > **Note:** api-contracts/build/ is a stale build artifact. Ignore build/lib/api_contracts/endpoint_registry.py — the live source is api_contracts/vcr_endpoints.py.
 
@@ -87,19 +83,16 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 
 ## Phase 1 — Key in SM + cassette definition exists
 
-
 | Done | Venue  | key_env in vcr_endpoints.py | Secret Name in SM | Notes                                                                               |
 | ---- | ------ | --------------------------- | ----------------- | ----------------------------------------------------------------------------------- |
-| [ ]  | tardis | TARDIS_API_KEY              | tardis-api-key ✅  | Cassette definition at vcr_endpoints.py:tardis. VCR captures the auth HEAD request. |
-
+| [ ]  | tardis | TARDIS_API_KEY              | tardis-api-key ✅ | Cassette definition at vcr_endpoints.py:tardis. VCR captures the auth HEAD request. |
 
 ---
 
 ## Phase 2 — Key in SM, but [] in vcr_endpoints.py
 
-
-| Done | Venue         | Secret Name in SM                | Env Var             | Action needed in vcr_endpoints.py                              |
-| ---- | ------------- | -------------------------------- | ------------------- | -------------------------------------------------------------- |
+| Done | Venue         | Secret Name in SM                 | Env Var             | Action needed in vcr_endpoints.py                              |
+| ---- | ------------- | --------------------------------- | ------------------- | -------------------------------------------------------------- |
 | [ ]  | databento     | databento-api-key ✅ (pool of 22) | DATABENTO_API_KEY   | Add get(...) entry with hist.databento.com endpoint            |
 | [ ]  | thegraph      | thegraph-api-key ✅ (pool of 9)   | THE_GRAPH_API_KEY   | Add post(...) GraphQL entry; key in URL path — must filter     |
 | [ ]  | alchemy       | alchemy-api-key ✅                | ALCHEMY_API_KEY     | Add post(...) entry; key is in URL path — scrub in VCR filter  |
@@ -108,23 +101,19 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | [ ]  | openbb (FMP)  | openbb-fmp-api-key ✅             | OPENBB_FMP_API_KEY  | Add entry; FMP endpoints via OpenBB wrapper                    |
 | [ ]  | openbb (FRED) | openbb-fred-api-key ✅            | OPENBB_FRED_API_KEY | Add entry; FRED via OpenBB (separate from direct fred-api-key) |
 
-
 ---
 
 ## Phase 2 — WebSocket/binary (cassette approach TBD)
-
 
 | Done | Venue   | Secret Name(s) in SM                               | Env Var              | Notes                                                                    |
 | ---- | ------- | -------------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
 | [ ]  | binance | binance-read-api-key + binance-read-api-key-secret | BINANCE_READ_API_KEY | Private WS (listen key). Need REST call first to get listenKey, then WS. |
 | [ ]  | deribit | deribit-read-api-key + deribit-read-api-key-secret | DERIBIT_READ_API_KEY | Private WS auth. Synthetic cassette approach TBD.                        |
-| [ ]  | ibkr    | ❌ key not in SM yet                                | IBKR_TWS_KEY         | TWS socket protocol — VCR not applicable. Need mock TWS gateway.         |
-
+| [ ]  | ibkr    | ❌ key not in SM yet                               | IBKR_TWS_KEY         | TWS socket protocol — VCR not applicable. Need mock TWS gateway.         |
 
 ---
 
 ## Phase 3 — key NOT in SM → get key first
-
 
 | Done | Venue                | key_env               | Target Secret Name    | How to Get Access                            |
 | ---- | -------------------- | --------------------- | --------------------- | -------------------------------------------- |
@@ -136,11 +125,9 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | [ ]  | soccer_football_info | FOOTBALL_DATA_API_KEY | football-data-api-key | football-data.org — free tier available      |
 | [ ]  | footystats           | FOOTYSTATS_API_KEY    | footystats-api-key    | footystats.org — API subscription            |
 
-
 ---
 
 ## Phase 4 — No cassette definition AND no key in SM / non-HTTP
-
 
 | Done | Venue         | Target Secret Name                                         | Env Var               | Blocker                                                                       |
 | ---- | ------------- | ---------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------- |
@@ -151,15 +138,13 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | [ ]  | bloxroute     | bloxroute-auth-header                                      | BLOXROUTE_AUTH_HEADER | Key not in SM; paid tier                                                      |
 | [ ]  | smarkets      | smarkets-api-key                                           | SMARKETS_API_KEY      | Key not in SM                                                                 |
 | [ ]  | betdaq        | betdaq-api-key                                             | BETDAQ_API_KEY        | Key not in SM                                                                 |
-| [ ]  | binance (WS)  | binance-read-api-key                                       | BINANCE_READ_API_KEY  | Key in SM ✅; WS not HTTP — VCR approach TBD                                   |
-| [ ]  | deribit (WS)  | deribit-read-api-key                                       | DERIBIT_READ_API_KEY  | Key in SM ✅; WS not HTTP — VCR approach TBD                                   |
+| [ ]  | binance (WS)  | binance-read-api-key                                       | BINANCE_READ_API_KEY  | Key in SM ✅; WS not HTTP — VCR approach TBD                                  |
+| [ ]  | deribit (WS)  | deribit-read-api-key                                       | DERIBIT_READ_API_KEY  | Key in SM ✅; WS not HTTP — VCR approach TBD                                  |
 | [ ]  | ibkr          | ibkr-tws-key                                               | IBKR_TWS_KEY          | Key not in SM; TWS protocol — VCR not applicable                              |
-
 
 ---
 
 ## Phase 5 — Sports Betting Services Repo Migration
-
 
 | Done | Current Env Var              | Target Secret Name           | Notes                                              |
 | ---- | ---------------------------- | ---------------------------- | -------------------------------------------------- |
@@ -169,22 +154,18 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | [ ]  | GOOGLE_MAPS_API_KEY          | google-maps-api-key          | footballbets/cli/location.py                       |
 | [ ]  | API_FOOTBALL_KEY             | api-football-api-key         | Env var must be renamed to API_FOOTBALL_API_KEY    |
 
-
 ---
 
 ## Env Var Inconsistencies — Already Fixed / TODO
 
-
 | Fixed?   | Was (wrong)      | Now (correct)        | Location fixed                                      |
 | -------- | ---------------- | -------------------- | --------------------------------------------------- |
-| ✅ Done   | THEGRAPH_API_KEY | THE_GRAPH_API_KEY    | uniswapv2_adapter.py, uniswapv4_adapter.py          |
+| ✅ Done  | THEGRAPH_API_KEY | THE_GRAPH_API_KEY    | uniswapv2_adapter.py, uniswapv4_adapter.py          |
 | [ ] TODO | API_FOOTBALL_KEY | API_FOOTBALL_API_KEY | sports-betting-services/footballbets/core/config.py |
-
 
 ---
 
 ## Naming Violations in SM — Fix When Safe
-
 
 | Current SM Name  | Correct Canonical Name | When to Rename                                                           |
 | ---------------- | ---------------------- | ------------------------------------------------------------------------ |
@@ -192,11 +173,9 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | bybit_api_secret | bybit-api-secret       | Same as above                                                            |
 | graph-api-key    | deprecated → delete    | After confirming no code references graph-api-key (use thegraph-api-key) |
 
-
 ---
 
 ## Audit Checklist Alignment
-
 
 | Audit Item | Action                                                           |
 | ---------- | ---------------------------------------------------------------- |
@@ -208,7 +187,6 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | 10.17      | AUTH_FAILURE events logged                                       |
 | 10.18      | SECRET_ACCESSED events logged                                    |
 | 10.19      | CONFIG_CHANGED events logged                                     |
-
 
 ---
 

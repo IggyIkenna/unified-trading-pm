@@ -120,16 +120,16 @@ todos:
     content: "Update unified-trading-codex/04-architecture/TOPOLOGY-DAG.md: add features-multi-timeframe-service to Layer 3b subgraph, add edges FDS→FMTS (5m/15m/1h/4h/1d), FMTS→MLTR, FMTS→MLIN. Update WORKSPACE_MANIFEST_DAG.svg and RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg to include FMTS node at merge_level 6."
     status: completed
   - id: topology-runtime-add-mtf-service
-    content: "Update unified-trading-deployment-v3/configs/runtime-topology.yaml: add service_flows (FDS→FMTS batch+live, FMTS→ml-training-service batch, FMTS→ml-inference-service batch+live), add persistence_flow (FMTS→GCS multi_timeframe_features), add to clusters.features.services, add to batch_and_live_services."
+    content: "Update deployment-service/configs/runtime-topology.yaml: add service_flows (FDS→FMTS batch+live, FMTS→ml-training-service batch, FMTS→ml-inference-service batch+live), add persistence_flow (FMTS→GCS multi_timeframe_features), add to clusters.features.services, add to batch_and_live_services."
     status: completed
   - id: topology-sharding-add-mtf-service
-    content: "Update unified-trading-deployment-v3/configs/sharding_config.yaml: add features-multi-timeframe-service entry — batch dimensions [category, feature_category, date], live dimensions [feature_category], topic_template 'features-multi-timeframe-{feature_category}', feature_category_values [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]."
+    content: "Update deployment-service/configs/sharding_config.yaml: add features-multi-timeframe-service entry — batch dimensions [category, feature_category, date], live dimensions [feature_category], topic_template 'features-multi-timeframe-{feature_category}', feature_category_values [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]."
     status: completed
   - id: deployment-v3-mtf-terraform
-    content: "Create unified-trading-deployment-v3/terraform/services/features-multi-timeframe-service/gcp/ with main.tf, variables.tf, terraform.tfvars, backend.tf, outputs.tf. Mirror features-cross-instrument-service terraform structure. GCS backend prefix: services/features-multi-timeframe-service."
+    content: "Create deployment-service/terraform/services/features-multi-timeframe-service/gcp/ with main.tf, variables.tf, terraform.tfvars, backend.tf, outputs.tf. Mirror features-cross-instrument-service terraform structure. GCS backend prefix: services/features-multi-timeframe-service."
     status: completed
   - id: deployment-v3-mtf-checklist
-    content: Create unified-trading-deployment-v3/configs/checklist.features-multi-timeframe-service.yaml mirroring checklist.features-cross-instrument-service.yaml. Defines readiness checks for service deployment.
+    content: Create deployment-service/configs/checklist.features-multi-timeframe-service.yaml mirroring checklist.features-cross-instrument-service.yaml. Defines readiness checks for service deployment.
     status: completed
   - id: scaffold-mtf-service-repo
     content: "Scaffold features-multi-timeframe-service repo: copy pyproject.toml from features-cross-instrument-service, update name/description. Create directory structure: features_multi_timeframe_service/app/calculators/, app/engine/, schemas/output_schemas.py, tests/unit/, tests/integration/, docs/, scripts/quality-gates.sh, scripts/quickmerge.sh. Set up .python-version=3.13. Add conftest.py with mock fixtures derived from CrossTimeframeFeatures and delta-one output schemas."
@@ -150,7 +150,7 @@ todos:
     content: Add features-multi-timeframe-service to unified-trading-pm/scripts/create-github-repos-and-collaborators.py REPOS_TO_CREATE list. Add datadodo and CosmicTrader as collaborators with admin permission. Run script to create repo and set access.
     status: pending
   - id: mtf-service-cloud-build-trigger
-    content: "Add Cloud Build trigger for features-multi-timeframe-service in unified-trading-deployment-v3: trigger on push to main at path features-multi-timeframe-service/**. Mirror features-cross-instrument-service Cloud Build trigger config."
+    content: "Add Cloud Build trigger for features-multi-timeframe-service in deployment-service: trigger on push to main at path features-multi-timeframe-service/**. Mirror features-cross-instrument-service Cloud Build trigger config."
     status: pending
 isProject: true
 ---
@@ -828,10 +828,10 @@ Full setup checklist (mirror `features-cross-instrument-service` for every item)
 unified-trading-pm/workspace-manifest.json          ← add repo entry (merge_level=6)
 unified-trading-codex/04-architecture/TOPOLOGY-DAG.md ← add L3b node + edges
 unified-trading-codex/04-architecture/*.svg           ← update both DAG SVGs
-unified-trading-deployment-v3/configs/runtime-topology.yaml  ← service_flows + persistence_flows
-unified-trading-deployment-v3/configs/sharding_config.yaml   ← sharding dimensions
-unified-trading-deployment-v3/configs/checklist.features-multi-timeframe-service.yaml
-unified-trading-deployment-v3/terraform/services/features-multi-timeframe-service/gcp/
+deployment-service/configs/runtime-topology.yaml  ← service_flows + persistence_flows
+deployment-service/configs/sharding_config.yaml   ← sharding dimensions
+deployment-service/configs/checklist.features-multi-timeframe-service.yaml
+deployment-service/terraform/services/features-multi-timeframe-service/gcp/
 features-multi-timeframe-service/scripts/quality-gates.sh    ← setup only, never run
 features-multi-timeframe-service/scripts/quickmerge.sh       ← setup only, never run
 features-multi-timeframe-service/tests/unit/                  ← mock-based, run with pytest only

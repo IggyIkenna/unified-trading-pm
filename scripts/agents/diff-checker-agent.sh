@@ -7,7 +7,7 @@
 
 set -euo pipefail
 WORKSPACE_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-DEPLOYMENT_V3="$WORKSPACE_ROOT/unified-trading-deployment-v3"
+DEPLOYMENT_V3="$WORKSPACE_ROOT/deployment-service"
 MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 TARGET_SERVICE="${1:-}"
 DRY_RUN="${2:-}"
@@ -17,7 +17,7 @@ echo "Deployment: $DEPLOYMENT_V3"
 echo ""
 
 if [ ! -d "$DEPLOYMENT_V3" ]; then
-  echo "ERROR: unified-trading-deployment-v3 not found"
+  echo "ERROR: deployment-service not found"
   exit 1
 fi
 

@@ -49,8 +49,8 @@ isProject: false
 
 ### P0 — Core Analytics (Required for TCA + Alpha + Execution Quality)
 
-| Page                    | Source                                                                               | Purpose                                                          | execution-results-api Endpoints                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Page                    | Source                                                                              | Purpose                                                          | execution-results-api Endpoints                                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | **LoadResults**         | [LoadResults.tsx](execution-analytics-ui/src/pages/LoadResults.tsx)                 | Browse GCS/local results, bucket/prefix selection, list results  | `/results`, `/results/buckets`, `/results/prefixes`, `/results/local-default-directory`, `/health` |
 | **Analysis**            | [Analysis.tsx](execution-analytics-ui/src/pages/Analysis.tsx)                       | Alpha distribution histogram, execution alpha bars, equity curve | `/results`, `/results/execution_alpha`                                                             |
 | **DeepDive**            | [DeepDive.tsx](execution-analytics-ui/src/pages/DeepDive.tsx)                       | Per-result alpha, fills, orders, timeline tabs                   | `/results/{id}`, `/results/execution_alpha`                                                        |
@@ -58,14 +58,14 @@ isProject: false
 
 ### P1 — Execution Backtest Management
 
-| Page            | Source                                                               | Purpose                                | execution-results-api Endpoints                                                                            |
-| --------------- | -------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Page            | Source                                                              | Purpose                                | execution-results-api Endpoints                                                                            |
+| --------------- | ------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | **RunBacktest** | [RunBacktest.tsx](execution-analytics-ui/src/pages/RunBacktest.tsx) | Run single/batch backtests, job status | `/backtest/run`, `/backtest/batch`, `/backtest/status/{job_id}`, `/config/sources`, `/config/system/cores` |
 
 ### P2 — Domain Data Browsing (execution-service domain)
 
-| Page                        | Source                                                                                       | Purpose                                           | execution-results-api Endpoints                                    |
-| --------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| Page                        | Source                                                                                      | Purpose                                           | execution-results-api Endpoints                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------ |
 | **InstrumentDefinitions**   | [InstrumentDefinitions.tsx](execution-analytics-ui/src/pages/InstrumentDefinitions.tsx)     | Browse instruments (UDC via execution-service)    | `/data/instruments`, `/data/instruments/data`                      |
 | **InstructionAvailability** | [InstructionAvailability.tsx](execution-analytics-ui/src/pages/InstructionAvailability.tsx) | Browse strategy instructions                      | `/data/strategies`, `/data/instructions`                           |
 | **ConfigBrowser**           | [ConfigBrowser.tsx](execution-analytics-ui/src/pages/ConfigBrowser.tsx)                     | Browse and validate configs                       | `/data/configs`, `/data/configs/content`, `/data/configs/validate` |
@@ -73,8 +73,8 @@ isProject: false
 
 ### P3 — Market Data (market-data-api)
 
-| Page               | Source                                                                     | Purpose                    | API                                                                       |
-| ------------------ | -------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------- |
+| Page               | Source                                                                    | Purpose                    | API                                                                       |
+| ------------------ | ------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------- |
 | **MarketTickData** | [MarketTickData.tsx](execution-analytics-ui/src/pages/MarketTickData.tsx) | Browse and chart tick data | `/data/tick-data`, `/data/tick-data/instruments`, `/data/tick-data/ticks` |
 
 ---
@@ -83,8 +83,8 @@ isProject: false
 
 | Component          | Source                                         | Notes                                                                                               |
 | ------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **API client**     | `execution-analytics-ui/src/api/client.ts`    | Axios base URL; adapt for `authFetchJson` or Bearer token from `@unified-trading/ui-auth`           |
-| **API types**      | `execution-analytics-ui/src/api/types.ts`     | `ResultSummary`, `ExecutionAlpha`, `FilterOptions`, etc. — align with execution-results-api schemas |
+| **API client**     | `execution-analytics-ui/src/api/client.ts`     | Axios base URL; adapt for `authFetchJson` or Bearer token from `@unified-trading/ui-auth`           |
+| **API types**      | `execution-analytics-ui/src/api/types.ts`      | `ResultSummary`, `ExecutionAlpha`, `FilterOptions`, etc. — align with execution-results-api schemas |
 | **Zustand stores** | `resultsStore.ts`, `filterStore.ts`            | Results list, filters (category, asset, strategy, mode, timeframe, algorithm)                       |
 | **React Query**    | `@tanstack/react-query`                        | Server state, caching for buckets, results, execution_alpha, job status                             |
 | **Recharts**       | BarChart, ComposedChart, AreaChart, RadarChart | Alpha distribution, equity, fills, algorithm comparison                                             |

@@ -10,7 +10,8 @@
 #
 # Safe to run periodically in background (e.g. cron, launchd).
 #
-# Usage: bash sync-all-to-main.sh [--dry-run] [--limit N]
+# Usage: bash sync-all-to-main.sh [--dry-run] [--limit N] [--repo NAME]
+#   --repo NAME   Sync only this repo (e.g. unified-api-contracts)
 # Run from: workspace root or unified-trading-pm/scripts/repo-management/
 
 set -euo pipefail
@@ -39,16 +40,19 @@ build/
 
 DRY_RUN=false
 LIMIT=""
+REPO_FILTER=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dry-run) DRY_RUN=true; shift ;;
     --limit) LIMIT="$2"; shift 2 ;;
+    --repo) REPO_FILTER="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
 
 REPOS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
+[[ -n "$REPO_FILTER" ]] && REPOS=("$REPO_FILTER")
 [[ -n "$LIMIT" ]] && REPOS=("${REPOS[@]:0:$LIMIT}")
 
 echo "Sync to main: ${#REPOS[@]} repos"
