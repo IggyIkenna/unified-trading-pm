@@ -38,7 +38,7 @@ todos:
       Add a cross-reference block to unified-trading-pm/TOPOLOGY-DAG.md header
       (after the move) that explicitly links the three machine-readable SSOTs:
         - unified-trading-pm/workspace-manifest.json  (code DAG, version pins)
-        - deployment-service/configs/runtime-topology.yaml  (runtime wiring: topics, storage, modes)
+        - unified-trading-pm/configs/runtime-topology.yaml  (runtime wiring: topics, storage, modes)
         - unified-trading-pm/TOPOLOGY-DAG.md  (human-readable tier diagram — this file)
       These three files form the complete system topology specification.
       No other file is authoritative for tier membership or runtime wiring.
@@ -185,12 +185,58 @@ todos:
       Gate: uci_cloud_abstraction_complete.plan.md has all todos completed.
     status: pending
 
+  - id: pm-runtime-topology-ssot-formal
+    content: |
+      COMPLETED: unified-trading-pm/configs/runtime-topology.yaml is the canonical SSOT for
+      runtime service wiring (version 6, 70KB). deployment-service/configs/runtime-topology.yaml
+      is a partial local view with ssot_ref pointing to PM. RUNTIME_TOPOLOGY_DECISIONS.md in
+      deployment-service/configs/ explicitly states PM ownership.
+
+      Libraries and services receive PROTOCOL_* env vars injected at deploy time from the PM
+      runtime-topology.yaml — services declare only SERVICE_MODE=live|batch; UCI factory reads
+      CLOUD_PROVIDER + PROTOCOL_* to resolve concrete providers. Services are never aware of
+      GCP vs AWS or the topology file.
+
+      Gate: unified-trading-pm/configs/runtime-topology.yaml exists at version ≥ 6. ✅
+    status: completed
+
+  - id: pm-library-protocol-orchestration
+    content: |
+      COMPLETED: The library-orchestrates-protocol pattern is formally documented in
+      unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md (created in
+      protocol-injection-codex-doc todo above).
+
+      Contract: Services declare SERVICE_MODE only. CI/CD reads unified-trading-pm/configs/
+      runtime-topology.yaml to generate per-service PROTOCOL_* env files
+      (deployment-service/configs/services/{svc}/{mode}.env). UCI factory.py (T0) consumes
+      CLOUD_PROVIDER + PROTOCOL_* → resolves DataSink/DataSource/EventBus providers.
+      No service ever reads env vars directly for routing decisions.
+
+      Gate: PROTOCOL-INJECTION.md section 2 (tier injection points) matches factory.py. ✅
+    status: completed
+
+  - id: pm-runtime-topology-refs-update
+    content: |
+      Update all plan files that reference deployment-service/configs/runtime-topology.yaml
+      as the canonical SSOT. Correct path: unified-trading-pm/configs/runtime-topology.yaml.
+      deployment-service/configs/runtime-topology.yaml is a partial local view only.
+
+      Files to update (identified 2026-03-06):
+        - phase3_service_hardening_integration.plan.md
+        - multi_tf_cascade_signal_architecture.plan.md
+        - trading_system_audit_prompt.plan.md
+        - INDEX.md
+        - documentation_standards_enforcement.plan.md
+        - phase1_foundation_prep.plan.md
+        - ibkr_gateway_rollout.plan.md
+        - plans_to_deployable_unified_audit.plan.md
+        - topology_dag_pm_ssot.plan.md (workspace-manifest-dag-link todo — fixed above)
+
+      Gate: grep 'deployment-service/configs/runtime-topology.yaml' across all active plan
+      files returns zero matches (except where explicitly describing the partial local view).
+    status: pending
+
 isProject: true
-blockedBy:
-  - plan: phase2_library_tier_hardening.plan.md
-    reason: "UTL is T1 — must reach D3+ before CloudTarget/StandardizedDomainCloudService can be safely deleted"
-  - plan: service_protocol_abstraction.plan.md
-    reason: "DataSink/DataSource routing_key ABCs must be stable before UDC/service migration"
 ---
 
 # Topology DAG — PM as SSOT + Protocol Injection Formalization
@@ -222,13 +268,17 @@ The full cloud-agnostic + mode-agnostic picture (services never see GCP/AWS):
 ```
 workspace-manifest.json (PM)
   └── TOPOLOGY-DAG.md (PM) — tier map, human readable
-        └── runtime-topology.yaml (deployment-service/configs/)
+        └── runtime-topology.yaml (unified-trading-pm/configs/) ← CANONICAL SSOT
               └── env var injection per service (CLOUD_PROVIDER, SERVICE_MODE, PROTOCOL_*)
                     └── UCI factory.py (T0)
                           └── Resolved: StorageClient|DataSink|EventBus|QueueClient
                                 └── Service calls get_data_sink(routing_key="features")
                                       └── Zero cloud SDK knowledge in service code
 ```
+
+Note: `deployment-service/configs/runtime-topology.yaml` is a partial local view of the
+execution-service wiring only; it carries `ssot_ref: unified-trading-pm/configs/runtime-topology.yaml`
+and is not the canonical file.
 
 Libraries know their tier from the DAG. They expose ABCs. Deployment wires env vars. Services declare mode. UCI resolves providers. No service ever reads `os.getenv("GCS_BUCKET")`.
 
