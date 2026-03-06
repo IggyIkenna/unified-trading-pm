@@ -31,7 +31,7 @@ isProject: false
 
 | Blocker                            | Type          | Specific Dependency                                                                                     | Resolution                                                                                                                                                 |
 | ---------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 0 baseline not established   | `[PLAN_TODO]` | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md) § todo `p0-gate-check`     | Phase 0 runs basedpyright strict on all repos and documents all current bypasses; this plan then enforces zero-new-violations and clears existing bypasses |
+| Phase 0 baseline not established   | `[DONE]`      | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md) § todo `p0-gate-check`     | Phase 0 complete (2026-03-05). All repos have basedpyright strict configs; all bypasses documented in QUALITY_GATE_BYPASS_AUDIT.md. |
 | Any violations in public T0/T1 API | `[PLAN_TODO]` | [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md) § todo `t0-code-rewrite` | T0 Any violations must be fixed during T0 STEP C before T1 compliance can be achieved; run in tier order T0→T1→T2→T3→services                              |
 
 ---
