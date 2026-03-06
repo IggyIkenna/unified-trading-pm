@@ -19,6 +19,23 @@ todos:
     content: "Audit schemas/ (13 core files: accounts, derivatives, risk, analytics, etc.) for boundary violations against unified_normalised_contracts/. Verify FundingRate (schemas/derivatives.py) does not conflict with CanonicalFundingRate (unified_normalised_contracts/domain.py) — they serve distinct purposes (raw vs canonical). Flag any schemas/ class that duplicates or overlaps with a canonical. Document the permitted schemas/ purpose: non-normalised shared utilities, not canonical outputs."
     status: pending
 
+  # PHASE 1b — UAC Canonical Field Fixes (P0 findings from audit)
+  - id: p1b-canonical-funding-rate-predicted-rate
+    content: "Add predicted_rate: Decimal | None to CanonicalFundingRate in unified_normalised_contracts/domain.py. schemas/derivatives.py::FundingRate has this field (line 20) but it is silently dropped during normalization — confirmed data loss. File: unified-api-contracts/unified_api_contracts/unified_normalised_contracts/domain.py."
+    status: pending
+  - id: p1b-ohlcv-decimal-precision
+    content: "Change CanonicalOhlcvBar.open/high/low/close from float to Decimal in unified_normalised_contracts/domain.py. All other price fields in canonical schemas use Decimal; this is an inconsistency that allows silent precision loss. File: unified-api-contracts/unified_api_contracts/unified_normalised_contracts/domain.py."
+    status: pending
+  - id: p1b-derivative-ticker-adl-rank
+    content: "Add adl_rank: int | None to CanonicalDerivativeTicker in unified_normalised_contracts/domain.py. ADL (Auto-Deleveraging) rank is published by Binance, OKX, Deribit and is important for position risk assessment — currently no field for it. File: unified-api-contracts/unified_api_contracts/unified_normalised_contracts/domain.py."
+    status: pending
+  - id: p1b-funding-timestamp-rename
+    content: "Rename next_funding_time → next_funding_timestamp in CanonicalFundingRate (unified_normalised_contracts/domain.py). Inconsistent suffix vs all other timestamp fields. Coordinate update in all normalise/funding_rate normalizers that populate this field."
+    status: pending
+  - id: p1b-instrument-id-naming-split
+    content: "Document the intentional split: domain.py canonical schemas use instrument_key (VENUE:TYPE:SYMBOL format), execution.py uses instrument_id (venue-specific opaque ID). Add a module-level docstring to both files explaining why and when to use each. This is NOT a bug but causes confusion — P1 documentation fix. Files: unified-api-contracts/unified_api_contracts/unified_normalised_contracts/domain.py and execution.py."
+    status: pending
+
   # PHASE 2 — UIC Utilization Audit
   - id: p2-uic-adoption-matrix
     content: "For all 108 public UIC classes (from unified_internal_contracts/__init__.__all__), grep all terminal consumer repos (execution-service, strategy-service, market-data-processing-service, market-tick-data-service, market-data-api, instruments-service, alerting-service, risk-and-exposure-service, position-balance-monitor-service, pnl-attribution-service, ml-inference-service, ml-training-service, features-delta-one-service, features-volatility-service, features-cross-instrument-service, features-onchain-service, features-sports-service, features-calendar-service). Produce UIC Adoption Matrix: Schema × Service → imported? Exclude unified-trading-library (re-exporter, not terminal consumer)."
@@ -33,8 +50,8 @@ todos:
     content: "Plan population of unified_internal_contracts/domain/ (scaffolded 2026-03-06, currently empty). For each of the 6 MISPLACE-UIC services from SCHEMA_CONTRACTS_AUDIT.md: execution-service, strategy-service, market-data-processing-service, market-data-api, features-onchain-service, features-sports-service — define: (a) target domain/<service-name>/ module path, (b) classes to migrate, (c) importers to update. Respect domain/__init__.py layout rule: each service gets its own subdirectory."
     status: pending
   - id: p2-uic-registry-fix
-    content: "Fix 4 stale entries in unified-internal-contracts/schema_registry.json that point to non-existent source files (currently reference UAC re-exports as if they were native UIC definitions). Update each entry to reflect the true canonical location of the schema."
-    status: pending
+    content: "Fix 4 stale entries in unified-internal-contracts/schema_registry.json that point to non-existent source files (currently reference UAC re-exports as if they were native UIC definitions). Update each entry to reflect the true canonical location of the schema. DONE 2026-03-06: CanonicalOrderBook, CanonicalTrade, CanonicalLiquidation, CanonicalDerivativeTicker corrected to repo=unified-api-contracts + re_export_via=unified_internal_contracts.market_data."
+    status: completed
 
   # PHASE 3 — Cross-Contract Duplication Resolution
   - id: p3-instrument-record-conflict
@@ -54,20 +71,20 @@ todos:
     status: pending
 
   # PHASE 4 — SoC Enforcement & DRY Quality Gates
-  - id: p4-cursor-rule-schema-boundary
-    content: "Write new cursor rule at unified-trading-pm/cursor-rules/imports/schema-governance-boundary.mdc. Six rules: (1) Raw venue API models → UAC unified_api_contracts_external/<venue>/schemas.py ONLY; (2) Canonical normalisation output → UAC unified_normalised_contracts/ ONLY; (3) Cross-repo internal contracts → UIC unified_internal_contracts/ ONLY; (4) Service-local Pydantic models OK only if never cross-imported; (5) No service defines a BaseModel with the same name as a UAC canonical or UIC class; (6) UIC may import from UAC canonical; UAC must NOT import from UIC. Include bad/good examples matching MDC format of adapter-models-belong-in-uac.mdc."
-    status: pending
-  - id: p4-quality-gate-step-512
-    content: "Add STEP 5.12 to all quality gate scripts (quality-gates-service-template.sh, quality-gates-library-template.sh, quality-gates-codex-compliance-snippet.sh, quality-gates-template.sh): scan service source directories for Pydantic BaseModel subclass names that match (case-insensitive) any canonical class in UAC unified_normalised_contracts/ or UIC — flag as POTENTIAL_SCHEMA_DUPLICATE. Warn (not hard fail) in quickmerge; hard fail in CI. Also update codex/06-coding-standards/README.md TL;DR."
-    status: pending
+  - id: p4-cursor-rule-schema-governance-index
+    content: "Write new cursor rule at unified-trading-pm/cursor-rules/core/schema-governance-index.mdc as a master index pointing to the 6 existing specific import rules (adapter-models-belong-in-uac, no-schema-outside-contracts, service-domain-schema-in-uic, uic-may-import-uac, unified-api-contracts-usage, contracts-integration) and the codex doc (02-data/schema-governance.md). NOTE: The 6 specific rules already exist and are comprehensive — this new rule is an overview/entry-point at priority 95, not a replacement. It also adds Rule 5 (no canonical name collision) and Rule 6 (quality gate advisory) which are NOT yet in any existing rule. DONE 2026-03-06."
+    status: completed
+  - id: p4-quality-gate-step-513
+    content: "Add STEP 5.13 (advisory) to quality gate service template: scan service source for 'Canonical*' BaseModel subclasses — flag as potential canonical name collision. STEP 5.12 was already taken (hardcoded protocol names). Added to quality-gates-service-template.sh DONE 2026-03-06. Still needed: quality-gates-library-template.sh, quality-gates-codex-compliance-snippet.sh."
+    status: completed
   - id: p4-no-type-ignore-schema-drift
     content: "Grep all service repos for '# type: ignore' comments near schema-related code that suppress type errors caused by local schema copies diverging from UIC canonical types. For each hit: fix root cause by replacing local model with the canonical UIC import. No type: ignore to hide architectural violations (per existing CLAUDE.md rule)."
     status: pending
 
   # PHASE 5 — Documentation & Verification
-  - id: p5-schema-governance-codex-doc
-    content: "Create unified-trading-codex/04-architecture/SCHEMA_GOVERNANCE.md as SSOT for schema ownership rules. Sections: Overview (why 3 layers), Ownership table (UAC raw / UAC canonical / UIC / service-local), domain/ population guide (how to migrate a service schema), deduplication procedure, canonical schema listing with links, cursor rule links. Add row to unified-trading-codex/00-SSOT-INDEX.md."
-    status: pending
+  - id: p5-schema-governance-codex-update
+    content: "UPDATE (not create) unified-trading-codex/02-data/schema-governance.md — it already exists with ownership table and domain/ guide. ADD the following sections: (1) Canonical Field Standards table (timestamp=int ms, price=Decimal, size=Decimal); (2) UIC Adoption Matrix summary (link to ADOPTION_MATRIX.md); (3) Known P0 canonical field data-loss issues tracker (funding rate predicted_rate, OHLCV float precision, ADL rank gap, timestamp suffix). 00-SSOT-INDEX.md updated DONE 2026-03-06 to add schema governance row linking to this file."
+    status: in_progress
   - id: p5-adoption-matrix-publish
     content: "Publish UIC Adoption Matrix (produced by p2-uic-adoption-matrix) as unified-internal-contracts/docs/ADOPTION_MATRIX.md. Add a scripts/check_uic_adoption.py generator script to UIC repo that re-generates the matrix by grepping the workspace. Run as part of UIC release process."
     status: pending
@@ -83,6 +100,9 @@ isProject: true
 **Last Updated:** 2026-03-06
 **SSOT for schema placements:** [SCHEMA_CONTRACTS_AUDIT.md](SCHEMA_CONTRACTS_AUDIT.md)
 **SSOT for normalization coverage:** [unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md](../../../unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md)
+**Master cursor rule:** `unified-trading-pm/cursor-rules/core/schema-governance-index.mdc` ✅ created 2026-03-06
+**Codex doc (existing):** `unified-trading-codex/02-data/schema-governance.md` (update, not create)
+**Registry fixed:** `unified-internal-contracts/schema_registry.json` — 4 stale entries corrected ✅
 
 ---
 
