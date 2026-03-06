@@ -12,8 +12,8 @@ overview: |
   BLOCKS: Phase 1 Stream A, B, C — same gate as enforcement.
 todos:
   - id: stream1-secrets-uci-uci-config
-    content: "Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig bootstrap pattern; unified-config-interface 1 os.environ in loaders.py."
-    status: pending
+    content: "Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig bootstrap pattern; unified-config-interface 1 os.environ in loaders.py. (DONE 2026-03-06)"
+    status: done
   - id: stream2-utl-fds
     content: "Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py."
     status: done
