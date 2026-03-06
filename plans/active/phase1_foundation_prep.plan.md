@@ -64,12 +64,12 @@ todos:
     status: done
   - id: ci-qg-baseline-run
     content: "DONE (2026-03-05): Created run-qg-baseline.sh. Run: bash unified-trading-pm/scripts/run-qg-baseline.sh. Run quality gates baseline on all 30 repos that have quality-gates.sh. Record pass/fail + coverage % + bypass count per repo into workspace-manifest.json ci_status fields. Use 4 parallel agents (8 repos each). This is the baseline snapshot needed before any hardening work. Task: ci-per-repo-status-run (baseline only)."
-    status: pending
+    status: done
   - id: ci-cloudbuild-audit
     content: "Verify all 29 cloudbuild.yaml files actually invoke quality-gates.sh inside the Docker image (not just run pytest standalone). Per cloud-build-test-in-image.mdc: tests run INSIDE the built image. Audit each for: docker build → docker run quality-gates.sh --no-fix --quick → docker push. Fix any that run pytest or ruff outside the image. [5 agents, 6 repos each]. Task: ci-cloudbuild-quality-gate-wire."
     status: pending
   - id: ci-aws-parity
-    content: "AWS parity tasks [3 agents PARALLEL]: aws-compute-stubs-wire (verify aws_batch.py + aws_ec2.py match cloud_run.py interface), aws-secret-naming-parity (mirror GCP SM naming in AWS SM), aws-cloudbuild-parity (add buildspec.aws.yaml to all repos with cloudbuild.yaml)."
+    content: "AWS parity tasks [3 agents PARALLEL]: aws-compute-stubs-wire (verify aws_batch.py + aws_ec2.py match cloud_run.py interface), aws-secret-naming-parity (mirror GCP SM naming in AWS SM), aws-cloudbuild-parity (add buildspec.aws.yaml to all repos with cloudbuild.yaml). PARTIAL (2026-03-05): aws-cloudbuild-parity DONE — buildspec.aws.yaml added to all 45 repos (Template A services, Template B libraries). Remaining: aws-compute-stubs-wire (interface verification) + aws-secret-naming-parity."
     status: pending
 isProject: true
 ---
