@@ -1,0 +1,44 @@
+################################################################################
+# Cloud Build — Feature Branch Trigger Template
+#
+# Purpose: Run quality gates on feature/* and feat/* branches.
+#          No Docker push on feature branches — quality check only.
+#          Adds PEP 440 local version suffix +feat.SHORT_SHA to image tag.
+#
+# Usage: Copy to each repo as cloudbuild-feature.yaml.
+#        In GCP Cloud Build, create a trigger pointing to this file,
+#        filtering on branch pattern: ^(feature|feat)/.*$
+#
+# SSOT: unified-trading-pm/templates/cloudbuild-feature.yaml
+################################################################################
+
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    id: build
+    args:
+      - "build"
+      - "-t"
+      - "$_IMAGE:${SHORT_SHA}+feat.${SHORT_SHA}"
+      - "."
+    env:
+      - "SHORT_SHA=$SHORT_SHA"
+
+  - name: "$_IMAGE:${SHORT_SHA}+feat.${SHORT_SHA}"
+    id: quality-gates
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - "bash scripts/quality-gates.sh --no-fix --quick"
+    env:
+      - "CI=true"
+      - "BRANCH_NAME=$BRANCH_NAME"
+
+# No push step — feature branches are quality-check only.
+# Docker push happens only on staging→main merge via cloudbuild.yaml.
+
+substitutions:
+  _IMAGE: "gcr.io/$PROJECT_ID/${REPO_NAME}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_HIGHCPU_8"
