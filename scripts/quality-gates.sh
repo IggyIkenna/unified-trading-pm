@@ -108,11 +108,20 @@ SOURCE_DIRS="${STAGED:-scripts/ tests/}"
 
 export CLOUD_MOCK_MODE="true"; export GCP_PROJECT_ID="test-project"
 
+# CI/Act: ensure ripgrep is available (Act Docker containers may not have it)
+if { [ -n "${GITHUB_ACTIONS:-}" ] || [ -n "${CI:-}" ] || [ -n "${CLOUD_BUILD:-}" ]; } && ! command -v rg &>/dev/null; then
+    if command -v apt-get &>/dev/null; then
+        apt-get update -qq && apt-get install -y ripgrep 2>/dev/null || :
+    elif command -v apk &>/dev/null; then
+        apk add --no-cache ripgrep 2>/dev/null || :
+    fi
+fi
+
 # ── [0] ENVIRONMENT ────────────────────────────────────────────────────────────
 log_section "[0/6] ENVIRONMENT"
 ACTUAL_PY=$($PYTHON_CMD --version 2>&1 | awk '{print $2}' | cut -d'.' -f1,2)
 [[ "$ACTUAL_PY" != "3.13" ]] && { log_fail "Python 3.13 required, found $ACTUAL_PY"; exit 1; }; log_success "Python $ACTUAL_PY"
-command -v rg &>/dev/null || { log_fail "ripgrep required: brew install ripgrep"; exit 1; }; log_success "ripgrep OK"
+command -v rg &>/dev/null || { log_fail "ripgrep required: brew install ripgrep (macOS) or apt-get install ripgrep (Linux)"; exit 1; }; log_success "ripgrep OK"
 [ -f "pyproject.toml" ] && grep -q '>=3.13,<3.14' pyproject.toml || { log_fail "pyproject.toml: requires-python = '>=3.13,<3.14'"; exit 1; }; log_success "pyproject.toml OK"
 [[ ! -f "uv.lock" ]] && log_warn "uv.lock missing" || log_success "uv.lock present"
 RUFF_CMD=".venv/bin/ruff"; [ ! -f "$RUFF_CMD" ] && [ -f "${REPO_ROOT}/.venv-workspace/bin/ruff" ] && RUFF_CMD="${REPO_ROOT}/.venv-workspace/bin/ruff"; command -v "$RUFF_CMD" &>/dev/null || RUFF_CMD="ruff"

@@ -16,16 +16,16 @@
 # Usage:
 #   # Clone this repo first, then run bootstrap:
 #   git clone git@github.com:IggyIkenna/unified-trading-pm.git
-#   bash unified-trading-pm/scripts/workspace-bootstrap.sh
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
 #
 #   # Or with a custom workspace root:
-#   bash unified-trading-pm/scripts/workspace-bootstrap.sh /path/to/workspace
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh /path/to/workspace
 #
 #   # Check mode (verify existing workspace):
-#   bash unified-trading-pm/scripts/workspace-bootstrap.sh --check
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --check
 #
 #   # Skip system deps (if already installed):
-#   bash unified-trading-pm/scripts/workspace-bootstrap.sh --skip-system
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-system
 #
 # What this script does:
 #   Phase 1 — System dependencies (Python 3.13, uv, ripgrep, jq, basedpyright)
@@ -404,5 +404,5 @@ echo "  For a single repo in isolation:"
 echo "    cd <repo> && bash scripts/setup.sh --isolated"
 echo ""
 echo "  To re-verify the whole workspace:"
-echo "    bash unified-trading-pm/scripts/workspace-bootstrap.sh --check"
+echo "    bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --check"
 echo ""
