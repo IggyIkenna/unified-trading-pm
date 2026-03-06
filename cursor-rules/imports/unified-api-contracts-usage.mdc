@@ -1,58 +1,16 @@
 ---
 description: "Use unified-api-contracts for external API schemas and VCR mocks"
 alwaysApply: false
-globs: ["**/*.py", "**/unified-api-contracts/**"]
+globs: ["**/unified-api-contracts/**", "**/adapters/**/*.py"]
+tags: [contracts, schemas]
 ---
-
 # Unified API Contracts Usage
 
 RULE: Use unified-api-contracts for all external API schemas and VCR mocks. Never duplicate contract logic in services.
-CODEX: unified-trading-codex/02-data/contracts-scope-and-layout.md
+CODEX: 02-data/contracts-scope-and-layout.md, 05-infrastructure/contracts-integration.md
 
-**Full specification (codex):** `unified-trading-codex/02-data/contracts-scope-and-layout.md`, `05-infrastructure/contracts-integration.md`
+**When to use:** (1) External API response parsing — Pydantic schemas for Databento, Tardis, CCXT, The Graph, exchanges. (2) Normalization — after model_validate(), map to canonical via UAC normalizers; interfaces return canonical only. (3) Tests — VCR cassettes from unified-api-contracts/<venue>/mocks/. (4) New venues — add schemas in UAC before adapter.
 
----
+**Typed response models (mandatory):** Create _<provider>_models.py with Pydantic BaseModel; use model_validate() at boundary; never dict[str, Any]. PascalCase: Field(alias="...") + populate_by_name. Exemplar: unified-sports-execution-interface adapters.
 
-## When to Use unified-api-contracts
-
-1. **External API response parsing** — Use unified-api-contracts Pydantic schemas wherever code parses raw responses from Databento, Tardis, CCXT, The Graph, OKX, Bybit, Upbit, Yahoo Finance, Alchemy, Hyperliquid, Aster, IBKR, etc. Validate or parse with the contract schema, then map to internal/canonical types.
-2. **Normalization (mandatory)** — After `model_validate()` at the API boundary, map to canonical types via UAC normalizers. Interfaces must return canonical types only — never raw. Scope: all response types (trades, orderbooks, orders, fills, tickers, positions, balances, liquidations, funding, OHLCV, market info, errors, WebSocket, sports, alt data).
-3. **Domain split** — Prefer canonical with optional fields; use sub-types only when structures are incompatible; group by instruction type (TRADE, SWAP, LEND, BORROW, etc.).
-4. **Tests** — Use VCR cassettes from `unified-api-contracts/<venue>/mocks/` when testing code that calls those APIs. Prefer cassettes over live calls or heavy mocks for deterministic, fast tests.
-5. **New venues or endpoint types** — Add schemas (and optionally examples and mocks) in the unified-api-contracts repo before or with the adapter implementation. Do not add fallbacks or duplicate contract logic in services.
-
----
-
-## Context7 for schemas and adoption
-
-When defining or updating unified-api-contracts schemas, capture scripts, or adoption code in UMI/UOI/services:
-
-- **Use Context7** for the provider's API/SDK documentation (Databento, Tardis, CCXT, The Graph, exchange docs, etc.).
-- Append **"use context7"** to prompts when working with external APIs, SDKs, or libraries so schemas and parsing stay aligned with current provider behavior.
-
----
-
-## Dependency and CI
-
-- Consumers depend on unified-api-contracts via path dependency `../unified-api-contracts` and clone it to `../unified-api-contracts` in CI (see path-dependency-ci.mdc).
-- Contract-vs-reality: normal CI validates all `examples/*.json` against Pydantic models. Live verification and response collection run in the interfaces (UMI, UTEI, USEI, URDI, UPI, UCI), not in AC — interfaces hold API keys and perform integration tests.
-
----
-
-## Typed Response Models (MANDATORY)
-
-When an adapter consumes an external API that does NOT have a schema in unified-api-contracts yet:
-
-1. Create `_<provider>_models.py` with frozen Pydantic `BaseModel` classes for the API responses
-2. Use `model_validate()` to parse `response.json()` into typed models at the boundary
-3. Never use `dict[str, Any]` — quality gates now BLOCK this pattern
-4. For PascalCase APIs: `Field(alias="PascalCase")` with `model_config = {"populate_by_name": True}`
-
-**Exemplar:** `unified-sports-execution-interface/adapters/exchanges/_matchbook_models.py`, `_smarkets_models.py`, `_betdaq_models.py`
-
-## Related
-
-- Schema normalization completion plan; codex 02-data/contracts-scope-and-layout.md § Normalization ideology.
-- `.cursor/rules/no-type-any-use-specific.mdc` — Use specific types (contract schemas) instead of `Any` for API responses. Includes typed response model pattern.
-- `.cursor/rules/contracts-integration.mdc` — Typed response models at API boundaries.
-- `.cursor/rules/path-dependency-ci.mdc` — Checkout and install path deps in CI.
+**Context7:** Append "use context7" when working with external APIs. Path deps: see path-dependency-ci.mdc. Full spec: contracts-integration.mdc, no-type-any-use-specific.mdc.

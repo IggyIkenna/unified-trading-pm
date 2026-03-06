@@ -3,7 +3,7 @@ description: "Keep uv.lock in sync when dependencies change"
 alwaysApply: false
 priority: 30
 tags: [uv, dependencies]
-globs: ["**/pyproject.toml", "**/uv.lock"]
+globs: []
 ---
 
 # UV Lock File: Update When Dependencies Change

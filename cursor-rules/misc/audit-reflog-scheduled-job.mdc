@@ -7,69 +7,7 @@ tags: [git, safety, scheduled, launchd]
 
 Weekly check for unintended `reset --hard` / `reset to origin/main`. Alerts via macOS notification.
 
-## Locations
-
-| Item | Path |
-|------|------|
-| Wrapper (with alert) | `unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh` |
-| Audit script | `unified-trading-pm/scripts/repo-management/audit-reflog-resets.sh` |
-| Install | `unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog.sh` |
-| Watch install | `unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog-watch.sh` |
-| Log | `/tmp/audit-reflog.log` |
-| Watch log | `/tmp/audit-reflog-watch.log` |
-
-## Run manually
-
-```bash
-cd WORKSPACE_ROOT
-bash unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh
-```
-
-## Test notification (click opens log, sound)
-
-```bash
-terminal-notifier -title "Audit Reflog" -message "Test" -sound default -execute "open /tmp/audit-reflog.log"
-```
-
-## Stay until acknowledged
-
-System Settings → Notifications → terminal-notifier → **Alerts** (not Banners).
-
-## Start job (runs every 10 min)
-
-```bash
-bash unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog.sh
-launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist
-```
-
-## Cancel job
-
-```bash
-launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist
-```
-
-## Event-based watch (fswatch)
-
-Runs audit on `.git/logs` changes (commit, reset, checkout). Requires `brew install fswatch`.
-
-```bash
-bash unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog-watch.sh
-launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog-watch.plist
-```
-
-Stop: `launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog-watch.plist`
-
-
-## Implementation notes (similar scripts)
-
-- **set -e**: Use `cmd || exit_code=$?` so notification block runs when audit exits 1
-- **launchd PATH**: Use full path to terminal-notifier (`/opt/homebrew/bin` or `/usr/local/bin`)
-- Reference: `run-audit-reflog-with-alert.sh`
-
-## Ignore format
-
-Per-commit: `repo:hash` (e.g. `deployment-api:b103671`). Audit output shows the exact line to add. Legacy: `repo` only = whole repo.
-
-## Full doc
-
-`unified-trading-pm/docs/audit-reflog-scheduled-job.md`
+Run: `bash unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh`
+Start job: `bash .../launchd/install-audit-reflog.sh` then `launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`
+Cancel: `launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`
+Full doc: `unified-trading-pm/docs/audit-reflog-scheduled-job.md`

@@ -12,56 +12,11 @@ globs: ["**/tests/**/*.py", "**/test_*.py", "**/*_test.py"]
 
 # Pytest Collection Audit Readiness
 
-RULE: Before claiming "tests pass", run `cd <repo> && uv run pytest --collect-only -q`. Collection must complete with zero errors. If collection fails, tests have not passed.
-WHY: Import errors, missing path deps, and broken fixtures surface at collection time. Claiming "tests pass" without collection verification masks broken test suites.
+RULE: Before claiming "tests pass", run `cd <repo> && uv run pytest --collect-only -q`. Collection must complete with zero errors.
+WHY: Import errors, missing path deps, and broken fixtures surface at collection time.
 CODEX: 06-coding-standards/testing.md, 06-coding-standards/quality-gates.md
 
-## Pre-claim verification
+DO: Run `pytest --collect-only -q` before asserting tests pass; install path deps in workspace venv when tests import sibling libs
+NEVER: Claim "tests pass" without collection verification; use deprecated `unified_api_contracts.sports` or `unified_api_contracts.internal` (use `unified_internal_contracts`)
 
-```bash
-cd <repo>
-uv run pytest --collect-only -q
-```
-
-- Exit 0 + no stderr errors → collection OK; then run full pytest
-- Exit non-zero or import/collection errors → fix before claiming tests pass
-
-## Workspace venv path deps
-
-The workspace venv (`.venv-workspace`) must have path-installed sibling libs for tests that import them:
-
-```bash
-cd <workspace_root>
-source .venv-workspace/bin/activate
-
-# Core contracts (required for most services)
-uv pip install -e unified-internal-contracts -e unified-api-contracts
-
-# Execution interfaces (as needed by repo)
-uv pip install -e unified-defi-execution-interface
-# Add other path deps per pyproject.toml / workspace-manifest.json (SSOT)
-```
-
-If a repo's tests import `unified_internal_contracts`, `unified_api_contracts`, or execution interfaces, those must be installed in the venv used for pytest.
-
-## Import paths (audit alignment)
-
-| Old / wrong | Correct |
-|-------------|---------|
-| `from unified_api_contracts.sports import ...` | `from unified_api_contracts.unified_api_contracts_external.sports import ...` |
-| `InstrumentDefinition` from `unified_api_contracts` | `from unified_internal_contracts import InstrumentDefinition` |
-| Internal schemas from `unified_api_contracts.internal` | `from unified_internal_contracts import ...` |
-
-See: contracts-integration.mdc, unified-api-contracts-usage.mdc.
-
-## DO
-
-- Run `pytest --collect-only -q` before asserting tests pass
-- Install path deps in workspace venv when tests import sibling libs
-- Use correct import paths for sports and internal schemas
-
-## NEVER
-
-- Claim "tests pass" without collection verification
-- Run pytest from workspace root without path deps installed
-- Use deprecated `unified_api_contracts.sports` or `unified_api_contracts.internal` imports
+Import paths: Internal schemas → `unified_internal_contracts`; sports → `unified_api_contracts_external.sports`. See contracts-integration.mdc.

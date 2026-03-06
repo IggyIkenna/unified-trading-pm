@@ -48,11 +48,12 @@ All rules in **core/** have `alwaysApply: true` — they are always active regar
 
 ## Context-Sensitive Rules (globs)
 
-- `**/pyproject.toml`, `**/uv.lock` → uv-lock-file.mdc, workspace-venv-sync.mdc
-- `**/.github/workflows/*.yml`, `**/pyproject.toml` → path-dependency-ci.mdc
-- `**/*.py` → no-type-any-use-specific, no-empty-fallbacks, code-quality-limits
-- `**/tests/**` → test-quality-standards, test-coverage-targets
+- `**/pyproject.toml` → workspace-venv-sync.mdc, library-versioning.mdc
+- `**/*.py` → no-type-any-use-specific, no-empty-fallbacks, code-quality-limits, unified-api-contracts-usage.mdc
+- `**/tests/**` → test-quality-standards, test-coverage-targets, pytest-collection-audit-readiness.mdc
 - `unified-trading-codex/06-coding-standards/**` → coding-standards-alignment.mdc
+
+Requestable-only (no globs; use Read when needed): path-dependency-ci.mdc, uv-lock-file.mdc, uv-package-manager.mdc, no-hardcoded-project-ids.mdc
 
 ---
 

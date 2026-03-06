@@ -8,30 +8,13 @@ tags:
   - typed-responses
 ---
 # Contracts Integration
-RULE: Use unified-api-contracts for external APIs (Databento, CCXT, Tardis). Import internal schemas (pubsub, lifecycle, features, ML, risk, events) from unified-internal-contracts only — never from unified_api_contracts.internal.
-UAC is the **normalization layer** — raw venue responses must be normalized via UAC before interfaces return data to services. Interfaces are **venue routers** — they select venue but always return canonical types, never raw.
-WHY: Type safety, VCR mocks for testing, canonical format normalization, contract validation; internal SSOT is UIC.
-CODEX: 02-data/contracts-scope-and-layout.md, 05-infrastructure/contracts-integration.md, 02-data/vcr-cassette-ownership.md
-DO: Import internal schemas from unified_internal_contracts; use unified-api-contracts for external + normalised; use UAC normalizers (normalize_*) to convert validated raw schemas to canonical types before returning from adapters; use VCR cassette path from unified-api-contracts (unified_api_contracts_external/<venue>/mocks/). VCR and live validation are done in the six interfaces (unified-market-interface, unified-trade-execution-interface, unified-sports-execution-interface, unified-reference-data-interface, unified-position-interface, unified-cloud-interface); they hold keys.
 
-TYPED RESPONSE MODELS AT API BOUNDARIES:
-  Every adapter that calls an external API MUST define Pydantic response models for that API's responses.
-  Pattern: raw dict from response.json() → cast(dict[str, object], ...) → MyResponseModel.model_validate(raw)
-  Then access typed attributes (model.field) instead of untyped dict access (raw["field"] or raw.get("field", {})).
-  See: no-type-any-use-specific.mdc for full pattern and exemplars.
-  Quality gates now BLOCK dict[str, Any] and raw response.json() without model_validate().
+RULE: UAC for external APIs (Databento, CCXT, Tardis). UIC for internal schemas (pubsub, lifecycle, features, ML, risk, events). Never `unified_api_contracts.internal`. Raw venue responses → UAC normalizers → canonical types before returning.
+WHY: Type safety, VCR mocks, canonical format; internal SSOT is UIC.
+CODEX: 02-data/contracts-scope-and-layout.md, 05-infrastructure/contracts-integration.md
 
-DOMAIN SCHEMA PLACEMENT:
-  Domain data schemas (BaseModel, TypedDict, dataclass used as cross-repo contracts) belong in UIC under
-  `domain/<service-name>/`. Services import domain schemas from UIC; they never define them locally.
-  Exception: `SchemaDefinition`/`ColumnSchema` (parquet infrastructure) stays in service `schemas/output_schemas.py`.
-  See: imports/service-domain-schema-in-uic.mdc
+Typed response models: Adapters MUST use Pydantic `model_validate()` at API boundary; never `dict[str, Any]`. See no-type-any-use-specific.mdc.
+Domain schemas: UIC `domain/<service-name>/`; services never define locally. SchemaDefinition stays in service.
+Adapter models: `_<venue>_models.py` → UAC `unified_api_contracts_external/<venue>/schemas.py`; private prefix does not exempt.
 
-ADAPTER-PRIVATE MODELS ARE NOT EXEMPT:
-  `_<venue>_models.py` files in interface adapters parse external API responses — they ARE external API schemas.
-  They must move to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py`.
-  "Private" prefix does not exempt them from the UAC placement rule.
-  Current known violations: unified-sports-execution-interface/_matchbook_models.py, _smarkets_models.py, _betdaq_models.py etc.
-  RESOLVED: unified-market-interface/_deribit_models.py, /_defi_graph_models.py → migrated to UAC (P3 #17 complete).
-
-NEVER: from unified_api_contracts.internal import (use unified_internal_contracts); duplicate schema definitions; skip contract validation; hardcode API response parsing; use dict[str, Any] for API responses; pass raw venue responses through to services without UAC normalization; define Pydantic domain contracts in service repos instead of UIC; keep adapter-private models in interface repos instead of moving to UAC
+NEVER: from unified_api_contracts.internal; dict[str, Any] for API responses; raw venue responses to services; domain contracts in service repos; adapter models in interface repos

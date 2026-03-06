@@ -2,9 +2,7 @@
 description: "Never hardcode project IDs - use GCP_PROJECT_ID environment variable"
 alwaysApply: false
 priority: 50
-globs:
-  - "**/*.py"
-  - "**/*.sh"
+globs: []
 tags:
   - configuration
   - project-id

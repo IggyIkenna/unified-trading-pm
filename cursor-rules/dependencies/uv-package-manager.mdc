@@ -2,10 +2,7 @@
 description: "Use uv for all Python package installs, never pip (except pip install uv)"
 alwaysApply: false
 priority: 30
-globs:
-  - "**/pyproject.toml"
-  - "**/*.sh"
-  - "**/Dockerfile"
+globs: []
 tags:
   - tooling
   - package-manager

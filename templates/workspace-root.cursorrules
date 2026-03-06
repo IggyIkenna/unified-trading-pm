@@ -1,0 +1,56 @@
+# Unified Trading System — Workspace Rules
+#
+# Canonical location: unified-trading-pm/templates/workspace-root.cursorrules
+# At workspace root, .cursorrules is a symlink to this file (tracked in PM).
+# Create symlink: bash unified-trading-pm/scripts/workspace/setup-cursorrules-symlink.sh
+
+## Package Manager
+- **Always uv.** NEVER `pip install` (except `pip install uv` bootstrap).
+- `uv pip install -e ".[dev]"` locally; `uv pip install --system -e ".[dev]"` in Docker.
+
+## Git / Merging
+- **Always `bash scripts/quickmerge.sh "message"`** — never `git push` or `bash scripts/quality-gates.sh` standalone.
+- Use `--dep-branch "feat/X"` when dependency repos have local changes.
+- Use conventional commit format: `feat:`, `fix:`, `chore:`, `feat!:` for breaking changes.
+- NEVER `git reset --hard`, `git clean -fd`, or `git restore` uncommitted work.
+
+## Configuration
+- NEVER `os.getenv("KEY", "")` — use `config.key_name` via `UnifiedCloudConfig`.
+- NEVER hardcode project IDs. Use `GCP_PROJECT_ID` env var via config class.
+
+## Cloud I/O
+- NEVER `from google.cloud import storage` or `import boto3` directly.
+- Always `get_storage_client()`, `get_secret_client()` from `unified_cloud_interface`.
+
+## Python Standards
+- Python 3.13. Ruff 0.15.0. basedpyright (strict).
+- `datetime.now(timezone.utc)` — NEVER `datetime.now()` or `datetime.utcnow()`.
+- Imports at top of file — NEVER inside functions.
+- `logger.info()` — NEVER `print()`.
+- Specific exceptions — NEVER bare `except:` or `except Exception:` in production.
+
+## Quality Gates
+- Same `ruff==0.15.0` across local / GitHub Actions / Cloud Build.
+- Run quality gates via quickmerge, not standalone.
+- `timeout 120 basedpyright <source_dir>/` — NEVER `basedpyright .` (OOM risk).
+
+## Runtime Verification (P0)
+- NEVER claim "done" without running the code, waiting 8-10s, and checking terminal for errors.
+
+## Documentation / Plans
+- NEVER create `*_SUMMARY.md`, `*_STATUS.md`, or recap docs.
+- Plans go in `unified-trading-pm/plans/ai/` (ephemeral) or `unified-trading-pm/plans/active/` (tracked).
+
+## No Technical Debt
+- Delete old code when replacing — no parallel code paths, no `# deprecated` stubs.
+- No backward-compatibility shims. Update all consumers directly.
+
+## Search Before Implementing
+- Search unified libraries (unified-market-interface, unified-trade-execution-interface, unified-domain-client, etc.) before writing any new function or class.
+
+## Full Rules
+See `.cursor/rules/` for all detailed rules. Key files:
+- `core/` — always-apply rules (quickmerge, cloud-agnostic, event-logging, dag-enforcement, etc.)
+- `quality-gates/` — ruff, basedpyright, coverage
+- `imports/` — schema placement, UAC/UIC contracts
+- `dependencies/` — breaking changes, version alignment
