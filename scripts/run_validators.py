@@ -71,16 +71,25 @@ def main() -> int:
     parser.add_argument("--repo-type", help="Filter by repo type (service, library, ui)")
     parser.add_argument("--check-codex-refs", action="store_true", help="Phase 8: detect stale codex refs")
     parser.add_argument("--configs", type=Path, help="Path to deployment configs")
-    args = parser.parse_args()
+
+    class Args(argparse.Namespace):
+        scope: str = "all"
+        configs: Path | None = None
+        check_codex_refs: bool = False
+
+    args = parser.parse_args(namespace=Args())
+    scope: str = args.scope
+    configs: Path | None = args.configs
+    check_codex_refs: bool = args.check_codex_refs
 
     failed = 0
-    if args.scope in ("all", "checklist"):
-        failed |= run_checklist_validator(args.configs)
-    if args.scope in ("all", "manifest"):
+    if scope in ("all", "checklist"):
+        failed |= run_checklist_validator(configs)
+    if scope in ("all", "manifest"):
         failed |= run_manifest_validator()
-    if args.scope == "all":
+    if scope == "all":
         failed |= run_plan_links_validator()
-    if args.check_codex_refs:
+    if check_codex_refs:
         script = VALIDATORS_DIR / "validate_codex_refs.py"
         if script.is_file():
             failed |= subprocess.run(

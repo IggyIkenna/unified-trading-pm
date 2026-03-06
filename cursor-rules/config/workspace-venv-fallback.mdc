@@ -43,3 +43,18 @@ cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate
 
 - Assume repo venv is always correct; workspace venv is a valid fallback
 - Block on repo venv issues when workspace venv works
+
+## pyrightconfig.json
+
+Each repo must have a `pyrightconfig.json` referencing the workspace venv Python path so basedpyright
+resolves imports correctly:
+```json
+{
+  "pythonPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+  "typeCheckingMode": "strict",
+  "reportAny": "error",
+  "reportUnknownMemberType": "error",
+  "reportUnknownVariableType": "error"
+}
+```
+Run `run_timeout 120 basedpyright <source_dir>/` per-repo — never `basedpyright .` from workspace root.

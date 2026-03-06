@@ -23,19 +23,40 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
 
-from packaging.requirements import Requirement
-from packaging.specifiers import SpecifierSet
-from packaging.version import Version
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
+
+JsonDict = dict[str, object]
+
+
+def _jdict(val: object):
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jlist(val: object):
+    if isinstance(val, list):
+        return cast(list[JsonDict], val)
+    return None
+
+
+def _jstr(val: object, default: str = ""):
+    return str(val) if val is not None else default
+
 
 # PM repo root (unified-trading-pm); workspace root is parent (where all repos live)
 PM_ROOT = Path(__file__).resolve().parents[2]
-WORKSPACE_ROOT = PM_ROOT.parent
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(PM_ROOT.parent)))
 MANIFEST_PATH = PM_ROOT / "canonical-dependency-manifest.json"
 WORKSPACE_MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
 
@@ -49,10 +70,10 @@ def load_internal_package_names(workspace_manifest: Path) -> frozenset[str]:
     if not workspace_manifest.exists():
         return frozenset()
     try:
-        data = json.loads(workspace_manifest.read_text())
-        repos: dict[str, object] = data.get("repositories", {})
-        return frozenset(re.sub(r"[-_]", "-", name.strip().lower()) for name in repos)
-    except Exception:
+        data = cast(JsonDict, json.loads(workspace_manifest.read_text()))
+        repos = _jdict(data.get("repositories")) or {}
+        return frozenset(re.sub(r"[-_]", "-", _jstr(name).strip().lower()) for name in repos)
+    except (OSError, json.JSONDecodeError):
         return frozenset()
 
 
@@ -93,7 +114,7 @@ class CanonicalEntry:
             req = Requirement(_strip_extras(version_range))
             spec = req.specifier
             fix_spec = str(spec)
-        except Exception:
+        except InvalidRequirement:
             spec = SpecifierSet()
             fix_spec = ""
         return cls(
@@ -106,8 +127,15 @@ class CanonicalEntry:
 
 
 def load_canonical(manifest_path: Path) -> dict[str, CanonicalEntry]:
-    data = json.loads(manifest_path.read_text())
-    return {_norm(e["name"]): CanonicalEntry.from_dict(e) for e in data["externalPackages"]}
+    data = cast(JsonDict, json.loads(manifest_path.read_text()))
+    ext = _jlist(data.get("externalPackages")) or []
+    result: dict[str, CanonicalEntry] = {}
+    for e in ext:
+        ed = _jdict(e)
+        if ed:
+            entry = {"name": _jstr(ed.get("name")), "versionRange": _jstr(ed.get("versionRange"))}
+            result[_norm(_jstr(ed.get("name")))] = CanonicalEntry.from_dict(entry)
+    return result
 
 
 # ── Compatibility check (same logic as check script) ──────────────────────────
@@ -120,7 +148,7 @@ def needs_fix(repo_spec_str: str, canonical: CanonicalEntry) -> bool:
 
     try:
         repo_spec = SpecifierSet(_strip_extras(repo_spec_str))
-    except Exception:
+    except InvalidSpecifier:
         return False
 
     canonical_str = str(canonical.specifier)
@@ -141,7 +169,7 @@ def needs_fix(repo_spec_str: str, canonical: CanonicalEntry) -> bool:
             if s.operator == op:
                 try:
                     return Version(s.version)
-                except Exception:
+                except InvalidVersion:
                     pass
         return None
 
@@ -213,16 +241,18 @@ def find_and_collect_fixes(
 
     try:
         raw_text = pyproject_path.read_text()
-        data = tomllib.loads(raw_text)
-    except Exception as e:
+        data = cast(JsonDict, tomllib.loads(raw_text))
+    except (OSError, tomllib.TOMLDecodeError) as e:
         result.skipped = True
         result.skip_reason = f"parse error: {e}"
         return result
 
-    project = data.get("project", {})
-    deps: list[str] = project.get("dependencies", [])
-    optional: dict[str, list[str]] = project.get("optional-dependencies", {})
-    dev_deps: list[str] = optional.get("dev", [])
+    project = _jdict(data.get("project")) or {}
+    deps_raw = _jlist(project.get("dependencies")) or []
+    deps = [_jstr(x) for x in deps_raw]
+    optional = _jdict(project.get("optional-dependencies")) or {}
+    dev_raw = _jlist(optional.get("dev")) or []
+    dev_deps = [_jstr(x) for x in dev_raw]
 
     def _collect(dep_list: list[str], section: str) -> None:
         for dep_str in dep_list:
@@ -231,7 +261,7 @@ def find_and_collect_fixes(
                 continue
             try:
                 req = Requirement(dep_str_clean)
-            except Exception:
+            except InvalidRequirement:
                 continue
 
             if is_internal(req.name):
@@ -315,7 +345,7 @@ def apply_fixes_to_file(result: RepoFixResult) -> bool:
     if changed:
         try:
             result.pyproject.write_text(raw)
-        except Exception as e:
+        except OSError as e:
             result.write_error = str(e)
             return False
 
@@ -448,14 +478,15 @@ def find_repos(workspace: Path, single_repo: str | None) -> list[Path]:
     # Prefer manifest-driven repo list
     if WORKSPACE_MANIFEST_PATH.exists():
         try:
-            data = json.loads(WORKSPACE_MANIFEST_PATH.read_text())
-            repo_names: list[str] = sorted(data.get("repositories", {}).keys())
+            data = cast(JsonDict, json.loads(WORKSPACE_MANIFEST_PATH.read_text()))
+            repos_d = _jdict(data.get("repositories")) or {}
+            repo_names = sorted(repos_d.keys())
             return [
                 workspace / name / "pyproject.toml"
                 for name in repo_names
                 if (workspace / name).is_dir() and (workspace / name / "pyproject.toml").exists()
             ]
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             pass  # fall through to filesystem scan
 
     # Fallback: scan workspace for pyproject.toml dirs
@@ -472,24 +503,27 @@ def main() -> None:
     parser.add_argument("--repo", metavar="NAME", help="Fix a single repo only")
     parser.add_argument("--json", action="store_true", help="JSON output")
     args = parser.parse_args()
+    repo_filter: str | None = cast(str | None, args.repo)
+    do_apply: bool = cast(bool, args.apply)
+    json_out: bool = cast(bool, args.json)
 
     if not MANIFEST_PATH.exists():
         print(f"ERROR: manifest not found: {MANIFEST_PATH}")
         sys.exit(1)
 
     canonical = load_canonical(MANIFEST_PATH)
-    pyprojects = find_repos(WORKSPACE_ROOT, args.repo)
+    pyprojects = find_repos(WORKSPACE_ROOT, repo_filter)
 
     results = [find_and_collect_fixes(p, canonical) for p in pyprojects]
 
-    if args.apply:
+    if do_apply:
         for result in results:
             apply_fixes_to_file(result)
 
-    if args.json:
-        sys.exit(print_json_report(results, apply=args.apply))
+    if json_out:
+        sys.exit(print_json_report(results, apply=do_apply))
     else:
-        sys.exit(print_report(results, apply=args.apply))
+        sys.exit(print_report(results, apply=do_apply))
 
 
 if __name__ == "__main__":

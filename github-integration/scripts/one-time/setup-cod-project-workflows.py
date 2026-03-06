@@ -103,7 +103,7 @@ def run_graphql_query(
 
     if "errors" in data:
         print("GraphQL errors:")
-        raw_errors = data.get("errors", [])
+        raw_errors = data.get("errors") or []
         errors_list: list[object] = cast(list[object], raw_errors) if isinstance(raw_errors, list) else []
         for error_raw in errors_list:
             if isinstance(error_raw, dict):

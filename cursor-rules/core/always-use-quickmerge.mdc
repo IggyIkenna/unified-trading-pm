@@ -11,23 +11,36 @@ RULE: ALWAYS run `bash scripts/quickmerge.sh "message"`. NEVER run `scripts/qual
 WHY: Quickmerge runs dependency cascade, pre-flight audit, quality gates, Act simulation, and PR creation. Standalone quality gates miss critical checks.
 CODEX: 06-coding-standards/feature-branch-workflow.md, 06-coding-standards/quality-gates.md
 
-## Branch / Staging Model
+## Three-Tier Branch Model
 
-| Branch type | Quickmerge command | Effect |
-|-------------|-------------------|--------|
-| `feat/*` or `feature/*` | `bash scripts/quickmerge.sh "feat: ..." --no-pr` | QG only — no PR, branch stays open |
-| `staging` | `bash scripts/quickmerge.sh "feat: ..."` | QG + auto-PR to main |
-| Direct on `main` | blocked by branch protection | — |
+```
+feat/*   → QG only, no PR (feature iteration — auto-detected, no --no-pr needed)
+staging  → convergence zone; breaking changes + SIT; auto-PR targets main after SIT
+main     → always stable; NEVER a direct target for breaking changes
+```
 
-**Auto-PR detection:** quickmerge auto-adds `--no-pr` when current branch starts with `feat/` or `feature/`. To promote: merge feature into staging → run quickmerge on staging.
+| Commit type | Target | Command |
+|-------------|--------|---------|
+| `fix:` / `feat:` / `chore:` | main (direct) | `bash scripts/quickmerge.sh "fix: ..."` |
+| `feat!:` / `BREAKING CHANGE:` | staging (via --to-staging) | `bash scripts/quickmerge.sh "feat!: ..." --to-staging` |
+| Feature iteration | no PR | auto when on `feat/*` branch |
 
-## Dependency Cascade (--dep-branch)
+**Hotfix path:** Non-breaking commits go directly to main. No staging gate needed.
+**Breaking change path:** MUST use `--to-staging`. Cascade runs through staging. SIT validates. `staging-to-main.yml` merges to main automatically after SIT passes.
+**Staging lock:** If `staging_status.locked = true` in `workspace-manifest.json`, `--to-staging` exits with queue message. Non-breaking quickmerge to main is NOT blocked.
 
-When `--dep-branch NAME` is set and a dependency has local changes, quickmerge cascades into that dependency (T0 first) and runs quickmerge there. Local changes are ALWAYS preserved.
+## Dependency Cascade
+
+- **Feature mode (--dep-branch):** cascades across dep repos on a named feature branch; QG only, no PR. Branch auto-derived from current git branch.
+- **Staging mode (--to-staging):** cascades breaking change through ALL actual dependents (recursive DAG walk via `topologicalOrder`); PRs target staging. Branch auto-derived from HEAD.
+- **`--branch NAME` + `--to-staging`** → hard fail (mutually exclusive).
+- The cascade is **selective**: only repos with a dependency edge to the changed repo are touched. Not all 60 repos.
+
+**SSOT:** `unified-trading-pm/docs/repo-management/version-cascade-flow.md`
 
 ## Key Flags
 
-`--unit-only` (lint+type+unit only) | `--no-pr` (QG only) | `--dep-branch "feat/X"` (cascade) | `--quick` (skip act) | `--skip-tests` | `--files "a.py b.py"`
+`--to-staging` (breaking change cascade) | `--no-pr` (QG only, auto on feat/*) | `--dep-branch "feat/X"` (feature cascade) | `--unit-only` | `--quick` (skip act) | `--skip-tests` | `--files "a.py b.py"`
 
 Full flags: CODEX 06-coding-standards/quality-gates.md
 

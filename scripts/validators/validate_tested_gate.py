@@ -16,6 +16,7 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+from typing import cast
 
 
 def main() -> int:
@@ -23,7 +24,7 @@ def main() -> int:
     parser.add_argument("--repo-dir", type=Path, default=Path(__file__).resolve().parent.parent.parent)
     args = parser.parse_args()
 
-    repo = args.repo_dir
+    repo: Path = cast(Path, args.repo_dir)
     if not (repo / "pyproject.toml").exists():
         print(f"Skip: no pyproject.toml in {repo}", file=sys.stderr)
         return 0

@@ -24,6 +24,20 @@ import json
 import sys
 import typing
 from pathlib import Path
+from typing import TypeAlias, cast
+
+JsonDict: TypeAlias = dict[str, object]
+
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jstr(val: object, default: str = "") -> str:
+    return str(val) if val is not None else default
+
 
 # Paths relative to script location
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -62,6 +76,8 @@ TYPE_TEST_HARNESS = "test-harness"
 TYPE_DEVOPS = "devops"
 
 SKIP_STATUSES = frozenset({"deprecated", "archived", "deleted"})
+# PM and Codex have their own quality-gates; do not overwrite with templates
+ROLLOUT_SKIP_REPOS = frozenset({"unified-trading-pm", "unified-trading-codex"})
 
 
 def get_typescript_quality_gates_script() -> str:
@@ -129,8 +145,13 @@ None.
 
 def discover_source_dir(repo_path: Path, repo_name: str) -> str:
     """Discover Python source directory. Fallback: repo name with underscores."""
-    default = repo_name.replace("-", "_")
-    candidates = [default, "src", repo_name]
+    # PM and codex are not packages; Python lives in scripts/
+    if repo_name in ("unified-trading-pm", "unified-trading-codex"):
+        scripts = repo_path / "scripts"
+        if scripts.is_dir() and any(scripts.rglob("*.py")):
+            return "scripts"
+    default = repo_name.replace("-", "_")  # Python package form (underscores)
+    candidates = [default, "src"]  # Try underscore form, then src; not hyphen form
     for c in candidates:
         d = repo_path / c
         if d.is_dir():
@@ -248,7 +269,7 @@ def ensure_bypass_audit(repo_path: Path, doc_standard: typing.Optional[str], dry
 
 def process_repo(
     repo_name: str,
-    repo_info: dict,
+    repo_info: JsonDict,
     workspace_root: Path,
     dry_run: bool,
 ) -> bool:
@@ -257,9 +278,12 @@ def process_repo(
     if status in SKIP_STATUSES:
         print(f"\n⏭️ Skipping {repo_name} (status={status})")
         return True
-
-    repo_type = repo_info.get("type", "service")
-    doc_standard = repo_info.get("doc_standard")
+    if repo_name in ROLLOUT_SKIP_REPOS:
+        print(f"\n⏭️ Skipping {repo_name} (has own quality-gates, not overwritten)")
+        return True
+    repo_type = _jstr(repo_info.get("type"), "service")
+    doc_standard_raw = repo_info.get("doc_standard")
+    doc_standard: str | None = None if doc_standard_raw is None else _jstr(doc_standard_raw)
     template_type = select_template_type(repo_type)
     repo_path = workspace_root / repo_name
     if not repo_path.exists():
@@ -305,26 +329,29 @@ def main() -> int:
         return 1
 
     with open(MANIFEST_PATH) as f:
-        manifest = json.load(f)
+        manifest = cast(JsonDict, json.load(f))
 
-    repositories = manifest.get("repositories", {})
-    if args.repo:
-        if args.repo not in repositories:
-            print(f"❌ Repository not in manifest: {args.repo}")
+    repos_raw = _jdict(manifest.get("repositories"))
+    repositories = cast(dict[str, JsonDict], repos_raw) if repos_raw else {}
+    dry_run = cast(bool, args.dry_run)
+    repo_filter = cast(str | None, args.repo)
+    if repo_filter is not None:
+        if repo_filter not in repositories:
+            print(f"❌ Repository not in manifest: {repo_filter}")
             return 1
-        repositories = {args.repo: repositories[args.repo]}
+        repositories = {repo_filter: repositories[repo_filter]}
 
     print("🚀 Rolling out quality gates (unified)")
     print(f"📁 Workspace: {WORKSPACE_ROOT}")
     print(f"📋 Repositories: {len(repositories)}")
-    if args.dry_run:
+    if dry_run:
         print("🔍 Dry run — no files will be written")
 
     success = 0
     errors = 0
     for repo_name in sorted(repositories.keys()):
         try:
-            if process_repo(repo_name, repositories[repo_name], WORKSPACE_ROOT, args.dry_run):
+            if process_repo(repo_name, repositories[repo_name], WORKSPACE_ROOT, dry_run):
                 success += 1
             else:
                 errors += 1

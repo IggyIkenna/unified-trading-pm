@@ -54,7 +54,7 @@ def _get_project_number(owner: str, title: str) -> int | None:
     data: list[object]
     if isinstance(parsed, dict):
         parsed_dict: JsonDict = cast(JsonDict, parsed)
-        raw_projects: object = parsed_dict.get("projects", [])
+        raw_projects: object = parsed_dict.get("projects") or []
         data = cast(list[object], raw_projects) if isinstance(raw_projects, list) else []
     elif isinstance(parsed, list):
         data = cast(list[object], parsed)

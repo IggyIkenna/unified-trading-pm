@@ -22,6 +22,20 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import TypeAlias, cast
+
+JsonDict: TypeAlias = dict[str, object]
+
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jstr(val: object, default: str = "") -> str:
+    return str(val) if val is not None else default
+
 
 # Paths relative to script location
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -119,7 +133,7 @@ def insert_prettier_block(content: str) -> str:
 
 def process_repo(
     repo_name: str,
-    repo_info: dict,
+    repo_info: JsonDict,
     workspace_root: Path,
     dry_run: bool,
     create_if_missing: bool,
@@ -183,21 +197,25 @@ def main() -> int:
         return 1
 
     with open(MANIFEST_PATH) as f:
-        manifest = json.load(f)
+        manifest = cast(JsonDict, json.load(f))
 
-    repositories = manifest.get("repositories", {})
-    if args.repo:
-        if args.repo not in repositories:
-            print(f"❌ Repository not in manifest: {args.repo}")
+    repos_raw = _jdict(manifest.get("repositories"))
+    repositories: dict[str, JsonDict] = cast(dict[str, JsonDict], repos_raw) if repos_raw else {}
+    dry_run = cast(bool, args.dry_run)
+    create_if_missing = cast(bool, args.create_if_missing)
+    repo_filter = cast(str | None, args.repo)
+    if repo_filter is not None:
+        if repo_filter not in repositories:
+            print(f"❌ Repository not in manifest: {repo_filter}")
             return 1
-        repositories = {args.repo: repositories[args.repo]}
+        repositories = {repo_filter: repositories[repo_filter]}
 
     print("🚀 Rolling out Prettier (unified)")
     print(f"📁 Workspace: {WORKSPACE_ROOT}")
     print(f"📋 Repositories: {len(repositories)}")
-    if args.dry_run:
+    if dry_run:
         print("🔍 Dry run — no files will be written")
-    if args.create_if_missing:
+    if create_if_missing:
         print("📄 Will create .pre-commit-config.yaml for repos without one")
 
     success = 0
@@ -208,8 +226,8 @@ def main() -> int:
                 repo_name,
                 repositories[repo_name],
                 WORKSPACE_ROOT,
-                args.dry_run,
-                args.create_if_missing,
+                dry_run,
+                create_if_missing,
             ):
                 success += 1
             else:

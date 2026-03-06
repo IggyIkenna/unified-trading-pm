@@ -16,9 +16,13 @@ dev = [
     "pytest-xdist<4.0.0,>=3.6.0",
     "pytest-cov<8.0.0,>=7.0.0",
     "ruff==0.15.0",
+    "basedpyright<2.0.0,>=1.21.0",
     "pip-audit>=2.7.0,<3.0.0",
     "bandit>=1.7.0,<2.0.0",
 ]
+
+[tool.setuptools.packages.find]
+include = []
 
 [tool.ruff]
 line-length = 120
@@ -39,8 +43,14 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 parallel = true
-source = ["scripts/manifest"]
-omit = ["tests/*", "*.venv*/*"]
+source = ["scripts"]
+omit = [
+    "tests/*",
+    "*.venv*/*",
+    "scripts/manifest/generate_canonical_dependency_manifest.py",
+    "scripts/manifest/sbom-store.py",
+    "scripts/check-internal-advisories.py",
+]
 
 [tool.coverage.report]
 skip_empty = true

@@ -1,0 +1,180 @@
+name: staging-to-main
+
+# Triggered by system-integration-tests dispatching 'staging-validated' after SIT passes.
+# Merges staging → main in topological order for all repos that have staging changes,
+# then clears staging_status.locked and promotes staging_versions → versions.
+#
+# Flow:
+#   SIT passes → dispatches staging-validated → this workflow runs →
+#   each repo: merge staging → main (via gh pr create --base main --head staging) →
+#   PM manifest: staging_versions → versions, staging_status.locked = false →
+#   PM commits manifest update [skip ci]
+#
+# Requires: GH_PAT with repo + workflow scope (to push to protected main branches).
+
+on:
+  repository_dispatch:
+    types: [staging-validated]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: staging-to-main
+  cancel-in-progress: false
+
+jobs:
+  promote-staging-to-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PM
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Merge staging → main for all repos with staging changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          OWNER="${{ github.repository_owner }}"
+          MANIFEST="workspace-manifest.json"
+
+          # Get topological order (all tiers, T0 first)
+          REPOS=$(python3 - <<PYEOF
+          import json
+          with open("${MANIFEST}") as f:
+              m = json.load(f)
+
+          staging_versions = m.get("staging_versions", {})
+          stable_versions = m.get("versions", {})
+          topo = m.get("topologicalOrder", {}).get("levels", [])
+
+          # Collect repos where staging_versions differs from versions
+          changed = set()
+          for repo, sv in staging_versions.items():
+              if repo.startswith("_"):
+                  continue
+              if sv != stable_versions.get(repo):
+                  changed.add(repo)
+
+          # Emit in topological order
+          for level in topo:
+              for repo in level.get("repos", []):
+                  if repo in changed:
+                      print(repo)
+          PYEOF
+          )
+
+          if [ -z "$REPOS" ]; then
+            echo "No repos with staging changes found. staging_status may already be clear."
+            exit 0
+          fi
+
+          echo "Repos to promote (staging → main):"
+          echo "$REPOS" | while read -r r; do echo "  $r"; done
+
+          FAILED=""
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+
+            echo ""
+            echo "=== Promoting $REPO ==="
+
+            # Check if staging branch exists
+            STAGING_EXISTS=$(gh api "repos/$OWNER/$REPO/branches/staging" --jq '.name' 2>/dev/null || true)
+            if [ -z "$STAGING_EXISTS" ]; then
+              echo "  SKIP: staging branch not found in $REPO"
+              continue
+            fi
+
+            # Check if main and staging differ
+            COMPARE=$(gh api "repos/$OWNER/$REPO/compare/main...staging" --jq '.ahead_by' 2>/dev/null || echo "0")
+            if [ "$COMPARE" = "0" ]; then
+              echo "  SKIP: staging is already merged to main in $REPO (ahead_by=0)"
+              continue
+            fi
+
+            # Create PR staging → main and auto-merge
+            BODY="Automated: SIT validated staging. Promoting staging → main. Triggered by: staging-validated dispatch from system-integration-tests. Staging lock will be cleared after all repos are promoted."
+            PR_URL=$(gh pr create \
+              --repo "$OWNER/$REPO" \
+              --title "chore(release): promote staging to main" \
+              --body "$BODY" \
+              --base main \
+              --head staging \
+              2>/dev/null || true)
+
+            if [ -n "$PR_URL" ]; then
+              echo "  PR created: $PR_URL"
+              # Enable auto-merge (requires branch protection to be configured)
+              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || \
+                echo "  WARNING: auto-merge not available for $REPO — merge PR manually: $PR_URL"
+            else
+              echo "  PR already exists or merge conflict — skipping $REPO"
+              FAILED="$FAILED $REPO"
+            fi
+
+          done <<< "$REPOS"
+
+          if [ -n "$FAILED" ]; then
+            echo ""
+            echo "WARNING: Failed to create PRs for:$FAILED"
+            echo "These repos may need manual merge conflict resolution."
+          fi
+
+      - name: Promote staging_versions → versions, clear staging lock
+        run: |
+          set -euo pipefail
+
+          python3 - <<PYEOF
+          import json, datetime
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging_versions = manifest.get("staging_versions", {})
+
+          # Promote each staging version to the stable versions map
+          promoted = []
+          for repo, version in staging_versions.items():
+              if repo.startswith("_"):
+                  continue
+              manifest["versions"][repo] = version
+              promoted.append(f"  {repo}={version}")
+
+          # Clear staging_versions (keep the _note)
+          note = staging_versions.get("_note", "")
+          manifest["staging_versions"] = {"_note": note}
+
+          # Clear staging lock
+          manifest["staging_status"]["locked"] = False
+          manifest["staging_status"]["locked_since"] = None
+          manifest["staging_status"]["locked_reason"] = None
+          manifest["staging_status"]["lock_version"] = None
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print(f"Promoted {len(promoted)} repos to stable versions:")
+          for p in promoted:
+              print(p)
+          print("staging_status.locked = false")
+          PYEOF
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No manifest changes. Nothing to commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): promote staging_versions → versions, clear staging lock [skip ci]"
+          git push

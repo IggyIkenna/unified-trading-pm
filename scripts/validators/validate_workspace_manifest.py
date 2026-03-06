@@ -17,6 +17,23 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import cast
+
+# JSON typing: json.load returns Any; cast at boundary
+JsonDict = dict[str, "JsonDict | list[JsonDict] | str | int | float | bool | None"]
+
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jlist(val: object) -> list[JsonDict] | None:
+    if isinstance(val, list):
+        return cast(list[JsonDict], val)
+    return None
+
 
 REQUIRED_REPO_FIELDS = [
     "ci_status",
@@ -37,27 +54,36 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    path = args.manifest
+    path: Path = cast(Path, args.manifest)
     if not path.is_file():
         print(f"ERROR: Manifest not found: {path}", file=sys.stderr)
         return 1
 
     with open(path) as f:
-        data = json.load(f)
+        data: JsonDict = cast(JsonDict, json.load(f))
 
     errors: list[str] = []
 
     # Check repositories exist
-    repos = data.get("repositories", {})
+    if "repositories" not in data:
+        errors.append("repositories is required")
+        return 1
+    repos_raw: object = data["repositories"]
+    repos: JsonDict = _jdict(repos_raw) or {}
     if not repos:
         errors.append("repositories is empty")
 
     # Check topologicalOrder: {description, levels: [{level, repos: [...]}]}
-    topo = data.get("topologicalOrder", {})
+    topo_raw: object = data.get("topologicalOrder") or {}  # optional: if absent, topology validation skipped
+    topo: JsonDict | None = _jdict(topo_raw)
     topo_repos: list[str] = []
-    if isinstance(topo, dict) and "levels" in topo:
-        for lev in topo["levels"]:
-            topo_repos.extend(lev.get("repos", []))
+    if topo is not None and "levels" in topo:
+        levels_raw: object = topo["levels"]
+        levels: list[JsonDict] = _jlist(levels_raw) or []
+        for lev in levels:
+            repos_in_lev: object = lev.get("repos") or []  # optional per level
+            if isinstance(repos_in_lev, list):
+                topo_repos.extend(str(x) for x in repos_in_lev)
     else:
         errors.append("topologicalOrder must have levels array")
 
@@ -66,9 +92,11 @@ def main() -> int:
             errors.append(f"topologicalOrder references unknown repo: {name}")
 
     # Check each repo has required fields (only for repos in versions - those are tracked)
-    versions = data.get("versions", {})
-    for name, repo in repos.items():
-        if not isinstance(repo, dict):
+    versions_raw: object = data.get("versions") or {}  # optional: version tracking per repo
+    versions: JsonDict = _jdict(versions_raw) or {}
+    for name, repo_raw in repos.items():
+        repo = _jdict(repo_raw)
+        if repo is None:
             errors.append(f"{name}: repo entry must be object")
             continue
         for field in REQUIRED_REPO_FIELDS:

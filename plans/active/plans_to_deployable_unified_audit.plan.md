@@ -182,7 +182,7 @@ Before claiming the Tested gate, run: `cd <repo> && uv run pytest --collect-only
 ### SSOT
 
 - **Checklists:** deployment-service/configs/checklist.{service}.yaml
-- **Topology:** deployment-service/configs/runtime-topology.yaml
+- **Topology (canonical SSOT):** unified-trading-pm/configs/runtime-topology.yaml (deployment-service/configs/runtime-topology.yaml is a partial local view only)
 - **Decisions:** deployment-service/configs/RUNTIME_TOPOLOGY_DECISIONS.md
 
 ### Gate Order

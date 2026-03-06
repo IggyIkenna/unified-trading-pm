@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import cast
 
 import yaml
+from spec_logging import log_error, log_info, log_success, log_warning
 
 JsonDict = dict[str, object]
 
@@ -69,35 +70,6 @@ PRIORITY_GROUPS = {
 
 
 # ==============================================================================
-# Color Logging
-# ==============================================================================
-
-
-class Colors:
-    BLUE = "\033[0;34m"
-    GREEN = "\033[0;32m"
-    YELLOW = "\033[1;33m"
-    RED = "\033[0;31m"
-    NC = "\033[0m"  # No Color
-
-
-def log_info(msg: str) -> None:
-    print(f"{Colors.BLUE}[INFO]{Colors.NC} {msg}")
-
-
-def log_success(msg: str) -> None:
-    print(f"{Colors.GREEN}[OK]{Colors.NC} {msg}")
-
-
-def log_warning(msg: str) -> None:
-    print(f"{Colors.YELLOW}[WARN]{Colors.NC} {msg}")
-
-
-def log_error(msg: str) -> None:
-    print(f"{Colors.RED}[ERR]{Colors.NC} {msg}")
-
-
-# ==============================================================================
 # Service Registry Parsing
 # ==============================================================================
 
@@ -116,7 +88,7 @@ def load_service_registry() -> list[JsonDict]:
         sys.exit(1)
 
     data: JsonDict = cast(JsonDict, raw)
-    raw_services: object = data.get("services", [])
+    raw_services: object = data.get("services") or []
     services: list[JsonDict] = []
     if isinstance(raw_services, list):
         services = [cast(JsonDict, s) for s in cast(list[object], raw_services) if isinstance(s, dict)]
@@ -190,64 +162,65 @@ def _get_int(d: JsonDict, key: str, default: int = 0) -> int:
 # ==============================================================================
 
 
-def generate_domain_spec(service: JsonDict) -> str:
-    """Generate domain specification content."""
-    service_name: str = _get_str(service, "service")
-    service_type: str = _get_str(service, "type")
-
-    # Determine batch/live modes
+def _extract_domain_metadata(service: JsonDict) -> dict[str, str | list[str]]:
+    """Extract metadata for domain spec generation."""
     data_coverage: JsonDict = _get_dict(service, "data_coverage")
-    batch_mode: bool = _get_bool(data_coverage, "batch_mode")
-    live_mode: bool = _get_bool(data_coverage, "live_mode")
-
-    # Domain coverage
     domain_coverage: JsonDict = _get_dict(service, "domain_coverage")
+    pipeline_metadata: JsonDict = _get_dict(service, "pipeline_metadata")
     venues: list[str] = _get_str_list(domain_coverage, "venues")
     asset_classes: list[str] = _get_str_list(domain_coverage, "asset_classes")
-
-    # Pipeline-specific metadata
-    pipeline_metadata: JsonDict = _get_dict(service, "pipeline_metadata")
     upstream_deps: list[str] = _get_str_list(pipeline_metadata, "upstream_dependencies")
 
-    priority: str = _get_str(service, "priority")
-    milestone: str = _get_str(service, "milestone")
-    last_updated: str = _get_str(service, "last_updated", "TBD")
-
-    batch_status: str = "Supported" if batch_mode else "Not Supported"
-    live_status: str = "Supported" if live_mode else "Not Supported"
-
-    venues_str: str = chr(10).join([f"- {venue}" for venue in venues]) if venues else "- N/A"
+    batch_status: str = "Supported" if _get_bool(data_coverage, "batch_mode") else "Not Supported"
+    live_status: str = "Supported" if _get_bool(data_coverage, "live_mode") else "Not Supported"
+    venues_str: str = chr(10).join([f"- {v}" for v in venues]) if venues else "- N/A"
     ac_str: str = chr(10).join([f"- {ac}" for ac in asset_classes]) if asset_classes else "- N/A"
-    deps_str: str = chr(10).join([f"- `{dep}`" for dep in upstream_deps]) if upstream_deps else "- None"
+    deps_str: str = chr(10).join([f"- `{d}`" for d in upstream_deps]) if upstream_deps else "- None"
 
-    content: str = f"""# Domain Specification: {service_name}
+    return {
+        "service_name": _get_str(service, "service"),
+        "service_type": _get_str(service, "type"),
+        "priority": _get_str(service, "priority"),
+        "milestone": _get_str(service, "milestone"),
+        "last_updated": _get_str(service, "last_updated", "TBD"),
+        "batch_status": batch_status,
+        "live_status": live_status,
+        "venues_str": venues_str,
+        "ac_str": ac_str,
+        "deps_str": deps_str,
+    }
+
+
+def _build_domain_content(m: dict[str, str | list[str]]) -> str:
+    """Build domain spec content from extracted metadata."""
+    return f"""# Domain Specification: {m["service_name"]}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
 ## Service Overview
 
-**Service Name:** `{service_name}`
-**Service Type:** `{service_type}`
-**Priority:** `{priority}`
-**Milestone:** `{milestone}`
+**Service Name:** `{m["service_name"]}`
+**Service Type:** `{m["service_type"]}`
+**Priority:** `{m["priority"]}`
+**Milestone:** `{m["milestone"]}`
 
 ## Operational Modes
 
-**Batch Mode:** {batch_status}
-**Live Mode:** {live_status}
+**Batch Mode:** {m["batch_status"]}
+**Live Mode:** {m["live_status"]}
 
 ## Domain Coverage
 
 ### Venues
-{venues_str}
+{m["venues_str"]}
 
 ### Asset Classes
-{ac_str}
+{m["ac_str"]}
 
 ## Dependencies
 
 ### Upstream Dependencies
-{deps_str}
+{m["deps_str"]}
 
 ## Business Logic (TODO: Manual Review Required)
 
@@ -292,10 +265,14 @@ def generate_domain_spec(service: JsonDict) -> str:
 
 ---
 
-**Last Updated:** {last_updated}
+**Last Updated:** {m["last_updated"]}
 **Review Status:** Needs Review (Auto-Generated Baseline)
 """
-    return content
+
+
+def generate_domain_spec(service: JsonDict) -> str:
+    """Generate domain specification content."""
+    return _build_domain_content(_extract_domain_metadata(service))
 
 
 def generate_data_spec(service: JsonDict) -> str:
@@ -392,12 +369,17 @@ def generate_data_spec(service: JsonDict) -> str:
     return content
 
 
-def generate_observability_spec(service: JsonDict) -> str:
-    """Generate observability specification content."""
-    service_name: str = _get_str(service, "service")
-    last_updated: str = _get_str(service, "last_updated", "TBD")
+def _extract_observability_metadata(service: JsonDict) -> dict[str, str]:
+    """Extract metadata for observability spec generation."""
+    return {
+        "service_name": _get_str(service, "service"),
+        "last_updated": _get_str(service, "last_updated", "TBD"),
+    }
 
-    content: str = f"""# Observability Specification: {service_name}
+
+def _build_observability_content(m: dict[str, str]) -> str:
+    """Build observability spec content from extracted metadata."""
+    return f"""# Observability Specification: {m["service_name"]}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -446,7 +428,7 @@ All services MUST implement these 11 lifecycle events:
 ```python
 # Use unified_events_interface for lifecycle event logging
 from unified_trading_services import setup_service, GCSEventSink
-setup_service(service_name="{service_name}", mode="batch", sink=GCSEventSink(...))
+setup_service(service_name="{m["service_name"]}", mode="batch", sink=GCSEventSink(...))
 ```
 
 **Thresholds:**
@@ -489,10 +471,14 @@ setup_service(service_name="{service_name}", mode="batch", sink=GCSEventSink(...
 
 ---
 
-**Last Updated:** {last_updated}
+**Last Updated:** {m["last_updated"]}
 **Review Status:** Needs Review (Auto-Generated Baseline)
 """
-    return content
+
+
+def generate_observability_spec(service: JsonDict) -> str:
+    """Generate observability specification content."""
+    return _build_observability_content(_extract_observability_metadata(service))
 
 
 def generate_architecture_spec(service: JsonDict) -> str:
@@ -587,43 +573,49 @@ Services supporting both modes MUST maintain 90% code symmetry with only 4 seams
     return content
 
 
-def generate_infrastructure_spec(service: JsonDict) -> str:
-    """Generate infrastructure specification content."""
-    service_name: str = _get_str(service, "service")
-
-    # Infrastructure metadata
+def _extract_infrastructure_metadata(service: JsonDict) -> dict[str, str | int]:
+    """Extract metadata for infrastructure spec generation."""
     infrastructure: JsonDict = _get_dict(service, "infrastructure")
-    has_ui: bool = _get_bool(infrastructure, "has_ui")
-    config_paths: list[str] = _get_str_list(infrastructure, "config_paths")
-    credentials: list[str] = _get_str_list(infrastructure, "credentials")
+    readiness: JsonDict = _get_dict(service, "readiness")
     deployment: JsonDict = _get_dict(infrastructure, "deployment")
 
-    # Readiness
-    readiness: JsonDict = _get_dict(service, "readiness")
     test_coverage: int = _get_int(readiness, "test_coverage", 0)
     test_coverage_target: int = _get_int(readiness, "test_coverage_target", 80)
+    config_paths: list[str] = _get_str_list(infrastructure, "config_paths")
+    credentials: list[str] = _get_str_list(infrastructure, "credentials")
     cloud_compat: list[str] = _get_str_list(readiness, "cloud_compatibility")
 
     coverage_gap: int = test_coverage_target - test_coverage
     coverage_status: str = "Meets Target" if test_coverage >= test_coverage_target else f"Gap: {coverage_gap}%"
 
-    last_updated: str = _get_str(service, "last_updated", "TBD")
-
-    github_token_required: bool = _get_bool(deployment, "github_token_required")
-    cloud_build_auth: str = _get_str(deployment, "cloud_build_auth")
-    coding_standards_compliant: bool = _get_bool(readiness, "coding_standards_compliant")
-    ui_path: str = _get_str(infrastructure, "ui_path")
-
     config_paths_str: str = chr(10).join([f"- `{p}`" for p in config_paths]) if config_paths else "- None"
     credentials_str: str = chr(10).join([f"- {c}" for c in credentials]) if credentials else "- None"
     cloud_compat_str: str = chr(10).join([f"- {cloud}" for cloud in cloud_compat]) if cloud_compat else "- N/A"
 
-    github_token_str: str = "Yes" if github_token_required else "No"
-    has_ui_str: str = "Yes" if has_ui else "No"
+    has_ui: bool = _get_bool(infrastructure, "has_ui")
+    ui_path: str = _get_str(infrastructure, "ui_path")
     ui_path_line: str = f"**UI Path:** `{ui_path}`" if has_ui else ""
-    compliance_str: str = "Compliant" if coding_standards_compliant else "Non-Compliant"
 
-    content: str = f"""# Infrastructure Specification: {service_name}
+    return {
+        "service_name": _get_str(service, "service"),
+        "last_updated": _get_str(service, "last_updated", "TBD"),
+        "config_paths_str": config_paths_str,
+        "credentials_str": credentials_str,
+        "cloud_compat_str": cloud_compat_str,
+        "github_token_str": "Yes" if _get_bool(deployment, "github_token_required") else "No",
+        "cloud_build_auth": _get_str(deployment, "cloud_build_auth"),
+        "has_ui_str": "Yes" if has_ui else "No",
+        "ui_path_line": ui_path_line,
+        "test_coverage": test_coverage,
+        "test_coverage_target": test_coverage_target,
+        "coverage_status": coverage_status,
+        "compliance_str": "Compliant" if _get_bool(readiness, "coding_standards_compliant") else "Non-Compliant",
+    }
+
+
+def _build_infrastructure_content(m: dict[str, str | int]) -> str:
+    """Build infrastructure spec content from extracted metadata."""
+    return f"""# Infrastructure Specification: {m["service_name"]}
 
 <!-- AUTO-GENERATED BASELINE - NEEDS MANUAL REVIEW -->
 
@@ -632,37 +624,37 @@ def generate_infrastructure_spec(service: JsonDict) -> str:
 ### Configuration
 
 **Config Paths:**
-{config_paths_str}
+{m["config_paths_str"]}
 
 **Required Credentials:**
-{credentials_str}
+{m["credentials_str"]}
 
 ### Deployment Type
 
-**GitHub Token Required:** {github_token_str}
-**Cloud Build Auth:** `{cloud_build_auth}`
+**GitHub Token Required:** {m["github_token_str"]}
+**Cloud Build Auth:** `{m["cloud_build_auth"]}`
 
 ### UI Component
 
-**Has UI:** {has_ui_str}
-{ui_path_line}
+**Has UI:** {m["has_ui_str"]}
+{m["ui_path_line"]}
 
 ## Cloud Compatibility
 
 **Supported Clouds:**
-{cloud_compat_str}
+{m["cloud_compat_str"]}
 
 ## Quality Metrics
 
 ### Test Coverage
 
-**Current:** {test_coverage}%
-**Target:** {test_coverage_target}%
-**Status:** {coverage_status}
+**Current:** {m["test_coverage"]}%
+**Target:** {m["test_coverage_target"]}%
+**Status:** {m["coverage_status"]}
 
 ### Coding Standards
 
-**Compliance:** {compliance_str}
+**Compliance:** {m["compliance_str"]}
 
 ## Service Structure (TODO: Manual Review Required)
 
@@ -710,10 +702,14 @@ def generate_infrastructure_spec(service: JsonDict) -> str:
 
 ---
 
-**Last Updated:** {last_updated}
+**Last Updated:** {m["last_updated"]}
 **Review Status:** Needs Review (Auto-Generated Baseline)
 """
-    return content
+
+
+def generate_infrastructure_spec(service: JsonDict) -> str:
+    """Generate infrastructure specification content."""
+    return _build_infrastructure_content(_extract_infrastructure_metadata(service))
 
 
 # Map spec types to generator functions

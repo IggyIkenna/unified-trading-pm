@@ -88,7 +88,7 @@ Known pattern: UAC schemas re-exported via UIC `market_data/__init__.py` must ha
 ## Current Audit Status
 
 - **SCHEMA_CONTRACTS_AUDIT.md** (plans/active/): 156 violations catalogued; Category A + B resolved ✅
-- **schema_governance_full_audit.plan.md** (plans/active/): active plan for normalization quality, UIC adoption, dedup
+- **schema_governance_full_audit.plan.md** (plans/archive/): DONE 2026-03-06 — normalization quality, UIC adoption, dedup
 - **schema_registry.json**: 4 stale entries fixed 2026-03-06 ✅
 
 ## P0 Canonical Field Issues (all fixed 2026-03-06)
