@@ -1,8 +1,9 @@
 # Orphan Contracts Utilisation Plan
 
-**Status:** Complete
+**Status:** Active (Phase 1 complete; Phase 2+ pending — augmented by Plan #0c findings)
 **Created:** 2026-03-04
 **Related:** unified-trading-codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md. Schema normalization completion plan — UAC normalization coverage (all external schemas → canonical) is part of contracts utilization; orphan schemas without normalizers are in scope.
+**Feeds from:** [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md) (Plan #0c) — comprehensive 60-repo orphan scan will append new orphan schemas to the table below.
 
 ---
 

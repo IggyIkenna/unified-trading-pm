@@ -9,7 +9,7 @@ Uses get_storage_client() from unified_trading_services (never direct google.clo
 Stores to: gs://{bucket}/sboms/{service_name}/{date}/{timestamp}.json
 
 Required env vars:
-    GCP_PROJECT_ID    — GCP project ID (no GOOGLE_CLOUD_PROJECT per workspace rules)
+    GCP_PROJECT_ID    — GCP project ID (no GCP_PROJECT_ID per workspace rules)
     SBOM_BUCKET       — GCS bucket name (default: uts-sbom-audit)
     SERVICE_NAME      — Name of the service running quality gates (default: unknown)
 """

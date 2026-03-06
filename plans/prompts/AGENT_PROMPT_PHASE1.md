@@ -183,7 +183,7 @@ All items independent — run in parallel:
 - [ ] `bash scripts/setup.sh --check` passes on all 58 repos
 - [ ] dep-branch clone + Cloud Build feature trigger + GH Action version-bump live
 - [ ] `execution-service` has no `visualizer-ui/` or `visualizer-api/`
-- [ ] `unified-trading-deployment-v3` split into 4 repos (`deployment-service`, `deployment-api`, `deployment-ui`, `system-integration-tests`)
+- [x] `unified-trading-deployment-v3` split into 4 repos (`deployment-service`, `deployment-api`, `deployment-ui`, `system-integration-tests`) — DONE 2026-03-03
 - [ ] No embedded UI artifacts in any Python service repo
 - [ ] `ibkr-gateway-infra/` deleted; Terraform in `deployment-service/infra/`
 - [ ] 4 cursor rules created: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`, `mandatory-setup-sh.mdc`

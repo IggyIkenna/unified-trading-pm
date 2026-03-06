@@ -258,7 +258,7 @@ echo "Step 1-2: Running ruff (parallel)..."
 ### Part 6: Create Performance Monitoring
 
 ```bash
-# unified-trading-deployment-v3/scripts/benchmark-quality-gates.sh
+# deployment-service/scripts/benchmark-quality-gates.sh
 #!/bin/bash
 
 set -e
@@ -327,7 +327,7 @@ column -t -s',' "$RESULTS_FILE"
 Make executable:
 
 ```bash
-chmod +x unified-trading-deployment-v3/scripts/benchmark-quality-gates.sh
+chmod +x deployment-service/scripts/benchmark-quality-gates.sh
 ```
 
 ---

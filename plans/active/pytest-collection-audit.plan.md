@@ -83,22 +83,21 @@ Exit code 0 = collection passes. Any import/module error = fix required.
 
 All core repos pass `pytest --collect-only -q`:
 
-| Repo | Tests | Status |
-|------|-------|--------|
-| unified-internal-contracts | 16 | OK |
-| unified-api-contracts | 719 | OK |
-| unified-cloud-interface | 118 | OK |
-| unified-config-interface | 82 | OK |
-| unified-events-interface | 40 | OK |
-| unified-domain-client | 44 | OK |
-| unified-market-interface | 407 | OK |
-| unified-ml-interface | 401 | OK |
-| unified-trade-execution-interface | 561 | OK |
-| instruments-service | 819 | OK |
-| ml-inference-service | 96 | OK |
-| strategy-service | 264 | OK |
-| market-data-processing-service | 224 | OK |
-
+| Repo                              | Tests | Status |
+| --------------------------------- | ----- | ------ |
+| unified-internal-contracts        | 16    | OK     |
+| unified-api-contracts             | 719   | OK     |
+| unified-cloud-interface           | 118   | OK     |
+| unified-config-interface          | 82    | OK     |
+| unified-events-interface          | 40    | OK     |
+| unified-domain-client             | 44    | OK     |
+| unified-market-interface          | 407   | OK     |
+| unified-ml-interface              | 401   | OK     |
+| unified-trade-execution-interface | 561   | OK     |
+| instruments-service               | 819   | OK     |
+| ml-inference-service              | 96    | OK     |
+| strategy-service                  | 264   | OK     |
+| market-data-processing-service    | 224   | OK     |
 
 ## References
 

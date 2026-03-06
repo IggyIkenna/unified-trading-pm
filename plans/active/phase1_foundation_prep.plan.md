@@ -5,7 +5,7 @@ overview: |
   Three parallel streams: STREAM A (CI/CD infrastructure), STREAM B (deployment structure refactor),
   STREAM C (quality gate baseline audit). No quickmerge runs until STREAM A is complete.
   Phase 1 is complete when: all 55 repos have quickmerge + commit-msg hook; CI/CD pipeline live;
-  deployment structure refactored (UTD V3 split, visualizer-ui/api extracted, system-integration-tests repo);
+  deployment structure refactored (UTD V3 split complete: deployment-service + deployment-api + deployment-ui + system-integration-tests; visualizer-ui/api extracted);
   SSOT docs clean; naming consistent.
 todos:
   - id: p1-naming-cleanup-done
@@ -33,7 +33,7 @@ todos:
     content: "Split unified-trading-deployment-v3 into 4 repos: (1) deployment-service/ — Python package (orchestrator, catalog, config_loader, cli, cloud_client, monitor, shard_builder, shard_calculator, backends/), terraform/, configs/ (YAML checklists, bucket configs). Move smoke_test_framework.py → tests/integration/shard_smoke/. Split orchestrator.py (672L) and config_loader.py (551L) by SRP before extract; (2) deployment-api/ — thin FastAPI, imports deployment-service, GoogleOAuthMiddleware on write endpoints, port 8001; (3) deployment-ui/ — React UI calling deployment-api, OAuth ADMIN scope, SSE for status (scaffolded already); (4) system-integration-tests/ — NEW repo (per new-repo-setup.md), Layer 3a + 3b. Layer 2 (infra verification) lives in deployment-service/scripts/verify_infra.py. Tasks: deployment-v3-four-way-split, arch-deployment-v3-ui-extract."
     status: done
   - id: arch-ui-audit-full
-    content: "Full audit of all service repos for embedded UI: check for ui/, frontend/, static/, visualiz*, *.tsx, *.jsx, package.json, index.html inside Python service repos. Known violations: execution-service (visualizer-ui + visualizer-api), unified-trading-deployment-v3 (ui/). Check also: alerting-service, market-data-processing-service, client-reporting-api, risk-and-exposure-service. Task: ui-service-separation-audit-full."
+    content: "Full audit of all service repos for embedded UI: check for ui/, frontend/, static/, visualiz*, *.tsx, *.jsx, package.json, index.html inside Python service repos. Known violations: execution-service (visualizer-ui + visualizer-api). unified-trading-deployment-v3 (ui/ dir) resolved by four-way split. Check also: alerting-service, market-data-processing-service, client-reporting-api, risk-and-exposure-service. Task: ui-service-separation-audit-full."
     status: pending
   - id: integration-system-tests-repo
     content: "Create system-integration-tests repo per new-repo-setup.md: Layer 3a (fast smoke @pytest.mark.smoke, <5 min) + Layer 3b (full @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Zero Python imports from services — HTTP/GCS/PubSub interaction only. SSOT: 06-coding-standards/integration-testing-layers.md. Tasks: integration-system-integration-tests-repo, integration-layer3-implement."
@@ -42,7 +42,7 @@ todos:
     content: "Add verify_infra.py to deployment-service/scripts/ after four-way split: checks GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist. Exposed as GET /infra/health in deployment-api. Gates deployment success before Layer 3. Task: integration-layer2-infra-verify."
     status: pending
   - id: infra-merge-utdv3
-    content: "ibkr-gateway-infra/ dir (workspace root) contains ibkr-gateway-infra/ibkr-gateway/ Terraform config (main.tf, variables.tf). Move: ibkr-gateway-infra/ibkr-gateway/ → unified-trading-deployment-v3/infra/ibkr-gateway/ then delete ibkr-gateway-infra/. Update manifest. Task: infra-merge-utdv3."
+    content: "ibkr-gateway-infra/ dir (workspace root) contains ibkr-gateway-infra/ibkr-gateway/ Terraform config (main.tf, variables.tf). Move: ibkr-gateway-infra/ibkr-gateway/ → deployment-service/terraform/infra/ibkr-gateway/ then delete ibkr-gateway-infra/. Update manifest. Task: infra-merge-utdv3."
     status: pending
   - id: hybrid-live-seam
     content: "Implement/document hybrid live in-memory adapter seam for MDPS←MTDH (allowed ONLY under co_located_vm deployment profile per runtime-topology.yaml). Task: hybrid-live-seam."
@@ -84,7 +84,7 @@ isProject: true
 ## NAMING CHANGE MANDATE — Zero Technical Debt
 
 > **SSOT for repo names:** `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` (57 repos, 11 levels, generated from `workspace-manifest.json`).
-> **SSOT for runtime topology:** `unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`.
+> **SSOT for runtime topology:** `deployment-service/configs/runtime-topology.yaml` (SSOT) and `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` (diagram).
 > Any name not matching these diagrams is WRONG and must be fixed at EVERY level below.
 
 When any component is renamed, the change is **complete** only when ALL of the following are updated. No shortcuts, no aliases, no backward compatibility shims.
@@ -99,7 +99,7 @@ When any component is renamed, the change is **complete** only when ALL of the f
 | **All imports**                   | `from market_tick_data_handler import ...` → `from market_tick_data_service import ...` across ALL 57 repos (run `rg` to find every occurrence) |
 | `**workspace-manifest.json`       | `name`, `github_url`, `artifact_registry_url`, `package_name` — all 4 fields                                                                    |
 | `**runtime-topology.yaml`\*\*     | All service name references                                                                                                                     |
-| **Deployment checklists**         | `unified-trading-deployment-v3/configs/checklist.*.yaml`                                                                                        |
+| **Deployment checklists**         | `deployment-service/configs/checklist.*.yaml`                                                                                                   |
 | `**RUNTIME_TOPOLOGY_DECISIONS.md` | All narrative references                                                                                                                        |
 | **Cursor rules**                  | Any `.cursor/rules/*.mdc` mentioning old name (`rg` search)                                                                                     |
 | **Codex docs**                    | All `unified-trading-codex/**/*.md` mentioning old name (`rg` search)                                                                           |
@@ -287,7 +287,7 @@ Steps:
 
 Pre-split: split `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP before extract.
 
-> **Tier note (2026-02-28):** Merge levels assigned in workspace-manifest.json tier restructure. `unified-trading-deployment-v3` (the monorepo being split) → merge_level: 10 (IaC; deploy last, references all service images). deployment-api/engine at L6 = own tier between foundational services (L5) and bulk services (L7).
+> **Tier note (2026-02-28, updated 2026-03-05):** Merge levels assigned in workspace-manifest.json tier restructure. `unified-trading-deployment-v3` (ARCHIVED — four-way split complete as of 2026-03-03). deployment-service + deployment-api at L10; deployment-ui at L11; system-integration-tests at L12.
 
 Layer 2 infra verification: `deployment-service/scripts/verify_infra.py` → exposed as `GET /infra/health`.
 
@@ -296,7 +296,7 @@ Layer 2 infra verification: `deployment-service/scripts/verify_infra.py` → exp
 Full sweep of all 17 service repos for embedded UI artifacts:
 
 - Patterns: `ui/`, `frontend/`, `static/`, `visualiz`_, `_.tsx`, `\*.jsx`, `package.json`, `index.html`
-- Known violations: `execution-service`, `unified-trading-deployment-v3`
+- Known violations: `execution-service` (unified-trading-deployment-v3 violation resolved by four-way split)
 - Also check: `alerting-service`, `market-data-processing-service`, `client-reporting-api`, `risk-and-exposure-service`
 
 ### integration-system-tests-repo
@@ -310,7 +310,7 @@ New repo `system-integration-tests` (per `new-repo-setup.md`):
 
 ### infra-merge-utdv3
 
-`ibkr-gateway-infra/ibkr-gateway/` (Terraform) → `unified-trading-deployment-v3/infra/ibkr-gateway/`
+`ibkr-gateway-infra/ibkr-gateway/` (Terraform) → `deployment-service/terraform/infra/ibkr-gateway/`
 Then delete `ibkr-gateway-infra/` from workspace root. Update manifest.
 
 ### hybrid-live-seam
@@ -403,7 +403,7 @@ All of the following must be true before Phase 2 starts:
 - **Consolidated remaining work** (full task registry): `.cursor/plans/consolidated_remaining_work.plan.md`
 - **Workspace manifest**: `unified-trading-pm/workspace-manifest.json`
 - **Codex SSOT index**: `unified-trading-codex/00-SSOT-INDEX.md`
-- **Runtime topology**: `unified-trading-deployment-v3/configs/runtime-topology.yaml`
+- **Runtime topology**: `deployment-service/configs/runtime-topology.yaml`
 - **New repo setup**: `unified-trading-pm/docs/new-repo-setup.md`
 - **Integration testing layers**: `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
 - **UI service separation**: `unified-trading-codex/06-coding-standards/ui-service-separation.md`
