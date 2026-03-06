@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# run-all-setup.sh — Run setup.sh in all repos (dependency order)
+#
+# Run AFTER version alignment (run-version-alignment.sh) succeeds.
+# SSOT: unified-trading-pm/scripts/repo-management/run-all-setup.sh
+#
+# Usage:
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --check  # verify only
+#
+# Prerequisites:
+#   - Version alignment complete (no conflicts)
+#   - Workspace root set (UNIFIED_TRADING_WORKSPACE_ROOT or parent of unified-trading-pm)
+
+set -euo pipefail
+
+CHECK_ONLY=false
+for arg in "$@"; do
+  case $arg in
+    --check) CHECK_ONLY=true ;;
+    --help | -h)
+      echo "Usage: bash run-all-setup.sh [--check]"
+      echo "  --check  Run setup.sh --check only (verify, no install)"
+      exit 0
+      ;;
+  esac
+done
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+WORKSPACE_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$(cd "$PM_ROOT/.." && pwd)}"
+MANIFEST="$PM_ROOT/workspace-manifest.json"
+
+echo "━━━ Run setup in all repos (topological order) ━━━"
+echo "  Workspace: $WORKSPACE_ROOT"
+echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || echo 'INSTALL')"
+echo ""
+
+# Topological order from manifest
+ORDERED_REPOS=$(python3 -c "
+import json
+with open('$MANIFEST') as f:
+    data = json.load(f)
+topo = data.get('topologicalOrder', {}).get('levels', [])
+for level in sorted(topo, key=lambda l: l.get('level', 999)):
+    for repo in level.get('repos', []):
+        print(repo)
+" 2>/dev/null)
+
+OK=0
+SKIP=0
+FAIL=0
+FAILED_REPOS=""
+
+for repo in $ORDERED_REPOS; do
+  REPO_PATH="$WORKSPACE_ROOT/$repo"
+  if [ ! -d "$REPO_PATH" ]; then
+    continue
+  fi
+
+  if [ ! -f "$REPO_PATH/scripts/setup.sh" ]; then
+    echo "  [SKIP] $repo (no setup.sh)"
+    SKIP=$((SKIP + 1))
+    continue
+  fi
+
+  echo -n "  $repo ... "
+  if [ "$CHECK_ONLY" = true ]; then
+    if (cd "$REPO_PATH" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/setup.sh --check 2>/dev/null); then
+      echo "OK"
+      OK=$((OK + 1))
+    else
+      echo "FAIL"
+      FAIL=$((FAIL + 1))
+      FAILED_REPOS="$FAILED_REPOS  - $repo\n"
+    fi
+  else
+    if (cd "$REPO_PATH" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/setup.sh >/dev/null 2>&1); then
+      OK=$((OK + 1))
+    else
+      echo "  [WARN] $repo setup failed"
+      FAIL=$((FAIL + 1))
+      FAILED_REPOS="$FAILED_REPOS  - $repo\n"
+    fi
+  fi
+done
+
+echo ""
+echo "  OK: $OK | Skipped: $SKIP | Failed: $FAIL"
+if [ -n "$FAILED_REPOS" ]; then
+  echo -e "\n  Failed repos:\n$FAILED_REPOS"
+fi
+[ "$FAIL" -eq 0 ]

@@ -35,7 +35,7 @@ todos:
     content: "Add IBKR credentials to GCP Secret Manager as 'ibkr-account-credentials'. Resolves the [EXTERNAL] blocker in INDEX.md (IBKR key not in SM)."
     status: todo
   - id: ibkr-runtime-topology
-    content: "Update deployment-service/configs/runtime-topology.yaml: add ibkr_gateway_connectivity section documenting live path (ibkr-gateway-infra → ib_insync → UMI/UTEI/UPI/URDI adapters) and batch path (matching-engine-library synthetic callbacks → same adapter interfaces). Document the invariant: adapters are written against EWrapper callback protocol — MEL and IB Gateway both satisfy that protocol."
+    content: "Update unified-trading-pm/configs/runtime-topology.yaml (canonical SSOT): add ibkr_gateway_connectivity section documenting live path (ibkr-gateway-infra → ib_insync → UMI/UTEI/UPI/URDI adapters) and batch path (matching-engine-library synthetic callbacks → same adapter interfaces). Document the invariant: adapters are written against EWrapper callback protocol — MEL and IB Gateway both satisfy that protocol."
     status: todo
   - id: ibkr-index-blocker-resolve
     content: "After sm-credentials and mock-pattern-codex are complete: remove the IBKR blocker row from INDEX.md ('IBKR key not in SM + TWS VCR strategy undefined'). Update api_keys_and_auth.plan.md phase-2-ws IBKR row to 'resolved'."

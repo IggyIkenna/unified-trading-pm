@@ -154,7 +154,7 @@ def _get_body(issue: JsonDict) -> str:
 
 def _get_labels(issue: JsonDict) -> list[str]:
     """Safely get label names from issue."""
-    raw_labels: object = issue.get("labels", [])
+    raw_labels: object = issue.get("labels") or []
     if isinstance(raw_labels, list):
         labels_list: list[JsonDict] = [
             cast(JsonDict, lb) for lb in cast(list[object], raw_labels) if isinstance(lb, dict)
@@ -397,51 +397,8 @@ def collect_metrics(repo: str, period_days: int) -> WorkflowMetrics:
     )
 
 
-def format_markdown_report(metrics: WorkflowMetrics) -> str:
-    """Format metrics as markdown report."""
-    det_status: str = "PASS" if metrics.drift_detection_rate >= 90 else "WARN"
-    det_analysis: str = (
-        "Strong drift prevention"
-        if metrics.drift_detection_rate >= 90
-        else "Needs improvement - increase diff checker coverage"
-    )
-    dup_status: str = "PASS" if metrics.duplication_rate < 2 else "WARN"
-    dup_analysis: str = (
-        "Excellent duplication prevention"
-        if metrics.duplication_rate < 2
-        else "Review marker system - duplicates detected"
-    )
-    auto_status: str = "PASS" if metrics.automation_rate >= 60 else "WARN"
-    qg_status: str = "PASS" if metrics.quality_gate_pass_rate >= 90 else "WARN"
-    qg_analysis: str = (
-        "Excellent quality - agents understanding standards well"
-        if metrics.quality_gate_pass_rate >= 90
-        else "Review common failures - may need better agent guidance"
-    )
-    regen_status: str = "PASS" if metrics.avg_regenerations_per_epic < 1.5 else "WARN"
-    regen_analysis: str = (
-        "Stable epic generation"
-        if metrics.avg_regenerations_per_epic < 1.5
-        else "Review epic generator - too much churn"
-    )
-
-    max_completed: int = max(metrics.total_tasks_completed, 1)
-    bar_auto: str = "X" * int(metrics.total_automation_tasks / max_completed * 20)
-    bar_front: str = "X" * int(metrics.semi_auto_front_tasks / max_completed * 20)
-    bar_back: str = "X" * int(metrics.semi_auto_back_tasks / max_completed * 20)
-    bar_human: str = "X" * int(metrics.full_human_loop_tasks / max_completed * 20)
-
-    passing: int = sum(
-        [
-            metrics.drift_detection_rate >= 90,
-            metrics.duplication_rate < 2,
-            metrics.automation_rate >= 60,
-            metrics.quality_gate_pass_rate >= 90,
-            metrics.avg_regenerations_per_epic < 1.5,
-        ]
-    )
-    overall_status: str = "HEALTHY" if passing == 5 else "NEEDS ATTENTION"
-
+def _format_markdown_header(metrics: WorkflowMetrics) -> str:
+    """Format report header with metadata."""
     return f"""# Workflow Metrics Report
 
 **Generated:** {metrics.timestamp}
@@ -450,7 +407,18 @@ def format_markdown_report(metrics: WorkflowMetrics) -> str:
 
 ---
 
-## 1. Drift Detection
+"""
+
+
+def _format_markdown_drift_section(metrics: WorkflowMetrics) -> str:
+    """Format drift detection section."""
+    det_status: str = "PASS" if metrics.drift_detection_rate >= 90 else "WARN"
+    det_analysis: str = (
+        "Strong drift prevention"
+        if metrics.drift_detection_rate >= 90
+        else "Needs improvement - increase diff checker coverage"
+    )
+    return f"""## 1. Drift Detection
 
 - **Gaps found:** {metrics.drift_gaps_found}
 - **Caught before human review:** {metrics.drift_gaps_caught_before_review}
@@ -460,7 +428,18 @@ def format_markdown_report(metrics: WorkflowMetrics) -> str:
 
 ---
 
-## 2. Duplication Prevention
+"""
+
+
+def _format_markdown_duplication_section(metrics: WorkflowMetrics) -> str:
+    """Format duplication prevention section."""
+    dup_status: str = "PASS" if metrics.duplication_rate < 2 else "WARN"
+    dup_analysis: str = (
+        "Excellent duplication prevention"
+        if metrics.duplication_rate < 2
+        else "Review marker system - duplicates detected"
+    )
+    return f"""## 2. Duplication Prevention
 
 - **Total issues created:** {metrics.total_issues_created}
 - **Duplicate issues:** {metrics.duplicate_issues_created}
@@ -470,7 +449,18 @@ def format_markdown_report(metrics: WorkflowMetrics) -> str:
 
 ---
 
-## 3. Automation Effectiveness
+"""
+
+
+def _format_markdown_automation_section(metrics: WorkflowMetrics) -> str:
+    """Format automation effectiveness section."""
+    auto_status: str = "PASS" if metrics.automation_rate >= 60 else "WARN"
+    max_completed: int = max(metrics.total_tasks_completed, 1)
+    bar_auto: str = "X" * int(metrics.total_automation_tasks / max_completed * 20)
+    bar_front: str = "X" * int(metrics.semi_auto_front_tasks / max_completed * 20)
+    bar_back: str = "X" * int(metrics.semi_auto_back_tasks / max_completed * 20)
+    bar_human: str = "X" * int(metrics.full_human_loop_tasks / max_completed * 20)
+    return f"""## 3. Automation Effectiveness
 
 - **Total tasks completed:** {metrics.total_tasks_completed}
 - **Total automation (auto-pickup + auto-close):** {metrics.total_automation_tasks}
@@ -489,7 +479,12 @@ Full Human:    {bar_human} {metrics.full_human_loop_tasks}
 
 ---
 
-## 4. Cycle Time
+"""
+
+
+def _format_markdown_cycle_time_section(metrics: WorkflowMetrics) -> str:
+    """Format cycle time section."""
+    return f"""## 4. Cycle Time
 
 - **Total automation:** {metrics.avg_cycle_time_total_auto:.1f} days
 - **Semi-automation:** {metrics.avg_cycle_time_semi_auto:.1f} days
@@ -500,7 +495,18 @@ Full Human:    {bar_human} {metrics.full_human_loop_tasks}
 
 ---
 
-## 5. Quality Gate Performance
+"""
+
+
+def _format_markdown_quality_gate_section(metrics: WorkflowMetrics) -> str:
+    """Format quality gate performance section."""
+    qg_status: str = "PASS" if metrics.quality_gate_pass_rate >= 90 else "WARN"
+    qg_analysis: str = (
+        "Excellent quality - agents understanding standards well"
+        if metrics.quality_gate_pass_rate >= 90
+        else "Review common failures - may need better agent guidance"
+    )
+    return f"""## 5. Quality Gate Performance
 
 - **Total quickmerge attempts:** {metrics.total_quickmerge_attempts}
 - **First-time pass:** {metrics.first_time_pass}
@@ -510,7 +516,18 @@ Full Human:    {bar_human} {metrics.full_human_loop_tasks}
 
 ---
 
-## 6. Regeneration Frequency
+"""
+
+
+def _format_markdown_regeneration_section(metrics: WorkflowMetrics) -> str:
+    """Format regeneration frequency section."""
+    regen_status: str = "PASS" if metrics.avg_regenerations_per_epic < 1.5 else "WARN"
+    regen_analysis: str = (
+        "Stable epic generation"
+        if metrics.avg_regenerations_per_epic < 1.5
+        else "Review epic generator - too much churn"
+    )
+    return f"""## 6. Regeneration Frequency
 
 - **Total regenerations:** {metrics.total_regenerations}
 - **Average per epic:** {metrics.avg_regenerations_per_epic:.2f} [{regen_status}] (target: <1.5)
@@ -520,7 +537,22 @@ Full Human:    {bar_human} {metrics.full_human_loop_tasks}
 
 ---
 
-## Overall Health Score
+"""
+
+
+def _format_markdown_footer(metrics: WorkflowMetrics) -> str:
+    """Format overall health score and recommendations header."""
+    passing: int = sum(
+        [
+            metrics.drift_detection_rate >= 90,
+            metrics.duplication_rate < 2,
+            metrics.automation_rate >= 60,
+            metrics.quality_gate_pass_rate >= 90,
+            metrics.avg_regenerations_per_epic < 1.5,
+        ]
+    )
+    overall_status: str = "HEALTHY" if passing == 5 else "NEEDS ATTENTION"
+    return f"""## Overall Health Score
 
 {overall_status}
 
@@ -531,6 +563,20 @@ Full Human:    {bar_human} {metrics.full_human_loop_tasks}
 ## Recommendations
 
 """
+
+
+def format_markdown_report(metrics: WorkflowMetrics) -> str:
+    """Format metrics as markdown report."""
+    return (
+        _format_markdown_header(metrics)
+        + _format_markdown_drift_section(metrics)
+        + _format_markdown_duplication_section(metrics)
+        + _format_markdown_automation_section(metrics)
+        + _format_markdown_cycle_time_section(metrics)
+        + _format_markdown_quality_gate_section(metrics)
+        + _format_markdown_regeneration_section(metrics)
+        + _format_markdown_footer(metrics)
+    )
 
 
 def calculate_recommendations(metrics: WorkflowMetrics) -> list[str]:

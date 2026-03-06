@@ -5,7 +5,7 @@
 # Clones all repos, installs system deps, creates workspace venv, and runs
 # setup.sh in dependency order (T0 → T1 → T2 → T3 → services → UIs).
 #
-# SSOT: unified-trading-pm/scripts/workspace-bootstrap.sh
+# SSOT: docs/repo-management/CI-CD-FLOW.md (this script wraps it)
 # Codex: unified-trading-codex/06-coding-standards/setup-standards.md
 #
 # Prerequisites:
@@ -31,7 +31,7 @@
 #   Phase 1 — System dependencies (Python 3.13, uv, ripgrep, jq, basedpyright)
 #   Phase 2 — Clone all repos from workspace-manifest.json (skip existing)
 #   Phase 3 — Create workspace venv (.venv-workspace)
-#   Phase 4 — Run setup.sh per repo in topological order (T0 first)
+#   Phase 4 — Invoke run-all-setup.sh (CI/CD Phase 2) — no reimplementation
 #   Phase 5 — Verify all repos pass import smoke test
 #
 # Idempotent. Safe to re-run. Skips repos already cloned and deps already installed.
@@ -280,65 +280,25 @@ if [ -d "$WORKSPACE_VENV" ] && [ "$CHECK_ONLY" != true ]; then
   fi
 fi
 
-# ── PHASE 4: REPO SETUP (topological order) ───────────────────────────────
-log_phase 4 "Per-Repo Setup (tier order)"
+# ── PHASE 4: REPO SETUP (CI/CD Phase 2) ─────────────────────────────────────
+# Wraps docs/repo-management/CI-CD-FLOW.md — invokes run-all-setup.sh
+log_phase 4 "Per-Repo Setup (CI/CD Phase 2)"
 
-# Topological order from manifest: T0 → T1 → T2 → services → UIs → infra
-# Extract using Python for reliability
-if [ -n "$PYTHON_CMD" ]; then
-  ORDERED_REPOS=$("$PYTHON_CMD" -c "
-import json
-with open('$MANIFEST') as f:
-    data = json.load(f)
-topo = data.get('topologicalOrder', {}).get('levels', [])
-for level in sorted(topo, key=lambda l: l['level']):
-    for repo in level.get('repos', []):
-        print(repo)
-" 2>/dev/null)
-elif command -v jq &>/dev/null; then
-  ORDERED_REPOS=$(jq -r '.topologicalOrder.levels | sort_by(.level) | .[].repos[]' "$MANIFEST" 2>/dev/null)
-else
-  ORDERED_REPOS=$REPOS
-fi
-
-SETUP_OK=0
-SETUP_SKIP=0
-SETUP_FAIL=0
-
-for repo in $ORDERED_REPOS; do
-  REPO_PATH="$WORKSPACE_ROOT/$repo"
-  if [ ! -d "$REPO_PATH" ]; then
-    continue
-  fi
-
-  SETUP_SCRIPT="$REPO_PATH/scripts/setup.sh"
-  if [ ! -f "$SETUP_SCRIPT" ]; then
-    log_skip "$repo (no setup.sh)"
-    SETUP_SKIP=$((SETUP_SKIP + 1))
-    continue
-  fi
-
-  echo -e "\n  ${BLUE}Setting up: $repo${NC}"
-  if [ "$CHECK_ONLY" = true ]; then
-    if (cd "$REPO_PATH" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/setup.sh --check 2>/dev/null); then
-      log_ok "$repo"
-      SETUP_OK=$((SETUP_OK + 1))
-    else
-      log_fail "$repo"
-      SETUP_FAIL=$((SETUP_FAIL + 1))
-    fi
+if [ "$CHECK_ONLY" = true ]; then
+  if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --check 2>&1 | tail -20); then
+    log_ok "Setup check passed (all repos)"
   else
-    if (cd "$REPO_PATH" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/setup.sh 2>&1 | tail -5); then
-      log_ok "$repo"
-      SETUP_OK=$((SETUP_OK + 1))
-    else
-      log_warn "$repo setup failed (non-fatal — continuing)"
-      SETUP_FAIL=$((SETUP_FAIL + 1))
-    fi
+    log_fail "Setup check failed"
+    exit 1
   fi
-done
-
-echo -e "\n  Setup OK: $SETUP_OK | Skipped: $SETUP_SKIP | Failed: $SETUP_FAIL"
+else
+  echo -e "\n  ${BLUE}Invoking run-all-setup.sh --rollout-first (CI/CD Phase 2)${NC}"
+  if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --rollout-first 2>&1 | tail -30); then
+    log_ok "Setup complete (all repos)"
+  else
+    log_warn "Setup had issues (non-fatal — continuing)"
+  fi
+fi
 
 # ── PHASE 5: IMPORT SMOKE TEST (all repos) ────────────────────────────────
 log_phase 5 "Import Smoke Test (all Python repos)"

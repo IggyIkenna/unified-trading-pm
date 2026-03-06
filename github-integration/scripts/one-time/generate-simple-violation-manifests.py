@@ -161,10 +161,9 @@ def check_violations(service_dir: Path, service_name: str) -> dict[str, list[str
     return violations
 
 
-def generate_manifest(service_name: str, violations: dict[str, list[str]]) -> str:
-    """Generate markdown manifest from violations."""
-    if not violations:
-        return f"""# Codex Violations Manifest: {service_name}
+def _build_no_violations_manifest(service_name: str) -> str:
+    """Return manifest content when no violations are found."""
+    return f"""# Codex Violations Manifest: {service_name}
 
 ✅ **No violations found!** This service is compliant with all codex standards.
 
@@ -181,18 +180,10 @@ def generate_manifest(service_name: str, violations: dict[str, list[str]]) -> st
 - ✅ All imports at top of file
 """
 
-    total_count = sum(len(v) for v in violations.values())
 
-    lines = [
-        f"# Codex Violations Manifest: {service_name}",
-        "",
-        f"**Total Violations**: {total_count}",
-        "",
-        "## Summary",
-        "",
-    ]
-
-    # Summary table
+def _build_summary_lines(violations: dict[str, list[str]]) -> list[str]:
+    """Build summary bullet lines from violations."""
+    lines: list[str] = []
     if "print_statements" in violations:
         lines.append(f"- ❌ **{len(violations['print_statements'])} print() statements** (use `logger.info()`)")
     if "os_getenv" in violations:
@@ -211,163 +202,118 @@ def generate_manifest(service_name: str, violations: dict[str, list[str]]) -> st
         lines.append(f"- ❌ **{len(violations['files_too_large'])} files >1500 lines**")
     if "imports_in_functions" in violations:
         lines.append(f"- ❌ **{len(violations['imports_in_functions'])} imports inside functions**")
+    return lines
 
+
+_VIOLATION_SECTIONS: list[tuple[str, str, str]] = [
+    (
+        "print_statements",
+        "1. Print Statements (use logger.info())",
+        "Replace `print()` with `logger.info()` or appropriate logging level.",
+    ),
+    (
+        "os_getenv",
+        "2. os.getenv() Usage (use config classes)",
+        "Replace `os.getenv()` with proper config classes extending `UnifiedCloudServicesConfig`.",
+    ),
+    ("datetime_now", "3. datetime.now() Without UTC", "Replace `datetime.now()` with `datetime.now(timezone.utc)`."),
+    (
+        "bare_except",
+        "4. Bare except: Clauses",
+        "Specify exception types: `except (OSError, ValueError):` or specific exceptions.",
+    ),
+    (
+        "requests_in_async",
+        "5. requests Library in Async Code",
+        "Replace `requests` with `aiohttp` for async HTTP calls.",
+    ),
+    (
+        "asyncio_run_in_loops",
+        "6. asyncio.run() in Loops",
+        "Use `await` instead of `asyncio.run()` inside async functions.",
+    ),
+    (
+        "time_sleep_in_async",
+        "7. time.sleep() in Async Functions",
+        "Replace `time.sleep()` with `await asyncio.sleep()`.",
+    ),
+    (
+        "files_too_large",
+        "8. Files >1500 Lines (COD-SIZE)",
+        "Split these files into smaller modules following Single Responsibility Principle.",
+    ),
+    ("imports_in_functions", "9. Imports Inside Functions", "Move all imports to the top of the file."),
+]
+
+
+def _build_detail_section_code(title: str, hint: str, matches: list[str], limit: int = 50) -> list[str]:
+    """Build a detailed section with code block."""
+    lines = [f"### {title}", "", hint, "", "```"]
+    for match in matches[:limit]:
+        lines.append(match)
+    if len(matches) > limit:
+        lines.append(f"... and {len(matches) - limit} more")
+    lines.extend(["```", ""])
+    return lines
+
+
+def _build_detail_section_list(title: str, hint: str, items: list[str]) -> list[str]:
+    """Build a detailed section with bullet list."""
+    lines = [f"### {title}", "", hint, ""]
+    for f in items:
+        lines.append(f"- {f}")
+    lines.append("")
+    return lines
+
+
+def _build_detailed_sections(violations: dict[str, list[str]]) -> list[str]:
+    """Build all detailed violation sections."""
+    lines: list[str] = []
+    for key, title, hint in _VIOLATION_SECTIONS:
+        if key not in violations:
+            continue
+        matches = violations[key]
+        if key == "files_too_large":
+            lines.extend(_build_detail_section_list(title, hint, matches))
+        else:
+            limit = 50 if key != "requests_in_async" else len(matches)
+            lines.extend(_build_detail_section_code(title, hint, matches, limit))
+    return lines
+
+
+def _build_footer_lines() -> list[str]:
+    """Build footer with next steps."""
+    return [
+        "---",
+        "",
+        "## Next Steps",
+        "",
+        "1. Fix violations listed above",
+        "2. Run `bash scripts/quality-gates.sh` to verify",
+        "3. Run `bash scripts/quickmerge.sh` to create PR",
+        "",
+        "Quality gates will **BLOCK** merge if violations remain.",
+    ]
+
+
+def generate_manifest(service_name: str, violations: dict[str, list[str]]) -> str:
+    """Generate markdown manifest from violations."""
+    if not violations:
+        return _build_no_violations_manifest(service_name)
+
+    total_count = sum(len(v) for v in violations.values())
+    lines = [
+        f"# Codex Violations Manifest: {service_name}",
+        "",
+        f"**Total Violations**: {total_count}",
+        "",
+        "## Summary",
+        "",
+    ]
+    lines.extend(_build_summary_lines(violations))
     lines.extend(["", "---", "", "## Detailed Violations", ""])
-
-    # Detailed sections
-    if "print_statements" in violations:
-        lines.extend(
-            [
-                "### 1. Print Statements (use logger.info())",
-                "",
-                "Replace `print()` with `logger.info()` or appropriate logging level.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["print_statements"][:50]:  # Limit to first 50
-            lines.append(match)
-        if len(violations["print_statements"]) > 50:
-            lines.append(f"... and {len(violations['print_statements']) - 50} more")
-        lines.extend(["```", ""])
-
-    if "os_getenv" in violations:
-        lines.extend(
-            [
-                "### 2. os.getenv() Usage (use config classes)",
-                "",
-                "Replace `os.getenv()` with proper config classes extending `UnifiedCloudServicesConfig`.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["os_getenv"][:50]:
-            lines.append(match)
-        if len(violations["os_getenv"]) > 50:
-            lines.append(f"... and {len(violations['os_getenv']) - 50} more")
-        lines.extend(["```", ""])
-
-    if "datetime_now" in violations:
-        lines.extend(
-            [
-                "### 3. datetime.now() Without UTC",
-                "",
-                "Replace `datetime.now()` with `datetime.now(timezone.utc)`.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["datetime_now"][:50]:
-            lines.append(match)
-        if len(violations["datetime_now"]) > 50:
-            lines.append(f"... and {len(violations['datetime_now']) - 50} more")
-        lines.extend(["```", ""])
-
-    if "bare_except" in violations:
-        lines.extend(
-            [
-                "### 4. Bare except: Clauses",
-                "",
-                "Specify exception types: `except (OSError, ValueError):` or specific exceptions.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["bare_except"][:50]:
-            lines.append(match)
-        if len(violations["bare_except"]) > 50:
-            lines.append(f"... and {len(violations['bare_except']) - 50} more")
-        lines.extend(["```", ""])
-
-    if "requests_in_async" in violations:
-        lines.extend(
-            [
-                "### 5. requests Library in Async Code",
-                "",
-                "Replace `requests` with `aiohttp` for async HTTP calls.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["requests_in_async"]:
-            lines.append(match)
-        lines.extend(["```", ""])
-
-    if "asyncio_run_in_loops" in violations:
-        lines.extend(
-            [
-                "### 6. asyncio.run() in Loops",
-                "",
-                "Use `await` instead of `asyncio.run()` inside async functions.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["asyncio_run_in_loops"][:50]:
-            lines.append(match)
-        if len(violations["asyncio_run_in_loops"]) > 50:
-            lines.append(f"... and {len(violations['asyncio_run_in_loops']) - 50} more")
-        lines.extend(["```", ""])
-
-    if "time_sleep_in_async" in violations:
-        lines.extend(
-            [
-                "### 7. time.sleep() in Async Functions",
-                "",
-                "Replace `time.sleep()` with `await asyncio.sleep()`.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["time_sleep_in_async"][:50]:
-            lines.append(match)
-        if len(violations["time_sleep_in_async"]) > 50:
-            lines.append(f"... and {len(violations['time_sleep_in_async']) - 50} more")
-        lines.extend(["```", ""])
-
-    if "files_too_large" in violations:
-        lines.extend(
-            [
-                "### 8. Files >1500 Lines (COD-SIZE)",
-                "",
-                "Split these files into smaller modules following Single Responsibility Principle.",
-                "",
-            ]
-        )
-        for f in violations["files_too_large"]:
-            lines.append(f"- {f}")
-        lines.append("")
-
-    if "imports_in_functions" in violations:
-        lines.extend(
-            [
-                "### 9. Imports Inside Functions",
-                "",
-                "Move all imports to the top of the file.",
-                "",
-                "```",
-            ]
-        )
-        for match in violations["imports_in_functions"][:50]:
-            lines.append(match)
-        if len(violations["imports_in_functions"]) > 50:
-            lines.append(f"... and {len(violations['imports_in_functions']) - 50} more")
-        lines.extend(["```", ""])
-
-    lines.extend(
-        [
-            "---",
-            "",
-            "## Next Steps",
-            "",
-            "1. Fix violations listed above",
-            "2. Run `bash scripts/quality-gates.sh` to verify",
-            "3. Run `bash scripts/quickmerge.sh` to create PR",
-            "",
-            "Quality gates will **BLOCK** merge if violations remain.",
-        ]
-    )
-
+    lines.extend(_build_detailed_sections(violations))
+    lines.extend(_build_footer_lines())
     return "\n".join(lines)
 
 
@@ -413,7 +359,7 @@ def main() -> int:
         manifest_path = service_dir / "CODEX_VIOLATIONS_MANIFEST.md"
 
         if not dry_run:
-            manifest_path.write_text(manifest_md)
+            _ = manifest_path.write_text(manifest_md)
             print(f"  → Saved to {manifest_path.name}")
         else:
             print(f"  → Would save to {manifest_path.name}")

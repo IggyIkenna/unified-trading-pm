@@ -41,7 +41,7 @@ REPOS: list[str] = [
 
 def _get_gaps(violations: JsonDict) -> list[JsonDict]:
     """Safely extract gaps list from violations dict."""
-    raw: object = violations.get("gaps", [])
+    raw: object = violations.get("gaps") or []
     if isinstance(raw, list):
         raw_list: list[object] = cast(list[object], raw)
         return [cast(JsonDict, item) for item in raw_list if isinstance(item, dict)]
@@ -186,7 +186,7 @@ Generated: {violations.get("timestamp", "unknown")}
                 ]
             )
 
-            raw_affected: object = gap.get("affected_files", [])
+            raw_affected: object = gap.get("affected_files") or []
             affected: list[str] = (
                 [str(f) for f in cast(list[object], raw_affected)] if isinstance(raw_affected, list) else []
             )
@@ -252,7 +252,7 @@ def main() -> int:
         # Filter gaps to only those from this service
         service_gaps: list[JsonDict] = []
         for gap in all_gaps:
-            raw_affected_files: object = gap.get("affected_files", [])
+            raw_affected_files: object = gap.get("affected_files") or []
             affected_files: list[str] = (
                 [str(f) for f in cast(list[object], raw_affected_files)] if isinstance(raw_affected_files, list) else []
             )

@@ -58,6 +58,58 @@ SubtaskDict = dict[str, object]
 ChecklistDict = dict[str, object]
 ItemDict = dict[str, object]
 
+
+def _format_gap_subtasks(breakdown: list[SubtaskDict]) -> list[str]:
+    """Format breakdown subtasks for GitHub issue body."""
+    parts: list[str] = []
+    if not breakdown:
+        return parts
+    parts.extend(["", "## Required Subtasks", ""])
+    for subtask in breakdown:
+        subtask_type = str(subtask.get("type", "task"))
+        stitle = str(subtask.get("title", "Untitled"))
+        desc = str(subtask.get("description", ""))
+        hours = subtask.get("estimated_hours", 0)
+        parts.append(f"### {stitle} ({hours}h)")
+        parts.append(f"**Type:** {subtask_type}")
+        if desc:
+            parts.append(desc)
+        parts.append("")
+        if "files" in subtask:
+            raw_files = subtask["files"]
+            file_list: list[str] = cast(list[str], raw_files) if isinstance(raw_files, list) else []
+            parts.append(f"**Files:** `{', '.join(file_list)}`")
+            parts.append("")
+    return parts
+
+
+def _format_gap_codex_refs(codex_refs: list[str]) -> list[str]:
+    """Format codex refs section for GitHub issue body."""
+    if not codex_refs:
+        return []
+    parts: list[str] = ["", "## Codex References"]
+    for ref in codex_refs:
+        parts.append(f"- `{ref}`")
+    return parts
+
+
+def _format_gap_footer(gap_type: str, service: str, estimated_hours: float) -> list[str]:
+    """Format footer section for GitHub issue body."""
+    return [
+        "",
+        "## Success Criteria",
+        "- [ ] All subtasks completed",
+        "- [ ] Tests pass (>80% coverage)",
+        "- [ ] Quality gates pass",
+        "- [ ] Deployment checklist updated",
+        "",
+        "## Time Estimate",
+        f"{estimated_hours:.1f} hours",
+        "",
+        f"<!-- gap-id: {gap_type}:{service} -->",
+    ]
+
+
 # ============================================================================
 # Gap Types
 # ============================================================================
@@ -97,71 +149,12 @@ class Gap:
             f"**Priority:** {self.priority}",
             f"**Gap Type:** {self.gap_type}",
         ]
-
         if self.milestone:
             body_parts.append(f"**Milestone:** {self.milestone}")
-
-        body_parts.extend(
-            [
-                "",
-                "## Context",
-                self.description,
-            ]
-        )
-
-        if self.breakdown:
-            body_parts.extend(
-                [
-                    "",
-                    "## Required Subtasks",
-                    "",
-                ]
-            )
-            for subtask in self.breakdown:
-                subtask_type = str(subtask.get("type", "task"))
-                stitle = str(subtask.get("title", "Untitled"))
-                desc = str(subtask.get("description", ""))
-                hours = subtask.get("estimated_hours", 0)
-
-                body_parts.append(f"### {stitle} ({hours}h)")
-                body_parts.append(f"**Type:** {subtask_type}")
-                if desc:
-                    body_parts.append(desc)
-                body_parts.append("")
-
-                # Add file hints
-                if "files" in subtask:
-                    raw_files = subtask["files"]
-                    file_list: list[str] = cast(list[str], raw_files) if isinstance(raw_files, list) else []
-                    body_parts.append(f"**Files:** `{', '.join(file_list)}`")
-                    body_parts.append("")
-
-        if self.codex_refs:
-            body_parts.extend(
-                [
-                    "",
-                    "## Codex References",
-                ]
-            )
-            for ref in self.codex_refs:
-                body_parts.append(f"- `{ref}`")
-
-        body_parts.extend(
-            [
-                "",
-                "## Success Criteria",
-                "- [ ] All subtasks completed",
-                "- [ ] Tests pass (>80% coverage)",
-                "- [ ] Quality gates pass",
-                "- [ ] Deployment checklist updated",
-                "",
-                "## Time Estimate",
-                f"{self.estimated_hours:.1f} hours",
-                "",
-                f"<!-- gap-id: {self.gap_type}:{self.service} -->",
-            ]
-        )
-
+        body_parts.extend(["", "## Context", self.description])
+        body_parts.extend(_format_gap_subtasks(self.breakdown))
+        body_parts.extend(_format_gap_codex_refs(self.codex_refs))
+        body_parts.extend(_format_gap_footer(self.gap_type, self.service, self.estimated_hours))
         return "\n".join(body_parts)
 
 
@@ -178,7 +171,7 @@ def load_service_registry() -> RegistryDict:
 
 def get_service_from_registry(registry: RegistryDict, service_name: str) -> ServiceDict | None:
     """Get service metadata from registry."""
-    raw_services = registry.get("services", [])
+    raw_services = registry.get("services") or []
     services: list[object] = cast(list[object], raw_services) if isinstance(raw_services, list) else []
     for svc in services:
         if isinstance(svc, dict):
@@ -255,7 +248,7 @@ def find_item_in_deployment_checklist(checklist: ChecklistDict, item_id: str) ->
     if not checklist:
         return None
 
-    raw_items = checklist.get("checklist_items", {})
+    raw_items = checklist.get("checklist_items") or {}
     if not isinstance(raw_items, dict):
         return None
     items: dict[str, object] = cast(dict[str, object], raw_items)
@@ -276,7 +269,7 @@ def find_item_in_deployment_checklist(checklist: ChecklistDict, item_id: str) ->
 def check_missing_services(registry: RegistryDict) -> list[Gap]:
     """Find services in registry but repo doesn't exist."""
     gaps: list[Gap] = []
-    raw_services = registry.get("services", [])
+    raw_services = registry.get("services") or []
     services: list[object] = cast(list[object], raw_services) if isinstance(raw_services, list) else []
 
     for svc in services:
@@ -289,9 +282,9 @@ def check_missing_services(registry: RegistryDict) -> list[Gap]:
         if not repo_path.exists():
             # This is an EPIC-level gap (entire service missing)
             breakdown = generate_service_creation_breakdown(service)
-            raw_venues = service.get("venues", [])
+            raw_venues = service.get("venues") or []
             venues: list[str] = cast(list[str], raw_venues) if isinstance(raw_venues, list) else []
-            raw_asset_classes = service.get("asset_classes", [])
+            raw_asset_classes = service.get("asset_classes") or []
             asset_classes: list[str] = cast(list[str], raw_asset_classes) if isinstance(raw_asset_classes, list) else []
             gaps.append(
                 Gap(
@@ -416,9 +409,9 @@ def check_checklist_compliance(
         return gaps
 
     # Check baseline items
-    raw_baseline = template.get("baseline_items", [])
+    raw_baseline = template.get("baseline_items") or []
     baseline_items: list[object] = cast(list[object], raw_baseline) if isinstance(raw_baseline, list) else []
-    raw_group = template.get("group_items", [])
+    raw_group = template.get("group_items") or []
     group_items: list[object] = cast(list[object], raw_group) if isinstance(raw_group, list) else []
     all_items: list[object] = [*baseline_items, *group_items]
 
@@ -686,7 +679,8 @@ def check_existing_issue(gap: Gap) -> bool:
 # ============================================================================
 
 
-def main() -> None:
+def _parse_compliance_args() -> argparse.Namespace:
+    """Parse and validate CLI arguments."""
     parser = argparse.ArgumentParser(description="Check service compliance against Codex standards")
     parser.add_argument(
         "--repo",
@@ -712,74 +706,47 @@ def main() -> None:
         action="store_true",
         help="Skip gaps that already have issues",
     )
-
     parsed = parser.parse_args()
-
-    repo_arg: str = str(getattr(parsed, "repo", "") or "")
-    all_services: bool = bool(getattr(parsed, "all_services", False))
-    service_type_arg: str = str(getattr(parsed, "service_type", "") or "")
-    dry_run: bool = bool(getattr(parsed, "dry_run", False))
-    skip_existing: bool = bool(getattr(parsed, "skip_existing", False))
-
+    repo_arg = str(getattr(parsed, "repo", "") or "")
+    all_services = bool(getattr(parsed, "all_services", False))
+    service_type_arg = str(getattr(parsed, "service_type", "") or "")
     if not any([repo_arg, all_services, service_type_arg]):
         parser.error("Must specify --repo, --all-services, or --service-type")
+    return parsed
 
-    print(f"Loading service registry from {SERVICE_REGISTRY}...")
-    registry = load_service_registry()
 
-    print(f"Loading codex templates from {CODEX_TEMPLATES_DIR}...")
-    templates = load_codex_templates()
-
-    # Determine which services to check
-    services_to_check: list[ServiceDict] = []
+def _resolve_services_to_check(parsed: argparse.Namespace, registry: RegistryDict) -> list[ServiceDict]:
+    """Resolve which services to check from parsed args and registry."""
+    repo_arg = str(getattr(parsed, "repo", "") or "")
+    all_services = bool(getattr(parsed, "all_services", False))
+    service_type_arg = str(getattr(parsed, "service_type", "") or "")
 
     if repo_arg:
         svc_name = repo_arg.split("/")[1]
         svc = get_service_from_registry(registry, svc_name)
         if svc:
-            services_to_check = [svc]
-        else:
-            print(f"Service {svc_name} not found in registry")
-            sys.exit(1)
-    elif all_services:
-        raw_svcs = registry.get("services", [])
-        services_to_check = cast(list[ServiceDict], raw_svcs) if isinstance(raw_svcs, list) else []
-    elif service_type_arg:
-        raw_svcs = registry.get("services", [])
-        svcs_list: list[object] = cast(list[object], raw_svcs) if isinstance(raw_svcs, list) else []
-        services_to_check = [
+            return [svc]
+        print(f"Service {svc_name} not found in registry")
+        sys.exit(1)
+
+    raw_svcs = registry.get("services") or []
+    svcs_list: list[object] = cast(list[object], raw_svcs) if isinstance(raw_svcs, list) else []
+
+    if all_services:
+        return [cast(ServiceDict, s) for s in svcs_list if isinstance(s, dict)]
+
+    if service_type_arg:
+        return [
             cast(ServiceDict, s)
             for s in svcs_list
             if isinstance(s, dict) and cast(ServiceDict, s).get("type") == service_type_arg
         ]
 
-    print(f"Checking {len(services_to_check)} services...\n")
+    return []
 
-    all_gaps: list[Gap] = []
 
-    # Check missing services (only if checking all)
-    if all_services or service_type_arg:
-        print("Checking for missing services...")
-        missing_service_gaps = check_missing_services(registry)
-        all_gaps.extend(missing_service_gaps)
-        print(f"   Found {len(missing_service_gaps)} missing services\n")
-
-    # Check checklist compliance
-    for service in services_to_check:
-        svc_name_str = str(service.get("service", ""))
-        print(f"Checking {svc_name_str}...")
-
-        # Load deployment checklist
-        deployment_checklist = load_deployment_checklist(svc_name_str)
-        if not deployment_checklist:
-            print(f"   No deployment checklist found for {svc_name_str}")
-
-        # Check compliance
-        gaps = check_checklist_compliance(service, templates, deployment_checklist)
-        all_gaps.extend(gaps)
-        print(f"   Found {len(gaps)} gaps\n")
-
-    # Summary
+def _print_compliance_summary(all_gaps: list[Gap]) -> None:
+    """Print compliance gap summary to stdout."""
     print(f"\n{'=' * 80}")
     print("SUMMARY")
     print(f"{'=' * 80}")
@@ -788,14 +755,12 @@ def main() -> None:
     gap_type_counts: dict[str, int] = {}
     for gap in all_gaps:
         gap_type_counts[gap.gap_type] = gap_type_counts.get(gap.gap_type, 0) + 1
-
     for gap_type, count in gap_type_counts.items():
         print(f"  {gap_type}: {count}")
 
     priority_counts: dict[str, int] = {}
     for gap in all_gaps:
         priority_counts[gap.priority] = priority_counts.get(gap.priority, 0) + 1
-
     print("\nBy priority:")
     for priority in ["P0-critical", "P1-high", "P2-medium", "P3-low"]:
         count = priority_counts.get(priority, 0)
@@ -806,28 +771,69 @@ def main() -> None:
     print(f"\nTotal estimated hours: {total_hours:.1f}h")
     print(f"{'=' * 80}\n")
 
-    # Create issues
+
+def _create_issues_from_gaps(
+    all_gaps: list[Gap],
+    dry_run: bool,
+    skip_existing: bool,
+) -> None:
+    """Create GitHub issues from gaps (or dry-run)."""
     if not dry_run:
         print("Creating GitHub issues...")
         created = 0
         skipped = 0
-
         for gap in all_gaps:
             if skip_existing and check_existing_issue(gap):
                 print(f"Skipping {gap.title} (already exists)")
                 skipped += 1
                 continue
-
             issue_url = create_github_issue(gap, dry_run=False)
             if issue_url:
                 created += 1
-
         print(f"\nCreated {created} issues")
         if skipped > 0:
             print(f"Skipped {skipped} existing issues")
     else:
         print("Dry run mode - no issues created")
         print("   Run without --dry-run to create issues")
+
+
+def main() -> None:
+    parsed = _parse_compliance_args()
+    dry_run = bool(getattr(parsed, "dry_run", False))
+    skip_existing = bool(getattr(parsed, "skip_existing", False))
+    all_services = bool(getattr(parsed, "all_services", False))
+    service_type_arg = str(getattr(parsed, "service_type", "") or "")
+
+    print(f"Loading service registry from {SERVICE_REGISTRY}...")
+    registry = load_service_registry()
+
+    print(f"Loading codex templates from {CODEX_TEMPLATES_DIR}...")
+    templates = load_codex_templates()
+
+    services_to_check = _resolve_services_to_check(parsed, registry)
+    print(f"Checking {len(services_to_check)} services...\n")
+
+    all_gaps: list[Gap] = []
+
+    if all_services or service_type_arg:
+        print("Checking for missing services...")
+        missing_service_gaps = check_missing_services(registry)
+        all_gaps.extend(missing_service_gaps)
+        print(f"   Found {len(missing_service_gaps)} missing services\n")
+
+    for service in services_to_check:
+        svc_name_str = str(service.get("service", ""))
+        print(f"Checking {svc_name_str}...")
+        deployment_checklist = load_deployment_checklist(svc_name_str)
+        if not deployment_checklist:
+            print(f"   No deployment checklist found for {svc_name_str}")
+        gaps = check_checklist_compliance(service, templates, deployment_checklist)
+        all_gaps.extend(gaps)
+        print(f"   Found {len(gaps)} gaps\n")
+
+    _print_compliance_summary(all_gaps)
+    _create_issues_from_gaps(all_gaps, dry_run, skip_existing)
 
 
 if __name__ == "__main__":

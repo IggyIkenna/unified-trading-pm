@@ -21,3 +21,14 @@ NEVER:
  Execution events without client_order_id
  Delete or modify audit records (append-only, immutable)
  Skip correlation_id on coordination events
+
+RISK CONTROL EVENTS (execution-service + risk-and-exposure-service):
+DO:
+ log_event("CIRCUIT_BREAKER_OPEN", metadata={"venue": venue_id, "failure_count": n, "window_seconds": w, "cooldown_seconds": c})
+ log_event("KILL_SWITCH_ACTIVATED", metadata={"trigger_source": "cli", "open_orders_cancelled": True})
+ log_event("KILL_SWITCH_DEACTIVATED", metadata={"trigger_source": "cli"})
+ log_event("PREFLIGHT_FAILED", metadata={"failures": [str(f) for f in failures]})
+NEVER:
+ Emit orders to venue adapters after KILL_SWITCH_ACTIVATED without KILL_SWITCH_DEACTIVATED
+ Skip CIRCUIT_BREAKER_OPEN event when transitioning to OPEN state
+ Start a live session without running preflight checks (and emitting PREFLIGHT_FAILED if any fail)

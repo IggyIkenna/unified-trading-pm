@@ -63,10 +63,10 @@ GitHub Actions runner (ubuntu-latest, ephemeral)
 
 ## Auth (Secrets)
 
-| Secret | Purpose |
-|---|---|
-| `ANTHROPIC_API_KEY` | Claude Code SDK invocation |
-| `GH_PAT` | Everything: clone private repos, create PRs, auto-merge. Exposed as `GH_TOKEN` in workflow env so `gh` CLI uses it automatically. |
+| Secret              | Purpose                                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY` | Claude Code SDK invocation                                                                                                        |
+| `GH_PAT`            | Everything: clone private repos, create PRs, auto-merge. Exposed as `GH_TOKEN` in workflow env so `gh` CLI uses it automatically. |
 
 `GH_PAT` requires `repo` scope (read+write) on all workspace repos. Built-in `GITHUB_TOKEN` is NOT used.
 

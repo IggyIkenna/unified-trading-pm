@@ -6,6 +6,7 @@
       "internal_deps": {},
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
+        "basedpyright<2.0.0,": ["basedpyright<2.0.0,>=1.21.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "pytest-asyncio<2.0.0,": ["pytest-asyncio<2.0.0,>=0.25.0"],
         "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
@@ -17,7 +18,7 @@
         "tomli-w": ["tomli-w>=1.0.0"]
       },
       "internal_count": 0,
-      "external_count": 10
+      "external_count": 11
     },
     "unified-trading-codex": {
       "internal_deps": {},

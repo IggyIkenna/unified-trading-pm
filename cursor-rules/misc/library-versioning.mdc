@@ -61,7 +61,7 @@ cd unified-trading-pm && git pull
 
 - **GitHub Action** (`version-bump.yml`): auto-triggered on push to main — reads merge commit prefix → bumps pyproject.toml/package.json → commits `[skip ci]` back to main
 - **PM repo version-bump**: also updates its own entry in workspace-manifest.json versions map
-- **Other repos version-bump**: bumps their own pyproject.toml only (cannot push to PM repo). PM manifest synced via periodic workflow or manual pull.
+- **Other repos version-bump**: bumps their own pyproject.toml → then dispatches `version-bump` `repository_dispatch` to PM via `GH_PAT`. PM's `update-repo-version.yml` receives the dispatch, updates `workspace-manifest.json`, bumps PM's own patch version, and cascades `dependency-update` dispatches to all direct downstream repos. No periodic sync or manual pull needed — the chain is automatic.
 - **Cloud Build**: publishes the bumped version to Artifact Registry with idempotent check
 - **Nobody else**: no agent, no human, no script should manually bump version on a branch
 - **All 53 repos** must have `version-bump.yml` — propagated in Phase 0 Stream A alongside quickmerge templates

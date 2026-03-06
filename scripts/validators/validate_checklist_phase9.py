@@ -16,8 +16,12 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import cast
 
 import yaml
+
+# YAML typing: safe_load returns Any; cast at boundary
+YamlDict = dict[str, object]
 
 REQUIRED_ITEMS = [
     "item_38_data_availability",
@@ -37,7 +41,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    configs = Path(args.configs)
+    configs: Path = cast(Path, args.configs)
     if not configs.is_dir():
         print(f"ERROR: Configs dir not found: {configs}", file=sys.stderr)
         return 1
@@ -50,16 +54,17 @@ def main() -> int:
 
         try:
             with open(path) as f:
-                data = yaml.safe_load(f)
-        except Exception as e:
+                data: YamlDict = cast(YamlDict, yaml.safe_load(f))
+        except (OSError, yaml.YAMLError) as e:
             failed.append(f"{name}: parse error: {e}")
             continue
 
-        phase9 = data.get("phase_9_deployable_enhancements")
-        if not phase9:
+        phase9_raw: object | None = data.get("phase_9_deployable_enhancements")
+        if not phase9_raw or not isinstance(phase9_raw, dict):
             failed.append(f"{name}: missing phase_9_deployable_enhancements")
             continue
 
+        phase9: dict[str, object] = phase9_raw
         missing = [i for i in REQUIRED_ITEMS if i not in phase9]
         if missing:
             failed.append(f"{name}: missing items: {', '.join(missing)}")

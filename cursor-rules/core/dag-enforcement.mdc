@@ -12,7 +12,8 @@ tags:
 # DAG Tier Enforcement
 RULE: No repo may import from a repo at a higher or equal tier. Tiers are defined in workspace-manifest.json arch_tier.
 SSOT: unified-trading-pm/workspace-manifest.json (code DAG); canonical visual: unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg (derived from manifest).
-Runtime interaction SSOT: deployment-v3/configs/runtime-topology.yaml + RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg. See 00-SSOT-INDEX.md § No service-to-service imports.
+Runtime interaction SSOT: unified-trading-pm/configs/runtime-topology.yaml (PM-canonical); deployment-service/configs/runtime-topology.yaml is a local view with ssot_ref pointing to PM. Human-readable diagram: unified-trading-pm/TOPOLOGY-DAG.md. See 00-SSOT-INDEX.md § No service-to-service imports.
+NOTE: `unified-trading-services` was renamed to `unified-trading-library` — use `unified-trading-library` in all imports and pyproject.toml dependencies. `unified_trading_services` import still works as backward-compat re-export but `unified_trading_library` is canonical.
 CODEX: 00-SSOT-INDEX.md, 04-architecture/TIER-ARCHITECTURE.md. AC cannot import UIC: 02-data/contracts-scope-and-layout.md.
 TIERS:
   T0 (pure leaf): unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library

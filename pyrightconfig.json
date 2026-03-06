@@ -2,6 +2,7 @@
   "typeCheckingMode": "standard",
   "reportImplicitOverride": "none",
   "reportExplicitAny": "none",
+  "reportAny": "error",
   "reportUnknownArgumentType": "none",
   "reportUnknownVariableType": "none",
   "reportUnknownMemberType": "none",
@@ -9,6 +10,7 @@
   "reportUnnecessaryComparison": "warning",
   "reportUnreachable": "warning",
   "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py"],
-  "venvPath": "../",
-  "venv": ".venv-workspace"
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.13"
 }

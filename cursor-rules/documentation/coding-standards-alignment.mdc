@@ -56,4 +56,4 @@ cd /path/to/unified-trading-system-repos
 
 When PRs touch `unified-trading-codex/06-coding-standards/` SSOT files, run the alignment agent in CI to ensure no contradictions are introduced.
 
-CODEX: 06-coding-standards/README.md (§ Document Map)
+CODEX: 06-coding-standards/README.md (§ Document Map), 06-coding-standards/documentation-standards.md (S5.1/S5.2 required docs per repo)

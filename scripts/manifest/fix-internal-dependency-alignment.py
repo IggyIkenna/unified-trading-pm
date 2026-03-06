@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Fix internal dependency alignment: code uses -> add; code doesnt use -> remove.
 
+Tier rule: No repo may import from a higher or equal tier. If code uses a dep
+but it would violate the tier DAG (circular or wrong direction), reports
+TIER_VIOLATION and requires architectural change — does not auto-fix.
+
 Usage:
     python fix-internal-dependency-alignment.py              # dry run
     python fix-internal-dependency-alignment.py --apply
@@ -11,16 +15,18 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import cast
 
 import tomli_w  # type: ignore[reportMissingImports]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
-WORKSPACE_ROOT = PM_ROOT.parent
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(PM_ROOT.parent)))
 DERIVED_PATH = PM_ROOT / "derived-dependency-manifest.json"
 MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
 EXCLUDE = {".venv", "venv", ".venv-workspace", "__pycache__", ".git", "tests", "examples", "docs", "scripts", ".github"}
@@ -30,15 +36,36 @@ def pkg_to_import(pkg: str) -> str:
     return pkg.replace("-", "_")
 
 
-def load_manifest() -> dict:
+JsonDict = dict[str, object]
+TomlDict = dict[str, object]  # mutable, for tomllib
+
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jlist(val: object) -> list[JsonDict] | None:
+    if isinstance(val, list):
+        return cast(list[JsonDict], val)
+    return None
+
+
+def _jstr(val: object, default: str = "") -> str:
+    return str(val) if val is not None else default
+
+
+def load_manifest() -> JsonDict:
     with open(MANIFEST_PATH) as f:
-        return json.load(f)
+        return cast(JsonDict, json.load(f))
 
 
-def get_repo_path(manifest: dict, repo: str) -> Path:
-    e = manifest.get("repositories", {}).get(repo, {})
-    if isinstance(e, dict) and e.get("folder_name"):
-        return WORKSPACE_ROOT / e["folder_name"]
+def get_repo_path(manifest: JsonDict, repo: str) -> Path:
+    repos = _jdict(manifest.get("repositories")) or {}
+    e = _jdict(repos.get(repo)) or {}
+    if e.get("folder_name"):
+        return WORKSPACE_ROOT / str(e.get("folder_name"))
     return WORKSPACE_ROOT / repo
 
 
@@ -52,41 +79,42 @@ def _dep_matches_spec(spec: str, dep: str) -> bool:
     return rest.startswith((">=", "==", "<", "~", "["))
 
 
-def get_internal_dep_version(manifest: dict, dep: str) -> str:
+def get_internal_dep_version(manifest: JsonDict, dep: str) -> str:
     """Version range for internal dep: from manifest versions or default."""
-    versions = manifest.get("versions", {})
-    ver = versions.get(dep) if isinstance(versions, dict) else None
+    versions = _jdict(manifest.get("versions")) or {}
+    ver = versions.get(dep)
     if ver and not dep.startswith("_"):
         return f">={ver},<1.0.0"
     return ">=0.1.0,<1.0.0"
 
 
-def workspace_sibling_exists(manifest: dict, dep: str) -> bool:
+def workspace_sibling_exists(manifest: JsonDict, dep: str) -> bool:
     return get_repo_path(manifest, dep).is_dir()
 
 
-def add_to_pyproject(repo: str, dep: str, manifest: dict) -> None:
+def add_to_pyproject(repo: str, dep: str, manifest: JsonDict) -> None:
     repo_path = get_repo_path(manifest, repo)
     pyproject_path = repo_path / "pyproject.toml"
     if not pyproject_path.is_file():
         raise FileNotFoundError(f"No pyproject.toml: {pyproject_path}")
 
     with open(pyproject_path, "rb") as f:
-        data = tomllib.load(f)
+        data = cast(TomlDict, tomllib.load(f))
 
-    project = data.setdefault("project", {})
-    deps = list(project.get("dependencies", []))
+    project = cast(TomlDict, data.setdefault("project", {}))
+    deps_raw = project.get("dependencies") or []  # PEP 621: optional
+    deps = list(deps_raw) if isinstance(deps_raw, list) else []
     dep_spec = f"{dep}{get_internal_dep_version(manifest, dep)}"
 
     # Avoid duplicate
-    deps = [d for d in deps if not _dep_matches_spec(d, dep)]
+    deps = [str(d) for d in deps if not _dep_matches_spec(str(d), dep)]
     deps.append(dep_spec)
     project["dependencies"] = deps
 
     if workspace_sibling_exists(manifest, dep):
-        tool = data.setdefault("tool", {})
-        uv = tool.setdefault("uv", {})
-        sources = uv.setdefault("sources", {})
+        tool = cast(TomlDict, data.setdefault("tool", {}))
+        uv = cast(TomlDict, tool.setdefault("uv", {}))
+        sources = cast(TomlDict, uv.setdefault("sources", {}))
         dep_folder = get_repo_path(manifest, dep).name
         sources[dep] = {"path": f"../{dep_folder}"}
         uv["sources"] = sources
@@ -97,38 +125,44 @@ def add_to_pyproject(repo: str, dep: str, manifest: dict) -> None:
         tomli_w.dump(data, f)
 
 
-def remove_from_pyproject(repo: str, dep: str, manifest: dict) -> None:
+def remove_from_pyproject(repo: str, dep: str, manifest: JsonDict) -> None:
     repo_path = get_repo_path(manifest, repo)
     pyproject_path = repo_path / "pyproject.toml"
     if not pyproject_path.is_file():
         return
 
     with open(pyproject_path, "rb") as f:
-        data = tomllib.load(f)
+        data = cast(TomlDict, tomllib.load(f))
 
-    project = data.get("project", {})
-    deps = list(project.get("dependencies", []))
-    deps = [d for d in deps if not _dep_matches_spec(d, dep)]
+    project = cast(TomlDict, data.get("project") or {})
+    deps_raw = project.get("dependencies") or []  # PEP 621: optional
+    deps = list(deps_raw) if isinstance(deps_raw, list) else []
+    deps = [str(d) for d in deps if not _dep_matches_spec(str(d), dep)]
     project["dependencies"] = deps
     data["project"] = project
 
-    sources = data.get("tool", {}).get("uv", {}).get("sources", {})
+    tool = cast(TomlDict, data.get("tool") or {})
+    uv = cast(TomlDict, tool.get("uv") or {})
+    sources = cast(TomlDict, uv.get("sources") or {})
     if dep in sources:
         del sources[dep]
         if "tool" not in data:
             data["tool"] = {}
-        if "uv" not in data["tool"]:
-            data["tool"]["uv"] = {}
-        data["tool"]["uv"]["sources"] = sources
+        tool_d = cast(TomlDict, data.get("tool") or {})
+        if "uv" not in tool_d:
+            tool_d["uv"] = {}
+        uv_inner = cast(TomlDict, tool_d["uv"])
+        uv_inner["sources"] = sources
+        data["tool"] = tool_d
 
     with open(pyproject_path, "wb") as f:
         tomli_w.dump(data, f)
 
 
-def add_to_manifest(manifest: dict, repo: str, dep: str) -> None:
-    repos = manifest.setdefault("repositories", {})
-    entry = repos.setdefault(repo, {})
-    deps_list = entry.setdefault("dependencies", [])
+def add_to_manifest(manifest: JsonDict, repo: str, dep: str) -> None:
+    repos = cast(JsonDict, manifest.setdefault("repositories", {}))
+    entry = cast(JsonDict, repos.setdefault(repo, {}))
+    deps_list = cast(list[object], entry.setdefault("dependencies", []))
     if not isinstance(deps_list, list):
         deps_list = []
         entry["dependencies"] = deps_list
@@ -146,10 +180,10 @@ def add_to_manifest(manifest: dict, repo: str, dep: str) -> None:
         manifest["repositories"] = repos
 
 
-def remove_from_manifest(manifest: dict, repo: str, dep: str) -> None:
-    repos = manifest.get("repositories", {})
-    entry = repos.get(repo, {})
-    deps_list = entry.get("dependencies", [])
+def remove_from_manifest(manifest: JsonDict, repo: str, dep: str) -> None:
+    repos = _jdict(manifest.get("repositories")) or {}
+    entry = _jdict(repos.get(repo)) or {}
+    deps_list = _jlist(entry.get("dependencies")) or []
     if not isinstance(deps_list, list):
         return
     deps_list = [d for d in deps_list if not (isinstance(d, dict) and d.get("name") == dep)]
@@ -171,16 +205,19 @@ def scan_imports(repo_dir: Path, own: str) -> set[str]:
                         out.add(a.name.split(".")[0])
                 elif isinstance(n, ast.ImportFrom) and n.module and n.level == 0:
                     out.add(n.module.split(".")[0])
-        except Exception:
+        except (OSError, SyntaxError):
             pass
     out.discard(own)
     return out
 
 
-def get_imported_internal(manifest: dict) -> dict[str, set[str]]:
-    internal = {pkg_to_import(n): n for n in manifest.get("repositories", {})}
+def get_imported_internal(manifest: JsonDict, repos: set[str] | None = None) -> dict[str, set[str]]:
+    """Scan repos for internal imports. If repos is None, scan all; else only those repos."""
+    repos_map = _jdict(manifest.get("repositories")) or {}
+    internal = {pkg_to_import(n): n for n in repos_map}
+    to_scan = repos if repos is not None else set(repos_map.keys())
     result: dict[str, set[str]] = {}
-    for repo in manifest.get("repositories", {}):
+    for repo in to_scan:
         path = get_repo_path(manifest, repo)
         if not path.is_dir():
             continue
@@ -189,18 +226,41 @@ def get_imported_internal(manifest: dict) -> dict[str, set[str]]:
     return result
 
 
+def get_tier_map(manifest: JsonDict) -> dict[str, int]:
+    tiers: dict[str, int] = {}
+    repos_map = _jdict(manifest.get("repositories")) or {}
+    for name, info in repos_map.items():
+        info_d = _jdict(info) or {} if isinstance(info, dict) else {}
+        t = _jstr(info_d.get("arch_tier", "0"))
+        if t.isdigit():
+            tiers[name] = int(t)
+        elif t in ("service", "api", "ui"):
+            tiers[name] = 999
+        else:
+            tiers[name] = 0
+    return tiers
+
+
+def is_tier_violation(repo: str, dep: str, tier_map: dict[str, int]) -> bool:
+    """True if repo importing dep would violate DAG (repo tier must be > dep tier)."""
+    repo_tier = tier_map.get(repo, 0)
+    dep_tier = tier_map.get(dep, 0)
+    return repo_tier <= dep_tier
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
+    do_apply: bool = cast(bool, args.apply)
+    json_out: bool = cast(bool, args.json)
 
     if not DERIVED_PATH.is_file():
         print("Run generate-derived-manifest.py first.", file=sys.stderr)
         return 1
 
     manifest = load_manifest()
-    imported = get_imported_internal(manifest)
 
     r = subprocess.run(
         [sys.executable, str(PM_ROOT / "scripts/manifest/check-dependency-alignment.py"), "--json"],
@@ -208,33 +268,60 @@ def main() -> int:
         text=True,
         cwd=str(WORKSPACE_ROOT),
     )
-    data = json.loads(r.stdout)
-    issues = [i for i in data.get("issues", []) if "internal" in str(i.get("type") or "")]
+    data = cast(JsonDict, json.loads(r.stdout))
+    issues_raw = _jlist(data.get("issues")) or []
+    issues = [i for i in issues_raw if isinstance(i, dict) and "internal" in _jstr(i.get("type"))]
+    repos_with_issues = {_jstr(i.get("repo")) for i in issues if isinstance(i, dict)}
+    imported = get_imported_internal(manifest, repos_with_issues) if repos_with_issues else {}
 
+    tier_map = get_tier_map(manifest)
     actions: list[dict] = []
-    for i in issues:
-        repo, dep, itype = i["repo"], i["dep"], i["type"]
-        uses = dep in imported.get(repo, set())
-        if itype == "internal_in_manifest_not_pyproject":
-            actions.append(
-                {
-                    "action": "add_to_pyproject" if uses else "remove_from_manifest",
-                    "repo": repo,
-                    "dep": dep,
-                    "uses": uses,
-                }
-            )
-        else:
-            actions.append(
-                {
-                    "action": "add_to_manifest" if uses else "remove_from_pyproject",
-                    "repo": repo,
-                    "dep": dep,
-                    "uses": uses,
-                }
-            )
+    tier_violations: list[dict] = []
 
-    if args.json:
+    for i in issues:
+        if not isinstance(i, dict):
+            continue
+        repo = _jstr(i.get("repo"))
+        dep = _jstr(i.get("dep"))
+        itype = _jstr(i.get("type"))
+        uses = dep in imported.get(repo, set())
+
+        if itype == "internal_in_manifest_not_pyproject":
+            if uses and is_tier_violation(repo, dep, tier_map):
+                tier_violations.append({"repo": repo, "dep": dep, "reason": "add_to_pyproject would violate tier DAG"})
+            else:
+                actions.append(
+                    {
+                        "action": "add_to_pyproject" if uses else "remove_from_manifest",
+                        "repo": repo,
+                        "dep": dep,
+                        "uses": uses,
+                    }
+                )
+        else:
+            if uses and is_tier_violation(repo, dep, tier_map):
+                tier_violations.append({"repo": repo, "dep": dep, "reason": "add_to_manifest would violate tier DAG"})
+            else:
+                actions.append(
+                    {
+                        "action": "add_to_manifest" if uses else "remove_from_pyproject",
+                        "repo": repo,
+                        "dep": dep,
+                        "uses": uses,
+                    }
+                )
+
+    if tier_violations:
+        print("TIER_VIOLATION (architectural change required):", file=sys.stderr)
+        for v in tier_violations:
+            print(f"  [{v['repo']}] imports [{v['dep']}] — {v['reason']}", file=sys.stderr)
+        print("  Fix: move shared code to a lower tier, or restructure dependency.", file=sys.stderr)
+        if json_out:
+            print(json.dumps({"actions": actions, "tier_violations": tier_violations}, indent=2))
+            return 1
+        return 1
+
+    if json_out:
         print(json.dumps({"actions": actions}, indent=2))
         return 0
 
@@ -242,7 +329,7 @@ def main() -> int:
     for a in actions:
         print(f"  [{a['repo']}] {a['action']}: {a['dep']} (uses={a['uses']})")
 
-    if args.apply:
+    if do_apply:
         print("\nApplying...")
         manifest = load_manifest()
         for a in actions:
@@ -257,7 +344,7 @@ def main() -> int:
                 elif act == "remove_from_manifest":
                     remove_from_manifest(manifest, repo, dep)
                 print(f"  OK [{repo}] {act}: {dep}")
-            except Exception as e:
+            except (OSError, FileNotFoundError, json.JSONDecodeError, tomllib.TOMLDecodeError) as e:
                 print(f"  FAIL [{repo}] {act}: {dep} — {e}", file=sys.stderr)
                 return 1
 
@@ -283,8 +370,9 @@ def main() -> int:
             text=True,
             cwd=str(WORKSPACE_ROOT),
         )
-        verify = json.loads(r2.stdout)
-        internal_issues = [i for i in verify.get("issues", []) if "internal" in str(i.get("type") or "")]
+        verify = cast(JsonDict, json.loads(r2.stdout))
+        verify_issues = _jlist(verify.get("issues")) or []
+        internal_issues = [i for i in verify_issues if isinstance(i, dict) and "internal" in _jstr(i.get("type"))]
         if internal_issues:
             print(f"Verification failed: {len(internal_issues)} internal mismatch(es) remaining.", file=sys.stderr)
             for i in internal_issues:

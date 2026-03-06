@@ -132,8 +132,8 @@ else
         echo -e "    ${GREEN}✅ No hardcoded project IDs in tests${NC}"
     fi
 
-    # Check 3: Large files (>1500 lines)
-    large_files=$(find . -name "*.py" -not -path "./tests/*" -not -path "./scripts/*" -exec wc -l {} + 2>/dev/null | awk '$1 > 1500 && $2 != "total" {print $2}' | head -5)
+    # Check 3: Large files (>1500 lines) — exclude .venv, archive, site-packages
+    large_files=$(find . -name "*.py" -not -path "./tests/*" -not -path "./scripts/*" -not -path "./.venv*" -not -path "*/.venv*" -not -path "*/site-packages/*" -not -path "*/archive/*" -not -path "./archive/*" -exec wc -l {} + 2>/dev/null | awk '$1 > 1500 && $2 != "total" {print $2}' | head -5)
     if [ -n "$large_files" ]; then
         echo -e "    ${YELLOW}⚠️  Large files found (>1500 lines):${NC}"
         echo "$large_files" | sed 's/^/       /'
@@ -142,11 +142,14 @@ else
         echo -e "    ${GREEN}✅ No files >1500 lines${NC}"
     fi
 
-    # Check 4: Directories with >30 files (exclude gitignored + .cursor)
+    # Check 4: Directories with >30 files (exclude gitignored, .cursor, .venv, archive, cursor-rules)
     big_dirs=""
     while IFS= read -r dir; do
         git check-ignore -q "$dir" 2>/dev/null && continue
         [[ "$dir" == ./.cursor* ]] && continue
+        [[ "$dir" == */.venv* ]] && continue
+        [[ "$dir" == */archive* ]] && continue
+        [[ "$dir" == */cursor-rules* ]] && continue
         count=$(find "$dir" -maxdepth 1 -type f 2>/dev/null | wc -l | tr -d ' ')
         if [ "$count" -gt 30 ] 2>/dev/null; then
             big_dirs="${big_dirs}${dir} (${count} files)

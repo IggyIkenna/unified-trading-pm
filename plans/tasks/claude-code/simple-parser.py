@@ -50,7 +50,7 @@ for line in sys.stdin:
 
         # Show tool calls
         elif event_type == "tool_call" and event.get("subtype") == "started":
-            tool_call = event.get("tool_call", {})
+            tool_call = event.get("tool_call") or {}
 
             if "readToolCall" in tool_call:
                 path = tool_call["readToolCall"]["args"].get("path", "")

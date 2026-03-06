@@ -7,7 +7,7 @@ on:
   workflow_run:
     workflows: [quality-gates]
     types: [completed]
-    branches: [main]
+    branches: [main, staging]
 
 permissions:
   contents: write
@@ -16,17 +16,17 @@ jobs:
   version-bump:
     runs-on: ubuntu-latest
     # Only run when quality-gates succeeded (not failed/cancelled), the run
-    # was triggered by a push to main, and commit does not contain [skip ci]
+    # was triggered by a push to main or staging, and commit does not contain [skip ci]
     if: |
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'main' &&
+      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'staging') &&
       !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
       - name: Parse commit and bump version
@@ -57,7 +57,15 @@ jobs:
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
           case "$BUMP" in
-            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            major)
+              # Pre-1.0.0 rule: breaking changes bump minor, not major (never auto-cross to 1.0.0).
+              # 1.0.0 is only set manually when the repo passes full quickmerge under the new
+              # CI/CD pipeline and all plan items are complete. See workspace-manifest versions_policy.
+              if [ "$MAJOR" = "0" ]; then
+                MINOR=$((MINOR + 1)); PATCH=0
+              else
+                MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+              fi ;;
             minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
             patch) PATCH=$((PATCH + 1)) ;;
           esac
@@ -76,10 +84,31 @@ jobs:
           set -euo pipefail
 
           NEW_VERSION="${{ env.NEW_VERSION }}"
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
 
-          # Update versions map entry
+          # Update versions map entry (always — versions tracks main and staging)
           if grep -q '"unified-trading-pm"' workspace-manifest.json; then
             sed -i "s/\"unified-trading-pm\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"unified-trading-pm\": \"${NEW_VERSION}\"/" workspace-manifest.json
+          fi
+
+          # On staging: also update staging_versions."unified-trading-pm"
+          if [ "$BRANCH" = "staging" ]; then
+            python3 - <<PYEOF
+          import json, re
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          if "staging_versions" not in manifest:
+              manifest["staging_versions"] = {"_note": manifest.get("staging_versions", {}).get("_note", "")}
+
+          manifest["staging_versions"]["unified-trading-pm"] = "${NEW_VERSION}"
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          PYEOF
+            echo "Updated staging_versions[unified-trading-pm] = ${NEW_VERSION}"
           fi
 
       - name: Commit version bump
