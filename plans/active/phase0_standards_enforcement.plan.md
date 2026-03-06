@@ -156,6 +156,9 @@ Phase 0 is complete when ALL repos have:
 
 ## Related Plans
 
-- Feeds into: phase1_foundation_prep.plan.md, phase2_library_tier_hardening.plan.md
-- Standards SSOT: unified-trading-codex/06-coding-standards/quality-gates.md
-- Cursor rules: .cursor/rules/core/no-type-any-use-specific.mdc, strict-quality-gates.mdc, cloud-agnostic.mdc
+- **Companion (parallel Phase 0):** `phase0_audit_remediation.plan.md` — fixes the FAIL/WARN items this plan discovers. Both must complete before Phase 1. Relationship: this plan SCANS and VERIFIES; remediation FIXES. No circularity.
+- Feeds into: `phase1_foundation_prep.plan.md`, `phase2_library_tier_hardening.plan.md`
+- Standards SSOT: `unified-trading-codex/06-coding-standards/quality-gates.md`
+- Cursor rules: `.cursor/rules/core/no-type-any-use-specific.mdc`, `strict-quality-gates.mdc`, `cloud-agnostic.mdc`
+
+> **Phase 0 gate note:** `p0-gate-check: done` means the enforcement scan and initial baseline was established (2026-03-04 audit). It does NOT mean all violations are fixed — that is the job of `phase0_audit_remediation.plan.md`. The final Phase 0 → Phase 1 gate requires BOTH plans complete.
