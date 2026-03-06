@@ -343,7 +343,7 @@ SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -
 
 # File size
 SVIOL=""; SWARN=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./docs/archive/*" 2>/dev/null); do
     lines=$(wc -l < "$f" 2>/dev/null || echo 0)
     [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
     [[ "$lines" -gt $FILE_WARN_LINES && "$lines" -le $MAX_FILE_LINES ]] && SWARN="${SWARN}\n  $f: $lines L"
@@ -353,7 +353,7 @@ done
 
 # Function/class/method size
 FSIZES=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./docs/archive/*" 2>/dev/null); do
     out=$($PYTHON_CMD -c "
 import ast, sys
 p=sys.argv[1]
@@ -555,6 +555,44 @@ if grep -r "ConfigStore(" "$SOURCE_DIR" --include="*.py" 2>/dev/null | grep -v "
   ((V++))
 else
   log_success "STEP 5.14: No direct ConfigStore() construction in service source"
+fi
+
+
+# ============================================================
+# STEP 5.19 — Secret scanning (gitleaks / trufflehog)
+# BLOCKING: leaked credentials in git history or staged files must never reach main.
+# Install: brew install gitleaks  OR  uv pip install trufflehog
+# ============================================================
+echo ""
+echo "=== STEP 5.19: Secret scanning (git history + staged files) ==="
+if command -v gitleaks &>/dev/null; then
+    gitleaks detect --source . --no-banner --redact 2>/dev/null \
+        && log_success "STEP 5.19: gitleaks — no secrets detected" \
+        || { log_fail "STEP 5.19: gitleaks detected potential secrets — review output above and rotate any exposed credentials"; ((V++)); }
+elif command -v trufflehog &>/dev/null; then
+    trufflehog git file://. --only-verified --no-update 2>/dev/null \
+        && log_success "STEP 5.19: trufflehog — no verified secrets detected" \
+        || { log_fail "STEP 5.19: trufflehog detected verified secrets — rotate exposed credentials immediately"; ((V++)); }
+else
+    log_warn "STEP 5.19: Neither gitleaks nor trufflehog installed — secret scanning skipped (install: brew install gitleaks)"
+fi
+
+# ============================================================
+# STEP 5.20 — Lockfile hash verification (uv.lock)
+# BLOCKING if lockfile exists but is out of sync with pyproject.toml.
+# Non-blocking if no lockfile exists yet (warns to generate one).
+# To generate: uv lock  (creates uv.lock with exact hashes — SLSA Level 2)
+# ============================================================
+echo ""
+echo "=== STEP 5.20: Lockfile hash verification ==="
+if [ -f "uv.lock" ]; then
+    uv lock --check 2>/dev/null \
+        && log_success "STEP 5.20: uv.lock is up to date with pyproject.toml" \
+        || { log_fail "STEP 5.20: uv.lock is out of sync — run 'uv lock' to regenerate"; ((V++)); }
+elif [ -f "requirements.lock" ]; then
+    log_success "STEP 5.20: requirements.lock present"
+else
+    log_warn "STEP 5.20: No lockfile found — run 'uv lock' to generate uv.lock with pinned hashes (SLSA Level 2)"
 fi
 
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
