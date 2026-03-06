@@ -33,25 +33,25 @@ isProject: false
 
 ## Blockers
 
-| Blocker | Type | Dependency |
-|---------|------|------------|
-| `features-delta-one-service` output schema is live | `[INFRA]` | New columns must be added to `output_schemas.py` before any downstream service reads them |
-| MTF wedge confluence | `[PLAN_TODO]` | Depends on Parts 1–2 of this plan (delta-one poly + wedge columns must exist first) |
+| Blocker                                            | Type          | Dependency                                                                                |
+| -------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------- |
+| `features-delta-one-service` output schema is live | `[INFRA]`     | New columns must be added to `output_schemas.py` before any downstream service reads them |
+| MTF wedge confluence                               | `[PLAN_TODO]` | Depends on Parts 1–2 of this plan (delta-one poly + wedge columns must exist first)       |
 
 ## Done Criteria
 
-| Criterion | Gate |
-|-----------|------|
-| `basedpyright` strict | `timeout 120 basedpyright src/` exits 0, zero reportAny |
-| `ruff` clean | `ruff check src/` exits 0 |
-| No `os.getenv` / `os.environ` | `rg 'os\.(getenv\|environ)' src/` empty |
-| No `Any` types | `rg ': Any\|-> Any' src/` empty |
-| Coverage ≥ 70% | `pytest --cov=...polynomial_trendline --cov-fail-under=70` |
-| All output columns in schema | `output_schemas.py` includes all poly + wedge columns |
-| File ≤ 900 lines | calculator + wedge detector each ≤ 900 lines |
-| Touch gate works | Unit test: < min_touches → NaN, not values |
-| Wedge convergence correct | Unit test: converging synthetic curves → correct intersection bar |
-| Break events fire | Unit test: close < support_value → `poly_{c}_support_break = 1` |
+| Criterion                     | Gate                                                              |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `basedpyright` strict         | `timeout 120 basedpyright src/` exits 0, zero reportAny           |
+| `ruff` clean                  | `ruff check src/` exits 0                                         |
+| No `os.getenv` / `os.environ` | `rg 'os\.(getenv\|environ)' src/` empty                           |
+| No `Any` types                | `rg ': Any\|-> Any' src/` empty                                   |
+| Coverage ≥ 70%                | `pytest --cov=...polynomial_trendline --cov-fail-under=70`        |
+| All output columns in schema  | `output_schemas.py` includes all poly + wedge columns             |
+| File ≤ 900 lines              | calculator + wedge detector each ≤ 900 lines                      |
+| Touch gate works              | Unit test: < min_touches → NaN, not values                        |
+| Wedge convergence correct     | Unit test: converging synthetic curves → correct intersection bar |
+| Break events fire             | Unit test: close < support*value → `poly*{c}\_support_break = 1`  |
 
 ## Core Insight
 
@@ -109,22 +109,22 @@ RESISTANCE CURVE (highs):
 
 ### Output Features: 14 columns × 6 combos = 84 total
 
-| Pattern | Type | Description |
-|---------|------|-------------|
-| `poly_{c}_support_value` | Float64 | Extrapolated support at current bar |
-| `poly_{c}_support_slope` | Float64 | First derivative (curve velocity) |
-| `poly_{c}_support_curvature` | Float64 | Second derivative; +ve = concave up |
-| `poly_{c}_support_distance_pct` | Float64 | % gap: (close − curve) / close |
-| `poly_{c}_support_touches` | Int32 | Validated touch count in window |
-| `poly_{c}_support_valid` | Int8 | 1 if touches ≥ min_touches |
-| `poly_{c}_support_break` | Int8 | Binary break event → time_since pipeline |
-| `poly_{c}_resistance_value` | Float64 | |
-| `poly_{c}_resistance_slope` | Float64 | |
-| `poly_{c}_resistance_curvature` | Float64 | |
-| `poly_{c}_resistance_distance_pct` | Float64 | |
-| `poly_{c}_resistance_touches` | Int32 | |
-| `poly_{c}_resistance_valid` | Int8 | |
-| `poly_{c}_resistance_break` | Int8 | Binary break event → time_since pipeline |
+| Pattern                            | Type    | Description                              |
+| ---------------------------------- | ------- | ---------------------------------------- |
+| `poly_{c}_support_value`           | Float64 | Extrapolated support at current bar      |
+| `poly_{c}_support_slope`           | Float64 | First derivative (curve velocity)        |
+| `poly_{c}_support_curvature`       | Float64 | Second derivative; +ve = concave up      |
+| `poly_{c}_support_distance_pct`    | Float64 | % gap: (close − curve) / close           |
+| `poly_{c}_support_touches`         | Int32   | Validated touch count in window          |
+| `poly_{c}_support_valid`           | Int8    | 1 if touches ≥ min_touches               |
+| `poly_{c}_support_break`           | Int8    | Binary break event → time_since pipeline |
+| `poly_{c}_resistance_value`        | Float64 |                                          |
+| `poly_{c}_resistance_slope`        | Float64 |                                          |
+| `poly_{c}_resistance_curvature`    | Float64 |                                          |
+| `poly_{c}_resistance_distance_pct` | Float64 |                                          |
+| `poly_{c}_resistance_touches`      | Int32   |                                          |
+| `poly_{c}_resistance_valid`        | Int8    |                                          |
+| `poly_{c}_resistance_break`        | Int8    | Binary break event → time_since pipeline |
 
 **Auto-generated by base class pipeline** (no extra code):
 `time_since_poly_{c}_support_break`, `time_since_poly_{c}_resistance_break`,
@@ -163,15 +163,15 @@ WEDGE TYPE:
 
 ### Output Features: 7 columns × 6 combos = 42 total
 
-| Pattern | Type | Description |
-|---------|------|-------------|
-| `poly_{c}_wedge_valid` | Int8 | 1 if both curves valid and converging |
-| `poly_{c}_wedge_type` | Int8 | 0=invalid, 1=symmetric, 2=ascending, 3=descending |
-| `poly_{c}_wedge_current_gap_pct` | Float64 | (resistance − support) / close % |
-| `poly_{c}_wedge_compression_ratio` | Float64 | current_gap / past_gap (< 1 = compressing) |
-| `poly_{c}_wedge_bars_to_convergence` | Float64 | Extrapolated bars until curve intersection |
-| `poly_{c}_wedge_total_touches` | Int32 | support_touches + resistance_touches |
-| `poly_{c}_wedge_breakout_imminent` | Int8 | 1 if bars_to_convergence < 10 (binary event) |
+| Pattern                              | Type    | Description                                       |
+| ------------------------------------ | ------- | ------------------------------------------------- |
+| `poly_{c}_wedge_valid`               | Int8    | 1 if both curves valid and converging             |
+| `poly_{c}_wedge_type`                | Int8    | 0=invalid, 1=symmetric, 2=ascending, 3=descending |
+| `poly_{c}_wedge_current_gap_pct`     | Float64 | (resistance − support) / close %                  |
+| `poly_{c}_wedge_compression_ratio`   | Float64 | current_gap / past_gap (< 1 = compressing)        |
+| `poly_{c}_wedge_bars_to_convergence` | Float64 | Extrapolated bars until curve intersection        |
+| `poly_{c}_wedge_total_touches`       | Int32   | support_touches + resistance_touches              |
+| `poly_{c}_wedge_breakout_imminent`   | Int8    | 1 if bars_to_convergence < 10 (binary event)      |
 
 **Auto-generated:** `time_since_poly_{c}_wedge_breakout_imminent`
 
@@ -202,18 +202,18 @@ WEDGE_CONFLUENCE_FEATURES = [
 
 **File:** `features-delta-one-service/tests/unit/calculators/test_polynomial_trendline.py`
 
-| # | Test | Assert |
-|---|------|--------|
-| 1 | Insufficient touches | `poly_medium_support_value` is NaN |
-| 2 | Valid support fit | value in price range, touches ≥ 5 |
-| 3 | Support break | close < support_value → `poly_medium_support_break = 1` |
-| 4 | Resistance break | close > resistance_value → `poly_medium_resistance_break = 1` |
-| 5 | Curvature sign | bowl-up: curvature > 0; arch-down: curvature < 0 |
-| 6 | Time-since delegation | `time_since_poly_medium_support_break` in output, NaN before first break |
-| 7 | No lookahead | fit window contains only rows ≤ current index |
-| 8 | Wedge convergence | two synthetic converging lines → correct intersection bar |
-| 9 | All 6 combos | output has columns for all combo keys in `POLY_COMBOS` |
-| 10 | Schema match | `set(output.columns) == set(POLYNOMIAL_TRENDLINE_FEATURES + WEDGE_FEATURES)` |
+| #   | Test                  | Assert                                                                       |
+| --- | --------------------- | ---------------------------------------------------------------------------- |
+| 1   | Insufficient touches  | `poly_medium_support_value` is NaN                                           |
+| 2   | Valid support fit     | value in price range, touches ≥ 5                                            |
+| 3   | Support break         | close < support_value → `poly_medium_support_break = 1`                      |
+| 4   | Resistance break      | close > resistance_value → `poly_medium_resistance_break = 1`                |
+| 5   | Curvature sign        | bowl-up: curvature > 0; arch-down: curvature < 0                             |
+| 6   | Time-since delegation | `time_since_poly_medium_support_break` in output, NaN before first break     |
+| 7   | No lookahead          | fit window contains only rows ≤ current index                                |
+| 8   | Wedge convergence     | two synthetic converging lines → correct intersection bar                    |
+| 9   | All 6 combos          | output has columns for all combo keys in `POLY_COMBOS`                       |
+| 10  | Schema match          | `set(output.columns) == set(POLYNOMIAL_TRENDLINE_FEATURES + WEDGE_FEATURES)` |
 
 ---
 
