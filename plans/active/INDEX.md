@@ -8,7 +8,7 @@
 
 ---
 
-## 36 Canonical Plans (Execution Order)
+## 37 Canonical Plans (Execution Order)
 
 | #   | Plan                                                                                         | Day   | Scope                                                                                                                             |
 | --- | -------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -31,6 +31,7 @@
 | 7   | [multi_tf_cascade_signal_architecture.plan.md](multi_tf_cascade_signal_architecture.plan.md)                   | 2–3   | ML, features                                                                                                                                                        |
 | 10  | [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md)               | 4     | Libraries                                                                                                                         |
 | 11  | [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md)                 | 4–5   | UAC, UIC orphan schemas                                                                                                           |
+| 11c | [schema_governance_full_audit.plan.md](schema_governance_full_audit.plan.md)                 | 4–6   | UAC + UIC — canonical normalization quality, UIC adoption matrix, cross-contract deduplication, SoC cursor rule, SCHEMA_GOVERNANCE.md codex doc |
 | 11a | [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)                           | 4–5   | All 60+ Python repos — pytest collect-only                                                                                        |
 | 11b | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md)       | 4–6   | UAC — 0 orphaned schemas, all providers                                                                                           |
 | 12  | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) | 5–6   | Services, UIs                                                                                                                     |
