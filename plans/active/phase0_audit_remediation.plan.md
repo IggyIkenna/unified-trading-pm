@@ -19,7 +19,7 @@ todos:
     status: done
   - id: stream3-instruments-strategy-mlt-deploy
     content: "Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore; strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async."
-    status: pending
+    status: done
   - id: stream4-exec-mtds-sports
     content: "Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139 type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service _registry_data_b.py 1570L split."
     status: pending
