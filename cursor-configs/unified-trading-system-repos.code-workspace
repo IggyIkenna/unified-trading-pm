@@ -45,7 +45,13 @@
       "path": "execution-algo-library",
     },
     {
+      "path": "execution-analytics-ui",
+    },
+    {
       "path": "execution-results-api",
+    },
+    {
+      "path": "features-commodity-service",
     },
     {
       "path": "execution-service",
@@ -102,6 +108,9 @@
       "path": "ml-training-service",
     },
     {
+      "path": "ml-training-ui",
+    },
+    {
       "path": "onboarding-ui",
     },
     {
@@ -127,6 +136,9 @@
     },
     {
       "path": "system-integration-tests",
+    },
+    {
+      "path": "trading-agent-service",
     },
     {
       "path": "trading-analytics-ui",
@@ -216,8 +228,8 @@
       "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/execution-results-api",
       "${workspaceFolder}/execution-service",
-      "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/features-calendar-service",
+      "${workspaceFolder}/features-commodity-service",
       "${workspaceFolder}/features-cross-instrument-service",
       "${workspaceFolder}/features-delta-one-service",
       "${workspaceFolder}/features-multi-timeframe-service",
@@ -235,6 +247,7 @@
       "${workspaceFolder}/ml-inference-service",
       "${workspaceFolder}/ml-training-service",
       "${workspaceFolder}/ml-training-ui",
+      "${workspaceFolder}/trading-agent-service",
       "${workspaceFolder}/onboarding-ui",
       "${workspaceFolder}/pnl-attribution-service",
       "${workspaceFolder}/position-balance-monitor-service",
@@ -276,8 +289,8 @@
       "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/execution-results-api",
       "${workspaceFolder}/execution-service",
-      "${workspaceFolder}/execution-analytics-ui",
       "${workspaceFolder}/features-calendar-service",
+      "${workspaceFolder}/features-commodity-service",
       "${workspaceFolder}/features-cross-instrument-service",
       "${workspaceFolder}/features-delta-one-service",
       "${workspaceFolder}/features-multi-timeframe-service",
@@ -295,6 +308,7 @@
       "${workspaceFolder}/ml-inference-service",
       "${workspaceFolder}/ml-training-service",
       "${workspaceFolder}/ml-training-ui",
+      "${workspaceFolder}/trading-agent-service",
       "${workspaceFolder}/onboarding-ui",
       "${workspaceFolder}/pnl-attribution-service",
       "${workspaceFolder}/position-balance-monitor-service",
