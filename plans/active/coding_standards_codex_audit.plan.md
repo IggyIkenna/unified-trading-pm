@@ -50,9 +50,17 @@ isProject: false
 
 Config, UTC, imports, error handling, typing, quality gates, setup.sh, batch-live pattern.
 
+> **Ownership note — bare excepts:** execution-service bare excepts (201) were remediated in
+> `execution_services_hygiene_refactor.plan.md` (day3-bare-excepts, status: completed).
+> **Exclude execution-service from this plan's bare except audit scope and count.** All other
+> repos are in scope for bare except remediation here.
+
+> **Hook runner:** When referencing pre-commit or CI hooks in this plan, always specify `prek`
+> as the hook runner (not raw pre-commit or custom shell scripts). Per `.cursorrules` workspace standard.
+
 ### Size Limits (enforced by quality-gates.sh per repo)
 
-- File size: MAX_FILE_LINES=900, warn at 700, hard fail at 1500 — applies to ALL files including schema files
+- File size: MAX_FILE_LINES=900 (hard maximum; files above 900 lines must be split before merge), warn at 700 — applies to ALL files including schema files. There is no 1500-line grace threshold; 900 is the hard limit per quality-gates/quality-gates.mdc.
 - Function size: MAX_FUNCTION_LINES=100 — applies to all functions including **init**
 - Method size: MAX_METHOD_LINES=50
 - Class size: MAX_CLASS_LINES=500

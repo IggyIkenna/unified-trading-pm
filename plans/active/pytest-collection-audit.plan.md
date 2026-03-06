@@ -1,6 +1,10 @@
 ---
-name: ""
-overview: ""
+name: "Pytest Collection Audit"
+overview: |
+  Ensure all Python repos pass pytest --collect-only -q for audit readiness.
+  Scope: all 60+ Python repos in the unified-trading-system workspace.
+  Root causes: missing path deps in workspace venv, import path changes from schema migrations.
+  Fix checklist: workspace venv bootstrap, per-repo import fixes, pyproject.toml constraint updates.
 todos: []
 isProject: false
 ---

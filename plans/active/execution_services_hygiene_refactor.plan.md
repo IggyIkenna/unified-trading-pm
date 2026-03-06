@@ -31,7 +31,7 @@ todos:
     status: completed
   - id: day4-quality-gates
     content: "DAY 4.2 — Quality gates progression: quickmerge --lint-only → --unit-only → --qg-only → --quick → full (D5). All must pass before declare green."
-    status: pending
+    status: completed
   - id: day4-topology
     content: "DAY 4.3 — Topology wiring: topology-execution-order-lifecycle (full order lifecycle PubSub); topology-t1-execution-recon (execution T+1 recon)."
     status: completed
@@ -83,6 +83,9 @@ isProject: true
 - **Batch/live seam tests** — Mode-agnostic engine; 4 seams (data source, sink, persistence, trigger)
 - **Consumer tests** — p0-cdc-tests for strategy+execution
 - **Event validation** — ic-strategy-domain-event-validation (Pydantic model_validate)
+- **IBKR/TWS tests:** Mock `ib_insync.IB` directly — do NOT use HTTP VCR cassettes for IBKR/TWS
+  connections. VCR cassettes only apply to HTTP-based interfaces (the 6 VCR owners per
+  `cursor-rules/testing/vcr-ownership.mdc`). TWS uses a binary protocol, not HTTP.
 
 ---
 
@@ -124,3 +127,10 @@ isProject: true
 - [ ] Zero service→service Python deps
 - [ ] Full quickmerge with act simulation (D5) passes
 - [ ] All missing files recovered and service runs
+- [ ] Adapter model placement: audit for any `_<venue>_models.py` files inside execution_service/;
+  any found must be moved to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py`
+  per `cursor-rules/imports/adapter-models-belong-in-uac.mdc`
+
+> **Note:** `qg-*` identifiers in Day 3.6 (qg-exec-services-smoke-import, qg-exec-services-codex-18,
+> qg-pip-audit-exec-services) are quickmerge check labels — always invoke via
+> `bash scripts/quickmerge.sh --qg-only`, never as standalone `scripts/quality-gates.sh`.

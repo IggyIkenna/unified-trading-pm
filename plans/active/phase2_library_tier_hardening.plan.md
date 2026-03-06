@@ -35,9 +35,11 @@ overview: |
 
   ## Integration Layer 0
 
-  Contract alignment tests (Layer 0 of the 4-layer integration testing strategy) run during
+  Contract alignment tests (Layer 0 of the 5-layer integration testing strategy) run during
   **T0 STEP B**. These are the AC↔UIC schema pair tests and must pass before any T1 work begins.
-  See `.cursor/rules/integration-testing-layers.mdc` for the full 4-layer strategy.
+  See `.cursor/rules/integration-testing-layers.mdc` for the full 5-layer strategy (Layers 0, 1,
+  1.5, 2, 3a/3b). Layer 1.5 = per-component integration tests in `tests/integration/`, mocked
+  external deps, blocking in quickmerge `--unit-only` progression.
 
   Schema tests are DEFINED in AC (unified-api-contracts) and UIC (unified-internal-contracts)
   for test coverage. They are EXECUTED by their owning interface repos:
@@ -56,7 +58,7 @@ todos:
     content: "Run ONCE across ALL repos after Phase 1 complete (10 agents PARALLEL). ROUND 1: replace os.getenv()/os.environ.get()/os.environ[KEY] with UnifiedCloudConfig or get_secret_client(); fix bare except/silent swallows to log+reraise; print() → logger.info(); datetime.now()/utcnow() → datetime.now(timezone.utc); List[x]/Dict[x,y] → list[x]/dict[x,y]; except ImportError fallbacks → delete+fail loud. ROUND 2: every except must reraise or raise typed error or log ERROR+reraise. ROUND 3: files >900L split by SRP; functions >50L extract helpers. Run pure import smoke test first per repo. Commit Round 1+2 separately from Round 3."
     status: pending
   - id: t0-deploy-structure
-    content: "T0 STEP A — DEPLOY STRUCTURE [8 agents PARALLEL, 1 per repo]: Verify cloudbuild.yaml, quality-gates.sh, pyproject.toml, workspace-manifest.json present and correct for: AC=unified-api-contracts, UIC_INT=unified-internal-contracts, UCI=unified-config-interface, UEI=unified-events-interface, UCLI=unified-cloud-interface, URDI=unified-reference-data-interface, EAL=execution-algo-library, MEL=matching-engine-library. Fix ci-quality-gates-missing-repos (AC, UEI, URDI), ci-cloudbuild-quality-gate-wire, ci-bypass-audit-missing-repos per repo."
+    content: "T0 STEP A — DEPLOY STRUCTURE [7 agents PARALLEL, 1 per repo]: Verify cloudbuild.yaml, quality-gates.sh, pyproject.toml, workspace-manifest.json present and correct for: AC=unified-api-contracts, UIC_INT=unified-internal-contracts, UEI=unified-events-interface, UCLI=unified-cloud-interface, URDI=unified-reference-data-interface, EAL=execution-algo-library, MEL=matching-engine-library. NOTE: UCI=unified-config-interface is T1 (it imports UEI for CONFIG_LOADED event) — handled in t1-uts-deploy-structure, not here. Fix ci-quality-gates-missing-repos (AC, UEI, URDI), ci-cloudbuild-quality-gate-wire, ci-bypass-audit-missing-repos per repo."
     status: pending
   - id: t0-tests-first
     content: "T0 STEP B — TESTS FIRST [8 agents PARALLEL]: Integration Layer 0 MUST complete in T0: test_contract_alignment.py (AC), test_ac_uic_alignment.py (AC→UIC schema pairs), test_uic_ac_alignment.py (UIC). Also: ic-uic-coverage-floor (35%→80%), ic-uic-py-typed, ac-coverage-90. Schema todos: ic-greeks-position-schema, ic-pnl-breakdown-schema, ic-circuit-breaker-schema, ic-eod-settlement-contract, ic-feature-contracts, ic-ml-training-contracts, ic-rebalance-instruction, ic-portfolio-risk-contracts, ic-client-account-domain-model. API contracts: ac-ccxt-completeness, ac-fee-borrow-all-venues, ac-risk-infrastructure, ac-restructure."
@@ -68,7 +70,7 @@ todos:
     content: "T0 STEP D→E — PROGRESSIVE VALIDATION [8 agents PARALLEL]: D1 (quickmerge --lint-only) → D2 (--unit-only) → D3 (--qg-only) → D4 (--quick) → D5 (full, no flags) = T0 TIER GREEN GATE. ALL 8 T0 repos must pass D5 before any T1 work starts."
     status: pending
   - id: t1-uts-deploy-structure
-    content: "T1 STEP A — DEPLOY STRUCTURE [REQUIRES: all T0 repos green at D5]: lib-phase5-t1-quality-gates (verify QG passes in unified-trading-services=UTS); ci-cloudbuild-quality-gate-wire for UTS."
+    content: "T1 STEP A — DEPLOY STRUCTURE [REQUIRES: all T0 repos green at D5]: T1 repos are UTS=unified-trading-services AND UCI=unified-config-interface (UCI is T1, not T0, because it imports UEI for the CONFIG_LOADED lifecycle event). lib-phase5-t1-quality-gates (verify QG passes in both UTS and UCI); ci-cloudbuild-quality-gate-wire for UTS and UCI."
     status: pending
   - id: t1-uts-tests
     content: "T1 STEP B — TESTS FIRST: qg-uts-conftest-skip-pattern (fix GCP auth skip pattern — use google.auth.default() per gcp-auth-in-tests.mdc; reference market-data-processing-service/tests/conftest.py as correct pattern)."
