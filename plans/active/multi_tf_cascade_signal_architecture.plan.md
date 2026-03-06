@@ -789,6 +789,8 @@ flowchart TD
 
 **What is run here:** Unit tests only via `pytest`.
 
+> **Layer 1.5 — Per-component integration tests (D2):** Per-component integration tests for FMTS and MTF calculators belong in `tests/integration/` with all external deps mocked (no live GCS/PubSub). These block quickmerge `--unit-only` progression and must pass before service tier promotion. They are distinct from Layer 2 post-deploy tests (which go to `consolidated_remaining_work.plan.md`). See `cursor-rules/testing/integration-testing-layers.mdc` for full 5-layer strategy (Layers 0, 1, 1.5, 2, 3a/3b).
+
 **Mocking strategy:** All external API responses and internal data contracts mocked using `MagicMock(spec=...)` against canonical schemas:
 
 - `unified-api-contracts/external/{source}/schemas.py` — external API responses (Coinglass, CoinGecko, Databento, CryptoPanic, LunarCrush)
