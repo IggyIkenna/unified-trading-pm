@@ -22,7 +22,7 @@ todos:
     status: done
   - id: stream4-exec-mtds-sports
     content: "Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139 type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service _registry_data_b.py 1570L split."
-    status: pending
+    status: done
   - id: stream5-warn-cleanup
     content: "Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore; market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ verification."
     status: done
