@@ -8,9 +8,6 @@
 # 5. If merge conflicts: abort, log error, FAIL (do not push)
 # 6. git push origin main
 #
-# Repos are processed in dependency order (topologicalOrder from workspace-manifest.json SSOT)
-# so dependencies are pushed before dependents.
-#
 # Safe to run periodically in background (e.g. cron, launchd).
 #
 # Usage: bash sync-all-to-main.sh [--dry-run] [--limit N] [--repo NAME]
@@ -54,24 +51,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Build repo list in dependency order from manifest SSOT (topologicalOrder)
-# Dependencies are pushed before dependents to avoid downstream failures.
-if [[ -n "$REPO_FILTER" ]]; then
-  REPOS=("$REPO_FILTER")
-else
-  # Flatten topologicalOrder.levels[].repos[] for dependency-ordered list
-  ORDERED=($(jq -r '.topologicalOrder.levels[].repos[]' "$MANIFEST" 2>/dev/null))
-  # Append any repos in .repositories not yet in topologicalOrder (manifest drift guard)
-  REPO_KEYS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
-  for r in "${REPO_KEYS[@]}"; do
-    for o in "${ORDERED[@]}"; do [[ "$o" == "$r" ]] && break; done
-    [[ "$o" != "$r" ]] && ORDERED+=("$r")
-  done
-  REPOS=("${ORDERED[@]}")
-fi
+REPOS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
+[[ -n "$REPO_FILTER" ]] && REPOS=("$REPO_FILTER")
 [[ -n "$LIMIT" ]] && REPOS=("${REPOS[@]:0:$LIMIT}")
 
-echo "Sync to main: ${#REPOS[@]} repos (dependency order from manifest)"
+echo "Sync to main: ${#REPOS[@]} repos"
 [[ "$DRY_RUN" = true ]] && echo "DRY RUN"
 echo ""
 
