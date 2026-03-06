@@ -5,6 +5,11 @@ Reads all pyproject.toml files from repos in topological order (workspace-manife
 collects external dependency specs, picks the tightest constraint per package, and writes
 unified-trading-pm/workspace-constraints.toml plus a short report.
 
+WARNING: This script DERIVES the canonical from repo state. Do NOT use it to "fix"
+dependency alignment — that would let a few repos dictate the workspace standard.
+When alignment fails, use fix_external_dependency_alignment.py to update repos to match
+the existing canonical. Use this script only for intentional sync (e.g. migration).
+
 Usage:
     python resolve-canonical-versions.py              # write workspace-constraints.toml + report to stdout
     python resolve-canonical-versions.py -o report.txt  # write report to file

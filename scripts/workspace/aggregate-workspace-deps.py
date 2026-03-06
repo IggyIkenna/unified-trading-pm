@@ -325,6 +325,29 @@ def write_requirements_file(
     output_path.write_text("\n".join(lines))
 
 
+def _get_uv_cmd(venv_python: Path) -> tuple[list[str], bool] | None:
+    """Return (uv_prefix, use_system_uv). uv_prefix is the command to run before 'pip install'.
+    use_system_uv=True means we must pass --python to target the venv."""
+    # Prefer system uv (bootstrap Phase 1 installs it)
+    uv_check = subprocess.run(
+        ["uv", "--version"],
+        capture_output=True,
+        text=True,
+    )
+    if uv_check.returncode == 0:
+        return (["uv"], True)
+    # Fallback: uv in workspace venv
+    if venv_python.is_file():
+        uv_in_venv = subprocess.run(
+            [str(venv_python), "-m", "uv", "--version"],
+            capture_output=True,
+            text=True,
+        )
+        if uv_in_venv.returncode == 0:
+            return ([str(venv_python), "-m", "uv"], False)
+    return None
+
+
 def run_uv_install(
     requirements_file: Path,
     *,
@@ -338,17 +361,20 @@ def run_uv_install(
         print("  Run workspace-bootstrap.sh first to create it.")
         return False
 
-    cmd = [
-        str(VENV_DIR / "bin" / "python"),
-        "-m",
-        "uv",
-        "pip",
-        "install",
-        "-r",
-        str(requirements_file),
-    ]
+    uv_result = _get_uv_cmd(venv_python)
+    if uv_result is None:
+        print("ERROR: uv not found. Install it first:")
+        print("  pip install uv   # or: brew install uv / apt install uv")
+        print("  Then re-run workspace-bootstrap.sh")
+        return False
+
+    uv_prefix, use_system_uv = uv_result
+    cmd = uv_prefix + ["pip", "install"]
+    if use_system_uv:
+        cmd.extend(["--python", str(venv_python)])
     if no_deps:
         cmd.append("--no-deps")
+    cmd.extend(["-r", str(requirements_file)])
 
     if dry_run:
         print(f"\n[DRY RUN] Would run: {' '.join(cmd)}")
@@ -356,20 +382,6 @@ def run_uv_install(
 
     print(f"\nInstalling dependencies into {VENV_DIR}...")
     print(f"  Requirements file: {requirements_file}")
-
-    # Check if uv is available in the venv
-    uv_check = subprocess.run(
-        [str(venv_python), "-m", "uv", "--version"],
-        capture_output=True,
-        text=True,
-    )
-    if uv_check.returncode != 0:
-        print("  Installing uv into workspace venv...")
-        subprocess.run(
-            [str(venv_python), "-m", "pip", "install", "uv"],
-            capture_output=True,
-            check=True,
-        )
 
     result = subprocess.run(cmd, cwd=str(WORKSPACE_ROOT))
     return result.returncode == 0
