@@ -10,22 +10,22 @@ overview: |
 todos:
   - id: poly-calc-implementation
     content: "Implement PolynomialTrendlineCalculator in features-delta-one-service/features_delta_one_service/app/calculators/polynomial_trendline.py. Extend BaseFeatureCalculator (polars-based). Register as @FeatureCalculatorRegistry.register('polynomial_trendlines'). Compute support (local lows) and resistance (local highs) polynomial fits for all 6 POLY_COMBOS. Emit 84 curve columns (14 per combo)."
-    status: pending
+    status: done
   - id: wedge-detector-implementation
     content: "Implement WedgeDetector in features-delta-one-service/features_delta_one_service/app/calculators/wedge_detector.py. Detect convergence of support and resistance curves. Compute bars_to_convergence via closed-form quadratic intersection formula. Classify wedge type (symmetric/ascending/descending). Emit 42 wedge columns (7 per combo)."
-    status: pending
+    status: done
   - id: delta-one-schema-update
     content: "Update features-delta-one-service/features_delta_one_service/app/output_schemas.py. Add POLYNOMIAL_TRENDLINE_FEATURES (84 columns, generated from POLY_COMBOS) and WEDGE_FEATURES (42 columns). Append both to ALL_FEATURES."
-    status: pending
+    status: done
   - id: mtf-wedge-confluence
     content: "Implement WedgeConfluenceCalculator in features-multi-timeframe-service/features_multi_timeframe_service/app/calculators/wedge_confluence.py. Join wedge features at 1h/4h/1d timeframes. Emit wedge_confluence_1h_4h, wedge_confluence_1h_4h_1d, wedge_confluence_score, wedge_convergence_alignment binary events. Update MTF output_schemas.py."
-    status: pending
+    status: done
   - id: poly-unit-tests
     content: "Write 10 unit tests in features-delta-one-service/tests/unit/calculators/test_polynomial_trendline.py covering: insufficient touches → NaN, valid support fit, support break event, resistance break event, curvature sign, time-since delegation, no-lookahead, wedge convergence estimate, all 6 combos present in output, output columns match schema."
-    status: pending
+    status: done
   - id: poly-quality-gates
     content: "Run quality gates for both repos: ruff check, basedpyright strict (timeout 120), coverage ≥ 70%, no os.getenv/os.environ, no Any types, file size ≤ 900 lines per calculator file."
-    status: pending
+    status: done
 isProject: false
 ---
 
