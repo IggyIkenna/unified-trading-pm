@@ -13,16 +13,16 @@ todos:
     status: pending
   - id: day3-engine-split
     content: "DAY 3.2 — engine.py split by SRP: engine.py 2826L exceeds 900L limit (06-coding-standards/file-splitting-guide.md). Extract by single responsibility — order lifecycle, matching logic, persistence, event emission. Target: no file >900 lines."
-    status: pending
+    status: completed
   - id: day3-bare-excepts
     content: "DAY 3.3 — Replace 201 bare excepts with proper handling: Use @handle_api_errors or specific exceptions; fail-loud for ImportError (25 remaining); document per-file bypasses in QUALITY_GATE_BYPASS_AUDIT.md only when audited."
-    status: pending
+    status: completed
   - id: day3-arch-violations
     content: "DAY 3.4 — Resolve 67 ARCHITECTURAL_VIOLATION suppressions: Fix root causes (service→service deps, tier violations); remove type: ignore where possible; ci-arch-violations-fix."
-    status: pending
+    status: completed
   - id: day3-cross-svc-deps
     content: "DAY 3.5 — exec-svc-cross-svc-deps: Remove execution-service→market-tick-data-service, →risk-and-exposure-service, →instruments-service. Extract shared schemas to unified-api-contracts or unified-internal-contracts. When using venue data (orders, fills, trades), use UAC normalizers — execution-service must receive canonical types only. See schema normalization completion plan."
-    status: pending
+    status: completed
   - id: day3-other-hygiene
     content: "DAY 3.6 — Other hygiene: qg-exec-services-smoke-import (get_storage_client from unified-cloud-interface); qg-central-element-test-code (test-project placeholder); qg-pip-audit-exec-services; qg-exec-services-codex-18."
     status: pending

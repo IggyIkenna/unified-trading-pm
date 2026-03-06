@@ -4,46 +4,46 @@ overview: "Design a systematic, quant-grade feature engineering architecture tar
 todos:
   - id: feed-all-22-groups
     content: "HIGHEST ROI: Update ml-training-service to subscribe to all 22 feature groups, not just 4 (technical_indicators, market_structure, returns, targets). Add: moving_averages, oscillators, volatility, momentum, volume_analysis, vwap, candlestick_patterns, streaks, round_numbers, microstructure, funding_oi, liquidations, futures_basis, volume_flow, temporal, economic_events, stablecoin_dominance, fear_greed, macro_dxy, yield_curve, news_sentiment, social_sentiment"
-    status: pending
+    status: completed
   - id: standardise-windows
     content: "Standardise IndicatorParams in parameters.py with canonical window families: MICRO_WINDOWS [2,3,5], SHORT_WINDOWS [8,12,20], MEDIUM_WINDOWS [30,50,100], LONG_WINDOWS [200]. Migrate hardcoded window lists in moving_averages.py and volatility.py to use get_params()"
-    status: pending
+    status: completed
   - id: window-ratio-features
     content: "Add cross-window ratio features to existing calculators: vol_compression_{short}_{long} (atr_5/atr_50), momentum_acceleration_{short}_{long} (roc_5/roc_20), oi_acceleration (oi_change_ma_8/oi_change_ma_48). These let GBT detect squeeze/acceleration without multi-step splits"
-    status: pending
+    status: completed
   - id: multi-timeframe-stacking
     content: "Add multi-timeframe context stacking to features-delta-one-service: each model operating at timeframe T also receives higher-TF structural features (market_structure + momentum from 4h when running 1h model, etc.) as suffix-renamed columns (_4h, _1d)"
     status: pending
   - id: cross-asset-features
     content: "Add CrossAssetFeatures calculator: BTC return context for all instruments (btc_return_1h/4h/1d, btc_vol_regime, btc_dominance_pct/roc), relative performance vs BTC (symbol_vs_btc_return, symbol_beta_vs_btc_50, rolling_correlation_btc_20/50), stablecoin_dominance_roc as risk-on signal"
-    status: pending
+    status: completed
   - id: regime-conditional-models
     content: "Add regime-conditional model segmentation to ml-training-service: split training data by volatility_regime (low/normal/high) and train 3 specialist LightGBM models. Route inference based on current regime. Ensemble outputs with confidence weighting"
-    status: pending
+    status: completed
   - id: trendline-calculator
     content: "Add trendline.py calculator: upper/lower trendline slopes at STRUCTURE_WINDOWS [10,20,30,50,100], channel_convergence (wedge detector), channel_width_pct, vol_compression (breakout proximity), price_position_in_channel, convergence_acceleration ratio"
-    status: pending
+    status: completed
   - id: market-structure-sequence
     content: "Add market_structure_sequence.py extending market_structure.py: consecutive_lower_highs/higher_lows sequence counts, swing_high_compression (LH pattern), market_structure_bias score, bos_detected, choch_detected, decay-weighted level strength (swing_strength × exp(-λ × bars_since)) replacing raw time_since"
-    status: pending
+    status: completed
   - id: fibonacci-calculator
     content: "Add fibonacci.py calculator derived from existing swing_high/swing_low: fib_0236/0382/0500/0618/0650/0750/0786 levels, distance_to_nearest_fib_pct, fib_confluence_score (count of round_number + POC + EMA systems agreeing at nearest Fib)"
-    status: pending
+    status: completed
   - id: supply-demand-zones
     content: "Add supply_demand_zones.py calculator: order block detection (last opposing candle before impulse > 1.5×ATR), demand/supply zone proximity + strength + decay_score, at_demand_zone/at_supply_zone booleans, unmitigated zone counts"
-    status: pending
+    status: completed
   - id: weekly-anchors
     content: "Add weekly_anchors.py calculator: price_vs_weekly_open_pct, price_vs_monday_high/low_pct, monday_range_width_pct, weekly_range_position, prev_week_high/low/close distances, monthly_range_position"
-    status: pending
+    status: completed
   - id: liquidation-levels
     content: "Add liquidation_levels.py calculator using Coinglass heatmap API: long/short liquidation density at 1/3/5% distance bands, liq_gravity_ratio (directional magnet), next_liq_cluster_distance_pct, oi_leverage_estimate. DECISION: Coinglass is the primary source (Tardis check no longer required — proceed directly with Coinglass; API contract schemas already completed in unified-api-contracts). API key: coinglass-api-key in Secret Manager (via get_secret_client). GATE: unit tests with MagicMock(spec=LiquidationHeatmapResponse) pass; output columns match output_schemas.py; basedpyright strict passes."
-    status: pending
+    status: completed
   - id: level-confluence-score
     content: "Add level_confluence_score meta-feature aggregating: round_number + fib_level + volume_poc + demand_zone + sr_flip + weekly_anchor + liq_cluster signals into single weighted scalar per bar. DECISION: equal weights 1.0 for all components as starting point — weights tuned via SHAP after first training run (do not specify final weights in code; read from UnifiedCloudConfig or ConfigStore so they are tunable without redeploy). Formula: level_confluence_score = sum(component_i × weight_i) where weight_i defaults to 1.0. GATE: unit test verifies score increases monotonically as more components fire; basedpyright strict; no hardcoded weights in source."
-    status: pending
+    status: completed
   - id: sharpe-adjusted-targets
     content: "Add Sharpe-adjusted return targets to targets.py: sharpe_adjusted_return_{1,3,5} = return_n / realized_vol, magnitude_conditional = return × is_swing_breakout, return_percentile_5bar for learning-to-rank"
-    status: pending
+    status: completed
 isProject: false
 ---
 
