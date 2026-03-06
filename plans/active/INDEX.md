@@ -8,7 +8,7 @@
 
 ---
 
-## 37 Canonical Plans (Execution Order)
+## 38 Canonical Plans (Execution Order)
 
 | #   | Plan                                                                                         | Day   | Scope                                                                                                                             |
 | --- | -------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,6 +21,7 @@
 | 2a  | [uci_cloud_abstraction_complete.plan.md](uci_cloud_abstraction_complete.plan.md)             | 1–3   | All repos — UCI complete: Analytics, Compute, Cache, factory, Terraform bootstrap, build configs                                  |
 | 2b  | [service_protocol_abstraction.plan.md](service_protocol_abstraction.plan.md)                 | 2–4   | UCI + all services — Intent-level APIs (DataSink/EventBus/ConfigStore); services declare mode, deployment injects protocol config |
 | 2c  | [quality_gate_hardening.plan.md](quality_gate_hardening.plan.md)                             | 2–3   | All 52 repos — harden STEP 5.10/5.11 from soft-warn to hard-fail CI; audit + fix all violations; QUALITY_GATE_BYPASS_AUDIT.md     |
+| 2d  | [topology_dag_pm_ssot.plan.md](topology_dag_pm_ssot.plan.md)                                | 2–4   | PM, Codex, UTL (T1), UDC (T3), UML (T2), services — TOPOLOGY-DAG.md moved to PM; PROTOCOL-INJECTION.md created; CloudTarget/StandardizedDomainCloudService deleted from UTL (37 call sites → UCI factory); canary CodeBuild run |
 | 3   | [dependency_governance.plan.md](dependency_governance.plan.md)                               | 1     | All repos — pyproject.toml / uv.lock alignment                                                                                    |
 | 3a  | [version_cascade_rollout.plan.md](version_cascade_rollout.plan.md)                           | 1     | All 59 repos — automated version cascade + cross-repo dispatch                                                                    |
 | 4   | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md)                             | 2     | T0–T1, deployment                                                                                                                 |
@@ -36,6 +37,7 @@
 | 11b | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md)       | 4–6   | UAC — 0 orphaned schemas, all providers                                                                                           |
 | 12  | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) | 5–6   | Services, UIs                                                                                                                     |
 | 12a | [execution_services_hygiene_refactor.plan.md](execution_services_hygiene_refactor.plan.md)   | 3–4   | execution-service — engine.py SRP split, 201 bare excepts, 67 ARCHITECTURAL_VIOLATION suppressions, cross-svc dep removal, testing |
+| 12b | [execution_service_package_hygiene.plan.md](execution_service_package_hygiene.plan.md)       | 4     | execution-service — delete dead analytics/ package, merge core/ + io/ into utils/, fix 2 pre-existing test collection errors |
 | 13  | [master_pre_deployment_plan_chain.plan.md](master_pre_deployment_plan_chain.plan.md)         | 1 ref | Order chain                                                                                                                       |
 | 14  | [workspace_quickmerge_validation.plan.md](workspace_quickmerge_validation.plan.md)           | 4     | All                                                                                                                               |
 | 15  | [strict_basedpyright_compliance.plan.md](strict_basedpyright_compliance.plan.md)             | 5     | T0–T3, services                                                                                                                   |
