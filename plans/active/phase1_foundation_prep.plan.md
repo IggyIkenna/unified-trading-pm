@@ -39,14 +39,14 @@ todos:
     content: "Create system-integration-tests repo per new-repo-setup.md: Layer 3a (fast smoke @pytest.mark.smoke, <5 min) + Layer 3b (full @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Zero Python imports from services — HTTP/GCS/PubSub interaction only. SSOT: 06-coding-standards/integration-testing-layers.md. Tasks: integration-system-integration-tests-repo, integration-layer3-implement."
     status: done
   - id: integration-layer2-infra-verify
-    content: "Add verify_infra.py to deployment-service/scripts/ after four-way split: checks GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist. Exposed as GET /infra/health in deployment-api. Gates deployment success before Layer 3. Task: integration-layer2-infra-verify."
-    status: pending
+    content: "Add verify_infra.py to deployment-service/scripts/ after four-way split: checks GCS buckets exist + IAM, PubSub topics exist + subscriptions, Secret Manager entries exist. Exposed as GET /infra/health in deployment-api. Gates deployment success before Layer 3. Task: integration-layer2-infra-verify. DONE (2026-03-06): verify_infra.py already existed; added deployment_api/routes/infra_health.py with GET /infra/health; registered as unauthenticated in main.py."
+    status: done
   - id: infra-merge-utdv3
-    content: "ibkr-gateway-infra/ dir (workspace root) contains ibkr-gateway-infra/ibkr-gateway/ Terraform config (main.tf, variables.tf). Move: ibkr-gateway-infra/ibkr-gateway/ → deployment-service/terraform/infra/ibkr-gateway/ then delete ibkr-gateway-infra/. Update manifest. Task: infra-merge-utdv3."
-    status: pending
+    content: "ibkr-gateway-infra/ dir (workspace root) contains ibkr-gateway-infra/ibkr-gateway/ Terraform config (main.tf, variables.tf). Move: ibkr-gateway-infra/ibkr-gateway/ → deployment-service/terraform/infra/ibkr-gateway/ then delete ibkr-gateway-infra/. Update manifest. Task: infra-merge-utdv3. DONE (2026-03-06): All Terraform files copied to deployment-service/terraform/infra/ibkr-gateway/. ibkr-gateway-infra marked archived in workspace-manifest.json."
+    status: done
   - id: hybrid-live-seam
-    content: "Implement/document hybrid live in-memory adapter seam for MDPS←MTDH (allowed ONLY under co_located_vm deployment profile per runtime-topology.yaml). Task: hybrid-live-seam."
-    status: pending
+    content: "Implement/document hybrid live in-memory adapter seam for MDPS←MTDH (allowed ONLY under co_located_vm deployment profile per runtime-topology.yaml). Task: hybrid-live-seam. DONE (2026-03-06): Created deployment-service/docs/hybrid-live-seam.md + deployment-service/configs/in_memory_tick_queue.py (InMemoryTickQueue Protocol + make_tick_queue factory)."
+    status: done
   - id: ci-cloud-agnostic-rule
     content: 'Create .cursor/rules/cloud-agnostic.mdc: RULE: All cloud I/O goes through get_storage_client(), get_secret_client(), CloudEventSink — never direct google-cloud-* or boto3. CLOUD_PROVIDER env var switches provider. Config values must use UnifiedCloudConfig subclasses (from unified_config_interface); secrets/API keys must use get_secret_client().get_secret("secret-name") (from unified_cloud_interface). NEVER os.getenv(), os.environ.get(), or os.environ[KEY] in production Python source. Test both paths in test_cloud_agnostic_paths.py. GCP primary; AWS secondary. Reference cloud-agnostic-migration.md. Task: aws-migration-cursor-rule.'
     status: completed
@@ -57,8 +57,8 @@ todos:
     content: "Create .cursor/rules/ui-service-separation.mdc (if not already present): RULE: UI code must NEVER live inside a service repo. Known violations tracked in arch-exec-services-visualizer-extract and arch-deployment-v3-ui-extract. Task: arch-ui-separation-rule."
     status: completed
   - id: ci-manifest-status
-    content: "Add ci_status, quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields to workspace-manifest.json for all repos. Current state: NO_STATUS for 40/57. Task: ci-manifest-status-fields."
-    status: pending
+    content: "DONE 2026-03-06: Add ci_status, quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields to workspace-manifest.json for all repos. Audit confirmed all 58 repos already have all 6 CI status fields (ci_status, quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates). No missing fields found. Task: ci-manifest-status-fields."
+    status: done
   - id: ci-add-missing-quality-gates
     content: "Add quality-gates.sh to 12 repos missing it: unified-api-contracts, unified-events-interface, unified-reference-data-interface, alerting-service, unified-trade-execution-interface, features-calendar-service, unified-position-interface, unified-trading-services, ml-training-service, ml-inference-service, client-reporting-api, pnl-attribution-service. Use codex template (06-coding-standards/quality-gates-library-template.sh or service template). [10 agents, 1-2 repos each]. Task: ci-quality-gates-missing-repos."
     status: done
@@ -66,8 +66,8 @@ todos:
     content: "DONE (2026-03-05): Created run-qg-baseline.sh. Run: bash unified-trading-pm/scripts/run-qg-baseline.sh. Run quality gates baseline on all 30 repos that have quality-gates.sh. Record pass/fail + coverage % + bypass count per repo into workspace-manifest.json ci_status fields. Use 4 parallel agents (8 repos each). This is the baseline snapshot needed before any hardening work. Task: ci-per-repo-status-run (baseline only)."
     status: done
   - id: ci-cloudbuild-audit
-    content: "Verify all 29 cloudbuild.yaml files actually invoke quality-gates.sh inside the Docker image (not just run pytest standalone). Per cloud-build-test-in-image.mdc: tests run INSIDE the built image. Audit each for: docker build → docker run quality-gates.sh --no-fix --quick → docker push. Fix any that run pytest or ruff outside the image. [5 agents, 6 repos each]. Task: ci-cloudbuild-quality-gate-wire."
-    status: pending
+    content: "DONE 2026-03-06: Verify all cloudbuild.yaml files actually invoke quality-gates.sh inside the Docker image. Audited 27 repos. Results: 18 service/devops repos correctly run quality-gates inside Docker (docker run pattern). 8 library repos use the library publishing pattern (lint + pytest + wheel, no Docker image - correct for pure Python libraries). 1 repo fixed: execution-results-api (type=api-service had library publishing pattern but has a Dockerfile and scripts/quality-gates.sh; fixed to multi-stage Dockerfile + docker run quality-gates inside dev image). Task: ci-cloudbuild-quality-gate-wire."
+    status: done
   - id: ci-aws-parity
     content: "AWS parity tasks [3 agents PARALLEL]: aws-compute-stubs-wire (verify aws_batch.py + aws_ec2.py match cloud_run.py interface), aws-secret-naming-parity (mirror GCP SM naming in AWS SM), aws-cloudbuild-parity (add buildspec.aws.yaml to all repos with cloudbuild.yaml). PARTIAL (2026-03-05): aws-cloudbuild-parity DONE — buildspec.aws.yaml added to all 45 repos (Template A services, Template B libraries). Remaining: aws-compute-stubs-wire (interface verification) + aws-secret-naming-parity."
     status: pending
