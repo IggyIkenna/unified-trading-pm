@@ -191,6 +191,23 @@ Checks `doc_standards` from manifest, canonical docs compliance, and documentati
 
 ---
 
+## 5a. Cloud Isolation Audit (Hard Gates — must pass before Phase 2+)
+
+STEP 5.10 — No direct cloud SDK imports outside UCI providers:
+  PASS gate: rg 'from google.cloud|import boto3|import botocore' --type py --glob '!.venv*' --glob '!unified-cloud-interface/**' = 0 matches
+
+STEP 5.11 — No protocol-leaking symbols in service code:
+  PASS gate: rg 'CloudTarget|StandardizedDomainCloudService|upload_to_gcs_batch|gcs_bucket=|bigquery_dataset=' --type py --glob '!.venv*' --glob '!tests/**' = 0 matches in service repos
+
+STEP 5.12 — No hardcoded cloud protocol names in service source:
+  PASS gate: rg 'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b' --type py --glob '!.venv*' --glob '!tests/**' --glob '!scripts/**' = 0 matches
+
+UTL gate: [project.dependencies] in unified-trading-library/pyproject.toml has no google-cloud-* or boto3 (only in [project.optional-dependencies.gcp/aws])
+
+All 4 checks must be PASS before any Phase 2+ work begins on a repo.
+
+---
+
 ## SECTION 6 — CURSOR RULES & AGENT GOVERNANCE
 
 Checks that cursor rules are complete, consistent, enforced, and synced.
