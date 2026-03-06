@@ -4,26 +4,26 @@ Reference for sports migration master plan. SSOT: archive sources.
 
 ## Archive Sources
 
-| Source | Path | Package | Feature Count |
-|--------|------|---------|---------------|
-| sports-betting-services-previous | archive/sports-betting-services-previous | footballbets | 857 |
-| sports-betting-service | archive/sports-betting-service | sports_betting_service | 26 modules |
+| Source                           | Path                                     | Package                | Feature Count |
+| -------------------------------- | ---------------------------------------- | ---------------------- | ------------- |
+| sports-betting-services-previous | archive/sports-betting-services-previous | footballbets           | 857           |
+| sports-betting-service           | archive/sports-betting-service           | sports_betting_service | 26 modules    |
 
 ## sports-betting-services-previous (footballbets)
 
 **Catalog:** footballbets/features/docs/core/FEATURES_CATALOG.md
 
-| Category | Count |
-|----------|-------|
-| MARKET | 108 |
-| TEAM | 262 |
-| LEAGUE | 27 |
-| H2H | 20 |
-| LINEUP | 40 |
-| REFEREE | 20 |
-| WEATHER | 10 |
-| HT | 8 |
-| OTHER | 356 |
+| Category  | Count   |
+| --------- | ------- |
+| MARKET    | 108     |
+| TEAM      | 262     |
+| LEAGUE    | 27      |
+| H2H       | 20      |
+| LINEUP    | 40      |
+| REFEREE   | 20      |
+| WEATHER   | 10      |
+| HT        | 8       |
+| OTHER     | 356     |
 | **Total** | **857** |
 
 ## sports-betting-service

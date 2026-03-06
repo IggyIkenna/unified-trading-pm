@@ -756,7 +756,7 @@
         }
       ]
     },
-    "unified-trading-deployment-v3": {
+    "deployment-service": {
       "version": "1.0.0",
       "dependencies": [
         {
@@ -927,7 +927,7 @@
           "pnl-attribution-service",
           "alerting-service",
           "corporate-actions",
-          "unified-trading-deployment-v3",
+          "deployment-service",
           "execution-service"
         ]
       },

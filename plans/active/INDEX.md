@@ -8,39 +8,44 @@
 
 ---
 
-## 27 Canonical Plans (Execution Order)
+## 29 Canonical Plans (Execution Order)
 
-| #   | Plan                                                                                         | Day   | Scope                                                                |
-| --- | -------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------- |
-| 0   | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md)                 | 0     | All repos                                                            |
-| 0a  | [phase0_audit_remediation.plan.md](phase0_audit_remediation.plan.md)                         | 0     | 13 FAIL + 16 WARN repos — audit-driven fixes                         |
-| 0c  | [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)                   | 0–1   | All 60 repos — schema placement & contract audit; feeds #11 and #11b |
-| 1   | [plans_to_deployable_unified_audit.plan.md](plans_to_deployable_unified_audit.plan.md)       | 1     | PM, Codex, all                                                       |
-| 2   | [aws_migration.plan.md](aws_migration.plan.md)                                               | 1–2   | All (early)                                                          |
-| 3   | [dependency_governance.plan.md](dependency_governance.plan.md)                               | 1     | All repos — pyproject.toml / uv.lock alignment                       |
-| 4   | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md)                             | 2     | T0–T1, deployment                                                    |
-| 4a  | [ibkr_gateway_rollout.plan.md](ibkr_gateway_rollout.plan.md)                                 | 2–3   | ibkr-gateway-infra, URDI, UMI, UTEI, UPI                             |
-| 5   | [documentation_standards_enforcement.plan.md](documentation_standards_enforcement.plan.md)   | 2–3   | All service + library repos                                          |
-| 6   | [citadel_grade_feature_architecture.plan.md](citadel_grade_feature_architecture.plan.md)     | 2–3   | UFC, FDS, ML                                                         |
-| 7   | [multi_tf_cascade_signal_architecture.plan.md](multi_tf_cascade_signal_architecture.plan.md) | 2–3   | ML, features                                                         |
-| 10  | [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md)               | 4     | Libraries                                                            |
-| 11  | [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md)                 | 4–5   | UAC, UIC orphan schemas                                              |
-| 11a | [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)                           | 4–5   | All 60+ Python repos — pytest collect-only                           |
-| 11b | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md)       | 4–6   | UAC — 0 orphaned schemas, all providers                              |
-| 12  | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) | 5–6   | Services, UIs                                                        |
-| 13  | [master_pre_deployment_plan_chain.plan.md](master_pre_deployment_plan_chain.plan.md)         | 1 ref | Order chain                                                          |
-| 14  | [workspace_quickmerge_validation.plan.md](workspace_quickmerge_validation.plan.md)           | 4     | All                                                                  |
-| 15  | [strict_basedpyright_compliance.plan.md](strict_basedpyright_compliance.plan.md)             | 5     | T0–T3, services                                                      |
-| 16  | [coding_standards_codex_audit.plan.md](coding_standards_codex_audit.plan.md)                 | 5     | All                                                                  |
-| 17  | [sports_migration_gap_fix.plan.md](sports_migration_gap_fix.plan.md)                         | 4–5   | Sports                                                               |
-| 18  | [sports_migration_phase2_full.plan.md](sports_migration_phase2_full.plan.md)                 | 5–6   | Sports                                                               |
-| 19  | [coverage_70_percent.plan.md](coverage_70_percent.plan.md)                                   | 6     | Tiers split                                                          |
-| 20  | [unit_tests_and_test_failure_action.plan.md](unit_tests_and_test_failure_action.plan.md)     | 7     | All                                                                  |
-| 21  | [api_keys_and_auth.plan.md](api_keys_and_auth.plan.md)                                       | 6     | All, api-contracts                                                   |
-| 22  | [observability_and_health_endpoints.plan.md](observability_and_health_endpoints.plan.md)     | 6–7   | All API services + long-running services                             |
-| 23  | [safety_and_risk_controls.plan.md](safety_and_risk_controls.plan.md)                         | 6–8   | execution-service, risk-and-exposure-service                         |
-| 24  | [e2e_smoke_and_portable_backtests.plan.md](e2e_smoke_and_portable_backtests.plan.md)         | 8–9   | Integration, strategies                                              |
-| 25  | [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md)                   | 11–12 | All                                                                  |
+| #   | Plan                                                                                         | Day   | Scope                                                                                                                             |
+| --- | -------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | [phase0_standards_enforcement.plan.md](phase0_standards_enforcement.plan.md)                 | 0     | All repos                                                                                                                         |
+| 0d  | [pyrightconfig_venv_fix.plan.md](pyrightconfig_venv_fix.plan.md)                             | 0     | All 49 Python repos — **DONE** 2026-03-05                                                                                         |
+| 0a  | [phase0_audit_remediation.plan.md](phase0_audit_remediation.plan.md)                         | 0     | 13 FAIL + 16 WARN repos — audit-driven fixes                                                                                      |
+| 0c  | [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)                   | 0–1   | All 60 repos — schema placement & contract audit; feeds #11 and #11b                                                              |
+| 1   | [plans_to_deployable_unified_audit.plan.md](plans_to_deployable_unified_audit.plan.md)       | 1     | PM, Codex, all                                                                                                                    |
+| 2   | [aws_migration.plan.md](aws_migration.plan.md)                                               | 1–2   | All (early)                                                                                                                       |
+| 2a  | [uci_cloud_abstraction_complete.plan.md](uci_cloud_abstraction_complete.plan.md)             | 1–3   | All repos — UCI complete: Analytics, Compute, Cache, factory, Terraform bootstrap, build configs                                  |
+| 2b  | [service_protocol_abstraction.plan.md](service_protocol_abstraction.plan.md)                 | 2–4   | UCI + all services — Intent-level APIs (DataSink/EventBus/ConfigStore); services declare mode, deployment injects protocol config |
+| 2c  | [quality_gate_hardening.plan.md](quality_gate_hardening.plan.md)                             | 2–3   | All 52 repos — harden STEP 5.10/5.11 from soft-warn to hard-fail CI; audit + fix all violations; QUALITY_GATE_BYPASS_AUDIT.md     |
+| 3   | [dependency_governance.plan.md](dependency_governance.plan.md)                               | 1     | All repos — pyproject.toml / uv.lock alignment                                                                                    |
+| 3a  | [version_cascade_rollout.plan.md](version_cascade_rollout.plan.md)                           | 1     | All 59 repos — automated version cascade + cross-repo dispatch                                                                    |
+| 4   | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md)                             | 2     | T0–T1, deployment                                                                                                                 |
+| 4a  | [ibkr_gateway_rollout.plan.md](ibkr_gateway_rollout.plan.md)                                 | 2–3   | ibkr-gateway-infra, URDI, UMI, UTEI, UPI                                                                                          |
+| 5   | [documentation_standards_enforcement.plan.md](documentation_standards_enforcement.plan.md)   | 2–3   | All service + library repos                                                                                                       |
+| 6   | [citadel_grade_feature_architecture.plan.md](citadel_grade_feature_architecture.plan.md)     | 2–3   | UFC, FDS, ML                                                                                                                      |
+| 7   | [multi_tf_cascade_signal_architecture.plan.md](multi_tf_cascade_signal_architecture.plan.md) | 2–3   | ML, features                                                                                                                      |
+| 10  | [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md)               | 4     | Libraries                                                                                                                         |
+| 11  | [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md)                 | 4–5   | UAC, UIC orphan schemas                                                                                                           |
+| 11a | [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)                           | 4–5   | All 60+ Python repos — pytest collect-only                                                                                        |
+| 11b | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md)       | 4–6   | UAC — 0 orphaned schemas, all providers                                                                                           |
+| 12  | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) | 5–6   | Services, UIs                                                                                                                     |
+| 13  | [master_pre_deployment_plan_chain.plan.md](master_pre_deployment_plan_chain.plan.md)         | 1 ref | Order chain                                                                                                                       |
+| 14  | [workspace_quickmerge_validation.plan.md](workspace_quickmerge_validation.plan.md)           | 4     | All                                                                                                                               |
+| 15  | [strict_basedpyright_compliance.plan.md](strict_basedpyright_compliance.plan.md)             | 5     | T0–T3, services                                                                                                                   |
+| 16  | [coding_standards_codex_audit.plan.md](coding_standards_codex_audit.plan.md)                 | 5     | All                                                                                                                               |
+| 17  | [sports_migration_gap_fix.plan.md](sports_migration_gap_fix.plan.md)                         | 4–5   | Sports                                                                                                                            |
+| 18  | [sports_migration_phase2_full.plan.md](sports_migration_phase2_full.plan.md)                 | 5–6   | Sports                                                                                                                            |
+| 19  | [coverage_70_percent.plan.md](coverage_70_percent.plan.md)                                   | 6     | Tiers split                                                                                                                       |
+| 20  | [unit_tests_and_test_failure_action.plan.md](unit_tests_and_test_failure_action.plan.md)     | 7     | All                                                                                                                               |
+| 21  | [api_keys_and_auth.plan.md](api_keys_and_auth.plan.md)                                       | 6     | All, api-contracts                                                                                                                |
+| 22  | [observability_and_health_endpoints.plan.md](observability_and_health_endpoints.plan.md)     | 6–7   | All API services + long-running services                                                                                          |
+| 23  | [safety_and_risk_controls.plan.md](safety_and_risk_controls.plan.md)                         | 6–8   | execution-service, risk-and-exposure-service                                                                                      |
+| 24  | [e2e_smoke_and_portable_backtests.plan.md](e2e_smoke_and_portable_backtests.plan.md)         | 8–9   | Integration, strategies                                                                                                           |
+| 25  | [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md)                   | 11–12 | All                                                                                                                               |
 
 ---
 

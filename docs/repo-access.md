@@ -19,7 +19,7 @@ Grant **datadodo** and **CosmicTrader** access to these repos:
 | 2   | deployment-api                   | https://github.com/IggyIkenna/deployment-api                   |
 | 3   | deployment-service               | https://github.com/IggyIkenna/deployment-service               |
 | 4   | execution-analytics-ui           | https://github.com/IggyIkenna/execution-analytics-ui           |
-| 5   | execution-analytics-ui          | https://github.com/IggyIkenna/execution-analytics-ui          |
+| 5   | execution-analytics-ui           | https://github.com/IggyIkenna/execution-analytics-ui           |
 | 6   | features-multi-timeframe-service | https://github.com/IggyIkenna/features-multi-timeframe-service |
 | 7   | ml-training-ui                   | https://github.com/IggyIkenna/ml-training-ui                   |
 | 8   | system-integration-tests         | https://github.com/IggyIkenna/system-integration-tests         |

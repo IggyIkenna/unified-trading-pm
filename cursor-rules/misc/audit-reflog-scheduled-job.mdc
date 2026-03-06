@@ -66,6 +66,10 @@ Stop: `launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog-
 - **launchd PATH**: Use full path to terminal-notifier (`/opt/homebrew/bin` or `/usr/local/bin`)
 - Reference: `run-audit-reflog-with-alert.sh`
 
+## Ignore format
+
+Per-commit: `repo:hash` (e.g. `deployment-api:b103671`). Audit output shows the exact line to add. Legacy: `repo` only = whole repo.
+
 ## Full doc
 
 `unified-trading-pm/docs/audit-reflog-scheduled-job.md`

@@ -161,7 +161,7 @@ When a library you depend on releases a new major version, you MUST:
 bash scripts/quickmerge.sh "feat!(unified-market-interface): remove legacy normalize_trade API"
 
 # Major bump — breaking config change
-bash scripts/quickmerge.sh "feat!(unified-config-interface): rename GOOGLE_CLOUD_PROJECT to GCP_PROJECT_ID"
+bash scripts/quickmerge.sh "feat!(unified-config-interface): rename GCP_PROJECT_ID to GCP_PROJECT_ID"
 
 # Major bump — breaking schema change (cloud-agnostic storage)
 bash scripts/quickmerge.sh "feat!(unified-domain-client): rename instrument_key column to instrument_id in output schema"

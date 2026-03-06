@@ -1342,7 +1342,7 @@ Sequence (strictly ordered):
   status: completed
 - id: codex-google-cloud-project-cleanup-done
   content: >
-  COMPLETED (2026-02-28): Replaced all GOOGLE_CLOUD_PROJECT → GCP_PROJECT_ID across
+  COMPLETED (2026-02-28): Replaced all GCP_PROJECT_ID → GCP_PROJECT_ID across
   unified-trading-codex and unified-trading-deployment-v3. Replaced all
   central-element-323112 → test-project in both repos. Zero occurrences remain.
   status: completed
