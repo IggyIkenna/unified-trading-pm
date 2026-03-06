@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "title": "Unified Trading System — Workspace Manifest v2",
+  "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-03-05",
-  "notes": "Updated 2026-03-05: (14) Added ibkr-gateway-infra (orphan repo in workspace). type: infrastructure, arch_tier: infrastructure, merge_level 12, completion_path: tradfi. Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services → unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 — codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI→UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
+  "lastUpdated": "2026-03-06",
+  "notes": "Updated 2026-03-06: (15) Added deployment_topology L0 section (cloud_provider_env_var, protocol_defaults, messaging_topology, colocation_groups, infra_authority). Added service_declaration per service (mode, capabilities_needed, protocol_default_set). Added infra_primitives per library/interface. Updated 2026-03-05: (14) Added ibkr-gateway-infra (orphan repo in workspace). type: infrastructure, arch_tier: infrastructure, merge_level 12, completion_path: tradfi. Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services \u2192 unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 \u2014 codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI\u2192UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -59,14 +59,14 @@
     }
   },
   "versions_policy": {
-    "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release — it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
+    "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release \u2014 it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
     "bump_authority": "GitHub Action (version-bump.yml) on merge to main only. Conventional commit prefix determines bump type.",
     "local_bumps": "FORBIDDEN on branches. Only the GitHub Action bumps versions. Manual bumps cause double-bump (local + CI = skipped semver).",
-    "pre_stable_convention": "0.MINOR.PATCH — minor reflects architectural evolution; patch reflects fixes. 0.x.x means not yet validated as stable on the new CI/CD pipeline.",
+    "pre_stable_convention": "0.MINOR.PATCH \u2014 minor reflects architectural evolution; patch reflects fixes. 0.x.x means not yet validated as stable on the new CI/CD pipeline.",
     "stable_threshold": "1.0.0+ = passed full quickmerge on main with Phase 0-CI infrastructure in place."
   },
   "versions": {
-    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
+    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "unified-api-contracts": "0.1.1",
     "unified-internal-contracts": "0.1.0",
     "unified-reference-data-interface": "0.1.0",
@@ -120,7 +120,13 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "FAILING"
+      "quality_gate_status": "FAILING",
+      "infra_primitives": [
+        "normalization functions",
+        "CanonicalTrade",
+        "CanonicalOrderBook",
+        "CanonicalFill"
+      ]
     },
     "unified-internal-contracts": {
       "type": "library",
@@ -149,7 +155,11 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": [
+        "internal message schemas",
+        "topic names"
+      ]
     },
     "unified-reference-data-interface": {
       "type": "library",
@@ -189,7 +199,11 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-config-interface": {
       "type": "library",
@@ -215,7 +229,10 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PASSING",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "UnifiedCloudConfig"
+      ]
     },
     "unified-events-interface": {
       "type": "library",
@@ -235,7 +252,11 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "setup_events",
+        "log_event"
+      ]
     },
     "unified-cloud-interface": {
       "type": "library",
@@ -256,7 +277,28 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": [
+        "StorageClient",
+        "SecretClient",
+        "QueueClient",
+        "AnalyticsClient",
+        "CacheClient",
+        "AsyncCacheClient",
+        "ComputeClient",
+        "DataSink",
+        "DataSource",
+        "EventBus",
+        "ServiceMode",
+        "ProtocolConfig",
+        "get_storage_client",
+        "get_secret_client",
+        "get_analytics_client",
+        "get_data_sink",
+        "get_data_source",
+        "get_event_bus",
+        "get_service_mode"
+      ]
     },
     "unified-trading-library": {
       "type": "library",
@@ -296,7 +338,12 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "PARTIAL"
+      "quality_gate_status": "PARTIAL",
+      "infra_primitives": [
+        "UnifiedCloudService",
+        "CloudStorageService",
+        "CloudPubSubService"
+      ]
     },
     "unified-domain-client": {
       "type": "library",
@@ -340,13 +387,17 @@
       "status": "active",
       "github_url": "https://github.com/IggyIkenna/unified-domain-client",
       "folder_name": "unified-domain-client",
-      "notes": "TIER 3: Cloud storage I/O layer — reads/writes GCS/S3 domain data. Imports T0 (UCLI, UCI, UEI) + T1 (UTS). arch_tier corrected from 2→3 on 2026-02-28 per canonical DAG and codex SSOT (04-architecture/TIER-ARCHITECTURE.md).",
+      "notes": "TIER 3: Cloud storage I/O layer \u2014 reads/writes GCS/S3 domain data. Imports T0 (UCLI, UCI, UEI) + T1 (UTS). arch_tier corrected from 2\u21923 on 2026-02-28 per canonical DAG and codex SSOT (04-architecture/TIER-ARCHITECTURE.md).",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "execution-algo-library": {
       "type": "library",
@@ -366,7 +417,11 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "matching-engine-library": {
       "type": "library",
@@ -380,14 +435,18 @@
       "version_source": "pyproject.toml",
       "merge_level": 2,
       "dependencies": [],
-      "notes": "TIER 0: Pure order matching algorithms — zero inter-library deps. arch_tier corrected 2→0 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
+      "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-feature-calculator-library": {
       "type": "library",
@@ -408,7 +467,11 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "github_url": "https://github.com/IggyIkenna/unified-feature-calculator-library"
+      "github_url": "https://github.com/IggyIkenna/unified-feature-calculator-library",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-market-interface": {
       "type": "library",
@@ -455,7 +518,11 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-ml-interface": {
       "type": "library",
@@ -485,7 +552,11 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-trade-execution-interface": {
       "type": "library",
@@ -521,7 +592,11 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-sports-execution-interface": {
       "type": "library",
@@ -550,7 +625,11 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "NEEDS_WORK",
-      "github_url": "https://github.com/IggyIkenna/unified-sports-execution-interface"
+      "github_url": "https://github.com/IggyIkenna/unified-sports-execution-interface",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-defi-execution-interface": {
       "type": "library",
@@ -571,7 +650,11 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "status": "active",
-      "github_url": "https://github.com/IggyIkenna/unified-defi-execution-interface"
+      "github_url": "https://github.com/IggyIkenna/unified-defi-execution-interface",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "unified-position-interface": {
       "type": "library",
@@ -604,7 +687,11 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "github_url": "https://github.com/IggyIkenna/unified-position-interface"
+      "github_url": "https://github.com/IggyIkenna/unified-position-interface",
+      "infra_primitives": [
+        "venue adapters",
+        "domain ABCs"
+      ]
     },
     "instruments-service": {
       "type": "service",
@@ -673,7 +760,16 @@
       "skipped_gates": [],
       "quality_gate_status": "FAILING",
       "notes": "Now includes sports reference data functionality (merged from sports-reference-data-service 2026-03-01).",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "market-tick-data-service": {
       "type": "service",
@@ -736,7 +832,17 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "market-data-processing-service": {
       "type": "service",
@@ -784,7 +890,17 @@
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
       "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01).",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "features-calendar-service": {
       "type": "service",
@@ -836,7 +952,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "features-delta-one-service": {
       "type": "service",
@@ -878,7 +1003,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "features-volatility-service": {
       "type": "service",
@@ -920,7 +1054,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "features-onchain-service": {
       "type": "service",
@@ -972,7 +1115,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "features-sports-service": {
       "type": "service",
@@ -1026,7 +1178,16 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "github_url": "https://github.com/IggyIkenna/features-sports-service"
+      "github_url": "https://github.com/IggyIkenna/features-sports-service",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "features-multi-timeframe-service": {
       "type": "service",
@@ -1066,7 +1227,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "NOT_CONFIGURED",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "features-cross-instrument-service": {
       "type": "service",
@@ -1111,7 +1281,16 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
-      "github_url": "https://github.com/IggyIkenna/features-cross-instrument-service"
+      "github_url": "https://github.com/IggyIkenna/features-cross-instrument-service",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "ml-training-service": {
       "type": "service",
@@ -1158,7 +1337,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "ml-inference-service": {
       "type": "service",
@@ -1215,7 +1403,17 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "strategy-service": {
       "type": "service",
@@ -1270,7 +1468,17 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "notes": "Now includes sports strategy functionality (merged from sports-strategy-service 2026-03-01). Supports arbitrage + ML strategy modes for sports.",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "execution-service": {
       "type": "service",
@@ -1286,7 +1494,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
-      "deployment_note": "Per-client deployment — holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
+      "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1356,7 +1564,16 @@
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
       "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters.",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "cache",
+          "config_store"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "alerting-service": {
       "type": "service",
@@ -1397,7 +1614,17 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1449,7 +1676,16 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "position-balance-monitor-service": {
       "type": "service",
@@ -1462,7 +1698,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 9,
-      "deployment_note": "Shared service — serves many clients. One instance per workspace.",
+      "deployment_note": "Shared service \u2014 serves many clients. One instance per workspace.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1506,7 +1742,17 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "risk-and-exposure-service": {
       "type": "service",
@@ -1547,7 +1793,16 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
-      "status": "active"
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "strategy-validation-service": {
       "type": "service",
@@ -1586,7 +1841,16 @@
       "testing_level": "none",
       "skipped_gates": [],
       "quality_gate_status": "NO_TESTS",
-      "github_url": "https://github.com/IggyIkenna/strategy-validation-service"
+      "github_url": "https://github.com/IggyIkenna/strategy-validation-service",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      }
     },
     "execution-results-api": {
       "type": "api-service",
@@ -1636,7 +1900,16 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "market-data-api": {
       "type": "api-service",
@@ -1681,7 +1954,16 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "NO_TESTS"
+      "quality_gate_status": "NO_TESTS",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -1730,7 +2012,16 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY"
+      "quality_gate_status": "BASELINE_READY",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "strategy-ui": {
       "type": "ui",
@@ -1806,7 +2097,7 @@
       "merge_level": 10,
       "status": "active",
       "version": "0.1.0",
-      "description": "Deployment orchestration service — Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
+      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         "unified-trading-library",
         "unified-config-interface",
@@ -1852,7 +2143,7 @@
       "merge_level": 10,
       "status": "active",
       "version": "0.1.0",
-      "description": "Deployment API — standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
+      "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
         "unified-cloud-interface",
         "unified-events-interface",
@@ -1894,7 +2185,15 @@
       "version_source": "pyproject.toml",
       "codex_sections": [
         "05-infrastructure"
-      ]
+      ],
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      }
     },
     "deployment-ui": {
       "type": "ui",
@@ -1902,7 +2201,7 @@
       "merge_level": 11,
       "status": "scaffolded",
       "version": "0.1.0",
-      "description": "Deployment management UI — orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
+      "description": "Deployment management UI \u2014 orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
       "dependencies": [
         "deployment-api"
       ],
@@ -1928,7 +2227,7 @@
       "merge_level": 12,
       "status": "scaffolded",
       "version": "0.1.0",
-      "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports — HTTP/GCS/PubSub only.",
+      "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports \u2014 HTTP/GCS/PubSub only.",
       "dependencies": [
         "deployment-api",
         "unified-api-contracts",
@@ -2109,7 +2408,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "merge_level": 11,
-      "notes": "Settlement UI — empty directory, not yet implemented.",
+      "notes": "Settlement UI \u2014 empty directory, not yet implemented.",
       "dependencies": [],
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 0,
@@ -2125,10 +2424,10 @@
       "merge_level": 0,
       "status": "active",
       "version": "0.7.0",
-      "description": "Project management SSOT — workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
+      "description": "Project management SSOT \u2014 workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
       "dependencies": [],
       "completion_path": "all",
-      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
+      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -2157,7 +2456,13 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
       "skipped_gates": [],
-      "quality_gate_status": "NO_QG"
+      "quality_gate_status": "NO_QG",
+      "infra_primitives": [
+        "GoogleAuth",
+        "RequireAuth",
+        "authFetch",
+        "useAuthToken"
+      ]
     },
     "execution-analytics-ui": {
       "type": "ui",
@@ -2207,21 +2512,21 @@
     "levels": [
       {
         "level": 0,
-        "description": "Project management — pure root (manifest, templates, scripts, cursor rules). No dependencies.",
+        "description": "Project management \u2014 pure root (manifest, templates, scripts, cursor rules). No dependencies.",
         "repos": [
           "unified-trading-pm"
         ]
       },
       {
         "level": 1,
-        "description": "Standards & codex — coding standards, architecture docs, quality gate templates. Depends on PM.",
+        "description": "Standards & codex \u2014 coding standards, architecture docs, quality gate templates. Depends on PM.",
         "repos": [
           "unified-trading-codex"
         ]
       },
       {
         "level": 2,
-        "description": "Foundation — zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards.",
+        "description": "Foundation \u2014 zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards.",
         "repos": [
           "matching-engine-library",
           "unified-api-contracts",
@@ -2260,7 +2565,7 @@
       },
       {
         "level": 6,
-        "description": "Execution interfaces — DeFi + sports",
+        "description": "Execution interfaces \u2014 DeFi + sports",
         "repos": [
           "unified-defi-execution-interface",
           "unified-sports-execution-interface"
@@ -2345,27 +2650,27 @@
   "tier_rules": {
     "0": {
       "allowed_from": [],
-      "description": "Pure leaf — zero inter-library deps. Uses doc dependencies (PM, codex) for CI standards. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library"
+      "description": "Pure leaf \u2014 zero inter-library deps. Uses doc dependencies (PM, codex) for CI standards. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library"
     },
     "1": {
       "allowed_from": [
         "0"
       ],
-      "description": "Services runtime (library) — imports Tier 0 only. Services use UTL for L2. Repos: unified-trading-library (UTL), unified-reference-data-interface, unified-config-interface (UCI)"
+      "description": "Services runtime (library) \u2014 imports Tier 0 only. Services use UTL for L2. Repos: unified-trading-library (UTL), unified-reference-data-interface, unified-config-interface (UCI)"
     },
     "2": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "Domain/market interfaces — imports Tier 0+1, NOT Tier 3. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface"
+      "description": "Domain/market interfaces \u2014 imports Tier 0+1, NOT Tier 3. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface"
     },
     "3": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "Domain data client — cloud storage I/O, imports Tier 0+1. Repos: unified-domain-client (UDC)"
+      "description": "Domain data client \u2014 cloud storage I/O, imports Tier 0+1. Repos: unified-domain-client (UDC)"
     },
     "service": {
       "allowed_from": [
@@ -2374,33 +2679,33 @@
         "2",
         "3"
       ],
-      "description": "Services — import from all library tiers. Never import from another service repo."
+      "description": "Services \u2014 import from all library tiers. Never import from another service repo."
     },
     "api": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "API gateway services (FastAPI+OAuth) — HTTP boundary between services and UIs. Deps: UTL+UCI+UEI only."
+      "description": "API gateway services (FastAPI+OAuth) \u2014 HTTP boundary between services and UIs. Deps: UTL+UCI+UEI only."
     },
     "ui": {
       "allowed_from": [],
-      "description": "TypeScript UIs — call API services via HTTP/SSE only. Never import Python libraries."
+      "description": "TypeScript UIs \u2014 call API services via HTTP/SSE only. Never import Python libraries."
     },
     "infrastructure": {
       "allowed_from": [],
-      "description": "Infrastructure repos — codex, IaC (Terraform), scripts. No Python package deps. Repos: unified-trading-codex, ibkr-gateway-infra."
+      "description": "Infrastructure repos \u2014 codex, IaC (Terraform), scripts. No Python package deps. Repos: unified-trading-codex, ibkr-gateway-infra."
     },
     "devops": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "DevOps/deployment — deployment-service, deployment-api. Imports UTL, UCI, UEI."
+      "description": "DevOps/deployment \u2014 deployment-service, deployment-api. Imports UTL, UCI, UEI."
     },
     "integration": {
       "allowed_from": [],
-      "description": "Integration test harness — system-integration-tests. HTTP/GCS/PubSub only, no service imports."
+      "description": "Integration test harness \u2014 system-integration-tests. HTTP/GCS/PubSub only, no service imports."
     }
   },
   "futureRepos": {
@@ -2524,6 +2829,94 @@
       }
     ]
   },
+  "deployment_topology": {
+    "description": "L0 DAG \u2014 cloud provider, protocol defaults, messaging topology, colocation groups. Libraries own infra decisions; services declare mode + capabilities only.",
+    "cloud_provider_env_var": "CLOUD_PROVIDER",
+    "service_mode_env_var": "SERVICE_MODE",
+    "environments": {
+      "local": {
+        "cloud_provider": "local",
+        "note": "CI, dev/test \u2014 no cloud SDKs required"
+      },
+      "dev": {
+        "cloud_provider": "gcp",
+        "note": "Development GCP project"
+      },
+      "staging": {
+        "cloud_provider": "gcp",
+        "note": "Staging GCP project"
+      },
+      "prod": {
+        "cloud_provider": "gcp",
+        "note": "Production \u2014 primary cloud"
+      },
+      "prod_aws": {
+        "cloud_provider": "aws",
+        "note": "AWS migration target"
+      }
+    },
+    "protocol_defaults": {
+      "gcp_live": {
+        "data_sink_backend": "bigquery",
+        "event_bus_backend": "pubsub",
+        "cache_backend": "redis",
+        "config_store_backend": "secretmanager"
+      },
+      "gcp_batch": {
+        "data_sink_backend": "gcs",
+        "event_bus_backend": "pubsub",
+        "cache_backend": "local",
+        "config_store_backend": "secretmanager"
+      },
+      "aws_live": {
+        "data_sink_backend": "athena",
+        "event_bus_backend": "sqs",
+        "cache_backend": "elasticache",
+        "config_store_backend": "ssm"
+      },
+      "aws_batch": {
+        "data_sink_backend": "s3",
+        "event_bus_backend": "sqs",
+        "cache_backend": "local",
+        "config_store_backend": "ssm"
+      },
+      "local_any": {
+        "data_sink_backend": "local",
+        "event_bus_backend": "local",
+        "cache_backend": "local",
+        "config_store_backend": "local"
+      }
+    },
+    "messaging_topology": {
+      "default": "pubsub",
+      "alternatives": [
+        "redis",
+        "sqs"
+      ],
+      "colocation_transport": "shared_memory",
+      "note": "pubsub/sqs for async fan-out across service boundaries; redis for low-latency point-to-point; shared_memory for zero-copy within a colocated group"
+    },
+    "colocation_groups": [
+      {
+        "group_id": "execution-core",
+        "services": [
+          "execution-service",
+          "risk-and-exposure-service"
+        ],
+        "transport": "shared_memory",
+        "note": "Latency-critical path; must deploy together on same host; no network hop between them"
+      }
+    ],
+    "infra_authority": {
+      "decision_owner": "libraries",
+      "enforcement": [
+        "quality-gates STEP 5.10",
+        "quality-gates STEP 5.11",
+        "quality-gates STEP 5.12"
+      ],
+      "note": "Libraries (UCI T0, UTL T1, protocol router) own all infra decisions. Service source files must NEVER contain: gcs, s3, bigquery, pubsub, sqs, redis, bucket, dataset, topic, cloudtarget, upload_to_gcs, StandardizedDomainCloudService. Those belong only in UCI providers and deployment config."
+    }
+  },
   "completion_paths": {
     "_description": "Which repos are required for each vertical completion milestone. Unblocked = can be done now; blocked = needs another path's completion first.",
     "cefi": {
@@ -2602,7 +2995,7 @@
       "milestone": "Post-commercialisation",
       "description": "Sports betting as a separate vertical. Does NOT require DeFi. Can be done in parallel with CeFi post-commercialisation.",
       "additional_libraries": [
-        "unified-sports-execution-interface (v1.0.0 — BaseSportsAdapter, Betfair, Pinnacle)",
+        "unified-sports-execution-interface (v1.0.0 \u2014 BaseSportsAdapter, Betfair, Pinnacle)",
         "unified-api-contracts (sports: api_football, FootyStats, soccer-football-info, Betfair, Pinnacle, Open Meteo)"
       ],
       "additional_services": [
