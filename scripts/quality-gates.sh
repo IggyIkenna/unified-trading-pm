@@ -475,18 +475,58 @@ UNIT_CLOUD_CALLS=$(rg 'get_storage_client\(\)|get_secret_client\(\)|get_queue_cl
 } || log_success "Unit tests appear cloud-agnostic"
 
 # ============================================================
-# STEP 5.11 — No UTL protocol-leaking symbol imports in service code
+# STEP 5.10 — Block direct cloud SDK imports outside UCI providers
 # ============================================================
-UTL_PROTOCOL=$(rg "from unified_trading_library import.*(CloudTarget|StandardizedDomainCloudService|upload_to_gcs_batch)" \
+echo "=== STEP 5.10: No direct cloud SDK imports outside UCI providers ==="
+CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!tests/**' \
+    --glob '!unified_cloud_interface/providers/**' \
+    -l "${SOURCE_DIR}/" 2>/dev/null || true)
+if [ -n "$CLOUD_SDK_VIOLATIONS" ]; then
+    log_fail "STEP 5.10: Direct cloud SDK imports found. Use unified_cloud_interface instead:"
+    echo "$CLOUD_SDK_VIOLATIONS"
+    ((V++))
+else
+    log_success "STEP 5.10: No direct cloud SDK imports"
+fi
+
+# ============================================================
+# STEP 5.11 — Block protocol-leaking symbols in service code
+# ============================================================
+echo "=== STEP 5.11: No protocol-leaking symbols in service code ==="
+PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests/**' --glob '!scripts/**' \
-    "${SOURCE_DIR}/" 2>/dev/null || :)
-[[ -n "$UTL_PROTOCOL" ]] && {
-    log_fail "STEP 5.11: Protocol symbols must come from unified_domain_client, not unified_trading_library:"
-    echo "$UTL_PROTOCOL" | head -5
+    -l "${SOURCE_DIR}/" 2>/dev/null || true)
+if [ -n "$PROTOCOL_VIOLATIONS" ]; then
+    log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UCI instead:"
+    echo "$PROTOCOL_VIOLATIONS" | head -5
     ((V++))
-} || log_success "No UTL protocol-leaking symbol imports"
+else
+    log_success "STEP 5.11: No protocol-leaking symbols in service code"
+fi
+
+# ============================================================
+# STEP 5.12 — Services must not hardcode cloud protocol names
+# ============================================================
+echo "=== STEP 5.12: No hardcoded protocol names in service source ==="
+HARDCODED_PROTO=$(rg \
+  'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b|StandardizedDomainCloudService\b' \
+  --type py \
+  --glob '!.venv*' \
+  --glob '!tests/**' \
+  --glob '!scripts/**' \
+  -l 2>/dev/null || true)
+if [ -n "$HARDCODED_PROTO" ]; then
+    log_fail "STEP 5.12: Hardcoded protocol/cloud names in service source (use get_data_sink/get_event_bus):"
+    echo "$HARDCODED_PROTO"
+    ((V++))
+else
+    log_success "STEP 5.12: No hardcoded protocol names"
+fi
 
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
 log_success "Codex compliance PASSED"
