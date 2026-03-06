@@ -17,17 +17,39 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
 
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+JsonDict = dict[str, object]
+
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jlist(val: object) -> list[JsonDict] | None:
+    if isinstance(val, list):
+        return cast(list[JsonDict], val)
+    return None
+
+
+def _jstr(val: object, default: str = "") -> str:
+    return str(val) if val is not None else default
+
+
+_pm_root = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(_pm_root.parent)))
 MANIFEST_PATH = Path(__file__).resolve().parents[1] / "canonical-dependency-manifest.json"
 WORKSPACE_MANIFEST_PATH = Path(__file__).resolve().parents[1] / "workspace-manifest.json"
 
@@ -42,11 +64,10 @@ def load_internal_package_names(workspace_manifest: Path) -> frozenset[str]:
     if not workspace_manifest.exists():
         return frozenset()
     try:
-        data = json.loads(workspace_manifest.read_text())
-        repos: dict[str, object] = data.get("repositories", {})
-        # Repo names use hyphens; normalise to be safe
-        return frozenset(re.sub(r"[-_]", "-", name.strip().lower()) for name in repos)
-    except Exception:
+        data = cast(JsonDict, json.loads(workspace_manifest.read_text()))
+        repos = _jdict(data.get("repositories")) or {}
+        return frozenset(re.sub(r"[-_]", "-", _jstr(name).strip().lower()) for name in repos)
+    except (OSError, json.JSONDecodeError):
         return frozenset()
 
 
@@ -82,7 +103,7 @@ class CanonicalEntry:
         try:
             req = Requirement(_strip_extras(version_range))
             spec = req.specifier
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             spec = SpecifierSet()
         return cls(
             name=name,
@@ -113,8 +134,16 @@ class RepoResult:
 
 
 def load_canonical(manifest_path: Path) -> dict[str, CanonicalEntry]:
-    data = json.loads(manifest_path.read_text())
-    return {_norm(e["name"]): CanonicalEntry.from_dict(e) for e in data["externalPackages"]}
+    data = cast(JsonDict, json.loads(manifest_path.read_text()))
+    ext = _jlist(data.get("externalPackages")) or []
+    result: dict[str, CanonicalEntry] = {}
+    for e in ext:
+        ed = _jdict(e)
+        if ed:
+            name = _jstr(ed.get("name"))
+            version_range = _jstr(ed.get("versionRange"))
+            result[_norm(name)] = CanonicalEntry.from_dict({"name": name, "versionRange": version_range})
+    return result
 
 
 def is_internal(name: str) -> bool:
@@ -137,7 +166,7 @@ def check_specifier_compatible(repo_spec_str: str, canonical: CanonicalEntry) ->
 
     try:
         repo_spec = SpecifierSet(_strip_extras(repo_spec_str))
-    except Exception:
+    except (OSError, json.JSONDecodeError):
         return False, f"unparseable specifier: {repo_spec_str!r}"
 
     canonical_str = str(canonical.specifier)
@@ -164,7 +193,7 @@ def check_specifier_compatible(repo_spec_str: str, canonical: CanonicalEntry) ->
             if s.operator == op:
                 try:
                     return Version(s.version)
-                except Exception:
+                except (OSError, json.JSONDecodeError):
                     pass
         return None
 
@@ -206,16 +235,18 @@ def check_repo(
         return result
 
     try:
-        data = tomllib.loads(pyproject_path.read_text())
-    except Exception as e:
+        data = cast(JsonDict, tomllib.loads(pyproject_path.read_text()))
+    except (OSError, ValueError, tomllib.TOMLDecodeError) as e:
         result.skipped = True
         result.skip_reason = f"parse error: {e}"
         return result
 
-    project = data.get("project", {})
-    deps: list[str] = project.get("dependencies", [])
-    optional: dict[str, list[str]] = project.get("optional-dependencies", {})
-    dev_deps: list[str] = optional.get("dev", [])
+    project = _jdict(data.get("project")) or {}
+    deps_raw = _jlist(project.get("dependencies")) or []
+    deps: list[str] = [_jstr(x) for x in deps_raw]
+    optional = _jdict(project.get("optional-dependencies")) or {}
+    dev_raw = _jlist(optional.get("dev")) or []
+    dev_deps: list[str] = [_jstr(x) for x in dev_raw]
 
     def _check_deps(dep_list: list[str], section: str) -> None:
         for dep_str in dep_list:
@@ -229,7 +260,7 @@ def check_repo(
 
             try:
                 req = Requirement(dep_str)
-            except Exception:
+            except (OSError, json.JSONDecodeError):
                 continue
 
             pkg_name = req.name
@@ -289,15 +320,16 @@ def find_repos(workspace: Path, single_repo: str | None) -> list[Path]:
     # Prefer manifest-driven repo list
     if WORKSPACE_MANIFEST_PATH.exists():
         try:
-            data = json.loads(WORKSPACE_MANIFEST_PATH.read_text())
-            repo_names: list[str] = sorted(data.get("repositories", {}).keys())
+            data = cast(JsonDict, json.loads(WORKSPACE_MANIFEST_PATH.read_text()))
+            repos_d = _jdict(data.get("repositories")) or {}
+            repo_names = sorted(repos_d.keys())
             repos = []
             for name in repo_names:
                 p = workspace / name
                 if p.is_dir() and (p / "pyproject.toml").exists():
                     repos.append(p)
             return repos
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             pass  # fall through to filesystem scan
 
     # Fallback: scan workspace for pyproject.toml dirs
@@ -399,20 +431,23 @@ def main() -> None:
     parser.add_argument("--repo", metavar="NAME", help="Check a single repo only")
     parser.add_argument("--show-clean", action="store_true", help="Also list repos with no violations")
     args = parser.parse_args()
+    repo_filter: str | None = cast(str | None, args.repo)
+    json_out: bool = cast(bool, args.json)
+    show_clean: bool = cast(bool, args.show_clean)
 
     if not MANIFEST_PATH.exists():
         print(f"ERROR: manifest not found: {MANIFEST_PATH}")
         sys.exit(1)
 
     canonical = load_canonical(MANIFEST_PATH)
-    repos = find_repos(WORKSPACE_ROOT, args.repo)
+    repos = find_repos(WORKSPACE_ROOT, repo_filter)
 
     results = [check_repo(repo, canonical) for repo in repos]
 
-    if args.json:
+    if json_out:
         sys.exit(print_json_report(results))
     else:
-        sys.exit(print_report(results, show_clean=args.show_clean))
+        sys.exit(print_report(results, show_clean=show_clean))
 
 
 if __name__ == "__main__":

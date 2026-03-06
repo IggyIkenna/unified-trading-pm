@@ -3,8 +3,8 @@ name: workspace-quickmerge-validation
 on:
   workflow_dispatch:
   schedule:
-    # Weekly on Sunday 02:00 UTC
-    - cron: "0 2 * * 0"
+    # Every 6 hours — catches drift sooner than weekly
+    - cron: "0 */6 * * *"
 
 permissions:
   contents: read

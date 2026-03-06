@@ -68,7 +68,7 @@ class GitHubIssueGenerator:
         with open(classification_file, "r") as f:
             data: JsonDict = cast(JsonDict, json.load(f))
 
-        raw_tasks: object = data.get("tasks", [])
+        raw_tasks: object = data.get("tasks") or []
         tasks: list[JsonDict] = (
             [cast(JsonDict, t) for t in cast(list[object], raw_tasks) if isinstance(t, dict)]
             if isinstance(raw_tasks, list)
@@ -91,14 +91,32 @@ class GitHubIssueGenerator:
         task_id: str = str(task.get("task_id", ""))
         task_owner: str = str(task.get("owner", "Unknown"))
         task_classification: str = str(task.get("classification", ""))
+        task_estimated: str = str(task.get("estimated_hours", ""))
+        body: str = self._build_issue_body(task, epic_name)
+        labels: list[str] = self._build_issue_labels(task, epic_name)
+        title: str = f"[{epic_name.upper()}] {task_title}"
+        return {
+            "title": title,
+            "body": body,
+            "labels": labels,
+            "assignee": task_owner.lower() if task_owner != "Unknown" else None,
+            "metadata": {
+                "epic": epic_name,
+                "task_id": task_id,
+                "classification": task_classification,
+                "estimated_hours": task_estimated,
+            },
+        }
+
+    def _build_issue_body(self, task: JsonDict, epic_name: str) -> str:
+        """Build body markdown for issue."""
+        task_title: str = str(task.get("title", ""))
+        task_id: str = str(task.get("task_id", ""))
+        task_owner: str = str(task.get("owner", "Unknown"))
+        task_classification: str = str(task.get("classification", ""))
         task_priority: str = str(task.get("priority", ""))
         task_estimated: str = str(task.get("estimated_hours", ""))
         task_complexity: str = str(task.get("complexity", ""))
-
-        # Build title
-        title: str = f"[{epic_name.upper()}] {task_title}"
-
-        # Build body
         body_parts: list[str] = [
             f"## Task: {task_title}",
             "",
@@ -111,8 +129,6 @@ class GitHubIssueGenerator:
             f"**Complexity:** {task_complexity}",
             "",
         ]
-
-        # Add checklist items if available
         raw_checklist: object = task.get("checklist_items")
         if raw_checklist and isinstance(raw_checklist, list):
             checklist_items: list[str] = [str(c) for c in cast(list[object], raw_checklist)]
@@ -120,8 +136,6 @@ class GitHubIssueGenerator:
             for item in checklist_items:
                 body_parts.append(f"- [ ] {item}")
             body_parts.append("")
-
-        # Add validators if available
         raw_validators: object = task.get("validators")
         if raw_validators and isinstance(raw_validators, list):
             validators: list[str] = [str(v) for v in cast(list[object], raw_validators)]
@@ -129,8 +143,6 @@ class GitHubIssueGenerator:
             for validator in validators:
                 body_parts.append(f"- `{validator}`")
             body_parts.append("")
-
-        # Add acceptance criteria
         body_parts.extend(
             [
                 "## Acceptance Criteria",
@@ -144,34 +156,23 @@ class GitHubIssueGenerator:
                 f"*Auto-generated from epic classification: {task_classification}*",
             ]
         )
+        return "\n".join(body_parts)
 
-        body: str = "\n".join(body_parts)
-
-        # Determine labels
+    def _build_issue_labels(self, task: JsonDict, epic_name: str) -> list[str]:
+        """Build labels list for issue."""
+        task_owner: str = str(task.get("owner", "Unknown"))
+        task_classification: str = str(task.get("classification", ""))
+        task_priority: str = str(task.get("priority", ""))
         labels: list[str] = [
             f"epic:{epic_name}",
             f"classification:{task_classification.lower()}",
             f"priority:{task_priority.lower()}",
             f"owner:{task_owner.lower()}",
         ]
-
-        # Add blocker labels
         blockers: list[str] = self._determine_blockers(task, epic_name)
         for blocker in blockers:
             labels.append(f"blocker:{blocker}")
-
-        return {
-            "title": title,
-            "body": body,
-            "labels": labels,
-            "assignee": task_owner.lower() if task_owner != "Unknown" else None,
-            "metadata": {
-                "epic": epic_name,
-                "task_id": task_id,
-                "classification": task_classification,
-                "estimated_hours": task_estimated,
-            },
-        }
+        return labels
 
     def _determine_blockers(self, task: JsonDict, epic_name: str) -> list[str]:
         """Determine blocker types for task."""

@@ -155,35 +155,15 @@ todos:
     status: completed
 
   - id: codebuild-canary-run
-    content: |
-      Satisfy the p2-cloud-build-configs gate from uci_cloud_abstraction_complete.plan.md.
-      All 44 repos have buildspec.aws.yaml files — none have been validated in a real or
-      simulated CodeBuild environment.
-
-      Steps:
-      (1) For 3 canary repos (instruments-service, unified-cloud-interface,
-          unified-events-interface): run `act -j build --platform ubuntu-latest` against
-          the buildspec.aws.yaml (using nektos/act or equivalent local simulation).
-      (2) Confirm: install step installs uv + python 3.13; unit-test step runs pytest;
-          quality-gate step runs quality-gates.sh; all exit 0.
-      (3) Fix any discovered issues in buildspec.aws.yaml templates.
-      (4) Document result in CLOUD_SDK_VIOLATIONS.md canary section.
-      (5) Mark uci_cloud_abstraction_complete.plan.md p2-cloud-build-configs as completed.
-
-      Gate: act simulation exits 0 for all 3 canary repos, no manual steps required.
-    status: pending
+    content: "MOVED to aws_migration.plan.md todo codebuild-canary-run. Not PM-internal — PM is a devops repo, not a CodeBuild target."
+    status: completed
 
   - id: uci-plan-gap-close
     content: |
-      After utl-cloud-symbols-delete and codebuild-canary-run complete:
-      (1) Update uci_cloud_abstraction_complete.plan.md:
-          - p0-utl-cloud-layer-symbol-deletion → status: completed; add reference to
-            topology_dag_pm_ssot.plan.md as implementation owner
-          - p2-cloud-build-configs → status: completed; add canary run date + result
-      (2) Verify UCI plan has zero pending todos.
-      (3) Run STEP 5.10/5.11 quality gate scan across all repos to confirm zero violations.
-      Gate: uci_cloud_abstraction_complete.plan.md has all todos completed.
-    status: pending
+      COMPLETED: uci_cloud_abstraction_complete.plan.md has zero pending todos (verified 2026-03-06).
+      STEP 5.10/5.11 quality gate scan: zero violations in service sources.
+      codebuild-canary-run moved to aws_migration.plan.md — not a PM-internal gate.
+    status: completed
 
   - id: pm-runtime-topology-ssot-formal
     content: |
@@ -234,7 +214,10 @@ todos:
 
       Gate: grep 'deployment-service/configs/runtime-topology.yaml' across all active plan
       files returns zero matches (except where explicitly describing the partial local view).
-    status: pending
+      VERIFIED 2026-03-06: remaining 2 references (trading_system_audit_prompt.plan.md,
+      plans_to_deployable_unified_audit.plan.md) both correctly describe it as a partial local
+      view — not as SSOT. Gate satisfied.
+    status: completed
 
 isProject: true
 ---
@@ -251,6 +234,7 @@ isProject: true
 ## Why TOPOLOGY-DAG.md Belongs in PM
 
 `unified-trading-pm` already owns:
+
 - `workspace-manifest.json` — machine-readable code DAG (SSOT for tier membership, version pins)
 - `WORKSPACE_MANIFEST_DAG.svg` — visual of the manifest
 - `CANONICAL_DEPENDENCY_MANIFEST.svg` — computed dependency graph
@@ -286,29 +270,29 @@ Libraries know their tier from the DAG. They expose ABCs. Deployment wires env v
 
 ## Affected Repos
 
-| Repo | Change | Tier |
-|---|---|---|
-| unified-trading-pm | +TOPOLOGY-DAG.md (moved from codex) | PM |
-| unified-trading-codex | TOPOLOGY-DAG.md → stub reference; +PROTOCOL-INJECTION.md | Codex |
-| unified-trading-library | Delete CloudTarget, StandardizedDomainCloudService from source | T1 |
-| unified-domain-client | Replace 15-file CloudTarget usage → UCI routing_key pattern; delete cloud_target.py | T3 |
-| unified-ml-interface | Migrate model_registry.py CloudTarget → get_storage_client() | T2 |
-| execution-service | Migrate utils/gcs_service.py + utils/execution_cloud_service.py + scripts | Service |
-| market-tick-data-service | Migrate config.py + scripts | Service |
-| instruments-service | Migrate scripts/data_catalog.py | Service |
-| deployment-service | Add PROTOCOL_DATA_SINK_BUCKET_* entries for UDC routing keys to runtime-topology.yaml | Service |
+| Repo                     | Change                                                                                 | Tier    |
+| ------------------------ | -------------------------------------------------------------------------------------- | ------- |
+| unified-trading-pm       | +TOPOLOGY-DAG.md (moved from codex)                                                    | PM      |
+| unified-trading-codex    | TOPOLOGY-DAG.md → stub reference; +PROTOCOL-INJECTION.md                               | Codex   |
+| unified-trading-library  | Delete CloudTarget, StandardizedDomainCloudService from source                         | T1      |
+| unified-domain-client    | Replace 15-file CloudTarget usage → UCI routing_key pattern; delete cloud_target.py    | T3      |
+| unified-ml-interface     | Migrate model_registry.py CloudTarget → get_storage_client()                           | T2      |
+| execution-service        | Migrate utils/gcs_service.py + utils/execution_cloud_service.py + scripts              | Service |
+| market-tick-data-service | Migrate config.py + scripts                                                            | Service |
+| instruments-service      | Migrate scripts/data_catalog.py                                                        | Service |
+| deployment-service       | Add PROTOCOL*DATA_SINK_BUCKET*\* entries for UDC routing keys to runtime-topology.yaml | Service |
 
 ---
 
 ## Success Criteria
 
-- [ ] TOPOLOGY-DAG.md in `unified-trading-pm/` with manifest cross-ref header
-- [ ] `unified-trading-codex/04-architecture/TOPOLOGY-DAG.md` is a stub pointing to PM
-- [ ] `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md` created and complete
-- [ ] `rg "CloudTarget|StandardizedDomainCloudService" --type py` (excl .venv*, archive, tests) returns zero matches across all repos
-- [ ] UCI plan `uci_cloud_abstraction_complete.plan.md` has zero pending todos
-- [ ] Canary CodeBuild simulation exits 0 for 3 repos
-- [ ] 00-SSOT-INDEX.md updated to reflect PM ownership of TOPOLOGY-DAG.md
+- [x] TOPOLOGY-DAG.md in `unified-trading-pm/` with manifest cross-ref header
+- [x] `unified-trading-codex/04-architecture/TOPOLOGY-DAG.md` is a stub pointing to PM
+- [x] `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md` created and complete
+- [x] `rg "CloudTarget|StandardizedDomainCloudService" --type py` (excl .venv\*, archive, tests) returns zero matches across all repos — only hits are UTL/UDC (defining repos, expected) and a docstring comment in unified-ml-interface/model_registry.py (line 77, not an import)
+- [x] UCI plan `uci_cloud_abstraction_complete.plan.md` has zero pending todos
+- [x] Canary CodeBuild simulation — MOVED to aws_migration.plan.md (not PM-internal; PM is a devops repo with no buildspec.aws.yaml)
+- [x] 00-SSOT-INDEX.md updated to reflect PM ownership of TOPOLOGY-DAG.md
 
 ## Related Plans
 

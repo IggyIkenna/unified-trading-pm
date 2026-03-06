@@ -18,9 +18,17 @@ SSOT: `unified-trading-pm/canonical-dependency-manifest.json` (generated from wo
 CODEX: 06-coding-standards/dependency-management.md (§ Workspace-wide dependency pinning, § Canonical dependency manifest).
 
 DO:
-  Check canonical-dependency-manifest.json (or workspace-constraints.toml) before adding a dependency — use the listed version range.
-  For a package not in the manifest: add it in one repo with a sensible range, then run resolve-canonical-versions.py → propagate --apply → generate_canonical_dependency_manifest.py so the manifest and SVG are updated.
-  Run scripts from workspace root: resolve-canonical-versions.py, propagate-canonical-versions.py --apply, aggregate-workspace-deps.py --resolve, then scripts/manifest/generate_canonical_dependency_manifest.py.
+  Check workspace-constraints.toml (or canonical-dependency-manifest.json) before adding a dependency — use the listed version range.
+  For a package not in the manifest: add it in one repo with a sensible range, then run the full workflow below.
+
+  Full workflow (run from workspace root):
+  1. validate-dependency-conflicts.py            # detect version conflicts BEFORE propagating
+  2. resolve-canonical-versions.py               # resolve canonical ranges
+  3. propagate-canonical-versions.py --apply     # update all 41+ pyproject.toml files
+  4. aggregate-workspace-deps.py --resolve        # aggregate resolved deps
+  5. uv lock --check (in each affected repo)     # verify lock files are current after propagation
+  6. check-dependency-alignment.py               # find unbounded deps (bare names or unconstrained >=X)
+  7. scripts/manifest/generate_canonical_dependency_manifest.py  # regenerate manifest + SVG
 
 NEVER:
   Add an external dependency with a version range that contradicts the canonical manifest without going through the resolve/propagate flow (and updating the manifest).

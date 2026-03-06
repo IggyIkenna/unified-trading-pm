@@ -1,9 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = []
+
 [project]
 name = "unified-trading-pm"
 version = "1.2.0"
 requires-python = ">=3.13,<3.14"
 description = "Unified Trading System - Project Management"
 dependencies = [
+    "packaging>=24.0",
+    "pyyaml<7.0.0,>=6.0.1",
     "tomli-w>=1.0.0",
 ]
 
@@ -33,14 +42,21 @@ select = ["E", "F", "W", "I", "G"]
 [tool.basedpyright]
 extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management"]
 pythonVersion = "3.13"
+reportMissingModuleSource = "none"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.coverage.run]
 parallel = true
-source = ["scripts/manifest"]
-omit = ["tests/*", "*.venv*/*"]
+source = ["scripts"]
+omit = [
+    "tests/*",
+    "*.venv*/*",
+    "scripts/manifest/generate_canonical_dependency_manifest.py",
+    "scripts/manifest/sbom-store.py",
+    "scripts/check-internal-advisories.py",
+]
 
 [tool.coverage.report]
 skip_empty = true

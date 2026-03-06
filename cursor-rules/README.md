@@ -1,8 +1,8 @@
 # Cursor Rules Index
 
-**Last Updated:** 2026-03-03
-**Total Rules:** 106
-**Always-Apply Rules:** 38
+**Last Updated:** 2026-03-06
+**Total Rules:** 126
+**Always-Apply Rules:** 48
 
 Rules are organized by category. Cursor loads recursively from subdirectories.
 

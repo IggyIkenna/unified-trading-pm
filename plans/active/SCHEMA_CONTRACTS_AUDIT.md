@@ -6,6 +6,7 @@
 **Scope:** All 60+ repos scanned across 10 parallel agents
 **Audit result:** Violations catalogued. Codex/cursor rules updated. Quality gates blocking.
 **Remediation blockers remaining:**
+
 - `unified-internal-contracts/unified_internal_contracts/domain/` scaffolded 2026-03-06 (was missing); service schema migration can now begin per Section 6 priority order.
 - `InstrumentRecord` CONFLICT (UAC vs UIC) must be resolved before migration of instrument schemas.
 
@@ -68,24 +69,24 @@
 
 ### 1b. UIC Schema Inventory (Summary)
 
-| Category               | File(s)                                 | Count                           | Status                                        |
-| ---------------------- | --------------------------------------- | ------------------------------- | --------------------------------------------- |
-| Market data canonicals | `market_data/` (8 files)                | 11 native + 5 imported from UAC | CORRECT-UIC                                   |
-| Position schemas       | `positions/` (4 files)                  | 5 classes                       | CORRECT-UIC                                   |
-| Reference schemas      | `reference/` (2 files)                  | 6 classes                       | CORRECT-UIC (InstrumentRecord = CONFLICT)     |
-| Event envelopes        | `events.py`                             | 25+ classes                     | CORRECT-UIC                                   |
-| Pub/Sub messages       | `pubsub.py`                             | 16 classes                      | CORRECT-UIC                                   |
-| Risk management        | `risk.py`                               | 12 classes                      | CORRECT-UIC                                   |
-| ML pipeline            | `ml.py`                                 | 9 classes                       | CORRECT-UIC (2 = DUPLICATE with ml-interface) |
-| Feature engineering    | `features.py`                           | 6 classes                       | CORRECT-UIC                                   |
-| WebSocket lifecycle    | `connectivity/websocket_lifecycle.py`   | 7 classes                       | CORRECT-UIC                                   |
-| Error/audit            | `schemas/errors.py`, `schemas/audit.py` | 8 classes                       | CORRECT-UIC                                   |
-| Messaging              | `messaging.py`                          | 2 enums                         | CORRECT-UIC                                   |
-| DeFi gas               | `defi.py`                               | 2 classes                       | CORRECT-UIC                                   |
-| Alerting               | `alerting/__init__.py`                  | 1 class                         | CORRECT-UIC                                   |
-| Reporting              | `reporting/fee_structure.py`            | 1 class                         | CORRECT-UIC                                   |
-| **domain/ directory**  |                                         | **MISSING**                     | Must be created                               |
-| **Total audited**      |                                         | **~110 classes**                |                                               |
+| Category               | File(s)                                                                         | Count                                  | Status                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Market data canonicals | `market_data/` (8 files)                                                        | 11 native + 5 imported from UAC        | CORRECT-UIC                                                                                    |
+| Position schemas       | `positions/` (4 files)                                                          | 5 classes                              | CORRECT-UIC                                                                                    |
+| Reference schemas      | `reference/` (2 files)                                                          | 6 classes                              | CORRECT-UIC (InstrumentRecord = CONFLICT)                                                      |
+| Event envelopes        | `events.py`                                                                     | 25+ classes                            | CORRECT-UIC                                                                                    |
+| Pub/Sub messages       | `pubsub.py`                                                                     | 16 classes                             | CORRECT-UIC                                                                                    |
+| Risk management        | `risk.py`                                                                       | 12 classes                             | CORRECT-UIC                                                                                    |
+| ML pipeline            | `ml.py`                                                                         | 9 classes                              | CORRECT-UIC (2 = DUPLICATE with ml-interface)                                                  |
+| Feature engineering    | `features.py`                                                                   | 6 classes                              | CORRECT-UIC                                                                                    |
+| WebSocket lifecycle    | `connectivity/websocket_lifecycle.py`                                           | 7 classes                              | CORRECT-UIC                                                                                    |
+| Error/audit            | `schemas/errors.py`, `schemas/audit.py`                                         | 8 classes                              | CORRECT-UIC                                                                                    |
+| Messaging              | `messaging.py`                                                                  | 2 enums                                | CORRECT-UIC                                                                                    |
+| DeFi gas               | `defi.py`                                                                       | 2 classes                              | CORRECT-UIC                                                                                    |
+| Alerting               | `alerting/__init__.py`                                                          | 1 class                                | CORRECT-UIC                                                                                    |
+| Reporting              | `reporting/fee_structure.py`                                                    | 1 class                                | CORRECT-UIC                                                                                    |
+| **domain/ directory**  | `domain/__init__.py` (scaffolded), `domain/market_data_api/orderbook_schema.py` | **PARTIAL** — 2 of 6 services migrated | strategy_service/, execution_service/sports.py, market_data_processing/, sports/ still pending |
+| **Total audited**      |                                                                                 | **~110 classes**                       |                                                                                                |
 
 ### 1c. Duplicate/Conflict Between UAC and UIC
 

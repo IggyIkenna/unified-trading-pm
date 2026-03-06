@@ -11,7 +11,7 @@ tags:
 ---
 # Python Version Consistency
 RULE: Python 3.13 (>=3.13,<3.14) across pyproject.toml, Cloud Build, GitHub Actions, Dockerfile, IDE.
-WHY: Prevents import/feature mismatches; unified-trading-services requires 3.10+ features.
+WHY: Prevents import/feature mismatches; unified-trading-library (formerly unified-trading-services) requires 3.10+ features.
 CODEX: .cursor/rules/python-version-consistency.mdc, 06-coding-standards/dependency-management.md
 DO: requires-python = ">=3.13,<3.14"; python:3.13-slim; python-version: '3.13'
-NEVER: Mix 3.10/3.11/3.12 in services; use older base images
+NEVER: Mix 3.10/3.11/3.12 in services; use older base images; use Python 3.14+ (upper bound <3.14 is a HARD requirement)

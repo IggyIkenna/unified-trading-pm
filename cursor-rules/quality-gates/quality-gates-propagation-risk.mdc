@@ -1,0 +1,42 @@
+---
+description: "Quality gate SSOT propagation — editing downstream quality-gates.sh risks rollout revert"
+alwaysApply: true
+priority: 90
+tags:
+  - quality-gates
+  - ssot
+  - propagation
+---
+# Quality Gate Propagation Risk
+# SSOT: unified-trading-codex/06-coding-standards/quality-gates-library-template.sh
+#       unified-trading-codex/06-coding-standards/quality-gates-service-template.sh
+# Rollout: unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py
+# Trigger: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first
+
+RULE: When editing `scripts/quality-gates.sh` in ANY downstream repo (service, library, api, ui),
+      changes WILL be overwritten on the next `run-all-setup.sh --rollout-first` run.
+      ALWAYS propagate fixes to the codex template SSOT first.
+
+WHY: `rollout-quality-gates-unified.py` reads the codex templates and overwrites every repo's
+     `scripts/quality-gates.sh`. A local-only fix survives until the next rollout, then vanishes.
+
+DO:
+  1. Edit the codex template FIRST:
+     - Libraries: `unified-trading-codex/06-coding-standards/quality-gates-library-template.sh`
+     - Services:  `unified-trading-codex/06-coding-standards/quality-gates-service-template.sh`
+  2. Optionally apply the same change to the downstream repo for immediate effect.
+  3. Run `python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run`
+     to preview what repos would be updated.
+  4. Document repo-specific deviations in the repo's `QUALITY_GATE_BYPASS_AUDIT.md`.
+
+NEVER:
+  - Edit only the downstream `scripts/quality-gates.sh` without updating the codex template.
+  - Use `rollout-quality-gates-unified.py` to REVERT intentional downstream deviations;
+    deviations belong in QUALITY_GATE_BYPASS_AUDIT.md, not in the template.
+
+DEVIATIONS ALLOWED:
+  - Per-repo PACKAGE_NAME, SOURCE_DIR, LOCAL_DEPS settings (these are repo-specific placeholders).
+  - Entries in QUALITY_GATE_BYPASS_AUDIT.md for documented exceptions.
+  - The rollout script preserves these placeholders and the bypass audit file.
+
+CODEX: 06-coding-standards/quality-gates.md

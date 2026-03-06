@@ -47,13 +47,13 @@ isProject: false
 
 ## What & Why
 
-| Item | Action | Reason |
-|---|---|---|
-| `analytics/` package | Delete | 0 importers; pure re-export of `benchmark.metrics` |
-| `core/audit_log.py` | Move to `utils/` | Single file, single importer; merges into existing `utils/` |
-| `io/loader.py` | Move to `utils/` | Single file; `io/__init__.py` is the only consumer |
-| `test_sports_execution.py` | Add `importorskip` | Contracts submodule not yet published; crashes collect |
-| `test_backtest_service_split.py` | Delete | Imports `visualizer_api` (wrong service entirely) |
+| Item                             | Action             | Reason                                                      |
+| -------------------------------- | ------------------ | ----------------------------------------------------------- |
+| `analytics/` package             | Delete             | 0 importers; pure re-export of `benchmark.metrics`          |
+| `core/audit_log.py`              | Move to `utils/`   | Single file, single importer; merges into existing `utils/` |
+| `io/loader.py`                   | Move to `utils/`   | Single file; `io/__init__.py` is the only consumer          |
+| `test_sports_execution.py`       | Add `importorskip` | Contracts submodule not yet published; crashes collect      |
+| `test_backtest_service_split.py` | Delete             | Imports `visualizer_api` (wrong service entirely)           |
 
 ## Acceptance Criteria
 

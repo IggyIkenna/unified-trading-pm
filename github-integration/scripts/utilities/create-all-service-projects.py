@@ -98,7 +98,7 @@ def load_service_registry() -> list[JsonDict]:
     with open(SERVICE_REGISTRY, "r") as f:
         data: JsonDict = cast(JsonDict, yaml.safe_load(f) or {})
 
-    raw_services: object = data.get("services", [])
+    raw_services: object = data.get("services") or []
     services: list[JsonDict] = (
         [cast(JsonDict, s) for s in cast(list[object], raw_services) if isinstance(s, dict)]
         if isinstance(raw_services, list)
@@ -214,8 +214,8 @@ def create_project(org: str, project_name: str, dry_run: bool = False) -> str | 
     result: subprocess.CompletedProcess[str] = run_gh_command(cmd)
 
     data: JsonDict = cast(JsonDict, json.loads(result.stdout))
-    data_field: JsonDict = cast(JsonDict, cast(JsonDict, data.get("data", {})).get("createProjectV2", {}))
-    project_v2: JsonDict = cast(JsonDict, data_field.get("projectV2", {}))
+    data_field: JsonDict = cast(JsonDict, cast(JsonDict, data.get("data") or {}).get("createProjectV2") or {})
+    project_v2: JsonDict = cast(JsonDict, data_field.get("projectV2") or {})
     project_id: str = str(project_v2.get("id", ""))
     project_number: str = str(project_v2.get("number", ""))
     project_url: str = str(project_v2.get("url", ""))

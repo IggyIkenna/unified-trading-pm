@@ -199,7 +199,9 @@ def _build_retry_tasks(failed_days_path: Path, dry_run: bool) -> list[DownloadTa
     with open(failed_days_path) as f:
         data = json.load(f)
     tasks = []
-    for item in data.get("failed_days", []):
+    if "failed_days" not in data:
+        raise KeyError("failed_days required in failed_days.json")
+    for item in data["failed_days"]:
         task_id = item["task"]
         date = item["date"]
         # Parse task_id: CATEGORY:VENUE:SYMBOL:DATA_TYPE (symbol may contain colons)

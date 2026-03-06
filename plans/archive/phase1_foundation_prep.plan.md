@@ -90,7 +90,7 @@ isProject: true
 ## NAMING CHANGE MANDATE — Zero Technical Debt
 
 > **SSOT for repo names:** `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` (57 repos, 11 levels, generated from `workspace-manifest.json`).
-> **SSOT for runtime topology:** `deployment-service/configs/runtime-topology.yaml` (SSOT) and `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` (diagram).
+> **SSOT for runtime topology:** `unified-trading-pm/configs/runtime-topology.yaml` (canonical SSOT — owned by PM) and `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` (diagram). `deployment-service/configs/runtime-topology.yaml` is a partial local view with `ssot_ref` pointing to PM.
 > Any name not matching these diagrams is WRONG and must be fixed at EVERY level below.
 
 When any component is renamed, the change is **complete** only when ALL of the following are updated. No shortcuts, no aliases, no backward compatibility shims.
@@ -409,7 +409,7 @@ All of the following must be true before Phase 2 starts:
 - **Consolidated remaining work** (full task registry): `.cursor/plans/consolidated_remaining_work.plan.md`
 - **Workspace manifest**: `unified-trading-pm/workspace-manifest.json`
 - **Codex SSOT index**: `unified-trading-codex/00-SSOT-INDEX.md`
-- **Runtime topology**: `deployment-service/configs/runtime-topology.yaml`
+- **Runtime topology (canonical SSOT)**: `unified-trading-pm/configs/runtime-topology.yaml` (deployment-service/configs/ has partial local view only)
 - **New repo setup**: `unified-trading-pm/docs/new-repo-setup.md`
 - **Integration testing layers**: `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
 - **UI service separation**: `unified-trading-codex/06-coding-standards/ui-service-separation.md`

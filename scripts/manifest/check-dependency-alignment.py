@@ -21,7 +21,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import cast
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
@@ -29,10 +29,28 @@ DERIVED_PATH = PM_ROOT / "derived-dependency-manifest.json"
 MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
 CANONICAL_PATH = PM_ROOT / "canonical-dependency-manifest.json"
 
+JsonDict = dict[str, object]
 
-def load_json(path: Path) -> dict[str, Any]:
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jlist(val: object) -> list[JsonDict] | None:
+    if isinstance(val, list):
+        return cast(list[JsonDict], val)
+    return None
+
+
+def _jstr(val: object, default: str = "") -> str:
+    return str(val) if val is not None else default
+
+
+def load_json(path: Path) -> JsonDict:
     with open(path) as f:
-        return json.load(f)
+        return cast(JsonDict, json.load(f))
 
 
 def normalize(name: str) -> str:
@@ -44,6 +62,8 @@ def main() -> int:
     parser.add_argument("--repo", help="Check single repo only")
     parser.add_argument("--json", action="store_true", help="Machine-readable output")
     args = parser.parse_args()
+    repo_filter: str | None = cast(str | None, args.repo)
+    json_output: bool = cast(bool, args.json)
 
     if not DERIVED_PATH.is_file():
         print(f"ERROR: Run generate-derived-manifest.py first. Missing: {DERIVED_PATH}", file=sys.stderr)
@@ -57,31 +77,40 @@ def main() -> int:
     canonical: dict[str, str] = {}
     if CANONICAL_PATH.is_file():
         c = load_json(CANONICAL_PATH)
-        for p in c.get("externalPackages", []):
-            canonical[normalize(p["name"])] = str(p.get("versionRange") or "")
+        ext_pkgs = _jlist(c.get("externalPackages")) or []
+        for p in ext_pkgs:
+            p_dict = _jdict(p)
+            if p_dict:
+                canonical[normalize(_jstr(p_dict.get("name")))] = _jstr(p_dict.get("versionRange"))
 
-    repos = derived.get("repositories", {})
-    if args.repo:
-        repos = {k: v for k, v in repos.items() if k == args.repo}
+    repos_raw = _jdict(derived.get("repositories")) or {}
+    repos: dict[str, object] = dict(repos_raw)
+    if repo_filter:
+        repos = {k: v for k, v in repos.items() if k == repo_filter}
         if not repos:
-            print(f"ERROR: Repo not found: {args.repo}", file=sys.stderr)
+            print(f"ERROR: Repo not found: {repo_filter}", file=sys.stderr)
             return 1
 
-    issues: list[dict[str, Any]] = []
-    manifest_repos = manifest.get("repositories", {})
+    issues: list[dict[str, object]] = []
+    manifest_repos_raw = _jdict(manifest.get("repositories")) or {}
 
     for repo_name, data in repos.items():
-        if data.get("skipped"):
+        data_d = _jdict(data) or {}
+        if data_d.get("skipped"):
             continue
-        manifest_entry = manifest_repos.get(repo_name, {})
-        manifest_deps = {
-            normalize(d["name"]): str(d.get("version") or "")
-            for d in manifest_entry.get("dependencies", [])
-            if isinstance(d, dict) and "name" in d
-        }
+        manifest_entry_raw = manifest_repos_raw.get(repo_name)
+        manifest_entry = _jdict(manifest_entry_raw) or {} if manifest_entry_raw is not None else {}
+        deps_list = _jlist(manifest_entry.get("dependencies")) or []
+        manifest_deps: dict[str, str] = {}
+        for d in deps_list:
+            d_dict = _jdict(d)
+            if d_dict and "name" in d_dict:
+                manifest_deps[normalize(_jstr(d_dict.get("name")))] = _jstr(d_dict.get("version"))
 
-        derived_internal = data.get("internal_deps", {})
-        derived_external = data.get("external_deps", {})
+        derived_internal_raw = data_d.get("internal_deps")
+        derived_internal = _jdict(derived_internal_raw) or {} if isinstance(derived_internal_raw, dict) else {}
+        derived_external_raw = data_d.get("external_deps")
+        derived_external = _jdict(derived_external_raw) or {} if isinstance(derived_external_raw, dict) else {}
 
         for dep in derived_internal:
             if dep not in manifest_deps:
@@ -90,23 +119,26 @@ def main() -> int:
             if dep not in derived_internal:
                 issues.append({"repo": repo_name, "type": "internal_in_manifest_not_pyproject", "dep": dep})
 
-        for pkg, specs in derived_external.items():
+        for pkg, specs_obj in derived_external.items():
             if pkg in canonical:
                 canon_spec = canonical[pkg]
-                for spec in specs:
-                    if spec != canon_spec:
+                specs_list = _jlist(specs_obj) or [] if isinstance(specs_obj, list) else [specs_obj]
+                for spec in specs_list:
+                    spec_str = _jstr(spec)
+                    if spec_str != canon_spec:
                         issues.append(
                             {
                                 "repo": repo_name,
                                 "type": "external_version_mismatch",
                                 "dep": pkg,
-                                "pyproject_spec": spec,
+                                "pyproject_spec": spec_str,
                                 "canonical_spec": canon_spec,
                             }
                         )
 
-    if args.json:
-        print(json.dumps({"aligned": len(issues) == 0, "issues": issues, "count": len(issues)}, indent=2))
+    if json_output:
+        out: dict[str, object] = {"aligned": len(issues) == 0, "issues": issues, "count": len(issues)}
+        print(json.dumps(out, indent=2))
     else:
         if not issues:
             print("OK: All dependencies aligned with manifest and canonical constraints.")

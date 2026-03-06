@@ -12,13 +12,13 @@ todos:
     content: "Audit Section 3 — Security (items 10.1–10.19): no hardcoded API keys; all secrets via get_secret_client(); no verify=False in HTTP clients; all API services authenticated; no mock auth in prod; AUTH_FAILURE + SECRET_ACCESSED + CONFIG_CHANGED events logged."
     status: pending
   - id: audit-architecture
-    content: "Audit Section 4 — Architecture: tier boundaries respected (no service→service Python imports); no UI embedded in service repo; batch-live symmetry (same engine for both modes); cloud-agnostic I/O (get_storage_client, get_secret_client, CloudEventSink); no GCS* protocol names."
+    content: "Audit Section 4 — Architecture: tier boundaries respected (no service→service Python imports); no UI embedded in service repo; batch-live symmetry (same engine for both modes); cloud-agnostic I/O (get_storage_client, get_secret_client, CloudEventSink); no GCS* protocol names; deployment-api HTTP boundary (no direct deployment_service imports)."
     status: pending
   - id: audit-schema-governance
     content: "Audit Section 5 — Schema Governance: AC contains external venue schemas only; UIC contains internal schemas; no AC/UIC duplication; Layer 0 contract alignment tests pass (test_contract_alignment.py, test_ac_uic_alignment.py); per-service test_schema_robustness.py passes."
     status: pending
   - id: audit-observability
-    content: "Audit Section 6 — Observability: /health + /readiness endpoints on all API services; correlation_id propagated end-to-end; Prometheus metrics exported; Grafana dashboards present (trading-overview.json, system-health.json); pre-crash checkpoint at 85% memory; compliance reporting wired (MiFID/FCA)."
+    content: "Audit Section 6 — Observability: /health + /readiness endpoints on all API services; correlation_id propagated end-to-end; Prometheus metrics exported; Grafana dashboards present (trading-overview.json, system-health.json); pre-crash checkpoint at 85% memory; compliance reporting wired (MiFID/FCA); 12.16-12.20: timestamp validation, CloudEventSink naming, test_event_logging.py, memory watchdog, correlation_id propagation."
     status: pending
   - id: audit-deployment
     content: "Audit Section 7 — Deployment: deployment checklist phases 1–7 complete per service; runtime-topology.yaml accurate; Layer 2 infra verify passes (/infra/health); Layer 3a smoke (<5 min) passes; Layer 3b full E2E (15–30 min) passes; v1.0.0 tagged on main."
@@ -31,6 +31,9 @@ todos:
     status: pending
   - id: audit-output
     content: "Produce final audit output: per-criterion PASS/WARN/FAIL/N/A table; overall grade (PASS=0 FAILs, CONDITIONAL=≥1 WARNs + 0 FAILs, FAIL=≥1 FAILs); top 10 blocking findings with file:line references; technical debt trajectory vs previous audit."
+    status: pending
+  - id: audit-config-injection
+    content: "Audit Section on dynamic config injection compliance — GCP_PROJECT_ID banned, DomainConfigReloader used for domain entity hot-reload, get_config_store() factory only, no hardcoded subscription lists, CONFIG_CHANGED events logged."
     status: pending
 isProject: false
 ---
@@ -66,8 +69,8 @@ At the end, output:
 **Key SSOT references for auditors:**
 
 - Repo registry & DAG: `unified-trading-pm/workspace-manifest.json`
-- **Deployment configs (canonical):** `deployment-service/configs/` — runtime-topology.yaml, checklist._.yaml, venues.yaml, RUNTIME_TOPOLOGY_DECISIONS.md, data-catalogue._.yaml. Fallback: `unified-trading-deployment-v3/configs/` if deployment-service not yet extracted.
-- Runtime topology: `deployment-service/configs/runtime-topology.yaml` (or `unified-trading-deployment-v3/configs/runtime-topology.yaml`)
+- **Deployment configs (canonical):** `deployment-service/configs/` — checklist._.yaml, venues.yaml, RUNTIME_TOPOLOGY_DECISIONS.md, data-catalogue._.yaml, per-service PROTOCOL\_\* env files.
+- **Runtime topology (canonical SSOT):** `unified-trading-pm/configs/runtime-topology.yaml` — owned by PM; `deployment-service/configs/runtime-topology.yaml` is a partial local view with `ssot_ref` pointing to PM.
 - Tier architecture: `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
 - SSOT master index: `unified-trading-codex/00-SSOT-INDEX.md`
 - Cursor rules: `unified-trading-pm/cursor-rules/` (synced to `.cursor/rules/`)
@@ -125,6 +128,7 @@ Validates the 5-tier dependency model from `TIER-ARCHITECTURE.md` and cursor rul
 | 2.10 | `pyproject.toml` path sources use `../repo-name` pattern (not `deps/` or absolute paths)                                                                                                                                                                | YES      |
 | 2.11 | `WORKSPACE_MANIFEST_DAG.svg` is regenerated and matches current manifest content                                                                                                                                                                        | WARN     |
 | 2.12 | No upward-tier violations (e.g., T2 importing T3, library importing service)                                                                                                                                                                            | YES      |
+| 2.13 | `deployment-api` MUST NOT import `deployment_service` as a Python package — all interaction via HTTP REST API. Search: `rg 'from deployment_service\|import deployment_service' deployment-api/ --type py` = 0 hits.                                    | YES      |
 
 ---
 
@@ -132,22 +136,24 @@ Validates the 5-tier dependency model from `TIER-ARCHITECTURE.md` and cursor rul
 
 Checks that `00-SSOT-INDEX.md` is accurate, no duplicate implementations exist, and the SSOT placement principle is respected.
 
-| #    | Criterion                                                                                                                                                           | Blocking |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 3.1  | Every entry in `00-SSOT-INDEX.md` points to a file that exists and contains current content                                                                         | YES      |
-| 3.2  | No duplicate schema definitions across repos (e.g., `ModelVariantConfig` in only one location)                                                                      | YES      |
-| 3.3  | No duplicate cloud service abstractions (single config class name: `UnifiedCloudConfig` from `unified-config-interface`)                                            | YES      |
-| 3.4  | Config class naming standardized — no `UnifiedCloudServicesConfig` from `unified_trading_services` in any repo                                                      | YES      |
-| 3.5  | Cursor rules source of truth is `unified-trading-pm/cursor-rules/`, synced to `.cursor/rules/` via symlink (not copies)                                             | YES      |
-| 3.6  | Quality gate scripts (`scripts/quality-gates.sh`) across all repos aligned with canonical template from codex — no template drift                                   | YES      |
-| 3.7  | Runtime topology SSOT: `runtime-topology.yaml` is sole authority for messaging/storage/API interaction policy — not duplicated in service configs                   | YES      |
-| 3.8  | Venue catalog SSOT: `deployment-service/configs/venues.yaml` (or `unified-trading-deployment-v3/configs/venues.yaml`) — not duplicated in service-level venue lists | YES      |
-| 3.9  | No parallel code paths (old + new schema, old + new import) — `delete-deprecated.mdc` (priority 95) enforced                                                        | YES      |
-| 3.10 | No `_old.py`, `_legacy.py`, `_deprecated.py` files in any active repo                                                                                               | YES      |
-| 3.11 | Event field definitions live in `unified-internal-contracts` only — not redefined in services                                                                       | YES      |
-| 3.12 | No copy-paste test templates diverging across repos (e.g., `test_event_logging.py` variants)                                                                        | WARN     |
-| 3.13 | Documentation references machine-readable SSOTs, never duplicates them (SSOT placement principle)                                                                   | WARN     |
-| 3.14 | No deployment-engine / deployment-v3 / deployment-service code duplication — single canonical location for deployment logic (`deployment-service/configs/`)         | YES      |
+| #    | Criterion                                                                                                                                                                                                                                 | Blocking |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 3.1  | Every entry in `00-SSOT-INDEX.md` points to a file that exists and contains current content                                                                                                                                               | YES      |
+| 3.2  | No duplicate schema definitions across repos (e.g., `ModelVariantConfig` in only one location)                                                                                                                                            | YES      |
+| 3.3  | No duplicate cloud service abstractions (single config class name: `UnifiedCloudConfig` from `unified-config-interface`)                                                                                                                  | YES      |
+| 3.4  | Config class naming standardized — no `UnifiedCloudServicesConfig` from `unified_trading_services` in any repo                                                                                                                            | YES      |
+| 3.5  | Cursor rules source of truth is `unified-trading-pm/cursor-rules/`, synced to `.cursor/rules/` via symlink (not copies)                                                                                                                   | YES      |
+| 3.6  | Quality gate scripts (`scripts/quality-gates.sh`) across all repos aligned with canonical template from codex — no template drift                                                                                                         | YES      |
+| 3.7  | Runtime topology SSOT: `runtime-topology.yaml` is sole authority for messaging/storage/API interaction policy — not duplicated in service configs                                                                                         | YES      |
+| 3.8  | Venue catalog SSOT: `deployment-service/configs/venues.yaml` (or `unified-trading-deployment-v3/configs/venues.yaml`) — not duplicated in service-level venue lists                                                                       | YES      |
+| 3.9  | No parallel code paths (old + new schema, old + new import) — `delete-deprecated.mdc` (priority 95) enforced                                                                                                                              | YES      |
+| 3.10 | No `_old.py`, `_legacy.py`, `_deprecated.py` files in any active repo                                                                                                                                                                     | YES      |
+| 3.11 | Event field definitions live in `unified-internal-contracts` only — not redefined in services                                                                                                                                             | YES      |
+| 3.12 | No copy-paste test templates diverging across repos (e.g., `test_event_logging.py` variants)                                                                                                                                              | WARN     |
+| 3.13 | Documentation references machine-readable SSOTs, never duplicates them (SSOT placement principle)                                                                                                                                         | WARN     |
+| 3.14 | No deployment-engine / deployment-v3 / deployment-service code duplication — single canonical location for deployment logic (`deployment-service/configs/`)                                                                               | YES      |
+| 3.15 | Tests for UIC internal schemas live only in `unified-internal-contracts/tests/` — not in `unified-api-contracts/tests/`. Search: `rg 'UIC\|unified_internal_contracts\|internal_schema' unified-api-contracts/tests/ --type py` = 0 hits. | YES      |
+| 3.16 | No backward-compat shim aliases anywhere: `rg '# deprecated:\|# backward.compat\|# kept for backward\|# alias for' --type py --glob '!.venv*'` = 0 hits in production source.                                                             | YES      |
 
 ---
 
@@ -476,40 +482,50 @@ Checks for documentation drift between codex standards and actual implementation
 
 ## SECTION 12 — OBSERVABILITY & LOGGING
 
-| #     | Criterion                                                                                                                                                                                                                                                                    | Blocking        |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------- | ---- |
-| 12.1  | No `print()` statements in production code — all output through structured logger                                                                                                                                                                                            | YES             |
-| 12.2  | All 11 batch lifecycle events emitted in correct order: STARTED → VALIDATION_STARTED → VALIDATION_COMPLETED → DATA_INGESTION_STARTED → DATA_INGESTION_COMPLETED → PROCESSING_STARTED → PROCESSING_COMPLETED → PERSISTENCE_STARTED → PERSISTENCE_COMPLETED → STOPPED / FAILED | YES             |
-| 12.3  | All 12 live lifecycle events emitted (batch events plus DATA_BROADCAST)                                                                                                                                                                                                      | YES             |
-| 12.4  | Service never exits without logging STOPPED or FAILED                                                                                                                                                                                                                        | YES             |
-| 12.5  | No `setup_cloud_logging` — use structured event logging via `unified_events_interface`                                                                                                                                                                                       | YES             |
-| 12.6  | `setup_events(service_name=...)` called in every service's CLI entrypoint                                                                                                                                                                                                    | YES             |
-| 12.7  | `datetime.now(timezone.utc)` used — never `datetime.now()`, `datetime.utcnow()`, or `datetime.today()`                                                                                                                                                                       | YES             |
-| 12.8  | All timestamps in stored schemas are timezone-aware UTC                                                                                                                                                                                                                      | YES             |
-| 12.9  | No `logging.basicConfig()` in library code (clobbers root logger configuration)                                                                                                                                                                                              | YES             |
-| 12.10 | No f-string logging (`logger.info(f"...")`) — use lazy `%s` formatting or `extra={}` for structured data                                                                                                                                                                     | WARN            |
-| 12.11 | Events logged with structured metadata (not free-form strings)                                                                                                                                                                                                               | WARN            |
-| 12.12 | Correlation IDs propagated through all events for trace reconstruction. End-to-end test (`test_correlation_id_e2e.py`) in `system-integration-tests/` or per-service `tests/integration/` verifying `correlation_id` flows from API ingress → service → PubSub → consumer    | WARN            |
-| 12.13 | Health check endpoints standardized: consistent path (`/health`) and response shape (`{"status": "healthy"}`) across all services                                                                                                                                            | WARN            |
-| 12.14 | Prometheus metrics exported by all T4–T6 service repos — each exports minimum: `requests_total`, `processing_duration_seconds`, `errors_total`. Verify: `grep -r "prometheus_client" <service>/`                                                                             | WARN            |
-| 12.15 | AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED compliance events logged in every service that handles auth or config changes (per lifecycle-events.md). Verify per service: `rg "AUTH_FAILURE                                                                                 | SECRET_ACCESSED | CONFIG_CHANGED" <service>/` | WARN |
+| #     | Criterion                                                                                                                                                                                                                                                                                                                                         | Blocking        |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | --------------------------- | ---- |
+| 12.1  | No `print()` statements in production code — all output through structured logger                                                                                                                                                                                                                                                                 | YES             |
+| 12.2  | All 11 batch lifecycle events emitted in correct order: STARTED → VALIDATION_STARTED → VALIDATION_COMPLETED → DATA_INGESTION_STARTED → DATA_INGESTION_COMPLETED → PROCESSING_STARTED → PROCESSING_COMPLETED → PERSISTENCE_STARTED → PERSISTENCE_COMPLETED → STOPPED / FAILED                                                                      | YES             |
+| 12.3  | All 12 live lifecycle events emitted (batch events plus DATA_BROADCAST)                                                                                                                                                                                                                                                                           | YES             |
+| 12.4  | Service never exits without logging STOPPED or FAILED                                                                                                                                                                                                                                                                                             | YES             |
+| 12.5  | No `setup_cloud_logging` — use structured event logging via `unified_events_interface`                                                                                                                                                                                                                                                            | YES             |
+| 12.6  | `setup_events(service_name=...)` called in every service's CLI entrypoint                                                                                                                                                                                                                                                                         | YES             |
+| 12.7  | `datetime.now(timezone.utc)` used — never `datetime.now()`, `datetime.utcnow()`, or `datetime.today()`                                                                                                                                                                                                                                            | YES             |
+| 12.8  | All timestamps in stored schemas are timezone-aware UTC                                                                                                                                                                                                                                                                                           | YES             |
+| 12.9  | No `logging.basicConfig()` in library code (clobbers root logger configuration)                                                                                                                                                                                                                                                                   | YES             |
+| 12.10 | No f-string logging (`logger.info(f"...")`) — use lazy `%s` formatting or `extra={}` for structured data                                                                                                                                                                                                                                          | WARN            |
+| 12.11 | Events logged with structured metadata (not free-form strings)                                                                                                                                                                                                                                                                                    | WARN            |
+| 12.12 | Correlation IDs propagated through all events for trace reconstruction. End-to-end test (`test_correlation_id_e2e.py`) in `system-integration-tests/` or per-service `tests/integration/` verifying `correlation_id` flows from API ingress → service → PubSub → consumer                                                                         | WARN            |
+| 12.13 | Health check endpoints standardized: consistent path (`/health`) and response shape (`{"status": "healthy"}`) across all services                                                                                                                                                                                                                 | WARN            |
+| 12.14 | Prometheus metrics exported by all T4–T6 service repos — each exports minimum: `requests_total`, `processing_duration_seconds`, `errors_total`. Verify: `grep -r "prometheus_client" <service>/`                                                                                                                                                  | WARN            |
+| 12.15 | AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED compliance events logged in every service that handles auth or config changes (per lifecycle-events.md). Verify per service: `rg "AUTH_FAILURE                                                                                                                                                      | SECRET_ACCESSED | CONFIG_CHANGED" <service>/` | WARN |
+| 12.16 | `validate_timestamp_utc()` (or `validate_timestamp_date_alignment()`) from `unified_trading_library` called on ALL inbound timestamps from external sources (market data, API, PubSub) before processing — no raw datetime ingestion without validation.                                                                                          | YES             |
+| 12.17 | `CloudEventSink` (not `GCSEventSink`) used as canonical event sink class name everywhere — `rg 'GCSEventSink' --type py --glob '!.venv*'` = 0 hits.                                                                                                                                                                                               | YES             |
+| 12.18 | `test_event_logging.py` MUST exist in `tests/unit/` for every Python service/API/library repo — tests SERVICE_STARTED, SERVICE_STOPPED, SERVICE_FAILED lifecycle events.                                                                                                                                                                          | YES             |
+| 12.19 | Memory watchdog implemented in all long-running services (market-tick-data, features-\*, ml-training, ml-inference, execution, strategy, alerting, risk, position-monitor, pnl): psutil memory check ≥ every 60s; at >85% triggers `log_event('SERVICE_MEMORY_CRITICAL', ...)` + checkpoint write via `get_data_sink(routing_key='checkpoints')`. | YES             |
+| 12.20 | `correlation_id` propagated through ALL `log_event` calls: extracted from inbound message or generated as `uuid4()` at ingress; present in STARTED/STOPPED/FAILED and all data processing events.                                                                                                                                                 | YES             |
 
 ---
 
 ## SECTION 13 — CONFIGURATION & ENVIRONMENT
 
-| #     | Criterion                                                                                          | Blocking |
-| ----- | -------------------------------------------------------------------------------------------------- | -------- |
-| 13.1  | No `os.getenv()` in service code — all config via typed config class (e.g., Pydantic BaseSettings) | YES      |
-| 13.2  | No `os.getenv('KEY', '')` empty fallbacks — required values must fail loudly if absent             | YES      |
-| 13.3  | No `os.environ["KEY"]` at module level / import time — deferred to config class initialization     | YES      |
-| 13.4  | Config class validates all required fields at startup — not lazily on first use                    | YES      |
-| 13.5  | No hardcoded environment-specific values (bucket names, topic names, project IDs)                  | YES      |
-| 13.6  | Bucket / topic names parameterized by environment (e.g., `market-data-{category}-{project_id}`)    | YES      |
-| 13.7  | Config extends `UnifiedCloudConfig` from `unified-config-interface` per codex                      | YES      |
-| 13.8  | `CLOUD_PROVIDER` env var respected for GCP/AWS switching (`cloud-agnostic.mdc`)                    | WARN     |
-| 13.9  | `MAX_WORKERS` set based on workload type: I/O-bound=16, CPU-bound=1-3                              | WARN     |
-| 13.10 | `.env.example` exists documenting all required env vars with placeholder values                    | WARN     |
+| #     | Criterion                                                                                                                                                                                                                                     | Blocking |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 13.1  | No `os.getenv()` in service code — all config via typed config class (e.g., Pydantic BaseSettings)                                                                                                                                            | YES      |
+| 13.2  | No `os.getenv('KEY', '')` empty fallbacks — required values must fail loudly if absent                                                                                                                                                        | YES      |
+| 13.3  | No `os.environ["KEY"]` at module level / import time — deferred to config class initialization                                                                                                                                                | YES      |
+| 13.4  | Config class validates all required fields at startup — not lazily on first use                                                                                                                                                               | YES      |
+| 13.5  | No hardcoded environment-specific values (bucket names, topic names, project IDs)                                                                                                                                                             | YES      |
+| 13.6  | Bucket / topic names parameterized by environment (e.g., `market-data-{category}-{project_id}`)                                                                                                                                               | YES      |
+| 13.7  | Config extends `UnifiedCloudConfig` from `unified-config-interface` per codex                                                                                                                                                                 | YES      |
+| 13.8  | `CLOUD_PROVIDER` env var respected for GCP/AWS switching (`cloud-agnostic.mdc`)                                                                                                                                                               | WARN     |
+| 13.9  | `MAX_WORKERS` set based on workload type: I/O-bound=16, CPU-bound=1-3                                                                                                                                                                         | WARN     |
+| 13.10 | `.env.example` exists documenting all required env vars with placeholder values                                                                                                                                                               | WARN     |
+| 13.11 | `GCP_PROJECT_ID` env var banned — use `GCP_PROJECT_ID` via `UnifiedCloudConfig.gcp_project_id`. Search: `rg 'GCP_PROJECT_ID' --type py --glob '!.venv*'` = 0 hits.                                                                            | YES      |
+| 13.12 | Services that manage domain entities (instruments, strategies, clients, venues) MUST declare a `config_store_bucket` field in their config class extending `UnifiedCloudConfig` — no hardcoded domain entity lists in source.                 | YES      |
+| 13.13 | Direct `ConfigStore()` construction banned in services — MUST use `get_config_store(domain)` from `unified_config_interface`. Search: `rg 'ConfigStore(' --type py --glob '!.venv*' \| grep -v 'get_config_store\|test_\|conftest'` = 0 hits. | YES      |
+| 13.14 | Domain entity subscription lists (instruments, strategies, clients, venues) come from `DomainConfigReloader` — never hardcoded as Python lists/dicts in production source.                                                                    | YES      |
+| 13.15 | `CONFIG_CHANGED` event logged whenever any domain config is written (via `/api/config-store/{domain}` endpoint) — includes `domain`, `config_path`, `updated_by`, `schema_version` fields.                                                    | YES      |
 
 ---
 
@@ -547,6 +563,7 @@ Checks for documentation drift between codex standards and actual implementation
 | 14.3.5 | No protocol-leaking symbols in service source — banned: `CloudTarget`, `upload_to_gcs_batch`, `gcs_bucket=`, `bigquery_dataset=`, `StandardizedDomainCloudService`. Use `DataSink`/`EventBus` ABCs from `unified-cloud-interface`. Search: `rg 'CloudTarget\|upload_to_gcs_batch\|gcs_bucket=\|bigquery_dataset=' --type py --glob '!tests/**'` | YES      |
 | 14.3.6 | Services declare runtime mode via `SERVICE_MODE` env var (`LIVE`/`BATCH`) — not hardcoded. Cloud routing injected via `PROTOCOL_DATA_SINK_*` env vars at deploy time, never in source.                                                                                                                                                          | YES      |
 | 14.3.7 | Quality gate STEP 5.11 (protocol-leaking symbols check) is present as hard-fail in `scripts/quality-gates.sh` for all service repos                                                                                                                                                                                                             | YES      |
+| 14.3.8 | Config event subscriptions go through `DomainConfigReloader` from `unified_trading_library` — services MUST NOT subscribe to `config-updates` or `config-domain-*` PubSub/SQS topics directly. Search: `rg 'config-updates\|config-domain-' --type py --glob '!.venv*' \| grep -v 'DomainConfigReloader\|test_'` = 0 hits.                      | YES      |
 
 ### 14.4 Async & Concurrency
 
@@ -667,6 +684,7 @@ Verify the following data type groups have canonical schemas with appropriate Op
 | 17.1.11 | Python version alignment: workflows, Cloud Build, local quality gates, and `pyproject.toml` all specify same Python version (3.13)                                                                                                              | YES      |
 | 17.1.12 | Layer 1.5 per-component integration tests exist in `tests/integration/` per service repo — at least one `test_<component>_integration.py` using mocked direct dependencies (`@pytest.mark.integration`). These tests BLOCK quickmerge (D3 gate) | YES      |
 | 17.1.13 | Layer 1.5 tests are included in `scripts/quickmerge.sh` integration step — not skipped by default. Verify: `grep -q "integration\|Layer 1.5\|pytest.*integration" scripts/quickmerge.sh`                                                        | YES      |
+| 17.1.14 | No `test_*_extended.py` files — all extended test cases merged into their base `test_*.py` file. Search: `rg 'test_.*_extended\.py' --type py` = 0 hits.                                                                                        | YES      |
 
 ### 17.2 TypeScript Testing & Quality Gates
 
@@ -771,21 +789,22 @@ _Applicable to systems with multi-venue market data ingestion._
 
 ## SECTION 22 — CI/CD & QUICKMERGE PIPELINE
 
-| #     | Criterion                                                                                                                                                   | Blocking |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 22.1  | Quality gates run INSIDE the built Docker image — not by cloning source in CI                                                                               | YES      |
-| 22.2  | Image pushed only after tests pass                                                                                                                          | YES      |
-| 22.3  | Library version bumped only by GitHub Action (`version-bump.yml`) on merge — not manual                                                                     | YES      |
-| 22.4  | Branch protection blocks direct push to main                                                                                                                | YES      |
-| 22.5  | Quickmerge used for all pushes — never standalone quality gates or bare `git push`                                                                          | YES      |
-| 22.6  | `--dep-branch` used in quickmerge when dependencies differ from main                                                                                        | YES      |
-| 22.7  | Pre-flight audit runs before quality gates (path dependency uncommitted changes check)                                                                      | WARN     |
-| 22.8  | No git token or SA key embedded in Dockerfile or Cloud Build YAML                                                                                           | YES      |
-| 22.9  | `uv.lock` committed alongside `pyproject.toml` changes                                                                                                      | YES      |
-| 22.10 | CI clones path deps to `../repo-name` with `${DEP_BRANCH:-main}` fallback per `path-dependency-ci.mdc`                                                      | YES      |
-| 22.11 | Conventional commit messages used (`feat:` / `fix:` / `chore:`)                                                                                             | WARN     |
-| 22.12 | `quality-gates.yml` GitHub Actions workflow exists and runs on PRs — no repos with zero CI enforcement                                                      | YES      |
-| 22.13 | Pre-commit hooks fire automatically during quickmerge's `git commit` step (Stage 5) — ruff auto-fix, prettier, and file checks run before commit is created | YES      |
+| #     | Criterion                                                                                                                                                                                                                                                                                                           | Blocking |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 22.1  | Quality gates run INSIDE the built Docker image — not by cloning source in CI                                                                                                                                                                                                                                       | YES      |
+| 22.2  | Image pushed only after tests pass                                                                                                                                                                                                                                                                                  | YES      |
+| 22.3  | Library version bumped only by GitHub Action (`version-bump.yml`) on merge — not manual                                                                                                                                                                                                                             | YES      |
+| 22.4  | Branch protection blocks direct push to main                                                                                                                                                                                                                                                                        | YES      |
+| 22.5  | Quickmerge used for all pushes — never standalone quality gates or bare `git push`                                                                                                                                                                                                                                  | YES      |
+| 22.6  | `--dep-branch` used in quickmerge when dependencies differ from main                                                                                                                                                                                                                                                | YES      |
+| 22.7  | Pre-flight audit runs before quality gates (path dependency uncommitted changes check)                                                                                                                                                                                                                              | WARN     |
+| 22.8  | No git token or SA key embedded in Dockerfile or Cloud Build YAML                                                                                                                                                                                                                                                   | YES      |
+| 22.9  | `uv.lock` committed alongside `pyproject.toml` changes                                                                                                                                                                                                                                                              | YES      |
+| 22.10 | CI clones path deps to `../repo-name` with `${DEP_BRANCH:-main}` fallback per `path-dependency-ci.mdc`                                                                                                                                                                                                              | YES      |
+| 22.11 | Conventional commit messages used (`feat:` / `fix:` / `chore:`)                                                                                                                                                                                                                                                     | WARN     |
+| 22.12 | `quality-gates.yml` GitHub Actions workflow exists and runs on PRs — no repos with zero CI enforcement                                                                                                                                                                                                              | YES      |
+| 22.13 | Pre-commit hooks fire automatically during quickmerge's `git commit` step (Stage 5) — ruff auto-fix, prettier, and file checks run before commit is created                                                                                                                                                         | YES      |
+| 22.14 | Test-in-image pattern used for services with Docker-based deployment: tests run inside built Docker image (not as separate cloudbuild pip install step). Verify `cloudbuild.yaml` has `docker run --entrypoint pytest ...` step. Currently required for: `instruments-service`, `position-balance-monitor-service`. | YES      |
 
 ---
 
@@ -851,6 +870,8 @@ mock auth in production               | rg '"client-.*-key"\|mock.*auth\|fake.*t
 CloudTarget in service code           | rg "CloudTarget" --type py (excl tests, UCI, UTL)         | YES
 upload_to_gcs_batch in service code   | rg "upload_to_gcs_batch" --type py (excl tests, UTL)      | YES
 output_schemas.py cross-service import| rg "from \w+_service.*output_schemas" --type py           | YES
+ConfigStore() without get_config_store | rg 'ConfigStore(' --type py | grep -v get_config_store  | FAIL
+Hardcoded domain lists in source      | rg 'subscription_list\s*=\s*\[' --type py --glob '!test*' | WARN
 ```
 
 ---

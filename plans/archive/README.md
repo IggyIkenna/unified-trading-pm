@@ -48,9 +48,9 @@ Plans in this folder have been superseded by the canonical **Plans to Deployable
 
 ## Archived (2026-03-06 — PM Completeness Audit)
 
-| File                                               | Reason                                                                                                                                                                       |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visualizer_to_analytics_ui_port.plan.md`          | COMPLETE — all todos `status: completed`; UI port done                                                                                                                       |
-| `schema_normalization_completion_01858c38.plan.md` | Superseded by `uac_schema_normalization_complete.plan.md`; `todos: []`, was an early draft                                                                                   |
-| `uac_full_schema_normalization_20cdacd7.plan.md`   | Superseded by `uac_schema_normalization_complete.plan.md`; `todos: []`, spec doc only                                                                                        |
-| `uac_full_schema_normalization_62fb98b4.plan.md`   | Superseded by `uac_schema_normalization_complete.plan.md`; `todos: []`, spec doc only; `generate_schema_audit_matrix.py` already lives in `unified-api-contracts/scripts/`  |
+| File                                               | Reason                                                                                                                                                                     |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visualizer_to_analytics_ui_port.plan.md`          | COMPLETE — all todos `status: completed`; UI port done                                                                                                                     |
+| `schema_normalization_completion_01858c38.plan.md` | Superseded by `uac_schema_normalization_complete.plan.md`; `todos: []`, was an early draft                                                                                 |
+| `uac_full_schema_normalization_20cdacd7.plan.md`   | Superseded by `uac_schema_normalization_complete.plan.md`; `todos: []`, spec doc only                                                                                      |
+| `uac_full_schema_normalization_62fb98b4.plan.md`   | Superseded by `uac_schema_normalization_complete.plan.md`; `todos: []`, spec doc only; `generate_schema_audit_matrix.py` already lives in `unified-api-contracts/scripts/` |

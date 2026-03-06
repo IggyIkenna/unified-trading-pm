@@ -147,7 +147,12 @@ def pick_tightest_constraint(specs: list[DepSpec]) -> DepSpec:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Resolve canonical external dependency versions")
     parser.add_argument("-o", "--report", metavar="FILE", help="Write human-readable report to file")
-    args = parser.parse_args()
+
+    class Args(argparse.Namespace):
+        report: str | None = None
+
+    args = parser.parse_args(namespace=Args())
+    report_path: Path | None = Path(args.report) if args.report is not None else None
 
     if not MANIFEST_PATH.is_file():
         print(f"ERROR: Manifest not found: {MANIFEST_PATH}", file=sys.stderr)
@@ -186,9 +191,9 @@ def main() -> None:
     print(f"Wrote {CONSTRAINTS_FILE} ({len(canonical)} packages)")
 
     report_text = "\n".join(report_lines)
-    if args.report:
-        Path(args.report).write_text(report_text)
-        print(f"Report written to {args.report}")
+    if report_path is not None:
+        report_path.write_text(report_text)
+        print(f"Report written to {report_path}")
     else:
         print("\n--- Report ---\n")
         print(report_text)

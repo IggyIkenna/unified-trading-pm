@@ -1,27 +1,40 @@
 #!/usr/bin/env bash
-# Sync all workspace repos to main: commit local changes, merge origin/main, push
+# Sync all workspace repos to main via quickmerge (PR + auto-merge)
 #
-# 1. Ensures .gitignore has heavy-file exclusions (.coverage, .venv, node_modules, etc.)
-# 2. git add -A (stages all local changes, respects .gitignore)
-# 3. git commit if there are staged changes
-# 4. git fetch origin main && git merge origin/main — keep non-conflicting remote changes
-# 5. If merge conflicts: abort, log error, FAIL (do not push)
-# 6. git push origin main
+# Flow:
+# 1. Ensure .gitignore has heavy-file exclusions (.coverage, .venv, node_modules, etc.)
+# 2. git add -A (stage all local changes)
+# 3. Fetch origin/main; if local is behind, merge. If merge conflicts → FAIL (abort, do not continue)
+# 4. If local has commits ahead of origin: git reset --soft origin/main (convert to staged changes)
+# 5. If there are changes: run quickmerge (creates PR, runs quality gates, enables auto-merge)
+# 6. If quickmerge fails (quality gates, PR creation, or auto-merge): FAIL, report
 #
 # Repos are processed in dependency order (topologicalOrder from workspace-manifest.json SSOT)
-# so dependencies are pushed before dependents.
+# so dependencies are merged before dependents.
 #
-# Safe to run periodically in background (e.g. cron, launchd).
+# Prerequisites: gh CLI authenticated; auto-merge enabled on repos.
+# See: docs/repo-management/sync-to-main-flow.md
 #
-# Usage: bash sync-all-to-main.sh [--dry-run] [--limit N] [--repo NAME]
-#   --repo NAME   Sync only this repo (e.g. unified-api-contracts)
+# Usage: bash sync-all-to-main.sh [--dry-run] [--limit N] [--repo NAME] [--filter PATTERN] [--dep-branch NAME]
+#   --repo NAME       Sync only this repo (e.g. unified-api-contracts)
+#   --filter PATTERN  Sync only repos matching glob (e.g. unified-*, *-service, execution-*)
+#   --dep-branch NAME Pass to quickmerge when path deps have local changes (avoids DEPENDENCY CONFLICT)
 # Run from: workspace root or unified-trading-pm/scripts/repo-management/
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
+# Resolve workspace root from cwd (must run from workspace root)
+if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
+  WORKSPACE_ROOT="$(pwd)"
+elif [ -f "$(pwd)/workspace-manifest.json" ]; then
+  WORKSPACE_ROOT="$(cd .. && pwd)"
+else
+  echo "Error: Run from workspace root. Expected unified-trading-pm/workspace-manifest.json"
+  echo "  cd /path/to/unified-trading-system-repos"
+  echo "  bash unified-trading-pm/scripts/repo-management/sync-all-to-main.sh"
+  exit 1
+fi
+PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
 MANIFEST="$PM_ROOT/workspace-manifest.json"
 
 
@@ -44,24 +57,25 @@ build/
 DRY_RUN=false
 LIMIT=""
 REPO_FILTER=""
+FILTER_PATTERN=""
+DEP_BRANCH=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dry-run) DRY_RUN=true; shift ;;
     --limit) LIMIT="$2"; shift 2 ;;
     --repo) REPO_FILTER="$2"; shift 2 ;;
+    --filter) FILTER_PATTERN="$2"; shift 2 ;;
+    --dep-branch) DEP_BRANCH="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
 
 # Build repo list in dependency order from manifest SSOT (topologicalOrder)
-# Dependencies are pushed before dependents to avoid downstream failures.
 if [[ -n "$REPO_FILTER" ]]; then
   REPOS=("$REPO_FILTER")
 else
-  # Flatten topologicalOrder.levels[].repos[] for dependency-ordered list
   ORDERED=($(jq -r '.topologicalOrder.levels[].repos[]' "$MANIFEST" 2>/dev/null))
-  # Append any repos in .repositories not yet in topologicalOrder (manifest drift guard)
   REPO_KEYS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
   for r in "${REPO_KEYS[@]}"; do
     for o in "${ORDERED[@]}"; do [[ "$o" == "$r" ]] && break; done
@@ -69,14 +83,25 @@ else
   done
   REPOS=("${ORDERED[@]}")
 fi
+# Apply glob filter if set (e.g. unified-*, *-service)
+if [[ -n "$FILTER_PATTERN" ]]; then
+  FILTERED=()
+  for r in "${REPOS[@]}"; do
+    [[ "$r" == $FILTER_PATTERN ]] && FILTERED+=("$r")
+  done
+  REPOS=("${FILTERED[@]}")
+fi
 [[ -n "$LIMIT" ]] && REPOS=("${REPOS[@]:0:$LIMIT}")
 
-echo "Sync to main: ${#REPOS[@]} repos (dependency order from manifest)"
+echo "Sync to main: ${#REPOS[@]} repos (dependency order, quickmerge flow)"
 [[ "$DRY_RUN" = true ]] && echo "DRY RUN"
+[[ -n "$FILTER_PATTERN" ]] && echo "Filter: $FILTER_PATTERN"
+[[ -n "$DEP_BRANCH" ]] && echo "Dep branch: $DEP_BRANCH (will pass to quickmerge)"
 echo ""
 
 ok=0
 FAILED_REPOS=()
+FAILED_REASONS=()
 fail=0
 skip=0
 
@@ -100,39 +125,83 @@ for repo in "${REPOS[@]}"; do
     echo -e "$GITIGNORE_BLOCK" >> "$dir/.gitignore"
   fi
 
-  (cd "$dir" && git add -A 2>/dev/null || true)
-  (cd "$dir" && [[ -n "$(git status --porcelain 2>/dev/null)" ]] && git commit --no-verify -m "chore: sync local changes" 2>/dev/null) || true
+  (cd "$dir" && git add -A 2>/dev/null) || true
+
   if ! (cd "$dir" && git rev-parse --verify main >/dev/null 2>&1); then
     echo "  (skip) $repo — no main branch"
     ((skip++))
     continue
   fi
-  # Fetch and merge origin/main — keep non-conflicting remote changes
+
+  # Fetch and merge origin/main — if we are behind, pull. Conflict -> FAIL
   if ! (cd "$dir" && git fetch origin main 2>/dev/null); then
     FAILED_REPOS+=("$repo")
+    FAILED_REASONS+=("fetch failed")
     echo "  FAIL $repo — fetch origin failed"
     ((fail++))
     continue
   fi
+
   if ! (cd "$dir" && git merge origin/main --no-edit 2>/dev/null); then
     (cd "$dir" && git merge --abort 2>/dev/null) || true
     FAILED_REPOS+=("$repo")
-    echo "  FAIL $repo — merge conflicts with origin/main; pull and resolve manually first"
+    FAILED_REASONS+=("merge conflict with origin/main")
+    echo "  FAIL $repo — merge conflicts with origin/main; resolve manually first"
     ((fail++))
     continue
   fi
-  if (cd "$dir" && git push origin main 2>/dev/null); then
+
+  # If we have commits ahead of origin, reset to staged changes so quickmerge can commit
+  if (cd "$dir" && git rev-list origin/main..HEAD --quiet 2>/dev/null); then
+    (cd "$dir" && git reset --soft origin/main 2>/dev/null) || true
+  fi
+
+  # Skip if nothing to commit
+  if (cd "$dir" && [[ -z "$(git status --porcelain 2>/dev/null)" ]] ); then
+    echo "  OK $repo (no changes)"
+    ((ok++))
+    continue
+  fi
+
+  # Run quickmerge
+  QM_SCRIPT="$dir/scripts/quickmerge.sh"
+  if [[ ! -f "$QM_SCRIPT" ]]; then
+    QM_SCRIPT="$PM_ROOT/scripts/quickmerge.sh"
+  fi
+  if [[ ! -f "$QM_SCRIPT" ]]; then
+    FAILED_REPOS+=("$repo")
+    FAILED_REASONS+=("no quickmerge.sh")
+    echo "  FAIL $repo — scripts/quickmerge.sh not found"
+    ((fail++))
+    continue
+  fi
+
+  QM_ARGS=("chore: sync local changes")
+  [[ -n "$DEP_BRANCH" ]] && QM_ARGS+=("--dep-branch" "$DEP_BRANCH")
+  QM_OUT=$(mktemp)
+  if (cd "$dir" && bash "$QM_SCRIPT" "${QM_ARGS[@]}" > "$QM_OUT" 2>&1); then
     echo "  OK $repo"
     ((ok++))
   else
     FAILED_REPOS+=("$repo")
-    echo "  FAIL $repo — push failed"
+    FAILED_REASONS+=("quickmerge failed (quality gates or PR auto-merge)")
+    echo "  FAIL $repo — quickmerge failed"
+    echo "  Last 60 lines of quickmerge output:"
+    tail -60 "$QM_OUT" | sed 's/^/    /'
     ((fail++))
   fi
+  rm -f "$QM_OUT"
 done
 
 echo ""
 echo "Done: $ok OK, $fail FAIL, $skip skipped"
-[[ $fail -gt 0 ]] && echo "Failed repos: ${FAILED_REPOS[*]}"
-[[ $fail -gt 0 ]] && exit 1
+if [[ $fail -gt 0 ]]; then
+  echo "Failed repos:"
+  for i in "${!FAILED_REPOS[@]}"; do
+    echo "  - ${FAILED_REPOS[$i]}: ${FAILED_REASONS[$i]:-unknown}"
+  done
+  echo ""
+  echo "Resolve: fix conflicts manually, or run quality gates locally, then re-run."
+  exit 1
+fi
 exit 0

@@ -120,7 +120,7 @@ todos:
     content: "Update unified-trading-codex/04-architecture/TOPOLOGY-DAG.md: add features-multi-timeframe-service to Layer 3b subgraph, add edges FDS→FMTS (5m/15m/1h/4h/1d), FMTS→MLTR, FMTS→MLIN. Update WORKSPACE_MANIFEST_DAG.svg and RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg to include FMTS node at merge_level 6."
     status: completed
   - id: topology-runtime-add-mtf-service
-    content: "Update deployment-service/configs/runtime-topology.yaml: add service_flows (FDS→FMTS batch+live, FMTS→ml-training-service batch, FMTS→ml-inference-service batch+live), add persistence_flow (FMTS→GCS multi_timeframe_features), add to clusters.features.services, add to batch_and_live_services."
+    content: "Update unified-trading-pm/configs/runtime-topology.yaml (canonical SSOT): add service_flows (FDS→FMTS batch+live, FMTS→ml-training-service batch, FMTS→ml-inference-service batch+live), add persistence_flow (FMTS→GCS multi_timeframe_features), add to clusters.features.services, add to batch_and_live_services. Also update deployment-service/configs/runtime-topology.yaml partial local view if FMTS is in the execution-service wiring section."
     status: completed
   - id: topology-sharding-add-mtf-service
     content: "Update deployment-service/configs/sharding_config.yaml: add features-multi-timeframe-service entry — batch dimensions [category, feature_category, date], live dimensions [feature_category], topic_template 'features-multi-timeframe-{feature_category}', feature_category_values [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]."
@@ -830,7 +830,7 @@ Full setup checklist (mirror `features-cross-instrument-service` for every item)
 unified-trading-pm/workspace-manifest.json          ← add repo entry (merge_level=6)
 unified-trading-codex/04-architecture/TOPOLOGY-DAG.md ← add L3b node + edges
 unified-trading-codex/04-architecture/*.svg           ← update both DAG SVGs
-deployment-service/configs/runtime-topology.yaml  ← service_flows + persistence_flows
+unified-trading-pm/configs/runtime-topology.yaml  ← service_flows + persistence_flows (canonical SSOT)
 deployment-service/configs/sharding_config.yaml   ← sharding dimensions
 deployment-service/configs/checklist.features-multi-timeframe-service.yaml
 deployment-service/terraform/services/features-multi-timeframe-service/gcp/

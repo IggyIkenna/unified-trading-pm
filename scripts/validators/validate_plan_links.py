@@ -11,6 +11,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 
 def main() -> int:
@@ -21,25 +22,30 @@ def main() -> int:
     parser.add_argument("--workspace-root", type=Path, default=Path(__file__).resolve().parent.parent.parent.parent)
     args = parser.parse_args()
 
-    plans_dir = args.plans_dir.resolve()
-    ws_root = args.workspace_root.resolve()
+    plans_dir: Path = cast(Path, args.plans_dir).resolve()
+    ws_root: Path = cast(Path, args.workspace_root).resolve()
     if not plans_dir.is_dir():
         print(f"Skip: {plans_dir} not found", file=sys.stderr)
         return 0
 
     broken: list[tuple[str, str]] = []
     for path in plans_dir.glob("*.plan.md"):
-        content = path.read_text()
+        content: str = path.read_text()
         for m in re.finditer(r"\]\(([^)]+)\)", content):
             link = m.group(1).strip()
             if link.startswith("http") or link.startswith("#") or " " in link:
                 continue
+            target: Path
             if link.startswith(".cursor/") or link.startswith("deployment-service/"):
                 target = ws_root / link
             elif "/" in link and not link.startswith("."):
                 target = ws_root / link.split("/")[0]
             else:
                 target = (plans_dir / link).resolve()
+                if not target.exists():
+                    archive_dir: Path = plans_dir.parent / "archive"
+                    if archive_dir.is_dir():
+                        target = (archive_dir / link).resolve()
             if not target.exists():
                 broken.append((str(path.relative_to(plans_dir.parent)), link))
 

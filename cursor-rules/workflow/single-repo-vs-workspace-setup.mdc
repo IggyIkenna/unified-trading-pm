@@ -1,0 +1,26 @@
+---
+description: "Single-repo vs workspace setup — when to run setup.sh vs run-all-setup"
+alwaysApply: false
+priority: 55
+tags: [setup, single-repo, workspace, agent]
+---
+
+# Single-Repo vs Workspace Setup
+
+## Rule
+
+- **Single-repo work** (agent in one repo, local dev in one repo): Run `bash scripts/setup.sh` in that repo only.
+- **Workspace-wide changes** (deps changed, pushing to main): Follow `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` — version alignment → run-all-setup → sync-to-main.
+
+## When to Use Each
+
+| Context | Command | Why |
+|---------|---------|-----|
+| Agent working in execution-service | `cd execution-service && bash scripts/setup.sh` | That repo only; no workspace-wide ops |
+| You changed pyproject.toml in 3 repos | `run-version-alignment.sh --fix` then `run-all-setup.sh` | Workspace-wide alignment + uv.lock refresh |
+| Pushing local changes to main | `sync-all-to-main.sh` | Full flow (after alignment + setup if deps changed) |
+
+## SSOT
+
+- **Full flow:** `docs/repo-management/CI-CD-FLOW.md`
+- **Related:** `dependency-alignment-and-setup-flow.mdc`, `full-cicd-flow.mdc`, `mandatory-setup-sh.mdc`

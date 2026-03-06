@@ -58,6 +58,16 @@
       "optional_dir": "specs/"
     }
   },
+  "staging_status": {
+    "_note": "Set by update-repo-version.yml on major version bump cascade. Cleared by staging-to-main.yml after SIT validates staging. When locked, --to-staging quickmerge exits with queue message (non-breaking quickmerge to main is NOT blocked).",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null
+  },
+  "staging_versions": {
+    "_note": "Mirrors 'versions' for repos currently on staging (converging). Updated by update-repo-version.yml when branch=staging in dispatch payload. Promoted to 'versions' by staging-to-main.yml after SIT passes. Empty until first --to-staging cascade lands on staging."
+  },
   "versions_policy": {
     "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release \u2014 it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
     "bump_authority": "GitHub Action (version-bump.yml) on merge to main only. Conventional commit prefix determines bump type.",
@@ -139,6 +149,11 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.1,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
         }
       ],
       "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
@@ -202,6 +217,11 @@
         {
           "name": "unified-events-interface",
           "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=1.1.5,<1.0.0",
           "required": true
         }
       ],
@@ -344,6 +364,11 @@
         },
         {
           "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -921,6 +946,16 @@
         {
           "name": "unified-domain-client",
           "version": ">=0.1.12,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
@@ -1919,15 +1954,10 @@
           "name": "unified-config-interface",
           "version": ">=0.1.3,<1.0.0",
           "required": true
-        },
-        {
-          "name": "deployment-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "completion_path": "cefi",
-      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth.",
+      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. deployment-service path dep removed 2026-03-06 (stream1 citadel audit remediation).",
       "ci_status": "HAS_QG",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",

@@ -208,6 +208,7 @@ def parse_level_descriptions(data: JsonDict) -> dict[int, str]:
 
 def parse_repos(
     repos_raw: JsonDict,
+    versions: JsonDict | None = None,
 ) -> tuple[dict[int, list[RepoEntry]], dict[str, int]]:
     """Extract level->repos map and type counts from repositories dict."""
     levels: dict[int, list[RepoEntry]] = {}
@@ -229,7 +230,8 @@ def parse_repos(
 
         status = _jstr(info.get("status"))
         css = "future" if status == "planned" else TYPE_CSS.get(repo_type, "infra")
-        ver = _jstr(info.get("version"), "0.1.0")
+        # Use top-level versions map (GHA-maintained SSOT) over per-repo version field
+        ver = _jstr((versions or {}).get(name) or info.get("version"), "0.1.0")
         levels.setdefault(lvl, []).append(
             RepoEntry(name=name, version=ver, css_class=css),
         )
@@ -250,8 +252,9 @@ def generate_svg(data: JsonDict) -> str:
         raise ValueError("workspace-manifest.json missing 'repositories' dict")
     total = len(repos_raw)
 
+    versions_raw = _jdict(data.get("versions")) or {}
     level_desc = parse_level_descriptions(data)
-    levels, type_counts = parse_repos(repos_raw)
+    levels, type_counts = parse_repos(repos_raw, versions_raw)
 
     level_rows = {lvl: layout_rows(levels[lvl]) for lvl in levels}
     level_heights = {lvl: band_height(level_rows[lvl]) for lvl in levels}

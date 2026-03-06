@@ -78,7 +78,7 @@ def ensure_scripts_in_package_json(package_json_path: Path) -> bool:
         print(f"  ❌ Invalid JSON in {package_json_path}")
         return False
 
-    scripts_val = data.get("scripts", {})
+    scripts_val = data.get("scripts") or {}
     scripts: dict[str, str] = cast(dict[str, str], scripts_val) if isinstance(scripts_val, dict) else {}
     updated = False
 

@@ -9,11 +9,23 @@ on:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --no-deprecation
     steps:
       - name: Checkout unified-trading-pm
         uses: actions/checkout@v4
-        with:
-          path: unified-trading-pm
+
+      - name: Checkout Codex (sibling, for background agents / cursor rules context)
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          # actions/checkout rejects path outside GITHUB_WORKSPACE; use git clone to sibling
+          PARENT="$(dirname "$GITHUB_WORKSPACE")"
+          if [ -d "$PARENT/unified-trading-codex/.git" ]; then
+            (cd "$PARENT/unified-trading-codex" && git fetch --depth 1 origin main && git checkout main) || true
+          elif [ -n "${GH_PAT}" ]; then
+            git clone --depth 1 "https://x-access-token:${GH_PAT}@github.com/${{ github.repository_owner }}/unified-trading-codex.git" "$PARENT/unified-trading-codex"
+          fi
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -23,57 +35,26 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      - name: Install ripgrep
+      - name: Install ripgrep, shellcheck, bats
         run: |
-          # Install via GitHub release — works in both real GHA runners and act containers
-          # where apt universe may not have ripgrep in its package lists.
-          RG_VER="14.1.1"
-          curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
-            | tar -xz --strip-components=1 -C /tmp "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
-          sudo mv /tmp/rg /usr/local/bin/rg
+          sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep shellcheck bats
           rg --version
+          shellcheck --version
+          bats --version
 
-      - name: Install PM dev deps (ruff, basedpyright, pytest)
-        working-directory: unified-trading-pm
+      - name: Install PM dev deps (ruff, basedpyright, pytest, pyyaml)
+        working-directory: .
         run: |
-          uv venv .venv
+          uv sync --extra dev
           source .venv/bin/activate
-          uv pip install ruff==0.15.0 basedpyright pytest pytest-asyncio pytest-mock pytest-timeout pytest-xdist pytest-cov
 
-      - name: Checkout Codex (sibling)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/unified-trading-codex
-          path: unified-trading-codex
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 1
-        continue-on-error: true
-
-      - name: Simulate sibling workspace layout
-        # Scripts infer workspace root as parent of unified-trading-pm/.
-        # In CI the checkout lands at $GITHUB_WORKSPACE/unified-trading-pm,
-        # so $GITHUB_WORKSPACE is the workspace root — perfect sibling layout.
-        # We just need to create .cursor/rules/ and one sibling so validation passes.
+      - name: Simulate workspace layout (for validation)
         run: |
           mkdir -p "$GITHUB_WORKSPACE/.cursor/rules"
           touch "$GITHUB_WORKSPACE/.cursorrules"
 
-      - name: Install shellcheck
-        run: |
-          # Install via GitHub release — same reason as ripgrep above.
-          SC_VER="v0.10.0"
-          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VER}/shellcheck-${SC_VER}.linux.x86_64.tar.xz" \
-            | tar -xJ --strip-components=1 -C /tmp "shellcheck-${SC_VER}/shellcheck"
-          sudo mv /tmp/shellcheck /usr/local/bin/shellcheck
-          shellcheck --version
-
-      - name: Install bats-core
-        run: |
-          git clone --depth=1 https://github.com/bats-core/bats-core.git /tmp/bats-core
-          sudo /tmp/bats-core/install.sh /usr/local
-
       - name: Run quality gates
-        working-directory: unified-trading-pm
+        working-directory: .
         run: |
           source .venv/bin/activate
           bash scripts/quality-gates.sh

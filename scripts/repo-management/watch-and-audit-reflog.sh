@@ -8,10 +8,16 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
-AUDIT_SCRIPT="$SCRIPT_DIR/run-audit-reflog-with-alert.sh"
+# Resolve workspace root from cwd (must run from workspace root)
+if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
+  WORKSPACE_ROOT="$(pwd)"
+elif [ -f "$(pwd)/workspace-manifest.json" ]; then
+  WORKSPACE_ROOT="$(cd .. && pwd)"
+else
+  echo "Error: Run from workspace root. Expected unified-trading-pm/workspace-manifest.json"
+  exit 1
+fi
+AUDIT_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh"
 
 cd "$WORKSPACE_ROOT"
 

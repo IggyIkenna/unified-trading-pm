@@ -3,6 +3,7 @@
 **Canonical location:** `unified-trading-pm/TOPOLOGY-DAG.md` (this file — moved from codex 2026-03-06)
 
 **Machine-readable SSOTs (the three files that define the complete topology):**
+
 - `unified-trading-pm/workspace-manifest.json` — code DAG: tier membership, version pins, merge order
 - `deployment-service/configs/runtime-topology.yaml` — runtime wiring: topics, storage, modes, co-location rules
 - `unified-trading-pm/TOPOLOGY-DAG.md` — human-readable Mermaid diagram (this file)
@@ -313,28 +314,28 @@ flowchart TB
 UIs use `VITE_API_URL` injected at build time. In development, UIs call local APIs directly. In production, routing goes
 through Cloud Run URLs.
 
-| UI Group | Dev (`localhost`) | Prod (Cloud Run) |
-| --- | --- | --- |
-| Ops UIs: `deployment-ui`, `live-health-monitor-ui`, `batch-audit-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui` | `:8001` (deployment-api) | `deployment-api-<hash>-uc.a.run.app` |
-| Trading UIs: `trading-analytics-ui`, `strategy-ui`, `execution-analytics-ui`, `settlement-ui` | `:8002` (execution-results-api) | `execution-results-api-<hash>-uc.a.run.app` |
-| Client UIs: `client-reporting-ui` | `:8003` (client-reporting-api) | `client-reporting-<hash>-uc.a.run.app` |
+| UI Group                                                                                                                     | Dev (`localhost`)               | Prod (Cloud Run)                            |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------- |
+| Ops UIs: `deployment-ui`, `live-health-monitor-ui`, `batch-audit-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui` | `:8001` (deployment-api)        | `deployment-api-<hash>-uc.a.run.app`        |
+| Trading UIs: `trading-analytics-ui`, `strategy-ui`, `execution-analytics-ui`, `settlement-ui`                                | `:8002` (execution-results-api) | `execution-results-api-<hash>-uc.a.run.app` |
+| Client UIs: `client-reporting-ui`                                                                                            | `:8003` (client-reporting-api)  | `client-reporting-<hash>-uc.a.run.app`      |
 
 ---
 
 ## Known Violations (open tasks)
 
-| Violation | Task ID | Priority |
-| --- | --- | --- |
-| UMI imports UDC (T2→T3 lateral) | `cohesion-umi-udc-dep-violation` | P1 |
-| UTS package name still `unified_cloud_services` (rename in progress) | `uts-package-rename` | P1 |
-| execution-service depends on market-tick-data-service + risk-and-exposure-service (service→service) | `exec-svc-cross-svc-deps` | P1 |
-| market-tick-data-service depends on instruments-service (service→service) | `mtdh-instruments-svc-dep` | P1 |
-| `company.com` placeholder domain in execution-service auth — replace with real domain from config | `exec-svc-auth-domain-config` | P1 |
-| execution-service-kill-switch-api-key + google-oauth-client-id must be provisioned in Secret Manager | `exec-svc-sm-provisioning` | P1 |
-| 4 orphan repos not in workspace-manifest.json | `orphan-repos-manifest` | P2 |
-| deployment-ui is static files in UTDV3, not standalone repo | `deployment-v3-four-way-split` | P1 |
-| strategy-ui in filesystem not in manifest | `strategy-ui-manifest` | P2 |
-| UTD V3 being split into 4 repos (deployment-service + deployment-api + deployment-ui + system-integration-tests) | `deployment-v3-four-way-split` | P1 |
+| Violation                                                                                                        | Task ID                          | Priority |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------- |
+| UMI imports UDC (T2→T3 lateral)                                                                                  | `cohesion-umi-udc-dep-violation` | P1       |
+| UTS package name still `unified_cloud_services` (rename in progress)                                             | `uts-package-rename`             | P1       |
+| execution-service depends on market-tick-data-service + risk-and-exposure-service (service→service)              | `exec-svc-cross-svc-deps`        | P1       |
+| market-tick-data-service depends on instruments-service (service→service)                                        | `mtdh-instruments-svc-dep`       | P1       |
+| `company.com` placeholder domain in execution-service auth — replace with real domain from config                | `exec-svc-auth-domain-config`    | P1       |
+| execution-service-kill-switch-api-key + google-oauth-client-id must be provisioned in Secret Manager             | `exec-svc-sm-provisioning`       | P1       |
+| 4 orphan repos not in workspace-manifest.json                                                                    | `orphan-repos-manifest`          | P2       |
+| deployment-ui is static files in UTDV3, not standalone repo                                                      | `deployment-v3-four-way-split`   | P1       |
+| strategy-ui in filesystem not in manifest                                                                        | `strategy-ui-manifest`           | P2       |
+| UTD V3 being split into 4 repos (deployment-service + deployment-api + deployment-ui + system-integration-tests) | `deployment-v3-four-way-split`   | P1       |
 
 ---
 
@@ -342,14 +343,14 @@ through Cloud Run URLs.
 
 5 testing layers validate the system end-to-end. See **SSOT:** `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
 
-| Layer | Purpose | Location | In quickmerge? |
-| --- | --- | --- | --- |
-| 0 | Contract alignment (AC↔UIC) | unified-api-contracts + unified-internal-contracts | Yes |
-| 1 | Schema robustness per-service | Each repo tests/unit/ | Yes |
-| 1.5 | Per-component integration (adapter/event/config with mocks) | Each repo tests/integration/ | Yes (last local gate) |
-| 2 | Infrastructure verify (storage, queues, IAM) | deployment-service/scripts/verify_infra.py | No (post-deploy) |
-| 3a | Pipeline smoke (fast) | system-integration-tests `@smoke` | No (post-deploy) |
-| 3b | Full E2E (thorough) | system-integration-tests `@full_e2e` | No (post-deploy) |
+| Layer | Purpose                                                     | Location                                           | In quickmerge?        |
+| ----- | ----------------------------------------------------------- | -------------------------------------------------- | --------------------- |
+| 0     | Contract alignment (AC↔UIC)                                | unified-api-contracts + unified-internal-contracts | Yes                   |
+| 1     | Schema robustness per-service                               | Each repo tests/unit/                              | Yes                   |
+| 1.5   | Per-component integration (adapter/event/config with mocks) | Each repo tests/integration/                       | Yes (last local gate) |
+| 2     | Infrastructure verify (storage, queues, IAM)                | deployment-service/scripts/verify_infra.py         | No (post-deploy)      |
+| 3a    | Pipeline smoke (fast)                                       | system-integration-tests `@smoke`                  | No (post-deploy)      |
+| 3b    | Full E2E (thorough)                                         | system-integration-tests `@full_e2e`               | No (post-deploy)      |
 
 ---
 
