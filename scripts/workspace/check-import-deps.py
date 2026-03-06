@@ -315,7 +315,9 @@ def load_manifest() -> dict[str, object]:
 
 def get_internal_package_names(manifest: dict[str, object]) -> dict[str, str]:
     """Get mapping of import_name -> repo_name for all internal packages."""
-    repos = cast(dict[str, object], manifest.get("repositories", {}))
+    if "repositories" not in manifest:
+        raise KeyError("repositories required in workspace-manifest.json")
+    repos = cast(dict[str, object], manifest["repositories"])
     result: dict[str, str] = {}
     for repo_name in repos:
         import_name = pkg_name_to_import_name(repo_name)
@@ -329,7 +331,9 @@ def load_constraints() -> set[str]:
         return set()
     with open(CONSTRAINTS_PATH, "rb") as f:
         data = cast(TomlDict, tomllib.load(f))
-    deps_section = cast(dict[str, object], data.get("dependencies", {}))
+    if "dependencies" not in data:
+        raise KeyError("[dependencies] required in workspace-constraints.toml")
+    deps_section = cast(dict[str, object], data["dependencies"])
     return set(deps_section.keys())
 
 
@@ -343,8 +347,10 @@ def parse_repo_deps(repo_dir: Path) -> set[str]:
         return set()
     with open(pyproject, "rb") as f:
         data = cast(TomlDict, tomllib.load(f))
-    project = cast(dict[str, object], data.get("project", {}))
-    deps_raw = cast(list[object], project.get("dependencies", []))
+    if "project" not in data:
+        raise KeyError("[project] required in pyproject.toml")
+    project = cast(dict[str, object], data["project"])
+    deps_raw = cast(list[object], (project.get("dependencies") or []))  # PEP 621: optional
     result: set[str] = set()
     for dep in deps_raw:
         if isinstance(dep, str):
@@ -519,13 +525,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", help="Check only this repo")
     parser.add_argument("--verbose", action="store_true", help="Show all imports")
-    args = parser.parse_args()
 
-    repo_name_filter: str | None = str(getattr(args, "repo")) if getattr(args, "repo") else None
-    verbose: bool = bool(getattr(args, "verbose"))
+    class Args(argparse.Namespace):
+        repo: str | None = None
+        verbose: bool = False
+
+    args = parser.parse_args(namespace=Args())
+    repo_name_filter: str | None = args.repo
+    verbose: bool = args.verbose
 
     manifest = load_manifest()
-    repos = cast(dict[str, object], manifest.get("repositories", {}))
+    if "repositories" not in manifest:
+        raise KeyError("repositories required in workspace-manifest.json")
+    repos = cast(dict[str, object], manifest["repositories"])
     internal_packages = get_internal_package_names(manifest)
     constraints_packages = load_constraints()
     stdlib_modules = get_stdlib_modules()

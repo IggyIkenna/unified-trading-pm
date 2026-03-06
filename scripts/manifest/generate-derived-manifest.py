@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import tomllib
@@ -25,7 +26,7 @@ from typing import Any, cast
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
-WORKSPACE_ROOT = PM_ROOT.parent
+WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(PM_ROOT.parent)))
 MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
 CONSTRAINTS_PATH = PM_ROOT / "workspace-constraints.toml"
 DEFAULT_OUTPUT = PM_ROOT / "derived-dependency-manifest.json"
@@ -145,7 +146,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT))
     args = parser.parse_args()
-    output_path = Path(args.output)
+    output_path = Path(cast(str, args.output))
 
     if not MANIFEST_PATH.is_file():
         print(f"ERROR: Manifest not found: {MANIFEST_PATH}", file=sys.stderr)

@@ -67,7 +67,7 @@ Scope identifies which component changed:
 
 - commit-msg hook (pre-commit): validates format before commit is created
 - quickmerge.sh Stage 0: validates COMMIT_MSG format, exits 1 if not conventional
-- GitHub Actions version-bump.yml: reads type prefix from squash-merge commit
+- GitHub Actions version-bump.yml: reads type prefix from squash-merge commit; non-conventional format = no bump → idempotent conflict on next Cloud Build run
 
 ## Breaking Changes in Internal Libraries/Services
 

@@ -10,7 +10,7 @@ globs: ["**/pyproject.toml"]
 When adding dependencies to any repo's pyproject.toml, ALWAYS install at BOTH levels:
 
 1. **Repo level**: `cd repo && uv pip install -e ".[dev]"`
-2. **Workspace level**: `cd /Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos && source .venv-workspace/bin/activate && uv pip install package-name`
+2. **Workspace level**: `cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate && uv pip install package-name`
 
 This ensures IDE health (Pylance, type checking) works across the workspace.
 
@@ -23,7 +23,7 @@ This ensures IDE health (Pylance, type checking) works across the workspace.
 **Install order** (dependency order for workspace venv IDE type hints):
 
 ```bash
-cd /Users/ikennaigboaka/Documents/Documents - Mac/repos/unified-trading-system-repos
+cd $WORKSPACE_ROOT  # or /path/to/unified-trading-system-repos
 source .venv-workspace/bin/activate
 
 # 1. matching-engine-library (no deps on other local libs)
@@ -46,3 +46,22 @@ pip install -e execution-service --no-deps
 **Uninstall old:** `uv pip uninstall unified-order-interface` (no longer exists)
 
 CODEX: 05-infrastructure/workspace-root-variable.md
+
+---
+
+## pyrightconfig.json Venv Configuration
+
+Every repo's `pyrightconfig.json` MUST include the workspace venv path so basedpyright resolves cross-repo imports:
+
+```json
+{
+  "venvPath": "../",
+  "venv": ".venv-workspace"
+}
+```
+
+- **Standard repos (depth 1):** `"venvPath": "../"` (relative to repo root, points to workspace root)
+- **Archive/* repos (depth 2):** `"venvPath": "../../"` (two levels up)
+- **Workspace root config:** `"venvPath": "."` (self-referential)
+
+After changing pyrightconfig.json, restart the IDE language server (Ctrl+Shift+P → "Pylance: Restart Language Server"). Run `run_timeout 120 basedpyright <source_dir>/` per-repo to verify — never `basedpyright .` from workspace root.

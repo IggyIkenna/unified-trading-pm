@@ -16,7 +16,6 @@ ENFORCED BY: UCS_DOMAIN_IMPORT quality gate check (blocking)
 ```python
 from unified_domain_client import (
     InstrumentsDomainClient,         # reading instruments
-    StandardizedDomainCloudService,  # writing domain data to GCS
     DomainValidationService,         # domain validation service
     DomainValidationConfig,          # domain validation config
     validate_timestamp_date_alignment,
@@ -26,27 +25,47 @@ from unified_domain_client import (
 )
 ```
 
-## Import from UTS (cloud primitives only):
+## Import from UCI (cloud I/O — preferred for all tiers):
+```python
+from unified_cloud_interface import (
+    get_storage_client, get_secret_client, get_data_sink, get_data_source,
+)
+
+# Writing domain data to cloud storage:
+sink = get_data_sink(routing_key="instruments")  # maps to PROTOCOL_DATA_SINK_BUCKET_INSTRUMENTS
+sink.write(data=output_df, path=output_path)
+```
+
+## Import from UTS (cloud primitives — backward compat only):
 ```python
 from unified_trading_services import (
-    CloudTarget, get_storage_client, get_secret_client,
+    get_storage_client, get_secret_client,  # re-exported from UCI
     handle_api_errors, BaseGCSWriter, ColumnSchema, generate_date_range,
 )
 ```
 
-**Note:** Cloud primitives (get_storage_client, StorageClient) now come from unified_cloud_interface (Tier 0). Services may still import them via unified_trading_services (backward compat re-export) but direct unified_cloud_interface imports are preferred for Tier 2 libs.
+**Note:** `CloudTarget` and `StandardizedDomainCloudService` are **fully deleted** from UTS/UDC. Use `get_data_sink(routing_key=...)` from `unified_cloud_interface` for all domain data writes. Direct `unified_cloud_interface` imports are preferred over UTS re-exports for T2+ libs.
 
 ## API Keys: Secret Manager Only
 ```python
-api_key = get_secret_client(project_id=..., secret_name=...)
+api_key = get_secret_client().get_secret(secret_name="<secret-name>")
 ```
+
+Key API key secret names (from `07-security/secrets-management.md`):
+- `tardis-api-key` — Tardis.dev historical tick data
+- `databento-api-key` — Databento market data
+- `coinglass-api-key` — Coinglass liquidation heatmap / open interest
+- `thegraph-api-key` — The Graph subgraph queries
+- `alchemy-api-key` — Alchemy node RPC (Ethereum, DeFi)
 
 NEVER:
 - `get_secret_client(..., fallback_env_var=...)` — silently swallows missing-secret errors
+- `CloudTarget` — **DELETED** from UTS; use `get_data_sink(routing_key=...)`
+- `StandardizedDomainCloudService` — **DELETED** from UDC; use `get_data_sink(routing_key=...)`
 - `from unified_trading_services import InstrumentsDomainClient` (deleted stub)
 - `from unified_trading_services import create_instruments_client` (deleted stub)
 - `from unified_trading_services import determine_market_category` (moved to UDC)
 - `from unified_trading_services import DomainValidationConfig` (re-exported from UDC)
 - `from unified_trading_services import DomainValidationService` (re-exported from UDC)
-- `os.environ.get("TARDIS_API_KEY")`
+- `os.environ.get("TARDIS_API_KEY")` or any `os.environ` for secrets — use Secret Manager
 - Direct GCS reads for instruments; duplicate `_load_instruments_by_venue` in services

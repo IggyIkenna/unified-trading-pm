@@ -118,8 +118,8 @@ def main() -> None:
     parser.add_argument("--apply", action="store_true", help="Write changes and run uv lock")
     parser.add_argument("--commit", action="store_true", help="Git add and commit (implies --apply)")
     args = parser.parse_args()
-    do_apply = args.apply or args.commit
-    do_commit = args.commit
+    do_apply = cast(bool, args.apply) or cast(bool, args.commit)
+    do_commit = cast(bool, args.commit)
 
     if not CONSTRAINTS_PATH.is_file():
         print(f"ERROR: Constraints file not found: {CONSTRAINTS_PATH}", file=sys.stderr)

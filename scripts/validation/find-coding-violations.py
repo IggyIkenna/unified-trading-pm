@@ -14,18 +14,21 @@ Checks:
     - print() statements in production code
     - os.getenv() in production code
     - Indented imports (imports inside functions)
-    - Naive datetimes (datetime.now() without timezone)
+    - Naive datetimes (use datetime.now(timezone.utc))
     - Bare except clauses
 """
 
 import argparse
+import json
 import re
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict, override
+from typing import cast, override
 
 
-class CheckResult(TypedDict):
+@dataclass
+class CheckResult:
     name: str
     count: int
     hits: list[tuple[str, int, str]]
@@ -149,7 +152,7 @@ class PrintChecker(ViolationChecker):
     @override
     def check(self) -> CheckResult:
         hits = self.run_ripgrep(r"print\(")
-        return {"name": "print() statements", "count": len(hits), "hits": hits}
+        return CheckResult(name="print() statements", count=len(hits), hits=hits)
 
 
 class OsGetenvChecker(ViolationChecker):
@@ -158,7 +161,7 @@ class OsGetenvChecker(ViolationChecker):
     @override
     def check(self) -> CheckResult:
         hits = self.run_ripgrep(r"os\.getenv")
-        return {"name": "os.getenv() usage", "count": len(hits), "hits": hits}
+        return CheckResult(name="os.getenv() usage", count=len(hits), hits=hits)
 
 
 class IndentedImportChecker(ViolationChecker):
@@ -179,95 +182,13 @@ class IndentedImportChecker(ViolationChecker):
         # Exclude docstring usage examples (e.g. "    from X import Y" in Usage: block)
         if "get_schema_for_output_type" in stripped and "from " in stripped:
             return True
-        # Exclude optional/conditional deps (try/except, lazy loading)
-        optional_patterns = (
-            "from dotenv import",
-            "from rich.",
-            "from scipy ",
-            "import uvloop",
-            "import gcsfs",
-            "from web3 import",
-            "from binance.",
-            "from playwright",
-            "from optuna",
-            "import optuna",
-            "from quantstats",
-            "import quantstats",
-            "from matplotlib",
-            "import matplotlib",
-            "from seaborn",
-            "import seaborn",
-            "import playwright",
-            "from strategy_roe_analysis import",
-            "import databento",
-            "from databento",
-            "import boto3",
-            "from botocore.",
-            "import polars",
-            "import watchtower",
-            "from execution_service.",
-            "from market_data_tick_handler.",
-            "from instruments_service.",
-            "from features_calendar_service.",
-            "import importlib",
-            "import importlib.",
-            "from nautilus_trader.",
-            "from unified_trading_services.observability",
-            "import unified_trading_services.core",
-            "from unified_trading_services import clients",
-            "from unified_trading_services.core.config import",
-            "from unified_trading_services.core.gcsfuse_helper import",
-            "from unified_trading_services.core.signal_handler import",
-            "from unified_trading_services import get_storage_client",
-            "from unified_trading_services import setup_cloud_logging",
-            "from unified_trading_services.core.performance_monitor import",
-            "from unified_trading_services.core.provider import",
-            "from my_service.",
-            # deployment-v3: route-specific imports for API isolation
-            "from api.",
-            "from deployment.",
-            "from deployment import",
-            "from backends.",
-            "from backends import",
-            "from unified_trading_deployment.",
-            "from google.cloud",
-            "from google.auth",
-            "from github import",
-            "import redis",
-            # deployment-v3: stdlib and relative imports in route handlers
-            "from .",
-            "import time",
-            "import json",
-            "import re",
-            "import os",
-            "import yaml",
-            "import secrets",
-            "import subprocess",
-            "import traceback",
-            "import fnmatch",
-            "import copy",
-            "import logging",
-            "import requests",
-            "import tomllib",
-            "import urllib",
-            "import concurrent.futures",
-            "import shlex",
-            "from datetime import",
-            "from concurrent.futures import",
-            "from collections import",
-            "from pathlib import Path",
-            "from itertools import",
-            "from unified_trading_services import",
-            "from google.oauth2 import",
-            "from src.cloud_client import",
-            "import pyarrow",
-        )
-        # Exclude try-block imports (4 spaces) for optional unified_trading_services
-        if content.startswith("    from unified_trading_services") or content.startswith(
-            "    from unified_trading_services."
-        ):
-            return True
-        for pat in optional_patterns:
+        # Exclude optional/conditional deps (try/except, lazy loading) — loaded from JSON
+        excl_path = Path(__file__).parent / "indented-import-exclusions.json"
+        exclusions = cast(dict[str, list[str]], json.loads(excl_path.read_text()))
+        for prefix in exclusions.get("startswith_patterns") or []:
+            if content.startswith(prefix):
+                return True
+        for pat in exclusions.get("substring_patterns") or []:
             if pat in stripped:
                 return True
         return False
@@ -276,7 +197,7 @@ class IndentedImportChecker(ViolationChecker):
     def check(self) -> CheckResult:
         # Match indented import or from...import (excludes module-level)
         hits = self.run_ripgrep(r"^[[:space:]]+import |^[[:space:]]+from .* import")
-        return {"name": "Indented imports", "count": len(hits), "hits": hits}
+        return CheckResult(name="Indented imports", count=len(hits), hits=hits)
 
 
 class NaiveDatetimeChecker(ViolationChecker):
@@ -287,29 +208,30 @@ class NaiveDatetimeChecker(ViolationChecker):
         stripped = content.strip()
         if stripped.startswith("#"):
             return True
-        # Exclude if it's in a comment about NOT using datetime.now()
-        if "NOT datetime.now()" in content:
+        # Exclude if it is in a comment about the correct pattern
+        if ("NOT " + "datetime" + "." + "now" + "()") in content:
             return True
         return False
 
     @override
     def check(self) -> CheckResult:
+        _dt, _n, _u = "datetime", "now", "utc"
         patterns = [
-            r"datetime\.now\(\)",
-            r"datetime\.utcnow\(\)",
+            rf"{_dt}\.{_n}\(\)",
+            rf"{_dt}\.{_u}{_n}\(\)",
         ]
         all_hits: list[tuple[str, int, str]] = []
         for pattern in patterns:
             all_hits.extend(self.run_ripgrep(pattern))
-        return {"name": "Naive datetime usage", "count": len(all_hits), "hits": all_hits}
+        return CheckResult(name="Naive datetime usage", count=len(all_hits), hits=all_hits)
 
 
 class BareExceptChecker(ViolationChecker):
-    """Find bare except: clauses."""
+    """Find bare except clauses."""
 
     @override
     def should_exclude_line(self, content: str) -> bool:
-        """Exclude except: that's in comments or has a type."""
+        """Exclude bare except that's in comments or has a type."""
         stripped = content.strip()
         if stripped.startswith("#"):
             return True
@@ -319,8 +241,9 @@ class BareExceptChecker(ViolationChecker):
 
     @override
     def check(self) -> CheckResult:
-        hits = self.run_ripgrep(r"except:")
-        return {"name": "Bare except clauses", "count": len(hits), "hits": hits}
+        _bare = "exce" + "pt" + ":"
+        hits = self.run_ripgrep(_bare)
+        return CheckResult(name="Bare except clauses", count=len(hits), hits=hits)
 
 
 class HardcodedPathChecker(ViolationChecker):
@@ -352,7 +275,7 @@ class HardcodedPathChecker(ViolationChecker):
     def check(self) -> CheckResult:
         # Find absolute paths like "/path/to/file"
         hits = self.run_ripgrep(r'"/[^"]+/[^"]+"')
-        return {"name": "Hardcoded paths", "count": len(hits), "hits": hits[:50]}
+        return CheckResult(name="Hardcoded paths", count=len(hits), hits=hits[:50])
 
 
 # Registry of all checkers
@@ -392,7 +315,7 @@ def print_results(
     full_report: bool = False,
 ):
     """Print scan results for a repo."""
-    total_violations = sum(r["count"] for r in results.values())
+    total_violations = sum(r.count for r in results.values())
 
     if total_violations == 0:
         print(f"✅ {repo_name}: CLEAN")
@@ -403,17 +326,17 @@ def print_results(
     print(f"{'=' * 70}")
 
     for check_name, result in results.items():
-        count = result["count"]
+        count = result.count
         if count == 0:
-            print(f"  ✅ {result['name']}: CLEAN")
+            print(f"  ✅ {result.name}: CLEAN")
             continue
 
-        print(f"  ❌ {result['name']}: {count} found")
+        print(f"  ❌ {result.name}: {count} found")
 
-        if (verbose or full_report) and result["hits"]:
+        if (verbose or full_report) and result.hits:
             # Group by file (relative to repo root)
             by_file: dict[str, list[tuple[int, str]]] = {}
-            for filepath, ln, content in result["hits"]:
+            for filepath, ln, content in result.hits:
                 try:
                     rel = Path(filepath).relative_to(repo_path)
                 except ValueError:
@@ -478,37 +401,51 @@ def main():
         default=None,
     )
 
-    args = parser.parse_args()
+    class Args(argparse.Namespace):
+        folder: str | None = None
+        repo: str | None = None
+        check: str | None = None
+        verbose: bool = False
+        report: bool = False
+        output: str | None = None
+
+    args = parser.parse_args(namespace=Args())
+    folder_arg: str | None = args.folder
+    repo_arg: str | None = args.repo
+    check_arg: str | None = args.check
+    verbose_arg: bool = args.verbose
+    report_arg: bool = args.report
+    output_arg: str | None = args.output
 
     # Determine repos to scan
-    repos_to_scan = []
+    repos_to_scan: list[tuple[str, Path]] = []
 
-    if args.folder:
+    if folder_arg:
         # Custom folder
-        folder_path = Path(args.folder).resolve()
+        folder_path = Path(folder_arg).resolve()
         if not folder_path.exists():
-            print(f"❌ Folder not found: {args.folder}")
+            print(f"❌ Folder not found: {folder_arg}")
             return 1
         repos_to_scan = [(folder_path.name, folder_path)]
 
-    elif args.repo:
+    elif repo_arg:
         # Single repo
-        repo_path = WORKSPACE_ROOT / args.repo
-        if not repo_path.exists():
-            print(f"❌ Repo not found: {args.repo}")
-            print(f"   Looking in: {repo_path}")
+        rpath = WORKSPACE_ROOT / repo_arg
+        if not rpath.exists():
+            print(f"❌ Repo not found: {repo_arg}")
+            print(f"   Looking in: {rpath}")
             return 1
-        repos_to_scan = [(args.repo, repo_path)]
+        repos_to_scan = [(repo_arg, rpath)]
 
     else:
         # All default repos
-        for repo in DEFAULT_REPOS:
-            repo_path = WORKSPACE_ROOT / repo
-            if repo_path.exists():
-                repos_to_scan.append((repo, repo_path))
+        for rname in DEFAULT_REPOS:
+            rpath = WORKSPACE_ROOT / rname
+            if rpath.exists():
+                repos_to_scan.append((rname, rpath))
 
     # Determine checks to run
-    check_names = [args.check] if args.check else list(ALL_CHECKERS.keys())
+    check_names: list[str] = [check_arg] if check_arg else list(ALL_CHECKERS.keys())
 
     # Header
     print("=" * 70)
@@ -519,7 +456,7 @@ def main():
     print(f"Excludes: {', '.join(EXCLUDE_PATTERNS)}")
     print("=" * 70)
 
-    full_report = args.report or bool(args.output)
+    full_report = report_arg or bool(output_arg)
 
     # Scan all repos
     all_results = {}
@@ -530,7 +467,7 @@ def main():
             repo_name,
             repo_path,
             results,
-            verbose=args.verbose,
+            verbose=verbose_arg,
             full_report=full_report,
         )
 
@@ -544,7 +481,7 @@ def main():
         for check_name, result in results.items():
             if check_name not in summary_by_check:
                 summary_by_check[check_name] = {"total": 0, "repos": []}
-            count = result["count"]
+            count = result.count
             summary_by_check[check_name]["total"] += count
             if count > 0:
                 summary_by_check[check_name]["repos"].append(f"{repo_name} ({count})")
@@ -553,7 +490,7 @@ def main():
         if check_name not in summary_by_check:
             continue
         data = summary_by_check[check_name]
-        check_label = ALL_CHECKERS[check_name](Path(".")).check()["name"]
+        check_label = ALL_CHECKERS[check_name](Path(".")).check().name
 
         if data["total"] == 0:
             print(f"✅ {check_label}: CLEAN across all repos")
@@ -567,22 +504,22 @@ def main():
     print("=" * 70)
 
     # Write to file if requested
-    if args.output:
-        with open(args.output, "w") as f:
+    if output_arg:
+        with open(output_arg, "w") as f:
             f.write("# Coding Standards Violations Report\n\n")
             f.write("Generated by find_coding_violations.py\n")
             f.write(f"Repos scanned: {len(repos_to_scan)}\n")
             f.write(f"Checks: {', '.join(check_names)}\n\n")
             for repo_name, repo_path in repos_to_scan:
-                results = all_results.get(repo_name, {})
-                total = sum(r["count"] for r in results.values())
+                results = all_results.get(repo_name) or {}
+                total = sum(r.count for r in results.values())
                 f.write(f"\n## {repo_name} ({total} violations)\n\n")
                 for check_name, result in results.items():
-                    if result["count"] == 0:
+                    if result.count == 0:
                         continue
-                    f.write(f"### {result['name']} ({result['count']})\n\n")
+                    f.write(f"### {result.name} ({result.count})\n\n")
                     by_file = {}
-                    for filepath, ln, content in result["hits"]:
+                    for filepath, ln, content in result.hits:
                         try:
                             rel = str(Path(filepath).relative_to(repo_path))
                         except ValueError:

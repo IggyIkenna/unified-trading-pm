@@ -38,13 +38,13 @@ The following directories are excluded from the file-size and function-size qual
 | `github-integration/` | One-time and ongoing PM automation scripts for GitHub Projects/Issues workflows. These are long single-file scripts by design (no shared module), and they are not deployed or imported as Python packages. Max file `04-create-service-epics.py` (1167L) is a single-script GitHub API orchestrator. |
 | `rd-tax-credits/`     | R&D tax credit export utilities. `export-script.py` `main()` is 168L (exceeds 100L function limit) — it is a one-time reporting tool with a large argparse block followed by a reporting loop. Not deployed, not imported as a package.                                                               |
 
-**Audit trail:** Added 2026-03-04.
+**Audit trail:** Added 2026-03-04. File/function size exclusions for `docs/archive/`, `github-integration/`, `rd-tax-credits/` confirmed 2026-03-06.
 
 ---
 
 ## 2.1 File Size Exceptions — Explicitly Excluded Paths
 
-See §2 above for `docs/archive/` and `github-integration/` exclusions.
+See §2 above for `docs/archive/`, `github-integration/`, and `rd-tax-credits/` exclusions. Confirmed 2026-03-06.
 
 ## 2.2 Ruff Exceptions
 
@@ -69,7 +69,7 @@ None.
 | ------------------------------------------------------- | ---- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `scripts/manifest/fix-internal-dependency-alignment.py` | 23   | `import tomli_w  # type: ignore[reportMissingImports]` | `tomli-w` is in PM dependencies; Act/CI type-check env may not resolve it. Runtime works; type ignore documents the bypass. |
 
-**Audit trail:** Added 2026-03-04 (dependency governance S4).
+**Audit trail:** Added 2026-03-04 (dependency governance S4). reportAny errors fixed 2026-03-06 (312 → 0).
 
 ---
 
@@ -77,15 +77,18 @@ None.
 
 Some checks produce false positives against files whose content is pattern-search code (not violations). These exclusions are applied in `scripts/quality-gates.sh`:
 
-| Check                      | Excluded File                                        | Reason                                                                                                                                                                                |
-| -------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Bare `except:`             | `scripts/validation/find-coding-violations.py`       | This script searches for `except:` as a string literal in its rg command arguments. The rg match is on the script source text of the search pattern, not on a real bare except.       |
-| Deep unified lib imports   | `scripts/validation/find-coding-violations.py`       | This script contains example import strings like `"from unified_trading_services.core.config import"` as search pattern literals, not as actual imports.                              |
-| `GCP_PROJECT_ID`           | `scripts/propagation/rollout-quality-gate-checks.py` | This migration script contains `GCP_PROJECT_ID` as a sentinel string for the checks it REMOVES from target repos. It is the script that eliminates the violation, not a source of it. |
-| `pip install`              | `scripts/agents/llm-agent-wrapper.sh`                | This shell script contains an `echo` statement displaying install instructions for users. It is documentation output, not an actual pip install invocation.                           |
-| `pip install` (self-match) | `scripts/quality-gates.sh` itself                    | The rg command pattern `                                                                                                                                                              | pip install ` matches the line in the quality-gates.sh that runs the check. Excluded to prevent self-referential false positive. |
+| Check                          | Excluded File                                        | Reason                                                                                                                                                                                         |
+| ------------------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bare `except:`                 | `scripts/validation/find-coding-violations.py`       | This script searches for `except:` as a string literal in its rg command arguments. The rg match is on the script source text of the search pattern, not on a real bare except.                |
+| Deep unified lib imports       | `scripts/validation/find-coding-violations.py`       | This script contains example import strings like `"from unified_trading_services.core.config import"` as search pattern literals, not as actual imports.                                       |
+| Naive datetime                 | `scripts/validation/find-coding-violations.py`       | This script searches for `datetime.now()` / `datetime.utcnow()` as string literals in its rg command arguments. The match is on the search pattern, not on actual naive datetime usage.        |
+| TypedDict / `Any`              | `scripts/validation/find-coding-violations.py`       | This script defines `CheckResult` as an internal validation struct (TypedDict) for its own output format. Not a cross-repo contract; the script validates code patterns, not schema placement. |
+| `GCP_PROJECT_ID`               | `scripts/propagation/rollout-quality-gate-checks.py` | This migration script contains `GCP_PROJECT_ID` as a sentinel string for the checks it REMOVES from target repos. It is the script that eliminates the violation, not a source of it.          |
+| `GCP_PROJECT_ID` (BACK_COMPAT) | `scripts/propagation/rollout-quality-gate-checks.py` | Same script references `GCP_PROJECT_ID` (backward-compat alias) as a migration target string — the script removes this pattern from downstream repos.                                          |
+| `pip install`                  | `scripts/agents/llm-agent-wrapper.sh`                | This shell script contains an `echo` statement displaying install instructions for users. It is documentation output, not an actual pip install invocation.                                    |
+| `pip install` (self-match)     | `scripts/quality-gates.sh` itself                    | The rg command pattern `pip install` matches the line in the quality-gates.sh that runs the check. Excluded to prevent self-referential false positive.                                        |
 
-**Audit trail:** Added 2026-03-04.
+**Audit trail:** Added 2026-03-04. find-coding-violations.py (naive datetime, TypedDict) and rollout-quality-gate-checks.py (BACK_COMPAT) added 2026-03-06.
 
 ---
 
@@ -141,19 +144,17 @@ Some checks produce false positives against files whose content is pattern-searc
 
 **Rationale:** These scripts parse JSON manifest files where certain sections (`dependencies`, `repositories`, `sources`) are genuinely optional. `.get("key", [])` returning an empty list when a key is absent is correct and intentional — a missing section means "no items", not an error. The "fail fast" rule applies to API response fields and config values in production services, not to manifest file traversal in PM tooling scripts.
 
-**Audit trail:** Added 2026-03-04.
+**Audit trail:** Added 2026-03-04. ED/EL exclusions for scripts/manifest, workspace, migration, propagation, repo-management confirmed 2026-03-06.
 
 ---
 
-## 2.8 Import Inside Function — `scripts/manifest/sbom-store.py`
+## 2.8 Import Inside Function — `scripts/manifest/sbom-store.py` (RESOLVED 2026-03-06)
 
 **Rule bypassed:** No imports inside functions.
 
-**File:** `scripts/manifest/sbom-store.py` line 54: `from unified_trading_services import get_storage_client`
+**Status:** RESOLVED. Import moved to top level with `try/except ImportError`; `get_storage_client is None` check replaces `importlib.util.find_spec`. No bypass needed.
 
-**Rationale:** This import is intentionally deferred and guarded by `importlib.util.find_spec("unified_trading_services")` on line 47. If `unified_trading_services` is not installed (e.g., when running quality gates without the full workspace), the script exits gracefully instead of raising `ImportError`. This is the correct pattern for optional/conditional dependencies in PM tooling scripts that are non-blocking (called with `|| :` in quality-gates.sh).
-
-**Audit trail:** Added 2026-03-04.
+**Audit trail:** Added 2026-03-04. Resolved 2026-03-06.
 
 ---
 

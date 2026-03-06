@@ -54,6 +54,7 @@ Repos with path deps need a "Checkout dependencies" step in `quality-gates.yml` 
 ## Related
 
 - `dependency-version-alignment.mdc` — which versions to use (version selection); this file covers lock file mechanics only
+- `dependency-alignment-and-setup-flow.mdc` — workspace-wide uv.lock updates via run-all-setup
 - `uv-package-manager.mdc` — UV command reference for all installs
 - `always-use-quickmerge.mdc` — Quickmerge includes modified files
 - `path-dependency-ci.mdc` — Path deps checkout pattern for CI

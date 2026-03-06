@@ -42,7 +42,7 @@
   <text x="150" y="204" class="desc">Project management — pure root (manifest, templates, scripts, cursor rules). No dependencies. (1 repos)</text>
   <rect x="70" y="227" width="146" height="38" class="devops" />
   <text x="143" y="245" text-anchor="middle" class="label">unified-trading-pm</text>
-  <text x="143" y="257" text-anchor="middle" class="ver">0.7.0</text>
+  <text x="143" y="257" text-anchor="middle" class="ver">1.2.0</text>
   <!-- L1: Standards &amp; codex — coding standards, architecture docs, quality gate templates. Depends on PM. (1 repos) -->
   <rect x="40" y="299" width="2320" height="107" class="level-bg" />
   <rect x="55" y="307" width="80" height="22" fill="#16a34a" class="level-badge" />

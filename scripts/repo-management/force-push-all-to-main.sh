@@ -14,9 +14,18 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
+# Resolve workspace root from cwd (must run from workspace root)
+if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
+  WORKSPACE_ROOT="$(pwd)"
+elif [ -f "$(pwd)/workspace-manifest.json" ]; then
+  WORKSPACE_ROOT="$(cd .. && pwd)"
+else
+  echo "Error: Run from workspace root. Expected unified-trading-pm/workspace-manifest.json"
+  echo "  cd /path/to/unified-trading-system-repos"
+  echo "  bash <script>"
+  exit 1
+fi
+PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
 MANIFEST="$PM_ROOT/workspace-manifest.json"
 
 DRY_RUN=false

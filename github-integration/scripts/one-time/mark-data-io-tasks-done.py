@@ -90,7 +90,7 @@ def get_all_project_items() -> list[JsonDict]:
         if cursor:
             args.extend(["--cursor", cursor])
         data: JsonDict = cast(JsonDict, json.loads(run_gh(args)))
-        raw_batch: object = data.get("items", [])
+        raw_batch: object = data.get("items") or []
         batch: list[JsonDict] = cast(list[JsonDict], raw_batch) if isinstance(raw_batch, list) else []
         items.extend(batch)
         if not batch or len(batch) < 100:
@@ -113,7 +113,7 @@ def main() -> int:
     completed_set: set[int] = set(COMPLETED_ISSUES)
     to_update: list[tuple[str, int, str, str, str]] = []
     for item in items:
-        raw_content: object = item.get("content", {})
+        raw_content: object = item.get("content") or {}
         content: JsonDict = cast(JsonDict, raw_content) if isinstance(raw_content, dict) else {}
         raw_num: object = content.get("number")
         num: int = int(str(raw_num)) if isinstance(raw_num, (int, float)) else 0

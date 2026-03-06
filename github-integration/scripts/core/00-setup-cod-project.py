@@ -228,7 +228,7 @@ def find_cod_issues(org: str, repos: list[str]) -> list[JsonDict]:
                         repo_name = url_parts[4]
 
                 # Check if already labeled
-                raw_labels: object = issue.get("labels", [])
+                raw_labels: object = issue.get("labels") or []
                 labels_list: list[JsonDict] = (
                     [cast(JsonDict, lb) for lb in cast(list[object], raw_labels) if isinstance(lb, dict)]
                     if isinstance(raw_labels, list)
@@ -353,7 +353,7 @@ Auto-managed by setup-cod-project.py
     )
 
     if isinstance(existing_result, dict):
-        raw_projects: object = existing_result.get("projects", [])
+        raw_projects: object = existing_result.get("projects") or []
         if isinstance(raw_projects, list):
             projects_list: list[JsonDict] = [
                 cast(JsonDict, p) for p in cast(list[object], raw_projects) if isinstance(p, dict)
@@ -566,7 +566,7 @@ def get_main_projects(org: str) -> list[JsonDict]:
         return []
 
     # Filter out COD project
-    raw_projects: object = result.get("projects", [])
+    raw_projects: object = result.get("projects") or []
     if not isinstance(raw_projects, list):
         return []
     projects: list[JsonDict] = [cast(JsonDict, p) for p in cast(list[object], raw_projects) if isinstance(p, dict)]
@@ -627,7 +627,7 @@ def create_project_filters(org: str, project_number: str, project_title: str, dr
 
     existing_views: list[str] = []
     if isinstance(existing_views_result, dict) and not existing_views_result.get("_error"):
-        raw_views: object = existing_views_result.get("views", [])
+        raw_views: object = existing_views_result.get("views") or []
         if isinstance(raw_views, list):
             views_list: list[JsonDict] = [
                 cast(JsonDict, v) for v in cast(list[object], raw_views) if isinstance(v, dict)
@@ -689,7 +689,8 @@ def setup_main_project_filters(org: str, dry_run: bool = False) -> None:
     print("     4. Save view as 'Work Items (No CODs)'")
 
 
-def main() -> None:
+def _parse_setup_args() -> argparse.Namespace:
+    """Parse and return setup script arguments."""
     parser = argparse.ArgumentParser(
         description="Setup COD project and organize COD issues",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -714,88 +715,68 @@ def main() -> None:
         action="store_true",
         help="Apply changes (required to make actual modifications)",
     )
+    return parser.parse_args()
 
-    parsed = parser.parse_args()
 
+def _validate_mode(parsed: argparse.Namespace) -> None:
+    """Validate dry-run and apply flags; exit on error."""
     dry_run_flag: bool = bool(getattr(parsed, "dry_run", False))
     apply_flag: bool = bool(getattr(parsed, "apply", False))
-    org: str = str(getattr(parsed, "org", "IggyIkenna"))
-    raw_repos: object = getattr(parsed, "repos", None)
-
     if not dry_run_flag and not apply_flag:
         print("ERROR: Must specify either --dry-run or --apply")
         sys.exit(1)
-
     if apply_flag and dry_run_flag:
         print("ERROR: Cannot use both --dry-run and --apply")
         sys.exit(1)
 
-    dry_run: bool = dry_run_flag
 
-    print("=" * 80)
-    print("COD Project Setup")
-    print("=" * 80)
-
-    if dry_run:
-        print("\nDRY RUN MODE - No changes will be made\n")
-    else:
-        print("\nAPPLY MODE - Changes will be made to GitHub\n")
-
-    # Get repository list
-    repos: list[str]
+def _resolve_repos(org: str, raw_repos: object) -> list[str]:
+    """Resolve repository list from args or fetch from GitHub."""
     if isinstance(raw_repos, list) and raw_repos:
         raw_repos_list: list[object] = cast(list[object], raw_repos)
-        repos = [str(r) for r in raw_repos_list]
+        return [str(r) for r in raw_repos_list]
+    print("Fetching repository list...")
+    result: JsonDict | list[object] | str | None = run_gh_command(
+        [
+            "gh",
+            "repo",
+            "list",
+            org,
+            "--json",
+            "name",
+            "--limit",
+            "1000",
+        ]
+    )
+    if isinstance(result, list):
+        result_dicts: list[JsonDict] = [cast(JsonDict, item) for item in result if isinstance(item, dict)]
+        repos = [str(rd.get("name", "")) for rd in result_dicts]
     else:
-        print("Fetching repository list...")
-        result: JsonDict | list[object] | str | None = run_gh_command(
-            [
-                "gh",
-                "repo",
-                "list",
-                org,
-                "--json",
-                "name",
-                "--limit",
-                "1000",
-            ]
-        )
-        if isinstance(result, list):
-            result_dicts: list[JsonDict] = [cast(JsonDict, item) for item in result if isinstance(item, dict)]
-            repos = [str(rd.get("name", "")) for rd in result_dicts]
-        else:
-            repos = []
-        print(f"  Found {len(repos)} repositories")
+        repos = []
+    print(f"  Found {len(repos)} repositories")
+    return repos
 
-    # Step 1: Create COD label
+
+def _run_setup_steps(org: str, repos: list[str], dry_run: bool) -> str | None:
+    """Execute setup steps 1-8; returns project_number if created."""
     create_cod_label(org, repos, dry_run)
-
-    # Step 2 & 3: Find and label COD issues
     cod_issues: list[JsonDict] = find_cod_issues(org, repos)
     apply_cod_labels(org, cod_issues, dry_run)
-
-    # Step 4: Create COD project
     project_number: str | None = create_cod_project(org, dry_run)
-
-    # Step 5: Add issues to project
     if project_number:
         add_issues_to_project(org, project_number, cod_issues, dry_run)
-
-    # Step 6: Setup automation
-    if project_number:
         setup_project_automation(org, project_number, dry_run)
-
-    # Step 7: Issue template updates
     update_issue_templates(Path.cwd(), dry_run)
-
-    # Step 8: Setup filters in main projects
     setup_main_project_filters(org, dry_run)
+    return project_number
 
+
+def _print_completion(org: str, dry_run: bool, project_number: str | None) -> None:
+    """Print setup completion and manual steps."""
     print("\n" + "=" * 80)
     print("Setup complete!")
     print("=" * 80)
-
-    if not dry_run:
+    if not dry_run and project_number:
         print("\nRemaining manual steps (GitHub CLI limitations):")
         print("1. Configure project automation rules:")
         print(f"   https://github.com/orgs/{org}/projects/{project_number}/settings/workflows")
@@ -808,6 +789,26 @@ def main() -> None:
         print("   - Add filter: -label:cod")
         print("   - Set as default view")
         print("\nThese are one-time manual steps. Once configured, automation handles everything.")
+
+
+def main() -> None:
+    parsed = _parse_setup_args()
+    _validate_mode(parsed)
+    dry_run: bool = bool(getattr(parsed, "dry_run", False))
+    org: str = str(getattr(parsed, "org", "IggyIkenna"))
+    raw_repos: object = getattr(parsed, "repos", None)
+
+    print("=" * 80)
+    print("COD Project Setup")
+    print("=" * 80)
+    if dry_run:
+        print("\nDRY RUN MODE - No changes will be made\n")
+    else:
+        print("\nAPPLY MODE - Changes will be made to GitHub\n")
+
+    repos: list[str] = _resolve_repos(org, raw_repos)
+    project_number: str | None = _run_setup_steps(org, repos, dry_run)
+    _print_completion(org, dry_run, project_number)
 
 
 if __name__ == "__main__":

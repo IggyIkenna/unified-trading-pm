@@ -17,6 +17,27 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import cast
+
+# JSON typing: json.load returns Any; cast at boundary
+JsonDict = dict[str, "JsonDict | list[JsonDict] | str | int | float | bool | None"]
+
+
+def _jdict(val: object) -> JsonDict | None:
+    if isinstance(val, dict):
+        return cast(JsonDict, val)
+    return None
+
+
+def _jlist(val: object) -> list[JsonDict] | None:
+    if isinstance(val, list):
+        return cast(list[JsonDict], val)
+    return None
+
+
+def _jstr(val: object, default: str = "") -> str:
+    return str(val) if val is not None else default
+
 
 CODEX_PATTERNS = [
     re.compile(r"CODEX:\s*([^\n]+?)(?:\s+CODEX:|\s*$)", re.IGNORECASE | re.DOTALL),
@@ -94,9 +115,9 @@ def main() -> int:
 
     script_dir = Path(__file__).resolve().parent
     pm_root = script_dir.parent.parent
-    ws_root = (args.workspace_root or pm_root.parent).resolve()
+    ws_root: Path = (cast(Path | None, args.workspace_root) or pm_root.parent).resolve()
     codex_root = ws_root / "unified-trading-codex"
-    manifest_path = args.manifest or pm_root / "workspace-manifest.json"
+    manifest_path: Path = cast(Path | None, args.manifest) or pm_root / "workspace-manifest.json"
 
     if not codex_root.is_dir():
         print(f"Skip: codex not found at {codex_root}", file=sys.stderr)
@@ -109,19 +130,28 @@ def main() -> int:
 
     if manifest_path.is_file():
         with open(manifest_path) as f:
-            manifest = json.load(f)
-        for name, meta in manifest.get("repositories", {}).items():
-            arch_tier = meta.get("arch_tier")
+            manifest: JsonDict = cast(JsonDict, json.load(f))
+        if "repositories" not in manifest:
+            raise KeyError("repositories required in workspace-manifest.json")
+        repos_obj = manifest["repositories"]
+        repos_dict = _jdict(repos_obj) or {}
+        for name, meta_raw in repos_dict.items():
+            meta = _jdict(meta_raw)
+            if meta is None:
+                continue
+            arch_tier: object | None = meta.get("arch_tier")
             if arch_tier is None:
                 continue
-            tier = str(arch_tier)
+            tier: str = str(arch_tier)
             if tier not in ("0", "1", "2"):
                 continue
-            repo_path = ws_root / name
+            repo_path: Path = ws_root / name
             if repo_path.is_dir():
                 repos_to_scan.append((name, repo_path))
-            for sec in meta.get("codex_sections", []):
-                codex_sections_to_validate.add(sec)
+            codex_sections_raw: object = meta.get("codex_sections") or []  # optional per repo
+            if isinstance(codex_sections_raw, list):
+                for sec in codex_sections_raw:
+                    codex_sections_to_validate.add(str(sec))
 
     cursor_rules = pm_root / "cursor-rules"
     if cursor_rules.is_dir():
