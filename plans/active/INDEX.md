@@ -8,7 +8,7 @@
 
 ---
 
-## 29 Canonical Plans (Execution Order)
+## 35 Canonical Plans (Execution Order)
 
 | #   | Plan                                                                                         | Day   | Scope                                                                                                                             |
 | --- | -------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,6 +33,7 @@
 | 11a | [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)                           | 4–5   | All 60+ Python repos — pytest collect-only                                                                                        |
 | 11b | [uac_schema_normalization_complete.plan.md](uac_schema_normalization_complete.plan.md)       | 4–6   | UAC — 0 orphaned schemas, all providers                                                                                           |
 | 12  | [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) | 5–6   | Services, UIs                                                                                                                     |
+| 12a | [execution_services_hygiene_refactor.plan.md](execution_services_hygiene_refactor.plan.md)   | 3–4   | execution-service — engine.py SRP split, 201 bare excepts, 67 ARCHITECTURAL_VIOLATION suppressions, cross-svc dep removal, testing |
 | 13  | [master_pre_deployment_plan_chain.plan.md](master_pre_deployment_plan_chain.plan.md)         | 1 ref | Order chain                                                                                                                       |
 | 14  | [workspace_quickmerge_validation.plan.md](workspace_quickmerge_validation.plan.md)           | 4     | All                                                                                                                               |
 | 15  | [strict_basedpyright_compliance.plan.md](strict_basedpyright_compliance.plan.md)             | 5     | T0–T3, services                                                                                                                   |
