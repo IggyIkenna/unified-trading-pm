@@ -30,8 +30,8 @@ todos:
     content: "RESOLVED (2026-03-06): execution-service visualizer-ui and visualizer-api were already extracted to archive/execution-visualizer-ui. Only empty package-lock.json remnant remains. execution-service is CLEAN per ui-audit-results.md. New violations found by arch-ui-audit-full: (1) strategy-service — full React/TypeScript frontend/ dir (16 tsx files) → arch-strategy-ui-extract pending; (2) market-tick-data-service — package.json declaring tardis-dev JS dep → arch-market-tick-data-node-cleanup pending."
     status: done
   - id: arch-strategy-ui-extract
-    content: "NEW VIOLATION (found 2026-03-06 by arch-ui-audit-full): strategy-service/frontend/ contains full React/TypeScript app (16 tsx files, package.json, vite.config.ts, tailwind.config.js). Must extract to strategy-ui repo. Steps: (1) copy frontend/ contents to strategy-ui repo; (2) delete strategy-service/frontend/ and strategy-service/package.json; (3) update strategy-service cloudbuild.yaml to remove node/npm steps."
-    status: pending
+    content: "DONE (2026-03-06): Extracted strategy-service/frontend/ (16 tsx files) to strategy-ui repo. Copied src/components/ (live, results, ui, wizard — 16 tsx), src/services/, src/index.css, tailwind.config.js, postcss.config.js, tsconfig.node.json, vite.config.live.ts, index.live.html, public/ data, QUICK_START.md, TEST_E2E.md to strategy-ui (commit dc96fc6). Removed package.json and entire frontend/ dir from strategy-service via git rm (commit 609b430). cloudbuild.yaml had no npm/node steps — no changes needed."
+    status: done
   - id: arch-market-tick-data-node-cleanup
     content: "DONE (2026-03-06): Removed orphaned package.json (tardis-dev ^14.1.2 JS dep) and package-lock.json from market-tick-data-service root. Confirmed: no .js/.ts/.mjs files in repo (all JS files are inside .venv playwright driver — unrelated). Service uses tardis-client (Python, >=1.3.7) via pyproject.toml — the JS package was never used. node_modules/ was already gitignored and untracked. Updated .gitignore to add package-lock.json and remove package.json from keep list. Committed as 015c7e3 in market-tick-data-service."
     status: done
