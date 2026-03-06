@@ -430,7 +430,7 @@ L2b: [unified-internal-contracts, unified-reference-data-interface]   ← T0-wit
 1. **Rename InstrumentRecord in UAC** → `InstrumentWarehouseRow` (or similar). Fix all UAC normalizers and GCS write callers. This removes the CONFLICT that blocks all other migrations.
 2. **Retire `schema-service-owned.mdc`** → Create `imports/service-domain-schema-in-uic.mdc` with new rule.
 3. **Update `schema-governance.md`** TL;DR and service-owned section.
-4. **Create `unified_internal_contracts/domain/`** directory structure in UIC.
+4. **Create `unified_internal_contracts/domain/`** directory structure in UIC. [CREATED 2026-03-06 — `unified_internal_contracts/domain/__init__.py` scaffolded; service schema migration is now unblocked per Section 6 priority order.]
 5. **Move test_ac_uic_alignment.py** from UAC to UIC tests (removes CIRCULAR violation).
 
 ### P1 — High Value Migrations
