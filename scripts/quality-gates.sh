@@ -487,12 +487,16 @@ UNIT_CLOUD_CALLS=$(rg 'get_storage_client\(\)|get_secret_client\(\)|get_queue_cl
 # STEP 5.10 — Block direct cloud SDK imports outside UCI providers
 # ============================================================
 echo "=== STEP 5.10: No direct cloud SDK imports outside UCI providers ==="
+set +e
 CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests/**' \
     --glob '!unified_cloud_interface/providers/**' \
-    -l "${SOURCE_DIR}/" 2>/dev/null || true)
+    -l "${SOURCE_DIR}/" 2>/dev/null)
+RG_EXIT=$?
+set -e
+[[ $RG_EXIT -eq 2 ]] && { log_fail "STEP 5.10: ripgrep failed (exit 2)"; exit 1; }
 if [ -n "$CLOUD_SDK_VIOLATIONS" ]; then
     log_fail "STEP 5.10: Direct cloud SDK imports found. Use unified_cloud_interface instead:"
     echo "$CLOUD_SDK_VIOLATIONS"
@@ -505,11 +509,15 @@ fi
 # STEP 5.11 — Block protocol-leaking symbols in service code
 # ============================================================
 echo "=== STEP 5.11: No protocol-leaking symbols in service code ==="
+set +e
 PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests/**' --glob '!scripts/**' \
-    -l "${SOURCE_DIR}/" 2>/dev/null || true)
+    -l "${SOURCE_DIR}/" 2>/dev/null)
+RG_EXIT=$?
+set -e
+[[ $RG_EXIT -eq 2 ]] && { log_fail "STEP 5.11: ripgrep failed (exit 2)"; exit 1; }
 if [ -n "$PROTOCOL_VIOLATIONS" ]; then
     log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UCI instead:"
     echo "$PROTOCOL_VIOLATIONS" | head -5
@@ -522,13 +530,17 @@ fi
 # STEP 5.12 — Services must not hardcode cloud protocol names
 # ============================================================
 echo "=== STEP 5.12: No hardcoded protocol names in service source ==="
+set +e
 HARDCODED_PROTO=$(rg \
   'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b|StandardizedDomainCloudService\b' \
   --type py \
   --glob '!.venv*' \
   --glob '!tests/**' \
   --glob '!scripts/**' \
-  -l 2>/dev/null || true)
+  -l 2>/dev/null)
+RG_EXIT=$?
+set -e
+[[ $RG_EXIT -eq 2 ]] && { log_fail "STEP 5.12: ripgrep failed (exit 2)"; exit 1; }
 if [ -n "$HARDCODED_PROTO" ]; then
     log_fail "STEP 5.12: Hardcoded protocol/cloud names in service source (use get_data_sink/get_event_bus):"
     echo "$HARDCODED_PROTO"
