@@ -1,0 +1,85 @@
+# features-delta-one-service Development Rules
+
+This is features-delta-one-service: computes technical indicators, momentum, volume, and related features (~4,596 features across ~20 groups) for spot and futures.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/[batch|live]/per-service/features-delta-one-service.md
+- 04-architecture/batch-live-symmetry.md
+- 04-architecture/concurrency.md (MAX_WORKERS for CPU-bound)
+- 02-data/schema-governance.md (output_schemas.py, validate_timestamp_date_alignment)
+- 03-observability/lifecycle-events.md (3-tier event logging)
+- 06-coding-standards/ (quality gates, testing, config)
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge, config standards, cloud-agnostic design, event logging, UTC datetime, imports at top.
+
+- Config: extend UnifiedCloudServicesConfig; NEVER os.getenv() or hardcoded project IDs
+- Error handling: use @handle_api_errors, @handle_storage_errors; NEVER bare except
+
+## Quality Gates
+
+See: .cursor/rules/quality-gates/quality-gates.mdc. Same ruff==0.15.0 across Local/GitHub Actions/Cloud Build. UV only. Python 3.13.
+
+## Key Paths
+
+- Entry: `features_delta_one_service/__main__.py`, `cli/main.py`
+- Calculators: `features_service/app/calculators/` (technical.py, momentum.py, volume_flow.py, etc.)
+- Schemas: `features_delta_one_service/schemas/output_schemas.py`
+
+## Service-Specific Patterns
+
+- **Calculator plugin pattern**: Feature groups live in `features_service/app/calculators/` (technical.py, momentum.py, volume_flow.py, etc.); extend base calculator
+- **Live mode embedding**: In live mode, embeds market-data-processing + market-tick-data-handler (no separate pipeline)
+- **validate_timestamp_date_alignment()** before every GCS write (schema governance)
+- **MAX_WORKERS: 1** — CPU-bound due to TA-Lib; parallelization risks thread-safety issues
+
+## Domain Rules
+
+- ALWAYS validate instrument_id format and ensure no lookahead bias in feature calculations
+- NEVER add features that use future data; use lookback windows only
+- Batch: reads from market-data-processing + features-calendar outputs; Live: consumes ticks directly via embedded handlers
+- Features must be deterministic and reproducible for the same input date range
+- Feature groups: technical (RSI, MACD, etc.), momentum, volume_flow, microstructure, oscillators, volatility, returns, targets, streaks, market_structure
+
+## Dependencies
+
+- **Upstream**: market-data-processing, features-calendar
+- **Downstream**: ml-training (required), ml-inference, strategy
+- See: unified-trading-deployment-v2/configs/dependencies.yaml
+
+## Context7
+
+When working with TA-Lib, pandas, or NumPy, append "use context7" to prompts for up-to-date APIs and best practices.
+
+## CLI / Modes
+
+- `--mode batch`: reads from GCS (market-data-processing, features-calendar outputs)
+- `--mode live`: embeds market-data-processing + market-tick-data-handler; consumes ticks directly
+- Batch-live symmetry: same engine, different data source and sink
+
+## Testing
+
+See: .cursor/rules/testing/test-quality-standards.mdc. Unit tests for calculators (lookback, NaN, lookahead bias). tests/unit/test_event_logging.py required. Synthetic fixtures; no real GCS. Regression: test_regression_{issue}_{description}.
+
+## Codex Maintenance
+
+When establishing new calculator patterns or feature groups, update unified-trading-codex and this file.
+See .cursor/rules/codex-maintenance.mdc for workflow.
+
+## Universal Reminders
+
+- datetime: ALWAYS `datetime.now(timezone.utc)`; NEVER datetime.now() or datetime.utcnow()
+- Storage: use `get_storage_client()` from unified_cloud_services; NEVER `from google.cloud import storage`
+
+See: .cursor/rules/core/always-use-quickmerge.mdc for quickmerge workflow.
+
+## Anti-Patterns
+
+- NEVER use MAX_WORKERS > 1 (TA-Lib is not thread-safe)
+- NEVER hardcode GCS paths; use `config` and cloud-agnostic `get_storage_client()`
+- NEVER skip `validate_timestamp_date_alignment()` before writes
+- NEVER add imports inside functions; imports at top of file only
+- NEVER use print(); use logger.info() / log_event()

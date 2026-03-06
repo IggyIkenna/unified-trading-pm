@@ -1,0 +1,58 @@
+# matching-engine-library
+
+## Overview
+
+Pure Python library for L1/L2/AMM order matching. No cloud dependencies.
+
+## Standards
+
+- Python 3.13+
+- Ruff 0.15.0 (format + check)
+- Basedpyright (type checking)
+- Pytest with 35% coverage minimum
+
+## Package Manager
+
+Use `uv` for all installs. Never use `pip install` (except `pip install uv` bootstrap).
+
+## Quality Gates
+
+```bash
+bash scripts/quality-gates.sh
+bash scripts/quality-gates.sh --no-fix  # CI mode
+```
+
+## Structure
+
+- `matching_engine_library/engine.py` - MatchingEngine, matchers
+- `matching_engine_library/amm.py` - Uniswap V2/V3/V4 pools
+- `matching_engine_library/hooks.py` - Uniswap V4 hook system
+- `matching_engine_library/trade_matcher.py` - Passive/aggressive logic
+
+## Imports: Top of File Only + External Import Standards
+
+```python
+import asyncio
+import pandas as pd
+
+def my_function():
+ # Use imports
+```
+
+NEVER: imports inside functions, try-except fallback implementations
+
+**External Import Standards:** For external dependencies (unified libraries), use top-level imports only:
+
+```python
+# ✅ CORRECT
+from unified_config_service import ConfigValidator
+from unified_events_interface import setup_events
+
+# ❌ WRONG - exposes internal structure, breaks with upstream refactoring
+from unified_config_service.validators.schema import ConfigValidator
+from unified_events_interface.core.logging import setup_events
+```
+
+## External Import Standards
+
+See: .cursor/rules/core/external-import-standards.mdc

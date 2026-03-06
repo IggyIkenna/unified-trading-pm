@@ -1,0 +1,54 @@
+# unified-config-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Purpose**: Centralized config store with versioning and hot-reload
+**Epic**: `unified-trading-codex/11-project-management/epics/unified-libraries-refactor-epic.md`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+**⚠️ RUNTIME VERIFICATION (P0 BLOCKING GATE):** NEVER claim "done" without actual runtime verification. For library: must install in clean env, test import, run tests (if exist), verify no import errors. See `.cursor/rules/runtime-verification-required.mdc`.
+
+## Library-Specific Patterns
+
+### Config Loading Priority
+
+1. Overrides (dict passed in)
+2. Environment variables
+3. Config file (YAML/JSON)
+4. Default values
+
+### Config Storage
+
+- **GCS paths**: `configs/{service}/{version}/config.yaml`
+- **Versioning**: Latest, specific version, or historical
+- **Secrets**: Integrated with Secret Manager via `get_secret()`
+
+### Hot-Reload (Live Mode)
+
+- **PubSub topic**: `config-updates`
+- **Subscription**: `config-updates-{service-name}`
+- **Rate limit**: Max once per 5 seconds
+- **Background thread**: Non-blocking reload
+
+### Architecture Notes
+
+- **Cloud-agnostic**: Uses unified-trading-services abstractions
+- **No hardcoded project IDs**: Uses unified_config.project_id or GCP_PROJECT_ID env var
+- **Pydantic-based**: BaseConfig for validation
+
+### Dependencies
+
+- unified-trading-services>=2.0.0 (foundation layer)
+- pydantic>=2.0 (schema validation)
+- pyyaml>=6.0 (config parsing)
+
+---
+
+## SSOT Alignment Validation
+
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+

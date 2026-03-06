@@ -1,0 +1,56 @@
+# strategy-service Development Rules
+
+This is strategy-service: signal-based strategy definitions that consume ML predictions and features to generate trading signals.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/batch/per-service/strategy-service.md
+- 01-domain/live/per-service/strategy-service.md
+- 04-architecture/batch-live-symmetry.md, concurrency.md
+- 06-coding-standards/ (quality gates, testing, config)
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge, config standards, cloud-agnostic design, event logging.
+
+## Quality Gates (Three-Stage Consistency)
+
+**CRITICAL**: Same `ruff==0.15.0` across Local/GitHub Actions/Cloud Build:
+- **Local**: `uv pip install -e ".[dev]"` (gets ruff from pyproject.toml)
+- **GitHub Actions**: `.github/workflows/quality-gates.yml` (`ruff==0.15.0`)
+- **Cloud Build**: Tests inside Docker image (base: unified-cloud-services + `.[dev]`)
+
+**Package Manager**: UV only. NEVER use `pip install` (except `pip install uv` bootstrap). Use `uv pip install -e ".[dev]"` locally; `uv pip install --system -e ".[dev]"` in Docker.
+
+**Python**: 3.13 (`.python-version`, `pyproject.toml`, CI, Cursor `python.defaultInterpreterPath`).
+
+**Cloud Build**: Pull base image (auth) → build → test in image → push if pass.
+
+Verify: `cd unified-trading-deployment-v2 && ./scripts/check-ruff-versions.sh`
+
+## Service-Specific Patterns
+
+- **Strategy plugin pattern**: Strategies in `strategies/` extend BaseStrategy
+- **Signal generation**: Consumes ML predictions + features → generates trading signals
+- **Batch-live symmetry**: Same strategy logic, different data source
+- **MAX_WORKERS: 3** — light CPU-bound signal generation
+
+## Dependencies
+
+- **Upstream**: ml-inference, features-delta-one, instruments
+- **Downstream**: execution-services
+- See: unified-trading-deployment-v2/configs/dependencies.yaml
+
+## Testing
+
+- tests/unit/test_event_logging.py MUST exist
+- Unit tests for strategy logic with synthetic signals
+- Regression: test_regression_{issue}_{description} for every bug fix
+
+## Anti-Patterns
+
+- NEVER import google.cloud directly; use get_storage_client()
+- NEVER use os.getenv(); extend UnifiedCloudServicesConfig
+- NEVER use print(); use logger.info() or log_event()
+- NEVER add imports inside functions; imports at top only

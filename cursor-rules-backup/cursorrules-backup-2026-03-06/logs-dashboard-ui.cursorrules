@@ -1,0 +1,62 @@
+# logs-dashboard-ui Development Rules
+
+This is logs-dashboard-ui: Centralized log search, filtering, analysis.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/live/per-service/logs-dashboard-ui.md (if exists)
+- 04-architecture/batch-live-symmetry.md
+- Plus all universal principles in codex
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge (with Cursor Team Kit for CI/reviews), config standards, cloud-agnostic design, event logging.
+
+**⚠️ RUNTIME VERIFICATION (P0 BLOCKING GATE):** NEVER claim "done" without actual runtime verification. For UI: must run `npm run dev`, wait 8-10s, read terminal output, grep for errors, verify NO errors present. See `.cursor/rules/runtime-verification-required.mdc`.
+
+
+**UI-Specific Cursor Team Kit**: Use `/deslop` before committing, `/run-smoke-tests` for Playwright validation. **Agent automatically starts ci-watcher after quickmerge** (no user prompt needed).
+
+## Smoke Tests (Playwright)
+
+- **Setup**: `unified-trading-codex/14-testing-guides/UI_SMOKE_TESTING_GUIDE.md`
+- **Run**: `npm run smoketest` (6 tests, ~5-6s)
+- **Coverage**: Home page load, navigation, main heading, description, page title
+
+## Python and Package Manager
+
+- **Python**: 3.13 (`.python-version`, `pyproject.toml`, CI)
+- **Package Manager**: UV only. NEVER use `pip install` (except `pip install uv` bootstrap).
+
+## Quality Gates
+
+Same `ruff==0.15.0` across Local, GitHub Actions, Cloud Build.
+
+## Service-Specific Patterns
+
+- **Type**: ui-observability
+- **Tech Stack**: React/TypeScript
+- **Mode**: live
+- **Priority**: P2-medium
+
+## Dependencies
+
+- **Upstream**: unified-trading-services
+- See: unified-trading-deployment-v2/configs/dependencies.yaml
+- See: unified-trading-codex/11-project-management/service-registry.yaml
+
+## Testing
+
+- tests/unit/test_event_logging.py MUST exist (Python services)
+- Coverage minimum 35%, target 80%
+
+---
+
+## SSOT Alignment Validation
+
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+
+## External Import Standards
+
+See: .cursor/rules/core/external-import-standards.mdc

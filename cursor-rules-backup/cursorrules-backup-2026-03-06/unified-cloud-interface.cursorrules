@@ -1,0 +1,56 @@
+# unified-cloud-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Purpose**: Tier 0 cloud SDK abstraction providing StorageClient, SecretClient, QueueClient, LoggingClient, CacheClient
+**Epic**: `unified-trading-codex/11-project-management/epics/unified-libraries-refactor-epic.md`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+## Library-Specific Patterns
+
+### Tier 0 Architecture
+
+- **Zero dependencies** on other unified-* libraries
+- **Lazy imports**: All cloud SDK imports must be inside method bodies only
+- **No side effects**: Importing this library should have zero side effects
+- **Provider abstraction**: GCP, AWS, and Local implementations for all clients
+
+### Cloud Provider Support
+
+1. **GCP (Google Cloud Platform)**
+   - Storage: Google Cloud Storage (GCS)
+   - Secrets: Secret Manager
+   - Queue: Pub/Sub
+   - Logging: Cloud Logging
+   - Cache: Redis (Cloud Memorystore)
+
+2. **AWS (Amazon Web Services)**
+   - Storage: S3
+   - Secrets: Secrets Manager
+   - Queue: SQS
+   - Logging: CloudWatch Logs
+   - Cache: Redis (ElastiCache)
+
+3. **Local (Development/Testing)**
+   - Storage: Filesystem
+   - Secrets: Environment variables
+   - Queue: In-memory
+   - Logging: stdout/stderr
+   - Cache: In-memory dict
+
+### Code Requirements
+
+- **AWS preservation**: AWS code paths must be preserved and complete — never stub with NotImplementedError
+- **Lazy imports**: All `import google.cloud.*`, `import boto3`, etc. must be inside methods
+- **Protocol compliance**: All implementations must satisfy the Protocol ABCs
+- **Error handling**: Standardize exceptions across providers (wrap provider-specific errors)
+
+### Dependencies
+
+- **Core**: No dependencies on unified-* libraries
+- **Cloud SDKs**: google-cloud-* and boto3/botocore as optional extras
+- **Type safety**: Use Protocol ABCs for all client interfaces

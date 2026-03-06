@@ -1,0 +1,52 @@
+# features-onchain-service Development Rules
+
+This is features-onchain-service: computes DeFi-specific features (TVL, utilization, funding rates, APY) for onchain perps and lending.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/batch/per-service/features-onchain-service.md
+- 04-architecture/batch-live-symmetry.md
+- 06-coding-standards/ (quality gates, testing, config)
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge, config standards, cloud-agnostic design, event logging.
+
+## Quality Gates (Three-Stage Consistency)
+
+**CRITICAL**: Same `ruff==0.15.0` across Local/GitHub Actions/Cloud Build:
+- **Local**: `uv pip install -e ".[dev]"` (gets ruff from pyproject.toml)
+- **GitHub Actions**: `.github/workflows/quality-gates.yml` (`ruff==0.15.0`)
+- **Cloud Build**: Tests inside Docker image (base: unified-trading-services + `.[dev]`)
+
+**Package Manager**: UV only. NEVER use `pip install` (except `pip install uv` bootstrap). Use `uv pip install -e ".[dev]"` locally; `uv pip install --system -e ".[dev]"` in Docker.
+
+**Python**: 3.13 (`.python-version`, `pyproject.toml`, CI, Cursor `python.defaultInterpreterPath`).
+
+**Cloud Build**: Pull base image (auth) → build → test in image → push if pass.
+
+Verify: `cd unified-trading-deployment-v2 && ./scripts/check-ruff-versions.sh`
+
+## Service-Specific Patterns
+
+- **DeFi feature calculators**: TVL changes, utilization rates, funding payments
+- **Protocol adapters**: Aave, Morpho, Aster, Hyperliquid, Lido
+- **MAX_WORKERS: 3** — moderate I/O-bound feature computation
+
+## Dependencies
+
+- **Upstream**: market-data-processing (onchain data), instruments (protocol markets)
+- **Downstream**: ml-training, strategy
+- See: unified-trading-deployment-v2/configs/dependencies.yaml
+
+## Testing
+
+- tests/unit/test_event_logging.py MUST exist
+- Unit tests for DeFi math (utilization, funding calculations)
+- Regression: test_regression_{issue}_{description}
+
+## Anti-Patterns
+
+- NEVER import google.cloud directly; use get_storage_client()
+- NEVER use os.getenv(); extend UnifiedCloudServicesConfig

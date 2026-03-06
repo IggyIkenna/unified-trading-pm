@@ -2823,10 +2823,8 @@
       "external_count": 0
     },
     "execution-analytics-ui": {
-      "internal_deps": {},
-      "external_deps": {},
-      "internal_count": 0,
-      "external_count": 0
+      "skipped": true,
+      "reason": "not a directory"
     },
     "live-health-monitor-ui": {
       "internal_deps": {},
@@ -2841,10 +2839,8 @@
       "external_count": 0
     },
     "ml-training-ui": {
-      "internal_deps": {},
-      "external_deps": {},
-      "internal_count": 0,
-      "external_count": 0
+      "skipped": true,
+      "reason": "not a directory"
     },
     "onboarding-ui": {
       "internal_deps": {},

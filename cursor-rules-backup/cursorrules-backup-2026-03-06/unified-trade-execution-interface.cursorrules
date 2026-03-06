@@ -1,0 +1,51 @@
+# unified-order-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Epic**: See `unified-trading-codex/11-project-management/epics/`
+**Template**: `unified-trading-codex/10-audit/_service-library.yaml`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+## Service-Specific Patterns
+
+[Add service-specific patterns here]
+
+## Architecture Notes
+
+[Add architecture notes here]
+
+## Dependencies
+
+[List key dependencies here]
+
+## Imports: Top of File Only + External Import Standards
+
+```python
+import asyncio
+import pandas as pd
+
+def my_function():
+ # Use imports
+```
+
+NEVER: imports inside functions, try-except fallback implementations
+
+**External Import Standards:** For external dependencies (unified libraries), use top-level imports only:
+
+```python
+# ✅ CORRECT
+from unified_config_service import ConfigValidator
+from unified_events_interface import setup_events
+
+# ❌ WRONG - exposes internal structure, breaks with upstream refactoring
+from unified_config_service.validators.schema import ConfigValidator
+from unified_events_interface.core.logging import setup_events
+```
+
+## External Import Standards
+
+See: .cursor/rules/core/external-import-standards.mdc

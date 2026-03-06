@@ -1,0 +1,58 @@
+# ml-inference-service Development Rules
+
+This is ml-inference-service: batch and live ML inference from trained LightGBM models for signal-based strategies.
+
+## Codex References
+
+02-data/live/per-service/ml-inference-service.md, 03-observability/live/per-service/ml-inference-service.md, 04-architecture/batch-live-symmetry.md, 02-data/schema-governance.md, 06-coding-standards/
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`. **RUNTIME VERIFICATION (P0):** Start service, wait 8-10s, verify no errors. See `.cursor/rules/runtime-verification-required.mdc`.
+
+**Cursor Team Kit**: `/deslop` before commit; ci-watcher auto-starts after quickmerge.
+
+## Quality Gates
+
+Same ruff==0.15.0 across Local/GitHub Actions/Cloud Build. UV only. Python 3.13. Cloud Build: test in image. Verify: `cd unified-trading-deployment-v2 && ./scripts/check-ruff-versions.sh`
+
+## Service-Specific Patterns
+
+- **Dual entry points**: batch_inference.py (GCS), live_inference.py (streams)
+- **Live embedding**: Embeds inside strategy-service; no standalone live deployment
+- **Model loading**: Load once at startup; reuse for per-signal inference
+- **MAX_WORKERS: 3** — CPU-bound
+- **validate_timestamp_date_alignment()** before every GCS write
+
+## Anti-Patterns
+
+- NEVER load models per-request; load once, reuse
+- NEVER use future data; ensure feature alignment with training
+- NEVER MAX_WORKERS > 3
+- Imports at top; logger not print; config not os.getenv(); datetime.now(timezone.utc)
+
+## Dependencies
+
+**Upstream**: ml-training, features-delta-one. **Downstream**: strategy-service. See: unified-trading-deployment-v2/configs/dependencies.yaml
+
+## Context7
+
+Append "use context7" for: LightGBM inference, model loading (pickle, .pkl, model registry)
+
+## Testing
+
+tests/unit/test_event_logging.py MUST exist. tests/unit/test_cloud_agnostic_paths.py for GCP/AWS. 4-tier: unit → integration → e2e → smoke
+
+## Key Paths
+
+Entry: `__main__.py`, `cli/main.py`. Handlers: batch_handler, live_handler. Core: app/core/. Inference: app/inference/
+
+## Quickmerge
+
+`./scripts/quickmerge.sh "message" --files "path1 path2"`. See .cursor/rules/core/always-use-quickmerge.mdc
+
+## References
+
+- Codex maintenance: .cursor/rules/codex-maintenance.mdc
+- SSOT alignment: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+- External imports: .cursor/rules/core/external-import-standards.mdc

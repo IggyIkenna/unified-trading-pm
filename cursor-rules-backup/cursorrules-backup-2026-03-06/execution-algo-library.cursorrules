@@ -1,0 +1,23 @@
+# execution-algo-library: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Epic**: See `unified-trading-codex/11-project-management/epics/`
+**Template**: `unified-trading-codex/10-audit/_service-library.yaml`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+## Service-Specific Patterns
+
+[Add service-specific patterns here]
+
+## Architecture Notes
+
+[Add architecture notes here]
+
+## Dependencies
+
+[List key dependencies here]

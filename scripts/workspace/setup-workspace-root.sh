@@ -88,20 +88,25 @@ get_workspace_root() {
   # We want the parent of unified-trading-system-repos/ (4 levels up)
   detected_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 
-  log_info "Detected workspace root: ${BOLD}${detected_root}${NC}"
-  echo ""
-  echo "Common paths:"
-  echo "  • Current Mac (iCloud):     /Users/$(whoami)/Documents/Documents - Mac/repos"
-  echo "  • Other laptop:             /Users/$(whoami)/Documents/Documents - MacOld/repos"
-  echo "  • Linux:                    /home/$(whoami)/repos"
-  echo "  • Before iCloud:            /Users/$(whoami)/Documents/repos"
-  echo ""
+  log_info "Detected workspace root: ${BOLD}${detected_root}${NC}" >&2
+  echo "" >&2
+  echo "Common paths:" >&2
+  echo "  • Current Mac (iCloud):     /Users/$(whoami)/Documents/Documents - Mac/repos" >&2
+  echo "  • Other laptop:             /Users/$(whoami)/Documents/Documents - MacOld/repos" >&2
+  echo "  • Linux:                    /home/$(whoami)/repos" >&2
+  echo "  • Before iCloud:            /Users/$(whoami)/Documents/repos" >&2
+  echo "" >&2
 
   read -r -p "Enter workspace root path [${detected_root}]: " input_path
 
   if [ -z "$input_path" ]; then
     echo "$detected_root"
   else
+    # Strip surrounding quotes (single or double) if user accidentally included them
+    input_path="${input_path#\"}"
+    input_path="${input_path%\"}"
+    input_path="${input_path#\'}"
+    input_path="${input_path%\'}"
     # Expand ~ if present
     input_path="${input_path/#\~/$HOME}"
     if [ ! -d "$input_path" ]; then

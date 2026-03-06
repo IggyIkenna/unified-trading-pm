@@ -1,0 +1,50 @@
+# unified-position-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Purpose**: Tier 0 position and balance schema library providing Position, Balance, Portfolio types
+**Epic**: `unified-trading-codex/11-project-management/epics/unified-libraries-refactor-epic.md`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+## Library-Specific Patterns
+
+### Tier 0 Architecture
+
+- **Zero dependencies** on other unified-* libraries
+- **Pure schemas**: Only data models and validation logic
+- **No side effects**: Importing this library should have zero side effects
+- **Type safety**: Comprehensive type definitions with runtime validation
+
+### Core Schema Types
+
+1. **Position**
+   - Single position in a trading instrument
+   - Fields: instrument_id, size, entry_price, mark_price, unrealized_pnl
+   - Used for: Position tracking, PnL calculation, risk management
+
+2. **Balance**
+   - Account balance in a specific currency
+   - Fields: currency, available, reserved, total
+   - Used for: Margin calculation, portfolio valuation
+
+3. **Portfolio**
+   - Collection of positions and balances
+   - Fields: positions[], balances[], total_equity, margin_used
+   - Used for: Portfolio-level analysis, reporting, risk assessment
+
+### Code Requirements
+
+- **Schema validation**: All models must validate inputs and provide clear error messages
+- **Immutable by design**: Use dataclasses with frozen=True where appropriate
+- **Decimal precision**: Use Decimal for all monetary values to avoid floating-point errors
+- **Instrument ID format**: Follow standardized format: VENUE:TYPE:BASE-QUOTE
+
+### Dependencies
+
+- **Core**: Minimal dependencies (pydantic, decimal)
+- **No unified imports**: Never import from other unified-* libraries
+- **Type safety**: Use strict typing throughout all schemas

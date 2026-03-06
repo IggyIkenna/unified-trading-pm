@@ -1,0 +1,16 @@
+---
+description: "Enforce minimum 70% coverage for quality gates, target 80% for audit readiness"
+alwaysApply: false
+priority: 55
+globs:
+  - "**/tests/**/*.py"
+tags:
+  - testing
+  - coverage
+---
+# Test Coverage Targets
+RULE: 70% minimum (blocking), 80% recommended (production), 80% goal (audit readiness).
+WHY: Quality gates block merge below 70%; production and audits need 80%.
+CODEX: 06-coding-standards/testing.md, .cursor/rules/test-quality-standards.mdc
+DO: Focus on core logic for 70%; add edge cases for 80%; complete paths for audit readiness
+NEVER: Skip tests to pass gates; exclude test paths from coverage; target <70%

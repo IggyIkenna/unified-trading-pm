@@ -1,0 +1,53 @@
+---
+description: "Always use quickmerge.sh, never run quality gates standalone"
+alwaysApply: true
+priority: 85
+tags: [ci-cd, quickmerge]
+---
+
+# Always Use Quickmerge
+
+RULE: ALWAYS run `bash scripts/quickmerge.sh "message"`. NEVER run `scripts/quality-gates.sh` standalone. Use `--dep-branch` when dependencies differ from main. Branch protection rejects direct push to main.
+WHY: Quickmerge runs dependency cascade, pre-flight audit, quality gates, Act simulation, and PR creation. Standalone quality gates miss critical checks.
+CODEX: 06-coding-standards/feature-branch-workflow.md, 06-coding-standards/quality-gates.md
+
+## Branch / Staging Model
+
+| Branch type | Quickmerge command | Effect |
+|-------------|-------------------|--------|
+| `feat/*` or `feature/*` | `bash scripts/quickmerge.sh "feat: ..." --no-pr` | QG only — no PR, branch stays open |
+| `staging` | `bash scripts/quickmerge.sh "feat: ..."` | QG + auto-PR to main |
+| Direct on `main` | blocked by branch protection | — |
+
+**Auto-PR detection:** quickmerge auto-adds `--no-pr` when current branch starts with `feat/` or `feature/`. To promote: merge feature into staging → run quickmerge on staging.
+
+## Dependency Cascade (--dep-branch)
+
+When `--dep-branch NAME` is set and a dependency has local changes, quickmerge cascades into that dependency (T0 first) and runs quickmerge there. Local changes are ALWAYS preserved.
+
+## Key Flags
+
+`--unit-only` (lint+type+unit only) | `--no-pr` (QG only) | `--dep-branch "feat/X"` (cascade) | `--quick` (skip act) | `--skip-tests` | `--files "a.py b.py"`
+
+Full flags: CODEX 06-coding-standards/quality-gates.md
+
+## DO
+
+```bash
+bash scripts/quickmerge.sh "feat: add ConfigReloader"
+bash scripts/quickmerge.sh "fix: tier boundary" --dep-branch "feat/rollback"
+bash scripts/quickmerge.sh "chore: cleanup" --no-pr
+```
+
+## NEVER
+
+```bash
+bash scripts/quality-gates.sh                   # standalone — misses dep validation + PR
+git add -A && git commit && git push            # bypasses all quality gates
+git reset --hard origin/main                    # FORBIDDEN — destroys local changes
+Finish with uncommitted changes in any modified repo
+```
+
+## Nothing-to-Commit on Staging
+
+`git commit --allow-empty -m "chore: promote feat/X to staging"` then `bash scripts/quickmerge.sh "chore: promote feat/X to staging"`

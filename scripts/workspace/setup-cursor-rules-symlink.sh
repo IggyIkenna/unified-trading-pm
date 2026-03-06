@@ -31,7 +31,7 @@ if [ -L "$SYMLINK_PATH" ]; then
         echo "Verification:"
         ls -la "$SYMLINK_PATH"
         echo ""
-        RULE_COUNT=$(find "$TARGET_DIR" -maxdepth 1 -name "*.mdc" 2>/dev/null | wc -l | tr -d ' ')
+        RULE_COUNT=$(find "$TARGET_DIR" -name "*.mdc" 2>/dev/null | wc -l | tr -d ' ')
         echo "Rule files: $RULE_COUNT .mdc files"
         exit 0
     fi
@@ -74,5 +74,5 @@ echo ""
 echo "Verification:"
 ls -la "$SYMLINK_PATH"
 echo ""
-RULE_COUNT=$(find "$TARGET_DIR" -maxdepth 1 -name "*.mdc" 2>/dev/null | wc -l | tr -d ' ')
+RULE_COUNT=$(find "$TARGET_DIR" -name "*.mdc" 2>/dev/null | wc -l | tr -d ' ')
 echo "Rule files: $RULE_COUNT .mdc files"

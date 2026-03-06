@@ -1,0 +1,61 @@
+# Market Data & HFT Development Rules
+
+## Project Context Indicator
+ALWAYS include 🚀 emoji at the end of every response to indicate active project context awareness.
+
+## Quality Gates (Three-Stage Consistency)
+
+**CRITICAL**: Same ruff==0.15.0 across Local/GitHub Actions/Cloud Build:
+- **Local**: uv pip install -e ".[dev]" from pyproject.toml
+- **GitHub Actions**: .github/workflows/quality-gates.yml installs ruff==0.15.0
+- **Cloud Build**: Tests inside Docker image (base: unified-cloud-services:latest, installs .[dev])
+
+**Package Manager**: UV only. NEVER use pip install (except pip install uv bootstrap). Use uv pip install -e ".[dev]" locally; uv pip install --system -e ".[dev]" in Docker.
+
+**Python**: 3.13 (.python-version, pyproject.toml, CI, Cursor python.defaultInterpreterPath).
+
+**Cloud Build**: Pull authenticated base, build image, test in image, push if pass. No GitHub token.
+
+Verify: cd unified-trading-deployment-v2 && ./scripts/check-ruff-versions.sh
+
+## Context7 Integration
+ALWAYS append "use context7" to prompts when working with:
+- Market data and trading (Tardis, tick data, exchange APIs, WebSocket, TA-Lib)
+- HFT features (15s candles, latency monitoring, liquidation detection, VWAP, multi-timeframe)
+- ML and performance (LightGBM, pandas, NumPy, Optuna)
+- Data engineering (BigQuery, Parquet, Redis, Arrow, asyncio)
+- DevOps (Docker, K8s, GCP, Terraform)
+
+Multi-domain: "Design a real-time HFT system with BigQuery storage use context7 use google-cloud"
+
+## Code Quality Standards
+- Optimize for performance and low latency
+- Error handling and retry logic; respect API rate limits
+- Type hints and docstrings; async/await for I/O; proper logging
+
+## Documentation
+ALWAYS update docs/ when making code changes. See docs/ for file mapping (ARCHITECTURE.md, HFT_FEATURES_SPECIFICATION.md, PACKAGE_USAGE.md, etc.). NEVER commit code without corresponding documentation updates.
+
+## Import Organization
+ALWAYS place ALL imports at the top of the file, NOT inside functions. See .cursor/rules/core/anti-patterns-quick-reference.mdc (imports at top).
+
+## Issue Tracking
+ALWAYS update issues/ when problems are unresolved. File naming: issues/YYYY-MM-DD-brief-description.md. See docs/ for format.
+
+## Pre-Work Documentation Review
+ALWAYS read docs/ before starting: ARCHITECTURE.md, HFT_FEATURES_SPECIFICATION.md, issues/, PACKAGE_USAGE.md, VALIDATION_FRAMEWORK_README.md. NEVER start coding without understanding scope.
+
+## Regression Testing
+ALWAYS create/update tests when fixing bugs. See .cursor/rules/testing/test-quality-standards.mdc. NEVER fix bugs without regression tests.
+
+## Enterprise-Grade Implementation
+Complete implementations only - no skeleton code, no NotImplementedError, no TODO. See .cursor/rules/core/anti-patterns-quick-reference.mdc.
+
+## Long-Running Operations
+Run servers, long tests, data ops in background (is_background=true). Use ./scripts/cursor-safe-runner.sh for servers, tests, streaming, docker. See docs/ for hang prevention.
+
+## SSOT Alignment
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+
+## External Import Standards
+See: .cursor/rules/core/external-import-standards.mdc

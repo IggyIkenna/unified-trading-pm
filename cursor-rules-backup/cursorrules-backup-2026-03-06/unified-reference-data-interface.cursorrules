@@ -1,0 +1,36 @@
+# unified-reference-data-interface Cursor Rules
+
+## Library Purpose
+REST-only reference/static data for all trading venues. NO WebSocket connections ever.
+This library abstracts instrument definitions, options chains, expiry calendars, corporate actions.
+
+## Import Standards
+External consumers must import from package root only:
+  from unified_reference_data_interface import create_reference_data_adapter
+  from unified_reference_data_interface import CanonicalInstrument
+NEVER: from unified_reference_data_interface.adapters.binance import ...
+
+## Adapter Rules
+- All adapters use aiohttp for REST calls (never requests, never httpx)
+- All adapters implement BaseReferenceDataAdapter ABC
+- All adapters cache results — reference data changes rarely
+- No WebSocket connections in any adapter — this is the REST-only library
+
+## Adding a New Venue
+1. Create adapters/{venue}.py implementing BaseReferenceDataAdapter
+2. Register in factory.py _ADAPTERS dict
+3. Add tests in tests/unit/test_adapters.py (expand existing file, never create new test_*_extended.py)
+4. Update README.md supported venues table
+
+## Quality Gates
+Run: bash scripts/quickmerge.sh "description"
+NEVER: bash scripts/quality-gates.sh standalone; git push
+
+## Workspace Rules
+This repo inherits all workspace rules from ../.cursorrules:
+- uv not pip
+- datetime.now(timezone.utc) not datetime.now()
+- No os.getenv() - use config classes
+- No print() - use logging
+- Specific types not Any
+- Top-level imports only

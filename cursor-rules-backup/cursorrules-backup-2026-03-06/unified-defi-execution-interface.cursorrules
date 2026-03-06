@@ -1,0 +1,55 @@
+# unified-defi-execution-interface
+
+DeFi execution interface library for SWAP, LEND, BORROW, STAKE instructions.
+
+## Standards
+
+- Python 3.13
+- Ruff 0.15.0 (exact pin)
+- basedpyright (type checking, reportAny=error)
+- pytest with 35% coverage minimum
+- pytest-xdist for parallel execution (-n auto)
+
+## Structure
+
+- `unified_defi_execution_interface/` - Core library
+- `tests/unit/` - Unit tests
+
+## DeFi-Specific
+
+- Web3 usage: Optional dependency (lazy import when needed)
+- Gas estimation: Uses realistic defaults
+- Protocol adapters: Handle errors gracefully
+- Position tracking: Reconcile correctly
+
+## Dependencies
+
+Self-contained. No path deps. Consumers add unified-* as needed.
+
+## Imports: Top of File Only + External Import Standards
+
+```python
+import asyncio
+import pandas as pd
+
+def my_function():
+ # Use imports
+```
+
+NEVER: imports inside functions, try-except fallback implementations
+
+**External Import Standards:** For external dependencies (unified libraries), use top-level imports only:
+
+```python
+# ✅ CORRECT
+from unified_config_service import ConfigValidator
+from unified_events_interface import setup_events
+
+# ❌ WRONG - exposes internal structure, breaks with upstream refactoring
+from unified_config_service.validators.schema import ConfigValidator
+from unified_events_interface.core.logging import setup_events
+```
+
+## External Import Standards
+
+See: .cursor/rules/core/external-import-standards.mdc

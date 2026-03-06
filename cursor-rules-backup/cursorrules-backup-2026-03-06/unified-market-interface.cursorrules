@@ -1,0 +1,59 @@
+# unified-market-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Purpose**: Public market data normalization (venue adapters, WebSocket feeds)
+**Epic**: `unified-trading-codex/11-project-management/epics/unified-libraries-refactor-epic.md`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+**⚠️ RUNTIME VERIFICATION (P0 BLOCKING GATE):** NEVER claim "done" without actual runtime verification. For library: must install in clean env, test import, run tests (if exist), verify no import errors. See `.cursor/rules/runtime-verification-required.mdc`.
+
+## Library-Specific Patterns
+
+### Canonical Schemas
+
+- `CanonicalTrade` - Normalized trade data (venue-agnostic)
+- `CanonicalOrderBook` - Normalized orderbook depth
+- `CanonicalTicker` - Normalized ticker/24h stats
+
+### Venue Adapters
+
+Implemented: Binance, Coinbase, Deribit, Bybit, OKX
+
+Each adapter implements:
+- `normalize_trade()` - Convert venue format to CanonicalTrade
+- `normalize_orderbook()` - Convert venue format to CanonicalOrderBook
+- `normalize_ticker()` - Convert venue format to CanonicalTicker
+- `normalize_symbol()` - Convert venue symbol to canonical instrument_id
+
+### WebSocket Feeds (Live Mode)
+
+- `WebSocketFeedManager` - Base class for live market feeds
+- `subscribe_trades()` - Async generator for trades
+- `subscribe_orderbook()` - Async generator for orderbook snapshots
+- Auto-reconnection with exponential backoff
+- Queue management for slow consumers
+
+### Architecture Notes
+
+- **Batch mode**: Uses historical API clients (Tardis, Databento)
+- **Live mode**: Uses WebSocket feeds from exchanges
+- **Factory pattern**: `get_market_adapter(venue)`, `get_websocket_manager(venue)`
+- **Cloud-agnostic**: Will use unified-trading-services for external API clients
+
+### Dependencies
+
+- pydantic>=2.0 (schema validation)
+- ccxt>=4.0 (exchange connectivity)
+- websockets>=12.0 (WebSocket support)
+
+---
+
+## SSOT Alignment Validation
+
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+

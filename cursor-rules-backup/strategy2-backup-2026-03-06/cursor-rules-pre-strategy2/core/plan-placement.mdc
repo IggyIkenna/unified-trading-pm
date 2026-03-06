@@ -1,0 +1,59 @@
+---
+description: "Plans go in exactly three places: unified-trading-pm, unified-trading-pm/plans/ai/, or unified-trading-pm/plans/active/"
+alwaysApply: true
+priority: 95
+tags:
+  - documentation
+  - plans
+  - critical
+---
+
+# Plan Placement — Three Places Only
+
+PLANS go only in:
+  1. `unified-trading-pm/` — permanent, tracked, visible to team (epics, roadmaps, long-term plans)
+  2. `unified-trading-pm/plans/ai/` — active AI execution plans, current session only
+  3. `unified-trading-pm/plans/active/` — SSOT for Cursor IDE plan files (*.plan.md); `.cursor/plans` symlinks here
+
+NEVER create plans or execution docs in:
+- Workspace root (`unified-trading-system-repos/*.md`)
+- Codex root (`unified-trading-codex/*.md`)
+- Service repo root or `docs/`
+- `unified-trading-pm/scripts/`, `.cursor/rules/`
+
+## Cursor Plans Symlink
+
+## Three folders under plans/
+
+| Folder | Role |
+|--------|------|
+| `active/` | Canonical Cursor plans (real directory, git-tracked) |
+| `active/` | Symlink to `../../.cursor/plans` — what we upgrade to, currently in motion |
+| `archive/` | Archived plans |
+
+- `.cursor/plans` is a symlink to `unified-trading-pm/plans/active/`
+- `active` symlinks to `../../.cursor/plans` so Cursor can execute
+- This makes Cursor-generated plans git-tracked and team-shareable
+- **Setup:** run `bash unified-trading-pm/scripts/setup-active-symlink.sh` (or the copy at `.cursor/workspace-configs/setup-active-symlink.sh`)
+- If the symlink breaks (e.g., Cursor update recreates `.cursor/plans/` as a real dir), re-run the script
+
+After `unified-trading-pm/plans/ai/` task completes:
+- If rollout should be tracked: create entry in `unified-trading-pm`
+- If ephemeral (one-session task): delete the plan file
+- NEVER create a `*_COMPLETE.md`, `*_SUMMARY.md`, or `*_STATUS.md` alongside it
+
+## INDEX.md Update Requirement (MANDATORY)
+
+Whenever a plan is created in `unified-trading-pm/plans/active/`, the file `unified-trading-pm/plans/active/INDEX.md` MUST be updated to include the new plan in the canonical plans table. Whenever a plan is archived or removed, remove it from INDEX.md and add to the Archive Cross-Reference table. Failure to update INDEX.md is a plan placement violation.
+
+## Claude Code / AI Session Plans
+
+- Ephemeral session plans → `unified-trading-pm/plans/ai/` (temporary, not team-tracked)
+- Plans that should persist across sessions and be team-visible → `unified-trading-pm/plans/active/` (must follow `.plan.md` naming and be added to INDEX.md)
+- NEVER create `.plan.md` files in workspace root, service repos, or `unified-trading-codex/`
+
+## .plan.md Naming Enforcement
+
+All active plans MUST use the `.plan.md` suffix (e.g., `my-feature.plan.md`). Any plan-like document placed in `plans/active/` without the `.plan.md` suffix is a plan placement violation and must be renamed or removed.
+
+CODEX: 06-coding-standards/cursor-rules-system.md

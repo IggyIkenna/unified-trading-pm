@@ -1,0 +1,55 @@
+# trading-analytics-ui Development Rules
+
+This is trading-analytics-ui: P&L attribution, Sharpe ratio, win rate, trade history analytics.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/live/per-service/trading-analytics-ui.md (if exists)
+- 04-architecture/batch-live-symmetry.md
+- Plus all universal principles in codex
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge, config standards, cloud-agnostic design, event logging.
+
+**⚠️ RUNTIME VERIFICATION (P0 BLOCKING GATE):** NEVER claim "done" without actual runtime verification. For UI: must run `npm run dev`, wait 8-10s, read terminal output, grep for errors, verify NO errors present. See `.cursor/rules/runtime-verification-required.mdc`.
+
+
+## Python and Package Manager
+
+- **Python**: 3.13 (`.python-version`, `pyproject.toml`, CI)
+- **Package Manager**: UV only. NEVER use `pip install` (except `pip install uv` bootstrap).
+
+## Quality Gates
+
+Same `ruff==0.15.0` across Local, GitHub Actions, Cloud Build.
+
+## Service-Specific Patterns
+
+- **Type**: ui-analysis
+- **Tech Stack**: React/TypeScript
+- **Mode**: live
+- **Priority**: P2-medium
+
+## Dependencies
+
+- **Upstream**: pnl-attribution-service, execution-services
+- See: unified-trading-deployment-v2/configs/dependencies.yaml
+- See: unified-trading-codex/11-project-management/service-registry.yaml
+
+## Testing
+
+- **Smoke Tests:** Playwright (6 tests, ~7s runtime) - Critical flows, page loads
+- **Run:** `npm run smoketest` or use `/run-smoke-tests` Cursor skill
+- **See:** `unified-trading-codex/14-testing-guides/UI_SMOKE_TESTING_GUIDE.md`
+
+---
+
+## SSOT Alignment Validation
+
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+
+## External Import Standards
+
+See: .cursor/rules/core/external-import-standards.mdc

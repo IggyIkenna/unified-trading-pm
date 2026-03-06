@@ -1,0 +1,65 @@
+# features-volatility-service Development Rules
+
+This is features-volatility-service: computes volatility surface features, implied volatility metrics, skew, and Greeks for options.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/batch/per-service/features-volatility-service.md
+- 04-architecture/batch-live-symmetry.md, concurrency.md
+- 06-coding-standards/ (quality gates, testing, config)
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge (with Cursor Team Kit for CI/reviews), config standards, cloud-agnostic design, event logging.
+
+**⚠️ RUNTIME VERIFICATION (P0 BLOCKING GATE):** NEVER claim "done" without actual runtime verification. For backend: must start service, wait 8-10s, check for import/startup errors, verify service starts cleanly. See `.cursor/rules/runtime-verification-required.mdc`.
+
+
+**Cursor Team Kit**: Use `/deslop` before committing. **Agent automatically starts ci-watcher after quickmerge** (no user prompt needed).
+
+## Quality Gates (Three-Stage Consistency)
+
+**CRITICAL**: Same `ruff==0.15.0` across Local/GitHub Actions/Cloud Build:
+- **Local**: `uv pip install -e ".[dev]"` (gets ruff from pyproject.toml)
+- **GitHub Actions**: `.github/workflows/quality-gates.yml` (`ruff==0.15.0`)
+- **Cloud Build**: Tests inside Docker image (base: unified-cloud-services + `.[dev]`)
+
+**Package Manager**: UV only. NEVER use `pip install` (except `pip install uv` bootstrap). Use `uv pip install -e ".[dev]"` locally; `uv pip install --system -e ".[dev]"` in Docker.
+
+**Python**: 3.13 (`.python-version`, `pyproject.toml`, CI, Cursor `python.defaultInterpreterPath`).
+
+**Cloud Build**: Pull base image (auth) → build → test in image → push if pass.
+
+Verify: `cd unified-trading-deployment-v2 && ./scripts/check-ruff-versions.sh`
+
+## Service-Specific Patterns
+
+- **Volatility calculators**: Black-Scholes, implied vol, Greeks (delta, gamma, vega, theta)
+- **Options chain processing**: Per-strike IV, skew (25-delta), term structure
+- **MAX_WORKERS: 1-3** — CPU-bound numerical methods
+
+## Dependencies
+
+- **Upstream**: market-data-processing (options), instruments (chains)
+- **Downstream**: ml-training, strategy
+- See: unified-trading-deployment-v2/configs/dependencies.yaml
+
+## Testing
+
+- tests/unit/test_event_logging.py MUST exist
+- Unit tests for Greeks calculations, IV convergence
+- Regression: test_regression_{issue}_{description}
+
+## Anti-Patterns
+
+- NEVER import google.cloud directly; use get_storage_client()
+- NEVER use os.getenv(); extend UnifiedCloudConfig (from unified_config_interface)
+- NEVER add imports inside functions; imports at top only
+
+---
+
+## SSOT Alignment Validation
+
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc
+

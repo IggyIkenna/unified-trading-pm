@@ -1,0 +1,47 @@
+# unified-cloud-services: Per-Repo Rules (v1.6.0)
+
+## Repository Purpose
+
+Generic cloud operation abstractions for the unified trading system. **Focus**: Cloud utilities, NOT market data APIs.
+
+**Provides**: Config (UnifiedCloudServicesConfig), Cloud clients (get_storage_client, get_secret_client), Generic I/O (BaseGCSWriter, BaseGCSLoader, ConnectionPool), Utilities (timeframe, periods), Error handling, schema validation.
+
+**Does NOT Provide**: Market data API clients → unified-market-interface; Event logging → unified-events-interface; Config reloading → unified-config-interface.
+
+## Module Structure (v1.6.0)
+
+- io/: BaseGCSWriter, BaseGCSLoader, ConnectionPool
+- utils/: timeframe, periods, id_conventions
+- core/: config, client_factory, error_handling, dependency_checker, parquet_schema_enforcer
+- domain/: StandardizedDomainCloudService, validation
+- models/: instrument, schema_definition
+
+## Key Principles
+
+1. **Services extend BaseGCSWriter** — NEVER duplicate writer logic.
+2. **Use utils** — compute_lookback_days, generate_date_range (NOT GenericBatchProcessor, deleted).
+3. **ConnectionPool** for concurrent ops — warmup, get_client.
+4. **Market data → unified-market-interface** — NEVER add market data clients here.
+
+## Deleted in v1.6.0 (No Fallbacks)
+
+feature_data_loader → BaseGCSLoader; batch_processor → utils; http_session_pool, web3_client_pool, subgraph_service → unified-market-interface; observability → unified_events_interface.log_event; clients/, adapters/ → unified-market-interface.
+
+## Imports
+
+from unified_cloud_services.io import BaseGCSWriter, BaseGCSLoader, ConnectionPool
+from unified_cloud_services.utils import compute_lookback_days, generate_date_range, split_into_batches
+from unified_cloud_services import UnifiedCloudServicesConfig, get_storage_client, get_secret_client, handle_api_errors, handle_storage_errors, ParquetSchemaEnforcer
+
+## Error Handling
+
+Use @handle_api_errors, @handle_storage_errors. NEVER bare except or manual retry loops.
+
+## Schema Validation
+
+ParquetSchemaEnforcer + validate_timestamp_date_alignment before every GCS upload.
+
+## Related
+
+- Codex: unified-trading-codex/05-infrastructure/unified-libraries/
+- Migration: unified-trading-codex/05-infrastructure/unified-libraries/ucs-v1.6-migration.md

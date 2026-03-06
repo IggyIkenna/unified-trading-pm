@@ -1,0 +1,38 @@
+# unified-events-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Purpose**: Event logging abstraction for batch and live modes
+**Epic**: `unified-trading-codex/11-project-management/epics/unified-libraries-refactor-epic.md`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+## Library-Specific Patterns
+
+### Event Types
+
+1. **Lifecycle Events** (Cloud Logging) - For humans/UIs
+   - STARTED, PROCESSING_COMPLETED, FAILED, memory usage at 85%
+   - Used by: UTD v2 (batch), live-health-monitor-ui (live), Slack alerts
+   - Both batch and live modes
+
+2. **Coordination Events** (PubSub) - For services
+   - DATA_READY, PREDICTIONS_READY, SIGNALS_READY
+   - Enables service-to-service workflow
+   - **ONLY for live mode** (batch uses GCS existence checks)
+
+### Architecture Notes
+
+- **Batch mode**: Writes events to GCS as Parquet files
+- **Live mode**: Publishes events to PubSub topics
+- **Cloud-agnostic**: Uses unified-trading-services abstractions (get_storage_client, get_pubsub_client)
+- **No hardcoded project IDs**: Uses unified_config.project_id
+
+### Dependencies
+
+- unified-trading-services>=2.0.0 (foundation layer)
+- pydantic>=2.0 (schema validation)
+- python-dateutil>=2.8 (datetime handling)

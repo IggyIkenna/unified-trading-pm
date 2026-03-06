@@ -1,0 +1,39 @@
+---
+description: "Pre-upload GCS validation mandatory; domain schema placement moved to imports/service-domain-schema-in-uic.mdc"
+alwaysApply: true
+priority: 75
+tags: [schema, validation, gcs, contracts]
+---
+
+# Pre-Upload GCS Validation
+
+## SCHEMA PLACEMENT
+
+RULE MOVED: See `imports/service-domain-schema-in-uic.mdc` for domain schema placement rules.
+See `imports/no-schema-outside-contracts.mdc` for the master "no schema outside UAC or UIC" enforcement rule.
+
+SUMMARY: Domain data contracts (Pydantic BaseModel, TypedDict, @dataclass) belong in UIC `domain/<service-name>/`.
+The ONLY schema that stays in a service is `SchemaDefinition` / `ColumnSchema` — these are parquet write enforcement
+descriptors (infrastructure), not data contracts.
+
+## PRE-UPLOAD VALIDATION (unchanged, still required)
+
+RULE: Call `validate_timestamp_date_alignment()` before every GCS write.
+WHY: Misaligned timestamps cause partition read failures; schema drift causes silent corruption.
+
+  from unified_domain_client import validate_timestamp_date_alignment
+  validate_timestamp_date_alignment(df, date=processing_date)  # before every write
+
+## DO:
+  # SchemaDefinition: stays in service (infrastructure only)
+  # schemas/output_schemas.py
+  MY_OUTPUT_SCHEMA = SchemaDefinition(name="my_output", version="1.0", ...)
+
+  # Pre-upload: always validate before write
+  validate_timestamp_date_alignment(df, date=date)
+  writer.write(df)  # only after validation passes
+
+## NEVER:
+  Write to GCS without calling validate_timestamp_date_alignment first
+  Put cross-repo Pydantic/TypedDict contracts in service `schemas/output_schemas.py` (that file is for SchemaDefinition only)
+  # For schema placement violations: see imports/service-domain-schema-in-uic.mdc

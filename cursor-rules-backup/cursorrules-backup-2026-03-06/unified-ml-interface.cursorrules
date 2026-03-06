@@ -1,0 +1,55 @@
+# unified-ml-interface: Per-Repo Rules
+
+## Service-Specific Context
+
+**Type**: library
+**Purpose**: ML model registry, metadata, and configuration for ML services
+**Epic**: `unified-trading-codex/11-project-management/epics/unified-libraries-refactor-epic.md`
+
+## Workspace Rules Apply
+
+All workspace rules from `../.cursorrules` apply to this repo.
+
+**⚠️ RUNTIME VERIFICATION (P0 BLOCKING GATE):** NEVER claim "done" without actual runtime verification. For library: must install in clean env, test import, run tests (if exist), verify no import errors. See `.cursor/rules/runtime-verification-required.mdc`.
+
+## Library-Specific Patterns
+
+### Model Registry
+
+- **GCS paths**: `models/{model_id}/{training_period}/model.pkl`
+- **Metadata paths**: `models/{model_id}/{training_period}/metadata.json`
+- **Versioning**: Training period-based (e.g., "2024-01")
+- **Storage**: Uses unified-trading-services for GCS operations
+
+### Model Metadata
+
+- **Required fields**: model_id, model_type, target_type, training_period
+- **Optional fields**: accuracy, features, hyperparameters, training_metrics
+- **Validation**: Pydantic-based with strict type checking
+
+### Model Configuration
+
+- **Config schema**: YAML-based with validation
+- **Variant support**: Different model variants per strategy
+- **Feature management**: Feature lists and preprocessing configs
+
+### Architecture Notes
+
+- **Cloud-agnostic**: Uses unified-trading-services abstractions
+- **No hardcoded project IDs**: Uses unified_config.project_id or GCP_PROJECT_ID env var
+- **Pydantic-based**: All models use Pydantic for validation
+- **Type-safe**: Full type annotations throughout
+
+### Dependencies
+
+- unified-trading-services>=1.5.0 (cloud operations)
+- pydantic>=2.0 (validation)
+- pandas>=2.3.0 (data handling)
+
+## Imports
+
+Top of file only. NEVER imports inside functions. See: .cursor/rules/core/external-import-standards.mdc
+
+## SSOT Alignment
+
+See: .cursor/rules/workflow/ssot-alignment-enforcement.mdc

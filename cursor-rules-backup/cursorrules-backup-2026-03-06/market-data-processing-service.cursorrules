@@ -1,0 +1,36 @@
+# market-data-processing-service Development Rules
+
+This is market-data-processing-service: candle aggregation and OHLCV processing for CeFi, TradFi, and DeFi.
+
+## Codex References
+
+This service follows unified-trading-codex principles:
+- 01-domain/batch/per-service/market-data-processing-service.md
+- 04-architecture/batch-live-symmetry.md
+- 06-coding-standards/ (quality gates, testing, config)
+
+## Workspace Rules
+
+Inherits all rules from workspace `.cursorrules`: quality gates, quickmerge, config standards, cloud-agnostic design, event logging.
+
+## Python and Package Manager
+
+- **Python**: 3.13 (`.python-version`, `pyproject.toml`, CI, Cursor `python.defaultInterpreterPath`)
+- **Package Manager**: UV only. NEVER use `pip install` (except `pip install uv` bootstrap). Use `uv pip install -e ".[dev]"` locally; `uv pip install --system -e ".[dev]"` in Docker.
+
+## Quality Gates (Three-Stage Consistency)
+
+**CRITICAL**: Same `ruff==0.15.0` across Local/GitHub Actions/Cloud Build.
+
+**Cloud Build**: Pull base image (auth) → build → test in image → push if pass.
+
+## Service-Specific Patterns
+
+- **Candle aggregation**: Multi-timeframe OHLCV from tick/candle inputs
+- **validate_timestamp_date_alignment()** before every GCS write
+- **MAX_WORKERS**: I/O-bound GCS writes
+
+## Anti-Patterns
+
+- NEVER import google.cloud directly; use get_storage_client()
+- NEVER use os.getenv(); extend UnifiedCloudServicesConfig
