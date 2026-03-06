@@ -8,7 +8,7 @@
 
 ---
 
-## 35 Canonical Plans (Execution Order)
+## 36 Canonical Plans (Execution Order)
 
 | #   | Plan                                                                                         | Day   | Scope                                                                                                                             |
 | --- | -------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -26,8 +26,9 @@
 | 4   | [phase1_foundation_prep.plan.md](phase1_foundation_prep.plan.md)                             | 2     | T0–T1, deployment                                                                                                                 |
 | 4a  | [ibkr_gateway_rollout.plan.md](ibkr_gateway_rollout.plan.md)                                 | 2–3   | ibkr-gateway-infra, URDI, UMI, UTEI, UPI                                                                                          |
 | 5   | [documentation_standards_enforcement.plan.md](documentation_standards_enforcement.plan.md)   | 2–3   | All service + library repos                                                                                                       |
-| 6   | [citadel_grade_feature_architecture.plan.md](citadel_grade_feature_architecture.plan.md)     | 2–3   | UFC, FDS, ML                                                                                                                      |
-| 7   | [multi_tf_cascade_signal_architecture.plan.md](multi_tf_cascade_signal_architecture.plan.md) | 2–3   | ML, features                                                                                                                      |
+| 6   | [citadel_grade_feature_architecture.plan.md](citadel_grade_feature_architecture.plan.md)                       | 2–3   | UFC, FDS, ML                                                                                                                                                        |
+| 6a  | [polynomial_trendline_wedge_features.plan.md](polynomial_trendline_wedge_features.plan.md)                     | 3–4   | features-delta-one-service, features-multi-timeframe-service — quadratic trendline fit (highs+lows), wedge detection, bars-to-breakout, 6-combo param sweep, MTF confluence |
+| 7   | [multi_tf_cascade_signal_architecture.plan.md](multi_tf_cascade_signal_architecture.plan.md)                   | 2–3   | ML, features                                                                                                                                                        |
 | 10  | [phase2_library_tier_hardening.plan.md](phase2_library_tier_hardening.plan.md)               | 4     | Libraries                                                                                                                         |
 | 11  | [orphan-contracts-utilization.plan.md](orphan-contracts-utilization.plan.md)                 | 4–5   | UAC, UIC orphan schemas                                                                                                           |
 | 11a | [pytest-collection-audit.plan.md](pytest-collection-audit.plan.md)                           | 4–5   | All 60+ Python repos — pytest collect-only                                                                                        |

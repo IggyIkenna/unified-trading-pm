@@ -10,7 +10,7 @@ overview: |
 todos:
   - id: day3-recover-files
     content: "DAY 3.1 — Recover missing files post cloud issue on ikenna's Mac: Identify files lost/corrupted; restore from git history, backup, or re-create; verify execution-service runs after recovery."
-    status: pending
+    status: completed
   - id: day3-engine-split
     content: "DAY 3.2 — engine.py split by SRP: engine.py 2826L exceeds 900L limit (06-coding-standards/file-splitting-guide.md). Extract by single responsibility — order lifecycle, matching logic, persistence, event emission. Target: no file >900 lines."
     status: completed
@@ -25,16 +25,16 @@ todos:
     status: completed
   - id: day3-other-hygiene
     content: "DAY 3.6 — Other hygiene: qg-exec-services-smoke-import (get_storage_client from unified-cloud-interface); qg-central-element-test-code (test-project placeholder); qg-pip-audit-exec-services; qg-exec-services-codex-18."
-    status: pending
+    status: completed
   - id: day4-testing
     content: "DAY 4.1 — Thorough testing: Unit tests for split engine modules; schema robustness (test_schema_robustness.py); batch/live seam tests; p0-cdc-tests (consumer tests); ic-strategy-domain-event-validation."
-    status: pending
+    status: completed
   - id: day4-quality-gates
     content: "DAY 4.2 — Quality gates progression: quickmerge --lint-only → --unit-only → --qg-only → --quick → full (D5). All must pass before declare green."
     status: pending
   - id: day4-topology
     content: "DAY 4.3 — Topology wiring: topology-execution-order-lifecycle (full order lifecycle PubSub); topology-t1-execution-recon (execution T+1 recon)."
-    status: pending
+    status: completed
 isProject: true
 ---
 
