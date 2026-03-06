@@ -1,11 +1,55 @@
 ---
-name: ""
-overview: ""
-todos: []
-isProject: false
+name: "UCI Cloud Abstraction Complete"
+overview: "Complete cloud-provider abstraction so a single CLOUD_PROVIDER env var switches the entire system between GCP and AWS with zero code changes. All cloud SDK usage lives exclusively inside unified-cloud-interface providers. UCI exposes StorageClient, SecretClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient with auto-provider selection. UTL parallel cloud layer deleted. Terraform + bootstrap scripts in deployment-service. CLOUD_PROVIDER: gcp | aws | local. Terraform is exempt."
+todos:
+  - id: p0-service-violations
+    content: "Fix direct SDK imports in services (features-cross-instrument, hyperliquid_adapter, deployment-api redis)."
+    status: completed
+  - id: p0-script-violations
+    content: "Fix direct GCS/BQ SDK imports in deployment-service scripts and ml-training-service scripts."
+    status: completed
+  - id: p0-utl-cloud-layer
+    content: "Remove UTL parallel cloud layer (cloud_auth_factory, aws_clients, storage_abstraction, secret_abstraction); migrate all callers to UCI."
+    status: completed
+  - id: p1-analytics-client
+    content: "Add AnalyticsClient ABC + GCSAnalyticsClient/AthenaAnalyticsClient/LocalAnalyticsClient to UCI."
+    status: completed
+  - id: p1-async-cache-client
+    content: "Add AsyncCacheClient ABC + AsyncRedisProvider/AsyncLocalCacheProvider to UCI."
+    status: completed
+  - id: p1-compute-client
+    content: "Add ComputeClient ABC + GCPComputeClient/AWSComputeClient/LocalComputeClient to UCI."
+    status: completed
+  - id: p1-s3-explicit-creds
+    content: "AWSStorageClient accepts explicit credentials for hyperliquid requester-pays."
+    status: completed
+  - id: p1-uci-factory
+    content: "UCI factory functions read CLOUD_PROVIDER via UnifiedCloudConfig; no direct os.getenv."
+    status: completed
+  - id: p2-cloud-build-configs
+    content: "buildspec.aws.yaml in all 44 qualifying repos (8 newly created, 36 already present). Gate not fully satisfied: canary simulated CodeBuild run for instruments-service, unified-cloud-interface, unified-events-interface still pending."
+    status: pending
+  - id: p3-terraform-gcp
+    content: "deployment-service/terraform/gcp/ — GCS buckets, BQ datasets, Secret Manager stubs, IAM, Cloud Run definitions. Files exist: verified 2026-03-06."
+    status: completed
+  - id: p3-terraform-aws
+    content: "deployment-service/terraform/aws/ — S3 buckets, Athena, Secrets Manager, IAM, ECS task definitions. Files exist: verified 2026-03-06."
+    status: completed
+  - id: p3-bootstrap-scripts
+    content: "deployment-service/scripts/bootstrap/ — bootstrap_gcp.sh, bootstrap_aws.sh, verify_bootstrap.py. Files exist: verified 2026-03-06."
+    status: completed
+  - id: p4-quality-gate
+    content: "STEP 5.10 (direct cloud SDK scan) and STEP 5.11 added to all quality-gates templates. Confirmed 2026-03-05."
+    status: completed
+isProject: true
+blockedBy:
+  - plan: phase0_standards_enforcement.plan.md
+    reason: "Phase 0 quality gate scan (STEP 5.9) must pass before UCI violations are added as new gate"
+  - plan: phase2_library_tier_hardening.plan.md
+    reason: "UTL cloud layer removal (p0-utl-cloud-layer) must complete before library tier is locked"
 ---
 
----
+# UCI Cloud Abstraction Complete — Detailed Spec
 
 name: UCI Cloud Abstraction Complete
 overview: |

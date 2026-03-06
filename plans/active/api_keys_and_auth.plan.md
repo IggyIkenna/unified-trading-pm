@@ -21,7 +21,10 @@ todos:
     content: Phase 2 WS — binance, deribit, ibkr (cassette approach TBD)
     status: pending
   - id: phase-3-keys
-    content: Phase 3 — pinnacle, odds_api, api_football, glassnode, arkham, soccer_football_info, footystats (key in SM first)
+    content: Phase 3 — pinnacle, odds_api, api_football, glassnode, arkham, soccer_football_info, footystats, coinglass (key in SM first; coinglass required by citadel_grade_feature_architecture liquidation-levels todo)
+    status: pending
+  - id: phase-3-coinglass
+    content: "Coinglass heatmap API — key NOT in SM. Required by citadel_grade_feature_architecture.plan.md (liquidation_levels.py). Check Tardis coverage first; if not covered, obtain Coinglass API key via coinglass.com and add as coinglass-api-key in Secret Manager."
     status: pending
   - id: phase-4-blockers
     content: Phase 4 — betfair, kalshi, coinbase, bloxroute, smarkets, betdaq (key/cassette blockers)
@@ -124,6 +127,7 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 | [ ]  | arkham               | ARKHAM_API_KEY        | arkham-api-key        | arkhamintelligence.com                       |
 | [ ]  | soccer_football_info | FOOTBALL_DATA_API_KEY | football-data-api-key | football-data.org — free tier available      |
 | [ ]  | footystats           | FOOTYSTATS_API_KEY    | footystats-api-key    | footystats.org — API subscription            |
+| [ ]  | coinglass            | COINGLASS_API_KEY     | coinglass-api-key     | coinglass.com — check Tardis coverage first; if not covered, obtain via coinglass.com. Required by citadel_grade_feature_architecture liquidation-levels. |
 
 ---
 

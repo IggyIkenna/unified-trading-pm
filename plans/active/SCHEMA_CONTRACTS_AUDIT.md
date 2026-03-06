@@ -1,10 +1,13 @@
 # Schema Contracts Full Audit
 
-**Status:** Complete (All P0–P3 remediation done)
-**Date:** 2026-03-05
+**Status:** Audit complete. Remediation in progress.
+**Date:** 2026-03-05 | **Last verified:** 2026-03-06
 **Plan:** [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)
 **Scope:** All 60+ repos scanned across 10 parallel agents
-**Result:** All violations remediated. Schema SoC enforced. Quality gates blocking.
+**Audit result:** Violations catalogued. Codex/cursor rules updated. Quality gates blocking.
+**Remediation blockers remaining:**
+- `unified-internal-contracts/unified_internal_contracts/domain/` scaffolded 2026-03-06 (was missing); service schema migration can now begin per Section 6 priority order.
+- `InstrumentRecord` CONFLICT (UAC vs UIC) must be resolved before migration of instrument schemas.
 
 ---
 
