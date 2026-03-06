@@ -60,6 +60,7 @@ echo "Sync to main: ${#REPOS[@]} repos"
 echo ""
 
 ok=0
+FAILED_REPOS=()
 fail=0
 skip=0
 
@@ -93,12 +94,14 @@ for repo in "${REPOS[@]}"; do
   fi
   # Fetch and merge origin/main — keep non-conflicting remote changes
   if ! (cd "$dir" && git fetch origin main 2>/dev/null); then
+    FAILED_REPOS+=("$repo")
     echo "  FAIL $repo — fetch origin failed"
     ((fail++))
     continue
   fi
   if ! (cd "$dir" && git merge origin/main --no-edit 2>/dev/null); then
     (cd "$dir" && git merge --abort 2>/dev/null) || true
+    FAILED_REPOS+=("$repo")
     echo "  FAIL $repo — merge conflicts with origin/main; pull and resolve manually first"
     ((fail++))
     continue
@@ -107,6 +110,7 @@ for repo in "${REPOS[@]}"; do
     echo "  OK $repo"
     ((ok++))
   else
+    FAILED_REPOS+=("$repo")
     echo "  FAIL $repo — push failed"
     ((fail++))
   fi
@@ -114,5 +118,6 @@ done
 
 echo ""
 echo "Done: $ok OK, $fail FAIL, $skip skipped"
+[[ $fail -gt 0 ]] && echo "Failed repos: ${FAILED_REPOS[*]}"
 [[ $fail -gt 0 ]] && exit 1
 exit 0
