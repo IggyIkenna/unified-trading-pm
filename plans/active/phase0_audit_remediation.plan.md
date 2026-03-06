@@ -25,7 +25,7 @@ todos:
     status: pending
   - id: stream5-warn-cleanup
     content: "Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore; market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ verification."
-    status: pending
+    status: done
 isProject: true
 blockedBy:
   - plan: phase0_standards_enforcement.plan.md
