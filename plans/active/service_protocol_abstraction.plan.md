@@ -174,19 +174,19 @@ backend (GCS vs S3) is injected by the factory. Same pattern for `QueueEventBus`
 
 - [x] `p3-config-schema` — `deployment-service/configs/protocol-config-schema.yaml` — documents all PROTOCOL_* keys including new `PROTOCOL_DATA_SINK_TABLE_PREFIX` (for BigQueryDataSink) and `athena` backend value; per-service matrix section lists which vars each service uses
 - [x] `p3-gen-batch-configs` — `configs/services/<svc>/batch.env` exist for all 11 batch services (instruments, features-*, market-data-processing, ml-training, strategy, pnl, position-balance-monitor); new files added for features-volatility-service, features-delta-one-service, features-cross-instrument-service
-- [ ] `p3-gen-live-configs` — live.env files not yet created for live services (market-tick-data, execution, ml-inference, risk)
-- [ ] `p3-bootstrap-injects` — Deployment bootstrap scripts need updating to inject SERVICE_MODE + PROTOCOL_* vars when provisioning Cloud Run / ECS
-- [ ] `p3-terraform-vars` — Terraform modules receive PROTOCOL\_\* vars as input vars; pass to service container env
+- [x] `p3-gen-live-configs` — live.env files created for all live services including risk-and-exposure-service; market-tick-data, execution, ml-inference configs exist from prior sessions
+- [x] `p3-bootstrap-injects` — `bootstrap_gcp.sh` + `bootstrap_aws.sh` updated with `deploy_service()` helper that injects PROTOCOL_* env vars into Cloud Run / ECS at deploy time; commented examples for all 8 services
+- [x] `p3-terraform-vars` — `terraform/gcp/variables.tf` + `terraform/aws/variables.tf` updated with 5 PROTOCOL_* input vars (data_sink_backend, data_source_backend, event_bus_backend, config_store_backend, service_env_overrides)
 
 ### P4 — Service Refactors (high priority: services with worst violations)
 
 - [x] `p4-instruments-service` — `cloud_data_provider.py` uses `get_data_source(routing_key=category.lower())` (done in prior session); `cloud_instrument_storage.py` still present but deprecated; main read/write path is UCI
-- [ ] `p4-market-data-service` — `CloudTarget`/`StandardizedDomainCloudService` usage still present; P4 backlog
+- [x] `p4-market-data-service` — `gcs_bucket_cefi/tradfi/defi` + `bigquery_dataset` fields removed from config; replaced with `market_data_source_bucket_*` + `analytics_dataset`; `get_source_bucket(category)` reads PROTOCOL_DATA_SOURCE_BUCKET_{CATEGORY}; candle_processing_service updated to use `self._source_bucket`
 - [x] `p4-features-service` — features-volatility, features-delta-one, features-onchain: refactored to `get_data_sink(routing_key=category.lower())` / `get_data_source()` / UCI `StorageClient`; `get_output_gcs_buckets()` / `get_gcs_buckets()` removed; `from google.cloud.storage import Blob` removed from features-cross-instrument-service
-- [ ] `p4-ml-training` — `etl_gcs_to_bigquery.py` still uses BigQuery directly; P4 backlog
+- [x] `p4-ml-training` — `etl_gcs_to_bigquery.py` migrated: `load_table_from_dataframe` → `get_analytics_client().load_dataframe()`; `load_dataframe()` added to UCI `AnalyticsClient` ABC + `GCPAnalyticsClient` + `LocalAnalyticsClient`; `create_partitioned_table` keeps deferred GCP DDL (GCP-specific partitioning/clustering can't be abstracted without major ABC extension)
 - [x] `p4-deployment-api` — `cache.py` fully UCI (session #2a); event bus uses `get_queue_client()` via UCI
-- [ ] `p4-utl-cloud-layer` — `StandardizedDomainCloudService` in UTL has deprecation warnings; removal pending; `CloudTarget` still referenced by many services; P4 backlog
-- [ ] `p4-all-services` — Remaining services (execution, market-data-processing, risk, strategy) still have `CloudTarget|gcs_bucket` references; P5 quality gate will catch them
+- [x] `p4-utl-cloud-layer` — `CloudTarget` removed from UTL `__init__.py` public exports; `StandardizedDomainCloudService` removed from UTL `__init__.py` exports; scripts updated to import from `unified_domain_client.cloud_target`
+- [x] `p4-all-services` — execution-service: all `gcs_bucket`/`bigquery_dataset` field names renamed to protocol-agnostic names (`source_bucket`, `sink_bucket`, `analytics_dataset`); market-data-processing-service: cleaned; strategy-service: `_compute_domain_fields` validator removed; benchmark.py/strategies.py params renamed to `source_bucket`
 
 ### P5 — Quality Gate
 
