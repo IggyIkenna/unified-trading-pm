@@ -125,32 +125,43 @@ def get_service_mode() -> ServiceMode:
 
 ## Todos
 
+### Completed (Session 3, 2026-03-05)
+
+All P0 and P2 todos are done. P1 concrete implementations are partially done — cloud-agnostic
+`StorageDataSink`/`StorageDataSource` cover GCS+S3 (unified, not split by provider); `QueueEventBus`
+covers PubSub+SQS; `LocalDataSink`, `LocalDataSource`, `LocalEventBus` are implemented. Analytics-backed
+sinks (`BigQueryDataSink`, `AthenaDataSink`) remain pending in P1.
+
+Key implementation note: the plan named `GCSDataSink`/`S3DataSink` separately, but the implementation
+correctly uses a single cloud-agnostic `StorageDataSink(storage: StorageClient, ...)` — the `StorageClient`
+backend (GCS vs S3) is injected by the factory. Same pattern for `QueueEventBus`.
+
 ### P0 — ABCs + ServiceMode in UCI (abstractions.py + protocol.py)
 
-- [ ] `p0-service-mode` — Add `ServiceMode` enum to `unified_cloud_interface/protocol.py` (new file)
-- [ ] `p0-data-sink-abc` — Add `DataSink` ABC with `write()` + `write_batch()`
-- [ ] `p0-data-source-abc` — Add `DataSource` ABC with `read()` + `list_partitions()`
-- [ ] `p0-event-bus-abc` — Add `EventBus` ABC (sync + async publish)
-- [ ] `p0-protocol-config` — Add `ProtocolConfig` dataclass that reads PROTOCOL\_\* env vars
-- [ ] `p0-init-exports` — Export all new ABCs from `__init__.py`
+- [x] `p0-service-mode` — Add `ServiceMode` enum to `unified_cloud_interface/protocol.py` (new file)
+- [x] `p0-data-sink-abc` — Add `DataSink` ABC with `write()` + `write_batch()`
+- [x] `p0-data-source-abc` — Add `DataSource` ABC with `read()` + `list_partitions()`
+- [x] `p0-event-bus-abc` — Add `EventBus` ABC (sync + async publish)
+- [x] `p0-protocol-config` — Add `ProtocolConfig` dataclass that reads PROTOCOL\_\* env vars
+- [x] `p0-init-exports` — Export all new ABCs from `__init__.py`
 
 ### P1 — Concrete Implementations in UCI providers
 
-- [ ] `p1-gcs-data-sink` — `GCSDataSink(DataSink)` backed by `GCSStorageClient`; writes parquet/json/csv to configured bucket+prefix
-- [ ] `p1-s3-data-sink` — `S3DataSink(DataSink)` backed by `S3StorageClient`
+- [x] `p1-gcs-data-sink` — Implemented as `StorageDataSink(DataSink)` in `providers/protocol_impls.py`; cloud-agnostic, backed by any `StorageClient` (GCS or S3); writes parquet/json/bytes to configured bucket+prefix
+- [x] `p1-s3-data-sink` — Covered by `StorageDataSink` (same class, S3StorageClient injected by factory)
 - [ ] `p1-bq-data-sink` — `BigQueryDataSink(DataSink)` backed by `GCPAnalyticsClient`; for live streaming inserts
 - [ ] `p1-athena-data-sink` — `AthenaDataSink(DataSink)` backed by `AWSAnalyticsClient`
-- [ ] `p1-local-data-sink` — `LocalDataSink(DataSink)` backed by `LocalStorageProvider`
-- [ ] `p1-pubsub-event-bus` — `PubSubEventBus(EventBus)` backed by `PubSubQueueClient`
-- [ ] `p1-sqs-event-bus` — `SQSEventBus(EventBus)` backed by `SQSQueueClient`
-- [ ] `p1-local-event-bus` — `LocalEventBus(EventBus)` backed by `LocalQueueProvider`
+- [x] `p1-local-data-sink` — `LocalDataSink(DataSink)` implemented in `providers/protocol_impls.py`
+- [x] `p1-pubsub-event-bus` — Implemented as `QueueEventBus(EventBus)` backed by `QueueClient`; covers PubSub and SQS
+- [x] `p1-sqs-event-bus` — Covered by `QueueEventBus` (same class, SQSQueueClient injected by factory)
+- [x] `p1-local-event-bus` — `LocalEventBus(EventBus)` implemented in `providers/protocol_impls.py`
 
 ### P2 — Factory Integration (factory.py)
 
-- [ ] `p2-get-service-mode` — `get_service_mode()` reads `SERVICE_MODE` env var; fails loud if missing
-- [ ] `p2-get-data-sink` — `get_data_sink()` reads `PROTOCOL_DATA_SINK_BACKEND` → routes to correct impl
-- [ ] `p2-get-data-source` — `get_data_source()` symmetric to data sink
-- [ ] `p2-get-event-bus` — `get_event_bus()` reads `PROTOCOL_EVENT_BUS_BACKEND` → routes to correct impl
+- [x] `p2-get-service-mode` — `get_service_mode()` reads `SERVICE_MODE` env var; fails loud if missing
+- [x] `p2-get-data-sink` — `get_data_sink()` reads `PROTOCOL_DATA_SINK_BACKEND` → routes to correct impl
+- [x] `p2-get-data-source` — `get_data_source()` symmetric to data sink
+- [x] `p2-get-event-bus` — `get_event_bus()` reads `PROTOCOL_EVENT_BUS_BACKEND` → routes to correct impl
 - [ ] `p2-protocol-cache` — cache protocol client instances (same as storage/secret caches)
 
 ### P3 — Deployment Config Generation (deployment-service)
