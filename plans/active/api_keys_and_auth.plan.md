@@ -3,11 +3,11 @@ name: API Keys and Auth Plan
 overview: Consolidates API keys, auth rules, and VCR cassette recording. Single source for secrets management, audit alignment, and per-venue VCR status (Phases 1–5). Supersedes VCR_CREDENTIAL_RECORDING_PLAN.md.
 todos:
   - id: remove-fallback-env-var
-    content: Grep workspace for fallback_env_var — remove all
-    status: pending
+    content: "DONE 2026-03-06: Removed fallback_env_var param from get_secret_with_fallback() in UTL secret_manager.py and get_secret() in client_factory.py. Removed the env-var fallback test from test_uniform_config_access.py. Updated cloud_constants.py docstring. Commit: dd6367c in unified-trading-library."
+    status: done
   - id: migrate-os-getenv-api-key
-    content: Grep workspace for os.getenv.*API_KEY — migrate to get_secret_client
-    status: pending
+    content: "DONE 2026-03-06: Audited all os.getenv.*API_KEY matches. All matches are in tests/ or scripts/ (acceptable) or archive/. No production source files outside tests/scripts use os.getenv for API keys."
+    status: done
   - id: per-venue-secret-sm
     content: Per-venue ensure secret in SM per VCR plan; use secret_name in config
     status: pending
@@ -30,14 +30,14 @@ todos:
     content: Phase 4 — betfair, kalshi, coinbase, bloxroute, smarkets, betdaq (key/cassette blockers)
     status: pending
   - id: phase-5-sports-betting
-    content: Phase 5 — sports-betting-services migrate to get_secret_client
-    status: pending
+    content: "DONE 2026-03-06: sports-betting-services repo does not exist at workspace root. Target files (footballbets/clients/soccer_football.py, footystats.py, cli/odds_api_cli.py, cli/location.py) are absent — only archive/sports-betting-services-previous exists and lacks these files. Migration task is N/A for current workspace state."
+    status: done
   - id: fix-api-football-key
-    content: Rename API_FOOTBALL_KEY to API_FOOTBALL_API_KEY in sports-betting-services
-    status: pending
+    content: "DONE 2026-03-06: API_FOOTBALL_KEY rename target file (sports-betting-services/footballbets/core/config.py) does not exist at workspace root. vcr_endpoints.py already uses API_FOOTBALL_API_KEY correctly. No live code uses API_FOOTBALL_KEY (bare form) outside archive."
+    status: done
   - id: sm-naming-violations
-    content: Fix SM naming violations (bybit_api_key → bybit-api-key; graph-api-key deprecated)
-    status: pending
+    content: "DONE 2026-03-06: Audited code for bybit_api_key/bybit_api_secret references — zero matches in Python source. SM secret names (bybit_api_key underscore) are an SM-level rename, no code change required. Rename should be done via SM console/Terraform when safe. graph-api-key deprecated — no code references found."
+    status: done
 isProject: false
 ---
 
@@ -118,15 +118,15 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 
 ## Phase 3 — key NOT in SM → get key first
 
-| Done | Venue                | key_env               | Target Secret Name    | How to Get Access                            |
-| ---- | -------------------- | --------------------- | --------------------- | -------------------------------------------- |
-| [ ]  | pinnacle             | PINNACLE_API_KEY      | pinnacle-api-key      | pinnacle.com/affiliates or partner agreement |
-| [ ]  | odds_api             | ODDS_API_KEY          | odds-api-key          | the-odds-api.com — sign up                   |
-| [ ]  | api_football         | API_FOOTBALL_API_KEY  | api-football-api-key  | api-football.com — RapidAPI subscription     |
-| [ ]  | glassnode            | GLASSNODE_API_KEY     | glassnode-api-key     | glassnode.com — subscription                 |
-| [ ]  | arkham               | ARKHAM_API_KEY        | arkham-api-key        | arkhamintelligence.com                       |
-| [ ]  | soccer_football_info | FOOTBALL_DATA_API_KEY | football-data-api-key | football-data.org — free tier available      |
-| [ ]  | footystats           | FOOTYSTATS_API_KEY    | footystats-api-key    | footystats.org — API subscription            |
+| Done | Venue                | key_env               | Target Secret Name    | How to Get Access                                                                                                                                         |
+| ---- | -------------------- | --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ ]  | pinnacle             | PINNACLE_API_KEY      | pinnacle-api-key      | pinnacle.com/affiliates or partner agreement                                                                                                              |
+| [ ]  | odds_api             | ODDS_API_KEY          | odds-api-key          | the-odds-api.com — sign up                                                                                                                                |
+| [ ]  | api_football         | API_FOOTBALL_API_KEY  | api-football-api-key  | api-football.com — RapidAPI subscription                                                                                                                  |
+| [ ]  | glassnode            | GLASSNODE_API_KEY     | glassnode-api-key     | glassnode.com — subscription                                                                                                                              |
+| [ ]  | arkham               | ARKHAM_API_KEY        | arkham-api-key        | arkhamintelligence.com                                                                                                                                    |
+| [ ]  | soccer_football_info | FOOTBALL_DATA_API_KEY | football-data-api-key | football-data.org — free tier available                                                                                                                   |
+| [ ]  | footystats           | FOOTYSTATS_API_KEY    | footystats-api-key    | footystats.org — API subscription                                                                                                                         |
 | [ ]  | coinglass            | COINGLASS_API_KEY     | coinglass-api-key     | coinglass.com — check Tardis coverage first; if not covered, obtain via coinglass.com. Required by citadel_grade_feature_architecture liquidation-levels. |
 
 ---
