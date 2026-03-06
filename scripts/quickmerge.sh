@@ -209,6 +209,7 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
       echo "  python unified-trading-pm/scripts/manifest/generate-derived-manifest.py"
       echo "  python unified-trading-pm/scripts/manifest/check-dependency-alignment.py --json"
       echo "  python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply  # if internal mismatches"
+      echo "  python unified-trading-pm/scripts/manifest/fix_external_dependency_alignment.py --apply  # if external mismatches (updates repos to match canonical)"
       echo ""
       echo "See: unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md"
       cd "$REPO_DIR"
@@ -393,7 +394,7 @@ if [ -n "$DEP_BRANCH" ]; then
   BRANCH="$DEP_BRANCH"
   echo "[$REPO_NAME] Using specified branch: $BRANCH"
 else
-  BRANCH="auto/$(date +%Y%m%d-%H%M%S)-$$"
+  BRANCH="auto/$(TZ=UTC date +%Y%m%d-%H%M%S)-$$"
   echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
 fi
 

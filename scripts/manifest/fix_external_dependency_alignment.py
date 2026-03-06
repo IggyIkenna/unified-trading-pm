@@ -33,9 +33,11 @@ from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
 
-WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = Path(__file__).resolve().parents[1] / "canonical-dependency-manifest.json"
-WORKSPACE_MANIFEST_PATH = Path(__file__).resolve().parents[1] / "workspace-manifest.json"
+# PM repo root (unified-trading-pm); workspace root is parent (where all repos live)
+PM_ROOT = Path(__file__).resolve().parents[2]
+WORKSPACE_ROOT = PM_ROOT.parent
+MANIFEST_PATH = PM_ROOT / "canonical-dependency-manifest.json"
+WORKSPACE_MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
 
 
 def load_internal_package_names(workspace_manifest: Path) -> frozenset[str]:

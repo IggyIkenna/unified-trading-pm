@@ -1,7 +1,12 @@
 name: version-bump
 
+# Run only AFTER quality-gates passes on main. This ensures version-bump
+# never runs when quality-gates fails — the merge is already on main,
+# but we gate the bump on CI success.
 on:
-  push:
+  workflow_run:
+    workflows: [quality-gates]
+    types: [completed]
     branches: [main]
 
 permissions:
@@ -10,11 +15,17 @@ permissions:
 jobs:
   version-bump:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    # Only run when quality-gates succeeded (not failed/cancelled), the run
+    # was triggered by a push to main, and commit does not contain [skip ci]
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -22,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          COMMIT_MSG="${{ github.event.workflow_run.head_commit.message }}"
           FIRST_LINE=$(echo "$COMMIT_MSG" | head -n1)
 
           BUMP=""
