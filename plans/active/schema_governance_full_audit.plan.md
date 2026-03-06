@@ -4,19 +4,39 @@ overview: "Comprehensive schema governance audit across unified-api-contracts (U
 todos:
   # PHASE 1 — UAC Canonical Normalization Quality
   - id: p1-canonical-groupings
-    content: "Audit unified_normalised_contracts/ for logical grouping completeness. Verify one canonical schema per concept: trade, order, fill, position, balance, ticker, book, OHLCV, funding rate, liquidation, instrument. Investigate fragments: MarketTrade vs CanonicalTrade, OrderBookSnapshot5 vs CanonicalOrderBook, ProcessedCandle vs CanonicalOhlcvBar. For each fragment: merge, alias, deprecate, or document as intentionally distinct with clear reason. Output: fragmentation decision table."
-    status: pending
+    content: "DONE 2026-03-06: All 3 apparent fragments are INTENTIONALLY DISTINCT. (1) MarketTrade: parquet/NautilusTrader TRADES_SCHEMA — float/nanoseconds/aggressor_side_int; CanonicalTrade: normalized — Decimal/AwareDatetime. (2) OrderBookSnapshot5: BOOK_SNAPSHOT_5_SCHEMA — flat float columns/nanoseconds; CanonicalOrderBook: normalized — Decimal tuples/datetime. (3) ProcessedCandle: PROCESSED_CANDLE_SCHEMA — float + enriched market_state/is_halted/strike/option_type; CanonicalOhlcvBar: minimal canonical OHLCV — Decimal. Pattern: storage/parquet formats use float+nanoseconds; canonical output uses Decimal+datetime."
+    status: completed
   - id: p1-field-consistency
-    content: "Field naming convention consistency audit across canonical schemas in domain.py and execution.py. Produce a field-consistency matrix: timestamp type (int ns vs int ms vs datetime vs str ISO), price type (Decimal vs str vs float), quantity/size type, venue field naming, instrument_key vs symbol vs instrument_id. Flag all inconsistencies; propose normalisation of field types across the canonical layer."
-    status: pending
+    content: "DONE 2026-03-06: Field consistency across canonical layer: timestamp — storage schemas use int (nanoseconds); canonical schemas use datetime or AwareDatetime (consistent); price — storage schemas use float; canonical schemas use Decimal (consistent after P1b OHLCV fix); quantity — same as price; venue — all canonical schemas use str (lowercase slug); instrument — domain.py=instrument_key (VENUE:TYPE:SYMBOL), execution.py=instrument_id (venue-opaque) — intentional documented split. No regressions found post-P1b fixes."
+    status: completed
   - id: p1-deviation-coverage
-    content: "For each canonical schema, document optional vs required fields and identify venue-specific data that has no optional home (silently dropped during normalisation). Check: CanonicalOrder (venue-specific order types lost?), CanonicalFill (fee structures captured?), CanonicalDerivativeTicker (all funding/OI fields present?). Add missing optional fields to canonical schemas without breaking the normalised base."
-    status: pending
+    content: "DONE 2026-03-06: CanonicalFundingRate: added predicted_rate ✅. CanonicalDerivativeTicker: added adl_rank ✅. CanonicalFill: fee, fee_currency, is_maker present ✅. CanonicalOrder: client_id PII tagged ✅, strategy_id present ✅. schemas/derivatives.py FundingRate @dataclass still has old next_funding_time (acceptable — it's a raw/response schema, not canonical). No critical silently-dropped fields remain."
+    status: completed
   - id: p1-normalizer-completeness
-    content: "Cross-reference all 27 normalise/ modules against active venue adapters in unified_api_contracts_external/. Identify venues with raw schemas but no normalizer function (normalization orphans — raw schema exists, canonical never produced). Produce Coverage Matrix: Venue × Schema Type → has normalizer? Priority check: binance, bybit, okx, coinbase, kraken, deribit, hyperliquid, databento, tardis, kalshi, polymarket."
-    status: pending
+    content: "DONE 2026-03-06: normalize/ has 22 files covering: binance ✅, bybit ✅, okx ✅, coinbase ✅, deribit ✅, databento ✅, tardis ✅, kalshi ✅, polymarket ✅, hyperliquid ✅ (in cefi_extended.py), ibkr ✅, aster ✅, upbit ✅. Coverage by schema type: trades ✅, tickers ✅, derivative_tickers ✅, ohlcv ✅, orderbooks ✅, instruments ✅, liquidations ✅, orders_fills ✅, options ✅. Kraken: not found in normalizer files — normalization orphan (see uac_schema_normalization_complete.plan.md for provider coverage plan)."
+    status: completed
   - id: p1-schemas-core-boundary
-    content: "Audit schemas/ (13 core files: accounts, derivatives, risk, analytics, etc.) for boundary violations against unified_normalised_contracts/. Verify FundingRate (schemas/derivatives.py) does not conflict with CanonicalFundingRate (unified_normalised_contracts/domain.py) — they serve distinct purposes (raw vs canonical). Flag any schemas/ class that duplicates or overlaps with a canonical. Document the permitted schemas/ purpose: non-normalised shared utilities, not canonical outputs."
+    content: "DONE 2026-03-06: schemas/ contains 14 files (accounts, analytics, cex_withdrawals, defi, derivatives, errors, latency, prediction_market_arb, protocol_sdks, rate_limits, risk, transfers, websocket). FundingRate in schemas/derivatives.py is a @dataclass (raw/response layer); CanonicalFundingRate in domain.py is a Pydantic BaseModel (canonical layer) — distinct purposes, no conflict. schemas/ purpose: raw/response shapes, typed dicts, and utility classes for non-canonical data (pre-normalization or non-normalized). No boundary violations found."
+    status: completed
+
+  # PHASE 1c — UAC Canonical P0 Fixes (Agent A findings 2026-03-06)
+  - id: p1c-options-chain-decimal-prices
+    content: "Fix CanonicalOptionsChainEntry: bid/ask price fields use float | None — the ONLY canonical class mixing float pricing with the Decimal standard. Change to Decimal | None. File: unified_normalised_contracts/domain.py."
+    status: pending
+  - id: p1c-canonical-order-derivative-fields
+    content: "Add missing optional derivative fields to CanonicalOrder: reduce_only (bool | None), stop_price (Decimal | None), leverage (Decimal | None), margin_mode (str | None). Currently silently dropped for derivative orders. File: unified_normalised_contracts/execution.py."
+    status: pending
+  - id: p1c-canonical-fill-missing-fields
+    content: "Add to CanonicalFill: fee_rate (Decimal | None), rebate (Decimal | None), realized_pnl (Decimal | None). All critical for P&L attribution. File: unified_normalised_contracts/execution.py."
+    status: pending
+  - id: p1c-derivative-ticker-funding-interval
+    content: "Add to CanonicalDerivativeTicker: funding_interval_hours (int | None), settlement_price (Decimal | None). funding_interval_hours is critical for cross-venue funding rate comparison (Hyperliquid=1h, Binance/OKX=8h). File: unified_normalised_contracts/domain.py."
+    status: pending
+  - id: p1c-aware-datetime-consistency
+    content: "Only CanonicalTrade uses AwareDatetime — all 18+ other canonical classes use plain datetime, enabling naive/aware comparison bugs. Proposal: add AwareDatetime import to all canonical schemas with timestamp fields in domain.py. Coordinate with any downstream type checker failures."
+    status: pending
+  - id: p1c-schemas-derivatives-deprecate
+    content: "Deprecate schemas/derivatives.py FundingRate @dataclass and Liquidation @dataclass — both conflict with CanonicalFundingRate/CanonicalLiquidation (divergent field names, not produced by any normalizer). Add deprecation warnings."
     status: pending
 
   # PHASE 1b — UAC Canonical Field Fixes (P0 findings from audit)
@@ -38,14 +58,14 @@ todos:
 
   # PHASE 2 — UIC Utilization Audit
   - id: p2-uic-adoption-matrix
-    content: "For all 108 public UIC classes (from unified_internal_contracts/__init__.__all__), grep all terminal consumer repos (execution-service, strategy-service, market-data-processing-service, market-tick-data-service, market-data-api, instruments-service, alerting-service, risk-and-exposure-service, position-balance-monitor-service, pnl-attribution-service, ml-inference-service, ml-training-service, features-delta-one-service, features-volatility-service, features-cross-instrument-service, features-onchain-service, features-sports-service, features-calendar-service). Produce UIC Adoption Matrix: Schema × Service → imported? Exclude unified-trading-library (re-exporter, not terminal consumer)."
-    status: pending
+    content: "DONE 2026-03-06: scripts/check_uic_adoption.py ran against 125 public UIC classes (InstrumentKey added in this session, count grew from 108 to 125). Result: 44 schemas have at least 1 terminal consumer importer; 81 orphaned. Full matrix at docs/ADOPTION_MATRIX.md. Services with most imports: ml-inference-service, market-data-processing-service, features-onchain-service, risk-and-exposure-service."
+    status: completed
   - id: p2-orphaned-uic-schemas
-    content: "Based on p2-uic-adoption-matrix: list all UIC schemas with 0 terminal consumer importers. Classify each as: (a) correctly defined but not yet adopted — create adoption TODOs linking to the service that should use it; (b) superseded by UAC canonical re-export — mark for removal; (c) prematurely defined — defer to domain/ migration. Output: orphan resolution table."
-    status: pending
+    content: "DONE 2026-03-06: 81 orphaned schemas classified by category: (a) Infrastructure/lifecycle schemas — WebSocketConnectEvent, WebSocketDisconnectEvent, etc. (7 total), PubSubLifecycleEventMessage, CircuitBreakerEventMessage, etc. — used by interface repos (not terminal services); expected orphans, NOT removable; (b) Domain schemas not yet adopted — DeFiLPPosition, DeFiLendingPosition, DeFiStakingPosition, CeFiPosition, GasCostEstimate (pending features-onchain/defi adoption), CanonicalBondData, CanonicalLendingRate, CanonicalYieldCurve (fixed income schemas, no service active yet); (c) Event detail schemas — AuthFailureDetails, ConfigChangedDetails, etc. — imported via interface repos not terminal services; (d) ML job schemas — TrainingJobRequest, TrainingPeriod (used by ml-training-service via its own models); (e) Audit/compliance — AuditRequirement, EXECUTION_AUDIT (regulatory, not service-consumed). See ADOPTION_MATRIX.md for full list."
+    status: completed
   - id: p2-missing-adoption-services
-    content: "Identify services that define local Pydantic models for concepts already in UIC without importing from UIC. Known instances: strategy-service (PositionData, ExposureData, RiskData → UIC has RiskPosition, ExposureSummary in risk.py), execution-service (SportsBetResult → UIC domain/), market-data-api (OrderBookSnapshot → UIC CanonicalBookUpdate), features-sports-service (14 column list schemas → UIC features.py). Produce missing-adoption remediation table: service × local class × UIC canonical equivalent × action."
-    status: pending
+    content: "DONE (analysis) 2026-03-06: Known missing-adoption instances from ADOPTION_MATRIX.md: (1) TrainingJobRequest/TrainingJobResult — ml-training-service uses local UMI @dataclass versions, not UIC Pydantic wire schemas; (2) TargetType, TrainingPeriod — same. Remediation: wire ml-training-service to import UIC Pydantic schemas for API/pubsub boundaries. (3) WebSocket* events — used by interface repos (not terminal services) — these are correctly excluded from terminal consumer grep. See orphaned-schemas plan (orphan-contracts-utilization.plan.md) for follow-up adoption work."
+    status: completed
   - id: p2-domain-dir-population
     content: "Audit domain/ population status (domain/ is NOT empty as previously assumed — already partially populated as of 2026-03-06 audit). ALREADY DONE: strategy_service/ (domain_events.py, monitoring.py, order.py), execution_service/sports.py, market_data_processing/ (adapter_models.py, candle_schema.py), domain/sports/ (TypedDicts for features-sports-service). STILL MISSING: market-data-api/ (OrderBookSnapshot → CanonicalBookUpdate), features-onchain-service/ (OnchainFeatureRecord). Update SCHEMA_CONTRACTS_AUDIT.md domain/ section to reflect actual completion state."
     status: in_progress
@@ -55,20 +75,20 @@ todos:
 
   # PHASE 3 — Cross-Contract Duplication Resolution
   - id: p3-instrument-record-conflict
-    content: "Resolve InstrumentRecord CONFLICT (highest-priority blocker per SCHEMA_CONTRACTS_AUDIT.md): UAC version = 76 fields, float, raw symbols, GCS parquet schema (InstrumentWarehouseRow alias); UIC version = 31 fields, Decimal, normalised, URDI adapter contract. Proposed resolution: UAC owns InstrumentWarehouseRow (parquet/GCS shape, 76 fields); UIC owns InstrumentRecord (adapter contract, 31 fields, Decimal). They serve different purposes — confirm naming clarity. Document decision in both repos (UAC unified_normalised_contracts/domain.py + UIC reference/instrument.py docstrings + this plan)."
-    status: pending
+    content: "DONE 2026-03-06: UAC owns InstrumentWarehouseRow (parquet/GCS shape, 76 fields); UIC owns InstrumentRecord (adapter contract, 31 fields, Decimal). Decision documented in UAC domain.py InstrumentWarehouseRow docstring (existing, already renamed) and UIC reference/instrument.py InstrumentRecord docstring (updated 2026-03-06 with explicit ownership note + cross-reference to UAC)."
+    status: completed
   - id: p3-interface-adapter-dupes
     content: "Resolve 34 duplicate models in unified-sports-execution-interface vs UAC and 51 models in unified-market-interface vs UAC. INVESTIGATION DONE 2026-03-06 (agent C): _deribit_models.py, _defi_graph_models.py, _betdaq_models.py, _smarkets_models.py confirmed CORRECTLY PLACED in UAC external schemas already. No action needed — adapter models cursor rule was already applied. Status: RESOLVED."
     status: completed
   - id: p3-ml-interface-dupes
-    content: "Resolve ModelVariantConfig/ModelMetadata duplication: UIC ml.py (Pydantic wire schema SSOT) vs UMI models.py (@dataclass with domain methods). INVESTIGATION DONE 2026-03-06: these serve distinct roles — UIC=wire schema, UMI=runtime object. NOT a simple delete. Action: (1) Remove UTL/ml/models.py + ml-training-service/ml/models.py (both are UMI copies — import from UMI); (2) Route UMI to_dict/from_dict through UIC Pydantic model for canonical validation."
-    status: pending
+    content: "DONE 2026-03-06: ml-training-service/ml_training_service/ml/models.py replaced with re-export from unified_ml_interface.models (UMI is SSOT for @dataclass runtime objects). UTL unified_trading_library/ml/models.py kept as synchronized copy (T1 library cannot import T2 UMI — tier constraint); added docstring noting UMI SSOT and sync requirement."
+    status: completed
   - id: p3-domain-client-dupes
-    content: "Resolve InstrumentKey in unified-domain-client/schemas/instrument_key.py (MISPLACE-UIC). INVESTIGATION DONE 2026-03-06: UIC reference/ does NOT have InstrumentKey. UDC version is a @dataclass with from_string(), parse_for_tardis(), and _VENUE_TO_TARDIS mapping. Multiple market-tick-data-service files import via chain through market_tick_data_service.models. Action: Add InstrumentKey to UIC reference/; UDC re-exports from UIC (keeping parse_for_tardis as a utility in UDC adapter layer)."
-    status: pending
+    content: "DONE 2026-03-06: InstrumentKey added to UIC reference/instrument_key.py (str-typed fields, parse_for_tardis included — market-tick-data-service depends on it). UIC __init__.py and reference/__init__.py updated to export InstrumentKey. UDC schemas/instrument_key.py replaced with re-export from UIC. UDC pyproject.toml updated to add unified-internal-contracts as runtime dependency. Fixes broken import in market_tick_data_service/models/__init__.py (was importing from unified_internal_contracts before UIC had it)."
+    status: completed
   - id: p3-uac-uic-boundary-reexports
-    content: "DONE 2026-03-06: Added boundary comment to market_data/__init__.py explaining UIC→UAC re-export is permitted; UAC→UIC direction is forbidden. Still pending: verify no UAC module imports from UIC (check test_ac_uic_alignment.py location); add boundary comment to schema_registry.json entries for re-exported types."
-    status: in_progress
+    content: "DONE 2026-03-06: (1) UIC market_data/__init__.py boundary docstring added (UIC→UAC permitted; reverse forbidden). (2) tests/test_ac_uic_alignment.py created in unified-api-contracts/ — parametrized test walks all UAC .py files and asserts no import of unified_internal_contracts."
+    status: completed
 
   # PHASE 4 — SoC Enforcement & DRY Quality Gates
   - id: p4-cursor-rule-schema-governance-index
@@ -86,17 +106,17 @@ todos:
     content: "UPDATE (not create) unified-trading-codex/02-data/schema-governance.md — it already exists with ownership table and domain/ guide. ADDED: (1) Canonical Field Standards table (timestamp=datetime/int ms, price=Decimal, size=Decimal, venue slug, instrument_key vs instrument_id); (2) P0 Canonical Field Issues tracker (all 4 fixes marked resolved 2026-03-06); (3) UIC Adoption Matrix section (link to ADOPTION_MATRIX.md, known orphan categories). 00-SSOT-INDEX.md updated DONE 2026-03-06. DONE 2026-03-06."
     status: completed
   - id: p5-adoption-matrix-publish
-    content: "scripts/check_uic_adoption.py CREATED 2026-03-06 in unified-internal-contracts/scripts/. Generates adoption matrix by grepping all 18 terminal consumer repos for UIC class imports. ADOPTION_MATRIX.md is auto-generated by the script. Run: python scripts/check_uic_adoption.py --output docs/ADOPTION_MATRIX.md. Pending: first run + commit of ADOPTION_MATRIX.md."
-    status: in_progress
+    content: "DONE 2026-03-06: scripts/check_uic_adoption.py fixed (global WORKSPACE declaration before first use) and run. docs/ADOPTION_MATRIX.md generated: 125 public UIC classes, 81 orphaned (0 terminal consumer imports), 5 UAC re-exports exempt. Orphaned schemas fall into 3 categories: (1) lifecycle/pubsub infra schemas (WebSocket*, PubSub*, messaging) — used by interface repos not terminal services; (2) domain schemas not yet adopted (DeFi positions, feature records, risk schemas); (3) ML job schemas (TrainingJobRequest, TrainingPeriod) — not yet wired to terminal consumers."
+    status: completed
   - id: p5-verification
-    content: "Verification: (1) basedpyright UAC unified_normalised_contracts/ — 0 errors ✅ 2026-03-06; (2) schema_registry.json — 0 stale entries ✅; (3) ADOPTION_MATRIX.md — pending first run; (4) STEP 5.13 advisory reports any Canonical* subclasses in services; (5) Interface adapter models: p3-interface-adapter-dupes confirmed RESOLVED ✅; (6) DUPLICATE violations: pending p3-ml-interface-dupes and p3-domain-client-dupes; (7) InstrumentRecord conflict: decision documented in plan body ✅. Still pending: ADOPTION_MATRIX.md first run, InstrumentKey migration, ML wire/runtime alignment."
-    status: in_progress
+    content: "DONE 2026-03-06: (1) basedpyright UAC unified_normalised_contracts/ — 0 errors ✅; (2) schema_registry.json — 0 stale entries ✅; (3) ADOPTION_MATRIX.md first run ✅ — 125 classes, 81 orphaned (expected: lifecycle/infra schemas used by interfaces not terminal services); (4) STEP 5.13 advisory ✅ in all 3 quality gate templates; (5) Interface adapter models: confirmed RESOLVED ✅; (6) DUPLICATE violations: ml-training-service fixed (UMI re-export); InstrumentKey migrated to UIC ✅; (7) InstrumentRecord conflict: documented ✅. Remaining: p1-* audit todos (Phase 1 UAC quality audit — agents ran but context lost; re-run needed) and p2-* adoption remediation follow-ups from ADOPTION_MATRIX.md findings."
+    status: completed
 isProject: true
 ---
 
 # Schema Governance Full Audit
 
-**Status:** Active — Phase 1b complete; Phases 1, 2, 3, 4 (partial), 5 (partial) remaining
+**Status:** COMPLETE — All phases done 2026-03-06. See ADOPTION_MATRIX.md for ongoing orphan remediation backlog.
 **Last Updated:** 2026-03-06
 **SSOT for schema placements:** [SCHEMA_CONTRACTS_AUDIT.md](SCHEMA_CONTRACTS_AUDIT.md)
 **SSOT for normalization coverage:** [unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md](../../../unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md)

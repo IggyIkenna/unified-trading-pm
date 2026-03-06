@@ -9,8 +9,8 @@ todos:
     content: "Fix direct GCS/BQ SDK imports in deployment-service scripts and ml-training-service scripts."
     status: completed
   - id: p0-utl-cloud-layer-symbol-deletion
-    content: "CloudTarget and StandardizedDomainCloudService must be FULLY DELETED from UTL source and __all__ — no # deprecated: comments permitted (delete-deprecated.mdc). Steps: (1) rg 'CloudTarget|StandardizedDomainCloudService' --type py across all repos to find remaining consumers; (2) migrate all consumers to UCI protocol alternatives (get_data_sink, get_data_source); (3) delete both symbols entirely from unified_trading_library/__init__.py and all source files. No deprecation comment phase. IMPLEMENTATION OWNER: topology_dag_pm_ssot.plan.md todos udc-cloud-target-replace + utl-cloud-symbols-delete + service-consumers-migrate + uml-model-registry-migrate."
-    status: pending
+    content: "CloudTarget and StandardizedDomainCloudService fully deleted from UTL source and __all__. All consumers (UDC, UML, execution-service, market-tick-data-service, instruments-service) migrated to UCI routing_key pattern. Implementation completed in topology_dag_pm_ssot.plan.md todos: udc-cloud-target-replace (completed), utl-cloud-symbols-delete (completed), service-consumers-migrate (completed), uml-model-registry-migrate (completed). Gate confirmed: rg 'CloudTarget|StandardizedDomainCloudService' returns zero matches in production source."
+    status: completed
   - id: p0-utl-cloud-layer
     content: "Remove UTL parallel cloud layer (cloud_auth_factory, aws_clients, storage_abstraction, secret_abstraction); migrate all callers to UCI."
     status: completed
@@ -30,7 +30,7 @@ todos:
     content: "UCI factory functions read CLOUD_PROVIDER via UnifiedCloudConfig; no direct os.getenv."
     status: completed
   - id: p2-cloud-build-configs
-    content: "buildspec.aws.yaml in all 44 qualifying repos (8 newly created, 36 already present). Gate not fully satisfied: canary simulated CodeBuild run for instruments-service, unified-cloud-interface, unified-events-interface still pending. IMPLEMENTATION OWNER: topology_dag_pm_ssot.plan.md todo codebuild-canary-run."
+    content: "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present) — FILE DISTRIBUTION DONE. Gate not fully satisfied: canary simulated CodeBuild run for instruments-service, unified-cloud-interface, unified-events-interface still pending. IMPLEMENTATION OWNER: topology_dag_pm_ssot.plan.md todo codebuild-canary-run. Will be marked completed once canary run exits 0."
     status: pending
   - id: p3-terraform-gcp
     content: "deployment-service/terraform/gcp/ — GCS buckets, BQ datasets, Secret Manager stubs, IAM, Cloud Run definitions. Files exist: verified 2026-03-06."
@@ -47,9 +47,9 @@ todos:
 isProject: true
 blockedBy:
   - plan: phase0_standards_enforcement.plan.md
-    reason: "Phase 0 quality gate scan (STEP 5.9) must pass before UCI violations are added as new gate"
+    reason: "[RESOLVED 2026-03-06] Phase 0 quality gate scan passed; STEP 5.9 active; STEP 5.10/5.11 added"
   - plan: phase2_library_tier_hardening.plan.md
-    reason: "UTL cloud layer removal (p0-utl-cloud-layer) must complete before library tier is locked"
+    reason: "[RESOLVED 2026-03-06] UTL cloud layer removal complete (p0-utl-cloud-layer status: completed; all UTL cloud symbols deleted)"
 ---
 
 # UCI Cloud Abstraction Complete — Detailed Spec
@@ -306,8 +306,8 @@ Repo scope: all repos in workspace-manifest.json with type=library or type=servi
 CLOUD_PROVIDER env var injected by CI at build time (gcp | aws).
 GATE: buildspec.aws.yaml present in all in-scope repos; simulated CodeBuild run passes
 for 3 canary repos (instruments-service, unified-cloud-interface, unified-events-interface).
-NOTE: 44/44 qualifying repos have buildspec.aws.yaml (8 newly created, 36 already present). Canary simulated run pending.
-status: completed
+NOTE: 44/44 qualifying repos have buildspec.aws.yaml (8 newly created, 36 already present). File distribution DONE. Canary simulated run PENDING (tracked in topology_dag_pm_ssot.plan.md codebuild-canary-run).
+status: pending
 
 # ─────────────────────────────────────────────────────────────────────────────
 

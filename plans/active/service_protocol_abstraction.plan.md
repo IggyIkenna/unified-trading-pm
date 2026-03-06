@@ -114,14 +114,17 @@ PROTOCOL_CONFIG_STORE_BACKEND=secretmanager  # secretmanager | ssm | local
 ### Factory Functions (extend UCI factory.py)
 
 ```python
-def get_data_sink(name: str | None = None) -> DataSink:
-    """Return DataSink backed by PROTOCOL_DATA_SINK_BACKEND config."""
+def get_data_sink(routing_key: str | None = None) -> DataSink:
+    """Return DataSink backed by PROTOCOL_DATA_SINK_BACKEND config.
+    routing_key maps to PROTOCOL_DATA_SINK_BUCKET_{ROUTING_KEY_UPPER} env var for multi-bucket services."""
 
-def get_data_source(name: str | None = None) -> DataSource:
-    """Return DataSource backed by PROTOCOL_DATA_SINK_BACKEND config."""
+def get_data_source(routing_key: str | None = None) -> DataSource:
+    """Return DataSource backed by PROTOCOL_DATA_SINK_BACKEND config.
+    routing_key maps to PROTOCOL_DATA_SOURCE_BUCKET_{ROUTING_KEY_UPPER} env var."""
 
-def get_event_bus(name: str | None = None) -> EventBus:
-    """Return EventBus backed by PROTOCOL_EVENT_BUS_BACKEND config."""
+def get_event_bus(routing_key: str | None = None) -> EventBus:
+    """Return EventBus backed by PROTOCOL_EVENT_BUS_BACKEND config.
+    routing_key maps to PROTOCOL_EVENT_BUS_TOPIC_{ROUTING_KEY_UPPER} env var."""
 
 def get_service_mode() -> ServiceMode:
     """Read SERVICE_MODE env var. Raises if not set (services must always declare mode)."""
