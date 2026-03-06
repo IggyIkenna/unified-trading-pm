@@ -2,201 +2,198 @@
   "folders": [
     {
       "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root"
+      "name": "\ud83d\udcc1 Workspace Root",
     },
     {
       "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config"
+      "name": "\u2699\ufe0f Cursor Config",
     },
     {
       "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv"
+      "name": "\ud83d\udc0d Venv",
     },
     {
       "path": "../../unified-trading-codex",
-      "name": "\ud83d\udcda Codex"
+      "name": "\ud83d\udcda Codex",
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM"
+      "name": "\ud83d\udccb PM",
     },
     {
-      "path": "../../alerting-service"
+      "path": "../../alerting-service",
     },
     {
-      "path": "../../batch-audit-ui"
+      "path": "../../batch-audit-ui",
     },
     {
-      "path": "../../client-reporting-api"
+      "path": "../../client-reporting-api",
     },
     {
-      "path": "../../client-reporting-ui"
+      "path": "../../client-reporting-ui",
     },
     {
-      "path": "../../deployment-api"
+      "path": "../../deployment-api",
     },
     {
-      "path": "../../deployment-service"
+      "path": "../../deployment-service",
     },
     {
-      "path": "../../deployment-ui"
+      "path": "../../deployment-ui",
     },
     {
-      "path": "../../execution-algo-library"
+      "path": "../../execution-algo-library",
     },
     {
-      "path": "../../execution-analytics-ui"
+      "path": "../../execution-analytics-ui",
     },
     {
-      "path": "../../execution-results-api"
+      "path": "../../execution-results-api",
     },
     {
-      "path": "../../execution-service"
+      "path": "../../execution-service",
     },
     {
-      "path": "../../execution-analytics-ui"
+      "path": "../../execution-analytics-ui",
     },
     {
-      "path": "../../features-calendar-service"
+      "path": "../../features-calendar-service",
     },
     {
-      "path": "../../features-cross-instrument-service"
+      "path": "../../features-cross-instrument-service",
     },
     {
-      "path": "../../features-delta-one-service"
+      "path": "../../features-delta-one-service",
     },
     {
-      "path": "../../features-multi-timeframe-service"
+      "path": "../../features-multi-timeframe-service",
     },
     {
-      "path": "../../features-onchain-service"
+      "path": "../../features-onchain-service",
     },
     {
-      "path": "../../features-sports-service"
+      "path": "../../features-sports-service",
     },
     {
-      "path": "../../features-volatility-service"
+      "path": "../../features-volatility-service",
     },
     {
-      "path": "../../ibkr-gateway-infra"
+      "path": "../../ibkr-gateway-infra",
     },
     {
-      "path": "../../instruments-service"
+      "path": "../../instruments-service",
     },
     {
-      "path": "../../live-health-monitor-ui"
+      "path": "../../live-health-monitor-ui",
     },
     {
-      "path": "../../logs-dashboard-ui"
+      "path": "../../logs-dashboard-ui",
     },
     {
-      "path": "../../market-data-api"
+      "path": "../../market-data-api",
     },
     {
-      "path": "../../market-data-processing-service"
+      "path": "../../market-data-processing-service",
     },
     {
-      "path": "../../market-tick-data-service"
+      "path": "../../market-tick-data-service",
     },
     {
-      "path": "../../matching-engine-library"
+      "path": "../../matching-engine-library",
     },
     {
-      "path": "../../ml-inference-service"
+      "path": "../../ml-inference-service",
     },
     {
-      "path": "../../ml-training-service"
+      "path": "../../ml-training-service",
     },
     {
-      "path": "../../ml-training-ui"
+      "path": "../../ml-training-ui",
     },
     {
-      "path": "../../onboarding-ui"
+      "path": "../../onboarding-ui",
     },
     {
-      "path": "../../pnl-attribution-service"
+      "path": "../../pnl-attribution-service",
     },
     {
-      "path": "../../position-balance-monitor-service"
+      "path": "../../position-balance-monitor-service",
     },
     {
-      "path": "../../risk-and-exposure-service"
+      "path": "../../risk-and-exposure-service",
     },
     {
-      "path": "../../settlement-ui"
+      "path": "../../settlement-ui",
     },
     {
-      "path": "../../strategy-service"
+      "path": "../../strategy-service",
     },
     {
-      "path": "../../strategy-ui"
+      "path": "../../strategy-ui",
     },
     {
-      "path": "../../strategy-validation-service"
+      "path": "../../strategy-validation-service",
     },
     {
-      "path": "../../system-integration-tests"
+      "path": "../../system-integration-tests",
     },
     {
-      "path": "../../trading-analytics-ui"
+      "path": "../../trading-analytics-ui",
     },
     {
-      "path": "../../unified-api-contracts"
+      "path": "../../unified-api-contracts",
     },
     {
-      "path": "../../unified-cloud-interface"
+      "path": "../../unified-cloud-interface",
     },
     {
-      "path": "../../unified-config-interface"
+      "path": "../../unified-config-interface",
     },
     {
-      "path": "../../unified-defi-execution-interface"
+      "path": "../../unified-defi-execution-interface",
     },
     {
-      "path": "../../unified-domain-client"
+      "path": "../../unified-domain-client",
     },
     {
-      "path": "../../unified-events-interface"
+      "path": "../../unified-events-interface",
     },
     {
-      "path": "../../unified-feature-calculator-library"
+      "path": "../../unified-feature-calculator-library",
     },
     {
-      "path": "../../unified-internal-contracts"
+      "path": "../../unified-internal-contracts",
     },
     {
-      "path": "../../unified-market-interface"
+      "path": "../../unified-market-interface",
     },
     {
-      "path": "../../unified-ml-interface"
+      "path": "../../unified-ml-interface",
     },
     {
-      "path": "../../unified-position-interface"
+      "path": "../../unified-position-interface",
     },
     {
-      "path": "../../unified-reference-data-interface"
+      "path": "../../unified-reference-data-interface",
     },
     {
-      "path": "../../unified-sports-execution-interface"
+      "path": "../../unified-sports-execution-interface",
     },
     {
-      "path": "../../unified-trade-execution-interface"
+      "path": "../../unified-trade-execution-interface",
     },
     {
-      "path": "../../unified-trading-codex"
+      "path": "../../unified-trading-codex",
     },
     {
-      "path": "../../unified-trading-deployment-v3"
+      "path": "../../unified-trading-library",
     },
     {
-      "path": "../../unified-trading-library"
+      "path": "../../unified-trading-pm",
     },
     {
-      "path": "../../unified-trading-pm"
+      "path": "../../unified-trading-ui-auth",
     },
-    {
-      "path": "../../unified-trading-ui-auth"
-    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -268,10 +265,9 @@
       "${workspaceFolder}/unified-sports-execution-interface",
       "${workspaceFolder}/unified-trade-execution-interface",
       "${workspaceFolder}/unified-trading-codex",
-      "${workspaceFolder}/unified-trading-deployment-v3",
       "${workspaceFolder}/unified-trading-library",
       "${workspaceFolder}/unified-trading-pm",
-      "${workspaceFolder}/unified-trading-ui-auth"
+      "${workspaceFolder}/unified-trading-ui-auth",
     ],
     "python.analysis.extraPaths": [
       "${workspaceFolder}/alerting-service",
@@ -329,48 +325,36 @@
       "${workspaceFolder}/unified-sports-execution-interface",
       "${workspaceFolder}/unified-trade-execution-interface",
       "${workspaceFolder}/unified-trading-codex",
-      "${workspaceFolder}/unified-trading-deployment-v3",
       "${workspaceFolder}/unified-trading-library",
       "${workspaceFolder}/unified-trading-pm",
-      "${workspaceFolder}/unified-trading-ui-auth"
+      "${workspaceFolder}/unified-trading-ui-auth",
     ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-      "tests",
-      "-v"
-    ],
+    "python.testing.pytestArgs": ["tests", "-v"],
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000,
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": [
-      "E",
-      "F",
-      "W",
-      "I"
-    ],
+    "ruff.lint.select": ["E", "F", "W", "I"],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": [
-      "--line-length",
-      "120"
-    ],
+    "ruff.format.args": ["--line-length", "120"],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -379,7 +363,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -388,22 +372,20 @@
       "**/.hg/store/**": true,
       "**/.pixi/**": true,
       "**/.venv/**": true,
-      "**/.venv.backup/**": true
+      "**/.venv.backup/**": true,
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
-    "editor.rulers": [
-      100
-    ],
+    "editor.rulers": [100],
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true
-  }
+    "files.trimFinalNewlines": true,
+  },
 }

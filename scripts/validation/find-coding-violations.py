@@ -38,7 +38,7 @@ WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_REPOS = [
     "instruments-service",
     "market-tick-data-service",
-    "unified-trading-deployment-v3",
+    "deployment-service",
     "features-calendar-service",
     "features-delta-one-service",
     "features-onchain-service",

@@ -59,8 +59,6 @@ flowchart LR
     USEI -->|"canonical only"| Svc
 ```
 
-
-
 ---
 
 ## Current State (from 10-agent audit)
@@ -88,8 +86,6 @@ flowchart TB
     UAC_domain -.->|"duplicate"| UIC_md
 ```
 
-
-
 - **UMI** defines its own `CanonicalTrade`, `CanonicalOrderBook`, `CanonicalTicker`; adapters use UAC for raw validation but UMI for canonical output.
 - **UTEI** defines its own `CanonicalOrder`, `CanonicalFill`; uses `ccxt_order_to_canonical()` on raw dicts, not UAC schemas.
 - **UAC** has `normalize.py` with only 3 trade normalizers (binance, databento, tardis); no order/orderbook/fill normalizers.
@@ -98,7 +94,6 @@ flowchart TB
 ### Normalization Gaps
 
 **Trading domain:**
-
 
 | Domain           | External Schemas                                               | Normalized To                         | Status              |
 | ---------------- | -------------------------------------------------------------- | ------------------------------------- | ------------------- |
@@ -117,7 +112,6 @@ flowchart TB
 | **Errors**       | venue-specific                                                 | CanonicalError                        | Partial (errors.py) |
 | **WebSocket**    | venue-specific                                                 | CanonicalWsMessage                    | None in UAC         |
 | **Sports**       | 10 sources                                                     | CanonicalOdds, CanonicalFixture, etc. | Mapped in adapters  |
-
 
 ---
 
@@ -145,22 +139,19 @@ flowchart TB
 
 ### 2.1 Trade Normalizers (extend `normalize.py`)
 
-
-| External Schema           | Provider    | Canonical Output                  |
-| ------------------------- | ----------- | --------------------------------- |
-| CoinbaseTrade             | coinbase    | CanonicalTrade                    |
-| CcxtTrade                 | ccxt        | CanonicalTrade                    |
-| OKX* (via CCXT or direct) | okx         | CanonicalTrade                    |
-| Bybit*                    | bybit       | CanonicalTrade                    |
-| UpbitTrade                | upbit       | CanonicalTrade                    |
-| Deribit* (via CCXT)       | deribit     | CanonicalTrade                    |
-| AsterTrade                | aster       | CanonicalTrade                    |
-| HyperliquidFill           | hyperliquid | CanonicalTrade (or CanonicalFill) |
-| Nautilus Fill             | nautilus    | CanonicalTrade                    |
-
+| External Schema            | Provider    | Canonical Output                  |
+| -------------------------- | ----------- | --------------------------------- |
+| CoinbaseTrade              | coinbase    | CanonicalTrade                    |
+| CcxtTrade                  | ccxt        | CanonicalTrade                    |
+| OKX\* (via CCXT or direct) | okx         | CanonicalTrade                    |
+| Bybit\*                    | bybit       | CanonicalTrade                    |
+| UpbitTrade                 | upbit       | CanonicalTrade                    |
+| Deribit\* (via CCXT)       | deribit     | CanonicalTrade                    |
+| AsterTrade                 | aster       | CanonicalTrade                    |
+| HyperliquidFill            | hyperliquid | CanonicalTrade (or CanonicalFill) |
+| Nautilus Fill              | nautilus    | CanonicalTrade                    |
 
 ### 2.2 Order Book Normalizers
-
 
 | External Schema                            | Provider    | Canonical Output   |
 | ------------------------------------------ | ----------- | ------------------ |
@@ -174,11 +165,9 @@ flowchart TB
 | TardisOrderBook, TardisBookSnapshot5       | tardis      | CanonicalOrderBook |
 | DatabentoMbp1, DatabentoMbo, DatabentoTbbo | databento   | CanonicalOrderBook |
 | HyperliquidL2Book                          | hyperliquid | CanonicalOrderBook |
-| Aster*                                     | aster       | CanonicalOrderBook |
-
+| Aster\*                                    | aster       | CanonicalOrderBook |
 
 ### 2.3 Order and Fill Normalizers
-
 
 | External Schema                       | Provider    | Canonical Output              |
 | ------------------------------------- | ----------- | ----------------------------- |
@@ -194,9 +183,7 @@ flowchart TB
 | IBKROrder                             | ibkr        | CanonicalOrder                |
 | MatchbookOrder, BetfairOrder, etc.    | sports      | BetOrder (sports canonical)   |
 
-
 ### 2.4 Ticker Normalizers
-
 
 | External Schema                  | Provider | Canonical Output |
 | -------------------------------- | -------- | ---------------- |
@@ -209,9 +196,7 @@ flowchart TB
 | CcxtTicker                       | ccxt     | CanonicalTicker  |
 | AsterTicker24hr                  | aster    | CanonicalTicker  |
 
-
 ### 2.5 Positions, Balances, Liquidations, Funding, OHLCV, Market Info, Errors, WebSocket
-
 
 | Type               | Canonical Type       | External Schemas (examples)                      |
 | ------------------ | -------------------- | ------------------------------------------------ |
@@ -223,7 +208,6 @@ flowchart TB
 | Market info        | CanonicalMarketInfo  | venue-specific instrument/market metadata        |
 | Errors             | CanonicalError       | UAC errors.py; extend for venue error schemas    |
 | WebSocket messages | CanonicalWsMessage   | venue-specific WS payloads                       |
-
 
 ### 2.6 Instruction-Type Grouping (TRADE, SWAP, LEND, BORROW, etc.)
 
@@ -255,14 +239,21 @@ flowchart TB
 Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUDIT_FULL.md` with:
 
 1. **Table 1: External Schema → Canonical Output**
-  - Provider | External Schema | Canonical Type | Normalizer Function | Status (Mapped/Orphaned/Planned)
-  - Covers: trades, orderbooks, orders, fills, tickers, positions, balances, liquidations, funding, OHLCV, market info, errors, WebSocket, sports, alt data.
+
+- Provider | External Schema | Canonical Type | Normalizer Function | Status (Mapped/Orphaned/Planned)
+- Covers: trades, orderbooks, orders, fills, tickers, positions, balances, liquidations, funding, OHLCV, market info, errors, WebSocket, sports, alt data.
+
 2. **Table 2: Interface Alignment**
-  - Interface | Canonical Types Used | Import Source | Status (UAC/ Local)
+
+- Interface | Canonical Types Used | Import Source | Status (UAC/ Local)
+
 3. **Table 3: Sports Schema Mapping**
-  - Source | Raw Schema | Canonical Type | Normalizer Location
+
+- Source | Raw Schema | Canonical Type | Normalizer Location
+
 4. **Table 4: Instruction-Type Mapping**
-  - Instruction Type | Canonical Types | Domain (CeFi/DeFi/Sports)
+
+- Instruction Type | Canonical Types | Domain (CeFi/DeFi/Sports)
 
 ### 3.2 Schema Inventory (from agent audit)
 
@@ -313,7 +304,6 @@ Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUD
 
 ## Key Files
 
-
 | File                                                                                                                                                             | Role                                            |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | [unified_api_contracts/unified_normalised_contracts/normalize.py](unified-api-contracts/unified_api_contracts/unified_normalised_contracts/normalize.py)         | Add all normalizers                             |
@@ -322,7 +312,6 @@ Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUD
 | [unified-market-interface/unified_market_interface/schemas.py](unified-market-interface/unified_market_interface/schemas.py)                                     | Replace with UAC imports                        |
 | [unified-trade-execution-interface/unified_trade_execution_interface/schemas.py](unified-trade-execution-interface/unified_trade_execution_interface/schemas.py) | Replace with UAC imports                        |
 | [unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUDIT_FULL.md](unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUDIT_FULL.md)                                   | Full audit table (create)                       |
-
 
 ---
 

@@ -11,7 +11,7 @@ deployment v3 four-way split completion, and service dependency corrections.
 **Success criteria:**
 
 - Every repo passes quality gates (except codex, PM, and truly scaffolded repos)
-- `unified-trading-deployment-v3` fully archived (all code in the 4 split repos)
+- `unified-trading-deployment-v3` ARCHIVED 2026-03-03 (split into deployment-service, deployment-api, deployment-ui, system-integration-tests)
 - No ghost/phantom dependencies anywhere
 - `unified-cloud-services` name eliminated from codebase
 - `unified-trading-services` renamed to `unified-trading-library` everywhere
@@ -28,7 +28,7 @@ All changes applied to `unified-trading-pm/workspace-manifest.json`:
 | ---- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 0.1  | Add `status: "active"` to 35 repos                  | DONE                                                                         |
 | 0.2  | Fix `deployment-service` entry (folder_name)        | DONE (removed after Phase 1 rename)                                          |
-| 0.3  | Add 3 missing repos to manifest                     | DONE — execution-analytics-ui, unified-trading-ui-auth added. Now 60 repos. |
+| 0.3  | Add 3 missing repos to manifest                     | DONE — execution-analytics-ui, unified-trading-ui-auth added. Now 60 repos.  |
 | 0.4  | Normalize `"SCAFFOLDED"` → `"scaffolded"`           | DONE                                                                         |
 | 0.5  | Add missing metadata to 6 repos                     | DONE                                                                         |
 | 0.6  | Normalize dependency format                         | DONE                                                                         |
@@ -179,14 +179,14 @@ All steps completed:
 - Add more smoke tests per service
 - Wire post-deploy trigger from deployment-api
 
-### 4e: Archive unified-trading-deployment-v3
+### 4e: Archive unified-trading-deployment-v3 — COMPLETED 2026-03-03
 
-**Status:** Blocked on 4a-4d completion.
+**Status:** DONE. Four-way split complete. Repo archived on GitHub.
 
-1. Verify all code accounted for in 4 split repos
-2. Delete all source code from monolith
-3. Keep only README pointing to 4 new repos
-4. Update manifest: `status: "archived"`
+1. ~~Verify all code accounted for in 4 split repos~~ — Done
+2. ~~Delete all source code from monolith~~ — Done
+3. ~~Keep only README pointing to 4 new repos~~ — Done
+4. ~~Update manifest: `status: "archived"`~~ — Done (removed from manifest entirely; in removedEntries)
 
 ---
 
@@ -223,16 +223,16 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 
 **Tooling added to repos that were missing it:**
 
-| Gap                          | Repos Fixed                                                                                                                                                                                   |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gap                          | Repos Fixed                                                                                                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Vitest added                 | batch-audit-ui, client-reporting-ui, execution-analytics-ui, execution-analytics-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos) |
-| Playwright added             | deployment-ui, strategy-ui, unified-trading-ui-auth (3 repos)                                                                                                                                 |
+| Playwright added             | deployment-ui, strategy-ui, unified-trading-ui-auth (3 repos)                                                                                                                                |
 | ESLint added                 | execution-analytics-ui, unified-trading-ui-auth (2 repos)                                                                                                                                    |
 | Prettier added               | batch-audit-ui, client-reporting-ui, deployment-ui, execution-analytics-ui, logs-dashboard-ui, ml-training-ui, strategy-ui, trading-analytics-ui, unified-trading-ui-auth (9 repos)          |
 | TypeScript strict            | execution-analytics-ui (`strict: false` → `strict: true`)                                                                                                                                    |
 | .eslintrc.cjs created        | execution-analytics-ui, unified-trading-ui-auth                                                                                                                                              |
-| playwright.config.ts created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                           |
-| Smoke test scaffolds created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                           |
+| playwright.config.ts created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                          |
+| Smoke test scaffolds created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                          |
 
 **All 13 repos now have:** Playwright, ESLint, vitest, prettier, TypeScript strict, TS-aware quality-gates.sh
 
@@ -247,7 +247,7 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
    - deployment-service: extract remaining ~50% from monolith
    - deployment-ui: migrate 16K LOC monolith features
    - system-integration-tests: expand
-   - Archive unified-trading-deployment-v3
+   - ~~Archive unified-trading-deployment-v3~~ — DONE 2026-03-03
 
 ### Medium Priority
 

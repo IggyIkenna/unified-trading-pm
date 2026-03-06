@@ -21,4 +21,17 @@ TYPED RESPONSE MODELS AT API BOUNDARIES:
   See: no-type-any-use-specific.mdc for full pattern and exemplars.
   Quality gates now BLOCK dict[str, Any] and raw response.json() without model_validate().
 
-NEVER: from unified_api_contracts.internal import (use unified_internal_contracts); duplicate schema definitions; skip contract validation; hardcode API response parsing; use dict[str, Any] for API responses; pass raw venue responses through to services without UAC normalization
+DOMAIN SCHEMA PLACEMENT:
+  Domain data schemas (BaseModel, TypedDict, dataclass used as cross-repo contracts) belong in UIC under
+  `domain/<service-name>/`. Services import domain schemas from UIC; they never define them locally.
+  Exception: `SchemaDefinition`/`ColumnSchema` (parquet infrastructure) stays in service `schemas/output_schemas.py`.
+  See: imports/service-domain-schema-in-uic.mdc
+
+ADAPTER-PRIVATE MODELS ARE NOT EXEMPT:
+  `_<venue>_models.py` files in interface adapters parse external API responses — they ARE external API schemas.
+  They must move to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py`.
+  "Private" prefix does not exempt them from the UAC placement rule.
+  Current known violations: unified-sports-execution-interface/_matchbook_models.py, _smarkets_models.py, _betdaq_models.py etc.
+  RESOLVED: unified-market-interface/_deribit_models.py, /_defi_graph_models.py → migrated to UAC (P3 #17 complete).
+
+NEVER: from unified_api_contracts.internal import (use unified_internal_contracts); duplicate schema definitions; skip contract validation; hardcode API response parsing; use dict[str, Any] for API responses; pass raw venue responses through to services without UAC normalization; define Pydantic domain contracts in service repos instead of UIC; keep adapter-private models in interface repos instead of moving to UAC

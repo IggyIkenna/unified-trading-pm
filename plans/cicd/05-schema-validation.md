@@ -354,7 +354,7 @@ fi
 ### Part 4: Create Standalone Validation Script
 
 ```python
-# unified-trading-deployment-v3/scripts/validate-all-schemas.py
+# deployment-service/scripts/validate-all-schemas.py
 """
 Validate all schemas across all services.
 
