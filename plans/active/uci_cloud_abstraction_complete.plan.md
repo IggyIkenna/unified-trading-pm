@@ -104,8 +104,8 @@ FILES TO DELETE (after migrating all callers):
   only [project.optional-dependencies.gcp] and [project.optional-dependencies.aws]
   (both delegate to UCI).
   NOTE: 4 UTL files deleted (cloud_auth_factory, aws_clients, storage_abstraction, secret_abstraction).
-  google-cloud-* deps remain in [project.dependencies] pending full deferred-import migration in
-  gcp_clients.py, secret_manager.py, config_reloader.py — tracked as P3 backlog.
+  google-cloud-* moved to [project.optional-dependencies.gcp]; [project.dependencies] is clean.
+  gcp_clients.py, secret_manager.py, config_reloader.py use deferred imports only — gate confirmed 2026-03-06.
   status: completed
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ class LocalAnalyticsClient(AnalyticsClient):
 → wraps SQLite for local dev/testing
 **all** export in abstractions.py + UCI **init**.py.
 GATE: `from unified_cloud_interface import AnalyticsClient, get_analytics_client` works.
-status: pending
+status: completed
 - id: p1-async-cache-client
 content: |
 Add async CacheClient to UCI (for deployment-api async Redis tier).
@@ -154,7 +154,7 @@ unified-cloud-interface/unified_cloud_interface/providers/local.py:
 class AsyncLocalCacheProvider(AsyncCacheClient):
 → in-memory dict + asyncio.Queue for pub/sub channel
 GATE: deployment-api cache.py uses `AsyncRedisProvider` from UCI.
-status: pending
+status: completed
 - id: p1-compute-client
 content: |
 Add ComputeClient and CloudRunClient abstractions to UCI.
@@ -186,7 +186,7 @@ cpu: str = "1"
   AWS provider: AWSComputeClient → wraps boto3 ECS/Fargate
   Local provider: LocalComputeClient → no-op / logs only
   GATE: `from unified_cloud_interface import ComputeClient, get_compute_client` works.
-  status: pending
+  status: completed
 
 - id: p1-s3-explicit-creds
 content: |
@@ -340,7 +340,8 @@ Add STEP 5.10 to quality-gates-service-template.sh and quality-gates-library-tem
 ```
 
   GATE: All repos pass STEP 5.10; zero FAIL results in workspace scan.
-  status: pending
+  NOTE: STEP 5.10 added to quality-gates.sh (line 329). STEP 5.11 added (line 478). Confirmed 2026-03-05.
+  status: completed
 
 isProject: true
 blockedBy:
