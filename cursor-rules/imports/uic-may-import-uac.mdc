@@ -1,0 +1,61 @@
+---
+description: "UIC may import from UAC (permitted); UAC must never import from UIC (blocked); tier formalization for L2 split"
+alwaysApply: true
+priority: 85
+tags:
+  - contracts
+  - tier
+  - imports
+  - uac
+  - uic
+---
+# UIC → UAC Import Direction
+
+## Tier Boundary
+
+| Direction | Permitted | Rule |
+|-----------|-----------|------|
+| `unified-internal-contracts` → `unified-api-contracts` | YES | UIC may import UAC normalization canonicals for re-export in messaging. This is the ONLY permitted inter-T0 import. |
+| `unified-api-contracts` → `unified-internal-contracts` | NO | UAC is a true T0 leaf. It must have zero `unified-*` imports — not even in tests. |
+
+## Formal Tier Designation
+
+- **UAC = T0 leaf (L2a)** — stdlib + pydantic only; no workspace imports whatsoever.
+- **UIC = T0-with-UAC-dependency (L2b)** — stdlib + pydantic + UAC. Build order: UAC must build before UIC.
+- **workspace-manifest.json**: UAC is placed at L2a; UIC is placed at L2b.
+
+## Why UAC → UIC is Blocked
+
+- UAC normalizes raw external data → canonical types. This must be independent of any internal contracts.
+- If UAC imports UIC, any change to internal messaging contracts could break external API normalization.
+- The existing `test_ac_uic_alignment.py` inside the UAC test suite is a **known CIRCULAR violation**. It must be
+  moved to `unified-internal-contracts/tests/` where UIC→UAC imports are permitted.
+
+## Canonical Type Ownership
+
+| Type | Owned By | Rationale |
+|------|----------|-----------|
+| Normalization outputs (CanonicalTrade, CanonicalOrderBook, CanonicalTicker, etc.) | UAC `unified_normalised_contracts/` | Output of UAC normalizers — UAC must own them |
+| Messaging canonicals (CanonicalOHLCV, CanonicalBookUpdate, CeFiPosition) | UIC | Used only in internal pub-sub/messaging |
+| UAC canonicals re-exported for messaging | UIC `market_data/__init__.py` | UIC imports + re-exports UAC types for downstream consumers |
+
+CODEX: 02-data/contracts-scope-and-layout.md (Import direction rules section)
+AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 5 (Tier Structure Assessment)
+
+DO:
+  # In UIC: importing UAC normalization canonicals for messaging use — PERMITTED
+  # unified-internal-contracts/unified_internal_contracts/market_data/__init__.py
+  from unified_api_contracts.unified_normalised_contracts.domain import (
+      CanonicalTrade,
+      CanonicalOrderBook,
+      CanonicalTicker,
+  )
+
+NEVER:
+  # In UAC: importing anything from UIC — BLOCKED
+  # unified-api-contracts/unified_api_contracts/normalize.py
+  from unified_internal_contracts.market_data import ...  # CIRCULAR VIOLATION
+
+  # In UAC tests: importing UIC — also BLOCKED
+  # unified-api-contracts/tests/test_ac_uic_alignment.py
+  from unified_internal_contracts import ...  # must move this file to UIC tests
