@@ -1,7 +1,7 @@
 ---
 description: GCP authentication pattern for tests — use google.auth.default(), never pytest.skip for missing credentials
 globs: ["**/tests/conftest.py", "**/tests/**/*.py"]
-alwaysApply: true
+alwaysApply: false
 priority: 70
 ---
 # GCP Authentication in Tests

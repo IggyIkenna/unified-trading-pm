@@ -2,9 +2,6 @@
 description: "Every repo must have scripts/setup.sh from canonical template"
 alwaysApply: true
 priority: 85
-globs:
-  - "**/scripts/setup.sh"
-  - "**/pyproject.toml"
 tags:
   - infrastructure
   - blocking

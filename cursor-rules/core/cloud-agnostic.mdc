@@ -2,8 +2,6 @@
 description: "All cloud I/O must go through abstraction layer"
 alwaysApply: true
 priority: 85
-globs:
-  - "**/*.py"
 tags:
   - cloud
   - blocking

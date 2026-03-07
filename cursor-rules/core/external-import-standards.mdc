@@ -3,7 +3,6 @@ description: "Import from top-level package only, never from internal modules"
 alwaysApply: true
 priority: 50
 tags: [imports, dependencies, refactoring]
-globs: ["**/*.py"]
 ---
 
 # External Import Standards

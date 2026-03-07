@@ -1,6 +1,6 @@
 ---
 description: "Enforce DAG tier boundaries in imports and dependencies"
-alwaysApply: true
+alwaysApply: false
 priority: 90
 globs:
   - "**/*.py"

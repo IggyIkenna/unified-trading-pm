@@ -1,16 +1,51 @@
 ---
-description: "Enforce minimum 70% coverage for quality gates, target 80% for audit readiness"
+description: "Per-repo coverage targets set to actual coverage - 1% to prevent regression; never hardcode 70% as floor"
 alwaysApply: false
 priority: 55
 globs:
   - "**/tests/**/*.py"
+  - "**/scripts/quality-gates.sh"
+  - "**/pyproject.toml"
 tags:
   - testing
   - coverage
 ---
 # Test Coverage Targets
-RULE: 70% minimum (blocking), 80% recommended (production), 80% goal (audit readiness).
-WHY: Quality gates block merge below 70%; production and audits need 80%.
-CODEX: 06-coding-standards/testing.md, .cursor/rules/test-quality-standards.mdc
-DO: Focus on core logic for 70%; add edge cases for 80%; complete paths for audit readiness
-NEVER: Skip tests to pass gates; exclude test paths from coverage; target <70%
+
+RULE: `MIN_COVERAGE` in `scripts/quality-gates.sh` and `fail_under` in `pyproject.toml` must be set to **actual measured coverage - 1%**. Never leave it at the template default of 70% if actual coverage is higher.
+
+WHY: Hardcoded 70% floor allows silent coverage regression from 95% down to 71% without any gate failure. Per-repo targets lock in current coverage and detect regression immediately.
+
+## Required per-repo targets (update after intentional coverage improvements)
+
+| Repo | MIN_COVERAGE |
+|------|-------------|
+| unified-events-interface | 99 |
+| unified-internal-contracts | 99 |
+| execution-algo-library | 95 |
+| unified-feature-calculator-library | 93 |
+| unified-ml-interface | 91 |
+| unified-defi-execution-interface | 88 |
+| matching-engine-library | 88 |
+| unified-reference-data-interface | 87 |
+| unified-config-interface | 77 |
+| unified-sports-execution-interface | 73 |
+| unified-trade-execution-interface | 72 |
+
+## How to set coverage target
+
+1. Run tests with coverage: `pytest tests/ --cov=<package> --cov-report=term-missing`
+2. Note total coverage %
+3. Set `MIN_COVERAGE = <actual> - 1` in `scripts/quality-gates.sh`
+4. Set `fail_under = <actual> - 1` in `pyproject.toml [tool.coverage.report]`
+5. Commit. Comment: `# Set to actual coverage - 1%. Update after intentional coverage improvements.`
+
+DO:
+- Set MIN_COVERAGE to actual - 1% after any significant coverage improvement
+- Update the table above when targets change
+- Review coverage targets during PR review to catch silent regressions
+
+NEVER:
+- Leave MIN_COVERAGE=70 if actual coverage is higher
+- Lower MIN_COVERAGE without a documented reason in QUALITY_GATE_BYPASS_AUDIT.md
+- Skip tests to pass the coverage gate

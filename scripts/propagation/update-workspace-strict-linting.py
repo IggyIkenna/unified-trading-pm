@@ -3,9 +3,9 @@
 Update all workspace configuration files with strict linting settings.
 
 This script ensures:
-1. Strict type checking with reportAny warnings
+1. Strict type checking mode (typeCheckingMode=strict via cursorpyright.analysis)
 2. Ruff version consistency (uses workspace venv ruff)
-3. All diagnostic severity overrides for unused imports/variables
+3. Per-repo pyrightconfig.json controls all diagnostic severity — no workspace overrides.
 """
 
 import json
@@ -30,18 +30,6 @@ STRICT_SETTINGS: dict[str, SettingsValue] = {
     "cursorpyright.analysis.indexing": True,
     "cursorpyright.analysis.inlayHints.variableTypes": True,
     "cursorpyright.analysis.inlayHints.functionReturnTypes": True,
-    "cursorpyright.analysis.diagnosticSeverityOverrides": {
-        "reportUnusedImport": "error",
-        "reportUnusedVariable": "error",
-        "reportMissingImports": "error",
-        "reportUndefinedVariable": "error",
-        "reportGeneralTypeIssues": "warning",
-        "reportOptionalMemberAccess": "warning",
-        "reportOptionalSubscript": "warning",
-        "reportUnknownArgumentType": "warning",
-        "reportUnknownMemberType": "warning",
-        "reportAny": "warning",
-    },
     "python.testing.pytestEnabled": True,
     "python.testing.unittestEnabled": False,
     "python.testing.pytestArgs": ["tests", "-v"],
@@ -154,10 +142,9 @@ def main() -> None:
 
     print(f"\n✅ Successfully updated {len(workspace_files) + 1} workspace files")
     print("\n📋 Changes applied:")
-    print("  - Strict type checking with reportAny warnings")
-    print("  - Ruff 0.15.0 from workspace venv")
-    print("  - Unused imports/variables as errors (RED)")
-    print("  - Type issues as warnings (YELLOW)")
+    print("  - Strict type checking mode (typeCheckingMode=strict)")
+    print("  - Ruff from workspace venv")
+    print("  - Diagnostic severity controlled per-repo via pyrightconfig.json")
     print("  - Format on save with organize imports")
 
 
