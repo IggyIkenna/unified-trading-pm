@@ -1,0 +1,100 @@
+name: Plan Health Agent
+
+# Checks active plans for contradictions and archives fully-completed plans.
+# Uses claude-haiku-4-5 (cheap, targeted).
+#
+# Triggers:
+#   - push to plans/active/** (plan changes)
+#   - daily 02:00 UTC
+#   - manual workflow_dispatch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plans/active/**"
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (report only, no archiving)"
+        default: "false"
+        type: string
+
+jobs:
+  plan-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+      DRY_RUN: ${{ inputs.dry_run || 'false' }}
+
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "agent@ci.local"
+          git config --global user.name "Plan Health Agent"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code --quiet
+
+      - name: Run plan health agent
+        if: env.ANTHROPIC_API_KEY != ''
+        run: |
+          PLAN_DIR="plans/active"
+          ARCHIVE_DIR="plans/archive"
+
+          PROMPT="You are a plan health agent for the unified-trading-system. Follow these rules exactly:
+          - No chain-of-thought, no prose explanations
+          - Output only: JSON summary + shell commands to run (if any)
+          - Be minimal and precise
+
+          TASK 1 — CONTRADICTION CHECK:
+          Read every .plan.md file in ${PLAN_DIR}/. For each pair of plans that share overlapping scope (same service, same architectural area, same todo ID pattern):
+          - Check if they assign contradictory statuses (e.g. one marks a todo completed, another marks it pending with different implementation)
+          - Check if they mandate contradictory architectural decisions
+          Output: JSON array of contradictions: [{plan_a, plan_b, description}] or [] if none.
+
+          TASK 2 — ARCHIVE FULLY-COMPLETED PLANS:
+          A plan is fully completed if ALL of its todos have status: completed (or it has no todos and is marked completed).
+          For each fully-completed plan:
+          - Move the file from ${PLAN_DIR}/ to ${ARCHIVE_DIR}/ using: git mv plans/active/PLAN.plan.md plans/archive/PLAN.plan.md
+          - Update plans/active/INDEX.md to remove the plan entry
+          List the plans you moved.
+
+          $([ "$DRY_RUN" = "true" ] && echo "DRY RUN: Report what would be archived but do NOT run git mv or make any changes.")
+
+          After moving files (if any), run:
+            bash scripts/quickmerge.sh 'chore: archive completed plans, plan health check' --files 'plans/active/INDEX.md' --quick
+
+          If no changes needed, output: {\"status\": \"healthy\", \"contradictions\": [], \"archived\": []}"
+
+          claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
+            || echo "Plan health agent exited non-zero — check logs"
+
+      - name: Skip — no API key
+        if: env.ANTHROPIC_API_KEY == ''
+        run: echo "ANTHROPIC_API_KEY not set — skipping plan health agent"
+
+      - name: Notify Telegram
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ job.status }}
+        run: |
+          ICON=$([[ "$STATUS" == "success" ]] && echo "✅" || echo "⚠️")
+          TEXT="${ICON} *plan-health-agent* | ${STATUS} | PM plans checked"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${TEXT}" \
+            -d parse_mode="Markdown" || true
