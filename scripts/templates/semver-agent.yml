@@ -106,7 +106,7 @@ jobs:
           - If no pyproject.toml exists or no version line found, exit cleanly without committing
           - If current branch is staging, push to staging (not main)"
 
-          claude --print --dangerously-skip-permissions "$PROMPT" \
+          claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
             || echo "Semver agent exited non-zero — check logs"
 
       - name: Skip — no API key
