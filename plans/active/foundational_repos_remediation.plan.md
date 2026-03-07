@@ -31,7 +31,11 @@ todos:
 
       DO NOT: add noqa suppressions, change logic, modify test assertions.
       COMMIT: bash scripts/quickmerge.sh "fix: resolve E501 violations to unblock QG"
-    status: pending
+
+      RESULT (2026-03-07): E501 violations were already resolved in the repo. All 6 QG
+      steps passed (lint, tests 83/83, import patterns, type check 0 errors, codex
+      compliance, production readiness). Working tree was clean — no new commit needed.
+    status: completed
     activeForm: "Fixing matching-engine-library E501 violations and verifying QG passes"
 
   # ─── AGENT 2 — execution-algo-library ────────────────────────────────────────
@@ -64,7 +68,13 @@ todos:
 
       5. Run: bash scripts/quality-gates.sh — all 6 steps must pass.
       COMMIT: bash scripts/quickmerge.sh "fix: resolve C901 violations and coverage gap in EAL"
-    status: pending
+      RESULT (2026-03-07): COMPLETED. C901 violation in PartialTPTrailingExecutor.on_mark_price
+      (complexity 14) resolved by extracting _check_phase1_trigger, _check_phase2_trail,
+      _update_hwm_long, _update_hwm_short. Added 64 unit tests across test_almgren_chriss.py,
+      test_sor_dex.py, test_exit_algos.py. Coverage: 72% → 96.61% (gate: 70%). All 6 QG steps pass.
+      Fixed deep-import violations in existing test files. ExitAlgoType, ExitInstruction,
+      empty_decimal_list, empty_str_list added to public API.
+    status: completed
     activeForm: "Fixing execution-algo-library C901 violations and coverage gap"
 
   # ─── AGENT 3 — unified-api-contracts ─────────────────────────────────────────
@@ -103,7 +113,7 @@ todos:
 
       COMMIT (UAC repo): bash scripts/quickmerge.sh "fix: undefined names, gate mismatch, silent-pass cleanup"
       COMMIT (PM repo): bash scripts/quickmerge.sh "chore: sync UAC version 0.1.52 in workspace manifest"
-    status: pending
+    status: completed
     activeForm: "Fixing unified-api-contracts undefined names, gate mismatch, and manifest sync"
 
   # ─── AGENT 4 — unified-feature-calculator-library ────────────────────────────
