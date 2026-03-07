@@ -137,6 +137,27 @@ if [ "$RUN_TESTS" = true ]; then
         $PYTHON_CMD -m pytest tests/unit/ tests/integration/ $PARGS $COV || exit 1
     fi
     log_success "Tests PASSED"
+
+    # Auto-update MIN_COVERAGE to max(80%, actual_coverage - 1%) so thresholds
+    # stay current. Prevents quality gates from ever passing below 80% and keeps
+    # each repo self-documenting its real coverage floor. Rollout preserves this.
+    if [ -f "coverage.xml" ]; then
+        ACTUAL_COV=$($PYTHON_CMD -c "
+import xml.etree.ElementTree as ET
+rate = float(ET.parse('coverage.xml').getroot().attrib.get('line-rate', 0))
+print(int(rate * 100))
+" 2>/dev/null || echo "")
+        if [[ "$ACTUAL_COV" =~ ^[0-9]+$ ]]; then
+            NEW_THRESHOLD=$(( ACTUAL_COV - 1 < 80 ? 80 : ACTUAL_COV - 1 ))
+            if [ "$NEW_THRESHOLD" != "$MIN_COVERAGE" ]; then
+                SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+                sed -i.bak "s/^MIN_COVERAGE=[0-9]*/MIN_COVERAGE=$NEW_THRESHOLD/" "$SCRIPT_PATH" \
+                    && rm -f "${SCRIPT_PATH}.bak"
+                log_success "MIN_COVERAGE auto-updated: ${MIN_COVERAGE}% -> ${NEW_THRESHOLD}% (actual: ${ACTUAL_COV}%)"
+            fi
+        fi
+    fi
+
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
     [ ! -f "tests/unit/test_config.py" ] && { log_fail "Missing tests/unit/test_config.py"; exit 1; }
     log_success "Required test files present"

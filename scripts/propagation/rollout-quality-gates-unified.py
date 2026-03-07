@@ -218,9 +218,13 @@ def copy_quality_gates(
         return True
 
     scripts_dir.mkdir(parents=True, exist_ok=True)
+    is_new = not dest.exists()
+    if not is_new and dest.read_text() == content:
+        print("  -- scripts/quality-gates.sh unchanged")
+        return False
     dest.write_text(content)
     dest.chmod(0o755)
-    print("  ✅ Created/updated scripts/quality-gates.sh")
+    print(f"  ✅ {'Created' if is_new else 'Updated'} scripts/quality-gates.sh")
     return True
 
 
@@ -230,14 +234,19 @@ def copy_setup_sh(repo_path: Path, dry_run: bool) -> bool:
         print(f"  ⚠️ setup.sh not found: {SETUP_SH_SOURCE}")
         return False
     dest = repo_path / "scripts" / "setup.sh"
+    new_content = SETUP_SH_SOURCE.read_text()
     if dry_run:
         print(f"  [dry-run] Would copy setup.sh to {dest}")
         return True
-    repo_path.mkdir(parents=True, exist_ok=True)
-    (repo_path / "scripts").mkdir(parents=True, exist_ok=True)
-    dest.write_text(SETUP_SH_SOURCE.read_text())
+    scripts_dir = repo_path / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    is_new = not dest.exists()
+    if not is_new and dest.read_text() == new_content:
+        print("  -- scripts/setup.sh unchanged")
+        return False
+    dest.write_text(new_content)
     dest.chmod(0o755)
-    print("  ✅ Created/updated scripts/setup.sh")
+    print(f"  ✅ {'Created' if is_new else 'Updated'} scripts/setup.sh")
     return True
 
 
