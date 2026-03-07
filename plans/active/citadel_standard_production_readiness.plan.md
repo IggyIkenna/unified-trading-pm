@@ -53,7 +53,7 @@ streams\
 
 - id: p0-stream4-any-types-reportany content: 'P0 Stream 4 — Code Quality: Any / dict[str, Any]
 
-  SCAN: basedpyright execution_service/ | grep Any
+  SCAN: timeout 120 basedpyright execution_service/ 2>&1 | grep Any
 
   FIX: TypedDict/Pydantic at boundary; cast() for third-party. NEVER type: ignore.
 

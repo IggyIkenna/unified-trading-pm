@@ -80,7 +80,7 @@ todos:
       DECISION: Coinglass is the primary source (Tardis check no longer required — proceed directly with Coinglass; API
       contract schemas already completed in unified-api-contracts). API key: coinglass-api-key in Secret Manager (via
       get_secret_client). GATE: unit tests with MagicMock(spec=LiquidationHeatmapResponse) pass; output columns match
-      output_schemas.py; basedpyright strict passes."
+      output_schemas.py; timeout 120 basedpyright <source_dir>/ exits 0."
     status: completed
   - id: level-confluence-score
     content:
@@ -89,7 +89,8 @@ todos:
       all components as starting point — weights tuned via SHAP after first training run (do not specify final weights
       in code; read from UnifiedCloudConfig or ConfigStore so they are tunable without redeploy). Formula:
       level_confluence_score = sum(component_i × weight_i) where weight_i defaults to 1.0. GATE: unit test verifies
-      score increases monotonically as more components fire; basedpyright strict; no hardcoded weights in source."
+      score increases monotonically as more components fire; timeout 120 basedpyright <source_dir>/ exits 0; no
+      hardcoded weights in source."
     status: completed
   - id: sharpe-adjusted-targets
     content:

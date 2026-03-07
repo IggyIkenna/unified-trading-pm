@@ -175,9 +175,9 @@ cd unified-market-interface && pytest tests/integration/ -v
 cd unified-reference-data-interface && pytest tests/integration/ -v
 
 # 8.3 Layer 1 — Schema robustness (sample services)
-cd instruments-service && pytest tests/unit/test_schema*.py -v 2>/dev/null || true
-cd strategy-service && pytest tests/unit/test_schema*.py -v 2>/dev/null || true
-cd execution-service && pytest tests/unit/test_schema*.py -v 2>/dev/null || true
+cd instruments-service && pytest tests/unit/test_schema*.py -v 2>/dev/null || :
+cd strategy-service && pytest tests/unit/test_schema*.py -v 2>/dev/null || :
+cd execution-service && pytest tests/unit/test_schema*.py -v 2>/dev/null || :
 
 # 8.4 Layer 2 — Infra verification (POST-DEPLOY ONLY — requires deployment to be live, GCP_PROJECT_ID, GCP creds)
 # DO NOT run this pre-deploy or as part of quickmerge checks

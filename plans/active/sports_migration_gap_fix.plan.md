@@ -294,6 +294,8 @@ reference-data), not as a standalone deployment.
 **Source:** `archive/sports-betting-services-previous/footballbets/features/tracking/README.md` +
 `docs/FEATURE_IMPLEMENTATION_STATUS.md` + `docs/FEATURE_STATUS_AND_PLAN.md`
 
+<!-- AUDIT: *_STATUS.md files violate .cursorrules. Migrate content to a properly-named spec doc and delete before Phase 2 merges. -->
+
 **Status: RESOLVED.** Feature universe expanded from 420 → **998 tracked features** across **24 modules** with **27
 calculators** in the pipeline. All tests pass (773 unit + integration). 0 basedpyright errors in calculators/ and
 tracking/.

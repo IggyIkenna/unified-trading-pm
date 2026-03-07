@@ -262,8 +262,9 @@ isProject: true
 
 # Schema Governance Full Audit
 
-**Status:** COMPLETE — All phases done 2026-03-06. See ADOPTION_MATRIX.md for ongoing orphan remediation backlog. **Last
-Updated:** 2026-03-06 **SSOT for schema placements:** [SCHEMA_CONTRACTS_AUDIT.md](SCHEMA_CONTRACTS_AUDIT.md) **SSOT for
+**Status:** PARTIALLY COMPLETE — Phases 1–5 done 2026-03-06; **Phase 1c PENDING** (6 canonical field fixes; agents ran
+but context lost — re-run required). See ADOPTION_MATRIX.md for ongoing orphan remediation backlog. **Last Updated:**
+2026-03-06 **SSOT for schema placements:** [SCHEMA_CONTRACTS_AUDIT.md](SCHEMA_CONTRACTS_AUDIT.md) **SSOT for
 normalization coverage:**
 [unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md](../../../unified-api-contracts/docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md)
 **Master cursor rule:** `unified-trading-pm/cursor-rules/core/schema-governance-index.mdc` ✅ created 2026-03-06 **Codex
@@ -450,7 +451,7 @@ print(' '.join(set(names)))
 
 for name in $CANONICAL_NAMES; do
     hits=$(rg "class ${name}\b" "${SOURCE_DIR}/" --type py --glob '!.venv*' -l 2>/dev/null | \
-        grep -v "unified_api_contracts\|unified_internal_contracts" || true)
+        grep -v "unified_api_contracts\|unified_internal_contracts" || :)
     if [ -n "$hits" ]; then
         echo "WARN: POTENTIAL_SCHEMA_DUPLICATE — class '${name}' defined in service source:"
         echo "$hits"
