@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Compute canonical version ranges for all external workspace dependencies.
 
 Reads all pyproject.toml files from repos in topological order (workspace-manifest.json),

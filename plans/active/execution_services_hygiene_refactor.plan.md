@@ -9,42 +9,65 @@ overview: |
   Execution order: Day 3 → Day 4.
 todos:
   - id: day3-recover-files
-    content: "DAY 3.1 — Recover missing files post cloud issue on ikenna's Mac: Identify files lost/corrupted; restore from git history, backup, or re-create; verify execution-service runs after recovery."
+    content:
+      "DAY 3.1 — Recover missing files post cloud issue on ikenna's Mac: Identify files lost/corrupted; restore from git
+      history, backup, or re-create; verify execution-service runs after recovery."
     status: completed
   - id: day3-engine-split
-    content: "DAY 3.2 — engine.py split by SRP: engine.py 2826L exceeds 900L limit (06-coding-standards/file-splitting-guide.md). Extract by single responsibility — order lifecycle, matching logic, persistence, event emission. Target: no file >900 lines."
+    content:
+      "DAY 3.2 — engine.py split by SRP: engine.py 2826L exceeds 900L limit
+      (06-coding-standards/file-splitting-guide.md). Extract by single responsibility — order lifecycle, matching logic,
+      persistence, event emission. Target: no file >900 lines."
     status: completed
   - id: day3-bare-excepts
-    content: "DAY 3.3 — Replace 201 bare excepts with proper handling: Use @handle_api_errors or specific exceptions; fail-loud for ImportError (25 remaining); document per-file bypasses in QUALITY_GATE_BYPASS_AUDIT.md only when audited."
+    content:
+      "DAY 3.3 — Replace 201 bare excepts with proper handling: Use @handle_api_errors or specific exceptions; fail-loud
+      for ImportError (25 remaining); document per-file bypasses in QUALITY_GATE_BYPASS_AUDIT.md only when audited."
     status: completed
   - id: day3-arch-violations
-    content: "DAY 3.4 — Resolve 67 ARCHITECTURAL_VIOLATION suppressions: Fix root causes (service→service deps, tier violations); remove type: ignore where possible; ci-arch-violations-fix."
+    content:
+      "DAY 3.4 — Resolve 67 ARCHITECTURAL_VIOLATION suppressions: Fix root causes (service→service deps, tier
+      violations); remove type: ignore where possible; ci-arch-violations-fix."
     status: completed
   - id: day3-cross-svc-deps
-    content: "DAY 3.5 — exec-svc-cross-svc-deps: Remove execution-service→market-tick-data-service, →risk-and-exposure-service, →instruments-service. Extract shared schemas to unified-api-contracts or unified-internal-contracts. When using venue data (orders, fills, trades), use UAC normalizers — execution-service must receive canonical types only. See schema normalization completion plan."
+    content:
+      "DAY 3.5 — exec-svc-cross-svc-deps: Remove execution-service→market-tick-data-service, →risk-and-exposure-service,
+      →instruments-service. Extract shared schemas to unified-api-contracts or unified-internal-contracts. When using
+      venue data (orders, fills, trades), use UAC normalizers — execution-service must receive canonical types only. See
+      schema normalization completion plan."
     status: completed
   - id: day3-other-hygiene
-    content: "DAY 3.6 — Other hygiene: qg-exec-services-smoke-import (get_storage_client from unified-cloud-interface); qg-central-element-test-code (test-project placeholder); qg-pip-audit-exec-services; qg-exec-services-codex-18."
+    content:
+      "DAY 3.6 — Other hygiene: qg-exec-services-smoke-import (get_storage_client from unified-cloud-interface);
+      qg-central-element-test-code (test-project placeholder); qg-pip-audit-exec-services; qg-exec-services-codex-18."
     status: completed
   - id: day4-testing
-    content: "DAY 4.1 — Thorough testing: Unit tests for split engine modules; schema robustness (test_schema_robustness.py); batch/live seam tests; p0-cdc-tests (consumer tests); ic-strategy-domain-event-validation."
+    content:
+      "DAY 4.1 — Thorough testing: Unit tests for split engine modules; schema robustness (test_schema_robustness.py);
+      batch/live seam tests; p0-cdc-tests (consumer tests); ic-strategy-domain-event-validation."
     status: completed
   - id: day4-quality-gates
-    content: "DAY 4.2 — Quality gates progression: quickmerge --lint-only → --unit-only → --qg-only → --quick → full (D5). All must pass before declare green."
+    content:
+      "DAY 4.2 — Quality gates progression: quickmerge --lint-only → --unit-only → --qg-only → --quick → full (D5). All
+      must pass before declare green."
     status: completed
   - id: day4-topology
-    content: "DAY 4.3 — Topology wiring: topology-execution-order-lifecycle (full order lifecycle PubSub); topology-t1-execution-recon (execution T+1 recon)."
+    content:
+      "DAY 4.3 — Topology wiring: topology-execution-order-lifecycle (full order lifecycle PubSub);
+      topology-t1-execution-recon (execution T+1 recon)."
     status: completed
 isProject: true
 ---
 
 # Execution-Service Hygiene & Refactor Plan
 
-**Scope:** execution-service (EXEC) — T4 BATCH E in phase3_service_hardening_integration.plan.md
-**Execution order:** Day 3 → Day 4
-**Reference:** [phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) — t4e-strategy-execution todo
+**Scope:** execution-service (EXEC) — T4 BATCH E in phase3_service_hardening_integration.plan.md **Execution order:**
+Day 3 → Day 4 **Reference:**
+[phase3_service_hardening_integration.plan.md](phase3_service_hardening_integration.plan.md) — t4e-strategy-execution
+todo
 
-**Schema normalization:** UAC as normalization layer; interfaces return canonical only. See schema normalization completion plan.
+**Schema normalization:** UAC as normalization layer; interfaces return canonical only. See schema normalization
+completion plan.
 
 ---
 
@@ -83,9 +106,9 @@ isProject: true
 - **Batch/live seam tests** — Mode-agnostic engine; 4 seams (data source, sink, persistence, trigger)
 - **Consumer tests** — p0-cdc-tests for strategy+execution
 - **Event validation** — ic-strategy-domain-event-validation (Pydantic model_validate)
-- **IBKR/TWS tests:** Mock `ib_insync.IB` directly — do NOT use HTTP VCR cassettes for IBKR/TWS
-  connections. VCR cassettes only apply to HTTP-based interfaces (the 6 VCR owners per
-  `cursor-rules/testing/vcr-ownership.mdc`). TWS uses a binary protocol, not HTTP.
+- **IBKR/TWS tests:** Mock `ib_insync.IB` directly — do NOT use HTTP VCR cassettes for IBKR/TWS connections. VCR
+  cassettes only apply to HTTP-based interfaces (the 6 VCR owners per `cursor-rules/testing/vcr-ownership.mdc`). TWS
+  uses a binary protocol, not HTTP.
 
 ---
 
@@ -127,10 +150,10 @@ isProject: true
 - [ ] Zero service→service Python deps
 - [ ] Full quickmerge with act simulation (D5) passes
 - [ ] All missing files recovered and service runs
-- [ ] Adapter model placement: audit for any `_<venue>_models.py` files inside execution_service/;
-      any found must be moved to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py`
-      per `cursor-rules/imports/adapter-models-belong-in-uac.mdc`
+- [ ] Adapter model placement: audit for any `_<venue>_models.py` files inside execution_service/; any found must be
+      moved to `unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py` per
+      `cursor-rules/imports/adapter-models-belong-in-uac.mdc`
 
 > **Note:** `qg-*` identifiers in Day 3.6 (qg-exec-services-smoke-import, qg-exec-services-codex-18,
-> qg-pip-audit-exec-services) are quickmerge check labels — always invoke via
-> `bash scripts/quickmerge.sh --qg-only`, never as standalone `scripts/quality-gates.sh`.
+> qg-pip-audit-exec-services) are quickmerge check labels — always invoke via `bash scripts/quickmerge.sh --qg-only`,
+> never as standalone `scripts/quality-gates.sh`.

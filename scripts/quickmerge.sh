@@ -151,6 +151,131 @@ REPO_DIR="${REPO_DIR:-$REPO_ROOT}"
 REPO_NAME=$(basename "$REPO_DIR")
 cd "$REPO_DIR"
 
+# ── CASCADE DEP BRANCH ────────────────────────────────────────────────────────
+# When --dep-branch is set, walk the full transitive ancestor chain (DAG upward
+# from REPO_NAME) and switch each ancestor repo to the named branch before Stage 1.
+# This ensures Stage 1 dependency validation passes when ancestor repos have local
+# changes that haven't been pushed to main yet.
+#
+# Rules:
+#   - Only ancestors of the changed repo are touched (not siblings or unrelated repos)
+#   - If an ancestor has local changes, they are stashed, branch is created/switched,
+#     and the stash is re-applied on the new branch
+#   - If an ancestor doesn't exist locally, it is skipped (non-fatal)
+#   - No version bumping is done (version bumping is only on main via semver-agent)
+cascade_dep_branch() {
+  local branch_name="$1"
+  local manifest_path="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+
+  [ -f "$manifest_path" ] || { echo "[cascade] ⚠️  Manifest not found at $manifest_path — skipping cascade"; return 0; }
+
+  echo "=========================================="
+  echo "STAGE 0: Cascade dep-branch '$branch_name' to transitive ancestors"
+  echo "=========================================="
+
+  # Walk the DAG upward from REPO_NAME to collect all transitive ancestors.
+  # Output: one repo name per line, deepest deps first (reverse BFS order).
+  local ancestors
+  ancestors=$(python3.13 - "$manifest_path" "$REPO_NAME" 2>/dev/null <<'PYEOF'
+import json, sys
+from collections import deque
+
+manifest_path, repo_name = sys.argv[1], sys.argv[2]
+with open(manifest_path) as f:
+    manifest = json.load(f)
+
+repos = manifest.get("repositories", {})
+
+def get_internal_deps(name):
+    repo = repos.get(name, {})
+    # Support both "internal_dependencies" and "dependencies" key names
+    raw_deps = repo.get("internal_dependencies") or repo.get("dependencies") or []
+    result = []
+    for d in raw_deps:
+        dep_name = d.get("name", "") if isinstance(d, dict) else str(d)
+        if dep_name and dep_name in repos:
+            result.append(dep_name)
+    return result
+
+# BFS to collect all transitive ancestors
+visited, queue, order = set(), deque(get_internal_deps(repo_name)), []
+while queue:
+    name = queue.popleft()
+    if name not in visited:
+        visited.add(name)
+        order.append(name)
+        queue.extend(get_internal_deps(name))
+
+# Reverse: deepest deps first (so T0 libs are processed before T1, etc.)
+for name in reversed(order):
+    print(name)
+PYEOF
+)
+
+  if [ -z "$ancestors" ]; then
+    echo "[cascade] No transitive ancestors found for $REPO_NAME — nothing to cascade"
+    echo ""
+    return 0
+  fi
+
+  echo "[cascade] Ancestors of $REPO_NAME (deepest first):"
+  while IFS= read -r a; do [ -n "$a" ] && echo "  - $a"; done <<< "$ancestors"
+  echo ""
+
+  local cascaded=0
+
+  while IFS= read -r ancestor; do
+    [ -z "$ancestor" ] && continue
+    local ancestor_path="$WORKSPACE_ROOT/$ancestor"
+
+    if [ ! -d "$ancestor_path" ]; then
+      echo "[cascade] ⏭️  $ancestor: not found locally — skipping"
+      continue
+    fi
+
+    echo "[cascade] 🔀 $ancestor → branch '$branch_name'..."
+    (
+      cd "$ancestor_path" || exit 1
+      git fetch origin main --quiet 2>/dev/null || true
+
+      # Stash local changes if any
+      local_changes=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+      if [ "$local_changes" -gt 0 ]; then
+        git stash push -u -m "cascade-$$-$branch_name" --quiet 2>/dev/null || true
+        stashed=1
+      else
+        stashed=0
+      fi
+
+      # Switch to (or create) the branch
+      if git show-ref --verify --quiet "refs/remotes/origin/$branch_name" 2>/dev/null; then
+        git checkout -B "$branch_name" "origin/$branch_name" --quiet 2>/dev/null || \
+          git checkout "$branch_name" --quiet 2>/dev/null || \
+          git checkout -b "$branch_name" origin/main --quiet
+      elif git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
+        git checkout "$branch_name" --quiet
+      else
+        git checkout -b "$branch_name" origin/main --quiet
+      fi
+
+      # Restore stash on the new branch
+      if [ "$stashed" = 1 ] && git stash list 2>/dev/null | grep -q "cascade-$$-$branch_name"; then
+        git stash pop --quiet 2>/dev/null || \
+          echo "[cascade] ⚠️  $ancestor: stash pop had conflicts — resolve manually before committing"
+      fi
+    )
+    echo "[cascade] ✅ $ancestor on branch '$branch_name'"
+    cascaded=$((cascaded + 1))
+    echo ""
+  done <<< "$ancestors"
+
+  echo "[cascade] ✅ Cascaded $cascaded ancestor(s) to branch '$branch_name'"
+  echo ""
+}
+
+# Cascade dep-branch before any validation stages
+[ -n "$DEP_BRANCH" ] && cascade_dep_branch "$DEP_BRANCH"
+
 # ── ACTIVATE VENV ─────────────────────────────────────────────────────────────
 VENV_ACTIVATED=0
 if [ -f ".venv/bin/activate" ]; then
@@ -250,7 +375,7 @@ if [ "$TO_STAGING" = true ] && [ -f "$MANIFEST_PATH" ]; then
   echo "=========================================="
   echo "STAGE 1.5: Staging Lock Check"
   echo "=========================================="
-  STAGING_LOCKED=$(python3 -c "
+  STAGING_LOCKED=$(python3.13 -c "
 import json, sys
 try:
     with open('${MANIFEST_PATH}') as f:

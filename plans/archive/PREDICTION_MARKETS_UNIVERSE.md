@@ -2,15 +2,15 @@
 
 ## Overview
 
-Our prediction market universe covers two regulated/crypto-native platforms and several
-traditional sports books. The primary alpha thesis is:
+Our prediction market universe covers two regulated/crypto-native platforms and several traditional sports books. The
+primary alpha thesis is:
 
-1. **Neg-risk bucket arbitrage** (Polymarket-specific): Multi-outcome mutually-exclusive
-   markets where `sum(YES ask prices) < 1.0` = guaranteed profit at resolution
-2. **Cross-venue same-event arb**: Same event trading at different implied probabilities
-   on Kalshi vs Polymarket vs Pinnacle/Betfair
-3. **Market intelligence / sentiment features**: Prediction market probabilities as
-   leading indicators for macro/crypto/sports models
+1. **Neg-risk bucket arbitrage** (Polymarket-specific): Multi-outcome mutually-exclusive markets where
+   `sum(YES ask prices) < 1.0` = guaranteed profit at resolution
+2. **Cross-venue same-event arb**: Same event trading at different implied probabilities on Kalshi vs Polymarket vs
+   Pinnacle/Betfair
+3. **Market intelligence / sentiment features**: Prediction market probabilities as leading indicators for
+   macro/crypto/sports models
 
 ---
 
@@ -32,8 +32,8 @@ Two breaking changes happening simultaneously:
    - `volume: 1234` (int) → `volume_fp: "1234.00"` (string)
    - After this date, integer fields return `0`
 
-2. **Historical data window shrinks to ~3 months** around March 6, 2026. Currently
-   shows ~1 year of data. **Bulk-download before the cutoff**:
+2. **Historical data window shrinks to ~3 months** around March 6, 2026. Currently shows ~1 year of data.
+   **Bulk-download before the cutoff**:
    - `GET /trade-api/v2/markets` (all historical markets)
    - `GET /trade-api/v2/portfolio/fills` (all historical fills)
    - `GET /trade-api/v2/markets/{ticker}/candlesticks` (price history)
@@ -56,8 +56,7 @@ initialized → inactive → active → closed → determined → disputed → a
 
 ### Key Arb Opportunities vs Polymarket
 
-Both Kalshi and Polymarket list Fed rate decisions, CPI outcomes, Bitcoin price targets.
-Cross-venue arb pattern:
+Both Kalshi and Polymarket list Fed rate decisions, CPI outcomes, Bitcoin price targets. Cross-venue arb pattern:
 
 ```
 Kalshi   YES ask for "Fed raises 25bps Nov" = 0.62
@@ -67,8 +66,8 @@ Guaranteed payout                          = $1.00
 Profit                                      = 4% before fees
 ```
 
-Detection: match markets by `series_ticker` keyword against Polymarket `question` text
-(e.g. "KXCPI-24DEC" → Polymarket markets mentioning "CPI December 2024").
+Detection: match markets by `series_ticker` keyword against Polymarket `question` text (e.g. "KXCPI-24DEC" → Polymarket
+markets mentioning "CPI December 2024").
 
 ---
 
@@ -76,8 +75,7 @@ Detection: match markets by `series_ticker` keyword against Polymarket `question
 
 ### Three-API Architecture
 
-Polymarket data comes from **three separate systems**. All three must be combined for
-complete coverage:
+Polymarket data comes from **three separate systems**. All three must be combined for complete coverage:
 
 | System        | Base URL                   | What it Has                                                        | Auth                   |
 | ------------- | -------------------------- | ------------------------------------------------------------------ | ---------------------- |
@@ -88,7 +86,8 @@ complete coverage:
 ### Authentication
 
 - **L1 auth** (one-time): Sign EIP-712 message with wallet private key → derive CLOB credentials
-- **L2 auth** (per-request): HMAC-SHA256 headers (`POLY_ADDRESS`, `POLY_SIGNATURE`, `POLY_TIMESTAMP`, `POLY_NONCE`) on all trading endpoints
+- **L2 auth** (per-request): HMAC-SHA256 headers (`POLY_ADDRESS`, `POLY_SIGNATURE`, `POLY_TIMESTAMP`, `POLY_NONCE`) on
+  all trading endpoints
 - **Public endpoints** (no auth): price history, order books, market metadata
 
 ### Tagging — Known Messiness
@@ -97,12 +96,11 @@ Polymarket's tagging is intentionally/accidentally inconsistent:
 
 - No rigid category field — rely on `tags[]` array from Gamma API
 - Many CYOM (create-your-own-market) markets have zero tags
-- Same event type (e.g. "BTC above X") may appear with tags `["crypto"]`, `["bitcoin"]`,
-  no tags, or with completely different slugs
-- **Fallback strategy**: regex match on `question` text for known keywords
-  (BTC, ETH, CPI, Fed, NBA, soccer/football, election, etc.)
-- For our dataset (215K markets, 240M trades): filtering by question text works better
-  than tags
+- Same event type (e.g. "BTC above X") may appear with tags `["crypto"]`, `["bitcoin"]`, no tags, or with completely
+  different slugs
+- **Fallback strategy**: regex match on `question` text for known keywords (BTC, ETH, CPI, Fed, NBA, soccer/football,
+  election, etc.)
+- For our dataset (215K markets, 240M trades): filtering by question text works better than tags
 
 ### Data Eras and Availability
 
@@ -114,8 +112,8 @@ Polymarket's tagging is intentionally/accidentally inconsistent:
 
 ### Neg-Risk Markets (Bucket Arb)
 
-**Neg-risk** = multi-outcome markets where exactly one bucket resolves YES.
-All markets in the group share `neg_risk_market_id`.
+**Neg-risk** = multi-outcome markets where exactly one bucket resolves YES. All markets in the group share
+`neg_risk_market_id`.
 
 **The gold futures arb pattern you identified:**
 
@@ -140,9 +138,9 @@ Lock-up period                          = until June 30 resolution
 4. Fetch current CLOB ask prices for each YES token
 5. If `sum(asks) < 1.0` → signal (see `NegRiskArbSignal` schema)
 
-**Note on tagging messiness for neg-risk detection**: Polymarket intentionally doesn't
-make it easy to find these. Buckets for the same underlying often have different tags.
-Most reliable approach: group by `neg_risk_market_id` from Gamma API.
+**Note on tagging messiness for neg-risk detection**: Polymarket intentionally doesn't make it easy to find these.
+Buckets for the same underlying often have different tags. Most reliable approach: group by `neg_risk_market_id` from
+Gamma API.
 
 ---
 
@@ -211,11 +209,11 @@ When validating price data, per market YES + NO should sum to ≈ 1.0:
 
 ### Lock-Up Risk
 
-Neg-risk bucket arbs require holding until market resolution. Capital is tied up for
-the duration. Quantify as `requires_lock_up_days` in `NegRiskArbSignal`.
+Neg-risk bucket arbs require holding until market resolution. Capital is tied up for the duration. Quantify as
+`requires_lock_up_days` in `NegRiskArbSignal`.
 
-For the gold June futures arb example: ~60 day lock-up for 6% return = ~36% annualized
-(before fees and assuming no slippage filling all buckets simultaneously).
+For the gold June futures arb example: ~60 day lock-up for 6% return = ~36% annualized (before fees and assuming no
+slippage filling all buckets simultaneously).
 
 ### Fees
 

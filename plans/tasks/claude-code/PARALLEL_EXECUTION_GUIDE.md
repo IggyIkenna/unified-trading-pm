@@ -2,8 +2,7 @@
 
 ## 🚀 The Big Improvement (v10)
 
-**Before**: Sequential, limited context
-**After**: Parallel (4x), full workspace context
+**Before**: Sequential, limited context **After**: Parallel (4x), full workspace context
 
 ---
 

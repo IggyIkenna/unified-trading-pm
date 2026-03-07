@@ -10,19 +10,29 @@ overview: |
   Locally: uv.sources path deps always use latest. In CI: constraints ensure correct minimum.
 todos:
   - id: vc-vb-rollout
-    content: "Propagate canonical version-bump.yml to all 58 non-PM repos: adds dispatch step + uses GH_PAT + dynamic repo name. Run: python3 scripts/propagation/rollout-version-bump-workflow.py. Then quickmerge each repo (parallel agents, one per tier batch)."
+    content:
+      "Propagate canonical version-bump.yml to all 58 non-PM repos: adds dispatch step + uses GH_PAT + dynamic repo
+      name. Run: python3 scripts/propagation/rollout-version-bump-workflow.py. Then quickmerge each repo (parallel
+      agents, one per tier batch)."
     status: in_progress
 
   - id: vc-dep-rollout
-    content: "Propagate update-dependency-version.yml to all 37 repos with dependencies. Run: python3 scripts/propagation/rollout-dependency-update-workflow.py. Then quickmerge each repo (parallel agents)."
+    content:
+      "Propagate update-dependency-version.yml to all 37 repos with dependencies. Run: python3
+      scripts/propagation/rollout-dependency-update-workflow.py. Then quickmerge each repo (parallel agents)."
     status: in_progress
 
   - id: vc-ibkr-vb
-    content: "Add version-bump.yml to ibkr-gateway-infra (the one repo missing it). Part of vc-vb-rollout but flag separately as it requires creating .github/workflows/ dir."
+    content:
+      "Add version-bump.yml to ibkr-gateway-infra (the one repo missing it). Part of vc-vb-rollout but flag separately
+      as it requires creating .github/workflows/ dir."
     status: in_progress
 
   - id: vc-pm-merge
-    content: "Quickmerge unified-trading-pm with: updated update-repo-version.yml (GH_PAT), version-bump.yml template, update-dependency-version.yml template, rollout-version-bump-workflow.py, rollout-dependency-update-workflow.py, this plan."
+    content:
+      "Quickmerge unified-trading-pm with: updated update-repo-version.yml (GH_PAT), version-bump.yml template,
+      update-dependency-version.yml template, rollout-version-bump-workflow.py, rollout-dependency-update-workflow.py,
+      this plan."
     status: done
 
   - id: vc-pre-existing-blockers
@@ -41,16 +51,17 @@ todos:
     status: todo
 
   - id: vc-verify
-    content: "After all rollouts: merge a fix: commit in UAC and verify the full cascade fires — UAC bumps, PM manifest updates, dependent repos get pyproject.toml updated."
+    content:
+      "After all rollouts: merge a fix: commit in UAC and verify the full cascade fires — UAC bumps, PM manifest
+      updates, dependent repos get pyproject.toml updated."
     status: todo
 isProject: false
 ---
 
 # Version Cascade Rollout
 
-**Scope:** All 59 workspace repos
-**Prereq:** `GH_PAT` secret must exist in every repo (already present in workspace — used by quickmerge)
-**Blocks:** Nothing currently blocked; enables automation of dependency_governance.plan.md
+**Scope:** All 59 workspace repos **Prereq:** `GH_PAT` secret must exist in every repo (already present in workspace —
+used by quickmerge) **Blocks:** Nothing currently blocked; enables automation of dependency_governance.plan.md
 
 ## How It Works
 
@@ -91,8 +102,8 @@ Each dependent → update-dependency-version.yml:
 
 ### Batch 1 — T0 Libraries (6 repos, no deps)
 
-unified-api-contracts, unified-internal-contracts, unified-cloud-interface,
-unified-events-interface, execution-algo-library, matching-engine-library
+unified-api-contracts, unified-internal-contracts, unified-cloud-interface, unified-events-interface,
+execution-algo-library, matching-engine-library
 
 ### Batch 2 — T1 Libraries (3 repos)
 
@@ -100,31 +111,27 @@ unified-reference-data-interface, unified-config-interface, unified-trading-libr
 
 ### Batch 3 — T2 Libraries + T3 (8 repos)
 
-unified-market-interface, unified-ml-interface, unified-trade-execution-interface,
-unified-sports-execution-interface, unified-defi-execution-interface,
-unified-position-interface, unified-feature-calculator-library, unified-domain-client
+unified-market-interface, unified-ml-interface, unified-trade-execution-interface, unified-sports-execution-interface,
+unified-defi-execution-interface, unified-position-interface, unified-feature-calculator-library, unified-domain-client
 
 ### Batch 4 — Services Batch A (9 repos)
 
-instruments-service, market-tick-data-service, market-data-processing-service,
-features-calendar-service, features-delta-one-service, features-volatility-service,
-features-onchain-service, features-sports-service, features-multi-timeframe-service
+instruments-service, market-tick-data-service, market-data-processing-service, features-calendar-service,
+features-delta-one-service, features-volatility-service, features-onchain-service, features-sports-service,
+features-multi-timeframe-service
 
 ### Batch 5 — Services Batch B (9 repos)
 
-features-cross-instrument-service, ml-training-service, ml-inference-service,
-strategy-service, execution-service, alerting-service, pnl-attribution-service,
-position-balance-monitor-service, risk-and-exposure-service
+features-cross-instrument-service, ml-training-service, ml-inference-service, strategy-service, execution-service,
+alerting-service, pnl-attribution-service, position-balance-monitor-service, risk-and-exposure-service
 
 ### Batch 6 — APIs, UIs, Infra (11 repos)
 
-strategy-validation-service, execution-results-api, market-data-api,
-client-reporting-api, deployment-service, deployment-api, deployment-ui,
-system-integration-tests, ibkr-gateway-infra, unified-trading-codex,
-strategy-ui + remaining UIs
+strategy-validation-service, execution-results-api, market-data-api, client-reporting-api, deployment-service,
+deployment-api, deployment-ui, system-integration-tests, ibkr-gateway-infra, unified-trading-codex, strategy-ui +
+remaining UIs
 
 ### Batch 7 — UI-only repos (no pyproject.toml — version-bump only, no dep-update)
 
-batch-audit-ui, trading-analytics-ui, live-health-monitor-ui, client-reporting-ui,
-logs-dashboard-ui, onboarding-ui, settlement-ui, unified-trading-ui-auth,
-execution-analytics-ui, ml-training-ui
+batch-audit-ui, trading-analytics-ui, live-health-monitor-ui, client-reporting-ui, logs-dashboard-ui, onboarding-ui,
+settlement-ui, unified-trading-ui-auth, execution-analytics-ui, ml-training-ui

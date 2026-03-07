@@ -8,12 +8,13 @@
 - `deployment-service/configs/runtime-topology.yaml` — runtime wiring: topics, storage, modes, co-location rules
 - `unified-trading-pm/TOPOLOGY-DAG.md` — human-readable Mermaid diagram (this file)
 
-**Architectural narrative:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
-**Protocol injection contract:** `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md`
-**Cross-refs:** `05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md` · `05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+**Architectural narrative:** `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` **Protocol injection
+contract:** `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md` **Cross-refs:**
+`05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md` · `05-infrastructure/UI-DEPENDENCY-MATRIX.md`
 
-**Last Updated:** 2026-03-06 (moved to PM; topology-dag-pm-ssot plan; CloudTarget deleted from UDC/UTL)
-**Previous update:** 2026-02-28 (auth: kill-switch + OAuth client_id → Secret Manager; service-local auth.py; ConfigReloader moved UCI→UTS)
+**Last Updated:** 2026-03-06 (moved to PM; topology-dag-pm-ssot plan; CloudTarget deleted from UDC/UTL) **Previous
+update:** 2026-02-28 (auth: kill-switch + OAuth client_id → Secret Manager; service-local auth.py; ConfigReloader moved
+UCI→UTS)
 
 > **Version labels in this diagram are semantic milestone targets (the "what 1.0 means architecturally"), not current
 > semver.** For actual pinned versions of every package, see `unified-trading-pm/workspace-manifest.json` (the SSOT).
@@ -341,7 +342,8 @@ through Cloud Run URLs.
 
 ## Integration Testing Layers
 
-5 testing layers validate the system end-to-end. See **SSOT:** `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
+5 testing layers validate the system end-to-end. See **SSOT:**
+`unified-trading-codex/06-coding-standards/integration-testing-layers.md`
 
 | Layer | Purpose                                                     | Location                                           | In quickmerge?        |
 | ----- | ----------------------------------------------------------- | -------------------------------------------------- | --------------------- |

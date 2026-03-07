@@ -155,7 +155,9 @@ todos:
     status: completed
 
   - id: codebuild-canary-run
-    content: "MOVED to aws_migration.plan.md todo codebuild-canary-run. Not PM-internal — PM is a devops repo, not a CodeBuild target."
+    content:
+      "MOVED to aws_migration.plan.md todo codebuild-canary-run. Not PM-internal — PM is a devops repo, not a CodeBuild
+      target."
     status: completed
 
   - id: uci-plan-gap-close
@@ -224,10 +226,9 @@ isProject: true
 
 # Topology DAG — PM as SSOT + Protocol Injection Formalization
 
-**Plan:** #2d
-**Day:** 2–4 (runs parallel to phase2 T1 hardening)
-**Scope:** PM, codex, UTL (T1), UDC (T3), UML (T2), execution-service, market-tick-data-service, instruments-service
-**Supersedes:** No prior plan — topology DAG move was not tracked anywhere
+**Plan:** #2d **Day:** 2–4 (runs parallel to phase2 T1 hardening) **Scope:** PM, codex, UTL (T1), UDC (T3), UML (T2),
+execution-service, market-tick-data-service, instruments-service **Supersedes:** No prior plan — topology DAG move was
+not tracked anywhere
 
 ---
 
@@ -239,9 +240,12 @@ isProject: true
 - `WORKSPACE_MANIFEST_DAG.svg` — visual of the manifest
 - `CANONICAL_DEPENDENCY_MANIFEST.svg` — computed dependency graph
 
-`TOPOLOGY-DAG.md` is the human-readable Mermaid rendering of the same DAG. Keeping it in codex creates a split SSOT: the ground truth (manifest) is in PM, but the documentation is in codex. When tiers change, two files in two repos must both update. Moving it to PM means one PR in one repo updates both the manifest and the diagram.
+`TOPOLOGY-DAG.md` is the human-readable Mermaid rendering of the same DAG. Keeping it in codex creates a split SSOT: the
+ground truth (manifest) is in PM, but the documentation is in codex. When tiers change, two files in two repos must both
+update. Moving it to PM means one PR in one repo updates both the manifest and the diagram.
 
-Codex keeps `04-architecture/TIER-ARCHITECTURE.md` (the narrative explanation of why the tiers exist) and the new `PROTOCOL-INJECTION.md` (the injection contract spec). These are stable architectural principles, not living diagrams.
+Codex keeps `04-architecture/TIER-ARCHITECTURE.md` (the narrative explanation of why the tiers exist) and the new
+`PROTOCOL-INJECTION.md` (the injection contract spec). These are stable architectural principles, not living diagrams.
 
 ---
 
@@ -260,11 +264,11 @@ workspace-manifest.json (PM)
                                       └── Zero cloud SDK knowledge in service code
 ```
 
-Note: `deployment-service/configs/runtime-topology.yaml` is a partial local view of the
-execution-service wiring only; it carries `ssot_ref: unified-trading-pm/configs/runtime-topology.yaml`
-and is not the canonical file.
+Note: `deployment-service/configs/runtime-topology.yaml` is a partial local view of the execution-service wiring only;
+it carries `ssot_ref: unified-trading-pm/configs/runtime-topology.yaml` and is not the canonical file.
 
-Libraries know their tier from the DAG. They expose ABCs. Deployment wires env vars. Services declare mode. UCI resolves providers. No service ever reads `os.getenv("GCS_BUCKET")`.
+Libraries know their tier from the DAG. They expose ABCs. Deployment wires env vars. Services declare mode. UCI resolves
+providers. No service ever reads `os.getenv("GCS_BUCKET")`.
 
 ---
 
@@ -289,14 +293,18 @@ Libraries know their tier from the DAG. They expose ABCs. Deployment wires env v
 - [x] TOPOLOGY-DAG.md in `unified-trading-pm/` with manifest cross-ref header
 - [x] `unified-trading-codex/04-architecture/TOPOLOGY-DAG.md` is a stub pointing to PM
 - [x] `unified-trading-codex/04-architecture/PROTOCOL-INJECTION.md` created and complete
-- [x] `rg "CloudTarget|StandardizedDomainCloudService" --type py` (excl .venv\*, archive, tests) returns zero matches across all repos — only hits are UTL/UDC (defining repos, expected) and a docstring comment in unified-ml-interface/model_registry.py (line 77, not an import)
+- [x] `rg "CloudTarget|StandardizedDomainCloudService" --type py` (excl .venv\*, archive, tests) returns zero matches
+      across all repos — only hits are UTL/UDC (defining repos, expected) and a docstring comment in
+      unified-ml-interface/model_registry.py (line 77, not an import)
 - [x] UCI plan `uci_cloud_abstraction_complete.plan.md` has zero pending todos
-- [x] Canary CodeBuild simulation — MOVED to aws_migration.plan.md (not PM-internal; PM is a devops repo with no buildspec.aws.yaml)
+- [x] Canary CodeBuild simulation — MOVED to aws_migration.plan.md (not PM-internal; PM is a devops repo with no
+      buildspec.aws.yaml)
 - [x] 00-SSOT-INDEX.md updated to reflect PM ownership of TOPOLOGY-DAG.md
 
 ## Related Plans
 
-- **Feeds into:** `uci_cloud_abstraction_complete.plan.md` (closes p0-utl-cloud-layer-symbol-deletion and p2-cloud-build-configs)
+- **Feeds into:** `uci_cloud_abstraction_complete.plan.md` (closes p0-utl-cloud-layer-symbol-deletion and
+  p2-cloud-build-configs)
 - **Depends on:** `service_protocol_abstraction.plan.md` (DataSink/routing_key ABCs)
 - **Depends on:** `phase2_library_tier_hardening.plan.md` (UTL must be D3+ before deletion)
 - **Companion:** `quality_gate_hardening.plan.md` (STEP 5.10/5.11 gates enforce no regressions)

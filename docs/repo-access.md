@@ -27,7 +27,9 @@ Grant **datadodo** and **CosmicTrader** access to these repos:
 | 10  | unified-cloud-interface          | https://github.com/IggyIkenna/unified-cloud-interface          |
 | 11  | unified-trading-ui-auth          | https://github.com/IggyIkenna/unified-trading-ui-auth          |
 
-_Note: `unified-cloud-interface`, `deployment-api`, `system-integration-tests`, `execution-analytics-ui`, and `ml-training-ui` may not have `github_url` in `workspace-manifest.json`; URLs above use the same owner. Adjust if your org or repo names differ._
+_Note: `unified-cloud-interface`, `deployment-api`, `system-integration-tests`, `execution-analytics-ui`, and
+`ml-training-ui` may not have `github_url` in `workspace-manifest.json`; URLs above use the same owner. Adjust if your
+org or repo names differ._
 
 ## How to grant access (GitHub)
 
@@ -63,4 +65,5 @@ bash scripts/repo-management/add-repo-collaborators.sh --dry-run
 GITHUB_OWNER=MyOrg bash scripts/repo-management/add-repo-collaborators.sh
 ```
 
-Requires: `gh` CLI installed and authenticated (`gh auth login`). The script uses the GitHub API to add collaborators; users receive an invite email if they don’t already have access.
+Requires: `gh` CLI installed and authenticated (`gh auth login`). The script uses the GitHub API to add collaborators;
+users receive an invite email if they don’t already have access.

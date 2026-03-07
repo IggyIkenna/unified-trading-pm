@@ -70,12 +70,14 @@ At least one strategy per category:
 ### Person A (Track 1)
 
 - Repos: T0–T2 libraries, deployment-ui, batch-audit-ui, ml-training-ui, live-health-monitor-ui
-- Plans: 1 (T0–T2), 2 (first 4 UIs), 3 (T0–T1), 4 (T0–T1), 5 (T0–T2), 6 (T0–T2), 7 (CEFI/TradFi/DeFi backtests), 8 (cloud-agnostic)
+- Plans: 1 (T0–T2), 2 (first 4 UIs), 3 (T0–T1), 4 (T0–T1), 5 (T0–T2), 6 (T0–T2), 7 (CEFI/TradFi/DeFi backtests), 8
+  (cloud-agnostic)
 
 ### Person B (Track 2)
 
 - Repos: T3, services, remaining UIs
-- Plans: 1 (T3–services), 2 (remaining UIs), 3 (T2–T3 + services), 4 (T2–T3 + services), 5 (T3–services), 6 (T3–services), 6a (Arb structure check), 7 (Sports arb backtest), 8 (buildspec.aws.yaml)
+- Plans: 1 (T3–services), 2 (remaining UIs), 3 (T2–T3 + services), 4 (T2–T3 + services), 5 (T3–services), 6
+  (T3–services), 6a (Arb structure check), 7 (Sports arb backtest), 8 (buildspec.aws.yaml)
 
 ---
 
@@ -115,7 +117,10 @@ Week 4 (Mar 15–20): Phase 3 service hardening begins (after all T0–T3 green)
 Live trading week: March 20
 ```
 
-> **Phase 2 invariant (from phase2_library_tier_hardening.plan.md):** Never touch tier N until tier N-1 is fully green (all D5 passes). T0→T1→T2→T3 is a hard sequential constraint — parallelism is within a tier only (repos within T0 can be parallel; repos in T1 can run in parallel after ALL T0 repos pass D5). The master chain timeline above reflects this constraint. Plans 3–4 (Coverage + basedpyright) map 1:1 to Phase 2 and span Weeks 2–3.
+> **Phase 2 invariant (from phase2_library_tier_hardening.plan.md):** Never touch tier N until tier N-1 is fully green
+> (all D5 passes). T0→T1→T2→T3 is a hard sequential constraint — parallelism is within a tier only (repos within T0 can
+> be parallel; repos in T1 can run in parallel after ALL T0 repos pass D5). The master chain timeline above reflects
+> this constraint. Plans 3–4 (Coverage + basedpyright) map 1:1 to Phase 2 and span Weeks 2–3.
 
 ---
 

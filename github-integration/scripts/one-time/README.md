@@ -7,9 +7,8 @@ new projects or performing similar migrations in the future.
 
 ### create-initial-cleanup-project.sh
 
-**Purpose**: Create "Initial Cleanup" project with one task per repo
-**When Used**: Feb 2026 (initial COD cleanup before granular tracking)
-**Reusable For**:
+**Purpose**: Create "Initial Cleanup" project with one task per repo **When Used**: Feb 2026 (initial COD cleanup before
+granular tracking) **Reusable For**:
 
 - Creating cleanup/chore projects for bulk fixes
 - One-issue-per-repo strategy for large-scale cleanup
@@ -42,9 +41,8 @@ gh issue create --title "[CLEANUP] Fix all COD violations in repo"
 
 ### setup-cod-project-workflows.py
 
-**Purpose**: Set up GitHub Project workflows for the COD project
-**When Used**: Jan 2026 (one-time setup)
-**Reusable For**:
+**Purpose**: Set up GitHub Project workflows for the COD project **When Used**: Jan 2026 (one-time setup) **Reusable
+For**:
 
 - Setting up project workflows for new service-level projects
 - Configuring automated issue routing based on labels
@@ -70,8 +68,7 @@ workflow = {
 
 ### update-all-quickmerge.py
 
-**Purpose**: Update quickmerge scripts across all 30 repos
-**When Used**: Feb 2026 (quality gates standardization)
+**Purpose**: Update quickmerge scripts across all 30 repos **When Used**: Feb 2026 (quality gates standardization)
 **Reusable For**:
 
 - Bulk updates to scripts across many repos
@@ -98,8 +95,7 @@ for repo in all_repos:
 
 ### update-cod-size-threshold.sh
 
-**Purpose**: Update COD-SIZE threshold from 2000 to 1500 lines
-**When Used**: Feb 2026 (stricter SRP enforcement)
+**Purpose**: Update COD-SIZE threshold from 2000 to 1500 lines **When Used**: Feb 2026 (stricter SRP enforcement)
 **Reusable For**:
 
 - Updating issue thresholds
@@ -124,9 +120,8 @@ gh issue list --label "COD-SIZE" --json number \
 
 ### update-quickmerge-pr-body.sh
 
-**Purpose**: Update PR body template in quickmerge scripts
-**When Used**: Feb 2026 (improved PR descriptions)
-**Reusable For**:
+**Purpose**: Update PR body template in quickmerge scripts **When Used**: Feb 2026 (improved PR descriptions) **Reusable
+For**:
 
 - Standardizing PR templates
 - Adding quality gate status to PR bodies
@@ -150,8 +145,7 @@ find . -name "quickmerge.sh" \
 
 ### bulk-close-cod-size.sh
 
-**Purpose**: Close all COD-SIZE issues after threshold change
-**When Used**: Feb 2026 (cleanup after threshold update)
+**Purpose**: Close all COD-SIZE issues after threshold change **When Used**: Feb 2026 (cleanup after threshold update)
 **Reusable For**:
 
 - Bulk closing stale issues

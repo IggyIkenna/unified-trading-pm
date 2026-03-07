@@ -1,10 +1,9 @@
 ---
 name: schema_versioning_health_matrix_combos
 overview: >
-  Three complementary schema enhancements: (1) Combo/parlay bet support with
-  negative-price handling for American moneyline and options combos; (2) Provider
-  API version manifest + SVG health matrix; (3) CI schema validation (Option B)
-  owned by interface repos that hold VCR cassettes and API auth.
+  Three complementary schema enhancements: (1) Combo/parlay bet support with negative-price handling for American
+  moneyline and options combos; (2) Provider API version manifest + SVG health matrix; (3) CI schema validation (Option
+  B) owned by interface repos that hold VCR cassettes and API auth.
 status: active
 created: 2026-03-06
 ---
@@ -13,18 +12,17 @@ created: 2026-03-06
 
 ## Context
 
-During the schema gap normalizer sprint (Session 10) three deficiencies were identified
-beyond the five normalizer gaps that were closed:
+During the schema gap normalizer sprint (Session 10) three deficiencies were identified beyond the five normalizer gaps
+that were closed:
 
-1. **No combo/parlay support** — `CanonicalBetOrder` is single-leg only; American
-   moneyline odds (negative = favorite, e.g. -110) are silently dropped; options combos
-   (1×2 = buy call + sell put, risk reversals, straddles) can carry negative net premium.
-2. **No provider API version pinning** — `canonical-dependency-manifest.json` tracks
-   PyPI packages only. If Betfair or Binance releases a breaking API change there is no
-   machine-readable record of which raw schema snapshot maps to which API version.
-3. **No live schema health signal** — coverage (does a normalizer exist?) is tracked by
-   `SCHEMA_AUDIT_MATRIX.md` (STEP 5.15) but freshness (is the schema still valid against
-   the live API?) is not tracked anywhere.
+1. **No combo/parlay support** — `CanonicalBetOrder` is single-leg only; American moneyline odds (negative = favorite,
+   e.g. -110) are silently dropped; options combos (1×2 = buy call + sell put, risk reversals, straddles) can carry
+   negative net premium.
+2. **No provider API version pinning** — `canonical-dependency-manifest.json` tracks PyPI packages only. If Betfair or
+   Binance releases a breaking API change there is no machine-readable record of which raw schema snapshot maps to which
+   API version.
+3. **No live schema health signal** — coverage (does a normalizer exist?) is tracked by `SCHEMA_AUDIT_MATRIX.md` (STEP
+   5.15) but freshness (is the schema still valid against the live API?) is not tracked anywhere.
 
 ---
 
@@ -67,10 +65,9 @@ american_odds: int | None = None  # negative allowed (favorite in moneyline mark
 
 ### 1.3 `OddsFormat` enum actually used
 
-Currently `OddsFormat.AMERICAN` exists but normalizers always produce decimal and discard
-the source format. Add a `odds_format: OddsFormat = OddsFormat.DECIMAL` field to
-`CanonicalBetOrder` and `CanonicalComboLeg` so callers know how the odds were originally
-expressed.
+Currently `OddsFormat.AMERICAN` exists but normalizers always produce decimal and discard the source format. Add a
+`odds_format: OddsFormat = OddsFormat.DECIMAL` field to `CanonicalBetOrder` and `CanonicalComboLeg` so callers know how
+the odds were originally expressed.
 
 ### 1.4 Conversion utilities
 
@@ -94,8 +91,8 @@ def decimal_to_american(decimal_odds: Decimal) -> int:
 Document in `docs/NEGATIVE_PRICES.md`:
 
 - **American moneyline favorites**: -110, -300, etc. — always an integer
-- **Options combos**: 1×2 (buy call + sell put), risk reversal, straddle — net premium
-  is `Decimal` and CAN be negative when the short leg exceeds the long leg cost
+- **Options combos**: 1×2 (buy call + sell put), risk reversal, straddle — net premium is `Decimal` and CAN be negative
+  when the short leg exceeds the long leg cost
 - **NOT negative**: decimal odds (always ≥ 1.01), Betfair SP, fractional odds
 
 ### Todos
@@ -154,12 +151,11 @@ __api_spec_url__ = "https://binance-docs.github.io/apidocs/spot/en/"
 
 ### 2.3 `scripts/generate_schema_version_matrix.py`
 
-Reads `provider_api_versions.yaml` and each schema module's `__api_version__` attribute.
-Outputs:
+Reads `provider_api_versions.yaml` and each schema module's `__api_version__` attribute. Outputs:
 
 - `docs/SCHEMA_VERSION_MATRIX.md` — table: Provider | API Version | Schema Version | Last Verified | Status
-- `docs/schema_health.svg` — 8×8 colour grid (green/yellow/red cells) similar to the
-  workspace manifest SVG; one cell per provider; hover text shows version + last verified date
+- `docs/schema_health.svg` — 8×8 colour grid (green/yellow/red cells) similar to the workspace manifest SVG; one cell
+  per provider; hover text shows version + last verified date
 
 Script logic:
 
@@ -300,5 +296,5 @@ Phase 3 (interface repos — after Phase 2 SVG format stabilised):
   ci-blocked-sports-keys (parallel — add skip markers early)
 ```
 
-Phases 1 and 2 are independent and can run in parallel.
-Phase 3 should start after Phase 2 SVG format is stable (avoid format churn).
+Phases 1 and 2 are independent and can run in parallel. Phase 3 should start after Phase 2 SVG format is stable (avoid
+format churn).

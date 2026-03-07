@@ -314,5 +314,4 @@ gh issue close <issue-number> --repo IggyIkenna/instruments-service
 
 ---
 
-**Last Updated:** 2026-02-13
-**Status:** ✅ Active Strategy
+**Last Updated:** 2026-02-13 **Status:** ✅ Active Strategy

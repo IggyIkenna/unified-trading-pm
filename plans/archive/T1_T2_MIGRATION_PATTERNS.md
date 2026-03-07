@@ -65,12 +65,15 @@ unified-trading-services = { path = "../unified-trading-services" }
 unified-domain-client = { path = "../unified-domain-client" }
 ```
 
-**Note**: `unified-trading-services` provides `unified_trading_services` (Python package). `unified-domain-client` provides both `unified_domain_client` and `unified_domain_client`. Prefer `unified_trading_services` and `unified_domain_client` for imports.
+**Note**: `unified-trading-services` provides `unified_trading_services` (Python package). `unified-domain-client`
+provides both `unified_domain_client` and `unified_domain_client`. Prefer `unified_trading_services` and
+`unified_domain_client` for imports.
 
 ## Verification Checklist
 
 1. **No direct cloud deps** in pyproject.toml (no `google-cloud-*` except via unified-trading-services)
-2. **Imports** from `unified_trading_services` and `unified_domain_client`. Never `unified_trading_services` or `unified_domain_client` in new code.
+2. **Imports** from `unified_trading_services` and `unified_domain_client`. Never `unified_trading_services` or
+   `unified_domain_client` in new code.
 3. **setup_service** with `sink=GCSEventSink(...)` for event logging.
 4. **InstrumentsDomainClient** from `unified_domain_client` (or `unified_domain_client` if UDC not yet migrated).
 

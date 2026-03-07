@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate Tested gate: pytest --collect-only exits 0 (no import/path errors).
 
 Phase 9: plans_to_deployable_unified_audit.plan.md

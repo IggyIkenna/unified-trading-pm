@@ -2,16 +2,17 @@
 
 ## Context
 
-Four parallel audits identified 6 major work streams needed to bring the workspace to completion:
-manifest hygiene, QG fixes, the UTL big rename, unified-cloud-services elimination,
-deployment v3 four-way split completion, and service dependency corrections.
+Four parallel audits identified 6 major work streams needed to bring the workspace to completion: manifest hygiene, QG
+fixes, the UTL big rename, unified-cloud-services elimination, deployment v3 four-way split completion, and service
+dependency corrections.
 
 **Workspace size:** 60 repos (was 58 — added execution-analytics-ui and unified-trading-ui-auth)
 
 **Success criteria:**
 
 - Every repo passes quality gates (except codex, PM, and truly scaffolded repos)
-- `unified-trading-deployment-v3` ARCHIVED 2026-03-03 (split into deployment-service, deployment-api, deployment-ui, system-integration-tests)
+- `unified-trading-deployment-v3` ARCHIVED 2026-03-03 (split into deployment-service, deployment-api, deployment-ui,
+  system-integration-tests)
 - No ghost/phantom dependencies anywhere
 - `unified-cloud-services` name eliminated from codebase
 - `unified-trading-services` renamed to `unified-trading-library` everywhere
@@ -161,7 +162,8 @@ All steps completed:
 
 ### 4c: deployment-ui — Full Migration
 
-**Status:** Scaffold complete with React Router, Google OAuth, clean page structure. Now has full TS tooling (Playwright, ESLint, vitest, prettier, strict TS). Needs monolith UI feature migration.
+**Status:** Scaffold complete with React Router, Google OAuth, clean page structure. Now has full TS tooling
+(Playwright, ESLint, vitest, prettier, strict TS). Needs monolith UI feature migration.
 
 **Strategy:** Keep scaffold structure + port 16K LOC monolith features:
 
@@ -256,8 +258,12 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 
 ### Recently Completed (this session)
 
-- **Coverage tracking (Phase 5.4):** DONE — Synced `coverage_pct` in manifest from `MIN_COVERAGE` values in each repo's QG script. 43 Python repos updated (most to 70, some with custom thresholds like 35 or 40). UI repos remain at 0 (no Python coverage). These are floor values — actual coverage may be higher.
-- **Tier 2→3 violations:** RESOLVED — Phantom dependencies. Neither `unified-market-interface` nor `unified-ml-interface` actually import `unified-domain-client` in code or pyproject.toml. The dependency existed only in the manifest as a tracking artifact. Removed from both repos' manifest entries, cleared `known_violations`.
+- **Coverage tracking (Phase 5.4):** DONE — Synced `coverage_pct` in manifest from `MIN_COVERAGE` values in each repo's
+  QG script. 43 Python repos updated (most to 70, some with custom thresholds like 35 or 40). UI repos remain at 0 (no
+  Python coverage). These are floor values — actual coverage may be higher.
+- **Tier 2→3 violations:** RESOLVED — Phantom dependencies. Neither `unified-market-interface` nor
+  `unified-ml-interface` actually import `unified-domain-client` in code or pyproject.toml. The dependency existed only
+  in the manifest as a tracking artifact. Removed from both repos' manifest entries, cleared `known_violations`.
 - **npm install in UI repos:** Running (installs newly added vitest, Playwright, ESLint, prettier deps)
 
 ---
@@ -321,9 +327,11 @@ Audit completed 2026-03-02. Key findings for the agent working on Phase 4:
 ### Critical Issues
 
 1. **deployment-api has no .git** — needs `git init` + initial commit
-2. **Direct google.cloud imports** in deployment-api routes (cloud_builds.py, deployment_state.py, service_status.py) — should use unified-cloud-interface
+2. **Direct google.cloud imports** in deployment-api routes (cloud_builds.py, deployment_state.py, service_status.py) —
+   should use unified-cloud-interface
 3. **Direct boto3 imports** in deployment-service backends — should use abstractions
-4. **15+ TypedDict definitions** scattered in deployment-api routes — should be centralized in unified-api-contracts or unified-internal-contracts
+4. **15+ TypedDict definitions** scattered in deployment-api routes — should be centralized in unified-api-contracts or
+   unified-internal-contracts
 5. **83 YAML configs + 136 terraform files** still in monolith — need ownership assignment
 6. **Test coverage fragmented** — monolith has 49 test files, split repos have minimal
 

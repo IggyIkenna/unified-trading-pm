@@ -25,8 +25,7 @@ claude --model claude-sonnet-4-5-20250929
 - Full workspace context (codex, dependencies, rules)
 - No conflicts (each agent edits only its repo)
 
-**Time**: 15-20 minutes (6 batches × 3 min)
-**Cost**: $0 (FREE)
+**Time**: 15-20 minutes (6 batches × 3 min) **Cost**: $0 (FREE)
 
 ---
 
@@ -44,9 +43,8 @@ cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
 ./.cursor/plans/tasks_claude_code/orchestrator-simple.sh
 ```
 
-**Pros**: Fully automated, no manual steps, 10 parallel agents, **now with full workspace context + enhanced prompts + `--force` flag**
-**Cons**: Less smart (can't adapt or resume)
-**Cost**: $0 (FREE)
+**Pros**: Fully automated, no manual steps, 10 parallel agents, **now with full workspace context + enhanced prompts +
+`--force` flag** **Cons**: Less smart (can't adapt or resume) **Cost**: $0 (FREE)
 
 **Note**: As of v10, orchestrator scripts now use the same improvements as Claude Code approach:
 

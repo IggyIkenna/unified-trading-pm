@@ -1,10 +1,13 @@
 # VCR Cassette Recording Plan — External API Credentials
 
-**SSOT for secret names/env vars:** `unified-trading-codex/07-security/secrets-management.md`
-**SSOT for VCR cassette definitions:** `api-contracts/api_contracts/vcr_endpoints.py` — each venue entry has `key_env` (env var name) and `cassette_name`. Empty `[]` = no cassette defined yet.
-**Record script:** `api-contracts/scripts/record_vcr_cassettes.py`
+**SSOT for secret names/env vars:** `unified-trading-codex/07-security/secrets-management.md` **SSOT for VCR cassette
+definitions:** `api-contracts/api_contracts/vcr_endpoints.py` — each venue entry has `key_env` (env var name) and
+`cassette_name`. Empty `[]` = no cassette defined yet. **Record script:**
+`api-contracts/scripts/record_vcr_cassettes.py`
 
-> **Note:** `api-contracts/build/` is a stale build artifact. Ignore `build/lib/api_contracts/endpoint_registry.py` — it contains an `EndpointStatus` enum with `PENDING_CASSETTE_AWAITING_AUTH` notes that are no longer accurate. The live source is `api_contracts/vcr_endpoints.py`.
+> **Note:** `api-contracts/build/` is a stale build artifact. Ignore `build/lib/api_contracts/endpoint_registry.py` — it
+> contains an `EndpointStatus` enum with `PENDING_CASSETTE_AWAITING_AUTH` notes that are no longer accurate. The live
+> source is `api_contracts/vcr_endpoints.py`.
 
 ---
 
@@ -61,8 +64,8 @@ VCR captures HTTP only. These require a WS capture approach, mock gateway, or sy
 
 ## Phase 3 — Cassette definition exists in vcr_endpoints.py, key NOT in SM → get key first
 
-`vcr_endpoints.py` has a fully configured entry. Just need the API key in SM.
-Steps: (1) obtain key → (2) `echo -n "<key>" | gcloud secrets create <name> --data-file=- --project=central-element-323112` → (3) run recorder.
+`vcr_endpoints.py` has a fully configured entry. Just need the API key in SM. Steps: (1) obtain key → (2)
+`echo -n "<key>" | gcloud secrets create <name> --data-file=- --project=central-element-323112` → (3) run recorder.
 
 | Done | Venue                  | key_env                 | Target Secret Name      | How to Get Access                            |
 | ---- | ---------------------- | ----------------------- | ----------------------- | -------------------------------------------- |

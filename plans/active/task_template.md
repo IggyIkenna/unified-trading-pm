@@ -41,9 +41,7 @@ git checkout main
 ````markdown
 # Task: [Task Name]
 
-**Goal**: [One sentence]
-**Method**: X fast sub-agents (Task tool)
-**Time**: X hours
+**Goal**: [One sentence] **Method**: X fast sub-agents (Task tool) **Time**: X hours
 
 ## Prompt (Copy-Paste to Execute):
 

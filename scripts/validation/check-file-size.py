@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Pre-commit hook: check Python file size (900 lines max per codex standard)."""
 
 import contextlib

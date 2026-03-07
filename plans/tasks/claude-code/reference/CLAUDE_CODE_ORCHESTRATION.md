@@ -51,30 +51,27 @@ Launches next agent or resumes
 
 ## 🚀 PROMPT
 
-\`\`\`
-I want to fix basedpyright errors in unified-config-interface using agent CLI.
+\`\`\` I want to fix basedpyright errors in unified-config-interface using agent CLI.
 
-STEP 1: Navigate and check errors
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface
-basedpyright --level warning 2>&1 | tail -1
+STEP 1: Navigate and check errors cd
+/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface basedpyright --level warning
+2>&1 | tail -1
 
-STEP 2: Set up environment variables
-export PATH="$HOME/.local/bin:$PATH"
-export CURSOR_API_KEY=$(gcloud secrets versions access latest --secret=cursor-api-key --project=central-element-323112)
+STEP 2: Set up environment variables export PATH="$HOME/.local/bin:$PATH" export CURSOR_API_KEY=$(gcloud secrets
+versions access latest --secret=cursor-api-key --project=central-element-323112)
 
-STEP 3: Set workspace and parser paths
-export WORKSPACE=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface
-export PARSER=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/plans/tasks_claude_code/simple-parser.py
+STEP 3: Set workspace and parser paths export
+WORKSPACE=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface export
+PARSER=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/plans/tasks_claude_code/simple-parser.py
 
-STEP 4: Launch agent CLI with pretty printing (takes 3-5 minutes)
-agent --api-key "$CURSOR_API_KEY" --print --model auto --trust --output-format stream-json --stream-partial-output --workspace "$WORKSPACE" "Fix all basedpyright errors. Apply: 1) No empty fallbacks, 2) No Type Any, 3) No decorators. Target: 0 errors." 2>&1 | python3 "$PARSER"
+STEP 4: Launch agent CLI with pretty printing (takes 3-5 minutes) agent --api-key
+"$CURSOR_API_KEY" --print --model auto --trust --output-format stream-json --stream-partial-output --workspace "$WORKSPACE"
+"Fix all basedpyright errors. Apply: 1) No empty fallbacks, 2) No Type Any, 3) No decorators. Target: 0 errors." 2>&1 |
+python3 "$PARSER"
 
-STEP 5: Verify
-basedpyright --level warning 2>&1 | tail -1
+STEP 5: Verify basedpyright --level warning 2>&1 | tail -1
 
-STEP 6: Report
-Show me: Status, errors fixed (66 → X), time taken
-\`\`\`
+STEP 6: Report Show me: Status, errors fixed (66 → X), time taken \`\`\`
 
 ---
 
@@ -82,8 +79,7 @@ Show me: Status, errors fixed (66 → X), time taken
 
 If agent doesn't fix all errors:
 
-\`\`\`
-The agent fixed 66 → 15 errors. Remaining issues:
+\`\`\` The agent fixed 66 → 15 errors. Remaining issues:
 
 - Lines 45-67: Still has Type Any
 - Lines 89-103: Still has empty fallback
@@ -94,12 +90,14 @@ Launch agent again with targeted guidance:
 
 # Set environment if not already set
 
-export WORKSPACE=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface
-export PARSER=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/plans/tasks_claude_code/simple-parser.py
+export WORKSPACE=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-config-interface export
+PARSER=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/plans/tasks_claude_code/simple-parser.py
 
-agent --api-key "$CURSOR_API_KEY" --print --model auto --trust --output-format stream-json --stream-partial-output --workspace "$WORKSPACE" "Fix the remaining 15 basedpyright errors. Focus on: 1) Lines 45-67 in execution_config_schema.py - replace Any with dict[str, str], 2) Lines 89-103 in loaders.py - remove or {} fallback, fail loud. Target: 0 errors." 2>&1 | python3 "$PARSER"
-\`\`\`
-\`\`\`
+agent --api-key
+"$CURSOR_API_KEY" --print --model auto --trust --output-format stream-json --stream-partial-output --workspace "$WORKSPACE"
+"Fix the remaining 15 basedpyright errors. Focus on: 1) Lines 45-67 in execution_config_schema.py - replace Any with
+dict[str, str], 2) Lines 89-103 in loaders.py - remove or {} fallback, fail loud. Target: 0 errors." 2>&1 | python3
+"$PARSER" \`\`\` \`\`\`
 
 ---
 

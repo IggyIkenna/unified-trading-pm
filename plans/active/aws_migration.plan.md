@@ -1,12 +1,24 @@
 ---
 name: AWS Migration Plan
-overview: Dual-cloud readiness for GCP primary and AWS secondary. Cloud-agnostic abstractions via unified-cloud-interface; migration phases for build path, runtime, and full dual-cloud deployment.
+overview:
+  Dual-cloud readiness for GCP primary and AWS secondary. Cloud-agnostic abstractions via unified-cloud-interface;
+  migration phases for build path, runtime, and full dual-cloud deployment.
 todos:
   - id: phase-1-cloud-agnostic
-    content: "Verify cloud-agnostic abstractions; no direct google.cloud/boto3 in prod. SCOPE: all repos in workspace-manifest.json with type=library or type=service (not UIs). GATE: rg 'google\\.cloud|boto3' --type py --glob '!.venv*' --glob '!tests' returns 0 matches in production source across all in-scope repos; verified per-repo in QUALITY_GATE_BYPASS_AUDIT.md. DONE: 14 Category A + 37 Category B violations fixed (sessions 4–6); STEP 5.10/5.11 hard-fail gates active; QUALITY_GATE_BYPASS_AUDIT.md zero unapproved exceptions. Gate fully satisfied 2026-03-06."
+    content:
+      "Verify cloud-agnostic abstractions; no direct google.cloud/boto3 in prod. SCOPE: all repos in
+      workspace-manifest.json with type=library or type=service (not UIs). GATE: rg 'google\\.cloud|boto3' --type py
+      --glob '!.venv*' --glob '!tests' returns 0 matches in production source across all in-scope repos; verified
+      per-repo in QUALITY_GATE_BYPASS_AUDIT.md. DONE: 14 Category A + 37 Category B violations fixed (sessions 4–6);
+      STEP 5.10/5.11 hard-fail gates active; QUALITY_GATE_BYPASS_AUDIT.md zero unapproved exceptions. Gate fully
+      satisfied 2026-03-06."
     status: completed
   - id: phase-2-buildspec
-    content: "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present). FILE DISTRIBUTION DONE 2026-03-05. Canary simulated CodeBuild run for 3 repos (instruments-service, unified-cloud-interface, unified-events-interface) still pending — tracked in topology_dag_pm_ssot.plan.md todo codebuild-canary-run. File distribution gate satisfied; canary run completes the full gate."
+    content:
+      "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present). FILE
+      DISTRIBUTION DONE 2026-03-05. Canary simulated CodeBuild run for 3 repos (instruments-service,
+      unified-cloud-interface, unified-events-interface) still pending — tracked in topology_dag_pm_ssot.plan.md todo
+      codebuild-canary-run. File distribution gate satisfied; canary run completes the full gate."
     status: completed
   - id: codebuild-canary-run
     content: |
@@ -172,19 +184,28 @@ todos:
       Gate: ECR shows latest image tag for all 3 canary services after CodeBuild run.
     status: pending
   - id: phase-4-dual-cloud
-    content: "Full dual-cloud deployment — GCP + AWS parity. PARITY DEFINITION: (1) same quality-gates.sh exit code on GCP (cloudbuild.yaml) and AWS (buildspec.aws.yaml) for all in-scope repos; (2) same secret names mirrored in AWS Secrets Manager as in GCP Secret Manager; (3) same bucket structure in S3 as in GCS (different names, same prefix pattern); (4) CLOUD_PROVIDER switch changes only the concrete adapter, not business logic. GATE: pilot deployment of at least one service (instruments-service) on AWS ECS/Batch passes Layer 2 infra verification (verify_infra.py with CLOUD_PROVIDER=aws)."
+    content:
+      "Full dual-cloud deployment — GCP + AWS parity. PARITY DEFINITION: (1) same quality-gates.sh exit code on GCP
+      (cloudbuild.yaml) and AWS (buildspec.aws.yaml) for all in-scope repos; (2) same secret names mirrored in AWS
+      Secrets Manager as in GCP Secret Manager; (3) same bucket structure in S3 as in GCS (different names, same prefix
+      pattern); (4) CLOUD_PROVIDER switch changes only the concrete adapter, not business logic. GATE: pilot deployment
+      of at least one service (instruments-service) on AWS ECS/Batch passes Layer 2 infra verification (verify_infra.py
+      with CLOUD_PROVIDER=aws)."
     status: pending
   - id: per-service-checklist
-    content: "Per-service checklist — I/O via get_storage_client/get_secret_client; no hardcoded IDs. GATE: each service repo has a completed QUALITY_GATE_BYPASS_AUDIT.md section for AWS migration listing: (1) all get_storage_client/get_secret_client calls confirmed; (2) no hardcoded GCP project IDs or bucket names in production source; (3) buildspec.aws.yaml present; (4) secret names documented in credentials-registry.yaml."
+    content:
+      "Per-service checklist — I/O via get_storage_client/get_secret_client; no hardcoded IDs. GATE: each service repo
+      has a completed QUALITY_GATE_BYPASS_AUDIT.md section for AWS migration listing: (1) all
+      get_storage_client/get_secret_client calls confirmed; (2) no hardcoded GCP project IDs or bucket names in
+      production source; (3) buildspec.aws.yaml present; (4) secret names documented in credentials-registry.yaml."
     status: pending
 isProject: false
 ---
 
 # AWS Migration Plan (Dual-Cloud Readiness)
 
-**Order:** See master_pre_deployment_plan_chain.plan.md
-**Reference:** dual-cloud-cost-ops-playbook.md, 05-infrastructure/README.md, cloud-agnostic.mdc
-**Status:** GCP primary; AWS secondary [PLANNED]
+**Order:** See master_pre_deployment_plan_chain.plan.md **Reference:** dual-cloud-cost-ops-playbook.md,
+05-infrastructure/README.md, cloud-agnostic.mdc **Status:** GCP primary; AWS secondary [PLANNED]
 
 ---
 

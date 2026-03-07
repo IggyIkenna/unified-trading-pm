@@ -1,8 +1,6 @@
 # Workflow 1 Residual Items & Cross-Workflow Planning
 
-> Date: 2026-03-02
-> Status: ACTIVE
-> Context: End-of-day audit after Workflow 1 (Quality Gates Passing Locally) execution
+> Date: 2026-03-02 Status: ACTIVE Context: End-of-day audit after Workflow 1 (Quality Gates Passing Locally) execution
 > References: FIVE_WORKFLOW_DELIVERY_PLAN.md, SPORTS_MIGRATION_GAP_FIX.md, SPORTS_MIGRATION_PHASE2_FULL.md
 
 ---
@@ -98,68 +96,56 @@ See UDC row in T0 table.
 
 ### R-01: UFCL Test Failures — FIXED
 
-**Repo:** unified-feature-calculator-library
-**Status:** FIXED (March 2)
-**Root cause:** Stale installed package — source had `_add_diff_features()` but installed version didn't. Also 4 `%..3f` -> `%.3f` log format string bugs.
-**Fix:** `uv pip install -e .` + fixed format strings in base.py, transformations.py, validations.py.
-**Result:** All 54 tests pass. Coverage at 49% (pre-existing, see R-06).
+**Repo:** unified-feature-calculator-library **Status:** FIXED (March 2) **Root cause:** Stale installed package —
+source had `_add_diff_features()` but installed version didn't. Also 4 `%..3f` -> `%.3f` log format string bugs.
+**Fix:** `uv pip install -e .` + fixed format strings in base.py, transformations.py, validations.py. **Result:** All 54
+tests pass. Coverage at 49% (pre-existing, see R-06).
 
 ### R-02: UDC `test_get_trading_parameters_returns_none_when_not_found` Failure
 
-**Repo:** unified-domain-client
-**File:** `tests/unit/test_clients.py`
-**Error:** `ModuleNotFoundError` or assertion failure in client mock
-**Root cause:** Test expects `get_trading_parameters()` to return None for unknown instruments, but the mock or implementation doesn't match.
-**Fix:** Review the test mock setup and ensure the cloud service mock returns the expected response for missing data.
-**Priority:** P2 (edge case handling)
+**Repo:** unified-domain-client **File:** `tests/unit/test_clients.py` **Error:** `ModuleNotFoundError` or assertion
+failure in client mock **Root cause:** Test expects `get_trading_parameters()` to return None for unknown instruments,
+but the mock or implementation doesn't match. **Fix:** Review the test mock setup and ensure the cloud service mock
+returns the expected response for missing data. **Priority:** P2 (edge case handling)
 
 ### R-03: UMI Sports Registry Test Failure — FIXED
 
-**Repo:** unified-market-interface
-**Status:** FIXED (March 2)
-**Root cause:** USEI not installed + `adapter_for_bookmaker()` tried instantiating adapters needing credentials.
-**Fix:** Installed USEI, added `resolve_adapter_class()`, updated `adapter_for_bookmaker(**kwargs)`, updated tests.
-**Result:** All 23 tests pass.
+**Repo:** unified-market-interface **Status:** FIXED (March 2) **Root cause:** USEI not installed +
+`adapter_for_bookmaker()` tried instantiating adapters needing credentials. **Fix:** Installed USEI, added
+`resolve_adapter_class()`, updated `adapter_for_bookmaker(**kwargs)`, updated tests. **Result:** All 23 tests pass.
 
 ### R-04: UMLI Error Recovery Test Failure — FIXED
 
-**Repo:** unified-ml-interface
-**Status:** FIXED (March 2)
-**Root cause:** `@handle_storage_errors(reraise=False)` swallows exceptions, returning None. Test then tried loading a model that was never stored.
-**Fix:** Restructured test: (1) verify store fails, (2) recover + store successfully, (3) load succeeds.
-**Result:** All 7 e2e tests pass.
+**Repo:** unified-ml-interface **Status:** FIXED (March 2) **Root cause:** `@handle_storage_errors(reraise=False)`
+swallows exceptions, returning None. Test then tried loading a model that was never stored. **Fix:** Restructured test:
+(1) verify store fails, (2) recover + store successfully, (3) load succeeds. **Result:** All 7 e2e tests pass.
 
 ### R-05: UTS basedpyright 272 Errors
 
-**Repo:** unified-trading-services
-**Scope:** 272 errors, 1390 warnings across the entire package
-**Key error patterns:**
+**Repo:** unified-trading-services **Scope:** 272 errors, 1390 warnings across the entire package **Key error
+patterns:**
 
 - `reportAttributeAccessIssue` — config classes missing attributes (get_cloud_target, is_test_environment)
 - `reportArgumentType` — None passed where str expected in id_conventions.py
 - `reportUnknownMemberType` — untyped list operations in periods.py
-- `reportAny` — some Any type usage remaining
-  **Fix approach:** Systematic type annotation work. Start with the most-imported modules: `core/config.py`, `core/cloud_constants.py`, `utils/id_conventions.py`, `utils/periods.py`.
-  **Effort:** ~2-3 hours focused type annotation work
-  **Priority:** P2 (pre-existing debt, doesn't block runtime)
+- `reportAny` — some Any type usage remaining **Fix approach:** Systematic type annotation work. Start with the
+  most-imported modules: `core/config.py`, `core/cloud_constants.py`, `utils/id_conventions.py`, `utils/periods.py`.
+  **Effort:** ~2-3 hours focused type annotation work **Priority:** P2 (pre-existing debt, doesn't block runtime)
 
 ### R-06: UTS Test Coverage 40% vs 70% Threshold
 
-**Repo:** unified-trading-services
-**Current:** 40% (6352 total lines, 3811 uncovered)
-**Target:** 70% minimum
-**Gap:** Need ~1900 additional lines covered
-**Key uncovered modules:**
+**Repo:** unified-trading-services **Current:** 40% (6352 total lines, 3811 uncovered) **Target:** 70% minimum **Gap:**
+Need ~1900 additional lines covered **Key uncovered modules:**
 
 - `core/cloud_storage_service.py` (870 lines, 0% covered — needs mocked GCS tests)
 - `core/cloud_base_service.py` (complex, needs mocked service tests)
 - `domain/standardized_service.py` (743 lines, low coverage)
 - `core/error_handling.py` (762 lines, ~50% covered)
 - `ml/model_registry.py` (needs mocked GCS/BQ tests)
-- `testing/` modules (0% — they're test helpers, consider excluding from coverage)
-  **Quick win:** Exclude `unified_trading_services/testing/` from coverage measurement — these are test utilities, not production code. Would immediately boost coverage by ~3-5%.
-  **Fix approach:** Write unit tests for cloud_storage_service.py and error_handling.py first (highest line count). Use mocked GCS/BQ clients.
-  **Effort:** ~4-6 hours of test writing
+- `testing/` modules (0% — they're test helpers, consider excluding from coverage) **Quick win:** Exclude
+  `unified_trading_services/testing/` from coverage measurement — these are test utilities, not production code. Would
+  immediately boost coverage by ~3-5%. **Fix approach:** Write unit tests for cloud_storage_service.py and
+  error_handling.py first (highest line count). Use mocked GCS/BQ clients. **Effort:** ~4-6 hours of test writing
   **Priority:** P1 (quality gate failure)
 
 ### R-07: Pre-existing basedpyright Errors Across Workspace
@@ -172,8 +158,9 @@ See UDC row in T0 table.
 | unified-trading-services | 272         | P2 (foundational library)          |
 | instruments-service      | ~1,521      | P3                                 |
 
-**Fix approach:** Focus on UTS (272) and FSS (784) first since they're smaller and more impactful. UMI and deployment-api have massive type debt from GCP SDK return types — defer to Workflow 2.
-**Priority:** P2/P3 (doesn't block runtime, but blocks strict CI/CD)
+**Fix approach:** Focus on UTS (272) and FSS (784) first since they're smaller and more impactful. UMI and
+deployment-api have massive type debt from GCP SDK return types — defer to Workflow 2. **Priority:** P2/P3 (doesn't
+block runtime, but blocks strict CI/CD)
 
 ### R-08: 6 Codex-Fixed T4 Repos — VERIFIED (deeper issues found)
 
@@ -209,20 +196,20 @@ These repos exist in the workspace but weren't part of the primary scan:
 - execution-algo-library
 - matching-engine-library
 
-**Action:** Run quality gates on all of these to get baseline status.
-**Priority:** P1 (need full workspace visibility)
+**Action:** Run quality gates on all of these to get baseline status. **Priority:** P1 (need full workspace visibility)
 
 ### R-10: sports-betting-execution-service — Not Needed
 
-**Was listed as "MISSING" in T4 scan.**
-**Status:** NOT NEEDED. The functionality is distributed across:
+**Was listed as "MISSING" in T4 scan.** **Status:** NOT NEEDED. The functionality is distributed across:
 
-- `unified-sports-execution-interface` (USEI) — exchange adapters (Betfair, Smarkets, Matchbook, Betdaq), scraper adapters (13 bookmakers)
+- `unified-sports-execution-interface` (USEI) — exchange adapters (Betfair, Smarkets, Matchbook, Betdaq), scraper
+  adapters (13 bookmakers)
 - `features-sports-service` (FSS) — feature computation (batch + live)
 - `instruments-service` — sports instruments (leagues, fixtures, teams)
 - `strategy-service` — sports strategy (arb detection, value betting)
 
-**Reference:** `SPORTS_MIGRATION_GAP_FIX.md` Part A (COMPLETE) archived the old `sports-betting-services-previous` repo. Part B (IN PROGRESS) defines the live mode architecture across the above repos.
+**Reference:** `SPORTS_MIGRATION_GAP_FIX.md` Part A (COMPLETE) archived the old `sports-betting-services-previous` repo.
+Part B (IN PROGRESS) defines the live mode architecture across the above repos.
 
 **No new repo needed.** The old monolithic approach is replaced by the distributed service architecture.
 
@@ -232,10 +219,9 @@ These repos exist in the workspace but weren't part of the primary scan:
 
 ### R-11: unified-trading-services -> unified-cloud-library
 
-**Current name:** `unified-trading-services` (was `unified-cloud-services` before that)
-**Problem:** It's a library (imported by 37+ repos), NOT a service. Has no main entrypoint. Provides cloud provider abstractions.
-**Proposed name:** `unified-cloud-library`
-**Python package:** `unified_cloud_library`
+**Current name:** `unified-trading-services` (was `unified-cloud-services` before that) **Problem:** It's a library
+(imported by 37+ repos), NOT a service. Has no main entrypoint. Provides cloud provider abstractions. **Proposed name:**
+`unified-cloud-library` **Python package:** `unified_cloud_library`
 
 **Rename scope:**
 
@@ -243,36 +229,42 @@ These repos exist in the workspace but weren't part of the primary scan:
 2. Directory rename: `unified-trading-services/` -> `unified-cloud-library/`
 3. Python package rename: `unified_trading_services/` -> `unified_cloud_library/`
 4. pyproject.toml: `name = "unified-cloud-library"`
-5. Backward compat layer: Keep `unified_trading_services/` and `unified_cloud_services/` as re-export shims for 6-month window
+5. Backward compat layer: Keep `unified_trading_services/` and `unified_cloud_services/` as re-export shims for 6-month
+   window
 6. Update 37+ repos' pyproject.toml dependencies
 7. Update all Python imports across workspace (can be deferred with compat layers)
 8. Update CLAUDE.md, .cursorrules, codex docs
 9. Update CI/CD pipeline references
 
-**Migration strategy:** Same pattern as UCS->UTS — canonical package + two backward compat shim packages. Old imports continue to work during migration window.
+**Migration strategy:** Same pattern as UCS->UTS — canonical package + two backward compat shim packages. Old imports
+continue to work during migration window.
 
-**Effort:** ~2 hours for the core rename + compat layers. Import updates can be incremental.
-**Priority:** P1 (do before Workflow 2 CI/CD setup to avoid encoding wrong name in pipelines)
+**Effort:** ~2 hours for the core rename + compat layers. Import updates can be incremental. **Priority:** P1 (do before
+Workflow 2 CI/CD setup to avoid encoding wrong name in pipelines)
 
 ### R-12: deployment-engine → deployment-service (DONE in manifest/codex/docs; repo rename remaining)
 
-**Status:** Manifest, codex, PM docs, cursor-rules, and DAG now use "deployment-service". Naming is consistent in all documentation and scripts.
+**Status:** Manifest, codex, PM docs, cursor-rules, and DAG now use "deployment-service". Naming is consistent in all
+documentation and scripts.
 
 **Remaining (optional):** To fully rename the repo and package:
 
 1. GitHub repo rename: `deployment-engine` → `deployment-service`
 2. Local directory rename: `deployment-engine/` → `deployment-service/`
 3. pyproject.toml: `name = "deployment-service"`, package `deployment_service`
-4. Backward compat shim if any consumers import the old package (deployment-api does **not** depend on deployment-service in code — they are independent)
+4. Backward compat shim if any consumers import the old package (deployment-api does **not** depend on
+   deployment-service in code — they are independent)
 
-**Note:** deployment-api and deployment-service do not depend on each other in code (verified in pyproject.toml). deployment-api uses unified-cloud-services + unified-events-interface; deployment-service uses unified-trading-services only.
-**Priority:** P2 (doc rename done; repo/package rename when convenient)
+**Note:** deployment-api and deployment-service do not depend on each other in code (verified in pyproject.toml).
+deployment-api uses unified-cloud-services + unified-events-interface; deployment-service uses unified-trading-services
+only. **Priority:** P2 (doc rename done; repo/package rename when convenient)
 
 ### R-13: unified-trading-deployment-v3 — IN TRANSITION (Not Redundant)
 
 **Status:** INVESTIGATED (March 2). NOT redundant — mid-split into 4 repos.
 
-**Current state:** unified-trading-deployment-v3 is the SSOT for deployment infrastructure while a planned four-way split is in progress:
+**Current state:** unified-trading-deployment-v3 is the SSOT for deployment infrastructure while a planned four-way
+split is in progress:
 
 | Extracted Repo                             | What It Contains                                             | Status                 |
 | ------------------------------------------ | ------------------------------------------------------------ | ---------------------- |
@@ -281,16 +273,16 @@ These repos exist in the workspace but weren't part of the primary scan:
 | deployment-ui                              | React/TypeScript frontend                                    | Scaffolded v0.1.0      |
 | system-integration-tests                   | Smoke test infrastructure                                    | Scaffolded             |
 
-**What remains ONLY in v3:** Terraform modules, YAML configs, smoke test framework, full CLI.
-**No repos depend on v3** — deployment-api uses UCI+UEI, deployment-service uses UTS.
-**Action:** Continue extraction. Archive v3 only after all 4 repos pass quality gates.
-**Priority:** P3 (infrastructure transition, not blocking services)
+**What remains ONLY in v3:** Terraform modules, YAML configs, smoke test framework, full CLI. **No repos depend on v3**
+— deployment-api uses UCI+UEI, deployment-service uses UTS. **Action:** Continue extraction. Archive v3 only after all 4
+repos pass quality gates. **Priority:** P3 (infrastructure transition, not blocking services)
 
 ### R-14: Missing UTS Service APIs — MOSTLY RESOLVED (March 2)
 
 **Status:** RESOLVED (setup_service added, architecture audited)
 
-**Original issue:** T4 services couldn't import `setup_service`, `BaseModeHandler`, `GCSEventSink`, `GracefulShutdownHandler` from UTS.
+**Original issue:** T4 services couldn't import `setup_service`, `BaseModeHandler`, `GCSEventSink`,
+`GracefulShutdownHandler` from UTS.
 
 **Root cause:** Only `setup_service()` was actually missing. All other APIs existed in UTS source but:
 
@@ -304,79 +296,81 @@ These repos exist in the workspace but weren't part of the primary scan:
 - Fixed ml-inference-service conftest: `mode="test"` + `MockEventSink()` (was `mode="batch"` without sink)
 - Fixed features-onchain-service: import `log_dependency_failures` from UTS (not local module)
 
-**Test results after fix:**
-| Repo | Before | After |
-|------|--------|-------|
-| features-calendar-service | 181/187 | 177 unit pass (6 fail = pre-existing event logging) |
-| features-onchain-service | 0 (collection errors) | 69 pass, 1 fail |
-| ml-training-service | 0 (52 collection errors) | 235 pass, 5 fail |
-| ml-inference-service | 0 (conftest error) | 73 pass, 14 fail |
+**Test results after fix:** | Repo | Before | After | |------|--------|-------| | features-calendar-service | 181/187 |
+177 unit pass (6 fail = pre-existing event logging) | | features-onchain-service | 0 (collection errors) | 69 pass, 1
+fail | | ml-training-service | 0 (52 collection errors) | 235 pass, 5 fail | | ml-inference-service | 0 (conftest error)
+| 73 pass, 14 fail |
 
 **ARCHITECTURAL AUDIT RESULTS (resolved questions):**
 
 1. **Cloud abstraction boundary is CORRECT (90% aligned):**
    - UCI defines: `StorageClient`, `SecretClient`, `QueueClient` ABCs + cloud-provider implementations
    - UEI defines: `EventSink` Protocol + `setup_events()` + `MockEventSink`
-   - UTS provides: `GcsEventSink`, `S3EventSink`, `PubSubEventSink`, `QueueEventSink`, `LocalFsEventSink`, `CompositeEventSink`
+   - UTS provides: `GcsEventSink`, `S3EventSink`, `PubSubEventSink`, `QueueEventSink`, `LocalFsEventSink`,
+     `CompositeEventSink`
    - UTS also provides: `BaseModeHandler`, `ServiceCLI`, `GracefulShutdownHandler` (all cloud-agnostic)
 
-2. **`GCSEventSink` naming:** The NAME is cloud-specific but the ARCHITECTURE is correct — services choose a cloud-specific sink implementation and inject it via `setup_events(sink=...)`. Future improvement: add a `create_event_sink()` factory that auto-selects based on `CLOUD_PROVIDER` env var.
+2. **`GCSEventSink` naming:** The NAME is cloud-specific but the ARCHITECTURE is correct — services choose a
+   cloud-specific sink implementation and inject it via `setup_events(sink=...)`. Future improvement: add a
+   `create_event_sink()` factory that auto-selects based on `CLOUD_PROVIDER` env var.
 
-3. **`GracefulShutdownHandler`:** Confirmed cloud-agnostic (uses `psutil`, `signal`, `atexit`). Correct location in UTS as library utility.
+3. **`GracefulShutdownHandler`:** Confirmed cloud-agnostic (uses `psutil`, `signal`, `atexit`). Correct location in UTS
+   as library utility.
 
-4. **`setup_service()` = `setup_events()`:** Identical signature `(service_name, mode, sink)`. Services inject the sink at startup.
+4. **`setup_service()` = `setup_events()`:** Identical signature `(service_name, mode, sink)`. Services inject the sink
+   at startup.
 
 **Remaining T4 test failures (not R-14, separate issues):**
 
 - Codex agent introduced test files referencing non-existent local exports (MODES_WITH_DEPRECATED, etc.)
 - Missing optuna package for ml-training-service (install: `uv pip install optuna`)
-- event_logging tests expect lifecycle event markers not yet in source code
-  **Priority:** RESOLVED (was P0, now remaining items are P2)
+- event_logging tests expect lifecycle event markers not yet in source code **Priority:** RESOLVED (was P0, now
+  remaining items are P2)
 
 ### R-15: execution-service Circular Import — FIXED
 
-**Repo:** execution-service
-**Status:** FIXED (March 2)
-**Root cause:** THREE separate circular import chains:
+**Repo:** execution-service **Status:** FIXED (March 2) **Root cause:** THREE separate circular import chains:
 
-1. `definitions_loader.py` → `instruction_validator.py` → `utils.domain` → `instruments/factory.py` → `definitions_loader.py` (via `DataNotFoundError`)
-2. `config_builder.py` → `catalog_cache.py` → `gcs_cache_helper.py` → `catalog_cache.py` (via `GCS_CATALOG_CACHE_BUCKET` constant)
+1. `definitions_loader.py` → `instruction_validator.py` → `utils.domain` → `instruments/factory.py` →
+   `definitions_loader.py` (via `DataNotFoundError`)
+2. `config_builder.py` → `catalog_cache.py` → `gcs_cache_helper.py` → `catalog_cache.py` (via `GCS_CATALOG_CACHE_BUCKET`
+   constant)
 3. Missing `VENUE_CATEGORY_MAP` and Prometheus metrics imports from UTL
 
 **Fixes applied:**
 
-- Created `execution_service/exceptions.py` with centralized exception classes (DataNotFoundError, InstructionValidationError, ConfigValidationError)
+- Created `execution_service/exceptions.py` with centralized exception classes (DataNotFoundError,
+  InstructionValidationError, ConfigValidationError)
 - Updated 5 files to import from `exceptions.py` instead of `instruction_validator.py`
 - Made `gcs_cache_helper.py` use lazy import for `GCS_CATALOG_CACHE_BUCKET`
 - Fixed `VENUE_CATEGORY_MAP` import: `from unified_config_interface.execution_config_schema import VENUE_CATEGORY_MAP`
 - Defined Prometheus metrics locally in `orchestrator.py` (were never exported from UTL)
 - Also fixed `unified_config_interface/loaders.py` `log_event()` call to handle uninitialized event system
 
-**Result:** 1044 pass, 61 fail (was 0 pass, 38 collection errors)
-**Priority:** RESOLVED
+**Result:** 1044 pass, 61 fail (was 0 pass, 38 collection errors) **Priority:** RESOLVED
 
 ### R-16: deployment-service Missing Modules — FIXED
 
-**Repo:** deployment-service
-**Status:** FIXED (March 2)
-**Root cause:** Incomplete extraction from unified-trading-deployment-v3. Multiple subpackages referenced but never copied.
+**Repo:** deployment-service **Status:** FIXED (March 2) **Root cause:** Incomplete extraction from
+unified-trading-deployment-v3. Multiple subpackages referenced but never copied.
 
 **Missing modules found and extracted:**
 
 1. `deployment_service/deployment_config.py` — created (extends UnifiedCloudConfig with deployment-specific fields)
 2. `deployment_service/config/` — 4 files (base_config.py, config_validator.py, env_substitutor.py, **init**.py)
-3. `deployment_service/calculators/` — 4 files (base_calculator.py, shard_dimensions.py, shard_distribution.py, **init**.py)
+3. `deployment_service/calculators/` — 4 files (base_calculator.py, shard_dimensions.py, shard_distribution.py,
+   **init**.py)
 4. `deployment_service/dependencies.py` — DependencyGraph class
 5. `deployment_service/backends/services/` — 4 files (vm_config.py, vm_lifecycle.py, vm_monitoring.py, **init**.py)
-6. Fixed `vm_config.py` import: `from unified_trading_deployment.deployment_config` → `from deployment_service.deployment_config`
+6. Fixed `vm_config.py` import: `from unified_trading_deployment.deployment_config` →
+   `from deployment_service.deployment_config`
 7. Fixed `deployment_service/pyproject.toml` — typos in dependencies (doubled names: `pyyamlpyyaml` etc.)
 
 **Still missing (not blocking tests):**
 
 - `deployment_service/cli/handlers/` — 4 handler modules (CLI not tested)
 
-**Result:** 2/2 tests pass (was 0/2 with missing module errors)
-**Priority:** RESOLVED
+**Result:** 2/2 tests pass (was 0/2 with missing module errors) **Priority:** RESOLVED
 
 ---
 

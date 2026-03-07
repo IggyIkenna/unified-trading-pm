@@ -2,11 +2,14 @@
 
 **Full CI/CD flow SSOT:** `docs/repo-management/CI-CD-FLOW.md` (alignment → setup → sync → conflict resolution).
 
-Sync all workspace repos to `main` safely via quickmerge (PR + auto-merge). Replaces direct `git push origin main`, which fails under branch protection.
+Sync all workspace repos to `main` safely via quickmerge (PR + auto-merge). Replaces direct `git push origin main`,
+which fails under branch protection.
 
 ## Overview
 
-`sync-all-to-main.sh` processes repos in **dependency order** (from `workspace-manifest.json` topologicalOrder) so dependencies are merged before dependents. Each repo is synced via **quickmerge**, which creates a PR, runs quality gates, and enables auto-merge.
+`sync-all-to-main.sh` processes repos in **dependency order** (from `workspace-manifest.json` topologicalOrder) so
+dependencies are merged before dependents. Each repo is synced via **quickmerge**, which creates a PR, runs quality
+gates, and enables auto-merge.
 
 ## Flow (per repo)
 
@@ -14,7 +17,8 @@ Sync all workspace repos to `main` safely via quickmerge (PR + auto-merge). Repl
 2. **Stage changes** — `git add -A`.
 3. **Fetch and merge** — `git fetch origin main && git merge origin/main`.
    - If **merge conflicts** → abort, FAIL, report. Resolve manually and re-run.
-4. **Convert commits to staged** — If local has commits ahead of origin, `git reset --soft origin/main` so quickmerge can commit them on a branch.
+4. **Convert commits to staged** — If local has commits ahead of origin, `git reset --soft origin/main` so quickmerge
+   can commit them on a branch.
 5. **Run quickmerge** — Creates branch from origin/main, commits changes, pushes, creates PR, enables auto-merge.
    - If **quickmerge fails** (quality gates, PR creation, or auto-merge) → FAIL, report.
 6. **Skip if no changes** — If nothing to commit, OK (no-op).
@@ -48,9 +52,12 @@ bash unified-trading-pm/scripts/repo-management/sync-all-to-main.sh --filter "*-
 bash unified-trading-pm/scripts/repo-management/sync-all-to-main.sh --repo execution-service
 ```
 
-**`--filter PATTERN`** — Sync only repos whose names match the glob (e.g. `unified-*`, `*-service`, `execution-*`). Preserves dependency order among matches.
+**`--filter PATTERN`** — Sync only repos whose names match the glob (e.g. `unified-*`, `*-service`, `execution-*`).
+Preserves dependency order among matches.
 
-**`--dep-branch NAME`** — Pass to quickmerge when path dependencies (unified-trading-library, unified-config-interface, unified-events-interface, etc.) have local changes that differ from origin/main. Quickmerge will cascade changes to that branch in dependency order. Use when sync fails with `DEPENDENCY CONFLICT DETECTED`.
+**`--dep-branch NAME`** — Pass to quickmerge when path dependencies (unified-trading-library, unified-config-interface,
+unified-events-interface, etc.) have local changes that differ from origin/main. Quickmerge will cascade changes to that
+branch in dependency order. Use when sync fails with `DEPENDENCY CONFLICT DETECTED`.
 
 ## Failure Modes
 
@@ -94,6 +101,7 @@ Before running sync, you can validate all repos with `run-all-quality-gates.sh`:
 bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh
 ```
 
-This runs quality gates (lint, typecheck, unit tests) in dependency order for every repo. It does NOT push. Use it to surface failures before attempting sync/quickmerge.
+This runs quality gates (lint, typecheck, unit tests) in dependency order for every repo. It does NOT push. Use it to
+surface failures before attempting sync/quickmerge.
 
 See: `scripts/repo-management/run-all-quality-gates.sh`

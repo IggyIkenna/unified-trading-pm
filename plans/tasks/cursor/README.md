@@ -1,7 +1,7 @@
 # Tasks Directory - Execute These
 
-**Purpose**: Executable task documents that **MANDATE** sub-agent usage
-**For**: Sonnet 4.5 sessions (preserves context via sub-agents)
+**Purpose**: Executable task documents that **MANDATE** sub-agent usage **For**: Sonnet 4.5 sessions (preserves context
+via sub-agents)
 
 **⚠️ CRITICAL: ALL TASKS MUST USE SUB-AGENTS** - No direct execution allowed!
 

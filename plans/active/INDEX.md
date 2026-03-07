@@ -1,10 +1,11 @@
 # Active Plans Index
 
-**Canonical workflow:** [plans_to_deployable_unified_audit.plan.md](plans_to_deployable_unified_audit.plan.md) (Plans → Code → Tested → Deployable)
-**Phase 0:** [phase0_standards_enforcement.plan.md](../archive/phase0_standards_enforcement.plan.md) — DONE (archived)
-**Phase 0 Audit Remediation:** [phase0_audit_remediation.plan.md](../archive/phase0_audit_remediation.plan.md) — DONE (archived)
-**Sprint end:** March 12th (plans + portable backtests) | **Live trading week:** March 20th
-**Per-repo checklist:** deployment-service/configs/ — runtime-topology, checklist phases 1–7
+**Canonical workflow:** [plans_to_deployable_unified_audit.plan.md](plans_to_deployable_unified_audit.plan.md) (Plans →
+Code → Tested → Deployable) **Phase 0:**
+[phase0_standards_enforcement.plan.md](../archive/phase0_standards_enforcement.plan.md) — DONE (archived) **Phase 0
+Audit Remediation:** [phase0_audit_remediation.plan.md](../archive/phase0_audit_remediation.plan.md) — DONE (archived)
+**Sprint end:** March 12th (plans + portable backtests) | **Live trading week:** March 20th **Per-repo checklist:**
+deployment-service/configs/ — runtime-topology, checklist phases 1–7
 
 ---
 

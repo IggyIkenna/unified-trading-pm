@@ -1,7 +1,7 @@
 # Repo Audit Checklist (Repo-by-Repo)
 
-**Reference:** plans_to_deployable_unified_audit Phase 6 (run_validators.py --scope/--repo-type)
-**Deployment checklist:** deployment-service/configs/checklist.template.service.yaml
+**Reference:** plans_to_deployable_unified_audit Phase 6 (run_validators.py --scope/--repo-type) **Deployment
+checklist:** deployment-service/configs/checklist.template.service.yaml
 
 ---
 

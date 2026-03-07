@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Roll out quality gates to all TypeScript/UI repositories.
 This script adds missing quality gate scripts to package.json and creates quality-gates.sh scripts.

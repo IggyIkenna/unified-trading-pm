@@ -15,17 +15,21 @@ permissions:
 jobs:
   version-bump:
     runs-on: ubuntu-latest
-    # Only run when quality-gates succeeded (not failed/cancelled), the run
-    # was triggered by a push to main or staging, and commit does not contain [skip ci]
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'staging') &&
-      !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
+    # DISABLED: semver-agent.yml is the sole owner of version bumping (Claude-Haiku decides
+    # patch/minor/major from commit message + API diff). version-bump.yml is kept for reference
+    # but must not run alongside semver-agent.yml to avoid race conditions on pyproject.toml.
+    # To re-enable: remove `if: false` and restore the original condition below.
+    if: false
+    # Original condition (preserved for reference):
+    # if: |
+    #   github.event.workflow_run.conclusion == 'success' &&
+    #   (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'staging') &&
+    #   !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_branch }}
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 

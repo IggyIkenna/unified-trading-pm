@@ -1,8 +1,7 @@
 # Coding Standards (Codex) Audit Report
 
-**Plan:** coding_standards_codex_audit.plan.md
-**Generated:** 2026-03-04
-**SSOT:** unified-trading-codex/06-coding-standards/
+**Plan:** coding_standards_codex_audit.plan.md **Generated:** 2026-03-04 **SSOT:**
+unified-trading-codex/06-coding-standards/
 
 ---
 

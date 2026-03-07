@@ -30,16 +30,19 @@
 | diff_checkers                | cast, subprocess                                            | Imports added                                                           |
 | generate-per-service-specs   | file size 916L                                              | Extracted spec*logging.py (Colors, log*\*) to utilities/spec_logging.py |
 
-| 03-check-service-compliance | function size | main split into _parse_compliance_args, \_resolve_services_to_check, \_print_compliance_summary, \_create_issues_from_gaps |
-| track-metrics | function size | format_markdown_report split into 9 helpers |
-| 00-setup-cod-project | function size | main split into \_parse_setup_args, \_validate_mode, \_resolve_repos, \_run_setup_steps, \_print_completion |
-| 3x 02-create-issues | function size | create_issues split into \_build_issue_specs, \_find_existing_issue, \_create_single_issue_on_github, \_process_single_issue |
-| codex_violations | function size | find_coding_standards_violations split into 8 \_check\_\_ helpers |
-| generate-simple-violation-manifests | function size | generate*manifest split into 6 \_build*_ helpers |
-| parse-agent-logs | function size | parse*stream split into \_parse_stream_header, \_extract_events, \_handle*_, *dispatch_event |
-| create-all-projects | function size | main split into \_parse_args, \_validate_args, \_resolve_projects_to_create, \_create_projects_loop, \_print_summary |
-| generate-per-service-specs | function size | generate_domain_spec, generate_observability_spec, generate_infrastructure_spec split into \_extract*_ + _build_\* |
-| generate-issues-from-classifications | method size | \_create_issue split into \_build_issue_body, \_build_issue_labels |
+| 03-check-service-compliance | function size | main split into _parse_compliance_args, \_resolve_services_to_check,
+\_print_compliance_summary, \_create_issues_from_gaps | | track-metrics | function size | format_markdown_report split
+into 9 helpers | | 00-setup-cod-project | function size | main split into \_parse_setup_args, \_validate_mode,
+\_resolve_repos, \_run_setup_steps, \_print_completion | | 3x 02-create-issues | function size | create_issues split
+into \_build_issue_specs, \_find_existing_issue, \_create_single_issue_on_github, \_process_single_issue | |
+codex_violations | function size | find_coding_standards_violations split into 8 \_check\_\_ helpers | |
+generate-simple-violation-manifests | function size | generate*manifest split into 6 \_build*_ helpers | |
+parse-agent-logs | function size | parse*stream split into \_parse_stream_header, \_extract_events, \_handle*_,
+*dispatch_event | | create-all-projects | function size | main split into \_parse_args, \_validate_args,
+\_resolve_projects_to_create, \_create_projects_loop, \_print_summary | | generate-per-service-specs | function size |
+generate_domain_spec, generate_observability_spec, generate_infrastructure_spec split into \_extract*_ + _build_\* | |
+generate-issues-from-classifications | method size | \_create_issue split into \_build_issue_body, \_build_issue_labels
+|
 
 ---
 
@@ -54,6 +57,5 @@
 
 ## Quick Verification
 
-cd unified-trading-pm && source ../.venv-workspace/bin/activate
-ruff check github-integration/scripts/core/ github-integration/scripts/projects/
-basedpyright github-integration/scripts/core/04-create-service-epics.py
+cd unified-trading-pm && source ../.venv-workspace/bin/activate ruff check github-integration/scripts/core/
+github-integration/scripts/projects/ basedpyright github-integration/scripts/core/04-create-service-epics.py

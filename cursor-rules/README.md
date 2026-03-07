@@ -1,8 +1,6 @@
 # Cursor Rules Index
 
-**Last Updated:** 2026-03-06
-**Total Rules:** 126
-**Always-Apply Rules:** 48
+**Last Updated:** 2026-03-06 **Total Rules:** 126 **Always-Apply Rules:** 48
 
 Rules are organized by category. Cursor loads recursively from subdirectories.
 
@@ -29,7 +27,8 @@ Rules are organized by category. Cursor loads recursively from subdirectories.
 
 ## Always-Apply Rules (core/)
 
-All rules in **core/** have `alwaysApply: true` — they are always active regardless of file context. See `core/*.mdc` for the full list.
+All rules in **core/** have `alwaysApply: true` — they are always active regardless of file context. See `core/*.mdc`
+for the full list.
 
 ---
 

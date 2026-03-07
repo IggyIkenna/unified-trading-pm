@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate codex references in T0–T2 repos and cursor rules.
 
 Phase 8: plans_to_deployable_unified_audit.plan.md (Approach A — validator only).

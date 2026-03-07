@@ -1,12 +1,11 @@
 # Version Cascade Flow — SSOT
 
-**SSOT:** This document. Single entry point for understanding the three-tier branch model,
-version bump dispatch chain, selective dependency cascade, hotfix path, breaking change path,
-and stability criteria.
+**SSOT:** This document. Single entry point for understanding the three-tier branch model, version bump dispatch chain,
+selective dependency cascade, hotfix path, breaking change path, and stability criteria.
 
-**See also:** `CI-CD-FLOW.md` (local developer commands) | `sync-to-main-flow.md` (Phase 3 detail)
-**Codex:** `unified-trading-codex/08-workflows/version-cascade-flow.md` (mirrors this doc)
-**Cursor rules:** `workflow/full-cicd-flow.mdc`, `core/always-use-quickmerge.mdc`,
+**See also:** `CI-CD-FLOW.md` (local developer commands) | `sync-to-main-flow.md` (Phase 3 detail) **Codex:**
+`unified-trading-codex/08-workflows/version-cascade-flow.md` (mirrors this doc) **Cursor rules:**
+`workflow/full-cicd-flow.mdc`, `core/always-use-quickmerge.mdc`,
 `dependencies/breaking-change-major-version-protocol.mdc`
 
 ---
@@ -25,8 +24,8 @@ staging      — convergence zone; all cascade/SIT happens here
 main         — always stable; only updated when SIT passes
 ```
 
-**Rule:** `main` is NEVER a direct target for breaking changes. Non-breaking changes MAY go
-directly to main (hotfix path). Breaking changes MUST go through staging.
+**Rule:** `main` is NEVER a direct target for breaking changes. Non-breaking changes MAY go directly to main (hotfix
+path). Breaking changes MUST go through staging.
 
 ---
 
@@ -49,9 +48,9 @@ Developer on feat/X or any branch
   → no QG triggered downstream (non-breaking constraint range update)
 ```
 
-**Key:** Non-breaking changes produce a new compatible constraint for dependents. Dependents
-receive `>=M.N.0,<(M+1).0.0` — they already satisfy this. No code changes needed downstream.
-The `[skip ci]` commit prevents infinite QG loops.
+**Key:** Non-breaking changes produce a new compatible constraint for dependents. Dependents receive
+`>=M.N.0,<(M+1).0.0` — they already satisfy this. No code changes needed downstream. The `[skip ci]` commit prevents
+infinite QG loops.
 
 ---
 
@@ -124,16 +123,16 @@ Example: `unified-events-interface` (T0) bumps with `feat!:`:
 
 ## PM's Role in the Cascade
 
-PM (`unified-trading-pm`) is a **management repo**, not a library. Repos do not import PM.
-When PM's version bumps, it does NOT trigger cascades to service repos.
+PM (`unified-trading-pm`) is a **management repo**, not a library. Repos do not import PM. When PM's version bumps, it
+does NOT trigger cascades to service repos.
 
 PM's version is bumped:
 
 - On every `repository_dispatch` received: PM bumps its own patch (manifest bookkeeping)
 - On PM's own code changes: PM runs quickmerge → its own version-bump.yml bumps normally
 
-PM's version in `workspace-manifest.json` tracks "the manifest changed this many times".
-It is NOT a semantic signal about workspace stability — that is `staging_status.locked`.
+PM's version in `workspace-manifest.json` tracks "the manifest changed this many times". It is NOT a semantic signal
+about workspace stability — that is `staging_status.locked`.
 
 ---
 
@@ -147,8 +146,8 @@ A repo is stable (`1.0.0+`) when ALL of the following are true:
 4. The repo's staging branch has been merged to main via the staging-to-main flow
 5. `workspace-manifest.json versions[repo]` shows `1.0.0+` (GitHub Action bumped it)
 
-**Never manually set 1.0.0.** The GitHub Action bumps it automatically. If the manifest still
-shows `0.x.x` after a merge, the PR did not land — investigate.
+**Never manually set 1.0.0.** The GitHub Action bumps it automatically. If the manifest still shows `0.x.x` after a
+merge, the PR did not land — investigate.
 
 **Pre-1.0.0 rule:** While at `0.x.x`:
 
@@ -157,9 +156,9 @@ shows `0.x.x` after a merge, the PR did not land — investigate.
 - `feat!:` / `BREAKING CHANGE:` → minor bump (0.1.0 → 0.2.0) — never crosses to 1.0.0
 - `1.0.0` requires manual plan-completion gate + is set by the first post-stable quickmerge
 
-**Downstream stability:** A repo cannot be declared stable if its dependencies are `0.x.x`.
-The cascading convergence ensures this: if dep is `0.x.x`, the constraint `>=0.N.0,<1.0.0`
-is compatible but signals pre-stability. Track this in the SVG diagram (node colors).
+**Downstream stability:** A repo cannot be declared stable if its dependencies are `0.x.x`. The cascading convergence
+ensures this: if dep is `0.x.x`, the constraint `>=0.N.0,<1.0.0` is compatible but signals pre-stability. Track this in
+the SVG diagram (node colors).
 
 ---
 
@@ -223,9 +222,8 @@ is compatible but signals pre-stability. Track this in the SVG diagram (node col
 
 **Mutual exclusion:** `--branch NAME` + `--to-staging` → hard fail with clear message.
 
-**Branch auto-derivation (--to-staging):** dep-branch is auto-derived from current git branch
-name. No need to repeat it. `--to-staging` on `feat/my-feature` cascades as `feat/my-feature`
-across all dep repos.
+**Branch auto-derivation (--to-staging):** dep-branch is auto-derived from current git branch name. No need to repeat
+it. `--to-staging` on `feat/my-feature` cascades as `feat/my-feature` across all dep repos.
 
 ---
 

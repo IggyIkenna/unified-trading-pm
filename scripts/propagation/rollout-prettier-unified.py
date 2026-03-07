@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Roll out Prettier to all repositories via pre-commit hooks.
 

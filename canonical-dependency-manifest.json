@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-06T21:50:16.739849+00:00",
+  "generatedAt": "2026-03-07T11:38:06.508220+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -98,7 +98,7 @@
     },
     {
       "name": "eth_abi",
-      "versionRange": "eth-abi>=4.0.0,<5.0.0"
+      "versionRange": "eth-abi>=5.0.1,<6.0.0"
     },
     {
       "name": "exchange_calendars",
@@ -162,7 +162,7 @@
     },
     {
       "name": "gunicorn",
-      "versionRange": "gunicorn>=21.0.0,<22.0.0"
+      "versionRange": "gunicorn>=22.0.0,<23.0.0"
     },
     {
       "name": "hmmlearn",

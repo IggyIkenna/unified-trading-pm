@@ -45,15 +45,12 @@ projects/
 
 ### Project #3: Unified Libraries Refactor
 
-**Goal:** Extract shared code into unified libraries
-**Status:** Planning
-**Directory:** `unified-libraries-refactor/`
+**Goal:** Extract shared code into unified libraries **Status:** Planning **Directory:** `unified-libraries-refactor/`
 
 ### Project #5: Initial Cleanup
 
-**Goal:** Fix all codex violations across 13 repos
-**Status:** In Progress (11 open, 2 closed)
-**Directory:** `initial-cleanup/`
+**Goal:** Fix all codex violations across 13 repos **Status:** In Progress (11 open, 2 closed) **Directory:**
+`initial-cleanup/`
 
 ## Creating New Projects
 

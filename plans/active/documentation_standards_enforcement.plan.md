@@ -10,31 +10,44 @@ overview: |
   verifies no docs use hardcoded project IDs or bucket names.
 todos:
   - id: docs-audit-services
-    content: "Audit all service repos for S5.1 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing)."
+    content:
+      "Audit all service repos for S5.1 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md,
+      docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md,
+      QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing)."
     status: pending
   - id: docs-audit-libraries
-    content: "Audit all library repos for S5.2 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing)."
+    content:
+      "Audit all library repos for S5.2 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md,
+      docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing)."
     status: pending
   - id: docs-fill-service-gaps
-    content: "Create missing service-canonical docs identified in docs-audit-services. Priority: docs/DEPLOYMENT_GUIDE.md for execution-service, strategy-service, ml-training-service, risk-and-exposure-service. Then docs/SCHEMA_VALIDATION.md and docs/GCS_PATHS.md for services that lack them."
+    content:
+      "Create missing service-canonical docs identified in docs-audit-services. Priority: docs/DEPLOYMENT_GUIDE.md for
+      execution-service, strategy-service, ml-training-service, risk-and-exposure-service. Then
+      docs/SCHEMA_VALIDATION.md and docs/GCS_PATHS.md for services that lack them."
     status: pending
   - id: docs-fill-library-gaps
-    content: Create missing library-canonical docs identified in docs-audit-libraries. Focus on any library missing docs/TESTING.md or docs/CONFIGURATION.md. Do not create docs that exist — only fill confirmed gaps.
+    content:
+      Create missing library-canonical docs identified in docs-audit-libraries. Focus on any library missing
+      docs/TESTING.md or docs/CONFIGURATION.md. Do not create docs that exist — only fill confirmed gaps.
     status: pending
   - id: docs-stub-check
-    content: "Identify and expand stub docs (3 lines or fewer, only 'TODO', or empty) in required doc locations. A stub counts as missing for audit purposes (S5.4). Expand to at minimum: purpose, key components, and pointers to SSOT."
+    content:
+      "Identify and expand stub docs (3 lines or fewer, only 'TODO', or empty) in required doc locations. A stub counts
+      as missing for audit purposes (S5.4). Expand to at minimum: purpose, key components, and pointers to SSOT."
     status: pending
   - id: docs-no-hardcoded-ids
-    content: "Scan all docs/ directories for hardcoded GCP project IDs, bucket names, or service account emails. Replace with {project_id}, {bucket_name} placeholders per codex docs standard (S5.6). Pattern: grep for 'odum-' or known project IDs."
+    content:
+      "Scan all docs/ directories for hardcoded GCP project IDs, bucket names, or service account emails. Replace with
+      {project_id}, {bucket_name} placeholders per codex docs standard (S5.6). Pattern: grep for 'odum-' or known
+      project IDs."
     status: pending
 isProject: false
 ---
 
 # Documentation Standards Enforcement
 
-**Day:** 2–3 (March 6–7)
-**Scope:** All service repos + library repos
-**Blocks:** trading_system_audit_prompt S5
+**Day:** 2–3 (March 6–7) **Scope:** All service repos + library repos **Blocks:** trading_system_audit_prompt S5
 **Owner:** Person A (services T0–T2) + Person B (T3 + services)
 
 ---

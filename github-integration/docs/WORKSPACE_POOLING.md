@@ -241,12 +241,10 @@ if not KEEP_WORKSPACES:
 
 ## Key Features
 
-✅ **Zero git conflicts**: Each worker operates in isolated clone
-✅ **Resource-aware**: Clones only what's needed based on workers and issues
-✅ **Fair distribution**: Round-robin assignment within service
-✅ **Fast cloning**: Clones from local workspace (not GitHub)
-✅ **Automatic cleanup**: Workspace pool removed after completion
-✅ **Debug mode**: `--keep-workspaces` preserves pool for inspection
+✅ **Zero git conflicts**: Each worker operates in isolated clone ✅ **Resource-aware**: Clones only what's needed based
+on workers and issues ✅ **Fair distribution**: Round-robin assignment within service ✅ **Fast cloning**: Clones from
+local workspace (not GitHub) ✅ **Automatic cleanup**: Workspace pool removed after completion ✅ **Debug mode**:
+`--keep-workspaces` preserves pool for inspection
 
 ## Usage
 

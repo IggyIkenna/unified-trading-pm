@@ -1,9 +1,13 @@
 ---
 name: Sports Migration Phase 2 Full
-overview: Port all logic from sports-betting-services into UTS. All venues, features, arbitrage, ML practices. Strategy service arb + ML; execution via USEI. Unit tests only; strict quality gates.
+overview:
+  Port all logic from sports-betting-services into UTS. All venues, features, arbitrage, ML practices. Strategy service
+  arb + ML; execution via USEI. Unit tests only; strict quality gates.
 todos:
   - id: feature-calculators
-    content: Feature calculators — season_context, goal_timing, venue_context, referee; team features (split team_form, team_goals, etc.)
+    content:
+      Feature calculators — season_context, goal_timing, venue_context, referee; team features (split team_form,
+      team_goals, etc.)
     status: pending
   - id: data-loader
     content: Data loader — in-memory DataFrames; optional DB later
@@ -15,14 +19,23 @@ todos:
     content: USEI — Betfair, Pinnacle adapters (unit tests with mocks)
     status: pending
   - id: strategy-execution
-    content: "Strategy/execution — arb vs ML strategy types; consumers of FSS + USEI. ACCEPTANCE: (1) ArbitrageStrategy class reads vig + is_arbitrage from FSS output, emits TradeSignal with venue/odds/stake; unit tests mock FSS + USEI, verify signal emitted when arb margin > threshold; (2) MLSportsStrategy consumes FSS feature vectors + PredictionEvent (via unified-ml-interface), emits TradeSignal; unit tests mock FSS + UMI, verify signal at correct confidence threshold; (3) execution_service places/cancels via USEI Betfair/Pinnacle mocks; verify correct order type (back/lay) and stake calculation; (4) quality-gates.sh passes (ruff + basedpyright strict + MIN_COVERAGE=70); zero os.getenv; zero Any in public API."
+    content:
+      "Strategy/execution — arb vs ML strategy types; consumers of FSS + USEI. ACCEPTANCE: (1) ArbitrageStrategy class
+      reads vig + is_arbitrage from FSS output, emits TradeSignal with venue/odds/stake; unit tests mock FSS + USEI,
+      verify signal emitted when arb margin > threshold; (2) MLSportsStrategy consumes FSS feature vectors +
+      PredictionEvent (via unified-ml-interface), emits TradeSignal; unit tests mock FSS + UMI, verify signal at correct
+      confidence threshold; (3) execution_service places/cancels via USEI Betfair/Pinnacle mocks; verify correct order
+      type (back/lay) and stake calculation; (4) quality-gates.sh passes (ruff + basedpyright strict + MIN_COVERAGE=70);
+      zero os.getenv; zero Any in public API."
     status: pending
 isProject: false
 ---
 
 # Sports Full Migration — Phase 2 (All Logic, UTS Standards)
 
-Port **all** logic from `sports-betting-services` into UTS: all venues, all features, arbitrage, ML practices. Strategy service: arb (no ML) + other strategy types with ML signals. Execution service: place/cancel via USEI. Unit tests only; same quality gates (lint, line limits, types).
+Port **all** logic from `sports-betting-services` into UTS: all venues, all features, arbitrage, ML practices. Strategy
+service: arb (no ML) + other strategy types with ML signals. Execution service: place/cancel via USEI. Unit tests only;
+same quality gates (lint, line limits, types).
 
 ## Blockers
 
@@ -36,7 +49,8 @@ Port **all** logic from `sports-betting-services` into UTS: all venues, all feat
 
 ## Standards (strict)
 
-- **Config:** `UnifiedCloudConfig` extension; no `os.getenv()`; secrets via `get_secret_client(secret_name=..., project_id=...)`.
+- **Config:** `UnifiedCloudConfig` extension; no `os.getenv()`; secrets via
+  `get_secret_client(secret_name=..., project_id=...)`.
 - **Datetime:** `datetime.now(timezone.utc)` only.
 - **Types:** No `Any`; use `TypedDict`, `Protocol`, `dict[str, X]`.
 - **Files:** ≤900 lines (split team.py, models.py); functions ≤100; methods ≤50; classes ≤500.
@@ -55,15 +69,19 @@ Port **all** logic from `sports-betting-services` into UTS: all venues, all feat
 
 ## Strategy vs execution
 
-- **Arb strategy:** No ML; uses vig + arb detection (best odds across bookmakers). Strategy service emits signals; execution service places/cancels via USEI.
+- **Arb strategy:** No ML; uses vig + arb detection (best odds across bookmakers). Strategy service emits signals;
+  execution service places/cancels via USEI.
 - **ML strategies:** Consume FSS feature vectors + model predictions; different strategy types in strategy service.
 
 ## Implementation order
 
 1. **DONE** FSS config (UnifiedCloudConfig) + output schemas
 2. **DONE** FSS engine (orchestrates calculators; batch/live seam)
-3. **NOT DONE** Weather feature calculator (weather.py not found in features_sports_service/calculators/ — only ht_features.py and ml_predictions.py present); **NOT DONE** arb vig + is_arbitrage (features_sports_service/arb/ contains only **init**.py — no implementation)
-4. **UNVERIFIED** Unit tests: claimed "22 tests, 78% coverage" — tests/unit/ now has 57 test functions across 10 files (count may have grown with other additions); lint/type/coverage pass status unknown without running quality gates
+3. **NOT DONE** Weather feature calculator (weather.py not found in features_sports_service/calculators/ — only
+   ht_features.py and ml_predictions.py present); **NOT DONE** arb vig + is_arbitrage (features_sports_service/arb/
+   contains only **init**.py — no implementation)
+4. **UNVERIFIED** Unit tests: claimed "22 tests, 78% coverage" — tests/unit/ now has 57 test functions across 10 files
+   (count may have grown with other additions); lint/type/coverage pass status unknown without running quality gates
 5. **TODO** Feature calculators: season_context, goal_timing, venue_context, referee
 6. **TODO** Data loader (in-memory DataFrames; optional DB later)
 7. **TODO** Team features (split: team_form, team_goals, team_xg, team_derived; each file ≤900 lines)

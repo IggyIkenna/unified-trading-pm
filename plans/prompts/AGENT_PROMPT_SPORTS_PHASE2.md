@@ -1,31 +1,34 @@
 # Agent Prompt — Sports Phase 2: Adapter & Library Implementation
 
-> Paste this entire prompt into a new agent session to execute Sports Phase 2.
-> REQUIRES Sports Phase 1 fully complete. Verify preconditions before starting.
-> This phase is UNIT TESTS ONLY — VCR cassettes for HTTP, no live API calls, no real auth.
+> Paste this entire prompt into a new agent session to execute Sports Phase 2. REQUIRES Sports Phase 1 fully complete.
+> Verify preconditions before starting. This phase is UNIT TESTS ONLY — VCR cassettes for HTTP, no live API calls, no
+> real auth.
 
 ---
 
-Follow all workspace cursor rules in .cursorrules.
-No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git push.
-basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths.
-Search unified libraries before implementing anything new.
+Follow all workspace cursor rules in .cursorrules. No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git
+push. basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths. Search unified libraries
+before implementing anything new.
 
 WORKSPACE_ROOT=/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
-SPORTS_REPO=/Users/ikennaigboaka/Documents/repos/other_repos/sports-betting-services
-All Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+SPORTS_REPO=/Users/ikennaigboaka/Documents/repos/other_repos/sports-betting-services All
+Python/pytest/ruff/basedpyright/QG commands: cd WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
 
 ---
 
 ## Standard of Work — Citadel Audit-Worthy
 
-> **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every PR. Build accordingly.**
+> **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every
+> PR. Build accordingly.**
 
 This means — no exceptions, no shortcuts:
 
-- **No silent errors** — every `except` block must reraise, raise a typed error, or log at ERROR + reraise. `pass` is a build failure.
-- **No empty fallbacks** — `os.getenv(KEY, '')` silently fails in production; forbidden. Use `UnifiedCloudConfig` or `os.environ[KEY]` (raises on missing).
-- **No untyped code** — every function parameter, return type, and class field has a type annotation. `Any` is forbidden unless documented in `QUALITY_GATE_BYPASS_AUDIT.md`.
+- **No silent errors** — every `except` block must reraise, raise a typed error, or log at ERROR + reraise. `pass` is a
+  build failure.
+- **No empty fallbacks** — `os.getenv(KEY, '')` silently fails in production; forbidden. Use `UnifiedCloudConfig` or
+  `os.environ[KEY]` (raises on missing).
+- **No untyped code** — every function parameter, return type, and class field has a type annotation. `Any` is forbidden
+  unless documented in `QUALITY_GATE_BYPASS_AUDIT.md`.
 - **No TODO comments** in production code — open a GitHub issue with a link instead.
 - **No magic numbers/strings** — use constants from UCI or AC (`BookmakerRegistry`, `OddsType`).
 - **No skipped tests** — every skip must have a linked issue and `xfail` marker.
@@ -95,7 +98,8 @@ async def test_betfair_get_odds_returns_canonical_odds(betfair_adapter):
     assert all(o.bookmaker.key == "betfair" for o in odds)
 ```
 
-Cassette files live in `tests/cassettes/`. Record once from real API (or hand-craft realistic JSON/HTML). After recording, tests NEVER make live calls — CI always uses cassettes.
+Cassette files live in `tests/cassettes/`. Record once from real API (or hand-craft realistic JSON/HTML). After
+recording, tests NEVER make live calls — CI always uses cassettes.
 
 For Playwright scrapers, use `responses` library or hand-crafted HTML fixtures in `tests/fixtures/html/`:
 
@@ -112,13 +116,11 @@ async def test_skybet_parses_html_odds(skybet_adapter, skybet_html_fixture):
 
 ## Bottom-Up Development Rule
 
-If any adapter needs new error types (e.g., `BookmakerUnavailableError`, `BetRejectedError`, `OddsChangedError`):
-→ Add to `unified-api-contracts/sports/errors.py` FIRST
-→ Run D5 on `unified-api-contracts` before using in USEI
+If any adapter needs new error types (e.g., `BookmakerUnavailableError`, `BetRejectedError`, `OddsChangedError`): → Add
+to `unified-api-contracts/sports/errors.py` FIRST → Run D5 on `unified-api-contracts` before using in USEI
 
-If any new config field is needed (e.g., `sports_betfair_api_key`, `sports_playwright_headless`):
-→ Add to `unified-config-interface` FIRST
-→ Run D5 on `unified-config-interface` before using in adapters
+If any new config field is needed (e.g., `sports_betfair_api_key`, `sports_playwright_headless`): → Add to
+`unified-config-interface` FIRST → Run D5 on `unified-config-interface` before using in adapters
 
 ---
 
@@ -215,7 +217,8 @@ Dependencies to add to `unified-sports-execution-interface/pyproject.toml`:
 
 Implementation requirements:
 
-- `get_odds()`: calls `betfairlightweight` client → `list_runner_book()` → parses available back/lay prices → returns `list[CanonicalOdds]`
+- `get_odds()`: calls `betfairlightweight` client → `list_runner_book()` → parses available back/lay prices → returns
+  `list[CanonicalOdds]`
 - Map Betfair market types to `OddsType`: `MATCH_ODDS` → `H2H`, `OVER_UNDER_25` → `OVER_UNDER`, etc.
 - `place_bet()`: constructs `PlaceInstruction` → `place_orders()` → returns `BetExecution`
 - `cancel_bet()`: calls `cancel_orders()`
@@ -474,14 +477,13 @@ async def test_skybet_raises_scraper_error_on_bad_html():
         adapter._parse_odds_from_html("<html></html>", "af:12345", [OddsType.H2H])
 ```
 
-**Sub-agent 4A (Sky Bet, Coral, Paddy Power):** Implement 3 scrapers.
-**Sub-agent 4B (Betfred, BetVictor, BoyleSports):** Implement 3 scrapers.
-**Sub-agent 4C (Bwin, Ladbrokes, William Hill):** Implement 3 scrapers.
+**Sub-agent 4A (Sky Bet, Coral, Paddy Power):** Implement 3 scrapers. **Sub-agent 4B (Betfred, BetVictor,
+BoyleSports):** Implement 3 scrapers. **Sub-agent 4C (Bwin, Ladbrokes, William Hill):** Implement 3 scrapers.
 **Sub-agent 4D (Betway, Unibet, 888Sport):** Implement 3 scrapers.
 
-Note: The OddsApiAdapter already aggregates many of these bookmakers. The direct scrapers provide
-real-time odds independent of The Odds API latency (~2–5 min delay). Both coexist — the
-`sports-odds-data-service` decides which adapter to use per bookmaker per latency requirement.
+Note: The OddsApiAdapter already aggregates many of these bookmakers. The direct scrapers provide real-time odds
+independent of The Odds API latency (~2–5 min delay). Both coexist — the `sports-odds-data-service` decides which
+adapter to use per bookmaker per latency requirement.
 
 ---
 
@@ -556,8 +558,8 @@ Update `unified-market-interface/pyproject.toml` to add USEI dependency:
 "unified-sports-execution-interface>=0.2.0,<1.0.0",
 ```
 
-Tests: `tests/unit/sports/test_sports_registry.py` — verify all 20 keys return a non-None adapter instance.
-Run `unified-market-interface` D5.
+Tests: `tests/unit/sports/test_sports_registry.py` — verify all 20 keys return a non-None adapter instance. Run
+`unified-market-interface` D5.
 
 ---
 
@@ -565,8 +567,8 @@ Run `unified-market-interface` D5.
 
 Read `SPORTS_REPO/footballbets/features/` fully before starting. Port all 14 calculators.
 
-**Architecture:** Feature calculators no longer use PostgreSQL ORM. They receive canonical Pydantic
-models from GCS/PubSub (as `CanonicalFixture`, `CanonicalOdds`, etc.) and return typed feature dicts.
+**Architecture:** Feature calculators no longer use PostgreSQL ORM. They receive canonical Pydantic models from
+GCS/PubSub (as `CanonicalFixture`, `CanonicalOdds`, etc.) and return typed feature dicts.
 
 **Feature output schema** — add to `unified-api-contracts/sports/canonical/features.py`:
 

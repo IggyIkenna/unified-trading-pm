@@ -1,8 +1,7 @@
 # Basedpyright Compliance Report
 
-**Plan:** strict_basedpyright_compliance.plan.md
-**Generated:** 2026-03-04
-**SSOT:** `.cursor/plans/strict_basedpyright_compliance.plan.md`
+**Plan:** strict_basedpyright_compliance.plan.md **Generated:** 2026-03-04 **SSOT:**
+`.cursor/plans/strict_basedpyright_compliance.plan.md`
 
 ---
 

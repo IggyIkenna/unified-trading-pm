@@ -427,6 +427,4 @@ Before running scripts, verify:
 
 ---
 
-**Status:** ✅ Ready to use
-**Last Updated:** 2026-02-13
-**Version:** 1.0
+**Status:** ✅ Ready to use **Last Updated:** 2026-02-13 **Version:** 1.0

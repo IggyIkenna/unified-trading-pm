@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Delete instruments and market-tick data from GCS for specific dates only.
 

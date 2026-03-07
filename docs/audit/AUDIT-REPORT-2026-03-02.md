@@ -1,9 +1,7 @@
 # Unified Trading System — Comprehensive Audit Report
 
-**Date:** 2026-03-02
-**Auditor:** Claude Opus 4.6 (15 parallel agents)
-**Scope:** Workspace-wide (60 repos, 25 audit sections)
-**SSOT Reference:** `unified-trading-pm/plans/active/trading-system-audit-prompt.md`
+**Date:** 2026-03-02 **Auditor:** Claude Opus 4.6 (15 parallel agents) **Scope:** Workspace-wide (60 repos, 25 audit
+sections) **SSOT Reference:** `unified-trading-pm/plans/active/trading-system-audit-prompt.md`
 
 ---
 
@@ -19,10 +17,14 @@
 
 ### Top 5 Blocking Issues
 
-1. **CRITICAL: Corrupted package names in 37/45 repos** (400 dependency lines) — `propagate-canonical-versions.py` doubled package names (e.g., `fastapifastapi>=0.110.0`)
-2. **CRITICAL: DISABLE_AUTH bypasses all API authentication** — single env var disables security in 5 production API services with no production guard
-3. **CRITICAL: Enum members referenced but missing** — `ErrorRecoveryStrategy.DEAD_LETTER` and `ErrorCategory.VALIDATION_ERROR` will cause runtime `AttributeError`
-4. **CRITICAL: Service-to-service Python import** — `market-tick-data-service` imports `instruments-service` as a package dependency (violates DAG)
+1. **CRITICAL: Corrupted package names in 37/45 repos** (400 dependency lines) — `propagate-canonical-versions.py`
+   doubled package names (e.g., `fastapifastapi>=0.110.0`)
+2. **CRITICAL: DISABLE_AUTH bypasses all API authentication** — single env var disables security in 5 production API
+   services with no production guard
+3. **CRITICAL: Enum members referenced but missing** — `ErrorRecoveryStrategy.DEAD_LETTER` and
+   `ErrorCategory.VALIDATION_ERROR` will cause runtime `AttributeError`
+4. **CRITICAL: Service-to-service Python import** — `market-tick-data-service` imports `instruments-service` as a
+   package dependency (violates DAG)
 5. **CRITICAL: 169 functions exceed 200 lines** — automatic FAIL per codex; worst is 1,606-line test function
 
 ### Technical Debt Trajectory (Baseline)
@@ -44,7 +46,8 @@
 
 ## Fix Status (Updated 2026-03-03 final)
 
-**44 / 58 issues fixed** + 1 new issue (ISS-059) created and fixed. ISS-028 (coverage) partially done (4/14 repos at 70%, 10 blocked/in-progress). 14 deferred (P3).
+**44 / 58 issues fixed** + 1 new issue (ISS-059) created and fixed. ISS-028 (coverage) partially done (4/14 repos at
+70%, 10 blocked/in-progress). 14 deferred (P3).
 
 See: `unified-trading-pm/docs/audit/DEFERRED-ISSUES-DECISIONS.md` for full decisions and agent instructions.
 
@@ -93,11 +96,15 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S4 (Dependency Governance) | **Criterion:** 4.11
 - **Severity:** CRITICAL | **Time:** 2-4h | **Difficulty:** Medium
-- **Description:** `propagate-canonical-versions.py` introduced concatenated package names in `pyproject.toml` files. Example: `"fastapifastapi>=0.110.0,<1.0.0"` instead of `"fastapi>=0.110.0,<1.0.0"`. Affects 400 dependency lines across 37 repos. Fresh `uv pip install` will fail for all affected repos.
+- **Description:** `propagate-canonical-versions.py` introduced concatenated package names in `pyproject.toml` files.
+  Example: `"fastapifastapi>=0.110.0,<1.0.0"` instead of `"fastapi>=0.110.0,<1.0.0"`. Affects 400 dependency lines
+  across 37 repos. Fresh `uv pip install` will fail for all affected repos.
 - **Files:** Every `*/pyproject.toml` in 37 affected repos. Example: `alerting-service/pyproject.toml` lines 18-24
-- **Clean repos (8):** deployment-service, features-sports-service, strategy-validation-service, unified-api-contracts, unified-cloud-interface, unified-trading-codex, unified-trading-library, unified-trading-pm
+- **Clean repos (8):** deployment-service, features-sports-service, strategy-validation-service, unified-api-contracts,
+  unified-cloud-interface, unified-trading-codex, unified-trading-library, unified-trading-pm
 - **Fix:**
-  1. Write a script that reads each `pyproject.toml`, finds dependency strings matching `([a-z0-9][-a-z0-9]*)\1` regex pattern
+  1. Write a script that reads each `pyproject.toml`, finds dependency strings matching `([a-z0-9][-a-z0-9]*)\1` regex
+     pattern
   2. Replace each doubled name with the single correct name
   3. Run `uv lock` in each affected repo to validate
   4. Fix the root cause in `unified-trading-pm/scripts/propagation/propagate-canonical-versions.py`
@@ -106,7 +113,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S10 (Security) | **Criterion:** 10.12
 - **Severity:** CRITICAL | **Time:** 2h | **Difficulty:** Medium
-- **Description:** All 5 API services check `os.getenv("DISABLE_AUTH", "false")` and if `"true"`, bypass all auth returning `"dev-mode"`. No production guard prevents this from being set in Cloud Run.
+- **Description:** All 5 API services check `os.getenv("DISABLE_AUTH", "false")` and if `"true"`, bypass all auth
+  returning `"dev-mode"`. No production guard prevents this from being set in Cloud Run.
 - **Files:**
   - `execution-results-api/execution_results_api/auth.py:23`
   - `alerting-service/alerting_service/auth.py:23`
@@ -125,20 +133,24 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S11 (Error Handling) | **Criteria:** 11.7
 - **Severity:** CRITICAL | **Time:** 15 min | **Difficulty:** Trivial
-- **Description:** `base_adapter.py` references `ErrorRecoveryStrategy.DEAD_LETTER` and `ErrorCategory.VALIDATION_ERROR`, but these enum members do not exist. Will cause `AttributeError` at runtime when validation fails.
+- **Description:** `base_adapter.py` references `ErrorRecoveryStrategy.DEAD_LETTER` and
+  `ErrorCategory.VALIDATION_ERROR`, but these enum members do not exist. Will cause `AttributeError` at runtime when
+  validation fails.
 - **Files:**
   - `unified-market-interface/unified_market_interface/base_adapter.py:81-83`
   - `unified-internal-contracts/unified_internal_contracts/schemas/errors.py` (ErrorRecoveryStrategy enum)
   - `unified-api-contracts/unified_api_contracts/internal/health.py` (ErrorCategory enum)
 - **Fix:**
   1. Add `DEAD_LETTER = "dead_letter"` to `ErrorRecoveryStrategy` enum in both contracts repos
-  2. Change `ErrorCategory.VALIDATION_ERROR` to `ErrorCategory.VALIDATION` in `base_adapter.py`, OR add `VALIDATION_ERROR = "validation_error"` alias to enum
+  2. Change `ErrorCategory.VALIDATION_ERROR` to `ErrorCategory.VALIDATION` in `base_adapter.py`, OR add
+     `VALIDATION_ERROR = "validation_error"` alias to enum
 
 ### ISS-004: Service-to-service Python import (DAG violation) — FIXED (dep was already removed)
 
 - **Section:** S2 (Tier Architecture) | **Criterion:** 2.5, 2.9
 - **Severity:** CRITICAL | **Time:** 4-8h | **Difficulty:** Medium-High
-- **Description:** `market-tick-data-service/pyproject.toml` line 98 declares `"instruments-service>=0.1.0"` with path source `../instruments-service`. Services must NEVER import another service as a Python package.
+- **Description:** `market-tick-data-service/pyproject.toml` line 98 declares `"instruments-service>=0.1.0"` with path
+  source `../instruments-service`. Services must NEVER import another service as a Python package.
 - **Files:**
   - `market-tick-data-service/pyproject.toml:98` (dependency line)
   - `market-tick-data-service/pyproject.toml:167` (source path)
@@ -175,7 +187,9 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Section:** S10 (Security) | **Criterion:** 10.7
 - **Severity:** CRITICAL | **Time:** 2h | **Difficulty:** Low
 - **Description:** 13 repos have `.env` files tracked in git containing real GCP project ID and bucket names.
-- **Repos:** unified-trading-deployment-v3, market-data-processing-service, features-delta-one-service, unified-trading-library, features-volatility-service, instruments-service, strategy-service, market-tick-data-service, execution-service, features-onchain-service, features-calendar-service, ml-training-service, ml-inference-service
+- **Repos:** unified-trading-deployment-v3, market-data-processing-service, features-delta-one-service,
+  unified-trading-library, features-volatility-service, instruments-service, strategy-service, market-tick-data-service,
+  execution-service, features-onchain-service, features-calendar-service, ml-training-service, ml-inference-service
 - **Fix:**
   1. For each repo: `git rm --cached .env`
   2. Add `.env` to `.gitignore` (if not already present)
@@ -186,7 +200,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S10 (Security) + S7 (Codex Drift) | **Criteria:** 10.4, 7.1
 - **Severity:** CRITICAL | **Time:** 4h | **Difficulty:** Low
-- **Description:** `central-element-323112` hardcoded in production code, scripts, CLI help, and test files. 28 occurrences in tests alone.
+- **Description:** `central-element-323112` hardcoded in production code, scripts, CLI help, and test files. 28
+  occurrences in tests alone.
 - **Files (key):**
   - `execution-service/scripts/runners/run_phasee_fullpath_matrix.py:33-40`
   - `execution-service/execution_service/cli/backtest.py:171,177,183`
@@ -268,13 +283,15 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
   - `features-volatility-service/Dockerfile:10`
   - `market-data-processing-service/Dockerfile:22`
   - `ml-training-service/Dockerfile:14`
-- **Fix:** Replace `unified-cloud-services/unified-cloud-services:latest` with `unified-trading-services/unified-trading-services:latest`
+- **Fix:** Replace `unified-cloud-services/unified-cloud-services:latest` with
+  `unified-trading-services/unified-trading-services:latest`
 
 ### ISS-014: 6 Dockerfiles hardcode project ID in FROM lines — FIXED
 
 - **Section:** S7 (Codex Drift) | **Criterion:** 7.6
 - **Severity:** MEDIUM | **Time:** 1h | **Difficulty:** Low
-- **Files:** position-balance-monitor-service, risk-and-exposure-service, unified-cloud-interface, unified-events-interface, unified-market-interface, unified-trade-execution-interface Dockerfiles
+- **Files:** position-balance-monitor-service, risk-and-exposure-service, unified-cloud-interface,
+  unified-events-interface, unified-market-interface, unified-trade-execution-interface Dockerfiles
 - **Fix:** Add `ARG PROJECT_ID` and use `${PROJECT_ID}` in FROM lines
 
 ### ISS-015: Lifecycle events diverged between codex and code — FIXED
@@ -286,7 +303,9 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
   - `unified-trading-codex/03-observability/lifecycle-events.md:25-41`
 - **Fix:**
   1. Synchronize `STANDARD_LIFECYCLE_EVENTS` in `schemas.py` to match codex
-  2. Add missing codex events: VALIDATION_STARTED, VALIDATION_COMPLETED, DATA_INGESTION_STARTED, DATA_INGESTION_COMPLETED, UPLOAD_STARTED, UPLOAD_COMPLETED, DATA_BROADCAST, PERSISTENCE_STARTED, PERSISTENCE_COMPLETED
+  2. Add missing codex events: VALIDATION_STARTED, VALIDATION_COMPLETED, DATA_INGESTION_STARTED,
+     DATA_INGESTION_COMPLETED, UPLOAD_STARTED, UPLOAD_COMPLETED, DATA_BROADCAST, PERSISTENCE_STARTED,
+     PERSISTENCE_COMPLETED
   3. Either add code-only events (RETRY_ATTEMPT, DATA_VALIDATED, etc.) to codex or remove from schemas.py
 
 ### ISS-016: 70+ bare "BINANCE" venue names (should be BINANCE-SPOT/FUTURES) — FIXED
@@ -306,7 +325,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S1 (Manifest) | **Criterion:** 1.7
 - **Severity:** HIGH | **Time:** 30 min | **Difficulty:** Easy
-- **Description:** 118 manifest dependency specs use `>=1.0.0` or `>=2.0.0`. 8 `pyproject.toml` files also violate. Manifest `versions_policy` says all versions MUST be `<1.0.0`.
+- **Description:** 118 manifest dependency specs use `>=1.0.0` or `>=2.0.0`. 8 `pyproject.toml` files also violate.
+  Manifest `versions_policy` says all versions MUST be `<1.0.0`.
 - **Files:** `unified-trading-pm/workspace-manifest.json` (throughout)
 - **Fix:** Bulk find-replace all dependency specs to use `>=0.x.y,<1.0.0` ranges
 
@@ -321,7 +341,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S15 (Complexity) | **Criterion:** 15.7
 - **Severity:** HIGH | **Time:** 8h | **Difficulty:** Low
-- **Description:** 101 exact-duplicate file pairs between `deployment-service` and `unified-trading-deployment-v3`, plus 18 pairs with `deployment-api`. ~44,008 wasted lines.
+- **Description:** 101 exact-duplicate file pairs between `deployment-service` and `unified-trading-deployment-v3`, plus
+  18 pairs with `deployment-api`. ~44,008 wasted lines.
 - **Fix:** Complete the v3 split: deployment-service should import from a shared library, not copy files
 
 ### ISS-020: os.getenv() in 5 API auth modules + execution_service — FIXED
@@ -356,7 +377,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Files:**
   - `features-sports-service/features_sports_service/etl/state.py:28` — `from google.cloud import storage`
   - `execution-service/execution_service/core/audit_log.py:6` — `from google.cloud import storage`
-  - `unified-market-interface/unified_market_interface/adapters/onchain_perps/hyperliquid_adapter.py:29` — `import boto3`
+  - `unified-market-interface/unified_market_interface/adapters/onchain_perps/hyperliquid_adapter.py:29` —
+    `import boto3`
 - **Fix:** Replace with `get_storage_client()` from `unified-cloud-interface`
 
 ### ISS-023: setup_cloud_logging still used (should be setup_events) — FIXED
@@ -364,7 +386,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Section:** S12 (Observability) | **Criterion:** 12.5
 - **Severity:** HIGH | **Time:** 20 min | **Difficulty:** Easy
 - **Files:** `ml-training-service/ml_training_service/cli/main.py:16`
-- **Fix:** Replace `from unified_trading_library import setup_cloud_logging` with `from unified_events_interface import setup_events`
+- **Fix:** Replace `from unified_trading_library import setup_cloud_logging` with
+  `from unified_events_interface import setup_events`
 
 ### ISS-024: 3 services have zero observability (no setup_events, no lifecycle events) — FIXED
 
@@ -388,7 +411,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S4 (Dependencies) | **Criterion:** 4.7
 - **Severity:** MEDIUM | **Time:** 30 min | **Difficulty:** Low
-- **Files:** `deployment-service/requirements.txt`, `execution-service/requirements.txt`, `unified-trading-deployment-v3/requirements.txt`
+- **Files:** `deployment-service/requirements.txt`, `execution-service/requirements.txt`,
+  `unified-trading-deployment-v3/requirements.txt`
 - **Fix:** Delete all `requirements.txt` files. If CI needs flat list, generate via `uv pip compile`
 
 ### ISS-027: 9 completely unpinned dependencies — FIXED
@@ -402,7 +426,10 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S17 (Testing) | **Criterion:** 17.1.1
 - **Severity:** MEDIUM | **Time:** 28-56h total | **Difficulty:** Medium-High
-- **Repos:** deployment-service, execution-service, execution-results-api, features-delta-one-service, features-sports-service, features-volatility-service, market-data-processing-service, ml-training-service, position-balance-monitor-service, risk-and-exposure-service, unified-domain-client, unified-events-interface, unified-internal-contracts, unified-market-interface
+- **Repos:** deployment-service, execution-service, execution-results-api, features-delta-one-service,
+  features-sports-service, features-volatility-service, market-data-processing-service, ml-training-service,
+  position-balance-monitor-service, risk-and-exposure-service, unified-domain-client, unified-events-interface,
+  unified-internal-contracts, unified-market-interface
 - **Fix:** Raise `fail_under` incrementally: 40 → 55 → 70, adding tests as needed
 
 ### ISS-029: 141 test functions with zero assertions — FIXED (238 assertions added across 95+ files)
@@ -453,7 +480,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S14 (Architecture) | **Criterion:** 14.1.1
 - **Severity:** MEDIUM | **Time:** 4h | **Difficulty:** Medium
-- **Services:** alerting-service, execution-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, instruments-service
+- **Services:** alerting-service, execution-service, features-delta-one-service, features-multi-timeframe-service,
+  features-onchain-service, features-sports-service, features-volatility-service, instruments-service
 - **Fix:** Add `--mode` argument with `choices=["batch", "live"]` to each parser
 
 ### ISS-035: 4 services lack GracefulShutdownHandler — FIXED
@@ -467,21 +495,24 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S17 (Testing) | **Criterion:** 17.1.2
 - **Severity:** MEDIUM | **Time:** 2h | **Difficulty:** Low
-- **Services:** deployment-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-sports-service, strategy-validation-service
+- **Services:** deployment-service, features-cross-instrument-service, features-delta-one-service,
+  features-multi-timeframe-service, features-sports-service, strategy-validation-service
 - **Fix:** Copy template from `features-calendar-service/tests/unit/test_event_logging.py` and adapt
 
 ### ISS-037: No DeadLetterRecord schema exists — FIXED
 
 - **Section:** S16 (Schema Governance) | **Criterion:** 16.4.2
 - **Severity:** MEDIUM | **Time:** 2h | **Difficulty:** Medium
-- **Fix:** Create `DeadLetterRecord(BaseModel)` in `unified-internal-contracts` with: `original_payload`, `error_type`, `error_message`, `venue`, `timestamp`, `correlation_id`, `trace_id`
+- **Fix:** Create `DeadLetterRecord(BaseModel)` in `unified-internal-contracts` with: `original_payload`, `error_type`,
+  `error_message`, `venue`, `timestamp`, `correlation_id`, `trace_id`
 
 ### ISS-038: schema_version missing from most internal contract models — FIXED
 
 - **Section:** S16 (Schema Governance) | **Criterion:** 16.1.4
 - **Severity:** MEDIUM | **Time:** 2h | **Difficulty:** Low
 - **Description:** Only 5/20+ models have `schema_version`. Missing from all market_data schemas.
-- **Fix:** Add `schema_version: str = "1.0"` to CanonicalTrade, CanonicalOrderBook, CanonicalOHLCV, CanonicalDerivativeTicker, etc.
+- **Fix:** Add `schema_version: str = "1.0"` to CanonicalTrade, CanonicalOrderBook, CanonicalOHLCV,
+  CanonicalDerivativeTicker, etc.
 
 ### ISS-039: No SchemaRegistry compatibility matrix — FIXED (schema_registry.json + validation script created)
 
@@ -528,7 +559,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S13 (Configuration) | **Criterion:** 13.10
 - **Severity:** LOW | **Time:** 2h | **Difficulty:** Easy
-- **Repos:** features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-sports-service, strategy-service, strategy-validation-service
+- **Repos:** features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service,
+  features-sports-service, strategy-service, strategy-validation-service
 - **Fix:** Generate `.env.example` from each service's config class fields
 
 ---
@@ -585,7 +617,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S7 | **Criterion:** 7.9
 - **Files:** `unified-trading-codex/10-audit/_checklist-template.yaml:128,141,241,...`
-- **Fix:** Global replace: `unified-trading-library` → `unified-trading-services`, `UnifiedCloudServicesConfig` → `UnifiedCloudConfig`
+- **Fix:** Global replace: `unified-trading-library` → `unified-trading-services`, `UnifiedCloudServicesConfig` →
+  `UnifiedCloudConfig`
 
 ### ISS-051: 3 package.json files have version 1.0.0 — DEFERRED (P3)
 
@@ -603,7 +636,8 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S10 | **Criterion:** 10.16
 - **Time:** 4h | **Difficulty:** Medium
-- **Fix:** Audit all Pydantic models; tag `client_id`, `wallet_address`, `api_key`, `email`, `user_id` with `json_schema_extra={"pii": True}`
+- **Fix:** Audit all Pydantic models; tag `client_id`, `wallet_address`, `api_key`, `email`, `user_id` with
+  `json_schema_extra={"pii": True}`
 
 ### ISS-054: No auth/secret/config event logging — DEFERRED (P3)
 
@@ -709,4 +743,6 @@ File splitting, complexity reduction, deduplication, schema governance maturatio
 
 ---
 
-_Generated by 15 parallel audit agents on 2026-03-02. Sections S3 (SSOT), S5-S6 (Docs/Rules), S8-S9 (Lint/Types), S18-S21 (Cross-repo/Safety), S22-S24 (Deploy/Anti-patterns) had partial coverage due to agent rate limits — supplemented with inline searches. Re-audit recommended for full coverage of those sections._
+_Generated by 15 parallel audit agents on 2026-03-02. Sections S3 (SSOT), S5-S6 (Docs/Rules), S8-S9 (Lint/Types),
+S18-S21 (Cross-repo/Safety), S22-S24 (Deploy/Anti-patterns) had partial coverage due to agent rate limits — supplemented
+with inline searches. Re-audit recommended for full coverage of those sections._

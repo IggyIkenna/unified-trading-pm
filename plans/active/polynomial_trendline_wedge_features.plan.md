@@ -9,22 +9,44 @@ overview: |
   columns total — ML model decides what's most predictive.
 todos:
   - id: poly-calc-implementation
-    content: "Implement PolynomialTrendlineCalculator in features-delta-one-service/features_delta_one_service/app/calculators/polynomial_trendline.py. Extend BaseFeatureCalculator (polars-based). Register as @FeatureCalculatorRegistry.register('polynomial_trendlines'). Compute support (local lows) and resistance (local highs) polynomial fits for all 6 POLY_COMBOS. Emit 84 curve columns (14 per combo)."
+    content:
+      "Implement PolynomialTrendlineCalculator in
+      features-delta-one-service/features_delta_one_service/app/calculators/polynomial_trendline.py. Extend
+      BaseFeatureCalculator (polars-based). Register as @FeatureCalculatorRegistry.register('polynomial_trendlines').
+      Compute support (local lows) and resistance (local highs) polynomial fits for all 6 POLY_COMBOS. Emit 84 curve
+      columns (14 per combo)."
     status: done
   - id: wedge-detector-implementation
-    content: "Implement WedgeDetector in features-delta-one-service/features_delta_one_service/app/calculators/wedge_detector.py. Detect convergence of support and resistance curves. Compute bars_to_convergence via closed-form quadratic intersection formula. Classify wedge type (symmetric/ascending/descending). Emit 42 wedge columns (7 per combo)."
+    content:
+      "Implement WedgeDetector in
+      features-delta-one-service/features_delta_one_service/app/calculators/wedge_detector.py. Detect convergence of
+      support and resistance curves. Compute bars_to_convergence via closed-form quadratic intersection formula.
+      Classify wedge type (symmetric/ascending/descending). Emit 42 wedge columns (7 per combo)."
     status: done
   - id: delta-one-schema-update
-    content: "Update features-delta-one-service/features_delta_one_service/app/output_schemas.py. Add POLYNOMIAL_TRENDLINE_FEATURES (84 columns, generated from POLY_COMBOS) and WEDGE_FEATURES (42 columns). Append both to ALL_FEATURES."
+    content:
+      "Update features-delta-one-service/features_delta_one_service/app/output_schemas.py. Add
+      POLYNOMIAL_TRENDLINE_FEATURES (84 columns, generated from POLY_COMBOS) and WEDGE_FEATURES (42 columns). Append
+      both to ALL_FEATURES."
     status: done
   - id: mtf-wedge-confluence
-    content: "Implement WedgeConfluenceCalculator in features-multi-timeframe-service/features_multi_timeframe_service/app/calculators/wedge_confluence.py. Join wedge features at 1h/4h/1d timeframes. Emit wedge_confluence_1h_4h, wedge_confluence_1h_4h_1d, wedge_confluence_score, wedge_convergence_alignment binary events. Update MTF output_schemas.py."
+    content:
+      "Implement WedgeConfluenceCalculator in
+      features-multi-timeframe-service/features_multi_timeframe_service/app/calculators/wedge_confluence.py. Join wedge
+      features at 1h/4h/1d timeframes. Emit wedge_confluence_1h_4h, wedge_confluence_1h_4h_1d, wedge_confluence_score,
+      wedge_convergence_alignment binary events. Update MTF output_schemas.py."
     status: done
   - id: poly-unit-tests
-    content: "Write 10 unit tests in features-delta-one-service/tests/unit/calculators/test_polynomial_trendline.py covering: insufficient touches → NaN, valid support fit, support break event, resistance break event, curvature sign, time-since delegation, no-lookahead, wedge convergence estimate, all 6 combos present in output, output columns match schema."
+    content:
+      "Write 10 unit tests in features-delta-one-service/tests/unit/calculators/test_polynomial_trendline.py covering:
+      insufficient touches → NaN, valid support fit, support break event, resistance break event, curvature sign,
+      time-since delegation, no-lookahead, wedge convergence estimate, all 6 combos present in output, output columns
+      match schema."
     status: done
   - id: poly-quality-gates
-    content: "Run quality gates for both repos: ruff check, basedpyright strict (timeout 120), coverage ≥ 70%, no os.getenv/os.environ, no Any types, file size ≤ 900 lines per calculator file."
+    content:
+      "Run quality gates for both repos: ruff check, basedpyright strict (timeout 120), coverage ≥ 70%, no
+      os.getenv/os.environ, no Any types, file size ≤ 900 lines per calculator file."
     status: done
 isProject: false
 ---
@@ -55,13 +77,17 @@ isProject: false
 
 ## Core Insight
 
-Fitting separate quadratic curves to highs and lows at multiple history lengths gives the ML model structured trendline features at several timescales without config tuning. The wedge detector adds higher-order structure: when curves converge, their geometric intersection forecasts breakout timing — a feature not present anywhere else in the system. Running a sweep of 6 named combos means ML decides which scale is most predictive rather than the engineer guessing.
+Fitting separate quadratic curves to highs and lows at multiple history lengths gives the ML model structured trendline
+features at several timescales without config tuning. The wedge detector adds higher-order structure: when curves
+converge, their geometric intersection forecasts breakout timing — a feature not present anywhere else in the system.
+Running a sweep of 6 named combos means ML decides which scale is most predictive rather than the engineer guessing.
 
 ---
 
 ## Part 1 — Parameter Combos (Multi-Scale Sweep)
 
-Define **6 named combos** in a `POLY_COMBOS` constant. Each combo: `(fit_window, min_touches, local_window, touch_threshold_atr_mult)`.
+Define **6 named combos** in a `POLY_COMBOS` constant. Each combo:
+`(fit_window, min_touches, local_window, touch_threshold_atr_mult)`.
 
 ```python
 POLY_COMBOS: dict[str, tuple[int, int, int, float]] = {
@@ -126,9 +152,8 @@ RESISTANCE CURVE (highs):
 | `poly_{c}_resistance_valid`        | Int8    |                                          |
 | `poly_{c}_resistance_break`        | Int8    | Binary break event → time_since pipeline |
 
-**Auto-generated by base class pipeline** (no extra code):
-`time_since_poly_{c}_support_break`, `time_since_poly_{c}_resistance_break`,
-`time_since_poly_{c}_support_valid`, `time_since_poly_{c}_resistance_valid`
+**Auto-generated by base class pipeline** (no extra code): `time_since_poly_{c}_support_break`,
+`time_since_poly_{c}_resistance_break`, `time_since_poly_{c}_support_valid`, `time_since_poly_{c}_resistance_valid`
 
 ---
 
@@ -183,7 +208,8 @@ WEDGE TYPE:
 
 **File:** `features-multi-timeframe-service/features_multi_timeframe_service/app/calculators/wedge_confluence.py`
 
-Consumes poly features at 1h / 4h / 1d. For each combo, checks if 2+ timeframes simultaneously show `poly_{c}_wedge_valid=1` with matching `wedge_type`. Emits:
+Consumes poly features at 1h / 4h / 1d. For each combo, checks if 2+ timeframes simultaneously show
+`poly_{c}_wedge_valid=1` with matching `wedge_type`. Emits:
 
 ```python
 WEDGE_CONFLUENCE_FEATURES = [

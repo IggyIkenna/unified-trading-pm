@@ -2,7 +2,8 @@
 
 ### Purpose
 
-This document defines the **implementation-level rules** that apply to feature computation, independent of any particular codebase. It is designed to remove ambiguity by standardizing:
+This document defines the **implementation-level rules** that apply to feature computation, independent of any
+particular codebase. It is designed to remove ambiguity by standardizing:
 
 - time cutoffs (anti-leakage)
 - windowing and padding
@@ -22,24 +23,25 @@ Define:
 - `kickoff_utc`: canonical fixture kickoff time (UTC)
 - `as_of_utc`: the timestamp at which we are computing features (UTC)
 
-**Invariant A (no-lookahead):** every input event used to compute any feature for a fixture must satisfy:
-\[
-\max(\text{timestamp of inputs}) \le as_of_utc < kickoff_utc
-\]
+**Invariant A (no-lookahead):** every input event used to compute any feature for a fixture must satisfy: \[
+\max(\text{timestamp of inputs}) \le as_of_utc < kickoff_utc \]
 
 **Invariant B (partition vs event time):**
 
 - Stage 2 `dt` partitions are **storage partitions**.
-- Feature correctness is governed by **event timestamps** (`fetched_at_utc`, `timestamp_utc`, `announced_at_utc`, `kickoff_utc`).
+- Feature correctness is governed by **event timestamps** (`fetched_at_utc`, `timestamp_utc`, `announced_at_utc`,
+  `kickoff_utc`).
 
 ### Feature horizons (time buckets)
 
 We standardize discrete horizons, aligned to Odds API sampling:
 
-- Pregame: `T-24h`, `T-12h`, `T-6h`, `T-90m`, `T-80m`, `T-70m`, `T-60m`, `T-50m`, `T-40m`, `T-30m`, `T-20m`, `T-10m`, `T-0`
+- Pregame: `T-24h`, `T-12h`, `T-6h`, `T-90m`, `T-80m`, `T-70m`, `T-60m`, `T-50m`, `T-40m`, `T-30m`, `T-20m`, `T-10m`,
+  `T-0`
 - Halftime: `HT-2min`
 
-`as_of_utc` for a horizon is defined by the **data timestamp** actually available at that horizon (not by an assumed schedule).
+`as_of_utc` for a horizon is defined by the **data timestamp** actually available at that horizon (not by an assumed
+schedule).
 
 ### Rolling windows (team-level)
 
@@ -64,7 +66,8 @@ This applies to xG, goals, shots, possession, etc.
 
 Rule of thumb:
 
-- **Rolling last-N windows**: include all competitions (league + cups + continental), unless a feature explicitly says league-only.
+- **Rolling last-N windows**: include all competitions (league + cups + continental), unless a feature explicitly says
+  league-only.
 - **Season-to-date baselines**: league-only when you need comparability to standings and league rates.
 
 #### Padding rule (no fake data)
@@ -78,13 +81,10 @@ If fewer than `N` matches exist for a `lastN` feature:
 
 EWMAs must not cold-start from the first match of the season.
 
-Let \(x_t\) be the match-level metric (e.g., xG-for) in chronological order.
-Let \(m_0\) be the previous season mean (or league mean if unavailable).
+Let \(x_t\) be the match-level metric (e.g., xG-for) in chronological order. Let \(m_0\) be the previous season mean (or
+league mean if unavailable).
 
-EWMA update:
-\[
-m*t = \alpha x_t + (1-\alpha) m*{t-1}
-\]
+EWMA update: \[ m*t = \alpha x_t + (1-\alpha) m*{t-1} \]
 
 Where \(\alpha\) is derived from a time-based half-life (e.g., 30 days) and the time delta between matches.
 
@@ -94,23 +94,14 @@ Promoted/new-to-league teams require priors and blending.
 
 #### League-strength normalization
 
-When translating previous-league metrics into current-league scale, apply a league-strength factor:
-\[
-attack_factor = \\frac{strength(source_league)}{strength(target_league)}
-\]
-\[
-defense_factor = \\frac{strength(source_league)}{strength(target_league)}
-\]
+When translating previous-league metrics into current-league scale, apply a league-strength factor: \[ attack_factor =
+\\frac{strength(source_league)}{strength(target_league)} \] \[ defense_factor =
+\\frac{strength(source_league)}{strength(target_league)} \]
 
 #### Decay-weighted blending
 
-Blend priors with observed current-season values using:
-\[
-F = \\alpha \\cdot F*{prior} + (1-\\alpha) \\cdot F*{current}
-\]
-\[
-\\alpha = e^{-games\\\_played/\\tau}
-\]
+Blend priors with observed current-season values using: \[ F = \\alpha \\cdot F*{prior} + (1-\\alpha) \\cdot F*{current}
+\] \[ \\alpha = e^{-games\\\_played/\\tau} \]
 
 Where typical \(\tau\) is 3–5 (tunable).
 
@@ -121,21 +112,13 @@ Lineups must be “as-of safe”:
 - a confirmed lineup row is usable only if `announced_at_utc <= as_of_utc`
 - otherwise the system must fall back to predicted XI or priors
 
-**Backtesting rule:** if simulating a `T-24h` horizon historically, you must reconstruct what an expected XI would have been using only data before `as_of_utc` (e.g., last-N lineup frequency, injuries known at the time).
+**Backtesting rule:** if simulating a `T-24h` horizon historically, you must reconstruct what an expected XI would have
+been using only data before `as_of_utc` (e.g., last-N lineup frequency, injuries known at the time).
 
 ### Odds features: fair odds, vig, drift
 
-Given decimal odds \(o_1, o_X, o_2\):
-\[
-p_i = 1/o_i
-\]
-\[
-vig = (p_1 + p_X + p_2) - 1
-\]
-Vig-free probabilities:
-\[
-p_i^{fair} = p_i / (p_1 + p_X + p_2)
-\]
+Given decimal odds \(o_1, o_X, o_2\): \[ p_i = 1/o_i \] \[ vig = (p_1 + p_X + p_2) - 1 \] Vig-free probabilities: \[
+p_i^{fair} = p_i / (p_1 + p_X + p_2) \]
 
 ### Odds microstructure (path-based features)
 
@@ -143,16 +126,12 @@ The microstructure features treat the odds path as a time series.
 
 #### Velocity
 
-\[
-velocity = \\frac{\\Delta p}{\\Delta t}
-\]
-Computed between standardized snapshot windows (e.g., `T-24h` to `T-6h`, `T-30m` to `T-10m`).
+\[ velocity = \\frac{\\Delta p}{\\Delta t} \] Computed between standardized snapshot windows (e.g., `T-24h` to `T-6h`,
+`T-30m` to `T-10m`).
 
 #### Acceleration
 
-\[
-accel = velocity*{late} - velocity*{early}
-\]
+\[ accel = velocity*{late} - velocity*{early} \]
 
 #### Volatility / smoothness
 
@@ -174,7 +153,8 @@ Core constructs:
 
 ### Schema artifacts (non-feature tables)
 
-This section defines **execution-layer storage** that is not “a feature,” but is required to build features consistently and to backtest without leakage.
+This section defines **execution-layer storage** that is not “a feature,” but is required to build features consistently
+and to backtest without leakage.
 
 All table definitions should map to `sports-betting-service/docs/models.py`.
 
@@ -199,7 +179,8 @@ Because the feature universe is large and strictly enumerated, feature storage i
 
 #### 2) Player snapshots (as-of player state)
 
-**Goal:** freeze the state of each player as-of a timestamp so features can be computed deterministically and backtests can reconstruct “what was known.”
+**Goal:** freeze the state of each player as-of a timestamp so features can be computed deterministically and backtests
+can reconstruct “what was known.”
 
 Minimum contract (per player, per as-of):
 
@@ -267,5 +248,6 @@ This section defines which computations must exist before others and what should
 Cache at the granularity that avoids recomputation while preserving correctness:
 
 - **Cache key**: `(fixture_id, feature_horizon, timestamp_utc, feature_group, source_version)`
-- Cache layers B/C/D separately so that changes in odds snapshots don’t force recomputation of long-horizon rolling team stats.
+- Cache layers B/C/D separately so that changes in odds snapshots don’t force recomputation of long-horizon rolling team
+  stats.
 - Treat Stage 2 raw tables as immutable by `dt`; corrected data should be written as a new `dt` cut and reprocessed.

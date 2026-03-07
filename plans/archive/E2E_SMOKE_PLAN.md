@@ -1,7 +1,7 @@
 # E2E and Smoke Test Plan (Pre-Deployment)
 
-**Reference:** [E2E_TESTING_GUIDE_2026-02-17.md](../archive/E2E_TESTING_GUIDE_2026-02-17.md) (archived)
-**SSOT:** system-integration-tests/README.md, unified-trading-codex integration-testing-layers.md
+**Reference:** [E2E_TESTING_GUIDE_2026-02-17.md](../archive/E2E_TESTING_GUIDE_2026-02-17.md) (archived) **SSOT:**
+system-integration-tests/README.md, unified-trading-codex integration-testing-layers.md
 
 ---
 
@@ -21,7 +21,8 @@
 
 ## Internal Contracts Only
 
-**Rule:** system-integration-tests uses **internal contracts (UIC)** only. No external API keys. Tests hit services via HTTP; validate responses against UIC schemas where applicable.
+**Rule:** system-integration-tests uses **internal contracts (UIC)** only. No external API keys. Tests hit services via
+HTTP; validate responses against UIC schemas where applicable.
 
 | Allowed                       | Not allowed                                 |
 | ----------------------------- | ------------------------------------------- |
