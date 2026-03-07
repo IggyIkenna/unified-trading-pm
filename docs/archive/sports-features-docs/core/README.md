@@ -2,8 +2,8 @@
 
 **Purpose:** Syndicate-level sports betting ML pipeline for football (soccer) prediction.
 
-**Coverage:** 34 leagues, 5 seasons (2020-2024), pre-game + half-time predictions
-**Final Test:** 2025 reserved as out-of-sample validation
+**Coverage:** 34 leagues, 5 seasons (2020-2024), pre-game + half-time predictions **Final Test:** 2025 reserved as
+out-of-sample validation
 
 ---
 
@@ -69,7 +69,8 @@
 
 1. **Read `reference_data_spec.md`** - Stage 1 canonical keys + provider ID mappings (join layer)
 2. **Read `raw_data_spec.md`** - Stage 2 raw download layout + provider endpoint tables
-3. **Read `PROCESSING_PROVIDERS_AND_CLI.md`** - provider-grouped processing boundaries + standard CLI contract + Odds API market-data output layout
+3. **Read `PROCESSING_PROVIDERS_AND_CLI.md`** - provider-grouped processing boundaries + standard CLI contract + Odds
+   API market-data output layout
 4. Check `models.py` for database schema
 
 ### If you need to build features:

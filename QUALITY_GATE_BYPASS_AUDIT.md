@@ -4,7 +4,8 @@
 
 ## 1. PM Repo — Non-Standard Structure (Audited Exception)
 
-**unified-trading-pm** is not a deployable package. It is the project management, docs, and scripts canonical repo. Quality gates apply PM-specific handling:
+**unified-trading-pm** is not a deployable package. It is the project management, docs, and scripts canonical repo.
+Quality gates apply PM-specific handling:
 
 | Check               | Standard (deployable package)           | PM Exception                                           |
 | ------------------- | --------------------------------------- | ------------------------------------------------------ |
@@ -13,16 +14,21 @@
 | **coverage**        | `--cov=REPO_MODULE --cov-fail-under=70` | `--cov=scripts/manifest --cov-fail-under=0`            |
 | **SOURCE_DIRS**     | `REPO_MODULE/ tests/`                   | `scripts/ github-integration/ tests/`                  |
 
-**Rationale:** PM hosts automation scripts, cursor rules, workspace manifest, and plans — not a Cloud Run service or installable library. Documented in `.cursor/rules/pm-repo-context.mdc`.
+**Rationale:** PM hosts automation scripts, cursor rules, workspace manifest, and plans — not a Cloud Run service or
+installable library. Documented in `.cursor/rules/pm-repo-context.mdc`.
 
 ---
 
 ## 1.1 Version Policy Exception — `unified-trading-pm` at `1.0.0`
 
-**Repo:** `unified-trading-pm`
-**Version in manifest:** `1.0.0`
+**Repo:** `unified-trading-pm` **Version in manifest:** `1.0.0`
 
-**Justification:** `unified-trading-pm` is a documentation and orchestration repo — it is NOT a deployable Python package (no Cloud Run service, no installable library). The `versions_policy` rule (all versions `<1.0.0` until first stable quickmerge CI pass) applies exclusively to deployable service and library packages. `unified-trading-pm` version `1.0.0` denotes stable SSOT status — it is the single source of truth for workspace manifest, cursor rules, plans, and PM scripts. Version `1.0.0` here signals maturity of the SSOT role, not a Python package release milestone. This is exempt from the pre-1.0.0 policy.
+**Justification:** `unified-trading-pm` is a documentation and orchestration repo — it is NOT a deployable Python
+package (no Cloud Run service, no installable library). The `versions_policy` rule (all versions `<1.0.0` until first
+stable quickmerge CI pass) applies exclusively to deployable service and library packages. `unified-trading-pm` version
+`1.0.0` denotes stable SSOT status — it is the single source of truth for workspace manifest, cursor rules, plans, and
+PM scripts. Version `1.0.0` here signals maturity of the SSOT role, not a Python package release milestone. This is
+exempt from the pre-1.0.0 policy.
 
 **Audit trail:** Added 2026-03-04 per PM-F2 audit finding.
 
@@ -30,7 +36,8 @@
 
 ## 2. Excluded Paths — Legacy and Tooling Directories
 
-The following directories are excluded from the file-size and function-size quality gate checks. They are PM tooling and archive files, not deployable code.
+The following directories are excluded from the file-size and function-size quality gate checks. They are PM tooling and
+archive files, not deployable code.
 
 | Path                  | Reason                                                                                                                                                                                                                                                                                                |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,7 +45,8 @@ The following directories are excluded from the file-size and function-size qual
 | `github-integration/` | One-time and ongoing PM automation scripts for GitHub Projects/Issues workflows. These are long single-file scripts by design (no shared module), and they are not deployed or imported as Python packages. Max file `04-create-service-epics.py` (1167L) is a single-script GitHub API orchestrator. |
 | `rd-tax-credits/`     | R&D tax credit export utilities. `export-script.py` `main()` is 168L (exceeds 100L function limit) — it is a one-time reporting tool with a large argparse block followed by a reporting loop. Not deployed, not imported as a package.                                                               |
 
-**Audit trail:** Added 2026-03-04. File/function size exclusions for `docs/archive/`, `github-integration/`, `rd-tax-credits/` confirmed 2026-03-06.
+**Audit trail:** Added 2026-03-04. File/function size exclusions for `docs/archive/`, `github-integration/`,
+`rd-tax-credits/` confirmed 2026-03-06.
 
 ---
 
@@ -75,7 +83,8 @@ None.
 
 ## 2.6 Quality Gate Check — `grep -v` Exclusions
 
-Some checks produce false positives against files whose content is pattern-search code (not violations). These exclusions are applied in `scripts/quality-gates.sh`:
+Some checks produce false positives against files whose content is pattern-search code (not violations). These
+exclusions are applied in `scripts/quality-gates.sh`:
 
 | Check                          | Excluded File                                        | Reason                                                                                                                                                                                         |
 | ------------------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,7 +97,8 @@ Some checks produce false positives against files whose content is pattern-searc
 | `pip install`                  | `scripts/agents/llm-agent-wrapper.sh`                | This shell script contains an `echo` statement displaying install instructions for users. It is documentation output, not an actual pip install invocation.                                    |
 | `pip install` (self-match)     | `scripts/quality-gates.sh` itself                    | The rg command pattern `pip install` matches the line in the quality-gates.sh that runs the check. Excluded to prevent self-referential false positive.                                        |
 
-**Audit trail:** Added 2026-03-04. find-coding-violations.py (naive datetime, TypedDict) and rollout-quality-gate-checks.py (BACK_COMPAT) added 2026-03-06.
+**Audit trail:** Added 2026-03-04. find-coding-violations.py (naive datetime, TypedDict) and
+rollout-quality-gate-checks.py (BACK_COMPAT) added 2026-03-06.
 
 ---
 
@@ -96,7 +106,9 @@ Some checks produce false positives against files whose content is pattern-searc
 
 **Rule bypassed:** No `os.getenv()` — use `UnifiedCloudConfig` (codex §06 / `no-os-getenv` rule).
 
-**Scope:** `github-integration/` scripts only. These are PM orchestration scripts that drive GitHub API workflows and must authenticate via environment-injected tokens (e.g. `GITHUB_TOKEN`, `GH_TOKEN`). They run outside any cloud context and cannot use `get_secret_client()`, which requires a live GCP runtime.
+**Scope:** `github-integration/` scripts only. These are PM orchestration scripts that drive GitHub API workflows and
+must authenticate via environment-injected tokens (e.g. `GITHUB_TOKEN`, `GH_TOKEN`). They run outside any cloud context
+and cannot use `get_secret_client()`, which requires a live GCP runtime.
 
 | File                                                                                      | Line | Call                                                 | Justification                                                                                            |
 | ----------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -105,9 +117,14 @@ Some checks produce false positives against files whose content is pattern-searc
 | `github-integration/scripts/core/02-run-diff-checker.py`                                  | 894  | `os.getenv("GITHUB_REPO", ...)`                      | GitHub repo name for API calls — env var override pattern for local dev vs CI                            |
 | `github-integration/scripts/one-time/setup-cod-project-workflows.py`                      | 38   | `os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")` | GitHub API token with `GH_TOKEN`/`GITHUB_TOKEN` dual-fallback — standard GitHub Actions pattern          |
 
-**Rationale:** `github-integration/` scripts are pure CI/CD automation that orchestrate GitHub Projects, issues, and workflow triggers. They have no access to GCP Secret Manager (no service account, no ADC in the CI environment where they run). Reading GitHub credentials from environment variables is the correct and intentional approach for this architecture boundary. `UnifiedCloudConfig` and `get_secret_client()` are for deployed cloud services, not for PM orchestration scripts.
+**Rationale:** `github-integration/` scripts are pure CI/CD automation that orchestrate GitHub Projects, issues, and
+workflow triggers. They have no access to GCP Secret Manager (no service account, no ADC in the CI environment where
+they run). Reading GitHub credentials from environment variables is the correct and intentional approach for this
+architecture boundary. `UnifiedCloudConfig` and `get_secret_client()` are for deployed cloud services, not for PM
+orchestration scripts.
 
-**Architecture boundary:** This exception applies exclusively to `github-integration/` scripts. All other production service and library code must use `UnifiedCloudConfig` (config values) or `get_secret_client()` (secrets/API keys).
+**Architecture boundary:** This exception applies exclusively to `github-integration/` scripts. All other production
+service and library code must use `UnifiedCloudConfig` (config values) or `get_secret_client()` (secrets/API keys).
 
 **Audit trail:** Added 2026-03-04 per quality-gate failure analysis.
 
@@ -119,11 +136,17 @@ Some checks produce false positives against files whose content is pattern-searc
 
 **Scope:** The following scripts are excluded from the broad-except check:
 
-- `scripts/check_external_dependency_alignment.py` — parses semver specifiers and pyproject.toml files; broad except catches malformed input
+- `scripts/check_external_dependency_alignment.py` — parses semver specifiers and pyproject.toml files; broad except
+  catches malformed input
 - `scripts/fix_external_dependency_alignment.py` — same as above
-- `scripts/manifest/fix-internal-dependency-alignment.py` — parses imports from source files; broad except handles partial parses
+- `scripts/manifest/fix-internal-dependency-alignment.py` — parses imports from source files; broad except handles
+  partial parses
 
-**Rationale:** These are PM tooling scripts that parse external files (pyproject.toml, Python source). Parsing can fail with many different exception types (syntax errors, encoding errors, malformed TOML). Using `except Exception: pass` or `except Exception: return fallback` here is appropriate to maintain resilience — the scripts are best-effort tools, not production services with SLAs. The "specific exception" rule applies to production services where silent failures are dangerous.
+**Rationale:** These are PM tooling scripts that parse external files (pyproject.toml, Python source). Parsing can fail
+with many different exception types (syntax errors, encoding errors, malformed TOML). Using `except Exception: pass` or
+`except Exception: return fallback` here is appropriate to maintain resilience — the scripts are best-effort tools, not
+production services with SLAs. The "specific exception" rule applies to production services where silent failures are
+dangerous.
 
 **Audit trail:** Added 2026-03-04.
 
@@ -142,9 +165,13 @@ Some checks produce false positives against files whose content is pattern-searc
 - `scripts/repo-management/` — repo management scripts parsing manifest JSON
 - `scripts/check_external_dependency_alignment.py`, `scripts/fix_external_dependency_alignment.py`
 
-**Rationale:** These scripts parse JSON manifest files where certain sections (`dependencies`, `repositories`, `sources`) are genuinely optional. `.get("key", [])` returning an empty list when a key is absent is correct and intentional — a missing section means "no items", not an error. The "fail fast" rule applies to API response fields and config values in production services, not to manifest file traversal in PM tooling scripts.
+**Rationale:** These scripts parse JSON manifest files where certain sections (`dependencies`, `repositories`,
+`sources`) are genuinely optional. `.get("key", [])` returning an empty list when a key is absent is correct and
+intentional — a missing section means "no items", not an error. The "fail fast" rule applies to API response fields and
+config values in production services, not to manifest file traversal in PM tooling scripts.
 
-**Audit trail:** Added 2026-03-04. ED/EL exclusions for scripts/manifest, workspace, migration, propagation, repo-management confirmed 2026-03-06.
+**Audit trail:** Added 2026-03-04. ED/EL exclusions for scripts/manifest, workspace, migration, propagation,
+repo-management confirmed 2026-03-06.
 
 ---
 
@@ -152,7 +179,8 @@ Some checks produce false positives against files whose content is pattern-searc
 
 **Rule bypassed:** No imports inside functions.
 
-**Status:** RESOLVED. Import moved to top level with `try/except ImportError`; `get_storage_client is None` check replaces `importlib.util.find_spec`. No bypass needed.
+**Status:** RESOLVED. Import moved to top level with `try/except ImportError`; `get_storage_client is None` check
+replaces `importlib.util.find_spec`. No bypass needed.
 
 **Audit trail:** Added 2026-03-04. Resolved 2026-03-06.
 
@@ -169,4 +197,5 @@ Some checks produce false positives against files whose content is pattern-searc
 | system-integration-tests                   | `.venv` invalid (no Python executable)                       | Remove `.venv` and run `uv sync` from workspace                               |
 | 20 internal manifest↔pyproject mismatches | fix-internal-dependency-alignment.py needs tomli_w           | `uv pip install tomli-w` then run fix script                                  |
 
-**Rationale:** Path deps and workspace-local packages require workspace context for resolution. Documented for S4 audit traceability.
+**Rationale:** Path deps and workspace-local packages require workspace context for resolution. Documented for S4 audit
+traceability.

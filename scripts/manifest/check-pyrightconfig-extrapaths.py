@@ -1,0 +1,301 @@
+#!/usr/bin/env python3.13
+"""
+check-pyrightconfig-extrapaths.py — Validate pyrightconfig.json extraPaths against
+the workspace manifest declared dependencies.
+
+Rules enforced:
+  1. DEAD extraPath — listed in pyrightconfig.json but NOT declared in manifest deps
+       --apply: remove it (if code doesn't import it) OR error (if code imports it)
+  2. PHANTOM dep — declared in manifest deps AND in pyproject.toml, but code has
+       zero imports from that package → always ERROR (cannot auto-fix a missing usage)
+  3. MISSING extraPath — declared as internal manifest dep but not in extraPaths
+       --apply: add it
+
+Usage:
+    python3 check-pyrightconfig-extrapaths.py          # check only
+    python3 check-pyrightconfig-extrapaths.py --apply  # fix + report errors
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import cast
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def repo_to_package(repo_name: str) -> str:
+    """unified-api-contracts → unified_api_contracts"""
+    return repo_name.replace("-", "_")
+
+
+def extrapaths_from_config(config: dict[str, object]) -> list[str]:
+    """Extract all extraPaths entries from a pyrightconfig dict (all locations)."""
+    paths: list[str] = []
+    # Top-level extraPaths
+    if "extraPaths" in config:
+        paths.extend(str(p) for p in config["extraPaths"])  # type: ignore[union-attr]
+    # executionEnvironments[*].extraPaths
+    for env in config.get("executionEnvironments") or []:  # type: ignore[union-attr]
+        paths.extend(str(p) for p in env.get("extraPaths") or [])  # type: ignore[union-attr]
+    return paths
+
+
+def extrapaths_to_repo_names(paths: list[str], repo_root: Path, workspace_root: Path) -> dict[str, str]:
+    """Map each raw extraPath string to its resolved sibling repo name.
+
+    Only includes paths that resolve to a direct sibling of the workspace root.
+    Skips '.' (self-reference), '..' and non-sibling paths silently.
+
+    "../unified-api-contracts"                           → "unified-api-contracts"
+    "../api-contracts"                                   → "api-contracts" (typo)
+    "/abs/path/to/workspace/features-cross-instrument-service" → "features-cross-instrument-service"
+    "."                                                  → skipped
+    """
+    result: dict[str, str] = {}
+    for p in paths:
+        raw = Path(p)
+        # Skip self-reference and parent-only paths
+        if str(p) in (".", ".."):
+            continue
+        # Resolve to absolute
+        if raw.is_absolute():
+            resolved = raw
+        else:
+            resolved = (repo_root / raw).resolve()
+        # Must be a direct child of workspace_root to be a sibling repo
+        try:
+            resolved.relative_to(workspace_root)
+        except ValueError:
+            continue
+        if resolved.parent != workspace_root:
+            continue  # nested path, not a direct sibling repo
+        result[p] = resolved.name
+    return result
+
+
+def imports_package_in_source(source_dir: Path, package_name: str) -> bool:
+    """Return True if any .py file in source_dir or sibling tests/ imports package_name."""
+    search_dirs = [d for d in [source_dir, source_dir.parent / "tests"] if d.is_dir()]
+    if not search_dirs:
+        return False
+    patterns = [f"from {package_name}", f"import {package_name}"]
+    for search_dir in search_dirs:
+        for pattern in patterns:
+            result = subprocess.run(
+                ["grep", "-r", "--include=*.py", "-l", pattern, str(search_dir)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return True
+    return False
+
+
+def get_source_dir(repo_root: Path, config: dict[str, object]) -> Path:
+    """Derive source directory from pyrightconfig include list or fall back."""
+    includes: list[str] = list(config.get("include") or [])  # type: ignore[arg-type]
+    for inc in includes:
+        candidate = repo_root / inc
+        if candidate.is_dir() and not str(inc).startswith("test"):
+            return candidate
+    # Fallback: repo_name with hyphens → underscores
+    pkg = repo_to_package(repo_root.name)
+    candidate = repo_root / pkg
+    if candidate.is_dir():
+        return candidate
+    return repo_root
+
+
+def get_pyproject_internal_deps(repo_root: Path, internal_repos: set[str]) -> set[str]:
+    """Return set of internal repo names declared in pyproject.toml dependencies."""
+    pyproject = repo_root / "pyproject.toml"
+    if not pyproject.exists():
+        return set()
+    text = pyproject.read_text()
+    found: set[str] = set()
+    # Match dep lines like:  "unified-api-contracts>=0.1.0,<1.0.0"
+    for match in re.finditer(r'"([a-z][a-z0-9-]+)(?:>=|==|~=|>|@)', text):
+        name = match.group(1)
+        if name in internal_repos:
+            found.add(name)
+    return found
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--apply", action="store_true", help="Apply safe fixes")
+    args = parser.parse_args()
+    apply_fix: bool = cast(bool, args.apply)
+
+    # Resolve workspace root (script lives in unified-trading-pm/scripts/manifest/)
+    script_dir = Path(__file__).resolve().parent
+    pm_root = script_dir.parent.parent
+    workspace_root = pm_root.parent
+
+    manifest_path = pm_root / "workspace-manifest.json"
+    if not manifest_path.exists():
+        print(f"ERROR: workspace-manifest.json not found at {manifest_path}", file=sys.stderr)
+        return 1
+
+    manifest = cast(dict[str, object], json.loads(manifest_path.read_text()))
+    repositories: dict[str, dict[str, object]] = cast(dict[str, dict[str, object]], manifest.get("repositories") or {})
+    internal_repos: set[str] = set(repositories.keys())
+
+    errors: list[str] = []
+    warnings: list[str] = []
+    fixes_applied: list[str] = []
+
+    for repo_name, repo_meta in repositories.items():
+        repo_root = workspace_root / repo_name
+        pyright_path = repo_root / "pyrightconfig.json"
+
+        if not pyright_path.exists():
+            continue
+
+        config: dict[str, object] = cast(dict[str, object], json.loads(pyright_path.read_text()))
+        raw_paths = extrapaths_from_config(config)
+        if not raw_paths:
+            continue
+
+        path_to_repo = extrapaths_to_repo_names(raw_paths, repo_root, workspace_root)
+        # Internal manifest deps declared for this repo
+        # deps can be list[dict] ({"name": ..., "version": ...}) or list[str]
+        raw_deps: list[object] = list(repo_meta.get("dependencies") or [])  # type: ignore[arg-type]
+        manifest_internal_deps: set[str] = set()
+        for dep in raw_deps:
+            dep_name = dep["name"] if isinstance(dep, dict) else str(dep)  # type: ignore[index]
+            if dep_name in internal_repos:
+                manifest_internal_deps.add(dep_name)
+
+        source_dir = get_source_dir(repo_root, config)
+        pyproject_internal_deps = get_pyproject_internal_deps(repo_root, internal_repos)
+
+        # ── Rule 1: Dead extraPaths (not in manifest) ────────────────────────
+        dead_paths: list[str] = [raw for raw, name in path_to_repo.items() if name not in manifest_internal_deps]
+        for raw in dead_paths:
+            dep_name = path_to_repo[raw]
+            pkg_name = repo_to_package(dep_name)
+            used_in_code = imports_package_in_source(source_dir, pkg_name)
+
+            if used_in_code:
+                errors.append(
+                    f"[{repo_name}] extraPath '{raw}' (→ {dep_name}) is NOT in manifest deps "
+                    f"but IS imported in source — add '{dep_name}' to manifest dependencies first"
+                )
+            else:
+                if apply_fix:
+                    _remove_extrapath(pyright_path, config, raw)
+                    fixes_applied.append(
+                        f"[{repo_name}] Removed dead extraPath '{raw}' (not in manifest, not imported)"
+                    )
+                else:
+                    warnings.append(
+                        f"[{repo_name}] Dead extraPath '{raw}' (→ {dep_name}) not in manifest "
+                        f"and not imported — run --apply to remove"
+                    )
+
+        # ── Rule 2: Phantom deps (manifest + pyproject dep but no imports) ───
+        for dep in manifest_internal_deps & pyproject_internal_deps:
+            pkg_name = repo_to_package(dep)
+            if not imports_package_in_source(source_dir, pkg_name):
+                errors.append(
+                    f"[{repo_name}] Phantom dep '{dep}': declared in manifest + pyproject.toml "
+                    f"but no import of '{pkg_name}' found in {source_dir.relative_to(workspace_root)} "
+                    f"— add a real import or remove the dependency"
+                )
+
+        # ── Rule 3: Missing extraPaths (manifest dep, no extraPath) ──────────
+        configured_repos = set(path_to_repo.values())
+        missing: set[str] = manifest_internal_deps - configured_repos
+        for dep in sorted(missing):
+            if apply_fix:
+                _add_extrapath(pyright_path, config, f"../{dep}")
+                fixes_applied.append(f"[{repo_name}] Added missing extraPath '../{dep}' (declared manifest dep)")
+            else:
+                warnings.append(f"[{repo_name}] Manifest dep '{dep}' has no extraPath '../{dep}' — run --apply to add")
+
+    # ── Report ───────────────────────────────────────────────────────────────
+    if fixes_applied:
+        print("\nFixes applied:")
+        for f in fixes_applied:
+            print(f"  ✅ {f}")
+
+    if warnings:
+        print("\nWarnings (run --apply to fix):")
+        for w in warnings:
+            print(f"  ⚠️  {w}")
+
+    if errors:
+        print("\nErrors (manual intervention required):")
+        for e in errors:
+            print(f"  ❌ {e}")
+        return 1
+
+    if not fixes_applied and not warnings and not errors:
+        print("  extraPaths alignment OK")
+
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Mutation helpers
+# ---------------------------------------------------------------------------
+
+
+def _load_config(path: Path) -> dict[str, object]:
+    return cast(dict[str, object], json.loads(path.read_text()))
+
+
+def _save_config(path: Path, config: dict[str, object]) -> None:
+    path.write_text(json.dumps(config, indent=2) + "\n")
+
+
+def _remove_extrapath(path: Path, config: dict[str, object], raw: str) -> None:
+    """Remove raw extraPath from all locations in config and save."""
+    changed = False
+
+    if "extraPaths" in config:
+        old: list[str] = list(config["extraPaths"])  # type: ignore[arg-type]
+        new = [p for p in old if p != raw]
+        if new != old:
+            config["extraPaths"] = new
+            changed = True
+
+    for env in config.get("executionEnvironments") or []:  # type: ignore[union-attr]
+        if "extraPaths" in env:
+            old = list(env["extraPaths"])  # type: ignore[arg-type]
+            new = [p for p in old if p != raw]
+            if new != old:
+                env["extraPaths"] = new
+                changed = True
+
+    if changed:
+        _save_config(path, config)
+
+
+def _add_extrapath(path: Path, config: dict[str, object], raw: str) -> None:
+    """Add raw extraPath to the top-level extraPaths list and save."""
+    if "extraPaths" not in config:
+        config["extraPaths"] = []
+    paths: list[str] = list(config["extraPaths"])  # type: ignore[arg-type]
+    if raw not in paths:
+        paths.append(raw)
+        config["extraPaths"] = sorted(paths)
+        _save_config(path, config)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -129,9 +129,7 @@ All 8 checks from quality gates:
 
 ### 01-create-project.sh
 
-**Purpose:** Create GitHub Project #5
-**When to use:** One-time setup
-**Output:** Project number
+**Purpose:** Create GitHub Project #5 **When to use:** One-time setup **Output:** Project number
 
 ```bash
 bash 01-create-project.sh
@@ -140,9 +138,8 @@ bash 01-create-project.sh
 
 ### 02-create-issues.sh
 
-**Purpose:** Create cleanup issues in each repo
-**When to use:** One-time setup (or to create missing issues)
-**Dry run:** `--dry-run` flag
+**Purpose:** Create cleanup issues in each repo **When to use:** One-time setup (or to create missing issues) **Dry
+run:** `--dry-run` flag
 
 ```bash
 # Create all issues
@@ -161,9 +158,8 @@ bash 02-create-issues.sh --dry-run
 
 ### 03-link-issues-to-project.sh
 
-**Purpose:** Add cleanup issues to Project #5
-**When to use:** After creating issues
-**Project number:** Default 5 (or specify: `--project-number N`)
+**Purpose:** Add cleanup issues to Project #5 **When to use:** After creating issues **Project number:** Default 5 (or
+specify: `--project-number N`)
 
 ```bash
 bash 03-link-issues-to-project.sh
@@ -174,8 +170,7 @@ bash 03-link-issues-to-project.sh 5
 
 ### 04-run-batch-fix.sh
 
-**Purpose:** Run batch automation with intelligent filtering
-**When to use:** To process multiple issues in parallel
+**Purpose:** Run batch automation with intelligent filtering **When to use:** To process multiple issues in parallel
 
 **Features:**
 
@@ -224,8 +219,7 @@ bash 04-run-batch-fix.sh \
 
 ### 05-verify-completion.sh
 
-**Purpose:** Check completion status and generate report
-**When to use:** Anytime to check progress
+**Purpose:** Check completion status and generate report **When to use:** Anytime to check progress
 
 ```bash
 bash 05-verify-completion.sh
@@ -239,8 +233,8 @@ bash 05-verify-completion.sh
 
 ### 06-generate-manifests.py
 
-**Purpose:** Generate CODEX_VIOLATIONS_MANIFEST.md files for all repos
-**When to use:** After quality gates updates or to refresh violation counts
+**Purpose:** Generate CODEX_VIOLATIONS_MANIFEST.md files for all repos **When to use:** After quality gates updates or
+to refresh violation counts
 
 ```bash
 # Generate manifests for all repos
@@ -290,8 +284,7 @@ Total violations: 8
 
 ### utilities/check-codex-violations.py
 
-**Purpose:** Core violation checker (moved from core/02-run-diff-checker.py)
-**Used by:** 06-generate-manifests.py
+**Purpose:** Core violation checker (moved from core/02-run-diff-checker.py) **Used by:** 06-generate-manifests.py
 
 **Direct usage (advanced):**
 
@@ -326,8 +319,8 @@ violations), see `scripts/core/05-check-file-size-cods.py` (will move to COD-SIZ
 
 ### AGENT_PROMPT.md
 
-**Purpose:** Quick copy-paste prompts for local agent execution
-**When to use:** Running one repo at a time with full control
+**Purpose:** Quick copy-paste prompts for local agent execution **When to use:** Running one repo at a time with full
+control
 
 **Example:**
 
@@ -340,8 +333,7 @@ WORKFLOW: [8 steps...]
 
 ### WORKFLOW.md
 
-**Purpose:** Comprehensive 892-line workflow guide
-**When to use:** Reference for agents (local or batch)
+**Purpose:** Comprehensive 892-line workflow guide **When to use:** Reference for agents (local or batch)
 
 **Key sections:**
 
@@ -461,8 +453,7 @@ bash 04-run-batch-fix.sh \
 
 **Blocked by:** Initial Cleanup (this project)
 
-**Scope:** Fix files >1500 lines
-**Directory:** `scripts/projects/cod-size-refactoring/` (to be created)
+**Scope:** Fix files >1500 lines **Directory:** `scripts/projects/cod-size-refactoring/` (to be created)
 
 **Issues:**
 
@@ -491,18 +482,17 @@ bash 04-run-batch-fix.sh \
 
 ### Issue: CI fails but local passed
 
-**Root cause:** Infrastructure mismatch
-**Fix:** Update GitHub Actions to match local (see WORKFLOW.md Step 6)
+**Root cause:** Infrastructure mismatch **Fix:** Update GitHub Actions to match local (see WORKFLOW.md Step 6)
 
 ### Issue: Duplicate dependencies
 
-**Root cause:** Service re-specifies dependency already in unified-trading-services
-**Fix:** Remove from service pyproject.toml, unified-trading-services already provides it
+**Root cause:** Service re-specifies dependency already in unified-trading-services **Fix:** Remove from service
+pyproject.toml, unified-trading-services already provides it
 
 ### Issue: Quality gates outdated
 
-**Root cause:** Repo missing Check 5 (imports inside functions)
-**Fix:** Copy quality-gates.sh from unified-trading-services, commit separately
+**Root cause:** Repo missing Check 5 (imports inside functions) **Fix:** Copy quality-gates.sh from
+unified-trading-services, commit separately
 
 ---
 

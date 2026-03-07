@@ -1,6 +1,7 @@
 # Unified Trading PM — SSOT Index
 
-Canonical references for plans, manifest, and deployment. See also `unified-trading-codex/00-SSOT-INDEX.md` for Codex docs.
+Canonical references for plans, manifest, and deployment. See also `unified-trading-codex/00-SSOT-INDEX.md` for Codex
+docs.
 
 ## Canonical Plans
 

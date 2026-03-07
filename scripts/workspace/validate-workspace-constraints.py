@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate workspace-constraints.toml resolves without dependency conflicts.
 
 Parses workspace-constraints.toml, writes a temp requirements.in, runs uv pip compile.

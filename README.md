@@ -1,7 +1,7 @@
 # unified-trading-pm
 
-Project management, workspace tooling, and shared configuration for the Unified Trading System.
-This is Level 0 (root) in the workspace topology — the SSOT template host and workspace management repo.
+Project management, workspace tooling, and shared configuration for the Unified Trading System. This is Level 0 (root)
+in the workspace topology — the SSOT template host and workspace management repo.
 
 ---
 
@@ -22,7 +22,8 @@ bash unified-trading-pm/scripts/workspace/sync-rules-pull.sh
 bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
 ```
 
-Full setup guide: [docs/workspace-setup.md](docs/workspace-setup.md) | IDE coordination: [docs/both-ides-setup.md](docs/both-ides-setup.md)
+Full setup guide: [docs/workspace-setup.md](docs/workspace-setup.md) | IDE coordination:
+[docs/both-ides-setup.md](docs/both-ides-setup.md)
 
 ---
 

@@ -1,13 +1,12 @@
 # Schema Contracts Full Audit
 
-**Status:** Audit complete. Remediation in progress.
-**Date:** 2026-03-05 | **Last verified:** 2026-03-06
-**Plan:** [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)
-**Scope:** All 60+ repos scanned across 10 parallel agents
-**Audit result:** Violations catalogued. Codex/cursor rules updated. Quality gates blocking.
+**Status:** Audit complete. Remediation in progress. **Date:** 2026-03-05 | **Last verified:** 2026-03-06 **Plan:**
+[schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md) **Scope:** All 60+ repos scanned across 10
+parallel agents **Audit result:** Violations catalogued. Codex/cursor rules updated. Quality gates blocking.
 **Remediation blockers remaining:**
 
-- `unified-internal-contracts/unified_internal_contracts/domain/` scaffolded 2026-03-06 (was missing); service schema migration can now begin per Section 6 priority order.
+- `unified-internal-contracts/unified_internal_contracts/domain/` scaffolded 2026-03-06 (was missing); service schema
+  migration can now begin per Section 6 priority order.
 - `InstrumentRecord` CONFLICT (UAC vs UIC) must be resolved before migration of instrument schemas.
 
 ---
@@ -28,8 +27,10 @@
 **Critical pre-conditions for remediation:**
 
 1. `InstrumentRecord` CONFLICT must be resolved first (UAC and UIC define incompatible versions)
-2. `unified-internal-contracts/unified_internal_contracts/domain/` directory must be created before service schemas can migrate
-3. `schema-service-owned.mdc` and `schema-governance.md` actively enforce the OLD (wrong) pattern — retire/replace before any migration
+2. `unified-internal-contracts/unified_internal_contracts/domain/` directory must be created before service schemas can
+   migrate
+3. `schema-service-owned.mdc` and `schema-governance.md` actively enforce the OLD (wrong) pattern — retire/replace
+   before any migration
 
 ---
 
@@ -51,7 +52,10 @@
 | Interface-internal types not cross-imported                    | Interface (stays)                                       | Not a cross-repo contract                                       |
 | `SchemaDefinition` / `ColumnSchema` (parquet shape descriptor) | Service `schemas/output_schemas.py`                     | Infrastructure concern — NOT a data contract. Stays in service. |
 
-> **SchemaDefinition distinction:** `SchemaDefinition` and `ColumnSchema` objects (from `unified-trading-library`) are parquet schema enforcement descriptors — they tell the library HOW to validate a write. They are NOT Pydantic data contracts. They stay in the service. The corresponding Pydantic/TypedDict/dataclass model that describes the data SHAPE belongs in UIC.
+> **SchemaDefinition distinction:** `SchemaDefinition` and `ColumnSchema` objects (from `unified-trading-library`) are
+> parquet schema enforcement descriptors — they tell the library HOW to validate a write. They are NOT Pydantic data
+> contracts. They stay in the service. The corresponding Pydantic/TypedDict/dataclass model that describes the data
+> SHAPE belongs in UIC.
 
 ---
 
@@ -97,7 +101,9 @@
 | **CanonicalStakingRate**       | `domain.py:350` (4 fields: protocol, asset, apy, timestamp, chain="")                                                   | `market_data/defi.py:67` (5 fields: protocol, chain, asset, apy, total_staked, rewards_per_second)                                     | Different field counts                                                                                                                                                        | **DUPLICATE — resolve ownership** |
 | **CanonicalOptionsChainEntry** | `domain.py:303` (15 fields: timestamp, venue, symbol, underlying, strike, option_type, expiration, bid/ask, iv, greeks) | `market_data/options_chain.py:12` (10 fields: underlying, expiry, strike, put_call, bid, ask, last, iv, greeks, open_interest, volume) | Different field counts                                                                                                                                                        | **DUPLICATE — resolve ownership** |
 
-**Resolution rule:** UAC owns canonicals that are the OUTPUT of normalizers (they normalize external venue data to canonical form). UIC owns canonicals used for MESSAGING (cross-service pub-sub). For the three DeFi/options duplicates: determine which one the normalizers produce and which one the services subscribe to.
+**Resolution rule:** UAC owns canonicals that are the OUTPUT of normalizers (they normalize external venue data to
+canonical form). UIC owns canonicals used for MESSAGING (cross-service pub-sub). For the three DeFi/options duplicates:
+determine which one the normalizers produce and which one the services subscribe to.
 
 ### 1d. Orphaned Schemas in UAC
 
@@ -112,7 +118,8 @@ No orphaned Pydantic classes found. All UAC classes are exported in `__all__` or
 | CanonicalDerivativeTicker | `unified_internal_contracts.market_data.derivative_ticker` | Same — no `derivative_ticker.py` source file                                                                  |
 | CanonicalLiquidation      | `unified_internal_contracts.market_data.liquidation`       | Same — no `liquidation.py` source file                                                                        |
 
-**Action:** Update registry entries to reflect actual locations in UAC + the re-import path via UIC `market_data/__init__.py`.
+**Action:** Update registry entries to reflect actual locations in UAC + the re-import path via UIC
+`market_data/__init__.py`.
 
 ### 1f. Tier Boundary: UIC→UAC Import (Existing)
 
@@ -128,14 +135,14 @@ from unified_api_contracts.unified_normalised_contracts import (
 )
 ```
 
-**Status:** PERMITTED — UIC importing UAC is the correct direction.
-**Formalization needed:** workspace-manifest.json L2 must be split: UAC (L2a) before UIC (L2b).
+**Status:** PERMITTED — UIC importing UAC is the correct direction. **Formalization needed:** workspace-manifest.json L2
+must be split: UAC (L2a) before UIC (L2b).
 
 ### 1g. CIRCULAR Violation in UAC
 
-**File:** `unified-api-contracts/tests/test_ac_uic_alignment.py`
-Imports from `unified_internal_contracts` inside an `unified-api-contracts` test file. UAC is a T0 leaf and must not import UIC even in tests.
-**Action:** Move `test_ac_uic_alignment.py` to `unified-internal-contracts/tests/` (higher tier; UIC may import UAC).
+**File:** `unified-api-contracts/tests/test_ac_uic_alignment.py` Imports from `unified_internal_contracts` inside an
+`unified-api-contracts` test file. UAC is a T0 leaf and must not import UIC even in tests. **Action:** Move
+`test_ac_uic_alignment.py` to `unified-internal-contracts/tests/` (higher tier; UIC may import UAC).
 
 ---
 
@@ -150,7 +157,8 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 **Result: ALL CLEAN** — 43 schemas.
 
 - UCI enums (Venue, InstrumentType, InstructionType) are cross-imported and correctly placed in UCI.
-- URDI schemas (CanonicalOptionsChain, CanonicalExpiryCalendar, FundingRateRef, OHLCVRef) are NOT cross-imported. Currently `CORRECT-LOCAL` per audit.
+- URDI schemas (CanonicalOptionsChain, CanonicalExpiryCalendar, FundingRateRef, OHLCVRef) are NOT cross-imported.
+  Currently `CORRECT-LOCAL` per audit.
 - UTL provides no schema access pattern for services yet (gap for remediation).
 
 ### unified-market-interface (T2)
@@ -167,7 +175,9 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 
 ### unified-trade-execution-interface (T2)
 
-**Result: ALL CLEAN** — OrderType, TimeInForce, StopLimitOrder, StopMarketOrder, ExitAlgoType, ExitInstruction, ExecutionStatus, ExecutionResult, SignalExecutionResult, MarginState, AccountState, CanonicalPartialFill, CanonicalOrderRejection, CanonicalOrderAmendment = all CORRECT-LOCAL. schemas.py correctly re-exports from UAC.
+**Result: ALL CLEAN** — OrderType, TimeInForce, StopLimitOrder, StopMarketOrder, ExitAlgoType, ExitInstruction,
+ExecutionStatus, ExecutionResult, SignalExecutionResult, MarginState, AccountState, CanonicalPartialFill,
+CanonicalOrderRejection, CanonicalOrderAmendment = all CORRECT-LOCAL. schemas.py correctly re-exports from UAC.
 
 ### unified-ml-interface (T2)
 
@@ -228,7 +238,8 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 
 ### strategy-validation-service, risk-and-exposure-service, alerting-service
 
-**Result: ALL CLEAN.** Risk-and-exposure correctly imports from UIC (RiskPosition, RiskMetrics etc.). Alerting correctly uses UIC AlertEvent.
+**Result: ALL CLEAN.** Risk-and-exposure correctly imports from UIC (RiskPosition, RiskMetrics etc.). Alerting correctly
+uses UIC AlertEvent.
 
 ### market-data-processing-service
 
@@ -250,7 +261,9 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 
 **Totals: CORRECT (SchemaDefinition): 7 | CORRECT-LOCAL: 1**
 
-> **Note:** Agent 7 initially flagged these as MISPLACE-UIC. Corrected after Agent 8 clarification: `SchemaDefinition` objects are infrastructure concerns, not data contracts. The canonical data shapes for tick data already live in UIC `market_data/` (CanonicalTrade, CanonicalOrderBook, etc.). No violation.
+> **Note:** Agent 7 initially flagged these as MISPLACE-UIC. Corrected after Agent 8 clarification: `SchemaDefinition`
+> objects are infrastructure concerns, not data contracts. The canonical data shapes for tick data already live in UIC
+> `market_data/` (CanonicalTrade, CanonicalOrderBook, etc.). No violation.
 
 ### market-data-api
 
@@ -278,7 +291,8 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 
 ### features-delta-one-service, features-cross-instrument-service, features-multi-timeframe-service
 
-**Result: ALL CLEAN.** SchemaDefinition output_schemas.py files are infrastructure. UIC `features.py` has DeltaOneFeatureRecord, CrossInstrumentFeatures, CrossTimeframeFeatures as the canonical contracts.
+**Result: ALL CLEAN.** SchemaDefinition output_schemas.py files are infrastructure. UIC `features.py` has
+DeltaOneFeatureRecord, CrossInstrumentFeatures, CrossTimeframeFeatures as the canonical contracts.
 
 ### features-volatility-service
 
@@ -289,7 +303,8 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 | OptionQuote, VolatilitySurfacePoint | `models.py`         | Internal helper | CORRECT-LOCAL   | —                                                 |
 | SchemaDefinition objects            | `output_schemas.py` | Infrastructure  | CORRECT (stays) | —                                                 |
 
-> **CONFLICT-RISK:** Service maintains local dataclasses that mirror UIC contracts. Not a hard violation but risks field-level divergence. Recommendation: service imports from UIC instead of maintaining local copies.
+> **CONFLICT-RISK:** Service maintains local dataclasses that mirror UIC contracts. Not a hard violation but risks
+> field-level divergence. Recommendation: service imports from UIC instead of maintaining local copies.
 
 ### features-onchain-service
 
@@ -306,7 +321,9 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------ |
 | FIXTURE_STATS_COLUMNS, FIXTURE_EVENTS_COLUMNS, FIXTURE_LINEUPS_COLUMNS, FIXTURE_PLAYER_STATS_COLUMNS, INJURIES_COLUMNS, PLAYERS_COLUMNS, VENUES_COLUMNS, FIXTURES_COLUMNS, LEAGUES_COLUMNS, TEAMS_COLUMNS, REFEREES_COLUMNS, COACHES_COLUMNS, STANDINGS_COLUMNS, ROUNDS_COLUMNS | `schemas/output_schemas.py` | Column lists (not SchemaDefinition objects) | MISPLACE-UIC | Add as TypedDict/dataclass in new UIC `sports.py` module: FixtureStatsRecord, FixtureEventsRecord etc. |
 
-> **Note:** Unlike other features services, these are raw Python lists of column names — NOT `SchemaDefinition` objects. They are effectively data contracts that consumers need to understand sports data shape. They must be formalized as UIC TypedDicts.
+> **Note:** Unlike other features services, these are raw Python lists of column names — NOT `SchemaDefinition` objects.
+> They are effectively data contracts that consumers need to understand sports data shape. They must be formalized as
+> UIC TypedDicts.
 
 **Totals: MISPLACE-UIC: 14**
 
@@ -315,7 +332,8 @@ Imports from `unified_internal_contracts` inside an `unified-api-contracts` test
 **Result: ALL CLEAN** — 88 schemas audited, all CORRECT-LOCAL.
 
 - ml-inference correctly migrated to UIC (InferenceRequest/InferenceResult from Plan #11 Phase 1).
-- API services (execution-results-api, client-reporting-api, deployment-api) correctly use HTTP-only FastAPI models as CORRECT-LOCAL.
+- API services (execution-results-api, client-reporting-api, deployment-api) correctly use HTTP-only FastAPI models as
+  CORRECT-LOCAL.
 
 ---
 
@@ -420,7 +438,9 @@ L2a: [unified-api-contracts, unified-cloud-interface, unified-events-interface,
 L2b: [unified-internal-contracts, unified-reference-data-interface]   ← T0-with-T0-dep
 ```
 
-**Risk assessment:** Low — UIC already imports UAC in production. Formalizing the split makes the implicit explicit. No downstream repos need to change their tier classification. CI/CD build order is the only system that needs to be updated.
+**Risk assessment:** Low — UIC already imports UAC in production. Formalizing the split makes the implicit explicit. No
+downstream repos need to change their tier classification. CI/CD build order is the only system that needs to be
+updated.
 
 ---
 
@@ -428,10 +448,13 @@ L2b: [unified-internal-contracts, unified-reference-data-interface]   ← T0-wit
 
 ### P0 — Blockers (must do before Phase 2 library tier hardening)
 
-1. **Rename InstrumentRecord in UAC** → `InstrumentWarehouseRow` (or similar). Fix all UAC normalizers and GCS write callers. This removes the CONFLICT that blocks all other migrations.
+1. **Rename InstrumentRecord in UAC** → `InstrumentWarehouseRow` (or similar). Fix all UAC normalizers and GCS write
+   callers. This removes the CONFLICT that blocks all other migrations.
 2. **Retire `schema-service-owned.mdc`** → Create `imports/service-domain-schema-in-uic.mdc` with new rule.
 3. **Update `schema-governance.md`** TL;DR and service-owned section.
-4. **Create `unified_internal_contracts/domain/`** directory structure in UIC. [CREATED 2026-03-06 — `unified_internal_contracts/domain/__init__.py` scaffolded; service schema migration is now unblocked per Section 6 priority order.]
+4. **Create `unified_internal_contracts/domain/`** directory structure in UIC. [CREATED 2026-03-06 —
+   `unified_internal_contracts/domain/__init__.py` scaffolded; service schema migration is now unblocked per Section 6
+   priority order.]
 5. **Move test_ac_uic_alignment.py** from UAC to UIC tests (removes CIRCULAR violation).
 
 ### P1 — High Value Migrations
@@ -439,7 +462,8 @@ L2b: [unified-internal-contracts, unified-reference-data-interface]   ← T0-wit
 6. **Move InstrumentKey** from unified-domain-client → UIC `reference/instrument_key.py`. Update all importers.
 7. **Move `_deribit_models.py`** (30+ models) from unified-market-interface → UAC `deribit/schemas.py`.
 8. **Move `_defi_graph_models.py`** (21+ models) from unified-market-interface → new UAC `thegraph/schemas.py`.
-9. **Resolve UAC/UIC DeFi/options canonicals** — decide ownership of CanonicalOraclePrice, CanonicalStakingRate, CanonicalOptionsChainEntry.
+9. **Resolve UAC/UIC DeFi/options canonicals** — decide ownership of CanonicalOraclePrice, CanonicalStakingRate,
+   CanonicalOptionsChainEntry.
 10. **Deduplicate ModelVariantConfig/ModelMetadata** — ml-interface imports from UIC instead of own copies.
 
 ### P2 — Service Domain Schema Migrations
@@ -452,27 +476,41 @@ L2b: [unified-internal-contracts, unified-reference-data-interface]   ← T0-wit
 
 ### P0–P3 Status (2026-03-05)
 
-All P0–P3 items **COMPLETED**. Backward-compat re-export stubs eliminated. Quality gates blocking. Schema SoC enforcement in place.
+All P0–P3 items **COMPLETED**. Backward-compat re-export stubs eliminated. Quality gates blocking. Schema SoC
+enforcement in place.
 
 ### P3 — Completed
 
 16. ~~**features-sports-service**: Formalize 14 column lists as TypedDicts in UIC `sports.py`.~~ ✅ Done
 17. ~~**Eliminate backward-compat re-export stubs**~~ ✅ Done:
-    - **UAC**: `binance/schemas.py` stub — eliminated; consumers import from sub-modules (`account_schemas`, `market_schemas`, `order_schemas`, `ws_schemas`) directly.
-    - **UAC**: `cloud_sdks/aws_schemas.py` — no stub found; already structured as individual sub-modules (`aws/s3.py`, `aws/sqs.py`, etc.).
-    - **Migration stubs (interfaces)**: `unified-market-interface/adapters/_deribit_models.py`, `defi/_defi_graph_models.py` — deleted.
+    - **UAC**: `binance/schemas.py` stub — eliminated; consumers import from sub-modules (`account_schemas`,
+      `market_schemas`, `order_schemas`, `ws_schemas`) directly.
+    - **UAC**: `cloud_sdks/aws_schemas.py` — no stub found; already structured as individual sub-modules (`aws/s3.py`,
+      `aws/sqs.py`, etc.).
+    - **Migration stubs (interfaces)**: `unified-market-interface/adapters/_deribit_models.py`,
+      `defi/_defi_graph_models.py` — deleted.
     - **Migration stubs (UDC)**: `unified-domain-client/schemas/instrument_key.py` — deleted.
-    - **Service re-export stubs** (strategy-service, execution-service, market-data-processing, market-data-api, features-onchain) — stubs removed; consumers import from UIC `domain/` directly.
-    - **Sports adapter stubs** (Matchbook, Smarkets, Betdaq, Pinnacle, OddsAPI, OneXBet in USEI) — deleted; consumers import from UAC.
-    - **features-sports-service**: `schemas/output_schemas.py` TypedDict re-export section removed; only column lists remain.
-    - **features-volatility-service**: `models.py` backward-compat aliases (`VolatilityFeatures`, `FuturesTermStructureFeatures`) removed; all consumers now import from UIC directly.
+    - **Service re-export stubs** (strategy-service, execution-service, market-data-processing, market-data-api,
+      features-onchain) — stubs removed; consumers import from UIC `domain/` directly.
+    - **Sports adapter stubs** (Matchbook, Smarkets, Betdaq, Pinnacle, OddsAPI, OneXBet in USEI) — deleted; consumers
+      import from UAC.
+    - **features-sports-service**: `schemas/output_schemas.py` TypedDict re-export section removed; only column lists
+      remain.
+    - **features-volatility-service**: `models.py` backward-compat aliases (`VolatilityFeatures`,
+      `FuturesTermStructureFeatures`) removed; all consumers now import from UIC directly.
     - **Rule**: `cursor-rules/core/no-backward-compat-shims.mdc`. Quality gate STEP 5.8 is BLOCKING.
-18. ~~**features-volatility-service**: Replace local VolatilityFeatures/FuturesTermStructureFeatures with UIC imports.~~ ✅ Done — aliases removed; calculators and tests import `OptionsIvRecord`/`FuturesTermStructureRecord` from UIC directly.
+18. ~~**features-volatility-service**: Replace local VolatilityFeatures/FuturesTermStructureFeatures with UIC imports.~~
+    ✅ Done — aliases removed; calculators and tests import `OptionsIvRecord`/`FuturesTermStructureRecord` from UIC
+    directly.
 19. ~~**Update schema_registry.json** stale entries.~~ ✅ Done
 20. ~~**Add schema placement quality gate checks** to all service/library templates.~~ ✅ Done (STEP 5.9)
 21. ~~**Update workspace-manifest.json L2 → L2a/L2b** split.~~ ✅ Done
-22. ~~**Sports adapter execution schemas**: Extend UAC sports venue schemas with execution-specific shapes.~~ ✅ Done (USEI adapter stubs deleted; UAC is already the canonical home for execution-specific shapes per adapter-models-belong-in-uac.mdc)
-23. ~~**features-volatility-service reconciliation**: Resolve timestamp type and missing FuturesTermStructure fields.~~ ✅ Done — UIC `FuturesTermStructureRecord` already uses `datetime`; service calculators use `datetime` consistently. Timestamp conversion note captured in models.py docstring.
+22. ~~**Sports adapter execution schemas**: Extend UAC sports venue schemas with execution-specific shapes.~~ ✅ Done
+    (USEI adapter stubs deleted; UAC is already the canonical home for execution-specific shapes per
+    adapter-models-belong-in-uac.mdc)
+23. ~~**features-volatility-service reconciliation**: Resolve timestamp type and missing FuturesTermStructure fields.~~
+    ✅ Done — UIC `FuturesTermStructureRecord` already uses `datetime`; service calculators use `datetime` consistently.
+    Timestamp conversion note captured in models.py docstring.
 
 ---
 
@@ -482,12 +520,14 @@ All P0–P3 items **COMPLETED**. Backward-compat re-export stubs eliminated. Qua
 
 - unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library (T0 libs)
 - unified-reference-data-interface, unified-config-interface, unified-trading-library (T1 libs)
-- unified-trade-execution-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface (T2 libs)
+- unified-trade-execution-interface, unified-feature-calculator-library, unified-position-interface,
+  unified-defi-execution-interface (T2 libs)
 - strategy-validation-service, risk-and-exposure-service, alerting-service
 - features-delta-one-service, features-cross-instrument-service, features-multi-timeframe-service
 - ml-inference-service, ml-training-service, pnl-attribution-service, position-balance-monitor-service
 - execution-results-api, client-reporting-api, deployment-api, deployment-service
-- market-tick-data-service, instruments-service, features-calendar-service _(SchemaDefinition only — infrastructure, not violations)_
+- market-tick-data-service, instruments-service, features-calendar-service _(SchemaDefinition only — infrastructure, not
+  violations)_
 
 ### Previously Violated Repos — All Remediated ✅
 

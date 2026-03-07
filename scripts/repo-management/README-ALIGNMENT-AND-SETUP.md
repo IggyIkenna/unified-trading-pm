@@ -1,6 +1,7 @@
 # Version Alignment + Run-All-Setup Workflow
 
-**SSOT for full CI/CD flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (alignment + setup + sync + conflict resolution).
+**SSOT for full CI/CD flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (alignment + setup + sync +
+conflict resolution).
 
 **This doc:** Phase 1–2 only. Referenced by Codex and cursor rules.
 
@@ -47,7 +48,8 @@ Verify only (no install):
 bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --check
 ```
 
-This runs scripts/setup.sh in each repo in **topological order** (T0 → T1 → T2 → services → UIs). With `--rollout-first`, runs rollout-quality-gates-unified.py before setup.
+This runs scripts/setup.sh in each repo in **topological order** (T0 → T1 → T2 → services → UIs). With
+`--rollout-first`, runs rollout-quality-gates-unified.py before setup.
 
 ### uv.lock and agents
 

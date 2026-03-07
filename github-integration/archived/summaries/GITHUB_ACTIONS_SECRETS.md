@@ -481,11 +481,10 @@ I recommend **Hybrid Approach**:
 - ✅ Easy to rotate token (update in one place)
 - ✅ Can be extended to other secrets (GCP credentials, API keys, etc.)
 
-**Start with:** GitHub Secrets (simple, works today)
-**Migrate to:** GCP Secret Manager (when you need centralized management)
+**Start with:** GitHub Secrets (simple, works today) **Migrate to:** GCP Secret Manager (when you need centralized
+management)
 
 ---
 
-**Status:** ✅ Ready to implement
-**Recommended:** Start with GitHub Secrets (Option 1), migrate to GCP later if needed
+**Status:** ✅ Ready to implement **Recommended:** Start with GitHub Secrets (Option 1), migrate to GCP later if needed
 **Last Updated:** 2026-02-13

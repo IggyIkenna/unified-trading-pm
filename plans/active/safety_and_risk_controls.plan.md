@@ -9,32 +9,58 @@ overview: |
   ≥70% test coverage on all risk modules. Covers audit S21.
 todos:
   - id: risk-pretrade-wiring-verify
-    content: "Verify PreTradeCheckEngine (risk-and-exposure-service/core/pre_trade_check_engine.py) is correctly wired into execution-service live order flow. No ManualInstruction or AlgoInstruction should reach venue adapters without a PreTradeCheckResponse.approved=True. Trace the execution path from route_instruction() to venue adapter and confirm the risk check is in the critical path. Write test_pretrade_wiring.py to assert this."
+    content:
+      "Verify PreTradeCheckEngine (risk-and-exposure-service/core/pre_trade_check_engine.py) is correctly wired into
+      execution-service live order flow. No ManualInstruction or AlgoInstruction should reach venue adapters without a
+      PreTradeCheckResponse.approved=True. Trace the execution path from route_instruction() to venue adapter and
+      confirm the risk check is in the critical path. Write test_pretrade_wiring.py to assert this."
     status: pending
   - id: risk-position-limits-verify
-    content: "Verify position limit enforcement is complete and correct: long_limit and short_limit per venue per instrument enforced by PreTradeCheckEngine. Test with orders that would breach limits — must reject with RISK_LIMIT_EXCEEDED response. Confirm limits are loaded from config (not hardcoded). Verify test_pre_trade_check_engine.py covers limit breach scenarios."
+    content:
+      "Verify position limit enforcement is complete and correct: long_limit and short_limit per venue per instrument
+      enforced by PreTradeCheckEngine. Test with orders that would breach limits — must reject with RISK_LIMIT_EXCEEDED
+      response. Confirm limits are loaded from config (not hardcoded). Verify test_pre_trade_check_engine.py covers
+      limit breach scenarios."
     status: pending
   - id: risk-circuit-breaker
-    content: "SINGLE OWNER (implementation): Implement circuit breaker in execution-service/engine/ — 3-state machine (CLOSED→OPEN→HALF_OPEN). On N consecutive venue failures in M seconds: OPEN → emit CIRCUIT_BREAKER_OPEN via log_event(). After cooldown: HALF_OPEN → allow 1 test order. On success: CLOSED. Unit test all 3 states. NOTE: alerting-service PubSub wiring (publishing CIRCUIT_BREAKER_OPEN to circuit-breaker-commands topic) is owned by phase3_service_hardening_integration.plan.md t4f-monitoring-pipeline (topology-circuit-breaker-impl). These are complementary — this plan owns the implementation; phase3 t4f owns the cross-service PubSub propagation. UIC schema ic-circuit-breaker-schema (CircuitBreakerEvent) is defined in phase3 t4f STEP B."
+    content:
+      "SINGLE OWNER (implementation): Implement circuit breaker in execution-service/engine/ — 3-state machine
+      (CLOSED→OPEN→HALF_OPEN). On N consecutive venue failures in M seconds: OPEN → emit CIRCUIT_BREAKER_OPEN via
+      log_event(). After cooldown: HALF_OPEN → allow 1 test order. On success: CLOSED. Unit test all 3 states. NOTE:
+      alerting-service PubSub wiring (publishing CIRCUIT_BREAKER_OPEN to circuit-breaker-commands topic) is owned by
+      phase3_service_hardening_integration.plan.md t4f-monitoring-pipeline (topology-circuit-breaker-impl). These are
+      complementary — this plan owns the implementation; phase3 t4f owns the cross-service PubSub propagation. UIC
+      schema ic-circuit-breaker-schema (CircuitBreakerEvent) is defined in phase3 t4f STEP B."
     status: pending
   - id: risk-kill-switch
-    content: "Implement kill switch: a CLI command (or admin API endpoint) that immediately halts all live order submission across all venues. Kill switch must: (1) set a shared in-process flag that all venue adapters check before submitting, (2) cancel all open orders if venue supports it, (3) emit KILL_SWITCH_ACTIVATED event via log_event(). Test that no orders are submitted after kill switch is triggered. Implement in execution-service."
+    content:
+      "Implement kill switch: a CLI command (or admin API endpoint) that immediately halts all live order submission
+      across all venues. Kill switch must: (1) set a shared in-process flag that all venue adapters check before
+      submitting, (2) cancel all open orders if venue supports it, (3) emit KILL_SWITCH_ACTIVATED event via log_event().
+      Test that no orders are submitted after kill switch is triggered. Implement in execution-service."
     status: pending
   - id: risk-preflight-checks
-    content: "Implement and verify preflight checks in execution-service before any live session starts: (1) Secret Manager accessible (get_secret_client() call succeeds), (2) all configured venue API keys present in SM, (3) venue health endpoint reachable (or mock test for unit), (4) position state loaded from risk-and-exposure-service, (5) risk limits loaded. If any check fails: emit PREFLIGHT_FAILED event and exit — never start a live session in degraded state."
+    content:
+      "Implement and verify preflight checks in execution-service before any live session starts: (1) Secret Manager
+      accessible (get_secret_client() call succeeds), (2) all configured venue API keys present in SM, (3) venue health
+      endpoint reachable (or mock test for unit), (4) position state loaded from risk-and-exposure-service, (5) risk
+      limits loaded. If any check fails: emit PREFLIGHT_FAILED event and exit — never start a live session in degraded
+      state."
     status: pending
   - id: risk-test-coverage
-    content: "Achieve ≥70% test coverage on all risk control modules: pre_trade_check_engine.py, risk_monitor.py, circuit breaker (new), kill switch (new), preflight checks (new). Tests must be unit-only (mock all external dependencies). Run pytest tests/unit/ --cov=risk_and_exposure_service --cov-report=term-missing and verify ≥70%."
+    content:
+      "Achieve ≥70% test coverage on all risk control modules: pre_trade_check_engine.py, risk_monitor.py, circuit
+      breaker (new), kill switch (new), preflight checks (new). Tests must be unit-only (mock all external
+      dependencies). Run pytest tests/unit/ --cov=risk_and_exposure_service --cov-report=term-missing and verify ≥70%."
     status: pending
 isProject: false
 ---
 
 # Safety and Risk Controls
 
-**Day:** 6–8 (March 10–12)
-**Scope:** execution-service (circuit breaker, kill switch, preflight), risk-and-exposure-service (pre-trade wiring verification, position limits, test coverage)
-**Blocks:** trading_system_audit_prompt S21; live trading week (March 20)
-**Owner:** Person B
+**Day:** 6–8 (March 10–12) **Scope:** execution-service (circuit breaker, kill switch, preflight),
+risk-and-exposure-service (pre-trade wiring verification, position limits, test coverage) **Blocks:**
+trading_system_audit_prompt S21; live trading week (March 20) **Owner:** Person B
 
 ---
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Auto-fix pyproject.toml dependency versions to align with canonical-dependency-manifest.json.
 

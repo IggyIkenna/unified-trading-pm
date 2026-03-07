@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Run validators by scope, repo-type, or specific check.
 
 plans_to_deployable_unified_audit.plan.md Phase 6, 8.

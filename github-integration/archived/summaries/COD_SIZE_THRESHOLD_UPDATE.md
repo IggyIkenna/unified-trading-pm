@@ -1,7 +1,6 @@
 # COD-SIZE Threshold Update: 400 → 1500 Lines
 
-**Date:** 2026-02-13
-**Status:** ✅ Complete
+**Date:** 2026-02-13 **Status:** ✅ Complete
 
 ## Summary
 

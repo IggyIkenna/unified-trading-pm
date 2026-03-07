@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Generate WORKSPACE_MANIFEST_DAG.svg from workspace-manifest.json.
 
 SSOT: unified-trading-pm/workspace-manifest.json

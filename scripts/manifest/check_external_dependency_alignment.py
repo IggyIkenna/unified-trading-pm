@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Check that all repo pyproject.toml dependency versions align with
 canonical-dependency-manifest.json.

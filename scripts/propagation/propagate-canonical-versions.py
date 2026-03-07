@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Propagate workspace canonical dependency versions to all repo pyproject.toml files.
 
 Reads unified-trading-pm/workspace-constraints.toml and workspace-manifest.json (topological order),

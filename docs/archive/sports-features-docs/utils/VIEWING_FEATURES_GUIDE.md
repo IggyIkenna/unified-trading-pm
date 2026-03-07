@@ -1,7 +1,6 @@
 # Feature Data Viewing Guide
 
-**Created:** January 7, 2026
-**Purpose:** How to view and analyze your computed features
+**Created:** January 7, 2026 **Purpose:** How to view and analyze your computed features
 
 ---
 
@@ -198,8 +197,7 @@ python visualize_features.py
 - 5 PNG charts in project root
 - Ready to include in presentations/reports
 
-**Customize Charts:**
-Edit `visualize_features.py` to:
+**Customize Charts:** Edit `visualize_features.py` to:
 
 - Change colors, sizes, styles
 - Add more charts

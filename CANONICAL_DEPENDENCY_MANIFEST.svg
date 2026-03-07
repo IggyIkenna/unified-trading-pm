@@ -86,7 +86,7 @@
   <text x="882" y="234" text-anchor="middle" class="ver">docker&gt;=7.1.0,&lt;8.0.0</text>
   <rect x="958" y="208" width="142" height="32" class="pkg-box" />
   <text x="1029" y="222" text-anchor="middle" class="label">eth_abi</text>
-  <text x="1029" y="234" text-anchor="middle" class="ver">eth-abi&gt;=4.0.0,&lt;5.0.0</text>
+  <text x="1029" y="234" text-anchor="middle" class="ver">eth-abi&gt;=5.0.1,&lt;6.0.0</text>
   <rect x="40" y="254" width="208" height="32" class="pkg-box" />
   <text x="144" y="268" text-anchor="middle" class="label">exchange_calendars</text>
   <text x="144" y="280" text-anchor="middle" class="ver">exchange-calendars&gt;=4.5.0...</text>
@@ -134,7 +134,7 @@
   <text x="1008" y="372" text-anchor="middle" class="ver">greenlet&gt;=3.0.0,&lt;4.0.0</text>
   <rect x="40" y="392" width="160" height="32" class="pkg-box" />
   <text x="120" y="406" text-anchor="middle" class="label">gunicorn</text>
-  <text x="120" y="418" text-anchor="middle" class="ver">gunicorn&gt;=21.0.0,&lt;22.0.0</text>
+  <text x="120" y="418" text-anchor="middle" class="ver">gunicorn&gt;=22.0.0,&lt;23.0.0</text>
   <rect x="208" y="392" width="148" height="32" class="pkg-box" />
   <text x="282" y="406" text-anchor="middle" class="label">hmmlearn</text>
   <text x="282" y="418" text-anchor="middle" class="ver">hmmlearn&gt;=0.3.0,&lt;1.0.0</text>

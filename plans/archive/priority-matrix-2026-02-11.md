@@ -1,7 +1,6 @@
 # Priority Matrix (Eisenhower Matrix)
 
-**Last Updated:** 2026-02-11
-**Based on:** Audit Stage 3 findings (110-item checklist)
+**Last Updated:** 2026-02-11 **Based on:** Audit Stage 3 findings (110-item checklist)
 
 ---
 
@@ -39,9 +38,7 @@ Owner defaults are initialization only and can be overridden per item.
 
 ## Quadrant 1: Urgent + Important (Do First)
 
-**Priority:** P0
-**Timeline:** Weeks 1-4
-**Total Effort:** 328 hours
+**Priority:** P0 **Timeline:** Weeks 1-4 **Total Effort:** 328 hours
 
 These items block production deployment. Cannot go live without resolving.
 
@@ -85,9 +82,7 @@ These items block production deployment. Cannot go live without resolving.
 
 ## Quadrant 2: Important but Not Urgent (Schedule)
 
-**Priority:** P1
-**Timeline:** Weeks 5-10
-**Total Effort:** 500 hours
+**Priority:** P1 **Timeline:** Weeks 5-10 **Total Effort:** 500 hours
 
 These items should be completed before production but don't block initial deployment. Schedule deliberately.
 
@@ -157,9 +152,7 @@ These items should be completed before production but don't block initial deploy
 
 ## Quadrant 3: Urgent but Not Important (Delegate/Quick Wins)
 
-**Priority:** P2
-**Timeline:** Weeks 8-14 (can parallelize with Quadrant 2)
-**Total Effort:** 292 hours
+**Priority:** P2 **Timeline:** Weeks 8-14 (can parallelize with Quadrant 2) **Total Effort:** 292 hours
 
 These items provide quick wins or address tech debt. Can delegate to junior engineers or tackle during slow periods.
 
@@ -219,9 +212,7 @@ These items provide quick wins or address tech debt. Can delegate to junior engi
 
 ## Quadrant 4: Neither Urgent nor Important (Eliminate/Defer)
 
-**Priority:** P3
-**Timeline:** Post-production (defer indefinitely)
-**Total Effort:** 24 hours
+**Priority:** P3 **Timeline:** Post-production (defer indefinitely) **Total Effort:** 24 hours
 
 These items have low ROI. Consider eliminating or deferring to post-launch.
 

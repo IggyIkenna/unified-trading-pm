@@ -1,8 +1,7 @@
 # Portable Backtests Plan
 
-**Deadline:** March 12, 2026 (with all plans complete)
-**Reference:** MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md, mvp-universe.yaml
-**Order:** Plan 7 in chain
+**Deadline:** March 12, 2026 (with all plans complete) **Reference:** MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md,
+mvp-universe.yaml **Order:** Plan 7 in chain
 
 ---
 

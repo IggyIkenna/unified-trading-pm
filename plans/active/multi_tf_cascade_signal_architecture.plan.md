@@ -1,156 +1,326 @@
 ---
 name: Citadel ML + Cascade Signal Master Plan
-overview: "Combined master plan: GBT-specific feature design principles, 5-layer feature architecture (50-100% annual target), HFT plan remaining deployment work, new features-multi-timeframe-service, 6 new delta-one calculators, multi-resolution window banks, regime-conditional models, two-phase multi-TF cascade signal. All feature design decisions governed by what is actually useful for gradient boosted trees."
+overview:
+  "Combined master plan: GBT-specific feature design principles, 5-layer feature architecture (50-100% annual target),
+  HFT plan remaining deployment work, new features-multi-timeframe-service, 6 new delta-one calculators,
+  multi-resolution window banks, regime-conditional models, two-phase multi-TF cascade signal. All feature design
+  decisions governed by what is actually useful for gradient boosted trees."
 todos:
   - id: remove-monotonic-transforms
-    content: "ANTIPATTERN SWEEP: Remove vol_percentile_{window} from cross-instrument service (monotonic transform of raw vol — tree can find the threshold itself). Audit all calculators for any _zscore_, _percentile_rank_, _normalized_ features that are plain monotonic transforms of a feature already present. Delete them. NOTE: Verified 2026-03-04 — _zscore_, _percentile_rank_, vol_percentile_ patterns still present in features-delta-one-service source files (targets.py, anomaly.py, returns.py and features_service/ equivalents). This is NOT done."
+    content:
+      "ANTIPATTERN SWEEP: Remove vol_percentile_{window} from cross-instrument service (monotonic transform of raw vol —
+      tree can find the threshold itself). Audit all calculators for any _zscore_, _percentile_rank_, _normalized_
+      features that are plain monotonic transforms of a feature already present. Delete them. NOTE: Verified 2026-03-04
+      — _zscore_, _percentile_rank_, vol_percentile_ patterns still present in features-delta-one-service source files
+      (targets.py, anomaly.py, returns.py and features_service/ equivalents). This is NOT done."
     status: completed
   - id: replace-time-since-with-binary-horizons
-    content: "Replace all raw time_since_* integer features with multi-horizon binary encoding: for each event (swing_high, swing_low, bos, choch, supply_zone_entry, demand_zone_entry, round_number_touch, liq_event, regime_change, weekly_anchor_touch), add binary indicators: event_in_last_{1,3,5,10,20,50}_bars. These let GBT discover recency windows it cannot find from a raw integer."
+    content:
+      "Replace all raw time_since_* integer features with multi-horizon binary encoding: for each event (swing_high,
+      swing_low, bos, choch, supply_zone_entry, demand_zone_entry, round_number_touch, liq_event, regime_change,
+      weekly_anchor_touch), add binary indicators: event_in_last_{1,3,5,10,20,50}_bars. These let GBT discover recency
+      windows it cannot find from a raw integer."
     status: completed
   - id: add-explicit-binary-thresholds
-    content: "For known-meaningful thresholds, add explicit binary indicators alongside the continuous feature: rsi_overbought (rsi>70), rsi_oversold (rsi<30), funding_extreme_pos (>0.1%), funding_extreme_neg (<-0.1%), vol_high_vs_30d (>75th pct of 30d), vol_low_vs_30d (<25th pct), liq_cascade_active (liq_intensity>3), bos_fresh (bos_in_last_3_bars), choch_fresh (choch_in_last_5_bars). These collapse multi-split decisions to a single split."
+    content:
+      "For known-meaningful thresholds, add explicit binary indicators alongside the continuous feature: rsi_overbought
+      (rsi>70), rsi_oversold (rsi<30), funding_extreme_pos (>0.1%), funding_extreme_neg (<-0.1%), vol_high_vs_30d (>75th
+      pct of 30d), vol_low_vs_30d (<25th pct), liq_cascade_active (liq_intensity>3), bos_fresh (bos_in_last_3_bars),
+      choch_fresh (choch_in_last_5_bars). These collapse multi-split decisions to a single split."
     status: completed
   - id: hft-unit-tests
-    content: "Write unit tests for all HFT feature calculators using mocks based on API contracts schemas. Mock external API responses using unified-api-contracts schemas (DatabentoOhlcvBar, CanonicalOptionQuote, CanonicalBookUpdate, CryptoPanicResponse, LunarCrushResponse). Verify: new MDPS columns (trade_size_p10-p99, spread_volatility_15s, bid/ask_pressure_gradient, whale_trade_count, effective_to_quoted_spread_ratio, liq_inter_time_*, volume_clock_*), features-delta-one columns (amihud_illiquidity_*, vpin_*, kyles_lambda_*), cross-instrument output columns match CrossInstrumentFeatures schema. pytest only, no live I/O, no quality gates."
+    content:
+      "Write unit tests for all HFT feature calculators using mocks based on API contracts schemas. Mock external API
+      responses using unified-api-contracts schemas (DatabentoOhlcvBar, CanonicalOptionQuote, CanonicalBookUpdate,
+      CryptoPanicResponse, LunarCrushResponse). Verify: new MDPS columns (trade_size_p10-p99, spread_volatility_15s,
+      bid/ask_pressure_gradient, whale_trade_count, effective_to_quoted_spread_ratio, liq_inter_time_*, volume_clock_*),
+      features-delta-one columns (amihud_illiquidity_*, vpin_*, kyles_lambda_*), cross-instrument output columns match
+      CrossInstrumentFeatures schema. pytest only, no live I/O, no quality gates."
     status: completed
   - id: hft-provision-api-keys-setup
-    content: "Document required API keys in credentials-registry.yaml: Databento (databento-api-key, ~$100-500/mo), CryptoPanic (cryptopanic-api-key), LunarCrush (lunarcrush-api-key), CryptoQuant (cryptoquant-api-key), Coinglass (coinglass-api-key). DefiLlama, Yahoo Finance, FRED are free. Setup only — provisioning and live verification goes to consolidated_remaining_work.plan.md."
+    content:
+      "Document required API keys in credentials-registry.yaml: Databento (databento-api-key, ~$100-500/mo), CryptoPanic
+      (cryptopanic-api-key), LunarCrush (lunarcrush-api-key), CryptoQuant (cryptoquant-api-key), Coinglass
+      (coinglass-api-key). DefiLlama, Yahoo Finance, FRED are free. Setup only — provisioning and live verification goes
+      to consolidated_remaining_work.plan.md."
     status: completed
   - id: feed-all-22-groups
-    content: "HIGHEST ROI (no new code): Update ml-training-service to subscribe to all 22 feature groups, not just 4 (technical_indicators, market_structure, returns, targets). Add all remaining groups including round_numbers, microstructure, funding_oi, liquidations, futures_basis, volume_flow. Calendar service actual registered names: temporal, economic_events, yield_curve, dxy_momentum, sentiment. Onchain groups: stablecoin_dominance, fear_greed."
+    content:
+      "HIGHEST ROI (no new code): Update ml-training-service to subscribe to all 22 feature groups, not just 4
+      (technical_indicators, market_structure, returns, targets). Add all remaining groups including round_numbers,
+      microstructure, funding_oi, liquidations, futures_basis, volume_flow. Calendar service actual registered names:
+      temporal, economic_events, yield_curve, dxy_momentum, sentiment. Onchain groups: stablecoin_dominance, fear_greed."
     status: completed
   - id: standardise-windows
-    content: "Standardise IndicatorParams in parameters.py: MICRO_WINDOWS [2,3,5], SHORT_WINDOWS [8,12,20], MEDIUM_WINDOWS [30,50,100], LONG_WINDOWS [200], STRUCTURE_WINDOWS [10,20,30,50,100]. Migrate hardcoded lists in moving_averages.py and volatility.py to get_params()."
+    content:
+      "Standardise IndicatorParams in parameters.py: MICRO_WINDOWS [2,3,5], SHORT_WINDOWS [8,12,20], MEDIUM_WINDOWS
+      [30,50,100], LONG_WINDOWS [200], STRUCTURE_WINDOWS [10,20,30,50,100]. Migrate hardcoded lists in
+      moving_averages.py and volatility.py to get_params()."
     status: completed
   - id: window-ratio-features
-    content: "Add cross-window ratio features (non-monotonic — tree cannot derive these from components alone): vol_compression_{short}_{long} = atr_{short}/atr_{long}, momentum_acceleration_{short}_{long} = roc_{short}/roc_{long}, oi_acceleration = oi_change_ma_8/oi_change_ma_48, structure_compression = channel_width_10/channel_width_50."
+    content:
+      "Add cross-window ratio features (non-monotonic — tree cannot derive these from components alone):
+      vol_compression_{short}_{long} = atr_{short}/atr_{long}, momentum_acceleration_{short}_{long} =
+      roc_{short}/roc_{long}, oi_acceleration = oi_change_ma_8/oi_change_ma_48, structure_compression =
+      channel_width_10/channel_width_50."
     status: completed
   - id: trendline-calculator
-    content: "Add trendline.py: OLS slopes on swing highs/lows at STRUCTURE_WINDOWS, channel_convergence (negative=wedge, zero=parallel, positive=expanding), channel_width_pct, price_position_in_channel [0,1], vol_compression, convergence_acceleration ratio. All ATR-normalized for scale invariance."
+    content:
+      "Add trendline.py: OLS slopes on swing highs/lows at STRUCTURE_WINDOWS, channel_convergence (negative=wedge,
+      zero=parallel, positive=expanding), channel_width_pct, price_position_in_channel [0,1], vol_compression,
+      convergence_acceleration ratio. All ATR-normalized for scale invariance."
     status: completed
   - id: market-structure-sequence
-    content: "Add market_structure_sequence.py: consecutive_lower_highs/higher_lows counts per window, swing_high_compression (HH trend slope), market_structure_bias score [-1,+1]. REPLACE time_since_swing_high/low with multi-horizon binary encoding (swing_high_in_last_{1,3,5,10,20,50}_bars). Add bos_detected, choch_detected, plus multi-horizon: bos_in_last_{1,3,5,10,20}_bars, choch_in_last_{1,3,5,10}_bars."
+    content:
+      "Add market_structure_sequence.py: consecutive_lower_highs/higher_lows counts per window, swing_high_compression
+      (HH trend slope), market_structure_bias score [-1,+1]. REPLACE time_since_swing_high/low with multi-horizon binary
+      encoding (swing_high_in_last_{1,3,5,10,20,50}_bars). Add bos_detected, choch_detected, plus multi-horizon:
+      bos_in_last_{1,3,5,10,20}_bars, choch_in_last_{1,3,5,10}_bars."
     status: completed
   - id: fibonacci-calculator
-    content: "Add fibonacci.py: fib_0236/0382/0500/0618/0650/0750/0786 levels and ATR-normalized distance features. Add binary indicators: at_fib_0618 (within 0.3%), at_fib_0750, at_fib_0382. Add fib_confluence_score (count of round_number + POC + EMA systems at nearest Fib level). Derive from existing swing_high/swing_low — no new data needed."
+    content:
+      "Add fibonacci.py: fib_0236/0382/0500/0618/0650/0750/0786 levels and ATR-normalized distance features. Add binary
+      indicators: at_fib_0618 (within 0.3%), at_fib_0750, at_fib_0382. Add fib_confluence_score (count of round_number +
+      POC + EMA systems at nearest Fib level). Derive from existing swing_high/swing_low — no new data needed."
     status: completed
   - id: supply-demand-zones
-    content: "Add supply_demand_zones.py: order block detection (last opposing candle before impulse > 1.5×ATR), at_demand_zone/at_supply_zone binary, demand/supply_zone_strength, decay_score. Multi-horizon binary: entered_demand_zone_in_last_{1,3,5,10}_bars. unmitigated zone counts below/above."
+    content:
+      "Add supply_demand_zones.py: order block detection (last opposing candle before impulse > 1.5×ATR),
+      at_demand_zone/at_supply_zone binary, demand/supply_zone_strength, decay_score. Multi-horizon binary:
+      entered_demand_zone_in_last_{1,3,5,10}_bars. unmitigated zone counts below/above."
     status: completed
   - id: weekly-anchors
-    content: "Add weekly_anchors.py: price_vs_weekly_open_pct, price_vs_monday_high/low_pct, monday_range_width_pct, weekly_range_position [0,1]. Binary: above_weekly_open, at_monday_high (within 0.3%), at_monday_low. prev_week_high/low/close distance pcts, monthly_range_position."
+    content:
+      "Add weekly_anchors.py: price_vs_weekly_open_pct, price_vs_monday_high/low_pct, monday_range_width_pct,
+      weekly_range_position [0,1]. Binary: above_weekly_open, at_monday_high (within 0.3%), at_monday_low.
+      prev_week_high/low/close distance pcts, monthly_range_position."
     status: completed
   - id: liquidation-levels
-    content: "Add liquidation_levels.py using Coinglass heatmap API: long/short liq density at 1/3/5% distance bands, liq_gravity_ratio = long_liq_5pct/short_liq_5pct, next_liq_cluster_distance_pct, oi_leverage_estimate. Check Tardis coverage first as alternative source."
+    content:
+      "Add liquidation_levels.py using Coinglass heatmap API: long/short liq density at 1/3/5% distance bands,
+      liq_gravity_ratio = long_liq_5pct/short_liq_5pct, next_liq_cluster_distance_pct, oi_leverage_estimate. Check
+      Tardis coverage first as alternative source."
     status: completed
   - id: level-confluence-score
-    content: "Add level_confluence_score meta-feature: weighted sum of near_round_number + fib_at_level + poc_proximity + at_demand_zone + at_weekly_anchor + liq_cluster_magnet. Single scalar encoding multi-system agreement. Likely top-10 SHAP feature for swing reversal prediction."
+    content:
+      "Add level_confluence_score meta-feature: weighted sum of near_round_number + fib_at_level + poc_proximity +
+      at_demand_zone + at_weekly_anchor + liq_cluster_magnet. Single scalar encoding multi-system agreement. Likely
+      top-10 SHAP feature for swing reversal prediction."
     status: completed
   - id: sharpe-adjusted-targets
-    content: "Add Sharpe-adjusted targets to targets.py: sharpe_adjusted_return_{1,3,5} = return_n / realized_vol, magnitude_conditional = return × is_swing_breakout (reward size not just direction), return_percentile_5bar for learning-to-rank. These teach the model to distinguish high-conviction from marginal setups."
+    content:
+      "Add Sharpe-adjusted targets to targets.py: sharpe_adjusted_return_{1,3,5} = return_n / realized_vol,
+      magnitude_conditional = return × is_swing_breakout (reward size not just direction), return_percentile_5bar for
+      learning-to-rank. These teach the model to distinguish high-conviction from marginal setups."
     status: completed
   - id: cross-instrument-fix-percentile-features
-    content: "Replace vol_percentile_{window} in features_cross_instrument_service/app/calculators/realized_implied_vol.py (confirmed monotonic transform at lines 183-184, 317-321). Add binary thresholds instead: vol_high_vs_30d (>p75 of 30d), vol_low_vs_30d (<p25 of 30d), vol_extreme_high_30d (>p90), rv_iv_ratio_extreme (rv_iv_ratio_20>1.5), rv_iv_inverted (rv_iv_ratio_20<0.7). SCHEMA MIGRATION REQUIRED: update output_features list (line 68) to remove vol_percentile_{window} and add new columns. Check all downstream ML consumers that index this feature group by column name — this is a breaking schema change requiring a version bump in features-cross-instrument-service."
+    content:
+      "Replace vol_percentile_{window} in features_cross_instrument_service/app/calculators/realized_implied_vol.py
+      (confirmed monotonic transform at lines 183-184, 317-321). Add binary thresholds instead: vol_high_vs_30d (>p75 of
+      30d), vol_low_vs_30d (<p25 of 30d), vol_extreme_high_30d (>p90), rv_iv_ratio_extreme (rv_iv_ratio_20>1.5),
+      rv_iv_inverted (rv_iv_ratio_20<0.7). SCHEMA MIGRATION REQUIRED: update output_features list (line 68) to remove
+      vol_percentile_{window} and add new columns. Check all downstream ML consumers that index this feature group by
+      column name — this is a breaking schema change requiring a version bump in features-cross-instrument-service."
     status: completed
   - id: cross-instrument-btc-dominance
-    content: "Extend cross_asset_correlation calculator: add btc_dominance_pct/roc_1d/roc_7d (from onchain service), symbol_beta_vs_btc_50 (OLS regression slope — ratio feature, not monotonic), symbol_vs_btc_return_1h/4h (relative alpha vs BTC). Add binary: btc_dominance_rising, alt_season_active."
+    content:
+      "Extend cross_asset_correlation calculator: add btc_dominance_pct/roc_1d/roc_7d (from onchain service),
+      symbol_beta_vs_btc_50 (OLS regression slope — ratio feature, not monotonic), symbol_vs_btc_return_1h/4h (relative
+      alpha vs BTC). Add binary: btc_dominance_rising, alt_season_active."
     status: completed
   - id: cross-instrument-cme-gap
-    content: "Add cme_gap calculator: cme_gap_above/below_pct (ATR-normalized), cme_gap_size_pct, cme_has_gap_above/below binary indicators. Verify Databento CME BTC futures OHLCV coverage."
+    content:
+      "Add cme_gap calculator: cme_gap_above/below_pct (ATR-normalized), cme_gap_size_pct, cme_has_gap_above/below
+      binary indicators. Verify Databento CME BTC futures OHLCV coverage."
     status: completed
   - id: create-multi-timeframe-service
-    content: "Create features-multi-timeframe-service repo mirroring features-cross-instrument-service pattern: subscribes to delta-one features at 5m/15m/1h/4h/1d per instrument (PubSub in live, GCS in batch), maintains per-TF feature cache, computes cross-TF aggregation features, publishes to features-multi-timeframe-{feature_group} PubSub topics. Same BaseFeatureCalculator pattern."
+    content:
+      "Create features-multi-timeframe-service repo mirroring features-cross-instrument-service pattern: subscribes to
+      delta-one features at 5m/15m/1h/4h/1d per instrument (PubSub in live, GCS in batch), maintains per-TF feature
+      cache, computes cross-TF aggregation features, publishes to features-multi-timeframe-{feature_group} PubSub
+      topics. Same BaseFeatureCalculator pattern."
     status: completed
   - id: mtf-momentum-alignment
-    content: "Add tf_momentum_alignment calculator: tf_alignment_1h_4h (sign match bool), tf_alignment_4h_1d bool, tf_trend_agreement_score = count_agreeing_TFs/total_TFs [0,1], momentum_acceleration = roc_5_1h/(roc_5_4h+eps) ratio. Binary: all_tf_bullish, all_tf_bearish, tf_momentum_divergence (1h vs 4h opposite)."
+    content:
+      "Add tf_momentum_alignment calculator: tf_alignment_1h_4h (sign match bool), tf_alignment_4h_1d bool,
+      tf_trend_agreement_score = count_agreeing_TFs/total_TFs [0,1], momentum_acceleration = roc_5_1h/(roc_5_4h+eps)
+      ratio. Binary: all_tf_bullish, all_tf_bearish, tf_momentum_divergence (1h vs 4h opposite)."
     status: completed
   - id: mtf-structure-context
-    content: "Add tf_structure_context calculator: structure_bias_4h and structure_bias_1d as context columns for lower-TF models, tf_structure_alignment_1h_4h binary, tf_level_multi_confluence binary (same S/R on ≥2 TFs), tf_bos_alignment (BOS on both 1h and 4h within last 10 bars). Binary multi-horizon: tf_bos_aligned_in_last_{3,5,10}_bars."
+    content:
+      "Add tf_structure_context calculator: structure_bias_4h and structure_bias_1d as context columns for lower-TF
+      models, tf_structure_alignment_1h_4h binary, tf_level_multi_confluence binary (same S/R on ≥2 TFs),
+      tf_bos_alignment (BOS on both 1h and 4h within last 10 bars). Binary multi-horizon:
+      tf_bos_aligned_in_last_{3,5,10}_bars."
     status: completed
   - id: mtf-vol-compression
-    content: "Add tf_volatility_compression calculator: vol_ratio_1h_4h = atr_14_1h/atr_14_4h (ratio, not monotonic), vol_ratio_4h_1d, vol_compression_trend bool (vol_ratio declining over 10 bars = breakout incoming), tf_all_vol_low binary (all TFs in LOW_VOL)."
+    content:
+      "Add tf_volatility_compression calculator: vol_ratio_1h_4h = atr_14_1h/atr_14_4h (ratio, not monotonic),
+      vol_ratio_4h_1d, vol_compression_trend bool (vol_ratio declining over 10 bars = breakout incoming), tf_all_vol_low
+      binary (all TFs in LOW_VOL)."
     status: completed
   - id: mtf-session-context
-    content: "Add tf_session_context calculator: hours_to_next_4h_close, hours_to_weekly_close, is_4h_boundary bool, is_daily_boundary bool, london_ny_overlap bool, session_vol_multiplier ratio (current session vol / baseline). These are direct inputs not derivable by the model from timestamps alone."
+    content:
+      "Add tf_session_context calculator: hours_to_next_4h_close, hours_to_weekly_close, is_4h_boundary bool,
+      is_daily_boundary bool, london_ny_overlap bool, session_vol_multiplier ratio (current session vol / baseline).
+      These are direct inputs not derivable by the model from timestamps alone."
     status: completed
   - id: ml-subscribe-mtf-features
-    content: Update ml-training-service and ml-inference-service to subscribe to features-multi-timeframe-service output topics alongside delta-one and cross-instrument feature topics.
+    content:
+      Update ml-training-service and ml-inference-service to subscribe to features-multi-timeframe-service output topics
+      alongside delta-one and cross-instrument feature topics.
     status: completed
   - id: regime-conditional-models
-    content: "Add regime-conditional model segmentation: split training data by volatility_regime (low/normal/high), train 3 specialist LightGBM models. LOW_VOL: mean-reversion, S/R, fib confluence dominate. NORMAL: momentum ratios, trendline slopes. HIGH_VOL: liq_intensity, funding_extreme, oi_acceleration, round numbers. Route inference to specialist based on current regime."
+    content:
+      "Add regime-conditional model segmentation: split training data by volatility_regime (low/normal/high), train 3
+      specialist LightGBM models. LOW_VOL: mean-reversion, S/R, fib confluence dominate. NORMAL: momentum ratios,
+      trendline slopes. HIGH_VOL: liq_intensity, funding_extreme, oi_acceleration, round numbers. Route inference to
+      specialist based on current regime."
     status: completed
   - id: cascade-prediction-event-schema
-    content: Add CascadePredictionEvent, PredictionSnapshot, CascadeConfig, ModelType.META_CASCADE to unified-ml-interface (Tier 2) — SSOT schema consumed by both ml-inference and strategy-service.
+    content:
+      Add CascadePredictionEvent, PredictionSnapshot, CascadeConfig, ModelType.META_CASCADE to unified-ml-interface
+      (Tier 2) — SSOT schema consumed by both ml-inference and strategy-service.
     status: completed
   - id: prediction-cache
-    content: "Add PredictionCache to ml-inference-service: dict[instrument x timeframe -> latest PredictionEvent], updated on each incoming prediction, read by CascadeInferenceMode."
+    content:
+      "Add PredictionCache to ml-inference-service: dict[instrument x timeframe -> latest PredictionEvent], updated on
+      each incoming prediction, read by CascadeInferenceMode."
     status: completed
   - id: cascade-inference-mode
-    content: "Add CascadeInferenceMode to ml-inference-service: reads PredictionCache for context TFs, computes cascade_confidence_score via weighted_combine, publishes CascadePredictionEvent when trigger fires. Named profiles in ConfigStore: momentum_cascade (trigger=1h, context=[1d,4h]), scalp_cascade (trigger=15m, context=[4h,1h]), swing_cascade (trigger=1d, entry=[4h,1h])."
+    content:
+      "Add CascadeInferenceMode to ml-inference-service: reads PredictionCache for context TFs, computes
+      cascade_confidence_score via weighted_combine, publishes CascadePredictionEvent when trigger fires. Named profiles
+      in ConfigStore: momentum_cascade (trigger=1h, context=[1d,4h]), scalp_cascade (trigger=15m, context=[4h,1h]),
+      swing_cascade (trigger=1d, entry=[4h,1h])."
     status: completed
   - id: strategy-subscribe-cascade
-    content: Update strategy-service to subscribe to CascadePredictionEvent topic. Uses cascade_confidence_score + cascade_aligned flag — does NOT re-implement cross-TF logic.
+    content:
+      Update strategy-service to subscribe to CascadePredictionEvent topic. Uses cascade_confidence_score +
+      cascade_aligned flag — does NOT re-implement cross-TF logic.
     status: completed
   - id: cascade-meta-model-training
-    content: "Phase 2: Stage 10 in ml-training-service: CascadeMetaModelTrainer — inputs are base predictions across all TFs + multi-TF features from features-multi-timeframe-service + regime features. Target: Sharpe-adjusted swing outcome. ModelType.META_CASCADE. SHAP reveals which TF dominates per regime."
+    content:
+      "Phase 2: Stage 10 in ml-training-service: CascadeMetaModelTrainer — inputs are base predictions across all TFs +
+      multi-TF features from features-multi-timeframe-service + regime features. Target: Sharpe-adjusted swing outcome.
+      ModelType.META_CASCADE. SHAP reveals which TF dominates per regime."
     status: completed
   - id: cascade-inference-meta-swap
-    content: "Phase 2: Update CascadeInferenceMode to use trained CascadeMetaModel when available, falling back to heuristic weighted_combine. Phase 1 infrastructure unchanged."
+    content:
+      "Phase 2: Update CascadeInferenceMode to use trained CascadeMetaModel when available, falling back to heuristic
+      weighted_combine. Phase 1 infrastructure unchanged."
     status: completed
   - id: api-contracts-coinglass
-    content: "Add Coinglass liquidation heatmap schemas to unified-api-contracts: unified_api_contracts/external/coinglass/schemas.py — LiquidationHeatmapResponse, LiquidationLevel (price, long_liq_usd, short_liq_usd), LiquidationHeatmapRequest. API key in Secret Manager as coinglass-api-key."
+    content:
+      "Add Coinglass liquidation heatmap schemas to unified-api-contracts:
+      unified_api_contracts/external/coinglass/schemas.py — LiquidationHeatmapResponse, LiquidationLevel (price,
+      long_liq_usd, short_liq_usd), LiquidationHeatmapRequest. API key in Secret Manager as coinglass-api-key."
     status: completed
   - id: api-contracts-coingecko-btc-dominance
-    content: "Add CoinGecko global market data schemas to unified-api-contracts: unified_api_contracts/external/coingecko/schemas.py — GlobalMarketResponse, BtcDominancePct, TotalMarketCapUsd. Free tier, no API key needed for basic global endpoint."
+    content:
+      "Add CoinGecko global market data schemas to unified-api-contracts:
+      unified_api_contracts/external/coingecko/schemas.py — GlobalMarketResponse, BtcDominancePct, TotalMarketCapUsd.
+      Free tier, no API key needed for basic global endpoint."
     status: completed
   - id: api-contracts-cme-gap
-    content: "Verify DatabentoOhlcvBar in unified_api_contracts/external/databento/schemas.py supports CME BTC futures (dataset=GLBX.MDP3, symbols=BTC futures). Add CmeFuturesGapSchema if not covered: gap_open, gap_close, gap_size_pct, gap_direction."
+    content:
+      "Verify DatabentoOhlcvBar in unified_api_contracts/external/databento/schemas.py supports CME BTC futures
+      (dataset=GLBX.MDP3, symbols=BTC futures). Add CmeFuturesGapSchema if not covered: gap_open, gap_close,
+      gap_size_pct, gap_direction."
     status: completed
   - id: internal-contracts-cross-timeframe-features
-    content: "Add CrossTimeframeFeatures schema to unified-internal-contracts: unified_internal_contracts/features/cross_timeframe.py — timestamp, instrument_id, feature_category (Literal['tf_momentum_alignment','tf_structure_context','tf_vol_compression','tf_session_context']), features: dict[str, float]. Mirror CrossInstrumentFeatures pattern."
+    content:
+      "Add CrossTimeframeFeatures schema to unified-internal-contracts:
+      unified_internal_contracts/features/cross_timeframe.py — timestamp, instrument_id, feature_category
+      (Literal['tf_momentum_alignment','tf_structure_context','tf_vol_compression','tf_session_context']), features:
+      dict[str, float]. Mirror CrossInstrumentFeatures pattern."
     status: completed
   - id: internal-contracts-cascade-prediction
-    content: CascadePredictionEvent and PredictionSnapshot schemas belong in unified-ml-interface (Tier 2) not unified-internal-contracts. Confirm unified-ml-interface has a schemas file and add there.
+    content:
+      CascadePredictionEvent and PredictionSnapshot schemas belong in unified-ml-interface (Tier 2) not
+      unified-internal-contracts. Confirm unified-ml-interface has a schemas file and add there.
     status: completed
   - id: manifest-add-mtf-service
-    content: "Add features-multi-timeframe-service to unified-trading-pm/workspace-manifest.json: type=service, arch_tier=service, merge_level=6, status=planned, dependencies=[unified-trading-services, unified-domain-client, unified-feature-calculator-library, unified-config-interface, unified-events-interface]. Mirror features-cross-instrument-service entry."
+    content:
+      "Add features-multi-timeframe-service to unified-trading-pm/workspace-manifest.json: type=service,
+      arch_tier=service, merge_level=6, status=planned, dependencies=[unified-trading-services, unified-domain-client,
+      unified-feature-calculator-library, unified-config-interface, unified-events-interface]. Mirror
+      features-cross-instrument-service entry."
     status: completed
   - id: topology-dag-add-mtf-service
-    content: "Update unified-trading-codex/04-architecture/TOPOLOGY-DAG.md: add features-multi-timeframe-service to Layer 3b subgraph, add edges FDS→FMTS (5m/15m/1h/4h/1d), FMTS→MLTR, FMTS→MLIN. Update WORKSPACE_MANIFEST_DAG.svg and RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg to include FMTS node at merge_level 6."
+    content:
+      "Update unified-trading-codex/04-architecture/TOPOLOGY-DAG.md: add features-multi-timeframe-service to Layer 3b
+      subgraph, add edges FDS→FMTS (5m/15m/1h/4h/1d), FMTS→MLTR, FMTS→MLIN. Update WORKSPACE_MANIFEST_DAG.svg and
+      RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg to include FMTS node at merge_level 6."
     status: completed
   - id: topology-runtime-add-mtf-service
-    content: "Update deployment-service/configs/runtime-topology.yaml: add service_flows (FDS→FMTS batch+live, FMTS→ml-training-service batch, FMTS→ml-inference-service batch+live), add persistence_flow (FMTS→GCS multi_timeframe_features), add to clusters.features.services, add to batch_and_live_services."
+    content:
+      "Update deployment-service/configs/runtime-topology.yaml: add service_flows (FDS→FMTS batch+live,
+      FMTS→ml-training-service batch, FMTS→ml-inference-service batch+live), add persistence_flow (FMTS→GCS
+      multi_timeframe_features), add to clusters.features.services, add to batch_and_live_services."
     status: completed
   - id: topology-sharding-add-mtf-service
-    content: "Update deployment-service/configs/sharding_config.yaml: add features-multi-timeframe-service entry — batch dimensions [category, feature_category, date], live dimensions [feature_category], topic_template 'features-multi-timeframe-{feature_category}', feature_category_values [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]."
+    content:
+      "Update deployment-service/configs/sharding_config.yaml: add features-multi-timeframe-service entry — batch
+      dimensions [category, feature_category, date], live dimensions [feature_category], topic_template
+      'features-multi-timeframe-{feature_category}', feature_category_values [tf_momentum_alignment,
+      tf_structure_context, tf_vol_compression, tf_session_context]."
     status: completed
   - id: deployment-v3-mtf-terraform
-    content: "Create deployment-service/terraform/services/features-multi-timeframe-service/gcp/ with main.tf, variables.tf, terraform.tfvars, backend.tf, outputs.tf. Mirror features-cross-instrument-service terraform structure. GCS backend prefix: services/features-multi-timeframe-service."
+    content:
+      "Create deployment-service/terraform/services/features-multi-timeframe-service/gcp/ with main.tf, variables.tf,
+      terraform.tfvars, backend.tf, outputs.tf. Mirror features-cross-instrument-service terraform structure. GCS
+      backend prefix: services/features-multi-timeframe-service."
     status: completed
   - id: deployment-v3-mtf-checklist
-    content: Create deployment-service/configs/checklist.features-multi-timeframe-service.yaml mirroring checklist.features-cross-instrument-service.yaml. Defines readiness checks for service deployment.
+    content:
+      Create deployment-service/configs/checklist.features-multi-timeframe-service.yaml mirroring
+      checklist.features-cross-instrument-service.yaml. Defines readiness checks for service deployment.
     status: completed
   - id: scaffold-mtf-service-repo
-    content: "Scaffold features-multi-timeframe-service repo: copy pyproject.toml from features-cross-instrument-service, update name/description. Create directory structure: features_multi_timeframe_service/app/calculators/, app/engine/, schemas/output_schemas.py, tests/unit/, tests/integration/, docs/, scripts/quality-gates.sh, scripts/quickmerge.sh. Set up .python-version=3.13. Add conftest.py with mock fixtures derived from CrossTimeframeFeatures and delta-one output schemas."
+    content:
+      "Scaffold features-multi-timeframe-service repo: copy pyproject.toml from features-cross-instrument-service,
+      update name/description. Create directory structure: features_multi_timeframe_service/app/calculators/,
+      app/engine/, schemas/output_schemas.py, tests/unit/, tests/integration/, docs/, scripts/quality-gates.sh,
+      scripts/quickmerge.sh. Set up .python-version=3.13. Add conftest.py with mock fixtures derived from
+      CrossTimeframeFeatures and delta-one output schemas."
     status: completed
   - id: mtf-service-quality-gates
-    content: Set up scripts/quality-gates.sh in features-multi-timeframe-service from unified-trading-codex/06-coding-standards/quality-gates-service-template.sh. Set SERVICE_NAME=features-multi-timeframe-service, SOURCE_DIR=features_multi_timeframe_service, MIN_COVERAGE=70. Setup only — do NOT run.
+    content:
+      Set up scripts/quality-gates.sh in features-multi-timeframe-service from
+      unified-trading-codex/06-coding-standards/quality-gates-service-template.sh. Set
+      SERVICE_NAME=features-multi-timeframe-service, SOURCE_DIR=features_multi_timeframe_service, MIN_COVERAGE=70. Setup
+      only — do NOT run.
     status: completed
   - id: mtf-service-quickmerge
-    content: Set up scripts/quickmerge.sh in features-multi-timeframe-service from unified-trading-codex/05-infrastructure/quickmerge-templates/quickmerge.sh. Setup only — do NOT run.
+    content:
+      Set up scripts/quickmerge.sh in features-multi-timeframe-service from
+      unified-trading-codex/05-infrastructure/quickmerge-templates/quickmerge.sh. Setup only — do NOT run.
     status: completed
   - id: mtf-service-unit-tests
-    content: "Write unit tests for all MTF calculators (tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context). Mock all delta-one feature inputs using MagicMock(spec=delta_one output DataFrame schema). Test: output column presence, binary indicator ranges [0,1], ratio features non-negative, session context timing logic. Use pytest fixtures from conftest.py based on CrossTimeframeFeatures schema. Do NOT run quality gates."
+    content:
+      "Write unit tests for all MTF calculators (tf_momentum_alignment, tf_structure_context, tf_vol_compression,
+      tf_session_context). Mock all delta-one feature inputs using MagicMock(spec=delta_one output DataFrame schema).
+      Test: output column presence, binary indicator ranges [0,1], ratio features non-negative, session context timing
+      logic. Use pytest fixtures from conftest.py based on CrossTimeframeFeatures schema. Do NOT run quality gates."
     status: completed
   - id: mtf-service-schema-contract-test
-    content: "Write schema contract tests for MTF service: verify output_schemas.py columns match CrossTimeframeFeatures internal contract spec exactly (same field names, types, nullability). pytest only, no live I/O. This is a unit-level contract test, not a deployment test. Full integration and live PubSub/GCS verification goes to consolidated_remaining_work.plan.md."
+    content:
+      "Write schema contract tests for MTF service: verify output_schemas.py columns match CrossTimeframeFeatures
+      internal contract spec exactly (same field names, types, nullability). pytest only, no live I/O. This is a
+      unit-level contract test, not a deployment test. Full integration and live PubSub/GCS verification goes to
+      consolidated_remaining_work.plan.md."
     status: completed
   - id: mtf-service-github-collaborators
-    content: Add features-multi-timeframe-service to unified-trading-pm/scripts/create-github-repos-and-collaborators.py REPOS_TO_CREATE list. Add datadodo and CosmicTrader as collaborators with admin permission. Run script to create repo and set access.
+    content:
+      Add features-multi-timeframe-service to unified-trading-pm/scripts/create-github-repos-and-collaborators.py
+      REPOS_TO_CREATE list. Add datadodo and CosmicTrader as collaborators with admin permission. Run script to create
+      repo and set access.
     status: completed
   - id: mtf-service-cloud-build-trigger
-    content: "Add Cloud Build trigger for features-multi-timeframe-service in deployment-service: trigger on push to main at path features-multi-timeframe-service/**. Mirror features-cross-instrument-service Cloud Build trigger config."
+    content:
+      "Add Cloud Build trigger for features-multi-timeframe-service in deployment-service: trigger on push to main at
+      path features-multi-timeframe-service/**. Mirror features-cross-instrument-service Cloud Build trigger config."
     status: completed
 isProject: true
 ---
@@ -169,18 +339,22 @@ isProject: true
 
 ## Section 0: GBT Feature Design Principles
 
-These principles govern every calculator added or modified in this plan. Violating them wastes feature budget and pollutes the SHAP signal.
+These principles govern every calculator added or modified in this plan. Violating them wastes feature budget and
+pollutes the SHAP signal.
 
 ### Rule 1: Monotonic Transforms Are Worthless for Trees
 
-A gradient boosted tree splits on thresholds. If feature B is a monotonic function of feature A, the tree can always find the equivalent threshold on A without B. B adds zero information and wastes one of the ~300-500 selected feature slots.
+A gradient boosted tree splits on thresholds. If feature B is a monotonic function of feature A, the tree can always
+find the equivalent threshold on A without B. B adds zero information and wastes one of the ~300-500 selected feature
+slots.
 
 **Delete:**
 
 - `vol_percentile_{window}` — percentile rank of vol vs rolling window (monotonic of raw vol)
 - Any `_zscore_` suffixed features — GBT finds the threshold on raw data
 - Any `_normalized_` features where normalization is just `(x - mean) / std`
-- `return_percentile_5bar` as a percentile _rank_ — monotonic of raw return (keep if using as a learning-to-rank target, not as a feature)
+- `return_percentile_5bar` as a percentile _rank_ — monotonic of raw return (keep if using as a learning-to-rank target,
+  not as a feature)
 
 **Keep — these look similar but are NOT monotonic transforms:**
 
@@ -190,13 +364,21 @@ A gradient boosted tree splits on thresholds. If feature B is a monotonic functi
 - `fib_confluence_score` — count aggregation, not monotonic of any single input
 - `vol_regime` (categorical 0/1/2) — discrete bucketing, not monotonic
 
-**The test:** Ask "if I remove this feature, can the tree eventually learn the same splits using only the features that remain?" If YES → delete it.
+**The test:** Ask "if I remove this feature, can the tree eventually learn the same splits using only the features that
+remain?" If YES → delete it.
 
 ### Rule 2: Multi-Horizon Binary Encoding Replaces Raw "Time Since"
 
-**Important implementation note:** Both `features_delta_one_service/app/calculators/base.py` (pandas) and `features_cross_instrument_service/app/calculators/base_calculator.py` (Polars) already auto-generate raw `time_since_{event}` integers from any binary column via `_add_time_since_events()`. Multi-horizon binary encoding is a _replacement_ for this output, not filling a missing capability. Implementation requires adding a `_add_event_horizon_binaries()` method to both base class variants, either replacing `_add_time_since_events()` or running both in parallel if raw time_since is still needed for other purposes.
+**Important implementation note:** Both `features_delta_one_service/app/calculators/base.py` (pandas) and
+`features_cross_instrument_service/app/calculators/base_calculator.py` (Polars) already auto-generate raw
+`time_since_{event}` integers from any binary column via `_add_time_since_events()`. Multi-horizon binary encoding is a
+_replacement_ for this output, not filling a missing capability. Implementation requires adding a
+`_add_event_horizon_binaries()` method to both base class variants, either replacing `_add_time_since_events()` or
+running both in parallel if raw time_since is still needed for other purposes.
 
-Raw `time_since_swing_high = 15` tells the tree an integer. It has to waste multiple splits to learn "fresh vs stale." Instead, create binary indicators at a range of lookback windows. The tree can then split on `swing_high_in_last_5_bars = 1 AND swing_high_in_last_20_bars = 0` in a single node.
+Raw `time_since_swing_high = 15` tells the tree an integer. It has to waste multiple splits to learn "fresh vs stale."
+Instead, create binary indicators at a range of lookback windows. The tree can then split on
+`swing_high_in_last_5_bars = 1 AND swing_high_in_last_20_bars = 0` in a single node.
 
 **Pattern: for every discrete event, create this feature family:**
 
@@ -224,7 +406,8 @@ This pattern automatically encodes time since, recency decay, and event stalenes
 
 ### Rule 3: Explicit Binary Thresholds at Known Meaningful Levels
 
-For continuous features with well-understood critical thresholds, add explicit binary indicators. The tree would find these eventually but wastes depth doing so.
+For continuous features with well-understood critical thresholds, add explicit binary indicators. The tree would find
+these eventually but wastes depth doing so.
 
 ```python
 # RSI thresholds (overbought/oversold)
@@ -256,7 +439,8 @@ at_weekly_open    = (abs(price_vs_weekly_open_pct) < 0.003).astype(int)
 
 ### Rule 4: Ratio Features for Non-Obvious Interactions
 
-GBTs need many splits to approximate `A/B`. Providing the ratio directly costs one feature slot and conveys a non-redundant signal.
+GBTs need many splits to approximate `A/B`. Providing the ratio directly costs one feature slot and conveys a
+non-redundant signal.
 
 ```python
 # Multi-resolution compression (core of wedge/squeeze detection)
@@ -275,7 +459,9 @@ oi_acceleration   = oi_change_ma_8 / (oi_change_ma_48 + eps)
 
 ### Rule 5: Avoid Sparse Binaries Unless Aggregated
 
-A binary feature that fires in 0.1% of rows is useless — the tree never has enough samples to split confidently. For rare events (iceberg_order_count, specific pattern triggers), aggregate over larger windows or combine with other signals into a composite binary.
+A binary feature that fires in 0.1% of rows is useless — the tree never has enough samples to split confidently. For
+rare events (iceberg_order_count, specific pattern triggers), aggregate over larger windows or combine with other
+signals into a composite binary.
 
 ```python
 # BAD: fires rarely
@@ -288,7 +474,8 @@ iceberg_active              # 1 if count_last_20 > 0
 
 ### Rule 6: Scale Invariance via ATR Normalization
 
-All price-level distances and sizes must be ATR-normalized so features are comparable across instruments, timeframes, and market regimes.
+All price-level distances and sizes must be ATR-normalized so features are comparable across instruments, timeframes,
+and market regimes.
 
 ```python
 # BAD: raw distance in USD
@@ -357,9 +544,14 @@ rv_iv_ratio_extreme  = (rv_iv_ratio_20 > 1.5).astype(int)  # RV >> IV = unusual
 rv_iv_inverted       = (rv_iv_ratio_20 < 0.7).astype(int)  # IV >> RV = fear premium
 ```
 
-The `trade_size_p10/p50/p90/p99` features are FINE — they are distribution summary statistics (the absolute dollar threshold at the Nth percentile), not rank transforms of the current trade size. They tell the model "what does the market distribution look like right now."
+The `trade_size_p10/p50/p90/p99` features are FINE — they are distribution summary statistics (the absolute dollar
+threshold at the Nth percentile), not rank transforms of the current trade size. They tell the model "what does the
+market distribution look like right now."
 
-**Schema migration note:** Removing `vol_percentile_{window}` from `realized_implied_vol.py` is a breaking change. The `output_features` property (line 68) must be updated to remove those columns and add the new binary threshold columns. The `output_schemas.py` file defines the `realized_implied_vol` feature group — verify no downstream ML consumer selects by explicit column name before deploying. Requires a version bump in `features-cross-instrument-service`.
+**Schema migration note:** Removing `vol_percentile_{window}` from `realized_implied_vol.py` is a breaking change. The
+`output_features` property (line 68) must be updated to remove those columns and add the new binary threshold columns.
+The `output_schemas.py` file defines the `realized_implied_vol` feature group — verify no downstream ML consumer selects
+by explicit column name before deploying. Requires a version bump in `features-cross-instrument-service`.
 
 ---
 
@@ -376,7 +568,10 @@ The `trade_size_p10/p50/p90/p99` features are FINE — they are distribution sum
 
 What it still needs: BTC dominance context, symbol beta vs BTC, CME gap, and the monotonic transform fix above.
 
-Geopolitical event risk is already captured by the existing `sentiment` feature group (CryptoPanic news feed, implemented in HFT Tier 4). The ML model learns which sentiment signals are informative in which regime via SHAP selection. A hand-crafted keyword extractor would add fragility without clear alpha improvement over the general sentiment signal — the noisy signal is preserved, just via the correct existing channel.
+Geopolitical event risk is already captured by the existing `sentiment` feature group (CryptoPanic news feed,
+implemented in HFT Tier 4). The ML model learns which sentiment signals are informative in which regime via SHAP
+selection. A hand-crafted keyword extractor would add fragility without clear alpha improvement over the general
+sentiment signal — the noisy signal is preserved, just via the correct existing channel.
 
 ### Full Architecture
 
@@ -655,7 +850,8 @@ ALL_FEATURE_GROUPS = [
 
 ### Regime-Conditional Specialists
 
-Use existing `vol_regime_low / vol_regime_normal / vol_regime_high` binary features (already computed in `volatility.py`) to segment:
+Use existing `vol_regime_low / vol_regime_normal / vol_regime_high` binary features (already computed in
+`volatility.py`) to segment:
 
 ```
 LOW_VOL specialist:   mean-reversion dominates — S/R, fib confluence, RSI extremes
@@ -781,20 +977,30 @@ flowchart TD
 
 ## Section 9: Testing Policy
 
-**Scope of this plan:** Code, config, Terraform setup, API contracts, internal contracts, documentation, manifest, topology YAMLs, DAG diagrams, unit tests. Nothing that requires live infrastructure.
+**Scope of this plan:** Code, config, Terraform setup, API contracts, internal contracts, documentation, manifest,
+topology YAMLs, DAG diagrams, unit tests. Nothing that requires live infrastructure.
 
 **Quality gates:** Set up (scripts created) but never run. CI runs them on merge.
 
-**Deployment, live PubSub/GCS verification, integration tests, backfill, smoke tests:** All in `consolidated_remaining_work.plan.md` under the "Citadel ML Feature Pipeline — Hardening, Deployment & Live Verification" section.
+**Deployment, live PubSub/GCS verification, integration tests, backfill, smoke tests:** All in
+`consolidated_remaining_work.plan.md` under the "Citadel ML Feature Pipeline — Hardening, Deployment & Live
+Verification" section.
 
 **What is run here:** Unit tests only via `pytest`.
 
-> **Layer 1.5 — Per-component integration tests (D2):** Per-component integration tests for FMTS and MTF calculators belong in `tests/integration/` with all external deps mocked (no live GCS/PubSub). These block quickmerge `--unit-only` progression and must pass before service tier promotion. They are distinct from Layer 2 post-deploy tests (which go to `consolidated_remaining_work.plan.md`). See `cursor-rules/testing/integration-testing-layers.mdc` for full 5-layer strategy (Layers 0, 1, 1.5, 2, 3a/3b).
+> **Layer 1.5 — Per-component integration tests (D2):** Per-component integration tests for FMTS and MTF calculators
+> belong in `tests/integration/` with all external deps mocked (no live GCS/PubSub). These block quickmerge
+> `--unit-only` progression and must pass before service tier promotion. They are distinct from Layer 2 post-deploy
+> tests (which go to `consolidated_remaining_work.plan.md`). See `cursor-rules/testing/integration-testing-layers.mdc`
+> for full 5-layer strategy (Layers 0, 1, 1.5, 2, 3a/3b).
 
-**Mocking strategy:** All external API responses and internal data contracts mocked using `MagicMock(spec=...)` against canonical schemas:
+**Mocking strategy:** All external API responses and internal data contracts mocked using `MagicMock(spec=...)` against
+canonical schemas:
 
-- `unified-api-contracts/external/{source}/schemas.py` — external API responses (Coinglass, CoinGecko, Databento, CryptoPanic, LunarCrush)
-- `unified-internal-contracts/unified_internal_contracts/` — CanonicalOptionQuote, CanonicalBookUpdate, CrossInstrumentFeatures, CrossTimeframeFeatures
+- `unified-api-contracts/external/{source}/schemas.py` — external API responses (Coinglass, CoinGecko, Databento,
+  CryptoPanic, LunarCrush)
+- `unified-internal-contracts/unified_internal_contracts/` — CanonicalOptionQuote, CanonicalBookUpdate,
+  CrossInstrumentFeatures, CrossTimeframeFeatures
 - Service `schemas/output_schemas.py` — output DataFrame shape/column validation
 
 No live GCS, PubSub, or external HTTP calls in any test in this plan.
@@ -803,11 +1009,13 @@ No live GCS, PubSub, or external HTTP calls in any test in this plan.
 
 ## Section 10: Architectural Setup (Missing from Original Plan)
 
-Everything above covers feature engineering and ML changes. This section covers the full system integration layer that must accompany any new service or external data source.
+Everything above covers feature engineering and ML changes. This section covers the full system integration layer that
+must accompany any new service or external data source.
 
 ### New External Data Sources → API Contracts
 
-All external APIs follow the same pattern: schemas in `unified-api-contracts/unified_api_contracts/external/{source}/schemas.py`, API key in Secret Manager.
+All external APIs follow the same pattern: schemas in
+`unified-api-contracts/unified_api_contracts/external/{source}/schemas.py`, API key in Secret Manager.
 
 | Source        | Purpose                                         | Schema file                                                       | Key needed                            |
 | ------------- | ----------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------- |
@@ -873,13 +1081,7 @@ features-multi-timeframe-service:
   batch:
     dimensions: [category, feature_category, date]
     category_values: [cefi, defi, tradfi]
-    feature_category_values:
-      [
-        tf_momentum_alignment,
-        tf_structure_context,
-        tf_vol_compression,
-        tf_session_context,
-      ]
+    feature_category_values: [tf_momentum_alignment, tf_structure_context, tf_vol_compression, tf_session_context]
   live:
     dimensions: [feature_category]
     topic_template: "features-multi-timeframe-{feature_category}"

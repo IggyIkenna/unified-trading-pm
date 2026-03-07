@@ -23,9 +23,14 @@ isProject: false
 
 Collection failures typically stem from:
 
-1. **Missing path deps in workspace venv** — `unified-internal-contracts`, `unified-api-contracts`, and other sibling libs not installed via `uv pip install -e <path-dep>` in `.venv-workspace`. Sub-agents and isolated runs often lack these deps.
-2. **Import path changes** — Schema/package reorgs (e.g. `unified_api_contracts.sports` → `unified_api_contracts_external.sports`) break existing imports. Must align with external-import-standards (top-level imports only).
-3. **Schema migrations** — `InstrumentDefinition` and other types moved between `unified-api-contracts` and `unified-internal-contracts`. Consumers must update imports and pyproject.toml constraints.
+1. **Missing path deps in workspace venv** — `unified-internal-contracts`, `unified-api-contracts`, and other sibling
+   libs not installed via `uv pip install -e <path-dep>` in `.venv-workspace`. Sub-agents and isolated runs often lack
+   these deps.
+2. **Import path changes** — Schema/package reorgs (e.g. `unified_api_contracts.sports` →
+   `unified_api_contracts_external.sports`) break existing imports. Must align with external-import-standards (top-level
+   imports only).
+3. **Schema migrations** — `InstrumentDefinition` and other types moved between `unified-api-contracts` and
+   `unified-internal-contracts`. Consumers must update imports and pyproject.toml constraints.
 
 ---
 
@@ -43,7 +48,14 @@ source .venv-workspace/bin/activate
 uv pip install -e unified-api-contracts -e unified-internal-contracts -e unified-cloud-interface -e unified-config-interface -e unified-events-interface -e unified-reference-data-interface -e unified-trading-library -e unified-domain-client -e unified-market-interface -e unified-ml-interface -e unified-trade-execution-interface -e unified-sports-execution-interface -e unified-defi-execution-interface -e matching-engine-library -e execution-algo-library -e unified-feature-calculator-library -e unified-position-interface
 ```
 
-Additional path deps as needed per repo: `alerting-service`, `batch-audit-ui`, `client-reporting-api`, `client-reporting-ui`, `deployment-api`, `deployment-service`, `deployment-ui`, `execution-algo-library`, `execution-results-api`, `execution-service`, `features-calendar-service`, `features-cross-instrument-service`, `features-delta-one-service`, `features-multi-timeframe-service`, `features-onchain-service`, `features-sports-service`, `features-volatility-service`, `instruments-service`, `market-data-api`, `market-data-processing-service`, `market-tick-data-service`, `ml-inference-service`, `ml-training-service`, `pnl-attribution-service`, `position-balance-monitor-service`, `risk-and-exposure-service`, `strategy-service`, `strategy-validation-service`, `system-integration-tests`. See `workspace-manifest.json` for canonical list.
+Additional path deps as needed per repo: `alerting-service`, `batch-audit-ui`, `client-reporting-api`,
+`client-reporting-ui`, `deployment-api`, `deployment-service`, `deployment-ui`, `execution-algo-library`,
+`execution-results-api`, `execution-service`, `features-calendar-service`, `features-cross-instrument-service`,
+`features-delta-one-service`, `features-multi-timeframe-service`, `features-onchain-service`, `features-sports-service`,
+`features-volatility-service`, `instruments-service`, `market-data-api`, `market-data-processing-service`,
+`market-tick-data-service`, `ml-inference-service`, `ml-training-service`, `pnl-attribution-service`,
+`position-balance-monitor-service`, `risk-and-exposure-service`, `strategy-service`, `strategy-validation-service`,
+`system-integration-tests`. See `workspace-manifest.json` for canonical list.
 
 ### Per-Repo Fixes
 
@@ -114,4 +126,5 @@ All core repos pass `pytest --collect-only -q`:
 
 ## Execution Order
 
-Run after orphan-contracts-utilization and before unit_tests_and_test_failure_action. Aligns with phase2_library_tier_hardening (T0→T3) and phase3_service_hardening_integration.
+Run after orphan-contracts-utilization and before unit_tests_and_test_failure_action. Aligns with
+phase2_library_tier_hardening (T0→T3) and phase3_service_hardening_integration.

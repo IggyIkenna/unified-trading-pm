@@ -1,8 +1,7 @@
 # PM–Codex–Code Alignment: Version Tracking Design
 
-**Status:** Proposal — Under Team Review
-**Author:** Architecture discussion (Mar 2026)
-**Context:** 60-repo workspace, multi-agent delivery, high velocity
+**Status:** Proposal — Under Team Review **Author:** Architecture discussion (Mar 2026) **Context:** 60-repo workspace,
+multi-agent delivery, high velocity
 
 ---
 
@@ -18,9 +17,12 @@ Codex (specs, patterns, architecture docs)
 Code (services, libraries, interfaces)
 ```
 
-At high velocity with multiple agents (Cursor, Claude Code, etc.) working in parallel, these three layers drift apart. A plan references a spec that has been superseded. An agent writes code against a codex doc that was updated last week. A new engineer reads a doc that no longer matches what the code does.
+At high velocity with multiple agents (Cursor, Claude Code, etc.) working in parallel, these three layers drift apart. A
+plan references a spec that has been superseded. An agent writes code against a codex doc that was updated last week. A
+new engineer reads a doc that no longer matches what the code does.
 
-**The core question:** How do we make drift detectable and enforceable — like a failing unit test — rather than invisible until something breaks?
+**The core question:** How do we make drift detectable and enforceable — like a failing unit test — rather than
+invisible until something breaks?
 
 ---
 
@@ -28,7 +30,8 @@ At high velocity with multiple agents (Cursor, Claude Code, etc.) working in par
 
 ### Approach A: Central Manifest as Source of Truth (proposed initially)
 
-All version state lives in `workspace-manifest.json`. A post-merge GitHub Action syncs repo versions into the manifest after every merge. A drift checker script compares manifest versions against codex doc headers.
+All version state lives in `workspace-manifest.json`. A post-merge GitHub Action syncs repo versions into the manifest
+after every merge. A drift checker script compares manifest versions against codex doc headers.
 
 **How it works:**
 
@@ -56,7 +59,8 @@ All version state lives in `workspace-manifest.json`. A post-merge GitHub Action
 
 ### Approach B: Per-File Header Provenance (proposed by team)
 
-Every file that changes as part of a task carries a header recording which codex document and version it was built against. The codex doc itself carries its own `doc_version` independently of the repo/service version.
+Every file that changes as part of a task carries a header recording which codex document and version it was built
+against. The codex doc itself carries its own `doc_version` independently of the repo/service version.
 
 **How it works:**
 
@@ -90,9 +94,11 @@ codex_version: "0.1.0"
 created: "2026-03-04"
 ```
 
-When the codex doc is updated (spec changes), `doc_version` bumps from `1.2` → `1.3`. Any code file still carrying `doc-version: 1.2` is now detectably stale — it references a superseded spec.
+When the codex doc is updated (spec changes), `doc_version` bumps from `1.2` → `1.3`. Any code file still carrying
+`doc-version: 1.2` is now detectably stale — it references a superseded spec.
 
-**`doc_version` is independent of the service/repo version.** The module-level repo version (in `pyproject.toml`) only bumps when code ships. The `doc_version` bumps whenever the specification changes — these are different events.
+**`doc_version` is independent of the service/repo version.** The module-level repo version (in `pyproject.toml`) only
+bumps when code ships. The `doc_version` bumps whenever the specification changes — these are different events.
 
 **Pros:**
 
@@ -152,9 +158,11 @@ All checks are string/semver comparisons. No network calls. Complete check runs 
 - Generic utility files not tied to a specific spec (e.g. `utils/date_utils.py`)
 - `__init__.py`, `conftest.py`, test fixtures
 - Infrastructure files (`Dockerfile`, `cloudbuild.yaml`, `pyproject.toml`)
-- Codex cross-cutting pattern docs (e.g. `06-coding-standards/quality-gates.md`) — these describe workspace-wide standards, not a specific service
+- Codex cross-cutting pattern docs (e.g. `06-coding-standards/quality-gates.md`) — these describe workspace-wide
+  standards, not a specific service
 
-The rule: **if the file exists because a specific codex spec says it should**, it carries a header. If it's infrastructure or a workspace-wide pattern file, it doesn't.
+The rule: **if the file exists because a specific codex spec says it should**, it carries a header. If it's
+infrastructure or a workspace-wide pattern file, it doesn't.
 
 ---
 
@@ -168,7 +176,8 @@ The rule: **if the file exists because a specific codex spec says it should**, i
 | Code file updated to implement latest spec          | Update `doc-version` in header to match current spec |
 | `codex_version` bumps (whole codex ships a release) | Update `codex-version` in header                     |
 
-`doc_version` is managed by the agent doing the edit — it is **not** automated. This is intentional: the version is a human-meaningful signal, not a git artifact.
+`doc_version` is managed by the agent doing the edit — it is **not** automated. This is intentional: the version is a
+human-meaningful signal, not a git artifact.
 
 ---
 
@@ -201,15 +210,24 @@ The rule: **if the file exists because a specific codex spec says it should**, i
 
 ## Open Questions for Team Discussion
 
-1. **`doc_version` format:** Semantic (`1.2`) vs. date-based (`2026-03-04`) vs. integer (`42`)? Semantic is most expressive but requires agent discipline. Date-based is automatic but loses ordering when multiple edits happen in a day.
+1. **`doc_version` format:** Semantic (`1.2`) vs. date-based (`2026-03-04`) vs. integer (`42`)? Semantic is most
+   expressive but requires agent discipline. Date-based is automatic but loses ordering when multiple edits happen in a
+   day.
 
-2. **Header in code files — comment vs. docstring?** A module-level comment (`# codex-ref: ...`) is invisible to runtime but noisy in diffs. A module docstring (`"""codex-ref: ..."""`) is cleaner but changes the module's public interface. A dedicated `__codex__.py` per package avoids per-file headers entirely.
+2. **Header in code files — comment vs. docstring?** A module-level comment (`# codex-ref: ...`) is invisible to runtime
+   but noisy in diffs. A module docstring (`"""codex-ref: ..."""`) is cleaner but changes the module's public interface.
+   A dedicated `__codex__.py` per package avoids per-file headers entirely.
 
-3. **Enforcement strictness:** Should `doc_version_match` be a hard blocker or a warning in CI? Blocking is safer but will cause friction when specs are updated faster than code. Warning + a staleness threshold (e.g., allow 1 minor version behind) may be more practical.
+3. **Enforcement strictness:** Should `doc_version_match` be a hard blocker or a warning in CI? Blocking is safer but
+   will cause friction when specs are updated faster than code. Warning + a staleness threshold (e.g., allow 1 minor
+   version behind) may be more practical.
 
-4. **Cross-cutting pattern docs:** How do files that implement workspace-wide patterns (not service-specific specs) get tracked? Should they reference the `06-coding-standards/` section version instead?
+4. **Cross-cutting pattern docs:** How do files that implement workspace-wide patterns (not service-specific specs) get
+   tracked? Should they reference the `06-coding-standards/` section version instead?
 
-5. **Retroactive coverage:** Do we add headers to all existing files, or only files touched going forward? Full retroactive coverage is a one-time lobster workflow (~2 hours). Partial coverage means the check can only run on files that have headers, reducing enforcement completeness initially.
+5. **Retroactive coverage:** Do we add headers to all existing files, or only files touched going forward? Full
+   retroactive coverage is a one-time lobster workflow (~2 hours). Partial coverage means the check can only run on
+   files that have headers, reducing enforcement completeness initially.
 
 ---
 
@@ -225,7 +243,8 @@ The rule: **if the file exists because a specific codex spec says it should**, i
 | Testability             | Good                   | Excellent                  | Excellent |
 | Long-term maintenance   | Low                    | Medium                     | Medium    |
 
-The combined approach gives the most complete coverage. Phase 1 + Phase 2 (headers + enforcement script) deliver 80% of the value and can ship in 2–3 days. Phase 3 (manifest sync) adds the repo-level layer on top.
+The combined approach gives the most complete coverage. Phase 1 + Phase 2 (headers + enforcement script) deliver 80% of
+the value and can ship in 2–3 days. Phase 3 (manifest sync) adds the repo-level layer on top.
 
 ---
 

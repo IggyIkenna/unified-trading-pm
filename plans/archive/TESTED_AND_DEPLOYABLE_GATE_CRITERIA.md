@@ -1,7 +1,7 @@
 # Tested and Deployable Gate Criteria
 
-**Canonical reference:** plans_to_deployable_unified_audit.plan.md
-**Sprint:** Pre-first-deployment (batch → live → testnet → real)
+**Canonical reference:** plans_to_deployable_unified_audit.plan.md **Sprint:** Pre-first-deployment (batch → live →
+testnet → real)
 
 ---
 
@@ -31,7 +31,8 @@
 
 ## Phase 10: Deployable Gate
 
-**Definition:** Code is Deployable when checklist is complete. Data availability verified, deployment stages passed, data catalogue filled, recovery documented, security audit trails.
+**Definition:** Code is Deployable when checklist is complete. Data availability verified, deployment stages passed,
+data catalogue filled, recovery documented, security audit trails.
 
 ### Explicit Criteria (Checklist Phases 1–7)
 

@@ -1,9 +1,7 @@
 # Codex Compliance Blocking - Critical Fix
 
-**Date**: 2026-02-11
-**Issue**: Codex compliance is "warn only" - doesn't block merges
-**Impact**: Cleanup project success criteria cannot be enforced
-**Solution**: Make codex compliance BLOCKING + update issue context
+**Date**: 2026-02-11 **Issue**: Codex compliance is "warn only" - doesn't block merges **Impact**: Cleanup project
+success criteria cannot be enforced **Solution**: Make codex compliance BLOCKING + update issue context
 
 ---
 
@@ -271,7 +269,5 @@ Full standards: `unified-trading-codex/06-coding-standards/README.md`
 
 ---
 
-**Status**: Scripts created, ready to execute
-**Priority**: CRITICAL - must run before cleanup execution
-**Owner**: Agent / User
-**Reference**: Initial Cleanup Project (#5)
+**Status**: Scripts created, ready to execute **Priority**: CRITICAL - must run before cleanup execution **Owner**:
+Agent / User **Reference**: Initial Cleanup Project (#5)

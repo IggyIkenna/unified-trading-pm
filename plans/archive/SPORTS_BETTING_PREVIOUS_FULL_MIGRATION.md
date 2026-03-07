@@ -1,14 +1,13 @@
 # Sports-Betting-Services-Previous — Full Migration Plan
 
-> Supersedes: SPORTS_INTEGRATION_PHASE1.md (done), SPORTS_MIGRATION_PHASE2_FULL.md (partially done)
-> Date: 2026-03-02
+> Supersedes: SPORTS_INTEGRATION_PHASE1.md (done), SPORTS_MIGRATION_PHASE2_FULL.md (partially done) Date: 2026-03-02
 > Status: COMPLETE (2026-03-02)
 
 ## Objective
 
-Migrate **100% of functionality** from `sports-betting-services-previous` into the unified trading system.
-Migrate **0% of methodology** — no SQLAlchemy, no PostgreSQL, no `os.getenv()`, no custom logging.
-Everything follows unified standards: GCS Parquet, Pydantic schemas in AC, UnifiedCloudConfig, unified-events-interface.
+Migrate **100% of functionality** from `sports-betting-services-previous` into the unified trading system. Migrate **0%
+of methodology** — no SQLAlchemy, no PostgreSQL, no `os.getenv()`, no custom logging. Everything follows unified
+standards: GCS Parquet, Pydantic schemas in AC, UnifiedCloudConfig, unified-events-interface.
 
 ## Source Inventory (46 SQLAlchemy Models → Pydantic Schemas)
 
@@ -42,7 +41,8 @@ New Pydantic schemas needed in `unified-api-contracts/sports/canonical/`:
 | `CanonicalProgressiveStats`   | `SFMatchProgressiveStats`        | fixture_id, timer_seconds, team, goals/possession/attacks/shots/corners/fouls/cards/subs/dominance at 30s intervals                                         | `progressive.py`   |
 | `CanonicalProgressiveOdds`    | `SFMatchProgressiveOdds`         | fixture_id, timer_seconds, 1X2/AH/OU/AC odds + 1H variants at 30s intervals                                                                                 | `progressive.py`   |
 
-Also extend `CanonicalFixture` with: `home_shots_blocked`, `away_shots_blocked`, `home_offsides`, `away_offsides`, `home_passes_total`, `away_passes_total`, `home_passes_accuracy`, `away_passes_accuracy`.
+Also extend `CanonicalFixture` with: `home_shots_blocked`, `away_shots_blocked`, `home_offsides`, `away_offsides`,
+`home_passes_total`, `away_passes_total`, `home_passes_accuracy`, `away_passes_accuracy`.
 
 ### Gap 2: Extend Source-Specific Schemas
 
@@ -50,7 +50,8 @@ Each provider's raw API response needs full Pydantic coverage in `unified-api-co
 
 **FootyStats** (`sources/footystats/schemas.py`):
 
-- `FTMatchRaw` — ~250 fields: goals, corners, cards, shots, fouls, possession, xG, BTTS, 60+ odds cols, goal timings, potentials
+- `FTMatchRaw` — ~250 fields: goals, corners, cards, shots, fouls, possession, xG, BTTS, 60+ odds cols, goal timings,
+  potentials
 - `FTRefereeRaw` — ~75 fields: per-match cards/goals/penalties/BTTS stats
 - `FTLeagueStatsRaw` — ~170 fields: league-level aggregates (goals, BTTS, corners, cards, shots, fouls, over/under %)
 - `FTWeatherRaw` — wind, temp, pressure, clouds, humidity, lat/lon
@@ -89,30 +90,33 @@ Each provider's raw API response needs full Pydantic coverage in `unified-api-co
 **Source**: `extra/league_classification_config.py` — ~50+ leagues with tier, classification, data source flags
 **Target**: `instruments-service/instruments_service/sports/league_registry.py`
 
-Transform Python dict to Pydantic-validated YAML config stored in GCS ConfigStore.
-Fields: league_id, name, country, tier (1-3), classification (Prediction/Reference/Features), data_sources (dict of provider→bool).
+Transform Python dict to Pydantic-validated YAML config stored in GCS ConfigStore. Fields: league_id, name, country,
+tier (1-3), classification (Prediction/Reference/Features), data_sources (dict of provider→bool).
 
 ### Gap 4: Team Aliases & Cross-Provider Mappings → instruments-service
 
-**Source**: `team_name_changes.py`, `footystats_team_mapping.py`, `mapping.py`
-**Target**: `instruments-service/instruments_service/sports/team_aliases.py`
+**Source**: `team_name_changes.py`, `footystats_team_mapping.py`, `mapping.py` **Target**:
+`instruments-service/instruments_service/sports/team_aliases.py`
 
 Load from GCS Parquet, validate against `TeamMapping` schema from AC.
 
 ### Gap 5: Feature Tracking Registry → features-sports-service — COMPLETE
 
-**Source**: `footballbets/features/tracking/` — 14 modules, ~500+ features with status tracking
-**Target**: `features-sports-service/features_sports_service/tracking/`
+**Source**: `footballbets/features/tracking/` — 14 modules, ~500+ features with status tracking **Target**:
+`features-sports-service/features_sports_service/tracking/`
 
-Recreated as Pydantic-based feature registry. Status enum: COMPLETE, DATA_NEEDED, TESTED, BLOCKED, NOT_STARTED.
-CI integration: validate declared features match computed output.
+Recreated as Pydantic-based feature registry. Status enum: COMPLETE, DATA_NEEDED, TESTED, BLOCKED, NOT_STARTED. CI
+integration: validate declared features match computed output.
 
-**Completed (2026-03-02):** Expanded from 14 → 24 tracking modules, 420 → 998 features. 10 new calculators added (team_style, manager, referee_interaction, ht_sequencing, schedule_fatigue, promoted_team, market_efficiency, market_structure, price_dynamics, synthetic_xg). SportsFeatureVector in unified-api-contracts expanded to 1077 fields. 773 tests pass. Status: 614 TESTED, 249 COMPLETE, 77 DATA_NEEDED, 52 NOT_STARTED, 6 BLOCKED.
+**Completed (2026-03-02):** Expanded from 14 → 24 tracking modules, 420 → 998 features. 10 new calculators added
+(team_style, manager, referee_interaction, ht_sequencing, schedule_fatigue, promoted_team, market_efficiency,
+market_structure, price_dynamics, synthetic_xg). SportsFeatureVector in unified-api-contracts expanded to 1077 fields.
+773 tests pass. Status: 614 TESTED, 249 COMPLETE, 77 DATA_NEEDED, 52 NOT_STARTED, 6 BLOCKED.
 
 ### Gap 6: Provider CLI Handlers → features-sports-service
 
-**Source**: 8 CLI modules in `footballbets/cli/`
-**Target**: `features-sports-service/features_sports_service/cli/handlers/`
+**Source**: 8 CLI modules in `footballbets/cli/` **Target**:
+`features-sports-service/features_sports_service/cli/handlers/`
 
 | Old CLI                       | New Handler                  | Notes                                            |
 | ----------------------------- | ---------------------------- | ------------------------------------------------ |
@@ -125,8 +129,8 @@ CI integration: validate declared features match computed output.
 
 ### Gap 7: Utility Functions → features-sports-service
 
-**Source**: Various utility files in `footballbets/`
-**Target**: `features-sports-service/features_sports_service/utils/` or integrated into clients
+**Source**: Various utility files in `footballbets/` **Target**:
+`features-sports-service/features_sports_service/utils/` or integrated into clients
 
 | Old File                    | Functionality        | Target                                                       |
 | --------------------------- | -------------------- | ------------------------------------------------------------ |
@@ -215,8 +219,10 @@ After all code is migrated, a data migration script will:
 ## Done Criteria
 
 - [x] All 46 old SQLAlchemy models have Pydantic equivalents (canonical or source-specific)
-- [x] `unified-api-contracts/sports/canonical/` has: fixture, events, lineup, player_stats, injury, fixture_stats, progressive, odds, features, betting, arbitrage, bookmaker, mappings, processed_odds
-- [x] `unified-api-contracts/sports/sources/` has full schemas for: api_football, footystats, soccer_football_info, understat, odds_api, open_meteo, betfair, pinnacle
+- [x] `unified-api-contracts/sports/canonical/` has: fixture, events, lineup, player_stats, injury, fixture_stats,
+      progressive, odds, features, betting, arbitrage, bookmaker, mappings, processed_odds
+- [x] `unified-api-contracts/sports/sources/` has full schemas for: api_football, footystats, soccer_football_info,
+      understat, odds_api, open_meteo, betfair, pinnacle
 - [x] All 18 feature calculators pass unit tests in features-sports-service
 - [x] Feature tracking registry validates all declared features are computed
 - [x] 5 CLI handlers operational in features-sports-service
@@ -227,7 +233,8 @@ After all code is migrated, a data migration script will:
 
 ## Key Files
 
-- `archive/sports-betting-services-previous/footballbets/core/models.py` — source of truth for old data model (2309 lines, 46 models) [ARCHIVED]
+- `archive/sports-betting-services-previous/footballbets/core/models.py` — source of truth for old data model (2309
+  lines, 46 models) [ARCHIVED]
 - `unified-api-contracts/unified_api_contracts/sports/` — target for all schemas
 - `features-sports-service/` — target for feature logic, clients, CLI, tracking
 - `instruments-service/instruments_service/sports/` — target for league registry, team aliases

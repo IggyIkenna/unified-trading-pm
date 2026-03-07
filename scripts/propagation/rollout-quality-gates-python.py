@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Roll out quality gates to all Python repositories.
 This script adds missing quality gate configurations to pyproject.toml files and creates Makefiles.

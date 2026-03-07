@@ -1,7 +1,6 @@
 # Unit Tests All Passing Plan
 
-**Order:** 6 (see MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md)
-**Reference:** TEST_FAILURE_ACTION_PLAN.md (~98 T4 failures)
+**Order:** 6 (see MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md) **Reference:** TEST_FAILURE_ACTION_PLAN.md (~98 T4 failures)
 
 ---
 

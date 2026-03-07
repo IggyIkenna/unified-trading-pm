@@ -2,9 +2,8 @@
 
 **⚠️ CRITICAL: TOKEN TRACKING IS MANDATORY** - All tasks MUST report tokens!
 
-**Purpose**: Track costs at master agent and sub-agent levels (REQUIRED)
-**Why**: Optimize cost, measure efficiency, compare approaches
-**Rule**: Every task completion MUST include token usage from both master and all sub-agents
+**Purpose**: Track costs at master agent and sub-agent levels (REQUIRED) **Why**: Optimize cost, measure efficiency,
+compare approaches **Rule**: Every task completion MUST include token usage from both master and all sub-agents
 
 ---
 
@@ -191,9 +190,8 @@ Session Total: $0.54 + $0.14 = $0.68
 
 ### Sweet Spot:
 
-**Tasks > 100K tokens**: Always use sub-agents
-**Tasks < 50K tokens**: Direct execution OK
-**Tasks 50-100K**: Use sub-agents if preserving context matters
+**Tasks > 100K tokens**: Always use sub-agents **Tasks < 50K tokens**: Direct execution OK **Tasks 50-100K**: Use
+sub-agents if preserving context matters
 
 ---
 

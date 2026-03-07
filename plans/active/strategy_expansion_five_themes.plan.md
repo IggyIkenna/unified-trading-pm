@@ -9,9 +9,9 @@ priority: high
 
 ## Overview
 
-Integrated 5 trading themes into UTS without new repos: relative vol, stat arb,
-vol/options (normalized strikes), prediction market arb (Polymarket), cross-exchange arb.
-All themes share the existing feature -> signal -> execution pipeline via config-driven modes.
+Integrated 5 trading themes into UTS without new repos: relative vol, stat arb, vol/options (normalized strikes),
+prediction market arb (Polymarket), cross-exchange arb. All themes share the existing feature -> signal -> execution
+pipeline via config-driven modes.
 
 ## Completion Status
 
@@ -21,7 +21,8 @@ All themes share the existing feature -> signal -> execution pipeline via config
 - [x] `NormalizedStrikeCoordinate` + `OptionChainSnapshot` in UAC options.py
 - [x] `PairSpreadFeatureRecord` in UIC features.py
 - [x] `vol_of_vol_20/60` added to DeltaOneFeatureRecord (UIC)
-- [x] `relative_vol_ratio/zscore`, `fee_adjusted_spread_bps/zscore`, `crowd_sentiment_*` added to CrossInstrumentFeatures (UIC)
+- [x] `relative_vol_ratio/zscore`, `fee_adjusted_spread_bps/zscore`, `crowd_sentiment_*` added to
+      CrossInstrumentFeatures (UIC)
 - [x] `TargetType.CROSS_VENUE_SPREAD` added to UIC ml.py
 
 ### Phase 2: Feature Services (DONE)
@@ -70,7 +71,10 @@ All themes share the existing feature -> signal -> execution pipeline via config
 ## Key Architecture Decisions
 
 1. **No new repos**: All 5 themes are implemented within existing repos via config modes
-2. **Polymarket via NautilusTrader**: NautilusTrader already has a native Polymarket adapter; we add config + normalizers only
-3. **Cross-exchange arb is ML-driven**: Pure spatial arb is impractical (500ms latency); we train LightGBM on CROSS_VENUE_SPREAD labels instead
-4. **Normalized strikes**: Features/ML use delta coordinates; StrikeMapper resolves to real strikes at execution time only
+2. **Polymarket via NautilusTrader**: NautilusTrader already has a native Polymarket adapter; we add config +
+   normalizers only
+3. **Cross-exchange arb is ML-driven**: Pure spatial arb is impractical (500ms latency); we train LightGBM on
+   CROSS_VENUE_SPREAD labels instead
+4. **Normalized strikes**: Features/ML use delta coordinates; StrikeMapper resolves to real strikes at execution time
+   only
 5. **USEI extended**: Prediction market adapter lives in USEI prediction_markets/ subdir, not a new repo

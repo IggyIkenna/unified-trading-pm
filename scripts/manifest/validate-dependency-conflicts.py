@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate that workspace constraints resolve without dependency conflicts.
 
 1. Optionally regenerate workspace-constraints.toml from pyproject.toml (resolve-canonical-versions)

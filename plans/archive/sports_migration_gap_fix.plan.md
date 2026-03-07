@@ -1,18 +1,18 @@
 # Sports Migration Gap Fix Plan
 
-> Follows: SPORTS_BETTING_PREVIOUS_FULL_MIGRATION.md (COMPLETE)
-> Date: 2026-03-02
-> Status: COMPLETE
+> Follows: SPORTS_BETTING_PREVIOUS_FULL_MIGRATION.md (COMPLETE) Date: 2026-03-02 Status: COMPLETE
 
 ## Objective
 
-Fix all remaining gaps identified during the full audit of `sports-betting-services-previous` migration so that the old repo is fully superseded and can be permanently archived.
+Fix all remaining gaps identified during the full audit of `sports-betting-services-previous` migration so that the old
+repo is fully superseded and can be permanently archived.
 
 ## Gaps Identified
 
 ### P0 — Must Fix
 
-1. **8 canonical tables missing data exporters** — fixture_stats, fixture_events, fixture_lineups, fixture_player_stats, injuries, players, venues (fixture_coaches merged into lineups export)
+1. **8 canonical tables missing data exporters** — fixture_stats, fixture_events, fixture_lineups, fixture_player_stats,
+   injuries, players, venues (fixture_coaches merged into lineups export)
 2. **74 leagues missing from classification registry** — only 20 of 94 leagues migrated
 
 ### P1 — Should Fix
@@ -50,7 +50,8 @@ Fix all remaining gaps identified during the full audit of `sports-betting-servi
 - [x] Feature tracking covers 400+ features across 14 modules — VERIFIED (420 features across 14 modules)
 - [x] Batch fetch CLI accepts all 4 providers with rate limiting — VERIFIED
 - [x] All tests pass in features-sports-service and instruments-service — VERIFIED (509 + 174 sports tests pass)
-- [x] basedpyright clean on both repos — pre-existing errors only (888 in features, 1521 in instruments — none from new code)
+- [x] basedpyright clean on both repos — pre-existing errors only (888 in features, 1521 in instruments — none from new
+      code)
 
 ## Completion Summary
 

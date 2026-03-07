@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Check that Python imports match declared dependencies in pyproject.toml.
 
 The workspace venv installs all repos, so imports from undeclared packages

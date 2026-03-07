@@ -66,7 +66,8 @@ When migrating multiple repos (e.g. 61 repos), **use parallel agents**:
 - Different repos = zero file conflict risk; always safe to parallelize
 - Per workspace rules: cross-repo operations are ideal for parallel agents (max 4 recommended, up to 8 for migration)
 
-**When running batch migration (61 repos):** Ensure workspace root `.cursorignore` exists at `~/Code/unified-trading-system-repos/` before or after the first clone.
+**When running batch migration (61 repos):** Ensure workspace root `.cursorignore` exists at
+`~/Code/unified-trading-system-repos/` before or after the first clone.
 
 ---
 
@@ -74,10 +75,14 @@ When migrating multiple repos (e.g. 61 repos), **use parallel agents**:
 
 The **remote must be clean** after push. Ensure:
 
-- **All local changes committed:** `.gitignore`, `.cursorignore`, and junk removal (`git rm --cached`) must all be in the commit before push
-- **Deletions propagate to remote:** When we `git rm -r --cached` junk and commit, the push updates remote — those files are removed from remote too
-- **Nothing in .gitignore should exist on remote:** After push, remote must not contain `.venv/`, `venv/`, `node_modules/`, `__pycache__/`, etc.
-- **Single commit:** One commit with: (1) .gitignore/.cursorignore updates, (2) junk removal from index. Push once. Remote = clean.
+- **All local changes committed:** `.gitignore`, `.cursorignore`, and junk removal (`git rm --cached`) must all be in
+  the commit before push
+- **Deletions propagate to remote:** When we `git rm -r --cached` junk and commit, the push updates remote — those files
+  are removed from remote too
+- **Nothing in .gitignore should exist on remote:** After push, remote must not contain `.venv/`, `venv/`,
+  `node_modules/`, `__pycache__/`, etc.
+- **Single commit:** One commit with: (1) .gitignore/.cursorignore updates, (2) junk removal from index. Push once.
+  Remote = clean.
 
 ---
 
@@ -88,7 +93,8 @@ The **remote must be clean** after push. Ensure:
    - `git checkout -B main`
    - `git status -sb`
 
-2. **Ensure `.gitignore` exists (repo-level)** — append if missing (see [Ignore Patterns Reference](#ignore-patterns-reference)):
+2. **Ensure `.gitignore` exists (repo-level)** — append if missing (see
+   [Ignore Patterns Reference](#ignore-patterns-reference)):
    - Python: `.venv/`, `venv/`, `__pycache__/`, `*.pyc`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.cache/`
    - Node/UI: `node_modules/`, `.next/`, `dist/`, `build/`, `.turbo/`
    - Coverage: `coverage/`, `.nyc_output/`, `htmlcov/`, `.coverage`
@@ -96,12 +102,15 @@ The **remote must be clean** after push. Ensure:
    - Workspace: `.venv-workspace/`
    - Security (BLOCKING): `*credentials*.json`, `*-service-account.json`, etc.
 
-3. **Ensure `.cursorignore` exists (repo-level)** — create or append (see [Ignore Patterns Reference](#ignore-patterns-reference)):
+3. **Ensure `.cursorignore` exists (repo-level)** — create or append (see
+   [Ignore Patterns Reference](#ignore-patterns-reference)):
    - Use glob patterns: `**/.venv/**`, `**/node_modules/**`, etc.
 
-4. **Ensure `.cursorignore` exists (workspace root)** — if migrating into existing workspace (`~/Code/unified-trading-system-repos/`):
+4. **Ensure `.cursorignore` exists (workspace root)** — if migrating into existing workspace
+   (`~/Code/unified-trading-system-repos/`):
    - Workspace root has no `.gitignore` (it is not a git repo)
-   - Create or update workspace root `.cursorignore` with patterns from [Workspace Root .cursorignore](#workspace-root-cursorignore)
+   - Create or update workspace root `.cursorignore` with patterns from
+     [Workspace Root .cursorignore](#workspace-root-cursorignore)
 
 5. **Detect tracked junk** (no filesystem scan):
 
@@ -155,7 +164,8 @@ The **remote must be clean** after push. Ensure:
     cd "$DST" && git checkout main && git rev-parse HEAD
     ```
 
-11. **Verify remote is clean:** Fresh clone must not contain `.venv/`, `node_modules/`, `__pycache__/`, etc. — if present, junk was not properly removed and pushed.
+11. **Verify remote is clean:** Fresh clone must not contain `.venv/`, `node_modules/`, `__pycache__/`, etc. — if
+    present, junk was not properly removed and pushed.
 
 ---
 
@@ -240,7 +250,8 @@ central-element-323112-*.json
 
 ### Workspace Root .cursorignore
 
-The workspace root (`~/Code/unified-trading-system-repos/`) is not a git repo — only `.cursorignore` matters there. For a **new** workspace root, either:
+The workspace root (`~/Code/unified-trading-system-repos/`) is not a git repo — only `.cursorignore` matters there. For
+a **new** workspace root, either:
 
 - Copy the existing workspace `.cursorignore` from the current iCloud workspace, or
 - Use this simpler deny-list if the workspace is minimal:

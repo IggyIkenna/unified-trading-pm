@@ -2,7 +2,8 @@
 
 ## Problem
 
-Context fills quickly even on the first prompt when running agents. Investigation shows rules and duplicated content are the main cause.
+Context fills quickly even on the first prompt when running agents. Investigation shows rules and duplicated content are
+the main cause.
 
 ---
 
@@ -29,7 +30,8 @@ These repos have **real** `.cursor/rules` directories (not symlinks to PM):
 | deployment-service         | 3,272 |
 | system-integration-tests   | 3,272 |
 
-**Total:** ~26,000 lines of duplicated rules. If Cursor loads rules per workspace folder, the same rules can be loaded multiple times → **~100K+ tokens** from rules alone.
+**Total:** ~26,000 lines of duplicated rules. If Cursor loads rules per workspace folder, the same rules can be loaded
+multiple times → **~100K+ tokens** from rules alone.
 
 ### 3. 38 Per-Repo `.cursorrules` Files
 
@@ -65,7 +67,8 @@ ln -s ../../unified-trading-pm/cursor-rules .cursor/rules
 1. Detect repos with real `.cursor/rules` (not symlinks)
 2. Replace with symlink to PM
 
-**Repos to fix:** batch-audit-ui, unified-api-contracts, unified-internal-contracts, features-sports-service, unified-trading-ui-auth, deployment-api, deployment-service, system-integration-tests
+**Repos to fix:** batch-audit-ui, unified-api-contracts, unified-internal-contracts, features-sports-service,
+unified-trading-ui-auth, deployment-api, deployment-service, system-integration-tests
 
 ---
 

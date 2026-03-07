@@ -1,6 +1,9 @@
 ---
 name: Strict Quality Gate Alignment
-overview: Reconcile PM and Codex Quality Gate SSOT, establish repo-type-specific templates, harden the audit prompt to cover all cursor rules and quickmerge behavior, and roll out setup.sh, quality-gates.sh, .cursorignore, and .gitignore to every repo (no skips; covers frontend, backend, libraries, Python, bash, TypeScript).
+overview:
+  Reconcile PM and Codex Quality Gate SSOT, establish repo-type-specific templates, harden the audit prompt to cover all
+  cursor rules and quickmerge behavior, and roll out setup.sh, quality-gates.sh, .cursorignore, and .gitignore to every
+  repo (no skips; covers frontend, backend, libraries, Python, bash, TypeScript).
 todos:
   - id: reconcile-ssot
     content: "Reconcile PM and Codex SSOT: update Codex quality-gates.md, cursor rules (35%→70%), and templates"
@@ -40,9 +43,11 @@ isProject: false
 | **PM** `cursor-rules/quality-gates/` | 9 rules                          | Limits, hardening, audit factors, production validators                                      |
 | **Audit prompt**                     | Evaluation checklist             | Sections 1–18; references templates but not all 106 cursor rules                             |
 
-**Repos:** 60 total — 17 libraries, 18 services, 5 API services, 12 UIs, 4 infrastructure, 1 devops, 1 test-harness, 1 deprecated.
+**Repos:** 60 total — 17 libraries, 18 services, 5 API services, 12 UIs, 4 infrastructure, 1 devops, 1 test-harness, 1
+deprecated.
 
-**SSOT conflicts:** `quality-gates.mdc` and `quality-gates-audit-factors.mdc` use 35% coverage; Codex and `code-quality-limits.mdc` use 70% for services. Codex library template uses 35% for libraries.
+**SSOT conflicts:** `quality-gates.mdc` and `quality-gates-audit-factors.mdc` use 35% coverage; Codex and
+`code-quality-limits.mdc` use 70% for services. Codex library template uses 35% for libraries.
 
 ---
 
@@ -54,14 +59,24 @@ isProject: false
 
 **Actions:**
 
-- Update [unified-trading-codex/06-coding-standards/quality-gates.md](unified-trading-codex/06-coding-standards/quality-gates.md) to define:
-  - **Coverage by repo type:** `library: 70%`, `service: 70%`, `api-service: 70%`, `infrastructure: 50%` (docs-only: N/A)
+- Update
+  [unified-trading-codex/06-coding-standards/quality-gates.md](unified-trading-codex/06-coding-standards/quality-gates.md)
+  to define:
+  - **Coverage by repo type:** `library: 70%`, `service: 70%`, `api-service: 70%`, `infrastructure: 50%` (docs-only:
+    N/A)
   - **Size limits:** 900/700/100/500/50 (file, warn, function, class, method)
   - **Pipeline:** env-setup → lint → import-check → type-check → tests → codex → ci-validators
-- Update [unified-trading-pm/cursor-rules/quality-gates/quality-gates.mdc](unified-trading-pm/cursor-rules/quality-gates/quality-gates.mdc): change 35% → 70% (align with Codex)
-- Update [unified-trading-pm/cursor-rules/quality-gates/quality-gates-audit-factors.mdc](unified-trading-pm/cursor-rules/quality-gates/quality-gates-audit-factors.mdc): P2 35% → 70%
-- Update [unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc](unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc): 35% → 70% (blocking)
-- Update Codex library template: `MIN_COVERAGE=35` → `MIN_COVERAGE=70` (or document library exception: 35% for leaf-only libraries)
+- Update
+  [unified-trading-pm/cursor-rules/quality-gates/quality-gates.mdc](unified-trading-pm/cursor-rules/quality-gates/quality-gates.mdc):
+  change 35% → 70% (align with Codex)
+- Update
+  [unified-trading-pm/cursor-rules/quality-gates/quality-gates-audit-factors.mdc](unified-trading-pm/cursor-rules/quality-gates/quality-gates-audit-factors.mdc):
+  P2 35% → 70%
+- Update
+  [unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc](unified-trading-pm/cursor-rules/testing/test-coverage-targets.mdc):
+  35% → 70% (blocking)
+- Update Codex library template: `MIN_COVERAGE=35` → `MIN_COVERAGE=70` (or document library exception: 35% for leaf-only
+  libraries)
 
 ### 1.2 Define Repo-Type-Specific Templates
 
@@ -75,13 +90,15 @@ isProject: false
 | **test-harness**   | Service-like                        | Python                  | 70%        | Required                  |
 | **devops**         | PM-like                             | Python                  | 70%        | Required                  |
 
-**Codex:** Add `quality-gates-api-template.sh` (or document that api-service uses service template). Add `quality-gates-infrastructure-template.sh` for docs-only (codex: markdown lint, no pytest).
+**Codex:** Add `quality-gates-api-template.sh` (or document that api-service uses service template). Add
+`quality-gates-infrastructure-template.sh` for docs-only (codex: markdown lint, no pytest).
 
 ---
 
 ## Phase 2: Harden Audit Prompt
 
-**File:** [unified-trading-pm/plans/active/trading-system-audit-prompt.md](unified-trading-pm/plans/active/trading-system-audit-prompt.md)
+**File:**
+[unified-trading-pm/plans/active/trading-system-audit-prompt.md](unified-trading-pm/plans/active/trading-system-audit-prompt.md)
 
 ### 2.1 Cursor Rules Coverage
 
@@ -89,13 +106,15 @@ isProject: false
 
 - **Section 6.1:** Map each rule category (architecture, ci-cd, config, core, dependencies, etc.) to audit criteria
 - **Section 6.2:** BLOCKING rules (strict-quality-gates, no-type-any, runtime-verification, etc.) → mandatory PASS
-- **Section 6.3:** Add checklist items for rules not yet covered: e.g. `agents-follow-cursor-rules`, `no-summary-docs`, `plan-placement`, `hook-tooling-policy`, `concurrency-max-workers`, etc.
+- **Section 6.3:** Add checklist items for rules not yet covered: e.g. `agents-follow-cursor-rules`, `no-summary-docs`,
+  `plan-placement`, `hook-tooling-policy`, `concurrency-max-workers`, etc.
 
 ### 2.2 Quality Gate + Quickmerge Coverage
 
 **Add to audit prompt:**
 
-- **Section 8.x:** Quickmerge stages: dependency validation, pre-flight audit, two-phase quality gates, act simulation, PR creation
+- **Section 8.x:** Quickmerge stages: dependency validation, pre-flight audit, two-phase quality gates, act simulation,
+  PR creation
 - **Section 8.x:** `--dep-branch` usage when deps differ from main
 - **Section 8.x:** `--unit-only`, `--quick`, `--skip-tests`, `--skip-typecheck` usage
 - **Section 8.x:** Production-readiness validators (33 validators, 9 categories)
@@ -121,7 +140,8 @@ isProject: false
 
 - **Source:** `workspace-manifest.json` instead of hardcoded `ALL_REPOS`
 - **Per-repo:** Use `type`, `doc_standard`, `arch_tier`, `quality_gate_status` from manifest
-- **Actions:** Add `scripts/quality-gates.sh` (from PM canonical or Codex template), `pyproject.toml` config, `QUALITY_GATE_BYPASS_AUDIT.md` stub if required
+- **Actions:** Add `scripts/quality-gates.sh` (from PM canonical or Codex template), `pyproject.toml` config,
+  `QUALITY_GATE_BYPASS_AUDIT.md` stub if required
 
 **Refactor `rollout-quality-gates-typescript.py`:**
 
@@ -147,7 +167,8 @@ isProject: false
 | `.cursorignore`            | Repo-type template                  | Excludes build artifacts, .venv, node_modules from Cursor indexing.                                                                   |
 | `.gitignore`               | Repo-type template                  | Standard exclusions for Python/Node/Terraform.                                                                                        |
 
-**Why setup.sh everywhere:** Cloud agents and background agents (e.g. running qa-doc-gaps.sh or other utilities) need a reproducible bootstrap. Local devs with pre-provisioned VM can skip; the file must still exist.
+**Why setup.sh everywhere:** Cloud agents and background agents (e.g. running qa-doc-gaps.sh or other utilities) need a
+reproducible bootstrap. Local devs with pre-provisioned VM can skip; the file must still exist.
 
 **No skips by repo type:** All deviations must be covered:
 
@@ -193,9 +214,11 @@ Canonical setup.sh already detects UI vs Python and branches; propagation copies
 
 - **strategy-validation-service:** `service`; engine/adapters/cli per TASK_SERVICE_STRUCTURE
 - **features-multi-timeframe-service:** `service`; feature layout per multi-tf plan
-- **market-data-api, execution-analytics-ui, ml-training-ui:** NO_TESTS — add quality gates anyway; tests can fail initially
+- **market-data-api, execution-analytics-ui, ml-training-ui:** NO_TESTS — add quality gates anyway; tests can fail
+  initially
 
-**Rule:** Quality gate infrastructure exists even if tests fail. `QUALITY_GATE_BYPASS_AUDIT.md` documents temporary exceptions.
+**Rule:** Quality gate infrastructure exists even if tests fail. `QUALITY_GATE_BYPASS_AUDIT.md` documents temporary
+exceptions.
 
 ---
 
@@ -207,8 +230,10 @@ Canonical setup.sh already detects UI vs Python and branches; propagation copies
 
 **Changes:**
 
-- **Strict mode:** If `scripts/quality-gates.sh` is missing, **fail** (exit 1) instead of warn — for repos that should have it per manifest
-- **Manifest-driven:** Quickmerge reads `workspace-manifest.json`; if repo has `type` in [library, service, api-service, infrastructure, devops, test-harness] and `quality_gate_status` != "NO_QG", require quality-gates.sh
+- **Strict mode:** If `scripts/quality-gates.sh` is missing, **fail** (exit 1) instead of warn — for repos that should
+  have it per manifest
+- **Manifest-driven:** Quickmerge reads `workspace-manifest.json`; if repo has `type` in [library, service, api-service,
+  infrastructure, devops, test-harness] and `quality_gate_status` != "NO_QG", require quality-gates.sh
 
 **No execution:** This plan builds infrastructure only; does not run quality gates or quickmerge.
 
@@ -229,7 +254,8 @@ Canonical setup.sh already detects UI vs Python and branches; propagation copies
 
 ### 5.2 Quality Gate Status
 
-**Ensure every repo has `quality_gate_status`** in manifest. Values: `BASELINE_READY`, `PARTIAL`, `NEEDS_WORK`, `NOT_CONFIGURED`, `NO_TESTS`, `NO_QG`.
+**Ensure every repo has `quality_gate_status`** in manifest. Values: `BASELINE_READY`, `PARTIAL`, `NEEDS_WORK`,
+`NOT_CONFIGURED`, `NO_TESTS`, `NO_QG`.
 
 - **NO_QG:** Only for repos that explicitly do not need quality gates (e.g. deprecated, archived)
 - **UI repos:** Use `NO_QG` for Python; they have TypeScript quality gates only

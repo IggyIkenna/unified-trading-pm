@@ -1,15 +1,14 @@
 # 02: Background Agents Setup
 
-**Status**: ⬜ Not Started
-**Priority**: P0 (Critical for parallel work)
-**Estimated Time**: 1-2 hours (debugging required)
-**Expected Benefit**: 3-4x faster multi-repo operations
+**Status**: ⬜ Not Started **Priority**: P0 (Critical for parallel work) **Estimated Time**: 1-2 hours (debugging
+required) **Expected Benefit**: 3-4x faster multi-repo operations
 
 ---
 
 ## 📖 Overview
 
-Background agents (cloud VM agents) enable parallel execution of tasks but currently don't work in your 30+ repo workspace. This document diagnoses the issue and provides solutions.
+Background agents (cloud VM agents) enable parallel execution of tasks but currently don't work in your 30+ repo
+workspace. This document diagnoses the issue and provides solutions.
 
 ### Current State
 

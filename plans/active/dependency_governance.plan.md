@@ -8,32 +8,46 @@ overview: |
   uv.lock files are committed and current. Covers audit S4.1–S4.12.
 todos:
   - id: dg-validate-conflicts
-    content: Run unified-trading-pm/scripts/manifest/validate-dependency-conflicts.py — fix any version conflicts (same package, different ranges across repos). Record all conflicts in QUALITY_GATE_BYPASS_AUDIT.md if a conflict cannot be resolved.
+    content:
+      Run unified-trading-pm/scripts/manifest/validate-dependency-conflicts.py — fix any version conflicts (same
+      package, different ranges across repos). Record all conflicts in QUALITY_GATE_BYPASS_AUDIT.md if a conflict cannot
+      be resolved.
     status: completed
   - id: dg-propagate-versions
-    content: Run unified-trading-pm/scripts/propagation/propagate-canonical-versions.py across all repos — verify every pyproject.toml aligns with workspace-constraints.toml canonical versions. Fix any divergence (manual edits that drifted from canonical).
+    content:
+      Run unified-trading-pm/scripts/propagation/propagate-canonical-versions.py across all repos — verify every
+      pyproject.toml aligns with workspace-constraints.toml canonical versions. Fix any divergence (manual edits that
+      drifted from canonical).
     status: completed
   - id: dg-uv-lock-check
-    content: Verify all 42+ uv.lock files are committed and current. Run 'uv lock --check' in each Python repo. Re-run 'uv lock' where stale. Add uv.lock to .gitignore exclusion list if any repo is missing it.
+    content:
+      Verify all 42+ uv.lock files are committed and current. Run 'uv lock --check' in each Python repo. Re-run 'uv
+      lock' where stale. Add uv.lock to .gitignore exclusion list if any repo is missing it.
     status: completed
   - id: dg-canonical-manifest-refresh
-    content: Re-run unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py — confirm canonical-dependency-manifest.json matches workspace-constraints.toml after any fixes. Commit regenerated manifest.
+    content:
+      Re-run unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py — confirm
+      canonical-dependency-manifest.json matches workspace-constraints.toml after any fixes. Commit regenerated
+      manifest.
     status: completed
   - id: dg-unbounded-check
-    content: "Scan all pyproject.toml files for unbounded version specs (bare package names with no version, or '>=' with no upper bound on critical deps). Fix per workspace-constraints.toml pattern: >=X.Y.Z,<X+1.0.0. Check-script: unified-trading-pm/scripts/manifest/check-dependency-alignment.py."
+    content:
+      "Scan all pyproject.toml files for unbounded version specs (bare package names with no version, or '>=' with no
+      upper bound on critical deps). Fix per workspace-constraints.toml pattern: >=X.Y.Z,<X+1.0.0. Check-script:
+      unified-trading-pm/scripts/manifest/check-dependency-alignment.py."
     status: completed
   - id: dg-requirements-txt-purge
-    content: Verify no requirements.txt files exist as parallel dependency sources alongside pyproject.toml in any repo. Remove any found. Dev deps must live in [project.optional-dependencies.dev] only.
+    content:
+      Verify no requirements.txt files exist as parallel dependency sources alongside pyproject.toml in any repo. Remove
+      any found. Dev deps must live in [project.optional-dependencies.dev] only.
     status: completed
 isProject: false
 ---
 
 # Dependency Governance
 
-**Day:** 1 (March 5)
-**Scope:** All 52 repos — Python packages only
-**Blocks:** Nothing directly; must pass before trading_system_audit_prompt S4
-**Owner:** Person A (parallel with Phase 0 completion)
+**Day:** 1 (March 5) **Scope:** All 52 repos — Python packages only **Blocks:** Nothing directly; must pass before
+trading_system_audit_prompt S4 **Owner:** Person A (parallel with Phase 0 completion)
 
 ---
 
@@ -47,7 +61,9 @@ isProject: false
 
 ## Current State
 
-workspace-constraints.toml, canonical-dependency-manifest.json, and propagate-canonical-versions.py are all implemented (unified-trading-pm). 42+ uv.lock files exist. The governance infrastructure is in place — this plan is about **verifying alignment and enforcing it uniformly**, not building from scratch.
+workspace-constraints.toml, canonical-dependency-manifest.json, and propagate-canonical-versions.py are all implemented
+(unified-trading-pm). 42+ uv.lock files exist. The governance infrastructure is in place — this plan is about
+**verifying alignment and enforcing it uniformly**, not building from scratch.
 
 | Component                          | Status                                           |
 | ---------------------------------- | ------------------------------------------------ |

@@ -8,9 +8,7 @@
 
 ## Task: [YOUR TASK NAME]
 
-**Goal**: [One sentence goal]
-**Method**: X fast sub-agents MANDATORY (Task tool)
-**Time**: X hours
+**Goal**: [One sentence goal] **Method**: X fast sub-agents MANDATORY (Task tool) **Time**: X hours
 
 **⚠️ SUB-AGENTS REQUIRED**: Master orchestrates ONLY, never edits directly!
 
@@ -55,11 +53,7 @@ Launch [X] Task sub-agents in parallel:
 **Sub-Agent 1**:
 ```
 
-description: [5-10 word description]
-model: fast
-subagent_type: generalPurpose
-prompt: |
-[Detailed task for this agent]
+description: [5-10 word description] model: fast subagent_type: generalPurpose prompt: | [Detailed task for this agent]
 
 Files: [list]
 
@@ -70,19 +64,11 @@ Steps:
 
 Verify: [commands]
 
-RETURN (REQUIRED):
-✅ Status: [Success/Issues]
-📊 Metrics: Fixed X items, Y tests, Z errors
-💰 TOKENS USED: Check your context at end and report total tokens consumed
-⏱️ Time: X minutes
-🔒 Backup: [branch name]
+RETURN (REQUIRED): ✅ Status: [Success/Issues] 📊 Metrics: Fixed X items, Y tests, Z errors 💰 TOKENS USED: Check your
+context at end and report total tokens consumed ⏱️ Time: X minutes 🔒 Backup: [branch name]
 
-Example:
-✅ Status: Success
-📊 Metrics: Fixed 15 violations, 37 tests pass, 0 errors
-💰 TOKENS: 45K input + 12K output = 57K total
-⏱️ Time: 25 minutes
-🔒 Backup: fix-standards-1708713234
+Example: ✅ Status: Success 📊 Metrics: Fixed 15 violations, 37 tests pass, 0 errors 💰 TOKENS: 45K input + 12K output =
+57K total ⏱️ Time: 25 minutes 🔒 Backup: fix-standards-1708713234
 
 ```
 
@@ -105,12 +91,8 @@ Example:
 
 Resume Task sub-agent [X]:
 
-description: Continue fixing [specific issue]
-subagent_type: generalPurpose
-resume: [agent-id-from-initial-launch] ← MUST use same ID
-model: fast
-prompt: |
-Your previous work: [summary of progress, e.g., 328 → 150 errors]
+description: Continue fixing [specific issue] subagent_type: generalPurpose resume: [agent-id-from-initial-launch] ←
+MUST use same ID model: fast prompt: | Your previous work: [summary of progress, e.g., 328 → 150 errors]
 
 Issue found in master review: [Specific problem with example]
 
@@ -121,9 +103,7 @@ Solution (explicit guidance):
 
 Target: [Specific metric, e.g., 150 → 0 errors]
 
-RETURN:
-Progress: [metric before] → [metric after]
-Tokens this iteration: XK (incremental, not cumulative)
+RETURN: Progress: [metric before] → [metric after] Tokens this iteration: XK (incremental, not cumulative)
 
 ````
 

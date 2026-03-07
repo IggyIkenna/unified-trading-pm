@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate no broken relative links in plans/active/*.plan.md.
 
 Phase 0b: plans_to_deployable_unified_audit.plan.md

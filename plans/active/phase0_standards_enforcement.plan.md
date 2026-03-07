@@ -9,16 +9,28 @@ overview: |
   before any hardening work starts. Run in tier order (T0 first), parallel within each tier.
 todos:
   - id: p0-t0-parallel
-    content: "Run all 5 checks (quality-gates.sh, basedpyright, os.getenv scan, Any scan, cloud-agnostic scan) on all 6 T0 repos in parallel: unified-api-contracts, unified-internal-contracts, unified-cloud-interface, unified-events-interface, unified-reference-data-interface, matching-engine-library. Fix trivial violations immediately; document bypasses."
+    content:
+      "Run all 5 checks (quality-gates.sh, basedpyright, os.getenv scan, Any scan, cloud-agnostic scan) on all 6 T0
+      repos in parallel: unified-api-contracts, unified-internal-contracts, unified-cloud-interface,
+      unified-events-interface, unified-reference-data-interface, matching-engine-library. Fix trivial violations
+      immediately; document bypasses."
     status: done
   - id: p0-t1-parallel
-    content: "Run all 5 checks on all 4 T1 repos in parallel (after T0 passes): unified-config-interface, unified-trading-library, execution-algo-library, unified-feature-calculator-library. Fix trivial violations immediately; document bypasses."
+    content:
+      "Run all 5 checks on all 4 T1 repos in parallel (after T0 passes): unified-config-interface,
+      unified-trading-library, execution-algo-library, unified-feature-calculator-library. Fix trivial violations
+      immediately; document bypasses."
     status: done
   - id: p0-t2-parallel
-    content: "Run all 5 checks on all T2 repos in parallel (after T1 passes): unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface. Fix trivial violations immediately; document bypasses."
+    content:
+      "Run all 5 checks on all T2 repos in parallel (after T1 passes): unified-market-interface,
+      unified-trade-execution-interface, unified-ml-interface, unified-position-interface,
+      unified-defi-execution-interface, unified-sports-execution-interface. Fix trivial violations immediately; document
+      bypasses."
     status: done
   - id: p0-t3
-    content: "Run all 5 checks on T3 repo: unified-domain-client. Fix trivial violations immediately; document bypasses."
+    content:
+      "Run all 5 checks on T3 repo: unified-domain-client. Fix trivial violations immediately; document bypasses."
     status: done
   - id: p0-services-batch1
     content: Run all 5 checks on services batch 1 (matches Phase 3 DAG order, batch 1). Fix or document.
@@ -33,24 +45,29 @@ todos:
     content: Run all 5 checks on services batch 4. Fix or document.
     status: done
   - id: p0-bypass-audit-update
-    content: "Ensure QUALITY_GATE_BYPASS_AUDIT.md is up to date in every repo that required a bypass. Gate: zero undocumented suppressions."
+    content:
+      "Ensure QUALITY_GATE_BYPASS_AUDIT.md is up to date in every repo that required a bypass. Gate: zero undocumented
+      suppressions."
     status: done
   - id: p0-gate-check
-    content: 'Final gate check: all repos have quality-gates.sh passing (or bypass documented), basedpyright strict passing (or bypass documented), zero os.getenv in production source, zero Any in public API (or bypass documented), pyproject.toml has requires-python = ">=3.13,<3.14", QUALITY_GATE_BYPASS_AUDIT.md up to date.'
+    content:
+      'Final gate check: all repos have quality-gates.sh passing (or bypass documented), basedpyright strict passing (or
+      bypass documented), zero os.getenv in production source, zero Any in public API (or bypass documented),
+      pyproject.toml has requires-python = ">=3.13,<3.14", QUALITY_GATE_BYPASS_AUDIT.md up to date.'
     status: done
 isProject: true
 ---
 
 # Phase 0: System-Wide Standards Enforcement
 
-**Day:** 0 (before Phase 1 begins)
-**Scope:** All repos (T0–T3 libraries, services, UIs)
-**Blocks:** Phase 1, Phase 2, Phase 3 — must pass before any hardening work starts
-**Owner:** Parallel agents (one per tier group)
+**Day:** 0 (before Phase 1 begins) **Scope:** All repos (T0–T3 libraries, services, UIs) **Blocks:** Phase 1, Phase 2,
+Phase 3 — must pass before any hardening work starts **Owner:** Parallel agents (one per tier group)
 
 ## Purpose
 
-Establish a verified baseline across all repos before any hardening work begins. Every repo must meet minimum standards. Failures are documented and either fixed immediately (if trivial) or tracked in QUALITY_GATE_BYPASS_AUDIT.md (only for genuinely unavoidable suppressions).
+Establish a verified baseline across all repos before any hardening work begins. Every repo must meet minimum standards.
+Failures are documented and either fixed immediately (if trivial) or tracked in QUALITY_GATE_BYPASS_AUDIT.md (only for
+genuinely unavoidable suppressions).
 
 ## Standards (All Blocking)
 
@@ -156,12 +173,17 @@ Phase 0 is complete when ALL repos have:
 
 ## Related Plans
 
-- **Companion (parallel Phase 0):** `phase0_audit_remediation.plan.md` — fixes the FAIL/WARN items this plan discovers. Both must complete before Phase 1. Relationship: this plan SCANS and VERIFIES; remediation FIXES. No circularity.
+- **Companion (parallel Phase 0):** `phase0_audit_remediation.plan.md` — fixes the FAIL/WARN items this plan discovers.
+  Both must complete before Phase 1. Relationship: this plan SCANS and VERIFIES; remediation FIXES. No circularity.
 
-> **Sequencing mandate (J3):** (1) Enforcement gates added in WARN mode first (no merge block); (2) Remediation PRs merged while enforcement warns; (3) Enforcement switched to BLOCK mode only after all remediation PRs merge. This ordering is mandatory and is NOT implied by `blockedBy` alone — must be explicitly followed.
+> **Sequencing mandate (J3):** (1) Enforcement gates added in WARN mode first (no merge block); (2) Remediation PRs
+> merged while enforcement warns; (3) Enforcement switched to BLOCK mode only after all remediation PRs merge. This
+> ordering is mandatory and is NOT implied by `blockedBy` alone — must be explicitly followed.
 
 - Feeds into: `phase1_foundation_prep.plan.md`, `phase2_library_tier_hardening.plan.md`
 - Standards SSOT: `unified-trading-codex/06-coding-standards/quality-gates.md`
 - Cursor rules: `.cursor/rules/core/no-type-any-use-specific.mdc`, `strict-quality-gates.mdc`, `cloud-agnostic.mdc`
 
-> **Phase 0 gate note:** `p0-gate-check: done` means the enforcement scan and initial baseline was established (2026-03-04 audit). It does NOT mean all violations are fixed — that is the job of `phase0_audit_remediation.plan.md`. The final Phase 0 → Phase 1 gate requires BOTH plans complete.
+> **Phase 0 gate note:** `p0-gate-check: done` means the enforcement scan and initial baseline was established
+> (2026-03-04 audit). It does NOT mean all violations are fixed — that is the job of `phase0_audit_remediation.plan.md`.
+> The final Phase 0 → Phase 1 gate requires BOTH plans complete.

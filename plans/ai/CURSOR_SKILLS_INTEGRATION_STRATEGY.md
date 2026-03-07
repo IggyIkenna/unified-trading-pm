@@ -1,10 +1,12 @@
 # Cursor Skills Integration Strategy
 
-**Context:** Vibe coding (prompt-driven), 30+ repos, microservices, 114 rules, 28+ plans. Physical code is minimal; orchestration via prompts, plans, and rules.
+**Context:** Vibe coding (prompt-driven), 30+ repos, microservices, 114 rules, 28+ plans. Physical code is minimal;
+orchestration via prompts, plans, and rules.
 
 ## Goal
 
-Integrate Cursor skills so agents automatically apply the right workflows when plans, rules, and codebase complexity intersect — without re-prompting or forgetting context.
+Integrate Cursor skills so agents automatically apply the right workflows when plans, rules, and codebase complexity
+intersect — without re-prompting or forgetting context.
 
 ---
 
@@ -31,8 +33,10 @@ Integrate Cursor skills so agents automatically apply the right workflows when p
 
 ## 2. Rule-Aware Skills (Always-On Reminders)
 
-- **workspace-context-inject** — "Follow cursor rules; plans in unified-trading-pm; uv not pip; quickmerge not git push; delete deprecated, no parallel paths."
-- **sub-agent-reminder** — When launching Task: "Include at TOP: Follow workspace cursor rules; uv not pip; search unified libraries before implementing."
+- **workspace-context-inject** — "Follow cursor rules; plans in unified-trading-pm; uv not pip; quickmerge not git push;
+  delete deprecated, no parallel paths."
+- **sub-agent-reminder** — When launching Task: "Include at TOP: Follow workspace cursor rules; uv not pip; search
+  unified libraries before implementing."
 
 ---
 
@@ -54,7 +58,8 @@ Description: Include WHAT + WHEN. Match plan names, rule tags, common prompts (r
 
 ## 5. Use Context7
 
-Per context7-usage.mdc: For external libs, append "use context7" to prompts. Skills involving external APIs should include this.
+Per context7-usage.mdc: For external libs, append "use context7" to prompts. Skills involving external APIs should
+include this.
 
 ---
 

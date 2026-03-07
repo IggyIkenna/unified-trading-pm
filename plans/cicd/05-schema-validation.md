@@ -1,15 +1,14 @@
 # 05: Schema Validation (GCS + BigQuery)
 
-**Status**: ⬜ Not Started
-**Priority**: P2 (Catch data drift early)
-**Estimated Time**: 2-3 hours
-**Expected Benefit**: 10-20 min/day saved, prevent production data issues
+**Status**: ⬜ Not Started **Priority**: P2 (Catch data drift early) **Estimated Time**: 2-3 hours **Expected Benefit**:
+10-20 min/day saved, prevent production data issues
 
 ---
 
 ## 📖 Overview
 
-Validate that data in Google Cloud Storage (GCS) and BigQuery matches your defined schemas. Catch schema drift before it causes production issues.
+Validate that data in Google Cloud Storage (GCS) and BigQuery matches your defined schemas. Catch schema drift before it
+causes production issues.
 
 ### Current State
 
