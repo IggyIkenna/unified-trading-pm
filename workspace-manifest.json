@@ -57,7 +57,7 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "unified-api-contracts": "0.1.20",
+    "unified-api-contracts": "0.1.59",
     "unified-internal-contracts": "0.1.2",
     "unified-reference-data-interface": "0.1.0",
     "unified-config-interface": "0.1.17",
