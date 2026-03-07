@@ -103,7 +103,7 @@ jobs:
           - Keep rule bodies concise (< 20 lines)
           - Use the subdirectory that best fits the rule category (core/, workflow/, dependencies/, etc.)"
 
-          claude --print --dangerously-skip-permissions "$PROMPT" \
+          claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
             || echo "Claude agent exited non-zero — check logs"
 
       - name: Skip — no plan changes or no API key
