@@ -1,6 +1,7 @@
 # Workspace SSOT templates
 
-Canonical templates for files that should be consistent across all 56 repos (Python services, Python libraries, React/TypeScript UIs).
+Canonical templates for files that should be consistent across all 56 repos (Python services, Python libraries,
+React/TypeScript UIs).
 
 ## Files
 
@@ -22,9 +23,11 @@ cp "$PM/scripts/templates/.cursorignore.central" .cursorignore
 
 ### Repo-specific additions
 
-Append repo-specific patterns **after** the copied content (e.g. `coverage.xml`, `logs/`, or Terraform block). Do not remove security or credential patterns.
+Append repo-specific patterns **after** the copied content (e.g. `coverage.xml`, `logs/`, or Terraform block). Do not
+remove security or credential patterns.
 
-**CSV / data fixtures:** The central template ignores `*.csv` and other data/doc types (xlsx, ppt, doc, pdf, parquet, tsv, etc.). If a repo commits small CSV fixtures under `tests/fixtures/`, add after the central content:
+**CSV / data fixtures:** The central template ignores `*.csv` and other data/doc types (xlsx, ppt, doc, pdf, parquet,
+tsv, etc.). If a repo commits small CSV fixtures under `tests/fixtures/`, add after the central content:
 
 ```gitignore
 !tests/fixtures/*.csv
@@ -46,13 +49,18 @@ From workspace root:
 python3 unified-trading-pm/scripts/sync-gitignore-cursorignore.py
 ```
 
-This writes `.gitignore` and `.cursorignore` at each **repo root** only. Subdirectory ignore files (e.g. `ui/.gitignore`, `frontend/.gitignore`) are left unchanged. Repo-specific exceptions (e.g. `!tests/fixtures/*.csv` for unified-trading-library, `!.env.example` and Terraform for unified-trading-deployment-v3) are applied automatically.
+This writes `.gitignore` and `.cursorignore` at each **repo root** only. Subdirectory ignore files (e.g.
+`ui/.gitignore`, `frontend/.gitignore`) are left unchanged. Repo-specific exceptions (e.g. `!tests/fixtures/*.csv` for
+unified-trading-library, `!.env.example` and Terraform for unified-trading-deployment-v3) are applied automatically.
 
-Each repo’s `.gitignore` ends with a **preserved block**: `# --- Repo-specific exceptions (add below; sync preserves this section) ---`. Anything you add under that line (e.g. `!some/path/*.csv`) is kept on the next sync; the script only overwrites content above that block.
+Each repo’s `.gitignore` ends with a **preserved block**:
+`# --- Repo-specific exceptions (add below; sync preserves this section) ---`. Anything you add under that line (e.g.
+`!some/path/*.csv`) is kept on the next sync; the script only overwrites content above that block.
 
 ## Propagation (manual alternative)
 
-To roll out to all repos, use a script that copies from `unified-trading-pm/scripts/templates/` into each repo root, then commit with:
+To roll out to all repos, use a script that copies from `unified-trading-pm/scripts/templates/` into each repo root,
+then commit with:
 
 ```bash
 bash scripts/quickmerge.sh "chore: sync .gitignore and .cursorignore from PM SSOT"

@@ -93,7 +93,8 @@ crontab -e
 
 ### `line-count-by-language.sh`
 
-**Purpose:** Count lines of code for the whole workspace by language (Python, TypeScript, bash, etc.), ignore venv/node_modules, and split **test** vs **non-test** files.
+**Purpose:** Count lines of code for the whole workspace by language (Python, TypeScript, bash, etc.), ignore
+venv/node_modules, and split **test** vs **non-test** files.
 
 **Requires:** [cloc](https://github.com/AlDanial/cloc) — `brew install cloc`
 
@@ -106,11 +107,14 @@ bash unified-trading-pm/scripts/line-count-by-language.sh
 
 **What it does:**
 
-- **Full codebase** — breakdown by language (Python, TypeScript, JavaScript, bash, etc.), excluding `.venv`, `node_modules`, `build`, `dist`, `.git`, etc.
-- **Test files only** — same breakdown for files matching: `test_*.py`, `*_test.py`, `tests/`, `__tests__/`, `*.test.ts`, `*.spec.ts`, `test_*.sh`, `*_test.sh`
+- **Full codebase** — breakdown by language (Python, TypeScript, JavaScript, bash, etc.), excluding `.venv`,
+  `node_modules`, `build`, `dist`, `.git`, etc.
+- **Test files only** — same breakdown for files matching: `test_*.py`, `*_test.py`, `tests/`, `__tests__/`,
+  `*.test.ts`, `*.spec.ts`, `test_*.sh`, `*_test.sh`
 - **Non-test (source) only** — same breakdown for everything that is not a test file
 
-**Excluded dirs:** `.venv`, `.venv-workspace`, `node_modules`, `build`, `dist`, `__pycache__`, `.git`, `.ruff_cache`, `.mypy_cache`, `htmlcov`
+**Excluded dirs:** `.venv`, `.venv-workspace`, `node_modules`, `build`, `dist`, `__pycache__`, `.git`, `.ruff_cache`,
+`.mypy_cache`, `htmlcov`
 
 ---
 
@@ -218,7 +222,11 @@ These scripts are in the same directory but serve different purposes:
 | `repo-management/force-push-all-to-main.sh` | Force-push local main to origin (branch protection off) | Repo ops         |
 | `repo-management/audit-reflog-resets.sh`    | Audit all repos for reset/reset --hard in reflog        | Safety / review  |
 
-**Schedule (macOS):** `bash unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog.sh` then `launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`. Runs every 10 min. Uses `run-audit-reflog-with-alert.sh` (macOS notification on failure). **Cancel:** `launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`. **Full doc:** `docs/audit-reflog-scheduled-job.md`
+**Schedule (macOS):** `bash unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog.sh` then
+`launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`. Runs every 10 min. Uses
+`run-audit-reflog-with-alert.sh` (macOS notification on failure). **Cancel:**
+`launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`. **Full doc:**
+`docs/audit-reflog-scheduled-job.md`
 
 ---
 

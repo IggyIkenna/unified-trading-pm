@@ -16,13 +16,18 @@ Copy this prompt to the next agent to roll out the iCloud migration script acros
 
 ## Agent Task
 
-Roll out the iCloud migration script to 60 repos. Each repo lives on iCloud Drive (slow). Adapt the script per-repo and ensure it:
+Roll out the iCloud migration script to 60 repos. Each repo lives on iCloud Drive (slow). Adapt the script per-repo and
+ensure it:
 
 1. **Copies the script** into each repo's `scripts/` (create if missing)
-2. **Adapts batches** to that repo's top-level directories (discover dynamically; don't hardcode PM-specific paths like cursor-rules, github-integration)
+2. **Adapts batches** to that repo's top-level directories (discover dynamically; don't hardcode PM-specific paths like
+   cursor-rules, github-integration)
 3. **Splits staging into one directory at a time** — log each, check for hangs
-4. **If a directory hangs** — further split by subdirectory until the problematic path is identified; skip or exclude that path and continue
-5. **Ensures .gitignore and .cursorignore** include common large regeneratable paths — scan each repo for what exists: `.venv/`, `venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.cache/`, `node_modules/`, `.next/`, `dist/`, `build/`, `.turbo/`, `coverage/`, `.nyc_output/`, `.venv-workspace/`, `.DS_Store`
+4. **If a directory hangs** — further split by subdirectory until the problematic path is identified; skip or exclude
+   that path and continue
+5. **Ensures .gitignore and .cursorignore** include common large regeneratable paths — scan each repo for what exists:
+   `.venv/`, `venv/`, `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.cache/`, `node_modules/`,
+   `.next/`, `dist/`, `build/`, `.turbo/`, `coverage/`, `.nyc_output/`, `.venv-workspace/`, `.DS_Store`
 
 ---
 
@@ -109,4 +114,6 @@ git add -A -- ':!path/to/exclude'  # exclude known problematic dirs
 
 ## Reference: PM Repo Script (Template)
 
-The PM script batches: .gitignore/.cursorignore, cursor-rules/, docs/, plans/, scripts/security/tests/, github-integration/, .cursor/, root files, then `git add -A` with exclusions. Other repos will have different structures — discover and adapt.
+The PM script batches: .gitignore/.cursorignore, cursor-rules/, docs/, plans/, scripts/security/tests/,
+github-integration/, .cursor/, root files, then `git add -A` with exclusions. Other repos will have different structures
+— discover and adapt.

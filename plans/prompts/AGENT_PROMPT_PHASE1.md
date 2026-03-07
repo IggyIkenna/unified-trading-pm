@@ -1,23 +1,23 @@
 # Agent Prompt — Phase 1: Foundation & Prep
 
-> Paste this entire prompt into a new agent session to execute Phase 1.
-> Do NOT start Phase 2 until every done criterion below is checked.
+> Paste this entire prompt into a new agent session to execute Phase 1. Do NOT start Phase 2 until every done criterion
+> below is checked.
 
 ---
 
-Follow all workspace cursor rules in .cursorrules.
-No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git push.
-basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths.
-Search unified libraries before implementing anything new.
+Follow all workspace cursor rules in .cursorrules. No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git
+push. basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths. Search unified libraries
+before implementing anything new.
 
-WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos
-All Python/pytest/ruff/basedpyright/QG commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos All Python/pytest/ruff/basedpyright/QG
+commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
 
 ---
 
 ## Standard of Work — Citadel Audit-Worthy
 
-> **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every PR. Build accordingly.**
+> **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every
+> PR. Build accordingly.**
 
 This means:
 
@@ -86,11 +86,11 @@ Any old name anywhere is **immediate technical debt**. Fix at every level the mo
 
 ## Bottom-Up Rule — Template First, Then Propagate
 
-New CI/CD pattern needed → update `unified-trading-pm/scripts/quickmerge.sh` (SSOT), then propagate.
-New setup pattern needed → update `unified-trading-pm/scripts/setup.sh` (SSOT), then propagate.
-New QG check needed → update `unified-trading-codex/06-coding-standards/quality-gates.md` first, then template, then propagate.
-New cursor rule needed → create in `.cursor/rules/`, then add to `.cursorrules` if always-apply.
-New manifest field needed → update codex schema doc first, then `workspace-manifest.json`.
+New CI/CD pattern needed → update `unified-trading-pm/scripts/quickmerge.sh` (SSOT), then propagate. New setup pattern
+needed → update `unified-trading-pm/scripts/setup.sh` (SSOT), then propagate. New QG check needed → update
+`unified-trading-codex/06-coding-standards/quality-gates.md` first, then template, then propagate. New cursor rule
+needed → create in `.cursor/rules/`, then add to `.cursorrules` if always-apply. New manifest field needed → update
+codex schema doc first, then `workspace-manifest.json`.
 
 **Never** add a one-off fix to a single repo that belongs in a shared template.
 
@@ -104,8 +104,8 @@ In every Python repo, as part of `ci-qg-baseline-run`:
 python -c "import <package_name>" 2>&1
 ```
 
-Failure = P0 blocking issue. Record in manifest `ci_status` as `FAILING: import_error`.
-Import failures cascade — they block all other tests. Record all failures before touching anything else.
+Failure = P0 blocking issue. Record in manifest `ci_status` as `FAILING: import_error`. Import failures cascade — they
+block all other tests. Record all failures before touching anything else.
 
 ---
 
@@ -133,7 +133,9 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 7. Run `bash scripts/setup.sh --check` to verify setup works
 8. `git commit 'chore: sync quickmerge + setup.sh + version-bump templates'` → `git push`
 
-**Repo count note:** 58 git repos exist on disk. 51 have `pyproject.toml` (Python), 12 are TypeScript UIs (have `package.json`). All 58 get quickmerge.sh + version-bump.yml + setup.sh. TypeScript repos skip Python-specific setup steps (venv, uv, pyproject) automatically.
+**Repo count note:** 58 git repos exist on disk. 51 have `pyproject.toml` (Python), 12 are TypeScript UIs (have
+`package.json`). All 58 get quickmerge.sh + version-bump.yml + setup.sh. TypeScript repos skip Python-specific setup
+steps (venv, uv, pyproject) automatically.
 
 **A2 — Commit-Msg Hooks** (4 parallel agents, after A1):
 
@@ -152,27 +154,40 @@ Streams A, B, C run in parallel. Within Stream A: A0 → A1 → A2 → A3 strict
 
 All items in Stream B are independent — run them in parallel:
 
-1. **arch-visualizer-extract** — Extract `execution-service/visualizer-ui/` → `execution-analytics-ui` repo; `execution-service/visualizer-api/` → `execution-results-api`. Delete both from `execution-service`. Update `cloudbuild.yaml`.
-2. **arch-deployment-split** — Split `unified-trading-deployment-v3` → `deployment-service` + `deployment-api` + `deployment-ui` + `system-integration-tests`. Pre-split: fix `orchestrator.py` (672 L) and `config_loader.py` (551 L) by SRP first.
-3. **arch-ui-audit-full** — Find embedded UI artifacts (`ui/`, `frontend/`, `*.tsx`, `*.jsx`, `package.json`) in all service repos. Fix every violation.
-4. **integration-system-tests-repo** — Create `system-integration-tests` repo per `unified-trading-pm/docs/new-repo-setup.md`
+1. **arch-visualizer-extract** — Extract `execution-service/visualizer-ui/` → `execution-analytics-ui` repo;
+   `execution-service/visualizer-api/` → `execution-results-api`. Delete both from `execution-service`. Update
+   `cloudbuild.yaml`.
+2. **arch-deployment-split** — Split `unified-trading-deployment-v3` → `deployment-service` + `deployment-api` +
+   `deployment-ui` + `system-integration-tests`. Pre-split: fix `orchestrator.py` (672 L) and `config_loader.py` (551 L)
+   by SRP first.
+3. **arch-ui-audit-full** — Find embedded UI artifacts (`ui/`, `frontend/`, `*.tsx`, `*.jsx`, `package.json`) in all
+   service repos. Fix every violation.
+4. **integration-system-tests-repo** — Create `system-integration-tests` repo per
+   `unified-trading-pm/docs/new-repo-setup.md`
 5. **integration-layer2-infra-verify** — Add `deployment-service/scripts/verify_infra.py`; expose as `GET /infra/health`
-6. **infra-merge-utdv3** — Move `ibkr-gateway-infra/ibkr-gateway/` → `deployment-service/infra/ibkr-gateway/`. Delete `ibkr-gateway-infra/`.
-7. **hybrid-live-seam** — Document + implement in-memory adapter seam for `MDPS←MTDH` (under `co_located_vm` profile only)
+6. **infra-merge-utdv3** — Move `ibkr-gateway-infra/ibkr-gateway/` → `deployment-service/infra/ibkr-gateway/`. Delete
+   `ibkr-gateway-infra/`.
+7. **hybrid-live-seam** — Document + implement in-memory adapter seam for `MDPS←MTDH` (under `co_located_vm` profile
+   only)
 
 ### Stream C — QG Baseline Audit (parallel with A + B)
 
 All items independent — run in parallel:
 
-1. Create `.cursor/rules/cloud-agnostic.mdc` — all cloud I/O via `get_storage_client()`, `get_secret_client()`, `GCSEventSink`; `CLOUD_PROVIDER` env var switches provider; test both paths
-2. Create `.cursor/rules/dag-enforcement.mdc` — enforce tier boundaries; CI validates `pyproject.toml` deps vs manifest `arch_tier`
+1. Create `.cursor/rules/cloud-agnostic.mdc` — all cloud I/O via `get_storage_client()`, `get_secret_client()`,
+   `GCSEventSink`; `CLOUD_PROVIDER` env var switches provider; test both paths
+2. Create `.cursor/rules/dag-enforcement.mdc` — enforce tier boundaries; CI validates `pyproject.toml` deps vs manifest
+   `arch_tier`
 3. Create `.cursor/rules/ui-service-separation.mdc` — UI code must never live inside a service repo
 4. Create `.cursor/rules/mandatory-setup-sh.mdc` — every repo must have `scripts/setup.sh` from SSOT template
-5. **ci-manifest-status** — Add `ci_status`, `quality_gate_status`, `coverage_pct`, `bypass_audit_path`, `testing_level`, `skipped_gates` to `workspace-manifest.json` for all 57 repos
+5. **ci-manifest-status** — Add `ci_status`, `quality_gate_status`, `coverage_pct`, `bypass_audit_path`,
+   `testing_level`, `skipped_gates` to `workspace-manifest.json` for all 57 repos
 6. **ci-add-missing-quality-gates** — Add `quality-gates.sh` to 12 repos missing it (see plan for list)
-7. **ci-qg-baseline-run** — Run QG + import smoke test on all repos; record pass/fail + coverage % as baseline snapshot (do NOT fix failures here — that is Phase 2/3 work)
+7. **ci-qg-baseline-run** — Run QG + import smoke test on all repos; record pass/fail + coverage % as baseline snapshot
+   (do NOT fix failures here — that is Phase 2/3 work)
 8. **ci-cloudbuild-audit** — Verify all `cloudbuild.yaml` run tests INSIDE Docker image (not standalone pytest)
-9. **ci-aws-parity** — AWS compute stubs, secret naming parity, `buildspec.aws.yaml` for all repos with `cloudbuild.yaml`
+9. **ci-aws-parity** — AWS compute stubs, secret naming parity, `buildspec.aws.yaml` for all repos with
+   `cloudbuild.yaml`
 
 ---
 
@@ -183,10 +198,12 @@ All items independent — run in parallel:
 - [ ] `bash scripts/setup.sh --check` passes on all 58 repos
 - [ ] dep-branch clone + Cloud Build feature trigger + GH Action version-bump live
 - [ ] `execution-service` has no `visualizer-ui/` or `visualizer-api/`
-- [x] `unified-trading-deployment-v3` split into 4 repos (`deployment-service`, `deployment-api`, `deployment-ui`, `system-integration-tests`) — DONE 2026-03-03
+- [x] `unified-trading-deployment-v3` split into 4 repos (`deployment-service`, `deployment-api`, `deployment-ui`,
+      `system-integration-tests`) — DONE 2026-03-03
 - [ ] No embedded UI artifacts in any Python service repo
 - [ ] `ibkr-gateway-infra/` deleted; Terraform in `deployment-service/infra/`
-- [ ] 4 cursor rules created: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`, `mandatory-setup-sh.mdc`
+- [ ] 4 cursor rules created: `cloud-agnostic.mdc`, `dag-enforcement.mdc`, `ui-service-separation.mdc`,
+      `mandatory-setup-sh.mdc`
 - [ ] `ci_status` fields in `workspace-manifest.json` for all 57 repos
 - [ ] QG + import smoke baseline recorded for all repos
 - [ ] All 12 repos missing `quality-gates.sh` now have it
@@ -200,11 +217,14 @@ All items independent — run in parallel:
 - `unified-trading-pm/plans/active/phase1_foundation_prep.plan.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `unified-trading-pm/scripts/quickmerge.sh` — quickmerge SSOT
-- `unified-trading-pm/scripts/setup.sh` — setup.sh SSOT (idempotent dev environment bootstrap; supports `--isolated` for standalone repos)
-- `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs (clones all repos, tier-order setup)
+- `unified-trading-pm/scripts/setup.sh` — setup.sh SSOT (idempotent dev environment bootstrap; supports `--isolated` for
+  standalone repos)
+- `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs (clones all repos,
+  tier-order setup)
 - `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template for agents/developers
 - `unified-trading-pm/.github/workflows/version-bump.yml` — version-bump SSOT
-- `unified-trading-codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode, fresh env, AGENTS.md)
+- `unified-trading-codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode, fresh
+  env, AGENTS.md)
 - `unified-trading-codex/00-SSOT-INDEX.md` — canonical SSOT map
 - `unified-trading-codex/06-coding-standards/quality-gates.md` — QG template
 - `unified-trading-pm/docs/new-repo-setup.md` — new repo setup guide

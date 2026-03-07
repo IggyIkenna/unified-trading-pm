@@ -35,7 +35,8 @@ git clone git@github.com:IggyIkenna/unified-trading-pm.git
 
 ### Step 2: Bootstrap the workspace
 
-This single script does everything: installs system deps, clones all 63 repos from the manifest, creates the workspace venv, and runs per-repo setup in dependency order.
+This single script does everything: installs system deps, clones all 63 repos from the manifest, creates the workspace
+venv, and runs per-repo setup in dependency order.
 
 ```bash
 bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
@@ -268,11 +269,15 @@ source ~/.zshrc
 
 ## Workspace dependency pinning
 
-Canonical external dependency versions and propagation: see **unified-trading-codex** `06-coding-standards/dependency-management.md` (§ Workspace-wide dependency pinning) and `unified-trading-pm/workspace-constraints.toml`. Scripts: `resolve-canonical-versions.py`, `propagate-canonical-versions.py`, `aggregate-workspace-deps.py`.
+Canonical external dependency versions and propagation: see **unified-trading-codex**
+`06-coding-standards/dependency-management.md` (§ Workspace-wide dependency pinning) and
+`unified-trading-pm/workspace-constraints.toml`. Scripts: `resolve-canonical-versions.py`,
+`propagate-canonical-versions.py`, `aggregate-workspace-deps.py`.
 
 ### Canonical deps flow
 
-Prerequisite: ensure `uv` is installed (`pip install uv` once; workspace-bootstrap.sh does this if missing). Then run from **workspace root** (with `.venv-workspace` activated or Python 3.13 + uv on PATH):
+Prerequisite: ensure `uv` is installed (`pip install uv` once; workspace-bootstrap.sh does this if missing). Then run
+from **workspace root** (with `.venv-workspace` activated or Python 3.13 + uv on PATH):
 
 ```bash
 # 1) Generate canonical constraints (tightest range per external package)
@@ -286,4 +291,5 @@ python unified-trading-pm/scripts/propagation/propagate-canonical-versions.py --
 python unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py --resolve
 ```
 
-Without `--resolve`, aggregate-workspace-deps uses the existing `.venv-workspace/requirements.lock` for a fast re-install.
+Without `--resolve`, aggregate-workspace-deps uses the existing `.venv-workspace/requirements.lock` for a fast
+re-install.

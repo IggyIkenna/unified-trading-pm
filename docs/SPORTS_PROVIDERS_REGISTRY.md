@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document is the single source of truth for all sports data providers, odds aggregators, exchange bookmakers, and non-exchange bookmakers (API or scraping) in the unified trading system. It tracks UAC (unified-api-contracts), UMI (unified-market-interface), and USEI (unified-sports-execution-interface) integration status.
+This document is the single source of truth for all sports data providers, odds aggregators, exchange bookmakers, and
+non-exchange bookmakers (API or scraping) in the unified trading system. It tracks UAC (unified-api-contracts), UMI
+(unified-market-interface), and USEI (unified-sports-execution-interface) integration status.
 
 **Abbreviations:**
 
@@ -79,7 +81,10 @@ This document is the single source of truth for all sports data providers, odds 
 | 888sport     | -           | Bet888sportAdapter | Playwright scraper        |
 | SBO          | Planned     | -                  | Asian bookmaker (planned) |
 
-**Scraping for orders and market data:** Non-exchange bookmakers without APIs (Bovada, BetOnline, Bet365, SkyBet, etc.) require Playwright-based scraping for both order placement and market data. USEI scraper adapters use Playwright for browser automation. Odds API and aggregators (SharpAPI, Odds Engine) provide odds without scraping; scraping is only for providers with no API.
+**Scraping for orders and market data:** Non-exchange bookmakers without APIs (Bovada, BetOnline, Bet365, SkyBet, etc.)
+require Playwright-based scraping for both order placement and market data. USEI scraper adapters use Playwright for
+browser automation. Odds API and aggregators (SharpAPI, Odds Engine) provide odds without scraping; scraping is only for
+providers with no API.
 
 ---
 

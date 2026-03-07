@@ -1,7 +1,6 @@
 # Quality Gates Fix Plan - All Services
 
-**Status:** Branch protection DISABLED for 10 repos
-**Backup:** `/tmp/branch-protection-backup-20260214-134431`
+**Status:** Branch protection DISABLED for 10 repos **Backup:** `/tmp/branch-protection-backup-20260214-134431`
 
 ---
 

@@ -1,7 +1,6 @@
 # Full Audit Plan
 
-**Order:** 7 (see MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md)
-**SSOT:** trading-system-audit-prompt.md
+**Order:** 7 (see MASTER_PRE_DEPLOYMENT_PLAN_CHAIN.md) **SSOT:** trading-system-audit-prompt.md
 
 ---
 

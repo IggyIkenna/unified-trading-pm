@@ -1,8 +1,7 @@
 # Phase 0 Baseline Report
 
-**Plan:** phase0_standards_enforcement.plan.md
-**Generated:** 2026-03-05
-**Purpose:** Establish verified baseline before Phase 1/2/3 hardening
+**Plan:** phase0_standards_enforcement.plan.md **Generated:** 2026-03-05 **Purpose:** Establish verified baseline before
+Phase 1/2/3 hardening
 
 ---
 
@@ -73,7 +72,8 @@
 | execution-service              | FAIL (19170 err) | Phase 3 hardening |
 | market-data-processing-service | FAIL (2425 err)  | Phase 3 hardening |
 
-Services with 1000+ errors: document in QUALITY_GATE_BYPASS_AUDIT.md or Phase 3 plan. Phase 0 gate: "bypass documented" satisfies.
+Services with 1000+ errors: document in QUALITY_GATE_BYPASS_AUDIT.md or Phase 3 plan. Phase 0 gate: "bypass documented"
+satisfies.
 
 ---
 
@@ -97,7 +97,8 @@ Services with 1000+ errors: document in QUALITY_GATE_BYPASS_AUDIT.md or Phase 3 
 
 ## Phase 0 Complete (2026-03-05)
 
-**Status:** All Phase 0 todos marked done. Baseline established. Phase 1, Phase 2, Phase 3, strict_basedpyright_compliance, and coding_standards_codex_audit are unblocked.
+**Status:** All Phase 0 todos marked done. Baseline established. Phase 1, Phase 2, Phase 3,
+strict_basedpyright_compliance, and coding_standards_codex_audit are unblocked.
 
 **Fixes applied this run:**
 

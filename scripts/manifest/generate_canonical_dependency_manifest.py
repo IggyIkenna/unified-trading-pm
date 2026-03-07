@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Generate canonical-dependency-manifest.json and CANONICAL_DEPENDENCY_MANIFEST.svg.
 
 Reads unified-trading-pm/workspace-constraints.toml (external packages only).

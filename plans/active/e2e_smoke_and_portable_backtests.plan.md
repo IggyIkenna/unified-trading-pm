@@ -1,18 +1,30 @@
 ---
 name: E2E Smoke and Portable Backtests Plan
-overview: Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures.
+overview:
+  Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus
+  CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures.
 todos:
   - id: layer-0-1-smoke
-    content: Layer 0–1 — unified-api-contracts, unified-internal-contracts, per-service test_schema_*.py (blocks quickmerge)
+    content:
+      Layer 0–1 — unified-api-contracts, unified-internal-contracts, per-service test_schema_*.py (blocks quickmerge)
     status: pending
   - id: layer-2-3-smoke
-    content: Layer 2–3 — deployment-service verify_infra.py; system-integration-tests smoke + full_e2e (blocks first deployment)
+    content:
+      Layer 2–3 — deployment-service verify_infra.py; system-integration-tests smoke + full_e2e (blocks first
+      deployment)
     status: pending
   - id: portable-backtests-cefi-tradfi-defi
     content: Portable backtests — CEFI, TradFi, DeFi via run_parallel_backtests.sh and runners
     status: pending
   - id: portable-backtests-sports
-    content: "Sports portable arb backtest — VCR cassettes for odds/line feeds. SCRIPT: strategy-service/scripts/run_sports_arb_backtest.py (to be created). COMMAND: cd strategy-service && python scripts/run_sports_arb_backtest.py --fixtures tests/fixtures/sports_odds/ --output artifacts/sports_backtest_result.json. Loads VCR-recorded odds/line feeds from tests/fixtures/sports_odds/ (no live API calls); runs arb detection via features_sports_service arb module; outputs artifacts/sports_backtest_result.json with fields: n_opportunities, n_trades, pnl, win_rate, max_drawdown. GATE: exits 0; artifact written with all required fields; no live API calls at runtime."
+    content:
+      "Sports portable arb backtest — VCR cassettes for odds/line feeds. SCRIPT:
+      strategy-service/scripts/run_sports_arb_backtest.py (to be created). COMMAND: cd strategy-service && python
+      scripts/run_sports_arb_backtest.py --fixtures tests/fixtures/sports_odds/ --output
+      artifacts/sports_backtest_result.json. Loads VCR-recorded odds/line feeds from tests/fixtures/sports_odds/ (no
+      live API calls); runs arb detection via features_sports_service arb module; outputs
+      artifacts/sports_backtest_result.json with fields: n_opportunities, n_trades, pnl, win_rate, max_drawdown. GATE:
+      exits 0; artifact written with all required fields; no live API calls at runtime."
     status: pending
   - id: portable-criteria
     content: Ensure no live API calls in CI; deterministic; batch-live symmetry
@@ -22,9 +34,9 @@ isProject: false
 
 # E2E Smoke and Portable Backtests Plan (Merged)
 
-**References:** E2E_SMOKE_PLAN.md, PORTABLE_BACKTESTS_PLAN.md, master_pre_deployment_plan_chain.plan.md
-**SSOT:** system-integration-tests/README.md, unified-trading-codex integration-testing-layers.md
-**Order:** Day 8–9 in execution sequence (Plans 7–8 in chain)
+**References:** E2E_SMOKE_PLAN.md, PORTABLE_BACKTESTS_PLAN.md, master_pre_deployment_plan_chain.plan.md **SSOT:**
+system-integration-tests/README.md, unified-trading-codex integration-testing-layers.md **Order:** Day 8–9 in execution
+sequence (Plans 7–8 in chain)
 
 ---
 
@@ -48,13 +60,14 @@ isProject: false
 
 **Layer 0–1 block quickmerge.** Layer 2–3 block first deployment.
 
-> **Layer 0 — Schema test ownership note:**
-> Schema tests are DEFINED in AC (unified-api-contracts) and UIC (unified-internal-contracts) for coverage tracking, but are EXECUTED by their owning interface repositories:
+> **Layer 0 — Schema test ownership note:** Schema tests are DEFINED in AC (unified-api-contracts) and UIC
+> (unified-internal-contracts) for coverage tracking, but are EXECUTED by their owning interface repositories:
 >
 > - unified-cloud-interface: tests cloud SDK integration
 > - unified-market-interface: tests market data sources (using VCR cassettes from AC's vcr_endpoints.py)
 > - unified-reference-data-interface: tests reference data sources
-> - AC contains external venue/source schemas only; UIC contains internal service-to-service schemas; no duplication between them
+> - AC contains external venue/source schemas only; UIC contains internal service-to-service schemas; no duplication
+>   between them
 
 ---
 
@@ -89,9 +102,11 @@ isProject: false
 - `system-integration-tests/` — pytest from repo root
 - `deployment-service/scripts/verify_infra.py` — **post-deploy only**
 - `unified-cloud-interface/tests/integration/` — executes cloud SDK schema tests
-- `unified-market-interface/tests/integration/` — executes market data schema tests (VCR cassettes from AC's vcr_endpoints.py)
+- `unified-market-interface/tests/integration/` — executes market data schema tests (VCR cassettes from AC's
+  vcr_endpoints.py)
 - `unified-reference-data-interface/tests/integration/` — executes reference data schema tests
-- AC (`unified-api-contracts`) and UIC (`unified-internal-contracts`) define schemas for coverage tracking only; tests are executed by the interface repos above
+- AC (`unified-api-contracts`) and UIC (`unified-internal-contracts`) define schemas for coverage tracking only; tests
+  are executed by the interface repos above
 
 ---
 

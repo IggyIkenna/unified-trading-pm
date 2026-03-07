@@ -2,7 +2,8 @@
 
 ## 📋 Overview
 
-The `DataLoader` class provides a centralized way to load all data sources from the PostgreSQL database into pandas DataFrames for fast, in-memory, vectorized feature engineering.
+The `DataLoader` class provides a centralized way to load all data sources from the PostgreSQL database into pandas
+DataFrames for fast, in-memory, vectorized feature engineering.
 
 **Performance:** Loads 11,000+ rows from 17 tables in **~70ms** using only **~4.3 MB** of memory.
 
@@ -242,7 +243,8 @@ For **100,000 rows per table** (estimated):
 - Memory usage: **~430 MB** (still very manageable)
 - Load time: **~5-7 seconds**
 
-**Recommendation:** Load all data into memory at the start of your feature engineering pipeline. Modern systems can easily handle this.
+**Recommendation:** Load all data into memory at the start of your feature engineering pipeline. Modern systems can
+easily handle this.
 
 ---
 
@@ -319,6 +321,4 @@ When adding new tables or data sources:
 
 ---
 
-**Author:** AI Assistant
-**Date:** 2026-01-07
-**Status:** ✅ Production Ready
+**Author:** AI Assistant **Date:** 2026-01-07 **Status:** ✅ Production Ready

@@ -1,6 +1,8 @@
 ---
 name: Quality Gate Hardening — Cloud Agnostic + Protocol Enforcement
-overview: Harden STEP 5.10/5.11 from soft-warn to hard-fail; audit all repos for cloud SDK violations; fix all Category A/B/C violations; wire gates into quickmerge CI.
+overview:
+  Harden STEP 5.10/5.11 from soft-warn to hard-fail; audit all repos for cloud SDK violations; fix all Category A/B/C
+  violations; wire gates into quickmerge CI.
 todos:
   - id: p0-scan-category-a
     content: "Scan all repos for Category A violations (direct cloud SDK imports); produce CLOUD_SDK_VIOLATIONS.md."
@@ -15,34 +17,53 @@ todos:
     content: "Re-run os.environ scan (baseline from phase0); confirm current state."
     status: completed
   - id: p1-fix-category-a
-    content: "Remove/replace all direct cloud SDK imports — 14/14 fixed (deferred import helpers, TYPE_CHECKING guards, module __getattr__ lazy load). Confirmed 2026-03-05."
+    content:
+      "Remove/replace all direct cloud SDK imports — 14/14 fixed (deferred import helpers, TYPE_CHECKING guards, module
+      __getattr__ lazy load). Confirmed 2026-03-05."
     status: completed
   - id: p1-fix-category-b
-    content: "Remove/replace all protocol-leaking symbols (CloudTarget, StandardizedDomainCloudService, gcs_bucket, bigquery_dataset) — 37/37 service source violations fixed. Confirmed 2026-03-06."
+    content:
+      "Remove/replace all protocol-leaking symbols (CloudTarget, StandardizedDomainCloudService, gcs_bucket,
+      bigquery_dataset) — 37/37 service source violations fixed. Confirmed 2026-03-06."
     status: completed
   - id: p1-fix-category-c
-    content: "Replace direct redis imports with UCI AsyncRedisProvider or RedisProvider. deployment-api/cache.py migrated. UCI is the only allowable file with direct redis import."
+    content:
+      "Replace direct redis imports with UCI AsyncRedisProvider or RedisProvider. deployment-api/cache.py migrated. UCI
+      is the only allowable file with direct redis import."
     status: completed
   - id: p1-baseline-approved
-    content: "market-tick-data-service/inspect_gcs_data_schema.py is an ops root script excluded from SOURCE_DIR scan by quality gate pattern — no noqa comment needed; exclusion documented."
+    content:
+      "market-tick-data-service/inspect_gcs_data_schema.py is an ops root script excluded from SOURCE_DIR scan by
+      quality gate pattern — no noqa comment needed; exclusion documented."
     status: completed
   - id: p2-verify-exit-codes
-    content: "Verify all gate scripts exit code 1 when STEP 5.10/5.11 fail. STEP 5.10 at line 329, STEP 5.11 at line 478 of quality-gates.sh. Both use hard-fail exit 1 pattern. Confirmed 2026-03-05."
+    content:
+      "Verify all gate scripts exit code 1 when STEP 5.10/5.11 fail. STEP 5.10 at line 329, STEP 5.11 at line 478 of
+      quality-gates.sh. Both use hard-fail exit 1 pattern. Confirmed 2026-03-05."
     status: completed
   - id: p2-quickmerge-d3
-    content: "Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (fail quickmerge at D3+ if cloud SDK imports detected)."
+    content:
+      "Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (fail quickmerge at D3+ if cloud SDK imports
+      detected)."
     status: pending
   - id: p2-per-repo-scripts
     content: "For repos without a per-repo scripts/quality-gate.sh, ensure it sources the template (or add them)."
     status: pending
   - id: p2-codex-readme
-    content: "Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done: intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.plan.md p5-codex-update, 2026-03-05)."
+    content:
+      "Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done:
+      intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.plan.md p5-codex-update,
+      2026-03-05)."
     status: completed
   - id: p3-bypass-audit-file
-    content: "Create QUALITY_GATE_BYPASS_AUDIT.md in workspace root documenting approved exceptions with expiry dates and fix deadlines. Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root (confirmed session 4)."
+    content:
+      "Create QUALITY_GATE_BYPASS_AUDIT.md in workspace root documenting approved exceptions with expiry dates and fix
+      deadlines. Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root (confirmed session 4)."
     status: completed
   - id: p3-bypass-audit-update
-    content: "After P1 fixes (completed), update audit file to reflect zero unapproved violations. Done: zero unapproved exceptions; market-tick-data-service/inspect_gcs_data_schema.py excluded by design."
+    content:
+      "After P1 fixes (completed), update audit file to reflect zero unapproved violations. Done: zero unapproved
+      exceptions; market-tick-data-service/inspect_gcs_data_schema.py excluded by design."
     status: completed
   - id: p4-cloudbuild-gate
     content: "For repos with cloudbuild.yaml, add quality-gate step running STEP 5.10+5.11 that blocks the build."
@@ -58,18 +79,15 @@ isProject: false
 
 # Plan: Quality Gate Hardening — Cloud Agnostic + Protocol Enforcement
 
-**ID:** quality_gate_hardening
-**Status:** active
-**Day:** 2–3 (runs alongside #2a and #2b)
-**Scope:** All 59 repos per workspace manifest (`unified-trading-system-repos.code-workspace`) — quality gate scripts, codex, violations audit. Note: recount before each sweep; repo count may grow.
-**Prerequisite:** None — can run in parallel with #2a and #2b
+**ID:** quality_gate_hardening **Status:** active **Day:** 2–3 (runs alongside #2a and #2b) **Scope:** All 59 repos per
+workspace manifest (`unified-trading-system-repos.code-workspace`) — quality gate scripts, codex, violations audit.
+Note: recount before each sweep; repo count may grow. **Prerequisite:** None — can run in parallel with #2a and #2b
 
 ---
 
 ## Problem
 
-STEP 5.10 and 5.11 were added to the quality gate TEMPLATES as soft-warning checks.
-But:
+STEP 5.10 and 5.11 were added to the quality gate TEMPLATES as soft-warning checks. But:
 
 1. Not all repos have a quality-gate script that runs these templates
 2. The checks currently log violations but may not hard-fail the build (needs verification)
@@ -77,9 +95,8 @@ But:
 4. The gates aren't wired into `quickmerge.sh` D-level hardening flags
 5. No repo-level `QUALITY_GATE_BYPASS_AUDIT.md` tracks approved exceptions
 
-Without this hardening, the architecture rules from plans #2a + #2b are guidelines-only.
-After this hardening, any PR that introduces a direct `google.cloud` import in a service
-will fail CI immediately.
+Without this hardening, the architecture rules from plans #2a + #2b are guidelines-only. After this hardening, any PR
+that introduces a direct `google.cloud` import in a service will fail CI immediately.
 
 ---
 
@@ -87,8 +104,7 @@ will fail CI immediately.
 
 ### Category A — Direct cloud SDK imports (STEP 5.10)
 
-Pattern: `^from google\.cloud|^import boto3|^import botocore`
-Allowed ONLY in:
+Pattern: `^from google\.cloud|^import boto3|^import botocore` Allowed ONLY in:
 
 - `unified_cloud_interface/providers/` (UCI provider implementations)
 - `unified_cloud_interface/cache.py` (AsyncRedisProvider)
@@ -97,19 +113,16 @@ Allowed ONLY in:
 
 ### Category B — Protocol-leaking symbols in service code (STEP 5.11)
 
-Pattern: `CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService`
-Allowed NOWHERE in service code (no exceptions).
-Library code in UTL may have these during transition — tracked with TODO comments.
+Pattern: `CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService` Allowed NOWHERE in
+service code (no exceptions). Library code in UTL may have these during transition — tracked with TODO comments.
 
 ### Category C — Direct redis imports outside UCI (STEP 5.10 extension)
 
-Pattern: `^import redis` (not `from unified_cloud_interface`)
-Allowed ONLY in `unified_cloud_interface/cache.py`
+Pattern: `^import redis` (not `from unified_cloud_interface`) Allowed ONLY in `unified_cloud_interface/cache.py`
 
 ### Category D — os.environ violations (existing STEP 5.9)
 
-Pattern: `os\.getenv|os\.environ`
-Allowed ONLY in files with `# config-bootstrap` comment or UCI factory.py
+Pattern: `os\.getenv|os\.environ` Allowed ONLY in files with `# config-bootstrap` comment or UCI factory.py
 
 ---
 
@@ -124,30 +137,41 @@ Allowed ONLY in files with `# config-bootstrap` comment or UCI factory.py
 
 ### P1 — Fix all violations found in P0
 
-- [x] `p1-fix-category-a` — 14/14 Category A violations fixed (deferred import helpers, TYPE_CHECKING guards, module `__getattr__` lazy load). Confirmed 2026-03-05.
-- [x] `p1-fix-category-b` — 37/37 Category B violations fixed (CloudTarget, StandardizedDomainCloudService, gcs_bucket, bigquery_dataset removed from all service source). Confirmed 2026-03-06.
-- [x] `p1-fix-category-c` — `deployment-api/cache.py` migrated to `AsyncRedisProvider` from UCI; UCI is the only allowable direct redis importer
-- [x] `p1-baseline-approved` — `market-tick-data-service/inspect_gcs_data_schema.py` is an ops root script excluded from `SOURCE_DIR` scan by quality gate pattern; no `# noqa` comment needed
+- [x] `p1-fix-category-a` — 14/14 Category A violations fixed (deferred import helpers, TYPE_CHECKING guards, module
+      `__getattr__` lazy load). Confirmed 2026-03-05.
+- [x] `p1-fix-category-b` — 37/37 Category B violations fixed (CloudTarget, StandardizedDomainCloudService, gcs_bucket,
+      bigquery_dataset removed from all service source). Confirmed 2026-03-06.
+- [x] `p1-fix-category-c` — `deployment-api/cache.py` migrated to `AsyncRedisProvider` from UCI; UCI is the only
+      allowable direct redis importer
+- [x] `p1-baseline-approved` — `market-tick-data-service/inspect_gcs_data_schema.py` is an ops root script excluded from
+      `SOURCE_DIR` scan by quality gate pattern; no `# noqa` comment needed
 
 ### P2 — Harden gate scripts (hard-fail on new violations)
 
-- [x] `p2-verify-exit-codes` — STEP 5.10 at line 329, STEP 5.11 at line 478 of `quality-gates.sh`. Both use hard-fail `exit 1` pattern. Confirmed 2026-03-05.
-- [ ] `p2-quickmerge-d3` — Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (i.e., fail quickmerge at D3 or above if cloud SDK imports detected)
-- [ ] `p2-per-repo-scripts` — For repos that don't have a per-repo `scripts/quality-gate.sh`, ensure it sources the template (or add them)
-- [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.plan.md p5-codex-update, 2026-03-05)_
+- [x] `p2-verify-exit-codes` — STEP 5.10 at line 329, STEP 5.11 at line 478 of `quality-gates.sh`. Both use hard-fail
+      `exit 1` pattern. Confirmed 2026-03-05.
+- [ ] `p2-quickmerge-d3` — Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (i.e., fail quickmerge at
+      D3 or above if cloud SDK imports detected)
+- [ ] `p2-per-repo-scripts` — For repos that don't have a per-repo `scripts/quality-gate.sh`, ensure it sources the
+      template (or add them)
+- [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
+      _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.plan.md
+      p5-codex-update, 2026-03-05)_
 
 ### P3 — QUALITY_GATE_BYPASS_AUDIT.md
 
 - [x] `p3-bypass-audit-file` — Create `QUALITY_GATE_BYPASS_AUDIT.md` in workspace root documenting:
   - Any approved `# noqa: UCI-direct-sdk` exceptions with expiry dates
   - Repos that currently fail gates with a fix deadline
-  - Tracking TODOs for violations that need plan items before fix
-    _(Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root — confirmed session 4)_
-- [x] `p3-bypass-audit-update` — After P1 fixes, update the audit file to reflect zero unapproved violations _(Done: zero unapproved exceptions; inspect_gcs_data_schema.py excluded by design — root ops script outside SOURCE_DIR)_
+  - Tracking TODOs for violations that need plan items before fix _(Done: QUALITY_GATE_BYPASS_AUDIT.md exists at
+    workspace root — confirmed session 4)_
+- [x] `p3-bypass-audit-update` — After P1 fixes, update the audit file to reflect zero unapproved violations _(Done:
+      zero unapproved exceptions; inspect_gcs_data_schema.py excluded by design — root ops script outside SOURCE_DIR)_
 
 ### P4 — CI enforcement
 
-- [ ] `p4-cloudbuild-gate` — For repos with `cloudbuild.yaml`, add a quality-gate step that runs STEP 5.10+5.11 and blocks the build
+- [ ] `p4-cloudbuild-gate` — For repos with `cloudbuild.yaml`, add a quality-gate step that runs STEP 5.10+5.11 and
+      blocks the build
 - [ ] `p4-buildspec-gate` — For repos with `buildspec.aws.yaml`, add equivalent check in `pre_build` phase
 - [ ] `p4-github-action` — Ensure any GitHub Action workflows that run tests also run the quality gate check
 
@@ -165,8 +189,10 @@ To be filled after P0 scan completes. Format:
 
 ## Acceptance Criteria
 
-1. `rg "^from google\.cloud|^import boto3|^import botocore" --type py --glob '!.venv*' --glob '!unified_cloud_interface/providers/**' --glob '!unified_cloud_interface/cache.py' .` → 0 results or all have `# noqa: UCI-direct-sdk`
-2. `rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" --type py --glob '!.venv*' --glob '!tests' services/` → 0 results
+1. `rg "^from google\.cloud|^import boto3|^import botocore" --type py --glob '!.venv*' --glob '!unified_cloud_interface/providers/**' --glob '!unified_cloud_interface/cache.py' .`
+   → 0 results or all have `# noqa: UCI-direct-sdk`
+2. `rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" --type py --glob '!.venv*' --glob '!tests' services/`
+   → 0 results
 3. All 52 repos have a working quality gate script that runs STEP 5.10+5.11
 4. QUALITY_GATE_BYPASS_AUDIT.md exists with zero unapproved exceptions
 5. CI (Cloud Build + CodeBuild) fails on Category A/B violations in any PR

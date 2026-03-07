@@ -8,16 +8,18 @@
 
 ### 1.1 API Basics
 
-**Base URL (v2):** `https://api.elections.kalshi.com/trade-api/v2`
-**Demo URL:** `https://demo-api.kalshi.co/trade-api/v2`
-**OpenAPI version:** 3.8.0
-**WebSocket:** `wss://api.elections.kalshi.com/trade-api/ws/v2`
+**Base URL (v2):** `https://api.elections.kalshi.com/trade-api/v2` **Demo URL:**
+`https://demo-api.kalshi.co/trade-api/v2` **OpenAPI version:** 3.8.0 **WebSocket:**
+`wss://api.elections.kalshi.com/trade-api/ws/v2`
 
 **API Versioning History:**
 
 - **v1** (deprecated): integer cents pricing (e.g., `yes_bid: 45` = $0.45), no FP fields, no historical partition
-- **v2** (current): FixedPointDollars strings (`"0.4500"`), FP count fields, historical data partition, subaccounts, multivariate events
-- **v2 → v2 internal breaking changes (March 5 2026):** all integer cent fields (`yes_bid`, `no_bid`, `yes_ask`, `no_ask`, `tick_size`, `volume`, `open_interest` as integers) are **deprecated** — use `*_dollars` and `*_fp` variants exclusively from this date forward
+- **v2** (current): FixedPointDollars strings (`"0.4500"`), FP count fields, historical data partition, subaccounts,
+  multivariate events
+- **v2 → v2 internal breaking changes (March 5 2026):** all integer cent fields (`yes_bid`, `no_bid`, `yes_ask`,
+  `no_ask`, `tick_size`, `volume`, `open_interest` as integers) are **deprecated** — use `*_dollars` and `*_fp` variants
+  exclusively from this date forward
 
 ---
 
@@ -48,7 +50,8 @@ Signature payload: `{timestamp}GET/trade-api/v2` (or relevant method+path)
 | Premier  | 100/s | 100/s | 3.75% monthly exchange volume |
 | Prime    | 400/s | 400/s | 7.5% monthly exchange volume  |
 
-Write-limited endpoints: `CreateOrder`, `CancelOrder`, `AmendOrder`, `DecreaseOrder`, `BatchCancelOrders` (each cancel = 0.2 txns), `BatchCreateOrders`
+Write-limited endpoints: `CreateOrder`, `CancelOrder`, `AmendOrder`, `DecreaseOrder`, `BatchCancelOrders` (each cancel =
+0.2 txns), `BatchCreateOrders`
 
 ---
 
@@ -184,7 +187,8 @@ class KalshiMarket:
     mve_selected_legs: list[MveLeg] | None
 ```
 
-**Implied NO price rule:** `no_bid = 1 - yes_ask`, `no_ask = 1 - yes_bid` (Kalshi provides explicit NO quotes unlike Polymarket)
+**Implied NO price rule:** `no_bid = 1 - yes_ask`, `no_ask = 1 - yes_bid` (Kalshi provides explicit NO quotes unlike
+Polymarket)
 
 ---
 
@@ -291,10 +295,8 @@ class KalshiOrderRequest:
     expiration_ts: datetime | None
 ```
 
-`GET /portfolio/orders/{order_id}` — query order
-`DELETE /portfolio/orders/{order_id}` — cancel order
-`PUT /portfolio/orders/{order_id}` — amend order
-`POST /portfolio/batch_orders` — batch create
+`GET /portfolio/orders/{order_id}` — query order `DELETE /portfolio/orders/{order_id}` — cancel order
+`PUT /portfolio/orders/{order_id}` — amend order `POST /portfolio/batch_orders` — batch create
 `DELETE /portfolio/orders` (batch cancel)
 
 ---
@@ -348,8 +350,8 @@ class KalshiHistoricalCutoff:
     orders_updated_ts: datetime   # orders before this → /historical/orders
 ```
 
-**Current live window:** ~1 year (reducing to ~3 months post March 2026)
-**Historical endpoints mirror live endpoints** with same cursor pagination:
+**Current live window:** ~1 year (reducing to ~3 months post March 2026) **Historical endpoints mirror live endpoints**
+with same cursor pagination:
 
 - `GET /historical/markets`
 - `GET /historical/markets/{ticker}`
@@ -632,7 +634,8 @@ class PolymarketTag:
 - Markets can have **multiple tags** (a BTC market might have both "Crypto" and "Finance")
 - Events often have no `category` field set — rely on tags
 
-**Known gap:** Markets can be created without any tags (CYOM markets). Many historical markets (2020-2022) have sparse tagging. Pattern matching on `question` field is required as fallback.
+**Known gap:** Markets can be created without any tags (CYOM markets). Many historical markets (2020-2022) have sparse
+tagging. Pattern matching on `question` field is required as fallback.
 
 **Recommended approach:**
 
@@ -837,11 +840,7 @@ query tokenCondition($tokenId: String!) {
 
 ```graphql
 query fills($market: String!) {
-  orderFilledEvents(
-    where: { market: $market }
-    orderBy: timestamp
-    orderDirection: desc
-  ) {
+  orderFilledEvents(where: { market: $market }, orderBy: timestamp, orderDirection: desc) {
     id
     timestamp
     maker
@@ -887,13 +886,15 @@ query marketOI($conditionId: String!) {
 - `redemption` = claimed winning payout after resolution
 - Price at time of split ≈ FPMM price (from fixedProductMarketMaker reserves), NOT stored in event
 
-**Historical price reconstruction for AMM era:** Use the freelancer's trades.csv which maps split/merge transaction amounts as proxy for implied price. **Not tick-by-tick price series** — represents capital flows, not quotes.
+**Historical price reconstruction for AMM era:** Use the freelancer's trades.csv which maps split/merge transaction
+amounts as proxy for implied price. **Not tick-by-tick price series** — represents capital flows, not quotes.
 
 ---
 
 ### 2.9 Multi-Outcome "Neg-Risk" Markets
 
-Polymarket's **neg-risk** mechanism supports mutually-exclusive multi-outcome markets (analogous to Kalshi's `mutually_exclusive` events):
+Polymarket's **neg-risk** mechanism supports mutually-exclusive multi-outcome markets (analogous to Kalshi's
+`mutually_exclusive` events):
 
 ```
 Event: "Gold price on Dec 31"
@@ -951,7 +952,9 @@ UMA resolution flow:
 4. If undisputed: auto-settles
 5. If disputed: UMA DVM (Decentralized Verification Mechanism) votes
 
-**Resolution risk:** UMA disputes can delay resolution by 48-72 hours. Some markets have been incorrectly resolved and later corrected via `disputed` status. Schema must store `uma_resolution_status` separately from `closed`/`resolved` booleans.
+**Resolution risk:** UMA disputes can delay resolution by 48-72 hours. Some markets have been incorrectly resolved and
+later corrected via `disputed` status. Schema must store `uma_resolution_status` separately from `closed`/`resolved`
+booleans.
 
 ---
 
@@ -987,7 +990,8 @@ class CrossVenueLink:
 **Challenges:**
 
 - Kalshi uses binary YES/NO on exact thresholds; Polymarket uses open-ended questions
-- Different expiry timestamps (Kalshi settles at specific data release time; Polymarket often settles on "latest reported" date)
+- Different expiry timestamps (Kalshi settles at specific data release time; Polymarket often settles on "latest
+  reported" date)
 - Different resolution sources (Kalshi: BLS; Polymarket: UMA which cites BLS)
 - Currency: Kalshi = USD (regulated); Polymarket = USDC (crypto)
 
@@ -997,7 +1001,8 @@ class CrossVenueLink:
 
 User observation: "gold June contracts... combined prob of 94... pick up 6"
 
-**Pattern:** Multiple binary markets on the same underlying cover non-overlapping, exhaustive ranges. Their probabilities must sum to 1.0. If sum < 1.0, there is arbitrage.
+**Pattern:** Multiple binary markets on the same underlying cover non-overlapping, exhaustive ranges. Their
+probabilities must sum to 1.0. If sum < 1.0, there is arbitrage.
 
 ```
 Gold June 30 price prediction markets:
@@ -1134,7 +1139,8 @@ token_amount    float — outcome tokens exchanged
 - 30% sum to 0.95-1.05 (within normal spread)
 - 0.2% sum < 0.95 (stale quotes or illiquid — filter for backtesting)
 - This is **trade data** (executed fills), NOT order book snapshots
-- `/prices-history` endpoint provides sampled history at ~10-min intervals (~4K points per market) — too coarse for arb backtesting
+- `/prices-history` endpoint provides sampled history at ~10-min intervals (~4K points per market) — too coarse for arb
+  backtesting
 - Historical L2 order book snapshots **do not exist** in any Polymarket API
 
 ### 4.2 What Is Missing (Gaps for Kalshi + Enhanced Polymarket)
@@ -1232,16 +1238,23 @@ utc_date: date
 
 ## 6. Key Implementation Notes
 
-1. **Kalshi price migration (urgent):** Integer cent fields deprecated March 5 2026. All code must use `*_dollars` (string fixed-point) fields now.
+1. **Kalshi price migration (urgent):** Integer cent fields deprecated March 5 2026. All code must use `*_dollars`
+   (string fixed-point) fields now.
 
-2. **Polymarket trade data is NOT order book data.** It shows where trades executed, not where orders were sitting. For arb backtesting on Polymarket, build a real-time L2 recorder going forward.
+2. **Polymarket trade data is NOT order book data.** It shows where trades executed, not where orders were sitting. For
+   arb backtesting on Polymarket, build a real-time L2 recorder going forward.
 
-3. **neg-risk markets are the primary bucket arb opportunity on Polymarket.** They are structurally guaranteed to sum to 1.0 if efficient; deviations are exploitable. Use `neg_risk_market_id` to group them.
+3. **neg-risk markets are the primary bucket arb opportunity on Polymarket.** They are structurally guaranteed to sum to
+   1.0 if efficient; deviations are exploitable. Use `neg_risk_market_id` to group them.
 
-4. **Kalshi settlement timer matters for arb.** After determination, there is a `settlement_timer_seconds` delay before payout. Capital is locked during this window — factor into P&L calculations.
+4. **Kalshi settlement timer matters for arb.** After determination, there is a `settlement_timer_seconds` delay before
+   payout. Capital is locked during this window — factor into P&L calculations.
 
-5. **Cross-venue arb execution risk:** Kalshi = regulated, USD-settled (T+1). Polymarket = USDC on Polygon (near-instant). Must maintain balances on both venues and hedge FX risk (USDC is not perfectly $1.00 always).
+5. **Cross-venue arb execution risk:** Kalshi = regulated, USD-settled (T+1). Polymarket = USDC on Polygon
+   (near-instant). Must maintain balances on both venues and hedge FX risk (USDC is not perfectly $1.00 always).
 
-6. **Kalshi historical data window is shrinking.** Target: 3 months. Initial: 1 year. Bulk-download all historical markets/fills before March 6 2026.
+6. **Kalshi historical data window is shrinking.** Target: 3 months. Initial: 1 year. Bulk-download all historical
+   markets/fills before March 6 2026.
 
-7. **Polymarket `/prices-history`** returns ~4K data points per market at minimum 10-minute intervals — sufficient for daily strategy signals, insufficient for intraday arb.
+7. **Polymarket `/prices-history`** returns ~4K data points per market at minimum 10-minute intervals — sufficient for
+   daily strategy signals, insufficient for intraday arb.

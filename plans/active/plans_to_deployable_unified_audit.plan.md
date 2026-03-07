@@ -1,12 +1,22 @@
 ---
 name: Plans to Deployable Unified Audit
-overview: Canonical workflow for Plans → Code → Tested → Deployable. Unifies PM Codex Drift Zero, Other Alignment, and deployment topology. Four-stage pipeline with Tested and Deployable gates. Supersedes pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
+overview:
+  Canonical workflow for Plans → Code → Tested → Deployable. Unifies PM Codex Drift Zero, Other Alignment, and
+  deployment topology. Four-stage pipeline with Tested and Deployable gates. Supersedes
+  pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
 todos:
   - id: phase-0-manifest-sync
-    content: "Manifest sync (repository_dispatch); update version-bump workflows; remove broken manifest steps. GATE: workspace-manifest.json validates against JSON schema with zero errors; all repo entries have ci_status, quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields present; repository_dispatch event fires on PM push and reaches dependent workflows without error."
+    content:
+      "Manifest sync (repository_dispatch); update version-bump workflows; remove broken manifest steps. GATE:
+      workspace-manifest.json validates against JSON schema with zero errors; all repo entries have ci_status,
+      quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields present;
+      repository_dispatch event fires on PM push and reaches dependent workflows without error."
     status: completed
   - id: phase-0b-cleanup
-    content: "Codex + PM cleanup; fix paths, merge archives, create SSOT indexes. GATE: no broken relative links in any active plans/active/ .plan.md file; plans/archive/ contains only superseded plans; 00-SSOT-INDEX.md lists all canonical docs."
+    content:
+      "Codex + PM cleanup; fix paths, merge archives, create SSOT indexes. GATE: no broken relative links in any active
+      plans/active/ .plan.md file; plans/archive/ contains only superseded plans; 00-SSOT-INDEX.md lists all canonical
+      docs."
     status: completed
   - id: phase-1-manifest-validation
     content: JSON schema + topological validation for workspace-manifest.json
@@ -30,7 +40,10 @@ todos:
     content: Refactor 02-run-diff-checker.py to use validators
     status: completed
   - id: phase-8-per-file-headers
-    content: "DECISION: Approach A — validator only (no file headers). Implement run_validators.py --check-codex-refs which detects if a source file's last-touched codex doc version is stale relative to the current codex version. No # codex-ref: comments added to files. GATE: run_validators.py --check-codex-refs exits 0 for all T0–T2 repos."
+    content:
+      "DECISION: Approach A — validator only (no file headers). Implement run_validators.py --check-codex-refs which
+      detects if a source file's last-touched codex doc version is stale relative to the current codex version. No #
+      codex-ref: comments added to files. GATE: run_validators.py --check-codex-refs exits 0 for all T0–T2 repos."
     status: completed
   - id: phase-9-tested-gate
     content: Tested gate — quality gates + integration tests pass
@@ -42,23 +55,30 @@ todos:
     content: Audit — trading_system_audit_prompt.plan.md run; target A+
     status: completed
   - id: checklist-enhancements
-    content: "Add the following items to all 19 deployment checklists (checklist.{service}.yaml): (1) data_availability: input/output GCS buckets exist and contain expected data for the service date range; (2) gap_filling: empty date gaps documented with reason and expected fill date; (3) recovery: recovery runbook path documented (e.g. docs/recovery.md); (4) security_audit_trail: AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED events confirmed in Cloud Logging for at least one test run. GATE: all 19 checklist YAML files pass the updated checklist validator with zero missing sections."
+    content:
+      "Add the following items to all 19 deployment checklists (checklist.{service}.yaml): (1) data_availability:
+      input/output GCS buckets exist and contain expected data for the service date range; (2) gap_filling: empty date
+      gaps documented with reason and expected fill date; (3) recovery: recovery runbook path documented (e.g.
+      docs/recovery.md); (4) security_audit_trail: AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED events confirmed in
+      Cloud Logging for at least one test run. GATE: all 19 checklist YAML files pass the updated checklist validator
+      with zero missing sections."
     status: completed
 isProject: false
 ---
 
 # Plans → Code → Tested → Deployable: Unified Audit and Plan Alignment
 
-**Status:** Canonical (supersedes pm_codex, other_alignment, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF)
-**Created:** 2026-03-04
-**Archived plans:** `plans/archive/` — pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF
-**Blockers:** See [INDEX.md](INDEX.md) § Blockers — API keys (Phase 3 venues), background agents, phase1 completion.
+**Status:** Canonical (supersedes pm_codex, other_alignment, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF) **Created:** 2026-03-04
+**Archived plans:** `plans/archive/` — pm_codex_drift_zero_architecture, other_alignment_plan,
+PM_CODEX_VS_OTHER_ALIGNMENT_DIFF **Blockers:** See [INDEX.md](INDEX.md) § Blockers — API keys (Phase 3 venues),
+background agents, phase1 completion.
 
 ---
 
 ## 1. Extended Pipeline: Plans → Code → Tested → Deployable
 
-PM (plans, manifest) → Codex (specs) → Code (implemented) → **Tested** (quality gates + integration tests) → **Deployable** (checklist complete, actually deploys)
+PM (plans, manifest) → Codex (specs) → Code (implemented) → **Tested** (quality gates + integration tests) →
+**Deployable** (checklist complete, actually deploys)
 
 | Stage      | Gate                                       |
 | ---------- | ------------------------------------------ |
@@ -68,19 +88,24 @@ PM (plans, manifest) → Codex (specs) → Code (implemented) → **Tested** (qu
 | Tested     | quality-gates.sh; pytest; CI green         |
 | Deployable | Checklist YAML; runtime-topology; audit    |
 
-**Deployable** ≠ working code: data availability verified, deployment stages passed, data catalogue filled, recovery documented, security audit trails. Audit prompt gives A+ when everything is documented and verifiable.
+**Deployable** ≠ working code: data availability verified, deployment stages passed, data catalogue filled, recovery
+documented, security audit trails. Audit prompt gives A+ when everything is documented and verifiable.
 
-**Schema normalization checkpoint:** UAC is SSOT for canonical schemas; interfaces use UAC normalizers; no raw venue data flows to services. Reference: schema normalization completion plan.
+**Schema normalization checkpoint:** UAC is SSOT for canonical schemas; interfaces use UAC normalizers; no raw venue
+data flows to services. Reference: schema normalization completion plan.
 
 ---
 
 ## 2. Deployment Topology and Checklists
 
-**SSOT:** `deployment-service/configs/` — runtime-topology, RUNTIME_TOPOLOGY_DECISIONS.md, RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
+**SSOT:** `deployment-service/configs/` — runtime-topology, RUNTIME_TOPOLOGY_DECISIONS.md,
+RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
 
-**Checklist phases (1–7):** Repository foundation, Testing & Quality, Deployment Infrastructure, Local Validation, Production Deployment, Documentation, Data Catalogue.
+**Checklist phases (1–7):** Repository foundation, Testing & Quality, Deployment Infrastructure, Local Validation,
+Production Deployment, Documentation, Data Catalogue.
 
-**Additional items:** data availability, filling empty gaps, recovery processes, security audit trails. Codex audit + deployment-service configs + SSOT = lots to check against.
+**Additional items:** data availability, filling empty gaps, recovery processes, security audit trails. Codex audit +
+deployment-service configs + SSOT = lots to check against.
 
 ---
 
@@ -105,13 +130,17 @@ PM (plans, manifest) → Codex (specs) → Code (implemented) → **Tested** (qu
 
 ## 5. Per-File Headers (Clarification)
 
-**Per-file headers** = Header comments at top of each file recording provenance: `# codex-ref:`, `# doc_version:`, `# codex_version:`, `# last_modified:`. When Codex doc updates, `doc_version` bumps; stale code is detectable. Options: A) Validator-only | B) Headers-only | C) Hybrid.
+**Per-file headers** = Header comments at top of each file recording provenance: `# codex-ref:`, `# doc_version:`,
+`# codex_version:`, `# last_modified:`. When Codex doc updates, `doc_version` bumps; stale code is detectable. Options:
+A) Validator-only | B) Headers-only | C) Hybrid.
 
 ---
 
 ## 6. Consolidated Phase Order
 
-Phase 0: Manifest sync | 0b: Cleanup | 1: Manifest validation | 2: Active plans index | 3: Codex merge gate | 4: PM triggers Codex | 5: CI clone | 6: Per-repo drift | 7: Diff checker | 8: Per-file headers (optional) | 9: **Tested gate** | 10: **Deployable gate** | 11: **Audit**
+Phase 0: Manifest sync | 0b: Cleanup | 1: Manifest validation | 2: Active plans index | 3: Codex merge gate | 4: PM
+triggers Codex | 5: CI clone | 6: Per-repo drift | 7: Diff checker | 8: Per-file headers (optional) | 9: **Tested gate**
+| 10: **Deployable gate** | 11: **Audit**
 
 ---
 
@@ -144,7 +173,8 @@ Phase 0: Manifest sync | 0b: Cleanup | 1: Manifest validation | 2: Active plans 
 
 ### Auditor pre-claim verification
 
-Before claiming the Tested gate, run: `cd <repo> && uv run pytest --collect-only -q`. Collection must exit 0 with no import/path-deps errors. See pytest-collection-audit-readiness.mdc.
+Before claiming the Tested gate, run: `cd <repo> && uv run pytest --collect-only -q`. Collection must exit 0 with no
+import/path-deps errors. See pytest-collection-audit-readiness.mdc.
 
 ### Out of Scope (Post-Deploy)
 
@@ -156,7 +186,8 @@ Before claiming the Tested gate, run: `cd <repo> && uv run pytest --collect-only
 
 ## 9. Phase 10: Deployable Gate
 
-**Definition:** Code is Deployable when checklist is complete. Data availability verified, deployment stages passed, data catalogue filled, recovery documented, security audit trails.
+**Definition:** Code is Deployable when checklist is complete. Data availability verified, deployment stages passed,
+data catalogue filled, recovery documented, security audit trails.
 
 ### Explicit Criteria (Checklist Phases 1–7)
 
@@ -182,7 +213,8 @@ Before claiming the Tested gate, run: `cd <repo> && uv run pytest --collect-only
 ### SSOT
 
 - **Checklists:** deployment-service/configs/checklist.{service}.yaml
-- **Topology (canonical SSOT):** unified-trading-pm/configs/runtime-topology.yaml (deployment-service/configs/runtime-topology.yaml is a partial local view only)
+- **Topology (canonical SSOT):** unified-trading-pm/configs/runtime-topology.yaml
+  (deployment-service/configs/runtime-topology.yaml is a partial local view only)
 - **Decisions:** deployment-service/configs/RUNTIME_TOPOLOGY_DECISIONS.md
 
 ### Gate Order

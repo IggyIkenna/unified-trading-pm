@@ -1,7 +1,7 @@
 # Resume Pattern - Iterative Sub-Agent Feedback
 
-**Purpose**: Keep sub-agent context across iterations (massive token savings)
-**When**: Sub-agent needs corrections, improvements, or gets stuck
+**Purpose**: Keep sub-agent context across iterations (massive token savings) **When**: Sub-agent needs corrections,
+improvements, or gets stuck
 
 **⚠️ CRITICAL: RESUME IS MANDATORY FOR CORRECTIONS** - Never launch new agent when you can resume!
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Check that a service repo does not depend on another service repo as a path dependency.
 

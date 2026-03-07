@@ -1,9 +1,13 @@
 ---
 name: PM Codex Drift Zero Architecture
-overview: A cohesive flow from PM (manifest + active plans) to Codex (target-state docs) to service implementation, with zero drift. Problem → Target → Solution in staged phases, rollable by agents.
+overview:
+  A cohesive flow from PM (manifest + active plans) to Codex (target-state docs) to service implementation, with zero
+  drift. Problem → Target → Solution in staged phases, rollable by agents.
 todos:
   - id: phase-0-manifest-sync
-    content: "Phase 0: Add PM sync-manifest-versions.yml (repository_dispatch); update version-bump workflows; remove broken manifest steps"
+    content:
+      "Phase 0: Add PM sync-manifest-versions.yml (repository_dispatch); update version-bump workflows; remove broken
+      manifest steps"
     status: completed
   - id: phase-0b-cleanup
     content: "Phase 0b: Codex + PM cleanup; fix paths, merge archives, create SSOT indexes"
@@ -38,21 +42,34 @@ isProject: false
 
 ## Part 1: The Problem
 
-We have a multi-repo workspace where PM sets plans and owns the manifest, Codex holds architecture and standards, and services implement against both. But the chain is broken in several places, and there is no single source of truth for where things live or what to do next.
+We have a multi-repo workspace where PM sets plans and owns the manifest, Codex holds architecture and standards, and
+services implement against both. But the chain is broken in several places, and there is no single source of truth for
+where things live or what to do next.
 
-**Manifest and versioning.** PM owns `workspace-manifest.json`, but other repos (api-contracts, codex, settlement-ui, etc.) run version-bump workflows that try to update it. The manifest exists only in PM, so those steps fail. PM is never triggered when other repos bump. The manifest is not the real SSOT for versions.
+**Manifest and versioning.** PM owns `workspace-manifest.json`, but other repos (api-contracts, codex, settlement-ui,
+etc.) run version-bump workflows that try to update it. The manifest exists only in PM, so those steps fail. PM is never
+triggered when other repos bump. The manifest is not the real SSOT for versions.
 
-**Docs and scripts are scattered.** Codex and PM both have outdated docs that reference wrong paths (`unified-trading-library`, `unified-trading-deployment-v3`, `12-presentations`), deprecated scripts, and duplicate content. There are two archive directories in Codex, duplicate workflow diagrams in PM, and no single index that says "this is canonical."
+**Docs and scripts are scattered.** Codex and PM both have outdated docs that reference wrong paths
+(`unified-trading-library`, `unified-trading-deployment-v3`, `12-presentations`), deprecated scripts, and duplicate
+content. There are two archive directories in Codex, duplicate workflow diagrams in PM, and no single index that says
+"this is canonical."
 
-**Plans are not enforced.** Active plans live in `plans/active/` but there is no index. Codex does not require that plans are incorporated before merge. Implementers can drift from the intended architecture because nothing checks it.
+**Plans are not enforced.** Active plans live in `plans/active/` but there is no index. Codex does not require that
+plans are incorporated before merge. Implementers can drift from the intended architecture because nothing checks it.
 
-**CI does not have Codex or PM.** PM CI creates an empty `unified-trading-codex` directory. Service CI clones path deps but not Codex. Validators are skipped. Drift checks never run in CI.
+**CI does not have Codex or PM.** PM CI creates an empty `unified-trading-codex` directory. Service CI clones path deps
+but not Codex. Validators are skipped. Drift checks never run in CI.
 
-**Drift detection is shallow.** The diff checker uses grep and ad-hoc patterns. The 72+ validators in `VALIDATOR_COVERAGE_MATRIX` and checklist items with `validator_id` and `ssot_ref` exist but are not wired into a per-repo drift check. We cannot reliably catch small architectural drifts.
+**Drift detection is shallow.** The diff checker uses grep and ad-hoc patterns. The 72+ validators in
+`VALIDATOR_COVERAGE_MATRIX` and checklist items with `validator_id` and `ssot_ref` exist but are not wired into a
+per-repo drift check. We cannot reliably catch small architectural drifts.
 
-**No cascade.** When PM merges, Codex is not triggered. When a library bumps, dependents are not notified. The dependency graph exists in the manifest but is not used for automation.
+**No cascade.** When PM merges, Codex is not triggered. When a library bumps, dependents are not notified. The
+dependency graph exists in the manifest but is not used for automation.
 
-The result: docs drift from code, code drifts from plans, and there is no single place to look for "what is true" or "what to do next."
+The result: docs drift from code, code drifts from plans, and there is no single place to look for "what is true" or
+"what to do next."
 
 ---
 
@@ -60,11 +77,16 @@ The result: docs drift from code, code drifts from plans, and there is no single
 
 We want a single, coherent flow:
 
-1. **PM** is the root. It owns the manifest (versions, topology, doc standards) and active plans. The manifest is validated and is the SSOT. Active plans are indexed and visible. When PM merges, Codex is triggered.
-2. **Codex** reflects the architecture _after_ plans are implemented. It cannot merge to main without incorporating the latest PM and active plans. It has no contradicting statements. Services implement against Codex, not raw plans.
-3. **Services** run quality gates with Codex and PM as siblings. A per-repo drift check runs the validators that apply to that repo's type. No merge without passing drift.
-4. **Version flow** is bottom-up. When any repo bumps, PM updates the manifest. Deployment reads the manifest for versions. L0 bumps can trigger L1; L1 can trigger L2.
-5. **One reference side.** A single index (or small set) answers: where is the canonical quality-gates script? Where are active plans? Where is the diff checker? Codex and PM both have clear SSOT indexes.
+1. **PM** is the root. It owns the manifest (versions, topology, doc standards) and active plans. The manifest is
+   validated and is the SSOT. Active plans are indexed and visible. When PM merges, Codex is triggered.
+2. **Codex** reflects the architecture _after_ plans are implemented. It cannot merge to main without incorporating the
+   latest PM and active plans. It has no contradicting statements. Services implement against Codex, not raw plans.
+3. **Services** run quality gates with Codex and PM as siblings. A per-repo drift check runs the validators that apply
+   to that repo's type. No merge without passing drift.
+4. **Version flow** is bottom-up. When any repo bumps, PM updates the manifest. Deployment reads the manifest for
+   versions. L0 bumps can trigger L1; L1 can trigger L2.
+5. **One reference side.** A single index (or small set) answers: where is the canonical quality-gates script? Where are
+   active plans? Where is the diff checker? Codex and PM both have clear SSOT indexes.
 
 ```mermaid
 flowchart TB
@@ -95,13 +117,15 @@ flowchart TB
 
 ## Part 3: The Solution — Staged Rollout
 
-The solution is implemented in phases. Each phase can be rolled out independently and assigned to agents. Later phases assume earlier ones are done.
+The solution is implemented in phases. Each phase can be rolled out independently and assigned to agents. Later phases
+assume earlier ones are done.
 
 ### Phase 0: Manifest Sync (Critical)
 
 **Goal:** PM is the real SSOT for versions. Every repo bump updates the manifest.
 
-**Tasks:** Add PM workflow `sync-manifest-versions.yml` (repository_dispatch); update each repo's version-bump to trigger it; remove broken manifest-update steps from repos that don't have the manifest.
+**Tasks:** Add PM workflow `sync-manifest-versions.yml` (repository_dispatch); update each repo's version-bump to
+trigger it; remove broken manifest-update steps from repos that don't have the manifest.
 
 **Agent scope:** One agent for PM workflow; another for version-bump updates.
 
@@ -111,11 +135,14 @@ The solution is implemented in phases. Each phase can be rolled out independentl
 
 **Goal:** Fix broken paths, merge duplicates, create canonical indexes.
 
-**Codex:** Fix E2E paths; fix 00-SSOT-INDEX; create SSOT-BOUNDARY; replace wrong script refs; deployment-v3 → deployment-service; merge archive dirs; consolidate onboarding.
+**Codex:** Fix E2E paths; fix 00-SSOT-INDEX; create SSOT-BOUNDARY; replace wrong script refs; deployment-v3 →
+deployment-service; merge archive dirs; consolidate onboarding.
 
-**PM:** Fix index-migration; WORKFLOW_DIAGRAM SSOT; complete plans/README; mark superseded template; quality-gates-index; fix invalid paths.
+**PM:** Fix index-migration; WORKFLOW_DIAGRAM SSOT; complete plans/README; mark superseded template;
+quality-gates-index; fix invalid paths.
 
-**SSOT indexes:** Codex 00-SSOT-INDEX (Scripts, Plans); PM plans/active/INDEX, plans/README, docs/INDEX, scripts/README; cross-repo reference table.
+**SSOT indexes:** Codex 00-SSOT-INDEX (Scripts, Plans); PM plans/active/INDEX, plans/README, docs/INDEX, scripts/README;
+cross-repo reference table.
 
 **Agent scope:** One agent Codex; one PM; one indexes.
 

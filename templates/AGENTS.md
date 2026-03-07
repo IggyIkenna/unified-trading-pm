@@ -1,8 +1,7 @@
 # AGENTS.md — {REPO_NAME}
 
-> Per-repo guide for AI agents and developers working in fresh or isolated environments.
-> Copy this template to the repo root and fill in repo-specific details.
-> See: unified-trading-codex/06-coding-standards/setup-standards.md
+> Per-repo guide for AI agents and developers working in fresh or isolated environments. Copy this template to the repo
+> root and fill in repo-specific details. See: unified-trading-codex/06-coding-standards/setup-standards.md
 
 ## Quick Start
 

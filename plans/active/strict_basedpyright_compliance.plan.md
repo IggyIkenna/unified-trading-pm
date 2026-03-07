@@ -1,6 +1,8 @@
 ---
 name: Strict Basedpyright Compliance Plan
-overview: Achieve typeCheckingMode strict and reportAny error across all Python repos. No dict[str, Any] in public API. Run basedpyright on source_dir only (never .).
+overview:
+  Achieve typeCheckingMode strict and reportAny error across all Python repos. No dict[str, Any] in public API. Run
+  basedpyright on source_dir only (never .).
 todos:
   - id: pyrightconfig-strict
     content: Verify pyrightconfig.json — typeCheckingMode strict, reportAny error
@@ -9,21 +11,33 @@ todos:
     content: Run timeout 120 basedpyright <source_dir>/ (never basedpyright .)
     status: done
   - id: fix-type-ignores
-    content: "Fix or document every # type: ignore in QUALITY_GATE_BYPASS_AUDIT.md. THRESHOLD: T0–T3 libraries: zero # type: ignore allowed in production source (any bypass is an architectural violation — fix the root cause per no-type-any-use-specific.mdc). Services: each # type: ignore must have a documented entry in QUALITY_GATE_BYPASS_AUDIT.md with: file:line, reason, and owner. GATE: T0–T3 repos have rg '# type: ignore' returning 0 matches in production source; services have QUALITY_GATE_BYPASS_AUDIT.md with entries for every # type: ignore hit."
+    content:
+      "Fix or document every # type: ignore in QUALITY_GATE_BYPASS_AUDIT.md. THRESHOLD: T0–T3 libraries: zero # type:
+      ignore allowed in production source (any bypass is an architectural violation — fix the root cause per
+      no-type-any-use-specific.mdc). Services: each # type: ignore must have a documented entry in
+      QUALITY_GATE_BYPASS_AUDIT.md with: file:line, reason, and owner. GATE: T0–T3 repos have rg '# type: ignore'
+      returning 0 matches in production source; services have QUALITY_GATE_BYPASS_AUDIT.md with entries for every #
+      type: ignore hit."
     status: pending
   - id: remove-any
-    content: "Remove Any; use typed alternatives (TypedDict, Protocol, dict[str, X]). GATE: rg ': Any$|-> Any$|\\[Any\\]' --type py --glob '!.venv*' --glob '!tests' in public API files (top-level __init__.py and public interface modules) returns 0 matches for all T0–T3 repos."
+    content:
+      "Remove Any; use typed alternatives (TypedDict, Protocol, dict[str, X]). GATE: rg ': Any$|-> Any$|\\[Any\\]'
+      --type py --glob '!.venv*' --glob '!tests' in public API files (top-level __init__.py and public interface
+      modules) returns 0 matches for all T0–T3 repos."
     status: pending
   - id: tier-order
-    content: "T0 first → T1 → T2 → T3 → services. GATE: each tier complete before next begins. Tier complete = basedpyright exits 0 on source_dir + reportAny: error + zero # type: ignore in T0–T3 production source. Record completion date per repo in workspace-manifest.json ci_status field."
+    content:
+      "T0 first → T1 → T2 → T3 → services. GATE: each tier complete before next begins. Tier complete = basedpyright
+      exits 0 on source_dir + reportAny: error + zero # type: ignore in T0–T3 production source. Record completion date
+      per repo in workspace-manifest.json ci_status field."
     status: pending
 isProject: false
 ---
 
 # Strict Basedpyright Compliance Plan
 
-**Order:** 4 (see master_pre_deployment_plan_chain.plan.md)
-**SSOT:** trading_system_audit_prompt.plan.md §6.5, §8.6, §9.7, §9.10
+**Order:** 4 (see master_pre_deployment_plan_chain.plan.md) **SSOT:** trading_system_audit_prompt.plan.md §6.5, §8.6,
+§9.7, §9.10
 
 ---
 
@@ -44,9 +58,10 @@ isProject: false
 - Run timeout 120 basedpyright / (never basedpyright .)
 - Exclude build/, dist/, .venv/
 
-> **Safe Invocation (B3):** Always run `run_timeout 120 basedpyright <source_dir>/` (e.g., `timeout 120 basedpyright execution_service/`).
-> NEVER run `basedpyright .` from workspace root or any directory without an explicit source dir and timeout.
-> Omitting the source dir causes basedpyright to scan all files including venvs; omitting timeout causes hangs on large repos.
+> **Safe Invocation (B3):** Always run `run_timeout 120 basedpyright <source_dir>/` (e.g.,
+> `timeout 120 basedpyright execution_service/`). NEVER run `basedpyright .` from workspace root or any directory
+> without an explicit source dir and timeout. Omitting the source dir causes basedpyright to scan all files including
+> venvs; omitting timeout causes hangs on large repos.
 
 ---
 
@@ -61,8 +76,8 @@ isProject: false
 
 ## Cross-Service Type Imports and reportAny
 
-**Cross-service type imports and reportAny:**
-When fixing cross-service type imports (e.g., RC-12: ml-inference importing from ml-training-service), the fix must place shared types in protocol libraries:
+**Cross-service type imports and reportAny:** When fixing cross-service type imports (e.g., RC-12: ml-inference
+importing from ml-training-service), the fix must place shared types in protocol libraries:
 
 - Internal service-to-service schemas → `unified-internal-contracts` (T0, UIC)
 - Domain interfaces and protocols → appropriate T2 library (UML for ML, UMI for market, etc.)

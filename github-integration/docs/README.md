@@ -240,5 +240,4 @@ Different dimensions. Both needed.
 
 ---
 
-**Last Updated:** 2026-02-13
-**Canonical Reference:** [GITHUB_INTEGRATION_ROADMAP.md](GITHUB_INTEGRATION_ROADMAP.md)
+**Last Updated:** 2026-02-13 **Canonical Reference:** [GITHUB_INTEGRATION_ROADMAP.md](GITHUB_INTEGRATION_ROADMAP.md)

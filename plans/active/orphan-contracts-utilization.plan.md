@@ -1,15 +1,17 @@
 # Orphan Contracts Utilisation Plan
 
-**Status:** Active (Phase 1 complete; Phase 2+ pending — augmented by Plan #0c findings)
-**Created:** 2026-03-04
-**Related:** unified-trading-codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md. Schema normalization completion plan — UAC normalization coverage (all external schemas → canonical) is part of contracts utilization; orphan schemas without normalizers are in scope.
-**Feeds from:** [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md) (Plan #0c) — comprehensive 60-repo orphan scan will append new orphan schemas to the table below.
+**Status:** Active (Phase 1 complete; Phase 2+ pending — augmented by Plan #0c findings) **Created:** 2026-03-04
+**Related:** unified-trading-codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md. Schema normalization completion plan — UAC
+normalization coverage (all external schemas → canonical) is part of contracts utilization; orphan schemas without
+normalizers are in scope. **Feeds from:** [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)
+(Plan #0c) — comprehensive 60-repo orphan scan will append new orphan schemas to the table below.
 
 ---
 
 ## Purpose
 
-Schemas in unified-api-contracts and unified-internal-contracts that are not imported anywhere are "orphans". This plan proposes testing and utilising them. **Decision required:** Use, deprecate, or leave as-is.
+Schemas in unified-api-contracts and unified-internal-contracts that are not imported anywhere are "orphans". This plan
+proposes testing and utilising them. **Decision required:** Use, deprecate, or leave as-is.
 
 ---
 
@@ -26,10 +28,9 @@ Schemas in unified-api-contracts and unified-internal-contracts that are not imp
 
 ## Options
 
-**A. Migrate consumers** — ml-inference to UIC ml.py; features services to UIC features.py
-**B. Add tests** — Unit tests in UIC/UAC that instantiate each schema
-**C. Deprecate** — Remove superseded schemas
-**D. Document** — Mark as future-facing
+**A. Migrate consumers** — ml-inference to UIC ml.py; features services to UIC features.py **B. Add tests** — Unit tests
+in UIC/UAC that instantiate each schema **C. Deprecate** — Remove superseded schemas **D. Document** — Mark as
+future-facing
 
 ---
 
@@ -38,7 +39,8 @@ Schemas in unified-api-contracts and unified-internal-contracts that are not imp
 1. Phase 1: Add unit tests for all UIC/UAC schemas (Option B)
 2. Phase 2: Per-schema — ML types migrate (A); feature types migrate if aligned
 3. Phase 3: Deprecate confirmed superseded (C)
-4. Phase 4: Align with schema normalization completion — ensure orphan external schemas get normalizers per UAC ideology.
+4. Phase 4: Align with schema normalization completion — ensure orphan external schemas get normalizers per UAC
+   ideology.
 
 ---
 

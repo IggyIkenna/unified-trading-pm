@@ -12,8 +12,7 @@
 - `PLAYER_PROFILES.md` - Player attributes and lineup aggregation (see §3.5, §6 for details)
 - `models.py` - Database schemas
 
-**Version:** 2.1
-**Last Updated:** December 2024
+**Version:** 2.1 **Last Updated:** December 2024
 
 ---
 
@@ -66,8 +65,8 @@ We compute team stats over MULTIPLE rolling windows to capture different signals
 
 ### 2.2 Home/Away Splits
 
-**Critical:** For the HOME team, compute form using **HOME GAMES ONLY**.
-For the AWAY team, compute form using **AWAY GAMES ONLY**.
+**Critical:** For the HOME team, compute form using **HOME GAMES ONLY**. For the AWAY team, compute form using **AWAY
+GAMES ONLY**.
 
 ```python
 # Example: Computing home team xG
@@ -303,7 +302,8 @@ def compute_ewma_with_prior(
 
 ### 2.7 Promoted Teams & Fresh Season Handling (CRITICAL) 🔥
 
-**Problem:** This is one of the hardest parts of football modeling. Promoted teams, newly constructed squads, and fresh-season teams have:
+**Problem:** This is one of the hardest parts of football modeling. Promoted teams, newly constructed squads, and
+fresh-season teams have:
 
 - **Zero history** in the current league
 - **No reliable rolling statistics** for first 6-8 weeks
@@ -454,7 +454,8 @@ def compute_team_prior_embedding(
 
 #### 2.7.2 Layer 2: League Strength Normalization (Cross-Division Scaling)
 
-**Key Insight:** Championship-to-Premier-League strength ratios are known. Lower division metrics must be normalized before use as priors.
+**Key Insight:** Championship-to-Premier-League strength ratios are known. Lower division metrics must be normalized
+before use as priors.
 
 **League Strength Factors:**
 
@@ -1143,10 +1144,8 @@ def compute_pregame_features_with_promoted_handling(
 | `velocity_draw_*`          | float | Same for draw (6 features)                      |
 | `velocity_away_*`          | float | Same for away (6 features)                      |
 
-**HT-Specific Velocity:**
-| Feature | Type | Description |
-|---------|------|-------------|
-| `velocity_ht_home` | float | (prob_HT-2min - prob_0) / halftime duration |
+**HT-Specific Velocity:** | Feature | Type | Description | |---------|------|-------------| | `velocity_ht_home` | float
+| (prob_HT-2min - prob_0) / halftime duration |
 
 **Interpretation:**
 
@@ -2240,8 +2239,8 @@ def compute_team_level_fallback(
 
 #### Historical Predicted Lineups (Backtesting)
 
-**Q: Can we get historical predicted lineups?**
-**A: No reliable external source exists.** Services like WhoScored/FotMob show "expected XI" but:
+**Q: Can we get historical predicted lineups?** **A: No reliable external source exists.** Services like
+WhoScored/FotMob show "expected XI" but:
 
 - Not consistently archived
 - Often inaccurate
@@ -3376,8 +3375,8 @@ In lower leagues (Championship, Bundesliga 2, etc.):
 
 #### 3.6.5 Categorical Features for Trees (12)
 
-**Q: Do unordered categoricals like league, manager, referee help tree models?**
-**A: YES! Trees don't need ordering.** They find splits that reduce variance.
+**Q: Do unordered categoricals like league, manager, referee help tree models?** **A: YES! Trees don't need ordering.**
+They find splits that reduce variance.
 
 **Why categoricals work for trees:**
 
@@ -3863,7 +3862,8 @@ Bayesian:
 3. **Redundancy** - If one source is missing, others provide backup
 4. **Ensemble value** - Average of multiple xG sources often beats any single source
 
-**Note:** API-Football provides basic match statistics but is NOT used as a labeled xG source. We use the 3 labeled sources above plus synthetic xG as fallback for non-Understat leagues.
+**Note:** API-Football provides basic match statistics but is NOT used as a labeled xG source. We use the 3 labeled
+sources above plus synthetic xG as fallback for non-Understat leagues.
 
 ---
 
@@ -4056,8 +4056,7 @@ def get_best_xg(
 - Some leagues may have gaps in Soccerfootball.info/FootyStats coverage
 - xG-driven features should be consistent across ALL leagues
 
-**The Solution:**
-Train a synthetic xG model using features available EVERYWHERE, then apply as final fallback.
+**The Solution:** Train a synthetic xG model using features available EVERYWHERE, then apply as final fallback.
 
 ---
 
@@ -4395,8 +4394,7 @@ After:
 - Team style affects matchup dynamics: counter-attacking vs possession, high-press vs low-block
 - These embeddings improve model generalization across leagues
 
-**Data Limitation:** We don't have GPS/tracking data.
-**Solution:** Derive style PROXIES from existing data.
+**Data Limitation:** We don't have GPS/tracking data. **Solution:** Derive style PROXIES from existing data.
 
 ---
 
@@ -4714,8 +4712,7 @@ def create_style_embeddings(teams_data: pd.DataFrame) -> dict:
     return embeddings
 ```
 
-**Embedding Interpretation:**
-After training, each latent dimension roughly corresponds to:
+**Embedding Interpretation:** After training, each latent dimension roughly corresponds to:
 
 - `style_dim_0`: Possession vs Counter-attacking
 - `style_dim_1`: High press vs Low block
@@ -4750,8 +4747,7 @@ With Style Features:
     → Can generalize from similar teams in other leagues
 ```
 
-**Key Insight:**
-Two teams with identical xG can have completely different styles:
+**Key Insight:** Two teams with identical xG can have completely different styles:
 
 - Team A: 1.5 xG from 15 low-quality chances (volume style)
 - Team B: 1.5 xG from 5 high-quality chances (clinical style)
@@ -5069,8 +5065,7 @@ Example: Chelsea fires manager, appoints elite replacement
     - With: Model sees elite new manager + honeymoon = predicts bounce
 ```
 
-**Key Insight:**
-Same team, same players, different manager = COMPLETELY different expected performance.
+**Key Insight:** Same team, same players, different manager = COMPLETELY different expected performance.
 
 ---
 
@@ -5537,8 +5532,8 @@ Syndicate HT Model:
     → MUCH more predictive of 2H
 ```
 
-**Key Insight:**
-Two teams with identical HT aggregate stats can have COMPLETELY different 2H outlooks based on how the 1H unfolded.
+**Key Insight:** Two teams with identical HT aggregate stats can have COMPLETELY different 2H outlooks based on how the
+1H unfolded.
 
 ---
 
@@ -6076,15 +6071,18 @@ Fixture C: Moldovan Liga
 
 ## 6. Player-Level Feature Attribution
 
-**See `PLAYER_PROFILES.md` for complete documentation on player attributes, aggregation strategies, and lineup handling.**
+**See `PLAYER_PROFILES.md` for complete documentation on player attributes, aggregation strategies, and lineup
+handling.**
 
 ### 6.1 The Problem
 
-We have player-level stats (goals, assists, xG/90, ratings), but models need team-level features. How do we attribute players to a game?
+We have player-level stats (goals, assists, xG/90, ratings), but models need team-level features. How do we attribute
+players to a game?
 
 ### 6.2 Strategy: Aggregate by Confirmed Lineup
 
-**Key Principle:** We do NOT have a column per player (variable roster sizes, sparse data). Instead, we **aggregate player stats for the confirmed XI**.
+**Key Principle:** We do NOT have a column per player (variable roster sizes, sparse data). Instead, we **aggregate
+player stats for the confirmed XI**.
 
 **For detailed player profile system, see `PLAYER_PROFILES.md` §2-3.**
 
@@ -6382,7 +6380,8 @@ def compute_team_rolling_features(
 
 1. **Rolling features:** `match_kickoff < prediction_time`
 2. **Lineups:** Expected at T-24h, Confirmed at T-1h
-3. **Odds:** T-72h/T-24h snapshots for early features, T-90m through T-10m for pre-match granularity, T-0 for closing odds, HT-2min for HT model
+3. **Odds:** T-72h/T-24h snapshots for early features, T-90m through T-10m for pre-match granularity, T-0 for closing
+   odds, HT-2min for HT model
 4. **H2H:** Only matches with `kickoff < prediction_time`
 5. **Player stats:** Season-to-date before the match
 6. **Weather:** Forecast, not actual
@@ -6425,14 +6424,16 @@ This document defines **~738 features** across:
 - **Previous Game (12):** Last game details
 - **Lineup/Player (69):** XI aggregates, absentees, **position-level quality, depth charts, formation**
 - **Season State (8):** Early season flags, games played, manager changes
-- **Promoted Teams & Fresh Season (57):** Team prior embeddings, league normalization, decay-weighted priors, history depth
+- **Promoted Teams & Fresh Season (57):** Team prior embeddings, league normalization, decay-weighted priors, history
+  depth
 - **Context (81):** Referee-team interactions (22), weather, **schedule/travel/fatigue (28)**, venue
 - **Bayesian Poisson (42):** Shrinkage, uncertainty intervals, **market-implied λ blend**
 - **Multi-Source xG (36):** Understat + Soccerfootball + FootyStats (3 labeled sources), **xG disagreement features**
 - **Synthetic xG (18):** xG estimates for non-Understat leagues, **unified xG fallback**
 - **Team Style (48):** Attacking/defensive style, tempo, **style matchup interactions**
 - **Manager Impact (32):** Change detection, form, **tactical fingerprint, honeymoon effect**
-- **Market Efficiency (34):** Liquidity, learnability, **max odds, Pinnacle gap, soft book value, volatility-adjusted EV, skip flags**
+- **Market Efficiency (34):** Liquidity, learnability, **max odds, Pinnacle gap, soft book value, volatility-adjusted
+  EV, skip flags**
 - **HT-Specific (100):** First-half state, market, performance, **SEQUENCING (45)**
 - **Derived (35):** Momentum, relative, EWMA, interactions
 

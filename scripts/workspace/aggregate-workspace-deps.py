@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Aggregate all repo dependencies into .venv-workspace.
 
 Walks every pyproject.toml in the workspace, classifies deps as internal

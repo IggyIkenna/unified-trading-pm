@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Check Import Patterns - Enforce top-level imports for external dependencies
 

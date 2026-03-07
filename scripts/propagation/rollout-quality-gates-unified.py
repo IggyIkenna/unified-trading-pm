@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Roll out quality gates to all repositories from workspace-manifest.json.
 

@@ -50,8 +50,7 @@ gcloud secrets versions access latest \
 | signal-generation-service      | -               | -            | Repo doesn't exist yet |
 | trade-execution-service        | -               | -            | Repo doesn't exist yet |
 
-**Secret Name**: `AUTOMATION_GITHUB_TOKEN`
-**Updated**: 2026-02-14 03:42-03:43 UTC
+**Secret Name**: `AUTOMATION_GITHUB_TOKEN` **Updated**: 2026-02-14 03:42-03:43 UTC
 
 **Verify**:
 

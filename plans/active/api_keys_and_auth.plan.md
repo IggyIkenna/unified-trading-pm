@@ -1,12 +1,19 @@
 ---
 name: API Keys and Auth Plan
-overview: Consolidates API keys, auth rules, and VCR cassette recording. Single source for secrets management, audit alignment, and per-venue VCR status (Phases 1–5). Supersedes VCR_CREDENTIAL_RECORDING_PLAN.md.
+overview:
+  Consolidates API keys, auth rules, and VCR cassette recording. Single source for secrets management, audit alignment,
+  and per-venue VCR status (Phases 1–5). Supersedes VCR_CREDENTIAL_RECORDING_PLAN.md.
 todos:
   - id: remove-fallback-env-var
-    content: "DONE 2026-03-06: Removed fallback_env_var param from get_secret_with_fallback() in UTL secret_manager.py and get_secret() in client_factory.py. Removed the env-var fallback test from test_uniform_config_access.py. Updated cloud_constants.py docstring. Commit: dd6367c in unified-trading-library."
+    content:
+      "DONE 2026-03-06: Removed fallback_env_var param from get_secret_with_fallback() in UTL secret_manager.py and
+      get_secret() in client_factory.py. Removed the env-var fallback test from test_uniform_config_access.py. Updated
+      cloud_constants.py docstring. Commit: dd6367c in unified-trading-library."
     status: done
   - id: migrate-os-getenv-api-key
-    content: "DONE 2026-03-06: Audited all os.getenv.*API_KEY matches. All matches are in tests/ or scripts/ (acceptable) or archive/. No production source files outside tests/scripts use os.getenv for API keys."
+    content:
+      "DONE 2026-03-06: Audited all os.getenv.*API_KEY matches. All matches are in tests/ or scripts/ (acceptable) or
+      archive/. No production source files outside tests/scripts use os.getenv for API keys."
     status: done
   - id: per-venue-secret-sm
     content: Per-venue ensure secret in SM per VCR plan; use secret_name in config
@@ -21,29 +28,45 @@ todos:
     content: Phase 2 WS — binance, deribit, ibkr (cassette approach TBD)
     status: pending
   - id: phase-3-keys
-    content: Phase 3 — pinnacle, odds_api, api_football, glassnode, arkham, soccer_football_info, footystats, coinglass (key in SM first; coinglass required by citadel_grade_feature_architecture liquidation-levels todo)
+    content:
+      Phase 3 — pinnacle, odds_api, api_football, glassnode, arkham, soccer_football_info, footystats, coinglass (key in
+      SM first; coinglass required by citadel_grade_feature_architecture liquidation-levels todo)
     status: pending
   - id: phase-3-coinglass
-    content: "Coinglass heatmap API — key NOT in SM. Required by citadel_grade_feature_architecture.plan.md (liquidation_levels.py). Check Tardis coverage first; if not covered, obtain Coinglass API key via coinglass.com and add as coinglass-api-key in Secret Manager."
+    content:
+      "Coinglass heatmap API — key NOT in SM. Required by citadel_grade_feature_architecture.plan.md
+      (liquidation_levels.py). Check Tardis coverage first; if not covered, obtain Coinglass API key via coinglass.com
+      and add as coinglass-api-key in Secret Manager."
     status: pending
   - id: phase-4-blockers
     content: Phase 4 — betfair, kalshi, coinbase, bloxroute, smarkets, betdaq (key/cassette blockers)
     status: pending
   - id: phase-5-sports-betting
-    content: "DONE 2026-03-06: sports-betting-services repo does not exist at workspace root. Target files (footballbets/clients/soccer_football.py, footystats.py, cli/odds_api_cli.py, cli/location.py) are absent — only archive/sports-betting-services-previous exists and lacks these files. Migration task is N/A for current workspace state."
+    content:
+      "DONE 2026-03-06: sports-betting-services repo does not exist at workspace root. Target files
+      (footballbets/clients/soccer_football.py, footystats.py, cli/odds_api_cli.py, cli/location.py) are absent — only
+      archive/sports-betting-services-previous exists and lacks these files. Migration task is N/A for current workspace
+      state."
     status: done
   - id: fix-api-football-key
-    content: "DONE 2026-03-06: API_FOOTBALL_KEY rename target file (sports-betting-services/footballbets/core/config.py) does not exist at workspace root. vcr_endpoints.py already uses API_FOOTBALL_API_KEY correctly. No live code uses API_FOOTBALL_KEY (bare form) outside archive."
+    content:
+      "DONE 2026-03-06: API_FOOTBALL_KEY rename target file (sports-betting-services/footballbets/core/config.py) does
+      not exist at workspace root. vcr_endpoints.py already uses API_FOOTBALL_API_KEY correctly. No live code uses
+      API_FOOTBALL_KEY (bare form) outside archive."
     status: done
   - id: sm-naming-violations
-    content: "DONE 2026-03-06: Audited code for bybit_api_key/bybit_api_secret references — zero matches in Python source. SM secret names (bybit_api_key underscore) are an SM-level rename, no code change required. Rename should be done via SM console/Terraform when safe. graph-api-key deprecated — no code references found."
+    content:
+      "DONE 2026-03-06: Audited code for bybit_api_key/bybit_api_secret references — zero matches in Python source. SM
+      secret names (bybit_api_key underscore) are an SM-level rename, no code change required. Rename should be done via
+      SM console/Terraform when safe. graph-api-key deprecated — no code references found."
     status: done
 isProject: false
 ---
 
 # API Keys and Auth Plan
 
-**Consolidates:** [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md) Section 10. VCR content inlined below (formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
+**Consolidates:** [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md) Section 10. VCR content
+inlined below (formerly VCR_CREDENTIAL_RECORDING_PLAN.md, now archived).
 
 ---
 
@@ -67,7 +90,8 @@ isProject: false
 | [trading_system_audit_prompt.plan.md](trading_system_audit_prompt.plan.md) §10 | Security audit checklist (10.1–10.19)       |
 | api-contracts/scripts/record_vcr_cassettes.py                                  | Record script                               |
 
-> **Note:** api-contracts/build/ is a stale build artifact. Ignore build/lib/api_contracts/endpoint_registry.py — the live source is api_contracts/vcr_endpoints.py.
+> **Note:** api-contracts/build/ is a stale build artifact. Ignore build/lib/api_contracts/endpoint_registry.py — the
+> live source is api_contracts/vcr_endpoints.py.
 
 ---
 

@@ -696,8 +696,7 @@ co_location_rules:
   - group: [market-data-processing-service, market-tick-data-service]
     profile: co_located_vm
     reason: >
-      Live mode optimization — MDPS reads from MTDH via in_memory
-      to avoid Pub/Sub latency on the hot path.
+      Live mode optimization — MDPS reads from MTDH via in_memory to avoid Pub/Sub latency on the hot path.
     constraints:
       - in_memory transport allowed ONLY under co_located_vm profile
       - in distributed profile, MDPS reads from MTDH via pubsub (live) or gcs (batch)
@@ -707,9 +706,8 @@ co_location_rules:
   - group: [execution-service, market-tick-data-service]
     profile: co_located_vm
     reason: >
-      Execution needs live market feed for all allocation clients. One MTDH
-      stream serves many execution consumers. Co-location avoids PubSub
-      latency on the order execution hot path.
+      Execution needs live market feed for all allocation clients. One MTDH stream serves many execution consumers.
+      Co-location avoids PubSub latency on the order execution hot path.
     constraints:
       - same constraints as MDPS+MTDH group
       - execution-service does NOT import market-tick-data-service Python code
@@ -815,9 +813,8 @@ alerting:
     - deployment-api: service stop/restart triggers
     - external: Slack webhooks, PagerDuty alerts, email
   role: >
-    Disaster recovery trigger. Sits above the pipeline as a cross-cutting concern.
-    Uses unified-events-interface EventSink protocol for event consumption.
-    Circuit breaker commands are PubSub events that services MUST honor.
+    Disaster recovery trigger. Sits above the pipeline as a cross-cutting concern. Uses unified-events-interface
+    EventSink protocol for event consumption. Circuit breaker commands are PubSub events that services MUST honor.
     Separate from normal business PubSub flows — this is operational control.
 
 # ---------------------------------------------------------------------------
@@ -853,9 +850,9 @@ trading_loop:
   # 6. Strategy sees new position → loop repeats
   position_authority: position-balance-monitor-service
   why_not_execution: >
-    Execution knows what it SENT. PBM knows what the EXCHANGE actually holds.
-    PBM reconciles discrepancies (partial fills, venue rejections, connection drops).
-    If strategy restarts, it gets authoritative position from PBM immediately.
+    Execution knows what it SENT. PBM knows what the EXCHANGE actually holds. PBM reconciles discrepancies (partial
+    fills, venue rejections, connection drops). If strategy restarts, it gets authoritative position from PBM
+    immediately.
 
 # ===========================================================================
 # SHARDING DIMENSIONS
@@ -878,17 +875,16 @@ sharding_dimensions:
     live: [venue, instrument_type, data_type]
     topic_template: "raw-ticks-{venue}-{instrument_type}-{data_type}"
     notes: >
-      instrument_type added — memory/SSD heavy per venue, splitting helps.
-      One WebSocket per stream, multiplexed internally per venue.
+      instrument_type added — memory/SSD heavy per venue, splitting helps. One WebSocket per stream, multiplexed
+      internally per venue.
 
   market-data-processing-service:
     batch: [category, venue, instrument_type, date, timeframe]
     live: [venue, instrument_type]
     topic_template: "processed-candles-{venue}-{instrument_type}-{timeframe}"
     notes: >
-      Holds rolling historical candle window (~1 year, Redis/memcached).
-      Smallest timeframe (~15s) drives trigger. Larger timeframes update on
-      natural boundaries (1min=4 triggers, 5min=20, 15min=60, 1h=240).
+      Holds rolling historical candle window (~1 year, Redis/memcached). Smallest timeframe (~15s) drives trigger.
+      Larger timeframes update on natural boundaries (1min=4 triggers, 5min=20, 15min=60, 1h=240).
 
   features-delta-one-service:
     batch: [category, venue, feature_category, date]
@@ -919,28 +915,27 @@ sharding_dimensions:
     live: [feature_category]
     topic_template: "features-cross-instrument-{feature_category}"
     notes: >
-      Aggregates across venues/instruments. Feature categories: regime (HMM, correlation),
-      cross_venue_spread, realized_vs_implied_vol, cross_asset_correlation.
-      Triggered by completion events from features-delta-one and features-volatility.
+      Aggregates across venues/instruments. Feature categories: regime (HMM, correlation), cross_venue_spread,
+      realized_vs_implied_vol, cross_asset_correlation. Triggered by completion events from features-delta-one and
+      features-volatility.
 
   features-multi-timeframe-service:
     batch: [category, venue, instrument, timeframe, date]
     live: [category, venue, instrument, timeframe]
     topic_template: "features-multi-timeframe-{category}-{venue}-{instrument}-{timeframe}"
     notes: >
-      L3b: 1 instrument × many TFs. Feature categories: tf_momentum_alignment,
-      tf_structure_context, tf_vol_compression, tf_session_context.
-      Triggered by FDS completion events per instrument.
-      Sharding includes category (unlike FCIS which is cross-category by design).
+      L3b: 1 instrument × many TFs. Feature categories: tf_momentum_alignment, tf_structure_context, tf_vol_compression,
+      tf_session_context. Triggered by FDS completion events per instrument. Sharding includes category (unlike FCIS
+      which is cross-category by design).
 
   features-sports-service:
     batch: [feature_group, date]
     live: [feature_group]
     topic_template: "features-sports-{feature_group}"
     notes: >
-      Sports pre-match ML features (team form, H2H, referee, venue, weather, odds).
-      Consumes reference from instruments-service, odds from market-data-processing.
-      Supports --mode batch|live. 14 data exporters, 1000+ features.
+      Sports pre-match ML features (team form, H2H, referee, venue, weather, odds). Consumes reference from
+      instruments-service, odds from market-data-processing. Supports --mode batch|live. 14 data exporters, 1000+
+      features.
 
   ml-training-service:
     batch: [model, instrument, timeframe, target_type, config]
@@ -958,19 +953,17 @@ sharding_dimensions:
     live: [strategy_id, client]
     topic_template: "trade-signals-{strategy_id}-{client}"
     notes: >
-      NOT sharded by venue — strategy may span venues (arb, spread).
-      Has underlying concept for cross-instrument exposure aggregation.
-      Has pool concept = groups of correlated underlyings.
+      NOT sharded by venue — strategy may span venues (arb, spread). Has underlying concept for cross-instrument
+      exposure aggregation. Has pool concept = groups of correlated underlyings.
 
   execution-service:
     batch: [client, subaccount, date]
     live: [client, subaccount]
     topic_template: "order-events-{client}-{subaccount}-{venue}"
     notes: >
-      Default subaccount used in batch for uniform implementation.
-      Category (CeFi/DeFi) determines routing, not a shard dimension.
-      Three modes: single-leg, spread/multi-leg, atomic (blockchain).
-      Margin type (isolated/cross/unified) is metadata, not a shard dim.
+      Default subaccount used in batch for uniform implementation. Category (CeFi/DeFi) determines routing, not a shard
+      dimension. Three modes: single-leg, spread/multi-leg, atomic (blockchain). Margin type (isolated/cross/unified) is
+      metadata, not a shard dim.
 
   position-balance-monitor-service:
     batch: [client, venue, date]
@@ -997,8 +990,8 @@ sharding_dimensions:
     batch: null
     live: singleton
     notes: >
-      No sharding. Cloud Run auto-restart + PubSub message retention for
-      recovery. Deployment-engine health watchdog monitors alerting uptime.
+      No sharding. Cloud Run auto-restart + PubSub message retention for recovery. Deployment-engine health watchdog
+      monitors alerting uptime.
 
 # ===========================================================================
 # EVENT TRIGGER TAXONOMY
@@ -1010,9 +1003,11 @@ event_triggers:
     services: [market-tick-data-service]
     trigger: WebSocket message arrival
   time_throttled_short:
-    cadence: "~15s base timer; 1m (every 4), 5m (every 20), 15m (every 60), 1h (every 240), 4h (every 960), 24h (every 5760)"
+    cadence:
+      "~15s base timer; 1m (every 4), 5m (every 20), 15m (every 60), 1h (every 240), 4h (every 960), 24h (every 5760)"
     services: [market-data-processing-service]
-    trigger: timer aggregates buffer; MDPS only starts at even time boundaries since midnight (ensures full candle blocks)
+    trigger:
+      timer aggregates buffer; MDPS only starts at even time boundaries since midnight (ensures full candle blocks)
   event_driven_chain:
     cadence: after MDPS completion
     services: [features-delta-one-service, features-volatility-service]
@@ -1087,10 +1082,9 @@ pubsub_topic_templates:
 publish_persist_policy:
   rule: parallel
   description: >
-    Publish to PubSub and persist to GCS in PARALLEL, not sequentially.
-    Persistence is too slow to block live publishing. Consumer deduplicates
-    by timestamp. Tradeoff: live latency not blocked by persistence, but
-    switchover needs timestamp-based dedup at consumer.
+    Publish to PubSub and persist to GCS in PARALLEL, not sequentially. Persistence is too slow to block live
+    publishing. Consumer deduplicates by timestamp. Tradeoff: live latency not blocked by persistence, but switchover
+    needs timestamp-based dedup at consumer.
 
 # ===========================================================================
 # TIMESTAMP ORDERING POLICY
@@ -1099,8 +1093,8 @@ publish_persist_policy:
 timestamp_ordering:
   publisher_policy: publish_as_is
   description: >
-    No reorder buffer at publisher. MTDH publishes messages as they arrive.
-    Each message carries BOTH exchange_timestamp and local_timestamp.
+    No reorder buffer at publisher. MTDH publishes messages as they arrive. Each message carries BOTH exchange_timestamp
+    and local_timestamp.
   fields:
     exchange_timestamp: canonical ordering key (when exchange says it happened)
     local_timestamp: when our system received it (latency monitoring)
@@ -1110,8 +1104,7 @@ timestamp_ordering:
     - reorder_by_exchange_timestamp: correctness-critical (PBM reconciliation)
     - skip_late_messages: MDPS candle aggregation ignores ticks after candle close
   gap_detection: >
-    MTDH tracks sequence numbers per stream. Gaps trigger recovery from
-    venue REST API or Tardis/Databento replay.
+    MTDH tracks sequence numbers per stream. Gaps trigger recovery from venue REST API or Tardis/Databento replay.
 
 # ===========================================================================
 # KILL SWITCHES AND CIRCUIT BREAKERS
@@ -1145,19 +1138,8 @@ error_retry_policy:
   ssot: unified-internal-contracts/schemas/errors.py
   summary:
     RATE_LIMIT:
-      {
-        strategy: RETRY_WITH_BACKOFF,
-        max_retries: 5,
-        backoff: "exp 1s-60s + jitter",
-        after_exhaustion: "ALERT + SKIP",
-      }
-    TIMEOUT:
-      {
-        strategy: RETRY,
-        max_retries: 3,
-        backoff: "linear 2s",
-        after_exhaustion: "ALERT + FAIL",
-      }
+      { strategy: RETRY_WITH_BACKOFF, max_retries: 5, backoff: "exp 1s-60s + jitter", after_exhaustion: "ALERT + SKIP" }
+    TIMEOUT: { strategy: RETRY, max_retries: 3, backoff: "linear 2s", after_exhaustion: "ALERT + FAIL" }
     NETWORK:
       {
         strategy: RETRY_WITH_BACKOFF,
@@ -1165,21 +1147,9 @@ error_retry_policy:
         backoff: "exp 1s-120s",
         after_exhaustion: "CIRCUIT_BREAKER + ALERT",
       }
-    SERVER_ERROR:
-      {
-        strategy: RETRY,
-        max_retries: 3,
-        backoff: "linear 5s",
-        after_exhaustion: "ALERT + FAIL",
-      }
-    VALIDATION:
-      { strategy: FAIL_FAST, max_retries: 0, after_exhaustion: "ALERT + LOG" }
-    AUTH_FAILURE:
-      {
-        strategy: FAIL_FAST,
-        max_retries: 0,
-        after_exhaustion: "CIRCUIT_BREAKER + ALERT",
-      }
+    SERVER_ERROR: { strategy: RETRY, max_retries: 3, backoff: "linear 5s", after_exhaustion: "ALERT + FAIL" }
+    VALIDATION: { strategy: FAIL_FAST, max_retries: 0, after_exhaustion: "ALERT + LOG" }
+    AUTH_FAILURE: { strategy: FAIL_FAST, max_retries: 0, after_exhaustion: "CIRCUIT_BREAKER + ALERT" }
 
 # ===========================================================================
 # RECOVERY PATTERNS
@@ -1233,13 +1203,13 @@ recovery_patterns:
         scope: any gap, any duration
         details: blockchain is immutable, full history always available
     notes: >
-      DeFi is the simplest recovery story. The chain IS the source of truth.
-      No third-party dependency needed. No data loss possible.
+      DeFi is the simplest recovery story. The chain IS the source of truth. No third-party dependency needed. No data
+      loss possible.
 
   reference_data:
     notes: >
-      Trivial — latest live state only, can drop a packet. No replay needed.
-      instruments-service just re-fetches from venues on restart.
+      Trivial — latest live state only, can drop a packet. No replay needed. instruments-service just re-fetches from
+      venues on restart.
 
   internal_services:
     pattern: concurrent_replay_with_flip
@@ -1278,81 +1248,32 @@ recovery_patterns:
 venue_replay_capabilities:
   ssot: unified-api-contracts (per-venue schemas)
   summary:
-    tardis_dev:
-      {
-        lookback: "~7 years",
-        method: "WS-style replay (Tardis Machine)",
-        assets: "crypto 40+ exchanges",
-      }
-    databento:
-      {
-        lookback: "7 years",
-        method: "REST + live-identical replay",
-        assets: "TradFi 60+ venues",
-      }
-    binance_futures:
-      { lookback: "3 months", method: "REST pagination only", replay: false }
+    tardis_dev: { lookback: "~7 years", method: "WS-style replay (Tardis Machine)", assets: "crypto 40+ exchanges" }
+    databento: { lookback: "7 years", method: "REST + live-identical replay", assets: "TradFi 60+ venues" }
+    binance_futures: { lookback: "3 months", method: "REST pagination only", replay: false }
     okx: { lookback: "3 months", method: "REST pagination only", replay: false }
     deribit: { lookback: "shallow public", method: "REST only", replay: false }
-    bybit:
-      {
-        lookback: "2 years (7-day windows)",
-        method: "REST pagination",
-        replay: false,
-      }
-    ibkr:
-      { lookback: "6 months tick", method: "TWS API callbacks", replay: false }
-    defi:
-      { lookback: "unlimited", method: "block replay via RPC", replay: true }
+    bybit: { lookback: "2 years (7-day windows)", method: "REST pagination", replay: false }
+    ibkr: { lookback: "6 months tick", method: "TWS API callbacks", replay: false }
+    defi: { lookback: "unlimited", method: "block replay via RPC", replay: true }
 
 # ===========================================================================
 # INITIAL STATE BOOTSTRAP
 # ===========================================================================
 
 initial_state_bootstrap:
-  instruments-service:
-    { source: "venue REST APIs", method: "full fetch on start" }
-  market-tick-data-service:
-    { source: "venue WebSocket + Tardis", method: "subscribe + backfill gaps" }
-  market-data-processing-service:
-    { source: "GCS + Redis/memcached", method: "load rolling window (~1yr)" }
-  features-services:
-    {
-      source: "GCS historical features",
-      method: "load from GCS, recalculate if stale",
-    }
-  ml-inference-service:
-    {
-      source: "GCS models + PubSub features",
-      method: "load model, subscribe features",
-    }
-  strategy-service:
-    {
-      source: "PBM positions + ML + MDPS",
-      method: "subscribe PBM (initial snapshot), ML, MDPS",
-    }
-  execution-service:
-    {
-      source: "exchange REST + Redis",
-      method: "query exchange open orders, restore Redis",
-    }
+  instruments-service: { source: "venue REST APIs", method: "full fetch on start" }
+  market-tick-data-service: { source: "venue WebSocket + Tardis", method: "subscribe + backfill gaps" }
+  market-data-processing-service: { source: "GCS + Redis/memcached", method: "load rolling window (~1yr)" }
+  features-services: { source: "GCS historical features", method: "load from GCS, recalculate if stale" }
+  ml-inference-service: { source: "GCS models + PubSub features", method: "load model, subscribe features" }
+  strategy-service: { source: "PBM positions + ML + MDPS", method: "subscribe PBM (initial snapshot), ML, MDPS" }
+  execution-service: { source: "exchange REST + Redis", method: "query exchange open orders, restore Redis" }
   position-balance-monitor-service:
-    {
-      source: "exchange REST (positions+balances)",
-      method: "query exchange, publish initial snapshot",
-    }
-  risk-and-exposure-service:
-    { source: "PBM + MDPS PubSub", method: "subscribe to both" }
-  pnl-attribution-service:
-    {
-      source: "GCS historical + live PubSub",
-      method: "load GCS, subscribe exec+risk",
-    }
-  alerting-service:
-    {
-      source: "PubSub replay",
-      method: "Cloud Run auto-restart, PubSub retention",
-    }
+    { source: "exchange REST (positions+balances)", method: "query exchange, publish initial snapshot" }
+  risk-and-exposure-service: { source: "PBM + MDPS PubSub", method: "subscribe to both" }
+  pnl-attribution-service: { source: "GCS historical + live PubSub", method: "load GCS, subscribe exec+risk" }
+  alerting-service: { source: "PubSub replay", method: "Cloud Run auto-restart, PubSub retention" }
 
 # ===========================================================================
 # T+1 RECONCILIATION (two-layer)
@@ -1390,8 +1311,8 @@ mdps_rolling_window:
   survives_restarts: true
   warmup_source: GCS historical candles
   purpose: >
-    Downstream features services do not need their own warmup logic.
-    MDPS provides candles with sufficient history context.
+    Downstream features services do not need their own warmup logic. MDPS provides candles with sufficient history
+    context.
   multi_timeframe_update:
     smallest_trigger: "~15s"
     "1min": "every 4 triggers"
@@ -1405,17 +1326,11 @@ mdps_rolling_window:
 
 data_retention_policy:
   tiers:
-    hot:
-      { storage: bigquery_standard, description: "fast queries, recent data" }
+    hot: { storage: bigquery_standard, description: "fast queries, recent data" }
     warm: { storage: gcs_standard, description: "accessible archive" }
-    cold:
-      {
-        storage: gcs_nearline,
-        description: "regulatory archive, infrequent access",
-      }
+    cold: { storage: gcs_nearline, description: "regulatory archive, infrequent access" }
   regulatory_minimum:
-    execution_audit:
-      { cold_years: 7, note: "FCA/MiFID II minimum for transaction records" }
+    execution_audit: { cold_years: 7, note: "FCA/MiFID II minimum for transaction records" }
     strategy_audit: { cold_years: 3, note: "strategy decision audit trail" }
     market_data: { cold_years: 3, note: "market data for best execution proof" }
     default: { hot_days: 90, warm_days: 365, cold_years: 3 }
@@ -1428,13 +1343,7 @@ data_retention_policy:
 health_probes:
   api_services:
     endpoints: ["/health", "/readiness"]
-    services:
-      [
-        execution-results-api,
-        market-data-api,
-        client-reporting-api,
-        deployment-api,
-      ]
+    services: [execution-results-api, market-data-api, client-reporting-api, deployment-api]
     note: Cloud Run auto-restart on health check failure
   vm_services:
     method: deployment-engine-watchdog
@@ -1537,7 +1446,8 @@ deployment_targets:
       risk-and-exposure-service:
         reason: Live PubSub subscriber; computes risk on every position update
       pnl-attribution-service:
-        reason: Continuous subscriber to execution + risk PubSub events; runs P&L attribution on every update (not batch-only)
+        reason:
+          Continuous subscriber to execution + risk PubSub events; runs P&L attribution on every update (not batch-only)
       alerting-service:
         reason: Must be 24/7; auto-restart + PubSub retention for recovery
 

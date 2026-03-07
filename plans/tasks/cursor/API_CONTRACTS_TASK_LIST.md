@@ -1,8 +1,8 @@
 # API Contracts Comprehensive Task List (DOs)
 
-**Source:** `API_CONTRACTS_AUDIT_ADDENDUM.md`
-**Goal:** Fill out api-contracts to a verbose understanding of what's available and all possible interactions with external APIs.
-**Scope:** Market data, feed, orders, positions, reference data, exchange status, market feed status, error handling, cloud SDKs (GCP, AWS), quotas.
+**Source:** `API_CONTRACTS_AUDIT_ADDENDUM.md` **Goal:** Fill out api-contracts to a verbose understanding of what's
+available and all possible interactions with external APIs. **Scope:** Market data, feed, orders, positions, reference
+data, exchange status, market feed status, error handling, cloud SDKs (GCP, AWS), quotas.
 
 ---
 

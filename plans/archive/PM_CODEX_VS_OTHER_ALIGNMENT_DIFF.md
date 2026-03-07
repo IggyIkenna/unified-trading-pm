@@ -1,6 +1,7 @@
 # PM Codex Drift Zero vs Other Alignment Plan — Diff and Merge Guide
 
-**Purpose:** Compare pm_codex_drift_zero_architecture plan with other_alignment_plan.md for alignment, merge points, and decisions.
+**Purpose:** Compare pm_codex_drift_zero_architecture plan with other_alignment_plan.md for alignment, merge points, and
+decisions.
 
 ---
 
@@ -31,7 +32,8 @@
 
 ### 2.4 Enforcement Script
 
-**Merge:** Implement check-alignment-drift.py as validator or call from run_validators. Add in Phase 6. Covers header/provenance; validators cover architectural standards.
+**Merge:** Implement check-alignment-drift.py as validator or call from run_validators. Add in Phase 6. Covers
+header/provenance; validators cover architectural standards.
 
 ---
 
@@ -61,7 +63,8 @@ If headers adopted: only files touched going forward initially.
 
 ## 4. Good Practices to Adopt
 
-**From Other → PM Codex:** Scope rule (which files get headers), doc_version bumping rules, layered table, open questions, time estimates.
+**From Other → PM Codex:** Scope rule (which files get headers), doc_version bumping rules, layered table, open
+questions, time estimates.
 
 **From PM Codex → Other:** Codex merge gate, PM triggers Codex, CI clone, cleanup, dependency cascade.
 
@@ -69,12 +72,14 @@ If headers adopted: only files touched going forward initially.
 
 ## 5. Consolidated Phase Order
 
-0: Manifest sync | 0b: Cleanup + indexes | 1: Manifest validation | 2: Active plans + plan headers | 3: Codex merge gate + YAML | 4: PM triggers Codex | 5: CI clone | 6: Per-repo drift + check-alignment-drift | 7: Diff checker | 8 (optional): Per-file headers if B/C chosen.
+0: Manifest sync | 0b: Cleanup + indexes | 1: Manifest validation | 2: Active plans + plan headers | 3: Codex merge
+gate + YAML | 4: PM triggers Codex | 5: CI clone | 6: Per-repo drift + check-alignment-drift | 7: Diff checker | 8
+(optional): Per-file headers if B/C chosen.
 
 ---
 
 ## 6. Summary
 
-**Merge:** Manifest sync, plan headers, codex YAML, check-alignment-drift as validator.
-**Decide:** Per-file headers (A/B/C), doc_version format, strictness, retroactive.
-**Recommendation:** PM Codex primary. Fold in Other's plan headers and YAML. Defer per-file headers. Update Other to reference PM Codex or archive.
+**Merge:** Manifest sync, plan headers, codex YAML, check-alignment-drift as validator. **Decide:** Per-file headers
+(A/B/C), doc_version format, strictness, retroactive. **Recommendation:** PM Codex primary. Fold in Other's plan headers
+and YAML. Defer per-file headers. Update Other to reference PM Codex or archive.

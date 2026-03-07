@@ -1,8 +1,8 @@
 # Unified Trading System — Library Audit Report (T0-T3)
 
-**Date:** 2026-03-02 | **Auditor:** Claude Code Agent
-**Scope:** All 17 libraries (Tier 0 through Tier 3) per workspace-manifest.json
-**Method:** Canonical audit prompt (Sections 8-17, 24) — read-only code inspection + targeted fixes
+**Date:** 2026-03-02 | **Auditor:** Claude Code Agent **Scope:** All 17 libraries (Tier 0 through Tier 3) per
+workspace-manifest.json **Method:** Canonical audit prompt (Sections 8-17, 24) — read-only code inspection + targeted
+fixes
 
 ---
 
@@ -18,7 +18,9 @@
 | Post-fix: CONDITIONAL PASS | 1 (UTL — large remaining work) |
 | Post-fix: FAIL             | 0                              |
 
-**Key finding:** The codebase is remarkably clean for a 17-library workspace. Zero `Any` types across 15 of 17 libraries. Zero anti-patterns in 14 of 17. The only FAIL was UTL (the legacy monolith), which had a tracked `.env` with real credentials, 30 `Any` types, 151 f-string logger calls, and silent error swallowing — all now fixed.
+**Key finding:** The codebase is remarkably clean for a 17-library workspace. Zero `Any` types across 15 of 17
+libraries. Zero anti-patterns in 14 of 17. The only FAIL was UTL (the legacy monolith), which had a tracked `.env` with
+real credentials, 30 `Any` types, 151 f-string logger calls, and silent error swallowing — all now fixed.
 
 ---
 
@@ -196,7 +198,8 @@ All 17 libraries scanned for 16 anti-patterns. Results across ALL libraries:
 
 ### P3 (Polish) — REMAINING
 
-- [x] TIER-ARCHITECTURE.md: UCI promoted from T0 to T1 (imports UEI for CONFIG_LOADED event) — manifest, codex, DAG all updated
+- [x] TIER-ARCHITECTURE.md: UCI promoted from T0 to T1 (imports UEI for CONFIG_LOADED event) — manifest, codex, DAG all
+      updated
 - [ ] TIER-ARCHITECTURE.md: move URDI from T0 to T1
 - [ ] UMI: split 4 files > 900 lines (when practical)
 - [ ] MEL: split amm.py before it hits 900 lines

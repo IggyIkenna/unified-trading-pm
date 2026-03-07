@@ -9,8 +9,7 @@
 - `raw_data_spec.md` - Stage 2 raw download spec + provider field appendix
 - `LEAGUE_CLASSIFICATION.md` - League types and data requirements
 
-**Version:** 1.0
-**Last Updated:** December 2024
+**Version:** 1.0 **Last Updated:** December 2024
 
 ---
 
@@ -31,7 +30,8 @@
 
 ### 1.1 Key Principle
 
-**We do NOT have a column per player** (variable roster sizes, sparse data). Instead, we **aggregate player stats for the confirmed XI** into fixed-size feature vectors.
+**We do NOT have a column per player** (variable roster sizes, sparse data). Instead, we **aggregate player stats for
+the confirmed XI** into fixed-size feature vectors.
 
 ### 1.2 Why Aggregation?
 

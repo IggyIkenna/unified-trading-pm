@@ -1,15 +1,14 @@
 # 07: Quality Gates Performance
 
-**Status**: ⬜ Not Started
-**Priority**: P2 (Faster feedback loops)
-**Estimated Time**: 2-3 hours
-**Expected Benefit**: 5-10 min/run, 30+ min/day saved
+**Status**: ⬜ Not Started **Priority**: P2 (Faster feedback loops) **Estimated Time**: 2-3 hours **Expected Benefit**:
+5-10 min/run, 30+ min/day saved
 
 ---
 
 ## 📖 Overview
 
-Optimize quality gate execution to complete in <3 minutes (per codex standards). Use parallel execution, selective testing, and caching to speed up feedback loops.
+Optimize quality gate execution to complete in <3 minutes (per codex standards). Use parallel execution, selective
+testing, and caching to speed up feedback loops.
 
 ### Current State
 

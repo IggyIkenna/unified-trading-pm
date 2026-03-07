@@ -1,8 +1,7 @@
 # Post-Trade and Execution - Project Setup Scripts
 
-**Project**: GitHub Project #7 (TBD)
-**Epic**: Post-Trade and Execution
-**Issues**: 20 subtasks across 4 repos (2 new services + 1 refactor + 1 UI enhancement)
+**Project**: GitHub Project #7 (TBD) **Epic**: Post-Trade and Execution **Issues**: 20 subtasks across 4 repos (2 new
+services + 1 refactor + 1 UI enhancement)
 
 ---
 
@@ -665,6 +664,4 @@ continue using old patterns and documentation will be outdated.
 
 ---
 
-**Last Updated:** 2026-02-14
-**Maintainer:** Ikenna
-**Status:** Ready for use
+**Last Updated:** 2026-02-14 **Maintainer:** Ikenna **Status:** Ready for use

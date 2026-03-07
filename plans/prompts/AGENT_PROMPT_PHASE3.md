@@ -1,33 +1,37 @@
 # Agent Prompt — Phase 3: Service Hardening & Integration
 
-> Paste this entire prompt into a new agent session to execute Phase 3.
-> REQUIRES Phase 1 AND Phase 2 fully complete. Verify preconditions before starting.
+> Paste this entire prompt into a new agent session to execute Phase 3. REQUIRES Phase 1 AND Phase 2 fully complete.
+> Verify preconditions before starting.
 
 ---
 
-Follow all workspace cursor rules in .cursorrules.
-No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git push.
-basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths.
-Search unified libraries before implementing anything new.
+Follow all workspace cursor rules in .cursorrules. No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git
+push. basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel code paths. Search unified libraries
+before implementing anything new.
 
-WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos
-All Python/pytest/ruff/basedpyright/QG commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos All Python/pytest/ruff/basedpyright/QG
+commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
 
 ---
 
 ## Standard of Work — Citadel Audit-Worthy
 
-> **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every PR. Build accordingly.**
+> **When in doubt, assume a senior quant engineer at a top-tier fund (Citadel, Two Sigma, DE Shaw) is reviewing every
+> PR. Build accordingly.**
 
 This means — no exceptions, no shortcuts:
 
-- **No silent errors** — every `except` block must reraise, raise a typed error, or log at ERROR + reraise. `pass` is a build failure.
+- **No silent errors** — every `except` block must reraise, raise a typed error, or log at ERROR + reraise. `pass` is a
+  build failure.
 - **No empty fallbacks** — `os.getenv(KEY, '')` is forbidden. Use `UnifiedCloudConfig` or fail on missing config.
-- **No untyped boundaries** — every API endpoint, PubSub message, and GCS schema uses Pydantic models. `dict[str, Any]` at a boundary is a type violation.
+- **No untyped boundaries** — every API endpoint, PubSub message, and GCS schema uses Pydantic models. `dict[str, Any]`
+  at a boundary is a type violation.
 - **No service→service Python imports** — services communicate via HTTP, GCS, or PubSub only.
-- **No test project IDs in production code** — `central-element-323112` → `test-project` in tests, not in production paths.
+- **No test project IDs in production code** — `central-element-323112` → `test-project` in tests, not in production
+  paths.
 - **No TODO comments** in production code — open a GitHub issue and link it.
-- **Full observability** — every request logs `correlation_id`, `service_name`, `timestamp`. Every failure is structured.
+- **Full observability** — every request logs `correlation_id`, `service_name`, `timestamp`. Every failure is
+  structured.
 - **Every secret** through Secret Manager. Every config through `UnifiedCloudConfig`.
 - **Every external call** has retry logic (`@with_retry` from UTS) and a timeout.
 - **Every async operation** has an explicit timeout — no indefinite awaits.
@@ -97,7 +101,9 @@ If any check fails: STOP. Complete Phase 1/2 first.
 
 **T5 API Services (3):** `execution-results-api`, `market-data-api`, `client-reporting-api`
 
-**T6 UIs (11):** `batch-audit-ui`, `client-reporting-ui`, `deployment-ui`, `execution-analytics-ui`, `live-health-monitor-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui`, `settlement-ui`, `strategy-ui`, `trading-analytics-ui`
+**T6 UIs (11):** `batch-audit-ui`, `client-reporting-ui`, `deployment-ui`, `execution-analytics-ui`,
+`live-health-monitor-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui`, `settlement-ui`, `strategy-ui`,
+`trading-analytics-ui`
 
 ---
 
@@ -112,13 +118,16 @@ rg 'ml-training-ui|ml_training_ui' .                    # must be zero
 rg 'execution-analytics-ui|execution_analytics_ui' .                              # must be zero
 ```
 
-Any hit = fix at ALL levels before continuing (pyproject.toml, Python package dir, all imports across 57 repos, AR package, cloudbuild.yaml, Cloud Build trigger, workspace-manifest.json, runtime-topology.yaml, cursor rules, codex docs, PubSub topics, Secret Manager, Cloud Run service name).
+Any hit = fix at ALL levels before continuing (pyproject.toml, Python package dir, all imports across 57 repos, AR
+package, cloudbuild.yaml, Cloud Build trigger, workspace-manifest.json, runtime-topology.yaml, cursor rules, codex docs,
+PubSub topics, Secret Manager, Cloud Run service name).
 
 ---
 
 ## Bottom-Up Development Rule — No Exceptions
 
-> If a service needs new functionality that does not exist in a library, add it to the correct library FIRST. Never define schemas, error types, event names, or contracts inline in a service.
+> If a service needs new functionality that does not exist in a library, add it to the correct library FIRST. Never
+> define schemas, error types, event names, or contracts inline in a service.
 
 | If you need...                       | Add to first                           | Tier |
 | ------------------------------------ | -------------------------------------- | ---- |
@@ -130,7 +139,8 @@ Any hit = fix at ALL levels before continuing (pyproject.toml, Python package di
 | New market schema / adapter protocol | `unified-market-interface` (UMI)       | T2   |
 | New domain entity                    | `unified-domain-client` (UDC)          | T3   |
 
-**Workflow:** Add to library → run D5 on that library → bump version → `--dep-branch` cascade to all consumers → use in service. No shortcuts.
+**Workflow:** Add to library → run D5 on that library → bump version → `--dep-branch` cascade to all consumers → use in
+service. No shortcuts.
 
 ---
 
@@ -149,7 +159,8 @@ Every service follows this ladder in order. Fix each step before running the nex
 
 **D5 is the only valid green gate.** `--quick` alone is not sufficient for tier promotion.
 
-**Error handling (Step B every service):** Every `except` block must reraise, raise typed error, or log ERROR + reraise. Silent `pass` = build failure. Missing typed error class → add to AC/UIC_INT first (bottom-up rule).
+**Error handling (Step B every service):** Every `except` block must reraise, raise typed error, or log ERROR + reraise.
+Silent `pass` = build failure. Missing typed error class → add to AC/UIC_INT first (bottom-up rule).
 
 **File/function size (Step C every service):**
 
@@ -190,12 +201,14 @@ Every service (T4/T5) and UI (T6) follows this pattern:
 - Zero `os.getenv(API_KEY)`, zero hardcoded URLs, zero direct `requests`/`aiohttp` to venues — all via UDC/UMI/UTEI/URDI
 - `cloudbuild.yaml` image tag uses canonical name
 - AR package name matches `workspace-manifest.json`
-- Populate `AGENTS.md` from template (`unified-trading-pm/templates/AGENTS.md`) with repo-specific caveats, known test failures, and isolation notes
+- Populate `AGENTS.md` from template (`unified-trading-pm/templates/AGENTS.md`) with repo-specific caveats, known test
+  failures, and isolation notes
 
 **Step B — Tests first (before any code rewrite):**
 
 - Write/fix unit tests first
-- Add `tests/unit/test_schema_robustness.py`: required field missing → `ValidationError`; optional absent → passes; wrong type → fails
+- Add `tests/unit/test_schema_robustness.py`: required field missing → `ValidationError`; optional absent → passes;
+  wrong type → fails
 - Add `tests/unit/test_imports.py`: imports every public module — catches broken `__init__` in CI
 - Coverage: every new code path has a test
 
@@ -263,20 +276,27 @@ Every service (T4/T5) and UI (T6) follows this pattern:
 
 ## Tier 6 — UIs (11 repos)
 
-**Before starting T6:** `ui-local-dev-setup` — add `.env.local.example` to all 11 UI repos. Port map: 8001=deployment-api, 8002=execution-results-api, 8003=client-reporting-api, 8004=market-data-api.
+**Before starting T6:** `ui-local-dev-setup` — add `.env.local.example` to all 11 UI repos. Port map:
+8001=deployment-api, 8002=execution-results-api, 8003=client-reporting-api, 8004=market-data-api.
 
 11 agents in parallel after all T5 D5:
 
 1. `trading-analytics-ui` — Google OAuth TRADER; /positions /pnl /executions /risk /orderbook /latency
-2. `execution-analytics-ui` — **canonical name; old name `execution-analytics-ui` is wrong everywhere** — TCA + alpha + execution analytics; SSE from execution-results-api
+2. `execution-analytics-ui` — **canonical name; old name `execution-analytics-ui` is wrong everywhere** — TCA + alpha +
+   execution analytics; SSE from execution-results-api
 3. `live-health-monitor-ui` — ServiceStatusGrid, CPUMemoryTimeSeries, PubSubLagBars, DLQ badges, Alerts SSE
-4. `onboarding-ui` — AMLScreening, FeeStructureConfig, HWMInit, APIKeyManagement, VenueOnboarding, StrategyOnboarding (Google OAuth ADMIN)
-5. `strategy-ui` — BacktestGridResult → StrategyConfig promotion; POST /api/v1/config/promote; ConfigStore; deployed_by from OAuth
+4. `onboarding-ui` — AMLScreening, FeeStructureConfig, HWMInit, APIKeyManagement, VenueOnboarding, StrategyOnboarding
+   (Google OAuth ADMIN)
+5. `strategy-ui` — BacktestGridResult → StrategyConfig promotion; POST /api/v1/config/promote; ConfigStore; deployed_by
+   from OAuth
 6. `client-reporting-ui` + `settlement-ui` — assess data schema availability; scope SSE integration
-7. `ml-training-ui` — **canonical name; old name `ml-training-ui` is wrong everywhere** — /experiments, /experiments/:runId/deploy, /models, /training-runs (Google OAuth)
+7. `ml-training-ui` — **canonical name; old name `ml-training-ui` is wrong everywhere** — /experiments,
+   /experiments/:runId/deploy, /models, /training-runs (Google OAuth)
 8. `logs-dashboard-ui` + `batch-audit-ui` — assess data schema availability; scope SSE integration
-9. `deployment-ui` — orchestrator run status SSE, Cloud Build trigger buttons, shard calculator viz, Cloud Run health panel
-10. `onboarding-ui` AI summaries — add `ai_summary.py` using claude-3-5-haiku; API key via Secret Manager `anthropic-api-key`
+9. `deployment-ui` — orchestrator run status SSE, Cloud Build trigger buttons, shard calculator viz, Cloud Run health
+   panel
+10. `onboarding-ui` AI summaries — add `ai_summary.py` using claude-3-5-haiku; API key via Secret Manager
+    `anthropic-api-key`
 11. Grafana dashboard exports (trading-overview.json, system-health.json) + `03-observability/prometheus-metrics.md`
 
 ---

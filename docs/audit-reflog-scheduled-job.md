@@ -1,6 +1,7 @@
 # Audit Reflog — Scheduled Job & Alerts
 
-Weekly check for unintended `git reset --hard` or `reset to origin/main` across all workspace repos. Alerts via macOS notification when high-risk resets are found.
+Weekly check for unintended `git reset --hard` or `reset to origin/main` across all workspace repos. Alerts via macOS
+notification when high-risk resets are found.
 
 ## Script locations
 
@@ -48,7 +49,8 @@ Runs **every 10 min**.
 
 ## Event-based watch (fswatch)
 
-Runs the audit whenever `.git/logs` changes in any workspace repo (commit, reset, checkout, etc.). Uses `fswatch`; install via `brew install fswatch` if needed.
+Runs the audit whenever `.git/logs` changes in any workspace repo (commit, reset, checkout, etc.). Uses `fswatch`;
+install via `brew install fswatch` if needed.
 
 ```bash
 cd /path/to/unified-trading-system-repos
@@ -56,7 +58,8 @@ bash unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog-wat
 launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog-watch.plist
 ```
 
-The watch job runs in the background with `KeepAlive`; it triggers the same wrapper (audit + notification on high-risk). Log: `/tmp/audit-reflog-watch.log`.
+The watch job runs in the background with `KeepAlive`; it triggers the same wrapper (audit + notification on high-risk).
+Log: `/tmp/audit-reflog-watch.log`.
 
 **Stop watch job:**
 
@@ -78,9 +81,12 @@ launchctl list | grep audit-reflog
 
 ## Solved vs ignore list
 
-**Solved (automatic):** A reset is considered solved if the "lost" commit is now in `origin/main` — either the exact commit was recovered, or the same patch was committed (e.g. cherry-pick). No ignore entry needed.
+**Solved (automatic):** A reset is considered solved if the "lost" commit is now in `origin/main` — either the exact
+commit was recovered, or the same patch was committed (e.g. cherry-pick). No ignore entry needed.
 
-**Per-commit ignore (intentional discard):** When you intentionally reset and discard work, add the specific commit to `audit-reflog-ignore.txt` as `repo:hash` (e.g. `deployment-api:b103671`). The audit output shows the exact line to add. This keeps the ignore scoped to that commit — future genuine breaches in the same repo will still be detected.
+**Per-commit ignore (intentional discard):** When you intentionally reset and discard work, add the specific commit to
+`audit-reflog-ignore.txt` as `repo:hash` (e.g. `deployment-api:b103671`). The audit output shows the exact line to add.
+This keeps the ignore scoped to that commit — future genuine breaches in the same repo will still be detected.
 
 **Legacy:** `repo` only (no colon) = ignore whole repo. Prefer per-commit when possible.
 
@@ -101,4 +107,5 @@ Wrapper script: `run-audit-reflog-with-alert.sh` — reference when building sim
 - **No high-risk resets:** Script exits 0, no notification.
 - **High-risk resets found:** Script exits 1, macOS notification with sound. Click to open log.
 
-**Stay until acknowledged:** System Settings → Notifications → terminal-notifier → set delivery style to **Alerts** (not Banners). Alerts stay on screen until dismissed.
+**Stay until acknowledged:** System Settings → Notifications → terminal-notifier → set delivery style to **Alerts** (not
+Banners). Alerts stay on screen until dismissed.

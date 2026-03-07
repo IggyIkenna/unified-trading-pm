@@ -1,8 +1,7 @@
 # UI Audit Results — Full Service Repo Scan
 
-**Date:** 2026-03-06
-**Auditor:** arch-ui-audit-full task (Phase 1, Stream B)
-**Task:** Scan all service repos for embedded UI artifacts
+**Date:** 2026-03-06 **Auditor:** arch-ui-audit-full task (Phase 1, Stream B) **Task:** Scan all service repos for
+embedded UI artifacts
 
 ## Summary
 
@@ -68,26 +67,37 @@
 - `frontend/src/components/live/RiskMetricsPanel.tsx`
 - `frontend/dist/` — build output with CSV result files
 
-**Required Action:** Extract `strategy-service/frontend/` to a new `strategy-ui` repo (or merge into existing `strategy-ui` if it exists). Delete `frontend/` from `strategy-service`. Track as a new task `arch-strategy-ui-extract`.
+**Required Action:** Extract `strategy-service/frontend/` to a new `strategy-ui` repo (or merge into existing
+`strategy-ui` if it exists). Delete `frontend/` from `strategy-service`. Track as a new task `arch-strategy-ui-extract`.
 
 ### market-tick-data-service — PARTIAL VIOLATION (Node package.json at root)
 
 **File:** `market-tick-data-service/package.json`
 
-**Content summary:** Declares `tardis-dev` (^14.1.2) JS dependency at the repo root. No tsx/jsx files, no frontend directory. This indicates the service may be using a Node.js component for Tardis market data ingestion alongside the Python package.
+**Content summary:** Declares `tardis-dev` (^14.1.2) JS dependency at the repo root. No tsx/jsx files, no frontend
+directory. This indicates the service may be using a Node.js component for Tardis market data ingestion alongside the
+Python package.
 
-**Required Action:** Assess whether the `tardis-dev` Node dependency is still in use. If Python-only ingestion is complete, remove `package.json`. If still needed, document as an explicit exception. Track as `arch-market-tick-data-node-cleanup`.
+**Required Action:** Assess whether the `tardis-dev` Node dependency is still in use. If Python-only ingestion is
+complete, remove `package.json`. If still needed, document as an explicit exception. Track as
+`arch-market-tick-data-node-cleanup`.
 
 ### execution-service — PREVIOUSLY EXTRACTED (remnant only)
 
 **File:** `execution-service/package-lock.json` (empty — `packages: {}`)
 
-The plan item `arch-visualizer-extract` documented that `visualizer-ui/` and `visualizer-api/` needed extraction. Inspection confirms the extraction has been completed: the archive contains `archive/execution-visualizer-ui/`. Only an empty `package-lock.json` remnant remains. The `visualizer-ui/` and `visualizer-api/` directories are **not present** in execution-service.
+The plan item `arch-visualizer-extract` documented that `visualizer-ui/` and `visualizer-api/` needed extraction.
+Inspection confirms the extraction has been completed: the archive contains `archive/execution-visualizer-ui/`. Only an
+empty `package-lock.json` remnant remains. The `visualizer-ui/` and `visualizer-api/` directories are **not present** in
+execution-service.
 
 **Recommended cleanup:** Remove `execution-service/package-lock.json` (empty artifact).
 
 ## Notes on htmlcov/index.html
 
-Multiple repos contain `htmlcov/index.html` — this is the pytest-cov HTML coverage report output. It is a generated artifact, not embedded UI code. These are correctly excluded from the violation count and should be added to `.gitignore` in each repo.
+Multiple repos contain `htmlcov/index.html` — this is the pytest-cov HTML coverage report output. It is a generated
+artifact, not embedded UI code. These are correctly excluded from the violation count and should be added to
+`.gitignore` in each repo.
 
-Repos with htmlcov artifacts: alerting-service, market-data-processing-service, instruments-service, market-tick-data-service, features-delta-one-service, pnl-attribution-service.
+Repos with htmlcov artifacts: alerting-service, market-data-processing-service, instruments-service,
+market-tick-data-service, features-delta-one-service, pnl-attribution-service.

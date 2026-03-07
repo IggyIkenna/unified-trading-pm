@@ -872,11 +872,7 @@
       {
         "level": 0,
         "description": "Foundation - no dependencies",
-        "repos": [
-          "unified-config-interface",
-          "unified-events-interface",
-          "api-contracts"
-        ]
+        "repos": ["unified-config-interface", "unified-events-interface", "api-contracts"]
       },
       {
         "level": 1,
@@ -906,11 +902,7 @@
       {
         "level": 5,
         "description": "Core services",
-        "repos": [
-          "instruments-service",
-          "market-tick-data-handler",
-          "ml-training-service"
-        ]
+        "repos": ["instruments-service", "market-tick-data-handler", "ml-training-service"]
       },
       {
         "level": 6,
@@ -934,10 +926,7 @@
       {
         "level": 7,
         "description": "Operational services that depend on execution",
-        "repos": [
-          "position-balance-monitor-service",
-          "risk-and-exposure-service"
-        ]
+        "repos": ["position-balance-monitor-service", "risk-and-exposure-service"]
       },
       {
         "level": 8,
@@ -960,11 +949,7 @@
     "steps": [
       {
         "step": 1,
-        "packages": [
-          "api-contracts",
-          "unified-config-interface",
-          "unified-events-interface"
-        ],
+        "packages": ["api-contracts", "unified-config-interface", "unified-events-interface"],
         "reason": "Foundation packages with no dependencies"
       },
       {

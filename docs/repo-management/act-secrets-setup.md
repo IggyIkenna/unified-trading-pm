@@ -4,9 +4,12 @@
 
 ## Why Act Needs GH_PAT
 
-Quickmerge runs **act** (nektos/act) to simulate GitHub Actions locally before creating a PR. Many workflows (e.g. `quality-gates`) clone **sibling repos** (e.g. `unified-trading-codex`) using `secrets.GH_PAT`. Without a valid token, act cannot clone those repos and the simulation fails.
+Quickmerge runs **act** (nektos/act) to simulate GitHub Actions locally before creating a PR. Many workflows (e.g.
+`quality-gates`) clone **sibling repos** (e.g. `unified-trading-codex`) using `secrets.GH_PAT`. Without a valid token,
+act cannot clone those repos and the simulation fails.
 
-**If act fails:** Quickmerge now **aborts** (does not continue). You must fix the secrets before quickmerge can complete.
+**If act fails:** Quickmerge now **aborts** (does not continue). You must fix the secrets before quickmerge can
+complete.
 
 ## Setup (One-Time)
 

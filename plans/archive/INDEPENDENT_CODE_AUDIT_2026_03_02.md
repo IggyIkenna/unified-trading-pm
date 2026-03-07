@@ -27,8 +27,10 @@
 
 ### Critical Findings (49)
 
-- **49 `try/except ImportError` fallback patterns** in production code -- directly violates the fail-loud principle. `features-delta-one-service` alone has 16 occurrences including **MockTalib stubs** that return garbage data silently.
-- **37 `except Exception: pass`** blocks across 22 files, including core libraries (`unified_cloud_services/__init__.py`, `gcp_clients.py`, `dependency_checker.py`).
+- **49 `try/except ImportError` fallback patterns** in production code -- directly violates the fail-loud principle.
+  `features-delta-one-service` alone has 16 occurrences including **MockTalib stubs** that return garbage data silently.
+- **37 `except Exception: pass`** blocks across 22 files, including core libraries
+  (`unified_cloud_services/__init__.py`, `gcp_clients.py`, `dependency_checker.py`).
 - **10 silent `return None`** patterns where exceptions are caught and None is returned without logging.
 
 ### Key Offenders
@@ -62,7 +64,8 @@ Each creates a MockTalib that returns `np.full(...)` garbage data when talib is 
 
 **HIGH -- Execution Service Scripts**
 
-- `execution-service/scripts/utils/upload_backtest_results_to_gcs.py:167-432` -- five separate `except Exception: pass` blocks silently discarding data
+- `execution-service/scripts/utils/upload_backtest_results_to_gcs.py:167-432` -- five separate `except Exception: pass`
+  blocks silently discarding data
 
 **25 `os.getenv()` calls in production code** (should use `UnifiedCloudConfig`)
 
@@ -194,7 +197,8 @@ Each creates a MockTalib that returns `np.full(...)` garbage data when talib is 
 **F1: Missing API Authentication**
 
 - `execution-results-api`: All 30+ endpoints unauthenticated (POST /backtest/run, /backtest/mass-deploy, etc.)
-- `deployment-api` / `unified-trading-deployment-v3`: All deployment management endpoints unauthenticated (POST /deployments, DELETE /deployments/{id})
+- `deployment-api` / `unified-trading-deployment-v3`: All deployment management endpoints unauthenticated (POST
+  /deployments, DELETE /deployments/{id})
 - `market-data-api`, `client-reporting-api`, `alerting-service`: All unauthenticated
 
 **F3: Insecure Deserialization -- pickle.load from GCS**
@@ -218,8 +222,10 @@ Each creates a MockTalib that returns `np.full(...)` garbage data when talib is 
 
 **F1/F2: Command Injection via Unsanitized Parameters**
 
-- `unified-trading-deployment-v3/api/routes/service_status_checkers.py:299-308` -- user `service` param in gcloud subprocess
-- `unified-trading-deployment-v3/.../services/log_service.py:71-85` -- `deployment_id`, `service`, `shard_id` in gcloud filter
+- `unified-trading-deployment-v3/api/routes/service_status_checkers.py:299-308` -- user `service` param in gcloud
+  subprocess
+- `unified-trading-deployment-v3/.../services/log_service.py:71-85` -- `deployment_id`, `service`, `shard_id` in gcloud
+  filter
 
 **F14: Mock Authentication in Production**
 
@@ -265,30 +271,28 @@ Each creates a MockTalib that returns `np.full(...)` garbage data when talib is 
 
 ### CRITICAL (1)
 
-**Dual Package Identity Crisis**
-Two packages provide overlapping cloud service abstractions:
+**Dual Package Identity Crisis** Two packages provide overlapping cloud service abstractions:
 
 - `unified-trading-services` (v0.3.7) -> `unified_trading_services` namespace
 - `unified-cloud-services` (v1.5.23) -> `unified_cloud_services` namespace
 
-15+ repos confused about which to import. Some import from both. 3 `pyproject.toml` files + 25 CI configs still reference old name.
+15+ repos confused about which to import. Some import from both. 3 `pyproject.toml` files + 25 CI configs still
+reference old name.
 
 ### HIGH (4)
 
-**Test File Copy-Paste**
-| Template | Copies | Repos |
-|---|---|---|
-| `test_shard_combinatorics.py` | 11 | All major services |
-| `test_event_logging.py` | 18 | All services |
-| `test_cloud_agnostic_paths.py` | 9 | Data services |
-| `check-import-patterns.py` | 25 (6 divergent variants) | All repos under .cursor/scripts/ |
+**Test File Copy-Paste** | Template | Copies | Repos | |---|---|---| | `test_shard_combinatorics.py` | 11 | All major
+services | | `test_event_logging.py` | 18 | All services | | `test_cloud_agnostic_paths.py` | 9 | Data services | |
+`check-import-patterns.py` | 25 (6 divergent variants) | All repos under .cursor/scripts/ |
 
 **Sports Domain Client Duplication**: 5 near-identical classes in `unified-domain-client/sports/`
 
-- `SportsFixturesDomainClient`, `SportsFeaturesDomainClient`, `SportsTickDataDomainClient`, `SportsOddsDomainClient`, `SportsMappingsDomainClient`
+- `SportsFixturesDomainClient`, `SportsFeaturesDomainClient`, `SportsTickDataDomainClient`, `SportsOddsDomainClient`,
+  `SportsMappingsDomainClient`
 - All share identical `__init__`, `read_*`, `write_*`, `get_available_*` methods
 
-**DeFi Adapter Boilerplate**: 8+ adapters with identical `_ensure_session`, `_ensure_graph_client`, `_ensure_alchemy_client`
+**DeFi Adapter Boilerplate**: 8+ adapters with identical `_ensure_session`, `_ensure_graph_client`,
+`_ensure_alchemy_client`
 
 **`quality-gates.sh` Duplicated Across 60 Repos** with drift
 
@@ -373,7 +377,8 @@ def test_config_defaults(self):
 | `print()` in service/library code            | 429 calls                            | Not captured in cloud logging                      |
 | `logging.basicConfig()` in library code      | 21 files                             | Clobbers root logger for consumers                 |
 
-**Worst repos for f-string logging**: `execution-service` (145 files), `market-tick-data-service` (67 files), `unified-trading-library` (33 files)
+**Worst repos for f-string logging**: `execution-service` (145 files), `market-tick-data-service` (67 files),
+`unified-trading-library` (33 files)
 
 ### Type Safety
 
@@ -474,7 +479,8 @@ def test_config_defaults(self):
 
 ### P0 -- Security (Fix Immediately)
 
-1. **Add authentication to ALL API services** -- deployment-api, execution-results-api, market-data-api, client-reporting-api, alerting-service
+1. **Add authentication to ALL API services** -- deployment-api, execution-results-api, market-data-api,
+   client-reporting-api, alerting-service
 2. **Replace pickle/joblib/jsonpickle** with safe serialization (JSON, Parquet, ONNX, safetensors)
 3. **Remove .env files from git** (`git rm --cached`); add to `.gitignore`
 4. **Replace mock auth** in position-balance-monitor-service with real Secret Manager validation
@@ -485,7 +491,8 @@ def test_config_defaults(self):
 
 7. **Remove ALL `try/except ImportError` fallback patterns** -- fail loud
 8. **Replace ALL `except Exception: pass`** with specific exception types + logging
-9. **Fix exception logging** -- adopt `logger.exception()` in all except blocks; eliminate f-string logging (2,842 calls)
+9. **Fix exception logging** -- adopt `logger.exception()` in all except blocks; eliminate f-string logging (2,842
+   calls)
 10. **Resolve dual package identity** (`unified_cloud_services` vs `unified_trading_services`)
 
 ### P2 -- Maintainability (Fix This Month)

@@ -1,6 +1,9 @@
 ---
 name: Schema Normalization Completion
-overview: Complete normalization of all unified-api-contracts external schemas into canonical formats, establish UAC as the single source of truth for canonical schemas, align interfaces (UMI, UTEI, USEI) to import from UAC, and produce a full audit table of every schema and its normalization path.
+overview:
+  Complete normalization of all unified-api-contracts external schemas into canonical formats, establish UAC as the
+  single source of truth for canonical schemas, align interfaces (UMI, UTEI, USEI) to import from UAC, and produce a
+  full audit table of every schema and its normalization path.
 todos: []
 isProject: false
 ---
@@ -9,22 +12,32 @@ isProject: false
 
 ## Ideology and Principles
 
-**UAC = Normalization Layer.** unified-api-contracts is the mapping layer that converts raw venue responses into normalized forms. The interfaces should never pass raw data through; they return normalized data from UAC.
+**UAC = Normalization Layer.** unified-api-contracts is the mapping layer that converts raw venue responses into
+normalized forms. The interfaces should never pass raw data through; they return normalized data from UAC.
 
-**Interfaces = Venue Routers.** Interfaces (UMI, UTEI, USEI, UDEFI) say "I want data from Binance" or "I want data from IBKR" — but the response shape is always normalized. The interface is venue-agnostic from the consumer's perspective.
+**Interfaces = Venue Routers.** Interfaces (UMI, UTEI, USEI, UDEFI) say "I want data from Binance" or "I want data from
+IBKR" — but the response shape is always normalized. The interface is venue-agnostic from the consumer's perspective.
 
-**Internal CCXT/TARDIS.** We are building an internal version of what CCXT, TARDIS, and IBKR do: normalize across many venues. We do the same across the full universe (CeFi, DeFi, TradFi, Sports, Alt).
+**Internal CCXT/TARDIS.** We are building an internal version of what CCXT, TARDIS, and IBKR do: normalize across many
+venues. We do the same across the full universe (CeFi, DeFi, TradFi, Sports, Alt).
 
-**Scope: All Response Types.** Every raw venue response must map to a canonical type — not just trades and fills. Includes: trades, orderbooks, tickers, positions, balances, liquidations, funding rates, OHLCV, market info, errors, WebSocket messages, sports odds/fixtures, alt data, etc.
+**Scope: All Response Types.** Every raw venue response must map to a canonical type — not just trades and fills.
+Includes: trades, orderbooks, tickers, positions, balances, liquidations, funding rates, OHLCV, market info, errors,
+WebSocket messages, sports odds/fixtures, alt data, etc.
 
 **Domain split strategy:**
 
 - Prefer **canonical with optional fields** for venue-specific detail.
 - Use **sub-types** only when structures are truly incompatible.
-- Break by **instruction type** (TRADE, SWAP, LEND, BORROW, STAKE, etc.) — swaps differ from trades; alignment where possible (e.g. instrument_id).
-- Interface layout: UTEI (CeFi), USEI (sports), UDEFI (DeFi) — domain-specific canonical schemas are tolerated, but shared alignment where possible.
+- Break by **instruction type** (TRADE, SWAP, LEND, BORROW, STAKE, etc.) — swaps differ from trades; alignment where
+  possible (e.g. instrument_id).
+- Interface layout: UTEI (CeFi), USEI (sports), UDEFI (DeFi) — domain-specific canonical schemas are tolerated, but
+  shared alignment where possible.
 
-**Codex/PM alignment:** Confirmed against `02-data/contracts-scope-and-layout.md`, `05-infrastructure/contracts-integration.md`, `.cursor/rules/imports/unified-api-contracts-usage.mdc`, `.cursor/rules/imports/contracts-integration.mdc`. Related PM plans: `orphan-contracts-utilization.plan.md`, `execution_services_hygiene_refactor.plan.md`.
+**Codex/PM alignment:** Confirmed against `02-data/contracts-scope-and-layout.md`,
+`05-infrastructure/contracts-integration.md`, `.cursor/rules/imports/unified-api-contracts-usage.mdc`,
+`.cursor/rules/imports/contracts-integration.mdc`. Related PM plans: `orphan-contracts-utilization.plan.md`,
+`execution_services_hygiene_refactor.plan.md`.
 
 ```mermaid
 flowchart LR
@@ -86,9 +99,12 @@ flowchart TB
     UAC_domain -.->|"duplicate"| UIC_md
 ```
 
-- **UMI** defines its own `CanonicalTrade`, `CanonicalOrderBook`, `CanonicalTicker`; adapters use UAC for raw validation but UMI for canonical output.
-- **UTEI** defines its own `CanonicalOrder`, `CanonicalFill`; uses `ccxt_order_to_canonical()` on raw dicts, not UAC schemas.
-- **UAC** has `normalize.py` with only 3 trade normalizers (binance, databento, tardis); no order/orderbook/fill normalizers.
+- **UMI** defines its own `CanonicalTrade`, `CanonicalOrderBook`, `CanonicalTicker`; adapters use UAC for raw validation
+  but UMI for canonical output.
+- **UTEI** defines its own `CanonicalOrder`, `CanonicalFill`; uses `ccxt_order_to_canonical()` on raw dicts, not UAC
+  schemas.
+- **UAC** has `normalize.py` with only 3 trade normalizers (binance, databento, tardis); no order/orderbook/fill
+  normalizers.
 - **USEI** correctly imports `CanonicalOdds`, `BetExecution`, `BetOrder` from UAC sports.
 
 ### Normalization Gaps
@@ -121,17 +137,23 @@ flowchart TB
 
 - **Target:** UAC `unified_normalised_contracts` is the only definition of canonical trading schemas.
 - **Actions:**
-  1. Add `CanonicalTicker`, `CanonicalLiquidation`, `CanonicalDerivativeTicker` to `unified_normalised_contracts/domain.py` (UMI currently has these; UAC does not).
-  2. Add `CanonicalPosition`, `CanonicalBalance`, `CanonicalFundingRate`, `CanonicalOhlcvBar`, `CanonicalMarketInfo`, `CanonicalWsMessage` where missing.
-  3. Diff UMI `schemas.py` vs UAC `domain.py` for `CanonicalTrade`, `CanonicalOrderBook` — ensure field parity; merge any UMI-only fields into UAC.
-  4. Diff UTEI `schemas.py` vs UAC `execution.py` for `CanonicalOrder`, `CanonicalFill` — merge any UTEI-only fields into UAC.
+  1. Add `CanonicalTicker`, `CanonicalLiquidation`, `CanonicalDerivativeTicker` to
+     `unified_normalised_contracts/domain.py` (UMI currently has these; UAC does not).
+  2. Add `CanonicalPosition`, `CanonicalBalance`, `CanonicalFundingRate`, `CanonicalOhlcvBar`, `CanonicalMarketInfo`,
+     `CanonicalWsMessage` where missing.
+  3. Diff UMI `schemas.py` vs UAC `domain.py` for `CanonicalTrade`, `CanonicalOrderBook` — ensure field parity; merge
+     any UMI-only fields into UAC.
+  4. Diff UTEI `schemas.py` vs UAC `execution.py` for `CanonicalOrder`, `CanonicalFill` — merge any UTEI-only fields
+     into UAC.
   5. Update `unified_normalised_contracts/__init__.py` to export all canonical types.
 
 ### 1.2 Interface Migration
 
-- **UMI:** `from unified_api_contracts import CanonicalTrade, CanonicalOrderBook, CanonicalTicker, ...`; remove local definitions.
+- **UMI:** `from unified_api_contracts import CanonicalTrade, CanonicalOrderBook, CanonicalTicker, ...`; remove local
+  definitions.
 - **UTEI:** `from unified_api_contracts import CanonicalOrder, CanonicalFill, ...`; remove local definitions.
-- **UIC:** `from unified_api_contracts import CanonicalTrade, CanonicalOrderBook, CanonicalTicker`; remove `market_data/` duplicates or re-export from UAC.
+- **UIC:** `from unified_api_contracts import CanonicalTrade, CanonicalOrderBook, CanonicalTicker`; remove
+  `market_data/` duplicates or re-export from UAC.
 
 ---
 
@@ -212,15 +234,19 @@ flowchart TB
 ### 2.6 Instruction-Type Grouping (TRADE, SWAP, LEND, BORROW, etc.)
 
 - **TRADE:** CanonicalTrade, CanonicalOrder, CanonicalFill — shared across CeFi/TradFi.
-- **SWAP:** DeFi-specific; use `CanonicalSwap` or extend CanonicalTrade with `instruction_type=SWAP` and optional DeFi fields.
-- **LEND/BORROW/STAKE/UNSTAKE/TRANSFER/WITHDRAW/REPAY:** Domain-specific canonical types where structure differs; align on `instrument_id`, `venue`, `timestamp`.
+- **SWAP:** DeFi-specific; use `CanonicalSwap` or extend CanonicalTrade with `instruction_type=SWAP` and optional DeFi
+  fields.
+- **LEND/BORROW/STAKE/UNSTAKE/TRANSFER/WITHDRAW/REPAY:** Domain-specific canonical types where structure differs; align
+  on `instrument_id`, `venue`, `timestamp`.
 - **Sports:** BetOrder, CanonicalOdds, CanonicalFixture — separate canonical set; align identifiers where possible.
 
 ### 2.7 Sports Domain (already structured)
 
 - **sports/sources/** → **sports/canonical/** — mapping via `TeamMapping`, `FixtureMapping`, `PlayerMapping`.
-- **Odds sources** (odds_api, betfair, pinnacle, matchbook, smarkets, betdaq, etc.) → `CanonicalOdds`, `CanonicalBookmakerMarket`.
-- **Match/team/player** (api_football, footystats, understat, soccer_football_info) → canonical fixtures, stats, lineups.
+- **Odds sources** (odds_api, betfair, pinnacle, matchbook, smarkets, betdaq, etc.) → `CanonicalOdds`,
+  `CanonicalBookmakerMarket`.
+- **Match/team/player** (api_football, footystats, understat, soccer_football_info) → canonical fixtures, stats,
+  lineups.
 - Document explicit normalization paths in UAC (e.g. `normalize_odds_api_to_canonical.py` or add to sports module).
 
 ### 2.8 Alt Data / Non-Trading (dict or minimal canonical)
@@ -241,7 +267,8 @@ Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUD
 1. **Table 1: External Schema → Canonical Output**
 
 - Provider | External Schema | Canonical Type | Normalizer Function | Status (Mapped/Orphaned/Planned)
-- Covers: trades, orderbooks, orders, fills, tickers, positions, balances, liquidations, funding, OHLCV, market info, errors, WebSocket, sports, alt data.
+- Covers: trades, orderbooks, orders, fills, tickers, positions, balances, liquidations, funding, OHLCV, market info,
+  errors, WebSocket, sports, alt data.
 
 2. **Table 2: Interface Alignment**
 
@@ -257,9 +284,15 @@ Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUD
 
 ### 3.2 Schema Inventory (from agent audit)
 
-**Trading domain (60+ providers):** alchemy, api_football, arkham, aster, barchart, betdaq, betfair, binance, bloxroute, bybit, ccxt, coinbase, coingecko, coinglass, databento, defi, defillama, deribit, ecb, fear_greed, fix, footystats, fred, github, glassnode, hyperliquid, ibkr, instadapp, kalshi, manifold, matchbook, metabet, mev, nautilus, odds_api, odds_engine, ofr, okx, open_meteo, openbb, pinnacle, polymarket, predictit, prime_broker, pyth, regulatory, sharpapi, smarkets, soccer_football_info, sports, tardis, thegraph, transfermarkt, understat, upbit, venue_manifest, yahoo_finance.
+**Trading domain (60+ providers):** alchemy, api_football, arkham, aster, barchart, betdaq, betfair, binance, bloxroute,
+bybit, ccxt, coinbase, coingecko, coinglass, databento, defi, defillama, deribit, ecb, fear_greed, fix, footystats,
+fred, github, glassnode, hyperliquid, ibkr, instadapp, kalshi, manifold, matchbook, metabet, mev, nautilus, odds_api,
+odds_engine, ofr, okx, open_meteo, openbb, pinnacle, polymarket, predictit, prime_broker, pyth, regulatory, sharpapi,
+smarkets, soccer_football_info, sports, tardis, thegraph, transfermarkt, understat, upbit, venue_manifest,
+yahoo_finance.
 
-**Sports sources:** api_football, betfair, footystats, odds_api, oddsjam, open_meteo, opticodds, pinnacle, soccer_football_info, understat.
+**Sports sources:** api_football, betfair, footystats, odds_api, oddsjam, open_meteo, opticodds, pinnacle,
+soccer_football_info, understat.
 
 ---
 
@@ -291,14 +324,19 @@ Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUD
 
 ## Success Criteria
 
-1. **Quality gates pass for all updated repos** — Run `bash scripts/quickmerge.sh` (or `quality-gates.sh --no-fix`) on every repo that was modified:
+1. **Quality gates pass for all updated repos** — Run `bash scripts/quickmerge.sh` (or `quality-gates.sh --no-fix`) on
+   every repo that was modified:
    - unified-api-contracts
    - unified-market-interface
    - unified-trade-execution-interface
    - unified-internal-contracts (if UIC market_data/ updated)
    - Any service or interface that imports canonical types from UMI/UTEI (must pass after import migration)
-2. **Zero orphaned external API contracts** — Every external schema in `unified_api_contracts_external/` has a normalization path to a canonical type. Document in `SCHEMA_NORMALIZATION_AUDIT_FULL.md`; status must be Mapped or Planned (not Orphaned). Alt data providers may be documented as "Raw-only — no canonical type" per Phase 2.8 option B.
-3. **Import migration complete** — All consumers of UMI/UTEI canonical types import from UAC (or via re-export); no broken imports; tests pass.
+2. **Zero orphaned external API contracts** — Every external schema in `unified_api_contracts_external/` has a
+   normalization path to a canonical type. Document in `SCHEMA_NORMALIZATION_AUDIT_FULL.md`; status must be Mapped or
+   Planned (not Orphaned). Alt data providers may be documented as "Raw-only — no canonical type" per Phase 2.8 option
+   B.
+3. **Import migration complete** — All consumers of UMI/UTEI canonical types import from UAC (or via re-export); no
+   broken imports; tests pass.
 
 ---
 
@@ -317,8 +355,11 @@ Create a single audit file: `unified-api-contracts/docs/SCHEMA_NORMALIZATION_AUD
 
 ## Breaking Changes
 
-- UMI and UTEI will import canonical types from UAC instead of defining locally. This is a breaking change for any consumers that import from UMI/UTEI schemas directly.
-- **Mitigation:** UMI/UTEI re-export from UAC for backward compatibility: `from unified_api_contracts import CanonicalTrade; CanonicalTrade = CanonicalTrade` (or deprecate local and add deprecation warning).
+- UMI and UTEI will import canonical types from UAC instead of defining locally. This is a breaking change for any
+  consumers that import from UMI/UTEI schemas directly.
+- **Mitigation:** UMI/UTEI re-export from UAC for backward compatibility:
+  `from unified_api_contracts import CanonicalTrade; CanonicalTrade = CanonicalTrade` (or deprecate local and add
+  deprecation warning).
 
 ## Estimated Effort
 
