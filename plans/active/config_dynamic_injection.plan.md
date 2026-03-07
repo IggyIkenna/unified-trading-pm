@@ -104,6 +104,41 @@ todos:
       checks."
     status: pending
 
+  - id: p5-config-audit-trail
+    content: |
+      Immutable config audit trail: every ConfigStore write, rollback, and schema-validation-failure
+      must produce an immutable audit record stored in an append-only GCS/S3 object under
+      config-audit-log/{domain}/{timestamp}-{action}.json with fields:
+        domain, action (write|rollback|validation_failed), version_id, previous_version_id,
+        changed_by (from auth JWT sub claim), diff_summary (top-level keys changed),
+        client_ip, request_id, timestamp_utc.
+
+      Implementation:
+      - Add AuditLogger to ConfigStore (writes append-only to storage client)
+      - Wire into deployment-api config routes (extract auth context from request)
+      - Expose GET /api/config-store/{domain}/audit-log?since=<iso>&limit=100 in deployment-api
+      - Add audit log panel to deployment-ui Config tab
+      - Unit tests: verify every write/rollback triggers an audit record
+    status: pending
+    activeForm: "Implementing immutable config audit trail"
+
+  - id: p5-config-replay
+    content: |
+      Config version replay for historical analysis and debugging: ability to step through
+      config changes in chronological order and understand system state at any past point.
+
+      Implementation:
+      - ConfigStore.list_versions(domain, since=None, until=None) — returns list[ConfigVersion]
+        ordered by timestamp with diff from previous
+      - ConfigStore.get_at_time(domain, timestamp) — reconstructs config state at given UTC time
+        by replaying from initial version + applying changes in order
+      - Expose GET /api/config-store/{domain}/versions and GET /api/config-store/{domain}/at/{iso_ts}
+        in deployment-api
+      - deployment-ui Config tab: timeline slider to view config at any past timestamp
+      - Unit tests: round-trip replay (write 3 versions, get_at_time for each, verify correct state)
+    status: pending
+    activeForm: "Implementing config version replay for historical analysis"
+
 isProject: true
 blockedBy:
   - plan: phase0_standards_enforcement.plan.md

@@ -492,6 +492,11 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",

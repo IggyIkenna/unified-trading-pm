@@ -98,6 +98,18 @@ todos:
       (use upload_artifact via UCI StorageClient), os.getenv (use UnifiedCloudConfig), google-cloud-* imports outside
       UCI, boto3 imports outside UCI. Score FAIL if any banned pattern found in non-UCI source."
     status: pending
+
+  - id: audit-system-resource-usage
+    content: >
+      "Audit Section 13 — System Resource Usage: For each Cloud Run service, check that cpu and memory limits are
+      explicitly set in deployment config (no default unbounded resources). Measure or estimate utilisation at idle,
+      peak batch load, and peak live load. Flag over-provisioned services (< 20% CPU at peak) for right-sizing and
+      under-provisioned (> 80% CPU at peak) for scale-up. Verify max-instances and concurrency settings match actual
+      workload patterns (batch services: concurrency=1 with high CPU; live services: concurrency=80 with lower CPU).
+      Score PASS if: (a) all services have cpu+memory limits in deployment configs; (b) at least one load profile
+      documented per service in deployment-service/docs/resource-profiles/; (c) no service has default Cloud Run
+      resource limits."
+    status: pending
 isProject: false
 ---
 

@@ -29,6 +29,31 @@ todos:
   - id: portable-criteria
     content: Ensure no live API calls in CI; deterministic; batch-live symmetry
     status: pending
+
+  - id: local-service-play
+    content: |
+      LOCAL SERVICE DEVELOPMENT PLAY: Before Layer 2 infra verification, attempt running each core
+      service locally in batch mode with mocked/local deps. Purpose: surface missing env vars, import
+      errors, and config gaps before deploying to GCP sandbox.
+
+      Per service, create or verify scripts/run_local.sh with:
+        SERVICE_MODE=batch CLOUD_PROVIDER=local python -m <service_module>
+
+      Priority order (DAG):
+        1. instruments-service (gates all others)
+        2. market-data-processing-service
+        3. features-delta-one-service
+        4. strategy-service
+        5. execution-service
+
+      For each service document in deployment-service/docs/local-dev/:
+        - Required env vars (with example values)
+        - Any setup steps (seed data, mock pubsub, local GCS bucket)
+        - Known blockers
+
+      GATE: each service starts and processes one synthetic batch record without crashing.
+    status: pending
+    activeForm: "Running each core service locally to surface config and import issues"
 isProject: false
 ---
 

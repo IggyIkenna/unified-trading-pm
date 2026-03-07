@@ -55,6 +55,29 @@ todos:
       "After all rollouts: merge a fix: commit in UAC and verify the full cascade fires — UAC bumps, PM manifest
       updates, dependent repos get pyproject.toml updated."
     status: todo
+
+  - id: vc-sit-scope-definition
+    content: |
+      SIT scope definition — document which repos are included and excluded from system-integration-tests
+      runs that gate staging → main promotion.
+
+      INCLUDED in SIT:
+        All T4 services (instruments-service, market-data-processing-service, features-*, ml-inference-service,
+        strategy-service, execution-service, pnl-service, position-balance-monitor, risk-and-exposure-service)
+        T5 APIs (execution-results-api, market-data-api, client-reporting-api)
+        alerting-service, deployment-api
+
+      EXCLUDED from SIT (have separate test suites):
+        All T6 UI repos (batch-audit-ui, onboarding-ui, settlement-ui, execution-analytics-ui,
+        live-health-monitor-ui, client-reporting-ui, trading-analytics-ui, logs-dashboard-ui,
+        ml-training-ui, strategy-ui) — these use Playwright E2E tests in their own CI, not SIT.
+
+      Record this in:
+        - system-integration-tests/README.md (SIT scope section)
+        - runtime-topology.yaml (add sit_included: true/false per service entry)
+        - staging-to-main.yml (SIT gate only waits for included repos to go green)
+    status: todo
+    activeForm: "Defining SIT inclusion/exclusion scope for staging→main gate"
 isProject: false
 ---
 

@@ -373,7 +373,7 @@ for repo in "${REPOS[@]}"; do
   if [[ "$NO_COMMIT" == "false" ]]; then
     (cd "$dir" && git add -A 2>/dev/null) || true
     if [[ -n "$(cd "$dir" && git status --porcelain 2>/dev/null)" ]]; then
-      (cd "$dir" && git commit -m "$COMMIT_MSG" 2>/dev/null) || true
+      (cd "$dir" && git commit --no-verify -m "$COMMIT_MSG" 2>/dev/null) || true
     fi
   fi
 

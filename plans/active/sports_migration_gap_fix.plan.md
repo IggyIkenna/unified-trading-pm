@@ -20,6 +20,33 @@ todos:
   - id: b5-b6-deployment
     content: B5–B6 — Odds API validation; sports sharding; Playwright in base image; instruments sports namespace
     status: in_progress
+
+  - id: b7-bookmaker-login-scrapers
+    content: |
+      BOOKMAKER LOGIN + AUTHENTICATED SCRAPERS: Several bookmakers require authenticated sessions
+      for odds data access. Build on top of b1-scraper-adapters Playwright foundation.
+
+      Phase 1 — Audit & credentials:
+        (a) Audit which bookmakers require login vs offer public API keys:
+            - Public API: pinnacle (API key), odds_api (API key), api_football (API key)
+            - Login required: betfair (Exchange API + APING), smarkets (token), betdaq (SOAP/REST + token)
+            - Web scrape only (no API): identify from sports-betting-services-previous
+        (b) Store credentials in Secret Manager:
+            betfair-username, betfair-password, betfair-app-key
+            smarkets-api-token, betdaq-api-token
+
+      Phase 2 — Scraper implementation in USEI:
+        (c) Implement session-based scrapers using Playwright with SM credentials
+        (d) Implement session refresh + retry on 401/403 + exponential backoff
+        (e) Add website version fingerprinting to detect layout changes (alert + fail fast)
+
+      Phase 3 — VCR cassettes:
+        (f) Record authenticated responses as VCR cassettes (scrub auth tokens before committing)
+        (g) Add test_<bookmaker>_scraper.py with cassette playback in USEI tests/integration/
+
+      Scope: betfair, smarkets, betdaq. Kalshi deferred pending US regulatory clarity.
+    status: pending
+    activeForm: "Implementing bookmaker login and authenticated scraper adapters"
 isProject: false
 ---
 

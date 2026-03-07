@@ -24,6 +24,7 @@ else
 fi
 PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
 MANIFEST="$PM_ROOT/workspace-manifest.json"
+SCRIPT_DIR="$PM_ROOT/scripts/repo-management"
 
 REFLOG_DEPTH=50
 LIMIT=""

@@ -229,6 +229,27 @@ injected by the factory. Same pattern for `QueueEventBus`.
 
 ---
 
+### P6 — Protocol Extensions (Pending)
+
+- [ ] `p6-grpc-event-bus` — Add `GRPCEventBus(EventBus)` implementation in UCI `providers/protocol_impls.py`.
+      `PROTOCOL_EVENT_BUS_BACKEND=grpc` routes to it. Supports server-streaming RPC for low-latency live mode. Proto
+      definition at `unified_cloud_interface/proto/event_bus.proto`. Add `grpcio` + `grpcio-tools` to UCI pyproject.toml
+      (pin in workspace-constraints.toml). AWS equivalent: same gRPC implementation — grpc is cloud-agnostic by design.
+
+- [ ] `p6-bigquery-external-tables` — Batch data sink pattern: write parquet to GCS then register as BigQuery external
+      table via Hive partitioning (avoids BigQuery Storage write costs while retaining SQL query access). Implement
+      `HivePartitionedSink(DataSink)` in `providers/protocol_impls.py`; `PROTOCOL_DATA_SINK_BACKEND=hive` routes here.
+      The sink writes `gs://bucket/prefix/year=YYYY/month=MM/day=DD/` partitions and calls
+      `AnalyticsClient.register_external_table()` (new method on AnalyticsClient ABC). AWS equivalent: same pattern over
+      S3 + Athena (AthenaDataSink already partially done — extend to register Glue table).
+
+- [ ] `p6-get-cloud` — Add `get_cloud() -> Literal["gcp", "aws", "local"]` to UCI `factory.py`. Reads `CLOUD_PROVIDER`
+      env var (already exists). Returns lowercase cloud name. Purpose: downstream logging and sanity checks ONLY.
+      Document in codex: "get_cloud() is for observability/logging only — services MUST NOT branch business logic on
+      this result. All routing is done by the UCI factory, not by callers."
+
+---
+
 ## Acceptance Criteria
 
 1. `grep -r "gcs_bucket\|bigquery_dataset\|CloudTarget\|upload_to_gcs\|StandardizedDomainCloudService" --include="*.py" services/`
