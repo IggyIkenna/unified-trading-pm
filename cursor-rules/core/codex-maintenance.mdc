@@ -1,6 +1,5 @@
 ---
 description: "Update codex documentation when establishing new patterns — always apply, same PR as code"
-alwaysApply: true
 priority: 70
 globs:
   - "**/unified-trading-codex/**/*.md"

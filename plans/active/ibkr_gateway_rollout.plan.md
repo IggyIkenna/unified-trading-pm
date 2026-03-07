@@ -22,25 +22,34 @@ todos:
     status: todo
   - id: ibkr-adapter-refactor-urdi
     content:
-      "Refactor unified-reference-data-interface/adapters/ibkr.py: remove inline IB() connection setup; inject a
-      connected IB object via constructor parameter. Add integration test using mock IB() object (not HTTP VCR — TWS is
-      socket-based). Verify no duplicate auth logic vs other adapters."
+      "unified-reference-data-interface/adapters/ibkr.py: still a full stub — all methods raise NotImplementedError
+      pointing to Client Portal API. No IB() connection logic yet. Required: implement using ib_insync (not Client
+      Portal REST) with injected IB object per the canonical pattern. Add integration test with MagicMock(spec=IB)."
     status: todo
   - id: ibkr-adapter-refactor-umi
     content:
-      "Refactor unified-market-interface/adapters/ibkr_adapter.py: same pattern — inject IB object, remove inline
-      connection. Add integration test with mock IB()."
-    status: todo
+      "unified-market-interface/adapters/ibkr_adapter.py: PARTIALLY DONE — real ib_insync implementation added
+      (fetch_historical_bars, fetch_ticker, fetch_contract_details, fetch_historical_ticks, fetch_positions all
+      implemented with UAC model_validate). STILL REQUIRED: refactor connection ownership — currently lazy-creates its
+      own IB() in _get_ib() and connects via host/port/client_id (the 'bad' self-connecting pattern). Must remove
+      _get_ib() / connect() / disconnect(); accept a pre-connected IB object via constructor instead. Add integration
+      test with MagicMock(spec=IB)."
+    status: in_progress
   - id: ibkr-adapter-refactor-utei
     content:
-      "Refactor unified-trade-execution-interface/adapters/ibkr_tradfi.py: inject IB object, remove inline connection.
-      Add integration test with mock IB()."
-    status: todo
+      "unified-trade-execution-interface/adapters/ibkr_tradfi.py: PARTIALLY DONE — real ib_insync implementation with
+      order placement / cancellation / account queries. STILL REQUIRED: same inject-IB refactor as UMI — currently
+      lazy-creates IB() in _get_ib(); must accept injected IB object via constructor. Add integration test with
+      MagicMock(spec=IB)."
+    status: in_progress
   - id: ibkr-adapter-refactor-upi
     content:
-      "Refactor unified-position-interface/adapters/ibkr.py: inject IB object, remove inline connection. Add integration
-      test with mock IB()."
-    status: todo
+      "unified-position-interface/adapters/ibkr.py: PARTIALLY DONE — constructor accepts host/port/client_id;
+      map_ibkr_positions() and map_account_values_to_balance() normalizer helpers are implemented with UAC
+      model_validate. STILL REQUIRED: get_balances() and get_positions() both raise NotImplementedError (the error
+      messages correctly point callers to the map_* helpers). Wire live fetch using injected IB object; remove
+      host/port/client_id in favour of injected IB. Add integration test with MagicMock(spec=IB)."
+    status: in_progress
   - id: ibkr-mock-pattern-codex
     content:
       "Document the IB() mock pattern in unified-trading-codex/02-data/vcr-cassette-ownership.md under an IBKR section:

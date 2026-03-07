@@ -33,14 +33,18 @@ if [[ -z "${TELEGRAM_BOT_TOKEN:-}" || -z "${TELEGRAM_CHAT_ID:-}" ]] && [[ -f "$A
 fi
 
 cd "$WORKSPACE_ROOT"
+# Write each run to a temp file so extraction is always from the current run only
+RUN_LOG=$(mktemp /tmp/audit-reflog-run.XXXXXX)
 # Don't let set -e exit before we can show notification when audit finds high-risk (exit 1)
 exit_code=0
-bash "$SCRIPT_DIR/audit-reflog-resets.sh" >> "$LOG" 2>&1 || exit_code=$?
+bash "$SCRIPT_DIR/audit-reflog-resets.sh" 2>&1 | tee "$RUN_LOG" >> "$LOG" || exit_code=${PIPESTATUS[0]}
 
 if [[ $exit_code -eq 1 ]]; then
-  # Extract summary line and high-risk entries for the alert
-  SUMMARY=$(grep "^Summary:" "$LOG" | tail -1)
-  HIGH_RISK=$(grep -A 3 "HIGH RISK" "$LOG" | grep -v "^--$" | grep -v "MEDIUM\|LOW\|^===" | head -10 | sed 's/^  //')
+  # Extract from current run only (RUN_LOG), not accumulated history
+  SUMMARY=$(grep "^Summary:" "$RUN_LOG" | tail -1 || true)
+  # Extract the HIGH RISK section: from "=== HIGH RISK" up to "=== MEDIUM RISK"
+  HIGH_RISK=$(sed -n '/=== HIGH RISK/,/=== MEDIUM RISK/p' "$RUN_LOG" \
+    | grep -v "^===" | grep -v "^$" | sed 's/^  //' | head -10 || true)
 
   # macOS notification — Use full path (launchd has minimal PATH)
   NOTIFIER=""
@@ -66,4 +70,5 @@ if [[ $exit_code -eq 1 ]]; then
   fi
 fi
 
+rm -f "$RUN_LOG"
 exit $exit_code
