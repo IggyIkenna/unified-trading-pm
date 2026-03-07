@@ -2,9 +2,6 @@
 description: "GCP_PROJECT_ID is the ONLY project ID variable — GCP_PROJECT_ID is fully removed"
 alwaysApply: true
 priority: 60
-globs:
-  - "**/*.py"
-  - "**/*.sh"
 tags:
   - configuration
   - project-id

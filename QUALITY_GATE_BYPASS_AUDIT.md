@@ -19,6 +19,14 @@ installable library. Documented in `.cursor/rules/pm-repo-context.mdc`.
 
 ---
 
+## Version Policy Exemption
+
+file: pyproject.toml field: version value: "1.2.0" justification: PM is internal devops infrastructure, never published
+to PyPI. Version tracks internal CI/CD evolution independently of library semver policy. Pre-stable policy applies only
+to published libraries. owner: platform-team status: PERMANENT_EXEMPTION
+
+---
+
 ## 1.1 Version Policy Exception — `unified-trading-pm` at `1.0.0`
 
 **Repo:** `unified-trading-pm` **Version in manifest:** `1.0.0`

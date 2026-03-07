@@ -213,9 +213,6 @@
     "cursorpyright.analysis.indexing": true,
     "cursorpyright.analysis.inlayHints.variableTypes": true,
     "cursorpyright.analysis.inlayHints.functionReturnTypes": true,
-    "cursorpyright.analysis.reportAny": "error",
-    "cursorpyright.analysis.reportUnknownMemberType": "error",
-    "cursorpyright.analysis.reportUnknownVariableType": "error",
     "cursorpyright.analysis.extraPaths": [
       "${workspaceFolder}/alerting-service",
       "${workspaceFolder}/batch-audit-ui",

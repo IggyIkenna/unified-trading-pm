@@ -58,16 +58,16 @@
   <text x="150" y="442" class="desc">Foundation — zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards. (5 repos)</text>
   <rect x="70" y="465" width="181" height="38" class="lib" />
   <text x="160" y="483" text-anchor="middle" class="label">matching-engine-library</text>
-  <text x="160" y="495" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="160" y="495" text-anchor="middle" class="ver">0.1.3</text>
   <rect x="261" y="465" width="167" height="38" class="lib" />
   <text x="344" y="483" text-anchor="middle" class="label">unified-api-contracts</text>
-  <text x="344" y="495" text-anchor="middle" class="ver">0.1.1</text>
+  <text x="344" y="495" text-anchor="middle" class="ver">0.1.20</text>
   <rect x="438" y="465" width="181" height="38" class="lib" />
   <text x="528" y="483" text-anchor="middle" class="label">unified-cloud-interface</text>
-  <text x="528" y="495" text-anchor="middle" class="ver">1.1.5</text>
+  <text x="528" y="495" text-anchor="middle" class="ver">0.11.6</text>
   <rect x="629" y="465" width="188" height="38" class="lib" />
   <text x="723" y="483" text-anchor="middle" class="label">unified-events-interface</text>
-  <text x="723" y="495" text-anchor="middle" class="ver">0.2.0</text>
+  <text x="723" y="495" text-anchor="middle" class="ver">0.2.2</text>
   <rect x="827" y="465" width="244" height="38" class="lib" />
   <text x="949" y="483" text-anchor="middle" class="label">unified-reference-data-interface</text>
   <text x="949" y="495" text-anchor="middle" class="ver">0.1.0</text>
@@ -78,13 +78,13 @@
   <text x="150" y="561" class="desc">Services runtime (Tier 1) (3 repos)</text>
   <rect x="70" y="584" width="188" height="38" class="lib" />
   <text x="164" y="602" text-anchor="middle" class="label">unified-config-interface</text>
-  <text x="164" y="614" text-anchor="middle" class="ver">0.1.3</text>
+  <text x="164" y="614" text-anchor="middle" class="ver">0.1.17</text>
   <rect x="268" y="584" width="202" height="38" class="lib" />
   <text x="369" y="602" text-anchor="middle" class="label">unified-internal-contracts</text>
-  <text x="369" y="614" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="369" y="614" text-anchor="middle" class="ver">0.1.2</text>
   <rect x="480" y="584" width="181" height="38" class="lib" />
   <text x="570" y="602" text-anchor="middle" class="label">unified-trading-library</text>
-  <text x="570" y="614" text-anchor="middle" class="ver">0.3.21</text>
+  <text x="570" y="614" text-anchor="middle" class="ver">0.3.42</text>
   <!-- L4: Domain client + interfaces (Tier 2-3) (2 repos) -->
   <rect x="40" y="656" width="2320" height="107" class="level-bg" />
   <rect x="55" y="664" width="80" height="22" fill="#8b5cf6" class="level-badge" />
@@ -92,7 +92,7 @@
   <text x="150" y="680" class="desc">Domain client + interfaces (Tier 2-3) (2 repos)</text>
   <rect x="70" y="703" width="174" height="38" class="lib" />
   <text x="157" y="721" text-anchor="middle" class="label">execution-algo-library</text>
-  <text x="157" y="733" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="157" y="733" text-anchor="middle" class="ver">0.1.2</text>
   <rect x="254" y="703" width="258" height="38" class="lib" />
   <text x="383" y="721" text-anchor="middle" class="label">unified-feature-calculator-library</text>
   <text x="383" y="733" text-anchor="middle" class="ver">0.1.0</text>
@@ -103,10 +103,10 @@
   <text x="150" y="799" class="desc">Core interfaces (depends on UTEI, UTL, T0) (5 repos)</text>
   <rect x="70" y="822" width="167" height="38" class="lib" />
   <text x="153" y="840" text-anchor="middle" class="label">unified-domain-client</text>
-  <text x="153" y="852" text-anchor="middle" class="ver">0.1.12</text>
+  <text x="153" y="852" text-anchor="middle" class="ver">0.1.14</text>
   <rect x="247" y="822" width="188" height="38" class="lib" />
   <text x="341" y="840" text-anchor="middle" class="label">unified-market-interface</text>
-  <text x="341" y="852" text-anchor="middle" class="ver">0.3.0</text>
+  <text x="341" y="852" text-anchor="middle" class="ver">0.3.2</text>
   <rect x="445" y="822" width="160" height="38" class="lib" />
   <text x="525" y="840" text-anchor="middle" class="label">unified-ml-interface</text>
   <text x="525" y="852" text-anchor="middle" class="ver">0.1.0</text>
@@ -126,7 +126,7 @@
   <text x="192" y="971" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="324" y="941" width="258" height="38" class="lib" />
   <text x="453" y="959" text-anchor="middle" class="label">unified-sports-execution-interface</text>
-  <text x="453" y="971" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="453" y="971" text-anchor="middle" class="ver">0.1.1</text>
   <!-- L7: Foundational service (instruments only; no service-domain-data dependency) (1 repos) -->
   <rect x="40" y="1013" width="2320" height="107" class="level-bg" />
   <rect x="55" y="1021" width="80" height="22" fill="#ea580c" class="level-badge" />
@@ -134,7 +134,7 @@
   <text x="150" y="1037" class="desc">Foundational service (instruments only; no service-domain-data dependency) (1 repos)</text>
   <rect x="70" y="1060" width="153" height="38" class="svc" />
   <text x="146" y="1078" text-anchor="middle" class="label">instruments-service</text>
-  <text x="146" y="1090" text-anchor="middle" class="ver">0.1.15</text>
+  <text x="146" y="1090" text-anchor="middle" class="ver">0.1.22</text>
   <!-- L8: Services with data-flow dependencies (17 repos) -->
   <rect x="40" y="1132" width="2320" height="155" class="level-bg" />
   <rect x="55" y="1140" width="80" height="22" fill="#0891b2" class="level-badge" />
@@ -145,7 +145,7 @@
   <text x="136" y="1209" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="212" y="1179" width="139" height="38" class="svc" />
   <text x="281" y="1197" text-anchor="middle" class="label">execution-service</text>
-  <text x="281" y="1209" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="281" y="1209" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="361" y="1179" width="195" height="38" class="svc" />
   <text x="458" y="1197" text-anchor="middle" class="label">features-calendar-service</text>
   <text x="458" y="1209" text-anchor="middle" class="ver">0.2.0</text>
@@ -154,13 +154,13 @@
   <text x="667" y="1209" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="778" y="1179" width="251" height="38" class="svc" />
   <text x="903" y="1197" text-anchor="middle" class="label">features-cross-instrument-service</text>
-  <text x="903" y="1209" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="903" y="1209" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1039" y="1179" width="202" height="38" class="svc" />
   <text x="1140" y="1197" text-anchor="middle" class="label">features-delta-one-service</text>
   <text x="1140" y="1209" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1251" y="1179" width="244" height="38" class="svc" />
   <text x="1373" y="1197" text-anchor="middle" class="label">features-multi-timeframe-service</text>
-  <text x="1373" y="1209" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="1373" y="1209" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1505" y="1179" width="188" height="38" class="svc" />
   <text x="1599" y="1197" text-anchor="middle" class="label">features-onchain-service</text>
   <text x="1599" y="1209" text-anchor="middle" class="ver">0.2.0</text>
@@ -175,7 +175,7 @@
   <text x="2228" y="1209" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="70" y="1227" width="188" height="38" class="svc" />
   <text x="164" y="1245" text-anchor="middle" class="label">market-tick-data-service</text>
-  <text x="164" y="1257" text-anchor="middle" class="ver">0.2.0</text>
+  <text x="164" y="1257" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="268" y="1227" width="160" height="38" class="svc" />
   <text x="348" y="1245" text-anchor="middle" class="label">ml-inference-service</text>
   <text x="348" y="1257" text-anchor="middle" class="ver">0.1.0</text>
@@ -221,10 +221,10 @@
   <text x="150" y="1442" class="desc">Deployment infrastructure (deployment-api, deployment-service; deploys all services) (2 repos)</text>
   <rect x="70" y="1465" width="130" height="38" class="api" />
   <text x="135" y="1483" text-anchor="middle" class="label">deployment-api</text>
-  <text x="135" y="1495" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="135" y="1495" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="210" y="1465" width="146" height="38" class="infra" />
   <text x="283" y="1483" text-anchor="middle" class="label">deployment-service</text>
-  <text x="283" y="1495" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="283" y="1495" text-anchor="middle" class="ver">0.1.1</text>
   <!-- L11: UI applications (12 repos) -->
   <rect x="40" y="1537" width="2320" height="107" class="level-bg" />
   <rect x="55" y="1545" width="80" height="22" fill="#a855f7" class="level-badge" />
@@ -276,7 +276,7 @@
   <text x="143" y="1733" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="226" y="1703" width="188" height="38" class="test" />
   <text x="320" y="1721" text-anchor="middle" class="label">system-integration-tests</text>
-  <text x="320" y="1733" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="320" y="1733" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="40" y="1795" width="2320" height="90" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="8" />
   <text x="60" y="1820" class="section">Versioning + Summary</text>
   <text x="60" y="1840" class="small">All 0.x.x. Version 1.0.0 = first stable (GitHub Actions auto-bump on main merge). No local version bumping. CI/CD in level order.</text>

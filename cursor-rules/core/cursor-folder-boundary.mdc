@@ -1,7 +1,7 @@
 ---
 description: .cursor/ folder contains IDE config only — no scripts, plans, or manifests
 globs: [".cursor/**"]
-alwaysApply: true
+alwaysApply: false
 priority: 65
 ---
 

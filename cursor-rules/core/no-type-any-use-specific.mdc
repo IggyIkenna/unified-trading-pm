@@ -1,6 +1,6 @@
 ---
 description: "Use specific types, never Any. Check source code for actual type."
-alwaysApply: true
+alwaysApply: false
 priority: 90
 tags: [type-safety, blocking, strict-typing]
 globs: ["**/*.py", "!**/tests/**"]

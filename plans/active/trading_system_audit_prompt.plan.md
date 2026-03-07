@@ -72,6 +72,32 @@ todos:
       domain entity hot-reload, get_config_store() factory only, no hardcoded subscription lists, CONFIG_CHANGED events
       logged."
     status: pending
+  - id: audit-integration-test-coverage
+    content: >
+      "Audit Section 10 — Integration Test Coverage: Every repo with private deps (L2+) must have tests/integration/
+      with Layer 1.5 mock integration tests for all dep boundaries. External-facing interfaces
+      (unified-market-interface, unified-trade-execution-interface, unified-reference-data-interface,
+      unified-position-interface, unified-sports-execution-interface, unified-defi-execution-interface,
+      unified-cloud-interface) must have VCR-recorded integration tests against real API calls validating schemas from
+      unified-api-contracts. Score PASS if: (a) tests/integration/ exists with >=1 test per private dep boundary, (b)
+      interface repos have vcr cassettes in unified_api_contracts_external/<venue>/mocks/, (c) all integration tests run
+      with mocked deps (no live cloud in quickmerge)."
+    status: pending
+  - id: audit-coverage-regression-prevention
+    content: >
+      "Audit Section 11 — Coverage Regression Prevention: Each repo's MIN_COVERAGE in scripts/quality-gates.sh must be
+      set to (actual measured coverage - 1%), NOT the default 70%. pyproject.toml [tool.coverage.report] fail_under must
+      match MIN_COVERAGE. Score PASS if: MIN_COVERAGE != 70 for all repos with >70% actual coverage; fail_under in
+      pyproject.toml matches MIN_COVERAGE."
+    status: pending
+  - id: audit-cloud-agnostic-api
+    content: >
+      "Audit Section 12 — Cloud-Agnostic API Compliance: Only unified-cloud-interface may contain
+      cloud-provider-specific code (GCS/S3/AWS/GCP SDK calls). All other repos must use UCI abstractions. Banned
+      patterns outside UCI: gcs_bucket (use storage_bucket), bigquery_dataset (use analytics_dataset), upload_to_gcs
+      (use upload_artifact via UCI StorageClient), os.getenv (use UnifiedCloudConfig), google-cloud-* imports outside
+      UCI, boto3 imports outside UCI. Score FAIL if any banned pattern found in non-UCI source."
+    status: pending
 isProject: false
 ---
 
@@ -445,26 +471,26 @@ interfaces; (9) optional AC layout + remove sys.modules alias.
 
 ## SECTION 8 — LINTING, FORMATTING & QUALITY GATES
 
-| #    | Criterion                                                                                                                                                                                | Blocking |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- | --- |
-| 8.1  | Ruff linter runs with zero errors (`ruff check --no-fix`)                                                                                                                                | YES      |
-| 8.2  | Ruff formatter is applied (`ruff format --check`)                                                                                                                                        | YES      |
-| 8.3  | Line length ≤ 100 chars enforced (E501 in ruff config, not globally ignored)                                                                                                             | YES      |
-| 8.4  | No bare `except:` or `except Exception: pass` (E722 not in global ruff ignore)                                                                                                           | YES      |
-| 8.5  | No `# noqa` or `# type: ignore` used to hide architectural violations — each must be documented in QUALITY_GATE_BYPASS_AUDIT.md                                                          | YES      |
-| 8.6  | basedpyright passes with `typeCheckingMode: "strict"` and `reportAny: "error"` — run via `timeout 120 basedpyright <source_dir>/`                                                        | YES      |
-| 8.7  | Import order correct — stdlib → third-party → local; no imports inside functions (except `TYPE_CHECKING` blocks)                                                                         | YES      |
-| 8.8  | `scripts/quality-gates.sh` exists and matches canonical template from codex (`quality-gates-service-template.sh` or `quality-gates-library-template.sh`)                                 | YES      |
-| 8.9  | No `                                                                                                                                                                                     |          | true` or similar bypasses in quality gate CI workflows (`quality-gates.yml`, `quality-gates-simple.yml`) | YES |
-| 8.10 | McCabe complexity ≤ 10 enforced in ruff config                                                                                                                                           | WARN     |
-| 8.11 | Ruff config uses standard rule selection (`["E", "F", "W", "I"]` minimum) — not `["I"]` only                                                                                             | YES      |
-| 8.12 | `QUALITY_GATE_BYPASS_AUDIT.md` exists at repo root, is either empty (all gates pass) or contains only genuine unsolvable exceptions with justification — no stale or unjustified entries | YES      |
-| 8.13 | No wildcard imports (`from X import` ) in production code                                                                                                                                | YES      |
-| 8.14 | `.pre-commit-config.yaml` exists in repo root with ruff (`v0.15.0`), prettier (`3.6.2`), and pre-commit-hooks (`v6.0.0`) — matching canonical instruments-service template               | YES      |
-| 8.15 | Pre-commit hooks installed via `prek install` — `.git/hooks/pre-commit` exists and delegates to pre-commit                                                                               | YES      |
-| 8.16 | Prettier configured to format TypeScript/JSON/Markdown/YAML (`types_or: [ts, tsx, javascript, jsx, json, markdown, yaml]`)                                                               | WARN     |
-| 8.17 | Library repos include `bump-library-version` pre-commit hook; non-library repos (services, UIs, PM) omit it                                                                              | YES      |
-| 8.18 | `pre-commit run --all-files` exits 0 on clean repo (no trailing whitespace, no missing newlines, ruff clean)                                                                             | YES      |
+| #    | Criterion                                                                                                                                                                                                                                                                                                               | Blocking |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- | --- |
+| 8.1  | Ruff linter runs with zero errors (`ruff check --no-fix`)                                                                                                                                                                                                                                                               | YES      |
+| 8.2  | Ruff formatter is applied (`ruff format --check`)                                                                                                                                                                                                                                                                       | YES      |
+| 8.3  | Line length ≤ 100 chars enforced (E501 in ruff config, not globally ignored)                                                                                                                                                                                                                                            | YES      |
+| 8.4  | No bare `except:` or `except Exception: pass` (E722 not in global ruff ignore)                                                                                                                                                                                                                                          | YES      |
+| 8.5  | No `# noqa` or `# type: ignore` used to hide architectural violations — each must be documented in QUALITY_GATE_BYPASS_AUDIT.md                                                                                                                                                                                         | YES      |
+| 8.6  | basedpyright passes with `typeCheckingMode: "strict"` and `reportAny: "error"` — **zero errors AND zero warnings** (warnings are treated as errors). Run from repo root: `cd <repo> && basedpyright <source_dir>/`. Summary line must be `0 errors, 0 warnings, 0 notes`. quality-gates.sh enforces this automatically. | YES      |
+| 8.7  | Import order correct — stdlib → third-party → local; no imports inside functions (except `TYPE_CHECKING` blocks)                                                                                                                                                                                                        | YES      |
+| 8.8  | `scripts/quality-gates.sh` exists and matches canonical template from codex (`quality-gates-service-template.sh` or `quality-gates-library-template.sh`)                                                                                                                                                                | YES      |
+| 8.9  | No `                                                                                                                                                                                                                                                                                                                    |          | true` or similar bypasses in quality gate CI workflows (`quality-gates.yml`, `quality-gates-simple.yml`) | YES |
+| 8.10 | McCabe complexity ≤ 10 enforced in ruff config                                                                                                                                                                                                                                                                          | WARN     |
+| 8.11 | Ruff config uses standard rule selection (`["E", "F", "W", "I"]` minimum) — not `["I"]` only                                                                                                                                                                                                                            | YES      |
+| 8.12 | `QUALITY_GATE_BYPASS_AUDIT.md` exists at repo root, is either empty (all gates pass) or contains only genuine unsolvable exceptions with justification — no stale or unjustified entries                                                                                                                                | YES      |
+| 8.13 | No wildcard imports (`from X import` ) in production code                                                                                                                                                                                                                                                               | YES      |
+| 8.14 | `.pre-commit-config.yaml` exists in repo root with ruff (`v0.15.0`), prettier (`3.6.2`), and pre-commit-hooks (`v6.0.0`) — matching canonical instruments-service template                                                                                                                                              | YES      |
+| 8.15 | Pre-commit hooks installed via `prek install` — `.git/hooks/pre-commit` exists and delegates to pre-commit                                                                                                                                                                                                              | YES      |
+| 8.16 | Prettier configured to format TypeScript/JSON/Markdown/YAML (`types_or: [ts, tsx, javascript, jsx, json, markdown, yaml]`)                                                                                                                                                                                              | WARN     |
+| 8.17 | Library repos include `bump-library-version` pre-commit hook; non-library repos (services, UIs, PM) omit it                                                                                                                                                                                                             | YES      |
+| 8.18 | `pre-commit run --all-files` exits 0 on clean repo (no trailing whitespace, no missing newlines, ruff clean)                                                                                                                                                                                                            | YES      |
 
 ### 8.19 Quickmerge Pipeline: Stages & Flags
 
@@ -489,13 +515,14 @@ interfaces; (9) optional AC layout + remove sys.modules alias.
 
 ### 8.20 Type Checking & Linting Safety
 
-| Criterion                   | Blocking                                                                                                                                                                                                                                   |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **basedpyright-safety**     | Never run `basedpyright .` or `basedpyright` without source dir. Always use `timeout 120 basedpyright <source_dir>/` or `run_timeout 120 basedpyright <source_dir>/`. For audits, run quality gates per repo, NOT standalone basedpyright. |
-| **safe-linting-execution**  | Ruff/linters run with timeout and specific source dir. `timeout 30 ruff check <source_dir>/`; job-level timeout in CI. Never `ruff check .` or run linters without timeout.                                                                |
-| **exclude-build-artifacts** | Never type-check `build/`, `dist/`, `__pycache__/`, `.venv/`, `node_modules`. Add to pyrightconfig.json exclude. Run basedpyright on source_dir only.                                                                                      |
-| **UCS_DOMAIN_IMPORT**       | Services importing domain clients from UTS (e.g. `InstrumentsDomainClient`) FAIL — must import from `unified_domain_client`.                                                                                                               |
-| **E501**                    | Line length ≤ 100 chars enforced in ruff config; E501 not in global ignore.                                                                                                                                                                |
+| Criterion                   | Blocking                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **basedpyright-safety**     | Never run `basedpyright .` or `basedpyright` without source dir. Always use `timeout 120 basedpyright <source_dir>/` or `run_timeout 120 basedpyright <source_dir>/`. For audits, run quality gates per repo, NOT standalone basedpyright. **Zero-warning policy**: warnings count as errors — summary must be `0 errors, 0 warnings`.                                                 |
+| **safe-linting-execution**  | Ruff/linters run with timeout and specific source dir. `timeout 30 ruff check <source_dir>/`; job-level timeout in CI. Never `ruff check .` or run linters without timeout.                                                                                                                                                                                                            |
+| **exclude-build-artifacts** | Never type-check `build/`, `dist/`, `__pycache__/`, `.venv/`, `node_modules`. Add to pyrightconfig.json exclude. Run basedpyright on source_dir only.                                                                                                                                                                                                                                  |
+| **run-from-repo-root**      | Always run `basedpyright` from within the repo root directory (not with absolute paths from workspace root). Running from repo root picks up `pyrightconfig.json` + `.venv` — without these, basedpyright skips type-checking installed packages (Pydantic, etc.) and silently misses real errors. Wrong: `basedpyright /abs/path/repo/src/`. Correct: `cd repo && basedpyright src/`. |
+| **UCS_DOMAIN_IMPORT**       | Services importing domain clients from UTS (e.g. `InstrumentsDomainClient`) FAIL — must import from `unified_domain_client`.                                                                                                                                                                                                                                                           |
+| **E501**                    | Line length ≤ 100 chars enforced in ruff config; E501 not in global ignore.                                                                                                                                                                                                                                                                                                            |
 
 ---
 
