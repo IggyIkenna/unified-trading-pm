@@ -226,11 +226,17 @@ _restore_protection() {
       # enforce_admins: handle both object form {"enabled":true} and raw boolean
       put_body=$(jq '{
         required_status_checks: (
-          if .required_status_checks then {
-            strict: .required_status_checks.strict,
-            contexts: (.required_status_checks.contexts // []),
-            checks: (.required_status_checks.checks // [])
-          } else null end
+          if .required_status_checks then (
+            # GitHub anyOf: use "checks" (app-aware) when present, else "contexts" (legacy).
+            # Sending both causes HTTP 422 "No subschema in anyOf matched".
+            if ((.required_status_checks.checks // []) | length) > 0 then {
+              strict: .required_status_checks.strict,
+              checks: .required_status_checks.checks
+            } else {
+              strict: .required_status_checks.strict,
+              contexts: (.required_status_checks.contexts // [])
+            } end
+          ) else null end
         ),
         enforce_admins: (
           if (.enforce_admins | type) == "object" then (.enforce_admins.enabled // false)
