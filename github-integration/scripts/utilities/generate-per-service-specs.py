@@ -390,7 +390,7 @@ def _build_observability_content(m: dict[str, str]) -> str:
 All services MUST implement these 11 lifecycle events:
 
 1. **STARTED** - Service initialization began
-2. **INGESTING_DATA** - Data ingestion started
+2. **DATA_INGESTION_STARTED** - Data ingestion started
 3. **PROCESSING_DATA** - Data processing started
 4. **SAVING_DATA** - Data save operation started
 5. **DATA_SAVED** - Data save operation completed
@@ -404,7 +404,7 @@ All services MUST implement these 11 lifecycle events:
 ### Implementation Status (TODO: Manual Review Required)
 
 - [ ] STARTED implemented
-- [ ] INGESTING_DATA implemented
+- [ ] DATA_INGESTION_STARTED implemented
 - [ ] PROCESSING_DATA implemented
 - [ ] SAVING_DATA implemented
 - [ ] DATA_SAVED implemented

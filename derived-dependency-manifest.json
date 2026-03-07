@@ -351,6 +351,7 @@
     },
     "unified-position-interface": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -363,7 +364,7 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 1,
+      "internal_count": 2,
       "external_count": 8
     },
     "unified-trade-execution-interface": {
@@ -395,6 +396,7 @@
     },
     "unified-defi-execution-interface": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.36,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.2,<1.0.0"
       },
       "external_deps": {
@@ -408,12 +410,13 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 1,
+      "internal_count": 2,
       "external_count": 9
     },
     "unified-sports-execution-interface": {
       "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0"
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
         "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
@@ -432,7 +435,7 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 1,
+      "internal_count": 2,
       "external_count": 15
     },
     "instruments-service": {

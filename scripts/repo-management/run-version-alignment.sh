@@ -45,23 +45,32 @@ PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
 export WORKSPACE_ROOT
 cd "$PM_ROOT"
 
+# Use workspace venv Python (has tomli_w and all manifest tools installed).
+# Falls back to system python3.13 if venv not found.
+VENV_PYTHON="$WORKSPACE_ROOT/.venv-workspace/bin/python3.13"
+if [ -x "$VENV_PYTHON" ]; then
+  PYTHON="$VENV_PYTHON"
+else
+  PYTHON="python3.13"
+fi
+
 echo "━━━ Version alignment ━━━"
 echo ""
 
 # 1 & 2. Generate derived + canonical manifests (parallel)
 echo "[1/4] Generating derived + canonical manifests (parallel)..."
-python3.13 scripts/manifest/generate-derived-manifest.py &
+"$PYTHON" scripts/manifest/generate-derived-manifest.py &
 PID_DERIVED=$!
-python3.13 scripts/manifest/generate_canonical_dependency_manifest.py &
+"$PYTHON" scripts/manifest/generate_canonical_dependency_manifest.py &
 PID_CANON=$!
 wait $PID_DERIVED $PID_CANON
 
 # 3. Check alignment
 echo "[3/4] Checking alignment..."
-ALIGN_JSON=$(python3.13 scripts/manifest/check-dependency-alignment.py --json 2>/dev/null || true)
-HAS_INTERNAL=$(echo "$ALIGN_JSON" | python3.13 -c "import json,sys; d=json.load(sys.stdin); print('1' if any(i.get('type','').startswith('internal_') for i in d.get('issues',[])) else '0')" 2>/dev/null || echo '0')
-HAS_EXTERNAL=$(echo "$ALIGN_JSON" | python3.13 -c "import json,sys; d=json.load(sys.stdin); print('1' if any(i.get('type')=='external_version_mismatch' for i in d.get('issues',[])) else '0')" 2>/dev/null || echo '0')
-if ! python3.13 scripts/manifest/check-dependency-alignment.py; then
+ALIGN_JSON=$("$PYTHON" scripts/manifest/check-dependency-alignment.py --json 2>/dev/null || true)
+HAS_INTERNAL=$(echo "$ALIGN_JSON" | "$PYTHON" -c "import json,sys; d=json.load(sys.stdin); print('1' if any(i.get('type','').startswith('internal_') for i in d.get('issues',[])) else '0')" 2>/dev/null || echo '0')
+HAS_EXTERNAL=$(echo "$ALIGN_JSON" | "$PYTHON" -c "import json,sys; d=json.load(sys.stdin); print('1' if any(i.get('type')=='external_version_mismatch' for i in d.get('issues',[])) else '0')" 2>/dev/null || echo '0')
+if ! "$PYTHON" scripts/manifest/check-dependency-alignment.py; then
   echo ""
   echo "  Misalignment found. Options:"
   echo "    - Run with --fix to apply: bash run-version-alignment.sh --fix"
@@ -69,11 +78,11 @@ if ! python3.13 scripts/manifest/check-dependency-alignment.py; then
   if [ "$APPLY_FIXES" = true ]; then
     echo ""
     echo "  Applying fixes (internal=$HAS_INTERNAL external=$HAS_EXTERNAL)..."
-    [ "$HAS_INTERNAL" = '1' ] && python3.13 scripts/manifest/fix-internal-dependency-alignment.py --apply 2>&1 || true
-    [ "$HAS_EXTERNAL" = '1' ] && python3.13 scripts/manifest/fix_external_dependency_alignment.py --apply 2>&1 || true
-    python3.13 scripts/manifest/generate-derived-manifest.py
+    [ "$HAS_INTERNAL" = '1' ] && "$PYTHON" scripts/manifest/fix-internal-dependency-alignment.py --apply 2>&1 || true
+    [ "$HAS_EXTERNAL" = '1' ] && "$PYTHON" scripts/manifest/fix_external_dependency_alignment.py --apply 2>&1 || true
+    "$PYTHON" scripts/manifest/generate-derived-manifest.py
     echo "  Re-checking..."
-    python3.13 scripts/manifest/check-dependency-alignment.py
+    "$PYTHON" scripts/manifest/check-dependency-alignment.py
   else
     exit 1
   fi
@@ -83,8 +92,8 @@ fi
 echo "[4/4] Validating constraints..."
 
 
-if ! python3.13 scripts/manifest/validate-dependency-conflicts.py 2>/dev/null; then
-  echo "  Constraints have conflicts. Run: python3.13 scripts/manifest/validate-dependency-conflicts.py --regenerate"
+if ! "$PYTHON" scripts/manifest/validate-dependency-conflicts.py 2>/dev/null; then
+  echo "  Constraints have conflicts. Run: $PYTHON scripts/manifest/validate-dependency-conflicts.py --regenerate"
   exit 1
 fi
 
