@@ -99,10 +99,16 @@ def get_basedpyright_config(source_dir: str) -> str:
 include = ["{source_dir}"]
 exclude = ["tests", "**/__pycache__", ".venv*", "build", "dist"]
 pythonVersion = "3.13"
-typeCheckingMode = "standard"
+typeCheckingMode = "strict"
 reportMissingImports = "error"
-reportUnusedVariable = "warning"
-reportUnusedImport = "warning" """
+reportUnusedVariable = "none"
+reportUnusedImport = "none"
+reportUnknownMemberType = "error"
+reportUnknownVariableType = "error"
+reportUnknownParameterType = "error"
+reportUnknownArgumentType = "error"
+reportMissingParameterType = "error"
+reportAny = "error" """
 
 
 def get_makefile_content(source_dir: str) -> str:

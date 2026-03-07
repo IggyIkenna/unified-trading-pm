@@ -57,7 +57,7 @@ The cascade mechanism pushes dep changes to the same feature branch — changes 
 
 Run weekly (launchd). Alerts via macOS notification on high-risk findings.
 
-**Full doc:** `unified-trading-pm/docs/audit-reflog-scheduled-job.md`  
+**Full doc:** `unified-trading-pm/docs/audit-reflog-scheduled-job.md`
 **Cursor rule:** `unified-trading-pm/cursor-rules/misc/audit-reflog-scheduled-job.mdc`
 
 - Run: `bash unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh`

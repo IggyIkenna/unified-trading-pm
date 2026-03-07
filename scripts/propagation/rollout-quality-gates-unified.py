@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import typing
 from pathlib import Path
@@ -201,6 +202,16 @@ def copy_quality_gates(
     elif template_type == "service":
         content = content.replace('SERVICE_NAME="REPLACE_ME"', f'SERVICE_NAME="{package_name}"')
         content = content.replace('SOURCE_DIR="REPLACE_ME"', f'SOURCE_DIR="{source_dir}"')
+
+    # Preserve existing MIN_COVERAGE if the file already exists; avoids clobbering
+    # per-repo coverage targets that were carefully measured and set.
+    existing_coverage: str | None = None
+    if dest.exists():
+        m = re.search(r"^MIN_COVERAGE=(\d+)", dest.read_text(), re.MULTILINE)
+        if m:
+            existing_coverage = m.group(1)
+    if existing_coverage is not None:
+        content = re.sub(r"^MIN_COVERAGE=\d+", f"MIN_COVERAGE={existing_coverage}", content, flags=re.MULTILINE)
 
     if dry_run:
         print(f"  [dry-run] Would write {dest}")

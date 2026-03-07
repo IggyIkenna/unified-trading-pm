@@ -1,7 +1,7 @@
 ---
 description: "Always use quickmerge.sh, never run quality gates standalone"
 alwaysApply: true
-priority: 85
+priority: 90
 tags: [ci-cd, quickmerge]
 ---
 

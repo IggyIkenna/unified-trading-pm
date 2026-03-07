@@ -16,6 +16,20 @@ DO:
  @vcr.use_cassette(str(cassette_dir / "binance/mocks/ticker_24hr.yaml"))
  def test_binance_ticker(): ...
 
+## UCI VCR Tests (GCS + AWS both required)
+
+unified-cloud-interface is the ONE repo allowed cloud-provider-specific code. It MUST have VCR integration tests for BOTH providers:
+
+- `tests/integration/test_gcs_integration.py` — VCR cassettes for GCS Storage API calls
+- `tests/integration/test_s3_integration.py` — VCR cassettes for AWS S3 API calls
+- `tests/integration/test_gcp_secret_manager.py` — VCR cassettes for GCP Secret Manager
+- `tests/integration/test_aws_secrets_manager.py` — VCR cassettes for AWS Secrets Manager
+
+Cassettes validate that the UCI abstraction layer correctly routes to both providers.
+Provider selection is controlled by `CLOUD_PROVIDER` env var (`gcp` or `aws`).
+
+These tests prove the cloud-agnostic API works on both backends.
+
 NEVER:
  Copy cassettes to consumer repos
  Use VCR for WebSocket (different tooling required)

@@ -109,3 +109,25 @@ web3 = "web3>=6.0.0,<7.0.0"
 websockets = "websockets>=14.0,<15.0.0"
 yfinance = "yfinance>=0.2.66,<1.0.0"
 zstandard = "zstandard>=0.22.0,<1.0.0"
+
+[build-system-deps]
+# Bounded setuptools for [build-system] requires — prevents pulling in breaking releases
+setuptools = "setuptools>=75,<82"
+
+[internal-deps]
+# All internal workspace packages are pre-1.0.0; upper bound prevents accidental major-version drift
+unified_api_contracts = "unified-api-contracts>=0.1.0,<1.0.0"
+unified_cloud_interface = "unified-cloud-interface>=0.1.0,<1.0.0"
+unified_config_interface = "unified-config-interface>=0.1.0,<1.0.0"
+unified_defi_execution_interface = "unified-defi-execution-interface>=0.1.0,<1.0.0"
+unified_domain_client = "unified-domain-client>=0.1.0,<1.0.0"
+unified_events_interface = "unified-events-interface>=0.1.0,<1.0.0"
+unified_feature_calculator_library = "unified-feature-calculator-library>=0.1.0,<1.0.0"
+unified_internal_contracts = "unified-internal-contracts>=0.1.0,<1.0.0"
+unified_market_interface = "unified-market-interface>=0.1.0,<1.0.0"
+unified_ml_interface = "unified-ml-interface>=0.1.0,<1.0.0"
+unified_position_interface = "unified-position-interface>=0.1.0,<1.0.0"
+unified_reference_data_interface = "unified-reference-data-interface>=0.1.0,<1.0.0"
+unified_sports_execution_interface = "unified-sports-execution-interface>=0.1.0,<1.0.0"
+unified_trade_execution_interface = "unified-trade-execution-interface>=0.1.0,<1.0.0"
+unified_trading_library = "unified-trading-library>=0.1.0,<1.0.0"

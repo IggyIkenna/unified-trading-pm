@@ -191,7 +191,17 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     fi
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${SERVICE_NAME:-$(basename "$PWD")}"
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
-    run_timeout 120 basedpyright "$SOURCE_DIR/" 2>&1 && log_success "Type check PASSED" || { log_fail "Type check FAILED/timeout"; exit 1; }
+    # Capture output — warnings count as errors (zero-warning policy)
+    BP_OUT=$(run_timeout 120 basedpyright "$SOURCE_DIR/" 2>&1) || { echo "$BP_OUT"; log_fail "Type check FAILED/timeout"; exit 1; }
+    echo "$BP_OUT"
+    # basedpyright summary: "N errors, M warnings, K notes" — require both N and M = 0
+    if echo "$BP_OUT" | grep -qE "^0 errors, 0 warnings"; then
+        log_success "Type check PASSED (0 errors, 0 warnings)"
+    elif echo "$BP_OUT" | grep -qE "^0 errors,"; then
+        log_fail "Type check FAILED: warnings present (warnings are treated as errors)"; exit 1
+    else
+        log_fail "Type check FAILED: errors present"; exit 1
+    fi
 fi
 [ "$SKIP_TYPECHECK" = "true" ] && echo -e "${YELLOW}⚠️  Type check SKIPPED (--skip-typecheck flag)${NC}"
 

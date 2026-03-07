@@ -2,11 +2,6 @@
 description: "UI code must never live inside a service repo"
 alwaysApply: true
 priority: 90
-globs:
-  - "**/*.py"
-  - "**/*.tsx"
-  - "**/*.jsx"
-  - "**/package.json"
 tags:
   - architecture
   - blocking

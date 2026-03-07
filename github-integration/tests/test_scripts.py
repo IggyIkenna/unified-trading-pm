@@ -120,7 +120,9 @@ class TestScriptConstants(unittest.TestCase):
         script_path = SCRIPT_DIR / "core" / "05-check-file-size-cods.py"
         with open(script_path, "r") as f:
             content = f.read()
-            self.assertIn("git ls-files", content, "Script should use 'git ls-files' to respect .gitignore")
+            # Accept either shell-style "git ls-files" or subprocess list ["git", "ls-files"]
+            uses_git_ls_files = "git ls-files" in content or '"ls-files"' in content
+            self.assertTrue(uses_git_ls_files, "Script should use 'git ls-files' to respect .gitignore")
 
 
 class TestScriptHelp(unittest.TestCase):
