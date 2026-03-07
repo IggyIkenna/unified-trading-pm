@@ -50,6 +50,40 @@ todos:
       test_correlation_propagation.py in system-integration-tests repo (or execution-service tests) using mock pubsub.
       If end-to-end gap found, fix at the break point."
     status: pending
+
+  - id: obs-opentelemetry-rollout
+    content: |
+      OpenTelemetry instrumentation rollout across all services:
+      (a) Add opentelemetry-sdk + opentelemetry-exporter-otlp-proto-grpc to each service repo's
+          pyproject.toml (pin versions in workspace-constraints.toml).
+      (b) Instrument FastAPI routes with OTel ASGI middleware (opentelemetry-instrumentation-fastapi).
+      (c) Instrument PubSub publish/consume calls with span context propagation (inject/extract
+          trace context into message attributes).
+      (d) Instrument DataSink.write() and DataSource.read() calls with spans including
+          bytes_written, rows_written, latency_ms attributes.
+      (e) Instrument ML inference with model_name, batch_size, latency_p50/p95 span attributes.
+      (f) Configure OTLP exporter to send to Cloud Trace (GCP) or X-Ray (AWS) via collector
+          sidecar in Cloud Run. Use CLOUD_PROVIDER env var to select exporter.
+      Roll out tier-ordered: T4 services first, then T5 APIs, then T6 UIs.
+    status: pending
+    activeForm: "Rolling out OpenTelemetry instrumentation across all services"
+
+  - id: obs-lifecycle-event-test-mandate
+    content: |
+      Per-service lifecycle event test mandate: every service repo must have
+      tests/unit/test_lifecycle_events.py that asserts all required lifecycle events are emitted
+      via log_event() from unified_events_interface.
+
+      Required events per service type:
+        Batch services: SERVICE_STARTED, BATCH_STARTED, BATCH_COMPLETED (or BATCH_FAILED), SERVICE_STOPPED
+        Live services:  SERVICE_STARTED, LIVE_STARTED, LIVE_STOPPED, SERVICE_STOPPED
+        API services:   SERVICE_STARTED, REQUEST_RECEIVED, RESPONSE_SENT, SERVICE_STOPPED
+
+      Implementation: use mock/spy on log_event() — assert called_with(event_type=<required>, ...).
+      Add to quality-gates.sh: fail if tests/unit/test_lifecycle_events.py missing in any service repo.
+      Also verify BATCH_* vs LIVE_* variants match the service's declared SERVICE_MODE.
+    status: pending
+    activeForm: "Adding per-service lifecycle event test requirement to quality gates"
 isProject: false
 ---
 

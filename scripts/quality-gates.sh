@@ -29,7 +29,7 @@ set -e
 # ── REPO-SPECIFIC SETTINGS ────────────────────────────────────────────────────
 SERVICE_NAME="unified-trading-pm"          # e.g. instruments-service
 SOURCE_DIR="scripts"            # e.g. instruments_service  (underscore form)
-MIN_COVERAGE=70                    # Minimum test coverage % — BLOCKING (target: 80%)
+MIN_COVERAGE=88                    # Minimum test coverage % — BLOCKING (target: 80%)
 RUN_INTEGRATION=false              # Set true when integration tests are stable
 PYTEST_WORKERS=${PYTEST_WORKERS:-2} # Default 2; override via env (cap to avoid OOM)
 

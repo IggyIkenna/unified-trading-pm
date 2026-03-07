@@ -1,6 +1,11 @@
 ---
-name: ""
-overview: ""
+name: Workspace Audit Remediation — 2026-03-07
+overview: |
+  Full remediation plan for all FAIL and WARN findings from the 2026-03-07 institutional-grade
+  audit (10 parallel agents, Sections 1–10). Overall grade C+. 10 FAILs, 47 WARNs.
+  CRITICAL todos (P0) RESOLVED 2026-03-07. Most todos completed in the same session.
+  2 pending: fix-cloudbuild-template-drift (WARN 3.14), fix-coverage-pct-placeholders (WARN 1.12).
+  Todos are tracked as markdown body entries (not YAML) due to file size.
 todos: []
 isProject: false
 ---
@@ -16,16 +21,14 @@ do to avoid breaking other audit criteria. Ordered by severity: CRITICAL → HIG
   history rewritten via git-filter-repo removing .env AND central-element-323112-e35fb0ddafe2.json (GCP service account
   key also discovered in history). Both files removed from all commits and local working tree. .gitignore already
   covered .env. Remote ([git@github.com](mailto:git@github.com):IggyIkenna/sports-betting-service.git) re-added after
-  filter-repo stripped it. OUTSTANDING: force-push to remote required to propagate rewritten history — run: git push
-  origin --force --all && git push origin --force --tags. NOTE: Audit found more keys than initially flagged — also
-  exposed were Betfair credentials (username/password/app_key), FINFEED_API_KEY, POLYMARKET credentials
-  (api_key/secret/passphrase/private_key/polyrouter_key), SOCCER_FOOTBALL_INFO_API_KEY, SCRAPING_BEE_API_KEY,
-  FOOTYSTATS_API, TRANSFERMARKET_API. All must be rotated." status: completed
+  filter-repo stripped it. Force-push COMPLETED 2026-03-08 via admin-force-sync-all-to-main.sh. NOTE: Audit found more
+  keys than initially flagged — also exposed were Betfair credentials (username/password/app_key), FINFEED_API_KEY,
+  POLYMARKET credentials (api_key/secret/passphrase/private_key/polyrouter_key), SOCCER_FOOTBALL_INFO_API_KEY,
+  SCRAPING_BEE_API_KEY, FOOTYSTATS_API, TRANSFERMARKET_API. All must be rotated." status: completed
 - id: fix-instruments-service-env-tracking content: "WARN 10.7: RESOLVED 2026-03-07. Git history rewritten via
   git-filter-repo removing .env from all commits in instruments-service. Local .env file deleted. .gitignore already
   covered .env. Remote ([git@github.com](mailto:git@github.com):IggyIkenna/instruments-service.git) re-added after
-  filter-repo stripped it. OUTSTANDING: force-push to remote required — run: git push origin --force --all && git push
-  origin --force --tags." status: completed
+  filter-repo stripped it. Force-push COMPLETED 2026-03-08 via admin-force-sync-all-to-main.sh." status: completed
 - id: fix-ruff-errors-uic content: "FAIL 8.1+8.2: RESOLVED 2026-03-07. ruff check unified_internal_contracts/ and tests/
   both exit 0. Auto-fixed: 8 files reformatted, 50 import/style errors in tests/, 1 C401 set comprehension. Manually
   fixed: 11 E501 in source + 11 E501 in tests (wrapped description= strings, split comments, reformatted parametrize
@@ -227,12 +230,9 @@ parallel agents (Sections 1–10) **DO NOT fix anything until the corresponding 
 - Remotes restored after filter-repo stripped them
 - All keys rotated by user (confirmed)
 
-**OUTSTANDING — requires manual step:** Both repos need force-push to sync rewritten history to GitHub remote:
-
-```bash
-cd archive/sports-betting-service && git push origin --force --all && git push origin --force --tags
-cd instruments-service && git push origin --force --all && git push origin --force --tags
-```
+**RESOLVED 2026-03-08:** Force-push completed for both repos via `admin-force-sync-all-to-main.sh --admin-confirm`.
+Rewritten history (without .env / GCP credentials) is now live on remote main for both `sports-betting-service` and
+`instruments-service`.
 
 **Additional keys discovered (beyond initial audit):** Betfair credentials, FINFEED_API_KEY, POLYMARKET credentials
 (api_key/secret/passphrase/private_key), SOCCER_FOOTBALL_INFO_API_KEY, SCRAPING_BEE_API_KEY, FOOTYSTATS_API,

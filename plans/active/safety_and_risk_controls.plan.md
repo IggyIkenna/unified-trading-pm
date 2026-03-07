@@ -24,21 +24,19 @@ todos:
     status: pending
   - id: risk-circuit-breaker
     content:
-      "SINGLE OWNER (implementation): Implement circuit breaker in execution-service/engine/ — 3-state machine
-      (CLOSED→OPEN→HALF_OPEN). On N consecutive venue failures in M seconds: OPEN → emit CIRCUIT_BREAKER_OPEN via
-      log_event(). After cooldown: HALF_OPEN → allow 1 test order. On success: CLOSED. Unit test all 3 states. NOTE:
-      alerting-service PubSub wiring (publishing CIRCUIT_BREAKER_OPEN to circuit-breaker-commands topic) is owned by
-      phase3_service_hardening_integration.plan.md t4f-monitoring-pipeline (topology-circuit-breaker-impl). These are
-      complementary — this plan owns the implementation; phase3 t4f owns the cross-service PubSub propagation. UIC
-      schema ic-circuit-breaker-schema (CircuitBreakerEvent) is defined in phase3 t4f STEP B."
-    status: pending
+      "DONE 2026-03-07. Implemented execution-service/execution_service/engine/circuit_breaker.py — 3-state machine
+      (CLOSED→OPEN→HALF_OPEN). Per-venue isolation via get_circuit_breaker(venue) singleton factory. 5 failures → OPEN;
+      300s cooldown → HALF_OPEN; 1 success → CLOSED. log_event on all transitions: CIRCUIT_BREAKER_OPEN,
+      CIRCUIT_BREAKER_HALF_OPEN, CIRCUIT_BREAKER_CLOSED. Tests: tests/unit/engine/test_circuit_breaker.py. NOTE:
+      alerting-service PubSub wiring owned by phase3_service_hardening_integration t4f-monitoring-pipeline."
+    status: completed
   - id: risk-kill-switch
     content:
-      "Implement kill switch: a CLI command (or admin API endpoint) that immediately halts all live order submission
-      across all venues. Kill switch must: (1) set a shared in-process flag that all venue adapters check before
-      submitting, (2) cancel all open orders if venue supports it, (3) emit KILL_SWITCH_ACTIVATED event via log_event().
-      Test that no orders are submitted after kill switch is triggered. Implement in execution-service."
-    status: pending
+      "DONE 2026-03-07. Implemented execution-service/execution_service/engine/kill_switch.py — singleton Event,
+      activate/deactivate/is_active. app.py imports from kill_switch module; emits KILL_SWITCH_ACTIVATED/DEACTIVATED via
+      log_event(). manual_instruction_api.py gates all order submissions with kill_switch.is_active() → 503 if set.
+      Tests: tests/unit/engine/test_kill_switch.py (11 tests)."
+    status: completed
   - id: risk-preflight-checks
     content:
       "Implement and verify preflight checks in execution-service before any live session starts: (1) Secret Manager

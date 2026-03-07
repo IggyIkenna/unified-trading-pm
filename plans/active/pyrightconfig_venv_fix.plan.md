@@ -23,6 +23,23 @@ todos:
       "In Cursor: Cmd+Shift+P → 'Pylance: Restart Language Server'. Confirm squiggles on unified_internal_contracts and
       sibling imports are gone for all repos."
     status: todo
+
+  - id: editable-install-all-repos
+    content: |
+      Fix run-all-setup.sh so every repo installs as an editable package (uv pip install -e .)
+      instead of a built wheel. Both .venv-workspace and per-repo .venv must use editable installs
+      so that code changes in dependencies are immediately visible without reinstall.
+
+      Changes needed in unified-trading-pm/scripts/repo-management/run-all-setup.sh:
+      - Replace any `uv pip install <package>` or `uv pip install .` calls with `uv pip install -e .`
+      - Ensure setup.sh in each repo also uses -e flag for all internal workspace deps
+      - Add a post-install verification step: python -c "import <pkg>; print(<pkg>.__file__)" should
+        show a path inside the repo source dir, NOT inside site-packages as a .dist-info wheel.
+
+      Run: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first
+      Verify: check that `uv pip show <package>` shows Editable project location for all internal packages.
+    status: todo
+    activeForm: "Fixing run-all-setup.sh to install all repos as editable packages"
 isProject: false
 ---
 

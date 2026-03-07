@@ -311,6 +311,34 @@ todos:
       1.0.0 (first stable). This is the final act of Phase 3. Full quickmerge with act simulation (D5) is the FINAL gate
       — not --quick alone."
     status: pending
+
+  - id: p3-service-bundling-review
+    content: |
+      PRE-DEPLOYMENT SERVICE BUNDLING REVIEW: Before p3-postrefactor-declare-healthy, evaluate
+      consolidation opportunities and record decision as ADR in unified-trading-codex/05-architecture/
+      service-bundling-decisions.md.
+
+      Bundle A — Risk/PnL colocate:
+        risk-and-exposure-service + position-balance-monitor-service + pnl-attribution-service share
+        the same event stream (fills → position → PnL → risk). Evaluate: same Cloud Run service,
+        separate HTTP endpoints. Criteria: shared in-memory state needed? → bundle. Independent
+        scaling needed? → keep separate.
+
+      Bundle B — Features colocate:
+        features-multi-timeframe-service + features-cross-instrument-service with
+        features-delta-one-service. All batch-only, same input (OHLCV candles), compatible compute
+        profiles. Criteria: combined artifact < 2GB and DAG distance ≤ 1 tier → bundle.
+
+      Bundle C — Volatility standalone (confirmed):
+        features-volatility-service — keep standalone. Longer computation window, independent scaling.
+
+      Bundle D — Cloud Run Jobs (stateless batch):
+        features-calendar-service + features-onchain-service → evaluate converting to Cloud Run Jobs
+        (not long-running services). Both are pure stateless batch compute.
+
+      Output: ADR with DECISION/RATIONALE/CONSEQUENCES per candidate.
+    status: pending
+    activeForm: "Evaluating service bundling opportunities before declaring healthy"
 isProject: true
 ---
 

@@ -60,6 +60,65 @@ todos:
       secret names (bybit_api_key underscore) are an SM-level rename, no code change required. Rename should be done via
       SM console/Terraform when safe. graph-api-key deprecated — no code references found."
     status: done
+
+  - id: vcr-interface-matrix
+    content: |
+      VCR coverage matrix — track cassette status for all 7 external-facing interfaces.
+      Each row must have: (a) SM secret provisioned, (b) cassette recorded and committed,
+      (c) test_<venue>_integration.py passing with cassette in CI.
+
+      UMI (unified-market-interface):
+        binance (market data) — cassette status: pending
+        deribit (market data) — cassette status: pending
+        coinbase (market data) — cassette status: pending
+
+      UTEI (unified-trade-execution-interface):
+        binance (order execution) — cassette status: pending
+        deribit (order execution) — cassette status: pending
+        ibkr (order execution) — cassette status: pending (mock pattern via ibkr-gateway-infra)
+
+      URDI (unified-reference-data-interface):
+        tardis (historical tick data) — cassette status: pending (key in SM per phase-1-tardis)
+        databento (reference data) — cassette status: pending (phase-2-http)
+
+      UPI (unified-position-interface):
+        ibkr (positions) — cassette status: pending
+        binance (positions) — cassette status: pending
+
+      USEI (unified-sports-execution-interface):
+        pinnacle — cassette status: pending (phase-3-keys)
+        odds_api — cassette status: pending (phase-3-keys)
+        betfair — cassette status: pending (phase-4-blockers)
+
+      UDEI (unified-defi-execution-interface):
+        thegraph — cassette status: pending (phase-2-http)
+        alchemy — cassette status: pending (phase-2-http)
+
+      UCI (unified-cloud-interface):
+        No external API cassettes needed — use local provider (LocalStorageClient,
+        LocalQueueClient, LocalAnalyticsClient) for CI tests.
+
+      Track completion per row. All rows must be green before declaring Layer 2 healthy.
+    status: pending
+    activeForm: "Completing VCR cassette coverage for all 7 external-facing interfaces"
+
+  - id: gcp-auth-integration-tests
+    content: |
+      GCP auth integration tests in unified-cloud-interface tests/integration/:
+      (a) test_gcp_auth.py — verify with ADC credentials (GOOGLE_APPLICATION_CREDENTIALS):
+          - Secret Manager: get_secret_client().get_secret(name) returns non-empty string
+          - GCS: get_storage_client().upload_bytes(b"test", "ci-test/probe.txt") then download_bytes
+          - PubSub: get_queue_client().publish("ci-test-topic", b"ping") then receive
+      (b) These tests run ONLY when INTEGRATION_TEST_MODE=live (not in quickmerge/default CI).
+
+      API key switching convention:
+        INTEGRATION_TEST_MODE=live   → real keys from Secret Manager
+        INTEGRATION_TEST_MODE=vcr    → cassette playback (no live calls)
+        INTEGRATION_TEST_MODE unset  → skip integration tests (safe default for CI)
+
+      Document this convention in unified-trading-codex/07-security/testing-with-api-keys.md.
+    status: pending
+    activeForm: "Adding GCP auth integration tests and API key switching convention to UCI"
 isProject: false
 ---
 
