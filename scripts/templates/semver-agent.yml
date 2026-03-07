@@ -1,0 +1,128 @@
+name: Semver Agent
+
+# Triggered on push to main (or staging). Claude reads the public API diff and commit messages
+# to determine the version bump magnitude, then commits the bump to pyproject.toml + CHANGELOG.
+#
+# Placeholders replaced by rollout-agent-workflows.sh:
+#   {{SERVICE_NAME}}  — e.g. market-tick-data-service
+#   {{SOURCE_DIR}}    — e.g. market_tick_data_service (underscore form)
+#
+# Secrets required:
+#   ANTHROPIC_API_KEY  — Claude Code CLI
+#   GH_PAT             — push version bump commit
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+    inputs:
+      force_bump:
+        description: "Force a specific bump (patch|minor|major). Leave empty for auto-detect."
+        required: false
+        default: ""
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  SERVICE_NAME: "{{SERVICE_NAME}}"
+  SOURCE_DIR: "{{SOURCE_DIR}}"
+  PYTHON_VERSION: "3.13"
+  GH_ORG: IggyIkenna
+
+jobs:
+  semver:
+    name: Semver Agent — {{SERVICE_NAME}}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 2
+
+      - name: Checkout unified-trading-codex (semver rules)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.GH_ORG }}/unified-trading-codex
+          path: unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          sparse-checkout: |
+            06-coding-standards/
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "semver-agent@ci.local"
+          git config --global user.name "Semver Agent"
+
+      - name: Run semver agent
+        if: env.ANTHROPIC_API_KEY != ''
+        env:
+          FORCE_BUMP: ${{ inputs.force_bump || '' }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          PROMPT="You are running inside the {{SERVICE_NAME}} repository on branch ${BRANCH}.
+
+          Your task: determine the correct semantic version bump and apply it.
+
+          === SEMVER DECISION RULES (pre-1.0.0) ===
+          - feat!: or removed public export → minor (never cross 1.0.0)
+          - feat: or new public export      → minor
+          - fix: or no API change           → patch
+          See: unified-trading-codex/06-coding-standards/ for full semver rules.
+
+          === STEPS ===
+          1. Read current version: grep '^version' pyproject.toml
+          2. Read the merge commit message: git log -1 --pretty=%B
+          3. Read the API diff: git diff HEAD~1 -- {{SOURCE_DIR}}/__init__.py
+          4. If FORCE_BUMP='${FORCE_BUMP}' is set, use that magnitude instead of auto-detecting
+          5. Determine bump magnitude using rules above
+          6. Calculate new version (semver arithmetic on X.Y.Z):
+             - patch: Z+1
+             - minor: Y+1, Z=0
+             - major: X+1, Y=0, Z=0 (ONLY allowed post-1.0.0)
+          7. Update version in pyproject.toml (version = \"X.Y.Z\" line)
+          8. Prepend to CHANGELOG.md:
+             ## [X.Y.Z] — YYYY-MM-DD
+             - <one-line summary of changes from commit message>
+          9. Commit with message: 'chore: bump version to X.Y.Z [skip ci]'
+             git add pyproject.toml CHANGELOG.md
+             git commit -m 'chore: bump version to X.Y.Z [skip ci]'
+             git push origin ${BRANCH}
+          10. If version changed, dispatch repository_dispatch type=version-updated to PM:
+              curl -sS -X POST \
+                -H 'Authorization: Bearer ${GH_TOKEN}' \
+                -H 'Accept: application/vnd.github+json' \
+                'https://api.github.com/repos/${GH_ORG}/unified-trading-pm/dispatches' \
+                -d '{\"event_type\":\"version-updated\",\"client_payload\":{\"repo\":\"{{SERVICE_NAME}}\",\"version\":\"X.Y.Z\",\"branch\":\"${BRANCH}\"}}'
+
+          Rules:
+          - [skip ci] in commit message prevents recursive workflow triggers
+          - Never bump past 1.0.0 on pre-1.0.0 repos (cap at 0.x.x)
+          - If no pyproject.toml exists or no version line found, exit cleanly without committing
+          - If current branch is staging, push to staging (not main)"
+
+          claude --print --dangerously-skip-permissions "$PROMPT" \
+            || echo "Semver agent exited non-zero — check logs"
+
+      - name: Skip — no API key
+        if: env.ANTHROPIC_API_KEY == ''
+        run: echo "ANTHROPIC_API_KEY not set — skipping semver agent"
+
+      # ── TELEGRAM NOTIFY ─────────────────────────────────────────────────────
+      - name: Notify Telegram
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ job.status }}
+        run: |
+          TEXT="*semver-agent* | {{SERVICE_NAME}} | ${STATUS} | branch: ${{ github.ref_name }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${TEXT}" \
+            -d parse_mode="Markdown" || true
