@@ -73,9 +73,9 @@ fi
 log_section "Reading workspace manifest"
 
 # Get service + api repos (the ones that get agent-audit.yml rolled out)
-TARGET_REPOS=$(python3 - <<'EOF'
+TARGET_REPOS=$(python3 - "$MANIFEST" <<'EOF'
 import json, sys
-with open("$MANIFEST".replace("$MANIFEST", sys.argv[1])) as f:
+with open(sys.argv[1]) as f:
     m = json.load(f)
 repos = m.get("repositories", {})
 # Roll out to service, api tiers (not libraries, pm, codex, devops)
@@ -194,14 +194,35 @@ print('$REPO'.replace('-', '_'))
     # ── COMMIT AND PUSH ───────────────────────────────────────────────────────
     if [ "$CHANGED" = true ] && [ "$DRY_RUN" = false ]; then
         pushd "$REPO_DIR" > /dev/null
-        git add .github/workflows/agent-audit.yml .github/workflows/semver-agent.yml .github/workflows/plan-alignment-agent.yml 2>/dev/null || true
+        BRANCH="chore/rollout-agent-workflows-$(date +%Y%m%d-%H%M%S)"
+        # Stash all local changes (avoids quickmerge dep-check; we only want workflow files)
+        git stash push --include-untracked -m "rollout-preserve-$REPO" -q 2>/dev/null || true
+        git checkout -b "$BRANCH" 2>/dev/null
+        # Write workflow files fresh on this branch (re-apply from template)
+        mkdir -p .github/workflows
+        sed "s|market-tick-data-service|$SERVICE_NAME|g" "$TEMPLATE_AGENT_AUDIT" > .github/workflows/agent-audit.yml
+        sed "s|{{SERVICE_NAME}}|$SERVICE_NAME|g; s|{{SOURCE_DIR}}|$SOURCE_DIR|g" "$TEMPLATES_DIR/semver-agent.yml" > .github/workflows/semver-agent.yml
+        sed "s|{{SERVICE_NAME}}|$SERVICE_NAME|g" "$TEMPLATES_DIR/plan-alignment-agent.yml" > .github/workflows/plan-alignment-agent.yml
+        git add .github/workflows/agent-audit.yml .github/workflows/semver-agent.yml .github/workflows/plan-alignment-agent.yml
         if git diff --cached --quiet; then
-            echo "  Nothing staged — skipping commit"
+            echo "  Nothing staged after stash — skipping"
+            git checkout main -q 2>/dev/null || true
         else
-            bash scripts/quickmerge.sh "chore: rollout autonomous agent workflows (agent-audit, semver, plan-alignment)" \
-                --files ".github/workflows/agent-audit.yml .github/workflows/semver-agent.yml .github/workflows/plan-alignment-agent.yml" \
-                --quick 2>&1 | tail -5 || warn "  quickmerge failed for $REPO — check manually"
+            if git commit -m "chore: rollout autonomous agent workflows (agent-audit, semver, plan-alignment)" -q 2>&1; then
+                git push -u origin "$BRANCH" -q 2>/dev/null \
+                    && gh pr create --title "chore: rollout autonomous agent workflows" \
+                        --body "Adds agent-audit.yml (retry+Telegram), semver-agent.yml, plan-alignment-agent.yml" \
+                        --base main --head "$BRANCH" 2>/dev/null \
+                        | xargs -I{} sh -c "gh pr merge --auto --squash 2>/dev/null; echo '  PR: {}'" \
+                    && ok "  PR created and auto-merge enabled" \
+                    || warn "  push/PR failed for $REPO — check manually"
+            else
+                warn "  commit failed for $REPO (pre-commit hook?) — check manually"
+            fi
+            git checkout main -q 2>/dev/null || true
         fi
+        # Restore local changes
+        git stash pop -q 2>/dev/null || true
         popd > /dev/null
     fi
 
