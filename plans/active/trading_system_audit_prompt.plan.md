@@ -1,58 +1,99 @@
 ---
 name: trading-system-audit-prompt
-overview: Canonical audit checklist for the unified trading system workspace against institutional-grade standards. Covers workspace governance, code quality, security, architecture, schema governance, observability, deployment, technical debt, and cross-repo alignment.
+overview:
+  Canonical audit checklist for the unified trading system workspace against institutional-grade standards. Covers
+  workspace governance, code quality, security, architecture, schema governance, observability, deployment, technical
+  debt, and cross-repo alignment.
 todos:
   - id: audit-workspace-governance
-    content: "Audit Section 1 — Workspace Governance: workspace-manifest.json complete + DAG valid; all 57 repos registered; arch_tier correct; ci_status fields present. Score each criterion PASS/WARN/FAIL/N/A with file:line evidence."
+    content:
+      "Audit Section 1 — Workspace Governance: workspace-manifest.json complete + DAG valid; all 57 repos registered;
+      arch_tier correct; ci_status fields present. Score each criterion PASS/WARN/FAIL/N/A with file:line evidence."
     status: completed
   - id: audit-code-quality
-    content: "Audit Section 2 — Code Quality: quality-gates.sh present + passing per repo; MIN_COVERAGE=70; file <900L, function <100L, method <50L, class <500L; ruff + basedpyright strict + reportAny:error; zero os.getenv in production source; zero Any in public API. Score each repo."
+    content:
+      "Audit Section 2 — Code Quality: quality-gates.sh present + passing per repo; MIN_COVERAGE=70; file <900L,
+      function <100L, method <50L, class <500L; ruff + basedpyright strict + reportAny:error; zero os.getenv in
+      production source; zero Any in public API. Score each repo."
     status: pending
   - id: audit-security
-    content: "Audit Section 3 — Security (items 10.1–10.19): no hardcoded API keys; all secrets via get_secret_client(); no verify=False in HTTP clients; all API services authenticated; no mock auth in prod; AUTH_FAILURE + SECRET_ACCESSED + CONFIG_CHANGED events logged."
+    content:
+      "Audit Section 3 — Security (items 10.1–10.19): no hardcoded API keys; all secrets via get_secret_client(); no
+      verify=False in HTTP clients; all API services authenticated; no mock auth in prod; AUTH_FAILURE + SECRET_ACCESSED
+      + CONFIG_CHANGED events logged."
     status: pending
   - id: audit-architecture
-    content: "Audit Section 4 — Architecture: tier boundaries respected (no service→service Python imports); no UI embedded in service repo; batch-live symmetry (same engine for both modes); cloud-agnostic I/O (get_storage_client, get_secret_client, CloudEventSink); no GCS* protocol names; deployment-api HTTP boundary (no direct deployment_service imports)."
+    content:
+      "Audit Section 4 — Architecture: tier boundaries respected (no service→service Python imports); no UI embedded in
+      service repo; batch-live symmetry (same engine for both modes); cloud-agnostic I/O (get_storage_client,
+      get_secret_client, CloudEventSink); no GCS* protocol names; deployment-api HTTP boundary (no direct
+      deployment_service imports)."
     status: pending
   - id: audit-schema-governance
-    content: "Audit Section 5 — Schema Governance: AC contains external venue schemas only; UIC contains internal schemas; no AC/UIC duplication; Layer 0 contract alignment tests pass (test_contract_alignment.py, test_ac_uic_alignment.py); per-service test_schema_robustness.py passes."
+    content:
+      "Audit Section 5 — Schema Governance: AC contains external venue schemas only; UIC contains internal schemas; no
+      AC/UIC duplication; Layer 0 contract alignment tests pass (test_contract_alignment.py, test_ac_uic_alignment.py);
+      per-service test_schema_robustness.py passes."
     status: pending
   - id: audit-observability
-    content: "Audit Section 6 — Observability: /health + /readiness endpoints on all API services; correlation_id propagated end-to-end; Prometheus metrics exported; Grafana dashboards present (trading-overview.json, system-health.json); pre-crash checkpoint at 85% memory; compliance reporting wired (MiFID/FCA); 12.16-12.20: timestamp validation, CloudEventSink naming, test_event_logging.py, memory watchdog, correlation_id propagation."
+    content:
+      "Audit Section 6 — Observability: /health + /readiness endpoints on all API services; correlation_id propagated
+      end-to-end; Prometheus metrics exported; Grafana dashboards present (trading-overview.json, system-health.json);
+      pre-crash checkpoint at 85% memory; compliance reporting wired (MiFID/FCA); 12.16-12.20: timestamp validation,
+      CloudEventSink naming, test_event_logging.py, memory watchdog, correlation_id propagation."
     status: pending
   - id: audit-deployment
-    content: "Audit Section 7 — Deployment: deployment checklist phases 1–7 complete per service; runtime-topology.yaml accurate; Layer 2 infra verify passes (/infra/health); Layer 3a smoke (<5 min) passes; Layer 3b full E2E (15–30 min) passes; v1.0.0 tagged on main."
+    content:
+      "Audit Section 7 — Deployment: deployment checklist phases 1–7 complete per service; runtime-topology.yaml
+      accurate; Layer 2 infra verify passes (/infra/health); Layer 3a smoke (<5 min) passes; Layer 3b full E2E (15–30
+      min) passes; v1.0.0 tagged on main."
     status: pending
   - id: audit-technical-debt
-    content: "Audit Section 8 — Technical Debt: QUALITY_GATE_BYPASS_AUDIT.md present + up to date in all repos; zero undocumented suppressions; type: ignore count <10 total documented exceptions; no old import names as aliases; no try/except ImportError fallbacks."
+    content:
+      "Audit Section 8 — Technical Debt: QUALITY_GATE_BYPASS_AUDIT.md present + up to date in all repos; zero
+      undocumented suppressions; type: ignore count <10 total documented exceptions; no old import names as aliases; no
+      try/except ImportError fallbacks."
     status: pending
   - id: audit-cross-repo-alignment
-    content: "Audit Section 9 — Cross-Repo Alignment: all plans in INDEX.md have corresponding implementation; codex docs reflect current decisions; cursor rules consistent with codex; workspace-manifest.json matches runtime-topology.yaml; no orphan repos (4 API services previously missing from manifest — verify fixed)."
+    content:
+      "Audit Section 9 — Cross-Repo Alignment: all plans in INDEX.md have corresponding implementation; codex docs
+      reflect current decisions; cursor rules consistent with codex; workspace-manifest.json matches
+      runtime-topology.yaml; no orphan repos (4 API services previously missing from manifest — verify fixed)."
     status: pending
   - id: audit-output
-    content: "Produce final audit output: per-criterion PASS/WARN/FAIL/N/A table; overall grade (PASS=0 FAILs, CONDITIONAL=≥1 WARNs + 0 FAILs, FAIL=≥1 FAILs); top 10 blocking findings with file:line references; technical debt trajectory vs previous audit."
+    content:
+      "Produce final audit output: per-criterion PASS/WARN/FAIL/N/A table; overall grade (PASS=0 FAILs, CONDITIONAL=≥1
+      WARNs + 0 FAILs, FAIL=≥1 FAILs); top 10 blocking findings with file:line references; technical debt trajectory vs
+      previous audit."
     status: pending
   - id: audit-config-injection
-    content: "Audit Section on dynamic config injection compliance — GCP_PROJECT_ID banned, DomainConfigReloader used for domain entity hot-reload, get_config_store() factory only, no hardcoded subscription lists, CONFIG_CHANGED events logged."
+    content:
+      "Audit Section on dynamic config injection compliance — GCP_PROJECT_ID banned, DomainConfigReloader used for
+      domain entity hot-reload, get_config_store() factory only, no hardcoded subscription lists, CONFIG_CHANGED events
+      logged."
     status: pending
 isProject: false
 ---
 
 # Unified Trading System — Canonical Audit Prompt
 
-**Purpose:** Single source of truth audit checklist for evaluating the unified trading system workspace against institutional-grade standards. Covers workspace governance, code quality, security, architecture, schema governance, observability, deployment, technical debt, and cross-repo alignment.
+**Purpose:** Single source of truth audit checklist for evaluating the unified trading system workspace against
+institutional-grade standards. Covers workspace governance, code quality, security, architecture, schema governance,
+observability, deployment, technical debt, and cross-repo alignment.
 
 **Scope:** 60+ repos (services, libraries, UIs, APIs, infrastructure). Usable by human auditors and AI agents.
 
 **SSOT:** This file is the canonical audit prompt. Registered in `unified-trading-codex/00-SSOT-INDEX.md`.
 
-**Format:** Score each criterion `PASS / WARN / FAIL / N/A`. Provide per-item evidence (file path + line). Output as structured table + findings list.
+**Format:** Score each criterion `PASS / WARN / FAIL / N/A`. Provide per-item evidence (file path + line). Output as
+structured table + findings list.
 
 ---
 
 ## AUDITOR INSTRUCTIONS
 
-You are auditing the unified trading system workspace. For each section below, evaluate every listed criterion. Return results in this format:
+You are auditing the unified trading system workspace. For each section below, evaluate every listed criterion. Return
+results in this format:
 
 ```
 CATEGORY | CRITERION | STATUS | EVIDENCE
@@ -69,8 +110,10 @@ At the end, output:
 **Key SSOT references for auditors:**
 
 - Repo registry & DAG: `unified-trading-pm/workspace-manifest.json`
-- **Deployment configs (canonical):** `deployment-service/configs/` — checklist._.yaml, venues.yaml, RUNTIME_TOPOLOGY_DECISIONS.md, data-catalogue._.yaml, per-service PROTOCOL\_\* env files.
-- **Runtime topology (canonical SSOT):** `unified-trading-pm/configs/runtime-topology.yaml` — owned by PM; `deployment-service/configs/runtime-topology.yaml` is a partial local view with `ssot_ref` pointing to PM.
+- **Deployment configs (canonical):** `deployment-service/configs/` — checklist._.yaml, venues.yaml,
+  RUNTIME_TOPOLOGY_DECISIONS.md, data-catalogue._.yaml, per-service PROTOCOL\_\* env files.
+- **Runtime topology (canonical SSOT):** `unified-trading-pm/configs/runtime-topology.yaml` — owned by PM;
+  `deployment-service/configs/runtime-topology.yaml` is a partial local view with `ssot_ref` pointing to PM.
 - Tier architecture: `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
 - SSOT master index: `unified-trading-codex/00-SSOT-INDEX.md`
 - Cursor rules: `unified-trading-pm/cursor-rules/` (synced to `.cursor/rules/`)
@@ -134,7 +177,8 @@ Validates the 5-tier dependency model from `TIER-ARCHITECTURE.md` and cursor rul
 
 ## SECTION 3 — SSOT ENFORCEMENT & CENTRALIZATION
 
-Checks that `00-SSOT-INDEX.md` is accurate, no duplicate implementations exist, and the SSOT placement principle is respected.
+Checks that `00-SSOT-INDEX.md` is accurate, no duplicate implementations exist, and the SSOT placement principle is
+respected.
 
 | #    | Criterion                                                                                                                                                                                                                                 | Blocking |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -199,21 +243,26 @@ Checks `doc_standards` from manifest, canonical docs compliance, and documentati
 
 ## 5a. Cloud Isolation Audit (Hard Gates — must pass before Phase 2+)
 
-STEP 5.10 — No direct cloud SDK imports outside UCI providers:
-PASS gate: rg 'from google.cloud|import boto3|import botocore' --type py --glob '!.venv\*' --glob '!unified-cloud-interface/\*\*' = 0 matches
+STEP 5.10 — No direct cloud SDK imports outside UCI providers: PASS gate: rg 'from google.cloud|import boto3|import
+botocore' --type py --glob '!.venv\*' --glob '!unified-cloud-interface/\*\*' = 0 matches
 
-STEP 5.11 — No protocol-leaking symbols in service code:
-PASS gate: rg 'CloudTarget|StandardizedDomainCloudService|upload_to_gcs_batch|gcs_bucket=|bigquery_dataset=' --type py --glob '!.venv\*' --glob '!tests/\*\*' = 0 matches in service repos
-Per-repo enforcement: `scripts/quality-gates.sh` must include STEP 5.11 check as hard-fail (not warn). Verify with: grep -q "STEP 5.11\|CloudTarget\|upload_to_gcs_batch" scripts/quality-gates.sh
+STEP 5.11 — No protocol-leaking symbols in service code: PASS gate: rg
+'CloudTarget|StandardizedDomainCloudService|upload_to_gcs_batch|gcs_bucket=|bigquery_dataset=' --type py --glob
+'!.venv\*' --glob '!tests/\*\*' = 0 matches in service repos Per-repo enforcement: `scripts/quality-gates.sh` must
+include STEP 5.11 check as hard-fail (not warn). Verify with: grep -q "STEP 5.11\|CloudTarget\|upload_to_gcs_batch"
+scripts/quality-gates.sh
 
-STEP 5.12 — No hardcoded cloud protocol names in service source:
-PASS gate: rg 'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b' --type py --glob '!.venv\*' --glob '!tests/**' --glob '!scripts/**' = 0 matches
+STEP 5.12 — No hardcoded cloud protocol names in service source: PASS gate: rg
+'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b' --type py --glob '!.venv\*' --glob '!tests/**' --glob
+'!scripts/**' = 0 matches
 
-STEP 5.13 — Services use ServiceMode + PROTOCOL*\* env vars for deployment injection:
-PASS gate: Services that have live/batch modes use `SERVICE_MODE` env var (not hardcoded string); cloud routing via `PROTOCOL_DATA_SINK*\*` env vars injected at deploy time, not in source.
-Verify: rg 'SERVICE_MODE|PROTOCOL_DATA_SINK' deployment-service/configs/ -- presence confirms injection pattern
+STEP 5.13 — Services use ServiceMode + PROTOCOL*\* env vars for deployment injection: PASS gate: Services that have
+live/batch modes use `SERVICE_MODE` env var (not hardcoded string); cloud routing via `PROTOCOL_DATA_SINK*\*` env vars
+injected at deploy time, not in source. Verify: rg 'SERVICE_MODE|PROTOCOL_DATA_SINK' deployment-service/configs/ --
+presence confirms injection pattern
 
-UTL gate: [project.dependencies] in unified-trading-library/pyproject.toml has no google-cloud-\* or boto3 (only in [project.optional-dependencies.gcp/aws])
+UTL gate: [project.dependencies] in unified-trading-library/pyproject.toml has no google-cloud-\* or boto3 (only in
+[project.optional-dependencies.gcp/aws])
 
 All 5 checks must be PASS before any Phase 2+ work begins on a repo.
 
@@ -225,12 +274,15 @@ Checks that cursor rules are complete, consistent, enforced, and synced.
 
 ### 6.1 Cursor Rule Category → Audit Criteria Mapping
 
-- **architecture** — Tier enforcement (SECTION 2), batch-live symmetry (14.1), service structure (14.2), cloud-agnostic (14.3), adapters (14.2)
+- **architecture** — Tier enforcement (SECTION 2), batch-live symmetry (14.1), service structure (14.2), cloud-agnostic
+  (14.3), adapters (14.2)
 - **ci-cd** — Cloud Build test-in-image (22.1), quickmerge pipeline (22.5, SECTION 8.19), branch protection (22.4)
 - **config** — UnifiedCloudConfig (7.7), GCP_PROJECT_ID (single-project-id), ConfigStore usage (SECTION 13)
-- **core** — All blocking rules (6.2), basedpyright-safety (6.5, 8.20), runtime-verification (6.2), delete-deprecated, never-revert-local-changes
+- **core** — All blocking rules (6.2), basedpyright-safety (6.5, 8.20), runtime-verification (6.2), delete-deprecated,
+  never-revert-local-changes
 - **dependencies** — Breaking-change protocol, dependency alignment (SECTION 4), path-dependency-ci (22.10)
-- **quality-gates** — Strict quality gates (8.x), safe-linting-execution (8.20), exclude-build-artifacts (8.20), E501 (8.3)
+- **quality-gates** — Strict quality gates (8.x), safe-linting-execution (8.20), exclude-build-artifacts (8.20), E501
+  (8.3)
 - **testing** — GCP auth in tests (no skip for missing creds), test quality standards (SECTION 17)
 - **ui** — UI-service separation (no Python in UI repos), TypeScript quality gates only (17.2)
 
@@ -239,7 +291,8 @@ Checks that cursor rules are complete, consistent, enforced, and synced.
 The following rules are BLOCKING — any violation fails the audit:
 
 - **strict-quality-gates** — E501 enforced, no E722 global ignore, no empty fallbacks, no hardcoded project IDs
-- **no-type-any-use-specific** — `reportAny: "error"`, no `dict[str, Any]`, only audited bypasses in QUALITY_GATE_BYPASS_AUDIT.md
+- **no-type-any-use-specific** — `reportAny: "error"`, no `dict[str, Any]`, only audited bypasses in
+  QUALITY_GATE_BYPASS_AUDIT.md
 - **runtime-verification-required** — Never claim "done" without running code, waiting 8–10s, checking terminal output
 - **basedpyright-safety** — Never `basedpyright .`; always `timeout 120 basedpyright <source_dir>/` or `run_timeout 120`
 - **dag-enforcement** — No repo imports from higher or equal tier
@@ -247,7 +300,8 @@ The following rules are BLOCKING — any violation fails the audit:
 - **never-revert-local-changes** — No `git reset --hard` in scripts or agent prompts
 - **agents-follow-cursor-rules** — Sub-agents receive blocking rules explicitly
 - **no-summary-docs** — No `*_SUMMARY.md`, `*_STATUS.md`, or recap docs unless explicitly requested
-- **always-use-quickmerge** — All pushes via `bash scripts/quickmerge.sh`; never standalone quality gates or bare `git push`
+- **always-use-quickmerge** — All pushes via `bash scripts/quickmerge.sh`; never standalone quality gates or bare
+  `git push`
 
 ---
 
@@ -298,7 +352,8 @@ Checks for documentation drift between codex standards and actual implementation
 | Phase 9 (root, tests, QG, 2-min timeout) | **QG fails:** 63 lint errors (E501 line length, F401 unused imports)                                        |
 | Phase 10 (workspace consumers)           | Blocked by Phase 9                                                                                          |
 
-**QG lint blockers:** Run `ruff check --fix` and manually fix E501 (line length) in AC. Ensure `pytest -m "not integration"` completes in <2 min. Workspace consumers: update imports after AC QG passes.
+**QG lint blockers:** Run `ruff check --fix` and manually fix E501 (line length) in AC. Ensure
+`pytest -m "not integration"` completes in <2 min. Workspace consumers: update imports after AC QG passes.
 
 **Does not block first deployment:** AC/UIC refactor improves structure; existing imports work via top-level re-exports.
 
@@ -306,52 +361,79 @@ Checks for documentation drift between codex standards and actual implementation
 
 ### Intended Split (AC vs UIC)
 
-- **unified-api-contracts (AC):** Everything **external** to our private repos (needs API key / external connection) + a **normalised** layer (one-hop from raw external responses). No purely internal service-to-service contracts.
-- **unified-internal-contracts (UIC):** Purely **internal** contracts between private components (no API key, not normalised-from-external, not "getting something external").
-- **Dependency rule:** AC must **not** depend on UIC (AC is Tier 0). Canonical namings that AC needs for external/normalised (e.g. venue enums, error classification at API boundary) stay in AC.
-- **VCR and live schema validation:** Done in the **interfaces** that depend on AC (interfaces hold API keys). AC holds only schemas and static examples. Interfaces that perform VCR and contract-vs-reality validation: **unified-trade-execution-interface**, **unified-sports-execution-interface**, **unified-reference-data-interface**, **unified-position-interface**, **unified-market-interface**, **unified-cloud-interface**.
+- **unified-api-contracts (AC):** Everything **external** to our private repos (needs API key / external connection) + a
+  **normalised** layer (one-hop from raw external responses). No purely internal service-to-service contracts.
+- **unified-internal-contracts (UIC):** Purely **internal** contracts between private components (no API key, not
+  normalised-from-external, not "getting something external").
+- **Dependency rule:** AC must **not** depend on UIC (AC is Tier 0). Canonical namings that AC needs for
+  external/normalised (e.g. venue enums, error classification at API boundary) stay in AC.
+- **VCR and live schema validation:** Done in the **interfaces** that depend on AC (interfaces hold API keys). AC holds
+  only schemas and static examples. Interfaces that perform VCR and contract-vs-reality validation:
+  **unified-trade-execution-interface**, **unified-sports-execution-interface**, **unified-reference-data-interface**,
+  **unified-position-interface**, **unified-market-interface**, **unified-cloud-interface**.
 
 ---
 
 ### Part A: unified-api-contracts (AC) — existing audit
 
-(See full plan in .cursor/plans/ for sections 1–8: layout, docs, .cursor/ boundary, deprecated files, file size, import standards, other alignment, summary table and suggested order.)
+(See full plan in .cursor/plans/ for sections 1–8: layout, docs, .cursor/ boundary, deprecated files, file size, import
+standards, other alignment, summary table and suggested order.)
 
 ---
 
 ### Part B: unified-internal-contracts (UIC) — audit
 
-**Role:** SSOT for internal message schemas, topic names, and request/response/error contracts (no external APIs, no API keys).
+**Role:** SSOT for internal message schemas, topic names, and request/response/error contracts (no external APIs, no API
+keys).
 
-**Current content (correct for "internal only"):** events, market_data, positions, pubsub, risk, features, ml, schemas, reference, messaging, defi, execution (ManualInstruction).
+**Current content (correct for "internal only"):** events, market_data, positions, pubsub, risk, features, ml, schemas,
+reference, messaging, defi, execution (ManualInstruction).
 
 **Dependencies:** Only pydantic; no dependency on AC. Tier 0. OK.
 
-**Alignment tests:** test_uic_ac_alignment.py imports from unified_api_contracts.internal.; obsolete once AC.internal is removed.
+**Alignment tests:** test_uic_ac_alignment.py imports from unified_api_contracts.internal.; obsolete once AC.internal is
+removed.
 
 **schema_registry.json:** Remove entries for unified_api_contracts.internal. when AC.internal is deleted.
 
 **Verdict:** UIC is already internal-only and well-scoped.
 
-**Before deleting AC internal/:** Verify every AC internal symbol (config, domain, execution, health, signals, sor) has an equivalent in UIC; add any gaps to UIC first, then delete AC internal/.
+**Before deleting AC internal/:** Verify every AC internal symbol (config, domain, execution, health, signals, sor) has
+an equivalent in UIC; add any gaps to UIC first, then delete AC internal/.
 
 ---
 
 ### Part C: Combined split and remediation
 
-**What belongs where:** External + FIX + nautilus + normalised + canonical namings → AC. Events, pubsub, risk, features, ml, config, health, execution, signals, sor → UIC only (delete from AC). internal_execution_services, prime_broker, regulatory, shared → classify (internal → UIC/delete; external → AC).
+**What belongs where:** External + FIX + nautilus + normalised + canonical namings → AC. Events, pubsub, risk, features,
+ml, config, health, execution, signals, sor → UIC only (delete from AC). internal_execution_services, prime_broker,
+regulatory, shared → classify (internal → UIC/delete; external → AC).
 
 **Dependency:** AC must NOT depend on UIC. UIC may optionally depend on AC to re-export normalised types.
 
-**Normalised in AC:** Make unified_normalised_contracts self-contained (Option A: own definitions in AC; Option B: UIC depends on AC and re-exports).
+**Normalised in AC:** Make unified_normalised_contracts self-contained (Option A: own definitions in AC; Option B: UIC
+depends on AC and re-exports).
 
-**VCR / live capture:** Move collected_responses/ and generated_schemas/ responsibility to the six interfaces (integration tests). Remove or relocate from AC: collect_responses.py, capture_api_responses.py, validate_schemas.py (live/--generate-schemas), verify_contracts_vs_reality.py. AC keeps only schemas and static examples.
+**VCR / live capture:** Move collected_responses/ and generated_schemas/ responsibility to the six interfaces
+(integration tests). Remove or relocate from AC: collect_responses.py, capture_api_responses.py, validate_schemas.py
+(live/--generate-schemas), verify_contracts_vs_reality.py. AC keeps only schemas and static examples.
 
-**Docs and SSOT updates:** (1) Codex 00-SSOT-INDEX.md — AC = contracts only; VCR/live validation in the six interfaces; add internal contracts row. (2) Codex 05-infrastructure/contracts-integration.md — same. (3) Codex 02-data (VCR/schema ownership) — interfaces record/validate; AC holds schemas and examples. (4) Cursor rules: vcr-ownership.mdc (interfaces do VCR; list six), unified-api-contracts-usage.mdc (live verification in interfaces), contracts-integration.mdc (one line on six interfaces). (5) AC README/docs — point live validation to interfaces.
+**Docs and SSOT updates:** (1) Codex 00-SSOT-INDEX.md — AC = contracts only; VCR/live validation in the six interfaces;
+add internal contracts row. (2) Codex 05-infrastructure/contracts-integration.md — same. (3) Codex 02-data (VCR/schema
+ownership) — interfaces record/validate; AC holds schemas and examples. (4) Cursor rules: vcr-ownership.mdc (interfaces
+do VCR; list six), unified-api-contracts-usage.mdc (live verification in interfaces), contracts-integration.mdc (one
+line on six interfaces). (5) AC README/docs — point live validation to interfaces.
 
-**Orphaned-schemas audit (two types):** (1) **Not normalised** — external/venue schemas that have no corresponding normalised form in AC. (2) **Not used by any interface** — schemas that none of the six interfaces import or use. Single report, two sections; list by module and symbol; output in unified-trading-pm/docs/audit/ or AC docs.
+**Orphaned-schemas audit (two types):** (1) **Not normalised** — external/venue schemas that have no corresponding
+normalised form in AC. (2) **Not used by any interface** — schemas that none of the six interfaces import or use. Single
+report, two sections; list by module and symbol; output in unified-trading-pm/docs/audit/ or AC docs.
 
-**Combined remediation order:** (1) AC docs + script move + .bak + gitignore; (2) normalised self-contained in AC; (3) verify UIC has all AC internal symbols, then remove internal (and classify other dirs) from AC, update AC tests; (4) UIC: remove alignment tests and schema_registry AC.internal entries; (5) confirm no production imports of AC.internal; (6) move VCR/live scripts to interfaces, remove collected_responses/generated_schemas from AC; (7) update docs and SSOT as above; (8) **produce orphaned-schemas audit report** — Type 1: not normalised; Type 2: not used by any of the six interfaces; (9) optional AC layout + remove sys.modules alias.
+**Combined remediation order:** (1) AC docs + script move + .bak + gitignore; (2) normalised self-contained in AC; (3)
+verify UIC has all AC internal symbols, then remove internal (and classify other dirs) from AC, update AC tests; (4)
+UIC: remove alignment tests and schema_registry AC.internal entries; (5) confirm no production imports of AC.internal;
+(6) move VCR/live scripts to interfaces, remove collected_responses/generated_schemas from AC; (7) update docs and SSOT
+as above; (8) **produce orphaned-schemas audit report** — Type 1: not normalised; Type 2: not used by any of the six
+interfaces; (9) optional AC layout + remove sys.modules alias.
 
 ---
 

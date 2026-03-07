@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate deployment checklists have phase_9_deployable_enhancements (items 38-41).
 
 GATE: plans_to_deployable_unified_audit.plan.md checklist-enhancements.

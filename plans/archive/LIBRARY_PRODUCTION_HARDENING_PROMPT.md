@@ -2,7 +2,9 @@
 
 **Purpose:** Comprehensive audit and hardening prompt for central shared libraries in the unified trading system.
 
-**Target Libraries:** unified-trading-services, unified-config-interface, unified-events-interface, unified-domain-client, unified-market-interface, unified-trade-execution-interface, unified-ml-interface, execution-algo-library
+**Target Libraries:** unified-trading-services, unified-config-interface, unified-events-interface,
+unified-domain-client, unified-market-interface, unified-trade-execution-interface, unified-ml-interface,
+execution-algo-library
 
 ---
 
@@ -467,7 +469,10 @@ A production-ready {UNIFIED_EVENTS_INTERFACE} with:
 
 **Are we clear? Ready for the audit of where we are and where we're going?**
 
-**Write me the 7 required output documents (ADOPTION_AUDIT.md, CONSISTENCY_VIOLATIONS.md, DUPLICATION_REPORT.md, TECHNICAL_DEBT.md, COVERAGE_PLAN.md, DOWNSTREAM_ENFORCEMENT.md, PRODUCTION_READINESS_CHECKLIST.md) with detailed tasks. No task should be >1 hour of wall time with 1 agent. In practice you will run parallel agents. It's all going to be done by AI (you) so take that into account in your time estimates.**
+**Write me the 7 required output documents (ADOPTION_AUDIT.md, CONSISTENCY_VIOLATIONS.md, DUPLICATION_REPORT.md,
+TECHNICAL_DEBT.md, COVERAGE_PLAN.md, DOWNSTREAM_ENFORCEMENT.md, PRODUCTION_READINESS_CHECKLIST.md) with detailed tasks.
+No task should be >1 hour of wall time with 1 agent. In practice you will run parallel agents. It's all going to be done
+by AI (you) so take that into account in your time estimates.**
 
 ```
 

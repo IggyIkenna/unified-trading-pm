@@ -1,13 +1,14 @@
 # Deferred Audit Issues — Final Status (2026-03-03)
 
-**Date:** 2026-03-02 (decisions finalized 2026-03-03, execution completed 2026-03-03)
-**Source:** `unified-trading-pm/docs/audit/AUDIT-REPORT-2026-03-02.md`
+**Date:** 2026-03-02 (decisions finalized 2026-03-03, execution completed 2026-03-03) **Source:**
+`unified-trading-pm/docs/audit/AUDIT-REPORT-2026-03-02.md`
 
 ---
 
 ## Status Summary
 
-**44 / 58 original issues FIXED.** 1 new issue (ISS-059) created and fixed. ISS-028 (coverage) in progress. 14 P3 deferred.
+**44 / 58 original issues FIXED.** 1 new issue (ISS-059) created and fixed. ISS-028 (coverage) in progress. 14 P3
+deferred.
 
 | Status             | Issues                                                       |
 | ------------------ | ------------------------------------------------------------ |
@@ -46,7 +47,8 @@ Groups that share files and **MUST run sequentially** (or in the same session):
 
 **Safe to run in parallel** (no shared files):
 
-- Group A + Group B + Group C + Group D + Group E + Group F — all safe in parallel as long as Group A is a single session
+- Group A + Group B + Group C + Group D + Group E + Group F — all safe in parallel as long as Group A is a single
+  session
 
 ---
 
@@ -56,7 +58,9 @@ Groups that share files and **MUST run sequentially** (or in the same session):
 
 ### ISS-004: Remove instruments-service dep from MTDS — DECISION: Remove, types already exist
 
-**Investigation found:** MTDS has ZERO `from instruments_service` imports. The dependency in pyproject.toml is stale. Instrument data flows via GCS/PubSub. Types (InstrumentKey, Venue, InstrumentType) already live in unified-domain-client.
+**Investigation found:** MTDS has ZERO `from instruments_service` imports. The dependency in pyproject.toml is stale.
+Instrument data flows via GCS/PubSub. Types (InstrumentKey, Venue, InstrumentType) already live in
+unified-domain-client.
 
 **Agent instructions:**
 
@@ -70,7 +74,8 @@ Groups that share files and **MUST run sequentially** (or in the same session):
 
 ### ISS-010: Promote UCI to T1 — DECISION: Promote (keeps log_event, clean tier separation)
 
-**Investigation found:** UCI imports only `log_event` from UEI (1 call in loaders.py for CONFIG_LOADED). No cycle — UEI has zero internal deps. UCI is the only T0 interface calling log_event. Promoting to T1 is clean.
+**Investigation found:** UCI imports only `log_event` from UEI (1 call in loaders.py for CONFIG_LOADED). No cycle — UEI
+has zero internal deps. UCI is the only T0 interface calling log_event. Promoting to T1 is clean.
 
 **Agent instructions:**
 
@@ -247,7 +252,8 @@ Already included in Group C above.
 
 ### ISS-059: CI script to check imports against declared dependencies
 
-**Background:** ISS-011 investigation found execution-results-api doesn't actually depend on UDC, but UDC was available in the workspace venv due to aggregate install. Quality gates should catch undeclared imports.
+**Background:** ISS-011 investigation found execution-results-api doesn't actually depend on UDC, but UDC was available
+in the workspace venv due to aggregate install. Quality gates should catch undeclared imports.
 
 **Agent instructions:**
 
@@ -277,8 +283,8 @@ Already included in Group C above.
 load_config("GCS_BUCKET", f"{domain}-store")  # WRONG signature
 ```
 
-UCI's `load_config()` expects `(config_class, config_file=None, ...)` not `(key, default)`.
-This is likely dead code or a pre-refactor remnant. Should be investigated and fixed.
+UCI's `load_config()` expects `(config_class, config_file=None, ...)` not `(key, default)`. This is likely dead code or
+a pre-refactor remnant. Should be investigated and fixed.
 
 ---
 

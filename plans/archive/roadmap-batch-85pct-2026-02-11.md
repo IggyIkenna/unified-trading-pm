@@ -3,10 +3,8 @@
 
 # Roadmap: Batch Production (49.0% → 85.0%)
 
-**Current State:** 49.0% batch readiness
-**Target:** 85.0% batch readiness
-**Gap:** 36.0 percentage points
-**Last Updated:** 2026-02-11
+**Current State:** 49.0% batch readiness **Target:** 85.0% batch readiness **Gap:** 36.0 percentage points **Last
+Updated:** 2026-02-11
 
 ---
 
@@ -36,18 +34,14 @@ Dual-cloud note:
 
 **Objective:** Eliminate security risks and critical system failures that prevent production deployment.
 
-**Estimated Completion:** 3 weeks
-**Risk Level:** HIGH (these issues block production deployment)
+**Estimated Completion:** 3 weeks **Risk Level:** HIGH (these issues block production deployment)
 
 ### 1.1 Remove Service Account Key Files (SEC-05)
 
-**Priority:** P0
-**Status:** NOT_STARTED
-**Effort:** 16 hours (4 hours per step)
+**Priority:** P0 **Status:** NOT_STARTED **Effort:** 16 hours (4 hours per step)
 
-**Description:**
-Service account key file (`test-project-e35fb0ddafe2.json`) is committed to ALL 12 repos in git history. This is a
-critical security vulnerability.
+**Description:** Service account key file (`test-project-e35fb0ddafe2.json`) is committed to ALL 12 repos in git
+history. This is a critical security vulnerability.
 
 **Affected Services:** ALL (12/12)
 
@@ -101,13 +95,10 @@ critical security vulnerability.
 
 ### 1.2 Replace Hardcoded Project ID (COD-20)
 
-**Priority:** P0
-**Status:** NOT_STARTED
-**Effort:** 24 hours (2 hours per service)
+**Priority:** P0 **Status:** NOT_STARTED **Effort:** 24 hours (2 hours per service)
 
-**Description:**
-`test-project` is hardcoded in Dockerfiles, CI config, tests, and documentation across all 12 repos. This prevents
-multi-environment deployment and violates cloud-agnostic principles.
+**Description:** `test-project` is hardcoded in Dockerfiles, CI config, tests, and documentation across all 12 repos.
+This prevents multi-environment deployment and violates cloud-agnostic principles.
 
 **Affected Services:** ALL (12/12)
 
@@ -142,13 +133,10 @@ multi-environment deployment and violates cloud-agnostic principles.
 
 ### 1.3 Implement Position Reconciliation (WRK-03)
 
-**Priority:** P0 for live, P1 for batch
-**Status:** PLANNED
-**Effort:** 40 hours
+**Priority:** P0 for live, P1 for batch **Status:** PLANNED **Effort:** 40 hours
 
-**Description:**
-No automated position reconciliation exists. Manual reconciliation is error-prone and not scalable for production.
-Critical for live trading; important for batch backtesting to verify P&L accuracy.
+**Description:** No automated position reconciliation exists. Manual reconciliation is error-prone and not scalable for
+production. Critical for live trading; important for batch backtesting to verify P&L accuracy.
 
 **Affected Services:**
 
@@ -199,13 +187,10 @@ Critical for live trading; important for batch backtesting to verify P&L accurac
 
 ### 1.4 Data Catalogue (BATCH-03)
 
-**Priority:** P0
-**Status:** PLANNED
-**Effort:** 24 hours
+**Priority:** P0 **Status:** PLANNED **Effort:** 24 hours
 
-**Description:**
-No central data catalogue exists. Engineers manually discover datasets in GCS. This blocks pipeline dependency
-verification and causes data discovery friction.
+**Description:** No central data catalogue exists. Engineers manually discover datasets in GCS. This blocks pipeline
+dependency verification and causes data discovery friction.
 
 **Affected Services:** ALL (data producers and consumers)
 
@@ -249,13 +234,10 @@ verification and causes data discovery friction.
 
 ### 1.5 Verify Pipeline Dependency Chain (BATCH-04)
 
-**Priority:** P0
-**Status:** PLANNED
-**Effort:** 16 hours
+**Priority:** P0 **Status:** PLANNED **Effort:** 16 hours
 
-**Description:**
-No end-to-end verification of pipeline dependency chain. Services may start before upstream data is ready, causing
-silent failures or stale data reads.
+**Description:** No end-to-end verification of pipeline dependency chain. Services may start before upstream data is
+ready, causing silent failures or stale data reads.
 
 **Affected Services:** ALL pipeline services (10 of 12, excluding client-facing services)
 
@@ -316,18 +298,15 @@ silent failures or stale data reads.
 
 **Objective:** Fix high-priority issues that create operational risk or hinder development velocity.
 
-**Estimated Completion:** 4 weeks
-**Risk Level:** MEDIUM (production possible but risky)
+**Estimated Completion:** 4 weeks **Risk Level:** MEDIUM (production possible but risky)
 
 ### 2.1 Add log_event() Calls (OBS-05, OBS-07, OBS-08)
 
-**Priority:** P1
-**Status:** PARTIAL (test files exist but source code missing calls)
-**Effort:** 24 hours (8 hours per service)
+**Priority:** P1 **Status:** PARTIAL (test files exist but source code missing calls) **Effort:** 24 hours (8 hours per
+service)
 
-**Description:**
-3 services have `test_event_logging.py` but zero `log_event()` calls in source code. This breaks lifecycle observability
-and violates 3-tier event logging standard.
+**Description:** 3 services have `test_event_logging.py` but zero `log_event()` calls in source code. This breaks
+lifecycle observability and violates 3-tier event logging standard.
 
 **Affected Services:**
 
@@ -364,13 +343,11 @@ and violates 3-tier event logging standard.
 
 ### 2.2 Remove Try-Except Import Fallbacks (COD-24)
 
-**Priority:** P1
-**Status:** FAILING (all re-audited services)
-**Effort:** 12 hours (2 hours per service)
+**Priority:** P1 **Status:** FAILING (all re-audited services) **Effort:** 12 hours (2 hours per service)
 
-**Description:**
-All 6 re-audited services have try-except import fallbacks (e.g., `try: import lightgbm except: lightgbm = None`). This
-creates silent degradation when optional dependencies are missing, leading to runtime failures hours into execution.
+**Description:** All 6 re-audited services have try-except import fallbacks (e.g.,
+`try: import lightgbm except: lightgbm = None`). This creates silent degradation when optional dependencies are missing,
+leading to runtime failures hours into execution.
 
 **Affected Services:**
 
@@ -408,13 +385,10 @@ creates silent degradation when optional dependencies are missing, leading to ru
 
 ### 2.3 Replace print() with logger (COD-08)
 
-**Priority:** P1
-**Status:** FAILING (multiple services)
-**Effort:** 16 hours
+**Priority:** P1 **Status:** FAILING (multiple services) **Effort:** 16 hours
 
-**Description:**
-210+ `print()` statements in execution-service alone. `print()` produces unstructured output that doesn't integrate with
-Cloud Logging severity levels, filtering, or structured fields.
+**Description:** 210+ `print()` statements in execution-service alone. `print()` produces unstructured output that
+doesn't integrate with Cloud Logging severity levels, filtering, or structured fields.
 
 **Affected Services:**
 
@@ -451,12 +425,9 @@ Cloud Logging severity levels, filtering, or structured fields.
 
 ### 2.4 Add Missing .env.example (INF-03)
 
-**Priority:** P1
-**Status:** FAILING
-**Effort:** 4 hours (2 hours per service)
+**Priority:** P1 **Status:** FAILING **Effort:** 4 hours (2 hours per service)
 
-**Description:**
-2 services missing `.env.example`, making it difficult for new developers to set up local environments.
+**Description:** 2 services missing `.env.example`, making it difficult for new developers to set up local environments.
 
 **Affected Services:**
 
@@ -490,12 +461,10 @@ Cloud Logging severity levels, filtering, or structured fields.
 
 ### 2.5 Move Imports to Module Level (COD-09)
 
-**Priority:** P1
-**Status:** FAILING
-**Effort:** 8 hours
+**Priority:** P1 **Status:** FAILING **Effort:** 8 hours
 
-**Description:**
-Imports inside functions cause performance degradation (repeated import overhead) and hinder static analysis tools.
+**Description:** Imports inside functions cause performance degradation (repeated import overhead) and hinder static
+analysis tools.
 
 **Affected Services:**
 
@@ -528,14 +497,11 @@ Imports inside functions cause performance degradation (repeated import overhead
 
 ### 2.6 Implement Normalized Publish/Subscribe (DAT-19, DAT-20)
 
-**Priority:** P1
-**Status:** PLANNED
-**Effort:** 40 hours
+**Priority:** P1 **Status:** PLANNED **Effort:** 40 hours
 
-**Description:**
-No service fully uses `StandardizedDomainCloudService` for publish/subscribe. Most services use direct GCS paths or
-custom `publish_dataframe()` implementations. This causes schema drift, partition inconsistencies, and hinders
-batch-live symmetry.
+**Description:** No service fully uses `StandardizedDomainCloudService` for publish/subscribe. Most services use direct
+GCS paths or custom `publish_dataframe()` implementations. This causes schema drift, partition inconsistencies, and
+hinders batch-live symmetry.
 
 **Affected Services:** ALL (10/10 pipeline services)
 
@@ -596,18 +562,14 @@ batch-live symmetry.
 
 **Objective:** Address technical debt and improve maintainability.
 
-**Estimated Completion:** 3 weeks
-**Risk Level:** LOW (can defer to post-production)
+**Estimated Completion:** 3 weeks **Risk Level:** LOW (can defer to post-production)
 
 ### 3.1 Implement Batch-Live Symmetry (ARC-11)
 
-**Priority:** P2
-**Status:** PLANNED
-**Effort:** 60 hours
+**Priority:** P2 **Status:** PLANNED **Effort:** 60 hours
 
-**Description:**
-Most services are batch-only. Batch-live symmetry pattern (90% shared code, mode-specific logic isolated to 4 seams) not
-yet implemented.
+**Description:** Most services are batch-only. Batch-live symmetry pattern (90% shared code, mode-specific logic
+isolated to 4 seams) not yet implemented.
 
 **Affected Services:**
 
@@ -651,13 +613,10 @@ yet implemented.
 
 ### 3.2 Add Regression Tests (COD-21)
 
-**Priority:** P2
-**Status:** PARTIAL
-**Effort:** 16 hours
+**Priority:** P2 **Status:** PARTIAL **Effort:** 16 hours
 
-**Description:**
-No systematic regression testing. Known bugs may reoccur. Best practice: every bug fix gets a regression test named
-`test_regression_{issue}_{description}`.
+**Description:** No systematic regression testing. Known bugs may reoccur. Best practice: every bug fix gets a
+regression test named `test_regression_{issue}_{description}`.
 
 **Affected Services:** ALL (add regression tests for historical bugs)
 
@@ -693,12 +652,9 @@ No systematic regression testing. Known bugs may reoccur. Best practice: every b
 
 ### 3.3 Split Large Files (COD-25)
 
-**Priority:** P2
-**Status:** FAILING (multiple services)
-**Effort:** 40 hours
+**Priority:** P2 **Status:** FAILING (multiple services) **Effort:** 40 hours
 
-**Description:**
-Multiple services have files exceeding 1500-line guideline. Largest offenders:
+**Description:** Multiple services have files exceeding 1500-line guideline. Largest offenders:
 
 - instruments-service: 5600+ line file
 - market-data-processing-service: 1500+ line file (borderline, may be acceptable for centralized scripts)
@@ -735,13 +691,10 @@ Multiple services have files exceeding 1500-line guideline. Largest offenders:
 
 ### 3.4 Clean Up Wasteful Documentation (COD-19)
 
-**Priority:** P2
-**Status:** FAILING
-**Effort:** 8 hours
+**Priority:** P2 **Status:** FAILING **Effort:** 8 hours
 
-**Description:**
-Multiple services have 10+ documentation files cluttering repos. Worst: features-delta-one with 14 files. Consolidate
-into single README or move to codex.
+**Description:** Multiple services have 10+ documentation files cluttering repos. Worst: features-delta-one with 14
+files. Consolidate into single README or move to codex.
 
 **Affected Services:**
 
@@ -773,12 +726,9 @@ into single README or move to codex.
 
 ### 3.5 Add Type Hints to Public APIs (COD-23)
 
-**Priority:** P3
-**Status:** PARTIAL
-**Effort:** 24 hours
+**Priority:** P3 **Status:** PARTIAL **Effort:** 24 hours
 
-**Description:**
-Type hints missing on many public API signatures. This hinders IDE autocomplete and refactoring safety.
+**Description:** Type hints missing on many public API signatures. This hinders IDE autocomplete and refactoring safety.
 
 **Affected Services:** ALL (prioritize shared libraries first)
 
@@ -893,5 +843,4 @@ After completing all phases, re-run audit to verify:
 4. **Week 7:** Mid-point review; decide if Phase 3 items move to post-production
 5. **Week 10:** Re-run audit to measure progress
 
-**Owner:** Engineering Lead
-**Stakeholders:** All service owners, DevOps, Security
+**Owner:** Engineering Lead **Stakeholders:** All service owners, DevOps, Security

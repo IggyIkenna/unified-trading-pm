@@ -132,8 +132,7 @@ agent --api-key "$CURSOR_API_KEY" --print --model auto --trust \
 
 **CRITICAL**: Repo folders use DASHES, Python packages use UNDERSCORES
 
-**Repo folder**: `unified-config-interface` (dashes)
-**Python package**: `unified_config_interface` (underscores)
+**Repo folder**: `unified-config-interface` (dashes) **Python package**: `unified_config_interface` (underscores)
 
 **For agent CLI**: Always use repo folder path (dashes)
 

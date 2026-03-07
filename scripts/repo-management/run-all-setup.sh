@@ -54,7 +54,7 @@ MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 # Optional: propagate setup.sh + quality-gates.sh to all repos first
 if [ "$ROLLOUT_FIRST" = true ]; then
   echo "━━━ Phase 0: Rollout templates (setup.sh + quality-gates.sh) ━━━"
-  python3 "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py" || exit 1
+  python3.13 "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py" || exit 1
   echo ""
 fi
 
@@ -64,7 +64,7 @@ echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || echo 'INSTALL')"
 echo ""
 
 # Topological order from manifest
-ORDERED_REPOS=$(python3 -c "
+ORDERED_REPOS=$(python3.13 -c "
 import json
 with open('$MANIFEST') as f:
     data = json.load(f)

@@ -38,8 +38,8 @@ todos:
   - id: rollout-github-repo-settings
     content:
       "Script rollout of repo settings (auto-merge + branch protection) to all 52 service repos:
-      scripts/rollout-repo-settings.sh"
-    status: pending
+      scripts/rollout-repo-settings.sh. See full_autonomous_agent_ci todo rollout-branch-protection for details."
+    status: in_progress
   - id: add-github-secrets
     content:
       Add ANTHROPIC_API_KEY, GH_PAT (repo scope on all workspace repos), TELEGRAM_BOT_TOKEN, and TELEGRAM_CHAT_ID to

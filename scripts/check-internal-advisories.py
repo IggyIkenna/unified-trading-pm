@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Check repo dependencies against internal vulnerability advisories.
 
 Reads unified-trading-pm/security/internal-advisories.yaml and fails if any

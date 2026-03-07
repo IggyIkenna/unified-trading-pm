@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 sbom-store.py — Store pip-audit JSON output (SBOM) in GCS as an audit trail.
 

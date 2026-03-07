@@ -17,8 +17,8 @@ If any tool resolves outside `.venv-workspace/bin/`, run:
 source /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/activate
 ```
 
-**The `env` in `.claude/settings.json` prepends `.venv-workspace/bin` to PATH automatically.
-If that worked, the checks above will pass without manual activation.**
+**The `env` in `.claude/settings.json` prepends `.venv-workspace/bin` to PATH automatically. If that worked, the checks
+above will pass without manual activation.**
 
 ## Rules: Read Before Coding
 
@@ -41,8 +41,8 @@ Read these before making ANY code changes:
 
 ## This is a Multi-Repo Workspace (NOT a monorepo)
 
-Each subdirectory is an independent git repo. When editing, only commit to the target repo.
-Never run `basedpyright .` from workspace root — always run per-repo with timeout.
+Each subdirectory is an independent git repo. When editing, only commit to the target repo. Never run `basedpyright .`
+from workspace root — always run per-repo with timeout.
 
 ## Analysis Rules
 
@@ -79,4 +79,5 @@ grep -r "pattern" --include="*.py" --exclude-dir=".venv*" --exclude-dir="tests"
 - `workspace-infrastructure` — deployment, infra
 - `workspace-complete` / `workspace-full-pipeline` — all repos
 
-All paths use `${workspaceFolder}` — portable across users. Strict basedpyright (reportAny, reportUnknownMemberType, reportUnknownVariableType = error).
+All paths use `${workspaceFolder}` — portable across users. Strict basedpyright (reportAny, reportUnknownMemberType,
+reportUnknownVariableType = error).

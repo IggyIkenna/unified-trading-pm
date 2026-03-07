@@ -126,7 +126,8 @@ Before starting, read these files to understand the standards:
 
 ### Workspace-scoped context (less context, same rules)
 
-**To give Claude/Cursor only the repos that matter for a given epic**, open a **themed workspace file** instead of the full repo root:
+**To give Claude/Cursor only the repos that matter for a given epic**, open a **themed workspace file** instead of the
+full repo root:
 
 ```bash
 cursor .cursor/workspace-configs/workspace-trading.code-workspace
@@ -136,11 +137,16 @@ cursor .cursor/workspace-configs/workspace-trading.code-workspace
 **What this does**:
 
 - Cursor’s **multi-root workspace** = only the folders listed in that `.code-workspace` file.
-- File tree, search, and “files in workspace” are limited to those roots (e.g. trading repos + .cursor + codex + deployment-v3 + .github + .venv-workspace).
-- **You do not need different “doc Claudes” per workspace.** The same `.cursorrules` and `.cursor/rules/*.mdc` apply; Cursor still loads them from the `.cursor` folder that is one of the roots.
-- **Claude Code CLI**: When you run the agent with `--workspace <path>`, point it at the **same workspace file** (or the parent folder that contains only the themed roots). Then the agent’s view of “what files exist” is already scoped to that workspace.
+- File tree, search, and “files in workspace” are limited to those roots (e.g. trading repos + .cursor + codex +
+  deployment-v3 + .github + .venv-workspace).
+- **You do not need different “doc Claudes” per workspace.** The same `.cursorrules` and `.cursor/rules/*.mdc` apply;
+  Cursor still loads them from the `.cursor` folder that is one of the roots.
+- **Claude Code CLI**: When you run the agent with `--workspace <path>`, point it at the **same workspace file** (or the
+  parent folder that contains only the themed roots). Then the agent’s view of “what files exist” is already scoped to
+  that workspace.
 
-**Summary**: Open the themed `.code-workspace` (e.g. `workspace-trading`) → Cursor/Claude see only those folders + shared .cursor/codex/deployment. No extra config per workspace.
+**Summary**: Open the themed `.code-workspace` (e.g. `workspace-trading`) → Cursor/Claude see only those folders +
+shared .cursor/codex/deployment. No extra config per workspace.
 
 ### Claude Code CLI
 
@@ -246,8 +252,8 @@ claude --model claude-sonnet-4-5-20250929
 
 ## 🐍 Workspace Venv Auto-Activation
 
-Claude Code needs the workspace venv so that `python`, `ruff`, `basedpyright`, `uv`, and `pytest`
-resolve to the correct versions (`ruff==0.15.0`, `basedpyright`, Python 3.13) without manual setup.
+Claude Code needs the workspace venv so that `python`, `ruff`, `basedpyright`, `uv`, and `pytest` resolve to the correct
+versions (`ruff==0.15.0`, `basedpyright`, Python 3.13) without manual setup.
 
 ### Three-layer approach (all three active):
 
@@ -261,9 +267,8 @@ ccw-opus             # claude-opus-4-6 + venv
 ccw-think            # claude-sonnet-4-5 + venv + thinking budget 10k
 ```
 
-Use `ccw` instead of `claude` when working from the unified-trading-system-repos workspace.
-The shell function `source`s the venv before invoking `claude`, so every bash subprocess
-inherits the activated PATH automatically.
+Use `ccw` instead of `claude` when working from the unified-trading-system-repos workspace. The shell function `source`s
+the venv before invoking `claude`, so every bash subprocess inherits the activated PATH automatically.
 
 **Layer 2 — `.claude/settings.json` (env vars, automatic for any claude invocation)**
 
@@ -278,14 +283,13 @@ Located at `unified-trading-system-repos/.claude/settings.json`:
 }
 ```
 
-This is picked up by `claude` regardless of how it was launched (CLI, IDE, scripts).
-It ensures `VIRTUAL_ENV` is set and `.venv-workspace/bin` is first in PATH.
+This is picked up by `claude` regardless of how it was launched (CLI, IDE, scripts). It ensures `VIRTUAL_ENV` is set and
+`.venv-workspace/bin` is first in PATH.
 
 **Layer 3 — `CLAUDE.md` (session instruction, fallback check)**
 
-`CLAUDE.md` at workspace root tells Claude Code to verify `which python` and `which ruff`
-at the start of every session, and to run `source .venv-workspace/bin/activate` if they
-aren't resolving to the workspace venv.
+`CLAUDE.md` at workspace root tells Claude Code to verify `which python` and `which ruff` at the start of every session,
+and to run `source .venv-workspace/bin/activate` if they aren't resolving to the workspace venv.
 
 ### Verification
 

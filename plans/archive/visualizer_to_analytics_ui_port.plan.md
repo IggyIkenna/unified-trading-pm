@@ -1,24 +1,45 @@
 ---
 name: Visualizer to Analytics UI Port
-overview: Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM plans and codex, and full integration with execution-results-api and execution-service domain data.
+overview:
+  Port execution-analytics-ui functionality into execution-analytics-ui to achieve 100% audit grade, alignment with PM
+  plans and codex, and full integration with execution-results-api and execution-service domain data.
 todos:
   - id: infra-setup
-    content: "Add infrastructure dependencies to execution-analytics-ui: axios, @tanstack/react-query, zustand, recharts, tailwind css, postcss. Configure Vite proxy /api → http://localhost:8002. Add @/ path alias. Configure authApiClient (axios + auth interceptor). Add api/types.ts aligned with execution-results-api schemas (ResultSummary, ResultsResponse, ExecutionAlpha). Fix GridResult → ResultSummary schema mismatch."
+    content:
+      "Add infrastructure dependencies to execution-analytics-ui: axios, @tanstack/react-query, zustand, recharts,
+      tailwind css, postcss. Configure Vite proxy /api → http://localhost:8002. Add @/ path alias. Configure
+      authApiClient (axios + auth interceptor). Add api/types.ts aligned with execution-results-api schemas
+      (ResultSummary, ResultsResponse, ExecutionAlpha). Fix GridResult → ResultSummary schema mismatch."
     status: completed
   - id: p0-pages
-    content: "Port P0 core analytics pages from execution-analytics-ui: (1) LoadResults — browse GCS/local results, bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore, filterStore) and React Query hooks."
+    content:
+      "Port P0 core analytics pages from execution-analytics-ui: (1) LoadResults — browse GCS/local results,
+      bucket/prefix selection; uses /results, /results/buckets, /results/prefixes endpoints; (2) Analysis — alpha
+      histogram, equity curve; uses /results, /results/execution_alpha; (3) DeepDive — per-result fills/orders/timeline
+      tabs; (4) AlgorithmComparison — compare algorithms with bar/radar charts. Port Zustand stores (resultsStore,
+      filterStore) and React Query hooks."
     status: completed
   - id: p1-run-backtest
-    content: "Port P1 RunBacktest page: single/batch backtest execution, job status polling. Uses /backtest/run, /backtest/batch, /backtest/status/{job_id}, /config/sources, /config/system/cores endpoints."
+    content:
+      "Port P1 RunBacktest page: single/batch backtest execution, job status polling. Uses /backtest/run,
+      /backtest/batch, /backtest/status/{job_id}, /config/sources, /config/system/cores endpoints."
     status: completed
   - id: p2-domain-browsing
-    content: "Port P2 domain data browsing pages: InstrumentDefinitions (/data/instruments), InstructionAvailability (/data/strategies, /data/instructions), ConfigBrowser (/data/configs), ConfigGenerator (stub — returns 501, defer or scaffold)."
+    content:
+      "Port P2 domain data browsing pages: InstrumentDefinitions (/data/instruments), InstructionAvailability
+      (/data/strategies, /data/instructions), ConfigBrowser (/data/configs), ConfigGenerator (stub — returns 501, defer
+      or scaffold)."
     status: completed
   - id: p3-market-data
-    content: "Port P3 MarketTickData page from execution-analytics-ui: browse and chart tick data via market-data-api (/data/tick-data, /data/tick-data/instruments, /data/tick-data/ticks, port 8003)."
+    content:
+      "Port P3 MarketTickData page from execution-analytics-ui: browse and chart tick data via market-data-api
+      (/data/tick-data, /data/tick-data/instruments, /data/tick-data/ticks, port 8003)."
     status: completed
   - id: quality-gates
-    content: "Ensure TypeScript quality gates pass: Vitest unit tests, ESLint, Prettier. Add Playwright smoke tests for LoadResults, Analysis, DeepDive pages. Verify no Python in repo (ui-no-python-quality-gates.mdc). Auth: all API calls pass Bearer token via axios interceptor using @unified-trading/ui-auth authContext."
+    content:
+      "Ensure TypeScript quality gates pass: Vitest unit tests, ESLint, Prettier. Add Playwright smoke tests for
+      LoadResults, Analysis, DeepDive pages. Verify no Python in repo (ui-no-python-quality-gates.mdc). Auth: all API
+      calls pass Bearer token via axios interceptor using @unified-trading/ui-auth authContext."
     status: completed
 isProject: false
 ---
@@ -27,14 +48,19 @@ isProject: false
 
 ## Context
 
-**Canonical target:** [execution-analytics-ui](execution-analytics-ui/) is the designated UI for execution backtest (TCA, alpha, fill analysis, execution quality) per [RUNTIME_TOPOLOGY_DECISIONS.md](deployment-service/configs/RUNTIME_TOPOLOGY_DECISIONS.md) (lines 59–65). Content migration from `execution-service/visualizer-ui/` into this repo is tracked as `arch-exec-services-visualizer-extract`.
+**Canonical target:** [execution-analytics-ui](execution-analytics-ui/) is the designated UI for execution backtest
+(TCA, alpha, fill analysis, execution quality) per
+[RUNTIME_TOPOLOGY_DECISIONS.md](deployment-service/configs/RUNTIME_TOPOLOGY_DECISIONS.md) (lines 59–65). Content
+migration from `execution-service/visualizer-ui/` into this repo is tracked as `arch-exec-services-visualizer-extract`.
 
 **Current state:**
 
-- **execution-analytics-ui:** 2 pages (Login, GridResults), auth via `@unified-trading/ui-auth`, single `GET /api/v1/results` with schema mismatch
+- **execution-analytics-ui:** 2 pages (Login, GridResults), auth via `@unified-trading/ui-auth`, single
+  `GET /api/v1/results` with schema mismatch
 - **execution-analytics-ui:** 11 pages, full execution-results-api integration, no auth
 - **execution-results-api:** Full API (results, analysis, backtest, config, data, fills SSE)
-- **execution-service:** Produces domain data (summary.json, execution_alpha.json, orders/fills/equity parquet) to GCS; execution-results-api reads it
+- **execution-service:** Produces domain data (summary.json, execution_alpha.json, orders/fills/equity parquet) to GCS;
+  execution-results-api reads it
 
 **Audit requirements** (trading-system-audit-prompt, ui-service-separation):
 
@@ -96,9 +122,13 @@ isProject: false
 
 ## Schema Alignment
 
-**Current mismatch:** execution-analytics-ui `GridResult` expects `{ run_id, cell_id, sharpe, calmar, total_return_pct, max_drawdown_pct, is_best_cell }`; execution-results-api returns `{ results: ResultSummary[], total, filters }` with `sharpe_ratio`, `pnl`, `net_alpha_bps`, etc.
+**Current mismatch:** execution-analytics-ui `GridResult` expects
+`{ run_id, cell_id, sharpe, calmar, total_return_pct, max_drawdown_pct, is_best_cell }`; execution-results-api returns
+`{ results: ResultSummary[], total, filters }` with `sharpe_ratio`, `pnl`, `net_alpha_bps`, etc.
 
-**Action:** Replace `GridResult` with `ResultSummary` (and `ResultsResponse`) from execution-results-api. Map `sharpe_ratio` → `sharpe`; add derived fields (`calmar`, `max_drawdown_pct`, `total_return_pct`) if execution-results-api or analysis endpoints provide them, or compute client-side from equity/summary.
+**Action:** Replace `GridResult` with `ResultSummary` (and `ResultsResponse`) from execution-results-api. Map
+`sharpe_ratio` → `sharpe`; add derived fields (`calmar`, `max_drawdown_pct`, `total_return_pct`) if
+execution-results-api or analysis endpoints provide them, or compute client-side from equity/summary.
 
 ---
 
@@ -118,14 +148,17 @@ isProject: false
 
 ## Deployment API (Optional)
 
-execution-analytics-ui uses `deployment-dashboard` (Cloud Run) for mass cloud deploy (`/api/deployments`, `/api/service-status/execution-services/`\*). For RunBacktest mass deploy, execution-analytics-ui may need this. Defer to P1 completion; add if RunBacktest mass-deploy is required for audit.
+execution-analytics-ui uses `deployment-dashboard` (Cloud Run) for mass cloud deploy (`/api/deployments`,
+`/api/service-status/execution-services/`\*). For RunBacktest mass deploy, execution-analytics-ui may need this. Defer
+to P1 completion; add if RunBacktest mass-deploy is required for audit.
 
 ---
 
 ## Quality Gates and Cursor Rules
 
 - **UI-service separation:** No Python in UI repo — already satisfied
-- **TypeScript quality gates:** Vitest, ESLint, Prettier (per [ui-no-python-quality-gates.mdc](../../../.cursor/rules/ui/ui-no-python-quality-gates.mdc))
+- **TypeScript quality gates:** Vitest, ESLint, Prettier (per
+  [ui-no-python-quality-gates.mdc](../../../.cursor/rules/ui/ui-no-python-quality-gates.mdc))
 - **execution-analytics-ui** → execution-results-api (8002) + market-data-api (8003) — per topology
 
 ---
@@ -188,15 +221,18 @@ flowchart TB
 
 1. **Infrastructure:** Add axios, React Query, Zustand, Recharts, Tailwind; API client with auth; Vite proxy; path alias
 2. **Schema:** Add `api/types.ts` aligned with execution-results-api; fix GridResults → ResultSummary
-3. **P0 pages:** LoadResults → Analysis → DeepDive → AlgorithmComparison (in that order; Analysis/DeepDive/Compare depend on LoadResults store)
+3. **P0 pages:** LoadResults → Analysis → DeepDive → AlgorithmComparison (in that order; Analysis/DeepDive/Compare
+   depend on LoadResults store)
 4. **P1:** RunBacktest
 5. **P2:** InstrumentDefinitions, InstructionAvailability, ConfigBrowser; ConfigGenerator (stub if 501)
 6. **P3:** MarketTickData (if market-data-api integration required)
-7. **Quality gates:** Ensure Vitest, ESLint, Prettier pass; add smoke tests (Playwright) for LoadResults, Analysis, DeepDive
+7. **Quality gates:** Ensure Vitest, ESLint, Prettier pass; add smoke tests (Playwright) for LoadResults, Analysis,
+   DeepDive
 
 ---
 
 ## Out of Scope
 
 - **execution-analytics-ui repo:** After port, deprecate or archive; execution-analytics-ui becomes single source
-- **execution-service/visualizer-ui:** Extraction tracked separately; this plan ports from execution-analytics-ui (already extracted) into execution-analytics-ui
+- **execution-service/visualizer-ui:** Extraction tracked separately; this plan ports from execution-analytics-ui
+  (already extracted) into execution-analytics-ui

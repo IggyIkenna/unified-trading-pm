@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Create GitHub repos (if missing) and add datadodo + CosmicTrader as admin.
 Uses GH_PAT or GITHUB_TOKEN (same as instruments-service / Cloud Build).

@@ -2,12 +2,14 @@
 
 ### Purpose
 
-This file enumerates **every feature header** and defines its **type**, **horizon**, and **math/definition** at a minimum level required for unambiguous implementation.
+This file enumerates **every feature header** and defines its **type**, **horizon**, and **math/definition** at a
+minimum level required for unambiguous implementation.
 
 Cross references:
 
 - Processing + provider + CLI contract: `sports-betting-service/docs/PROCESSING_PROVIDERS_AND_CLI.md`
-- Implementation nuances (rolling windows, priors, HT sequencing): `sports-betting-service/docs/FEATURES_IMPLEMENTATION_GUIDE.md`
+- Implementation nuances (rolling windows, priors, HT sequencing):
+  `sports-betting-service/docs/FEATURES_IMPLEMENTATION_GUIDE.md`
 - Domain guides: `sports-betting-service/docs/FEATURES_DOMAIN_GUIDES.md`
 
 ### Naming conventions (critical for `models.py`)

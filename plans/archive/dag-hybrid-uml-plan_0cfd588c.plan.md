@@ -1,6 +1,8 @@
 ---
 name: dag-hybrid-uml-plan
-overview: Apply DAG-first refactor with UML protocol-based storage decoupling (Option 1) and hybrid live coupling policy, then synchronize manifest/codex/rules/plan before broad testing.
+overview:
+  Apply DAG-first refactor with UML protocol-based storage decoupling (Option 1) and hybrid live coupling policy, then
+  synchronize manifest/codex/rules/plan before broad testing.
 todos:
   - id: dag-ssot-align
     content: Reconcile manifest + topology/dependency docs and reorder consolidated plan to DAG-first.
@@ -27,7 +29,9 @@ todos:
     content: Create post-fix annotated DAG SVG next to existing architecture visuals.
     status: pending
   - id: runtime-topology-ssot
-    content: Add deployment runtime-topology SSOT manifest, wire deployment consumer, and sync codex/cursor rules/plan references.
+    content:
+      Add deployment runtime-topology SSOT manifest, wire deployment consumer, and sync codex/cursor rules/plan
+      references.
     status: pending
 isProject: false
 ---
@@ -36,12 +40,15 @@ isProject: false
 
 ## Locked decisions
 
-- **UML:** Use **Option 1** — keep interface/types in `UML`, define storage protocol there, implement in `UDC`, inject from services.
-- **Live coupling policy:** **Hybrid** — allow same-VM in-memory bridge in live mode, but **no service→service pyproject dependency** and no cross-repo service imports.
+- **UML:** Use **Option 1** — keep interface/types in `UML`, define storage protocol there, implement in `UDC`, inject
+  from services.
+- **Live coupling policy:** **Hybrid** — allow same-VM in-memory bridge in live mode, but **no service→service pyproject
+  dependency** and no cross-repo service imports.
 
 ## Phase 0 — DAG gate (must complete before tier tests)
 
-- Normalize `workspace-manifest.json` as SSOT (remove duplicate repo keys, remove stale violation/orphan statements that are already resolved).
+- Normalize `workspace-manifest.json` as SSOT (remove duplicate repo keys, remove stale violation/orphan statements that
+  are already resolved).
 - Reconcile architecture docs with manifest:
   - `unified-trading-codex/04-architecture/TOPOLOGY-DAG.md`
   - `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`

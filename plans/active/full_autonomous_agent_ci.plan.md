@@ -75,7 +75,46 @@ todos:
     content:
       Trigger overnight-agent-orchestrator manually (workflow_dispatch), verify in GHA that T1 jobs do not start until
       all T0 jobs complete, T2 waits on T1, T3 waits on T2. Verify no cross-tier repo contamination (each agent's
-      ephemeral workspace only has read-only clones of deps, never writes to them).
+      ephemeral workspace only has read-only clones of deps, never writes to them). Unblocked after
+      rollout-branch-protection completes.
+    status: pending
+  - id: rollout-branch-protection
+    content: >-
+      Set branch protection (require quality-gates status check + enable auto-merge) on all 52 service/API repos.
+      Without branch protection, gh pr merge --auto merges immediately without waiting for CI to pass. Script: iterate
+      workspace-manifest.json service/api-service tiers, call gh api repos/:owner/:repo/branches/main/protection with
+      required_status_checks: {strict: true, contexts: [quality-gates]}. Prereq for gh pr merge --auto to actually gate
+      on CI.
+    status: pending
+  - id: set-anthropic-api-key-sit
+    content: >-
+      Add ANTHROPIC_API_KEY secret to system-integration-tests repo so sit-plan-sync-agent.yml can run. Command: gh
+      secret set ANTHROPIC_API_KEY --repo IggyIkenna/system-integration-tests. Verify: gh run list --workflow
+      sit-plan-sync-agent.yml after next push to SIT main.
+    status: pending
+  - id: repos-update-pm-plans-in-gha
+    content: >-
+      Each service repo's agent-audit.yml adds a post-quickmerge step: after successful QG run, clone PM sibling
+      (already done in setup-workspace.sh), find the plan todo(s) for this service, mark them completed, commit to the
+      current PM branch, push. This allows PM to have up-to-date plan status before staging-to-main fires, eliminating
+      circular reference between PM manifest updates and service repo merges. Design: add a
+      scripts/update-pm-plan-status.sh helper that takes SERVICE_NAME and TODO_ID, updates the .plan.md YAML status
+      field, and commits to the current PM branch.
+    status: pending
+  - id: pm-manifest-remote-ssot-check
+    content: >-
+      Add a pre-check to quickmerge.sh (before Stage 1): fetch origin/main of PM, compare versions block against local
+      manifest. If local PM is behind remote: in interactive mode prompt user to pull; in GHA mode auto-pull. Prevents
+      stale-manifest quickmerges where a service repo thinks a dep is at version X but PM remote already has it at X+1,
+      causing constraint mismatches in downstream repos after merge.
+    status: pending
+  - id: smoke-test-gate
+    content: >-
+      In system-integration-tests repo, add a GHA workflow (smoke-test-gate.yml) that triggers on push to staging
+      branch, runs the smoke test suite (pytest tests/smoke/ or similar), and on success dispatches staging-validated
+      event to unified-trading-pm. PM staging-to-main.yml is already wired to receive this dispatch and promote all
+      repos from staging to main in topological order. This closes the loop on the staging-to-main automation. Blocked
+      until: (1) SIT smoke tests exist in tests/smoke/, (2) SIT ANTHROPIC_API_KEY set (set-anthropic-api-key-sit todo).
     status: pending
 isProject: false
 ---

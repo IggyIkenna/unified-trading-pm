@@ -79,8 +79,5 @@
     "from src.cloud_client import",
     "import pyarrow"
   ],
-  "startswith_patterns": [
-    "    from unified_trading_services",
-    "    from unified_trading_services."
-  ]
+  "startswith_patterns": ["    from unified_trading_services", "    from unified_trading_services."]
 }

@@ -1,6 +1,7 @@
 # Cursor Index Migration (Skip Re-Indexing)
 
-When your workspace path changes (iCloud sync, different machine), Cursor starts re-indexing from scratch. This can take **30+ minutes** for large workspaces.
+When your workspace path changes (iCloud sync, different machine), Cursor starts re-indexing from scratch. This can take
+**30+ minutes** for large workspaces.
 
 **Solution:** Copy the index from the old path to the new path!
 
@@ -56,7 +57,8 @@ cp -R Users-USERNAME-Documents-repos-unified-trading-system-repos/* \
 - Code embeddings (for semantic search)
 - File content vectors
 
-**This means:** When you copy the local index, Cursor can match it with the cloud embeddings using file hashes. It doesn't need to re-process everything.
+**This means:** When you copy the local index, Cursor can match it with the cloud embeddings using file hashes. It
+doesn't need to re-process everything.
 
 ---
 

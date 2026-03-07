@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Ensure GitHub users datadodo and CosmicTrader have admin (read/write) access
 on all repos in the workspace. Uses GitHub REST API; token: GH_PAT or GITHUB_TOKEN.

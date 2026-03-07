@@ -12,24 +12,39 @@ overview: |
   BLOCKS: Phase 1 Stream A, B, C — same gate as enforcement.
 todos:
   - id: stream1-secrets-uci-uci-config
-    content: "Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig bootstrap pattern; unified-config-interface 1 os.environ in loaders.py. (DONE 2026-03-06)"
+    content:
+      "Stream 1 (unblocks everything): trading-analytics-ui .env removal; UCI 30+ os.environ → UnifiedCloudConfig
+      bootstrap pattern; unified-config-interface 1 os.environ in loaders.py. (DONE 2026-03-06)"
     status: done
   - id: stream2-utl-fds
-    content: "Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py."
+    content:
+      "Stream 2 (after Stream 1 merges): unified-trading-library 50+ os.environ + try/except ImportError in
+      aws_clients.py; features-delta-one-service try/except ImportError in _openbb_types.py."
     status: done
   - id: stream3-instruments-strategy-mlt-deploy
-    content: "Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore; strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async."
+    content:
+      "Stream 3 (parallel after Stream 2): instruments-service PYTEST_CURRENT_TEST antipattern + 68 type:ignore;
+      strategy-service 3x try/except ImportError + create_presentation.py 1187L split; ml-training-service Dockerfile
+      pip→uv; deployment-service env_substitutor.py boundary + scripts; deployment-api time.sleep in async."
     status: done
   - id: stream4-exec-mtds-sports
-    content: "Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139 type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service _registry_data_b.py 1570L split."
+    content:
+      "Stream 4 (parallel after Stream 1): execution-service hardcoded project IDs + 5 oversized files + 139
+      type:ignore; market-tick-data-service hardcoded ID + os.environ scripts; features-sports-service
+      _registry_data_b.py 1570L split."
     status: done
   - id: stream5-warn-cleanup
-    content: "Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore; market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ verification."
+    content:
+      "Stream 5 (parallel, WARN cleanup): unified-market-interface 3 files >900L; execution-results-api 13 type:ignore;
+      market-data-processing-service Any type; strategy-ui + batch-audit-ui .env hygiene; 8 services datetime TZ
+      verification."
     status: done
 isProject: true
 blockedBy:
   - plan: phase0_standards_enforcement.plan.md
-    reason: "Enforcement scan identifies the FAIL/WARN items that this plan fixes. Stream 1 can begin as soon as the initial scan is complete — does not need full enforcement to be done."
+    reason:
+      "Enforcement scan identifies the FAIL/WARN items that this plan fixes. Stream 1 can begin as soon as the initial
+      scan is complete — does not need full enforcement to be done."
 ---
 
 # Phase 0 — Audit Remediation Plan
@@ -45,15 +60,17 @@ These are **two parallel Phase 0 companions, not competing plans:**
 | **Gate**   | p0-gate-check verifies all fixes are in             | N/A — enforcement gate is the final arbiter        |
 | **Start**  | Day 0, parallel with remediation                    | Day 0, can begin after Stream 1 scan results       |
 
-**There is no circularity.** Enforcement DISCOVERS violations → remediation FIXES them → enforcement's gate check VERIFIES they are fixed. Both complete before Phase 1 starts.
+**There is no circularity.** Enforcement DISCOVERS violations → remediation FIXES them → enforcement's gate check
+VERIFIES they are fixed. Both complete before Phase 1 starts.
 
-> **Sequencing mandate (J3):** (1) Enforcement gates added in WARN mode first (no merge block); (2) Remediation PRs merged while enforcement warns; (3) Enforcement switched to BLOCK mode only after all remediation PRs merge. This ordering is mandatory and is NOT implied by `blockedBy` alone — must be explicitly followed.
+> **Sequencing mandate (J3):** (1) Enforcement gates added in WARN mode first (no merge block); (2) Remediation PRs
+> merged while enforcement warns; (3) Enforcement switched to BLOCK mode only after all remediation PRs merge. This
+> ordering is mandatory and is NOT implied by `blockedBy` alone — must be explicitly followed.
 
 ## Context
 
-A full-system audit (2026-03-04) scored the workspace **Grade D** across 53 repos.
-13 repos have FAIL status; 16 have WARN. Phase 1 cannot start until all FAIL items are
-resolved and WARN items are either fixed or formally deferred.
+A full-system audit (2026-03-04) scored the workspace **Grade D** across 53 repos. 13 repos have FAIL status; 16 have
+WARN. Phase 1 cannot start until all FAIL items are resolved and WARN items are either fixed or formally deferred.
 
 **Automatic-FAIL triggers found:**
 
@@ -155,14 +172,13 @@ Stream 5 (WARN cleanup, parallel):
 - Provider-detection fallbacks in `factory.py` → read from `UnifiedCloudConfig().cloud_provider`
 - `constants.py` env lookups → promote to `UnifiedCloudConfig` fields with proper validation
 
-**Note:** `unified-cloud-interface` IS the cloud config provider — it bootstraps before
-`UnifiedCloudConfig` is fully available. For the bootstrap path only (provider detection),
-use `os.environ.get()` is acceptable IF wrapped in a single `_detect_provider()` function
-and documented with `# config-bootstrap: pre-UnifiedCloudConfig`. All other accesses must
+**Note:** `unified-cloud-interface` IS the cloud config provider — it bootstraps before `UnifiedCloudConfig` is fully
+available. For the bootstrap path only (provider detection), use `os.environ.get()` is acceptable IF wrapped in a single
+`_detect_provider()` function and documented with `# config-bootstrap: pre-UnifiedCloudConfig`. All other accesses must
 use the config class.
 
-**Done:** `rg "os\.environ" unified_cloud_interface/ --type py` returns 0 results outside
-the single `_detect_provider()` bootstrap function.
+**Done:** `rg "os\.environ" unified_cloud_interface/ --type py` returns 0 results outside the single
+`_detect_provider()` bootstrap function.
 
 ---
 
@@ -174,8 +190,8 @@ the single `_detect_provider()` bootstrap function.
 
 - `unified_config_interface/loaders.py:158` — `os.environ.items()` iteration
 
-**Fix:** Replace direct `os.environ.items()` with an injected environment mapping parameter
-with a default of `dict(os.environ)` at call site (loader receives a snapshot, not live access).
+**Fix:** Replace direct `os.environ.items()` with an injected environment mapping parameter with a default of
+`dict(os.environ)` at call site (loader receives a snapshot, not live access).
 
 **Done:** `rg "os\.environ" unified_config_interface/ --type py` returns 0 results.
 
@@ -207,9 +223,9 @@ with a default of `dict(os.environ)` at call site (loader receives a snapshot, n
 
 - All `os.environ.get("KEY")` → `UnifiedCloudConfig().field_name`
 - Extend `UnifiedCloudConfig` with any missing fields needed
-- `aws_clients.py:23` → remove `try/except ImportError`; if boto3 is optional, declare it
-  as an optional extra in pyproject.toml and guard with `importlib.util.find_spec("boto3") is not None`
-  at module level (no fallback mock — fail loud)
+- `aws_clients.py:23` → remove `try/except ImportError`; if boto3 is optional, declare it as an optional extra in
+  pyproject.toml and guard with `importlib.util.find_spec("boto3") is not None` at module level (no fallback mock — fail
+  loud)
 - `testing/test_config_helpers.py` os.environ usage is acceptable (test helper, not prod)
 
 **Done:** `rg "os\.environ" unified_trading_library/ --type py --glob '!**/testing/**' --glob '!**/tests/**'` = 0.
@@ -227,10 +243,10 @@ with a default of `dict(os.environ)` at call site (loader receives a snapshot, n
 
 **Fix:**
 
-- `_openbb_types.py`: Remove `try/except ImportError`. If openbb is optional, use
-  `importlib.util.find_spec("openbb")` guard with a hard `raise ImportError(...)` message.
-- `examples/` os.environ usage: acceptable in examples — add `# noqa: S105` or move to
-  test fixtures, but do NOT suppress with `# type: ignore`.
+- `_openbb_types.py`: Remove `try/except ImportError`. If openbb is optional, use `importlib.util.find_spec("openbb")`
+  guard with a hard `raise ImportError(...)` message.
+- `examples/` os.environ usage: acceptable in examples — add `# noqa: S105` or move to test fixtures, but do NOT
+  suppress with `# type: ignore`.
 
 **Done:** `rg "except ImportError" features_delta_one_service/ --type py` = 0.
 
@@ -249,15 +265,15 @@ with a default of `dict(os.environ)` at call site (loader receives a snapshot, n
 
 These use `os.environ.get("PYTEST_CURRENT_TEST")` for pytest-detection — an anti-pattern.
 
-**Fix (os.environ):** Inject a `testing_mode: bool = False` parameter at construction time.
-In tests, pass `testing_mode=True` explicitly. Remove all `PYTEST_CURRENT_TEST` checks.
+**Fix (os.environ):** Inject a `testing_mode: bool = False` parameter at construction time. In tests, pass
+`testing_mode=True` explicitly. Remove all `PYTEST_CURRENT_TEST` checks.
 
 **Fix (type:ignore 68×):** Audit all 68 instances. Categorize:
 
 - Legitimate pandas/ccxt/tardis API gaps → create `py.typed` stubs or use `cast()`
 - Architectural violations → fix root cause, never suppress
-- Target: reduce to ≤5 documented instances, each with a `# type: ignore[specific-code]`
-  comment referencing a GitHub issue
+- Target: reduce to ≤5 documented instances, each with a `# type: ignore[specific-code]` comment referencing a GitHub
+  issue
 
 **Done:** `rg "os\.environ\|PYTEST_CURRENT_TEST" instruments_service/app/ --type py` = 0.
 `rg "# type: ignore" instruments_service/ --type py | wc -l` ≤ 5.
@@ -274,9 +290,8 @@ In tests, pass `testing_mode=True` explicitly. Remove all `PYTEST_CURRENT_TEST` 
 - `scripts/run_backtest_api.py:19–28` — ArchiveBacktestAdapter fallback
 - `scripts/run_backtest_api.py:194–204` — mock mode fallback
 
-**Fix (ImportError):** Scripts are NOT exempt from this rule. Remove all fallbacks.
-If matplotlib is optional, add it as `[project.optional-dependencies.viz]` and
-document the install requirement in the script header docstring.
+**Fix (ImportError):** Scripts are NOT exempt from this rule. Remove all fallbacks. If matplotlib is optional, add it as
+`[project.optional-dependencies.viz]` and document the install requirement in the script header docstring.
 
 **File (1187 lines):**
 
@@ -318,13 +333,12 @@ RUN uv pip install --system --no-cache -e ".[dev]"
 - `deployment_service/config/env_substitutor.py:42` — core service code
 - 11 instances in `scripts/` — automation scripts
 
-**Fix (env_substitutor.py:42):** `env_substitutor.py` substitutes env vars into config
-templates — this is a legitimate use. Wrap in a single `_get_env_snapshot() -> dict[str, str]`
-function that reads `os.environ` once and documents it as the config substitution boundary.
-All other access must go through the snapshot.
+**Fix (env_substitutor.py:42):** `env_substitutor.py` substitutes env vars into config templates — this is a legitimate
+use. Wrap in a single `_get_env_snapshot() -> dict[str, str]` function that reads `os.environ` once and documents it as
+the config substitution boundary. All other access must go through the snapshot.
 
-**Fix (scripts):** Replace `os.environ["GCP_PROJECT_ID"]` with a shared `_get_project_id()`
-helper in `scripts/_common.py` that reads from `GCP_PROJECT_ID` with a hard fail if absent.
+**Fix (scripts):** Replace `os.environ["GCP_PROJECT_ID"]` with a shared `_get_project_id()` helper in
+`scripts/_common.py` that reads from `GCP_PROJECT_ID` with a hard fail if absent.
 
 **Done:** `rg "os\.environ" deployment_service/ --type py --glob '!**/scripts/**'` = 0 (except documented boundary).
 
@@ -378,12 +392,11 @@ Replace all literal `"central-element-323112"` with `get_project_id()`.
 - `execution_service/engine/backtest/preflight.py` (967L) → split checks/setup
 - `execution_service/algorithms/impl/hybrid_optimal.py` (905L) → split strategy/math
 
-**type:ignore (139×):** Audit and reduce. Target ≤10 documented instances.
-Priority: fix architectural violations first (imports, schema boundaries); use `cast()` for
-legitimate pandas/numpy type gaps.
+**type:ignore (139×):** Audit and reduce. Target ≤10 documented instances. Priority: fix architectural violations first
+(imports, schema boundaries); use `cast()` for legitimate pandas/numpy type gaps.
 
-**Done:** `rg "central-element" execution_service/ --type py` = 0.
-All 5 files ≤ 900 lines. `rg "# type: ignore" execution_service/ --type py | wc -l` ≤ 10.
+**Done:** `rg "central-element" execution_service/ --type py` = 0. All 5 files ≤ 900 lines.
+`rg "# type: ignore" execution_service/ --type py | wc -l` ≤ 10.
 
 ---
 
@@ -395,10 +408,9 @@ All 5 files ≤ 900 lines. `rg "# type: ignore" execution_service/ --type py | w
 
 - `scripts/test_unified_cloud_integration.py:206` — `"central-element-323112"`
 
-**Fix:** Replace with `get_project_id()` helper from `scripts/_env.py` (same pattern as
-TASK 4.1, which raises RuntimeError if absent — no silent fallback).
-Do NOT use `os.environ.get("GCP_PROJECT_ID", "test-project")` — the `"test-project"` default
-is a banned silent fallback (no-empty-fallbacks.mdc). Fail loud if the env var is absent.
+**Fix:** Replace with `get_project_id()` helper from `scripts/_env.py` (same pattern as TASK 4.1, which raises
+RuntimeError if absent — no silent fallback). Do NOT use `os.environ.get("GCP_PROJECT_ID", "test-project")` — the
+`"test-project"` default is a banned silent fallback (no-empty-fallbacks.mdc). Fail loud if the env var is absent.
 
 **os.environ (20+ in scripts):** Apply same `_env.py` helper pattern.
 
@@ -441,8 +453,8 @@ is a banned silent fallback (no-empty-fallbacks.mdc). Fail loud if the env var i
 
 **Grade:** B → target A
 
-Audit all 13 in `services/analysis_service.py` and `services/backtest_retrieval.py`.
-Replace with `cast()` where appropriate. Document any remaining with `[specific-code]`.
+Audit all 13 in `services/analysis_service.py` and `services/backtest_retrieval.py`. Replace with `cast()` where
+appropriate. Document any remaining with `[specific-code]`.
 
 ---
 
@@ -450,10 +462,9 @@ Replace with `cast()` where appropriate. Document any remaining with `[specific-
 
 **Grade:** B
 
-- `base_adapter.py:342,582` — replace `config: Any | None = None` with a typed Protocol
-  or `BaseAdapterConfig` TypedDict
-- `config.py:477` — `os.environ.get("VM_INSTANCE_NAME")` for VM detection is acceptable
-  at the config boundary only; annotate with `# config-bootstrap: VM detection`
+- `base_adapter.py:342,582` — replace `config: Any | None = None` with a typed Protocol or `BaseAdapterConfig` TypedDict
+- `config.py:477` — `os.environ.get("VM_INSTANCE_NAME")` for VM detection is acceptable at the config boundary only;
+  annotate with `# config-bootstrap: VM detection`
 
 ---
 
@@ -462,8 +473,8 @@ Replace with `cast()` where appropriate. Document any remaining with `[specific-
 **Grade:** B
 
 - `strategy-ui`: Add `.env.development` and `.env.` (except `.env.example`) to `.gitignore`
-- `batch-audit-ui/src/App.tsx:8-9`: Add code comment explaining placeholder defaults are
-  intentional for `VITE_SKIP_AUTH=true` dev mode
+- `batch-audit-ui/src/App.tsx:8-9`: Add code comment explaining placeholder defaults are intentional for
+  `VITE_SKIP_AUTH=true` dev mode
 
 ---
 
@@ -481,8 +492,8 @@ Services: `risk-and-exposure-service`, `pnl-attribution-service`, `position-bala
 `ml-inference-service`, `features-cross-instrument-service`, `features-multi-timeframe-service`,
 `features-onchain-service`, `features-volatility-service`.
 
-If `datetime.now()` found with no arg → replace with `datetime.now(UTC)`.
-If all calls already use `datetime.now(UTC)` → mark PASS, no change needed.
+If `datetime.now()` found with no arg → replace with `datetime.now(UTC)`. If all calls already use `datetime.now(UTC)` →
+mark PASS, no change needed.
 
 ---
 
@@ -543,7 +554,6 @@ All of the following must be true before Phase 1 Stream A starts:
 
 ## Plan File Location
 
-Once approved, save as:
-`unified-trading-pm/plans/active/phase0_audit_remediation.plan.md`
+Once approved, save as: `unified-trading-pm/plans/active/phase0_audit_remediation.plan.md`
 
 Add to INDEX.md as Day 0, blocking Phase 1 stream A.

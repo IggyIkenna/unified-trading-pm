@@ -61,8 +61,7 @@ Updates all 10 `.code-workspace` files in `.cursor/workspace-configs/`:
    Creates: New → Old (symlink)
    ```
 
-2. **Permissions:**
-   Adds new path to `~/.claude/settings.json`:
+2. **Permissions:** Adds new path to `~/.claude/settings.json`:
    ```json
    {
      "permissions": {
@@ -80,17 +79,12 @@ Updates all 10 `.code-workspace` files in `.cursor/workspace-configs/`:
 
 ### Before (Manual Setup)
 
-❌ Update Cursor workspace configs (10 files)
-❌ Create Claude Code symlink manually
-❌ Edit Claude Code settings.json manually
-❌ Restart both IDEs
-❌ Test each separately
+❌ Update Cursor workspace configs (10 files) ❌ Create Claude Code symlink manually ❌ Edit Claude Code settings.json
+manually ❌ Restart both IDEs ❌ Test each separately
 
 ### After (One Command)
 
-✅ Run: `bash scripts/workspace/setup-workspace-root.sh`
-✅ Restart both IDEs
-✅ Everything works
+✅ Run: `bash scripts/workspace/setup-workspace-root.sh` ✅ Restart both IDEs ✅ Everything works
 
 ---
 
@@ -229,11 +223,8 @@ Claude Code settings update needs Python3 to safely modify JSON.
 
 ## Summary
 
-✅ **One script handles both IDEs**
-✅ **One variable to change when switching machines**
-✅ **No manual file editing needed**
-✅ **Works cross-platform (macOS + Linux)**
-✅ **Your colleague can use the same script**
+✅ **One script handles both IDEs** ✅ **One variable to change when switching machines** ✅ **No manual file editing
+needed** ✅ **Works cross-platform (macOS + Linux)** ✅ **Your colleague can use the same script**
 
 **The setup-workspace-root.sh script is now your single source of truth for IDE configuration.**
 

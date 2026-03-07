@@ -10,32 +10,54 @@ overview: |
   correlation_id propagation. Covers audit S12.
 todos:
   - id: obs-readiness-audit
-    content: "Audit all API services (execution-results-api, market-data-api, client-reporting-api, deployment-api, alerting-service) for /readiness endpoint. Document which have /health only vs /health + /readiness. For each missing /readiness: implement checks for DB connection, pubsub connectivity, and external API reachability."
+    content:
+      "Audit all API services (execution-results-api, market-data-api, client-reporting-api, deployment-api,
+      alerting-service) for /readiness endpoint. Document which have /health only vs /health + /readiness. For each
+      missing /readiness: implement checks for DB connection, pubsub connectivity, and external API reachability."
     status: pending
   - id: obs-prometheus-all-services
-    content: "Add Prometheus metrics export to all services that lack it. execution-service already has Counter + Histogram for trade latency and order submission. Pattern: add prometheus_client Counter/Histogram for key per-service operations (e.g., feature calculation latency, ML inference latency, strategy signal emission). Verify prometheus-client pinned in each repo's pyproject.toml per workspace-constraints.toml."
+    content:
+      "Add Prometheus metrics export to all services that lack it. execution-service already has Counter + Histogram for
+      trade latency and order submission. Pattern: add prometheus_client Counter/Histogram for key per-service
+      operations (e.g., feature calculation latency, ML inference latency, strategy signal emission). Verify
+      prometheus-client pinned in each repo's pyproject.toml per workspace-constraints.toml."
     status: pending
   - id: obs-compliance-events
-    content: "Audit every service for MiFID/FCA required compliance events: AUTH_FAILURE logged on authentication failure; SECRET_ACCESSED logged when get_secret_client() is called; CONFIG_CHANGED logged when config is modified at runtime. Verify each event uses log_event() from unified_events_interface with correct event_type from lifecycle-events.md. Add missing log_event() calls."
+    content:
+      "Audit every service for MiFID/FCA required compliance events: AUTH_FAILURE logged on authentication failure;
+      SECRET_ACCESSED logged when get_secret_client() is called; CONFIG_CHANGED logged when config is modified at
+      runtime. Verify each event uses log_event() from unified_events_interface with correct event_type from
+      lifecycle-events.md. Add missing log_event() calls."
     status: pending
   - id: obs-pre-crash-checkpoint
-    content: "Implement pre-crash checkpoint in long-running services (execution-service, strategy-service, risk-and-exposure-service, ml-inference-service): register signal handler (SIGTERM, SIGINT) + memory threshold monitor at 85% RSS. On trigger: flush state to GCS/pubsub via get_storage_client(), log SHUTDOWN_INITIATED event, then exit gracefully. Unit tests with mocked signal delivery."
+    content:
+      "Implement pre-crash checkpoint in long-running services (execution-service, strategy-service,
+      risk-and-exposure-service, ml-inference-service): register signal handler (SIGTERM, SIGINT) + memory threshold
+      monitor at 85% RSS. On trigger: flush state to GCS/pubsub via get_storage_client(), log SHUTDOWN_INITIATED event,
+      then exit gracefully. Unit tests with mocked signal delivery."
     status: pending
   - id: obs-grafana-verify
-    content: "Verify deployment-service/grafana/dashboards/trading-overview.json and system-health.json are complete: all services deployed after last dashboard update must have panels. Metrics to cover: API request latency P95 per service, PubSub message lag per topic, DLQ depth, execution order submission rate, feature calculation rate, ML inference rate. Update dashboard JSON if panels are missing."
+    content:
+      "Verify deployment-service/grafana/dashboards/trading-overview.json and system-health.json are complete: all
+      services deployed after last dashboard update must have panels. Metrics to cover: API request latency P95 per
+      service, PubSub message lag per topic, DLQ depth, execution order submission rate, feature calculation rate, ML
+      inference rate. Update dashboard JSON if panels are missing."
     status: pending
   - id: obs-correlation-id-e2e
-    content: "Verify correlation_id propagates end-to-end: API ingress sets correlation_id → execution-service passes it to order events → pubsub messages carry it in attributes → consuming services log it. Write or verify test_correlation_propagation.py in system-integration-tests repo (or execution-service tests) using mock pubsub. If end-to-end gap found, fix at the break point."
+    content:
+      "Verify correlation_id propagates end-to-end: API ingress sets correlation_id → execution-service passes it to
+      order events → pubsub messages carry it in attributes → consuming services log it. Write or verify
+      test_correlation_propagation.py in system-integration-tests repo (or execution-service tests) using mock pubsub.
+      If end-to-end gap found, fix at the break point."
     status: pending
 isProject: false
 ---
 
 # Observability and Health Endpoints
 
-**Day:** 6–7 (March 10–11)
-**Scope:** All API services + long-running services (execution, strategy, risk, ml-inference)
-**Blocks:** trading_system_audit_prompt S12; Layer 3a smoke test (health checks must pass)
-**Owner:** Person B (services)
+**Day:** 6–7 (March 10–11) **Scope:** All API services + long-running services (execution, strategy, risk, ml-inference)
+**Blocks:** trading_system_audit_prompt S12; Layer 3a smoke test (health checks must pass) **Owner:** Person B
+(services)
 
 ---
 

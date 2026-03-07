@@ -1,8 +1,7 @@
 # START HERE - Agent Task Execution
 
-**For**: New Sonnet 4.5 session
-**Goal**: Execute work via sub-agents ONLY (context preservation + cursor rules enforcement)
-**Structure**: 1 template + 3 executable tasks
+**For**: New Sonnet 4.5 session **Goal**: Execute work via sub-agents ONLY (context preservation + cursor rules
+enforcement) **Structure**: 1 template + 3 executable tasks
 
 **⚠️ CRITICAL: SUB-AGENTS ARE MANDATORY** - Master NEVER edits files directly!
 
@@ -186,6 +185,8 @@ Sub-Agent prompt includes:
 
 **Location**: `/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/plans/tasks/`
 
-**Unified execution plan:** See `.cursor/plans/code_optimizations_and_ci_cd_alignment/UNIFIED-SETUP-AND-EXECUTION-PLAN.md` for canonical order. First run: `TASK_CICD_PHASE1_FOUNDATION.md` (CI/CD Phase 1 — blocks Master Plan).
+**Unified execution plan:** See
+`.cursor/plans/code_optimizations_and_ci_cd_alignment/UNIFIED-SETUP-AND-EXECUTION-PLAN.md` for canonical order. First
+run: `TASK_CICD_PHASE1_FOUNDATION.md` (CI/CD Phase 1 — blocks Master Plan).
 
 **Next**: Open `TASK_CICD_PHASE1_FOUNDATION.md` (recommended) or `TASK_1_ADD_QUALITY_CHECKS.md` and execute!

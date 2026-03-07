@@ -130,9 +130,8 @@ agent --workspace $(pwd) "fix"  # Uses repo folder path
 
 ## ✅ Summary
 
-**Repo folders**: Use DASHES (unified-config-interface)
-**Python packages**: Use UNDERSCORES (unified_config_interface)
-**For agent CLI**: Use repo folder path (dashes)
-**For basedpyright**: Run from repo folder (finds package automatically)
+**Repo folders**: Use DASHES (unified-config-interface) **Python packages**: Use UNDERSCORES (unified_config_interface)
+**For agent CLI**: Use repo folder path (dashes) **For basedpyright**: Run from repo folder (finds package
+automatically)
 
 **This is standard Python convention!**

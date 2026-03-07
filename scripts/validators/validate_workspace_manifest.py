@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Validate workspace-manifest.json against schema and topological order.
 
 Phase 1: plans_to_deployable_unified_audit.plan.md

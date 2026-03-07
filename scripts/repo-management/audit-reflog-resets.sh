@@ -9,6 +9,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Resolve workspace root from cwd (must run from workspace root)
 if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
   WORKSPACE_ROOT="$(pwd)"

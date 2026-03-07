@@ -1,6 +1,9 @@
 ---
 name: Sports Migration Master Plan
-overview: Single comprehensive plan for sports betting migration. Architecture alignment (UIC/AC, interfaces-only auth), data layer separation (reference vs features vs market), sports-as-adapter pattern, batch-live symmetry, unified CLI, 70% test coverage, full provider registry, arbitrage+ML pipeline. Merged from sports_migration_master_plan_9b2acc2e.
+overview:
+  Single comprehensive plan for sports betting migration. Architecture alignment (UIC/AC, interfaces-only auth), data
+  layer separation (reference vs features vs market), sports-as-adapter pattern, batch-live symmetry, unified CLI, 70%
+  test coverage, full provider registry, arbitrage+ML pipeline. Merged from sports_migration_master_plan_9b2acc2e.
 todos:
   - id: phase-0-arch-alignment
     content: Align schema ownership (UIC internal, AC external) and API key placement (interfaces only)
@@ -102,9 +105,11 @@ isProject: false
 
 ## To-Dos
 
-- **Phase 0:** Architecture alignment (UIC/AC, interfaces-only auth); clone sports-betting-service; feature inventory; doc scan
+- **Phase 0:** Architecture alignment (UIC/AC, interfaces-only auth); clone sports-betting-service; feature inventory;
+  doc scan
 - **Phase 1:** League classification (94); team/stadium mapping; canonical schemas
-- **Phase 2:** Package structure; 14 data exporters; 1000+ feature tracking; batch fetch CLI; HT features; ML predictions
+- **Phase 2:** Package structure; 14 data exporters; 1000+ feature tracking; batch fetch CLI; HT features; ML
+  predictions
 - **Phase 3:** Half-time arbitrage; SCE/HUF operational modes
 - **Phase 4:** USEI adapters; odds processing; execution sports module
 - **Phase 5:** GCS Hive schema migration; validate_timestamp_date_alignment
@@ -118,7 +123,9 @@ isProject: false
 
 ## Scope and SSOT
 
-- **No new repos.** All work fits into existing workspace manifest entries: `features-sports-service`, `unified-sports-execution-interface`, `instruments-service`, `market-data-processing-service`, `strategy-service`, `execution-service`.
+- **No new repos.** All work fits into existing workspace manifest entries: `features-sports-service`,
+  `unified-sports-execution-interface`, `instruments-service`, `market-data-processing-service`, `strategy-service`,
+  `execution-service`.
 - **Workspace manifest:** No deviation; single source of truth.
 
 ---
@@ -132,8 +139,10 @@ isProject: false
 | **Component-to-component** (internal)      | unified-internal-contracts (UIC) | Service-to-service, Pub/Sub, events, ML inference/training, features request/response, risk |
 | **External** (bookmakers, exchanges, APIs) | unified-api-contracts (AC)       | Raw per-venue schemas + `unified_normalised_contracts` + `normalize.py`                     |
 
-- **Internal:** `InferenceRequest`, `FeatureRequest`, `FillEventMessage`, `EventEnvelope`, sports strategy signals (service→service)
-- **External:** Betfair, Pinnacle, API-Football, FootyStats, Understat, etc. — raw schemas in AC, normalized to canonical
+- **Internal:** `InferenceRequest`, `FeatureRequest`, `FillEventMessage`, `EventEnvelope`, sports strategy signals
+  (service→service)
+- **External:** Betfair, Pinnacle, API-Football, FootyStats, Understat, etc. — raw schemas in AC, normalized to
+  canonical
 - **AC cannot import UIC** (T0 leaf). UIC may depend on AC.
 
 ### API Keys and Authentication — Interfaces Only
@@ -150,9 +159,11 @@ isProject: false
 | **market-data-processing-service**            | Odds processing; consumes data from UMI or GCS                                                         | NO                              |
 | **market-tick-data-service**                  | Orchestration; passes config to UMI; UMI fetches keys                                                  | NO                              |
 
-**Batch fetch flow:** features-sports-service config has `api_football_secret_name`, etc. Service passes config to UMI adapter factory. UMI adapter calls `get_secret_client(secret_name=...)` internally. Service never sees the key.
+**Batch fetch flow:** features-sports-service config has `api_football_secret_name`, etc. Service passes config to UMI
+adapter factory. UMI adapter calls `get_secret_client(secret_name=...)` internally. Service never sees the key.
 
-**Execution flow:** execution-service passes `secret_name` to USEI factory. USEI BetfairAdapter/PinnacleAdapter fetch credentials internally. Service never sees the key.
+**Execution flow:** execution-service passes `secret_name` to USEI factory. USEI BetfairAdapter/PinnacleAdapter fetch
+credentials internally. Service never sees the key.
 
 ### Interface Adapters for Sports
 
@@ -163,9 +174,13 @@ isProject: false
 ---
 
 - **Two archive sources** (both required):
-  - `archive/sports-betting-services-previous` — legacy monolith (footballbets), multi-provider, 855+ features in catalog
-  - `archive/sports-betting-service` — clone from [https://github.com/IggyIkenna/sports-betting-service](https://github.com/IggyIkenna/sports-betting-service) (Betfair-centric, Parquet, different feature set)
-- **Target:** 1000+ features, all data sources (Understat, FootyStats, Transfermarkt, API-Football, Betfair, Pinnacle, Open Meteo, etc.), arbitrage in strategy architecture, GCS hive schema, ready to delete sports repo (kept in archive).
+  - `archive/sports-betting-services-previous` — legacy monolith (footballbets), multi-provider, 855+ features in
+    catalog
+  - `archive/sports-betting-service` — clone from
+    [https://github.com/IggyIkenna/sports-betting-service](https://github.com/IggyIkenna/sports-betting-service)
+    (Betfair-centric, Parquet, different feature set)
+- **Target:** 1000+ features, all data sources (Understat, FootyStats, Transfermarkt, API-Football, Betfair, Pinnacle,
+  Open Meteo, etc.), arbitrage in strategy architecture, GCS hive schema, ready to delete sports repo (kept in archive).
 
 ---
 
@@ -174,7 +189,8 @@ isProject: false
 ### 0.1 Clone sports-betting-service
 
 - Clone `https://github.com/IggyIkenna/sports-betting-service` into `archive/sports-betting-service`.
-- **Not** the same as `archive/sports-betting-services-previous` — different package (`sports_betting_service` vs `footballbets`), Betfair/Parquet vs multi-provider/PostgreSQL.
+- **Not** the same as `archive/sports-betting-services-previous` — different package (`sports_betting_service` vs
+  `footballbets`), Betfair/Parquet vs multi-provider/PostgreSQL.
 - If repo is private, ensure auth (SSH/HTTPS token) before clone.
 
 ### 0.2 Feature inventory (both archives)
@@ -191,7 +207,8 @@ isProject: false
 
 Scan and extract from:
 
-- `footballbets/features/docs/core/`: FEATURES_CATALOG.md, FEATURE_ENGINEERING.md, FEATURES_IMPLEMENTATION_GUIDE.md, PLAYER_PROFILES.md
+- `footballbets/features/docs/core/`: FEATURES_CATALOG.md, FEATURE_ENGINEERING.md, FEATURES_IMPLEMENTATION_GUIDE.md,
+  PLAYER_PROFILES.md
 - `footballbets/features/docs/utils/`: DATA_LOADER_README.md, FEATURE_ENGINEERING_SETUP.md
 - `REPO_MIGRATION_INSTRUCTIONS.md` (GCS migration mention)
 - `notebooks/data_migration.ipynb` (DB→CSV, not GCS)
@@ -203,7 +220,8 @@ Scan and extract from:
 ### 1.1 League classification (instruments-service)
 
 - Expand to 94 leagues (gap fix: 20→94).
-- Ensure `league_classification.py`, `league_definition.py`, `team_mapping_data.py`, `team_aliases.py` cover all leagues from both archives.
+- Ensure `league_classification.py`, `league_definition.py`, `team_mapping_data.py`, `team_aliases.py` cover all leagues
+  from both archives.
 - Data sources per league: api_football, footystats, transfermarkt, understat.
 
 ### 1.2 Team and stadium mapping
@@ -214,8 +232,10 @@ Scan and extract from:
 
 ### 1.3 Canonical schemas (unified-api-contracts)
 
-- Align `CanonicalFixture`, `CanonicalTeam`, `CanonicalVenue`, `CanonicalLeague`, `CanonicalPlayer`, `CanonicalReferee` with UMI adapters.
-- Ensure normalizers in `unified_normalised_contracts/normalize.py` use these schemas (API-CONTRACTS-ORPHANED-SCHEMAS-AUDIT).
+- Align `CanonicalFixture`, `CanonicalTeam`, `CanonicalVenue`, `CanonicalLeague`, `CanonicalPlayer`, `CanonicalReferee`
+  with UMI adapters.
+- Ensure normalizers in `unified_normalised_contracts/normalize.py` use these schemas
+  (API-CONTRACTS-ORPHANED-SCHEMAS-AUDIT).
 
 ---
 
@@ -238,7 +258,8 @@ features-sports-service/
 
 ### 2.2 Data exporters (14 tables)
 
-- **Fixture-level:** fixture_stats, fixture_events, fixture_lineups, fixture_player_stats (fixture_coaches merged into lineups)
+- **Fixture-level:** fixture_stats, fixture_events, fixture_lineups, fixture_player_stats (fixture_coaches merged into
+  lineups)
 - **Standalone:** injuries, players, venues
 - **Existing:** 7 tables
 - `get_available_tables()` returns 14; `_TABLE_CONFIGS` in validation.py has 14 entries.
@@ -252,7 +273,8 @@ features-sports-service/
 ### 2.4 Batch fetch CLI (4+ providers)
 
 - Providers: api_football, footystats, understat, odds_api, soccer_football_info.
-- **Pattern:** Service passes `secret_name` in config to UMI adapter factory; UMI fetches keys internally. Service never has API keys.
+- **Pattern:** Service passes `secret_name` in config to UMI adapter factory; UMI fetches keys internally. Service never
+  has API keys.
 - Rate-limited bulk data collection.
 - Migrate shell scripts from archive (~1,439L).
 
@@ -276,7 +298,8 @@ features-sports-service/
 ### 3.1 Arbitrage in strategy-service
 
 - **Existing:** `ArbitrageStrategy` (sports_arb), cross-bookmaker when `1/odds_A + 1/odds_B < 1.0`.
-- **Data source:** strategy-service receives odds from market-data-processing-service (which consumes UMI) or features-sports-service. No direct bookmaker calls; no API keys.
+- **Data source:** strategy-service receives odds from market-data-processing-service (which consumes UMI) or
+  features-sports-service. No direct bookmaker calls; no API keys.
 - **Extend:** Half-time arbitrage — use OddsHTSnapshot, HT state, arb bucket classification at HT.
 - Arb buckets: Soft→Sharp (0.2–0.6%), Soft→Soft (0.4–1.2%), Soft→Exchange (0.5–1.5%).
 
@@ -338,7 +361,8 @@ features-sports-service/
 
 - Migrate from legacy paths (e.g. `day-YYYY-MM-DD`) to Hive format.
 - Use `validate_timestamp_date_alignment()` before every GCS write.
-- Reference: `market-tick-data-service/scripts/migrate_gcs_path_to_hive.py`, `deployment-service/docs/archive/schema-change/`.
+- Reference: `market-tick-data-service/scripts/migrate_gcs_path_to_hive.py`,
+  `deployment-service/docs/archive/schema-change/`.
 
 ---
 
@@ -407,7 +431,8 @@ features-sports-service/
 | SBO                                                                                                            | No   | Scraping  | Asian bookmaker |
 | Bet888sport, Betfred, BetVictor, Betway, Boylesports, Bwin, Coral, Ladbrokes, PaddyPower, Unibet, William Hill | No   | Scraping  | USEI scrapers   |
 
-**Scraping:** Non-exchange bookmakers require scraping for orders and market data. USEI has scraper adapters for Bet365, SkyBet, etc. Odds API and faster aggregators (SharpAPI, Odds Engine) provide odds without scraping.
+**Scraping:** Non-exchange bookmakers require scraping for orders and market data. USEI has scraper adapters for Bet365,
+SkyBet, etc. Odds API and faster aggregators (SharpAPI, Odds Engine) provide odds without scraping.
 
 ### API contracts todo (add schemas)
 
@@ -443,7 +468,8 @@ Use up to 10 parallel agents for:
 Before declaring done:
 
 - **Schema ownership:** Internal (UIC) vs external (AC) correctly split; AC normalized
-- **API keys:** No get_secret_client in features-sports-service, execution-service, strategy-service, market-tick-data-service; interfaces own auth
+- **API keys:** No get_secret_client in features-sports-service, execution-service, strategy-service,
+  market-tick-data-service; interfaces own auth
 - Both archives cloned/inventoried; feature count ≥1000
 - All 14 data exporters in features-sports-service
 - 94 leagues in instruments-service
@@ -559,7 +585,8 @@ flowchart TB
 | I     | GCS schema docs                        | Done    | sports-schema-paths.md in codex                    |
 | J     | Provider registry                      | Done    | SPORTS_PROVIDERS_REGISTRY.md                       |
 
-**Clone:** Use SSH or PAT for [https://github.com/IggyIkenna/sports-betting-service](https://github.com/IggyIkenna/sports-betting-service)
+**Clone:** Use SSH or PAT for
+[https://github.com/IggyIkenna/sports-betting-service](https://github.com/IggyIkenna/sports-betting-service)
 
 ---
 
@@ -573,15 +600,18 @@ flowchart TB
 | T1_T2_MIGRATION_PATTERNS               | Aligned              | Import patterns, pyproject deps — sports follows same.                                       |
 | sports_migration_gap_fix.plan.md       | Complete             | All streams done.                                                                            |
 
-**This master plan** consolidates and adds: data layer separation, sports-as-adapter, batch-live symmetry, unified CLI, 70% coverage, arbitrage+ML pipeline.
+**This master plan** consolidates and adds: data layer separation, sports-as-adapter, batch-live symmetry, unified CLI,
+70% coverage, arbitrage+ML pipeline.
 
 ---
 
 ## References
 
 - [workspace-manifest.json](unified-trading-pm/workspace-manifest.json) — completion_paths.sports, futureRepos
-- [contracts-scope-and-layout.md](unified-trading-codex/02-data/contracts-scope-and-layout.md) — UIC vs AC, schema ownership
-- [instruments-domain-and-api-keys.mdc](.cursor/rules/core/instruments-domain-and-api-keys.mdc) — API keys from Secret Manager only
+- [contracts-scope-and-layout.md](unified-trading-codex/02-data/contracts-scope-and-layout.md) — UIC vs AC, schema
+  ownership
+- [instruments-domain-and-api-keys.mdc](.cursor/rules/core/instruments-domain-and-api-keys.mdc) — API keys from Secret
+  Manager only
 - [sports_migration_gap_fix.plan.md](unified-trading-pm/plans/cursor-plans/sports_migration_gap_fix.plan.md)
 - [SPORTS_PROVIDERS_REGISTRY.md](unified-trading-pm/docs/SPORTS_PROVIDERS_REGISTRY.md)
 - [sports-schema-paths.md](unified-trading-codex/02-data/sports-schema-paths.md) — gap fix (COMPLETE per plan)

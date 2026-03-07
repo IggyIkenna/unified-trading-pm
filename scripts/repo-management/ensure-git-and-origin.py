@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """
 Ensure every manifest repo that exists as a workspace folder has .git and origin.
 Run from workspace root. Creates GitHub remote URL IggyIkenna/<folder>.git;

@@ -1,6 +1,8 @@
 ---
 name: UAC Full Schema Normalization
-overview: Complete specification for normalizing all external API contracts across 60+ venues into canonical formats, with full matrix generation, live/batch symmetry, and references for every data source and schema.
+overview:
+  Complete specification for normalizing all external API contracts across 60+ venues into canonical formats, with full
+  matrix generation, live/batch symmetry, and references for every data source and schema.
 todos: []
 isProject: false
 ---
@@ -9,13 +11,17 @@ isProject: false
 
 ## 1. Scope and Objectives
 
-**Goal:** Every external schema from every data source (60+ venues) must have a `normalize_<provider>_<schema>()` function that maps to a canonical type. Output is identical regardless of source (live WebSocket vs batch GCS/API).
+**Goal:** Every external schema from every data source (60+ venues) must have a `normalize_<provider>_<schema>()`
+function that maps to a canonical type. Output is identical regardless of source (live WebSocket vs batch GCS/API).
 
 **Principles:**
 
-- **Live-batch symmetry:** Same canonical output whether data comes from live stream or historical batch. No `if mode == "batch"` in normalizers.
-- **Single source of truth:** `unified_api_contracts/unified_normalised_contracts/domain.py` defines all `Canonical`\* types.
-- **Matrix-driven:** `scripts/generate_schema_audit_matrix.py` scans schemas + normalizers and produces `docs/SCHEMA_AUDIT_MATRIX.md` as SSOT for coverage.
+- **Live-batch symmetry:** Same canonical output whether data comes from live stream or historical batch. No
+  `if mode == "batch"` in normalizers.
+- **Single source of truth:** `unified_api_contracts/unified_normalised_contracts/domain.py` defines all `Canonical`\*
+  types.
+- **Matrix-driven:** `scripts/generate_schema_audit_matrix.py` scans schemas + normalizers and produces
+  `docs/SCHEMA_AUDIT_MATRIX.md` as SSOT for coverage.
 
 ---
 
@@ -133,7 +139,8 @@ isProject: false
 
 ### 4.2 Optional Fields (Proxy Pattern)
 
-When provider lacks a field, use `None`. Document per-provider in `docs/SCHEMA_AUDIT_MATRIX.md` which fields are populated.
+When provider lacks a field, use `None`. Document per-provider in `docs/SCHEMA_AUDIT_MATRIX.md` which fields are
+populated.
 
 ### 4.3 Decimal and Timestamp
 
@@ -217,7 +224,8 @@ def normalize_<provider>_<schema>(raw: ExternalSchema, venue: str = "...", symbo
 ## 9. Implementation Phases (Ordered)
 
 1. **Phase 2a — Fees:** CanonicalFee + normalize for Binance, CCXT, Bybit, OKX, Deribit
-2. **Phase 2b — Reference:** BinanceSymbol, BybitMarket, OKXMarket, CcxtMarket, DeribitInstrument, DatabentoSymbol, IBKRContractDetails → CanonicalMarketInfo/InstrumentRecord
+2. **Phase 2b — Reference:** BinanceSymbol, BybitMarket, OKXMarket, CcxtMarket, DeribitInstrument, DatabentoSymbol,
+   IBKRContractDetails → CanonicalMarketInfo/InstrumentRecord
 3. **Phase 2c — Liquidations:** Market (public) + own (private) feeds per venue
 4. **Phase 2d — Derivative Ticker:** Tardis, Binance, Deribit, Bybit, OKX, Hyperliquid → CanonicalDerivativeTicker
 5. **Phase 2e — Options Chain:** Tardis, Deribit, Databento, Yahoo, IBKR → CanonicalOptionsChainEntry

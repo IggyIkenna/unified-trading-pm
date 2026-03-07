@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.13
 """Fix internal dependency alignment: code uses -> add; code doesnt use -> remove.
 
 Tier rule: No repo may import from a higher or equal tier. If code uses a dep
@@ -83,8 +83,9 @@ def get_internal_dep_version(manifest: JsonDict, dep: str) -> str:
     """Version range for internal dep: from manifest versions or default."""
     versions = _jdict(manifest.get("versions")) or {}
     ver = versions.get(dep)
-    if ver and not dep.startswith("_"):
-        return f">={ver},<1.0.0"
+    if isinstance(ver, str) and ver and not dep.startswith("_"):
+        major = int(ver.split(".")[0])
+        return f">={ver},<{major + 1}.0.0"
     return ">=0.1.0,<1.0.0"
 
 

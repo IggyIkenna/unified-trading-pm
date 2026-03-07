@@ -1,6 +1,7 @@
 # NautilusTrader Removal Plan
 
-**Context**: Remove NautilusTrader dependency and use our own execution algorithm implementation. Algorithms are simple (TWAP, VWAP, Adaptive, etc.) and we can implement them exactly how we want.
+**Context**: Remove NautilusTrader dependency and use our own execution algorithm implementation. Algorithms are simple
+(TWAP, VWAP, Adaptive, etc.) and we can implement them exactly how we want.
 
 ---
 
@@ -47,7 +48,8 @@
 - `clock.py`: Clock Protocol, MockClock
 - `mocks.py`: Factory functions
 
-**Status**: Exists but execution-service tests still import from `nautilus_trader` directly. Can be used for algorithm unit tests.
+**Status**: Exists but execution-service tests still import from `nautilus_trader` directly. Can be used for algorithm
+unit tests.
 
 ### 2. unified-trade-execution-interface
 
@@ -63,7 +65,8 @@
 - **Schemas**: ChildOrder, AlgoConfig, TWAPConfig, VWAPConfig, etc.
 - **Base**: ExecutionAlgorithm (async execute(), get_child_orders())
 
-**Status**: Pure Python, zero Nautilus. execution-service already uses `AdaptiveTWAPCalculator` via `algo_library_adapter`. Can expand usage.
+**Status**: Pure Python, zero Nautilus. execution-service already uses `AdaptiveTWAPCalculator` via
+`algo_library_adapter`. Can expand usage.
 
 ### 4. Our Own Order Types, Position Tracking
 
@@ -126,7 +129,8 @@ class BaseExecutionAlgorithm:
 - **Live**: `OrderAdapter` (unified-trade-execution-interface) - already exists
 - **Backtest**: Our backtest engine's simulated order router (see Phase 4)
 
-**Note**: Phase 2 is intertwined with Phase 1. Algorithms need a submit abstraction that works for both live (real venue) and backtest (simulated).
+**Note**: Phase 2 is intertwined with Phase 1. Algorithms need a submit abstraction that works for both live (real
+venue) and backtest (simulated).
 
 ### Phase 3: Replace Timing (1 week)
 
@@ -228,7 +232,9 @@ class BaseExecutionAlgorithm:
 **Remove Nautilus from algorithms only. Keep Nautilus for backtest.**
 
 - **Phases 1-3**: Replace ExecAlgorithm, spawn_market, submit_order, cache, clock with our own
-- **Challenge**: Our algorithms must still work inside Nautilus's backtest. That means we need an **adapter layer**: our algorithms produce ChildOrders, and a thin Nautilus ExecAlgorithm wrapper converts them to Nautilus orders and calls spawn_market/submit_order.
+- **Challenge**: Our algorithms must still work inside Nautilus's backtest. That means we need an **adapter layer**: our
+  algorithms produce ChildOrders, and a thin Nautilus ExecAlgorithm wrapper converts them to Nautilus orders and calls
+  spawn_market/submit_order.
 - **Benefit**: Live path uses our code entirely. Backtest continues to work. Lower risk.
 - **Effort**: 3-4 weeks
 
@@ -248,14 +254,16 @@ This way: our algorithm logic is Nautilus-free; only the adapter touches Nautilu
 - **Phase 4b**: Build our own backtest engine
 - **Benefit**: Zero Nautilus dependency. Full control.
 - **Effort**: 9-14 weeks total
-- **When**: After hybrid is stable, or if Nautilus becomes a blocking issue (e.g., Python 3.14 incompatibility, license change).
+- **When**: After hybrid is stable, or if Nautilus becomes a blocking issue (e.g., Python 3.14 incompatibility, license
+  change).
 
 ### Option 3: Defer Backtest Replacement
 
 **Remove Nautilus from live path now. Build backtest engine later.**
 
 - **Phases 1-3**: Same as hybrid, but live-only. Backtest keeps current Nautilus algorithms.
-- **Result**: Two algorithm implementations temporarily (Nautilus ExecAlgorithms for backtest, our algorithms for live). Tech debt until Phase 4b.
+- **Result**: Two algorithm implementations temporarily (Nautilus ExecAlgorithms for backtest, our algorithms for live).
+  Tech debt until Phase 4b.
 - **Not recommended**: Doubles algorithm maintenance.
 
 ---
@@ -264,5 +272,6 @@ This way: our algorithm logic is Nautilus-free; only the adapter touches Nautilu
 
 1. **Decide**: Hybrid vs full removal
 2. **If hybrid**: Design `NautilusExecAlgorithmAdapter` and our `BaseExecutionAlgorithm` interface
-3. **If full**: Create epic for backtest engine; break into tasks (event loop, data catalog, order matching, strategy layer)
+3. **If full**: Create epic for backtest engine; break into tasks (event loop, data catalog, order matching, strategy
+   layer)
 4. **Spike**: Prototype one algorithm (e.g., AdaptiveTWAP) with our base + adapter to validate approach

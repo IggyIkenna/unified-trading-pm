@@ -1,9 +1,12 @@
 ---
 name: Sports Migration Gap Fix
-overview: Fix remaining gaps from sports-betting-services-previous migration. Part A (batch) COMPLETE. Part B (live mode) — scraper adapters, API contracts, live features, paper trading, deployment config.
+overview:
+  Fix remaining gaps from sports-betting-services-previous migration. Part A (batch) COMPLETE. Part B (live mode) —
+  scraper adapters, API contracts, live features, paper trading, deployment config.
 todos:
   - id: b1-scraper-adapters
-    content: B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image
+    content:
+      B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image
     status: in_progress
   - id: b2-api-contracts
     content: B2 — API contracts and schemas for live (CanonicalOdds, progressive stats, OddsType)
@@ -22,13 +25,13 @@ isProject: false
 
 # Sports Migration Gap Fix Plan
 
-> Follows: SPORTS_BETTING_PREVIOUS_FULL_MIGRATION.md (COMPLETE)
-> Date: 2026-03-02 (updated 2026-03-02)
-> Status: ACTIVE — Part A COMPLETE, Part B IN PROGRESS (B-S2 DONE, B-S3 DONE, B-S7 DONE, B-S8 partial)
+> Follows: SPORTS_BETTING_PREVIOUS_FULL_MIGRATION.md (COMPLETE) Date: 2026-03-02 (updated 2026-03-02) Status: ACTIVE —
+> Part A COMPLETE, Part B IN PROGRESS (B-S2 DONE, B-S3 DONE, B-S7 DONE, B-S8 partial)
 
 ## Objective
 
-Fix all remaining gaps identified during the full audit of `sports-betting-services-previous` migration **and** add comprehensive live-mode support so that:
+Fix all remaining gaps identified during the full audit of `sports-betting-services-previous` migration **and** add
+comprehensive live-mode support so that:
 
 1. The old repo is fully superseded and can be permanently archived. **(DONE)**
 2. Sports can operate in **batch**, **paper**, and **live** modes using the same unified pipeline as TradFi.
@@ -39,9 +42,14 @@ Fix all remaining gaps identified during the full audit of `sports-betting-servi
 ## Prerequisites
 
 1. **Workspace venv active** — `.venv-workspace/bin/python` (3.13.x), ruff, basedpyright all resolve there.
-2. **Claude Code available in IDE** — developers must be able to use Claude Code through the Cursor IDE extension tab (same setup used for this planning session). Ensure `claude-code` CLI is installed (`npm install -g @anthropic-ai/claude-code` or via VSCode/Cursor marketplace) and the `.claude/` workspace config is present in the repo root.
+2. **Claude Code available in IDE** — developers must be able to use Claude Code through the Cursor IDE extension tab
+   (same setup used for this planning session). Ensure `claude-code` CLI is installed
+   (`npm install -g @anthropic-ai/claude-code` or via VSCode/Cursor marketplace) and the `.claude/` workspace config is
+   present in the repo root.
 3. **GCP project access** — Secret Manager, Pub/Sub, Cloud Run, Artifact Registry, GCS.
-4. **Odds API key provisioned** — `odds-api-key` in Secret Manager (declared in `SportsFeaturesConfig.odds_api_secret_name`). Verify: `gcloud secrets versions access latest --secret=odds-api-key --project=$PROJECT_ID`.
+4. **Odds API key provisioned** — `odds-api-key` in Secret Manager (declared in
+   `SportsFeaturesConfig.odds_api_secret_name`). Verify:
+   `gcloud secrets versions access latest --secret=odds-api-key --project=$PROJECT_ID`.
 5. **Playwright browsers installed** — `playwright install chromium` in USEI Docker image and local dev envs.
 
 ---
@@ -52,7 +60,8 @@ Fix all remaining gaps identified during the full audit of `sports-betting-servi
 
 #### P0 — Must Fix
 
-1. **8 canonical tables missing data exporters** — fixture_stats, fixture_events, fixture_lineups, fixture_player_stats, injuries, players, venues (fixture_coaches merged into lineups export)
+1. **8 canonical tables missing data exporters** — fixture_stats, fixture_events, fixture_lineups, fixture_player_stats,
+   injuries, players, venues (fixture_coaches merged into lineups export)
 2. **74 leagues missing from classification registry** — only 20 of 94 leagues migrated
 
 #### P1 — Should Fix
@@ -87,10 +96,12 @@ Fix all remaining gaps identified during the full audit of `sports-betting-servi
 - `_TABLE_CONFIGS` in validation.py has 14 entries — VERIFIED
 - `DEFAULT_CLASSIFICATION_REGISTRY.league_count == 94` — VERIFIED
 - Team alias resolver loads 56+ teams with cross-provider mappings — VERIFIED (74 teams: 40 EPL + 34 Bundesliga)
-- Feature tracking covers 400+ features across 14 modules — VERIFIED (420 features across 14 modules at Part A; expanded to 998 features across 24 modules in B-S7)
+- Feature tracking covers 400+ features across 14 modules — VERIFIED (420 features across 14 modules at Part A; expanded
+  to 998 features across 24 modules in B-S7)
 - Batch fetch CLI accepts all 4 providers with rate limiting — VERIFIED
 - All tests pass in features-sports-service and instruments-service — VERIFIED (509 + 174 sports tests pass)
-- basedpyright clean on both repos — pre-existing errors only (888 in features, 1521 in instruments — none from new code)
+- basedpyright clean on both repos — pre-existing errors only (888 in features, 1521 in instruments — none from new
+  code)
 
 ### Part A Completion Summary
 
@@ -111,17 +122,23 @@ Fix all remaining gaps identified during the full audit of `sports-betting-servi
 
 Deep audit revealed the following gaps preventing sports from running in live/real-time mode.
 
-**Architectural principle**: No new repos or standalone services. Sports live = `mode="live"` + `category="sports"` flowing through the **same existing UTS services** that handle TradFi. USEI is a library consumed by services. Odds API validation runs inside an existing service (market-tick-data or reference-data). The existing Pub/Sub, sharding, and deployment infrastructure extends to sports by adding the right category/league dimensions — not by creating parallel sports-only infra.
+**Architectural principle**: No new repos or standalone services. Sports live = `mode="live"` + `category="sports"`
+flowing through the **same existing UTS services** that handle TradFi. USEI is a library consumed by services. Odds API
+validation runs inside an existing service (market-tick-data or reference-data). The existing Pub/Sub, sharding, and
+deployment infrastructure extends to sports by adding the right category/league dimensions — not by creating parallel
+sports-only infra.
 
 ### B1 — Scraper Adapters in USEI Library (P0)
 
 **What exists:**
 
-- 13 Playwright-based scraper adapters in `unified-sports-execution-interface/adapters/scrapers/` (Bet365, William Hill, Ladbrokes, Sky Bet, Paddy Power, Coral, Betfred, BetVictor, Betway, Unibet, bwin, BoyleSports, 888sport)
+- 13 Playwright-based scraper adapters in `unified-sports-execution-interface/adapters/scrapers/` (Bet365, William Hill,
+  Ladbrokes, Sky Bet, Paddy Power, Coral, Betfred, BetVictor, Betway, Unibet, bwin, BoyleSports, 888sport)
 - Each implements `OddsAdapter` protocol → `async get_odds(fixture_id, markets) -> list[CanonicalOdds]`
 - Dependencies declared in USEI `pyproject.toml`: `playwright>=1.40`, `beautifulsoup4>=4.12`, `lxml>=5.0`
 - `OddsApiAdapter` (aggregator) returns odds from 30+ bookmakers in a single call for validation
-- USEI is a **library** — services import and call its adapters, just like TradFi services import `unified-execution-interface`
+- USEI is a **library** — services import and call its adapters, just like TradFi services import
+  `unified-execution-interface`
 
 **Gaps to fix:**
 
@@ -154,7 +171,8 @@ Deep audit revealed the following gaps preventing sports from running in live/re
 
 ### B3 — Live Mode in Existing Services (P0)
 
-**Principle**: Sports live mode follows the same pattern as TradFi live — each existing service handles `category="sports"` via its `mode="live"` CLI arg. No new services.
+**Principle**: Sports live mode follows the same pattern as TradFi live — each existing service handles
+`category="sports"` via its `mode="live"` CLI arg. No new services.
 
 **How it maps to existing services:**
 
@@ -201,7 +219,8 @@ Deep audit revealed the following gaps preventing sports from running in live/re
 
 ### B5 — Odds API Validation (P1)
 
-**Principle**: Odds API cross-check runs as a periodic job inside an existing service (market-tick-data or reference-data), not as a standalone deployment.
+**Principle**: Odds API cross-check runs as a periodic job inside an existing service (market-tick-data or
+reference-data), not as a standalone deployment.
 
 | #    | Gap                                | Details                                                                                                                                                                                                                                                                                |
 | ---- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -231,7 +250,9 @@ Deep audit revealed the following gaps preventing sports from running in live/re
 
 ### B8 — API Keys & Data Source Auth (P0)
 
-**Principle**: All external data source auth (API keys, tokens, rate limit config) lives in `unified-market-interface/unified_market_interface/sports/` — NOT in features-sports-service. UMI already has a `sports/` directory. This centralises key management and VCR (cassette-based request recording) checks in one place.
+**Principle**: All external data source auth (API keys, tokens, rate limit config) lives in
+`unified-market-interface/unified_market_interface/sports/` — NOT in features-sports-service. UMI already has a
+`sports/` directory. This centralises key management and VCR (cassette-based request recording) checks in one place.
 
 | #    | Gap                                             | Details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -243,9 +264,12 @@ Deep audit revealed the following gaps preventing sports from running in live/re
 
 ### B9 — Feature Implementation Completeness (P1) — COMPLETE (2026-03-02)
 
-**Source:** `archive/sports-betting-services-previous/footballbets/features/tracking/README.md` + `docs/FEATURE_IMPLEMENTATION_STATUS.md` + `docs/FEATURE_STATUS_AND_PLAN.md`
+**Source:** `archive/sports-betting-services-previous/footballbets/features/tracking/README.md` +
+`docs/FEATURE_IMPLEMENTATION_STATUS.md` + `docs/FEATURE_STATUS_AND_PLAN.md`
 
-**Status: RESOLVED.** Feature universe expanded from 420 → **998 tracked features** across **24 modules** with **27 calculators** in the pipeline. All tests pass (773 unit + integration). 0 basedpyright errors in calculators/ and tracking/.
+**Status: RESOLVED.** Feature universe expanded from 420 → **998 tracked features** across **24 modules** with **27
+calculators** in the pipeline. All tests pass (773 unit + integration). 0 basedpyright errors in calculators/ and
+tracking/.
 
 **Current tracking registration count (post-expansion):**
 
@@ -289,11 +313,14 @@ Deep audit revealed the following gaps preventing sports from running in live/re
 | B9.6 | ~~Halftime features only 37.9% complete~~ | **RESOLVED at tracking level.** All 66 halftime features tracked. HT sequencing calculator adds 45 more temporal dynamics features. Live mode HT features still need real-time data (Part B-S3).                               |
 | B9.7 | ~~Multi-horizon computation missing~~     | **INFRASTRUCTURE DONE.** BaseFeatureCalculator has FeatureHorizon enum (T_24H, T_1H, HT_2MIN, POST_MATCH). Odds snapshot pipeline stores at 7 time horizons. Live runner (B-S3) still needed for real-time horizon triggering. |
 
-**SportsFeatureVector** in unified-api-contracts expanded to **1077 fields** covering all 998 tracked features. All calculator outputs validated against the model (integration tests pass).
+**SportsFeatureVector** in unified-api-contracts expanded to **1077 fields** covering all 998 tracked features. All
+calculator outputs validated against the model (integration tests pass).
 
 ### B10 — OpticOdds & OddsJam Integration (P1)
 
-**Principle**: OpticOdds and OddsJam are Tier 2 live odds sources — low-latency streaming APIs that aggregate odds from multiple bookmakers. They sit between Odds API (slow batch) and own scrapers (fast but high maintenance). Same multi-source normalization pattern as existing `unified-api-contracts/sports/sources/`.
+**Principle**: OpticOdds and OddsJam are Tier 2 live odds sources — low-latency streaming APIs that aggregate odds from
+multiple bookmakers. They sit between Odds API (slow batch) and own scrapers (fast but high maintenance). Same
+multi-source normalization pattern as existing `unified-api-contracts/sports/sources/`.
 
 | #     | Gap                                 | Details                                                                                                                                                                                                                                                                      |
 | ----- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -306,7 +333,9 @@ Deep audit revealed the following gaps preventing sports from running in live/re
 
 ### B11 — Execution Stubs & Human-Like Integration (P1)
 
-**Principle**: Most bookmakers don't offer public bet-placement APIs. Sending orders requires custom logic that mimics human browser interaction — automated form filling, session management, rate limiting to avoid detection. Every execution adapter needs a stub for paper-trading/testing.
+**Principle**: Most bookmakers don't offer public bet-placement APIs. Sending orders requires custom logic that mimics
+human browser interaction — automated form filling, session management, rate limiting to avoid detection. Every
+execution adapter needs a stub for paper-trading/testing.
 
 | #     | Gap                                          | Details                                                                                                                                                                                                                                                                                                                                                                                      |
 | ----- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -374,7 +403,8 @@ B-S7 (feature completeness) ──→  B-S5 (strategy + execution routing)
 
 **Scrapers & Contracts:**
 
-- All 13 scraper adapters tested against live bookmaker sites with passing CSS selector tests _(PENDING — deferred, requires live site access)_
+- All 13 scraper adapters tested against live bookmaker sites with passing CSS selector tests _(PENDING — deferred,
+  requires live site access)_
 - Each scraper has `SCRAPER_SCHEMA_VERSION` constant and archived HTML snapshots in GCS
 - `LiveOddsUpdate`, `LiveMatchState`, `ScraperVersionMeta` schemas in unified-api-contracts (DONE 2026-03-02)
 - Playwright installed in `unified-trading-services:latest` base Docker image
@@ -382,8 +412,10 @@ B-S7 (feature completeness) ──→  B-S5 (strategy + execution routing)
 **Live Pipeline (existing services, `mode="live"`):**
 
 - `market-tick-data-service` handles `category="sports"` — imports USEI scrapers, polls, publishes to Pub/Sub
-- `features-sports-service --mode live` — `live_runner.py` subscribes to live odds, computes features, broadcasts (DONE 2026-03-02)
-- `LIVE_CALCULATORS` subset defined; pre-match features cached at kickoff (DONE 2026-03-02: 4 live calculators + LiveFeatureCache)
+- `features-sports-service --mode live` — `live_runner.py` subscribes to live odds, computes features, broadcasts (DONE
+  2026-03-02)
+- `LIVE_CALCULATORS` subset defined; pre-match features cached at kickoff (DONE 2026-03-02: 4 live calculators +
+  LiveFeatureCache)
 - `strategy-service` has sports arb strategy type consuming live sports features
 - `execution-service` routes sports bet orders to USEI adapters (Betfair, Smarkets, etc.)
 - `PaperBettingAdapter` passes all `BettingAdapter` protocol tests
@@ -398,8 +430,10 @@ B-S7 (feature completeness) ──→  B-S5 (strategy + execution routing)
 
 **Tier 2 Odds Sources (OpticOdds/OddsJam):**
 
-- OpticOdds adapter in UMI with WebSocket streaming client, normalizing to `CanonicalOdds` (DONE 2026-03-02: `opticodds_adapter.py` + `normalize_market_to_canonical()`)
-- OddsJam adapter in UMI with REST/WebSocket client, normalizing to `CanonicalOdds` (DONE 2026-03-02: `oddsjam_adapter.py` + `normalize_market_to_canonical()`)
+- OpticOdds adapter in UMI with WebSocket streaming client, normalizing to `CanonicalOdds` (DONE 2026-03-02:
+  `opticodds_adapter.py` + `normalize_market_to_canonical()`)
+- OddsJam adapter in UMI with REST/WebSocket client, normalizing to `CanonicalOdds` (DONE 2026-03-02:
+  `oddsjam_adapter.py` + `normalize_market_to_canonical()`)
 - Source schemas for both in `unified_api_contracts/sports/sources/` (DONE 2026-03-02: opticodds/ + oddsjam/)
 - Both registered in `BOOKMAKER_REGISTRY` (DONE 2026-03-02: 22 entries, category=STREAMING_API)
 - VCR cassettes for both in `unified-market-interface/tests/cassettes/sports/`
@@ -422,7 +456,8 @@ B-S7 (feature completeness) ──→  B-S5 (strategy + execution routing)
 
 - Feature tracking reconciled: new system tracks ≥600 features (vs old system's 659)
 - Team features tracking: ≥200 FeatureEntry records in `tracking/team_features.py`
-- Odds features tracking: ≥45 FeatureEntry records in `tracking/odds_features.py` (including BTTS, Asian handicap, steam detection, value bet placeholders)
+- Odds features tracking: ≥45 FeatureEntry records in `tracking/odds_features.py` (including BTTS, Asian handicap, steam
+  detection, value bet placeholders)
 - H2H features tracking: ≥40 FeatureEntry records in `tracking/h2h_features.py`
 - Promoted team features: new `tracking/promoted_team_features.py` with ≥50 entries
 - Halftime features: ≥55 of 66 implemented (up from 25)
@@ -464,9 +499,13 @@ B-S7 (feature completeness) ──→  B-S5 (strategy + execution routing)
 
 **Three-tier live odds strategy**:
 
-- **Tier 1 — Odds API** (batch + fallback): Pre-match odds, 30+ bookmakers, slower but reliable. Default fallback if Tier 2/3 fail for a bookmaker. Also used for periodic validation of Tier 2/3 accuracy.
-- **Tier 2 — OpticOdds / OddsJam** (live streaming APIs): Sub-second latency, aggregated odds from multiple bookmakers via WebSocket/SSE. Lower operational burden than own scrapers. API keys in Secret Manager, clients in UMI.
-- **Tier 3 — Own scrapers** (direct from bookmaker sites): Fastest possible for in-play (direct browser scraping). Highest operational cost (proxy rotation, CSS maintenance). USEI library adapters imported into MTDS. Use when Tier 2 doesn't cover a bookmaker or for verification.
+- **Tier 1 — Odds API** (batch + fallback): Pre-match odds, 30+ bookmakers, slower but reliable. Default fallback if
+  Tier 2/3 fail for a bookmaker. Also used for periodic validation of Tier 2/3 accuracy.
+- **Tier 2 — OpticOdds / OddsJam** (live streaming APIs): Sub-second latency, aggregated odds from multiple bookmakers
+  via WebSocket/SSE. Lower operational burden than own scrapers. API keys in Secret Manager, clients in UMI.
+- **Tier 3 — Own scrapers** (direct from bookmaker sites): Fastest possible for in-play (direct browser scraping).
+  Highest operational cost (proxy rotation, CSS maintenance). USEI library adapters imported into MTDS. Use when Tier 2
+  doesn't cover a bookmaker or for verification.
 
 All three tiers normalize to `CanonicalOdds` — same multi-source pattern as `unified-api-contracts/sports/sources/`.
 
@@ -516,7 +555,8 @@ When a bookmaker changes their website:
 3. **Diagnosis**: Load latest HTML snapshot from GCS, diff against archived version.
 4. **Fix**: Update CSS selectors in the scraper adapter.
 5. **Version bump**: Increment `SCRAPER_SCHEMA_VERSION` (e.g., `"bet365-v3"` → `"bet365-v4"`).
-6. **Schema update**: If the data structure changed (new fields, removed fields), update `unified_api_contracts/sports/sources/{bookmaker}/schemas.py`.
+6. **Schema update**: If the data structure changed (new fields, removed fields), update
+   `unified_api_contracts/sports/sources/{bookmaker}/schemas.py`.
 7. **Test**: Run selector test suite against new HTML snapshot.
 8. **Archive**: Save new HTML snapshot to GCS.
 9. **Deploy**: `bash scripts/quickmerge.sh "fix: update bet365 scraper for site v4"`.

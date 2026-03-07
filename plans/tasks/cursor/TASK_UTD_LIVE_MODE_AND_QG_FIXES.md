@@ -6,48 +6,65 @@
 
 ## Part A: First-round quality gate and codex fixes (parallel agents)
 
-**Goal**: Fix remaining quality gate failures and ensure adherence to codex and cursor rules. Services must accept the new CLI (--operation + --mode) with backwards compatibility; verify Docker/deployment works.
+**Goal**: Fix remaining quality gate failures and ensure adherence to codex and cursor rules. Services must accept the
+new CLI (--operation + --mode) with backwards compatibility; verify Docker/deployment works.
 
 **Per-repo**:
 
 1. Run `bash scripts/quality-gates.sh` then `bash scripts/quality-gates.sh --no-fix`.
-2. Fix all reported failures: lint (ruff), type (basedpyright), tests, codex (empty fallbacks, imports at top, no print, no hardcoded project ID, file size, etc.). See `.cursor/rules/*.mdc` and `unified-trading-codex/06-coding-standards/`.
-3. Ensure services accept both new (--operation X --mode batch|live) and legacy CLI where backward compat is required; prefer new form in docs and Docker.
+2. Fix all reported failures: lint (ruff), type (basedpyright), tests, codex (empty fallbacks, imports at top, no print,
+   no hardcoded project ID, file size, etc.). See `.cursor/rules/*.mdc` and
+   `unified-trading-codex/06-coding-standards/`.
+3. Ensure services accept both new (--operation X --mode batch|live) and legacy CLI where backward compat is required;
+   prefer new form in docs and Docker.
 4. Check Dockerfile and cloudbuild.yaml use the new flags (--operation and --mode) so deployment-v3 invocations work.
 
-**Agent 1**: market-data-processing-service, pnl-attribution-service, features-calendar-service.
-**Agent 2**: features-onchain-service, ml-training-service, ml-inference-service, strategy-service.
-**Agent 3**: execution-service, unified-trading-deployment-v3 (fix so run-all-quality-gates passes at least for this repo).
+**Agent 1**: market-data-processing-service, pnl-attribution-service, features-calendar-service. **Agent 2**:
+features-onchain-service, ml-training-service, ml-inference-service, strategy-service. **Agent 3**: execution-service,
+unified-trading-deployment-v3 (fix so run-all-quality-gates passes at least for this repo).
 
 ---
 
 ## Part B: UTD live mode (unified-trading-deployment-v3)
 
-**Goal**: Build the **live** mode of the deployment system (Unified Trading Deployment). It is a mode that stands on its own but shares code with batch where relevant (per codex batch-live symmetry). Same deployment machinery; differences: (1) how missing data is checked, (2) how job completion is monitored.
+**Goal**: Build the **live** mode of the deployment system (Unified Trading Deployment). It is a mode that stands on its
+own but shares code with batch where relevant (per codex batch-live symmetry). Same deployment machinery; differences:
+(1) how missing data is checked, (2) how job completion is monitored.
 
 **Codex refs**:
 
 - `04-architecture/batch-live-symmetry.md` — 4 seams; live data sink persists to GCS/BigQuery asynchronously.
-- `04-architecture/deployment-topology-diagrams.md` — Live: standalone vs deployment groups; persistence thread writes to GCS.
+- `04-architecture/deployment-topology-diagrams.md` — Live: standalone vs deployment groups; persistence thread writes
+  to GCS.
 
 **Requirements**:
 
-1. **Shared with batch (reuse)**
-   Config loader, shard builder, catalog, backend selection (Cloud Run / VM), CLI structure. No duplicate orchestration logic; parameterize by mode where needed.
+1. **Shared with batch (reuse)** Config loader, shard builder, catalog, backend selection (Cloud Run / VM), CLI
+   structure. No duplicate orchestration logic; parameterize by mode where needed.
 
 2. **Missing data check (live)**
    - **Batch**: data-status checks **historical GCS buckets** (by_date, day=YYYY-MM-DD, etc.).
-   - **Live**: data-status should check **persisted data from the live data sink** — i.e. the paths where the live persistence thread (or BroadcastSink persistence) writes. These are typically live-specific prefixes/buckets (e.g. `live/`, or service-specific live output paths).
-   - Add a **--mode** (or equivalent) to the `data-status` CLI so callers can request `batch` vs `live`. For `live`, resolve service data paths to live output locations (from config or convention), then run the same completion/missing logic over those paths. Reuse existing listing/counting; only the path resolution differs.
+   - **Live**: data-status should check **persisted data from the live data sink** — i.e. the paths where the live
+     persistence thread (or BroadcastSink persistence) writes. These are typically live-specific prefixes/buckets (e.g.
+     `live/`, or service-specific live output paths).
+   - Add a **--mode** (or equivalent) to the `data-status` CLI so callers can request `batch` vs `live`. For `live`,
+     resolve service data paths to live output locations (from config or convention), then run the same
+     completion/missing logic over those paths. Reuse existing listing/counting; only the path resolution differs.
 
 3. **Job completion monitoring (live)**
    - **Batch**: current behavior uses batch job API (e.g. Cloud Run Jobs `get_status_batch`).
-   - **Live**: monitor the **live system** — e.g. Cloud Run **services** (revisions, health), or long-running VM/containers, not one-off jobs. Abstract so a “status checker” can be batch (job completion) vs live (service/revision health or custom health endpoint). Override only the status-fetch part; keep state/refresh loop structure where possible.
+   - **Live**: monitor the **live system** — e.g. Cloud Run **services** (revisions, health), or long-running
+     VM/containers, not one-off jobs. Abstract so a “status checker” can be batch (job completion) vs live
+     (service/revision health or custom health endpoint). Override only the status-fetch part; keep state/refresh loop
+     structure where possible.
 
 4. **Documentation**
-   - In deployment-v3 docs, describe live mode: when to use it, how data-status --mode live works (persisted sink paths), how live job monitoring works. Point to codex batch-live-symmetry and deployment-topology.
+   - In deployment-v3 docs, describe live mode: when to use it, how data-status --mode live works (persisted sink
+     paths), how live job monitoring works. Point to codex batch-live-symmetry and deployment-topology.
 
-**Deliverable**: (1) data-status supports --mode live and checks live persisted paths; (2) a live status-check path (e.g. LiveStatusChecker or mode branch in existing refresh) that monitors live jobs/services; (3) shared code unchanged except where mode is parameterized; (4) short doc update in deployment-v3 (e.g. docs/ or README) for live mode.
+**Deliverable**: (1) data-status supports --mode live and checks live persisted paths; (2) a live status-check path
+(e.g. LiveStatusChecker or mode branch in existing refresh) that monitors live jobs/services; (3) shared code unchanged
+except where mode is parameterized; (4) short doc update in deployment-v3 (e.g. docs/ or README) for live mode.
 
 ---
 
@@ -71,12 +88,17 @@
 
 **Done:**
 
-- **data-status --mode live**: CLI and API accept `--mode live`; GCS listing uses `live/` prefix for persisted live data (same buckets, same logic). Cache key includes mode.
-- **Live job monitoring**: `DeploymentState.deployment_mode`; when `deployment_mode == "live"` and Cloud Run, refresh uses Cloud Run **Services API** (revisions, Ready condition) instead of Jobs API. `DeployRequest.mode` sets initial state.
-- **Shared code**: Config loader, shard builder, catalog unchanged; only path prefix and status source are mode-specific.
+- **data-status --mode live**: CLI and API accept `--mode live`; GCS listing uses `live/` prefix for persisted live data
+  (same buckets, same logic). Cache key includes mode.
+- **Live job monitoring**: `DeploymentState.deployment_mode`; when `deployment_mode == "live"` and Cloud Run, refresh
+  uses Cloud Run **Services API** (revisions, Ready condition) instead of Jobs API. `DeployRequest.mode` sets initial
+  state.
+- **Shared code**: Config loader, shard builder, catalog unchanged; only path prefix and status source are
+  mode-specific.
 - **Docs**: `docs/LIVE_MODE.md` (when to use, data-status live, live monitoring); `docs/INDEX.md` updated.
 
-**Files changed**: api/routes/data_status.py, api/utils/data_status_cache.py, unified_trading_deployment/cli.py, deployment/state.py, api/routes/deployments.py, docs/LIVE_MODE.md, docs/INDEX.md.
+**Files changed**: api/routes/data_status.py, api/utils/data_status_cache.py, unified_trading_deployment/cli.py,
+deployment/state.py, api/routes/deployments.py, docs/LIVE_MODE.md, docs/INDEX.md.
 
 ---
 
@@ -95,8 +117,12 @@
 
 ### Part B: UTD v3 live mode verification
 
-- **Shared vs override confirmed**: Config loader, shard builder, catalog, backend selection, refresh loop are shared. Only (1) GCS path resolution (batch vs `live/` prefix) and (2) status-fetch (Jobs API vs Services API) are mode-specific.
-- **Docs**: LIVE_MODE.md updated with design principle (“abstract as much from batch as possible; only override where needed”), “Shared Code vs Mode-Specific Overrides” table, “Docker and CLI Compatibility”, and “Backwards Compatibility” (services accept --operation/--mode; UTD v3 uses new structure).
+- **Shared vs override confirmed**: Config loader, shard builder, catalog, backend selection, refresh loop are shared.
+  Only (1) GCS path resolution (batch vs `live/` prefix) and (2) status-fetch (Jobs API vs Services API) are
+  mode-specific.
+- **Docs**: LIVE_MODE.md updated with design principle (“abstract as much from batch as possible; only override where
+  needed”), “Shared Code vs Mode-Specific Overrides” table, “Docker and CLI Compatibility”, and “Backwards
+  Compatibility” (services accept --operation/--mode; UTD v3 uses new structure).
 - **Docker/CLI**: No code changes; behavior verified and documented.
 
 ---
@@ -119,7 +145,9 @@
 
 ### Part B: UTD v3 live mode (re-verification)
 
-- **Shared vs override**: Confirmed in code (config loader, shard builder, catalog, backend selection, refresh loop shared; only GCS path and status-fetch override).
+- **Shared vs override**: Confirmed in code (config loader, shard builder, catalog, backend selection, refresh loop
+  shared; only GCS path and status-fetch override).
 - **data-status --mode live**: Checks persisted live sink data under `live/` prefix.
 - **Refresh deployment_mode=live**: Uses Cloud Run Services API via `_refresh_live_cloud_run_status(state)`.
-- **LIVE_MODE.md**: Added explicit sentence: “Do not omit shared code where relevant—reuse batch code everywhere; override only at GCS path resolution and status-fetch.”
+- **LIVE_MODE.md**: Added explicit sentence: “Do not omit shared code where relevant—reuse batch code everywhere;
+  override only at GCS path resolution and status-fetch.”

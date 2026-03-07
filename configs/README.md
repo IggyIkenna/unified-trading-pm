@@ -1,6 +1,7 @@
 # unified-trading-pm/configs — PM-Level Configs
 
-This directory contains workspace-wide configuration files that are the single source of truth (SSOT) for runtime behavior.
+This directory contains workspace-wide configuration files that are the single source of truth (SSOT) for runtime
+behavior.
 
 ## Files
 

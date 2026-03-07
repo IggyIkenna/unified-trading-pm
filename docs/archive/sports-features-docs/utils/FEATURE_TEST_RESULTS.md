@@ -1,7 +1,6 @@
 # Feature Engineering Test Results
 
-**Date:** January 7, 2026
-**Test Scope:** 100 Team Features on Real Premier League Data
+**Date:** January 7, 2026 **Test Scope:** 100 Team Features on Real Premier League Data
 
 ---
 
@@ -334,16 +333,13 @@ builder = TeamFeatureBuilder(fixture_id, "T-24h", as_of_utc)
 
 ### 1. Dangerous Attacks Mapping (Minor)
 
-**Status:** Missing 6 features
-**Severity:** Low
-**Fix:** Add fixture ID mapping
-**Timeline:** Can fix later (non-critical)
+**Status:** Missing 6 features **Severity:** Low **Fix:** Add fixture ID mapping **Timeline:** Can fix later
+(non-critical)
 
 ### 2. Early Season Data (Expected)
 
-**Status:** Many `None` values for start of season
-**Severity:** None (expected behavior)
-**Solution:** Use EWMA with previous season prior (future enhancement)
+**Status:** Many `None` values for start of season **Severity:** None (expected behavior) **Solution:** Use EWMA with
+previous season prior (future enhancement)
 
 ---
 
@@ -484,5 +480,4 @@ The team feature builder is **working excellently** with **93.8% feature coverag
 
 ---
 
-**Test Date:** January 7, 2026
-**Status:** ✅ **PASSED - READY FOR PRODUCTION**
+**Test Date:** January 7, 2026 **Status:** ✅ **PASSED - READY FOR PRODUCTION**
