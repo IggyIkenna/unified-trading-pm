@@ -1,0 +1,126 @@
+name: Rules Alignment Agent
+
+# Triggers when plan files change on PM main. Claude reads the diff, checks if any new
+# architectural constraints in the changed plans are covered by cursor-rules/ .mdc files,
+# and creates missing rules. Keeps PM plans and cursor rules in sync automatically.
+#
+# Secrets required:
+#   ANTHROPIC_API_KEY  — Claude Code CLI invocation
+#   GH_PAT             — repo scope; used for quickmerge PR creation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plans/active/**"
+  workflow_dispatch:
+    inputs:
+      plan_file:
+        description:
+          "Specific plan file to check (relative path, e.g. plans/active/foo.plan.md). Leave empty to check all recent
+          changes."
+        required: false
+        default: ""
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  align-rules:
+    name: Check and Align Cursor Rules with Plans
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ── CHECKOUT ─────────────────────────────────────────────────────────────
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 2 # need HEAD~1 for diff
+
+      # ── SYSTEM DEPS ──────────────────────────────────────────────────────────
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      # ── GIT IDENTITY ─────────────────────────────────────────────────────────
+      - name: Configure git identity
+        run: |
+          git config --global user.email "rules-alignment-agent@ci.local"
+          git config --global user.name "Rules Alignment Agent"
+
+      # ── DIFF CHANGED PLANS ───────────────────────────────────────────────────
+      - name: Identify changed plan files
+        id: changed-plans
+        run: |
+          if [ -n "${{ inputs.plan_file }}" ]; then
+            CHANGED="${{ inputs.plan_file }}"
+          else
+            CHANGED=$(git diff HEAD~1 --name-only -- 'plans/active/' | tr '\n' ' ')
+          fi
+          echo "changed_plans=$CHANGED" >> $GITHUB_OUTPUT
+          echo "Changed plan files: $CHANGED"
+
+      # ── AGENT RUN ────────────────────────────────────────────────────────────
+      - name: Run Claude rules alignment agent
+        if: steps.changed-plans.outputs.changed_plans != '' && env.ANTHROPIC_API_KEY != ''
+        env:
+          CHANGED_PLANS: ${{ steps.changed-plans.outputs.changed_plans }}
+        run: |
+          PROMPT="You are running inside unified-trading-pm.
+
+          Your task: ensure cursor-rules/ has .mdc coverage for every new architectural constraint introduced by the recently changed plan files.
+
+          === CHANGED PLAN FILES ===
+          ${CHANGED_PLANS}
+
+          === STEPS ===
+          1. Run: git diff HEAD~1 -- plans/active/ and read the full diff
+          2. For each new constraint, decision, or architectural rule in the changed todos:
+             - Search cursor-rules/ for an existing .mdc that covers it
+             - If none found: create a minimal .mdc file in the appropriate cursor-rules/ subdirectory
+          3. .mdc format (follow exactly):
+             ---
+             description: \"<one line>\",
+             alwaysApply: false
+             priority: 50
+             tags: [<relevant tags>]
+             ---
+             # Rule Title
+             RULE: <actionable constraint>
+             WHY: <reason>
+             DO: <correct pattern>
+             NEVER: <what to avoid>
+          4. If you created or modified any .mdc files:
+             Run: bash scripts/quickmerge.sh \"chore: add cursor rules for new plan constraints\" --files \"<space-separated list of .mdc files>\"
+          5. If no gaps found: exit cleanly without committing.
+
+          Rules:
+          - Only create rules for actionable architectural constraints, not descriptive summaries
+          - Never duplicate coverage of patterns already in existing .mdc files
+          - Keep rule bodies concise (< 20 lines)
+          - Use the subdirectory that best fits the rule category (core/, workflow/, dependencies/, etc.)"
+
+          claude --print --dangerously-skip-permissions "$PROMPT" \
+            || echo "Claude agent exited non-zero — check logs"
+
+      - name: Skip — no plan changes or no API key
+        if: steps.changed-plans.outputs.changed_plans == '' || env.ANTHROPIC_API_KEY == ''
+        run: |
+          echo "Skipping: changed_plans='${{ steps.changed-plans.outputs.changed_plans }}' ANTHROPIC_API_KEY_set=$([ -n "$ANTHROPIC_API_KEY" ] && echo yes || echo no)"
+
+      # ── TELEGRAM NOTIFY ───────────────────────────────────────────────────────
+      - name: Notify Telegram
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ job.status }}
+        run: |
+          TEXT="*rules-alignment-agent* (PM) | ${STATUS} | plans: ${{ steps.changed-plans.outputs.changed_plans }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${TEXT}" \
+            -d parse_mode="Markdown" || true

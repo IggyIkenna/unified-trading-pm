@@ -1,0 +1,296 @@
+name: Overnight Agent Orchestrator
+
+# Nightly (01:00 UTC) autonomous agent run across all repos in tier order.
+# T0 (libraries) → T1 (contracts) → T2 (interfaces) → T3 (domain client) → Telegram summary.
+# Each tier runs all repos in parallel. Cross-tier ordering enforced by GHA job dependencies.
+#
+# Secrets required:
+#   GH_PAT              — dispatch workflow_dispatch + poll run status across repos
+#   TELEGRAM_BOT_TOKEN  — morning summary notification
+#   TELEGRAM_CHAT_ID    — target chat
+
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      tiers:
+        description: "Tiers to run (comma-separated: 0,1,2,3 — or 'all')"
+        required: false
+        default: "all"
+      dry_run:
+        description: "Dispatch workflows but don't wait for results"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  GH_ORG: IggyIkenna
+  POLL_INTERVAL: 30
+  POLL_TIMEOUT: 3600 # 1 hour max per tier
+
+jobs:
+  # ── TIER 0: Core Libraries ────────────────────────────────────────────────────
+  t0:
+    name: Tier 0 — Core Libraries
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: inputs.tiers == 'all' || contains(inputs.tiers, '0') || github.event_name == 'schedule'
+    outputs:
+      results: ${{ steps.poll.outputs.results }}
+
+    steps:
+      - name: Dispatch agent-audit.yml to T0 repos
+        id: dispatch
+        env:
+          REPOS: >-
+            unified-api-contracts unified-internal-contracts unified-events-interface unified-cloud-interface
+            execution-algo-library matching-engine-library
+        run: |
+          echo "Dispatching to T0 repos..."
+          RUN_IDS=""
+          for repo in $REPOS; do
+            echo "  → $GH_ORG/$repo"
+            gh workflow run agent-audit.yml \
+              --repo "$GH_ORG/$repo" \
+              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo (workflow may not exist yet)"
+          done
+          echo "T0 dispatches sent. Waiting 15s for runs to register..."
+          sleep 15
+          echo "repos=$REPOS" >> $GITHUB_OUTPUT
+
+      - name: Poll T0 runs until complete
+        id: poll
+        if: inputs.dry_run != 'true'
+        env:
+          REPOS: ${{ steps.dispatch.outputs.repos }}
+        run: |
+          RESULTS=""
+          for repo in $REPOS; do
+            echo "Polling $GH_ORG/$repo..."
+            START=$(date +%s)
+            STATUS="unknown"
+            while true; do
+              ELAPSED=$(( $(date +%s) - START ))
+              if [ "$ELAPSED" -gt "$POLL_TIMEOUT" ]; then
+                STATUS="timeout"
+                break
+              fi
+              RUN_STATUS=$(gh run list \
+                --repo "$GH_ORG/$repo" \
+                --workflow agent-audit.yml \
+                --limit 1 \
+                --json status,conclusion \
+                --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
+              RUN_STATUS_PART="${RUN_STATUS%%/*}"
+              RUN_CONCLUSION="${RUN_STATUS##*/}"
+              if [ "$RUN_STATUS_PART" = "completed" ]; then
+                STATUS="$RUN_CONCLUSION"
+                break
+              fi
+              echo "  $repo: $RUN_STATUS — waiting ${POLL_INTERVAL}s..."
+              sleep "$POLL_INTERVAL"
+            done
+            echo "  $repo: $STATUS"
+            RESULTS="${RESULTS} ${repo}:${STATUS}"
+          done
+          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+          # Fail tier if any repo failed
+          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T0 FAILED: $RESULTS"; exit 1; } || echo "T0 PASSED"
+
+  # ── TIER 1: Contract + Config Tier ───────────────────────────────────────────
+  t1:
+    name: Tier 1 — Contracts & Config
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    needs: [t0]
+    if:
+      always() && (needs.t0.result == 'success') && (inputs.tiers == 'all' || contains(inputs.tiers, '1') ||
+      github.event_name == 'schedule')
+    outputs:
+      results: ${{ steps.poll.outputs.results }}
+
+    steps:
+      - name: Dispatch agent-audit.yml to T1 repos
+        id: dispatch
+        env:
+          REPOS: >-
+            unified-reference-data-interface unified-config-interface unified-trading-library
+        run: |
+          echo "Dispatching to T1 repos..."
+          for repo in $REPOS; do
+            echo "  → $GH_ORG/$repo"
+            gh workflow run agent-audit.yml \
+              --repo "$GH_ORG/$repo" \
+              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+          done
+          sleep 15
+          echo "repos=$REPOS" >> $GITHUB_OUTPUT
+
+      - name: Poll T1 runs until complete
+        id: poll
+        if: inputs.dry_run != 'true'
+        env:
+          REPOS: ${{ steps.dispatch.outputs.repos }}
+        run: |
+          RESULTS=""
+          for repo in $REPOS; do
+            START=$(date +%s)
+            STATUS="unknown"
+            while true; do
+              [ $(( $(date +%s) - START )) -gt "$POLL_TIMEOUT" ] && { STATUS="timeout"; break; }
+              RUN_STATUS=$(gh run list --repo "$GH_ORG/$repo" --workflow agent-audit.yml --limit 1 --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
+              [ "${RUN_STATUS%%/*}" = "completed" ] && { STATUS="${RUN_STATUS##*/}"; break; }
+              sleep "$POLL_INTERVAL"
+            done
+            echo "$repo: $STATUS"
+            RESULTS="${RESULTS} ${repo}:${STATUS}"
+          done
+          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T1 FAILED: $RESULTS"; exit 1; } || echo "T1 PASSED"
+
+  # ── TIER 2: Interface Libraries ───────────────────────────────────────────────
+  t2:
+    name: Tier 2 — Interface Libraries
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    needs: [t1]
+    if:
+      always() && (needs.t1.result == 'success') && (inputs.tiers == 'all' || contains(inputs.tiers, '2') ||
+      github.event_name == 'schedule')
+    outputs:
+      results: ${{ steps.poll.outputs.results }}
+
+    steps:
+      - name: Dispatch agent-audit.yml to T2 repos
+        id: dispatch
+        env:
+          REPOS: >-
+            unified-feature-calculator-library unified-market-interface unified-ml-interface
+            unified-trade-execution-interface unified-sports-execution-interface unified-defi-execution-interface
+        run: |
+          echo "Dispatching to T2 repos..."
+          for repo in $REPOS; do
+            echo "  → $GH_ORG/$repo"
+            gh workflow run agent-audit.yml \
+              --repo "$GH_ORG/$repo" \
+              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+          done
+          sleep 15
+          echo "repos=$REPOS" >> $GITHUB_OUTPUT
+
+      - name: Poll T2 runs until complete
+        id: poll
+        if: inputs.dry_run != 'true'
+        env:
+          REPOS: ${{ steps.dispatch.outputs.repos }}
+        run: |
+          RESULTS=""
+          for repo in $REPOS; do
+            START=$(date +%s)
+            STATUS="unknown"
+            while true; do
+              [ $(( $(date +%s) - START )) -gt "$POLL_TIMEOUT" ] && { STATUS="timeout"; break; }
+              RUN_STATUS=$(gh run list --repo "$GH_ORG/$repo" --workflow agent-audit.yml --limit 1 --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
+              [ "${RUN_STATUS%%/*}" = "completed" ] && { STATUS="${RUN_STATUS##*/}"; break; }
+              sleep "$POLL_INTERVAL"
+            done
+            echo "$repo: $STATUS"
+            RESULTS="${RESULTS} ${repo}:${STATUS}"
+          done
+          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T2 FAILED: $RESULTS"; exit 1; } || echo "T2 PASSED"
+
+  # ── TIER 3: Domain Client ─────────────────────────────────────────────────────
+  t3:
+    name: Tier 3 — Domain Client
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [t2]
+    if:
+      always() && (needs.t2.result == 'success') && (inputs.tiers == 'all' || contains(inputs.tiers, '3') ||
+      github.event_name == 'schedule')
+    outputs:
+      results: ${{ steps.poll.outputs.results }}
+
+    steps:
+      - name: Dispatch agent-audit.yml to T3 repos
+        id: dispatch
+        env:
+          REPOS: unified-domain-client
+        run: |
+          echo "Dispatching to T3 repos..."
+          for repo in $REPOS; do
+            echo "  → $GH_ORG/$repo"
+            gh workflow run agent-audit.yml \
+              --repo "$GH_ORG/$repo" \
+              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+          done
+          sleep 15
+          echo "repos=$REPOS" >> $GITHUB_OUTPUT
+
+      - name: Poll T3 runs until complete
+        id: poll
+        if: inputs.dry_run != 'true'
+        env:
+          REPOS: ${{ steps.dispatch.outputs.repos }}
+        run: |
+          RESULTS=""
+          for repo in $REPOS; do
+            START=$(date +%s)
+            STATUS="unknown"
+            while true; do
+              [ $(( $(date +%s) - START )) -gt "$POLL_TIMEOUT" ] && { STATUS="timeout"; break; }
+              RUN_STATUS=$(gh run list --repo "$GH_ORG/$repo" --workflow agent-audit.yml --limit 1 --json status,conclusion --jq '.[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/unknown")
+              [ "${RUN_STATUS%%/*}" = "completed" ] && { STATUS="${RUN_STATUS##*/}"; break; }
+              sleep "$POLL_INTERVAL"
+            done
+            echo "$repo: $STATUS"
+            RESULTS="${RESULTS} ${repo}:${STATUS}"
+          done
+          echo "results=$RESULTS" >> $GITHUB_OUTPUT
+          echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T3 FAILED: $RESULTS"; exit 1; } || echo "T3 PASSED"
+
+  # ── TELEGRAM MORNING SUMMARY ──────────────────────────────────────────────────
+  notify:
+    name: Telegram Morning Summary
+    runs-on: ubuntu-latest
+    needs: [t0, t1, t2, t3]
+    if: always()
+
+    steps:
+      - name: Build and send Telegram summary
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          T0_RESULT: ${{ needs.t0.result }}
+          T1_RESULT: ${{ needs.t1.result }}
+          T2_RESULT: ${{ needs.t2.result }}
+          T3_RESULT: ${{ needs.t3.result }}
+          T0_DETAILS: ${{ needs.t0.outputs.results }}
+          T1_DETAILS: ${{ needs.t1.outputs.results }}
+          T2_DETAILS: ${{ needs.t2.outputs.results }}
+          T3_DETAILS: ${{ needs.t3.outputs.results }}
+        run: |
+          DATE=$(date +"%Y-%m-%d")
+          status_icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
+
+          TEXT="*Overnight QG Report ${DATE}*
+          $(status_icon $T0_RESULT) T0 (libraries): ${T0_RESULT}
+          $(status_icon $T1_RESULT) T1 (contracts): ${T1_RESULT}
+          $(status_icon $T2_RESULT) T2 (interfaces): ${T2_RESULT}
+          $(status_icon $T3_RESULT) T3 (domain): ${T3_RESULT}
+
+          Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${TEXT}" \
+              -d parse_mode="Markdown" || true
+          else
+            echo "Telegram not configured — skipping notification"
+            echo "Summary: $TEXT"
+          fi
