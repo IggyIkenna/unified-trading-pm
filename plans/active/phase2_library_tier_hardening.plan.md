@@ -63,7 +63,12 @@ todos:
       loud. ROUND 2: every except must reraise or raise typed error or log ERROR+reraise. ROUND 3: files >900L split by
       SRP; functions >50L extract helpers. Run pure import smoke test first per repo. Commit Round 1+2 separately from
       Round 3."
-    status: pending
+    status: in_progress
+    notes: |
+      Partial sweep (2026-03-08) against T1 library repos:
+        unified-trading-library/unified_trading_library/: 0 print() violations, 0 datetime.now() violations.
+        unified-cloud-interface/unified_cloud_interface/: 0 print() violations, 0 datetime.now() violations.
+      Full sweep across all 59 repos still pending (requires parallel agent run).
   - id: t0-deploy-structure
     content:
       "T0 STEP A — DEPLOY STRUCTURE [7 agents PARALLEL, 1 per repo]: Verify cloudbuild.yaml, quality-gates.sh,
@@ -99,7 +104,17 @@ todos:
       "T0 STEP D→E — PROGRESSIVE VALIDATION [8 agents PARALLEL]: D1 (quickmerge --lint-only) → D2 (--unit-only) → D3
       (--qg-only) → D4 (--quick) → D5 (full, no flags) = T0 TIER GREEN GATE. ALL 8 T0 repos must pass D5 before any T1
       work starts."
-    status: pending
+    status: in_progress
+    notes: |
+      D1 PASS (2026-03-08): All 6 T0 repos ruff-clean (0 errors, all files unchanged after format).
+        Repos: UEI, AC, UIC, URDI, EAL, MEL.
+      D2 PASS (2026-03-08): All 6 T0 repos unit tests pass.
+        UEI: 71/71 | AC: 666/666 | UIC: 608/608 (incl. 15 new alignment tests) |
+        URDI: 227/227 | EAL: 94/94 | MEL: 83/83.
+        Fixed: test_uic_ac_alignment.py — missing RiskMetrics fields (cash_balance, *_status);
+               RiskAlert class → AlertMessage (correct class name).
+      D3 PASS (2026-03-08): All 6 T0 repos basedpyright 0 errors, 0 warnings.
+      D4/D5: Require quickmerge — NOT run in this session (per ABSOLUTE PROHIBITION rule).
   - id: t1-uts-deploy-structure
     content:
       "T1 STEP A — DEPLOY STRUCTURE [REQUIRES: all T0 repos green at D5]: T1 repos are UTS=unified-trading-services AND
