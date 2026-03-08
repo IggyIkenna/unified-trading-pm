@@ -3,10 +3,18 @@
 **Canonical workflow:**
 [plans_to_deployable_unified_audit.plan.md](../archive/plans_to_deployable_unified_audit.plan.md) (Plans → Code → Tested
 → Deployable) — DONE (archived 2026-03-08) **Phase 0:**
-[phase0_standards_enforcement.plan.md](../archive/phase0_standards_enforcement.plan.md) — DONE (archived) **Phase 0
-Audit Remediation:** [phase0_audit_remediation.plan.md](../archive/phase0_audit_remediation.plan.md) — DONE (archived)
-**Sprint end:** March 12th (plans + portable backtests) | **Live trading week:** March 20th **Per-repo checklist:**
-deployment-service/configs/ — runtime-topology, checklist phases 1–7
+[phase0_standards_enforcement.plan.md](../archive/phase0_standards_enforcement.plan.md) — DONE (archived 2026-03-08)
+**Phase 0 Audit Remediation:** [phase0_audit_remediation.plan.md](../archive/phase0_audit_remediation.plan.md) — DONE
+(archived 2026-03-08) **Phase 1:** [phase1_foundation_prep.plan.md](../archive/phase1_foundation_prep.plan.md) — DONE
+(archived 2026-03-08) **Exec Hygiene:**
+[execution_services_hygiene_refactor.plan.md](../archive/execution_services_hygiene_refactor.plan.md) — DONE (archived
+2026-03-08) **Exec Pkg Hygiene:**
+[execution_service_package_hygiene.plan.md](../archive/execution_service_package_hygiene.plan.md) — DONE (archived
+2026-03-08) **QM Validation:**
+[workspace_quickmerge_validation.plan.md](../archive/workspace_quickmerge_validation.plan.md) — DONE (archived
+2026-03-08) **Dep Governance:** [dependency_governance.plan.md](../archive/dependency_governance.plan.md) — DONE
+(archived 2026-03-08) **Sprint end:** March 12th (plans + portable backtests) | **Live trading week:** March 20th
+**Per-repo checklist:** deployment-service/configs/ — runtime-topology, checklist phases 1–7
 
 ---
 
