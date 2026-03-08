@@ -10,7 +10,7 @@ todos:
     status: in_progress
   - id: b2-api-contracts
     content: B2 — API contracts and schemas for live (CanonicalOdds, progressive stats, OddsType)
-    status: in_progress
+    status: completed
   - id: b3-live-features
     content: B3 — Live feature subset; feature cache; strategy-service sports arb; execution-service USEI routing
     status: completed
