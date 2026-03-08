@@ -312,19 +312,19 @@ def main() -> int:
                     }
                 )
 
-    if tier_violations:
+    has_tier_violations = bool(tier_violations)
+    if has_tier_violations:
         print("TIER_VIOLATION (architectural change required):", file=sys.stderr)
         for v in tier_violations:
             print(f"  [{v['repo']}] imports [{v['dep']}] — {v['reason']}", file=sys.stderr)
         print("  Fix: move shared code to a lower tier, or restructure dependency.", file=sys.stderr)
-        if json_out:
-            print(json.dumps({"actions": actions, "tier_violations": tier_violations}, indent=2))
-            return 1
-        return 1
+        print("  Continuing to apply non-violation fixes...", file=sys.stderr)
 
     if json_out:
-        print(json.dumps({"actions": actions}, indent=2))
-        return 0
+        print(json.dumps({"actions": actions, "tier_violations": tier_violations}, indent=2))
+        if has_tier_violations and not actions:
+            return 1
+        return 0 if not has_tier_violations else 1
 
     print(f"Planned {len(actions)} action(s) (code uses -> add; else -> remove):\n")
     for a in actions:
@@ -380,7 +380,8 @@ def main() -> int:
                 print(f"  [{i['repo']}] {i['type']}: {i['dep']}", file=sys.stderr)
             return 1
         print("OK: 0 internal mismatches.")
-    return 0
+    # Still exit non-zero if architectural tier violations remain unresolved
+    return 1 if has_tier_violations else 0
 
 
 if __name__ == "__main__":
