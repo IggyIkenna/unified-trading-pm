@@ -120,7 +120,7 @@ def main() -> int:
         print(f"Advisories file not found: {adv_path}", file=sys.stderr)
         return 0  # No advisories — skip
 
-    advisories: list[dict[str, object]] = load_advisories(adv_path)  # type: ignore[reportAny]
+    advisories: list[dict[str, object]] = load_advisories(adv_path)
     if not advisories:
         return 0
 
