@@ -183,7 +183,29 @@ todos:
     content:
       "T2 STEP D→E — PROGRESSIVE VALIDATION [7 agents PARALLEL] [REQUIRES: T0+T1 green]: D1 → D2 → D3 → D4 → D5. T2 TIER
       GREEN GATE = all 7 repos pass D5."
-    status: pending
+    status: in_progress
+    notes: |
+      NOTE: unified-portfolio-interface (UPI) does not exist in the workspace — repo absent, skipped.
+      D1 PASS (2026-03-08): All 6 present T2 repos ruff-clean after fixes.
+        UMI: 0 errors (warnings only — invalid noqa directives, not errors).
+        UFC: 0 errors.
+        UML: 0 errors.
+        UDC: 0 errors (warnings only).
+        UDEI: 0 errors.
+        USEI: Fixed 5 I001 unsorted-imports via ruff --fix; now 0 errors.
+      D2 PASS (2026-03-08): All 6 T2 repos unit tests pass.
+        UMI: 2160/2160 passed, 1 skipped | UFC: 203/203 | UML: 413/413 |
+        UDC: 385/385 | UDEI: 94/94 | USEI: 298/298.
+      D3 PARTIAL PASS (2026-03-08): 4/6 repos at 0 errors; 2 exceed threshold (>10).
+        PASS (0 errors): UFC (fixed reportUnknownMemberType on stats.boxcox),
+          UML (added ../unified-events-interface to pyrightconfig.json extraPaths),
+          UDC (0 errors), USEI (0 errors).
+        REPORT-ONLY (>10 errors, no fix per protocol):
+          UMI: 67 errors (reportMissingImports for unified_cloud_interface,
+            unified_config_interface, unified_internal_contracts — pyrightconfig extraPaths gap).
+          UDEI: 78 errors (reportUnknownMemberType/reportUnknownVariableType/
+            reportUnknownParameterType from pydantic model_validate and uniswap.py).
+      D4/D5: Require quickmerge — NOT run in this session (per ABSOLUTE PROHIBITION rule).
   - id: t3-udc-deploy-structure
     content:
       "T3 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1+T2 green]: lib-phase1-udc-tier2-compliance (replace
@@ -210,7 +232,12 @@ todos:
     content:
       "T3 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0+T1+T2 green]: D1 → D2 → D3 → D4 → D5. T3 TIER GREEN GATE = D5
       passes. Phase 2 COMPLETE when T3 D5 passes."
-    status: pending
+    status: in_progress
+    notes: |
+      D1 PASS (2026-03-08): ruff-clean (0 errors, warnings only for invalid noqa directives).
+      D2 PASS (2026-03-08): 385/385 unit tests passed.
+      D3 PASS (2026-03-08): basedpyright unified_domain_client/ → 0 errors, 0 warnings, 0 notes.
+      D4/D5: Require quickmerge — NOT run in this session (per ABSOLUTE PROHIBITION rule).
 isProject: true
 ---
 
