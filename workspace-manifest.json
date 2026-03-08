@@ -638,6 +638,11 @@
           "name": "unified-events-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -656,7 +661,7 @@
     },
     "unified-sports-execution-interface": {
       "type": "library",
-      "arch_tier": "2",
+      "arch_tier": "1",
       "doc_standard": "library-canonical",
       "codex_sections": [
         "04-architecture",
