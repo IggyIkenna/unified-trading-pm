@@ -231,6 +231,16 @@ todos:
       correlation_id), obs-pre-crash-checkpoint (pre-crash state dump at 85% memory), obs-compliance-reporting-wiring
       (MiFID/FCA reporting)."
     status: pending
+  - id: p3-service-bundling-review
+    content:
+      "SERVICE BUNDLING REVIEW: Evaluate co-locating Risk+PnL, Features bundle, and converting calendar/onchain to Cloud
+      Run Jobs. Analysis based on resource profiles in deployment-service/docs/resource-profiles/. Output:
+      deployment-service/docs/service-bundling-review.md. Verdict: Risk+PnL co-location REJECTED (blast radius;
+      incompatible profiles); Features bundle REJECTED (independent DAG gates; bundling delays faster services);
+      calendar-service and onchain-service ALREADY Cloud Run Jobs — no conversion needed. All always-on services
+      (execution, risk, strategy, ml-inference, alerting, PBS) must remain standalone Cloud Run Services with
+      min-instances=1."
+    status: done
   - id: p3-final-qg-sweep
     content:
       "FINAL QG SWEEP (after all tiers T0–T6 green, before post-refactor): p0-reportany-error-all-repos [10 agents]
