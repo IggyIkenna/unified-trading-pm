@@ -11,10 +11,10 @@ todos:
     status: pending
   - id: data-loader
     content: Data loader — in-memory DataFrames; optional DB later
-    status: pending
+    status: done
   - id: remaining-features
     content: Remaining features — h2h, league, odds, halftime, player_lineup, poisson_xg, multisource_xg, advanced_stats
-    status: pending
+    status: done
   - id: usei-adapters
     content: USEI — Betfair, Pinnacle adapters (unit tests with mocks)
     status: pending
