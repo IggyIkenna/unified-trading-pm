@@ -19,7 +19,7 @@ todos:
       "Add IB Gateway config fields to UnifiedCloudConfig in unified-config-interface: ibkr_gateway_host (str),
       ibkr_gateway_port (int), ibkr_client_id_base (int). Do not use os.getenv. Use get_secret_client for the IBKR
       credentials secret (ibkr-account-credentials in Secret Manager)."
-    status: todo
+    status: done
   - id: ibkr-adapter-refactor-urdi
     content:
       "unified-reference-data-interface/adapters/ibkr.py: still a full stub — all methods raise NotImplementedError
@@ -34,14 +34,14 @@ todos:
       own IB() in _get_ib() and connects via host/port/client_id (the 'bad' self-connecting pattern). Must remove
       _get_ib() / connect() / disconnect(); accept a pre-connected IB object via constructor instead. Add integration
       test with MagicMock(spec=IB)."
-    status: in_progress
+    status: done
   - id: ibkr-adapter-refactor-utei
     content:
       "unified-trade-execution-interface/adapters/ibkr_tradfi.py: PARTIALLY DONE — real ib_insync implementation with
       order placement / cancellation / account queries. STILL REQUIRED: same inject-IB refactor as UMI — currently
       lazy-creates IB() in _get_ib(); must accept injected IB object via constructor. Add integration test with
       MagicMock(spec=IB)."
-    status: in_progress
+    status: done
   - id: ibkr-adapter-refactor-upi
     content:
       "unified-position-interface/adapters/ibkr.py: PARTIALLY DONE — constructor accepts host/port/client_id;
@@ -49,13 +49,13 @@ todos:
       model_validate. STILL REQUIRED: get_balances() and get_positions() both raise NotImplementedError (the error
       messages correctly point callers to the map_* helpers). Wire live fetch using injected IB object; remove
       host/port/client_id in favour of injected IB. Add integration test with MagicMock(spec=IB)."
-    status: in_progress
+    status: done
   - id: ibkr-mock-pattern-codex
     content:
       "Document the IB() mock pattern in unified-trading-codex/02-data/vcr-cassette-ownership.md under an IBKR section:
       use unittest.mock.MagicMock(spec=IB) or ib_insync AsyncMock fixtures; never use HTTP VCR for TWS. Add a shared
       pytest fixture to each interface repo's conftest.py."
-    status: todo
+    status: done
   - id: ibkr-gateway-infra-deploy
     content:
       "Wire ibkr-gateway-infra into deployment-service: add to runtime-topology.yaml, add Cloud Run service definition.
