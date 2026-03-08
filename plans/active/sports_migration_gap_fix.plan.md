@@ -13,7 +13,7 @@ todos:
     status: in_progress
   - id: b3-live-features
     content: B3 — Live feature subset; feature cache; strategy-service sports arb; execution-service USEI routing
-    status: pending
+    status: completed
   - id: b4-paper-trading
     content: B4 — PaperBettingAdapter; operation mode routing for sports paper/live
     status: completed
