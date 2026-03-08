@@ -40,11 +40,16 @@ def extrapaths_from_config(config: dict[str, object]) -> list[str]:
     """Extract all extraPaths entries from a pyrightconfig dict (all locations)."""
     paths: list[str] = []
     # Top-level extraPaths
-    if "extraPaths" in config:
-        paths.extend(str(p) for p in config["extraPaths"])  # type: ignore[union-attr]
+    raw_extra = config.get("extraPaths")
+    if isinstance(raw_extra, list):
+        paths.extend(str(p) for p in raw_extra)
     # executionEnvironments[*].extraPaths
-    for env in config.get("executionEnvironments") or []:  # type: ignore[union-attr]
-        paths.extend(str(p) for p in env.get("extraPaths") or [])  # type: ignore[union-attr]
+    envs = config.get("executionEnvironments")
+    for env in envs if isinstance(envs, list) else []:
+        env_dict = cast(dict[str, object], env) if isinstance(env, dict) else {}
+        env_extra = env_dict.get("extraPaths")
+        if isinstance(env_extra, list):
+            paths.extend(str(p) for p in env_extra)
     return paths
 
 
@@ -101,7 +106,8 @@ def imports_package_in_source(source_dir: Path, package_name: str) -> bool:
 
 def get_source_dir(repo_root: Path, config: dict[str, object]) -> Path:
     """Derive source directory from pyrightconfig include list or fall back."""
-    includes: list[str] = list(config.get("include") or [])  # type: ignore[arg-type]
+    raw_include = config.get("include")
+    includes: list[str] = [str(x) for x in raw_include] if isinstance(raw_include, list) else []
     for inc in includes:
         candidate = repo_root / inc
         if candidate.is_dir() and not str(inc).startswith("test"):
@@ -173,10 +179,11 @@ def main() -> int:
         path_to_repo = extrapaths_to_repo_names(raw_paths, repo_root, workspace_root)
         # Internal manifest deps declared for this repo
         # deps can be list[dict] ({"name": ..., "version": ...}) or list[str]
-        raw_deps: list[object] = list(repo_meta.get("dependencies") or [])  # type: ignore[arg-type]
+        raw_deps_val = repo_meta.get("dependencies")
+        raw_deps: list[object] = list(raw_deps_val) if isinstance(raw_deps_val, list) else []
         manifest_internal_deps: set[str] = set()
         for dep in raw_deps:
-            dep_name = dep["name"] if isinstance(dep, dict) else str(dep)  # type: ignore[index]
+            dep_name = cast(dict[str, object], dep)["name"] if isinstance(dep, dict) else str(dep)
             if dep_name in internal_repos:
                 manifest_internal_deps.add(dep_name)
 
@@ -267,19 +274,23 @@ def _remove_extrapath(path: Path, config: dict[str, object], raw: str) -> None:
     """Remove raw extraPath from all locations in config and save."""
     changed = False
 
-    if "extraPaths" in config:
-        old: list[str] = list(config["extraPaths"])  # type: ignore[arg-type]
+    raw_extra = config.get("extraPaths")
+    if isinstance(raw_extra, list):
+        old: list[str] = [str(p) for p in raw_extra]
         new = [p for p in old if p != raw]
         if new != old:
             config["extraPaths"] = new
             changed = True
 
-    for env in config.get("executionEnvironments") or []:  # type: ignore[union-attr]
-        if "extraPaths" in env:
-            old = list(env["extraPaths"])  # type: ignore[arg-type]
+    envs = config.get("executionEnvironments")
+    for env in envs if isinstance(envs, list) else []:
+        env_dict = cast(dict[str, object], env) if isinstance(env, dict) else {}
+        env_extra = env_dict.get("extraPaths")
+        if isinstance(env_extra, list):
+            old = [str(p) for p in env_extra]
             new = [p for p in old if p != raw]
             if new != old:
-                env["extraPaths"] = new
+                env_dict["extraPaths"] = new
                 changed = True
 
     if changed:
@@ -290,7 +301,8 @@ def _add_extrapath(path: Path, config: dict[str, object], raw: str) -> None:
     """Add raw extraPath to the top-level extraPaths list and save."""
     if "extraPaths" not in config:
         config["extraPaths"] = []
-    paths: list[str] = list(config["extraPaths"])  # type: ignore[arg-type]
+    raw_extra = config["extraPaths"]
+    paths: list[str] = [str(p) for p in raw_extra] if isinstance(raw_extra, list) else []
     if raw not in paths:
         paths.append(raw)
         config["extraPaths"] = sorted(paths)

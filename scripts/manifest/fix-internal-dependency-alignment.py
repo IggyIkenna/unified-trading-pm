@@ -22,7 +22,7 @@ import tomllib
 from pathlib import Path
 from typing import cast
 
-import tomli_w  # type: ignore[reportMissingImports]
+import tomli_w
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
