@@ -563,6 +563,63 @@ fi
 echo ""
 
 # ============================================================================
+# STAGE 3.5: D3 CLOUD-AGNOSTIC GATE — STEP 5.10 + 5.11 (always runs)
+#
+# Inline re-enforcement of STEP 5.10 (direct cloud SDK imports) and STEP 5.11
+# (protocol-specific symbols) from quality-gates.sh.  Runs even when a repo
+# has no scripts/quality-gates.sh so the checks can never be silently skipped.
+# Hard-fails quickmerge if violations are found in Python source.
+# Allowed exceptions must carry a "# noqa: UCI-direct-sdk" comment and be
+# tracked in QUALITY_GATE_BYPASS_AUDIT.md at the workspace root.
+# ============================================================================
+echo "=========================================="
+echo "STAGE 3.5: D3 Cloud-Agnostic Gate (STEP 5.10 + 5.11)"
+echo "=========================================="
+echo ""
+
+# ── STEP 5.10 — No direct cloud SDK imports outside UCI providers ─────────────
+echo "[$REPO_NAME] STEP 5.10: Checking for direct cloud SDK imports..."
+CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
+  --type py \
+  --glob '!.venv*' --glob '!**/.venv*/**' \
+  --glob '!tests' --glob '!tests/**' \
+  --glob '!unified_cloud_interface/providers/**' \
+  -l . 2>/dev/null || :)
+if [ -n "$CLOUD_SDK_VIOLATIONS" ]; then
+  echo "[$REPO_NAME] ❌ STEP 5.10 FAILED — Direct cloud SDK imports detected."
+  echo "   Route all cloud access through unified_cloud_interface (UCI)."
+  echo "   Approved exceptions require '# noqa: UCI-direct-sdk' + entry in QUALITY_GATE_BYPASS_AUDIT.md."
+  echo "   Violating files:"
+  echo "$CLOUD_SDK_VIOLATIONS" | sed 's/^/     /'
+  exit 1
+else
+  echo "[$REPO_NAME] ✅ STEP 5.10: No direct cloud SDK imports"
+fi
+
+echo ""
+
+# ── STEP 5.11 — No protocol-specific symbols in service code ──────────────────
+echo "[$REPO_NAME] STEP 5.11: Checking for protocol-specific symbols..."
+PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
+  --type py \
+  --glob '!.venv*' --glob '!**/.venv*/**' \
+  --glob '!tests' --glob '!tests/**' \
+  -l . 2>/dev/null || :)
+if [ -n "$PROTOCOL_VIOLATIONS" ]; then
+  echo "[$REPO_NAME] ❌ STEP 5.11 FAILED — Protocol-specific symbols detected in service code."
+  echo "   Use get_data_sink() / get_event_bus() from UCI instead."
+  echo "   These symbols (CloudTarget, StandardizedDomainCloudService, etc.) are deleted; any"
+  echo "   match indicates re-introduction. Fix before merging."
+  echo "   Violating files:"
+  echo "$PROTOCOL_VIOLATIONS" | sed 's/^/     /'
+  exit 1
+else
+  echo "[$REPO_NAME] ✅ STEP 5.11: No protocol-specific symbols in service code"
+fi
+
+echo ""
+
+# ============================================================================
 # STAGE 4: ACT SIMULATION (skip with --quick)
 # ============================================================================
 echo "=========================================="

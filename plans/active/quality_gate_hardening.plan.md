@@ -45,7 +45,7 @@ todos:
     content:
       "Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (fail quickmerge at D3+ if cloud SDK imports
       detected)."
-    status: pending
+    status: completed
   - id: p2-per-repo-scripts
     content: "For repos without a per-repo scripts/quality-gate.sh, ensure it sources the template (or add them)."
     status: pending
@@ -150,8 +150,9 @@ Pattern: `os\.getenv|os\.environ` Allowed ONLY in files with `# config-bootstrap
 
 - [x] `p2-verify-exit-codes` — STEP 5.10 at line 329, STEP 5.11 at line 478 of `quality-gates.sh`. Both use hard-fail
       `exit 1` pattern. Confirmed 2026-03-05.
-- [ ] `p2-quickmerge-d3` — Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (i.e., fail quickmerge at
-      D3 or above if cloud SDK imports detected)
+- [x] `p2-quickmerge-d3` — Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (i.e., fail quickmerge at
+      D3 or above if cloud SDK imports detected) _(Done: Stage 3.5 added to quickmerge.sh — runs inline rg checks for
+      STEP 5.10 + 5.11 independent of quality-gates.sh; hard-fails on any violation — 2026-03-08)_
 - [ ] `p2-per-repo-scripts` — For repos that don't have a per-repo `scripts/quality-gate.sh`, ensure it sources the
       template (or add them)
 - [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
