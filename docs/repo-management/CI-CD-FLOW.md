@@ -193,6 +193,60 @@ from main by resolving conflicts with a broken local state.
 
 ---
 
+## Admin Operations (Special Circumstances Only)
+
+> **WARNING:** These operations bypass normal CI/CD flow and branch protections. Use only when the standard
+> sync-to-main flow cannot be used (e.g. remote main has diverged from local after a bad merge, workspace recovery
+> after destructive remote changes, or emergency local-state promotion).
+
+### Force-Push All Repos to Main
+
+Overwrites `origin/main` with the current local `main` state for all (or selected) repos. Before pushing, it
+auto-stages and commits all local changes — including untracked files and deletions — so the push reflects true local
+state.
+
+```bash
+# All repos — dry run first to inspect what would be committed + pushed
+bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --dry-run
+
+# All repos — force push (branch protection must be off, or use --bypass-protection)
+bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection
+
+# Single repo
+bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection --repos "unified-trading-pm"
+
+# Multiple specific repos
+bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection --repos "unified-trading-pm unified-events-interface"
+
+# Leave branch protection disabled after push (skip restore)
+bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection --no-restore
+```
+
+**What it does per repo:**
+
+1. `git checkout main`
+2. `git add -A` — stages all modifications, deletions, and untracked files
+3. Commits staged changes as `chore: force-sync local state` (skips pre-commit hooks via `--no-verify`)
+4. Disables branch protection + rulesets (if `--bypass-protection`)
+5. `git push --force origin main`
+6. Restores branch protection (unless `--no-restore`)
+
+**When to use:**
+
+| Situation | Use |
+| --- | --- |
+| Remote main diverged (bad merge, external push) | `--bypass-protection` all repos or `--repos` targeted |
+| Untracked/unstaged local files not on remote | Runs automatically — no extra flags needed |
+| PM plans archive/active out of sync on remote | Delete from disk first, then run — deletions are auto-staged |
+| Emergency workspace recovery | `--bypass-protection` all repos |
+
+**When NOT to use:** Do not use as a substitute for `sync-all-to-main.sh` in normal workflow. Force-push skips quality
+gates, PR review, and semver-agent. Always prefer Phase 3 (quickmerge) for standard changes.
+
+**Script:** `scripts/repo-management/force-push-all-to-main.sh`
+
+---
+
 ## Troubleshooting
 
 | Failure                                    | Fix                                                                                                                                                                                  |
