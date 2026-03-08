@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-07T16:06:26.930642+00:00",
+  "generatedAt": "2026-03-08T23:09:52.854736+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -26,7 +26,7 @@
     },
     {
       "name": "anthropic",
-      "versionRange": "anthropic>=0.40.0,<1.0.0"
+      "versionRange": "anthropic>=0.49.0,<1.0.0"
     },
     {
       "name": "asyncio_mqtt",
