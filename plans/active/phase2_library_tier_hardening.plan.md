@@ -87,7 +87,7 @@ todos:
       ic-circuit-breaker-schema, ic-eod-settlement-contract, ic-feature-contracts, ic-ml-training-contracts,
       ic-rebalance-instruction, ic-portfolio-risk-contracts, ic-client-account-domain-model. API contracts:
       ac-ccxt-completeness, ac-fee-borrow-all-venues, ac-risk-infrastructure, ac-restructure."
-    status: pending
+    status: done
   - id: t0-code-rewrite
     content:
       "T0 STEP C — CODE REWRITE [8 agents PARALLEL]: lib-phase3-urdi-setup (URDI hardening — verify REST adapters,
