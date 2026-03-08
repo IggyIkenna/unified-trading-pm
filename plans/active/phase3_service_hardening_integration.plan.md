@@ -86,7 +86,7 @@ todos:
       verify they consume from L3 features via GCS/PubSub (not direct import from lower feature services). STEPS D→E:
       quickmerge --lint-only → --unit-only → --qg-only → --quick → full [7 agents PARALLEL]. All 7 must pass D5 before
       Batch D."
-    status: pending
+    status: in_progress
   - id: t4d-ml-pipeline
     content:
       "T4 BATCH D — ML PIPELINE (MLTR=ml-training-service, MLIN=ml-inference-service) [2 agents PARALLEL, after features
