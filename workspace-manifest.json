@@ -1937,7 +1937,7 @@
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
       "ci_status": "PASSING",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
-      "coverage_pct": 81.05,
+      "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
