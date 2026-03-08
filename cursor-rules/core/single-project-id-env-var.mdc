@@ -14,3 +14,7 @@ DO: Replace any GCP_PROJECT_ID with GCP_PROJECT_ID across all files including co
 NEVER: GCP_PROJECT_ID anywhere — not even in config.py, not even as AliasChoices
 ENFORCED BY: quality-gates codex compliance check (blocks merge)
 See also: `no-backward-compatibility.mdc` for the general principle.
+
+## Audit criteria
+- **Correct:** `GCP_PROJECT_ID` only.
+- **Banned:** `GOOGLE_CLOUD_PROJECT` (deprecated GCP default), `GCP_PROJECT` (without `_ID`), or any variant that is NOT `GCP_PROJECT_ID`.
