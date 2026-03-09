@@ -187,10 +187,7 @@ push_repo() {
       return
     fi
 
-    # Ensure we're on main
-    (cd "$dir" && git checkout main 2>/dev/null) || true
-
-    # Stage ALL local changes
+    # Stage ALL local changes on whatever branch we're on
     (cd "$dir" && git add -A)
 
     if [[ "$DRY_RUN" = true ]]; then
@@ -201,11 +198,24 @@ push_repo() {
       return
     fi
 
+    # Commit staged changes on current branch (captures our state before switching)
     if ! (cd "$dir" && git diff --cached --quiet 2>/dev/null); then
       staged_summary=$(cd "$dir" && git diff --cached --stat | tail -1)
       (cd "$dir" && git commit -m "chore: force-sync local state" --no-verify 2>/dev/null) && \
         echo "    [commit] $repo — $staged_summary" || \
         echo "    [commit] WARN: commit failed for $repo (continuing)"
+    fi
+
+    # Move our HEAD to local main — our version wins unconditionally (no merge/conflict)
+    local our_head
+    our_head=$(cd "$dir" && git rev-parse HEAD)
+    current_branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD)
+    if [[ "$current_branch" != "main" ]]; then
+      # Switch to main (create it if missing), then hard-reset to our branch HEAD
+      (cd "$dir" && git checkout main 2>/dev/null || git checkout -B main 2>/dev/null) || true
+      (cd "$dir" && git reset --hard "$our_head" 2>/dev/null) && \
+        echo "    [branch] $repo — reset main to $current_branch ($our_head)" || \
+        echo "    [branch] WARN: could not reset main to $current_branch for $repo"
     fi
 
     if [[ "$BYPASS_PROTECTION" = true ]]; then
