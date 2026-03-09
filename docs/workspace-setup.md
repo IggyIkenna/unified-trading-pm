@@ -340,3 +340,5 @@ python unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py --resolv
 
 Without `--resolve`, aggregate-workspace-deps uses the existing `.venv-workspace/requirements.lock` for a fast
 re-install.
+
+<!-- last-synced: 2026-03-09T16:42:53Z -->
