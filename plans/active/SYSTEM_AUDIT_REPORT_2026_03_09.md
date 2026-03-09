@@ -76,15 +76,15 @@ applied:** MAX_FUNCTION_LINES=200 · MAX_CLASS_LINES=900 (updated this session)
 
 ## Technical Debt Trajectory
 
-| Metric                                   | 2026-02-28 | 2026-03-08 | 2026-03-09 | Trend                    |
-| ---------------------------------------- | ---------- | ---------- | ---------- | ------------------------ |
-| `try/except ImportError` in production   | 8          | 0          | 0          | ✅ Stable                |
+| Metric                                   | 2026-02-28 | 2026-03-08 | 2026-03-09 | Trend                     |
+| ---------------------------------------- | ---------- | ---------- | ---------- | ------------------------- |
+| `try/except ImportError` in production   | 8          | 0          | 0          | ✅ Stable                 |
 | `# type: ignore` count                   | 8          | 12         | 32         | ⚠ Rising (URDI adapters) |
-| TODO/FIXME count                         | 62         | 48         | 50         | ✅ Stable                |
-| Services missing schema robustness tests | 22         | 15         | 0          | ✅ Resolved              |
-| Unregistered DAG edges                   | 3          | 1          | 0          | ✅ Resolved              |
-| Bare `except Exception:` patterns        | 7          | 3          | 0          | ✅ Resolved              |
-| `float` in compliance schemas            | 1          | 1          | 0          | ✅ Resolved              |
+| TODO/FIXME count                         | 62         | 48         | 50         | ✅ Stable                 |
+| Services missing schema robustness tests | 22         | 15         | 0          | ✅ Resolved               |
+| Unregistered DAG edges                   | 3          | 1          | 0          | ✅ Resolved               |
+| Bare `except Exception:` patterns        | 7          | 3          | 0          | ✅ Resolved               |
+| `float` in compliance schemas            | 1          | 1          | 0          | ✅ Resolved               |
 
 ---
 
