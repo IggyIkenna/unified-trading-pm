@@ -135,6 +135,9 @@ SSOT: deployment-service/configs/
 | quality_gate_hardening                                         | [EXTERNAL] p4: GitHub Actions CI gates (cloudbuild-gate, buildspec-gate, github-action); p2-per-repo-scripts |
 | uci_cloud_abstraction_complete                                 | [EXTERNAL] p2-cloud-build-configs: canary CodeBuild act simulation (CI infrastructure not provisioned)       |
 
+| context_bloat_reduction.plan.md | Active | Reduce always-apply cursor rule tokens from 25,559 → ≤12,000 via
+demotions + trimming |
+
 | Archived (earlier)                                                                             | Superseded by                                        |
 | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | E2E_SMOKE_PLAN, PORTABLE_BACKTESTS_PLAN                                                        | E2E_SMOKE_AND_PORTABLE_BACKTESTS_PLAN                |

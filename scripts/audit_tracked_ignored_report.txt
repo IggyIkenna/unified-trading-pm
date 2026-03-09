@@ -1,0 +1,187 @@
+audit_tracked_ignored.sh — 2026-03-06 20:22:20
+Mode: DRY-RUN (report only)
+Workspace: /data/Upwork/On Going/Ikenna/unified-trading-system-repos
+============================================================
+
+------------------------------------------------------------
+REPO: alerting-service  (33 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    alerting_service.egg-info/PKG-INFO
+    alerting_service.egg-info/SOURCES.txt
+    alerting_service.egg-info/dependency_links.txt
+    alerting_service.egg-info/requires.txt
+    alerting_service.egg-info/top_level.txt
+    htmlcov/class_index.html
+    htmlcov/coverage_html_cb_cadff66e.js
+    htmlcov/coverage_html_cb_dd2e7eb5.js
+    htmlcov/favicon_32_cb_58284776.png
+    htmlcov/favicon_32_cb_c827f16f.png
+    htmlcov/function_index.html
+    htmlcov/index.html
+    htmlcov/keybd_closed_cb_900cfef5.png
+    htmlcov/keybd_closed_cb_ce680311.png
+    htmlcov/status.json
+    htmlcov/style_cb_9ff733b0.css
+    htmlcov/style_cb_a37fa487.css
+    htmlcov/z_38b9f87c9dad4c4b___init___py.html
+    htmlcov/z_38b9f87c9dad4c4b_alerts_py.html
+    htmlcov/z_38b9f87c9dad4c4b_health_py.html
+    htmlcov/z_6edda025853ca7fd___init___py.html
+    htmlcov/z_6edda025853ca7fd_config_py.html
+    htmlcov/z_6edda025853ca7fd_main_py.html
+    htmlcov/z_a94665848723bf6e___init___py.html
+    htmlcov/z_a94665848723bf6e_main_py.html
+    htmlcov/z_c59fdea34c633327___init___py.html
+    htmlcov/z_c59fdea34c633327_alert_store_py.html
+    htmlcov/z_c59fdea34c633327_claude_slack_agent_py.html
+    htmlcov/z_c59fdea34c633327_slack_dispatcher_py.html
+    htmlcov/z_d083005eea1ec75b___init___py.html
+    htmlcov/z_d083005eea1ec75b_auth_py.html
+    htmlcov/z_d083005eea1ec75b_config_py.html
+    htmlcov/z_d083005eea1ec75b_main_py.html
+  ACTION: none (dry-run)
+CLEAN  batch-audit-ui
+
+------------------------------------------------------------
+REPO: client-reporting-api  (6 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    client_reporting_api.egg-info/PKG-INFO
+    client_reporting_api.egg-info/SOURCES.txt
+    client_reporting_api.egg-info/dependency_links.txt
+    client_reporting_api.egg-info/entry_points.txt
+    client_reporting_api.egg-info/requires.txt
+    client_reporting_api.egg-info/top_level.txt
+  ACTION: none (dry-run)
+CLEAN  client-reporting-ui
+CLEAN  deployment-api
+CLEAN  deployment-service
+CLEAN  deployment-ui
+CLEAN  execution-algo-library
+CLEAN  execution-results-api
+CLEAN  execution-service
+CLEAN  features-calendar-service
+CLEAN  features-cross-instrument-service
+
+------------------------------------------------------------
+REPO: features-delta-one-service  (2 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    data/mock/ETHUSDT.csv
+    data/mock/SOLUSDT.csv
+  ACTION: none (dry-run)
+CLEAN  features-multi-timeframe-service
+
+------------------------------------------------------------
+REPO: features-onchain-service  (1 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    features_onchain_service/examples/fear_greed_index.csv
+  ACTION: none (dry-run)
+CLEAN  features-sports-service
+CLEAN  features-volatility-service
+CLEAN  ibkr-gateway-infra
+
+------------------------------------------------------------
+REPO: instruments-service  (2 tracked-but-ignored files)
+------------------------------------------------------------
+  [CRITICAL - .env]
+    .env
+  [other]
+    instruments_service/data/sp500_tickers.json
+  ACTION: none (dry-run)
+CLEAN  live-health-monitor-ui
+CLEAN  logs-dashboard-ui
+CLEAN  market-data-api
+CLEAN  market-data-processing-service
+CLEAN  market-tick-data-service
+CLEAN  matching-engine-library
+CLEAN  ml-inference-service
+CLEAN  ml-training-service
+CLEAN  onboarding-ui
+
+------------------------------------------------------------
+REPO: pnl-attribution-service  (7 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    coverage.xml
+    pnl_attribution_service.egg-info/PKG-INFO
+    pnl_attribution_service.egg-info/SOURCES.txt
+    pnl_attribution_service.egg-info/dependency_links.txt
+    pnl_attribution_service.egg-info/entry_points.txt
+    pnl_attribution_service.egg-info/requires.txt
+    pnl_attribution_service.egg-info/top_level.txt
+  ACTION: none (dry-run)
+CLEAN  position-balance-monitor-service
+CLEAN  risk-and-exposure-service
+CLEAN  settlement-ui
+
+------------------------------------------------------------
+REPO: strategy-service  (5 tracked-but-ignored files)
+------------------------------------------------------------
+  [CRITICAL - .env]
+    .env
+  [other]
+    .DS_Store
+    presentation/.DS_Store
+    presentation/data/markdown_parser.py
+    strategy_analysis_presentation/.DS_Store
+  ACTION: none (dry-run)
+CLEAN  strategy-ui
+CLEAN  strategy-validation-service
+CLEAN  system-integration-tests
+CLEAN  trading-analytics-ui
+CLEAN  unified-api-contracts
+CLEAN  unified-cloud-interface
+CLEAN  unified-config-interface
+CLEAN  unified-defi-execution-interface
+CLEAN  unified-domain-client
+CLEAN  unified-events-interface
+CLEAN  unified-feature-calculator-library
+CLEAN  unified-internal-contracts
+CLEAN  unified-market-interface
+CLEAN  unified-ml-interface
+
+------------------------------------------------------------
+REPO: unified-position-interface  (7 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    .coverage
+    coverage.xml
+    unified_position_interface.egg-info/PKG-INFO
+    unified_position_interface.egg-info/SOURCES.txt
+    unified_position_interface.egg-info/dependency_links.txt
+    unified_position_interface.egg-info/requires.txt
+    unified_position_interface.egg-info/top_level.txt
+  ACTION: none (dry-run)
+CLEAN  unified-reference-data-interface
+CLEAN  unified-sports-execution-interface
+CLEAN  unified-trade-execution-interface
+CLEAN  unified-trading-codex
+CLEAN  unified-trading-deployment-v3
+
+------------------------------------------------------------
+REPO: unified-trading-library  (1 tracked-but-ignored files)
+------------------------------------------------------------
+  [CRITICAL - .env]
+    .env
+  ACTION: none (dry-run)
+
+------------------------------------------------------------
+REPO: unified-trading-pm  (3 tracked-but-ignored files)
+------------------------------------------------------------
+  [other]
+    github-integration/data/all-epic-task-subtask-breakdown.json
+    github-integration/data/delta-audit-plan.json
+    github-integration/data/feature-cards-plan.json
+  ACTION: none (dry-run)
+CLEAN  unified-trading-ui-auth
+
+============================================================
+SUMMARY
+  Repos scanned:          56
+  Repos with hits:        10
+  Total tracked+ignored:  67
+  Mode: DRY-RUN — run with --apply to remove from index
+============================================================

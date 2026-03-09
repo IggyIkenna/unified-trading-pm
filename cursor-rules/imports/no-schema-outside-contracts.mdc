@@ -1,6 +1,6 @@
 ---
 description: "No schema class (BaseModel, TypedDict, dataclass used as a contract) may be defined outside unified-api-contracts or unified-internal-contracts"
-alwaysApply: true
+alwaysApply: false
 priority: 90
 tags:
   - contracts

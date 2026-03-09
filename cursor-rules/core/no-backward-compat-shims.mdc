@@ -50,28 +50,8 @@ from old_location import MyClass
 from canonical_new_location import MyClass
 ```
 
-## WHY this matters
-
-Re-export stubs are invisible tech debt:
-- Type checkers accept them, so violations are never surfaced
-- Future developers import from the wrong location because the shim "works"
-- The shim file accumulates divergence over time (becomes stale)
-- CI/CD import checks cannot distinguish a shim from a real source
-- Audit tools cannot determine canonical ownership from the import graph
-
 ## Exceptions
 
-The ONLY permitted re-export is in a package `__init__.py` that acts as the package's **declared public API** — not a migration shim. If `__init__.py` re-exports for the package's public surface, it must include ALL public symbols (not a subset that was "moved") and must NOT have a "backward compat" comment.
-
-## Quality Gate Check
-
-```bash
-# Detect backward-compat shims, re-export stubs, and migration markers
-rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward|re-export.*compat" \
-    --type py --glob '!tests/**' --glob '!.venv*' "$SOURCE_DIR/" 2>/dev/null \
-    && log_fail "Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims" \
-    || log_success "No backward-compat stubs"
-```
+The ONLY permitted re-export is in a package `__init__.py` that acts as the package's **declared public API** — not a migration shim. Must include ALL public symbols and must NOT have a "backward compat" comment.
 
 CODEX: 06-coding-standards/README.md (no backwards-compatibility hacks rule)
-AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md

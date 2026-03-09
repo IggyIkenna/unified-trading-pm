@@ -220,10 +220,13 @@ def _pyproject_package_name(repo_name: str) -> str | None:
     try:
         with pp.open("rb") as f:
             data = tomllib.load(f)
-        proj_name = data.get("project", {}).get("name", "")  # type: ignore[union-attr]
+        project_section = data.get("project")
+        if not isinstance(project_section, dict):
+            return None
+        proj_name = project_section.get("name")
         if isinstance(proj_name, str) and proj_name and proj_name != repo_name:
             return proj_name
-    except Exception:
+    except (OSError, ValueError, KeyError):
         pass
     return None
 

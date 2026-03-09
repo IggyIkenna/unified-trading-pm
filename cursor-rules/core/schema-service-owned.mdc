@@ -1,6 +1,6 @@
 ---
 description: "Pre-upload GCS validation mandatory; domain schema placement moved to imports/service-domain-schema-in-uic.mdc"
-alwaysApply: true
+alwaysApply: false
 priority: 75
 tags: [schema, validation, gcs, contracts]
 ---

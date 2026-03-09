@@ -50,15 +50,4 @@ If you see the dependency conflict error:
 ## Feature Branch Safety Invariant
 
 On a feature branch, local changes in dependency repos are intentional and required.
-Quickmerge's stash/pop mechanism preserves all changes through branch operations.
-The cascade mechanism pushes dep changes to the same feature branch — changes are never lost.
-
-## Periodic Reflog Audit
-
-Run weekly (launchd). Alerts via macOS notification on high-risk findings.
-
-**Full doc:** `unified-trading-pm/docs/audit-reflog-scheduled-job.md`
-**Cursor rule:** `unified-trading-pm/cursor-rules/misc/audit-reflog-scheduled-job.mdc`
-
-- Run: `bash unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh`
-- Cancel job: `launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`
+Quickmerge's stash/pop preserves all changes through branch operations — changes are never lost.

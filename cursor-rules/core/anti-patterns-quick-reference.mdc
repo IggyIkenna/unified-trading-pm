@@ -26,14 +26,12 @@ tags:
 | TODO in code | GitHub issue |
 | File >900 lines | Split by SRP — see `06-coding-standards/file-splitting-guide.md` |
 | Hardcode standards in scripts | **Read from cursor rules** (see `.lobster/` workflow) |
-| Create `test_*_extended.py` files | **Expand existing test files** (see `.cursor/rules/test-quality-standards.mdc`) |
+| Create `test_*_extended.py` files | **Expand existing test files** |
 | Duplicate fixtures across test files | **Use singleton fixtures from conftest.py** |
-| `!central-element-*.json` in .gitignore | **Never allow credential JSON**; use `*credentials*.json` (see quality-gates-audit-factors.mdc) |
-| `central-element-323112` in tests | **Use `test-project`** placeholder (see quality-gates-audit-factors.mdc) |
-| `except Exception:` in production | **Use `@handle_api_errors` or specific exceptions** (see quality-gates-audit-factors.mdc) |
-| Relax reportAny/reportUnknown*, add baselines | **Only audited exceptions pass** — document in QUALITY_GATE_BYPASS_AUDIT.md; fix all other type errors |
-| `basedpyright .` or `basedpyright` (no args) | **`timeout 120 basedpyright <source_dir>/`** (see `.cursor/rules/basedpyright-safety.mdc`) |
-| Run standalone basedpyright for codebase audits | **Run quality gates per repo** (`bash scripts/quality-gates.sh --no-fix`) — same lint + type check, no zombies |
-| Keep parallel code paths after refactor (old + new schema/import) | **Single code path; delete old; tests under new structure only** — see delete-deprecated.mdc |
-
-Full detail: unified-trading-codex/06-coding-standards/README.md
+| `!central-element-*.json` in .gitignore | **Never allow credential JSON**; use `*credentials*.json` |
+| `central-element-323112` in tests | **Use `test-project`** placeholder |
+| `except Exception:` in production | **Use `@handle_api_errors` or specific exceptions** |
+| Relax reportAny/reportUnknown*, add baselines | **Document in QUALITY_GATE_BYPASS_AUDIT.md; fix all other type errors** |
+| `basedpyright .` or `basedpyright` (no args) | **`timeout 120 basedpyright <source_dir>/`** |
+| Run standalone basedpyright for codebase audits | **Run quality gates per repo** (`bash scripts/quality-gates.sh --no-fix`) |
+| Keep parallel code paths after refactor | **Single code path; delete old; tests under new structure only** |

@@ -1,6 +1,6 @@
 ---
 description: "UIC may import from UAC (permitted); UAC must never import from UIC (blocked); tier formalization for L2 split"
-alwaysApply: true
+alwaysApply: false
 priority: 85
 tags:
   - contracts

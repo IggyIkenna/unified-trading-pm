@@ -1,6 +1,6 @@
 ---
 description: "Canonical schema types in UAC (domain.py, execution.py) and UIC domain schemas use semver version constants. UIC files that re-use UAC canonical types import UAC's constant — they do NOT define their own version."
-alwaysApply: true
+alwaysApply: false
 priority: 85
 tags: [schema, versioning, uac, uic, semver, canonical]
 ---

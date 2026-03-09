@@ -27,34 +27,7 @@ or from workspace root:
 cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate
 ```
 
-## When to use workspace venv
+Use workspace venv when: repo venv has missing deps, wrong Python, or cross-repo commands needed.
 
-- Repo `.venv` has `ModuleNotFoundError` for transitive deps
-- Repo `.venv` uses wrong Python version
-- Quality gates or tests fail due to env gaps in repo venv
-- Running cross-repo commands (e.g. features-delta-one-service + features-calendar-service)
-
-## DO
-
-- Use workspace venv for pytest, quality gates, and imports when repo venv fails
-- Document in prompts: "run from WORKSPACE_ROOT with source .venv-workspace/bin/activate"
-
-## NEVER
-
-- Assume repo venv is always correct; workspace venv is a valid fallback
-- Block on repo venv issues when workspace venv works
-
-## pyrightconfig.json
-
-Each repo must have a `pyrightconfig.json` referencing the workspace venv Python path so basedpyright
-resolves imports correctly:
-```json
-{
-  "pythonPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
-  "typeCheckingMode": "strict",
-  "reportAny": "error",
-  "reportUnknownMemberType": "error",
-  "reportUnknownVariableType": "error"
-}
-```
-Run `run_timeout 120 basedpyright <source_dir>/` per-repo — never `basedpyright .` from workspace root.
+DO: Use for pytest, quality gates when repo venv fails.
+NEVER: Assume repo venv is always correct; never block on repo venv issues when workspace venv works.

@@ -36,15 +36,6 @@ NEVER:
 RULE: A deleted function that causes a FAILING TEST is BETTER than a deprecated
 function that causes SILENT WRONG BEHAVIOR.
 
-## When to delete (examples)
-
-- Removing a duplicate config class → delete it immediately
-- Moving ConfigStore from UCI to UCS → delete from UCI immediately
-- Replacing `os.getenv()` with config class → delete the `os.getenv()` call
-- Replacing custom venue connector with UMI → delete the custom connector
-- Switching to a new schema → remove old schema and all code that used it
-- Switching a script to import from a new module → remove old import and old module usage
-
 Only safe fallback: git history. Code is never truly gone — use `git blame`.
 
 CODEX: 06-coding-standards/error-handling.md. See also: no-backward-compatibility.mdc (pointer).
