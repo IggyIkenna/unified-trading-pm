@@ -897,6 +897,11 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -940,6 +945,11 @@
         },
         {
           "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -997,6 +1007,11 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -1050,6 +1065,11 @@
         },
         {
           "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1110,6 +1130,11 @@
           "name": "unified-market-interface",
           "version": ">=0.3.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "PASSING",
@@ -1153,6 +1178,11 @@
         },
         {
           "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1206,6 +1236,11 @@
         {
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.2.0,<1.0.0",
           "required": true
         }
       ],
@@ -2327,6 +2362,11 @@
         {
           "name": "unified-cloud-interface",
           "version": ">=0.1.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.2.0,<1.0.0",
           "required": true
         }
       ],

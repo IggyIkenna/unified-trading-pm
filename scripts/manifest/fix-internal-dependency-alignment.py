@@ -212,10 +212,37 @@ def scan_imports(repo_dir: Path, own: str) -> set[str]:
     return out
 
 
+def _pyproject_package_name(repo_name: str) -> str | None:
+    """Return the Python package name from a repo's pyproject.toml if it differs from the repo name."""
+    pp = WORKSPACE_ROOT / repo_name / "pyproject.toml"
+    if not pp.is_file():
+        return None
+    try:
+        with pp.open("rb") as f:
+            data = tomllib.load(f)
+        proj_name = data.get("project", {}).get("name", "")  # type: ignore[union-attr]
+        if isinstance(proj_name, str) and proj_name and proj_name != repo_name:
+            return proj_name
+    except Exception:
+        pass
+    return None
+
+
 def get_imported_internal(manifest: JsonDict, repos: set[str] | None = None) -> dict[str, set[str]]:
-    """Scan repos for internal imports. If repos is None, scan all; else only those repos."""
+    """Scan repos for internal imports. If repos is None, scan all; else only those repos.
+
+    Handles repos whose pyproject.toml package name differs from the repo name (e.g.
+    unified-feature-calculator-library publishes 'unified-feature-calculator', so code
+    imports 'unified_feature_calculator', not 'unified_feature_calculator_library').
+    """
     repos_map = _jdict(manifest.get("repositories")) or {}
-    internal = {pkg_to_import(n): n for n in repos_map}
+    # Map import-module-name → canonical repo name.
+    # Seed with repo-name-derived key, then override/add with pyproject package name if different.
+    internal: dict[str, str] = {pkg_to_import(n): n for n in repos_map}
+    for repo_name in repos_map:
+        pkg_name = _pyproject_package_name(repo_name)
+        if pkg_name:
+            internal[pkg_to_import(pkg_name)] = repo_name
     to_scan = repos if repos is not None else set(repos_map.keys())
     result: dict[str, set[str]] = {}
     for repo in to_scan:
@@ -275,6 +302,17 @@ def main() -> int:
     repos_with_issues = {_jstr(i.get("repo")) for i in issues if isinstance(i, dict)}
     imported = get_imported_internal(manifest, repos_with_issues) if repos_with_issues else {}
 
+    # Build pyproject package-name → canonical repo-name map for repos whose
+    # published package name differs from their repo name (e.g. unified-feature-calculator-library
+    # publishes the 'unified-feature-calculator' package). Without this, `dep` (the pyproject dep
+    # name) would not match the repo name stored in `imported[repo]`.
+    repos_map_main = _jdict(manifest.get("repositories")) or {}
+    pkg_to_repo: dict[str, str] = {}
+    for rname in repos_map_main:
+        pname = _pyproject_package_name(rname)
+        if pname and pname != rname:
+            pkg_to_repo[pname] = rname
+
     tier_map = get_tier_map(manifest)
     actions: list[dict] = []
     tier_violations: list[dict] = []
@@ -285,7 +323,10 @@ def main() -> int:
         repo = _jstr(i.get("repo"))
         dep = _jstr(i.get("dep"))
         itype = _jstr(i.get("type"))
-        uses = dep in imported.get(repo, set())
+        # Normalize dep to repo name so it can be matched against `imported[repo]`
+        # (which stores canonical repo names, not pyproject package names).
+        dep_as_repo = pkg_to_repo.get(dep, dep)
+        uses = dep_as_repo in imported.get(repo, set())
 
         if itype == "internal_in_manifest_not_pyproject":
             if uses and is_tier_violation(repo, dep, tier_map):

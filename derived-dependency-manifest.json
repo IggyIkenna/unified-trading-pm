@@ -602,6 +602,7 @@
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-domain-client": "unified-domain-client>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -631,7 +632,7 @@
         "ruff": ["ruff==0.15.0"],
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
-      "internal_count": 6,
+      "internal_count": 7,
       "external_count": 24
     },
     "features-cross-instrument-service": {
@@ -639,6 +640,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<2.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.2,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -671,7 +673,7 @@
         "statsmodels<1.0.0,": ["statsmodels<1.0.0,>=0.14.6"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
-      "internal_count": 5,
+      "internal_count": 6,
       "external_count": 27
     },
     "features-delta-one-service": {
@@ -679,6 +681,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.3,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.2.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
@@ -707,7 +710,7 @@
         "ta-lib": ["ta-lib>=0.6.8,<1.0.0"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 5,
       "external_count": 24
     },
     "features-multi-timeframe-service": {
@@ -715,6 +718,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<2.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<0.2.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<0.2.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.2.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -742,7 +746,7 @@
         "scipy": ["scipy>=1.14.0,<2.0.0"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 5,
       "external_count": 23
     },
     "features-onchain-service": {
@@ -751,6 +755,7 @@
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-domain-client": "unified-domain-client>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.2.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -779,7 +784,7 @@
         "tqdm": ["tqdm>=4.66.0,<5.0.0"],
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
-      "internal_count": 6,
+      "internal_count": 7,
       "external_count": 23
     },
     "features-sports-service": {
@@ -788,6 +793,7 @@
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-domain-client": "unified-domain-client>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.2.0,<1.0.0",
         "unified-market-interface": "unified-market-interface>=0.3.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -807,7 +813,7 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 6,
+      "internal_count": 7,
       "external_count": 14
     },
     "features-volatility-service": {
@@ -816,6 +822,7 @@
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-domain-client": "unified-domain-client>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.2.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -841,7 +848,7 @@
         "tqdm": ["tqdm>=4.66.0,<5.0.0"],
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
-      "internal_count": 6,
+      "internal_count": 7,
       "external_count": 20
     },
     "market-data-processing-service": {
@@ -1115,6 +1122,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.3,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
@@ -1141,7 +1149,7 @@
         "ruff": ["ruff==0.15.0"],
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
       },
-      "internal_count": 5,
+      "internal_count": 6,
       "external_count": 22
     },
     "trading-agent-service": {

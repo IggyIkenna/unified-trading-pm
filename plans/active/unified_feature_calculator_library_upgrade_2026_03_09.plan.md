@@ -325,7 +325,9 @@ UEI schemas) + Tier 1 (UCI, UTL, URDI). No Tier 2→Tier 2 imports. No circular 
 - Requires `fastapi` in library pyproject.toml for health router (already present or add as optional dep)
 - After library version bump: run `uv lock` + `uv pip install -e unified-feature-calculator-library/` from workspace
   root
-- All 8 services must pin the new minor version in their pyproject.toml after refactor
+- All 8 services must pin the new minor version — update `workspace-manifest.json` first, then run
+  `python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply` to sync pyproject.toml. Do
+  NOT edit the 8 services' pyproject.toml directly — the manifest is the SSOT for internal deps.
 
 ## Cross-Plan Notes
 
