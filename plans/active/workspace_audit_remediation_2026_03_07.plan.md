@@ -147,12 +147,13 @@ do to avoid breaking other audit criteria. Ordered by severity: CRITICAL → HIG
   (stale 25-line install-order list fully superseded by docs/DEPENDENCIES.md at 153 lines). specs/ directory retained —
   contains 4 other non-duplicate files: DEFI_DOWNLOAD_STRATEGY.md, ERROR_HANDLING.md, HYPERLIQUID_DATA_SOURCES.md,
   TROUBLESHOOTING.md." status: completed
-- id: fix-cloudbuild-template-drift content: "WARN 3.14: 44 cloudbuild.yaml files exist with no enforced canonical
-  template. Create unified-trading-pm/configs/cloudbuild-service-template.yaml as the canonical structure. Document the
-  required steps and their order. Add a QG check to quality-gates.sh: verify cloudbuild.yaml has all required steps
-  (test-in-image, vulnerability-scan, push, deploy). DO NOT auto-generate all 44 files — human review is needed for
-  service-specific variations. Start with canary: add the check to 3 services (execution-service, instruments-service,
-  alerting-service)." status: pending
+- id: fix-cloudbuild-template-drift content: "WARN 3.14: RESOLVED 2026-03-08. Created
+  unified-trading-pm/configs/cloudbuild-service-template.yaml as canonical SSOT documenting required step IDs
+  (configure-docker, build, quality-gates, push, scan-check) and optional steps (extract-version, notify-deployment,
+  publish-wheel). Added STEP 5.22 to quality-gates.sh in 3 canary services (execution-service, instruments-service,
+  alerting-service) — enforces all 5 required step IDs present in cloudbuild.yaml; references template on failure. All 3
+  canary services PASS STEP 5.22. Human review still required before auto-extending to all 44 services." status:
+  completed
 - id: fix-venue-name-bare-binance content: "WARN 7.2: RESOLVED 2026-03-07. Confirmed both usages are intentional
   prefix-match catch-alls, NOT canonical venue names. Added inline comment '# prefix match — covers BINANCE-SPOT,
   BINANCE-FUTURES, BINANCE-MARGIN' to execution_config_schema.py:112 (VENUE_CATEGORY_MAP) and instructions.py:111
