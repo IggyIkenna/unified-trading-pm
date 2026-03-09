@@ -13,7 +13,14 @@ todos:
       shared lib OR delete if abandoned — unblocks ml-inference (22 fails + 3 errors) + execution (2). RC-11: Add 'from
       unified_events_interface import log_event' to ml-training + ml-inference main module. RC-8: Add
       initial_hyperparams param to stage2_coarse_optimization() + stage3_targeted_optimization() in ml-training-service."
-    status: pending
+    status: completed
+    notes: |
+      All RC-1/2/8/11 pre-resolved as of 2026-03-09 (confirmed by verification agents):
+      RC-1: UFCL exports all 3 names from service_base; ruff clean.
+      RC-2: DependencyChecker fully implemented in both ml-inference (engine/validation/ + app/core/) and
+            execution-service (utils/dependency_checker.py); 308/308 + 14/14 tests pass.
+      RC-8: initial_hyperparams param already in ml_training_service/app/training/hyperparameter_tuning.py.
+      RC-11: log_event imported in 4+ files in ml-inference; in ml-training cli/main.py.
   - id: phase2-execution-core
     content:
       "Phase 2 — Execution service core (~4h, fixes 35 tests): RC-4: Align VWAP algo with test spec (U-shape profiles,
