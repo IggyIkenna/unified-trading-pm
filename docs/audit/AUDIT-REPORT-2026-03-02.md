@@ -723,7 +723,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 | ISS-011 | Remove exec-results-api→UDC dependency            | 3     |
 | ISS-012 | Migrate 5 configs to UnifiedCloudConfig           | 2     |
 | ISS-013 | Update 5 Dockerfile base images                   | 0.5   |
-| ISS-015 | Sync lifecycle events codex↔code                  | 2     |
+| ISS-015 | Sync lifecycle events codex↔code                 | 2     |
 | ISS-017 | Fix manifest version ranges                       | 0.5   |
 | ISS-018 | Reconcile manifest deps with pyproject.toml       | 5     |
 | ISS-021 | Fix module-level os.environ                       | 1.5   |

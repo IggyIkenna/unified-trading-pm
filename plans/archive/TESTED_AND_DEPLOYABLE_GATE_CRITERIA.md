@@ -15,7 +15,7 @@ testnet → real)
 | ---------------------------------------------------------- | ------------------------------------------------- | --------------- |
 | `bash scripts/quality-gates.sh --no-fix` passes            | Per repo                                          | Yes             |
 | Unit tests pass (pytest tests/unit/)                       | Per repo                                          | Yes             |
-| Layer 0: Contract alignment (AC↔UIC schemas)               | unified-api-contracts, unified-internal-contracts | Yes             |
+| Layer 0: Contract alignment (AC↔UIC schemas)              | unified-api-contracts, unified-internal-contracts | Yes             |
 | Layer 1: Schema robustness (test_schema_robustness.py)     | Per-service                                       | Yes             |
 | Integration tests (if RUN_INTEGRATION=true)                | tests/integration/                                | Per-repo config |
 | No blocking lint/type violations                           | ruff, basedpyright                                | Yes             |

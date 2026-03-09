@@ -362,12 +362,14 @@ sync_repo() {
         -q >/dev/null 2>&1) || true
     fi
     # 2. Pre-format JS/TS/YAML/JSON/MD files with prettier
+    # Pin to 3.6.2 — matches the pre-commit additional_dependency pin so IDE/sync/hook all agree.
+    # npx 3.8.1 (system) vs hook 3.6.2 produces different output, causing re-touches every run.
     if [[ -f "$dir/package.json" || -f "$dir/.prettierrc" || -f "$dir/.prettierrc.json" || -f "$dir/prettier.config.js" ]]; then
-      (cd "$dir" && npx --yes prettier --write . \
+      (cd "$dir" && npx --yes prettier@3.6.2 --write . \
         --ignore-path .gitignore \
         >/dev/null 2>&1) || true
     elif compgen -G "$dir/**/*.{yaml,yml,json,md}" &>/dev/null 2>&1; then
-      (cd "$dir" && npx --yes prettier --write \
+      (cd "$dir" && npx --yes prettier@3.6.2 --write \
         --ignore-path .gitignore \
         "**/*.yaml" "**/*.yml" "**/*.json" "**/*.md" \
         >/dev/null 2>&1) || true

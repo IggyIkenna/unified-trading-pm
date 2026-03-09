@@ -113,7 +113,7 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts
     if command -v npx &>/dev/null; then
-        npx prettier --write "**/*.{md,json,yaml,yml}" --ignore-path .gitignore 2>/dev/null \
+        npx --yes prettier@3.6.2 --write "**/*.{md,json,yaml,yml}" --ignore-path .gitignore 2>/dev/null \
             && log_success "Prettier: non-Python files formatted" \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
