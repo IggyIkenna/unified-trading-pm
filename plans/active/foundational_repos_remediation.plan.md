@@ -179,8 +179,11 @@ todos:
 
       4. Run: bash scripts/quality-gates.sh — all 6 steps must pass.
       COMMIT: bash scripts/quickmerge.sh "fix: introduce _RawColumn/_RawSchema TypedDicts, resolve 56 pyright errors"
-    status: pending
-    activeForm: "Fixing unified-internal-contracts schema_definition.py TypedDict to resolve 56 pyright errors"
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Added _RawSchema TypedDict; updated to_dict() return type and from_dict()
+      parameter type; removed cast() calls; test_coverage_gaps.py updated to use TypedDict-safe access.
+      Final: 0 basedpyright errors, 967 tests pass.
 
   # ─── AGENT 6 — unified-events-interface ──────────────────────────────────────
   - id: agent-06-uei
