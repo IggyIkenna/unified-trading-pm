@@ -347,7 +347,7 @@ through Cloud Run URLs.
 
 | Layer | Purpose                                                     | Location                                           | In quickmerge?        |
 | ----- | ----------------------------------------------------------- | -------------------------------------------------- | --------------------- |
-| 0     | Contract alignment (AC↔UIC)                                | unified-api-contracts + unified-internal-contracts | Yes                   |
+| 0     | Contract alignment (AC↔UIC)                                 | unified-api-contracts + unified-internal-contracts | Yes                   |
 | 1     | Schema robustness per-service                               | Each repo tests/unit/                              | Yes                   |
 | 1.5   | Per-component integration (adapter/event/config with mocks) | Each repo tests/integration/                       | Yes (last local gate) |
 | 2     | Infrastructure verify (storage, queues, IAM)                | deployment-service/scripts/verify_infra.py         | No (post-deploy)      |

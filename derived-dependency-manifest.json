@@ -239,13 +239,19 @@
       "external_count": 13
     },
     "unified-feature-calculator-library": {
-      "internal_deps": {},
+      "internal_deps": {
+        "unified-config-interface": "unified-config-interface",
+        "unified-events-interface": "unified-events-interface",
+        "unified-trading-library": "unified-trading-library"
+      },
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright>=1.21.0,<2.0.0"],
+        "fastapi": ["fastapi>=0.110.0"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
         "pandas": ["pandas>=2.3.0,<3.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
+        "prometheus-client": ["prometheus-client>=0.20.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-mock<4.0.0,": ["pytest-mock<4.0.0,>=3.15.0"],
@@ -255,8 +261,8 @@
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
         "scipy": ["scipy>=1.14.0,<2.0.0"]
       },
-      "internal_count": 0,
-      "external_count": 13
+      "internal_count": 3,
+      "external_count": 15
     },
     "unified-domain-client": {
       "internal_deps": {
@@ -368,6 +374,7 @@
         "httpx": ["httpx>=0.28.1,<1.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
+        "pyjwt": ["PyJWT>=2.9.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
@@ -375,7 +382,7 @@
         "ruff": ["ruff==0.15.0"]
       },
       "internal_count": 2,
-      "external_count": 11
+      "external_count": 12
     },
     "unified-trade-execution-interface": {
       "internal_deps": {
