@@ -29,7 +29,7 @@ todos:
       "FSS feature calculators — season_context, goal_timing, venue_context, referee; team features (split team_form,
       team_goals, team_xg, team_derived; each ≤900L). Pure Python, no external deps. Also: arb vig + is_arbitrage in
       features_sports_service/arb/ (currently only __init__.py)."
-    status: pending
+    status: done
 
   - id: usei-adapters
     content:

@@ -90,6 +90,123 @@ This keeps the ignore scoped to that commit — future genuine breaches in the s
 
 **Legacy:** `repo` only (no colon) = ignore whole repo. Prefer per-commit when possible.
 
+## Linux setup (systemd)
+
+Linux uses `systemd` user timers instead of `launchd`. Notifications use `notify-send` instead of `terminal-notifier`.
+
+### Prerequisites
+
+```bash
+# Debian/Ubuntu
+sudo apt install inotify-tools libnotify-bin
+
+# Fedora/RHEL
+sudo dnf install inotify-tools libnotify
+```
+
+### Scheduled audit (every 10 min)
+
+Create `~/.config/systemd/user/audit-reflog.service`:
+
+```ini
+[Unit]
+Description=Unified Trading — audit reflog resets
+
+[Service]
+Type=oneshot
+WorkingDirectory=/path/to/unified-trading-system-repos
+ExecStart=/bin/bash unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh
+StandardOutput=append:/tmp/audit-reflog.log
+StandardError=append:/tmp/audit-reflog.log
+```
+
+Create `~/.config/systemd/user/audit-reflog.timer`:
+
+```ini
+[Unit]
+Description=Run audit-reflog every 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now audit-reflog.timer
+systemctl --user list-timers | grep audit-reflog
+```
+
+### Event-based watch (inotifywait)
+
+Create `~/.config/systemd/user/audit-reflog-watch.service`:
+
+```ini
+[Unit]
+Description=Unified Trading — fswatch audit reflog (inotifywait)
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/unified-trading-system-repos
+ExecStart=/bin/bash -c 'inotifywait -m -r -e modify,create,delete --include "ORIG_HEAD|HEAD|logs" \
+  $(find /path/to/unified-trading-system-repos -maxdepth 2 -name ".git" -type d | head -60 | sed "s|$|/logs|") \
+  | while read -r dir event file; do \
+      bash unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh; \
+      sleep 2; \
+    done'
+Restart=on-failure
+StandardOutput=append:/tmp/audit-reflog-watch.log
+StandardError=append:/tmp/audit-reflog-watch.log
+
+[Install]
+WantedBy=default.target
+```
+
+Enable:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now audit-reflog-watch.service
+systemctl --user status audit-reflog-watch.service
+```
+
+### Linux notifications
+
+`run-audit-reflog-with-alert.sh` uses `terminal-notifier` by name — on Linux replace that call with `notify-send`:
+
+```bash
+notify-send -u critical "Audit Reflog — High Risk" "See /tmp/audit-reflog.log"
+```
+
+Or set `DBUS_SESSION_BUS_ADDRESS` if running in a non-desktop session (e.g. SSH):
+
+```bash
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+notify-send "Audit Reflog" "High risk resets found"
+```
+
+### Check status (Linux)
+
+```bash
+systemctl --user status audit-reflog.timer
+systemctl --user status audit-reflog-watch.service
+journalctl --user -u audit-reflog.service --since "1 hour ago"
+```
+
+### Stop / disable (Linux)
+
+```bash
+systemctl --user disable --now audit-reflog.timer
+systemctl --user disable --now audit-reflog-watch.service
+```
+
+---
+
 ## Implementation notes (for similar notification scripts)
 
 When creating or copying scripts that run audits and show macOS notifications:
