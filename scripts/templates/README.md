@@ -63,7 +63,15 @@ To roll out to all repos, use a script that copies from `unified-trading-pm/scri
 then commit with:
 
 ```bash
+# Human (full QG including tests + act)
 bash scripts/quickmerge.sh "chore: sync .gitignore and .cursorignore from PM SSOT"
+
+# Agent/automated rollout script (skip tests + act; tests ran in Pass 1 QG)
+bash scripts/quickmerge.sh "chore: sync .gitignore and .cursorignore from PM SSOT" --agent
 ```
+
+**Two-pass model for rollout scripts:** run `bash scripts/quality-gates.sh` in each repo first (Pass 1 — full
+validation), then call `quickmerge --agent` (Pass 2 — lint/format/typecheck/codex verify only). This avoids re-running
+slow test suites in quickmerge when they already passed.
 
 Per-repo overrides (e.g. Terraform, `data/`) can be uncommented or appended in each repo after sync.

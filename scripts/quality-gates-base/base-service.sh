@@ -13,6 +13,9 @@
 #   PYTEST_WORKERS    — e.g. ${PYTEST_WORKERS:-2}
 #   LOCAL_DEPS        — e.g. ("unified-events-interface")
 #
+# Optional caller variables:
+#   MAX_DURATION      — duration limit in seconds (default: 120); set to 300 for PM/codex
+#
 # Version guard (optional): declare EXPECTED_BASE_VERSION="1.0" in stub before sourcing.
 #
 REQUIRED_BASE_VERSION="1.0"
@@ -60,6 +63,7 @@ run_timeout() {
     local secs=$1; shift
     if command -v timeout &>/dev/null; then timeout "$secs" "$@"
     elif command -v gtimeout &>/dev/null; then gtimeout "$secs" "$@"
+    elif command -v perl &>/dev/null; then perl -e 'alarm shift; exec @ARGV' -- "$secs" "$@"
     else "$@"; fi
 }
 
@@ -637,8 +641,9 @@ log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"
 [ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
 
-# ── DURATION CHECK (<2 min) ───────────────────────────────────────────────────
+# ── DURATION CHECK ───────────────────────────────────────────────────────────
+MAX_DURATION=${MAX_DURATION:-120}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
-[ $DUR -gt 120 ] && { log_fail "Quality gates must complete in <2 min (took ${DUR}s)"; exit 1; }
+[ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"

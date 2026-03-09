@@ -183,7 +183,7 @@ def main() -> int:
         raw_deps: list[object] = list(raw_deps_val) if isinstance(raw_deps_val, list) else []
         manifest_internal_deps: set[str] = set()
         for dep in raw_deps:
-            dep_name = cast(dict[str, object], dep)["name"] if isinstance(dep, dict) else str(dep)
+            dep_name = str(cast(dict[str, object], dep)["name"]) if isinstance(dep, dict) else str(dep)
             if dep_name in internal_repos:
                 manifest_internal_deps.add(dep_name)
 
