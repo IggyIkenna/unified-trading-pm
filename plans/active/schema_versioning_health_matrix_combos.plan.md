@@ -258,14 +258,14 @@ Providers that need Phase 4 API keys (see `api_keys_and_auth.plan.md` § `phase-
 
 ### Todos
 
-| id                     | description                                                                                 | status  |
-| ---------------------- | ------------------------------------------------------------------------------------------- | ------- |
-| ci-umi-schema-tests    | Add `tests/schema_validation/` to `unified-market-interface` for crypto providers           | pending |
-| ci-usei-schema-tests   | Add `tests/schema_validation/` to `unified-sports-execution-interface` for sports providers | pending |
-| ci-artifact-protocol   | Define CI artifact schema (`{provider}_schema_health.json`) + UAC reader script             | pending |
-| ci-svg-update-job      | UAC CI job that downloads interface artifacts + regenerates SVG                             | pending |
-| ci-vcr-cassettes       | Record initial VCR cassettes for Binance testnet, OKX sandbox, Bybit testnet                | pending |
-| ci-blocked-sports-keys | Create skip markers for Phase 4 key-blocked providers                                       | pending |
+| id                     | description                                                                                 | status                   |
+| ---------------------- | ------------------------------------------------------------------------------------------- | ------------------------ |
+| ci-umi-schema-tests    | Add `tests/schema_validation/` to `unified-market-interface` for crypto providers           | **completed 2026-03-09** |
+| ci-usei-schema-tests   | Add `tests/schema_validation/` to `unified-sports-execution-interface` for sports providers | **completed 2026-03-09** |
+| ci-artifact-protocol   | Define CI artifact schema (`{provider}_schema_health.json`) + UAC reader script             | **completed 2026-03-09** |
+| ci-svg-update-job      | UAC CI job that downloads interface artifacts + regenerates SVG                             | **completed 2026-03-09** |
+| ci-vcr-cassettes       | Record initial VCR cassettes for Binance testnet, OKX sandbox, Bybit testnet                | **completed 2026-03-09** |
+| ci-blocked-sports-keys | Create skip markers for Phase 4 key-blocked providers                                       | **completed 2026-03-09** |
 
 ---
 
