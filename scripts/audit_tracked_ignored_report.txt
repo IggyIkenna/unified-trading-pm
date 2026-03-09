@@ -1,0 +1,71 @@
+audit_tracked_ignored.sh — 2026-03-09 13:16:14
+Mode: DRY-RUN (report only)
+Workspace: /Users/ikennaigboaka/Code/unified-trading-system-repos
+============================================================
+CLEAN  alerting-service
+CLEAN  batch-audit-ui
+CLEAN  client-reporting-api
+CLEAN  client-reporting-ui
+CLEAN  deployment-api
+CLEAN  deployment-service
+CLEAN  deployment-ui
+CLEAN  execution-algo-library
+CLEAN  execution-analytics-ui
+CLEAN  execution-results-api
+CLEAN  execution-service
+CLEAN  features-calendar-service
+CLEAN  features-commodity-service
+CLEAN  features-cross-instrument-service
+CLEAN  features-delta-one-service
+CLEAN  features-multi-timeframe-service
+CLEAN  features-onchain-service
+CLEAN  features-sports-service
+CLEAN  features-volatility-service
+CLEAN  ibkr-gateway-infra
+CLEAN  instruments-service
+CLEAN  live-health-monitor-ui
+CLEAN  logs-dashboard-ui
+CLEAN  market-data-api
+CLEAN  market-data-processing-service
+CLEAN  market-tick-data-service
+CLEAN  matching-engine-library
+CLEAN  ml-inference-service
+CLEAN  ml-training-service
+CLEAN  ml-training-ui
+CLEAN  onboarding-ui
+CLEAN  pnl-attribution-service
+CLEAN  position-balance-monitor-service
+CLEAN  risk-and-exposure-service
+CLEAN  settlement-ui
+CLEAN  strategy-service
+CLEAN  strategy-ui
+CLEAN  strategy-validation-service
+CLEAN  system-integration-tests
+CLEAN  trading-agent-service
+CLEAN  trading-analytics-ui
+CLEAN  unified-api-contracts
+CLEAN  unified-cloud-interface
+CLEAN  unified-config-interface
+CLEAN  unified-defi-execution-interface
+CLEAN  unified-domain-client
+CLEAN  unified-events-interface
+CLEAN  unified-feature-calculator-library
+CLEAN  unified-internal-contracts
+CLEAN  unified-market-interface
+CLEAN  unified-ml-interface
+CLEAN  unified-position-interface
+CLEAN  unified-reference-data-interface
+CLEAN  unified-sports-execution-interface
+CLEAN  unified-trade-execution-interface
+CLEAN  unified-trading-codex
+CLEAN  unified-trading-library
+CLEAN  unified-trading-pm
+CLEAN  unified-trading-ui-auth
+
+============================================================
+SUMMARY
+  Repos scanned:          59
+  Repos with hits:        0
+  Total tracked+ignored:  0
+  Mode: DRY-RUN — run with --apply to remove from index
+============================================================

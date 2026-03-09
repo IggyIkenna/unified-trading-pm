@@ -2,6 +2,7 @@
 # Reference: instruments-service, unified-trading-library
 
 # Security - Never commit credentials
+.act-secrets
 *-credentials.json
 *-service-account.json
 workspace-dev-sa-key.json
