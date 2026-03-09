@@ -172,6 +172,14 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     }
     cleanup_zombie_pyright
     command -v basedpyright &>/dev/null || { log_fail "basedpyright required: uv pip install basedpyright"; exit 1; }
+    # ── BASELINE FILE GATE ────────────────────────────────────────────────────
+    if [ -f ".basedpyright-baseline.json" ]; then
+        if grep -q "basedpyright-baseline" QUALITY_GATE_BYPASS_AUDIT.md 2>/dev/null; then
+            log_warn "TYPE CHECK: .basedpyright-baseline.json is suppressing errors — documented in QUALITY_GATE_BYPASS_AUDIT.md (WARN: target is zero baselines)"
+        else
+            log_fail "TYPE CHECK: .basedpyright-baseline.json found but NOT documented in QUALITY_GATE_BYPASS_AUDIT.md — delete the baseline or document it"; exit 1
+        fi
+    fi
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${PACKAGE_NAME:-$(basename "$PWD")}"
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
     run_timeout 120 basedpyright "$SOURCE_DIR/" 2>&1 && log_success "Type check PASSED" || { log_fail "Type check FAILED/timeout"; exit 1; }

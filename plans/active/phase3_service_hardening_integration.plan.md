@@ -280,6 +280,21 @@ todos:
       risk-and-exposure-service (✅ 204 passed; Tests PASSED, Import patterns PASSED). Still PENDING overall — awaiting
       all tiers T0–T6 green."
     status: pending
+  - id: p3-baseline-elimination
+    content:
+      "BASEDPYRIGHT BASELINE ELIMINATION — 3 repos have .basedpyright-baseline.json files that silently suppress type
+      errors from CI. Policy: WARN if documented in QUALITY_GATE_BYPASS_AUDIT.md, FAIL if undocumented (enforced in
+      base-service.sh [4] and STEP 5.22 codex compliance). Target state: delete all 3 baseline files. Tackle
+      smallest-first. REPO ORDER: (1) features-sports-service (1580L — fold into T4 Batch C FSS STEP C): run
+      basedpyright features_sports_service/ without baseline to expose errors; fix by error code class; delete
+      .basedpyright-baseline.json; QG must pass at 0 errors 0 warnings; remove QUALITY_GATE_BYPASS_AUDIT.md §5 entry.
+      (2) ml-training-service (4090L — fold into T4 Batch D MLTR STEP C): same process; most errors expected in CLI
+      handlers (Any propagation from Click args — use TypedDict CliArgs pattern per existing §5 doc); delete baseline;
+      remove §5. (3) market-data-processing-service (8722L — fold into T4 Batch B MDPS STEP C): largest; categorise by
+      error code (reportMissingSuperCall, reportArgumentType, reportReturnType, reportOperatorIssue etc.); fix in
+      batches by file; delete baseline; remove §5. INVARIANT: never run --writebaseline to re-suppress — fix root cause
+      only. Verification: find . -maxdepth 2 -name .basedpyright-baseline.json must return zero results."
+    status: pending
   - id: p3-integration-layer1
     content:
       "INTEGRATION LAYER 1 — SCHEMA ROBUSTNESS (per service, folded into each tier's STEP B): Each repo

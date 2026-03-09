@@ -79,11 +79,16 @@ todos:
     content:
       "Audit Section 8 — Technical Debt: QUALITY_GATE_BYPASS_AUDIT.md present + up to date in all repos; zero
       undocumented suppressions; type: ignore count <10 total documented exceptions; no old import names as aliases; no
-      try/except ImportError fallbacks."
-    status: completed
+      try/except ImportError fallbacks. .basedpyright-baseline.json policy: FAIL if present without
+      QUALITY_GATE_BYPASS_AUDIT.md entry; WARN (counts as violation) even if documented — target state is zero baseline
+      files in all repos. Run: find . -maxdepth 2 -name .basedpyright-baseline.json to enumerate; any hit is a WARN
+      minimum regardless of documentation status."
+    status: in_progress
     note: >-
       RESOLVED 2026-03-08 — see SYSTEM_AUDIT_REPORT_2026_03_08.md (Section 8, WARN). RE-AUDITED 2026-03-10T02:31:37Z —
-      PASS. Zero ImportError fallbacks; zero undocumented suppressions confirmed.
+      PASS for importError/suppressions. RE-OPENED 2026-03-09: 3 repos have undocumented .basedpyright-baseline.json
+      files (market-data-processing-service 8722L, ml-training-service 4090L, features-sports-service 1580L) — these are
+      undocumented suppressions; QG base scripts now enforce FAIL if undocumented, WARN if documented.
   - id: audit-cross-repo-alignment
     content:
       "Audit Section 9 — Cross-Repo Alignment: all plans in INDEX.md have corresponding implementation; codex docs
