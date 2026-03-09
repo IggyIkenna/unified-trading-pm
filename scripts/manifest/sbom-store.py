@@ -30,7 +30,7 @@ def _load_storage_client():
         uts = __import__("unified_trading_services", fromlist=["get_storage_client"])
         return getattr(uts, "get_storage_client")
     except ImportError:
-        return None
+        return None  # acceptable: optional GCS upload in PM tooling script; caller checks for None
 
 
 get_storage_client = _load_storage_client()
