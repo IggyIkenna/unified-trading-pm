@@ -259,13 +259,25 @@ These items were found during the Section 13 audit scan and are not covered by a
 - [ ] `todo-deployment-service-league-config-import` — `deployment-service/scripts/sports/verify_league_config.py:348` —
       replace the inline workaround with an actual import from the league config module when that module is available.
 
-- [ ] `todo-features-commodity-signal-composer` — `features-commodity-service/features_commodity_service/cli/main.py:93`
+- [x] `todo-features-commodity-signal-composer` — `features-commodity-service/features_commodity_service/cli/main.py:93`
       — wire `engine.signal_composer.SignalComposer` per commodity asset class; currently the CLI exits without running
-      signal composition.
+      signal composition. — DONE 2026-03-09: Added `_collect_factor_values()` helper and
+      `_compute_signals_for_commodity()` function that iterates `enabled_factor_groups`, resolves each factor via
+      `FACTOR_REGISTRY`/`get_factor()`, fetches data via `DATA_SOURCE_REGISTRY`/`get_source()`, computes `FactorValue`
+      via `BaseCommodityFactor.compute()`, composes into a `CommoditySignal` via `SignalComposer` (defaulting regime to
+      UNKNOWN for CLI pass), and publishes via `SignalPublisher`. Dry-run path skips publish but runs full factor
+      computation. Ruff C901 complexity resolved by extracting the per-factor fetch/compute loop into
+      `_collect_factor_values`.
 
-- [ ] `todo-features-delta-one-subscriber-orchestration` —
+- [x] `todo-features-delta-one-subscriber-orchestration` —
       `features-delta-one-service/features_delta_one_service/app/pubsub/subscriber.py:115` — parse incoming candle data,
-      invoke the feature orchestration pipeline, and publish computed features to EventBus (referenced as Task 6.1.4).
+      invoke the feature orchestration pipeline, and publish computed features to EventBus (referenced as Task 6.1.4). —
+      DONE 2026-03-09: Implemented `_parse_candle_row()` to extract OHLCV fields from the message `data` dict into a
+      Polars DataFrame; added `_run_pipeline()` that applies `NaNHandler.handle_nans()`/`replace_infinities()`, builds a
+      feature record with per-column `to_list()` extraction (typed `list[object]` to satisfy basedpyright reportAny),
+      and publishes to `{category_lower}-features-ready` via `get_event_bus()` from UCI. Messages with missing/empty
+      candle data are acknowledged with status `skipped` (not hard-failed) for resilience. All 6 existing unit tests
+      pass.
 
 - [x] `todo-instruments-config-reloader-hook` — DONE 2026-03-09 commit `54c4268`: `_on_instruments_reload` now writes
       `_active_subscription_list` / `_active_enabled_venues` module-level snapshots and exposes
