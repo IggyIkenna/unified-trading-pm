@@ -65,6 +65,23 @@ todos:
       "After P1 fixes (completed), update audit file to reflect zero unapproved violations. Done: zero unapproved
       exceptions; market-tick-data-service/inspect_gcs_data_schema.py excluded by design."
     status: completed
+  - id: verify-cursor-language-server
+    content:
+      "In Cursor/VSCode: Cmd+Shift+P → 'Pylance: Restart Language Server'. Confirm import squiggles on
+      unified_internal_contracts and sibling packages are gone across all repos after venvPath fix. (Migrated from
+      pyrightconfig_venv_fix.plan.md verify-cursor.)"
+    status: pending
+
+  - id: fix-cloudbuild-template-drift
+    content:
+      "WARN 3.14: 44 cloudbuild.yaml files with no enforced canonical template. Create
+      unified-trading-pm/configs/cloudbuild-service-template.yaml as canonical structure. Add QG check to
+      quality-gates.sh: verify cloudbuild.yaml has required steps (test-in-image, vulnerability-scan, push, deploy).
+      Start with canary: 3 services (execution-service, instruments-service, alerting-service). Human review required
+      for service-specific variations — do NOT auto-generate all 44. (Migrated from
+      workspace_audit_remediation_2026_03_07.plan.md fix-cloudbuild-template-drift.)"
+    status: pending
+
   - id: p4-cloudbuild-gate
     content: "For repos with cloudbuild.yaml, add quality-gate step running STEP 5.10+5.11 that blocks the build."
     status: pending

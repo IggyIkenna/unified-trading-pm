@@ -98,6 +98,14 @@ todos:
       (use upload_artifact via UCI StorageClient), os.getenv (use UnifiedCloudConfig), google-cloud-* imports outside
       UCI, boto3 imports outside UCI. Score FAIL if any banned pattern found in non-UCI source."
     status: pending
+
+  - id: config-injection-compliance
+    content:
+      "Cross-reference config injection compliance checks (Sections 13.11-13.15, 14.3.8, 2.13, 3.15-3.16, 12.16-12.20,
+      17.x, 22.11) against citadel_audit_remediation stream checks. Verify: GCP_PROJECT_ID banned, DomainConfigReloader
+      used for domain entity hot-reload, get_config_store() factory only, no hardcoded subscription lists,
+      CONFIG_CHANGED events logged. (Migrated from config_dynamic_injection.plan.md p4-audit-integration.)"
+    status: pending
 isProject: false
 ---
 
