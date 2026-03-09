@@ -14,7 +14,7 @@ overview: |
   completes. Package version bumped (minor) for new public API.
 status: active
 created: 2026-03-09
-updated: 2026-03-09
+updated: 2026-03-09T03:40:00Z
 isProject: false
 todos:
   - id: audit-current-api-surface
@@ -27,7 +27,7 @@ todos:
       src/pages/Positions.tsx; (c) trading-analytics-ui imports RequireAuth, initiateGoogleLogin, getStoredToken,
       clearToken from App.tsx; (d) batch-audit-ui imports nothing from @unified-trading/ui-auth — it uses @okta/* only.
       Confirm all symbols are covered in the migration plan before writing any code.
-    status: pending
+    status: done
 
   - id: design-provider-agnostic-types
     content: >-
@@ -42,7 +42,7 @@ todos:
       (internal) — `login(): void`, `logout(): void`, `handleCallback(): Promise<string | null>`, `getToken(): string |
       null`, `refreshToken(): Promise<string | null>`. No `any` types. Export AuthProviderConfig, AuthUser, AuthState
       from index.ts (not AuthAdapter — internal only).
-    status: pending
+    status: done
 
   - id: implement-google-adapter
     content: >-
@@ -56,7 +56,7 @@ todos:
       from GoogleAuth.ts; `refreshToken()` — Google implicit flow has no refresh token; return `Promise.resolve(null)`.
       No new external dependencies. Full TypeScript strict typing, no `any`. Export `GoogleAdapter` class (not default
       export — named).
-    status: pending
+    status: done
 
   - id: implement-cognito-adapter
     content: >-
@@ -78,7 +78,7 @@ todos:
       both storage keys, redirects to `{cognitoDomain}/logout?client_id=...&logout_uri={redirectUri}`. Export
       `CognitoAdapter` class (named). Full TypeScript strict typing, no `any`. The `cognitoDomain` is passed via
       constructor from AuthProviderConfig.
-    status: pending
+    status: done
 
   - id: implement-auth-context
     content: >-
@@ -93,7 +93,7 @@ todos:
       `config.skipAuth === true`, set `isAuthenticated: true`, `token: "dev_token"` immediately without adapter call. No
       `import.meta.env` access inside this file — skipAuth comes only from config prop (callers pass it from their own
       env). Export `AuthProvider` (named), `useAuth` (named, internal use by hooks and RequireAuth).
-    status: pending
+    status: done
 
   - id: refactor-use-auth-token-hook
     content: >-
@@ -105,7 +105,7 @@ todos:
       still works. The old direct sessionStorage listener (`window.addEventListener("storage", handler)`) is removed —
       state management is now owned by AuthContext. Export remains `useAuthToken` from index.ts. Add JSDoc comment:
       `@deprecated Direct token import (getStoredToken) — migrate callers to useAuthToken from AuthProvider context.`
-    status: pending
+    status: done
 
   - id: refactor-require-auth-component
     content: >-
@@ -118,7 +118,7 @@ todos:
       config). Remove all direct references to `getStoredToken`, `initiateGoogleLogin`, and sessionStorage from this
       file. RequireAuth must be used inside an AuthProvider — add a runtime error if `useAuth()` returns null (not
       wrapped in provider).
-    status: pending
+    status: done
 
   - id: refactor-auth-fetch-utility
     content: >-
@@ -132,7 +132,7 @@ todos:
       function bound to the context token via `useAuth()`. No breaking change to the existing call signature
       `authFetch(input, init?)` — the third parameter is optional. Export: `authFetch`, `authFetchJson`, `useAuthFetch`
       from index.ts.
-    status: pending
+    status: done
 
   - id: update-index-exports
     content: >-
@@ -144,7 +144,7 @@ todos:
       exports kept with deprecation JSDoc: `getStoredToken`, `clearToken`, `initiateGoogleLogin` (from GoogleAuth.ts —
       these stay until all consumer migrations are committed). Update package.json description: "Provider-agnostic OAuth
       2.0 PKCE auth library (Google + AWS Cognito) for Unified Trading UIs".
-    status: pending
+    status: done
 
   - id: bump-library-version
     content: >-
@@ -155,7 +155,7 @@ todos:
       cleanly. Run `npm run typecheck` (tsc --noEmit) — zero type errors. Run `npm test` (vitest run) — all existing
       tests pass. Commit to unified-trading-ui-auth: `"feat(ui-auth): provider-agnostic OAuth2 PKCE — GoogleAdapter +
       CognitoAdapter"`.
-    status: pending
+    status: done
 
   - id: migrate-batch-audit-ui-drop-okta
     content: >-
@@ -225,7 +225,7 @@ todos:
       keys; (3) src/AuthContext.test.tsx — test AuthProvider renders children; test skipAuth=true sets
       isAuthenticated=true immediately; test useAuth() throws outside AuthProvider. Run `npm test` (vitest run) — all
       tests pass. Coverage for new files should be >80%.
-    status: pending
+    status: done
 
   - id: verify-no-okta-workspace
     content: >-
