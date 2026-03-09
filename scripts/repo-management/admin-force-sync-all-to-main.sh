@@ -191,6 +191,7 @@ _disable_protection() {
   if [[ "$prot_json" != "NONE" ]]; then
     printf '%s\n' "$prot_json" > "$PROT_TMPDIR/${key}.classic.json"
     gh api -X DELETE "repos/$GH_OWNER/$repo/branches/main/protection" &>/dev/null || true
+    sleep 1  # wait for GitHub to propagate the protection removal before force-push
   fi
 
   # Rulesets — disable every active ruleset, save exact JSON for restore
@@ -204,6 +205,7 @@ _disable_protection() {
           > "$PROT_TMPDIR/${key}.ruleset_${rid}.json" || true
         gh api -X PUT "repos/$GH_OWNER/$repo/rulesets/$rid" \
           --field enforcement=disabled &>/dev/null || true
+        sleep 1  # wait for ruleset disable to propagate
         printf '%s\n' "$rid" >> "$PROT_TMPDIR/${key}.rulesets"
       done
 }
