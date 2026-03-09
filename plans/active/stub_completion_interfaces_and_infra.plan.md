@@ -101,9 +101,13 @@ stub bodies.
       `NotImplementedError` intentionally (TVL/analytics adapter, no instrument definitions).
       `normalize_liquidity_pool()` and `normalize_chain_tvl()` are fully implemented via api-contracts Pydantic parsing.
 
-- [ ] `umi-instadapp-impl` — `adapters/defi/instadapp_adapter.py` (2 stubs): InstaApp is an aggregator without a
-      canonical REST API. Implement using on-chain read (Ethereum RPC) or the InstaApp subgraph. Document
-      `UnsupportedVenueCapabilityError` for position data if aggregation-only.
+- [x] `umi-instadapp-impl` — DONE 2026-03-09: Implemented `get_dsa_positions(account)` via The Graph free-tier subgraph
+      (`https://api.thegraph.com/subgraphs/name/instadapp/dsa-v2`); returns canonical dicts with
+      `venue/chain/account_id/version/authority/recent_casts/data_source/timestamp_utc`. `get_instrument_metadata` and
+      `download_market_data` raise `NotImplementedError` with descriptive guidance (Instadapp is position aggregator
+      only). Removed phantom fields (`type`/`collateralUsd`/etc.) from `_normalize_position` to match actual
+      `InstadappPosition` schema. Three unit tests added: success path, empty accounts, custom subgraph URL. Commit:
+      `f32938d` (unified-market-interface).
 
 - [x] `umi-onchain-perps-base` — VERIFIED 2026-03-09: already fully implemented; `fetch_markets()` and `fetch_trades()`
       raise `NotImplementedError` with descriptive messages guiding concrete subclass implementors;
@@ -256,9 +260,13 @@ These items were found during the Section 13 audit scan and are not covered by a
       `app.add_middleware(PrometheusMiddleware, service_name="client-reporting-api")`; `/metrics` endpoint already
       exposed via `generate_latest()`; `prometheus-client>=0.20.0` confirmed in `pyproject.toml`; TODO comments removed.
 
-- [ ] `todo-deployment-api-uci-cloud-build` — `deployment-api/deployment_api/routes/cloud_builds.py:42` and
-      `deployment_api/routes/service_status_checkers.py:355` — migrate direct GCP CloudBuild calls to UCI
-      `CloudBuildClient` abstraction once that client is available in `unified-cloud-interface`.
+- [x] `todo-deployment-api-uci-cloud-build` — DONE 2026-03-09: Added `CloudBuildClient` ABC to UCI abstractions,
+      `GCPCloudBuildClient` implementation in `gcp_compute.py`, and `get_cloud_build_client()` factory with caching in
+      `factory.py`. Exported from UCI `__init__`. In deployment-api: 5 `_cb.CloudBuildClient()` call-sites in
+      `cloud_builds.py` replaced with `_get_gcp_build_client()` (which uses UCI factory); 1 call-site in
+      `service_status_checkers.py` replaced with UCI-routed client. TODO comments removed. 17 new tests added (8
+      factory, 9 GCPCloudBuildClient). UCI coverage: 80.79% → 84.34%. Commits: `2306747` (unified-cloud-interface),
+      `6b940c9` (deployment-api).
 
 - [x] `todo-deployment-service-league-config-import` — `deployment-service/scripts/sports/verify_league_config.py:348` —
       replace the inline workaround with an actual import from the league config module when that module is available. —
