@@ -1,5 +1,6 @@
 ---
 description: "Use unified-api-contracts for external API schemas and VCR mocks"
+priority: 50
 alwaysApply: false
 globs: ["**/*.py", "**/unified-api-contracts/**"]
 ---

@@ -1,5 +1,6 @@
 ---
 description: Dynamic config injection rules — how services subscribe to config changes
+priority: 50
 globs: ["**/*.py"]
 alwaysApply: false
 ---
