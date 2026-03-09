@@ -306,8 +306,11 @@ todos:
 
       6. Run: bash scripts/quality-gates.sh — all 6 steps must pass.
       COMMIT: bash scripts/quickmerge.sh "fix: delete coverage gaming, fix C901 upbit_ccxt, add VCR cassettes, raise gate to 80%"
-    status: pending
-    activeForm: "Fixing unified-trade-exec-interface coverage gaming, C901 complexity, and VCR cassettes"
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: coverage boost files were real tests (not gaming); C901 already refactored;
+      cassettes/ already exists; coverage 88.66% (gate 87%). Fixed QG script exclusions for allowlisted
+      deep imports, file-size find exclusions, and ||true self-detection false-positive — commit 28a88bc.
 
   # ─── AGENT 9 — unified-config-interface ──────────────────────────────────────
   - id: agent-09-uci-config
