@@ -71,7 +71,11 @@ todos:
       trading-agent-service) investigate — if no tests, mark testing_level = none. Do NOT hard-code a different uniform
       value — measure real coverage. (Migrated from workspace_audit_remediation_2026_03_07.plan.md
       fix-coverage-pct-placeholders.)"
-    status: pending
+    status: completed
+    notes:
+      "DONE 2026-03-09: Real coverage measured for all 37 placeholder repos; workspace-manifest.json updated (commit
+      9539e7d in unified-trading-pm). Notable: features-commodity-service=3%, market-tick-data-service=16%,
+      execution-service=26% (1 failing test), pnl-attribution-service=46%, instruments-service=53%."
 
   - id: tier-order-run
     content:
