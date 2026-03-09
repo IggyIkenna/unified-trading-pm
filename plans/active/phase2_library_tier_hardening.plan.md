@@ -94,7 +94,24 @@ todos:
       UCI=unified-config-interface is T1 (it imports UEI for CONFIG_LOADED event) — handled in t1-uts-deploy-structure,
       not here. Fix ci-quality-gates-missing-repos (AC, UEI, URDI), ci-cloudbuild-quality-gate-wire,
       ci-bypass-audit-missing-repos per repo."
-    status: pending
+    status: done
+    notes: |
+      Completed (2026-03-09):
+      All 7 T0 repos verified: cloudbuild.yaml, scripts/quality-gates.sh, pyproject.toml PRESENT.
+      workspace-manifest.json is CENTRALIZED in unified-trading-pm (not per-repo) — all 7 T0
+        repos confirmed present with correct arch_tier and merge_level.
+      ci-bypass-audit-missing-repos: VERIFIED DONE — all 7 T0 repos have QUALITY_GATE_BYPASS_AUDIT.md.
+      ci-quality-gates-missing-repos (AC, UEI, URDI): FIXED — added clone-pm-scripts +
+        quality-gates steps to cloudbuild.yaml for AC, UEI, URDI. build-wheel now waits on
+        quality-gates to prevent publishing if QG fails.
+        Commit AC: chore(ci): wire quality-gates.sh into Cloud Build (ci-quality-gates-missing-repos)
+        Commit UEI: chore(ci): wire quality-gates.sh into Cloud Build (ci-quality-gates-missing-repos)
+        Commit URDI: chore(ci): wire quality-gates.sh into Cloud Build (ci-quality-gates-missing-repos)
+      ci-cloudbuild-quality-gate-wire: FIXED — quality-gates.sh WORKSPACE_ROOT updated in all 7
+        T0 repos to env-override pattern: WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd ...)}"
+        allowing Cloud Build to set WORKSPACE_ROOT=/workspace before running the script.
+        Commits: chore(ci): support WORKSPACE_ROOT env override (UIC_INT, UCI, MEL)
+      QG status: all 6 T0 repos pass --quick locally after changes.
   - id: t0-tests-first
     content:
       "T0 STEP B — TESTS FIRST [8 agents PARALLEL]: Integration Layer 0 MUST complete in T0: test_contract_alignment.py
