@@ -29,7 +29,11 @@ todos:
       unified_cloud_services.* to unified_trading_services.* — 9 fixes. RC-3: Implement sports category detection in
       route_instruction() (check SPORTS_VENUES set, return category='sports') — 9 fixes (also tracked in
       sports_migration_gap_fix.plan.md § B-S5)."
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: RC-3/4/5/6 all pre-resolved in prior sessions. One remaining failure was
+      DependencyChecker startup sequencing (GCS triggered before project ID validated) — fixed with
+      UnifiedCloudConfig fast-path check. Final: 1234 passed, 0 failed, 1 skipped.
   - id: phase3-ml-services
     content:
       "Phase 3 — ML services (~3h, fixes 8 tests): RC-7: Wire shap_explainer into TrainingOrchestrator.__init__() — 4
