@@ -798,6 +798,30 @@ ibkr_gateway_connectivity:
     credentials_secret: ibkr-account-credentials (Secret Manager)
 
 # ---------------------------------------------------------------------------
+# IBKR Gateway infrastructure service entry
+# ---------------------------------------------------------------------------
+ibkr-gateway-infra:
+  tier: T3-service
+  type: gateway
+  protocol: socket
+  port: 4001
+  depends_on: [unified-trading-settings]
+  connects_to:
+    [
+      unified-market-interface,
+      unified-trade-execution-interface,
+      unified-position-interface,
+      unified-reference-data-interface,
+    ]
+  status: planned
+  notes: >
+    IB Client Portal Gateway Docker container; inject-IB pattern. Single long-lived IB Gateway Java process for all IBKR
+    connectivity. All four adapters (UMI ibkr_adapter, UTEI ibkr_tradfi, UPI ibkr, URDI ibkr) accept an injected
+    ib_insync.IB object — caller owns lifecycle. Credentials: ibkr-account-credentials in Secret Manager. Config keys:
+    ibkr_gateway_host, ibkr_gateway_port, ibkr_client_id_base (all in UnifiedCloudConfig). Port 4001 = IB Gateway paper
+    trading default; port 7497 = TWS paper trading. See ibkr_gateway_connectivity section above.
+
+# ---------------------------------------------------------------------------
 # Alerting architecture (cross-cutting concern)
 # ---------------------------------------------------------------------------
 alerting:
