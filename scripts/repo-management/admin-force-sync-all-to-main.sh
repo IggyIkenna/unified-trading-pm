@@ -347,14 +347,18 @@ sync_repo() {
   # leave reformatted files unstaged and cause force-push to use old HEAD.
   if [[ "$NO_COMMIT" == "false" ]]; then
     # 1. Pre-format Python files with ruff (fix + format)
+    # Use --extend-exclude (not --exclude) so CLI additions APPEND to pyproject.toml excludes
+    # instead of replacing them. This preserves repo-level excludes like typings/, .cursor/, etc.
     if [[ -f "$dir/pyproject.toml" || -f "$dir/ruff.toml" ]]; then
       (cd "$dir" && "$WORKSPACE_ROOT/.venv-workspace/bin/ruff" check . --fix \
-        --exclude .venv --exclude .venv-workspace --exclude '*.egg-info' \
-        --exclude node_modules --exclude build --exclude dist \
+        --extend-exclude .venv --extend-exclude .venv-workspace --extend-exclude '*.egg-info' \
+        --extend-exclude node_modules --extend-exclude build --extend-exclude dist \
+        --extend-exclude typings --extend-exclude .cursor \
         -q 2>/dev/null) || true
       (cd "$dir" && "$WORKSPACE_ROOT/.venv-workspace/bin/ruff" format . \
-        --exclude .venv --exclude .venv-workspace --exclude '*.egg-info' \
-        --exclude node_modules --exclude build --exclude dist \
+        --extend-exclude .venv --extend-exclude .venv-workspace --extend-exclude '*.egg-info' \
+        --extend-exclude node_modules --extend-exclude build --extend-exclude dist \
+        --extend-exclude typings --extend-exclude .cursor \
         -q 2>/dev/null) || true
     fi
     # 2. Pre-format JS/TS/YAML/JSON/MD files with prettier
