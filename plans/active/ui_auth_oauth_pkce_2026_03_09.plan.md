@@ -170,7 +170,7 @@ todos:
       `VITE_REDIRECT_URI`, `VITE_SKIP_AUTH`; (5) Run `npm install` and `npm run type-check` — zero type errors; (6)
       Verify no @okta reference remains: `grep -r "@okta" batch-audit-ui/src/` must return empty. Commit to
       batch-audit-ui: `"feat(batch-audit-ui): replace Okta with unified-trading-ui-auth CognitoAdapter"`.
-    status: pending
+    status: completed
 
   - id: migrate-execution-analytics-ui
     content: >-
@@ -186,7 +186,7 @@ todos:
       needed here); (3) execution-analytics-ui/src/pages/Login.tsx — replace `initiateGoogleLogin()` direct call with
       `useAuth().login()` (inside Login component). Run `npm run type-check` in execution-analytics-ui — zero errors.
       Commit: `"feat(execution-analytics-ui): migrate to AuthProvider + GoogleAdapter"`.
-    status: pending
+    status: completed
 
   - id: migrate-settlement-ui
     content: >-
@@ -199,7 +199,7 @@ todos:
       settlement-ui/src/pages/Positions.tsx — replace `getStoredToken()` usage with `useAuth().token` or
       `useAuthToken().token`. Run `npm run typecheck` in settlement-ui — zero errors. Commit: `"feat(settlement-ui):
       migrate to AuthProvider + GoogleAdapter"`.
-    status: pending
+    status: completed
 
   - id: migrate-trading-analytics-ui
     content: >-
@@ -211,7 +211,7 @@ todos:
       trading-analytics-ui/src/pages/Latency.tsx — check for any direct token reads and replace with context if present.
       Run `npm run typecheck` — zero errors. Commit: `"feat(trading-analytics-ui): migrate to AuthProvider +
       GoogleAdapter"`.
-    status: pending
+    status: completed
 
   - id: add-unit-tests
     content: >-
@@ -237,7 +237,7 @@ todos:
       in the three consumer UI src/ directories should return zero results (these calls should all have migrated to
       AuthProvider context). Confirm batch-audit-ui builds cleanly: `npm run build` in batch-audit-ui from workspace
       root.
-    status: pending
+    status: completed
 ---
 
 # unified-trading-ui-auth — Provider-Agnostic OAuth 2.0 PKCE Refactor
