@@ -85,6 +85,12 @@
 # Archived docs — low indexing value
 unified-trading-pm/github-integration/archived/
 
+# Sub-repo .cursor/rules — all point to the same physical cursor-rules/ dir as workspace root.
+# Excluded from indexing to avoid duplicate file context in full workspace sessions.
+# Rules still load correctly via nearest-ancestor semantics when a single repo is opened directly.
+*/.cursor/
+*/.cursor/**
+
 # Optional: Terraform (uncomment if used)
 # **/.terraform/
 # **/*.tfstate
