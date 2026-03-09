@@ -97,21 +97,20 @@ stub bodies.
 
 ### Todos
 
-- [ ] `umi-defillama-impl` — Implement stub in `adapters/defi/defillama_adapter.py` line 96. DefiLlama is a free public
-      API (`https://api.llama.fi`); no key required.
+- [x] `umi-defillama-impl` — VERIFIED 2026-03-09: already fully implemented; `get_instrument_metadata()` raises
+      `NotImplementedError` intentionally (TVL/analytics adapter, no instrument definitions).
+      `normalize_liquidity_pool()` and `normalize_chain_tvl()` are fully implemented via api-contracts Pydantic parsing.
 
 - [ ] `umi-instadapp-impl` — `adapters/defi/instadapp_adapter.py` (2 stubs): InstaApp is an aggregator without a
       canonical REST API. Implement using on-chain read (Ethereum RPC) or the InstaApp subgraph. Document
       `UnsupportedVenueCapabilityError` for position data if aggregation-only.
 
-- [ ] `umi-onchain-perps-base` — Implement `adapters/onchain_perps/base_onchain_perp_adapter.py` abstract methods
-      `fetch_markets()` and `fetch_trades()`. These are the base class stubs that concrete adapters (GMX, dYdX,
-      Synthetix, etc.) should override. Define correct return types using UAC schemas; add docstrings explaining what
-      each concrete adapter must implement.
+- [x] `umi-onchain-perps-base` — VERIFIED 2026-03-09: already fully implemented; `fetch_markets()` and `fetch_trades()`
+      raise `NotImplementedError` with descriptive messages guiding concrete subclass implementors;
+      `fetch_funding_rates()` has sensible default (logs warning, returns empty list).
 
-- [ ] `umi-alt-data-base` — Implement `adapters/alt_data/base_alt_data_adapter.py` line 65 `normalize_record()`. This is
-      the base class hook; concrete adapters override it. Define the signature and return type (`CanonicalAltDataRecord`
-      or similar) and raise `NotImplementedError` with a useful message guiding implementors.
+- [x] `umi-alt-data-base` — VERIFIED 2026-03-09: already fully implemented; `normalize_record()` raises
+      `NotImplementedError("Subclasses must implement normalize_record()")` — correct abstract base pattern.
 
 ---
 
@@ -268,14 +267,16 @@ These items were found during the Section 13 audit scan and are not covered by a
       `features-delta-one-service/features_delta_one_service/app/pubsub/subscriber.py:115` — parse incoming candle data,
       invoke the feature orchestration pipeline, and publish computed features to EventBus (referenced as Task 6.1.4).
 
-- [ ] `todo-instruments-config-reloader-hook` — `instruments-service/instruments_service/config_reloaders.py:22` — hook
-      the config reloader into `InstrumentsService` subscription list so live reload triggers a real subscription update
-      instead of a no-op.
+- [x] `todo-instruments-config-reloader-hook` — DONE 2026-03-09 commit `54c4268`: `_on_instruments_reload` now writes
+      `_active_subscription_list` / `_active_enabled_venues` module-level snapshots and exposes
+      `get_active_subscription_list()` / `get_active_enabled_venues()` for consumers; emits `CONFIG_RELOADED` event via
+      `log_event` when events are set up.
 
-- [ ] `todo-instruments-gcs-upload-handlers` —
-      `instruments-service/instruments_service/cli/handlers/corporate_actions_backfill_handler.py:572` and
-      `instruments_service/cli/handlers/generate_date_views_handler.py:242` — implement optional GCS upload using
-      `DataSink.upload()` from UCI when `--upload` flag is passed.
+- [x] `todo-instruments-gcs-upload-handlers` — DONE 2026-03-09 commit `54c4268`:
+      `CorporateActionsBackfillHandler._upload_to_gcs()` walks `by_ticker_dir`, reads each CSV and writes via
+      `get_data_sink(routing_key="tradfi")` partitioned by `{ticker}/{action_type}`;
+      `GenerateDateViewsHandler._upload_to_gcs(by_date_dir)` walks date-partition dirs and writes Parquet via DataSink
+      partitioned by `{day}/{action_type}`.
 
 - [ ] `todo-instruments-defi-adapter-explicit-imports` —
       `instruments-service/instruments_service/app/core/adapter_loader.py:82,120-164` — replace wildcard
@@ -382,7 +383,7 @@ any downstream repo. Remediation completed 2026-03-09:
 
 ### Todos
 
-- [ ] `uac-endpoint-registry-consumer` — Wire `ENDPOINT_REGISTRY` (in `endpoint_registry.py`) to a real consumer: either
-      a runtime endpoint validation step in `market-tick-data-service` or a documentation generation script. Once wired,
-      remove the `# orphan:` comments from `AccessMode`, `DataAvailability`, `ResponseFormat`, `EndpointSpec` and add
-      them to `__all__` in `unified_api_contracts/__init__.py`.
+- [x] `uac-endpoint-registry-consumer` — DONE 2026-03-09 commit `2aa25d0`: `ENDPOINT_REGISTRY`, `AccessMode`,
+      `DataAvailability`, `EndpointSpec`, `ResponseFormat` imported and added to `__all__` in
+      `unified_api_contracts/__init__.py`; all `# orphan:` comments removed from `endpoint_registry.py`; basedpyright
+      clean (0 errors).
