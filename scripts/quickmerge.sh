@@ -17,6 +17,7 @@
 #   ./scripts/quickmerge.sh "commit message" --agent             # agents: always use this
 #   ./scripts/quickmerge.sh "commit message" --skip-tests
 #   ./scripts/quickmerge.sh "commit message" --skip-typecheck
+#   ./scripts/quickmerge.sh "commit message" --agent
 #
 # Flags:
 #   --agent            For agent/CI callers (Claude Code, run-agent.sh, GitHub Actions).
@@ -32,6 +33,8 @@
 #                      Agents must use --agent instead.
 #   --skip-tests       Pass --skip-tests to quality-gates.sh (lint+type+codex only)
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
+#   --agent            Agent-optimised run: implies --quick (skip act simulation). CI validates
+#                      on GitHub anyway; act Docker overhead is wasted in automated sessions.
 #
 # When to use --to-staging:
 #   feat!: / BREAKING CHANGE: commits that break downstream API contracts.
@@ -119,6 +122,12 @@ while [[ $# -gt 0 ]]; do
     --unit-only)
       QUICK=true
       NO_PR=true
+      shift
+      ;;
+    --agent)
+      # Agent-optimised: skip act simulation (CI validates on GitHub; Docker overhead is wasted
+      # in automated sessions). All quality gates still run — no shortcuts on code quality.
+      QUICK=true
       shift
       ;;
     *)
@@ -311,14 +320,32 @@ fi
 
 # ── INSTALL DEPS ──────────────────────────────────────────────────────────────
 if [ -f "pyproject.toml" ]; then
-  echo "[$REPO_NAME] Installing project dependencies..."
   command -v uv >/dev/null 2>&1 || pip install uv --quiet
-  uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || true
+  # Gate install on pyproject.toml or uv.lock being newer than the sentinel file.
+  # Pre-commit hooks and prettier never modify pyproject.toml/uv.lock, so mtime is stable.
+  _QM_SENTINEL=".venv/.deps-installed"
+  _QM_NEEDS_INSTALL=false
+  [ ! -d ".venv" ] && _QM_NEEDS_INSTALL=true
+  [ ! -f "$_QM_SENTINEL" ] && _QM_NEEDS_INSTALL=true
+  [ -f "pyproject.toml" ] && [ "pyproject.toml" -nt "$_QM_SENTINEL" ] 2>/dev/null && _QM_NEEDS_INSTALL=true
+  [ -f "uv.lock" ] && [ "uv.lock" -nt "$_QM_SENTINEL" ] 2>/dev/null && _QM_NEEDS_INSTALL=true
+  if [ "$_QM_NEEDS_INSTALL" = "true" ]; then
+    echo "[$REPO_NAME] Installing project dependencies..."
+    uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || true
+    touch "$_QM_SENTINEL" 2>/dev/null || true
+  else
+    echo "[$REPO_NAME] Dependencies up to date (skipping install)"
+  fi
+  unset _QM_SENTINEL _QM_NEEDS_INSTALL
 fi
 
 # ── EARLY EXIT: nothing to commit (skip when --no-pr) ─────────────────────────────────────────────
 git fetch origin main --quiet 2>/dev/null || true
-if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
+# Exit only if: no uncommitted changes AND no commits ahead of origin/main.
+# A clean working dir with local commits ahead of main should still proceed to create a PR.
+if [ "$NO_PR" != "true" ] \
+   && [ -z "$(git status --porcelain)" ] \
+   && [ "$(git rev-list origin/main..HEAD --count 2>/dev/null || echo 0)" -eq 0 ]; then
   echo "[$REPO_NAME] Nothing to commit — exiting fast"
   exit 0
 fi
@@ -560,17 +587,30 @@ if [ "$NO_PR" != "true" ]; then
     exit 0
   fi
 
-  if [ -z "$(git status --porcelain)" ]; then
-    echo "[$REPO_NAME] No changes to commit"
+  # Only exit if working dir is clean AND no commits ahead of origin/main.
+  # "clean working dir with commits ahead" is valid — those commits belong in the PR.
+  _AHEAD_CHECK=$(git rev-list origin/main..HEAD --count 2>/dev/null || echo 0)
+  if [ -z "$(git status --porcelain)" ] && [ "$_AHEAD_CHECK" -eq 0 ]; then
+    echo "[$REPO_NAME] No changes to commit and no commits ahead of origin/main"
     exit 0
   fi
+  unset _AHEAD_CHECK
 fi
 
 # ============================================================================
-# Run setup.sh first to ensure deps (incl. pytest) are installed
+# Run setup.sh only when pyproject.toml / uv.lock changed since last run
 if [ -f "scripts/setup.sh" ]; then
-  echo "[$REPO_NAME] Ensuring env ready (setup.sh)..."
-  bash scripts/setup.sh --check 2>/dev/null || bash scripts/setup.sh
+  _SETUP_SENTINEL=".venv/.setup-done"
+  _SETUP_NEEDS=false
+  [ ! -f "$_SETUP_SENTINEL" ] && _SETUP_NEEDS=true
+  [ -f "pyproject.toml" ] && [ "pyproject.toml" -nt "$_SETUP_SENTINEL" ] 2>/dev/null && _SETUP_NEEDS=true
+  [ -f "uv.lock" ] && [ "uv.lock" -nt "$_SETUP_SENTINEL" ] 2>/dev/null && _SETUP_NEEDS=true
+  if [ "$_SETUP_NEEDS" = "true" ]; then
+    echo "[$REPO_NAME] Ensuring env ready (setup.sh)..."
+    bash scripts/setup.sh --check 2>/dev/null || bash scripts/setup.sh
+    touch "$_SETUP_SENTINEL" 2>/dev/null || true
+  fi
+  unset _SETUP_SENTINEL _SETUP_NEEDS
 fi
 
 # Ensure scripts are executable before quality gates (so executable checks pass)
@@ -587,11 +627,10 @@ echo "=========================================="
 echo ""
 
 if [ -f "scripts/quality-gates.sh" ]; then
-  echo "[$REPO_NAME] Phase 1: auto-fix (ruff format + ruff check --fix)..."
-  bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK
-
-  echo "[$REPO_NAME] Phase 2: verify (--no-fix mode)..."
-  if ! bash scripts/quality-gates.sh --no-fix $SKIP_TESTS $SKIP_TYPECHECK; then
+  # Single pass: quality-gates.sh already runs auto-fix ([1/6]) then verifies ([2/6] LINT).
+  # Running it twice was redundant — ruff --fix followed immediately by ruff check in one
+  # invocation is equivalent to the old Phase 1 + Phase 2 pattern.
+  if ! bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK; then
     echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
     exit 1
   fi
@@ -764,7 +803,33 @@ else
   echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
 fi
 
-git checkout -b "$BRANCH" origin/main --quiet
+# ── BRANCH BASE SELECTION ─────────────────────────────────────────────────────
+# Problem: `git checkout -b BRANCH origin/main` always starts from remote main,
+# which drops any commits already made locally (e.g. 5 commits done before quickmerge).
+#
+# Fix: if local HEAD has commits ahead of origin/main, branch from HEAD so those
+# commits are included in the PR. If HEAD is also behind origin/main, rebase first
+# to avoid a diverged-base PR.
+_AHEAD=$(git rev-list origin/main..HEAD --count 2>/dev/null || echo 0)
+_BEHIND=$(git rev-list HEAD..origin/main --count 2>/dev/null || echo 0)
+
+if [ "$_AHEAD" -gt 0 ]; then
+  echo "[$REPO_NAME] Local branch has $_AHEAD commit(s) ahead of origin/main — including in PR"
+  if [ "$_BEHIND" -gt 0 ]; then
+    echo "[$REPO_NAME] Also $_BEHIND commit(s) behind origin/main — rebasing onto origin/main first..."
+    git rebase origin/main --quiet 2>/dev/null || {
+      echo "[$REPO_NAME] ❌ Rebase onto origin/main failed — resolve conflicts then re-run quickmerge"
+      # Restore stash before aborting so work is not lost
+      git rebase --abort 2>/dev/null || true
+      [ "$RESTORE_STASH" = 1 ] && git stash pop --quiet 2>/dev/null || true
+      exit 1
+    }
+  fi
+  git checkout -b "$BRANCH" --quiet  # branch from current HEAD (includes local commits)
+else
+  git checkout -b "$BRANCH" origin/main --quiet  # no local commits; start fresh from remote main
+fi
+unset _AHEAD _BEHIND
 echo ""
 
 # Restore stash on new branch

@@ -16,7 +16,7 @@
 # NOTE: Uses GIT_INDEX_FILE=/dev/null with git check-ignore (empty index) so git
 # evaluates .gitignore rules as if files were untracked, correctly honouring
 # negation patterns (!pattern). The --no-index flag does NOT honour negations,
-# causing false positives for intentionally-tracked files in negated dirs.
+# which caused false positives for intentionally-tracked files in negated dirs.
 # =============================================================================
 
 set -euo pipefail

@@ -1,7 +1,7 @@
 ---
 name: Canonical .gitignore / .cursorignore Sync
 archived: "2026-03-09"
-archiveReason: "Plan completed — .feather rules added, sync script created, repo-specific exceptions documented."
+archiveReason: "Plan was completed — .feather rules added, sync script created, repo-specific exceptions documented."
 overview: |
   Update the canonical .gitignore and .cursorignore files in unified-trading-pm, then
   propagate them to all 55 git repos in the workspace. The canonical files are the SSOT —

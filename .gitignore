@@ -8,6 +8,7 @@
 # =============================================================================
 
 # --- Security (never commit credentials) ---
+.act-secrets
 *credentials*.json
 *-credentials.json
 *-service-account.json
