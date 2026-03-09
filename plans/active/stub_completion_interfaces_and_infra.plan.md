@@ -190,8 +190,11 @@ via `api_keys_and_auth.plan.md`. Grouped by blocker phase.
 
 **REST fallback (no key dependency):**
 
-- [ ] `upi-upbit-impl` — Implement `/v1/accounts` for balance; Upbit spot only so return empty positions. Auth: JWT
-      HS256 with access_key + nonce.
+- [x] `upi-upbit-impl` — DONE 2026-03-09: `UpbitPositionAdapter` fully implemented in `adapters/upbit.py`;
+      `get_balances()` via `GET /v1/accounts` with JWT HS256 Bearer token; `get_positions()` returns `[]` (spot-only);
+      credentials read via constructor args (called from factory with `api_key`/`api_secret`); 6 unit tests in
+      `tests/unit/test_adapters.py` covering balance mapping, zero-total skip, positions empty, snapshot, auth header,
+      and JWT structure — all passing.
 
 ---
 
@@ -248,9 +251,10 @@ These items were found during the Section 13 audit scan and are not covered by a
 
 ### Todos
 
-- [ ] `todo-client-reporting-prometheus` — `client-reporting-api/client_reporting_api/api/main.py:12,44` —
-      PrometheusMiddleware and `get_metrics_response` are not yet implemented in UTL; re-enable once available. Verify
-      `prometheus-client` in `pyproject.toml` and expose `/metrics` endpoint.
+- [x] `todo-client-reporting-prometheus` — DONE 2026-03-09 commit `5976dbc`: implemented local `PrometheusMiddleware` in
+      `main.py` using `RECORDS_PROCESSED` + `PROCESSING_LATENCY` from `client_reporting_api.metrics`; wired via
+      `app.add_middleware(PrometheusMiddleware, service_name="client-reporting-api")`; `/metrics` endpoint already
+      exposed via `generate_latest()`; `prometheus-client>=0.20.0` confirmed in `pyproject.toml`; TODO comments removed.
 
 - [ ] `todo-deployment-api-uci-cloud-build` — `deployment-api/deployment_api/routes/cloud_builds.py:42` and
       `deployment_api/routes/service_status_checkers.py:355` — migrate direct GCP CloudBuild calls to UCI
@@ -290,11 +294,12 @@ These items were found during the Section 13 audit scan and are not covered by a
       `GenerateDateViewsHandler._upload_to_gcs(by_date_dir)` walks date-partition dirs and writes Parquet via DataSink
       partitioned by `{day}/{action_type}`.
 
-- [ ] `todo-instruments-defi-adapter-explicit-imports` —
-      `instruments-service/instruments_service/app/core/adapter_loader.py:82,120-164` — replace wildcard
-      `from unified_market_interface import <Adapter>` inline imports with explicit top-level imports so basedpyright
-      can resolve types. Covers HyperliquidAdapter, UniswapV2/V3/V4, AaveV3, Curve, Balancer, Morpho, Euler, Fluid,
-      Lido, EtherFi, Ethena adapters.
+- [x] `todo-instruments-defi-adapter-explicit-imports` — DONE 2026-03-09 commit `4a42cf3`: all 15 inline
+      `from unified_market_interface import ...` calls in `adapter_loader.py` replaced with a single consolidated
+      top-level import block covering `TardisAdapter`, `DatabentoAdapter`, `HyperliquidAdapter`,
+      `HyperliquidBaseClient`, `UniswapV2/V3/V4Adapter`, `AaveV3Adapter`, `CurveAdapter`, `BalancerAdapter`,
+      `MorphoAdapter`, `EulerAdapter`, `FluidAdapter`, `LidoAdapter`, `EtherFiAdapter`, `EthenaAdapter`; all TODO
+      comments removed; ruff clean.
 
 - [ ] `todo-ml-training-model-registry-explicit-imports` —
       `ml-training-service/ml_training_service/ml/model_registry.py:33,34` — replace inline import markers for
@@ -305,9 +310,10 @@ These items were found during the Section 13 audit scan and are not covered by a
       `from unified_trading_library import BaseGCSLoader` wildcard with an explicit sub-module import path once
       `BaseGCSLoader` is exported from a stable public UTL API.
 
-- [ ] `todo-risk-cli-client-list` — `risk-and-exposure-service/risk_and_exposure_service/cli/main.py:94` — implement
-      retrieval of the full client list from `UnifiedCloudConfig` or a config database; currently the `--all-clients`
-      CLI flag is a no-op stub.
+- [x] `todo-risk-cli-client-list` — DONE 2026-03-09: VERIFIED already fully implemented; `run_batch_mode()` builds the
+      client list as the union of `get_monitored_client_ids()` (reads `MONITORED_CLIENT_IDS` from
+      `RiskAndExposureServiceConfig`) and `limits_client.list_client_ids()` (from `RiskLimitsClient`); de-duplicated,
+      sorted, and iterated; empty-list path logs a warning and exits cleanly. No stub remaining.
 
 ---
 
