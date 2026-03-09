@@ -123,7 +123,12 @@ todos:
       event to unified-trading-pm. PM staging-to-main.yml is already wired to receive this dispatch and promote all
       repos from staging to main in topological order. This closes the loop on the staging-to-main automation. Blocked
       until: (1) SIT smoke tests exist in tests/smoke/, (2) SIT ANTHROPIC_API_KEY set (set-anthropic-api-key-sit todo).
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: smoke-test-gate.yml created in system-integration-tests/.github/workflows/.
+      Triggers on push to staging branch + workflow_dispatch; runs pytest tests/smoke/ -m smoke;
+      on success dispatches staging-validated repository_dispatch to PM with source_repo/branch/commit/run_id payload.
+      Fails hard on test failure with clear error about staging NOT being promoted. Commit 46fde35.
 isProject: false
 ---
 
