@@ -32,7 +32,9 @@ Read these before making ANY code changes:
 ## Key Rules (Quick Reference)
 
 - `uv pip install` not `pip install`
-- `bash scripts/quickmerge.sh "message"` not `git push`
+- `bash scripts/quickmerge.sh "message" --agent` not `git push` — always use `--agent` in Claude Code sessions
+- Two-pass model: `bash scripts/quality-gates.sh` first (Pass 1 — full), then `quickmerge --agent` (Pass 2 —
+  lint/format/typecheck/codex, no tests, no act)
 - `from unified_events_interface import setup_events, log_event` — no fallbacks
 - `basedpyright` not `pyright` (and always with `run_timeout 120 basedpyright <source_dir>/`)
 - No `os.getenv()` — use `UnifiedCloudConfig`

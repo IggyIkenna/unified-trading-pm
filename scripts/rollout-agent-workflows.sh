@@ -20,6 +20,14 @@
 #   TELEGRAM_CHAT_ID_VALUE   — optional
 #
 # Idempotent: skips repos where all target workflows already match templates.
+#
+# Two-pass model: this script is an automated rollout caller.
+#   Pass 1 — full QG: quality-gates.sh runs (if present) for each repo before commit
+#   Pass 2 — quickmerge --agent: lint+format+typecheck+codex only; tests already ran in Pass 1;
+#            act simulation skipped (CI validates on GitHub anyway)
+#
+# NEVER call quickmerge without --agent from automated scripts — act Docker overhead is 60-120s
+# with no benefit when CI already validates. Use --agent to document automated context.
 
 set -euo pipefail
 
@@ -200,7 +208,7 @@ print('$REPO'.replace('-', '_'))
         else
             bash scripts/quickmerge.sh "chore: rollout autonomous agent workflows (agent-audit, semver, plan-alignment)" \
                 --files ".github/workflows/agent-audit.yml .github/workflows/semver-agent.yml .github/workflows/plan-alignment-agent.yml" \
-                --quick 2>&1 | tail -5 || warn "  quickmerge failed for $REPO — check manually"
+                --agent 2>&1 | tail -5 || warn "  quickmerge failed for $REPO — check manually"
         fi
         popd > /dev/null
     fi

@@ -14,15 +14,22 @@
 #   ./scripts/quickmerge.sh "commit message" --dep-branch "my-feature"
 #   ./scripts/quickmerge.sh "commit message" --to-staging
 #   ./scripts/quickmerge.sh "commit message" --quick
+#   ./scripts/quickmerge.sh "commit message" --agent             # agents: always use this
 #   ./scripts/quickmerge.sh "commit message" --skip-tests
 #   ./scripts/quickmerge.sh "commit message" --skip-typecheck
 #
 # Flags:
+#   --agent            For agent/CI callers (Claude Code, run-agent.sh, GitHub Actions).
+#                      Implies --quick (skip act) + --skip-tests (skip pytest).
+#                      Rationale: tests ran in pass-1 QG; quickmerge is a lightweight pass-2
+#                      covering lint, format, typecheck, and codex only. Act is wasted in CI.
+#                      Add --skip-typecheck to also skip basedpyright if it ran in pass-1.
 #   --files "p1 p2"    Stage only these paths (multi-agent: avoid committing other agents' work)
 #   --dep-branch NAME  Branch isolation when dependencies have uncommitted changes (feature mode)
 #   --to-staging       Breaking change path: PR targets staging instead of main; checks staging lock.
 #                      dep-branch auto-derived from current git branch. Mutually exclusive with --dep-branch.
-#   --quick            Skip only act simulation (Stage 4); all other checks run
+#   --quick            Human shortcut: skip only act simulation (Stage 4); all other checks run.
+#                      Agents must use --agent instead.
 #   --skip-tests       Pass --skip-tests to quality-gates.sh (lint+type+codex only)
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
 #
@@ -95,6 +102,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --quick)
       QUICK=true
+      shift
+      ;;
+    --agent)
+      # Agent/CI optimised: skip act simulation + skip tests (tests ran in pass-1 QG).
+      # Quickmerge becomes a lightweight pass-2: lint, format, typecheck, codex only.
+      # Add --skip-typecheck to further lighten if typecheck also ran in pass-1.
+      QUICK=true
+      SKIP_TESTS="--skip-tests"
       shift
       ;;
     --no-pr)

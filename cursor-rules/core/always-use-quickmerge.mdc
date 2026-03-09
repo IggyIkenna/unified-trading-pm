@@ -38,9 +38,27 @@ main     → always stable; NEVER a direct target for breaking changes
 
 **SSOT:** `unified-trading-pm/docs/repo-management/version-cascade-flow.md`
 
+## Agent Sessions — MANDATORY
+
+RULE: Agents (Claude Code, CI agents, run-agent.sh) MUST pass `--agent` to quickmerge.
+
+Two-pass model:
+- **Pass 1** — full QG: `bash scripts/quality-gates.sh` or `run-all-quality-gates.sh` — tests, typecheck, lint, codex all run
+- **Pass 2** — quickmerge: lightweight verify only — lint + format + typecheck + codex; tests already passed in pass 1
+
+`--agent` = skip act + skip tests. Quickmerge becomes a fast format/lint gate before PR creation.
+
+```bash
+bash scripts/quickmerge.sh "feat: ..." --agent                          # skip act + tests
+bash scripts/quickmerge.sh "feat: ..." --agent --skip-typecheck         # also skip typecheck
+bash scripts/quickmerge.sh "feat: ..." --agent --skip-tests             # redundant (--agent already skips tests)
+```
+
+User can harden by omitting `--agent` (full QG re-runs including tests + act). Use `--quick` for human shortcut (skips act only, tests still run).
+
 ## Key Flags
 
-`--to-staging` (breaking change cascade) | `--no-pr` (QG only, auto on feat/*) | `--dep-branch "feat/X"` (feature cascade) | `--unit-only` | `--quick` (skip act) | `--skip-tests` | `--files "a.py b.py"`
+`--to-staging` (breaking change cascade) | `--no-pr` (QG only, auto on feat/*) | `--dep-branch "feat/X"` (feature cascade) | `--unit-only` | `--agent` (agent sessions — skip act) | `--quick` (human shortcut — skip act) | `--skip-tests` | `--files "a.py b.py"`
 
 Full flags: CODEX 06-coding-standards/quality-gates.md
 
