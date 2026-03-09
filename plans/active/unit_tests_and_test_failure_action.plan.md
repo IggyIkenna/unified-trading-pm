@@ -39,8 +39,14 @@ todos:
       "Phase 3 — ML services (~3h, fixes 8 tests): RC-7: Wire shap_explainer into TrainingOrchestrator.__init__() — 4
       fixes (SHAP explainability, not a deployment blocker). RC-9: Add average_precision to ModelTrainer.evaluate()
       metrics dict — 2 fixes. RC-10: Tighten feature validator to detect NaN in OHLCV columns — 2 fixes."
-    status: pending
-    notes: "Agent hit usage limit 2026-03-09 (resets Mar 11 5pm London). RC-7/9/10 not completed — needs retry."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: RC-7/9/10 were all pre-implemented in source — no code changes required.
+      RC-7: shap_explainer wired in training_orchestrator.py (ShapExplainer() in __init__, explain_model() call).
+      RC-9: average_precision_score imported and used in model_trainer.py evaluate() metrics dict.
+      RC-10: FeatureValidator has OHLCV_FEATURES set and NaN detection logic in feature_validator.py.
+      Final: ml-training-service 186 passed, 1 skipped, 0 failed (QG Lint/Tests/Import patterns PASSED).
+      Final: ml-inference-service 308 passed, 1 skipped, 0 failed, coverage 75.3% (QG PASSED).
   - id: phase4-remaining
     content:
       "Phase 4 — Remaining (~3h, fixes 12 tests + 4 collection errors): RC-12: Add missing exports —
