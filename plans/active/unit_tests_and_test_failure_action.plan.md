@@ -55,7 +55,23 @@ todos:
       ModelVariantConfig to unified-ml-interface (T2) or unified-internal-contracts (T0) as TypedDict/Protocol; never
       import between service repos. RC-13: Individual execution-service fixes (mock paths, API alignment, timer
       cancellation, import path updates post engine.py split)."
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: All RC-12 and RC-13 items were pre-resolved or confirmed non-failing.
+      RC-12: generate_strategy_id already exported from unified_trading_library (19/19 tests pass in
+             test_instruction_type_algorithm_selection + test_schema_validation). VENUE_CATEGORY_MAP already
+             exported from unified_config_interface. ModelVariantConfig already in unified_ml_interface (cross-service
+             import was fixed in a prior session). unified_order_interface only referenced in integration tests with
+             pytest.importorskip — no unit test failures.
+      RC-13: execution-service 1234 passed, 0 failed, 1 skipped (all previously fixed in phase2).
+      Additional fix in this session: ComplianceEventPayload.to_dict() was returning quantity/price as str()
+             instead of float() — fixed in unified-events-interface/schemas.py — resolved 4 compliance test
+             failures in execution-service (tests/unit/compliance/ and tests/unit/test_compliance_events.py).
+      Additional fix: test_config_instantiates_with_local_provider in features-onchain-service and
+             features-calendar-service used os.environ.setdefault which was bypassed when UTL's .env loaded
+             CLOUD_PROVIDER=gcp first — fixed with @patch.dict(os.environ, ...) decorator for proper isolation.
+      Final: execution-service 1234 passed; features-onchain 80 passed; features-calendar 192 passed,
+             1 skipped; ml-inference 308 passed; ml-training 186 passed — all 0 failures.
   - id: required-test-files
     content:
       "Verify required test files exist in all service repos: test_event_logging.py (tests 'from
