@@ -7,15 +7,20 @@ overview: |
   and strategy/execution wiring (blocked by USEI adapters).
 status: active
 created: 2026-03-02
-updated: 2026-03-09
+updated: 2026-03-09 (b1-scraper-adapters + usei-adapters completed)
 isProject: false
 todos:
   # ── From sports_migration_gap_fix (Part B) ──────────────────────────────
   - id: b1-scraper-adapters
-    content:
-      "B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image.
-      In progress — core adapter scaffolding exists, selectors need validation + fingerprinting logic."
-    status: in_progress
+    content: >-
+      B1 — Scraper adapters in USEI; validate CSS selectors; website version fingerprinting; Playwright in base image.
+      DONE 2026-03-09: Added _CSS_H2H/_CSS_OVER_UNDER constants + validate_css_selectors() at module-import to all 13
+      full scraper adapters (bet365, betway, coral, williamhill, ladbrokes, bwin, paddypower, skybet, unibet, betvictor,
+      betfred, bet888sport, boylesports). register_scraper_version() seeds ScraperVersionRegistry at import. get_odds()
+      delegates to wrap_get_odds_with_stale_tracking() + _get_odds_inner() for auto stale-flagging. sbobet stub:
+      register_scraper_version with css_selector_hash="stub". Added 39 new unit tests (3 per adapter). All 426 unit
+      tests pass; coverage 80.44%. Commits: 32c5513.
+    status: done
 
   - id: b5-b6-deployment
     content:
@@ -32,10 +37,16 @@ todos:
     status: done
 
   - id: usei-adapters
-    content:
-      "USEI — Betfair and Pinnacle adapters (unit tests with VCR mocks). BLOCKED: Betfair key not in SM; Pinnacle key
-      not obtained. See api_keys_and_auth.plan.md § phase-3-keys + phase-4-blockers."
-    status: pending
+    content: >-
+      USEI — Betfair and Pinnacle adapters (unit tests with VCR mocks). DONE 2026-03-09 (code + mock-tests): Betfair
+      adapter fully implemented (exchanges/betfair.py: get_odds, place_order, cancel_order, list_orders,
+      CanonicalSportsOrder). Pinnacle adapter fully implemented (bookmaker_api/pinnacle.py: get_odds, place_order,
+      cancel_bet, place_bet). 28 unit tests (betfair_adapter: 18, pinnacle_adapter: 10) using mock objects/aioresponses.
+      Added local cassettes betfair_list_market_catalogue.yaml + pinnacle_get_odds.yaml + 14 integration schema tests in
+      test_vcr_betting_exchange_schemas.py. All 465 tests pass. Commits: 57a5b4b. NOTE: Live VCR cassette recording
+      remains blocked pending API keys in SM (api_keys_and_auth.plan.md phase-3-keys + phase-4-blockers) — cassettes are
+      manually crafted mock data.
+    status: done
 
   - id: strategy-execution
     content:
