@@ -132,11 +132,11 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 
 ## Phase 2 — WebSocket/binary (cassette approach TBD)
 
-| Done | Venue   | Secret Name(s) in SM                               | Env Var              | Notes                                                                    |
-| ---- | ------- | -------------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
-| [ ]  | binance | binance-read-api-key + binance-read-api-key-secret | BINANCE_READ_API_KEY | Private WS (listen key). Need REST call first to get listenKey, then WS. |
-| [ ]  | deribit | deribit-read-api-key + deribit-read-api-key-secret | DERIBIT_READ_API_KEY | Private WS auth. Synthetic cassette approach TBD.                        |
-| [ ]  | ibkr    | ❌ key not in SM yet                               | IBKR_TWS_KEY         | TWS socket protocol — VCR not applicable. Need mock TWS gateway.         |
+| Done | Venue   | Secret Name(s) in SM                               | Env Var              | Notes                                                                                                                                                                                           |
+| ---- | ------- | -------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ ]  | binance | binance-read-api-key + binance-read-api-key-secret | BINANCE_READ_API_KEY | Private WS (listen key). Need REST call first to get listenKey, then WS.                                                                                                                        |
+| [ ]  | deribit | deribit-read-api-key + deribit-read-api-key-secret | DERIBIT_READ_API_KEY | Private WS auth. Synthetic cassette approach TBD.                                                                                                                                               |
+| [~]  | ibkr    | ❌ key not in SM yet                               | IBKR_TWS_KEY         | TWS socket protocol — VCR not applicable. RESOLVED: mock at ib_insync layer (MagicMock(spec=IB)); all 4 adapters implement inject-IB. Remaining: add ibkr-account-credentials to SM. [EXTERNAL] |
 
 ---
 
