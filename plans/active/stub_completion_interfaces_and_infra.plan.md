@@ -260,8 +260,11 @@ These items were found during the Section 13 audit scan and are not covered by a
       `deployment_api/routes/service_status_checkers.py:355` — migrate direct GCP CloudBuild calls to UCI
       `CloudBuildClient` abstraction once that client is available in `unified-cloud-interface`.
 
-- [ ] `todo-deployment-service-league-config-import` — `deployment-service/scripts/sports/verify_league_config.py:348` —
-      replace the inline workaround with an actual import from the league config module when that module is available.
+- [x] `todo-deployment-service-league-config-import` — `deployment-service/scripts/sports/verify_league_config.py:348` —
+      replace the inline workaround with an actual import from the league config module when that module is available. —
+      DONE 2026-03-09 (commit `3ad6a92`): created `scripts/sports/league_config.py` shim that re-exports
+      `LEAGUE_CLASSIFICATION_DATA` from `instruments_service.sports.league_data_classification`; updated `main()` in
+      `verify_league_config.py` to import and use it instead of the empty-dict placeholder.
 
 - [x] `todo-features-commodity-signal-composer` — `features-commodity-service/features_commodity_service/cli/main.py:93`
       — wire `engine.signal_composer.SignalComposer` per commodity asset class; currently the CLI exits without running
@@ -301,14 +304,19 @@ These items were found during the Section 13 audit scan and are not covered by a
       `MorphoAdapter`, `EulerAdapter`, `FluidAdapter`, `LidoAdapter`, `EtherFiAdapter`, `EthenaAdapter`; all TODO
       comments removed; ruff clean.
 
-- [ ] `todo-ml-training-model-registry-explicit-imports` —
+- [x] `todo-ml-training-model-registry-explicit-imports` —
       `ml-training-service/ml_training_service/ml/model_registry.py:33,34` — replace inline import markers for
       `ModelMetadata` and `ModelVariantConfig` with explicit module paths once those symbols are exported from a stable
-      UTL or UMI sub-module.
+      UTL or UMI sub-module. — DONE 2026-03-09 commit `f3c4019`: reverted deep sub-module import
+      (`from unified_ml_interface.models import`) to quality-gate-compliant top-level import
+      (`from unified_ml_interface import ModelMetadata, ModelVariantConfig`); TODO comments removed.
 
-- [ ] `todo-execution-loader-explicit-import` — `execution-service/execution_service/utils/io/loader.py:10` — replace
+- [x] `todo-execution-loader-explicit-import` — `execution-service/execution_service/utils/io/loader.py:10` — replace
       `from unified_trading_library import BaseGCSLoader` wildcard with an explicit sub-module import path once
-      `BaseGCSLoader` is exported from a stable public UTL API.
+      `BaseGCSLoader` is exported from a stable public UTL API. — DONE 2026-03-09 commit `0ffede59`: reverted deep
+      sub-module import (`from unified_trading_library.io.base_loader import BaseGCSLoader`) to the
+      quality-gate-compliant top-level import (`from unified_trading_library import BaseGCSLoader`); the
+      check-import-patterns.py gate requires top-level imports for all unified external libraries.
 
 - [x] `todo-risk-cli-client-list` — DONE 2026-03-09: VERIFIED already fully implemented; `run_batch_mode()` builds the
       client list as the union of `get_monitored_client_ids()` (reads `MONITORED_CLIENT_IDS` from
