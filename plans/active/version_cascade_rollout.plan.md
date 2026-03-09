@@ -38,17 +38,28 @@ todos:
   - id: vc-pre-existing-blockers
     content: |
       Pre-existing issues discovered during rollout that block quickmerge in those repos (unrelated to cascade rollout):
-      SKIP — needs code fix first:
-        - unified-defi-execution-interface: import smoke test fails (uv pip install -e . needed)
-        - unified-feature-calculator-library: 43% test coverage (needs tests for base.py, time_series.py, onchain.py, validations.py)
-      UI repos with pre-commit YAML parse errors (.pre-commit-config.yaml line 12/13):
-        - batch-audit-ui, onboarding-ui, settlement-ui, execution-analytics-ui
-      UI repos with broken TypeScript/test setup:
-        - live-health-monitor-ui (missing src modules), client-reporting-ui (missing recharts)
-        - trading-analytics-ui (no test files), logs-dashboard-ui (OAuth in tests), ml-training-ui (playwright conflict)
-        - strategy-ui (npm script name mismatch: typecheck vs type-check)
-      Workflow files ARE written to disk in all these repos. Will commit once underlying issues fixed.
-    status: todo
+
+      FIXED (2026-03-09):
+        - unified-defi-execution-interface: basedpyright 78 errors resolved by adding ../unified-api-contracts to
+          pyrightconfig.json extraPaths → 0 errors. Committed 3943161.
+        - onboarding-ui: .pre-commit-config.yaml eslint hook now excludes .eslintrc.cjs (was causing
+          "File ignored by default" warning → hook failure). Committed 598c31e.
+        - settlement-ui: cloudbuild.yaml YAML parse error (python3 -c inline script at col 0 broke block scalar) —
+          already fixed in prior admin force-sync a4d2429.
+        - batch-audit-ui: pre-commit passes cleanly (trailing-whitespace/EOF auto-fixed in prior sync).
+        - execution-analytics-ui: pre-commit passes cleanly (EOF auto-fixed in prior sync).
+        - strategy-ui: no actual mismatch — package.json has BOTH typecheck and type-check scripts;
+          pre-commit config does not reference either. Pre-commit passes cleanly.
+
+      STILL BLOCKED — needs further work:
+        - unified-feature-calculator-library: 43% test coverage (needs tests for base.py, time_series.py, onchain.py,
+          validations.py)
+        - live-health-monitor-ui: missing src modules
+        - client-reporting-ui: missing recharts dependency
+        - trading-analytics-ui: no test files
+        - logs-dashboard-ui: OAuth in tests
+        - ml-training-ui: playwright conflict
+    status: in_progress
 
   - id: vc-verify
     content:
