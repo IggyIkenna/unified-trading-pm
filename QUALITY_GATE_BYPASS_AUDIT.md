@@ -198,11 +198,11 @@ replaces `importlib.util.find_spec`. No bypass needed.
 
 **Audit:** dependency_governance.plan.md (2026-03-05)
 
-| Repo                                       | Issue                                                        | Resolution                                                                    |
-| ------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| unified-trading-library                    | uv lock fails: `unified-cloud-services[aws]` not in registry | Dep references external package; add to workspace-constraints or use path dep |
-| features-cross-instrument-service          | uv lock fails: `unified-cloud-interface` path dep            | Run `uv lock` from workspace root with path deps installed                    |
-| system-integration-tests                   | `.venv` invalid (no Python executable)                       | Remove `.venv` and run `uv sync` from workspace                               |
+| Repo                                      | Issue                                                        | Resolution                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| unified-trading-library                   | uv lock fails: `unified-cloud-services[aws]` not in registry | Dep references external package; add to workspace-constraints or use path dep |
+| features-cross-instrument-service         | uv lock fails: `unified-cloud-interface` path dep            | Run `uv lock` from workspace root with path deps installed                    |
+| system-integration-tests                  | `.venv` invalid (no Python executable)                       | Remove `.venv` and run `uv sync` from workspace                               |
 | 20 internal manifest↔pyproject mismatches | fix-internal-dependency-alignment.py needs tomli_w           | `uv pip install tomli-w` then run fix script                                  |
 
 **Rationale:** Path deps and workspace-local packages require workspace context for resolution. Documented for S4 audit
