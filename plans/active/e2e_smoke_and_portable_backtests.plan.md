@@ -23,8 +23,10 @@ todos:
       RESOLVED 2026-03-09: CeFi/TradFi/DeFi scripts created in strategy-service/scripts/;
       fixtures in tests/fixtures/{cefi,tradfi,defi}_market_data/; run_portable_backtests.sh
       orchestrates all 4 in parallel; all exit 0. CeFi: 11 trades, pnl=36.5, win_rate=0.64.
-      DeFi: 20 trades, pnl=39.2, win_rate=1.0. TradFi: fixture-based (no signals in sample).
-      commit 47c7ed0.
+      DeFi: 20 trades, pnl=39.2, win_rate=1.0. TradFi updated 2026-03-09: switched to
+      z-score calendar spread arb (window=5, entry|z|>0.8, exit|z|<0.25); added nq_back
+      contract + spread variability to fixture — ES: 1 trade, NQ: 1 trade, pnl=218.75,
+      win_rate=1.0. docs/BACKTESTS.md added. Commits 47c7ed0 + 0c92753.
   - id: portable-backtests-sports
     content:
       "Sports portable arb backtest — VCR cassettes for odds/line feeds. SCRIPT:
