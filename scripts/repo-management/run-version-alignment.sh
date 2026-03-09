@@ -20,12 +20,15 @@
 set -euo pipefail
 
 APPLY_FIXES=false
+STRICT=false
 for arg in "$@"; do
   case $arg in
     --fix) APPLY_FIXES=true ;;
+    --strict) STRICT=true ;;
     --help | -h)
-      echo "Usage: bash run-version-alignment.sh [--fix]"
-      echo "  --fix  Apply fixes (internal + external alignment)"
+      echo "Usage: bash run-version-alignment.sh [--fix] [--strict]"
+      echo "  --fix     Apply fixes (internal + external alignment)"
+      echo "  --strict  Treat broken symlinks as a fatal error (default: warn)"
       exit 0
       ;;
   esac
@@ -56,6 +59,41 @@ else
 fi
 
 echo "━━━ Version alignment ━━━"
+echo ""
+
+# 0. Audit tracked-but-gitignored files (informational; never blocks)
+echo "[0/4] Auditing tracked files matched by .gitignore..."
+bash "$PM_ROOT/scripts/audit_tracked_ignored.sh" 2>/dev/null || true
+echo ""
+
+# 0.5. Broken symlink check across all repos in workspace
+echo "[0.5/4] Checking for broken symlinks across all workspace repos..."
+BROKEN_SYMLINKS=()
+while IFS= read -r -d '' link; do
+  target=$(readlink "$link")
+  if [ ! -e "$link" ]; then
+    BROKEN_SYMLINKS+=("  $link -> $target")
+  fi
+done < <(find "$WORKSPACE_ROOT" \
+  -not \( -path "*/.venv*" -prune \) \
+  -not \( -path "*/.git*" -prune \) \
+  -not \( -path "*/node_modules*" -prune \) \
+  -not \( -path "*/build*" -prune \) \
+  -type l -print0 2>/dev/null)
+
+if [ "${#BROKEN_SYMLINKS[@]}" -gt 0 ]; then
+  echo ""
+  echo "  [WARN] Broken symlinks found (${#BROKEN_SYMLINKS[@]}):"
+  for s in "${BROKEN_SYMLINKS[@]}"; do echo "$s"; done
+  echo ""
+  echo "  To fix: rm <path> and re-target with: ln -sf <new-target> <path>"
+  echo "  Pass --strict to treat broken symlinks as a fatal error."
+  if [ "${STRICT:-false}" = true ]; then
+    exit 1
+  fi
+else
+  echo "  [OK] No broken symlinks"
+fi
 echo ""
 
 # 1 & 2. Generate derived + canonical manifests (parallel)
