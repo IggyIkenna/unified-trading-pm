@@ -150,9 +150,9 @@ if [ "$CHECK_ONLY" = true ]; then
 else
     uv pip install --python "$VENV_PYTHON" \
         "ruff==0.15.0" \
-        "basedpyright>=1.18.0,<2.0.0" \
+        "basedpyright==1.38.2" \
         "pytest>=8.0.0" \
-        --quiet 2>/dev/null && log_ok "Tools installed" || log_warn "Tool install had issues (non-fatal)"
+        --quiet 2>/dev/null && log_ok "Tools installed (ruff==0.15.0, basedpyright==1.38.2)" || log_warn "Tool install had issues (non-fatal)"
 fi
 
 # ── [6] INSTALL WORKSPACE REPOS AS EDITABLE ─────────────────────────────────

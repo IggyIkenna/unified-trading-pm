@@ -1,40 +1,49 @@
 #!/usr/bin/env bash
 # WORKSPACE BOOTSTRAP — unified-trading-system
 #
-# Bootstraps a COMPLETE workspace from scratch on a fresh VM or new machine.
-# Clones all repos, installs system deps, creates workspace venv, and runs
-# setup.sh in dependency order (T0 → T1 → T2 → T3 → services → UIs).
+# Bootstraps a COMPLETE workspace from scratch on a fresh machine.
+# Self-contained — requires only git + bash. Downloads unified-trading-pm
+# first if not already present, then reads workspace-manifest.json for
+# everything else.
 #
 # SSOT: docs/repo-management/CI-CD-FLOW.md (this script wraps it)
 # Codex: unified-trading-codex/06-coding-standards/setup-standards.md
 #
-# Prerequisites:
+# Prerequisites (only these, nothing else):
 #   - git (with SSH key configured for github.com)
 #   - bash 4+ or zsh
 #   - macOS (Homebrew) or Linux (apt/yum)
 #
-# Usage:
-#   # Clone this repo first, then run bootstrap:
-#   git clone git@github.com:IggyIkenna/unified-trading-pm.git
+# Usage (run this from your chosen workspace directory):
+#   mkdir -p ~/repos/unified-trading-system-repos
+#   cd ~/repos/unified-trading-system-repos
+#   bash <(curl -fsSL https://raw.githubusercontent.com/IggyIkenna/unified-trading-pm/main/scripts/workspace/workspace-bootstrap.sh)
+#
+#   # Or if you already have PM cloned:
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
 #
-#   # Or with a custom workspace root:
+#   # Custom workspace root:
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh /path/to/workspace
 #
-#   # Check mode (verify existing workspace):
+#   # Check mode (verify without changes):
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --check
+#
+#   # Preserve existing repos (skip delete + re-clone):
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-fresh
 #
 #   # Skip system deps (if already installed):
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-system
 #
 # What this script does:
-#   Phase 1 — System dependencies (Python 3.13, uv, ripgrep, jq, basedpyright)
-#   Phase 2 — Clone all repos from workspace-manifest.json (skip existing)
-#   Phase 3 — Create workspace venv (.venv-workspace)
-#   Phase 4 — Invoke run-all-setup.sh (CI/CD Phase 2) — no reimplementation
-#   Phase 5 — Verify all repos pass import smoke test
-#
-# Idempotent. Safe to re-run. Skips repos already cloned and deps already installed.
+#   Phase 0 — Clone unified-trading-pm if not already present (self-seeding)
+#   Phase 1 — System dependencies (Python 3.13, uv, ripgrep, jq)
+#   Phase 2 — Fresh clone all repos from workspace-manifest.json
+#             (deletes existing dirs and re-clones for a clean state;
+#              use --skip-fresh to preserve existing repos instead)
+#   Phase 3 — Version alignment (run-version-alignment.sh --fix)
+#   Phase 4 — Create workspace venv (.venv-workspace) via setup-workspace-venv.sh
+#   Phase 5 — Invoke run-all-setup.sh (CI/CD Phase 2)
+#   Phase 6 — Import smoke test across all Python repos
 
 set -e
 
@@ -55,18 +64,24 @@ log_phase() { echo -e "\n${BOLD}${CYAN}━━━ Phase $1: $2 ━━━${NC}"; }
 # ── PARSE ARGUMENTS ─────────────────────────────────────────────────────────
 CHECK_ONLY=false
 SKIP_SYSTEM=false
+SKIP_FRESH=false
+USE_HTTPS=false
 WORKSPACE_ROOT=""
 
 for arg in "$@"; do
   case $arg in
     --check) CHECK_ONLY=true ;;
     --skip-system) SKIP_SYSTEM=true ;;
+    --skip-fresh) SKIP_FRESH=true ;;
+    --https) USE_HTTPS=true ;;
     --help | -h)
-      echo "Usage: bash workspace-bootstrap.sh [WORKSPACE_ROOT] [--check|--skip-system|--help]"
+      echo "Usage: bash workspace-bootstrap.sh [WORKSPACE_ROOT] [flags]"
       echo ""
-      echo "  WORKSPACE_ROOT   Path to workspace (default: parent of this script's repo)"
+      echo "  WORKSPACE_ROOT   Path to workspace (default: current directory)"
       echo "  --check          Verify existing workspace without changes"
       echo "  --skip-system    Skip system dependency installation"
+      echo "  --skip-fresh     Preserve existing repo dirs (skip delete + re-clone)"
+      echo "  --https          Clone via HTTPS instead of SSH (use with gh auth login or a PAT)"
       echo "  --help           Show this message"
       exit 0
       ;;
@@ -80,20 +95,85 @@ done
 
 # ── RESOLVE PATHS ───────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+GITHUB_ORG="IggyIkenna"
 
+# Build clone URL based on protocol flag
+clone_url() { # clone_url <repo>
+  if [ "$USE_HTTPS" = true ]; then
+    echo "https://github.com/${GITHUB_ORG}/${1}.git"
+  else
+    echo "git@github.com:${GITHUB_ORG}/${1}.git"
+  fi
+}
+
+# Support running from workspace root (not from inside PM).
+# Detect whether we are running from inside an already-cloned PM or from workspace root.
 if [ -z "$WORKSPACE_ROOT" ]; then
-  WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
+  # If this script is inside unified-trading-pm/scripts/workspace/, workspace root is two levels up
+  if echo "$SCRIPT_DIR" | grep -q "unified-trading-pm/scripts/workspace"; then
+    WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+  else
+    # Running via curl pipe or from workspace root directly
+    WORKSPACE_ROOT="$(pwd)"
+  fi
 fi
 
+PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
 MANIFEST="$PM_ROOT/workspace-manifest.json"
-GITHUB_ORG="IggyIkenna"
 
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BOLD}  Workspace Bootstrap — unified-trading-system${NC}"
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "  Workspace: $WORKSPACE_ROOT"
-echo -e "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || echo 'BOOTSTRAP')"
+echo -e "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || ([ "$SKIP_FRESH" = true ] && echo 'BOOTSTRAP (preserve existing)' || echo 'BOOTSTRAP (fresh clone)'))"
+
+# ── PHASE 0: SELF-SEED — clone unified-trading-pm if not present ─────────────
+# This is the only step that doesn't require PM to already be cloned.
+# All subsequent phases read workspace-manifest.json from PM.
+log_phase 0 "Seed — unified-trading-pm"
+
+cd "$WORKSPACE_ROOT"
+if [ -d "$PM_ROOT/.git" ]; then
+  if [ "$CHECK_ONLY" = true ]; then
+    log_ok "unified-trading-pm present"
+  else
+    # Pull latest manifest so Phase 2 uses current repo list
+    echo -e "  Pulling latest unified-trading-pm..."
+    git -C "$PM_ROOT" fetch origin --quiet 2>/dev/null || true
+    git -C "$PM_ROOT" reset --hard origin/main --quiet 2>/dev/null \
+      && log_ok "unified-trading-pm updated to origin/main" \
+      || log_warn "Could not pull unified-trading-pm — using local state"
+  fi
+elif [ "$CHECK_ONLY" = true ]; then
+  log_fail "unified-trading-pm missing from $WORKSPACE_ROOT"
+  exit 1
+else
+  echo -e "  Cloning unified-trading-pm ($([ "$USE_HTTPS" = true ] && echo 'HTTPS' || echo 'SSH'))..."
+  if git clone "$(clone_url unified-trading-pm)" "$PM_ROOT" 2>/dev/null; then
+    log_ok "unified-trading-pm cloned"
+  else
+    if [ "$USE_HTTPS" = true ]; then
+      log_fail "Failed to clone unified-trading-pm — run: gh auth login  (or set a PAT in git credentials)"
+    else
+      log_fail "Failed to clone unified-trading-pm — check SSH key: ssh -T git@github.com"
+    fi
+    exit 1
+  fi
+fi
+
+if [ ! -f "$MANIFEST" ]; then
+  log_fail "workspace-manifest.json not found at $MANIFEST"
+  exit 1
+fi
+log_ok "manifest: $MANIFEST"
+
+# Create a convenience symlink at workspace root so future runs are just: bash bootstrap.sh
+# The symlink is relative (portable across machines) and outside any git repo.
+BOOTSTRAP_SYMLINK="$WORKSPACE_ROOT/bootstrap.sh"
+if [ "$CHECK_ONLY" != true ] && [ ! -L "$BOOTSTRAP_SYMLINK" ]; then
+  ln -sf unified-trading-pm/scripts/workspace/workspace-bootstrap.sh "$BOOTSTRAP_SYMLINK"
+  log_ok "bootstrap.sh symlink created (future runs: bash bootstrap.sh)"
+fi
 
 # ── PHASE 1: SYSTEM DEPENDENCIES ───────────────────────────────────────────
 log_phase 1 "System Dependencies"
@@ -187,16 +267,13 @@ if [ "$SYSTEM_ISSUES" -gt 0 ]; then
   log_warn "$SYSTEM_ISSUES system dependency issue(s) — some steps may fail"
 fi
 
-# ── PHASE 2: CLONE REPOS ──────────────────────────────────────────────────
-log_phase 2 "Clone Repositories"
+# ── PHASE 2: CLONE REPOS (fresh by default) ───────────────────────────────
+# Default: delete existing repo dirs and re-clone for a guaranteed clean state.
+# Use --skip-fresh to preserve existing dirs (faster, for incremental runs).
+# unified-trading-pm itself is never deleted here — it was handled in Phase 0.
+log_phase 2 "Clone Repositories ($([ "$SKIP_FRESH" = true ] && echo 'preserve existing' || echo 'fresh — delete + re-clone'))"
 
-if [ ! -f "$MANIFEST" ]; then
-  log_fail "Manifest not found: $MANIFEST"
-  echo "  Clone unified-trading-pm first: git clone git@github.com:${GITHUB_ORG}/unified-trading-pm.git"
-  exit 1
-fi
-
-# Extract repo names from manifest using Python (jq may not be installed yet)
+# Extract repo names from manifest using Python (jq may not be available yet)
 if command -v jq &>/dev/null; then
   REPOS=$(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null)
 elif [ -n "$PYTHON_CMD" ]; then
@@ -218,14 +295,29 @@ CLONE_FAIL=0
 
 cd "$WORKSPACE_ROOT"
 for repo in $REPOS; do
-  if [ -d "$repo" ]; then
-    log_skip "$repo (exists)"
+  # Never delete unified-trading-pm — already seeded in Phase 0
+  if [ "$repo" = "unified-trading-pm" ]; then
+    log_skip "$repo (seeded in Phase 0)"
     CLONE_SKIP=$((CLONE_SKIP + 1))
-  elif [ "$CHECK_ONLY" = true ]; then
-    log_fail "$repo (missing)"
-    CLONE_FAIL=$((CLONE_FAIL + 1))
+    continue
+  fi
+
+  if [ "$CHECK_ONLY" = true ]; then
+    [ -d "$repo/.git" ] && log_ok "$repo" || { log_fail "$repo (missing)"; CLONE_FAIL=$((CLONE_FAIL + 1)); }
+    continue
+  fi
+
+  # Fresh mode (default): delete and re-clone
+  if [ "$SKIP_FRESH" = false ] && [ -d "$repo" ]; then
+    echo -e "  ${YELLOW}[FRESH]${NC} $repo — removing and re-cloning..."
+    rm -rf "$repo"
+  fi
+
+  if [ -d "$repo/.git" ]; then
+    log_skip "$repo (exists, --skip-fresh)"
+    CLONE_SKIP=$((CLONE_SKIP + 1))
   else
-    if git clone "git@github.com:${GITHUB_ORG}/${repo}.git" "$repo" 2>/dev/null; then
+    if git clone "$(clone_url "$repo")" "$repo" --quiet 2>/dev/null; then
       log_ok "$repo"
       CLONE_OK=$((CLONE_OK + 1))
     else
@@ -235,54 +327,66 @@ for repo in $REPOS; do
   fi
 done
 
-echo -e "\n  Cloned: $CLONE_OK | Existing: $CLONE_SKIP | Failed: $CLONE_FAIL"
+echo -e "\n  Cloned: $CLONE_OK | Preserved: $CLONE_SKIP | Failed: $CLONE_FAIL"
 
-# ── PHASE 3: WORKSPACE VENV ───────────────────────────────────────────────
-log_phase 3 "Workspace Virtual Environment"
+# Parse topological order from manifest for smoke test (Phase 6)
+ORDERED_REPOS=""
+if command -v python3 &>/dev/null; then
+  ORDERED_REPOS=$(python3 -c "
+import json
+with open('$MANIFEST') as f:
+    data = json.load(f)
+levels = data.get('topologicalOrder', {}).get('levels', [])
+for level in sorted(levels, key=lambda l: l.get('level', 999)):
+    for repo in level.get('repos', []):
+        print(repo)
+" 2>/dev/null || echo "")
+fi
+[ -z "$ORDERED_REPOS" ] && ORDERED_REPOS="$REPOS"
 
-WORKSPACE_VENV="$WORKSPACE_ROOT/.venv-workspace"
+# ── PHASE 3: VERSION ALIGNMENT ────────────────────────────────────────────
+log_phase 3 "Version Alignment"
 
 if [ "$CHECK_ONLY" = true ]; then
-  if [ -d "$WORKSPACE_VENV" ]; then
-    log_ok ".venv-workspace exists"
+  if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-version-alignment.sh" 2>&1 | tail -20); then
+    log_ok "Version alignment: all deps in sync"
   else
-    log_fail ".venv-workspace missing"
+    log_warn "Version alignment found issues (run: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix)"
   fi
-elif [ -d "$WORKSPACE_VENV" ]; then
-  log_skip ".venv-workspace exists"
 else
-  if [ -n "$PYTHON_CMD" ] && command -v uv &>/dev/null; then
-    uv venv "$WORKSPACE_VENV" --python "$PYTHON_CMD" 2>/dev/null
-    log_ok "Created .venv-workspace"
-  elif [ -n "$PYTHON_CMD" ]; then
-    "$PYTHON_CMD" -m venv "$WORKSPACE_VENV"
-    log_ok "Created .venv-workspace (stdlib venv)"
+  echo -e "  Running version alignment --fix across all repos..."
+  if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-version-alignment.sh" --fix 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]|━|Fixing|up to date' | tail -30); then
+    log_ok "Version alignment complete"
   else
-    log_fail "Cannot create venv — Python $REQUIRED_PYTHON not found"
+    log_warn "Version alignment had issues (non-fatal — continuing)"
   fi
 fi
 
-# Install workspace-level tools and aggregate all repo dependencies
-if [ -d "$WORKSPACE_VENV" ] && [ "$CHECK_ONLY" != true ]; then
-  source "$WORKSPACE_VENV/bin/activate" 2>/dev/null || source "$WORKSPACE_VENV/Scripts/activate" 2>/dev/null || true
-  if command -v uv &>/dev/null; then
-    uv pip install ruff basedpyright --quiet 2>/dev/null && log_ok "Workspace tools (ruff, basedpyright)" || log_warn "Tool install failed"
-  fi
-  # Aggregate and install all repo dependencies into workspace venv
-  AGGREGATE_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py"
-  if [ -f "$AGGREGATE_SCRIPT" ] && [ -n "$PYTHON_CMD" ]; then
-    echo -e "\n  ${BLUE}Aggregating workspace dependencies...${NC}"
-    if "$PYTHON_CMD" "$AGGREGATE_SCRIPT" --resolve 2>&1 | tail -10; then
-      log_ok "Workspace deps aggregated (all repos)"
-    else
-      log_warn "Dependency aggregation had issues (non-fatal)"
-    fi
+# ── PHASE 4: WORKSPACE VENV ───────────────────────────────────────────────
+# Delegates entirely to setup-workspace-venv.sh — single source of truth for
+# workspace venv creation, pinned tool install (ruff==0.15.0, basedpyright==1.38.2),
+# and editable installs from workspace-manifest.json in topological order.
+# sync-workspace-venv.sh is a thin wrapper around the same script for day-to-day refresh.
+log_phase 4 "Workspace Virtual Environment"
+
+WORKSPACE_VENV="$WORKSPACE_ROOT/.venv-workspace"
+SETUP_VENV_SCRIPT="$PM_ROOT/scripts/setup-workspace-venv.sh"
+
+if [ ! -f "$SETUP_VENV_SCRIPT" ]; then
+  log_fail "setup-workspace-venv.sh not found at $SETUP_VENV_SCRIPT"
+else
+  if [ "$CHECK_ONLY" = true ]; then
+    bash "$SETUP_VENV_SCRIPT" --check 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]' || true
+  else
+    bash "$SETUP_VENV_SCRIPT" 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]|━' || true
+    [ -d "$WORKSPACE_VENV" ] && log_ok ".venv-workspace ready" || log_warn ".venv-workspace setup had issues (check above)"
   fi
 fi
 
-# ── PHASE 4: REPO SETUP (CI/CD Phase 2) ─────────────────────────────────────
+# ── PHASE 5: REPO SETUP (CI/CD Phase 2) ─────────────────────────────────────
 # Wraps docs/repo-management/CI-CD-FLOW.md — invokes run-all-setup.sh
-log_phase 4 "Per-Repo Setup (CI/CD Phase 2)"
+SETUP_FAIL=0
+log_phase 5 "Per-Repo Setup (CI/CD Phase 2)"
 
 if [ "$CHECK_ONLY" = true ]; then
   if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --check 2>&1 | tail -20); then
@@ -296,12 +400,13 @@ else
   if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --rollout-first 2>&1 | tail -30); then
     log_ok "Setup complete (all repos)"
   else
+    SETUP_FAIL=1
     log_warn "Setup had issues (non-fatal — continuing)"
   fi
 fi
 
-# ── PHASE 5: IMPORT SMOKE TEST (all repos) ────────────────────────────────
-log_phase 5 "Import Smoke Test (all Python repos)"
+# ── PHASE 6: IMPORT SMOKE TEST (all repos) ────────────────────────────────
+log_phase 6 "Import Smoke Test (all Python repos)"
 
 SMOKE_OK=0
 SMOKE_FAIL=0

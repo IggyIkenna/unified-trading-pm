@@ -111,4 +111,18 @@ if ! "$PYTHON" scripts/manifest/validate-dependency-conflicts.py 2>/dev/null; th
 fi
 
 echo ""
-echo "  Alignment OK. Next: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh"
+echo "  Alignment OK."
+
+# After --fix: refresh workspace venv so editable installs reflect updated dep versions.
+# Per-repo .venv rebuilds happen in run-all-setup.sh (next step).
+if [ "$APPLY_FIXES" = true ]; then
+  SYNC_SCRIPT="$PM_ROOT/scripts/workspace/sync-workspace-venv.sh"
+  if [ -f "$SYNC_SCRIPT" ]; then
+    echo ""
+    echo "  Refreshing .venv-workspace (dep versions changed by --fix)..."
+    bash "$SYNC_SCRIPT" 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]|━' || true
+    echo ""
+  fi
+fi
+
+echo "  Next: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh"

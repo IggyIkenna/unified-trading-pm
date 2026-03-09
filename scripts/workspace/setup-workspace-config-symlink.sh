@@ -22,17 +22,17 @@ if [ -L "$SYMLINK_PATH" ]; then
     echo "[SKIP] Already configured: .cursor/workspace-configs -> cursor-configs"
   else
     rm "$SYMLINK_PATH"
-    ln -s "$TARGET_DIR" "$SYMLINK_PATH"
+    ln -s "../unified-trading-pm/cursor-configs" "$SYMLINK_PATH"
     echo "[OK] Recreated symlink: .cursor/workspace-configs -> cursor-configs"
   fi
 elif [ -d "$SYMLINK_PATH" ]; then
   echo "[REPLACE] Removing .cursor/workspace-configs (canonical lives in cursor-configs)"
   rm -rf "$SYMLINK_PATH"
-  ln -s "$TARGET_DIR" "$SYMLINK_PATH"
+  ln -s "../unified-trading-pm/cursor-configs" "$SYMLINK_PATH"
   echo "[OK] Replaced with symlink: .cursor/workspace-configs -> cursor-configs"
 else
   mkdir -p "$(dirname "$SYMLINK_PATH")"
-  ln -s "$TARGET_DIR" "$SYMLINK_PATH"
+  ln -s "../unified-trading-pm/cursor-configs" "$SYMLINK_PATH"
   echo "[OK] Created symlink: .cursor/workspace-configs -> cursor-configs"
 fi
 
