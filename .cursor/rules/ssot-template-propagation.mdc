@@ -1,6 +1,5 @@
 ---
 description: "SSOT template changes must be propagated to all repos — never edit downstream copies"
-alwaysApply: true
 priority: 90
 globs:
   - "scripts/setup.sh"

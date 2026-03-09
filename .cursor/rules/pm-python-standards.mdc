@@ -1,6 +1,5 @@
 ---
 description: "Python scripts in PM must pass basedpyright + ruff — same standards as service repos"
-alwaysApply: true
 priority: 75
 globs:
   - "scripts/**/*.py"
