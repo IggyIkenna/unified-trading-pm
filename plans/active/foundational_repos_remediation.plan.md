@@ -545,8 +545,12 @@ todos:
 
       COMMIT (codex): bash scripts/quickmerge.sh "fix: pyrightconfig strict, SSOT-INDEX sync, event name update"
       COMMIT (pm): bash scripts/quickmerge.sh "fix: codex-maintenance.mdc alwaysApply conflict, priority fields"
-    status: pending
-    activeForm: "Fixing workspace governance: pyrightconfig strict, SSOT-INDEX, codex-maintenance.mdc"
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: codex pyrightconfig already strict+reportAny:error (0 errors). SSOT-INDEX
+      already has FOUNDATIONAL-REPOS-AUDIT registered. codex-maintenance.mdc had no alwaysApply conflict.
+      Added priority:50 to 6 cursor rules missing frontmatter (commit f82d037 in unified-trading-pm).
+      execution_service/ orphan not confirmed — left in place pending investigation.
 
   # ─── AGENT 14 — Cloud Isolation Hard Gates + Security ────────────────────────
   - id: agent-14-cloud-isolation
