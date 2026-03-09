@@ -127,6 +127,142 @@ echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━
 echo -e "  Workspace: $WORKSPACE_ROOT"
 echo -e "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || ([ "$SKIP_FRESH" = true ] && echo 'BOOTSTRAP (preserve existing)' || echo 'BOOTSTRAP (fresh clone)'))"
 
+# ── PRE-FLIGHT: AUTH + ACCESS CHECKS ─────────────────────────────────────────
+# Verify all required credentials are in place BEFORE doing any work.
+# These checks are informational — auth issues are reported but not fatal so the
+# developer can resolve them in one shot from the summary at the end.
+# Required:
+#   1. GitHub access — SSH key or HTTPS (gh auth login) with access to IggyIkenna org
+#   2. GCP auth     — gcloud ADC configured for datadodo@gmail.com (project: odum-research)
+#   3. act secrets  — ~/.act-secrets present for local GitHub Actions runs
+GITHUB_ORG_CHECK="IggyIkenna"
+REQUIRED_GCP_ACCOUNT="datadodo@gmail.com"
+REQUIRED_GCP_PROJECT="odum-research"
+REQUIRED_ACT_SECRETS="$HOME/.act-secrets"
+AUTH_ISSUES=0
+
+log_phase "PRE" "Auth & Access Checks"
+
+# 1. GitHub access
+echo -e "  Checking GitHub access to ${GITHUB_ORG_CHECK}..."
+GH_AUTH_OK=false
+if [ "$USE_HTTPS" = true ]; then
+  if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+    GH_USER=$(gh api user --jq '.login' 2>/dev/null || echo "unknown")
+    # Check org membership
+    if gh api "orgs/${GITHUB_ORG_CHECK}/members/${GH_USER}" &>/dev/null 2>&1; then
+      log_ok "GitHub HTTPS: authenticated as $GH_USER, member of ${GITHUB_ORG_CHECK}"
+      GH_AUTH_OK=true
+    else
+      log_warn "GitHub HTTPS: authenticated as $GH_USER but NOT a member of ${GITHUB_ORG_CHECK}"
+      echo -e "  ${YELLOW}Fix:${NC}"
+      echo -e "    1. Ask an admin to add $GH_USER to the IggyIkenna org"
+      echo -e "    2. Or request the same repo access that CosmicTrader has"
+      AUTH_ISSUES=$((AUTH_ISSUES + 1))
+    fi
+  else
+    log_fail "GitHub HTTPS: not authenticated (gh auth status failed)"
+    echo -e "  ${RED}Fix:${NC}"
+    echo -e "    gh auth login    (follow prompts, select HTTPS)"
+    echo -e "    Then re-run bootstrap"
+    AUTH_ISSUES=$((AUTH_ISSUES + 1))
+  fi
+else
+  # SSH mode: test connection to github.com
+  SSH_OUTPUT=$(ssh -T git@github.com 2>&1 || true)
+  if echo "$SSH_OUTPUT" | grep -q "successfully authenticated"; then
+    GH_SSH_USER=$(echo "$SSH_OUTPUT" | grep -oE 'Hi [^!]+' | sed 's/Hi //')
+    # Check org access by attempting to list repos (requires gh CLI or API)
+    if command -v gh &>/dev/null; then
+      GH_ACCESS=$(gh api "orgs/${GITHUB_ORG_CHECK}/repos" --jq '.[0].name' 2>/dev/null || echo "")
+      if [ -n "$GH_ACCESS" ]; then
+        log_ok "GitHub SSH: authenticated as $GH_SSH_USER, org access confirmed"
+        GH_AUTH_OK=true
+      else
+        log_warn "GitHub SSH: key works but could not confirm ${GITHUB_ORG_CHECK} org access"
+        echo -e "  ${YELLOW}Fix:${NC} Ask admin to verify $GH_SSH_USER has same repo access as CosmicTrader"
+        AUTH_ISSUES=$((AUTH_ISSUES + 1))
+      fi
+    else
+      log_ok "GitHub SSH: key authenticated as $GH_SSH_USER (install gh CLI to verify org access)"
+      GH_AUTH_OK=true
+    fi
+  else
+    log_fail "GitHub SSH: authentication failed"
+    echo -e "  ${RED}Fix:${NC}"
+    echo -e "    ssh-keygen -t ed25519 -C \"your@email.com\"   # generate key"
+    echo -e "    cat ~/.ssh/id_ed25519.pub                     # copy to GitHub Settings > SSH keys"
+    echo -e "    ssh -T git@github.com                         # verify"
+    echo -e "    Or use --https flag with: gh auth login"
+    AUTH_ISSUES=$((AUTH_ISSUES + 1))
+  fi
+fi
+
+# 2. GCP auth (gcloud ADC)
+echo -e "  Checking GCP auth (required: ${REQUIRED_GCP_ACCOUNT})..."
+if command -v gcloud &>/dev/null; then
+  GCP_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | head -1 || echo "")
+  GCP_PROJECT=$(gcloud config get-value project 2>/dev/null || echo "")
+  ADC_FILE="$HOME/.config/gcloud/application_default_credentials.json"
+  if [ "$GCP_ACCOUNT" = "$REQUIRED_GCP_ACCOUNT" ] && [ -f "$ADC_FILE" ]; then
+    log_ok "GCP: authenticated as $GCP_ACCOUNT, ADC configured (project: ${GCP_PROJECT:-unset})"
+    if [ "$GCP_PROJECT" != "$REQUIRED_GCP_PROJECT" ]; then
+      log_warn "GCP project is '${GCP_PROJECT}', expected '${REQUIRED_GCP_PROJECT}'"
+      echo -e "  ${YELLOW}Fix:${NC} gcloud config set project ${REQUIRED_GCP_PROJECT}"
+    fi
+  elif [ -n "$GCP_ACCOUNT" ] && [ "$GCP_ACCOUNT" != "$REQUIRED_GCP_ACCOUNT" ]; then
+    log_warn "GCP: authenticated as $GCP_ACCOUNT — expected ${REQUIRED_GCP_ACCOUNT}"
+    echo -e "  ${YELLOW}Fix:${NC}"
+    echo -e "    gcloud auth login --account ${REQUIRED_GCP_ACCOUNT}"
+    echo -e "    gcloud auth application-default login --account ${REQUIRED_GCP_ACCOUNT}"
+    echo -e "    gcloud config set project ${REQUIRED_GCP_PROJECT}"
+    AUTH_ISSUES=$((AUTH_ISSUES + 1))
+  elif [ ! -f "$ADC_FILE" ]; then
+    log_warn "GCP: account OK but Application Default Credentials not configured"
+    echo -e "  ${YELLOW}Fix:${NC}"
+    echo -e "    gcloud auth application-default login"
+    AUTH_ISSUES=$((AUTH_ISSUES + 1))
+  else
+    log_fail "GCP: gcloud found but not authenticated"
+    echo -e "  ${RED}Fix:${NC}"
+    echo -e "    gcloud auth login --account ${REQUIRED_GCP_ACCOUNT}"
+    echo -e "    gcloud auth application-default login"
+    echo -e "    gcloud config set project ${REQUIRED_GCP_PROJECT}"
+    AUTH_ISSUES=$((AUTH_ISSUES + 1))
+  fi
+else
+  log_warn "GCP: gcloud not installed — install after bootstrap for GCP service access"
+  echo -e "  ${YELLOW}Fix:${NC}"
+  echo -e "    macOS: brew install --cask google-cloud-sdk"
+  echo -e "    Linux: https://cloud.google.com/sdk/docs/install"
+  echo -e "    Then:  gcloud auth login --account ${REQUIRED_GCP_ACCOUNT}"
+  echo -e "           gcloud auth application-default login"
+  echo -e "           gcloud config set project ${REQUIRED_GCP_PROJECT}"
+  AUTH_ISSUES=$((AUTH_ISSUES + 1))
+fi
+
+# 3. act secrets file
+echo -e "  Checking act secrets (${REQUIRED_ACT_SECRETS})..."
+if [ -f "$REQUIRED_ACT_SECRETS" ]; then
+  SECRET_COUNT=$(grep -c "=" "$REQUIRED_ACT_SECRETS" 2>/dev/null || echo 0)
+  log_ok "act secrets: $REQUIRED_ACT_SECRETS ($SECRET_COUNT entries)"
+else
+  log_warn "act secrets not found at $REQUIRED_ACT_SECRETS"
+  echo -e "  ${YELLOW}Fix:${NC}"
+  echo -e "    cp unified-trading-pm/docs/act-secrets-template ~/.act-secrets"
+  echo -e "    # Then fill in your ANTHROPIC_API_KEY, GH_PAT, GCP credentials"
+  echo -e "  (Required for local GitHub Actions runs via 'act')"
+  AUTH_ISSUES=$((AUTH_ISSUES + 1))
+fi
+
+if [ "$AUTH_ISSUES" -gt 0 ]; then
+  echo ""
+  log_warn "$AUTH_ISSUES auth issue(s) detected — continuing bootstrap (fix before running services)"
+else
+  log_ok "All auth checks passed"
+fi
+echo ""
+
 # ── PHASE 0: SELF-SEED — clone unified-trading-pm if not present ─────────────
 # This is the only step that doesn't require PM to already be cloned.
 # All subsequent phases read workspace-manifest.json from PM.
@@ -448,7 +584,7 @@ fi
 # ── FINAL SUMMARY ─────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-TOTAL_ISSUES=$((SYSTEM_ISSUES + CLONE_FAIL + SETUP_FAIL + SMOKE_FAIL))
+TOTAL_ISSUES=$((AUTH_ISSUES + SYSTEM_ISSUES + CLONE_FAIL + SETUP_FAIL + SMOKE_FAIL))
 if [ "$TOTAL_ISSUES" -gt 0 ]; then
   echo -e "${BOLD}  Bootstrap complete with $TOTAL_ISSUES issue(s)${NC}"
 else
