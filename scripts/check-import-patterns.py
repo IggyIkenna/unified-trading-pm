@@ -79,11 +79,19 @@ class ImportChecker:
             with open(file_path, encoding="utf-8") as f:
                 lines = f.readlines()
 
+            # Determine if this file is inside the package it might import from
+            # (intra-package imports are allowed — only external consumers need top-level)
+            file_parts = file_path.parts
+
             for line_no, line in enumerate(lines, 1):
                 match = DEEP_IMPORT_PATTERN.match(line.strip())
                 if match:
                     package = match.group(1)
                     module_path = match.group(2)
+
+                    # Skip intra-package imports: file inside unified_X/ importing from unified_X.*
+                    if package in file_parts:
+                        continue
 
                     # Extract what's being imported
                     import_match = FROM_IMPORT_PATTERN.match(line)
@@ -104,7 +112,10 @@ class ImportChecker:
         """Recursively check all Python files in a directory."""
         for file_path in directory.rglob("*.py"):
             # Skip certain directories
-            if any(part in file_path.parts for part in [".venv", "venv", "__pycache__", ".git", "node_modules"]):
+            if any(
+                part in file_path.parts
+                for part in [".venv", "venv", "__pycache__", ".git", "node_modules", "tests", "build", "dist"]
+            ):
                 continue
 
             self.files_checked += 1
