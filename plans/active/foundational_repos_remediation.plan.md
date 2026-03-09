@@ -229,7 +229,9 @@ todos:
       python-dateutil removed from deps. Coverage 97% → 100% (new test_missing_coverage.py covers
       Protocol stub bodies). conftest.py pyright false positive suppressed inline. All 6 QG steps pass.
     status: completed
-    activeForm: "Fixing unified-events-interface REPO_ARCH_TIER wiring and coverage gap"
+    notes:
+      "RESOLVED 2026-03-07: REPO_ARCH_TIER wired, pydantic+python-dateutil removed from deps, coverage 97%→100%. Commit:
+      2e2ac7b. All 6 QG steps pass."
 
   # ─── AGENT 7 — unified-market-interface ──────────────────────────────────────
   - id: agent-07-umi
