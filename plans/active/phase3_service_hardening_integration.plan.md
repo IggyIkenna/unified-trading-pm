@@ -273,7 +273,12 @@ todos:
       'error'. VCR cassettes — UMI has cassettes/bybit + cassettes/binance; URDI has cassettes/deribit +
       cassettes/binance; USEI has 3 files. qg-type-ignore-audit — 724 total # type: ignore occurrences remain (target
       <10 documented). qg-venue-name-canonicalization — zero bare venue strings found in execution/strategy/risk service
-      production code (non-test). Still PENDING overall — awaiting all tiers T0–T6 green."
+      production code (non-test). QG SWEEP PARTIAL RESULTS (2026-03-09 session phase3 todos): instruments-service (✅
+      783 passed; Tests PASSED, Lint PASSED, Import patterns PASSED); market-data-processing-service (✅ 189 passed,
+      Tests PASSED, Import patterns PASSED); strategy-service (✅ 969 passed; Tests PASSED, Import patterns PASSED —
+      fixed deep import violation in compliance_reporter.py from unified_events_interface.schemas → top-level import);
+      risk-and-exposure-service (✅ 204 passed; Tests PASSED, Import patterns PASSED). Still PENDING overall — awaiting
+      all tiers T0–T6 green."
     status: pending
   - id: p3-integration-layer1
     content:
@@ -307,10 +312,21 @@ todos:
       VolatilityServiceConfig, VolatilityCalculator options-chain features, FuturesCalculator term-structure features,
       VolatilityFeaturesOrchestrator storage-client interactions; all pass), features-onchain-service (12 tests —
       OnchainFeaturesConfig, macro derived features, base-cols helper, perps instrument filtering, process_feature_group
-      orchestration + log-event emission; all pass). All 3 committed to their respective repos on main. STILL MISSING:
-      features-sports-service, features-cross-instrument-service, pnl-attribution-service, risk-and-exposure-service (2
-      files, not empty), strategy-validation-service."
-    status: in_progress
+      orchestration + log-event emission; all pass). All 3 committed to their respective repos on main. NEWLY ADDED
+      (2026-03-09 session phase3 todos): features-sports-service (13 tests — FeaturesSportsServiceConfig, engine
+      process_sports_record fixture-id/timestamp/odds/null-guard, PubSubSubscriber QueueClient wiring/topic-routing/
+      attribute-passing, write_sports_table Hive path + timestamp validation; all pass; committed main),
+      features-cross-instrument-service (14 tests — FeaturesCrossInstrumentConfig bucket resolution + service-name,
+      Parameters defaults, BaseFeatureCalculator empty/missing-col validation + performance stats + feature_group +
+      required_columns, compute_relative_vol_features empty/ratio/zero-denom/zscore; all pass; committed main),
+      pnl-attribution-service (33 tests — compute_pnl_breakdown engine + GreeksExposure, PnlDomainAdapter path
+      construction + read_fills error handling + write delegation, PnlAttributionServiceConfig, execution_alpha
+      calculate_execution_alpha 7 cases, analytics StatisticalMetrics 8 cases, PathAwareMetrics 3 cases,
+      AggregateMetrics 4 cases; all pass, coverage 48.1% > threshold 43%; committed main), strategy-validation-service
+      (7 tests — main() dry-run/batch exits 0, STARTED/STOPPED events, setup_events canonical service-name,
+      VALIDATION_COMPLETED before STOPPED, PERSISTENCE events in batch; all pass; committed main). All 5 committed.
+      STILL MISSING: none — all 19 T4 services now have integration tests."
+    status: done
   - id: p3-integration-layer2
     content:
       "INTEGRATION LAYER 2 — INFRASTRUCTURE VERIFICATION (post-deploy ONLY — never in quickmerge, never pre-deploy): Add
