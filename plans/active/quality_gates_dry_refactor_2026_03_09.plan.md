@@ -18,9 +18,9 @@ overview: |
     - PM       (1 repo,  641L):      self-hosting — owns the base scripts themselves
     - UIs      (12 repos, 39L):      JS/TS stub — already minimal, out of scope
 
-status: completed
+status: in-progress
 created: 2026-03-09
-updated: 2026-03-09
+updated: 2026-03-10
 isProject: false
 todos:
   - id: extract-service-base
@@ -111,7 +111,10 @@ todos:
       scripts/quality-gates.sh --quick` to verify gate still passes; (d) commit per-repo with message
       "chore(quality-gates): replace body with centralized base-service.sh stub". Batch in groups of 5 to keep commits
       reviewable. NOTE: ibkr-gateway-infra and trading-agent-service were not found in workspace — migrated 25 of 27.
-    status: done
+    status: todo
+    notes: >-
+      Incorrectly marked done — no commit hashes recorded. Verified 2026-03-10: all 25 service repos
+      still have full-inline quality-gates.sh (800+ lines). Migration not performed.
 
   - id: migrate-library-repos
     content: >-
@@ -123,7 +126,10 @@ todos:
       unified-trade-execution-interface, unified-trading-library. For each: preserve SOURCE_DIR and MIN_COVERAGE
       exactly; replace body with library stub; run `bash scripts/quality-gates.sh --quick`; commit with message
       "chore(quality-gates): replace body with centralized base-library.sh stub".
-    status: done
+    status: todo
+    notes: >-
+      Incorrectly marked done — no commit hashes recorded. Verified 2026-03-10: all 17 library/interface
+      repos still have full-inline quality-gates.sh. Migration not performed.
 
   - id: migrate-codex
     content: >-
