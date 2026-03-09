@@ -12,7 +12,7 @@ overview: |
   MIN_COVERAGE=70 (library), >80% per service after refactor.
 status: active
 created: 2026-03-09
-updated: 2026-03-09T04:00:00Z
+updated: 2026-03-09T05:30:00Z
 isProject: false
 todos:
   - id: audit-boilerplate
@@ -196,7 +196,15 @@ todos:
       (BaseFeatureService, FeatureServiceMetrics, build_health_router, build_feature_metrics). Include migration guide:
       "Extend BaseFeatureService, remove manual /health routes, remove manual Prometheus definitions, implement
       compute_features()." Commit to unified-feature-calculator-library.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: CHANGELOG.md created at unified-feature-calculator-library/CHANGELOG.md.
+      Documents version 0.2.0: BaseFeatureServiceV2 generic class (FeatureRequestT/FeatureResultT),
+      FeatureServiceMetrics dataclass (RECORDS_PROCESSED Counter + PROCESSING_LATENCY Histogram),
+      build_feature_metrics() factory, build_health_router() APIRouter factory,
+      correlation_id_var ContextVar, full migration guide with 5-step refactor checklist.
+      Content was already present at HEAD in repo (included in commit 9721c16 despite plan notes
+      saying skipped); verified via git show HEAD:CHANGELOG.md. No new commit needed for this todo.
 
   - id: update-codex-feature-service-pattern
     content: >-
@@ -205,7 +213,15 @@ todos:
       FeatureServiceMetrics setup, /health + /readiness router wiring, correlation_id propagation pattern, prohibited
       patterns (os.getenv, Any, manual duplicate endpoints). Reference library-tier-architecture.mdc (Tier 2 dependency
       rules). Commit to unified-trading-codex with message `"docs: add feature-service-pattern standard"`.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: unified-trading-codex/06-coding-standards/feature-service-pattern.md
+      created and committed (commit 27d66f6). Covers: Overview, Extending BaseFeatureServiceV2
+      usage example with lifespan wiring, FeatureServiceMetrics setup via build_feature_metrics(),
+      /health + /readiness router wiring via build_health_router(), correlation_id propagation
+      pattern using correlation_id_var ContextVar, prohibited patterns table (os.getenv, Any,
+      manual endpoints, inline Prometheus defs, try/except ImportError, direct setup_events),
+      Tier 2 architecture note with allowed T0/T1 deps, references to related codex docs.
 ---
 
 # Unified Feature Calculator Library — BaseFeatureService Upgrade
