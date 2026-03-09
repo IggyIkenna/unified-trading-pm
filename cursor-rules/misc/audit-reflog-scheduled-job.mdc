@@ -1,5 +1,6 @@
 ---
 description: "Audit reflog scheduled job — run, cancel, locations"
+priority: 50
 tags: [git, safety, scheduled, launchd]
 ---
 

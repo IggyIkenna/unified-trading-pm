@@ -1,3 +1,8 @@
+---
+description: "Runtime topology SSOT — two machine-readable SSOTs for code DAG and runtime interactions"
+priority: 50
+---
+
 # Runtime Topology SSOT
 
 RULE: Runtime messaging/storage/API interaction policy is owned by `unified-trading-pm/configs/runtime-topology.yaml` (canonical SSOT). `deployment-service/configs/runtime-topology.yaml` is a partial local view with `ssot_ref` pointing back to PM. Code dependency DAG must live in `unified-trading-pm/workspace-manifest.json`. Human-readable topology diagram lives in `unified-trading-pm/TOPOLOGY-DAG.md`. Do not hardcode runtime transport behavior in service repos or create service-to-service dependencies for live paths.

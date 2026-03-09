@@ -1,3 +1,8 @@
+---
+description: "Observability and compliance event field requirements for all services"
+priority: 50
+---
+
 # Observability and Compliance
 
 RULE: All events MUST include required fields per category. correlation_id on all coordination events, duration_ms on COMPLETED, stack_trace on FAILED, client_order_id on execution events.
