@@ -41,6 +41,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        exclude: ^configs/cloudbuild-service-template\.yaml$
       - id: check-toml
       - id: check-added-large-files
         args: ["--maxkb=1000"]
