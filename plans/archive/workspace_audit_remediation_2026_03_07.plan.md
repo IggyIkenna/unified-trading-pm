@@ -249,7 +249,7 @@ TRANSFERMARKET_API — all burned by history exposure, all must be rotated.
 | fix-ruff-errors-execution-service      | 8.1     | 1844 ruff errors in execution-service                                                                 |
 | fix-quality-gate-or-true-bypasses      | 8.9     | `                                                                                                     |     | true` on tool install steps silences failed ruff/basedpyright install — gates pass vacuously |
 | install-precommit-hooks                | 8.15    | pre-commit hooks not installed in ~52 repos — local commits bypass all linting                        |
-| fix-manifest-version-mismatches        | 1.8     | 20 manifest↔pyproject.toml version mismatches; impossible semver range on unified-cloud-interface    |
+| fix-manifest-version-mismatches        | 1.8     | 20 manifest↔pyproject.toml version mismatches; impossible semver range on unified-cloud-interface     |
 | fix-lifecycle-event-names              | 7.3     | 9 non-canonical lifecycle event strings across 6 services — invisible to event parsing infrastructure |
 | fix-market-data-processing-config-base | 7.7     | market-data-processing-service subclasses deprecated `UnifiedCloudServicesConfig`                     |
 
