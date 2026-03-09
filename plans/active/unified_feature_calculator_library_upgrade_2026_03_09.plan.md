@@ -51,7 +51,21 @@ todos:
       with library-tier-architecture.mdc: unified-feature-calculator-library is Tier 2 (may use Tier 0 + Tier 1 deps —
       UCI, UTL, UMI, UEI — but no Tier 2→Tier 2 circular imports). Document design in a comment block before
       implementation begins.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Design verified in implemented code (commit e17f550).
+      src/unified_feature_calculator/service_base/base_service.py — BaseFeatureServiceV2[FeatureRequestT, FeatureResultT]:
+        - abstract compute_features(payload: FeatureRequestT) -> FeatureResultT
+        - startup() → wires GCSEventSink + emits STARTED via setup_events()
+        - shutdown() → emits STOPPED + close_events()
+        - build_health_router() → delegates to health.build_health_router()
+        - UnifiedCloudConfig via @lru_cache(maxsize=1) singleton (_get_cloud_config())
+        - correlation_id_var: ContextVar[str] exported for request-level setting
+      Tier compliance confirmed: imports UCI (unified_config_interface), UEI (unified_events_interface),
+      UTL (unified_trading_library.GCSEventSink) — all Tier 0/1. No Tier 2 circular imports.
+      Design documented in 36-line module docstring in base_service.py.
+      All 3 exported symbols (BaseFeatureServiceV2, FeatureServiceMetrics, build_health_router)
+      re-exported from service_base/__init__.py and top-level __init__.py.
 
   - id: implement-base-feature-service
     content: >-
@@ -103,7 +117,14 @@ todos:
       from workspace root (venv active). Update CHANGELOG.md with new public API summary under new version heading. Run
       `bash scripts/quality-gates.sh` in unified-feature-calculator-library — all gates must pass before service
       refactors begin.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Version bumped to 0.2.0 in pyproject.toml. No CHANGELOG.md in repo — skipped.
+      QG run: all gates passed in 22s (basedpyright 0 errors/warnings; 240 tests pass; codex compliance
+      passed). Fixed 3 QG violations found during run: (1) docstring text matching os.getenv codex check
+      — rephrased; (2) indented import example in health.py docstring matching imports-inside-functions
+      check — replaced with comment; (3) same line matching deep-unified-lib-imports check — same fix.
+      Commit 9721c16: chore(release): bump unified-feature-calculator-library minor version for BaseFeatureService API.
 
   - id: refactor-features-calendar-service
     content: >-
