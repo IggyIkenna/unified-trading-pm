@@ -118,7 +118,7 @@ jobs:
         if: always() && env.TELEGRAM_BOT_TOKEN != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           STATUS: ${{ job.status }}
         run: |
           TEXT="*semver-agent* | {{SERVICE_NAME}} | ${STATUS} | branch: ${{ github.ref_name }}"
