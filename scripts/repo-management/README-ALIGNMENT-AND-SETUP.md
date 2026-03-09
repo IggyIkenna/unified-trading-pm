@@ -48,8 +48,9 @@ Verify only (no install):
 bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --check
 ```
 
-This runs scripts/setup.sh in each repo in **topological order** (T0 → T1 → T2 → services → UIs). With
-`--rollout-first`, runs rollout-quality-gates-unified.py before setup.
+This runs scripts/setup.sh in each repo in **topological tier order** (T0 → T1 → T2 → services → UIs). Repos within the
+same tier have no mutual dependencies and run **in parallel**; each tier waits for the previous tier to complete before
+starting. With `--rollout-first`, propagates setup.sh + quality-gates.sh templates to all repos before running setup.
 
 ### uv.lock and agents
 

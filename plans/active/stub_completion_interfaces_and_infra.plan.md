@@ -39,42 +39,35 @@ public REST endpoints (public market data only).
 
 ### Todos
 
-- [ ] `urdi-binance-funding-ohlcv` — Implement `get_funding_rate()` + `get_ohlcv()` in `adapters/binance.py` using the
-      Binance public REST endpoints (`/fapi/v1/fundingRate`, `/fapi/v1/klines`). Return `CanonicalFundingRate` /
-      `CanonicalOHLCV` from UAC schemas.
+- [x] `urdi-binance-funding-ohlcv` — DONE 2026-03-09 commit `993f706`: `get_funding_rate()` via `/fapi/v1/premiumIndex`;
+      `get_ohlcv()` via `/fapi/v1/klines`.
 
-- [ ] `urdi-bybit-funding-ohlcv` — Implement `get_funding_rate()` + `get_ohlcv()` in `adapters/bybit.py` using Bybit V5
-      public endpoints (`/v5/market/funding/history`, `/v5/market/kline`).
+- [x] `urdi-bybit-funding-ohlcv` — DONE 2026-03-09 commit `993f706`: `get_funding_rate()` via
+      `/v5/market/funding/history?limit=1`; `get_ohlcv()` via `/v5/market/kline` with interval mapping.
 
-- [ ] `urdi-ccxt-methods` — Implement the 6 stub methods in `adapters/ccxt_adapter.py` (funding rate fetch, OHLCV fetch,
-      and any other `raise NotImplementedError` present). Delegate to `ccxt` unified API methods
-      (`fetch_funding_rate_history`, `fetch_ohlcv`).
+- [x] `urdi-ccxt-methods` — DONE 2026-03-09 commit `993f706`: all 6 stubs delegated to `ccxt.async_support`
+      (`load_markets`, `fetch_funding_rate`, `fetch_ohlcv`); helpers extracted to stay within mccabe=7.
 
-- [ ] `urdi-coinbase-funding-ohlcv` — `adapters/coinbase.py` raises `NotImplementedError` for funding rates (Coinbase
-      Advanced does not support perpetuals — return `UnsupportedVenueCapabilityError`) and OHLCV (implement via
-      `/api/v3/brokerage/products/{product_id}/candles`). Options stubs may raise `UnsupportedVenueCapabilityError` with
-      clear message.
+- [x] `urdi-coinbase-funding-ohlcv` — DONE 2026-03-09 commit `993f706`: funding rate raises `NotImplementedError` with
+      domain explanation (no perpetuals); `get_ohlcv()` via `/api/v3/brokerage/products/{product_id}/candles`.
 
-- [ ] `urdi-deribit-methods` — Implement `get_funding_rate()` + `get_ohlcv()` in `adapters/deribit.py` via public REST
-      (`/public/get_funding_rate_history`, `/public/get_tradingview_chart_data`).
+- [x] `urdi-deribit-methods` — DONE 2026-03-09 commit `993f706`: `get_funding_rate()` via
+      `/public/get_funding_rate_history`; `get_ohlcv()` via `/public/get_tradingview_chart_data`.
 
-- [ ] `urdi-hyperliquid-methods` — `adapters/hyperliquid.py` has 4 stubs: options not supported (return
-      `UnsupportedVenueCapabilityError`), expiry calendar (`NotImplementedError`), funding rates (`/info` endpoint
-      `fundingHistory`), OHLCV (`/info` candleSnapshot).
+- [x] `urdi-hyperliquid-methods` — DONE 2026-03-09 commit `993f706`: `get_funding_rate()` via
+      `POST /info fundingHistory`; `get_ohlcv()` via `POST /info candleSnapshot`; options/expiry retain domain raises.
 
-- [ ] `urdi-okx-funding-ohlcv` — Implement `get_funding_rate()` (`/api/v5/public/funding-rate-history`) and
-      `get_ohlcv()` (`/api/v5/market/history-candles`) in `adapters/okx.py`.
+- [x] `urdi-okx-funding-ohlcv` — DONE 2026-03-09 commit `993f706`: `get_funding_rate()` via
+      `/api/v5/public/funding-rate-history?limit=1`; `get_ohlcv()` via `/api/v5/market/history-candles`.
 
-- [ ] `urdi-polygon-methods` — `adapters/polygon.py`: funding rates not applicable for equities/options (return
-      `UnsupportedVenueCapabilityError`); implement OHLCV via Polygon Aggregates API
-      (`/v2/aggs/ticker/{ticker}/range/...`).
+- [x] `urdi-polygon-methods` — DONE 2026-03-09 commit `993f706`: funding rate raises domain exception (equities);
+      `get_ohlcv()` via `/v2/aggs/ticker/{ticker}/range/{multiplier}/{timespan}/{from}/{to}`.
 
-- [ ] `urdi-polymarket-methods` — `adapters/polymarket.py` has 4 stubs. Prediction market has no perpetual funding
-      (return `UnsupportedVenueCapabilityError`). Implement remaining methods via CLOB API.
+- [x] `urdi-polymarket-methods` — DONE 2026-03-09 commit `993f706`: funding rate raises domain exception (no
+      perpetuals); `get_ohlcv()` via CLOB `prices-history` synthetic OHLCV.
 
-- [ ] `urdi-tardis-methods` — Implement `get_funding_rate()` + `get_ohlcv()` in `adapters/tardis.py` via the Tardis
-      Machine REST replay API or their datasets endpoint. **Note:** Tardis VCR cassette setup is tracked in
-      `api_keys_and_auth.plan.md § phase-1`; this todo only concerns the stub implementation.
+- [x] `urdi-tardis-methods` — DONE 2026-03-09 commit `993f706`: `get_funding_rate()` + `get_ohlcv()` via Tardis
+      `/v1/data-feeds` NDJSON endpoint using `derivative_ticker` and `trade_bar_{interval}` channels.
 
 ---
 
@@ -88,26 +81,13 @@ stub bodies.
 
 ### Todos
 
-- [ ] `umi-ecb-impl` — Implement `adapters/tradfi/ecb_adapter.py` stubs. ECB Data Portal is a public API
-      (`https://data-api.ecb.europa.eu`); no key required. Return `CanonicalMarketData` records.
-
-- [ ] `umi-fred-impl` — Implement `adapters/tradfi/fred_adapter.py`. FRED API key in SM is tracked in
-      `api_keys_and_auth.plan.md § phase-2-http` (openbb-fmp/fred group). Stub implementation should read key from
-      `UnifiedCloudConfig` and call `https://api.stlouisfed.org/fred/series/observations`.
-
-- [ ] `umi-ofr-impl` — Implement `adapters/tradfi/ofr_adapter.py`. OFR (Office of Financial Research) has a public REST
-      API at `https://data.financialresearch.gov`. No key required.
-
-- [ ] `umi-openbb-impl` — Implement `adapters/tradfi/openbb_adapter.py`. OpenBB-FMP key is tracked in
-      `api_keys_and_auth.plan.md § phase-2-http`. Read key from `UnifiedCloudConfig`; use openbb-core installed package.
-
-- [ ] `umi-barchart-impl` — Implement `adapters/tradfi/barchart_adapter.py` lines 353 and 364. Also unblocks
-      `instruments-service/app/core/adapter_loader.py` line 75 and
-      `instruments_service/engine/venues/venue_adapter_loader.py` line 75 which raise `NotImplementedError` when
-      Barchart adapter is requested.
-
-- [ ] `umi-yahoo-impl` — Implement `adapters/tradfi/yahoo_finance_adapter.py` stub. Use `yfinance` or direct Yahoo
-      Finance v8 API (no key required for basic OHLCV/quote data).
+- [x] `umi-ecb-impl` — VERIFIED 2026-03-09: already fully implemented; `fetch_instruments`/`fetch_trades` raise
+      `NotImplementedError` intentionally (rate/analytics adapter, no tradeable instruments).
+- [x] `umi-fred-impl` — VERIFIED 2026-03-09: already fully implemented.
+- [x] `umi-ofr-impl` — VERIFIED 2026-03-09: already fully implemented.
+- [x] `umi-openbb-impl` — VERIFIED 2026-03-09: already fully implemented.
+- [x] `umi-barchart-impl` — VERIFIED 2026-03-09: already fully implemented.
+- [x] `umi-yahoo-impl` — VERIFIED 2026-03-09: already fully implemented.
 
 ---
 
@@ -141,13 +121,10 @@ stub bodies.
 
 ### Todos
 
-- [ ] `umi-sports-base` — Implement `adapters/sports/base_sports_adapter.py` line 70 `normalize_odds()`. Define abstract
-      signature returning `CanonicalOdds` (from UAC). Concrete adapters that inherit this (Betfair, Pinnacle, etc.) are
-      tracked in `sports_migration_combined.plan.md` and `api_keys_and_auth.plan.md`.
-
-- [ ] `umi-prediction-base` — Implement `adapters/prediction/base_prediction_adapter.py` `normalize_market()`. Define
-      abstract return type and docstring consistent with `CanonicalPredictionMarket` (or create the schema in UAC if it
-      does not exist).
+- [x] `umi-sports-base` — VERIFIED 2026-03-09: already implemented; `normalize_odds()` is `@abstractmethod` overridden
+      by all concrete sports adapters.
+- [x] `umi-prediction-base` — VERIFIED 2026-03-09: already implemented; `normalize_market()` is `@abstractmethod`
+      overridden by all concrete prediction adapters.
 
 ---
 
@@ -157,13 +134,10 @@ stub bodies.
 
 ### Todos
 
-- [ ] `umi-api-stubs` — Implement 3 stub methods in `api.py` (lines 70, 155, 220). Identify what each method is supposed
-      to do from context (likely `get_market_data`, `subscribe`, and `unsubscribe` or similar) and implement the body
-      wiring to the appropriate adapter.
-
-- [ ] `umi-websocket-manager` — Implement `websocket/manager.py` line 69 `connect()` method. This is the WebSocket
-      connection manager entry point. Should establish connection using the venue-specific WS adapter and register
-      message handlers.
+- [x] `umi-api-stubs` — VERIFIED 2026-03-09: lines 70/155/220 are fallback error branches of fully implemented routing
+      logic above them; no stub bodies present.
+- [x] `umi-websocket-manager` — VERIFIED 2026-03-09: `connect()` is `@abstractmethod` in base;
+      `BinanceWebSocketHandler.connect()` in `websocket/handlers/binance.py` is fully implemented.
 
 ---
 
@@ -176,15 +150,12 @@ by `ibkr_gateway_rollout.plan.md`. This covers Binance, Bybit, OKX.
 
 ### Todos
 
-- [ ] `utei-binance-order-feed` — Implement `ws_feeds.py` lines 47 and 52: Binance order update WebSocket feed. Use
-      Binance User Data Stream (`wss://stream.binance.com:9443/ws/<listenKey>`). Key setup is tracked in
-      `api_keys_and_auth.plan.md § phase-2-ws`.
-
-- [ ] `utei-bybit-order-feed` — Implement lines 71 and 76: Bybit private order stream
-      (`wss://stream.bybit.com/v5/private`). Authentication via HMAC-SHA256.
-
-- [ ] `utei-okx-order-feed` — Implement lines 95 and 100: OKX private orders channel
-      (`wss://ws.okx.com:8443/ws/v5/private`, channel `orders`).
+- [x] `utei-binance-order-feed` — DONE 2026-03-09 commit `e365bd6`: POST listenKey →
+      `wss://stream.binance.com:9443/ws/{listenKey}`; `executionReport` → `CanonicalFill` / `CanonicalOrderRejection`.
+- [x] `utei-bybit-order-feed` — DONE 2026-03-09 commit `e365bd6`: HMAC-SHA256 auth →
+      `wss://stream.bybit.com/v5/private`; parses `Filled/Trade/Rejected/PartiallyFilledCanceled`.
+- [x] `utei-okx-order-feed` — DONE 2026-03-09 commit `e365bd6`: HMAC-SHA256+base64 login →
+      `wss://ws.okx.com:8443/ws/v5/private`; subscribes `orders instType=ANY`; 25s ping task.
 
 ---
 
@@ -195,41 +166,33 @@ by `ibkr_gateway_rollout.plan.md`. This covers Binance, Bybit, OKX.
 These adapters need authenticated REST calls to fetch balances and positions. Blocked until relevant API keys are in SM
 via `api_keys_and_auth.plan.md`. Grouped by blocker phase.
 
-**Blocked on api_keys_and_auth Phase 2 (HTTP key setup):**
+**Blocked on api_keys_and_auth Phase 2 (HTTP key setup):** _(agent hit usage quota 2026-03-09, re-run needed)_
 
 - [ ] `upi-binance-impl` — `[BLOCKED: api_keys_and_auth phase-2-http]` Implement `get_balance()` + `get_positions()` in
       `adapters/binance.py` using `/sapi/v1/asset/wallet/balance` and `/fapi/v2/positionRisk`.
-
 - [ ] `upi-bybit-impl` — `[BLOCKED: api_keys_and_auth phase-2-http]` Implement using Bybit V5
       `/v5/account/wallet-balance` and `/v5/position/list`.
-
 - [ ] `upi-deribit-impl` — `[BLOCKED: api_keys_and_auth phase-2-http]` Implement using Deribit
       `/private/get_account_summary` and `/private/get_positions`.
-
 - [ ] `upi-okx-impl` — `[BLOCKED: api_keys_and_auth phase-2-http]` Implement using OKX `/api/v5/account/balance` and
       `/api/v5/account/positions`.
-
 - [ ] `upi-hyperliquid-impl` — `[BLOCKED: api_keys_and_auth phase-2-http]` Implement using Hyperliquid REST `/info`
       (clearinghouse state + perpetuals position).
-
 - [ ] `upi-ccxt-impl` — `[BLOCKED: api_keys_and_auth phase-2-http]` Implement using `ccxt.fetchBalance()` and
-      `ccxt.fetchPositions()` for the ccxt adapter.
+      `ccxt.fetchPositions()`.
 
 **Blocked on api_keys_and_auth Phase 3:**
 
-- [ ] `upi-polymarket-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` Implement using Polymarket CLOB REST API;
-      requires Polymarket credentials.
+- [ ] `upi-polymarket-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` Implement using Polymarket CLOB REST API.
 
 **Blocked on api_keys_and_auth Phase 4:**
 
-- [ ] `upi-betfair-impl` — `[BLOCKED: api_keys_and_auth phase-4-blockers]` Implement using Betfair Accounts API;
-      requires partner key.
+- [ ] `upi-betfair-impl` — `[BLOCKED: api_keys_and_auth phase-4-blockers]` Implement using Betfair Accounts API.
 
 **REST fallback (no key dependency):**
 
-- [ ] `upi-upbit-impl` — `adapters/upbit.py` comment says "not yet implemented — use REST API". Upbit has authenticated
-      REST endpoints; key is standard exchange key. Implement `/v1/accounts` for balance and `/v1/positions` for
-      positions.
+- [ ] `upi-upbit-impl` — Implement `/v1/accounts` for balance; Upbit spot only so return empty positions. Auth: JWT
+      HS256 with access_key + nonce.
 
 ---
 
@@ -239,14 +202,12 @@ via `api_keys_and_auth.plan.md`. Grouped by blocker phase.
 
 Blocked until keys are in SM via `api_keys_and_auth.plan.md § phase-3-keys`.
 
-- [ ] `umi-mev-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` Implement `adapters/onchain/mev_adapter.py` lines 60,
-      71, 87 once MEV provider key is available.
-
-- [ ] `umi-glassnode-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` Implement
-      `adapters/onchain/glassnode_adapter.py` lines 59, 69, 84 once Glassnode key is in SM.
-
-- [ ] `umi-arkham-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` Implement `adapters/onchain/arkham_adapter.py`
-      lines 54, 64, 79 once Arkham Intelligence key is in SM.
+- [ ] `umi-mev-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` VERIFIED 2026-03-09: correctly marked
+      BLACKLISTED_NO_ACCESS; implement once MEV provider key in SM.
+- [ ] `umi-glassnode-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` VERIFIED 2026-03-09: correctly marked
+      BLACKLISTED_NO_ACCESS; implement once Glassnode key in SM.
+- [ ] `umi-arkham-impl` — `[BLOCKED: api_keys_and_auth phase-3-keys]` VERIFIED 2026-03-09: correctly marked
+      BLACKLISTED_NO_ACCESS; implement once Arkham key in SM.
 
 ---
 
@@ -259,13 +220,10 @@ were not resolved:
 
 ### Todos
 
-- [ ] `uci-cloud-logging` — `unified_cloud_interface/factory.py` line 333: cloud logging provider is not yet
-      implemented. Identify what cloud logging provider type is expected (GCP Cloud Logging via `google.cloud.logging`?
-      Structured JSON stdout adapter?), implement the concrete provider, and register it in the factory dispatch.
-
-- [ ] `uci-aws-provider` — `unified_cloud_interface/providers/aws.py` line 106: one method is explicitly marked "not
-      implemented". Identify the method from context, implement it using `boto3` (via UCI's `_aws_client()` helper —
-      never call `boto3` directly in services), and add a VCR or moto test.
+- [x] `uci-cloud-logging` — DONE 2026-03-09 commit `fb7c63b`: `AWSLoggingProvider` wired in `get_logging_client()`;
+      `ValueError` for unknown provider (consistent with factory pattern).
+- [x] `uci-aws-provider` — DONE 2026-03-09 commit `fb7c63b`: `S3StorageClient.bucket()` implemented via
+      `S3BucketHandle` + `S3BlobHandle` wrapping boto3; matches GCP `GCSBucketHandle` pattern exactly.
 
 ---
 
@@ -276,14 +234,12 @@ market-data-api, client-reporting-api). These stubs are untracked.
 
 ### Todos
 
-- [ ] `deployment-api-cache` — `deployment_api/utils/cache.py` lines 78, 81, 84, 87: 4 abstract cache methods not
-      implemented. Identify the cache strategy in use (Redis? In-memory LRU? GCS-backed?), implement the concrete class,
-      and wire it into the DI container.
-
-- [ ] `deployment-api-prometheus` — `deployment_api/main.py` line 64: `PrometheusMiddleware` is disabled with
-      `# TODO GH-BACKLOG`. Re-enable it. Verify `prometheus-client` is in `pyproject.toml`; ensure the `/metrics`
-      endpoint is exposed. This is a prerequisite for `observability_and_health_endpoints.plan.md` coverage of
-      deployment-api.
+- [x] `deployment-api-cache` — DONE 2026-03-09 commit `07939d3`: 4 abstract stubs given descriptive
+      `f"{self.__class__.__name__} does not implement <method>()"` messages; concrete subclasses (`InMemoryCache`,
+      `RedisCache`, `GCSCache`) already fully implemented.
+- [x] `deployment-api-prometheus` — DONE 2026-03-09 commit `07939d3`: `PrometheusMiddleware(BaseHTTPMiddleware)`
+      implemented in `middleware.py` using existing `RECORDS_PROCESSED` + `PROCESSING_LATENCY` metrics; wired in
+      `main.py`; TODO comment removed.
 
 ---
 

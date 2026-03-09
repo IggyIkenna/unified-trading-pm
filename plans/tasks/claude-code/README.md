@@ -34,13 +34,11 @@ claude --model claude-sonnet-4-5-20250929
 **Run the script, it does everything**:
 
 ```bash
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
-
 # Test with 2 repos (5-10 min)
-./.cursor/plans/tasks_claude_code/orchestrator-test.sh
+bash unified-trading-pm/plans/tasks/claude-code/orchestrator-test.sh
 
 # Full run with 24 repos (30-60 min)
-./.cursor/plans/tasks_claude_code/orchestrator-simple.sh
+bash unified-trading-pm/plans/tasks/claude-code/orchestrator-simple.sh
 ```
 
 **Pros**: Fully automated, no manual steps, 10 parallel agents, **now with full workspace context + enhanced prompts +
@@ -73,7 +71,7 @@ If you see high CPU usage from Node processes:
 
 ```bash
 # Kill all zombie basedpyright and agent processes
-bash .cursor/plans/tasks_claude_code/kill-zombies.sh
+bash unified-trading-pm/plans/tasks/claude-code/kill-zombies.sh
 ```
 
 **Prevention**: As of v10.1, all scripts now include:
@@ -95,7 +93,8 @@ bash .cursor/plans/tasks_claude_code/kill-zombies.sh
 - `CLAUDE_CODE_TASK.md` - Claude Code approach ⭐ **v10: Parallel + full context (2025-02-24)**
 - `CLAUDE_CODE_CONFIG.md` - Configuration guide
 - `run-agent.sh` - Single repo wrapper (workspace root)
-- `run-parallel-agents.sh` - Parallel wrapper (up to 4 agents) ⭐ **NEW**
+- `../../../scripts/agents/run-parallel-agents.sh` - Parallel wrapper (up to 4 agents) ⭐ **SSOT:
+  unified-trading-pm/scripts/agents/**
 - `orchestrator-test.sh` - Bash approach (test)
 - `orchestrator-simple.sh` - Bash approach (full)
 - `simple-parser.py` - Pretty output parser
@@ -116,7 +115,7 @@ bash .cursor/plans/tasks_claude_code/kill-zombies.sh
 **Simplest** (bash):
 
 ```bash
-./.cursor/plans/tasks_claude_code/orchestrator-test.sh
+bash unified-trading-pm/plans/tasks/claude-code/orchestrator-test.sh
 ```
 
 **Smartest + Fastest** (Claude Code with parallel):
