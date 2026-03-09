@@ -214,35 +214,39 @@ todos:
     status: pending
   - id: p3-cross-cutting-auth
     content:
-      "AUTH + CREDENTIALS (starts at T4, completes across tiers as services green): auth-credentials-registry
-      (system-wide unified-trading-pm/credentials-registry.yaml covering ALL services + secret types);
-      auth-setup-secret-script (generalize setup-secret-manager.sh → unified-trading-pm/scripts/setup_secret.sh);
-      auth-secret-manager-naming (enforce canonical SM naming: exec-{client}-{venue}-{account_type});
-      auth-three-tranche-data-wiring (tranche_router.py: A=manual CSV, B=SM exec-odum-{venue}-{account_type}, C=PBS+PNL
-      APIs); ssot-checklist-auth-alignment (add auth_setup block to all 19 deployment checklists);
-      ssot-success-criteria-update (update checklist success_criteria for new arch goals); auth-ibkr-corp-actions (P1:
-      URDI IBKR CorporateAction adapter; PENDING_CASSETTE_AWAITING_AUTH); auth-sports-migration-batch1 (auth status
-      fixes in endpoint_registry + UIC sports canonical schemas); auth-sports-migration-batch2 (sports UMI adapters
-      completion)."
-    status: pending
+      "AUTH + CREDENTIALS (starts at T4, completes across tiers as services green): auth-credentials-registry (DONE
+      2026-03-09 ✅ — unified-trading-pm/credentials-registry.yaml v2: 5 sections covering exchange credentials
+      CeFi/DeFi/TradFi/Sports, GCP service accounts for all 12 T4-T5 services, Phase 0 S2S tokens for 9 services, API
+      tokens for 12 vendors, and infrastructure DB/Redis credentials; canonical SM naming
+      exec-{client}-{venue}-{account_type} enforced throughout); auth-setup-secret-script (generalize
+      setup-secret-manager.sh → unified-trading-pm/scripts/setup_secret.sh); auth-secret-manager-naming (enforce
+      canonical SM naming: exec-{client}-{venue}-{account_type}); auth-three-tranche-data-wiring (tranche_router.py:
+      A=manual CSV, B=SM exec-odum-{venue}-{account_type}, C=PBS+PNL APIs); ssot-checklist-auth-alignment (add
+      auth_setup block to all 19 deployment checklists); ssot-success-criteria-update (update checklist success_criteria
+      for new arch goals); auth-ibkr-corp-actions (P1: URDI IBKR CorporateAction adapter;
+      PENDING_CASSETTE_AWAITING_AUTH); auth-sports-migration-batch1 (auth status fixes in endpoint_registry + UIC sports
+      canonical schemas); auth-sports-migration-batch2 (sports UMI adapters completion)."
+    status: in_progress
   - id: p3-cross-cutting-codex
     content:
       "CODEX + SSOT DOCS (update as each tier completes): codex-service-pair-flows-doc (DONE ✅ —
       unified-trading-codex/08-workflows/service-pair-flows.md exists; verified 2026-03-06);
-      codex-quality-gates-aws-parity (add AWS CodeBuild parity section to quality-gates.md); codex-s2s-auth-phase0-impl
-      (implement Phase 0 SA OAuth; auth_smoke_test.py validates SA token env var per service; update
-      07-security/service-to-service-auth.md). Topology tasks: topology-ssot-index-update (DONE ✅ —
-      system-integration-tests Layer 3a/3b row added to unified-trading-codex/00-SSOT-INDEX.md 2026-03-06),
-      topology-venue-replay-unified-api-contracts, topology-kill-switch-propagation (in T4 Batch F),
-      topology-circuit-breaker-impl (in T4 Batch F), topology-with-retry-decorator (implement @with_retry in UTS — T1),
-      topology-timestamp-ordering (MTDH published messages — T4 Batch B), topology-mdps-rolling-window (MDPS ~1yr
-      rolling window in Redis — T4 Batch B), topology-t1-strategy-recon (strategy-validation-service),
-      topology-t1-execution-recon (execution T+1 recon), topology-pbm-exchange-bootstrap (PBM exchange REST on startup),
-      topology-features-mdps-event-chain (features trigger on MDPS completion PubSub),
-      topology-execution-order-lifecycle (full order lifecycle PubSub). Observability: obs-health-probes (add /health +
-      /readiness to all API services), obs-audit-trail-enforcement, obs-correlation-id-propagation (end-to-end
-      correlation_id), obs-pre-crash-checkpoint (pre-crash state dump at 85% memory), obs-compliance-reporting-wiring
-      (MiFID/FCA reporting)."
+      codex-quality-gates-aws-parity (DONE 2026-03-09 ✅ — AWS CodeBuild parity section added to quality-gates.md:
+      structural differences table, env vars table, library vs service buildspec patterns, parity rules,
+      adding-to-new-repo guide); codex-s2s-auth-phase0-impl (DONE 2026-03-09 ✅ — Phase 0 implementation details section
+      added to 07-security/service-to-service-auth.md: what SA OAuth entails, canonical 3-test auth_smoke_test.py with
+      hex validation, verify_service_token() receiver pattern, token rotation procedure). Topology tasks:
+      topology-ssot-index-update (DONE ✅ — system-integration-tests Layer 3a/3b row added to
+      unified-trading-codex/00-SSOT-INDEX.md 2026-03-06), topology-venue-replay-unified-api-contracts,
+      topology-kill-switch-propagation (in T4 Batch F), topology-circuit-breaker-impl (in T4 Batch F),
+      topology-with-retry-decorator (implement @with_retry in UTS — T1), topology-timestamp-ordering (MTDH published
+      messages — T4 Batch B), topology-mdps-rolling-window (MDPS ~1yr rolling window in Redis — T4 Batch B),
+      topology-t1-strategy-recon (strategy-validation-service), topology-t1-execution-recon (execution T+1 recon),
+      topology-pbm-exchange-bootstrap (PBM exchange REST on startup), topology-features-mdps-event-chain (features
+      trigger on MDPS completion PubSub), topology-execution-order-lifecycle (full order lifecycle PubSub).
+      Observability: obs-health-probes (add /health + /readiness to all API services), obs-audit-trail-enforcement,
+      obs-correlation-id-propagation (end-to-end correlation_id), obs-pre-crash-checkpoint (pre-crash state dump at 85%
+      memory), obs-compliance-reporting-wiring (MiFID/FCA reporting)."
     status: pending
   - id: p3-service-bundling-review
     content:
