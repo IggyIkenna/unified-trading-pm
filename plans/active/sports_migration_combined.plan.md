@@ -49,11 +49,19 @@ todos:
     status: done
 
   - id: strategy-execution
-    content:
-      "Strategy/execution — ArbitrageStrategy (reads vig + is_arbitrage from FSS, emits TradeSignal); MLSportsStrategy
+    content: >-
+      Strategy/execution — ArbitrageStrategy (reads vig + is_arbitrage from FSS, emits TradeSignal); MLSportsStrategy
       (consumes FSS features + PredictionEvent via UMI); execution_service places/cancels via USEI Betfair/Pinnacle
-      mocks. Acceptance: quality-gates.sh passes; zero os.getenv; zero Any. BLOCKED: depends on usei-adapters."
-    status: pending
+      mocks. Acceptance: quality-gates.sh passes; zero os.getenv; zero Any. DONE 2026-03-09: ArbitrageStrategy fully
+      implemented with 86 tests (arbitrage detection, HT arb, bookmaker liquidity ranking, market liquidity ranking,
+      odds comparison). MLSportsStrategy implemented in strategy_service/engine/strategies/sports/ml_sports_strategy.py
+      — ML model probability predictions + fractional Kelly sizing, confidence gate, max-odds gate, model_id metadata
+      annotation; 28 new unit tests all passing. MLSportsConfigDict TypedDict added to types.py. Exported from
+      sports/__init__.py + strategies/__init__.py. Execution-service USEI routing: SportsAdapter, SportsRouter,
+      _route_instruction, _execute_sports_instruction fully implemented with 55 tests (BET/CANCEL_BET -> USEI routing
+      for BETFAIR/SMARKETS/MATCHBOOK/BETDAQ/PINNACLE). basedpyright: 0 errors on all new files. strategy-service unit
+      tests: 969 passed, 1 skipped.
+    status: done
 ---
 
 # Sports Migration — Combined Plan
