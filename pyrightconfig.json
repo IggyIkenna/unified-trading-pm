@@ -10,7 +10,7 @@
   "reportUnknownParameterType": "none",
   "reportUnnecessaryComparison": "warning",
   "reportUnreachable": "warning",
-  "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py"],
+  "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py", "tests"],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.13"

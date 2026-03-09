@@ -66,8 +66,8 @@ fi
 mkdir -p "$WORKSPACE_ROOT/.cursor"
 
 # Create symlink
-ln -s "$TARGET_DIR" "$SYMLINK_PATH"
-echo "[OK] Created symlink: .cursor/rules -> $TARGET_DIR"
+ln -s "../unified-trading-pm/cursor-rules" "$SYMLINK_PATH"
+echo "[OK] Created symlink: .cursor/rules -> ../unified-trading-pm/cursor-rules"
 
 # Verify
 echo ""

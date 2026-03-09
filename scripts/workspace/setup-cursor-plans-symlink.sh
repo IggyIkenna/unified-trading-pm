@@ -57,8 +57,8 @@ if [ ! -d "$WORKSPACE_ROOT/.cursor" ]; then
 fi
 
 # Create symlink
-ln -s "$TARGET_DIR" "$SYMLINK_PATH"
-echo "[OK] Created symlink: .cursor/plans -> $TARGET_DIR"
+ln -s "../unified-trading-pm/plans/cursor-plans" "$SYMLINK_PATH"
+echo "[OK] Created symlink: .cursor/plans -> ../unified-trading-pm/plans/cursor-plans"
 
 # Ensure cursor-plans and active in repo symlink to .cursor/plans (so Cursor can execute)
 PM_PLANS="$WORKSPACE_ROOT/unified-trading-pm/plans"

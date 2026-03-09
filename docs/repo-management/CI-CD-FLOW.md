@@ -9,6 +9,66 @@ Run scripts in this order. Do not skip steps when dependencies or code have chan
 
 ---
 
+## Workspace Lifecycle Overview
+
+Two distinct entry points — do not conflate them:
+
+### New Machine (run once)
+
+```bash
+mkdir -p ~/repos/unified-trading-system-repos
+cd ~/repos/unified-trading-system-repos
+
+# Self-contained — no prior clone required. Bootstrap clones PM first (Phase 0),
+# then reads its manifest to clone everything else and set up the full workspace.
+bash <(curl -fsSL https://raw.githubusercontent.com/IggyIkenna/unified-trading-pm/main/scripts/workspace/workspace-bootstrap.sh)
+
+# Or if you already have PM cloned:
+bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
+
+# Preserve existing repos (skip delete + re-clone — faster for incremental runs):
+bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-fresh
+```
+
+```
+Phase 0: Self-seed unified-trading-pm — clones it if missing; pulls origin/main if present.
+Phase 1: System deps (Python 3.13, uv, rg, jq)
+Phase 2: Fresh clone all repos from workspace-manifest.json
+         Default: delete existing dirs + re-clone (clean state guaranteed)
+         --skip-fresh: preserve existing dirs (incremental runs)
+Phase 3: .venv-workspace via setup-workspace-venv.sh (ruff==0.15.0, basedpyright==1.38.2)
+Phase 4: Per-repo setup.sh in topological order (T0 → T1 → T2 → T3)
+Phase 5: Import smoke test across all Python repos
+```
+
+**No chicken-and-egg:** Phase 0 clones PM automatically. `workspace-manifest.json` in PM is the single source of truth
+for repo list, tiers, and versions.
+
+### Day-to-Day (after every version alignment)
+
+```
+run-version-alignment.sh --fix      # align pyproject.toml versions + manifest
+  └── auto-calls sync-workspace-venv.sh   # refresh .venv-workspace editable installs
+
+run-all-setup.sh --rollout-first    # propagate QG templates + rebuild per-repo .venv
+
+run-all-quality-gates.sh            # local e2e smoke test (all tiers, parallel within tier)
+  └── --repo X / --repos "X Y"      # subset mode — skip alignment + setup checks
+
+→ if all pass → system-integration-tests → deployment
+```
+
+**Two venvs, two responsibilities:**
+
+| venv               | Purpose                                       | PYTHON_CMD / BASEDPYRIGHT_CMD                                   | Rebuilt by                      |
+| ------------------ | --------------------------------------------- | --------------------------------------------------------------- | ------------------------------- |
+| `.venv-workspace`  | IDE IntelliSense; `RUFF_CMD` in QG only       | **Never** — workspace has extra packages that mask missing deps | `sync-workspace-venv.sh`        |
+| `.venv` (per-repo) | QG Python, basedpyright, pytest — CI-faithful | **Always** used for type-checking and test execution            | `run-all-setup.sh` / `setup.sh` |
+
+See `unified-trading-codex/06-coding-standards/quality-gates.md § Tool Version Pinning` for the full rationale.
+
+---
+
 ## How Setup and Quality Gates Work for Every Repo
 
 **setup.sh** — One canonical file from PM. It auto-detects repo type (Python vs UI) and branches internally: Python
@@ -71,24 +131,24 @@ identical deps.
 
 ---
 
-## Phase 2b: Workspace Venv (aggregate-workspace-deps.py)
+## Phase 2b: Workspace Venv Sync
 
-After Phase 2, install all repo dependencies into the shared workspace venv (`.venv-workspace`). Required for cross-repo
-imports, quality gates from workspace root, and agent tooling.
+After Phase 2, refresh `.venv-workspace` so editable installs reflect updated dep versions. This is automatic when using
+`--fix` — `run-version-alignment.sh --fix` calls `sync-workspace-venv.sh` at the end. For manual refresh:
 
 ```bash
-# From workspace root (after run-all-setup.sh)
-source .venv-workspace/bin/activate
-python unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py
-
-# Re-resolve from scratch (ignore existing lock)
-python unified-trading-pm/scripts/workspace/aggregate-workspace-deps.py --resolve
+bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh          # refresh (idempotent)
+bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh --check  # verify only
+bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh --force  # full recreate
 ```
 
-**When:** Run after Phase 2 completes. `workspace-bootstrap.sh` invokes this automatically; for incremental runs after
-`run-all-setup.sh`, run it manually if you use the workspace venv.
+**What it does:** Creates `.venv-workspace` if missing, installs pinned tools (`ruff==0.15.0`, `basedpyright==1.38.2`),
+then reinstalls all repos from `workspace-manifest.json` as editable in topological order.
 
-**Ref:** `scripts/workspace/aggregate-workspace-deps.py` (docstring)
+**What it does NOT do:** It does not rebuild per-repo `.venv`. That is Phase 2 (`run-all-setup.sh`).
+
+**Ref:** `scripts/workspace/setup-workspace-venv.sh` (underlying implementation, also called by
+`workspace-bootstrap.sh`)
 
 ---
 
@@ -158,16 +218,27 @@ from main by resolving conflicts with a broken local state.
 
 ## Quick Reference: Full Flow
 
-| Step | Command                                                                    | When                                               |
-| ---- | -------------------------------------------------------------------------- | -------------------------------------------------- |
-| 1    | `run-version-alignment.sh`                                                 | Always first when deps may have changed            |
-| 2    | `run-version-alignment.sh --fix`                                           | If step 1 reports misalignment                     |
-| 3    | `run-all-setup.sh` (use `--rollout-first` for bootstrap/template changes)  | After alignment OK                                 |
-| 4    | Commit + push pyproject.toml, uv.lock, manifest                            | After run-all-setup                                |
-| 4b   | `aggregate-workspace-deps.py` (or `--resolve`)                             | After Phase 2, if using workspace venv             |
-| 5    | `sync-all-to-main.sh` (add `--dep-branch NAME` if DEPENDENCY CONFLICT)     | When pushing to main (only if deviation from main) |
-| 6a   | If sync fails: merge conflict → resolve manually, re-run sync              | Per conflicted repo                                |
-| 6b   | If sync fails: run `run-all-quality-gates.sh --repo X` on conflicted repos | Verify our version passes before fixing conflicts  |
+### New machine (once)
+
+| Step | Command                                                            | When                                                  |
+| ---- | ------------------------------------------------------------------ | ----------------------------------------------------- |
+| 0    | `git clone git@github.com:IggyIkenna/unified-trading-pm.git`       | Manual — PM is the seed; bootstrap reads its manifest |
+| 1    | `bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh` | Fresh machine only                                    |
+
+### Day-to-day (after any dep or code change)
+
+| Step | Command                                                                | When                                                                 |
+| ---- | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1    | `run-version-alignment.sh`                                             | Always first when deps may have changed                              |
+| 2    | `run-version-alignment.sh --fix`                                       | If step 1 reports misalignment (auto-calls `sync-workspace-venv.sh`) |
+| 3    | `run-all-setup.sh` (`--rollout-first` for template changes)            | After alignment OK — rebuilds per-repo `.venv`                       |
+| 4    | Commit + push pyproject.toml, uv.lock, manifest                        | After run-all-setup                                                  |
+| 5    | `run-all-quality-gates.sh`                                             | Local e2e smoke test; use `--repo X` for subset                      |
+| 6    | `sync-all-to-main.sh` (`--dep-branch NAME` if DEPENDENCY CONFLICT)     | When pushing to main                                                 |
+| 7a   | If sync fails: merge conflict → resolve manually, re-run sync          | Per conflicted repo                                                  |
+| 7b   | If sync fails: `run-all-quality-gates.sh --repo X` on conflicted repos | Verify our version passes before fixing                              |
+
+**If all pass → system-integration-tests → deployment**
 
 ---
 
@@ -181,11 +252,14 @@ from main by resolving conflicts with a broken local state.
 
 ## Workspace Scripts (scripts/workspace/)
 
-| Script                                | Purpose                                                                                                                               | When it runs                                                                                                                                                                                                                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **validate-workspace-constraints.py** | Validates `workspace-constraints.toml` resolves without dependency conflicts (runs `uv pip compile`). Caches result by file hash.     | Called by `validate-dependency-conflicts.py` during Phase 1 (step 4 of run-version-alignment.sh). Run when constraints may have changed.                                                                                                                                         |
-| **resolve-canonical-versions.py**     | Derives `workspace-constraints.toml` from all repo `pyproject.toml` files (topological order). Picks tightest constraint per package. | **Not** called by `run-version-alignment.sh --fix`. Called only by `validate-dependency-conflicts.py --regenerate` when constraints conflict. Use for intentional sync (e.g. migration); do **not** use to "fix" alignment — use `fix_external_dependency_alignment.py` instead. |
-| **aggregate-workspace-deps.py**       | Installs all repo deps into `.venv-workspace`. Uses `workspace-constraints.toml` + path deps.                                         | After Phase 2 (run-all-setup.sh). See Phase 2b above.                                                                                                                                                                                                                            |
+| Script                                | Purpose                                                                                                                                             | When it runs                                                                                                         |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **workspace-bootstrap.sh**            | New machine setup: system deps, clone all repos from manifest, workspace venv (via setup-workspace-venv.sh), per-repo setup, smoke test.            | Once, on fresh machine.                                                                                              |
+| **sync-workspace-venv.sh**            | Day-to-day `.venv-workspace` refresh: pinned tools + editable installs from manifest. Thin wrapper over `setup-workspace-venv.sh`.                  | Auto-called by `run-version-alignment.sh --fix`. Run manually after `git pull` on PM.                                |
+| **setup-workspace-venv.sh**           | Underlying venv setup logic: creates venv, installs `ruff==0.15.0` + `basedpyright==1.38.2`, installs all repos as editable in topo order.          | Called by both `workspace-bootstrap.sh` (Phase 3) and `sync-workspace-venv.sh`. Single source of truth.              |
+| **validate-workspace-constraints.py** | Validates `workspace-constraints.toml` resolves without dependency conflicts (runs `uv pip compile`). Caches result by file hash.                   | Called by `validate-dependency-conflicts.py` during Phase 1 (step 4 of run-version-alignment.sh).                    |
+| **resolve-canonical-versions.py**     | Derives `workspace-constraints.toml` from all repo `pyproject.toml` files (topological order). Picks tightest constraint per package.               | **Not** called by `--fix`. Called only by `validate-dependency-conflicts.py --regenerate` when constraints conflict. |
+| **aggregate-workspace-deps.py**       | Legacy: installs all repo deps into `.venv-workspace` using `workspace-constraints.toml`. Superseded by `setup-workspace-venv.sh` for standard use. | Only if explicitly needed for constraint-based resolution outside the standard flow.                                 |
 
 **Location:** `unified-trading-pm/scripts/workspace/`
 

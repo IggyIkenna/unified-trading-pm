@@ -6,21 +6,36 @@ Single source of truth for setting up the unified trading system workspace.
 
 ## Prerequisites
 
-You need these before starting:
+### Before running bootstrap (must be done manually)
 
-- **git** with SSH key configured for github.com (`ssh -T git@github.com` should work)
-- **bash 4+** or **zsh** (macOS ships zsh by default)
-- **macOS** (Homebrew) or **Linux** (apt/yum)
+| Prerequisite           | Why                          | How                                                                                                                                    |
+| ---------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **GitHub access**      | Clone ~60 private repos      | SSH: `ssh-keygen` + add to GitHub account, verify with `ssh -T git@github.com`<br>HTTPS: `gh auth login` (installs credential helpers) |
+| **bash 4+** or **zsh** | Script execution             | macOS ships zsh; Linux usually has bash 4+                                                                                             |
+| **macOS or Linux**     | Homebrew/apt for system deps | M-series and Intel Macs both supported                                                                                                 |
 
-The bootstrap script installs everything else (Python 3.13, uv, ripgrep, jq, basedpyright).
+### After bootstrap (separate one-time setup — not automated)
+
+| Prerequisite       | Why                                       | How                                                                                         |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **GCP auth**       | Service GCP calls (BigQuery, GCS, PubSub) | `gcloud auth application-default login`                                                     |
+| **act secrets**    | Run GitHub Actions locally via `act`      | Create `~/.act-secrets` from the template in `unified-trading-pm/docs/act-secrets-template` |
+| **Cursor account** | IDE licence                               | Sign up at cursor.com — free tier works for development                                     |
+
+### Handled automatically by bootstrap
+
+- **Python 3.13** — installed via Homebrew (macOS) or apt (Linux) in Phase 1
+- **uv, ripgrep, jq** — same
+- **ruff, basedpyright** — installed into `.venv-workspace` in Phase 4
 
 ---
 
 ## New Machine Setup (end-to-end)
 
-### Step 1: Clone this repo
+### Step 1: Bootstrap the workspace
 
-Pick a workspace directory. All 63 repos will live side-by-side here.
+Pick a workspace directory. All repos will live side-by-side here. Bootstrap is **self-contained** — no prior clone
+required. It clones `unified-trading-pm` first (Phase 0), reads its `workspace-manifest.json`, and sets up everything.
 
 ```bash
 # Pick ONE of these (or your own location):
@@ -30,29 +45,31 @@ Pick a workspace directory. All 63 repos will live side-by-side here.
 
 mkdir -p /your/chosen/path/unified-trading-system-repos
 cd /your/chosen/path/unified-trading-system-repos
-git clone git@github.com:IggyIkenna/unified-trading-pm.git
-```
 
-### Step 2: Bootstrap the workspace
+# Single command — no prior clone needed:
+bash <(curl -fsSL https://raw.githubusercontent.com/IggyIkenna/unified-trading-pm/main/scripts/workspace/workspace-bootstrap.sh)
 
-This single script does everything: installs system deps, clones all 63 repos from the manifest, creates the workspace
-venv, and runs per-repo setup in dependency order.
-
-```bash
+# Or if you already have PM cloned:
 bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
 ```
 
-What it does (5 phases):
+What it does (7 phases):
 
-| Phase             | What happens                                                                  |
-| ----------------- | ----------------------------------------------------------------------------- |
-| 1. System deps    | Installs Python 3.13, uv, ripgrep, jq via Homebrew/apt                        |
-| 2. Clone repos    | Reads `workspace-manifest.json`, clones all 63 repos via SSH                  |
-| 3. Workspace venv | Creates `.venv-workspace/` with ruff, basedpyright, pytest, and all repo deps |
-| 4. Per-repo setup | Runs `scripts/setup.sh` in each repo (topological order: T0 first)            |
-| 5. Smoke test     | Verifies `import <package>` works for every Python repo                       |
+| Phase                | What happens                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| 0. Seed PM           | Clones `unified-trading-pm` first (self-seeding); creates `bootstrap.sh` symlink          |
+| 1. System deps       | Installs Python 3.13, uv, ripgrep, jq via Homebrew (macOS) or apt (Linux)                 |
+| 2. Clone repos       | Reads `workspace-manifest.json`, fresh-clones all repos (SSH or `--https`)                |
+| 3. Version alignment | Runs `run-version-alignment.sh --fix` — syncs dep versions across all repos               |
+| 4. Workspace venv    | Creates `.venv-workspace/` with `ruff==0.15.0`, `basedpyright==1.38.2`, editable installs |
+| 5. Per-repo setup    | Runs `scripts/setup.sh` in each repo (topological order: T0 first)                        |
+| 6. Smoke test        | Verifies `import <package>` works for every Python repo                                   |
 
 Safe to re-run. Skips repos already cloned and deps already installed.
+
+> **Bootstrap vs sync** — `workspace-bootstrap.sh` is a **new machine** command (clone + system deps + venv + per-repo
+> setup). For day-to-day venv refresh after version alignment, use `sync-workspace-venv.sh` (see
+> [Day-to-Day Venv Sync](#day-to-day-venv-sync) below).
 
 ### Step 3: Set up workspace paths and IDE configs
 
@@ -90,10 +107,10 @@ unified-trading-system-repos/           <- open this in Cursor
 ├── unified-trading-pm/                 <- this repo
 │   ├── cursor-rules/                   <- git-tracked rules (symlinked from .cursor/rules/)
 │   ├── cursor-configs/                 <- git-tracked workspace configs
-│   └── workspace-manifest.json         <- registry of all 63 repos
+│   └── workspace-manifest.json         <- registry of all repos (manifest-driven)
 ├── unified-trading-codex/
 ├── instruments-service/
-└── ...60 more repos
+└── ...all other repos from manifest
 ```
 
 ### Step 5: Reload shell and restart IDEs
@@ -123,6 +140,36 @@ ls -la .cursor/plans                            # should show -> .../unified-tra
 # Quality gates pass on PM repo
 cd unified-trading-pm && bash scripts/quality-gates.sh
 ```
+
+---
+
+## Day-to-Day Venv Sync
+
+Run this after any version alignment or `git pull` on `unified-trading-pm`:
+
+```bash
+bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh          # refresh (idempotent)
+bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh --check  # verify only
+bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh --force  # full recreate
+```
+
+This is automatically called at the end of `run-version-alignment.sh --fix`. You only need to call it manually after a
+plain `git pull` that bumped dep versions.
+
+**What it does:** Reinstalls all repos as editable into `.venv-workspace` in topological order, and ensures pinned tool
+versions (`ruff==0.15.0`, `basedpyright==1.38.2`). Does not touch per-repo `.venv` — those are rebuilt by
+`run-all-setup.sh`.
+
+**Why per-repo `.venv` is separate:**
+
+| venv               | Purpose                                       | Rebuilt by                      |
+| ------------------ | --------------------------------------------- | ------------------------------- |
+| `.venv-workspace`  | IDE IntelliSense, `RUFF_CMD` in QG            | `sync-workspace-venv.sh`        |
+| `.venv` (per-repo) | QG Python, basedpyright, pytest — CI-faithful | `run-all-setup.sh` / `setup.sh` |
+
+**`BASEDPYRIGHT_CMD` always resolves from per-repo `.venv`**, never workspace — workspace has the union of all deps
+which would mask missing declarations in individual repos' `pyproject.toml` and cause type errors that only appear in
+CI. See `unified-trading-codex/06-coding-standards/quality-gates.md § Tool Version Pinning`.
 
 ---
 
