@@ -24,7 +24,23 @@ todos:
       contextvars usage, log injection; (e) UCI EventBus publishing — setup_events, log_event call sites; (f)
       startup/shutdown lifecycle — async lifespan context, signal handlers; (g) error handling — uncaught exception
       logging, event emission. Produce a summary table of which patterns are duplicated across how many services.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Audited all 8 features-*-service repos. Summary table:
+
+      | Pattern                             | Services | Details |
+      |-------------------------------------|----------|---------|
+      | UnifiedCloudConfig loading          | 8/8      | All extend UnifiedCloudConfig subclass (no lru_cache singleton — each service defines a typed subclass like CalendarFeaturesConfig, CommodityFeaturesConfig, etc. in config.py) |
+      | /health + /readiness endpoints      | 1/8      | Only features-delta-one-service has api/health.py; other 7 services have no HTTP health endpoints |
+      | RECORDS_PROCESSED Counter           | 8/8      | Identical pattern in each metrics.py: Counter at module level with same variable name |
+      | PROCESSING_LATENCY Histogram        | 8/8      | Identical pattern in each metrics.py: Histogram at module level with same variable name |
+      | correlation_id propagation          | 7/8      | 6 services use str(uuid.uuid4()) in cli/main.py + pass as details dict; features-onchain passes via error model field; features-commodity has none |
+      | UCI EventBus setup_events           | 5/8      | features-cross-instrument, commodity, sports wire setup_events() in cli/main.py; others use log_event only without setup_events at service level |
+      | startup/shutdown lifecycle          | 4/8      | features-calendar, delta-one, onchain, volatility use GracefulShutdownHandler global; commodity, cross-instrument, multi-timeframe, sports have no explicit shutdown handler |
+
+      All 8 services have duplicate metrics.py with identical RECORDS_PROCESSED/PROCESSING_LATENCY pattern.
+      No service uses ContextVar for correlation_id — all pass as function arguments or dict details.
+      No service has /readiness endpoint except delta-one (via api/health.py).
 
   - id: design-base-class
     content: >-
