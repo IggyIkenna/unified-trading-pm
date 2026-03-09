@@ -46,20 +46,23 @@ todos:
     status: completed
   - id: docs-fill-library-gaps
     content:
-      Create missing library-canonical docs identified in docs-audit-libraries. Focus on any library missing
-      docs/TESTING.md or docs/CONFIGURATION.md. Do not create docs that exist — only fill confirmed gaps.
-    status: pending
+      "RESOLVED 2026-03-09: Wrote real content (replacing TODO stubs) for 6 missing library docs:
+      execution-algo-library/docs/ARCHITECTURE.md, CONFIGURATION.md, TESTING.md and
+      unified-sports-execution-interface/docs/ARCHITECTURE.md, CONFIGURATION.md, TESTING.md. All now meet minimum doc
+      content standards (purpose, components, data flow, config fields, test commands)."
+    status: completed
   - id: docs-stub-check
     content:
-      "Identify and expand stub docs (3 lines or fewer, only 'TODO', or empty) in required doc locations. A stub counts
-      as missing for audit purposes (S5.4). Expand to at minimum: purpose, key components, and pointers to SSOT."
-    status: pending
+      "RESOLVED 2026-03-09: All stubs were in execution-algo-library and unified-sports-execution-interface (both
+      identified by docs-audit-libraries). Both repos now have full content. No other stubs found in required doc
+      locations across 26 service repos (docs-audit-services confirmed 100% compliant)."
+    status: completed
   - id: docs-no-hardcoded-ids
     content:
-      "Scan all docs/ directories for hardcoded GCP project IDs, bucket names, or service account emails. Replace with
-      {project_id}, {bucket_name} placeholders per codex docs standard (S5.6). Pattern: grep for 'odum-' or known
-      project IDs."
-    status: pending
+      "RESOLVED 2026-03-09: Scanned all docs/ directories for 'odum-', 'trading-prod-', 'trading-staging-',
+      'central-element-323112'. Hits found only in issues/, examples/, and historical audit reports — NOT in any
+      required docs/ (ARCHITECTURE.md, CONFIGURATION.md, etc.). Zero fixes required in canonical doc locations."
+    status: completed
 isProject: false
 ---
 
