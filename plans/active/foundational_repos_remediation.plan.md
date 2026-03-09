@@ -603,8 +603,12 @@ todos:
 
       5. Run QG for execution-service and deployment-service after fixes.
       COMMIT per repo: bash scripts/quickmerge.sh "fix: cloud isolation hard gate — no direct cloud SDK imports"
-    status: pending
-    activeForm: "Fixing cloud isolation hard gates in execution-service and deployment-service, converting .env files"
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: execution-service gcs_service.py already fully compliant (uses UCI get_storage_client).
+      deployment-service: removed direct google.cloud.storage.transfer_manager import from download_instruments.py;
+      replaced with ThreadPoolExecutor loop using UCI StorageClient — commit 82c662a. backends/*.py uses
+      TYPE_CHECKING-only imports (legitimate deferred pattern). .env already gitignored, .env.example tracked.
 
   # ─── AGENT 15 — UML schema migration + SIT + dependency governance ───────────
   - id: agent-15-ml-sit-deps
