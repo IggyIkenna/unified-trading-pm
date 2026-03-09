@@ -184,7 +184,7 @@
     },
     "unified-trading-library": {
       "internal_deps": {
-        "unified-cloud-interface": "path",
+        "unified-cloud-interface": "unified-cloud-interface[gcp]>=0.1.0,<1.0.0",
         "unified-config-interface": "path",
         "unified-events-interface": "path",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
