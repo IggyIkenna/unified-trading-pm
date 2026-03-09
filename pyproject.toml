@@ -41,6 +41,7 @@ max-complexity = 7
 [tool.basedpyright]
 extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management"]
 pythonVersion = "3.13"
+typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
