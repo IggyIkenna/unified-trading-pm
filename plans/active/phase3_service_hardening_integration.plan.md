@@ -276,13 +276,15 @@ todos:
       "INTEGRATION LAYER 1 — SCHEMA ROBUSTNESS (per service, folded into each tier's STEP B): Each repo
       tests/unit/test_schema_robustness.py — required field missing → ValidationError; optional absent → passes; wrong
       type → fails. Written as part of STEP B at each tier for every repo that defines or consumes Pydantic schemas. No
-      separate todos — folded into T4/T5/T6 STEP B work. Note: Layer 0 ran in Phase 2 T0 STEP B. PARTIAL PROGRESS
-      (verified 2026-03-09): EXISTS in execution-service, strategy-service, risk-and-exposure-service,
-      ml-inference-service, ml-training-service, pnl-attribution-service, market-data-processing-service. MISSING from
-      instruments-service, market-tick-data-service, features-calendar-service, features-delta-one-service,
-      features-volatility-service, features-onchain-service, features-sports-service, features-cross-instrument-service,
-      features-multi-timeframe-service, alerting-service, position-balance-monitor-service, strategy-validation-service."
-    status: in_progress
+      separate todos — folded into T4/T5/T6 STEP B work. Note: Layer 0 ran in Phase 2 T0 STEP B. COMPLETE (verified
+      2026-03-09): EXISTS and all tests pass in execution-service, strategy-service, risk-and-exposure-service,
+      ml-inference-service, ml-training-service, pnl-attribution-service, market-data-processing-service,
+      instruments-service (10 passed), market-tick-data-service (12 passed), features-calendar-service (7 passed),
+      features-delta-one-service (10 passed), features-volatility-service (8 passed), features-onchain-service (7
+      passed), features-sports-service (7 passed), features-cross-instrument-service (4 passed),
+      features-multi-timeframe-service (11 passed), alerting-service (10 passed), position-balance-monitor-service (10
+      passed), strategy-validation-service (7 passed). All 19 T4 services now covered."
+    status: done
   - id: p3-integration-layer1-5
     content:
       "INTEGRATION LAYER 1.5 — PER-COMPONENT INTEGRATION TESTS (in quickmerge, blocks merge): Each component/service
