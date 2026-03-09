@@ -173,8 +173,9 @@ todos:
       "T6 SETUP — UI LOCAL DEV [1 agent, REQUIRES all T5 green]: ui-local-dev-setup: add .env.local.example to all 11 UI
       repos with correct VITE_API_URL + VITE_ENV=local. Port assignments: 8001=deployment-api,
       8002=execution-results-api, 8003=client-reporting-api, 8004=market-data-api. See UI-DEPENDENCY-MATRIX.md for full
-      port table. Must complete before T6 implementation batch."
-    status: pending
+      port table. Must complete before T6 implementation batch. DONE ✅ (verified 2026-03-09): all 11 UI repos have
+      .env.local.example with correct VITE_API_URL + VITE_ENV=local and src/ directories with components."
+    status: done
   - id: t6-ui-implementation
     content:
       "T6 — UIs [11 agents PARALLEL, after setup]: Agent 1: auth-trading-analytics-ui (Google OAuth TRADER + /positions
@@ -197,7 +198,19 @@ todos:
       Agent 11: ui-skeleton-assess (assess execution-analytics-ui [CANONICAL — was execution-analytics-ui, old name is
       WRONG everywhere], client-reporting-ui, settlement-ui, logs-dashboard-ui, batch-audit-ui — what data schemas they
       need vs what's available; scope SSE integration; RENAME any repo/package/import/AR/cloudbuild still using old
-      execution-analytics-ui name). STEPS D→E: quickmerge --unit-only then full [batched in groups of 4]."
+      execution-analytics-ui name). STEPS D→E: quickmerge --unit-only then full [batched in groups of 4]. UI STATE
+      SURVEY (2026-03-09): All 11 repos have src/ with components and .env.local.example (t6-ui-setup DONE). Partial
+      implementation: trading-analytics-ui (4 files — App, main, Latency page only; shell); live-health-monitor-ui (10
+      files — ManualTradingPanel, ContractHealth, RiskMetrics, PositionMonitor, SystemHealth, useDashboardData hook,
+      RequireAuth); deployment-ui (44 files — most complete, full impl); onboarding-ui (12 files — ClientOnboarding,
+      StrategyOnboarding, VenueOnboarding, APIKeyManagement, AuditLog, RiskConfiguration pages); ml-training-ui (11
+      files — ExperimentsList, ExperimentDetail, DeployModal, ModelsList, GoogleAuth, mlApi, mlTypes); strategy-ui (29
+      files — wizard components, results, GoogleAuth; strategy-service frontend/ embedded code VIOLATION tracked in
+      ui-audit-results.md); batch-audit-ui (3 files — shell only); client-reporting-ui (8 files — ReportsPage,
+      GenerateReportPage, PerformancePage, GoogleAuth); settlement-ui (7 files — Reports, Positions, Invoices, Login);
+      logs-dashboard-ui (9 files — LogsView, LogDetail, logsApi, logsTypes, GoogleAuth); execution-analytics-ui (20
+      files — InstructionAvailability, ConfigBrowser, AlgorithmComparison, Login, api/client, stores, deploymentClient).
+      All UIs still pending full API wiring, SSE integration, OAuth completion per t6-ui-implementation spec."
     status: pending
   - id: p3-cross-cutting-auth
     content:
@@ -251,15 +264,25 @@ todos:
       qg-venue-name-canonicalization (binance/okx/deribit/bybit → UCI venue constants); adapter-models-placement-audit
       (rg '_[a-z]+_models\\.py' --type py across all service dirs; any _<venue>_models.py found in service directories
       must be moved to unified-api-contracts/unified_api_contracts_external/<venue>/schemas.py per
-      adapter-models-belong-in-uac.mdc)."
+      adapter-models-belong-in-uac.mdc). CODEBASE SURVEY (2026-03-09): reportAny — zero repos using 'warning' level;
+      deployment-service + features-delta-one-service set to 'none' (need upgrade to 'error'); all others already at
+      'error'. VCR cassettes — UMI has cassettes/bybit + cassettes/binance; URDI has cassettes/deribit +
+      cassettes/binance; USEI has 3 files. qg-type-ignore-audit — 724 total # type: ignore occurrences remain (target
+      <10 documented). qg-venue-name-canonicalization — zero bare venue strings found in execution/strategy/risk service
+      production code (non-test). Still PENDING overall — awaiting all tiers T0–T6 green."
     status: pending
   - id: p3-integration-layer1
     content:
       "INTEGRATION LAYER 1 — SCHEMA ROBUSTNESS (per service, folded into each tier's STEP B): Each repo
       tests/unit/test_schema_robustness.py — required field missing → ValidationError; optional absent → passes; wrong
       type → fails. Written as part of STEP B at each tier for every repo that defines or consumes Pydantic schemas. No
-      separate todos — folded into T4/T5/T6 STEP B work. Note: Layer 0 ran in Phase 2 T0 STEP B."
-    status: pending
+      separate todos — folded into T4/T5/T6 STEP B work. Note: Layer 0 ran in Phase 2 T0 STEP B. PARTIAL PROGRESS
+      (verified 2026-03-09): EXISTS in execution-service, strategy-service, risk-and-exposure-service,
+      ml-inference-service, ml-training-service, pnl-attribution-service, market-data-processing-service. MISSING from
+      instruments-service, market-tick-data-service, features-calendar-service, features-delta-one-service,
+      features-volatility-service, features-onchain-service, features-sports-service, features-cross-instrument-service,
+      features-multi-timeframe-service, alerting-service, position-balance-monitor-service, strategy-validation-service."
+    status: in_progress
   - id: p3-integration-layer1-5
     content:
       "INTEGRATION LAYER 1.5 — PER-COMPONENT INTEGRATION TESTS (in quickmerge, blocks merge): Each component/service
@@ -268,8 +291,15 @@ todos:
       Layer 2 post-deploy verification. Examples: test that a service correctly calls its UMI adapter with correct
       params, test that event publication logic calls EventSink correctly, test config loading against mock secrets.
       Naming convention: tests/integration/test_<component>_integration.py. Run command: pytest tests/integration/ -v
-      --timeout=30"
-    status: pending
+      --timeout=30. PARTIAL PROGRESS (verified 2026-03-09): tests/integration/ EXISTS with tests in execution-service
+      (20 files), strategy-service (4 files), ml-inference-service (3 files), instruments-service (5 files),
+      market-tick-data-service (2 files), market-data-processing-service (3 files), features-calendar-service (1 file),
+      features-multi-timeframe-service (1 file), ml-training-service (3 files), alerting-service (3 files),
+      position-balance-monitor-service (2 files). MISSING or EMPTY: features-delta-one-service,
+      features-volatility-service (0 files), features-onchain-service (0 files), features-sports-service,
+      features-cross-instrument-service, pnl-attribution-service, risk-and-exposure-service (2 files),
+      strategy-validation-service."
+    status: in_progress
   - id: p3-integration-layer2
     content:
       "INTEGRATION LAYER 2 — INFRASTRUCTURE VERIFICATION (post-deploy ONLY — never in quickmerge, never pre-deploy): Add
