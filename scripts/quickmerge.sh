@@ -309,6 +309,45 @@ if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff orig
 fi
 
 # ============================================================================
+# STAGE 0.5: PM MANIFEST STALENESS CHECK
+# Fetches origin/main of unified-trading-pm; warns if local PM is behind remote.
+# In CI auto-pulls (ff-only); interactive mode warns and continues.
+# Prevents stale-manifest quickmerges where the local manifest is behind the
+# remote, causing constraint mismatches in downstream repos after merge.
+# ============================================================================
+echo "=========================================="
+echo "STAGE 0.5: PM Manifest Staleness Check"
+echo "=========================================="
+PM_CHECK_PATH="$WORKSPACE_ROOT/unified-trading-pm"
+if [ -d "$PM_CHECK_PATH" ] && [ "$REPO_NAME" != "unified-trading-pm" ]; then
+  cd "$PM_CHECK_PATH"
+  git fetch origin main --quiet 2>/dev/null || true
+  LOCAL_PM_HASH=$(git rev-parse HEAD 2>/dev/null || echo "")
+  REMOTE_PM_HASH=$(git rev-parse origin/main 2>/dev/null || echo "")
+  if [ -n "$LOCAL_PM_HASH" ] && [ -n "$REMOTE_PM_HASH" ] && [ "$LOCAL_PM_HASH" != "$REMOTE_PM_HASH" ]; then
+    COMMITS_BEHIND=$(git rev-list HEAD..origin/main --count 2>/dev/null || echo "?")
+    echo "⚠️  unified-trading-pm is $COMMITS_BEHIND commit(s) behind origin/main"
+    echo "   Local:  $LOCAL_PM_HASH"
+    echo "   Remote: $REMOTE_PM_HASH"
+    if [ "${CI:-}" = "true" ] || [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+      echo "   [CI] Auto-pulling PM to latest..."
+      git pull --ff-only origin main --quiet 2>/dev/null && \
+        echo "   [$REPO_NAME] ✅ PM pulled to latest" || \
+        echo "   [$REPO_NAME] ⚠️  PM pull failed — continuing with stale manifest"
+    else
+      echo "   To sync: cd unified-trading-pm && git pull origin main"
+      echo "   Continuing with local manifest (possible constraint mismatches downstream)."
+    fi
+  else
+    echo "[$REPO_NAME] ✅ unified-trading-pm is current"
+  fi
+  cd "$REPO_DIR"
+elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
+  echo "[$REPO_NAME] ✅ Running from PM itself — skipping self-check"
+fi
+echo ""
+
+# ============================================================================
 # STAGE 1: DEPENDENCY VALIDATION (workspace-manifest.json SSOT)
 # ============================================================================
 echo "=========================================="
