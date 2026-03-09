@@ -100,14 +100,22 @@ todos:
       circular reference between PM manifest updates and service repo merges. Design: add a
       scripts/update-pm-plan-status.sh helper that takes SERVICE_NAME and TODO_ID, updates the .plan.md YAML status
       field, and commits to the current PM branch.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: scripts/update-pm-plan-status.sh created — takes --service, --todo, --status, --notes,
+      --plan, --dry-run; auto-discovers plan file by service name or todo ID; Python-based YAML line editor;
+      auto-commits plan change to PM branch. Committed f771289.
   - id: pm-manifest-remote-ssot-check
     content: >-
       Add a pre-check to quickmerge.sh (before Stage 1): fetch origin/main of PM, compare versions block against local
       manifest. If local PM is behind remote: in interactive mode prompt user to pull; in GHA mode auto-pull. Prevents
       stale-manifest quickmerges where a service repo thinks a dep is at version X but PM remote already has it at X+1,
       causing constraint mismatches in downstream repos after merge.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Stage 0.5 added to quickmerge.sh — fetches origin/main of unified-trading-pm, warns if
+      local PM is N commits behind remote (shows hash diff); CI auto-pulls ff-only; interactive warns and continues.
+      Skipped when running FROM unified-trading-pm itself to avoid self-check recursion. Committed f771289.
   - id: smoke-test-gate
     content: >-
       In system-integration-tests repo, add a GHA workflow (smoke-test-gate.yml) that triggers on push to staging
