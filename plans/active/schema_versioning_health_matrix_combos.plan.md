@@ -97,14 +97,14 @@ Document in `docs/NEGATIVE_PRICES.md`:
 
 ### Todos
 
-| id                        | description                                                         | status                     |
-| ------------------------- | ------------------------------------------------------------------- | -------------------------- | ------- |
-| combo-canonical-types     | Add `CanonicalComboLeg` + `CanonicalComboBet` to domain.py          | pending                    |
-| combo-american-odds-field | Add `american_odds: int                                             | None`to`CanonicalBetOrder` | pending |
-| combo-odds-format-field   | Add `odds_format: OddsFormat` field to order + leg canonicals       | pending                    |
-| combo-odds-utils          | Create `odds.py` with `american_to_decimal` + `decimal_to_american` | pending                    |
-| combo-negative-price-docs | Create `docs/NEGATIVE_PRICES.md`                                    | pending                    |
-| combo-tests               | Unit tests for conversion utils + negative price round-trips        | pending                    |
+| id                        | description                                                         | status                   |
+| ------------------------- | ------------------------------------------------------------------- | ------------------------ |
+| combo-canonical-types     | Add `CanonicalComboLeg` + `CanonicalComboBet` to domain.py          | **completed 2026-03-09** |
+| combo-american-odds-field | Add `american_odds: int \| None` to `CanonicalBetOrder`             | **completed 2026-03-09** |
+| combo-odds-format-field   | Add `odds_format: OddsFormat` field to order + leg canonicals       | **completed 2026-03-09** |
+| combo-odds-utils          | Create `odds.py` with `american_to_decimal` + `decimal_to_american` | **completed 2026-03-09** |
+| combo-negative-price-docs | Create `docs/NEGATIVE_PRICES.md`                                    | **completed 2026-03-09** |
+| combo-tests               | Unit tests for conversion utils + negative price round-trips        | **completed 2026-03-09** |
 
 ---
 
