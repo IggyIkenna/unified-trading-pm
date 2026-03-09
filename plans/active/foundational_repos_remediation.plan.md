@@ -677,8 +677,11 @@ todos:
       COMMIT (UMI): bash scripts/quickmerge.sh "fix: complete PredictionSnapshot migration, wire UEI events, fix 12 ruff"
       COMMIT (SIT): bash scripts/quickmerge.sh "fix: format error, coverage threshold, add library integration tests"
       COMMIT (PM): bash scripts/quickmerge.sh "chore: add 14 packages to workspace-constraints, tighten rich bound"
-    status: pending
-    activeForm: "Completing UMI schema migration, fixing SIT structural issues, and adding dep governance"
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: UML already compliant (C901, PredictionSnapshot migration, UEI events all done).
+      SIT: fixed SOURCE_DIR bug (system_integration_tests→tests), added library integration tests + test_config.py
+      — commit 4149ce9. Dep governance: rich bound tightened >=14.2.0,<15.0.0 — commit 1b5d4a9.
 
 isProject: true
 ---
