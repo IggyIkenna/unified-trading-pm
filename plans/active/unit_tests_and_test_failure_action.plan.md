@@ -40,6 +40,7 @@ todos:
       fixes (SHAP explainability, not a deployment blocker). RC-9: Add average_precision to ModelTrainer.evaluate()
       metrics dict — 2 fixes. RC-10: Tighten feature validator to detect NaN in OHLCV columns — 2 fixes."
     status: pending
+    notes: "Agent hit usage limit 2026-03-09 (resets Mar 11 5pm London). RC-7/9/10 not completed — needs retry."
   - id: phase4-remaining
     content:
       "Phase 4 — Remaining (~3h, fixes 12 tests + 4 collection errors): RC-12: Add missing exports —
