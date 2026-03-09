@@ -2358,6 +2358,11 @@
           "name": "unified-cloud-interface",
           "version": ">=0.1.0,<2.0.0",
           "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "github_url": "https://github.com/IggyIkenna/features-commodity-service",

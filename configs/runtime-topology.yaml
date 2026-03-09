@@ -1459,6 +1459,19 @@ deployment_targets:
       ml-training-service:
         reason: Heavy compute (~2hr training runs); Cloud Run max timeout too short
 
+  vm_infrastructure:
+    deploy_type: vm
+    scaling: always_on
+    provisioned_by: terraform
+    services:
+      ibkr-gateway-infra:
+        reason: >
+          Single long-lived IB Gateway Java process for all TradFi connectivity. Terraform-provisioned from
+          ibkr-gateway-infra repo (GCE e2-standard-2). SSH tunnel from trading-service VM to ibkr-gateway-vm:4002.
+          Credentials: ibkr-account-credentials in Secret Manager.
+        repo: ibkr-gateway-infra
+        ports: [4001, 4002]
+
   cloud_run_service_always_on:
     deploy_type: cloud_run_service
     scaling: always_on
