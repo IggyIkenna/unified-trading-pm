@@ -187,14 +187,14 @@ fi
 
 ### Todos
 
-| id                         | description                                                                     | status  |
-| -------------------------- | ------------------------------------------------------------------------------- | ------- |
-| versioning-yaml            | Create `unified_api_contracts/provider_api_versions.yaml` with all 63 providers | pending |
-| versioning-schema-metadata | Add `__api_version__` to all 63 external schema files                           | pending |
-| versioning-matrix-script   | Create `scripts/generate_schema_version_matrix.py` (MD + SVG output)            | pending |
-| versioning-svg-matrix      | SVG health matrix output (green/yellow/red grid)                                | pending |
-| versioning-quality-gate    | Add STEP 5.16 to quality-gates.sh + codex SSOT template                         | pending |
-| versioning-tests           | Unit tests for matrix script with mock yaml + schema modules                    | pending |
+| id                         | description                                                                     | status                   |
+| -------------------------- | ------------------------------------------------------------------------------- | ------------------------ |
+| versioning-yaml            | Create `unified_api_contracts/provider_api_versions.yaml` with all 63 providers | **completed 2026-03-09** |
+| versioning-schema-metadata | Add `__api_version__` to all 63 external schema files                           | **completed 2026-03-09** |
+| versioning-matrix-script   | Create `scripts/generate_schema_version_matrix.py` (MD + SVG output)            | **completed 2026-03-09** |
+| versioning-svg-matrix      | SVG health matrix output (green/yellow/red grid)                                | **completed 2026-03-09** |
+| versioning-quality-gate    | Add STEP 5.16 to quality-gates.sh + codex SSOT template                         | **completed 2026-03-09** |
+| versioning-tests           | Unit tests for matrix script with mock yaml + schema modules                    | **completed 2026-03-09** |
 
 ---
 
