@@ -114,7 +114,43 @@ todos:
       public venues: kalshi, polymarket, thegraph, defillama, barchart, open_meteo, upbit, fear_greed),
       quality-importerror-fallbacks (AC only), quality-large-file-splits (aws_schemas.py 1424L, venue_manifest.py 1058L,
       binance/schemas.py 1033L)."
-    status: pending
+    status: done
+    notes: |
+      Completed (2026-03-09):
+      lib-phase3-urdi-setup: VERIFIED DONE — URDI base_adapter.py has get_secret_client(),
+        3-attempt exponential backoff retry, 429/5xx handling, aiohttp rate-limit response logic.
+        14 adapters present. URDI QG PASSES.
+      mel-deps-remove: VERIFIED DONE — MEL pyproject.toml has zero dependencies; no
+        unified_trading_library/unified_config_interface imports anywhere in MEL source.
+      dag-mel-tier-mismatch: VERIFIED DONE — MEL correctly at arch_tier=0 in workspace-manifest.json
+        and L2 (Tier 0) in WORKSPACE_MANIFEST_DAG.svg.
+      cohesion-uic-int-unified-api-contracts-dep: VERIFIED DONE — unified-api-contracts>=0.1.0,<1.0.0
+        already in UIC_INT pyproject.toml dependencies.
+      auth-endpoint-registry-unvalidated: DONE — CassetteStatus enum (RECORDED/AUTH_BLOCKED/
+        NOT_APPLICABLE/PENDING) added to EndpointSpec; ENDPOINT_REGISTRY expanded from 27 to 55
+        entries covering all major venues with explicit requires_auth + cassette_status + Secret
+        Manager key names in notes for AUTH_BLOCKED endpoints.
+        endpoint_registry.py split into types module + _endpoint_registry_data.py (900L SRP limit).
+        CassetteStatus exported from unified_api_contracts __init__.py.
+        Commit: feat(endpoint-registry): add CassetteStatus enum and backfill 28+ auth-required venues
+      vcr-urdi-parse-raw-umi-stubs: VERIFIED DONE — _parse_raw() is a concrete method in
+        URDI base_adapter.py (lines 131-162) with schema validation + INSTRUMENT_SCHEMA_VIOLATION
+        event logging. No stubs needed; method is already implemented.
+      vcr-public-venues: VERIFIED DONE (confirmed already committed via admin force-sync):
+        tests/vcr/test_kalshi_vcr.py + test_thegraph_vcr.py present and passing (8/8 tests).
+        Cassettes: kalshi/mocks/markets.yaml, kalshi/mocks/orderbook.yaml committed.
+        VCR_ENDPOINTS: thegraph entry added (pools_query.yaml POST to Uniswap V2 subgraph).
+        All 8 venues (kalshi, polymarket, thegraph, defillama, barchart, open_meteo, upbit,
+        fear_greed) have VCR tests and/or cassettes.
+      quality-importerror-fallbacks (AC): VERIFIED DONE — 0 `except ImportError` blocks in
+        unified_api_contracts/ source.
+      quality-large-file-splits: VERIFIED DONE — all source files were already under 900L
+        (aws_schemas.py, venue_manifest.py, binance/schemas.py all split in prior sessions).
+        endpoint_registry.py (939L after expansion) split this session.
+      Also fixed: domain.py reportGeneralTypeIssues — CanonicalComboLeg/CanonicalComboBet
+        had frozen=True but _CanonicalBase is not frozen; removed frozen=True.
+        Commit: fix(type-check): remove frozen=True from CanonicalComboLeg and CanonicalComboBet
+      AC QG: ALL QUALITY GATES PASSED (D1-D3 equivalent, local). D4/D5 require quickmerge.
   - id: t0-progressive-validation
     content:
       "T0 STEP D→E — PROGRESSIVE VALIDATION [8 agents PARALLEL]: D1 (quickmerge --lint-only) → D2 (--unit-only) → D3
