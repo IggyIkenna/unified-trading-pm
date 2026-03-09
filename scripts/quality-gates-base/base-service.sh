@@ -195,6 +195,18 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     if [ -z "$SOURCE_DIR" ] || [ "$SOURCE_DIR" = "REPLACE_ME" ]; then
         log_fail "SOURCE_DIR not set — cannot run basedpyright safely"; exit 1
     fi
+    # ── BASELINE FILE GATE ────────────────────────────────────────────────────
+    # .basedpyright-baseline.json silently suppresses type errors from CI output.
+    # Policy: baseline files are FORBIDDEN unless documented in QUALITY_GATE_BYPASS_AUDIT.md.
+    #   • Present + undocumented → FAIL (hard block)
+    #   • Present + documented   → continues but counts as a violation (warn in audit)
+    if [ -f ".basedpyright-baseline.json" ]; then
+        if grep -q "basedpyright-baseline" QUALITY_GATE_BYPASS_AUDIT.md 2>/dev/null; then
+            log_warn "TYPE CHECK: .basedpyright-baseline.json is suppressing errors — documented in QUALITY_GATE_BYPASS_AUDIT.md (WARN: target is zero baselines)"
+        else
+            log_fail "TYPE CHECK: .basedpyright-baseline.json found but NOT documented in QUALITY_GATE_BYPASS_AUDIT.md — delete the baseline or document it"; exit 1
+        fi
+    fi
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${SERVICE_NAME:-$(basename "$PWD")}"
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
     PYRIGHT_OUT=$(run_timeout 120 basedpyright "$SOURCE_DIR/" 2>&1); PYRIGHT_EXIT=$?
@@ -569,6 +581,20 @@ if [ -f "pyproject.toml" ]; then
     else
         log_success "STEP 5.21: basedpyright Any/Unknown rules OK"
     fi
+fi
+
+# STEP 5.22 — basedpyright baseline suppression audit
+# .basedpyright-baseline.json silently hides errors from CI. Even if documented in
+# QUALITY_GATE_BYPASS_AUDIT.md it is a WARN (target state: no baseline files in any repo).
+echo "=== STEP 5.22: basedpyright baseline suppression ==="
+if [ -f ".basedpyright-baseline.json" ]; then
+    if grep -q "basedpyright-baseline" QUALITY_GATE_BYPASS_AUDIT.md 2>/dev/null; then
+        log_warn "STEP 5.22: .basedpyright-baseline.json present — documented bypass (WARN: eliminate to reach clean-slate)"; ((V++))
+    else
+        log_fail "STEP 5.22: .basedpyright-baseline.json present without QUALITY_GATE_BYPASS_AUDIT.md entry — undocumented suppression"; ((V++))
+    fi
+else
+    log_success "STEP 5.22: no basedpyright baseline (clean)"
 fi
 
 # ============================================================
