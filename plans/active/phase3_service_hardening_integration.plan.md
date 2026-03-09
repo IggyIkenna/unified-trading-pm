@@ -323,9 +323,11 @@ todos:
       construction + read_fills error handling + write delegation, PnlAttributionServiceConfig, execution_alpha
       calculate_execution_alpha 7 cases, analytics StatisticalMetrics 8 cases, PathAwareMetrics 3 cases,
       AggregateMetrics 4 cases; all pass, coverage 48.1% > threshold 43%; committed main), strategy-validation-service
-      (7 tests — main() dry-run/batch exits 0, STARTED/STOPPED events, setup_events canonical service-name,
-      VALIDATION_COMPLETED before STOPPED, PERSISTENCE events in batch; all pass; committed main). All 5 committed.
-      STILL MISSING: none — all 19 T4 services now have integration tests."
+      (16 tests — main() dry-run/batch/live exits 0, STARTED/STOPPED events, setup_events canonical service-name,
+      VALIDATION_COMPLETED before STOPPED, PERSISTENCE events in batch, STRATEGY_VALIDATION_STARTED/COMPLETED,
+      DATA_BROADCAST, PROCESSING_STARTED/COMPLETED, DATA_INGESTION_STARTED/COMPLETED, --strategy filter, --verbose flag,
+      setup_tracing canonical service name, VALIDATION_STARTED before VALIDATION_COMPLETED ordering; all pass; committed
+      main). All 5 committed. STILL MISSING: none — all 19 T4 services now have integration tests."
     status: done
   - id: p3-integration-layer2
     content:
