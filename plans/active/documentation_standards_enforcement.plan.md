@@ -9,23 +9,41 @@ overview: |
   and stub docs that need real content. This plan audits per-type, fills gaps, and
   verifies no docs use hardcoded project IDs or bucket names.
 todos:
+  - id: config-injection-codex
+    content:
+      "Add codex/08-workflows/config-injection.md with architecture ASCII diagram, domain schema reference, how to add a
+      new domain, service wiring pattern, UI usage guide. (Migrated from config_dynamic_injection.plan.md p4-codex.)
+      RESOLVED 2026-03-08: File already exists at unified-trading-codex/08-workflows/config-injection.md (358 lines),
+      covers all required sections: architecture ASCII, domain schemas (Instrument/Strategy/Client/Venue), adding a new
+      domain, service wiring pattern, UI usage guide, anti-patterns, quality gate."
+    status: completed
+
   - id: docs-audit-services
     content:
       "Audit all service repos for S5.1 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md,
       docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md,
-      QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing)."
-    status: pending
+      QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing). RESOLVED 2026-03-09:
+      Audited all 26 service repos. Result: 100% compliant — zero missing files, zero stubs. All repos have all 8
+      required docs. Gap report: unified-trading-pm/reports/docs_gap_report_2026_03_08.md."
+    status: completed
   - id: docs-audit-libraries
     content:
       "Audit all library repos for S5.2 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md,
-      docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing)."
-    status: pending
+      docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing). RESOLVED
+      2026-03-09: Audited all 17 library repos. 15/17 fully compliant. 2 repos with gaps: execution-algo-library
+      (missing ARCHITECTURE.md, CONFIGURATION.md, TESTING.md) and unified-sports-execution-interface (same 3 docs
+      missing). Stub files created for all 6 missing docs. Gap report:
+      unified-trading-pm/reports/docs_gap_report_2026_03_08.md."
+    status: completed
   - id: docs-fill-service-gaps
     content:
       "Create missing service-canonical docs identified in docs-audit-services. Priority: docs/DEPLOYMENT_GUIDE.md for
       execution-service, strategy-service, ml-training-service, risk-and-exposure-service. Then
-      docs/SCHEMA_VALIDATION.md and docs/GCS_PATHS.md for services that lack them."
-    status: pending
+      docs/SCHEMA_VALIDATION.md and docs/GCS_PATHS.md for services that lack them. NOTE 2026-03-09: docs-audit-services
+      found zero missing docs in service repos — all 26 services are fully compliant. No service gap fills required.
+      Marking in-progress as no-op; library stubs (6 files) created under docs-audit-libraries. Full content authoring
+      tracked under docs-fill-library-gaps."
+    status: completed
   - id: docs-fill-library-gaps
     content:
       Create missing library-canonical docs identified in docs-audit-libraries. Focus on any library missing

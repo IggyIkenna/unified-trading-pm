@@ -38,6 +38,23 @@ todos:
       (liquidation_levels.py). Check Tardis coverage first; if not covered, obtain Coinglass API key via coinglass.com
       and add as coinglass-api-key in Secret Manager."
     status: pending
+  - id: polymarket-api-keys-sm
+    content:
+      "Add Polymarket API keys (api_key, secret, passphrase, private_key, polyrouter_key) to Secret Manager. Keys were
+      burned by git history exposure (workspace_audit_remediation_2026_03_07 rotate-archive-api-keys). Obtain fresh
+      Polymarket credentials and store as polymarket-api-key, polymarket-api-secret, polymarket-passphrase,
+      polymarket-private-key, polymarket-polyrouter-key in SM. BLOCKER: Also requires Polymarket USDC.e wallet on
+      Polygon to be funded (trading-ops task). (Migrated from strategy_expansion_five_themes.plan.md.)"
+    status: pending
+
+  - id: deribit-options-live-feed
+    content:
+      "Implement live Deribit options chain WebSocket feed in market-tick-data-service or dedicated adapter. Required
+      for vol_surface strategy live execution. Feed should publish OptionChainSnapshot events to
+      NormalizedStrikeCoordinate schema. Deribit WS cassettes (phase-2-ws) must be recorded first. BLOCKER: Deribit WS
+      credentials (phase-2-ws). (Migrated from strategy_expansion_five_themes.plan.md.)"
+    status: pending
+
   - id: phase-4-blockers
     content: Phase 4 — betfair, kalshi, coinbase, bloxroute, smarkets, betdaq (key/cassette blockers)
     status: pending
