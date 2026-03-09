@@ -26,7 +26,10 @@ todos:
     content:
       "Add version-bump.yml to ibkr-gateway-infra (the one repo missing it). Part of vc-vb-rollout but flag separately
       as it requires creating .github/workflows/ dir."
-    status: in_progress
+    status: done
+    notes: |
+      RESOLVED 2026-03-09: version-bump.yml already committed to ibkr-gateway-infra in admin force-sync
+      (commit 407c9f5). Verified: .github/workflows/version-bump.yml exists with correct GH_PAT dispatch step.
 
   - id: vc-pm-merge
     content:
@@ -52,11 +55,11 @@ todos:
           pre-commit config does not reference either. Pre-commit passes cleanly.
 
       STILL BLOCKED — needs further work:
-        - unified-feature-calculator-library: 43% test coverage (needs tests for base.py, time_series.py, onchain.py,
-          validations.py)
+        - unified-feature-calculator-library: RESOLVED 2026-03-09 — version bumped to 0.2.0; 240 tests pass;
+          MIN_COVERAGE=93 confirmed passing (commit 9721c16). No longer a blocker.
         - live-health-monitor-ui: missing src modules
-        - client-reporting-ui: missing recharts dependency
-        - trading-analytics-ui: no test files
+        - client-reporting-ui: missing recharts dependency (VERIFIED resolved — recharts in package.json)
+        - trading-analytics-ui: no test files (has tests/ dir and src/)
         - logs-dashboard-ui: OAuth in tests
         - ml-training-ui: playwright conflict
     status: in_progress
