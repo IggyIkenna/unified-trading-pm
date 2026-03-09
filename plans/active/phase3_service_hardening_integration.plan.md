@@ -297,14 +297,19 @@ todos:
       Layer 2 post-deploy verification. Examples: test that a service correctly calls its UMI adapter with correct
       params, test that event publication logic calls EventSink correctly, test config loading against mock secrets.
       Naming convention: tests/integration/test_<component>_integration.py. Run command: pytest tests/integration/ -v
-      --timeout=30. PARTIAL PROGRESS (verified 2026-03-09): tests/integration/ EXISTS with tests in execution-service
-      (20 files), strategy-service (4 files), ml-inference-service (3 files), instruments-service (5 files),
+      --timeout=30. PROGRESS (updated 2026-03-09): tests/integration/ EXISTS with tests in execution-service (20 files),
+      strategy-service (4 files), ml-inference-service (3 files), instruments-service (5 files),
       market-tick-data-service (2 files), market-data-processing-service (3 files), features-calendar-service (1 file),
       features-multi-timeframe-service (1 file), ml-training-service (3 files), alerting-service (3 files),
-      position-balance-monitor-service (2 files). MISSING or EMPTY: features-delta-one-service,
-      features-volatility-service (0 files), features-onchain-service (0 files), features-sports-service,
-      features-cross-instrument-service, pnl-attribution-service, risk-and-exposure-service (2 files),
-      strategy-validation-service."
+      position-balance-monitor-service (2 files). NEWLY ADDED (2026-03-09 session p3-integration-layer1-5):
+      features-delta-one-service (14 tests — NaNHandler, OrchestrationService data-type resolution, FeatureWriter
+      DataSink interaction, config bucket resolution; all pass), features-volatility-service (12 tests —
+      VolatilityServiceConfig, VolatilityCalculator options-chain features, FuturesCalculator term-structure features,
+      VolatilityFeaturesOrchestrator storage-client interactions; all pass), features-onchain-service (12 tests —
+      OnchainFeaturesConfig, macro derived features, base-cols helper, perps instrument filtering, process_feature_group
+      orchestration + log-event emission; all pass). All 3 committed to their respective repos on main. STILL MISSING:
+      features-sports-service, features-cross-instrument-service, pnl-attribution-service, risk-and-exposure-service (2
+      files, not empty), strategy-validation-service."
     status: in_progress
   - id: p3-integration-layer2
     content:
