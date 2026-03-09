@@ -18,7 +18,13 @@ todos:
     status: pending
   - id: portable-backtests-cefi-tradfi-defi
     content: Portable backtests — CEFI, TradFi, DeFi via run_parallel_backtests.sh and runners
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: CeFi/TradFi/DeFi scripts created in strategy-service/scripts/;
+      fixtures in tests/fixtures/{cefi,tradfi,defi}_market_data/; run_portable_backtests.sh
+      orchestrates all 4 in parallel; all exit 0. CeFi: 11 trades, pnl=36.5, win_rate=0.64.
+      DeFi: 20 trades, pnl=39.2, win_rate=1.0. TradFi: fixture-based (no signals in sample).
+      commit 47c7ed0.
   - id: portable-backtests-sports
     content:
       "Sports portable arb backtest — VCR cassettes for odds/line feeds. SCRIPT:
@@ -35,7 +41,13 @@ todos:
       (n_opportunities:2, n_trades:2, pnl:6.22, win_rate:1.0, max_drawdown:0.0) — commit bede70c.
   - id: portable-criteria
     content: Ensure no live API calls in CI; deterministic; batch-live symmetry
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: All 4 backtest scripts verified: (a) no live API calls — all data
+      from YAML fixtures in tests/fixtures/; (b) deterministic — fixture data is static;
+      (c) fast — each script runs in <2s; (d) batch-live symmetry — same strategy logic
+      path as live (ArbitrageStrategy, MomentumStrategy, VWAPStrategy, DeFiLPStrategy);
+      run_portable_backtests.sh exits 0 when all pass.
 isProject: false
 ---
 

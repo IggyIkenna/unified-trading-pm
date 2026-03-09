@@ -46,7 +46,11 @@ todos:
       shutdown() flushes metrics and logs shutdown event; correlation_id propagated via contextvars; no os.getenv()
       anywhere. Export from src/unified_feature_calculator/__init__.py. Run `basedpyright
       src/unified_feature_calculator/` — zero errors before proceeding.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: base_service.py created; BaseFeatureServiceV2 with abstract
+      compute_features(), startup()/shutdown() lifecycle, correlation_id_var via contextvars.
+      Exported from service_base/__init__.py and top-level __init__.py. Commit e17f550.
 
   - id: implement-feature-service-metrics
     content: >-
@@ -57,7 +61,11 @@ todos:
       `build_feature_metrics(service_name: str) -> FeatureServiceMetrics` that registers and returns both metrics. No
       duplicate registration (use CollectorRegistry or handle ValueError). Export from __init__.py. Full type
       annotations, zero basedpyright errors.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: metrics.py created with RECORDS_PROCESSED Counter + PROCESSING_LATENCY
+      Histogram; build_feature_metrics() factory with ValueError-safe duplicate registration.
+      Exported from __init__.py. Commit e17f550.
 
   - id: implement-health-router-factory
     content: >-
@@ -66,7 +74,11 @@ todos:
       (liveness — returns `{"status": "ok", "service": service_name}`) and GET /readiness (readiness — checks UCI
       connectivity + config loaded, returns 200 or 503). No os.getenv; config from UnifiedCloudConfig. Export from
       __init__.py. Full type annotations, zero basedpyright errors. Add unit tests in tests/unit/test_health_router.py.
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: health.py created with build_health_router() returning FastAPI
+      APIRouter with /health (liveness) + /readiness (readiness) endpoints. Tests added.
+      Exported from __init__.py. Commit e17f550.
 
   - id: bump-library-version
     content: >-
