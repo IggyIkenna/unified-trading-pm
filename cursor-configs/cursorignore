@@ -1,0 +1,46 @@
+**/.venv/**
+**/venv/**
+**/node_modules/**
+**/.next/**
+**/dist/**
+**/build/**
+**/.turbo/**
+**/__pycache__/**
+**/.mypy_cache/**
+**/.hypothesis/**
+**/.ruff_cache/**
+**/.pytest_cache/**
+**/.cache/**
+**/.venv-workspace/**
+**/data/**
+**/logs/**
+!.cursorignore
+!unified-api-contracts
+
+
+# Archived docs — low indexing value
+unified-trading-pm/github-integration/archived/
+
+
+# Boilerplate and low-value config
+**/LICENSE
+**/.gitignore
+**/.actrc
+**/index.html
+**/vite-env.d.ts
+**/.gitkeep
+**/.python-version
+**/.cursorignore
+
+# Backup and dump files
+**/*.bak
+
+# Generated configs — machine-generated, low semantic value (~37% of index)
+**/configs/generated/**
+
+# Temp audit docs
+**/docs/.temp-audit/**
+
+# Build/config metadata
+**/.dependency-matrix.json
+**/pip.conf

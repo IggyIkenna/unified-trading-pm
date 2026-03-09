@@ -46,20 +46,49 @@ if [ -L "$ROOT_WS" ]; then
   CURRENT="$(readlink "$ROOT_WS")"
   if [ "$CURRENT" = "$REL_TARGET" ]; then
     echo "[SKIP] Root symlink already correct: unified-trading-system-repos.code-workspace -> $REL_TARGET"
-    ls -la "$ROOT_WS"
-    exit 0
+  else
+    rm "$ROOT_WS"
+    ln -s "$REL_TARGET" "$ROOT_WS"
+    echo "[OK] Recreated symlink: unified-trading-system-repos.code-workspace -> $REL_TARGET"
   fi
-  rm "$ROOT_WS"
-  echo "[OK] Removed incorrect symlink, recreating..."
-fi
-
-if [ -f "$ROOT_WS" ] && [ ! -L "$ROOT_WS" ]; then
+elif [ -f "$ROOT_WS" ]; then
   rm -f "$ROOT_WS"
+  ln -s "$REL_TARGET" "$ROOT_WS"
+  echo "[OK] Replaced regular file with symlink: unified-trading-system-repos.code-workspace -> $REL_TARGET"
+else
+  ln -s "$REL_TARGET" "$ROOT_WS"
+  echo "[OK] Created symlink: unified-trading-system-repos.code-workspace -> $REL_TARGET"
+fi
+ls -la "$ROOT_WS"
+
+# 3. Symlink root .cursorignore -> unified-trading-pm/cursor-configs/cursorignore
+CURSORIGNORE_SYMLINK="$WORKSPACE_ROOT/.cursorignore"
+CURSORIGNORE_TARGET="unified-trading-pm/cursor-configs/cursorignore"
+CURSORIGNORE_ABS="$WORKSPACE_ROOT/unified-trading-pm/cursor-configs/cursorignore"
+
+if [ ! -f "$CURSORIGNORE_ABS" ]; then
+  echo "[ERROR] Canonical cursorignore not found: $CURSORIGNORE_ABS"
+  exit 1
 fi
 
-ln -s "$REL_TARGET" "$ROOT_WS"
-echo "[OK] Symlink created: unified-trading-system-repos.code-workspace -> $REL_TARGET"
-ls -la "$ROOT_WS"
+if [ -L "$CURSORIGNORE_SYMLINK" ]; then
+  CURRENT="$(readlink "$CURSORIGNORE_SYMLINK")"
+  if [ "$CURRENT" = "$CURSORIGNORE_TARGET" ]; then
+    echo "[SKIP] Already configured: .cursorignore -> $CURSORIGNORE_TARGET"
+  else
+    rm "$CURSORIGNORE_SYMLINK"
+    ln -s "$CURSORIGNORE_TARGET" "$CURSORIGNORE_SYMLINK"
+    echo "[OK] Recreated symlink: .cursorignore -> $CURSORIGNORE_TARGET"
+  fi
+elif [ -f "$CURSORIGNORE_SYMLINK" ]; then
+  rm "$CURSORIGNORE_SYMLINK"
+  ln -s "$CURSORIGNORE_TARGET" "$CURSORIGNORE_SYMLINK"
+  echo "[OK] Replaced regular file with symlink: .cursorignore -> $CURSORIGNORE_TARGET"
+else
+  ln -s "$CURSORIGNORE_TARGET" "$CURSORIGNORE_SYMLINK"
+  echo "[OK] Created symlink: .cursorignore -> $CURSORIGNORE_TARGET"
+fi
+
 echo ""
 echo "Open workspace: File > Open Workspace from File > .cursor/workspace-configs/unified-trading-system-repos.code-workspace"
 echo "Or: unified-trading-system-repos.code-workspace (at root)"
