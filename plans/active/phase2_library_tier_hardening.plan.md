@@ -142,7 +142,13 @@ todos:
     content:
       "T1 STEP B — TESTS FIRST: qg-uts-conftest-skip-pattern (fix GCP auth skip pattern — use google.auth.default() per
       gcp-auth-in-tests.mdc; reference market-data-processing-service/tests/conftest.py as correct pattern)."
-    status: pending
+    status: done
+    notes: |
+      Verified complete (2026-03-09): unified-trading-library/tests/conftest.py already has the
+      correct gcp_auth_info fixture (session scope, returns (credentials, project_id, creds_file)
+      tuple) + _skip_integration_without_creds autouse fixture per gcp-auth-in-tests.mdc.
+      Pattern uses google.auth.default() ADC with SA key file fallback. 1000/1000 unit tests pass.
+      QG --quick PASSED.
   - id: t1-uts-code-rewrite
     content:
       "T1 STEP C — CODE REWRITE: lib-phase1-uts-domain-cleanup (remove create_instruments_client,
@@ -218,7 +224,20 @@ todos:
       "T3 STEP B — TESTS FIRST: ic-deprecated-withdraw-cleanup (remove deprecated WITHDRAW instruction type + signal_id
       field per delete-deprecated.mdc); ic-trad-fi-datasource-tag (add data_source_constraint field to InstrumentRecord;
       tag TradFi as DATABENTO_ONLY); ic-onchain-freshness-contract (OnchainDataFreshnessConfig per chain)."
-    status: pending
+    status: done
+    notes: |
+      Verified complete (2026-03-09):
+      ic-deprecated-withdraw-cleanup: DONE — UDC instruction_schema.py has WITHDRAW removed from
+        VALID_INSTRUCTION_TYPES/ATOMIC_COMPATIBLE_TYPES; signal_id renamed to instruction_id (required).
+        UNSTAKE replaces WITHDRAW. Tests in test_instruction_schema.py: 42/42 PASS.
+        Fixed: bq_catalog.py + glue_catalog.py had stale `from ..paths` imports (already correct in
+        HEAD — stale installed version caused issues; fixed by reinstalling UDC editable package).
+      ic-trad-fi-datasource-tag: DONE — DataSourceConstraint enum + data_source_constraint field
+        already in UIC unified_internal_contracts/reference/instrument.py with DATABENTO_ONLY
+        tagging for EQUITY/FX/COMMODITY/FIXED_INCOME asset classes.
+      ic-onchain-freshness-contract: DONE — OnchainDataFreshnessConfig already in UIC
+        unified_internal_contracts/reference/onchain_freshness.py with per-chain defaults
+        (ethereum/arbitrum/base/polygon/solana/bsc).
   - id: t3-udc-code-rewrite
     content:
       "T3 STEP C — CODE REWRITE: lib-phase3-instruments-service-urdi-wire (wire instruments-service to URDI via
