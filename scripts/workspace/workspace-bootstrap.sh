@@ -301,7 +301,8 @@ fi
 # ── PHASE 1: SYSTEM DEPENDENCIES ────────────────────────────────────────────
 log_phase 1 "System Dependencies"
 
-REQUIRED_PYTHON="3.13"
+REQUIRED_PYTHON_FULL="3.13.9"   # exact patch version — must match exactly
+REQUIRED_PYTHON_MM="3.13"       # major.minor for brew/pyenv installs
 SYSTEM_ISSUES=0
 
 check_cmd() {
@@ -337,42 +338,125 @@ install_cmd() {
   return 1
 }
 
+# Detect OS / arch for install hints
+OS_TYPE="$(uname -s)"
+ARCH_TYPE="$(uname -m)"
+
 # Git
 check_cmd "git" "git" "install: brew install git / sudo apt install git"
 
-# Python 3.13
+# ── Python 3.13.9 (exact version required) ───────────────────────────────────
+# Strategy: find any python that reports exactly 3.13.9, then offer uv install.
+# uv is the preferred install method — works on macOS (Intel + Apple Silicon M1–M5)
+# and Linux (x86_64 + arm64) without needing pyenv or Homebrew for Python.
+
+python_version_full() {
+  # Outputs full x.y.z version of a python binary, or empty string
+  local cmd="$1"
+  "$cmd" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 2>/dev/null || true
+}
+
 PYTHON_CMD=""
-for cmd in "python${REQUIRED_PYTHON}" python3 python; do
-  if command -v "$cmd" &>/dev/null; then
-    VER=$("$cmd" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
-    if [ "$VER" = "$REQUIRED_PYTHON" ]; then
-      PYTHON_CMD="$cmd"
-      break
+
+# 1. Check candidates on PATH + common install locations
+for candidate in \
+    "python${REQUIRED_PYTHON_MM}" \
+    "python3" \
+    "python" \
+    "$HOME/.local/share/uv/python/cpython-${REQUIRED_PYTHON_FULL}-*/bin/python" \
+    "$HOME/.pyenv/versions/${REQUIRED_PYTHON_FULL}/bin/python" \
+    "$HOME/.local/share/mise/installs/python/${REQUIRED_PYTHON_FULL}/bin/python" \
+    "/opt/homebrew/bin/python${REQUIRED_PYTHON_MM}" \
+    "/usr/local/bin/python${REQUIRED_PYTHON_MM}" \
+    "/usr/bin/python${REQUIRED_PYTHON_MM}"; do
+  # Expand globs (uv path may have arch suffix)
+  for expanded in $candidate; do
+    [ -x "$expanded" ] || command -v "$expanded" &>/dev/null || continue
+    VER=$(python_version_full "$expanded")
+    if [ "$VER" = "$REQUIRED_PYTHON_FULL" ]; then
+      PYTHON_CMD="$expanded"
+      break 2
     fi
-  fi
+  done
 done
-if [ -n "$PYTHON_CMD" ]; then
-  log_ok "Python $REQUIRED_PYTHON ($PYTHON_CMD)"
-else
-  if [ "$CHECK_ONLY" = true ] || [ "$SKIP_SYSTEM" = true ]; then
-    log_fail "Python $REQUIRED_PYTHON not found"
-    echo "  Install: brew install python@${REQUIRED_PYTHON}"
-    echo "  Or:      pyenv install ${REQUIRED_PYTHON}.0 && pyenv local ${REQUIRED_PYTHON}.0"
-    SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
-  else
-    echo "  Attempting to install Python ${REQUIRED_PYTHON}..."
-    if command -v brew &>/dev/null; then
-      brew install "python@${REQUIRED_PYTHON}" && PYTHON_CMD="python${REQUIRED_PYTHON}"
-    fi
-    if [ -z "$PYTHON_CMD" ]; then
-      log_fail "Python $REQUIRED_PYTHON not found and auto-install failed"
-      echo "  Install manually: brew install python@${REQUIRED_PYTHON}"
-      SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
-    else
-      log_ok "Installed Python $REQUIRED_PYTHON"
-    fi
+
+# 2. Also check `uv python find` if uv is available
+if [ -z "$PYTHON_CMD" ] && command -v uv &>/dev/null; then
+  UV_PY=$(uv python find "${REQUIRED_PYTHON_FULL}" 2>/dev/null || true)
+  if [ -n "$UV_PY" ] && [ -x "$UV_PY" ]; then
+    VER=$(python_version_full "$UV_PY")
+    [ "$VER" = "$REQUIRED_PYTHON_FULL" ] && PYTHON_CMD="$UV_PY"
   fi
 fi
+
+if [ -n "$PYTHON_CMD" ]; then
+  log_ok "Python $REQUIRED_PYTHON_FULL ($PYTHON_CMD)"
+else
+  # Show what version the system has
+  CURRENT_PY_VER=""
+  for cmd in python3 python; do
+    command -v "$cmd" &>/dev/null && CURRENT_PY_VER=$(python_version_full "$cmd") && break
+  done
+  [ -n "$CURRENT_PY_VER" ] && log_warn "Python found: $CURRENT_PY_VER (need exactly $REQUIRED_PYTHON_FULL)" \
+                            || log_warn "Python not found (need $REQUIRED_PYTHON_FULL)"
+
+  echo ""
+  echo "  ┌─ Install Python $REQUIRED_PYTHON_FULL ─────────────────────────────────────────"
+  echo "  │  Recommended (cross-platform, no root required):"
+  echo "  │    uv python install ${REQUIRED_PYTHON_FULL}    # installs managed Python"
+  echo "  │"
+  if [ "$OS_TYPE" = "Darwin" ]; then
+    echo "  │  macOS alternatives:"
+    echo "  │    brew install python@${REQUIRED_PYTHON_MM}  # Homebrew (may not be exact patch)"
+    echo "  │    pyenv install ${REQUIRED_PYTHON_FULL} && pyenv global ${REQUIRED_PYTHON_FULL}"
+    echo "  │    mise use -g python@${REQUIRED_PYTHON_FULL}"
+    echo "  │"
+    if [ "$ARCH_TYPE" = "arm64" ]; then
+      echo "  │  Apple Silicon (M1–M5): all methods above work natively."
+    else
+      echo "  │  Intel Mac: all methods above work."
+    fi
+  else
+    echo "  │  Linux alternatives:"
+    echo "  │    pyenv install ${REQUIRED_PYTHON_FULL} && pyenv global ${REQUIRED_PYTHON_FULL}"
+    echo "  │    mise use -g python@${REQUIRED_PYTHON_FULL}"
+    echo "  │"
+    echo "  │  Ubuntu/Debian (may not have exact patch):"
+    echo "  │    sudo add-apt-repository ppa:deadsnakes/ppa"
+    echo "  │    sudo apt update && sudo apt install python3.13"
+    echo "  │    (use pyenv/uv for exact ${REQUIRED_PYTHON_FULL} patch version)"
+  fi
+  echo "  │"
+  echo "  │  After installing, re-run: bash bootstrap.sh"
+  echo "  └────────────────────────────────────────────────────────────────────"
+  echo ""
+
+  if [ "$CHECK_ONLY" = true ] || [ "$SKIP_SYSTEM" = true ]; then
+    SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+  elif command -v uv &>/dev/null; then
+    echo "  uv is available — attempting: uv python install ${REQUIRED_PYTHON_FULL}"
+    if uv python install "${REQUIRED_PYTHON_FULL}" 2>&1; then
+      UV_PY=$(uv python find "${REQUIRED_PYTHON_FULL}" 2>/dev/null || true)
+      if [ -n "$UV_PY" ] && [ -x "$UV_PY" ]; then
+        PYTHON_CMD="$UV_PY"
+        log_ok "Python $REQUIRED_PYTHON_FULL installed via uv ($PYTHON_CMD)"
+      else
+        log_fail "uv install succeeded but python not found — re-run bootstrap"
+        SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+      fi
+    else
+      log_fail "uv python install ${REQUIRED_PYTHON_FULL} failed — install manually"
+      SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+    fi
+  else
+    log_fail "Python $REQUIRED_PYTHON_FULL not found — install uv first, then re-run"
+    echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+    SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+  fi
+fi
+
+# Keep REQUIRED_PYTHON for compat with downstream sections that reference it
+REQUIRED_PYTHON="$REQUIRED_PYTHON_MM"
 
 # uv
 install_cmd "uv" "uv" "uv" "uv" || true
