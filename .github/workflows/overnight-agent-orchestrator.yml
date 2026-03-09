@@ -264,7 +264,7 @@ jobs:
       - name: Build and send Telegram summary
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           T0_RESULT: ${{ needs.t0.result }}
           T1_RESULT: ${{ needs.t1.result }}
           T2_RESULT: ${{ needs.t2.result }}

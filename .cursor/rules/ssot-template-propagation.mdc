@@ -1,0 +1,35 @@
+---
+description: "SSOT template changes must be propagated to all repos — never edit downstream copies"
+priority: 90
+globs:
+  - "scripts/setup.sh"
+  - "scripts/quality-gates.sh"
+  - "scripts/quickmerge.sh"
+  - ".github/workflows/version-bump.yml"
+tags:
+  - pm
+  - ssot
+  - templates
+---
+
+# SSOT Template Propagation
+
+These files in unified-trading-pm are the canonical source. All repos copy them.
+
+## SSOT Files
+
+| File | Purpose | Propagation |
+|------|---------|-------------|
+| `scripts/setup.sh` | Environment bootstrap | Copied to all 60+ repos |
+| `scripts/quality-gates.sh` | Lint + test pipeline | Copied to all Python repos |
+| `scripts/quickmerge.sh` | Git + PR automation | Copied to all repos |
+| `.github/workflows/version-bump.yml` | Semver on main merge | Copied to all repos |
+
+## Rules
+
+1. **Edit ONLY in this repo** — never edit a downstream copy directly
+2. After changing a template, propagate with the rollout scripts:
+   - `python3 scripts/rollout-setup-sh.py` (or equivalent)
+   - Or manual: copy to each repo, commit with `chore: sync <template> from SSOT`
+3. **Test the template in PM first** before propagating
+4. Document template changes in `unified-trading-codex/06-coding-standards/`

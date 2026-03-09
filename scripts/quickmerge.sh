@@ -14,24 +14,19 @@
 #   ./scripts/quickmerge.sh "commit message" --dep-branch "my-feature"
 #   ./scripts/quickmerge.sh "commit message" --to-staging
 #   ./scripts/quickmerge.sh "commit message" --quick
-#   ./scripts/quickmerge.sh "commit message" --agent             # agents: always use this
 #   ./scripts/quickmerge.sh "commit message" --skip-tests
 #   ./scripts/quickmerge.sh "commit message" --skip-typecheck
 #
 # Flags:
-#   --agent            For agent/CI callers (Claude Code, run-agent.sh, GitHub Actions).
-#                      Implies --quick (skip act) + --skip-tests (skip pytest).
-#                      Rationale: tests ran in pass-1 QG; quickmerge is a lightweight pass-2
-#                      covering lint, format, typecheck, and codex only. Act is wasted in CI.
-#                      Add --skip-typecheck to also skip basedpyright if it ran in pass-1.
 #   --files "p1 p2"    Stage only these paths (multi-agent: avoid committing other agents' work)
 #   --dep-branch NAME  Branch isolation when dependencies have uncommitted changes (feature mode)
 #   --to-staging       Breaking change path: PR targets staging instead of main; checks staging lock.
 #                      dep-branch auto-derived from current git branch. Mutually exclusive with --dep-branch.
-#   --quick            Human shortcut: skip only act simulation (Stage 4); all other checks run.
-#                      Agents must use --agent instead.
+#   --quick            Skip only act simulation (Stage 4); all other checks run
 #   --skip-tests       Pass --skip-tests to quality-gates.sh (lint+type+codex only)
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
+#   --skip-codex       Skip codex compliance check (Stage 3 §5). Human-only escape hatch; never use with --agent.
+#   --skip-preflight   Skip pre-flight audit (Stage 2). Human-only escape hatch; never use with --agent.
 #
 # When to use --to-staging:
 #   feat!: / BREAKING CHANGE: commits that break downstream API contracts.
@@ -41,7 +36,7 @@
 # Pipeline:
 #   1. Dependency validation (workspace-manifest.json)
 #   1.5. PM: dependency alignment check; ALL: staging lock check (if --to-staging)
-#   2. Pre-flight audit (always runs — never skipped)
+#   2. Pre-flight audit (skippable with --skip-preflight for multi-agent use)
 #   3. Local quality gates (two-phase: auto-fix → verify)
 #   4. Act simulation (default; skip with --quick)
 #   5. Create PR + enable auto-merge (base: staging if --to-staging, else main)
@@ -68,6 +63,10 @@ WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 # Fallback: .act-secrets at repo root (e.g. single-repo dev)
 [ ! -f "${WORKSPACE_ROOT}/.act-secrets" ] && [ -f "${REPO_ROOT}/.act-secrets" ] && WORKSPACE_ROOT="$REPO_ROOT"
 
+# Act secrets: prefer UNIFIED_TRADING_WORKSPACE_ROOT when set (portable across team); else use computed WORKSPACE_ROOT
+ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
+[ -f "${ACT_SECRETS_ROOT}/.act-secrets" ] && export ACT_SECRETS_FILE="${ACT_SECRETS_ROOT}/.act-secrets"
+
 # ── PARSE ARGUMENTS ───────────────────────────────────────────────────────────
 COMMIT_MSG="chore: automated update"
 FILES_ARG=""
@@ -77,6 +76,8 @@ SKIP_TESTS=""
 SKIP_TYPECHECK=""
 QUICK=false
 NO_PR=false
+SKIP_CODEX=""
+SKIP_PREFLIGHT=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -104,14 +105,6 @@ while [[ $# -gt 0 ]]; do
       QUICK=true
       shift
       ;;
-    --agent)
-      # Agent/CI optimised: skip act simulation + skip tests (tests ran in pass-1 QG).
-      # Quickmerge becomes a lightweight pass-2: lint, format, typecheck, codex only.
-      # Add --skip-typecheck to further lighten if typecheck also ran in pass-1.
-      QUICK=true
-      SKIP_TESTS="--skip-tests"
-      shift
-      ;;
     --no-pr)
       NO_PR=true
       shift
@@ -119,6 +112,14 @@ while [[ $# -gt 0 ]]; do
     --unit-only)
       QUICK=true
       NO_PR=true
+      shift
+      ;;
+    --skip-codex)
+      SKIP_CODEX="--skip-codex"
+      shift
+      ;;
+    --skip-preflight)
+      SKIP_PREFLIGHT=true
       shift
       ;;
     *)
@@ -292,8 +293,13 @@ PYEOF
 [ -n "$DEP_BRANCH" ] && cascade_dep_branch "$DEP_BRANCH"
 
 # ── ACTIVATE VENV ─────────────────────────────────────────────────────────────
+# USE_WORKSPACE_VENV=1: prefer .venv-workspace over repo .venv (workspace-venv-fallback.mdc)
 VENV_ACTIVATED=0
-if [ -f ".venv/bin/activate" ]; then
+if [ "${USE_WORKSPACE_VENV:-0}" = "1" ] && [ -f "${WORKSPACE_ROOT}/.venv-workspace/bin/activate" ]; then
+  source "${WORKSPACE_ROOT}/.venv-workspace/bin/activate"
+  VENV_ACTIVATED=1
+  echo "[$REPO_NAME] Using .venv-workspace (Python $(python --version 2>&1))"
+elif [ -f ".venv/bin/activate" ]; then
   source .venv/bin/activate
   VENV_ACTIVATED=1
   echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
@@ -511,12 +517,15 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
 fi
 
 # ============================================================================
-# STAGE 2: PRE-FLIGHT AUDIT (always runs — never skipped)
+# STAGE 2: PRE-FLIGHT AUDIT (skippable with --skip-preflight for multi-agent use)
 # ============================================================================
 echo "=========================================="
 echo "STAGE 2: Pre-flight Audit"
 echo "=========================================="
 
+if [ "$SKIP_PREFLIGHT" = "true" ]; then
+  echo "[$REPO_NAME] ⚠️  Pre-flight audit SKIPPED (--skip-preflight)"
+else
 PREFLIGHT_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/validation/pre-flight-audit.sh"
 if [ -f "$PREFLIGHT_SCRIPT" ]; then
   if bash "$PREFLIGHT_SCRIPT" "$REPO_NAME"; then
@@ -528,6 +537,7 @@ if [ -f "$PREFLIGHT_SCRIPT" ]; then
 else
   echo "[$REPO_NAME] ❌ pre-flight-audit.sh not found at $PREFLIGHT_SCRIPT — required"
   exit 1
+fi
 fi
 
 echo ""
@@ -588,10 +598,10 @@ echo ""
 
 if [ -f "scripts/quality-gates.sh" ]; then
   echo "[$REPO_NAME] Phase 1: auto-fix (ruff format + ruff check --fix)..."
-  bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK
+  bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX
 
   echo "[$REPO_NAME] Phase 2: verify (--no-fix mode)..."
-  if ! bash scripts/quality-gates.sh --no-fix $SKIP_TESTS $SKIP_TYPECHECK; then
+  if ! bash scripts/quality-gates.sh --no-fix $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX; then
     echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
     exit 1
   fi
@@ -711,8 +721,17 @@ else
   fi
 
   ACT_SECRETS=""
-  [ -f "${WORKSPACE_ROOT}/.act-secrets" ] && ACT_SECRETS="--secret-file ${WORKSPACE_ROOT}/.act-secrets"
-  [ -z "$ACT_SECRETS" ] && [ -f ~/.secrets ] && ACT_SECRETS="--secret-file ~/.secrets"
+  RESOLVED_SECRETS_PATH=""
+  if [ -n "${ACT_SECRETS_FILE:-}" ] && [ -f "${ACT_SECRETS_FILE}" ]; then
+    ACT_SECRETS="--secret-file ${ACT_SECRETS_FILE}"
+    RESOLVED_SECRETS_PATH="${ACT_SECRETS_FILE}"
+  elif [ -f "${WORKSPACE_ROOT}/.act-secrets" ]; then
+    ACT_SECRETS="--secret-file ${WORKSPACE_ROOT}/.act-secrets"
+    RESOLVED_SECRETS_PATH="${WORKSPACE_ROOT}/.act-secrets"
+  elif [ -f ~/.secrets ]; then
+    ACT_SECRETS="--secret-file ~/.secrets"
+    RESOLVED_SECRETS_PATH="$HOME/.secrets"
+  fi
   if act -j quality-gates --container-architecture linux/amd64 $ACT_SECRETS; then
     echo "[$REPO_NAME] ✅ Act simulation PASSED"
   else
@@ -720,6 +739,15 @@ else
     echo "[$REPO_NAME] ❌ Act simulation FAILED — quickmerge aborted" >&2
     echo "" >&2
     echo "Act needs GH_PAT to clone sibling repos (e.g. unified-trading-codex). Without it, CI simulation cannot run." >&2
+    echo "" >&2
+    echo "Secrets lookup: ACT_SECRETS_ROOT=${ACT_SECRETS_ROOT:-$WORKSPACE_ROOT} (uses UNIFIED_TRADING_WORKSPACE_ROOT when set)" >&2
+    if [ -n "$RESOLVED_SECRETS_PATH" ]; then
+      echo "  Used: $RESOLVED_SECRETS_PATH" >&2
+    else
+      echo "  Checked: ${ACT_SECRETS_ROOT:-$WORKSPACE_ROOT}/.act-secrets (not found)" >&2
+      echo "  Checked: ${HOME}/.secrets (not found)" >&2
+      echo "  Set UNIFIED_TRADING_WORKSPACE_ROOT or export ACT_SECRETS_FILE=/path/to/.act-secrets" >&2
+    fi
     echo "" >&2
     echo "Fix:" >&2
     echo "  1. bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh" >&2
@@ -759,12 +787,18 @@ git fetch origin main --quiet
 if [ -n "$DEP_BRANCH" ]; then
   BRANCH="$DEP_BRANCH"
   echo "[$REPO_NAME] Using specified branch: $BRANCH"
+  if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
+    git checkout "$BRANCH" --quiet
+  elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
+    git checkout -B "$BRANCH" "origin/$BRANCH" --quiet
+  else
+    git checkout -b "$BRANCH" origin/main --quiet 2>/dev/null || git checkout "$BRANCH" --quiet
+  fi
 else
   BRANCH="auto/$(TZ=UTC date +%Y%m%d-%H%M%S)-$$"
   echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
+  git checkout -b "$BRANCH" origin/main --quiet
 fi
-
-git checkout -b "$BRANCH" origin/main --quiet
 echo ""
 
 # Restore stash on new branch
@@ -853,38 +887,8 @@ if [ -n "$PR_NUM" ]; then
   else
     gh pr merge "$PR_NUM" --auto --squash --delete-branch 2>/dev/null || true
     echo "[$REPO_NAME] ✅ PR created: $PR_URL (auto-merge enabled)"
-
-    # Wait for the PR to merge into main, then switch back to main.
-    # This ensures we pull the squash-merged commit, not the pre-merge auto branch state.
-    # Timeout: 10 minutes (600s). CI quality-gates typically take 1-3 min.
-    echo "[$REPO_NAME] Waiting for PR #$PR_NUM to merge into main (timeout: 10m)..."
-    WAIT_SECS=0
-    WAIT_MAX=600
-    WAIT_INTERVAL=10
-    MERGE_DONE=false
-    while [ "$WAIT_SECS" -lt "$WAIT_MAX" ]; do
-      sleep "$WAIT_INTERVAL"
-      WAIT_SECS=$((WAIT_SECS + WAIT_INTERVAL))
-      PR_STATE=$(gh pr view "$PR_NUM" --json state,mergedAt --jq '.state' 2>/dev/null || echo "UNKNOWN")
-      if [ "$PR_STATE" = "MERGED" ]; then
-        MERGE_DONE=true
-        break
-      elif [ "$PR_STATE" = "CLOSED" ]; then
-        echo "[$REPO_NAME] ⚠️  PR #$PR_NUM was closed without merging"
-        break
-      fi
-      echo "[$REPO_NAME]   ... PR state: $PR_STATE (${WAIT_SECS}s elapsed)"
-    done
-
-    if [ "$MERGE_DONE" = true ]; then
-      echo "[$REPO_NAME] ✅ PR merged — switching to main and pulling"
-      git checkout main --quiet
-      git pull --ff-only origin main --quiet
-      echo "[$REPO_NAME] ✅ On main @ $(git log --oneline -1)"
-    else
-      echo "[$REPO_NAME] ⚠️  PR not yet merged after ${WAIT_MAX}s — staying on $BRANCH"
-      echo "[$REPO_NAME] When it merges: git checkout main && git pull"
-    fi
+    echo "[$REPO_NAME] Staying on branch $BRANCH — PR will auto-merge when CI passes"
+    echo "[$REPO_NAME] To sync with main after merge: git checkout main && git pull"
   fi
 fi
 fi
