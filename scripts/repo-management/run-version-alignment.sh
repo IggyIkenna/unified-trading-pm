@@ -12,6 +12,7 @@
 #   1. generate-derived-manifest.py   → derived from pyproject.toml
 #   2. generate_canonical_dependency_manifest.py → canonical from workspace-constraints.toml
 #   3. check-dependency-alignment.py → compare derived vs manifest + canonical
+#   3.5. validate-uv-sources.py → every internal dep has [tool.uv.sources.*] editable = true
 #   4. validate-dependency-conflicts.py → verify constraints resolve (uv pip compile)
 #   5. fix-internal-dependency-alignment.py --apply (if internal misalignment)
 #   6. fix_external_dependency_alignment.py --apply (if external misalignment)
@@ -84,6 +85,18 @@ if ! "$PYTHON" scripts/manifest/check-dependency-alignment.py; then
     echo "  Re-checking..."
     "$PYTHON" scripts/manifest/check-dependency-alignment.py
   else
+    exit 1
+  fi
+fi
+
+# 3.5. Validate [tool.uv.sources] editable entries
+echo "[3.5/4] Validating [tool.uv.sources] editable entries..."
+if [ "$APPLY_FIXES" = true ]; then
+  "$PYTHON" scripts/manifest/validate-uv-sources.py --fix || true
+else
+  if ! "$PYTHON" scripts/manifest/validate-uv-sources.py; then
+    echo ""
+    echo "  Missing [tool.uv.sources.*] editable entries. Run with --fix to auto-add."
     exit 1
   fi
 fi

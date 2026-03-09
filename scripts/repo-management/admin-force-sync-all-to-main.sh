@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# ADMIN ONLY: Force-sync all workspace repos — local main overwrites remote main.
+# ADMIN ONLY: Force-sync all workspace repos — local HEAD overwrites remote main.
 #
-# What this does per repo:
-#   1. git checkout main
-#   2. git add -A (stage all local changes)
-#   3. git commit -m "<message>" (if anything staged)
-#   4. Disable GitHub branch protection via API (admin-only)
-#   5. git push --force origin main (local wins, no conflict resolution)
-#   6. Re-enable branch protection
+# What this does per repo (in topological tier order, parallel within each tier):
+#   1. git add -A  (stage all local changes — files added, modified, deleted)
+#   2. git commit -m "<message>"  (if anything staged; no --no-verify)
+#   3. Disable GitHub branch protection + rulesets via API
+#   4. git push --force origin HEAD:main  (works from any branch; local wins)
+#   5. Restore branch protection + rulesets immediately after push
 #
-# Branch protection is restored even on failure (trap-based cleanup).
+# Identity gate: only the repo admin (IggyIkenna) may run this script.
+# Protections are restored even on failure (trap-based cleanup).
+#
+# SSOT: unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh
 #
 # Usage:
 #   bash admin-force-sync-all-to-main.sh --admin-confirm [OPTIONS]
@@ -21,16 +23,16 @@
 #   --limit N             Process only the first N repos.
 #   --repo NAME           Process only one specific repo.
 #   --filter PATTERN      Glob filter on repo name (e.g. unified-*, *-service).
-#   --skip-protection     Skip the GitHub API protect/unprotect cycle
-#                         (use if protection is already disabled or not set).
-#   --no-commit           Skip git add / git commit; only force-push current HEAD.
 #   --repos "a b c"       Space-separated list of repo names to process.
+#   --skip-protection     Skip the GitHub API protect/unprotect cycle.
+#   --no-commit           Skip git add / git commit; only force-push current HEAD.
+#   --max-workers N       Parallel workers per tier (default: 8).
 #
 # Prerequisites:
-#   - gh CLI authenticated as an admin of all target repos.
+#   - gh CLI authenticated as IggyIkenna (admin of all target repos).
 #   - jq installed.
 #
-# Run from: workspace root OR unified-trading-pm/scripts/repo-management/
+# Run from: workspace root
 
 set -euo pipefail
 
@@ -63,6 +65,7 @@ REPOS_LIST=""
 COMMIT_MSG="chore: admin force-sync"
 SKIP_PROTECTION=false
 NO_COMMIT=false
+MAX_WORKERS=${MAX_WORKERS:-8}
 
 # ---------------------------------------------------------------------------
 # Parse args
@@ -78,17 +81,18 @@ while [[ $# -gt 0 ]]; do
     --message)         COMMIT_MSG="$2"; shift 2 ;;
     --skip-protection) SKIP_PROTECTION=true; shift ;;
     --no-commit)       NO_COMMIT=true; shift ;;
+    --max-workers)     MAX_WORKERS="$2"; shift 2 ;;
     *) echo "Unknown flag: $1"; shift ;;
   esac
 done
 
 # ---------------------------------------------------------------------------
-# Safety gate — must pass --admin-confirm
+# Safety gate 1: --admin-confirm required
 # ---------------------------------------------------------------------------
 if [[ "$ADMIN_CONFIRM" != "true" ]]; then
   cat <<'EOF'
-ADMIN FORCE-SYNC: Overwrites remote main with your local state for every repo.
-This CANNOT be undone without a reflog recovery on the server side.
+ADMIN FORCE-SYNC: Overwrites remote main with your local HEAD for every repo.
+This CANNOT be undone without reflog recovery on the server side.
 
   You MUST pass --admin-confirm to proceed.
 
@@ -99,10 +103,25 @@ EOF
 fi
 
 # ---------------------------------------------------------------------------
+# Safety gate 2: authenticated GitHub user must be IggyIkenna
+# ---------------------------------------------------------------------------
+if ! command -v gh &>/dev/null; then
+  echo "ERROR: gh CLI not found. Install gh CLI first."
+  exit 1
+fi
+
+GH_USER=$(gh api user --jq .login 2>/dev/null || echo "")
+if [[ "$GH_USER" != "IggyIkenna" ]]; then
+  echo "ERROR: This script may only be run by IggyIkenna (repo admin)."
+  echo "       Authenticated as: '${GH_USER:-<unauthenticated>}'"
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
 # Prerequisite checks
 # ---------------------------------------------------------------------------
 if ! command -v jq &>/dev/null; then
-  echo "ERROR: jq not found. Install jq to parse workspace-manifest.json."
+  echo "ERROR: jq not found. Install: brew install jq"
   exit 1
 fi
 
@@ -111,43 +130,33 @@ if [[ ! -f "$MANIFEST" ]]; then
   exit 1
 fi
 
-if [[ "$SKIP_PROTECTION" == "false" ]] && ! command -v gh &>/dev/null; then
-  echo "ERROR: gh CLI not found. Install gh or pass --skip-protection."
-  exit 1
-fi
-
-# Detect GitHub owner from manifest
 GH_OWNER=$(jq -r '.github_owner // .owner // empty' "$MANIFEST" 2>/dev/null || true)
 if [[ -z "$GH_OWNER" ]]; then
-  # Fall back: derive from first repo remote
   FIRST_REPO=$(jq -r '.repositories | keys[0]' "$MANIFEST" 2>/dev/null || true)
   if [[ -n "$FIRST_REPO" && -d "$WORKSPACE_ROOT/$FIRST_REPO/.git" ]]; then
     REMOTE_URL=$(cd "$WORKSPACE_ROOT/$FIRST_REPO" && git remote get-url origin 2>/dev/null || true)
     GH_OWNER=$(echo "$REMOTE_URL" | sed -E 's|.*[:/]([^/]+)/[^/]+\.git.*|\1|')
   fi
 fi
-if [[ -z "$GH_OWNER" ]] && [[ "$SKIP_PROTECTION" == "false" ]]; then
-  echo "ERROR: Could not determine GitHub owner from manifest. Pass --skip-protection or add 'github_owner' to workspace-manifest.json."
+if [[ -z "$GH_OWNER" && "$SKIP_PROTECTION" == "false" ]]; then
+  echo "ERROR: Could not determine GitHub owner. Pass --skip-protection or add 'github_owner' to workspace-manifest.json."
   exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# Build repo list in dependency order
+# Build repo list in topological tier order
 # ---------------------------------------------------------------------------
 if [[ -n "$REPOS_LIST" ]]; then
   REPOS=($REPOS_LIST)
+  USE_TOPO=false
 elif [[ -n "$REPO_FILTER" ]]; then
   REPOS=("$REPO_FILTER")
+  USE_TOPO=false
 else
-  ORDERED=($(jq -r '.topologicalOrder.levels[].repos[]' "$MANIFEST" 2>/dev/null || true))
-  REPO_KEYS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
-  # Append any keys not already in topological order
-  for r in "${REPO_KEYS[@]}"; do
-    found=false
-    for o in "${ORDERED[@]:-}"; do [[ "$o" == "$r" ]] && found=true && break; done
-    [[ "$found" == "false" ]] && ORDERED+=("$r")
-  done
-  REPOS=("${ORDERED[@]}")
+  USE_TOPO=true
+  # Also build flat list for --limit / --filter
+  REPOS=($(jq -r '.topologicalOrder.levels[].repos[]' "$MANIFEST" 2>/dev/null || \
+           jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
 fi
 
 # Apply glob filter
@@ -157,19 +166,14 @@ if [[ -n "$FILTER_PATTERN" ]]; then
     [[ "$r" == $FILTER_PATTERN ]] && FILTERED+=("$r")
   done
   REPOS=("${FILTERED[@]}")
+  USE_TOPO=false
 fi
 
-[[ -n "$LIMIT" ]] && REPOS=("${REPOS[@]:0:$LIMIT}")
+[[ -n "$LIMIT" ]] && { REPOS=("${REPOS[@]:0:$LIMIT}"); USE_TOPO=false; }
 
 # ---------------------------------------------------------------------------
-# Branch protection helpers
+# Branch protection helpers (saves + restores exact ruleset JSON)
 # ---------------------------------------------------------------------------
-
-# Temp dir: per-repo files store protection state (bash 3.2 compatible, no assoc arrays).
-#   ${key}.repo                  — original repo name (for cleanup reverse-mapping)
-#   ${key}.classic.json          — classic branch protection JSON (if it existed)
-#   ${key}.rulesets              — newline-separated ruleset IDs that were active (now disabled)
-#   ${key}.ruleset_<id>.json     — full GET JSON for each disabled ruleset (for exact restore)
 PROT_TMPDIR=$(mktemp -d "/tmp/admin_sync_prot_XXXXXX")
 
 _repo_key() { printf '%s' "$1" | tr '/' '_' | tr '-' '_'; }
@@ -177,15 +181,10 @@ _repo_key() { printf '%s' "$1" | tr '/' '_' | tr '-' '_'; }
 _disable_protection() {
   local repo="$1"
   local key; key=$(_repo_key "$repo")
-
-  # Record repo name for cleanup reverse-mapping
   printf '%s' "$repo" > "$PROT_TMPDIR/${key}.repo"
+  [[ "$SKIP_PROTECTION" == "true" ]] && return 0
 
-  if [[ "$SKIP_PROTECTION" == "true" ]]; then
-    return 0
-  fi
-
-  # 1. Classic branch protection (DELETE — 404 is fine, means none was set)
+  # Classic branch protection
   local prot_json
   prot_json=$(gh api "repos/$GH_OWNER/$repo/branches/main/protection" 2>/dev/null || echo "NONE")
   if [[ "$prot_json" != "NONE" ]]; then
@@ -193,18 +192,15 @@ _disable_protection() {
     gh api -X DELETE "repos/$GH_OWNER/$repo/branches/main/protection" &>/dev/null || true
   fi
 
-  # 2. GitHub Rulesets — disable every active ruleset
-  #    (GH013 "Repository rule violations" errors come from rulesets, not classic protection)
+  # Rulesets — disable every active ruleset, save exact JSON for restore
   local rulesets_json
   rulesets_json=$(gh api "repos/$GH_OWNER/$repo/rulesets" 2>/dev/null || echo "[]")
   printf '%s\n' "$rulesets_json" \
     | jq -r '.[] | select(.enforcement == "active") | .id' 2>/dev/null \
     | while IFS= read -r rid; do
         [[ -z "$rid" ]] && continue
-        # Fetch and save full ruleset JSON BEFORE disabling (for exact restore)
         gh api "repos/$GH_OWNER/$repo/rulesets/$rid" 2>/dev/null \
           > "$PROT_TMPDIR/${key}.ruleset_${rid}.json" || true
-        # Disable enforcement
         gh api -X PUT "repos/$GH_OWNER/$repo/rulesets/$rid" \
           --field enforcement=disabled &>/dev/null || true
         printf '%s\n' "$rid" >> "$PROT_TMPDIR/${key}.rulesets"
@@ -215,20 +211,16 @@ _restore_protection() {
   local repo="$1"
   local key; key=$(_repo_key "$repo")
 
-  # 1. Restore classic branch protection (if it existed)
+  # Restore classic branch protection
   local classicfile="$PROT_TMPDIR/${key}.classic.json"
   if [[ -f "$classicfile" ]]; then
-    # Validate the saved JSON looks like real branch protection (has 'url' field)
     local has_url
     has_url=$(jq -r '.url // empty' "$classicfile" 2>/dev/null || true)
     if [[ -n "$has_url" ]]; then
       local put_body
-      # enforce_admins: handle both object form {"enabled":true} and raw boolean
       put_body=$(jq '{
         required_status_checks: (
           if .required_status_checks then (
-            # GitHub anyOf: use "checks" (app-aware) when present, else "contexts" (legacy).
-            # Sending both causes HTTP 422 "No subschema in anyOf matched".
             if ((.required_status_checks.checks // []) | length) > 0 then {
               strict: .required_status_checks.strict,
               checks: .required_status_checks.checks
@@ -270,38 +262,34 @@ _restore_protection() {
         )
       }' "$classicfile" 2>/dev/null) || true
       if [[ -n "$put_body" ]]; then
-        local api_err
-        api_err=$(gh api -X PUT "repos/$GH_OWNER/$repo/branches/main/protection" \
-          --input - <<< "$put_body" 2>&1) || \
-          echo "  WARN: $repo — could not restore classic branch protection: $api_err"
+        gh api -X PUT "repos/$GH_OWNER/$repo/branches/main/protection" \
+          --input - <<< "$put_body" &>/dev/null || \
+          echo "  WARN: $repo — could not restore classic branch protection"
       fi
     fi
     rm -f "$classicfile"
   fi
 
-  # 2. Re-enable rulesets using their saved full JSON (exact original state)
+  # Re-enable rulesets from saved exact JSON
   local rulesetsfile="$PROT_TMPDIR/${key}.rulesets"
   if [[ -f "$rulesetsfile" ]]; then
     while IFS= read -r rid; do
       [[ -z "$rid" ]] && continue
       local rulesetjson="$PROT_TMPDIR/${key}.ruleset_${rid}.json"
       if [[ -f "$rulesetjson" && -s "$rulesetjson" ]]; then
-        # Restore exact original state: PUT back the full saved JSON with enforcement=active
-        # (strip read-only fields GitHub rejects on PUT: id, source, source_type, created_at, updated_at)
         local restore_body
         restore_body=$(jq 'del(.id, .source, .source_type, .created_at, .updated_at, .node_id, ._links)
                           | .enforcement = "active"' "$rulesetjson" 2>/dev/null) || true
         if [[ -n "$restore_body" ]]; then
           gh api -X PUT "repos/$GH_OWNER/$repo/rulesets/$rid" \
             --input - <<< "$restore_body" &>/dev/null || \
-            echo "  WARN: $repo — could not restore ruleset $rid from saved JSON (check manually)"
+            echo "  WARN: $repo — could not restore ruleset $rid"
         fi
         rm -f "$rulesetjson"
       else
-        # Fallback: just flip enforcement back to active
         gh api -X PUT "repos/$GH_OWNER/$repo/rulesets/$rid" \
           --field enforcement=active &>/dev/null || \
-          echo "  WARN: $repo — could not re-enable ruleset $rid (check manually)"
+          echo "  WARN: $repo — could not re-enable ruleset $rid"
       fi
     done < "$rulesetsfile"
     rm -f "$rulesetsfile"
@@ -310,16 +298,13 @@ _restore_protection() {
   rm -f "$PROT_TMPDIR/${key}.repo"
 }
 
-# Cleanup trap: restore protections if script exits early (e.g. Ctrl-C)
+# Trap: restore all protections if script exits early (Ctrl-C, error, etc.)
 _cleanup() {
   for repofile in "$PROT_TMPDIR"/*.repo; do
     [[ -f "$repofile" ]] || continue
     local repo; repo=$(cat "$repofile")
-    local classicfile rulesetsfile
     local key; key=$(_repo_key "$repo")
-    classicfile="$PROT_TMPDIR/${key}.classic.json"
-    rulesetsfile="$PROT_TMPDIR/${key}.rulesets"
-    if [[ -f "$classicfile" || -f "$rulesetsfile" ]]; then
+    if [[ -f "$PROT_TMPDIR/${key}.classic.json" || -f "$PROT_TMPDIR/${key}.rulesets" ]]; then
       echo "  CLEANUP: restoring protection for $repo ..."
       _restore_protection "$repo" || true
     else
@@ -331,45 +316,31 @@ _cleanup() {
 trap _cleanup EXIT INT TERM
 
 # ---------------------------------------------------------------------------
-# Main loop
+# Per-repo worker (runs in subshell for parallelism)
 # ---------------------------------------------------------------------------
-echo "============================================================"
-echo " ADMIN FORCE-SYNC: local main -> remote main"
-echo " Repos : ${#REPOS[@]}"
-echo " Owner : ${GH_OWNER:-N/A}"
-echo " Commit: $( [[ "$NO_COMMIT" == "true" ]] && echo "(skipped)" || echo "\"$COMMIT_MSG\"" )"
-echo " Bypass: $( [[ "$SKIP_PROTECTION" == "true" ]] && echo "skipped (--skip-protection)" || echo "via GitHub API" )"
-[[ "$DRY_RUN" == "true" ]] && echo " MODE  : DRY RUN — no changes will be made"
-echo "============================================================"
-echo ""
+RESULT_DIR="$(mktemp -d)"
+trap '_cleanup; rm -rf "$RESULT_DIR"' EXIT INT TERM
 
-ok=0
-fail=0
-skip=0
-FAILED_REPOS=()
-FAILED_REASONS=()
+sync_repo() {
+  local repo="$1"
+  local rf="$RESULT_DIR/${repo//\//__}.result"
+  local dir="$WORKSPACE_ROOT/$repo"
 
-for repo in "${REPOS[@]}"; do
-  dir="$WORKSPACE_ROOT/$repo"
-
-  if [[ ! -d "$dir" ]]; then
-    echo "  (skip) $repo — directory not found"
-    ((skip++)); continue
-  fi
-  if [[ ! -d "$dir/.git" ]]; then
-    echo "  (skip) $repo — not a git repo"
-    ((skip++)); continue
+  if [[ ! -d "$dir" || ! -d "$dir/.git" ]]; then
+    echo "  (skip) $repo — not in workspace"
+    echo "SKIP:$repo" > "$rf"
+    return
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [dry]  $repo"
-    continue
+    echo "OK:$repo" > "$rf"
+    return
   fi
 
   echo -n "  $repo ... "
 
-  # 1. Stage + commit whatever HEAD is (no checkout required — we push HEAD:main)
-  #    This handles repos on feat/* branches without failing on checkout.
+  # Stage + commit all local changes (works from any branch; no --no-verify)
   if [[ "$NO_COMMIT" == "false" ]]; then
     (cd "$dir" && git add -A 2>/dev/null) || true
     if [[ -n "$(cd "$dir" && git status --porcelain 2>/dev/null)" ]]; then
@@ -377,36 +348,128 @@ for repo in "${REPOS[@]}"; do
     fi
   fi
 
-  # 2. Disable branch protection + rulesets
+  # Disable branch protection
   _disable_protection "$repo"
 
-  # 3. Force-push current HEAD -> origin main (works from any local branch)
-  push_out=$(mktemp)
-  if (cd "$dir" && git push --force origin HEAD:main 2>"$push_out"); then
+  # Force-push current HEAD → remote main (works from any local branch)
+  local push_err; push_err=$(mktemp)
+  if (cd "$dir" && git push --force origin HEAD:main 2>"$push_err"); then
     echo "OK"
-    ((ok++))
+    echo "OK:$repo" > "$rf"
+    # Switch local branch to main after successful push (avoids post-sync branch confusion)
+    local current_branch
+    current_branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [[ -n "$current_branch" && "$current_branch" != "main" ]]; then
+      (cd "$dir" && git checkout -B main 2>/dev/null) \
+        && echo "    [checkout] $repo — switched local branch to main" \
+        || echo "    [checkout] WARN: could not switch to main for $repo"
+    fi
   else
     echo "FAIL"
     echo "  --- push error ---"
-    cat "$push_out" | sed 's/^/    /'
+    cat "$push_err" | sed 's/^/    /'
     echo "  ------------------"
-    FAILED_REPOS+=("$repo"); FAILED_REASONS+=("git push --force failed")
-    ((fail++))
+    echo "FAIL:$repo" > "$rf"
   fi
-  rm -f "$push_out"
+  rm -f "$push_err"
 
-  # 4. Restore branch protection + rulesets immediately after push
+  # Restore branch protection immediately after push
   _restore_protection "$repo"
+}
+
+export -f sync_repo _disable_protection _restore_protection _repo_key
+export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR
+
+# ---------------------------------------------------------------------------
+# Parallel batch runner
+# ---------------------------------------------------------------------------
+run_batch() {
+  local -a batch=("$@")
+  local -a pids=()
+
+  for repo in "${batch[@]}"; do
+    while [[ ${#pids[@]} -ge $MAX_WORKERS ]]; do
+      wait "${pids[0]}" 2>/dev/null || true
+      pids=("${pids[@]:1}")
+    done
+    sync_repo "$repo" &
+    pids+=("$!")
+  done
+
+  for pid in "${pids[@]+"${pids[@]}"}"; do
+    wait "$pid" 2>/dev/null || true
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
+echo "============================================================"
+echo " ADMIN FORCE-SYNC: local HEAD -> remote main"
+echo " User   : $GH_USER"
+echo " Owner  : ${GH_OWNER:-N/A}"
+echo " Commit : $( [[ "$NO_COMMIT" == "true" ]] && echo "(skipped)" || echo "\"$COMMIT_MSG\"" )"
+echo " Workers: $MAX_WORKERS per tier"
+echo " Protect: $( [[ "$SKIP_PROTECTION" == "true" ]] && echo "skip (--skip-protection)" || echo "via GitHub API (save + restore)" )"
+[[ "$DRY_RUN" == "true" ]] && echo " MODE   : DRY RUN — no changes will be made"
+echo "============================================================"
+echo ""
+
+# ---------------------------------------------------------------------------
+# Main: topological tier order, parallel within each tier
+# ---------------------------------------------------------------------------
+if [[ "$USE_TOPO" == "true" ]]; then
+  NUM_LEVELS=$(jq '[.topologicalOrder.levels[].level] | max + 1' "$MANIFEST" 2>/dev/null || echo "0")
+  LEVEL_COUNT=$(jq '.topologicalOrder.levels | length' "$MANIFEST" 2>/dev/null || echo "0")
+
+  for level_idx in $(seq 0 $((LEVEL_COUNT - 1))); do
+    level_repos=($(jq -r --argjson idx "$level_idx" \
+      '.topologicalOrder.levels[$idx].repos[]' "$MANIFEST" 2>/dev/null || true))
+
+    [[ ${#level_repos[@]} -eq 0 ]] && continue
+
+    # Apply glob filter and limit within topo mode
+    if [[ -n "$FILTER_PATTERN" ]]; then
+      FILTERED_LEVEL=()
+      for r in "${level_repos[@]}"; do
+        [[ "$r" == $FILTER_PATTERN ]] && FILTERED_LEVEL+=("$r")
+      done
+      level_repos=("${FILTERED_LEVEL[@]}")
+      [[ ${#level_repos[@]} -eq 0 ]] && continue
+    fi
+
+    level_num=$((level_idx + 1))
+    echo "── Tier $level_num (${#level_repos[@]} repos, max $MAX_WORKERS parallel) ──"
+    run_batch "${level_repos[@]}"
+    echo ""
+  done
+else
+  echo "── Processing ${#REPOS[@]} repos (max $MAX_WORKERS parallel) ──"
+  run_batch "${REPOS[@]}"
+  echo ""
+fi
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+ok=0; fail=0; skip=0
+FAILED_REPOS=()
+
+for rf in "$RESULT_DIR"/*.result; do
+  [[ -f "$rf" ]] || continue
+  result=$(cat "$rf")
+  case "$result" in
+    OK:*)   ((ok++)) ;;
+    FAIL:*) ((fail++)); FAILED_REPOS+=("${result#FAIL:}") ;;
+    SKIP:*) ((skip++)) ;;
+  esac
 done
 
-echo ""
 echo "============================================================"
 echo " Done: $ok OK  |  $fail FAIL  |  $skip skipped"
 if [[ $fail -gt 0 ]]; then
   echo " Failed repos:"
-  for i in "${!FAILED_REPOS[@]}"; do
-    echo "   - ${FAILED_REPOS[$i]}: ${FAILED_REASONS[$i]:-unknown}"
-  done
+  for r in "${FAILED_REPOS[@]}"; do echo "   - $r"; done
   echo "============================================================"
   exit 1
 fi

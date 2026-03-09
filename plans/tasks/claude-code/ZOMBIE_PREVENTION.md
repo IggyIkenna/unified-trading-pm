@@ -35,7 +35,7 @@ ERRORS=$(run_with_timeout 30 basedpyright --level warning 2>&1 | tail -1 ...)
 - Exit code 142 or 124 → Assumes errors exist (999)
 - Continues processing instead of hanging
 
-### 2. **Agent Prompts** (run-agent.sh, run-parallel-agents.sh)
+### 2. **Agent Prompts** (run-agent.sh, unified-trading-pm/scripts/agents/run-parallel-agents.sh)
 
 Reduced basedpyright frequency:
 
@@ -161,7 +161,7 @@ claude --model claude-sonnet-4-5-20250929 < CLAUDE_CODE_TASK.md
 **2. Direct parallel execution:**
 
 ```bash
-bash run-parallel-agents.sh repo1 repo2 repo3 repo4 "prompt"
+bash unified-trading-pm/scripts/agents/run-parallel-agents.sh repo1 repo2 repo3 repo4 "prompt"
 # Includes: reduced frequency in prompts
 ```
 

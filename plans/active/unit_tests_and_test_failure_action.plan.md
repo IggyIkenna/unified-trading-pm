@@ -55,7 +55,14 @@ todos:
       "Verify required test files exist in all service repos: test_event_logging.py (tests 'from
       unified_events_interface import log_event') and test_config.py (tests UnifiedCloudConfig subclass). These are
       compliance gates, not optional."
-    status: pending
+    status: completed
+    notes: |
+      Verified 2026-03-09: All 28 service repos already have both tests/unit/test_event_logging.py and
+      tests/unit/test_config.py. Spot-checked 9 repos (alerting-service, execution-service, ml-inference-service,
+      strategy-service, ml-training-service, market-data-processing-service, features-volatility-service,
+      trading-agent-service, system-integration-tests) — all tests pass. Files are real compliance tests
+      (not stubs): test_event_logging.py checks log_event import, event markers in source, MockEventSink,
+      setup_events signature; test_config.py tests the service config class extends UnifiedCloudConfig.
   - id: fix-coverage-pct-placeholders
     content:
       "WARN 1.12: 35/59 repos in workspace-manifest.json show coverage_pct = 70 — a uniform placeholder. Run actual

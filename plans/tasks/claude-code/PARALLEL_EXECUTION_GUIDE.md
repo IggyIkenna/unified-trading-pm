@@ -72,7 +72,7 @@ bash run-agent.sh unified-config-interface "Fix all basedpyright errors"
 ### Parallel Script (`run-parallel-agents.sh`)
 
 ```bash
-bash run-parallel-agents.sh <repo1> <repo2> <repo3> <repo4> "<prompt>"
+bash unified-trading-pm/scripts/agents/run-parallel-agents.sh <repo1> <repo2> <repo3> <repo4> "<prompt>"
 ```
 
 **What it does**:
@@ -87,7 +87,7 @@ bash run-parallel-agents.sh <repo1> <repo2> <repo3> <repo4> "<prompt>"
 **Usage**:
 
 ```bash
-bash run-parallel-agents.sh \
+bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
     unified-config-interface \
     unified-events-interface \
     instruments-service \
@@ -104,7 +104,7 @@ bash run-parallel-agents.sh \
 **Batch 1**:
 
 ```bash
-bash run-parallel-agents.sh \
+bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
     unified-config-interface \
     unified-events-interface \
     instruments-service \
@@ -115,7 +115,7 @@ bash run-parallel-agents.sh \
 **Batch 2**:
 
 ```bash
-bash run-parallel-agents.sh \
+bash unified-trading-pm/scripts/agents/run-parallel-agents.sh \
     market-data-processing-service \
     features-calendar-service \
     features-delta-one-service \
@@ -204,7 +204,7 @@ done
 ### Check All Repos
 
 ```bash
-cd /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos
+cd /path/to/unified-trading-system-repos  # workspace root (varies per machine)
 
 for repo in unified-config-interface unified-events-interface instruments-service market-tick-data-handler; do
     echo "=== $repo ==="
