@@ -403,3 +403,30 @@ Each completed todo must satisfy:
 | UDC athena + bq_external readers                      | `readers/athena.py`, `readers/bq_external.py`            | `phase2_library_tier_hardening.plan.md § t3-udc-code-rewrite`         |
 | UMI footystats + soccer_football adapters             | `adapters/alt_data/footystats_adapter.py`                | `api_keys_and_auth.plan.md § phase-3-keys`                            |
 | execution-service ADAPTIVE_TWAP / ALMGREN_CHRISS port | `scripts/migrate_to_library_algorithms.py:31-32`         | `phase2_library_tier_hardening.plan.md § t0-code-rewrite` (EAL)       |
+
+---
+
+## Track G — UAC Orphaned Symbol Remediation (Section 14 audit fix)
+
+**Repo:** `unified-api-contracts` **Added:** 2026-03-09
+
+### Background
+
+Audit Section 14 found 12 confirmed orphan symbols in `unified-api-contracts` — symbols defined but never imported by
+any downstream repo. Remediation completed 2026-03-09:
+
+- `domain_config.py` — 4 Protocol classes deleted (no import anywhere, only docstring mentions)
+- `canonical_mappings.py` — 3 orphan functions deleted (`get_venues_for_data_source`, `get_canonical_venue_for_dataset`,
+  `get_defi_venue`; superseded by UTL equivalents)
+- `endpoint_registry.py` — 4 classes (`AccessMode`, `DataAvailability`, `ResponseFormat`, `EndpointSpec`) marked with
+  `# orphan: kept because` comments; `ENDPOINT_REGISTRY` holds substantive per-venue documentation (auth details,
+  deprecation dates) not yet wired to a consumer
+- `vcr_endpoints.py` — `VCREndpoint` TypedDict marked with `# orphan: kept because` comment; it is used internally to
+  type `VCR_ENDPOINTS` and the `_get`/`_post` helpers
+
+### Todos
+
+- [ ] `uac-endpoint-registry-consumer` — Wire `ENDPOINT_REGISTRY` (in `endpoint_registry.py`) to a real consumer: either
+      a runtime endpoint validation step in `market-tick-data-service` or a documentation generation script. Once wired,
+      remove the `# orphan:` comments from `AccessMode`, `DataAvailability`, `ResponseFormat`, `EndpointSpec` and add
+      them to `__all__` in `unified_api_contracts/__init__.py`.
