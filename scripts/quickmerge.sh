@@ -853,8 +853,38 @@ if [ -n "$PR_NUM" ]; then
   else
     gh pr merge "$PR_NUM" --auto --squash --delete-branch 2>/dev/null || true
     echo "[$REPO_NAME] ✅ PR created: $PR_URL (auto-merge enabled)"
-    echo "[$REPO_NAME] Staying on branch $BRANCH — PR will auto-merge when CI passes"
-    echo "[$REPO_NAME] To sync with main after merge: git checkout main && git pull"
+
+    # Wait for the PR to merge into main, then switch back to main.
+    # This ensures we pull the squash-merged commit, not the pre-merge auto branch state.
+    # Timeout: 10 minutes (600s). CI quality-gates typically take 1-3 min.
+    echo "[$REPO_NAME] Waiting for PR #$PR_NUM to merge into main (timeout: 10m)..."
+    WAIT_SECS=0
+    WAIT_MAX=600
+    WAIT_INTERVAL=10
+    MERGE_DONE=false
+    while [ "$WAIT_SECS" -lt "$WAIT_MAX" ]; do
+      sleep "$WAIT_INTERVAL"
+      WAIT_SECS=$((WAIT_SECS + WAIT_INTERVAL))
+      PR_STATE=$(gh pr view "$PR_NUM" --json state,mergedAt --jq '.state' 2>/dev/null || echo "UNKNOWN")
+      if [ "$PR_STATE" = "MERGED" ]; then
+        MERGE_DONE=true
+        break
+      elif [ "$PR_STATE" = "CLOSED" ]; then
+        echo "[$REPO_NAME] ⚠️  PR #$PR_NUM was closed without merging"
+        break
+      fi
+      echo "[$REPO_NAME]   ... PR state: $PR_STATE (${WAIT_SECS}s elapsed)"
+    done
+
+    if [ "$MERGE_DONE" = true ]; then
+      echo "[$REPO_NAME] ✅ PR merged — switching to main and pulling"
+      git checkout main --quiet
+      git pull --ff-only origin main --quiet
+      echo "[$REPO_NAME] ✅ On main @ $(git log --oneline -1)"
+    else
+      echo "[$REPO_NAME] ⚠️  PR not yet merged after ${WAIT_MAX}s — staying on $BRANCH"
+      echo "[$REPO_NAME] When it merges: git checkout main && git pull"
+    fi
   fi
 fi
 fi
