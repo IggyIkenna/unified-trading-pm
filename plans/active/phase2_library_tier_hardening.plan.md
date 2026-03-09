@@ -319,22 +319,23 @@ isProject: true
 > level below is updated. This applies to any renames that surface during T0–T3 hardening (e.g., package name changes in
 > UTS, UDC dual-publish rename).
 
-| Level                                     | What to Change                                                                            |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `**pyproject.toml` `name`\*\*             | Must match canonical name in `workspace-manifest.json`                                    |
-| **Python package directory**              | Rename the source dir; update all `__init__.py`                                           |
-| **All imports**                           | `rg` all 57 repos for old package name; replace every occurrence                          |
-| **Artifact Registry**                     | Rename GCP AR package; update all `cloudbuild.yaml` `--tag` lines that publish/install it |
-| `**workspace-manifest.json`\*\*           | `name`, `artifact_registry_url`, `package_name` — all fields                              |
-| **All dependent repos' `pyproject.toml`** | Replace old dep entry with new name at correct version                                    |
-| **CI/CD**                                 | `version-bump.yml`, Cloud Build trigger name, `quality-gates.yml` dep install step        |
-| **Cursor rules + codex docs**             | `rg` for old name; fix every occurrence                                                   |
+| Level                                     | What to Change                                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `**pyproject.toml` `name`\*\*             | Must match canonical name in `workspace-manifest.json`                                                                                                                                |
+| **Python package directory**              | Rename the source dir; update all `__init__.py`                                                                                                                                       |
+| **All imports**                           | `rg` all 57 repos for old package name; replace every occurrence                                                                                                                      |
+| **Artifact Registry**                     | Rename GCP AR package; update all `cloudbuild.yaml` `--tag` lines that publish/install it                                                                                             |
+| `**workspace-manifest.json`\*\*           | `name`, `artifact_registry_url`, `package_name` — all fields                                                                                                                          |
+| **All dependent repos' `pyproject.toml`** | Update via manifest: edit `workspace-manifest.json` dep name/version, then run `fix-internal-dependency-alignment.py --apply` — do NOT edit pyproject.toml directly for internal deps |
+| **CI/CD**                                 | `version-bump.yml`, Cloud Build trigger name, `quality-gates.yml` dep install step                                                                                                    |
+| **Cursor rules + codex docs**             | `rg` for old name; fix every occurrence                                                                                                                                               |
 
 ### UTS Dual-Publish Rename (T1 STEP C: `lib-phase2-uts-rename-step1`)
 
 Adds `unified_trading_services/` re-export package. When this is published:
 
-- **ALL 14 services + 7 T2 libraries** must update their `pyproject.toml` dep entry in the SAME `--dep-branch` cascade
+- **ALL 14 services + 7 T2 libraries** must update their `workspace-manifest.json` dep entry in the SAME `--dep-branch`
+  cascade; run `fix-internal-dependency-alignment.py --apply` to sync pyproject.toml files
 - Old import path must be **deleted** from all files — no fallback re-export kept
 
 ### UDC Rename (T3 STEP C: `lib-phase2-rename-step2`)
