@@ -1036,11 +1036,6 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-feature-calculator",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
@@ -2362,6 +2357,11 @@
         {
           "name": "unified-cloud-interface",
           "version": ">=0.1.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.42,<1.0.0",
           "required": true
         }
       ],

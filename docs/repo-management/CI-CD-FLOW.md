@@ -195,55 +195,61 @@ from main by resolving conflicts with a broken local state.
 
 ## Admin Operations (Special Circumstances Only)
 
-> **WARNING:** These operations bypass normal CI/CD flow and branch protections. Use only when the standard
-> sync-to-main flow cannot be used (e.g. remote main has diverged from local after a bad merge, workspace recovery
-> after destructive remote changes, or emergency local-state promotion).
+> **WARNING:** These operations bypass normal CI/CD flow and branch protections. Use only when the standard sync-to-main
+> flow cannot be used (e.g. remote main has diverged from local after a bad merge, workspace recovery after destructive
+> remote changes, or emergency local-state promotion).
 
-### Force-Push All Repos to Main
+### Force-Push All Repos to Main (Admin Only)
 
-Overwrites `origin/main` with the current local `main` state for all (or selected) repos. Before pushing, it
-auto-stages and commits all local changes — including untracked files and deletions — so the push reflects true local
-state.
+**Script:** `scripts/repo-management/admin-force-sync-all-to-main.sh` **Access:** IggyIkenna only (identity gate via
+`gh api user`). All other users are rejected.
+
+Overwrites `origin/main` with the current local state for all (or selected) repos. Works from **any local branch** — no
+checkout to `main` required. Auto-stages and commits all local changes (including untracked files and deletions) before
+pushing, so the push reflects true local state. After a successful push, automatically switches the local branch to
+`main` to avoid post-sync branch confusion.
 
 ```bash
 # All repos — dry run first to inspect what would be committed + pushed
-bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --dry-run
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --dry-run
 
-# All repos — force push (branch protection must be off, or use --bypass-protection)
-bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection
+# All repos — force push (disables + restores branch protection automatically)
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh
 
 # Single repo
-bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection --repos "unified-trading-pm"
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --repo unified-trading-pm
 
-# Multiple specific repos
-bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection --repos "unified-trading-pm unified-events-interface"
+# Multiple specific repos (comma-separated)
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --repos "unified-trading-pm,unified-events-interface"
 
-# Leave branch protection disabled after push (skip restore)
-bash unified-trading-pm/scripts/repo-management/force-push-all-to-main.sh --bypass-protection --no-restore
+# Skip staging/committing (push current committed HEAD as-is)
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --no-commit
+
+# Skip branch protection disable/restore (if already disabled or not configured)
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --skip-protection
 ```
 
 **What it does per repo:**
 
-1. `git checkout main`
-2. `git add -A` — stages all modifications, deletions, and untracked files
-3. Commits staged changes as `chore: force-sync local state` (skips pre-commit hooks via `--no-verify`)
-4. Disables branch protection + rulesets (if `--bypass-protection`)
-5. `git push --force origin main`
-6. Restores branch protection (unless `--no-restore`)
+1. `git add -A` — stages all modifications, deletions, and untracked files (from any local branch)
+2. `git commit -m "chore: force-sync local state"` — commits staged changes (pre-commit hooks run normally)
+3. Disables branch protection + rulesets
+4. `git push --force origin HEAD:main` — pushes current HEAD to remote main (works from any branch)
+5. Restores branch protection immediately after push
+6. `git checkout -B main` — resets local `main` pointer to current HEAD and switches to it
 
 **When to use:**
 
-| Situation | Use |
-| --- | --- |
-| Remote main diverged (bad merge, external push) | `--bypass-protection` all repos or `--repos` targeted |
-| Untracked/unstaged local files not on remote | Runs automatically — no extra flags needed |
-| PM plans archive/active out of sync on remote | Delete from disk first, then run — deletions are auto-staged |
-| Emergency workspace recovery | `--bypass-protection` all repos |
+| Situation                                                | Use                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| Remote main diverged (bad merge, external push)          | Default — all repos                                          |
+| Working on a feature branch with committed local changes | Works automatically — push from any branch                   |
+| Untracked/unstaged local files not on remote             | Runs automatically — no extra flags needed                   |
+| PM plans archive/active out of sync on remote            | Delete from disk first, then run — deletions are auto-staged |
+| Emergency workspace recovery                             | Default — all repos                                          |
 
 **When NOT to use:** Do not use as a substitute for `sync-all-to-main.sh` in normal workflow. Force-push skips quality
 gates, PR review, and semver-agent. Always prefer Phase 3 (quickmerge) for standard changes.
-
-**Script:** `scripts/repo-management/force-push-all-to-main.sh`
 
 ---
 

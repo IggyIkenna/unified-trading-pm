@@ -269,7 +269,7 @@
   <text x="120" y="740" text-anchor="middle" class="ver">responses&gt;=0.24.1,&lt;1.0.0</text>
   <rect x="208" y="714" width="136" height="32" class="pkg-box" />
   <text x="276" y="728" text-anchor="middle" class="label">rich</text>
-  <text x="276" y="740" text-anchor="middle" class="ver">rich&gt;=14.2.0,&lt;16.0.0</text>
+  <text x="276" y="740" text-anchor="middle" class="ver">rich&gt;=14.2.0,&lt;15.0.0</text>
   <rect x="352" y="714" width="100" height="32" class="pkg-box" />
   <text x="402" y="728" text-anchor="middle" class="label">ruff</text>
   <text x="402" y="740" text-anchor="middle" class="ver">ruff==0.15.0</text>
