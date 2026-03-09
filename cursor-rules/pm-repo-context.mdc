@@ -1,0 +1,38 @@
+---
+description: "PM repo is L0 root — SSOT template host, workspace management, not a service"
+alwaysApply: true
+priority: 100
+tags:
+  - pm
+  - context
+---
+
+# PM Repo Context
+
+This is `unified-trading-pm` — Level 0 (root) in the workspace topology.
+
+## What This Repo Is
+
+- **SSOT template host** for scripts copied to all 60+ repos:
+  - `scripts/setup.sh` — environment bootstrap
+  - `scripts/quality-gates.sh` — linting + testing pipeline
+  - `scripts/quickmerge.sh` — git + PR automation
+  - `.github/workflows/version-bump.yml` — semver automation
+- **Workspace manifest** (`workspace-manifest.json`) — registry of all repos, tiers, versions
+- **Automation scripts** (`scripts/`, `github-integration/`) — workspace-wide tooling
+- **Cursor rule source** (`cursor-rules/`, `cursor-configs/`) — synced to `.cursor/rules/`
+- **Plans and coordination** (`plans/`) — phase execution plans
+
+## What This Repo Is NOT
+
+- Not a Python package — no importable `unified_trading_pm` module
+- Not a service — no Cloud Run, no API, no PubSub
+- Not a library — nothing depends on it at Python import time
+
+## Key Rules
+
+- Changes to SSOT templates (setup.sh, quality-gates.sh, quickmerge.sh) must be propagated to all repos
+- `workspace-manifest.json` changes must regenerate the DAG SVG: `python3 scripts/manifest/generate_workspace_dag.py`
+- Python scripts in `scripts/` must pass basedpyright and ruff (line-length 120)
+- Tests: bats for shell scripts, pytest for Python scripts
+- Use `bash scripts/quickmerge.sh "message"` to commit — never `git push` directly
