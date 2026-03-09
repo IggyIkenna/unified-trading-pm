@@ -117,7 +117,7 @@ After running the script and restarting:
 ### Check Cursor
 
 1. Open Cursor
-2. Check Python interpreter (bottom right) - should show Python 3.13.9
+2. Check Python interpreter (bottom right) - should show Python 3.13.x
 3. No "Invalid Python interpreter" errors
 
 ### Check Claude Code

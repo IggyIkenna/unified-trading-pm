@@ -32,8 +32,13 @@ complete.
 ## File Location
 
 - **Path:** `<workspace-root>/.act-secrets`
+- **Workspace root:** Quickmerge prefers `UNIFIED_TRADING_WORKSPACE_ROOT` when set (portable across team); else derives
+  from script location.
+- **Used across all repos:** Quickmerge exports `ACT_SECRETS_FILE` when the file exists, so act uses it regardless of
+  which repo you run from.
 - **Same for everyone:** Relative to workspace root; not committed (gitignored).
 - **Fallback:** `~/.secrets` (legacy) if `.act-secrets` is missing.
+- **Override:** `export ACT_SECRETS_FILE=/absolute/path/to/.act-secrets` — use when auto-detected path is wrong.
 
 ## When Act Fails
 

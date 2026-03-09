@@ -18,6 +18,7 @@ central-element-323112-*.json
 *.backup
 
 # Python
+.python-version
 __pycache__/
 *.pyc
 .pytest_cache/

@@ -61,6 +61,10 @@ WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 # Fallback: .act-secrets at repo root (e.g. single-repo dev)
 [ ! -f "${WORKSPACE_ROOT}/.act-secrets" ] && [ -f "${REPO_ROOT}/.act-secrets" ] && WORKSPACE_ROOT="$REPO_ROOT"
 
+# Act secrets: prefer UNIFIED_TRADING_WORKSPACE_ROOT when set (portable across team); else use computed WORKSPACE_ROOT
+ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
+[ -f "${ACT_SECRETS_ROOT}/.act-secrets" ] && export ACT_SECRETS_FILE="${ACT_SECRETS_ROOT}/.act-secrets"
+
 # ── PARSE ARGUMENTS ───────────────────────────────────────────────────────────
 COMMIT_MSG="chore: automated update"
 FILES_ARG=""
@@ -277,8 +281,13 @@ PYEOF
 [ -n "$DEP_BRANCH" ] && cascade_dep_branch "$DEP_BRANCH"
 
 # ── ACTIVATE VENV ─────────────────────────────────────────────────────────────
+# USE_WORKSPACE_VENV=1: prefer .venv-workspace over repo .venv (workspace-venv-fallback.mdc)
 VENV_ACTIVATED=0
-if [ -f ".venv/bin/activate" ]; then
+if [ "${USE_WORKSPACE_VENV:-0}" = "1" ] && [ -f "${WORKSPACE_ROOT}/.venv-workspace/bin/activate" ]; then
+  source "${WORKSPACE_ROOT}/.venv-workspace/bin/activate"
+  VENV_ACTIVATED=1
+  echo "[$REPO_NAME] Using .venv-workspace (Python $(python --version 2>&1))"
+elif [ -f ".venv/bin/activate" ]; then
   source .venv/bin/activate
   VENV_ACTIVATED=1
   echo "[$REPO_NAME] Using .venv (Python $(python --version 2>&1))"
@@ -696,8 +705,17 @@ else
   fi
 
   ACT_SECRETS=""
-  [ -f "${WORKSPACE_ROOT}/.act-secrets" ] && ACT_SECRETS="--secret-file ${WORKSPACE_ROOT}/.act-secrets"
-  [ -z "$ACT_SECRETS" ] && [ -f ~/.secrets ] && ACT_SECRETS="--secret-file ~/.secrets"
+  RESOLVED_SECRETS_PATH=""
+  if [ -n "${ACT_SECRETS_FILE:-}" ] && [ -f "${ACT_SECRETS_FILE}" ]; then
+    ACT_SECRETS="--secret-file ${ACT_SECRETS_FILE}"
+    RESOLVED_SECRETS_PATH="${ACT_SECRETS_FILE}"
+  elif [ -f "${WORKSPACE_ROOT}/.act-secrets" ]; then
+    ACT_SECRETS="--secret-file ${WORKSPACE_ROOT}/.act-secrets"
+    RESOLVED_SECRETS_PATH="${WORKSPACE_ROOT}/.act-secrets"
+  elif [ -f ~/.secrets ]; then
+    ACT_SECRETS="--secret-file ~/.secrets"
+    RESOLVED_SECRETS_PATH="$HOME/.secrets"
+  fi
   if act -j quality-gates --container-architecture linux/amd64 $ACT_SECRETS; then
     echo "[$REPO_NAME] ✅ Act simulation PASSED"
   else
@@ -705,6 +723,15 @@ else
     echo "[$REPO_NAME] ❌ Act simulation FAILED — quickmerge aborted" >&2
     echo "" >&2
     echo "Act needs GH_PAT to clone sibling repos (e.g. unified-trading-codex). Without it, CI simulation cannot run." >&2
+    echo "" >&2
+    echo "Secrets lookup: ACT_SECRETS_ROOT=${ACT_SECRETS_ROOT:-$WORKSPACE_ROOT} (uses UNIFIED_TRADING_WORKSPACE_ROOT when set)" >&2
+    if [ -n "$RESOLVED_SECRETS_PATH" ]; then
+      echo "  Used: $RESOLVED_SECRETS_PATH" >&2
+    else
+      echo "  Checked: ${ACT_SECRETS_ROOT:-$WORKSPACE_ROOT}/.act-secrets (not found)" >&2
+      echo "  Checked: ${HOME}/.secrets (not found)" >&2
+      echo "  Set UNIFIED_TRADING_WORKSPACE_ROOT or export ACT_SECRETS_FILE=/path/to/.act-secrets" >&2
+    fi
     echo "" >&2
     echo "Fix:" >&2
     echo "  1. bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh" >&2
@@ -744,12 +771,18 @@ git fetch origin main --quiet
 if [ -n "$DEP_BRANCH" ]; then
   BRANCH="$DEP_BRANCH"
   echo "[$REPO_NAME] Using specified branch: $BRANCH"
+  if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
+    git checkout "$BRANCH" --quiet
+  elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
+    git checkout -B "$BRANCH" "origin/$BRANCH" --quiet
+  else
+    git checkout -b "$BRANCH" origin/main --quiet
+  fi
 else
   BRANCH="auto/$(TZ=UTC date +%Y%m%d-%H%M%S)-$$"
   echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
+  git checkout -b "$BRANCH" origin/main --quiet
 fi
-
-git checkout -b "$BRANCH" origin/main --quiet
 echo ""
 
 # Restore stash on new branch

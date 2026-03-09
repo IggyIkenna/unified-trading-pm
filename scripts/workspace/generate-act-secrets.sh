@@ -13,13 +13,17 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# Workspace root = parent of unified-trading-pm
-WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# Workspace root: prefer UNIFIED_TRADING_WORKSPACE_ROOT (portable); else parent of unified-trading-pm
+DETECTED_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+WORKSPACE_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$DETECTED_ROOT}"
 SECRETS_FILE="${WORKSPACE_ROOT}/.act-secrets"
 
 if [ -f "$SECRETS_FILE" ]; then
   echo "[generate-act-secrets] $SECRETS_FILE already exists — not overwriting"
   echo "  Edit it manually to update GH_PAT"
+  echo ""
+  echo "  Quickmerge resolves workspace root and looks for .act-secrets there."
+  echo "  If act fails to find it, use: export ACT_SECRETS_FILE=$SECRETS_FILE"
   exit 0
 fi
 

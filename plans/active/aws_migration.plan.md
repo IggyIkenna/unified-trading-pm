@@ -223,6 +223,10 @@ isProject: false
 - **buildspec.aws.yaml** present in many repos (CodeBuild)
 - **Secrets:** GCP Secret Manager primary; AWS Secrets Manager secondary
 - **Storage:** GCS primary; S3 secondary (bucket naming: `{prefix}-${AWS_ACCOUNT_ID}`)
+- **codebuild-canary-run:** Completed 2026-03-09 — simulate-buildspec-canary.sh added; 2/3 canaries pass (UCI, UEI);
+  instruments-service blocked by service-level fixes. Pushed via PR #48.
+- **AWS admin tasks:** aws-account-setup, aws-team-access, github-aws-credentials assigned to team member with AWS
+  console access (Datadodo/Harsh).
 
 ---
 
