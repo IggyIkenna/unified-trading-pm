@@ -10,6 +10,7 @@ on:
     paths:
       - workspace-manifest.json
       - "plans/**"
+      - "docs/**"
 
 jobs:
   dispatch:
