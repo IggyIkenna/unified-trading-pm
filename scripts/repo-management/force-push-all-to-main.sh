@@ -11,6 +11,7 @@
 #   bash force-push-all-to-main.sh --bypass-protection --no-restore  # Disable and leave disabled
 #   bash force-push-all-to-main.sh --limit 2                    # First 2 repos only
 #   bash force-push-all-to-main.sh --repos "repo1 repo2"        # Specific repos only
+#   bash force-push-all-to-main.sh --max-workers 8              # Parallel workers (default 8)
 #
 # Requires: workspace-manifest.json, git, gh, jq
 # Run from: workspace root
@@ -36,6 +37,7 @@ LIMIT=""
 REPOS_FILTER=""
 BYPASS_PROTECTION=false
 RESTORE_PROTECTION=true
+MAX_WORKERS=${MAX_WORKERS:-8}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -44,6 +46,7 @@ while [[ $# -gt 0 ]]; do
     --no-restore)          RESTORE_PROTECTION=false; shift ;;
     --limit)               LIMIT="$2"; shift 2 ;;
     --repos)               REPOS_FILTER="$2"; shift 2 ;;
+    --max-workers)         MAX_WORKERS="$2"; shift 2 ;;
     *)                     shift ;;
   esac
 done
@@ -53,17 +56,44 @@ if [[ ! -f "$MANIFEST" ]]; then
   exit 1
 fi
 
+# Build level-ordered repo list from manifest topologicalOrder.
+# Falls back to alphabetical keys[] if topologicalOrder is absent.
+# When --repos is specified, skip topology and use the explicit list.
+USE_TOPO=false
+if [[ -z "$REPOS_FILTER" ]]; then
+  TOPO_CHECK=$(python3.13 -c "
+import json, sys
+with open('$MANIFEST') as f: data = json.load(f)
+levels = data.get('topologicalOrder', {}).get('levels', [])
+print('yes' if levels else 'no')
+" 2>/dev/null || echo "no")
+  [[ "$TOPO_CHECK" = "yes" ]] && USE_TOPO=true
+fi
+
 if [[ -n "$REPOS_FILTER" ]]; then
   REPOS=($REPOS_FILTER)
-else
+elif [[ "$USE_TOPO" = false ]]; then
   REPOS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
 fi
 
-if [[ -n "$LIMIT" ]]; then
+if [[ -n "$LIMIT" && "$USE_TOPO" = false ]]; then
   REPOS=("${REPOS[@]:0:$LIMIT}")
 fi
 
-echo "Force-push to main: ${#REPOS[@]} repos"
+TOTAL=$(
+  if [[ "$USE_TOPO" = true ]]; then
+    python3.13 -c "
+import json
+with open('$MANIFEST') as f: data = json.load(f)
+levels = data.get('topologicalOrder', {}).get('levels', [])
+print(sum(len(l.get('repos',[])) for l in levels))
+" 2>/dev/null
+  else
+    echo "${#REPOS[@]}"
+  fi
+)
+
+echo "Force-push to main: $TOTAL repos (max-workers=$MAX_WORKERS, topo-order=$USE_TOPO)"
 [[ "$DRY_RUN" = true ]]          && echo "DRY RUN — no pushes will be made"
 [[ "$BYPASS_PROTECTION" = true ]] && echo "BYPASS PROTECTION — will disable branch protection + rulesets before push"
 [[ "$BYPASS_PROTECTION" = true && "$RESTORE_PROTECTION" = false ]] && echo "NO RESTORE — protections left disabled after push"
@@ -71,28 +101,16 @@ echo ""
 
 # ── helpers ────────────────────────────────────────────────────────────────
 
-disable_protection() {
-  local repo="$1"
-  # Classic branch protection (GH006)
-  gh api "repos/$GITHUB_ORG/$repo/branches/main/protection" -X DELETE 2>/dev/null && \
-    echo "    [prot] classic branch protection removed: $repo" || true
-  # Rulesets (GH013)
-  local ids
-  ids=$(gh api "repos/$GITHUB_ORG/$repo/rulesets" 2>/dev/null | jq -r '.[].id // empty' 2>/dev/null || true)
-  for id in $ids; do
-    gh api "repos/$GITHUB_ORG/$repo/rulesets/$id" -X DELETE 2>/dev/null && \
-      echo "    [prot] ruleset $id removed: $repo" || true
-  done
-}
-
-# Capture ruleset configs before deletion so we can restore them
-# Uses temp files (not declare -A) for bash 3.2 compatibility (macOS default shell)
+# Init backup dir eagerly so parallel subshells share the same path
 PROT_BACKUP_DIR=""
+if [[ "$BYPASS_PROTECTION" = true ]]; then
+  PROT_BACKUP_DIR="$(mktemp -d)"
+  export PROT_BACKUP_DIR
+fi
 
 backup_and_disable_protection() {
   local repo="$1"
-  # Lazy-init temp dir
-  [[ -z "$PROT_BACKUP_DIR" ]] && PROT_BACKUP_DIR="$(mktemp -d)"
+  [[ -z "$PROT_BACKUP_DIR" ]] && return
   local safe_repo
   safe_repo="${repo//\//__}"
   # Classic branch protection
@@ -150,63 +168,145 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# ── main loop ──────────────────────────────────────────────────────────────
+# ── per-repo worker ─────────────────────────────────────────────────────────
+
+push_repo() {
+  local repo="$1" result_file="$2"
+  local dir="$WORKSPACE_ROOT/$repo"
+  local log; log=$(mktemp)
+
+  {
+    if [[ ! -d "$dir" ]]; then
+      echo "(skip) $repo — not in workspace"
+      echo "SKIP:$repo" >"$result_file"
+      return
+    fi
+    if [[ ! -d "$dir/.git" ]]; then
+      echo "(skip) $repo — not a git repo"
+      echo "SKIP:$repo" >"$result_file"
+      return
+    fi
+
+    # Ensure we're on main
+    (cd "$dir" && git checkout main 2>/dev/null) || true
+
+    # Stage ALL local changes
+    (cd "$dir" && git add -A)
+
+    if [[ "$DRY_RUN" = true ]]; then
+      echo "  [dry] $repo"
+      (cd "$dir" && git status -sb | head -1)
+      (cd "$dir" && git diff --cached --stat)
+      echo "OK:$repo" >"$result_file"
+      return
+    fi
+
+    if ! (cd "$dir" && git diff --cached --quiet 2>/dev/null); then
+      staged_summary=$(cd "$dir" && git diff --cached --stat | tail -1)
+      (cd "$dir" && git commit -m "chore: force-sync local state" --no-verify 2>/dev/null) && \
+        echo "    [commit] $repo — $staged_summary" || \
+        echo "    [commit] WARN: commit failed for $repo (continuing)"
+    fi
+
+    if [[ "$BYPASS_PROTECTION" = true ]]; then
+      backup_and_disable_protection "$repo"
+    fi
+
+    echo -n "  $repo ... "
+    if (cd "$dir" && git push --force origin main 2>&1); then
+      echo "OK"
+      echo "OK:$repo" >"$result_file"
+    else
+      echo "FAIL"
+      echo "FAIL:$repo" >"$result_file"
+    fi
+
+    if [[ "$BYPASS_PROTECTION" = true && "$RESTORE_PROTECTION" = true ]]; then
+      restore_protection "$repo"
+    fi
+  } >"$log" 2>&1
+
+  cat "$log"
+  rm -f "$log"
+}
+
+export -f push_repo backup_and_disable_protection restore_protection
+export GITHUB_ORG WORKSPACE_ROOT DRY_RUN BYPASS_PROTECTION RESTORE_PROTECTION PROT_BACKUP_DIR
+
+# ── parallel batch helper ────────────────────────────────────────────────────
+# Runs a list of repos in parallel (up to MAX_WORKERS), writes results to RESULT_DIR.
+# Populates global failed / failed_repos — does NOT abort on failure (collect-all).
+
+run_batch() {
+  local -a batch=("$@")
+  local -a pids=()
+
+  for repo in "${batch[@]}"; do
+    rf="$RESULT_DIR/${repo//\//__}.result"
+
+    while [[ ${#pids[@]} -ge $MAX_WORKERS ]]; do
+      wait "${pids[0]}" 2>/dev/null || true
+      pids=("${pids[@]:1}")
+    done
+
+    push_repo "$repo" "$rf" &
+    pids+=("$!")
+  done
+
+  for pid in "${pids[@]+"${pids[@]}"}"; do
+    wait "$pid" 2>/dev/null || true
+  done
+}
+
+# ── main loop ────────────────────────────────────────────────────────────────
+
+RESULT_DIR="$(mktemp -d)"
+trap 'cleanup; rm -rf "$RESULT_DIR"' EXIT
 
 failed=0
 failed_repos=()
 
-for repo in "${REPOS[@]}"; do
-  dir="$WORKSPACE_ROOT/$repo"
-  if [[ ! -d "$dir" ]]; then
-    echo "  (skip) $repo — not in workspace"
-    continue
-  fi
-  if [[ ! -d "$dir/.git" ]]; then
-    echo "  (skip) $repo — not a git repo"
-    continue
-  fi
+if [[ "$USE_TOPO" = true ]]; then
+  # Level-sequential, parallel within each level
+  NUM_LEVELS=$(python3.13 -c "
+import json
+with open('$MANIFEST') as f: data = json.load(f)
+levels = data.get('topologicalOrder', {}).get('levels', [])
+print(len(levels))
+" 2>/dev/null)
 
-  # Ensure we're on main
-  (cd "$dir" && git checkout main 2>/dev/null) || true
+  for level_idx in $(seq 0 $((NUM_LEVELS - 1))); do
+    level_repos=($(python3.13 -c "
+import json
+with open('$MANIFEST') as f: data = json.load(f)
+levels = sorted(data.get('topologicalOrder', {}).get('levels', []), key=lambda l: l.get('level', 999))
+repos = levels[$level_idx].get('repos', []) if $level_idx < len(levels) else []
+for r in repos: print(r)
+" 2>/dev/null))
 
-  # Stage ALL local changes (modifications, deletions, untracked files)
-  # This ensures force-push reflects true local state — not just already-committed state.
-  # Without this, unstaged deletes and untracked files are silently excluded from the push.
-  (cd "$dir" && git add -A)
+    [[ ${#level_repos[@]} -eq 0 ]] && continue
+    level_num=$((level_idx + 1))
+    echo "── Level $level_num (${#level_repos[@]} repos, max $MAX_WORKERS parallel) ──"
+    run_batch "${level_repos[@]}"
 
-  if [[ "$DRY_RUN" = true ]]; then
-    echo "  [dry] $repo"
-    (cd "$dir" && git status -sb | head -1)
-    (cd "$dir" && git diff --cached --stat)
-    continue
-  fi
+    # Collect failures for this level (informational only — push continues across levels)
+    for repo in "${level_repos[@]}"; do
+      rf="$RESULT_DIR/${repo//\//__}.result"
+      [[ -f "$rf" ]] || continue
+      result=$(cat "$rf")
+      [[ "$result" == FAIL:* ]] && { r="${result#FAIL:}"; ((failed++)) || true; failed_repos+=("$r"); }
+    done
+  done
+else
+  # Flat parallel — explicit --repos list or no topology in manifest
+  run_batch "${REPOS[@]}"
 
-  if ! (cd "$dir" && git diff --cached --quiet 2>/dev/null); then
-    staged_summary=$(cd "$dir" && git diff --cached --stat | tail -1)
-    (cd "$dir" && git commit -m "chore: force-sync local state" --no-verify 2>/dev/null) && \
-      echo "    [commit] $repo — $staged_summary" || \
-      echo "    [commit] WARN: commit failed for $repo (continuing)"
-  fi
-
-  # Disable protection before push
-  if [[ "$BYPASS_PROTECTION" = true ]]; then
-    backup_and_disable_protection "$repo"
-  fi
-
-  echo -n "  $repo ... "
-  if (cd "$dir" && git push --force origin main 2>&1); then
-    echo "OK"
-  else
-    echo "FAIL"
-    ((failed++)) || true
-    failed_repos+=("$repo")
-  fi
-
-  # Restore protection after push
-  if [[ "$BYPASS_PROTECTION" = true && "$RESTORE_PROTECTION" = true ]]; then
-    restore_protection "$repo"
-  fi
-done
+  for rf in "$RESULT_DIR"/*.result; do
+    [[ -f "$rf" ]] || continue
+    result=$(cat "$rf")
+    [[ "$result" == FAIL:* ]] && { r="${result#FAIL:}"; ((failed++)) || true; failed_repos+=("$r"); }
+  done
+fi
 
 echo ""
 if [[ $failed -gt 0 ]]; then

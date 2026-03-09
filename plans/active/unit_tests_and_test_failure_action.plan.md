@@ -44,6 +44,16 @@ todos:
       unified_events_interface import log_event') and test_config.py (tests UnifiedCloudConfig subclass). These are
       compliance gates, not optional."
     status: pending
+  - id: fix-coverage-pct-placeholders
+    content:
+      "WARN 1.12: 35/59 repos in workspace-manifest.json show coverage_pct = 70 — a uniform placeholder. Run actual
+      coverage measurements per repo (pytest --cov= --cov-report=json) and update manifest with real values. Repos with
+      coverage_pct = 0 and testing_level != none (features-commodity-service, features-cross-instrument-service,
+      trading-agent-service) investigate — if no tests, mark testing_level = none. Do NOT hard-code a different uniform
+      value — measure real coverage. (Migrated from workspace_audit_remediation_2026_03_07.plan.md
+      fix-coverage-pct-placeholders.)"
+    status: pending
+
   - id: tier-order-run
     content:
       "Run pytest tests/unit/ -v in tier order (T0 → T1 → T2 → T3 → services) per repo. Failing deps block consumers —
