@@ -46,18 +46,28 @@ if [[ $exit_code -eq 1 ]]; then
   HIGH_RISK=$(sed -n '/=== HIGH RISK/,/=== MEDIUM RISK/p' "$RUN_LOG" \
     | grep -v "^===" | grep -v "^$" | sed 's/^  //' | head -10 || true)
 
-  # macOS notification — Use full path (launchd has minimal PATH)
-  NOTIFIER=""
-  for p in /opt/homebrew/bin/terminal-notifier /usr/local/bin/terminal-notifier; do
-    [[ -x "$p" ]] && NOTIFIER="$p" && break
-  done
-  if [[ -n "$NOTIFIER" ]]; then
-    "$NOTIFIER" -title "Audit Reflog" \
-      -message "High-risk reset(s) found. Click to open log." \
-      -sound default \
-      -execute "open $LOG"
+  # Cross-platform notification
+  if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS notification — Use full path (launchd has minimal PATH)
+    NOTIFIER=""
+    for p in /opt/homebrew/bin/terminal-notifier /usr/local/bin/terminal-notifier; do
+      [[ -x "$p" ]] && NOTIFIER="$p" && break
+    done
+    if [[ -n "$NOTIFIER" ]]; then
+      "$NOTIFIER" -title "Audit Reflog" \
+        -message "High-risk reset(s) found. Click to open log." \
+        -sound default \
+        -execute "open $LOG"
+    else
+      osascript -e "display notification \"High-risk reset(s) found. Check $LOG\" with title \"Audit Reflog\" sound name \"Basso\""
+    fi
   else
-    osascript -e "display notification \"High-risk reset(s) found. Check $LOG\" with title \"Audit Reflog\" sound name \"Basso\""
+    # Linux notification via notify-send
+    DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/$(id -u)/bus}"
+    export DBUS_SESSION_BUS_ADDRESS
+    if command -v notify-send &>/dev/null; then
+      notify-send -u critical "Audit Reflog — High Risk" "High-risk reset(s) found. See $LOG"
+    fi
   fi
 
   # Telegram notification

@@ -52,30 +52,6 @@ bash scripts/quickmerge.sh "bump version to 1.3.0" # NEVER bump locally — CI d
 
 ## Local Version Bumping
 
-NEVER bump version in pyproject.toml or package.json locally on a branch.
-The GitHub Action bumps version automatically on merge to main, based on the commit message type.
-Manual bumps on branches create double-bumps (branch bump + CI bump = skipped semver).
+NEVER bump version in pyproject.toml or package.json locally on a branch. CI does this on merge.
 
-## Scope (optional but encouraged)
-
-Scope identifies which component changed:
-- `feat(ConfigReloader): extract from UCI to UTS`
-- `fix(quality-gates): remove git reset --hard suggestion from Option 1`
-- `chore(quickmerge): add --no-pr flag`
-
-## Enforcement
-
-- commit-msg hook (pre-commit): validates format before commit is created
-- quickmerge.sh Stage 0: validates COMMIT_MSG format, exits 1 if not conventional
-- GitHub Actions version-bump.yml: reads type prefix from squash-merge commit; non-conventional format = no bump → idempotent conflict on next Cloud Build run
-
-## Breaking Changes in Internal Libraries/Services
-
-When a library or service makes a breaking API change that forces consumers to update their code,
-use `feat!:` (bang) or include `BREAKING CHANGE:` in the commit footer. This triggers a **major**
-version bump (e.g. `1.4.2` → `2.0.0`) in the CI.
-
-Consumers of that library MUST then update their `pyproject.toml` version constraint and fix
-call sites before their next merge to main.
-
-See full protocol: `cursor-rules/dependencies/breaking-change-major-version-protocol.mdc`
+For breaking changes (`feat!:`): see requestable `breaking-change-major-version-protocol.mdc`.

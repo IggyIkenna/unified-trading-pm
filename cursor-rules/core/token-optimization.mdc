@@ -1,6 +1,6 @@
 ---
 description: "Strict token optimization mode + follow cursor rules — use @token-optimization to activate"
-alwaysApply: true
+alwaysApply: false
 priority: 55
 tags:
   - token

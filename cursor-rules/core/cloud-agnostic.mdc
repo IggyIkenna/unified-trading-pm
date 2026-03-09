@@ -10,7 +10,7 @@ tags:
 RULE: All cloud I/O goes through get_storage_client(), get_secret_client(), GCSEventSink from unified-cloud-interface. Never import google.cloud.* or boto3 directly.
 CODEX: unified-trading-codex/04-architecture/cloud-agnostic-migration.md
 ENV: CLOUD_PROVIDER=gcp|aws|local is the SSOT for cloud selection. Read it ONLY via get_cloud_provider() from unified_cloud_interface.constants. Never call os.getenv("CLOUD_PROVIDER") in service code. Only unified_cloud_interface/constants.py and unified_cloud_interface/factory.py may read CLOUD_PROVIDER directly.
-PROJECT_ID: Use GCP_PROJECT_ID (not GCP_PROJECT_ID). GCP_PROJECT_ID is banned — quality gates enforce this at STEP 5.1.
+PROJECT_ID: Use GCP_PROJECT_ID. Banned alternatives: GOOGLE_CLOUD_PROJECT, GCP_PROJECT — quality gates enforce at STEP 5.1.
 DO: from unified_cloud_interface import get_storage_client, get_secret_client, get_cloud_provider
 NEVER: from google.cloud import storage; import boto3; os.getenv("CLOUD_PROVIDER"); GCP_PROJECT_ID
 TEST: Both GCP and AWS paths must be tested in test_cloud_agnostic_paths.py
@@ -19,5 +19,4 @@ TEST: Both GCP and AWS paths must be tested in test_cloud_agnostic_paths.py
 - Public-facing protocol/interface class names MUST use `Cloud*` prefix: `CloudStorageClient`, `CloudModelArtifactStore`, `CloudEventSink`
 - Provider implementation classes MAY use cloud-specific names: `GCSStorageClient`, `S3StorageClient` (inside `providers/gcp.py`, `providers/aws.py`)
 - NEVER use `GCS*`, `S3*`, or `GCP*` in any Protocol, ABC, or abstract class name
-- NEVER use `GCS*`, `S3*`, or `GCP*` in any public re-export (`__init__.py`)
-- Rationale: protocols define the contract (cloud-agnostic); implementations fulfill it (cloud-specific)
+- NEVER use `GCS*`, `S3*`, or `GCP*` in any Protocol, ABC, abstract class name, or public re-export (`__init__.py`)
