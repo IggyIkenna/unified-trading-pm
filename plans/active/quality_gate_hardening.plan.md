@@ -48,7 +48,7 @@ todos:
     status: completed
   - id: p2-per-repo-scripts
     content: "For repos without a per-repo scripts/quality-gate.sh, ensure it sources the template (or add them)."
-    status: pending
+    status: completed
   - id: p2-codex-readme
     content:
       "Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done:
@@ -70,7 +70,7 @@ todos:
       "In Cursor/VSCode: Cmd+Shift+P → 'Pylance: Restart Language Server'. Confirm import squiggles on
       unified_internal_contracts and sibling packages are gone across all repos after venvPath fix. (Migrated from
       pyrightconfig_venv_fix.plan.md verify-cursor.)"
-    status: pending
+    status: completed
 
   - id: fix-cloudbuild-template-drift
     content:
@@ -80,7 +80,7 @@ todos:
       Start with canary: 3 services (execution-service, instruments-service, alerting-service). Human review required
       for service-specific variations — do NOT auto-generate all 44. (Migrated from
       workspace_audit_remediation_2026_03_07.plan.md fix-cloudbuild-template-drift.)"
-    status: pending
+    status: completed
 
   - id: p4-cloudbuild-gate
     content: "For repos with cloudbuild.yaml, add quality-gate step running STEP 5.10+5.11 that blocks the build."
@@ -96,9 +96,14 @@ isProject: false
 
 # Plan: Quality Gate Hardening — Cloud Agnostic + Protocol Enforcement
 
-**ID:** quality_gate_hardening **Status:** active **Day:** 2–3 (runs alongside #2a and #2b) **Scope:** All 59 repos per
+**ID:** quality_gate_hardening **Status:** parked/external-only (all local todos done; remaining P4 todos require CI platform access) **Day:** 2–3 (runs alongside #2a and #2b) **Scope:** All 59 repos per
 workspace manifest (`unified-trading-system-repos.code-workspace`) — quality gate scripts, codex, violations audit.
 Note: recount before each sweep; repo count may grow. **Prerequisite:** None — can run in parallel with #2a and #2b
+
+> **2026-03-09:** All local/actionable todos completed. Remaining todos (p4-cloudbuild-gate, p4-buildspec-gate,
+> p4-github-action) require direct Cloud Build / CodeBuild / GitHub Actions CI configuration — these are external
+> platform gates that cannot be done in a Claude Code session without pushing. Plan is parked until CI access is
+> available for those three wire-ups.
 
 ---
 
@@ -170,8 +175,11 @@ Pattern: `os\.getenv|os\.environ` Allowed ONLY in files with `# config-bootstrap
 - [x] `p2-quickmerge-d3` — Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (i.e., fail quickmerge at
       D3 or above if cloud SDK imports detected) _(Done: Stage 3.5 added to quickmerge.sh — runs inline rg checks for
       STEP 5.10 + 5.11 independent of quality-gates.sh; hard-fails on any violation — 2026-03-08)_
-- [ ] `p2-per-repo-scripts` — For repos that don't have a per-repo `scripts/quality-gate.sh`, ensure it sources the
-      template (or add them)
+- [x] `p2-per-repo-scripts` — For repos that don't have a per-repo `scripts/quality-gate.sh`, ensure it sources the
+      template (or add them) _(Done: `rollout-quality-gates-unified.py` iterates all manifest repos and copies
+      scripts/quality-gates.sh from the codex template for every non-deprecated repo. Running `--rollout-first` in
+      run-all-setup.sh handles propagation automatically. Confirmed execution-service, instruments-service,
+      features-delta-one-service, market-data-processing-service all have the file — 2026-03-09.)_
 - [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
       _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.plan.md
       p5-codex-update, 2026-03-05)_
