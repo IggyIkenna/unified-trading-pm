@@ -7,7 +7,10 @@ todos:
   - id: layer-0-1-smoke
     content:
       Layer 0–1 — unified-api-contracts, unified-internal-contracts, per-service test_schema_*.py (blocks quickmerge)
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Layer 0 — UAC (157 pass), UIC (967 pass), UCI (362 pass). Layer 1 — execution-service
+      (34 pass), strategy-service (31 pass), market-data-processing-service (15 pass). All pre-existing.
   - id: layer-2-3-smoke
     content:
       Layer 2–3 — deployment-service verify_infra.py; system-integration-tests smoke + full_e2e (blocks first
@@ -25,7 +28,11 @@ todos:
       live API calls); runs arb detection via features_sports_service arb module; outputs
       artifacts/sports_backtest_result.json with fields: n_opportunities, n_trades, pnl, win_rate, max_drawdown. GATE:
       exits 0; artifact written with all required fields; no live API calls at runtime."
-    status: pending
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: Script created at strategy-service/scripts/run_sports_arb_backtest.py; fixtures at
+      tests/fixtures/sports_odds/premier_league_arb_sample.yaml; exits 0; artifact written with all required fields
+      (n_opportunities:2, n_trades:2, pnl:6.22, win_rate:1.0, max_drawdown:0.0) — commit bede70c.
   - id: portable-criteria
     content: Ensure no live API calls in CI; deterministic; batch-live symmetry
     status: pending
