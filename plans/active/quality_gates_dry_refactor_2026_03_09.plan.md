@@ -33,7 +33,7 @@ todos:
       size-limit checks, ruff, basedpyright, pytest, pip-audit, bandit sections verbatim; (d) add a version header
       comment "# quality-gates-base-service v1.0 — owned by unified-trading-pm". Test by sourcing from
       features-calendar-service manually before any other migration. Commit to unified-trading-pm.
-    status: pending
+    status: done
 
   - id: extract-library-base
     content: >-
@@ -44,7 +44,7 @@ todos:
       unless overridden). Validate required vars: SOURCE_DIR, MIN_COVERAGE. Add version header "#
       quality-gates-base-library v1.0 — owned by unified-trading-pm". Test by sourcing from unified-events-interface
       manually. Commit to unified-trading-pm.
-    status: pending
+    status: done
 
   - id: extract-codex-base
     content: >-
@@ -56,6 +56,7 @@ todos:
     status: pending
 
   - id: define-stub-template
+    status: done
     content: >-
       Define the canonical thin-wrapper stub template for each repo type. Document in
       unified-trading-pm/scripts/quality-gates-base/README.md. Stubs must follow this shape:
@@ -89,7 +90,7 @@ todos:
       Note on path resolution: git rev-parse --show-toplevel returns the invoking repo's root (e.g.
       /workspace/features-calendar-service). Parent dir (..) is the workspace root, where unified-trading-pm is always a
       sibling. This assumption holds for all CI and local runs.
-    status: pending
+    status: done
 
   - id: migrate-service-repos
     content: >-
@@ -104,8 +105,8 @@ todos:
       MIN_COVERAGE, RUN_INTEGRATION, LOCAL_DEPS values exactly; (b) replace body with source stub; (c) run `bash
       scripts/quality-gates.sh --quick` to verify gate still passes; (d) commit per-repo with message
       "chore(quality-gates): replace body with centralized base-service.sh stub". Batch in groups of 5 to keep commits
-      reviewable.
-    status: pending
+      reviewable. NOTE: ibkr-gateway-infra and trading-agent-service were not found in workspace — migrated 25 of 27.
+    status: done
 
   - id: migrate-library-repos
     content: >-
@@ -117,7 +118,7 @@ todos:
       unified-trade-execution-interface, unified-trading-library. For each: preserve SOURCE_DIR and MIN_COVERAGE
       exactly; replace body with library stub; run `bash scripts/quality-gates.sh --quick`; commit with message
       "chore(quality-gates): replace body with centralized base-library.sh stub".
-    status: pending
+    status: done
 
   - id: migrate-codex
     content: >-
@@ -143,7 +144,7 @@ todos:
       regressions when the base evolves. Document the version bump protocol in
       unified-trading-pm/scripts/quality-gates-base/README.md: "Increment REQUIRED_BASE_VERSION on any breaking change
       to base interface variables."
-    status: pending
+    status: done
 
   - id: update-codex-standard
     content: >-
