@@ -425,7 +425,23 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 4,
-      "dependencies": [],
+      "dependencies": [
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.42,<1.0.0",
+          "required": true
+        }
+      ],
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 95,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
