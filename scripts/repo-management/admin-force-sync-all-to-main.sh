@@ -354,24 +354,23 @@ sync_repo() {
         --extend-exclude .venv --extend-exclude .venv-workspace --extend-exclude '*.egg-info' \
         --extend-exclude node_modules --extend-exclude build --extend-exclude dist \
         --extend-exclude typings --extend-exclude .cursor \
-        -q 2>/dev/null) || true
+        -q >/dev/null 2>&1) || true
       (cd "$dir" && "$WORKSPACE_ROOT/.venv-workspace/bin/ruff" format . \
         --extend-exclude .venv --extend-exclude .venv-workspace --extend-exclude '*.egg-info' \
         --extend-exclude node_modules --extend-exclude build --extend-exclude dist \
         --extend-exclude typings --extend-exclude .cursor \
-        -q 2>/dev/null) || true
+        -q >/dev/null 2>&1) || true
     fi
     # 2. Pre-format JS/TS/YAML/JSON/MD files with prettier
     if [[ -f "$dir/package.json" || -f "$dir/.prettierrc" || -f "$dir/.prettierrc.json" || -f "$dir/prettier.config.js" ]]; then
       (cd "$dir" && npx --yes prettier --write . \
         --ignore-path .gitignore \
-        2>/dev/null) || true
+        >/dev/null 2>&1) || true
     elif compgen -G "$dir/**/*.{yaml,yml,json,md}" &>/dev/null 2>&1; then
-      # Repos without package.json but with YAML/JSON/MD still benefit from prettier
       (cd "$dir" && npx --yes prettier --write \
         --ignore-path .gitignore \
         "**/*.yaml" "**/*.yml" "**/*.json" "**/*.md" \
-        2>/dev/null) || true
+        >/dev/null 2>&1) || true
     fi
     # 3. Stage all (now-formatted) changes and commit with --no-verify
     (cd "$dir" && git add -A 2>/dev/null) || true
