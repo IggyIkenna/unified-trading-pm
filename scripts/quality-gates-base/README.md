@@ -16,6 +16,7 @@ To add a new check for **all** service repos, edit `base-service.sh` only. No pe
 quality-gates-base/
 ├── base-service.sh   # Services (FastAPI apps, workers, APIs) — sourced by 27 service repos
 ├── base-library.sh   # Libraries and interfaces — sourced by 17 library/interface repos
+├── base-codex.sh     # Docs-only repos (no Python source) — sourced by unified-trading-codex and PM
 └── README.md         # This file
 ```
 
@@ -57,6 +58,21 @@ Required variables: `SOURCE_DIR`, `MIN_COVERAGE`
 Optional variables: `PACKAGE_NAME` (used for basedpyright cache), `PYTEST_WORKERS` (default: 2), `LOCAL_DEPS` (default:
 empty array)
 
+### CODEX / DOCS repos (~8 lines)
+
+```bash
+#!/usr/bin/env bash
+# Repo-specific settings only. Body: unified-trading-pm/scripts/quality-gates-base/base-codex.sh
+SERVICE_NAME="unified-trading-codex"
+WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
+source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-codex.sh"
+```
+
+Required variables: `SERVICE_NAME`
+
+Runs: markdown lint, prettier formatting check, link validation (non-blocking), codex structure checks. Skips:
+basedpyright, pytest, ruff source lint, pip-audit, bandit.
+
 ## Path Resolution
 
 `git rev-parse --show-toplevel` returns the invoking repo root (e.g. `/workspace/features-calendar-service`). Parent
@@ -94,7 +110,7 @@ bash scripts/quality-gates.sh --skip-typecheck  # Skip basedpyright
 
 ## Adding a New Gate Check
 
-1. Edit the appropriate base script (`base-service.sh` or `base-library.sh`) in this directory
+1. Edit the appropriate base script (`base-service.sh`, `base-library.sh`, or `base-codex.sh`) in this directory
 2. Test on one repo first: `bash scripts/quality-gates.sh --quick` from within the repo
 3. Commit to `unified-trading-pm` with message `feat(quality-gates): add <check-name> check`
 4. All repos immediately pick up the new check on next run — no per-repo commits needed
@@ -111,3 +127,7 @@ For a new **library** repo, copy the LIBRARY stub template above, filling in:
 
 - `SOURCE_DIR` — the Python package directory name (e.g. `"my_new_library"`)
 - `MIN_COVERAGE` — set to `(actual coverage - 1%)` after first test run
+
+For a new **docs-only** repo (no Python source), copy the CODEX stub template above, filling in:
+
+- `SERVICE_NAME` — the repo directory name (e.g. `"my-standards-repo"`)
