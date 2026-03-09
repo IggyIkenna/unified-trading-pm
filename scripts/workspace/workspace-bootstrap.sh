@@ -10,7 +10,7 @@
 # Codex: unified-trading-codex/06-coding-standards/setup-standards.md
 #
 # Prerequisites (only these, nothing else):
-#   - git (with SSH key configured for github.com)
+#   - git (with SSH key configured for github.com, OR use --https)
 #   - bash 4+ or zsh
 #   - macOS (Homebrew) or Linux (apt/yum)
 #
@@ -28,22 +28,30 @@
 #   # Check mode (verify without changes):
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --check
 #
+#   # Use HTTPS instead of SSH (no SSH key required):
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --https
+#
 #   # Preserve existing repos (skip delete + re-clone):
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-fresh
 #
 #   # Skip system deps (if already installed):
 #   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-system
 #
+#   # Skip pre-flight auth checks:
+#   bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-auth-check
+#
 # What this script does:
-#   Phase 0 — Clone unified-trading-pm if not already present (self-seeding)
-#   Phase 1 — System dependencies (Python 3.13, uv, ripgrep, jq)
-#   Phase 2 — Fresh clone all repos from workspace-manifest.json
-#             (deletes existing dirs and re-clones for a clean state;
-#              use --skip-fresh to preserve existing repos instead)
-#   Phase 3 — Version alignment (run-version-alignment.sh --fix)
-#   Phase 4 — Create workspace venv (.venv-workspace) via setup-workspace-venv.sh
-#   Phase 5 — Invoke run-all-setup.sh (CI/CD Phase 2)
-#   Phase 6 — Import smoke test across all Python repos
+#   Pre-flight — Auth checks: GitHub org access, GCP ADC, act secrets
+#   Phase 0    — Clone unified-trading-pm if not already present (self-seeding)
+#   Phase 1    — System dependencies (Python 3.13, uv, ripgrep, jq)
+#   Phase 2    — Clone all repos from workspace-manifest.json
+#              (fresh clone by default; --skip-fresh to preserve existing dirs)
+#   Phase 3    — Version alignment (run-version-alignment.sh --fix)
+#   Phase 4    — Create/update workspace venv (.venv-workspace) via setup-workspace-venv.sh
+#   Phase 5    — Invoke run-all-setup.sh per-repo setup (CI/CD Phase 2)
+#   Phase 6    — Import smoke test across all Python repos
+#
+# Idempotent. Safe to re-run.
 
 set -e
 
@@ -55,34 +63,41 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
-log_ok() { echo -e "${GREEN}  [OK] $1${NC}"; }
+log_ok()   { echo -e "${GREEN}  [OK]   $1${NC}"; }
 log_skip() { echo -e "${BLUE}  [SKIP] $1${NC}"; }
 log_warn() { echo -e "${YELLOW}  [WARN] $1${NC}"; }
 log_fail() { echo -e "${RED}  [FAIL] $1${NC}"; }
+log_info() { echo -e "${BLUE}  [INFO] $1${NC}"; }
 log_phase() { echo -e "\n${BOLD}${CYAN}━━━ Phase $1: $2 ━━━${NC}"; }
 
 # ── PARSE ARGUMENTS ─────────────────────────────────────────────────────────
 CHECK_ONLY=false
 SKIP_SYSTEM=false
 SKIP_FRESH=false
+SKIP_AUTH_CHECK=false
 USE_HTTPS=false
 WORKSPACE_ROOT=""
 
 for arg in "$@"; do
   case $arg in
-    --check) CHECK_ONLY=true ;;
-    --skip-system) SKIP_SYSTEM=true ;;
-    --skip-fresh) SKIP_FRESH=true ;;
-    --https) USE_HTTPS=true ;;
+    --check)           CHECK_ONLY=true ;;
+    --skip-system)     SKIP_SYSTEM=true ;;
+    --skip-fresh)      SKIP_FRESH=true ;;
+    --skip-auth-check) SKIP_AUTH_CHECK=true ;;
+    --https)           USE_HTTPS=true ;;
     --help | -h)
-      echo "Usage: bash workspace-bootstrap.sh [WORKSPACE_ROOT] [flags]"
+      echo "Usage: bash workspace-bootstrap.sh [WORKSPACE_ROOT] [options]"
       echo ""
-      echo "  WORKSPACE_ROOT   Path to workspace (default: current directory)"
-      echo "  --check          Verify existing workspace without changes"
-      echo "  --skip-system    Skip system dependency installation"
-      echo "  --skip-fresh     Preserve existing repo dirs (skip delete + re-clone)"
-      echo "  --https          Clone via HTTPS instead of SSH (use with gh auth login or a PAT)"
-      echo "  --help           Show this message"
+      echo "  WORKSPACE_ROOT      Path to workspace (default: parent of this script's repo)"
+      echo "  --check             Verify existing workspace without changes"
+      echo "  --https             Use HTTPS clone URLs (no SSH key required)"
+      echo "  --skip-fresh        Preserve existing repo dirs (skip re-clone)"
+      echo "  --skip-system       Skip system dependency installation"
+      echo "  --skip-auth-check   Skip pre-flight auth verification"
+      echo "  --help              Show this message"
+      echo ""
+      echo "Bootstrap URL (from any empty directory):"
+      echo "  bash <(curl -fsSL https://raw.githubusercontent.com/IggyIkenna/unified-trading-pm/main/scripts/workspace/workspace-bootstrap.sh)"
       exit 0
       ;;
     -*)
@@ -94,224 +109,196 @@ for arg in "$@"; do
 done
 
 # ── RESOLVE PATHS ───────────────────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-GITHUB_ORG="IggyIkenna"
+# When run via bash <(curl ...), BASH_SOURCE[0] may be empty or /dev/fd/XX.
+# We detect this and fall back to CWD-relative paths.
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
+if [[ "$SCRIPT_SOURCE" == /dev/fd/* ]] || [[ "$SCRIPT_SOURCE" == "-bash" ]] || [[ "$SCRIPT_SOURCE" == "bash" ]]; then
+  # Running via process substitution — script lives in unified-trading-pm
+  SCRIPT_DIR_RESOLVED="$(pwd)/unified-trading-pm/scripts/workspace"
+  PM_ROOT_RESOLVED="$(pwd)/unified-trading-pm"
+else
+  SCRIPT_DIR_RESOLVED="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+  PM_ROOT_RESOLVED="$(cd "$SCRIPT_DIR_RESOLVED/../.." && pwd)"
+fi
 
-# Build clone URL based on protocol flag
-clone_url() { # clone_url <repo>
-  if [ "$USE_HTTPS" = true ]; then
-    echo "https://github.com/${GITHUB_ORG}/${1}.git"
-  else
-    echo "git@github.com:${GITHUB_ORG}/${1}.git"
-  fi
-}
-
-# Support running from workspace root (not from inside PM).
-# Detect whether we are running from inside an already-cloned PM or from workspace root.
 if [ -z "$WORKSPACE_ROOT" ]; then
-  # If this script is inside unified-trading-pm/scripts/workspace/, workspace root is two levels up
-  if echo "$SCRIPT_DIR" | grep -q "unified-trading-pm/scripts/workspace"; then
-    WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+  # When PM is already cloned: parent of PM root
+  # When run via curl (PM not yet cloned): CWD
+  if [ -d "$PM_ROOT_RESOLVED" ]; then
+    WORKSPACE_ROOT="$(cd "$PM_ROOT_RESOLVED/.." && pwd)"
   else
-    # Running via curl pipe or from workspace root directly
     WORKSPACE_ROOT="$(pwd)"
   fi
 fi
 
-PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
-MANIFEST="$PM_ROOT/workspace-manifest.json"
+GITHUB_ORG="IggyIkenna"
+
+clone_url() {
+  local repo="$1"
+  if [ "$USE_HTTPS" = true ]; then
+    echo "https://github.com/${GITHUB_ORG}/${repo}.git"
+  else
+    echo "git@github.com:${GITHUB_ORG}/${repo}.git"
+  fi
+}
 
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BOLD}  Workspace Bootstrap — unified-trading-system${NC}"
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "  Workspace: $WORKSPACE_ROOT"
-echo -e "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || ([ "$SKIP_FRESH" = true ] && echo 'BOOTSTRAP (preserve existing)' || echo 'BOOTSTRAP (fresh clone)'))"
+echo -e "  Workspace : $WORKSPACE_ROOT"
+echo -e "  Protocol  : $([ "$USE_HTTPS" = true ] && echo 'HTTPS' || echo 'SSH')"
+echo -e "  Mode      : $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || echo 'BOOTSTRAP')"
 
-# ── PRE-FLIGHT: AUTH + ACCESS CHECKS ─────────────────────────────────────────
-# Verify all required credentials are in place BEFORE doing any work.
-# These checks are informational — auth issues are reported but not fatal so the
-# developer can resolve them in one shot from the summary at the end.
-# Required:
-#   1. GitHub access — SSH key or HTTPS (gh auth login) with access to IggyIkenna org
-#   2. GCP auth     — gcloud ADC configured for datadodo@gmail.com (project: odum-research)
-#   3. act secrets  — ~/.act-secrets present for local GitHub Actions runs
+# ── PRE-FLIGHT: AUTH & ACCESS CHECKS ────────────────────────────────────────
 GITHUB_ORG_CHECK="IggyIkenna"
 REQUIRED_GCP_ACCOUNT="datadodo@gmail.com"
 REQUIRED_GCP_PROJECT="odum-research"
 REQUIRED_ACT_SECRETS="$HOME/.act-secrets"
 AUTH_ISSUES=0
 
-log_phase "PRE" "Auth & Access Checks"
+if [ "$SKIP_AUTH_CHECK" = false ] && [ "$CHECK_ONLY" = false ]; then
+  log_phase "PRE" "Auth & Access Checks"
 
-# 1. GitHub access
-echo -e "  Checking GitHub access to ${GITHUB_ORG_CHECK}..."
-GH_AUTH_OK=false
-if [ "$USE_HTTPS" = true ]; then
-  if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
-    GH_USER=$(gh api user --jq '.login' 2>/dev/null || echo "unknown")
-    # Check org membership
-    if gh api "orgs/${GITHUB_ORG_CHECK}/members/${GH_USER}" &>/dev/null 2>&1; then
-      log_ok "GitHub HTTPS: authenticated as $GH_USER, member of ${GITHUB_ORG_CHECK}"
-      GH_AUTH_OK=true
-    else
-      log_warn "GitHub HTTPS: authenticated as $GH_USER but NOT a member of ${GITHUB_ORG_CHECK}"
-      echo -e "  ${YELLOW}Fix:${NC}"
-      echo -e "    1. Ask an admin to add $GH_USER to the IggyIkenna org"
-      echo -e "    2. Or request the same repo access that CosmicTrader has"
-      AUTH_ISSUES=$((AUTH_ISSUES + 1))
-    fi
-  else
-    log_fail "GitHub HTTPS: not authenticated (gh auth status failed)"
-    echo -e "  ${RED}Fix:${NC}"
-    echo -e "    gh auth login    (follow prompts, select HTTPS)"
-    echo -e "    Then re-run bootstrap"
-    AUTH_ISSUES=$((AUTH_ISSUES + 1))
-  fi
-else
-  # SSH mode: test connection to github.com
-  SSH_OUTPUT=$(ssh -T git@github.com 2>&1 || true)
-  if echo "$SSH_OUTPUT" | grep -q "successfully authenticated"; then
-    GH_SSH_USER=$(echo "$SSH_OUTPUT" | grep -oE 'Hi [^!]+' | sed 's/Hi //')
-    # Check org access by attempting to list repos (requires gh CLI or API)
+  # 1. GitHub — SSH connectivity or HTTPS token
+  if [ "$USE_HTTPS" = true ]; then
     if command -v gh &>/dev/null; then
-      GH_ACCESS=$(gh api "orgs/${GITHUB_ORG_CHECK}/repos" --jq '.[0].name' 2>/dev/null || echo "")
-      if [ -n "$GH_ACCESS" ]; then
-        log_ok "GitHub SSH: authenticated as $GH_SSH_USER, org access confirmed"
-        GH_AUTH_OK=true
+      if gh auth status &>/dev/null; then
+        log_ok "GitHub CLI authenticated (HTTPS mode)"
       else
-        log_warn "GitHub SSH: key works but could not confirm ${GITHUB_ORG_CHECK} org access"
-        echo -e "  ${YELLOW}Fix:${NC} Ask admin to verify $GH_SSH_USER has same repo access as CosmicTrader"
+        log_fail "GitHub CLI not authenticated — run: gh auth login"
+        echo "  Required for HTTPS clone + org API checks"
         AUTH_ISSUES=$((AUTH_ISSUES + 1))
       fi
     else
-      log_ok "GitHub SSH: key authenticated as $GH_SSH_USER (install gh CLI to verify org access)"
-      GH_AUTH_OK=true
+      log_warn "GitHub CLI (gh) not found — HTTPS clones may fail for private repos"
+      echo "  Install: brew install gh  OR  apt install gh"
+      echo "  Then:    gh auth login"
     fi
   else
-    log_fail "GitHub SSH: authentication failed"
-    echo -e "  ${RED}Fix:${NC}"
-    echo -e "    ssh-keygen -t ed25519 -C \"your@email.com\"   # generate key"
-    echo -e "    cat ~/.ssh/id_ed25519.pub                     # copy to GitHub Settings > SSH keys"
-    echo -e "    ssh -T git@github.com                         # verify"
-    echo -e "    Or use --https flag with: gh auth login"
+    if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+      log_ok "GitHub SSH authenticated"
+    else
+      log_fail "GitHub SSH not authenticated"
+      echo "  Run: ssh -T git@github.com  to diagnose"
+      echo "  Fix: Add ~/.ssh/id_ed25519.pub to GitHub → Settings → SSH keys"
+      echo "  Or:  Use --https flag for token-based cloning"
+      AUTH_ISSUES=$((AUTH_ISSUES + 1))
+    fi
+  fi
+
+  # 2. GitHub org membership — verify access parity with ${GITHUB_ORG_CHECK}
+  if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
+    GH_USER=$(gh api user --jq '.login' 2>/dev/null || echo "")
+    if [ -n "$GH_USER" ]; then
+      # Check org membership
+      ORG_STATUS=$(gh api "orgs/${GITHUB_ORG_CHECK}/members/${GH_USER}" --silent 2>&1 && echo "member" || echo "not-member")
+      if [ "$ORG_STATUS" = "member" ]; then
+        log_ok "GitHub org ${GITHUB_ORG_CHECK} membership confirmed (@${GH_USER})"
+      else
+        log_fail "Not a member of GitHub org: ${GITHUB_ORG_CHECK} (@${GH_USER})"
+        echo "  Contact: @IggyIkenna to request org membership"
+        echo "  Required: read access to all ${GITHUB_ORG_CHECK}/* repos"
+        AUTH_ISSUES=$((AUTH_ISSUES + 1))
+      fi
+    else
+      log_warn "Could not determine GitHub username — skipping org check"
+    fi
+  else
+    log_info "GitHub CLI not available — skipping org membership check"
+    log_info "Ensure your SSH key or token has access to: github.com/${GITHUB_ORG_CHECK}/*"
+  fi
+
+  # 3. GCP Application Default Credentials (ADC)
+  if command -v gcloud &>/dev/null; then
+    ACTIVE_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | head -1 || echo "")
+    if [ "$ACTIVE_ACCOUNT" = "$REQUIRED_GCP_ACCOUNT" ]; then
+      log_ok "GCP ADC active account: $REQUIRED_GCP_ACCOUNT"
+    elif [ -n "$ACTIVE_ACCOUNT" ]; then
+      log_fail "GCP ADC active account: $ACTIVE_ACCOUNT (expected: $REQUIRED_GCP_ACCOUNT)"
+      echo "  Fix: gcloud auth login --update-adc"
+      echo "  Then: gcloud config set account $REQUIRED_GCP_ACCOUNT"
+      AUTH_ISSUES=$((AUTH_ISSUES + 1))
+    else
+      log_fail "No GCP ADC credentials found"
+      echo "  Fix: gcloud auth application-default login"
+      echo "  Account required: $REQUIRED_GCP_ACCOUNT"
+      AUTH_ISSUES=$((AUTH_ISSUES + 1))
+    fi
+
+    ACTIVE_PROJECT=$(gcloud config get-value project 2>/dev/null || echo "")
+    if [ "$ACTIVE_PROJECT" = "$REQUIRED_GCP_PROJECT" ]; then
+      log_ok "GCP project: $REQUIRED_GCP_PROJECT"
+    else
+      log_fail "GCP project: $ACTIVE_PROJECT (expected: $REQUIRED_GCP_PROJECT)"
+      echo "  Fix: gcloud config set project $REQUIRED_GCP_PROJECT"
+      AUTH_ISSUES=$((AUTH_ISSUES + 1))
+    fi
+  else
+    log_warn "gcloud CLI not found — GCP auth checks skipped"
+    echo "  Install: https://cloud.google.com/sdk/docs/install"
+    echo "  Required GCP account: $REQUIRED_GCP_ACCOUNT"
+    echo "  Required GCP project: $REQUIRED_GCP_PROJECT"
+  fi
+
+  # 4. act secrets file (~/.act-secrets)
+  if [ -f "$REQUIRED_ACT_SECRETS" ]; then
+    log_ok "act secrets found: $REQUIRED_ACT_SECRETS"
+  else
+    log_fail "act secrets not found: $REQUIRED_ACT_SECRETS"
+    echo "  Required for local GitHub Actions testing via 'act'"
+    echo "  Create: touch ~/.act-secrets  and populate with required secrets"
+    echo "  See: unified-trading-pm/docs/workspace-setup.md#act-secrets"
     AUTH_ISSUES=$((AUTH_ISSUES + 1))
+  fi
+
+  if [ "$AUTH_ISSUES" -gt 0 ]; then
+    log_warn "$AUTH_ISSUES auth issue(s) — fix above before proceeding, OR re-run with --skip-auth-check"
+    echo ""
+    read -r -p "  Continue anyway? [y/N] " CONTINUE_ANYWAY
+    if [[ ! "$CONTINUE_ANYWAY" =~ ^[Yy]$ ]]; then
+      echo "  Aborted. Fix auth issues and re-run."
+      exit 1
+    fi
+  else
+    log_ok "All auth checks passed"
   fi
 fi
 
-# 2. GCP auth (gcloud ADC)
-echo -e "  Checking GCP auth (required: ${REQUIRED_GCP_ACCOUNT})..."
-if command -v gcloud &>/dev/null; then
-  GCP_ACCOUNT=$(gcloud auth list --filter=status:ACTIVE --format="value(account)" 2>/dev/null | head -1 || echo "")
-  GCP_PROJECT=$(gcloud config get-value project 2>/dev/null || echo "")
-  ADC_FILE="$HOME/.config/gcloud/application_default_credentials.json"
-  if [ "$GCP_ACCOUNT" = "$REQUIRED_GCP_ACCOUNT" ] && [ -f "$ADC_FILE" ]; then
-    log_ok "GCP: authenticated as $GCP_ACCOUNT, ADC configured (project: ${GCP_PROJECT:-unset})"
-    if [ "$GCP_PROJECT" != "$REQUIRED_GCP_PROJECT" ]; then
-      log_warn "GCP project is '${GCP_PROJECT}', expected '${REQUIRED_GCP_PROJECT}'"
-      echo -e "  ${YELLOW}Fix:${NC} gcloud config set project ${REQUIRED_GCP_PROJECT}"
-    fi
-  elif [ -n "$GCP_ACCOUNT" ] && [ "$GCP_ACCOUNT" != "$REQUIRED_GCP_ACCOUNT" ]; then
-    log_warn "GCP: authenticated as $GCP_ACCOUNT — expected ${REQUIRED_GCP_ACCOUNT}"
-    echo -e "  ${YELLOW}Fix:${NC}"
-    echo -e "    gcloud auth login --account ${REQUIRED_GCP_ACCOUNT}"
-    echo -e "    gcloud auth application-default login --account ${REQUIRED_GCP_ACCOUNT}"
-    echo -e "    gcloud config set project ${REQUIRED_GCP_PROJECT}"
-    AUTH_ISSUES=$((AUTH_ISSUES + 1))
-  elif [ ! -f "$ADC_FILE" ]; then
-    log_warn "GCP: account OK but Application Default Credentials not configured"
-    echo -e "  ${YELLOW}Fix:${NC}"
-    echo -e "    gcloud auth application-default login"
-    AUTH_ISSUES=$((AUTH_ISSUES + 1))
-  else
-    log_fail "GCP: gcloud found but not authenticated"
-    echo -e "  ${RED}Fix:${NC}"
-    echo -e "    gcloud auth login --account ${REQUIRED_GCP_ACCOUNT}"
-    echo -e "    gcloud auth application-default login"
-    echo -e "    gcloud config set project ${REQUIRED_GCP_PROJECT}"
-    AUTH_ISSUES=$((AUTH_ISSUES + 1))
-  fi
-else
-  log_warn "GCP: gcloud not installed — install after bootstrap for GCP service access"
-  echo -e "  ${YELLOW}Fix:${NC}"
-  echo -e "    macOS: brew install --cask google-cloud-sdk"
-  echo -e "    Linux: https://cloud.google.com/sdk/docs/install"
-  echo -e "    Then:  gcloud auth login --account ${REQUIRED_GCP_ACCOUNT}"
-  echo -e "           gcloud auth application-default login"
-  echo -e "           gcloud config set project ${REQUIRED_GCP_PROJECT}"
-  AUTH_ISSUES=$((AUTH_ISSUES + 1))
-fi
+# ── PHASE 0: SELF-SEEDING (clone PM if not already present) ─────────────────
+log_phase 0 "Self-Seeding (clone unified-trading-pm)"
 
-# 3. act secrets file
-echo -e "  Checking act secrets (${REQUIRED_ACT_SECRETS})..."
-if [ -f "$REQUIRED_ACT_SECRETS" ]; then
-  SECRET_COUNT=$(grep -c "=" "$REQUIRED_ACT_SECRETS" 2>/dev/null || echo 0)
-  log_ok "act secrets: $REQUIRED_ACT_SECRETS ($SECRET_COUNT entries)"
-else
-  log_warn "act secrets not found at $REQUIRED_ACT_SECRETS"
-  echo -e "  ${YELLOW}Fix:${NC}"
-  echo -e "    cp unified-trading-pm/docs/act-secrets-template ~/.act-secrets"
-  echo -e "    # Then fill in your ANTHROPIC_API_KEY, GH_PAT, GCP credentials"
-  echo -e "  (Required for local GitHub Actions runs via 'act')"
-  AUTH_ISSUES=$((AUTH_ISSUES + 1))
-fi
-
-if [ "$AUTH_ISSUES" -gt 0 ]; then
-  echo ""
-  log_warn "$AUTH_ISSUES auth issue(s) detected — continuing bootstrap (fix before running services)"
-else
-  log_ok "All auth checks passed"
-fi
-echo ""
-
-# ── PHASE 0: SELF-SEED — clone unified-trading-pm if not present ─────────────
-# This is the only step that doesn't require PM to already be cloned.
-# All subsequent phases read workspace-manifest.json from PM.
-log_phase 0 "Seed — unified-trading-pm"
+PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
+MANIFEST="$PM_ROOT/workspace-manifest.json"
 
 cd "$WORKSPACE_ROOT"
-if [ -d "$PM_ROOT/.git" ]; then
-  if [ "$CHECK_ONLY" = true ]; then
-    log_ok "unified-trading-pm present"
-  else
-    # Pull latest manifest so Phase 2 uses current repo list
-    echo -e "  Pulling latest unified-trading-pm..."
-    git -C "$PM_ROOT" fetch origin --quiet 2>/dev/null || true
-    git -C "$PM_ROOT" reset --hard origin/main --quiet 2>/dev/null \
-      && log_ok "unified-trading-pm updated to origin/main" \
-      || log_warn "Could not pull unified-trading-pm — using local state"
-  fi
-elif [ "$CHECK_ONLY" = true ]; then
-  log_fail "unified-trading-pm missing from $WORKSPACE_ROOT"
-  exit 1
+if [ -d "$PM_ROOT" ]; then
+  log_skip "unified-trading-pm already cloned"
 else
-  echo -e "  Cloning unified-trading-pm ($([ "$USE_HTTPS" = true ] && echo 'HTTPS' || echo 'SSH'))..."
-  if git clone "$(clone_url unified-trading-pm)" "$PM_ROOT" 2>/dev/null; then
+  if [ "$CHECK_ONLY" = true ]; then
+    log_fail "unified-trading-pm not found"
+    echo "  Clone: git clone $(clone_url unified-trading-pm)"
+    exit 1
+  fi
+  echo "  Cloning unified-trading-pm..."
+  if git clone "$(clone_url unified-trading-pm)" "unified-trading-pm" 2>/dev/null; then
     log_ok "unified-trading-pm cloned"
   else
-    if [ "$USE_HTTPS" = true ]; then
-      log_fail "Failed to clone unified-trading-pm — run: gh auth login  (or set a PAT in git credentials)"
+    log_fail "Failed to clone unified-trading-pm"
+    if [ "$USE_HTTPS" = false ]; then
+      echo "  SSH failed. Try: bash $0 --https"
     else
-      log_fail "Failed to clone unified-trading-pm — check SSH key: ssh -T git@github.com"
+      echo "  HTTPS failed. Ensure gh auth login or GITHUB_TOKEN is set."
     fi
     exit 1
   fi
 fi
 
-if [ ! -f "$MANIFEST" ]; then
-  log_fail "workspace-manifest.json not found at $MANIFEST"
-  exit 1
-fi
-log_ok "manifest: $MANIFEST"
-
-# Create a convenience symlink at workspace root so future runs are just: bash bootstrap.sh
-# The symlink is relative (portable across machines) and outside any git repo.
-BOOTSTRAP_SYMLINK="$WORKSPACE_ROOT/bootstrap.sh"
-if [ "$CHECK_ONLY" != true ] && [ ! -L "$BOOTSTRAP_SYMLINK" ]; then
-  ln -sf unified-trading-pm/scripts/workspace/workspace-bootstrap.sh "$BOOTSTRAP_SYMLINK"
-  log_ok "bootstrap.sh symlink created (future runs: bash bootstrap.sh)"
+# Now that PM is available, re-resolve paths if running via curl
+if [[ "${SCRIPT_SOURCE}" == /dev/fd/* ]] || [[ "${SCRIPT_SOURCE}" == "-bash" ]] || [[ "${SCRIPT_SOURCE}" == "bash" ]]; then
+  SCRIPT_DIR_RESOLVED="$PM_ROOT/scripts/workspace"
 fi
 
-# ── PHASE 1: SYSTEM DEPENDENCIES ───────────────────────────────────────────
+# ── PHASE 1: SYSTEM DEPENDENCIES ────────────────────────────────────────────
 log_phase 1 "System Dependencies"
 
 REQUIRED_PYTHON="3.13"
@@ -370,7 +357,7 @@ else
   if [ "$CHECK_ONLY" = true ] || [ "$SKIP_SYSTEM" = true ]; then
     log_fail "Python $REQUIRED_PYTHON not found"
     echo "  Install: brew install python@${REQUIRED_PYTHON}"
-    echo "  Or: pyenv install ${REQUIRED_PYTHON}.0 && pyenv local ${REQUIRED_PYTHON}.0"
+    echo "  Or:      pyenv install ${REQUIRED_PYTHON}.0 && pyenv local ${REQUIRED_PYTHON}.0"
     SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
   else
     echo "  Attempting to install Python ${REQUIRED_PYTHON}..."
@@ -403,15 +390,24 @@ if [ "$SYSTEM_ISSUES" -gt 0 ]; then
   log_warn "$SYSTEM_ISSUES system dependency issue(s) — some steps may fail"
 fi
 
-# ── PHASE 2: CLONE REPOS (fresh by default) ───────────────────────────────
-# Default: delete existing repo dirs and re-clone for a guaranteed clean state.
-# Use --skip-fresh to preserve existing dirs (faster, for incremental runs).
-# unified-trading-pm itself is never deleted here — it was handled in Phase 0.
-log_phase 2 "Clone Repositories ($([ "$SKIP_FRESH" = true ] && echo 'preserve existing' || echo 'fresh — delete + re-clone'))"
+# ── PHASE 2: CLONE REPOS ─────────────────────────────────────────────────────
+log_phase 2 "Clone Repositories"
 
-# Extract repo names from manifest using Python (jq may not be available yet)
+if [ ! -f "$MANIFEST" ]; then
+  log_fail "Manifest not found: $MANIFEST"
+  echo "  Clone unified-trading-pm first: git clone $(clone_url unified-trading-pm)"
+  exit 1
+fi
+
+# Extract repo names + topological order from manifest
 if command -v jq &>/dev/null; then
   REPOS=$(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null)
+  ORDERED_REPOS=$(jq -r '
+    .repositories
+    | to_entries
+    | sort_by(.value.tier // 99, .key)
+    | .[].key
+  ' "$MANIFEST" 2>/dev/null || echo "$REPOS")
 elif [ -n "$PYTHON_CMD" ]; then
   REPOS=$("$PYTHON_CMD" -c "
 import json, sys
@@ -420,6 +416,15 @@ with open('$MANIFEST') as f:
 for name in sorted(data.get('repositories', {}).keys()):
     print(name)
 " 2>/dev/null)
+  ORDERED_REPOS=$("$PYTHON_CMD" -c "
+import json
+with open('$MANIFEST') as f:
+    data = json.load(f)
+repos = data.get('repositories', {})
+ordered = sorted(repos.keys(), key=lambda r: (repos[r].get('tier', 99), r))
+for name in ordered:
+    print(name)
+" 2>/dev/null || echo "$REPOS")
 else
   log_fail "Need jq or Python to parse manifest"
   exit 1
@@ -431,29 +436,33 @@ CLONE_FAIL=0
 
 cd "$WORKSPACE_ROOT"
 for repo in $REPOS; do
-  # Never delete unified-trading-pm — already seeded in Phase 0
-  if [ "$repo" = "unified-trading-pm" ]; then
-    log_skip "$repo (seeded in Phase 0)"
-    CLONE_SKIP=$((CLONE_SKIP + 1))
-    continue
-  fi
+  # Skip PM — already cloned in Phase 0
+  [ "$repo" = "unified-trading-pm" ] && { log_skip "unified-trading-pm (Phase 0)"; CLONE_SKIP=$((CLONE_SKIP + 1)); continue; }
 
-  if [ "$CHECK_ONLY" = true ]; then
-    [ -d "$repo/.git" ] && log_ok "$repo" || { log_fail "$repo (missing)"; CLONE_FAIL=$((CLONE_FAIL + 1)); }
-    continue
-  fi
-
-  # Fresh mode (default): delete and re-clone
-  if [ "$SKIP_FRESH" = false ] && [ -d "$repo" ]; then
-    echo -e "  ${YELLOW}[FRESH]${NC} $repo — removing and re-cloning..."
-    rm -rf "$repo"
-  fi
-
-  if [ -d "$repo/.git" ]; then
-    log_skip "$repo (exists, --skip-fresh)"
-    CLONE_SKIP=$((CLONE_SKIP + 1))
+  if [ -d "$repo" ]; then
+    if [ "$SKIP_FRESH" = true ]; then
+      log_skip "$repo (exists)"
+      CLONE_SKIP=$((CLONE_SKIP + 1))
+    elif [ "$CHECK_ONLY" = true ]; then
+      log_ok "$repo (exists)"
+      CLONE_SKIP=$((CLONE_SKIP + 1))
+    else
+      # Fresh clone: remove and re-clone for clean state
+      log_info "Re-cloning $repo (use --skip-fresh to preserve)"
+      rm -rf "$repo"
+      if git clone "$(clone_url "$repo")" "$repo" 2>/dev/null; then
+        log_ok "$repo (fresh clone)"
+        CLONE_OK=$((CLONE_OK + 1))
+      else
+        log_warn "$repo clone failed (may not exist on GitHub yet)"
+        CLONE_FAIL=$((CLONE_FAIL + 1))
+      fi
+    fi
+  elif [ "$CHECK_ONLY" = true ]; then
+    log_fail "$repo (missing)"
+    CLONE_FAIL=$((CLONE_FAIL + 1))
   else
-    if git clone "$(clone_url "$repo")" "$repo" --quiet 2>/dev/null; then
+    if git clone "$(clone_url "$repo")" "$repo" 2>/dev/null; then
       log_ok "$repo"
       CLONE_OK=$((CLONE_OK + 1))
     else
@@ -463,86 +472,159 @@ for repo in $REPOS; do
   fi
 done
 
-echo -e "\n  Cloned: $CLONE_OK | Preserved: $CLONE_SKIP | Failed: $CLONE_FAIL"
+echo -e "\n  Cloned: $CLONE_OK | Existing: $CLONE_SKIP | Failed: $CLONE_FAIL"
 
-# Parse topological order from manifest for smoke test (Phase 6)
-ORDERED_REPOS=""
-if command -v python3 &>/dev/null; then
-  ORDERED_REPOS=$(python3 -c "
-import json
-with open('$MANIFEST') as f:
-    data = json.load(f)
-levels = data.get('topologicalOrder', {}).get('levels', [])
-for level in sorted(levels, key=lambda l: l.get('level', 999)):
-    for repo in level.get('repos', []):
-        print(repo)
-" 2>/dev/null || echo "")
-fi
-[ -z "$ORDERED_REPOS" ] && ORDERED_REPOS="$REPOS"
-
-# ── PHASE 3: VERSION ALIGNMENT ────────────────────────────────────────────
+# ── PHASE 3: VERSION ALIGNMENT ────────────────────────────────────────────────
 log_phase 3 "Version Alignment"
 
+VERSION_ALIGN_SCRIPT="$PM_ROOT/scripts/repo-management/run-version-alignment.sh"
 if [ "$CHECK_ONLY" = true ]; then
-  if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-version-alignment.sh" 2>&1 | tail -20); then
-    log_ok "Version alignment: all deps in sync"
+  if [ -f "$VERSION_ALIGN_SCRIPT" ]; then
+    log_info "Check mode — skipping version alignment fix"
   else
-    log_warn "Version alignment found issues (run: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix)"
+    log_warn "run-version-alignment.sh not found"
   fi
-else
-  echo -e "  Running version alignment --fix across all repos..."
-  if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-version-alignment.sh" --fix 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]|━|Fixing|up to date' | tail -30); then
+elif [ -f "$VERSION_ALIGN_SCRIPT" ]; then
+  echo "  Running version alignment..."
+  if (cd "$WORKSPACE_ROOT" && bash "$VERSION_ALIGN_SCRIPT" --fix 2>&1 | tail -10); then
     log_ok "Version alignment complete"
   else
     log_warn "Version alignment had issues (non-fatal — continuing)"
   fi
+else
+  log_warn "run-version-alignment.sh not found — skipping"
 fi
 
-# ── PHASE 4: WORKSPACE VENV ───────────────────────────────────────────────
-# Delegates entirely to setup-workspace-venv.sh — single source of truth for
-# workspace venv creation, pinned tool install (ruff==0.15.0, basedpyright==1.38.2),
-# and editable installs from workspace-manifest.json in topological order.
-# sync-workspace-venv.sh is a thin wrapper around the same script for day-to-day refresh.
+# ── PHASE 4: WORKSPACE VENV ───────────────────────────────────────────────────
 log_phase 4 "Workspace Virtual Environment"
 
 WORKSPACE_VENV="$WORKSPACE_ROOT/.venv-workspace"
-SETUP_VENV_SCRIPT="$PM_ROOT/scripts/setup-workspace-venv.sh"
+VENV_SETUP_SCRIPT="$PM_ROOT/scripts/setup-workspace-venv.sh"
 
-if [ ! -f "$SETUP_VENV_SCRIPT" ]; then
-  log_fail "setup-workspace-venv.sh not found at $SETUP_VENV_SCRIPT"
-else
-  if [ "$CHECK_ONLY" = true ]; then
-    bash "$SETUP_VENV_SCRIPT" --check 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]' || true
+if [ "$CHECK_ONLY" = true ]; then
+  if [ -d "$WORKSPACE_VENV" ]; then
+    log_ok ".venv-workspace exists"
+    VENV_PYTHON="$WORKSPACE_VENV/bin/python"
+    if [ -f "$VENV_PYTHON" ]; then
+      VENV_VER=$("$VENV_PYTHON" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
+      log_ok "Python $VENV_VER in .venv-workspace"
+    fi
   else
-    bash "$SETUP_VENV_SCRIPT" 2>&1 | grep -E '^\s+\[(OK|WARN|FAIL|SKIP)\]|━' || true
-    [ -d "$WORKSPACE_VENV" ] && log_ok ".venv-workspace ready" || log_warn ".venv-workspace setup had issues (check above)"
+    log_fail ".venv-workspace missing"
+  fi
+elif [ -f "$VENV_SETUP_SCRIPT" ] && [ -n "$PYTHON_CMD" ]; then
+  echo "  Running setup-workspace-venv.sh..."
+  if bash "$VENV_SETUP_SCRIPT" 2>&1 | tail -10; then
+    log_ok "Workspace venv ready (.venv-workspace)"
+  else
+    log_warn "Workspace venv setup had issues — falling back to manual creation"
+    if [ ! -d "$WORKSPACE_VENV" ]; then
+      if command -v uv &>/dev/null; then
+        uv venv "$WORKSPACE_VENV" --python "$PYTHON_CMD" 2>/dev/null && log_ok "Created .venv-workspace (uv fallback)"
+      else
+        "$PYTHON_CMD" -m venv "$WORKSPACE_VENV" && log_ok "Created .venv-workspace (stdlib fallback)"
+      fi
+    fi
+  fi
+else
+  # Manual fallback when setup-workspace-venv.sh not available
+  if [ -d "$WORKSPACE_VENV" ]; then
+    log_skip ".venv-workspace exists"
+  elif [ -n "$PYTHON_CMD" ]; then
+    if command -v uv &>/dev/null; then
+      uv venv "$WORKSPACE_VENV" --python "$PYTHON_CMD" 2>/dev/null && log_ok "Created .venv-workspace"
+    else
+      "$PYTHON_CMD" -m venv "$WORKSPACE_VENV" && log_ok "Created .venv-workspace (stdlib venv)"
+    fi
+    # Install pinned tools
+    if [ -d "$WORKSPACE_VENV" ] && command -v uv &>/dev/null; then
+      uv pip install --python "$WORKSPACE_VENV/bin/python" \
+        "ruff==0.15.0" "basedpyright==1.38.2" "pytest>=8.0.0" \
+        --quiet 2>/dev/null && log_ok "Workspace tools installed" || log_warn "Tool install failed"
+    fi
+  else
+    log_fail "Cannot create venv — Python $REQUIRED_PYTHON not found"
   fi
 fi
 
-# ── PHASE 5: REPO SETUP (CI/CD Phase 2) ─────────────────────────────────────
-# Wraps docs/repo-management/CI-CD-FLOW.md — invokes run-all-setup.sh
-SETUP_FAIL=0
+# ── PHASE 5: PER-REPO SETUP (CI/CD Phase 2) ──────────────────────────────────
 log_phase 5 "Per-Repo Setup (CI/CD Phase 2)"
+
+SETUP_FAIL=0
 
 if [ "$CHECK_ONLY" = true ]; then
   if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --check 2>&1 | tail -20); then
     log_ok "Setup check passed (all repos)"
   else
     log_fail "Setup check failed"
-    exit 1
+    SETUP_FAIL=1
   fi
 else
   echo -e "\n  ${BLUE}Invoking run-all-setup.sh --rollout-first (CI/CD Phase 2)${NC}"
   if (cd "$WORKSPACE_ROOT" && bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --rollout-first 2>&1 | tail -30); then
     log_ok "Setup complete (all repos)"
   else
-    SETUP_FAIL=1
     log_warn "Setup had issues (non-fatal — continuing)"
+    SETUP_FAIL=1
   fi
 fi
 
-# ── PHASE 6: IMPORT SMOKE TEST (all repos) ────────────────────────────────
-log_phase 6 "Import Smoke Test (all Python repos)"
+# ── PHASE 6: WORKSPACE SYMLINKS ───────────────────────────────────────────────
+log_phase 6 "Workspace Symlinks (.cursor/, bootstrap.sh)"
+
+if [ "$CHECK_ONLY" = false ]; then
+  SYMLINK_SCRIPTS=(
+    "setup-cursor-rules-symlink.sh"
+    "setup-cursor-plans-symlink.sh"
+    "setup-workspace-config-symlink.sh"
+  )
+  for s in "${SYMLINK_SCRIPTS[@]}"; do
+    SCRIPT_PATH="$PM_ROOT/scripts/workspace/$s"
+    if [ -f "$SCRIPT_PATH" ]; then
+      if bash "$SCRIPT_PATH" 2>&1 | grep -E '^\[(OK|SKIP)\]' | head -3; then
+        log_ok "$s"
+      else
+        log_warn "$s had issues (non-fatal)"
+      fi
+    else
+      log_warn "$s not found — skipping"
+    fi
+  done
+
+  # Ensure workspace root bootstrap.sh symlink
+  BOOTSTRAP_SYMLINK="$WORKSPACE_ROOT/bootstrap.sh"
+  BOOTSTRAP_TARGET="unified-trading-pm/scripts/workspace/workspace-bootstrap.sh"
+  if [ -L "$BOOTSTRAP_SYMLINK" ]; then
+    CURRENT_TARGET=$(readlink "$BOOTSTRAP_SYMLINK")
+    if [ "$CURRENT_TARGET" = "$BOOTSTRAP_TARGET" ]; then
+      log_skip "bootstrap.sh symlink already correct"
+    else
+      rm "$BOOTSTRAP_SYMLINK"
+      (cd "$WORKSPACE_ROOT" && ln -sf "$BOOTSTRAP_TARGET" bootstrap.sh)
+      log_ok "bootstrap.sh symlink updated"
+    fi
+  elif [ -f "$BOOTSTRAP_SYMLINK" ]; then
+    rm "$BOOTSTRAP_SYMLINK"
+    (cd "$WORKSPACE_ROOT" && ln -sf "$BOOTSTRAP_TARGET" bootstrap.sh)
+    log_ok "bootstrap.sh replaced with symlink"
+  else
+    (cd "$WORKSPACE_ROOT" && ln -sf "$BOOTSTRAP_TARGET" bootstrap.sh)
+    log_ok "bootstrap.sh symlink created"
+  fi
+else
+  # Check mode: verify symlinks
+  for name in rules plans workspace-configs; do
+    LINK="$WORKSPACE_ROOT/.cursor/$name"
+    if [ -L "$LINK" ]; then
+      log_ok ".cursor/$name symlink exists ($(readlink "$LINK"))"
+    else
+      log_warn ".cursor/$name not a symlink"
+    fi
+  done
+fi
+
+# ── PHASE 7: IMPORT SMOKE TEST (all repos) ───────────────────────────────────
+log_phase 7 "Import Smoke Test (all Python repos)"
 
 SMOKE_OK=0
 SMOKE_FAIL=0
@@ -554,7 +636,7 @@ for repo in $ORDERED_REPOS; do
   PYPROJECT="$REPO_PATH/pyproject.toml"
   [ -f "$PYPROJECT" ] || continue
 
-  # Auto-detect package name
+  # Auto-detect package name from [project] name
   PKG=$(grep -A 1 '^\[project\]' "$PYPROJECT" 2>/dev/null | grep '^name' | sed 's/.*= *"//;s/".*//' | tr '-' '_' 2>/dev/null || echo "")
   if [ -z "$PKG" ]; then
     log_skip "$repo (no package name)"
@@ -581,29 +663,28 @@ if [ -n "$SMOKE_FAILURES" ]; then
   echo -e "$SMOKE_FAILURES"
 fi
 
-# ── FINAL SUMMARY ─────────────────────────────────────────────────────────
+# ── FINAL SUMMARY ─────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 TOTAL_ISSUES=$((AUTH_ISSUES + SYSTEM_ISSUES + CLONE_FAIL + SETUP_FAIL + SMOKE_FAIL))
 if [ "$TOTAL_ISSUES" -gt 0 ]; then
-  echo -e "${BOLD}  Bootstrap complete with $TOTAL_ISSUES issue(s)${NC}"
+  echo -e "${BOLD}  Bootstrap complete with $TOTAL_ISSUES issue(s) — see above${NC}"
 else
   echo -e "${BOLD}${GREEN}  Bootstrap complete — workspace ready${NC}"
 fi
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "  Workspace root: $WORKSPACE_ROOT"
-echo "  Activate venv:  source $WORKSPACE_VENV/bin/activate"
+echo "  Workspace root : $WORKSPACE_ROOT"
+echo "  Activate venv  : source $WORKSPACE_VENV/bin/activate"
 echo ""
-echo "  Next steps:"
+echo "  Quick start:"
 echo "    1. source $WORKSPACE_VENV/bin/activate"
-echo "    2. cd <any-repo> && bash scripts/setup.sh --check"
-echo "    3. bash scripts/quality-gates.sh       # QG for a specific repo"
-echo "    4. bash scripts/quickmerge.sh \"msg\"    # Merge workflow"
+echo "    2. code $WORKSPACE_ROOT/.cursor/workspace-configs/unified-trading-system-repos.code-workspace"
+echo "       (or open via Cursor: File > Open Workspace from File)"
 echo ""
-echo "  For a single repo in isolation:"
-echo "    cd <repo> && bash scripts/setup.sh --isolated"
+echo "  Re-verify workspace at any time:"
+echo "    bash bootstrap.sh --check"
 echo ""
-echo "  To re-verify the whole workspace:"
-echo "    bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --check"
+echo "  Add new repos / re-sync:"
+echo "    bash bootstrap.sh --skip-fresh"
 echo ""
