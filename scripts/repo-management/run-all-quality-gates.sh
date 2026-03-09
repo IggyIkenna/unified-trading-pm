@@ -13,6 +13,8 @@
 #
 # Usage:
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --repo unified-cloud-interface
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --repos "unified-cloud-interface unified-events-interface"
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --sequential
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --dry-run
@@ -45,6 +47,7 @@ SKIP_ALIGNMENT=false
 SKIP_SETUP=false
 SEQUENTIAL=false
 DRY_RUN=false
+REPO_LIST=()  # empty = all repos
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -52,17 +55,27 @@ while [[ $# -gt 0 ]]; do
     --skip-setup)     SKIP_SETUP=true; shift ;;
     --sequential)     SEQUENTIAL=true; shift ;;
     --dry-run)        DRY_RUN=true; shift ;;
+    --repo)           REPO_LIST+=("$2"); shift 2 ;;
+    --repos)          read -ra _r <<< "$2"; REPO_LIST+=("${_r[@]}"); shift 2 ;;
     --help | -h)
       echo "Usage: bash run-all-quality-gates.sh [options]"
-      echo "  --skip-alignment   Skip version alignment check"
-      echo "  --skip-setup       Skip setup --check across all repos"
-      echo "  --sequential       Run QG one repo at a time (default: parallel within tier)"
-      echo "  --dry-run          Print what would run, do not execute"
+      echo "  --repo NAME            Run QG for a single repo"
+      echo "  --repos \"a b c\"        Run QG for a space-separated list of repos"
+      echo "  --skip-alignment       Skip version alignment check"
+      echo "  --skip-setup           Skip setup --check across all repos"
+      echo "  --sequential           Run QG one repo at a time (default: parallel within tier)"
+      echo "  --dry-run              Print what would run, do not execute"
       exit 0
       ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
+
+# Repo-filter mode: skip workspace-wide pre-flight steps
+if [[ ${#REPO_LIST[@]} -gt 0 ]]; then
+  SKIP_ALIGNMENT=true
+  SKIP_SETUP=true
+fi
 
 echo "━━━ Pre-push validation pipeline ━━━"
 echo "  Workspace: $WORKSPACE_ROOT"
@@ -148,18 +161,16 @@ run_qg() {
 
 OK=0; FAIL=0; FAILED_REPOS=()
 
-while IFS=: read -r LEVEL REPOS_STR; do
-  ALL_REPOS=($REPOS_STR)
-  echo "  ── Tier $LEVEL (${#ALL_REPOS[@]} repo(s)$([ "$SEQUENTIAL" = false ] && echo ', parallel' || echo '')) ──"
-
+run_list() {
+  local repos=("$@")
   if [[ "$SEQUENTIAL" = true ]] || [[ "$DRY_RUN" = true ]]; then
-    for repo in "${ALL_REPOS[@]}"; do
+    for repo in "${repos[@]}"; do
       [[ "$DRY_RUN" = true ]] && { echo "  [dry]  $repo"; OK=$((OK+1)); continue; }
       if run_qg "$repo"; then OK=$((OK+1)); else FAIL=$((FAIL+1)); FAILED_REPOS+=("$repo"); fi
     done
   else
     PIDS=(); LAUNCHED=()
-    for repo in "${ALL_REPOS[@]}"; do
+    for repo in "${repos[@]}"; do
       run_qg "$repo" & PIDS+=($!); LAUNCHED+=("$repo")
     done
     for i in "${!PIDS[@]}"; do
@@ -167,8 +178,22 @@ while IFS=: read -r LEVEL REPOS_STR; do
       else FAIL=$((FAIL+1)); FAILED_REPOS+=("${LAUNCHED[$i]}"); fi
     done
   fi
+}
+
+if [[ ${#REPO_LIST[@]} -gt 0 ]]; then
+  # Explicit repo list — run directly, no tier structure
+  echo "  ── ${#REPO_LIST[@]} repo(s) specified ──"
+  run_list "${REPO_LIST[@]}"
   echo ""
-done <<< "$LEVEL_DATA"
+else
+  # Full workspace — tier-by-tier from manifest, parallel within tier
+  while IFS=: read -r LEVEL REPOS_STR; do
+    ALL_REPOS=($REPOS_STR)
+    echo "  ── Tier $LEVEL (${#ALL_REPOS[@]} repo(s)$([ "$SEQUENTIAL" = false ] && echo ', parallel' || echo '')) ──"
+    run_list "${ALL_REPOS[@]}"
+    echo ""
+  done <<< "$LEVEL_DATA"
+fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo "━━━ Results ━━━"
