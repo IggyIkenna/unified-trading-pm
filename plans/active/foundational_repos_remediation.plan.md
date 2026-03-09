@@ -103,8 +103,12 @@ todos:
 
       COMMIT (UAC repo): bash scripts/quickmerge.sh "fix: undefined names, gate mismatch, silent-pass cleanup"
       COMMIT (PM repo): bash scripts/quickmerge.sh "chore: sync UAC version 0.1.52 in workspace manifest"
-    status: pending
-    activeForm: "Fixing unified-api-contracts undefined names, gate mismatch, and manifest sync"
+    status: completed
+    notes: |
+      RESOLVED 2026-03-09: No F821 undefined names found (path in audit was wrong). Coverage gate already 80%
+      both sides. No silent-pass blocks. Kalshi cent fields deprecated (yes_bid/ask/price_dollars string fields);
+      tickers+trades normalizers updated. QG false-positive in ||true bypass regex fixed (comment lines excluded).
+      ALL QUALITY GATES PASSED (42s).
 
   # ─── AGENT 4 — unified-feature-calculator-library ────────────────────────────
   - id: agent-04-ufcl

@@ -2,7 +2,6 @@
 description: "Anti-patterns quick reference — don't/do pairs for common mistakes"
 alwaysApply: true
 priority: 80
-globs: []
 tags:
   - standards
   - quick-reference
