@@ -776,7 +776,7 @@ if [ -n "$DEP_BRANCH" ]; then
   elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
     git checkout -B "$BRANCH" "origin/$BRANCH" --quiet
   else
-    git checkout -b "$BRANCH" origin/main --quiet
+    git checkout -b "$BRANCH" origin/main --quiet 2>/dev/null || git checkout "$BRANCH" --quiet
   fi
 else
   BRANCH="auto/$(TZ=UTC date +%Y%m%d-%H%M%S)-$$"
