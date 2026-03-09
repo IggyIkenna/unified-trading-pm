@@ -61,12 +61,15 @@ todos:
   - id: ibkr-gateway-infra-deploy
     content:
       "Wire ibkr-gateway-infra into deployment-service: add to runtime-topology.yaml, add Cloud Run service definition.
-      Ensure IB Gateway credentials (ibkr-account-credentials) are in Secret Manager before deploy."
-    status: todo
+      Ensure IB Gateway credentials (ibkr-account-credentials) are in Secret Manager before deploy. DONE 2026-03-09:
+      Added vm_infrastructure to deployment_targets; ibkr to credentials-registry; ibkr_account_credentials to
+      checklist.prerequisites; create_ibkr_secret.sh script. IB Gateway uses GCE VM (not Cloud Run) per architecture."
+    status: done
   - id: ibkr-sm-credentials
     content:
       "Add IBKR credentials to GCP Secret Manager as 'ibkr-account-credentials'. Resolves the [EXTERNAL] blocker in
-      INDEX.md (IBKR key not in SM)."
+      INDEX.md (IBKR key not in SM). USER ACTION: Run bash ibkr-gateway-infra/scripts/create_ibkr_secret.sh then add
+      secret value per script output. Requires actual IBKR username/account — cannot be automated."
     status: todo
   - id: ibkr-runtime-topology
     content:

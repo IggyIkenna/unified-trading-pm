@@ -1122,6 +1122,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.3,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0",
+        "unified-feature-calculator": "unified-feature-calculator>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
@@ -1148,7 +1149,7 @@
         "ruff": ["ruff==0.15.0"],
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
       },
-      "internal_count": 5,
+      "internal_count": 6,
       "external_count": 22
     },
     "trading-agent-service": {
