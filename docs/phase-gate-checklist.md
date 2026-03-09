@@ -117,7 +117,7 @@ D4/D5.
 
 | Check                                                                    | Status  | Notes                                                |
 | ------------------------------------------------------------------------ | ------- | ---------------------------------------------------- |
-| Layer 0: Contract alignment tests (AC↔UIC)                               | DONE    | test_contract_alignment.py, test_ac_uic_alignment.py |
+| Layer 0: Contract alignment tests (AC↔UIC)                              | DONE    | test_contract_alignment.py, test_ac_uic_alignment.py |
 | Layer 1: Schema robustness tests per service (test_schema_robustness.py) | PENDING | Folded into each tier STEP B                         |
 | Layer 1.5: Per-component integration tests per service                   | PENDING | Blocking in quickmerge --unit-only                   |
 | Layer 2: verify_infra.py → GET /infra/health                             | PENDING | Post-deploy only — requires cloud infra              |

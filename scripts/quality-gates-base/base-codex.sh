@@ -102,9 +102,9 @@ fi
 
 # ── [2] PRETTIER FORMATTING CHECK ────────────────────────────────────────────
 log_section "[2/4] PRETTIER FORMATTING"
-if command -v prettier &>/dev/null || command -v npx &>/dev/null; then
-    PRETTIER_CMD="prettier"
-    command -v prettier &>/dev/null || PRETTIER_CMD="npx prettier"
+if command -v npx &>/dev/null || command -v prettier &>/dev/null; then
+    PRETTIER_CMD="npx --yes prettier@3.6.2"
+    command -v npx &>/dev/null || PRETTIER_CMD="prettier"
     if [ "$FIX_MODE" = true ]; then
         run_timeout 60 $PRETTIER_CMD --write "**/*.md" "**/*.yaml" "**/*.yml" "**/*.json" \
             --ignore-path .gitignore \
