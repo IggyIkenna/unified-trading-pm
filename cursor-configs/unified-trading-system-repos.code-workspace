@@ -207,6 +207,7 @@
     "python.terminal.activateEnvironment": true,
     "python.envFile": "${workspaceFolder}/.env",
     "cursorpyright.analysis.typeCheckingMode": "strict",
+    "cursorpyright.analysis.reportAny": "error",
     "cursorpyright.analysis.autoSearchPaths": true,
     "cursorpyright.analysis.autoImportCompletions": true,
     "cursorpyright.analysis.useLibraryCodeForTypes": true,
