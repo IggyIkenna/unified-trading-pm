@@ -12,8 +12,10 @@ todos:
       "Create ibkr-gateway-infra repo (GitHub + local). Follow new-repo-setup.mdc. Add docs/ARCHITECTURE.md,
       docs/DEPLOYMENT_GUIDE.md, README.md, QUALITY_GATE_BYPASS_AUDIT.md per infrastructure-canonical doc_standard. Add
       Dockerfile or Cloud Run YAML for the IB Gateway Java process. Add scripts/start_gateway.sh and
-      scripts/health_check.sh."
-    status: todo
+      scripts/health_check.sh. RESOLVED 2026-03-08: Repo existed with Terraform infra + ibkr_gateway_client. Added
+      README.md, docs/ARCHITECTURE.md, docs/DEPLOYMENT_GUIDE.md, scripts/start_gateway.sh, scripts/health_check.sh. GCE
+      VM used instead of Cloud Run (IB Gateway is stateful, requires one-time GUI login)."
+    status: done
   - id: ibkr-config-in-ucc
     content:
       "Add IB Gateway config fields to UnifiedCloudConfig in unified-config-interface: ibkr_gateway_host (str),
