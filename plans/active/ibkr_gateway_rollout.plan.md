@@ -25,7 +25,7 @@ todos:
       "unified-reference-data-interface/adapters/ibkr.py: still a full stub — all methods raise NotImplementedError
       pointing to Client Portal API. No IB() connection logic yet. Required: implement using ib_insync (not Client
       Portal REST) with injected IB object per the canonical pattern. Add integration test with MagicMock(spec=IB)."
-    status: todo
+    status: done
   - id: ibkr-adapter-refactor-umi
     content:
       "unified-market-interface/adapters/ibkr_adapter.py: PARTIALLY DONE — real ib_insync implementation added
@@ -72,12 +72,12 @@ todos:
       documenting live path (ibkr-gateway-infra → ib_insync → UMI/UTEI/UPI/URDI adapters) and batch path
       (matching-engine-library synthetic callbacks → same adapter interfaces). Document the invariant: adapters are
       written against EWrapper callback protocol — MEL and IB Gateway both satisfy that protocol."
-    status: todo
+    status: done
   - id: ibkr-index-blocker-resolve
     content:
       "After sm-credentials and mock-pattern-codex are complete: remove the IBKR blocker row from INDEX.md ('IBKR key
       not in SM + TWS VCR strategy undefined'). Update api_keys_and_auth.plan.md phase-2-ws IBKR row to 'resolved'."
-    status: todo
+    status: done
 isProject: true
 ---
 
