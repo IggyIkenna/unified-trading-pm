@@ -1,26 +1,29 @@
 #!/usr/bin/env bash
-# Run quality gates for all workspace repos in dependency order.
+# run-all-quality-gates.sh — Full pre-push validation pipeline
 #
-# Does NOT push. Precursor to quickmerge — validates lint, typecheck, unit tests
-# across all repos before attempting sync/merge.
+# Runs in order:
+#   1. run-version-alignment.sh  — check dep alignment across all pyproject.toml
+#   2. run-all-setup.sh --check  — verify all repos have deps installed
+#   3. quality-gates.sh --no-fix — topological tier order, parallel within tier
 #
-# Quality gates run with --no-fix (verify only, no auto-fix) for CI consistency.
-# Act is not run (Act is in quickmerge, not quality-gates).
+# Python repos: bash scripts/quality-gates.sh --no-fix
+# UI repos:     npm run typecheck && npm run lint && npm run build
+# Codex:        skip (docs-only, no QG)
+# SSOT:         workspace-manifest.json topologicalOrder
 #
-# Repos are processed in dependency order (topologicalOrder from workspace-manifest.json SSOT).
-#
-# Usage: bash run-all-quality-gates.sh [--dry-run] [--limit N] [--repo NAME]
-#   --repo NAME   Run quality gates only for this repo
-#
-# Run from: workspace root
+# Usage:
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --sequential
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --dry-run
 #
-# Or from PM repo:
-#   bash scripts/repo-management/run-all-quality-gates.sh
+# Run from workspace root:
+#   cd /path/to/unified-trading-system-repos
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh
 
-set -euo pipefail
+set -uo pipefail  # no -e: background job exit codes collected via wait
 
-# Resolve workspace root from cwd (must run from workspace root)
+# ── Resolve workspace root ────────────────────────────────────────────────────
 if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
   WORKSPACE_ROOT="$(pwd)"
 elif [ -f "$(pwd)/workspace-manifest.json" ]; then
@@ -31,87 +34,148 @@ else
   echo "  bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh"
   exit 1
 fi
-MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+PM_ROOT="$WORKSPACE_ROOT/unified-trading-pm"
+MANIFEST="$PM_ROOT/workspace-manifest.json"
 
+PYTHON="$WORKSPACE_ROOT/.venv-workspace/bin/python3"
+[ -x "$PYTHON" ] || PYTHON="python3"
+
+# ── Parse arguments ───────────────────────────────────────────────────────────
+SKIP_ALIGNMENT=false
+SKIP_SETUP=false
+SEQUENTIAL=false
 DRY_RUN=false
-LIMIT=""
-REPO_FILTER=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dry-run) DRY_RUN=true; shift ;;
-    --limit) LIMIT="$2"; shift 2 ;;
-    --repo) REPO_FILTER="$2"; shift 2 ;;
-    *) shift ;;
+    --skip-alignment) SKIP_ALIGNMENT=true; shift ;;
+    --skip-setup)     SKIP_SETUP=true; shift ;;
+    --sequential)     SEQUENTIAL=true; shift ;;
+    --dry-run)        DRY_RUN=true; shift ;;
+    --help | -h)
+      echo "Usage: bash run-all-quality-gates.sh [options]"
+      echo "  --skip-alignment   Skip version alignment check"
+      echo "  --skip-setup       Skip setup --check across all repos"
+      echo "  --sequential       Run QG one repo at a time (default: parallel within tier)"
+      echo "  --dry-run          Print what would run, do not execute"
+      exit 0
+      ;;
+    *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
 
-# Build repo list in dependency order from manifest SSOT
-if [[ -n "$REPO_FILTER" ]]; then
-  REPOS=("$REPO_FILTER")
-else
-  ORDERED=($(jq -r '.topologicalOrder.levels[].repos[]' "$MANIFEST" 2>/dev/null))
-  REPO_KEYS=($(jq -r '.repositories | keys[]' "$MANIFEST" 2>/dev/null))
-  for r in "${REPO_KEYS[@]}"; do
-    for o in "${ORDERED[@]}"; do [[ "$o" == "$r" ]] && break; done
-    [[ "$o" != "$r" ]] && ORDERED+=("$r")
-  done
-  REPOS=("${ORDERED[@]}")
-fi
-[[ -n "$LIMIT" ]] && REPOS=("${REPOS[@]:0:$LIMIT}")
-
-echo "Quality gates: ${#REPOS[@]} repos (dependency order)"
-[[ "$DRY_RUN" = true ]] && echo "DRY RUN"
+echo "━━━ Pre-push validation pipeline ━━━"
+echo "  Workspace: $WORKSPACE_ROOT"
+[[ "$DRY_RUN" = true ]] && echo "  Mode: DRY-RUN"
 echo ""
 
-ok=0
-FAILED_REPOS=()
-FAILED_REASONS=()
-fail=0
-skip=0
-
-for repo in "${REPOS[@]}"; do
-  dir="$WORKSPACE_ROOT/$repo"
-
-  [[ ! -d "$dir" ]] || [[ ! -d "$dir/.git" ]] && continue
-
+# ── Phase 1: Version alignment ────────────────────────────────────────────────
+if [[ "$SKIP_ALIGNMENT" = false ]]; then
+  echo "━━━ Phase 1: Version alignment ━━━"
   if [[ "$DRY_RUN" = true ]]; then
-    echo "  [dry] $repo"
-    continue
-  fi
-
-  QG_SCRIPT="$dir/scripts/quality-gates.sh"
-  if [[ ! -f "$QG_SCRIPT" ]]; then
-    echo "  (skip) $repo — no scripts/quality-gates.sh"
-    ((skip++))
-    continue
-  fi
-
-  echo "----------------------------------------------------------------------"
-  echo "  $repo"
-  echo "----------------------------------------------------------------------"
-  if (cd "$dir" && bash scripts/quality-gates.sh --no-fix 2>&1); then
-    echo "  OK $repo"
-    ((ok++))
+    echo "  [dry] bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh"
   else
-    FAILED_REPOS+=("$repo")
-    FAILED_REASONS+=("quality gates failed")
-    echo "  FAIL $repo"
-    ((fail++))
+    bash "$PM_ROOT/scripts/repo-management/run-version-alignment.sh" || {
+      echo ""
+      echo "  FAILED. Fix: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix"
+      exit 1
+    }
   fi
   echo ""
-done
+fi
 
-echo "======================================================================"
-echo "Done: $ok OK, $fail FAIL, $skip skipped"
-if [[ $fail -gt 0 ]]; then
+# ── Phase 2: Setup check ──────────────────────────────────────────────────────
+if [[ "$SKIP_SETUP" = false ]]; then
+  echo "━━━ Phase 2: Setup check ━━━"
+  if [[ "$DRY_RUN" = true ]]; then
+    echo "  [dry] bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --check"
+  else
+    bash "$PM_ROOT/scripts/repo-management/run-all-setup.sh" --check || {
+      echo ""
+      echo "  FAILED. Run: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh"
+      exit 1
+    }
+  fi
   echo ""
-  echo "Failed repos:"
-  for i in "${!FAILED_REPOS[@]}"; do
-    echo "  - ${FAILED_REPOS[$i]}: ${FAILED_REASONS[$i]:-unknown}"
-  done
+fi
+
+# ── Phase 3: Quality gates (parallel within tier) ─────────────────────────────
+echo "━━━ Phase 3: Quality gates ━━━"
+echo "  Mode: $([ "$SEQUENTIAL" = true ] && echo 'SEQUENTIAL' || echo 'PARALLEL within tier')"
+echo ""
+
+LEVEL_DATA=$("$PYTHON" -c "
+import json
+with open('$MANIFEST') as f:
+    data = json.load(f)
+topo = data.get('topologicalOrder', {}).get('levels', [])
+for level in sorted(topo, key=lambda l: l.get('level', 999)):
+    lvl = level.get('level', '?')
+    repos = ' '.join(level.get('repos', []))
+    if repos:
+        print(f'{lvl}:{repos}')
+" 2>/dev/null)
+
+[ -z "$LEVEL_DATA" ] && { echo "Error: Could not parse topological order from $MANIFEST"; exit 1; }
+
+is_ui_repo()    { [[ -f "$1/package.json" ]] && [[ ! -f "$1/scripts/quality-gates.sh" ]]; }
+is_codex_repo() { [[ "$(basename "$1")" == "unified-trading-codex" ]]; }
+
+run_qg() {
+  local repo="$1" rp="$WORKSPACE_ROOT/$1"
+  [[ ! -d "$rp/.git" ]]  && { echo "  [SKIP] $repo — not found"; return 0; }
+  is_codex_repo "$rp"    && { echo "  [SKIP] $repo — docs-only"; return 0; }
+
+  local log; log=$(mktemp)
+
+  if is_ui_repo "$rp"; then
+    if (cd "$rp" && npm run typecheck 2>&1 && npm run lint 2>&1 && npm run build 2>&1) >"$log" 2>&1; then
+      echo "  [OK]   $repo (ui)"; rm -f "$log"; return 0
+    fi
+  elif [[ -f "$rp/scripts/quality-gates.sh" ]]; then
+    if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/quality-gates.sh --no-fix 2>&1) >"$log" 2>&1; then
+      echo "  [OK]   $repo"; rm -f "$log"; return 0
+    fi
+  else
+    echo "  [SKIP] $repo — no quality-gates.sh"; rm -f "$log"; return 0
+  fi
+
+  echo "  [FAIL] $repo"
+  tail -20 "$log" | sed 's/^/    /'
+  rm -f "$log"
+  return 1
+}
+
+OK=0; FAIL=0; FAILED_REPOS=()
+
+while IFS=: read -r LEVEL REPOS_STR; do
+  ALL_REPOS=($REPOS_STR)
+  echo "  ── Tier $LEVEL (${#ALL_REPOS[@]} repo(s)$([ "$SEQUENTIAL" = false ] && echo ', parallel' || echo '')) ──"
+
+  if [[ "$SEQUENTIAL" = true ]] || [[ "$DRY_RUN" = true ]]; then
+    for repo in "${ALL_REPOS[@]}"; do
+      [[ "$DRY_RUN" = true ]] && { echo "  [dry]  $repo"; OK=$((OK+1)); continue; }
+      if run_qg "$repo"; then OK=$((OK+1)); else FAIL=$((FAIL+1)); FAILED_REPOS+=("$repo"); fi
+    done
+  else
+    PIDS=(); LAUNCHED=()
+    for repo in "${ALL_REPOS[@]}"; do
+      run_qg "$repo" & PIDS+=($!); LAUNCHED+=("$repo")
+    done
+    for i in "${!PIDS[@]}"; do
+      if wait "${PIDS[$i]}"; then OK=$((OK+1))
+      else FAIL=$((FAIL+1)); FAILED_REPOS+=("${LAUNCHED[$i]}"); fi
+    done
+  fi
   echo ""
-  echo "Fix: cd <repo> && bash scripts/quality-gates.sh --no-fix"
+done <<< "$LEVEL_DATA"
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+echo "━━━ Results ━━━"
+echo "  OK: $OK | Failed: $FAIL"
+if [[ ${#FAILED_REPOS[@]} -gt 0 ]]; then
+  echo "  Failed:"; for r in "${FAILED_REPOS[@]}"; do echo "    ✗ $r"; done
+  echo "  Fix: cd <repo> && bash scripts/quality-gates.sh --no-fix"
   exit 1
 fi
-exit 0
+echo "  All quality gates passed."
