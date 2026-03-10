@@ -137,9 +137,17 @@ This left all UI repos with stale node_modules silently.
 ## Test Coverage
 
 ```
+# Dep-drift detection (step 0.6)
 run-version-alignment.sh --ui-only          # [OK] all UI repos clean
 touch batch-audit-ui/package.json
 run-version-alignment.sh --ui-only          # [WARN] batch-audit-ui drift detected
 npm install in batch-audit-ui
 run-version-alignment.sh --ui-only          # [OK] clean again
+
+# Canonical npm version enforcement (step 0.7)
+# onboarding-ui had 4 below-canonical versions in package.json
+run-version-alignment.sh --ui-only          # [WARN] 4 mismatches in onboarding-ui
+run-version-alignment.sh --fix --ui-only    # [APPLY] fixed all 4 versions
+cd onboarding-ui && npm install             # install updated deps
+run-version-alignment.sh --ui-only          # [OK] all 3 checks pass
 ```
