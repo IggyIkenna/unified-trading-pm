@@ -54,6 +54,9 @@
       "path": "../../trading-analytics-ui",
     },
     {
+      "path": "../../unified-admin-ui",
+    },
+    {
       "path": "../../unified-trading-ui-auth",
     },
   ],

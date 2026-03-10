@@ -198,6 +198,9 @@
       "path": "unified-trading-library",
     },
     {
+      "path": "unified-admin-ui",
+    },
+    {
       "path": "unified-trading-ui-auth",
     },
   ],
