@@ -2,12 +2,11 @@
 name: Sports Migration — Combined (Gap Fix + Phase 2 Full)
 overview: |
   Consolidates sports_migration_gap_fix and sports_migration_phase2_full (merged 2026-03-09).
-  Remaining work: live-mode scraper adapters + deployment config (gap fix B1/B5-B6 in_progress),
-  feature calculators (pure code), USEI Betfair/Pinnacle adapters (blocked by API keys phase-4),
-  and strategy/execution wiring (blocked by USEI adapters).
+  All actionable todos complete. Remaining: USEI Betfair/Pinnacle live VCR cassettes blocked
+  by API keys (phase-4-blockers), strategy/execution wiring blocked by USEI adapters.
 status: active
 created: 2026-03-02
-updated: 2026-03-09 (b1-scraper-adapters + usei-adapters completed)
+updated: 2026-03-10 (b5-b6-deployment completed)
 isProject: false
 todos:
   # ── From sports_migration_gap_fix (Part B) ──────────────────────────────
@@ -23,10 +22,16 @@ todos:
     status: done
 
   - id: b5-b6-deployment
-    content:
-      "B5–B6 — Odds API validation; sports sharding; Playwright in base image; instruments sports namespace. In progress
-      — base image Dockerfile change pending."
-    status: in_progress
+    content: >-
+      B5–B6 — Odds API validation; sports sharding; Dockerfile base image; deployment configs. DONE 2026-03-10: B5:
+      odds_api_validator.py added to market-tick-data-service/adapters/sports/ (OddsValidationResult,
+      validate_odds_payload, validate_canonical_odds_dict; 29 unit tests pass; basedpyright 0 errors). B6: Dockerfile +
+      pip.conf added to features-sports-service (uses unified-trading-library base image — no Playwright; FSS is
+      batch/API only). deployment-service configs updated: dependencies.yaml (features-sports-service entry + SPORTS
+      category_domain_mapping), expected_start_dates.yaml (SPORTS category_start 2020-08-01, 8 leagues),
+      checklist.features-sports-service.yaml (items 6,11,14,15 marked done). Commits: market-tick-data-service d5ebecc,
+      deployment-service 406199d, features-sports-service ba62fa3.
+    status: done
 
   # ── From sports_migration_phase2_full ───────────────────────────────────
   - id: feature-calculators
