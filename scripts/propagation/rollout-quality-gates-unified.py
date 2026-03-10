@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import typing
 from pathlib import Path
@@ -77,9 +78,31 @@ TYPE_INFRASTRUCTURE = "infrastructure"
 TYPE_TEST_HARNESS = "test-harness"
 TYPE_DEVOPS = "devops"
 
+# Coverage floors: max(floor, actual-1) — never set below floor regardless of actual
+LIBRARY_COVERAGE_FLOOR = 80
+SERVICE_COVERAGE_FLOOR = 70
+
 SKIP_STATUSES = frozenset({"deprecated", "archived", "deleted"})
 # PM and Codex have their own quality-gates; do not overwrite with templates
 ROLLOUT_SKIP_REPOS = frozenset({"unified-trading-pm", "unified-trading-codex"})
+
+# Repos where discover_source_dir() picks the wrong dir — override explicitly.
+# Key: repo name, Value: SOURCE_DIR value to use in quality-gates.sh
+SOURCE_DIR_OVERRIDES: dict[str, str] = {
+    # Actual Python package is ibkr_gateway_client, not ibkr_gateway_infra
+    "ibkr-gateway-infra": "ibkr_gateway_client",
+    # Pure test harness — no source package; measure coverage against tests/ directly
+    "system-integration-tests": "tests",
+}
+
+# Repos that need a lower MIN_COVERAGE floor than the type-default.
+# Rollout always enforces max(floor, existing); these entries lower the floor for specific repos.
+MIN_COVERAGE_OVERRIDES: dict[str, int] = {
+    # ibkr-gateway-infra has limited testable surface (mostly gateway client integration code)
+    "ibkr-gateway-infra": 51,
+    # system-integration-tests is a pure test-harness repo — no source to measure
+    "system-integration-tests": 0,
+}
 
 
 def get_typescript_quality_gates_script() -> str:
@@ -138,11 +161,79 @@ def select_template_type(repo_type: str) -> str:
     return "service"  # default for unknown Python repos
 
 
+def measure_coverage(repo_path: Path, source_dir: str) -> int | None:
+    """Return TOTAL coverage % for a repo.
+
+    Strategy (fast-path first):
+    1. Parse existing coverage.xml if present (written by the last quality-gates run).
+    2. Fall back to running pytest --cov if no report exists.
+    """
+    # Fast path: read coverage.xml produced by the last QG run
+    xml_path = repo_path / "coverage.xml"
+    if xml_path.exists():
+        try:
+            import xml.etree.ElementTree as ET  # noqa: PLC0415
+
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+            line_rate = root.get("line-rate")
+            if line_rate is not None:
+                return int(float(line_rate) * 100)
+        except Exception:  # noqa: BLE001
+            pass  # fall through to pytest
+
+    # Slow path: run pytest --cov
+    python = repo_path / ".venv" / "bin" / "python"
+    if not python.exists():
+        python = Path(sys.executable)
+
+    tests_unit = repo_path / "tests" / "unit"
+    tests_dir = tests_unit if tests_unit.exists() else repo_path / "tests"
+    if not tests_dir.exists():
+        return None
+
+    try:
+        result = subprocess.run(
+            [
+                str(python),
+                "-m",
+                "pytest",
+                str(tests_dir),
+                f"--cov={source_dir}",
+                "--cov-report=term-missing",
+                "--cov-report=xml:coverage.xml",
+                "-q",
+                "--tb=no",
+                "--no-header",
+                "-x",
+                "--ignore=tests/integration",
+                "--ignore=tests/e2e",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=repo_path,
+            timeout=180,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+
+    for line in (result.stdout + result.stderr).splitlines():
+        if line.startswith("TOTAL"):
+            parts = line.split()
+            pct_str = parts[-1].rstrip("%")
+            try:
+                return int(float(pct_str))
+            except (ValueError, IndexError):
+                pass
+    return None
+
+
 def copy_quality_gates(
     repo_path: Path,
     repo_name: str,
     template_type: str,
     dry_run: bool,
+    recalibrate: bool = False,
 ) -> bool:
     """Copy and customize quality-gates.sh. Returns True if created/updated."""
     scripts_dir = repo_path / "scripts"
@@ -157,7 +248,7 @@ def copy_quality_gates(
             return False
         content = template_path.read_text()
 
-    source_dir = discover_source_dir(repo_path, repo_name)
+    source_dir = SOURCE_DIR_OVERRIDES.get(repo_name) or discover_source_dir(repo_path, repo_name)
     package_name = repo_name  # repo name for PACKAGE_NAME/SERVICE_NAME
 
     if template_type == "library":
@@ -167,15 +258,33 @@ def copy_quality_gates(
         content = content.replace('SERVICE_NAME="REPLACE_ME"', f'SERVICE_NAME="{package_name}"')
         content = content.replace('SOURCE_DIR="REPLACE_ME"', f'SOURCE_DIR="{source_dir}"')
 
-    # Preserve existing MIN_COVERAGE if the file already exists; avoids clobbering
-    # per-repo coverage targets that were carefully measured and set.
-    existing_coverage: str | None = None
+    # Compute MIN_COVERAGE = max(floor, actual-1) when recalibrating,
+    # or max(floor, existing) to enforce floor without running tests.
+    # Floor: library=80, service=70. Per-repo overrides in MIN_COVERAGE_OVERRIDES take precedence.
+    floor = MIN_COVERAGE_OVERRIDES.get(
+        repo_name, LIBRARY_COVERAGE_FLOOR if template_type == "library" else SERVICE_COVERAGE_FLOOR
+    )
+    existing_int: int | None = None
     if dest.exists():
         m = re.search(r"^MIN_COVERAGE=(\d+)", dest.read_text(), re.MULTILINE)
         if m:
-            existing_coverage = m.group(1)
-    if existing_coverage is not None:
-        content = re.sub(r"^MIN_COVERAGE=\d+", f"MIN_COVERAGE={existing_coverage}", content, flags=re.MULTILINE)
+            existing_int = int(m.group(1))
+
+    if recalibrate:
+        actual = measure_coverage(repo_path, source_dir)
+        if actual is not None:
+            new_coverage = max(floor, actual - 1)
+            print(f"  📊 Actual coverage: {actual}% → MIN_COVERAGE={new_coverage} (floor={floor}%)")
+        else:
+            new_coverage = max(floor, existing_int) if existing_int is not None else floor
+            print(f"  ⚠️  Could not measure coverage → MIN_COVERAGE={new_coverage} (floor fallback)")
+    else:
+        prev = existing_int if existing_int is not None else floor
+        new_coverage = max(floor, prev)
+        if prev < floor:
+            print(f"  ⬆️  MIN_COVERAGE: {prev}% → {new_coverage}% (enforcing {floor}% floor)")
+
+    content = re.sub(r"^MIN_COVERAGE=\d+", f"MIN_COVERAGE={new_coverage}", content, flags=re.MULTILINE)
 
     if dry_run:
         print(f"  [dry-run] Would write {dest}")
@@ -256,6 +365,7 @@ def process_repo(
     repo_info: JsonDict,
     workspace_root: Path,
     dry_run: bool,
+    recalibrate: bool = False,
 ) -> bool:
     """Process a single repository. Returns True on success."""
     status = repo_info.get("status", "active")
@@ -292,7 +402,7 @@ def process_repo(
     print(f"\n🔧 Processing {repo_name} (type={repo_type}, template={template_type})")
 
     changed = False
-    changed |= copy_quality_gates(repo_path, repo_name, template_type, dry_run)
+    changed |= copy_quality_gates(repo_path, repo_name, template_type, dry_run, recalibrate)
     changed |= copy_setup_sh(repo_path, dry_run)
     changed |= ensure_ignore_files(repo_path, template_type, dry_run)
     changed |= ensure_bypass_audit(repo_path, doc_standard, dry_run)
@@ -306,6 +416,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Roll out quality gates from workspace manifest")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing")
     parser.add_argument("--repo", type=str, help="Process only this repository")
+    parser.add_argument(
+        "--recalibrate",
+        action="store_true",
+        help=(
+            "Measure actual coverage per repo (runs pytest --cov) and set "
+            "MIN_COVERAGE = max(floor, actual-1). Without this flag, enforces "
+            "floor only: max(floor, existing). floor=80 library, 70 service."
+        ),
+    )
     args = parser.parse_args()
 
     if not MANIFEST_PATH.exists():
@@ -318,6 +437,7 @@ def main() -> int:
     repos_raw = _jdict(manifest.get("repositories"))
     repositories = cast(dict[str, JsonDict], repos_raw) if repos_raw else {}
     dry_run = cast(bool, args.dry_run)
+    recalibrate = cast(bool, args.recalibrate)
     repo_filter = cast(str | None, args.repo)
     if repo_filter is not None:
         if repo_filter not in repositories:
@@ -330,12 +450,14 @@ def main() -> int:
     print(f"📋 Repositories: {len(repositories)}")
     if dry_run:
         print("🔍 Dry run — no files will be written")
+    if recalibrate:
+        print("📊 Recalibrate mode: measuring actual coverage per repo (runs pytest)")
 
     success = 0
     errors = 0
     for repo_name in sorted(repositories.keys()):
         try:
-            if process_repo(repo_name, repositories[repo_name], WORKSPACE_ROOT, dry_run):
+            if process_repo(repo_name, repositories[repo_name], WORKSPACE_ROOT, dry_run, recalibrate):
                 success += 1
             else:
                 errors += 1
