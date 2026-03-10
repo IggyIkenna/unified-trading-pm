@@ -1,7 +1,7 @@
 # Zero Baseline Typecheck — Full Remediation Plan
 
-**Created:** 2026-03-10 **Status:** DONE (2026-03-10) **SSOT-INDEX:** register under `08-type-safety` **Linked codex
-section:** `unified-trading-codex/06-coding-standards/README.md`
+**Created:** 2026-03-10 **Status:** IN PROGRESS (Phase 7 running) **SSOT-INDEX:** register under `08-type-safety`
+**Linked codex section:** `unified-trading-codex/06-coding-standards/README.md`
 
 ## Goal
 
@@ -196,11 +196,11 @@ class NautilusEngineProtocol(Protocol):
 ## Progress Tracking
 
 - [x] Plan created
-- [ ] Phase 1 complete (strategy-service ✗, execution-results-api ✗, UTEI ✗)
-- [ ] Phase 2 complete (nautilus stubs expanded)
-- [ ] Phase 3 complete (features-sports-service)
-- [ ] Phase 4 complete (deployment-api)
-- [ ] Phase 5 complete (market-data-processing)
-- [ ] Phase 6 complete (ml-training)
-- [ ] Phase 7 complete (execution-service core)
-- [ ] Phase 8 complete (zero baseline verified all repos)
+- [x] Phase 1 complete — strategy-service ✅, execution-results-api ✅, UTEI ✅ (2026-03-10)
+- [x] Phase 2 complete — nautilus stubs expanded (33+ .pyi files in execution-service/stubs/) (2026-03-10)
+- [ ] Phase 3 complete — features-sports-service (429 errors, not yet started)
+- [x] Phase 4 complete — deployment-api 2,962 → 0 errors, no baseline (commits ce897d3..c97a69e) (2026-03-10)
+- [x] Phase 5 complete — market-data-processing-service 1,348 → 0 errors, no baseline (commit 7cf0b39) (2026-03-10)
+- [x] Phase 6 complete — ml-training-service 504 → 0 errors, no baseline (commit 87808ac) (2026-03-10)
+- [ ] Phase 7 complete — execution-service ~9,107 remaining errors (background agent running 2026-03-10)
+- [ ] Phase 8 complete — zero baseline verified all repos
