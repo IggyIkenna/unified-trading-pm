@@ -206,11 +206,22 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
         log_fail "SOURCE_DIR not set — cannot run basedpyright safely"; exit 1
     fi
     # ── BASELINE FILE GATE ────────────────────────────────────────────────────
+    # Policy (escalated to ERROR 2026-03-10): any non-zero suppression is a hard block.
+    #   • Present + suppressed errors > 0 → FAIL (hard block; resolve errors and delete baseline)
+    #   • Present + suppressed errors = 0 → continue (empty baseline is harmless)
     if [ -f ".basedpyright-baseline.json" ]; then
-        if grep -q "basedpyright-baseline" QUALITY_GATE_BYPASS_AUDIT.md 2>/dev/null; then
-            log_warn "TYPE CHECK: .basedpyright-baseline.json is suppressing errors — documented in QUALITY_GATE_BYPASS_AUDIT.md (WARN: target is zero baselines)"
-        else
-            log_fail "TYPE CHECK: .basedpyright-baseline.json found but NOT documented in QUALITY_GATE_BYPASS_AUDIT.md — delete the baseline or document it"; exit 1
+        _SUPPRESSED=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open('.basedpyright-baseline.json'))
+    files = d.get('files', d)
+    total = sum(len(v) for v in files.values() if isinstance(v, list))
+    print(total)
+except Exception:
+    print(0)
+" 2>/dev/null || echo 0)
+        if [ "${_SUPPRESSED:-0}" -gt 0 ]; then
+            log_fail "TYPE CHECK: .basedpyright-baseline.json is suppressing ${_SUPPRESSED} error(s) — resolve all type errors and delete the baseline file"; exit 1
         fi
     fi
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${PACKAGE_NAME:-$(basename "$PWD")}"
@@ -466,12 +477,27 @@ fi
 
 # ============================================================
 # STEP 5.22 — basedpyright baseline suppression audit
+# Policy (escalated from WARN to ERROR 2026-03-10):
+#   • Present + suppressed errors > 0  → ERROR (FAIL): resolve type errors and delete baseline
+#   • Present + suppressed errors = 0  → PASS (harmless empty baseline; recommend deletion)
+#   • Not present                      → PASS (clean)
 # ============================================================
+echo "=== STEP 5.22: basedpyright baseline suppression ==="
 if [ -f ".basedpyright-baseline.json" ]; then
-    if grep -q "basedpyright-baseline" QUALITY_GATE_BYPASS_AUDIT.md 2>/dev/null; then
-        log_warn "STEP 5.22: .basedpyright-baseline.json present — documented bypass (WARN: eliminate to reach clean-slate)"; V=$(( V + 1 ))
+    SUPPRESSED=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open('.basedpyright-baseline.json'))
+    files = d.get('files', d)
+    total = sum(len(v) for v in files.values() if isinstance(v, list))
+    print(total)
+except Exception:
+    print(0)
+" 2>/dev/null || echo 0)
+    if [ "${SUPPRESSED:-0}" -gt 0 ]; then
+        log_fail "STEP 5.22: .basedpyright-baseline.json is suppressing ${SUPPRESSED} error(s) — ERROR: resolve all type errors and delete the baseline file"; V=$(( V + 1 ))
     else
-        log_fail "STEP 5.22: .basedpyright-baseline.json present without QUALITY_GATE_BYPASS_AUDIT.md entry — undocumented suppression"; V=$(( V + 1 ))
+        log_success "STEP 5.22: .basedpyright-baseline.json present but suppresses 0 errors (harmless — consider deleting it)"
     fi
 else
     log_success "STEP 5.22: no basedpyright baseline (clean)"
