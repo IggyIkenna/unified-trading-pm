@@ -605,7 +605,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.0,<2.0.0" },
-    { name = "basedpyright", marker = "extra == 'dev'", specifier = ">=1.21.0,<2.0.0" },
+    { name = "basedpyright", marker = "extra == 'dev'", specifier = "==1.38.2" },
     { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.7.0,<3.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.1,<10.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.25.0,<2.0.0" },
