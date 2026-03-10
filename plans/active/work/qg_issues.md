@@ -13,7 +13,7 @@
 
 ---
 
-## Issues
+## Issues (Original 22)
 
 | #   | Repo                               | Issue Type           | Details                                                                                                                      | Agent | Status   |
 | --- | ---------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----- | -------- |
@@ -32,13 +32,22 @@
 | 13  | client-reporting-api               | coverage             | Manifest stale; improved to 96.13% → 82 passed, 0 failed (commit dea967c)                                                    | —     | verified |
 | 14  | execution-results-api              | coverage             | Fixed: 8 tests fixed (GCP_PROJECT_ID mock) + 24 new fill_store tests → 570 passed, 0 failed, 78.74%                          | —     | verified |
 | 15  | features-cross-instrument-service  | coverage             | Manifest stale — actual 91.47%, 270 passed, 0 failed (threshold: fail_under=90)                                              | —     | verified |
-| 16  | instruments-service                | coverage             | Fixed: 110 new tests (error_counter, sports normalizer, fixture_parser, venue_config) → 1426 passed, 72.63% (commit f4699d0) | —     | verified |
+| 16  | instruments-service                | coverage             | Fixed: 110 new tests (error_counter, sports normalizer, fixture_parser, venue_config) → 1469 passed, 72.65% (commit f4699d0) | —     | verified |
 | 17  | trading-agent-service              | coverage             | Fixed: 4 failing tests fixed (starlette stub) → 177 passed, 0 failed, 94.90%                                                 | —     | verified |
 | 18  | features-sports-service            | test_fail            | RC-C env-leak fixed (@patch.dict isolation) commit 931af2b; 87% coverage                                                     | —     | verified |
 | 19  | features-calendar-service          | test_fail            | RC-C env-leak fixed (@patch.dict isolation) commit 41ddb31; 72% coverage                                                     | —     | verified |
 | 20  | ml-inference-api                   | unknown              | New repo — 22 passed, 0 failed, 78.21%                                                                                       | —     | verified |
 | 21  | ml-training-api                    | unknown              | New repo — 38 passed, 0 failed, 95.37%                                                                                       | —     | verified |
 | 22  | trading-analytics-api              | unknown              | New repo — 42 passed, 0 failed, 98.95%                                                                                       | —     | verified |
+
+---
+
+## Issues (Discovered in "Other 41" scan)
+
+| #   | Repo               | Issue Type           | Details                                                                                                                                 | Agent | Status      |
+| --- | ------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------- |
+| 23  | deployment-api     | test_fail + coverage | Fixed: 74 test API-mismatch failures (UCI StorageClient) + missing helpers re-exports → 1749 passed, 70.57% (commits 4d9bbf6 + earlier) | —     | verified    |
+| 24  | deployment-service | test_fail            | 12 turbo/missing-data tests fail: old GCS mock API vs UCI StorageClient; fix agent running                                              | af8d1 | in_progress |
 
 ---
 
