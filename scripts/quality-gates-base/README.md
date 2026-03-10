@@ -1,24 +1,27 @@
 # Quality Gates Base Scripts
 
-Centralized quality-gate logic for all Python repos in the unified-trading workspace.
+Centralized quality-gate logic for repos that use the source-based pattern.
 
 ## Overview
 
-Every Python repo's `scripts/quality-gates.sh` is a thin config stub that sources one of these base scripts. The base
-script contains the full gate logic — only the repo-specific variables (service name, source dir, coverage threshold,
-deps) live in each repo.
+Two repos use this pattern — `unified-trading-pm` sources `base-service.sh`, `unified-trading-codex` sources
+`base-codex.sh`. All other Python repos use standalone copies of the codex templates rolled out by
+`rollout-quality-gates-unified.py`.
 
-To add a new check for **all** service repos, edit `base-service.sh` only. No per-repo changes needed.
+To add a new check for PM's quality gates, edit `base-service.sh`. For all other repos, edit the codex template
+(`unified-trading-codex/06-coding-standards/quality-gates-service-template.sh` or `quality-gates-library-template.sh`)
+and re-run the rollout.
 
 ## Files
 
 ```
 quality-gates-base/
-├── base-service.sh   # Services (FastAPI apps, workers, APIs) — sourced by 27 service repos
-├── base-library.sh   # Libraries and interfaces — sourced by 17 library/interface repos
-├── base-codex.sh     # Docs-only repos (no Python source) — sourced by unified-trading-codex and PM
+├── base-service.sh   # Used by: unified-trading-pm/scripts/quality-gates.sh only
+├── base-codex.sh     # Used by: unified-trading-codex/scripts/quality-gates.sh only
 └── README.md         # This file
 ```
+
+Note: `base-library.sh` was deleted — it had no callers. Library repos use standalone codex template copies.
 
 ## Stub Templates
 
@@ -40,23 +43,6 @@ source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ser
 Required variables: `SERVICE_NAME`, `SOURCE_DIR`, `MIN_COVERAGE`, `RUN_INTEGRATION`
 
 Optional variables: `PYTEST_WORKERS` (default: 2), `LOCAL_DEPS` (default: empty array)
-
-### LIBRARY repos (~10 lines)
-
-```bash
-#!/usr/bin/env bash
-# Repo-specific settings only. Body: unified-trading-pm/scripts/quality-gates-base/base-library.sh
-SOURCE_DIR="<package_dir>"
-MIN_COVERAGE=<N>
-LOCAL_DEPS=()
-WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
-source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-library.sh"
-```
-
-Required variables: `SOURCE_DIR`, `MIN_COVERAGE`
-
-Optional variables: `PACKAGE_NAME` (used for basedpyright cache), `PYTEST_WORKERS` (default: 2), `LOCAL_DEPS` (default:
-empty array)
 
 ### CODEX / DOCS repos (~8 lines)
 
@@ -110,23 +96,24 @@ bash scripts/quality-gates.sh --skip-typecheck  # Skip basedpyright
 
 ## Adding a New Gate Check
 
-1. Edit the appropriate base script (`base-service.sh`, `base-library.sh`, or `base-codex.sh`) in this directory
-2. Test on one repo first: `bash scripts/quality-gates.sh --quick` from within the repo
-3. Commit to `unified-trading-pm` with message `feat(quality-gates): add <check-name> check`
-4. All repos immediately pick up the new check on next run — no per-repo commits needed
+**For PM or codex only** (source-based repos):
+
+1. Edit `base-service.sh` (PM) or `base-codex.sh` (codex) in this directory
+2. Test: `bash scripts/quality-gates.sh --quick` from within the repo
+3. Commit to `unified-trading-pm`
+
+**For all other repos** (template-based, 58 repos):
+
+1. Edit `unified-trading-codex/06-coding-standards/quality-gates-service-template.sh` or
+   `quality-gates-library-template.sh`
+2. Commit to `unified-trading-codex`
+3. Re-run rollout: `python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py`
 
 ## New Repo Setup
 
-For a new **service** repo, copy the SERVICE stub template above, filling in:
-
-- `SERVICE_NAME` — the repo directory name (e.g. `"my-new-service"`)
-- `SOURCE_DIR` — the Python package directory name (e.g. `"my_new_service"`)
-- `MIN_COVERAGE` — set to `(actual coverage - 1%)` after first test run
-
-For a new **library** repo, copy the LIBRARY stub template above, filling in:
-
-- `SOURCE_DIR` — the Python package directory name (e.g. `"my_new_library"`)
-- `MIN_COVERAGE` — set to `(actual coverage - 1%)` after first test run
+For a new **service** or **library** repo: use `rollout-quality-gates-unified.py` — it adds `scripts/quality-gates.sh`,
+`scripts/setup.sh`, `.cursorignore`, `.gitignore`, and `QUALITY_GATE_BYPASS_AUDIT.md` from the codex templates
+automatically.
 
 For a new **docs-only** repo (no Python source), copy the CODEX stub template above, filling in:
 

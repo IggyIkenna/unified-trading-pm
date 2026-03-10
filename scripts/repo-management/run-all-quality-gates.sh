@@ -6,8 +6,8 @@
 #   2. run-all-setup.sh --check  — verify all repos have deps installed
 #   3. quality-gates.sh --no-fix — topological tier order, parallel within tier
 #
-# Python repos: bash scripts/quality-gates.sh --no-fix
-# UI repos:     npm run typecheck && npm run lint && npm run build
+# All repos:    bash scripts/quality-gates.sh --no-fix (Python and UI)
+# UI template:  unified-trading-codex/06-coding-standards/quality-gates-ui-template.sh
 # Codex:        skip (docs-only, no QG)
 # SSOT:         workspace-manifest.json topologicalOrder
 #
@@ -18,6 +18,8 @@
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-alignment --skip-setup
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --sequential
 #   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --dry-run
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --skip-typecheck
+#   bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --lint
 #
 # Run from workspace root:
 #   cd /path/to/unified-trading-system-repos
@@ -47,16 +49,20 @@ SKIP_ALIGNMENT=false
 SKIP_SETUP=false
 SEQUENTIAL=false
 DRY_RUN=false
+SKIP_TYPECHECK=false
+LINT_ONLY=false
 REPO_LIST=()  # empty = all repos
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --skip-alignment) SKIP_ALIGNMENT=true; shift ;;
-    --skip-setup)     SKIP_SETUP=true; shift ;;
-    --sequential)     SEQUENTIAL=true; shift ;;
-    --dry-run)        DRY_RUN=true; shift ;;
-    --repo)           REPO_LIST+=("$2"); shift 2 ;;
-    --repos)          read -ra _r <<< "$2"; REPO_LIST+=("${_r[@]}"); shift 2 ;;
+    --skip-alignment)  SKIP_ALIGNMENT=true; shift ;;
+    --skip-setup)      SKIP_SETUP=true; shift ;;
+    --sequential)      SEQUENTIAL=true; shift ;;
+    --dry-run)         DRY_RUN=true; shift ;;
+    --skip-typecheck)  SKIP_TYPECHECK=true; shift ;;
+    --lint)            LINT_ONLY=true; shift ;;
+    --repo)            REPO_LIST+=("$2"); shift 2 ;;
+    --repos)           read -ra _r <<< "$2"; REPO_LIST+=("${_r[@]}"); shift 2 ;;
     --help | -h)
       echo "Usage: bash run-all-quality-gates.sh [options]"
       echo "  --repo NAME            Run QG for a single repo"
@@ -65,6 +71,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --skip-setup           Skip setup --check across all repos"
       echo "  --sequential           Run QG one repo at a time (default: parallel within tier)"
       echo "  --dry-run              Print what would run, do not execute"
+      echo "  --skip-typecheck       Skip basedpyright type check (pass-through to quality-gates.sh)"
+      echo "  --lint                 Run lint only, skip tests (pass-through to quality-gates.sh)"
       exit 0
       ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
@@ -115,6 +123,8 @@ fi
 # ── Phase 3: Quality gates (parallel within tier) ─────────────────────────────
 echo "━━━ Phase 3: Quality gates ━━━"
 echo "  Mode: $([ "$SEQUENTIAL" = true ] && echo 'SEQUENTIAL' || echo 'PARALLEL within tier')"
+[[ "$SKIP_TYPECHECK" = true ]] && echo "  Typecheck: SKIPPED"
+[[ "$LINT_ONLY" = true ]]      && echo "  Tests: SKIPPED (lint only)"
 echo ""
 
 LEVEL_DATA=$("$PYTHON" -c "
@@ -131,7 +141,6 @@ for level in sorted(topo, key=lambda l: l.get('level', 999)):
 
 [ -z "$LEVEL_DATA" ] && { echo "Error: Could not parse topological order from $MANIFEST"; exit 1; }
 
-is_ui_repo()    { [[ -f "$1/package.json" ]] && [[ ! -f "$1/scripts/quality-gates.sh" ]]; }
 is_codex_repo() { [[ "$(basename "$1")" == "unified-trading-codex" ]]; }
 
 run_qg() {
@@ -141,16 +150,16 @@ run_qg() {
 
   local log; log=$(mktemp)
 
-  if is_ui_repo "$rp"; then
-    if (cd "$rp" && npm run typecheck 2>&1 && npm run lint 2>&1 && npm run build 2>&1) >"$log" 2>&1; then
-      echo "  [OK]   $repo (ui)"; rm -f "$log"; return 0
-    fi
-  elif [[ -f "$rp/scripts/quality-gates.sh" ]]; then
-    if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/quality-gates.sh --no-fix 2>&1) >"$log" 2>&1; then
+  local qg_args=(--no-fix)
+  [[ "$SKIP_TYPECHECK" = true ]] && qg_args+=(--skip-typecheck)
+  [[ "$LINT_ONLY" = true ]]      && qg_args+=(--lint)
+
+  if [[ -f "$rp/scripts/quality-gates.sh" ]]; then
+    if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/quality-gates.sh "${qg_args[@]}" 2>&1) >"$log" 2>&1; then
       echo "  [OK]   $repo"; rm -f "$log"; return 0
     fi
   else
-    echo "  [SKIP] $repo — no quality-gates.sh"; rm -f "$log"; return 0
+    echo "  [SKIP] $repo — no quality-gates.sh (run rollout-quality-gates-unified.py)"; rm -f "$log"; return 0
   fi
 
   echo "  [FAIL] $repo"
@@ -171,7 +180,7 @@ run_list() {
   else
     PIDS=(); LAUNCHED=()
     for repo in "${repos[@]}"; do
-      run_qg "$repo" & PIDS+=($!); LAUNCHED+=("$repo")
+      run_qg "$repo" </dev/null & PIDS+=($!); LAUNCHED+=("$repo")
     done
     for i in "${!PIDS[@]}"; do
       if wait "${PIDS[$i]}"; then OK=$((OK+1))

@@ -27,7 +27,7 @@ for arg in "$@"; do
     --help | -h)
       echo "Usage: bash run-all-setup.sh [--check] [--rollout-first]"
       echo "  --check         Run setup.sh --check only (verify, no install)"
-      echo "  --rollout-first Propagate setup.sh + quality-gates.sh templates first"
+      echo "  --rollout-first Propagate setup.sh + quality-gates.sh + quickmerge.sh templates first"
       echo ""
       echo "Run from workspace root (parent of unified-trading-pm):"
       echo "  cd /path/to/unified-trading-system-repos"
@@ -56,8 +56,9 @@ PYTHON="$WORKSPACE_ROOT/.venv-workspace/bin/python3"
 
 # ── Optional: propagate templates first ──────────────────────────────────────
 if [ "$ROLLOUT_FIRST" = true ]; then
-  echo "━━━ Phase 0: Rollout templates (setup.sh + quality-gates.sh) ━━━"
+  echo "━━━ Phase 0: Rollout templates (setup.sh + quality-gates.sh + quickmerge.sh) ━━━"
   "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py" || exit 1
+  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quickmerge.py" || exit 1
   echo ""
 fi
 
@@ -131,7 +132,7 @@ while IFS=: read -r LEVEL REPOS_STR; do
         rm -f "$log"
         exit 1
       fi
-    ) &
+    ) </dev/null &
     PIDS+=($!)
     LAUNCHED+=("$repo")
   done

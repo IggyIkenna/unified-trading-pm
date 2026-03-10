@@ -51,6 +51,7 @@ MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json
 SETUP_SH_SOURCE = PM_ROOT / "scripts" / "setup.sh"
 QG_LIBRARY_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-library-template.sh"
 QG_SERVICE_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-service-template.sh"
+QG_UI_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-ui-template.sh"
 TEMPLATES_DIR = SCRIPT_DIR / "templates"
 CURSORIGNORE_PYTHON = TEMPLATES_DIR / "cursorignore-python.txt"
 CURSORIGNORE_NODE = TEMPLATES_DIR / "cursorignore-node.txt"
@@ -82,47 +83,10 @@ ROLLOUT_SKIP_REPOS = frozenset({"unified-trading-pm", "unified-trading-codex"})
 
 
 def get_typescript_quality_gates_script() -> str:
-    """Generate quality-gates.sh for TypeScript/UI repos."""
-    return """#!/bin/bash
-
-# Quality gates for TypeScript/React UI repository
-set -e
-
-echo "🔍 Running TypeScript/React Quality Gates..."
-
-# Step 1: TypeScript type check
-echo "Step 1/3: TypeScript type check..."
-if [ -f "package.json" ] && [ -f "tsconfig.json" ]; then
-    npm run typecheck
-    echo "✅ TypeScript type check passed"
-else
-    echo "⚠️ No package.json or tsconfig.json found, skipping TypeScript check"
-fi
-
-# Step 2: ESLint
-echo "Step 2/3: ESLint..."
-if [ -f "package.json" ]; then
-    if npm run lint --silent 2>/dev/null; then
-        echo "✅ ESLint passed"
-    else
-        echo "⚠️ No lint script or lint failed"
-    fi
-else
-    echo "⚠️ No package.json found, skipping ESLint"
-fi
-
-# Step 3 (optional): Smoke tests
-echo "Step 3/3: Smoke tests (optional)..."
-if [ -f "package.json" ] && grep -q '"smoketest"' package.json; then
-    npm run smoketest || echo "⚠️ Smoke tests failed (not blocking)"
-    echo "✅ Smoke tests completed"
-else
-    echo "⚠️ No smoke tests configured, skipping"
-fi
-
-echo ""
-echo "🎉 All TypeScript/React quality gates completed!"
-"""
+    """Load quality-gates.sh for TypeScript/UI repos from codex template."""
+    if not QG_UI_TEMPLATE.exists():
+        raise FileNotFoundError(f"UI template not found: {QG_UI_TEMPLATE}")
+    return QG_UI_TEMPLATE.read_text()
 
 
 def get_quality_gate_bypass_audit_stub() -> str:
