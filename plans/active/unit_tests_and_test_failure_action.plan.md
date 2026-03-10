@@ -132,9 +132,9 @@ todos:
       "Fix 4 remaining root-cause patterns from tier-order-run summary: RC-A/B stale wheel (UMI 15 + UTEI 5 failures),
       RC-C env-leak (features-multi-timeframe, features-sports, pnl-attribution — 1 each), RC-D missing setup_events
       (alerting-service 2 failures), coverage threshold (unified-feature-calculator-library 92.83% < 93%)."
-    status: in-progress
+    status: completed
     notes: |
-      Identified 2026-03-10 from tier-order-run summary table. NOT yet fixed.
+      RESOLVED 2026-03-10 (verified with per-repo .venv):
 
       RC-A/B (corrected diagnosis — 2026-03-10):
         UTEI: 5 failures were stale wheel artefact — passes fine via bash scripts/quality-gates.sh. No fix needed.
@@ -146,18 +146,19 @@ todos:
           Root lesson: always use bash scripts/quality-gates.sh not manual pytest — stale wheel masks missing exports.
           New cursor rules: testing/no-manual-pytest.mdc + imports/library-init-exports.mdc
 
-      RC-C (env-leak, 3 failures remaining):
-        features-multi-timeframe-service, features-sports-service, pnl-attribution-service: test_config_instantiates_
-          with_local_provider asserts cloud_provider=='local' but env has gcp. Fix: @patch.dict(os.environ,
-          {'CLOUD_PROVIDER': 'local'}, clear=False) on each test. (position-balance-monitor-service already fixed.)
+      RC-C (env-leak): Already passing with per-repo venv. Verified 2026-03-10:
+        features-multi-timeframe-service: test already has @patch.dict — 1 passed ✅
+        features-sports-service: sets os.environ["CLOUD_PROVIDER"]="local" before instantiation — 1 passed ✅
+        pnl-attribution-service: try/finally restore pattern — 1 passed ✅
+        Tier-order-run failures were workspace venv artefacts (ran from wrong venv).
 
-      RC-D (missing setup_events, 2 failures):
-        alerting-service: verify_api_key() calls log_event() but setup_events() not called in test. Gets
-          RuntimeError instead of HTTPException. Fix: add MockEventSink fixture in conftest.
+      RC-D (alerting-service): Already fixed. conftest.py has autouse session fixture:
+        _init_event_logging: setup_events(service_name="alerting-service", mode="test", sink=MockEventSink())
+        Verified: 125 passed, 0 failed, coverage 90.32% > 78% threshold ✅
 
-      Coverage threshold (1 repo):
-        unified-feature-calculator-library: 92.83% < 93.00%. All 224 tests pass. Fix: raise threshold to 93% or
-          add 1-2 tests for service_base/base_service.py (lines 96-99, 107, 112, 117, 147-198).
+      Coverage threshold (unified-feature-calculator-library):
+        Verified 2026-03-10: 303 passed, coverage 95.23% > 93% threshold ✅ (was 92.83% in stale measurement)
+        The 92.83% was from a workspace-venv run with wrong --cov= path. Per-repo venv run: 95.23%.
 
   - id: tier-order-run
     content:
