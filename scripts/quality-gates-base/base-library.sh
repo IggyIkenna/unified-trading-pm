@@ -181,7 +181,8 @@ fi
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
 log_section "[3.5/6] IMPORT PATTERNS"
-IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"
+IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
+[ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/.cursor/scripts/check-import-patterns.py"
 if [ -f "$IP" ]; then
     $PYTHON_CMD "$IP" --verbose 2>/dev/null && log_success "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
