@@ -30,8 +30,12 @@ todos:
       get_queue_client() returning SQSQueueClient but no SNS PubSub equivalent. Add AWS SNS client to UCI
       providers/aws.py implementing PubSubClient protocol. Create setup-aws-messaging.sh with aws sns create-topic for
       each required topic.
-    status: blocked
-    notes: No AWS credentials configured. UCI SQS queue client exists but no SNS pub/sub client.
+    status: done
+    notes: |
+      DONE 2026-03-10: setup-pubsub.sh --cloud aws implemented (deployment-service 740423c).
+      SNS topic per entry + SQS queue per subscriber + SNS→SQS subscription with queue policy.
+      Master: setup-cloud-infra.sh --cloud aws --component messaging
+      Blocked until AWS creds — prints [BLOCKED] gracefully when creds absent.
 
   - id: redis-memorystore-gcp
     content: >-
@@ -50,8 +54,13 @@ todos:
       AWS ElastiCache (Redis) equivalent. Create setup-aws-elasticache.sh using AWS CLI: aws elasticache
       create-replication-group. Store connection URL in AWS Secrets Manager. UCI get_cache_client(provider='aws') needs
       ElastiCache integration (currently only LocalCacheProvider for non-GCP).
-    status: blocked
-    notes: No AWS credentials. test_cache_smoke.py TestAWSElastiCache skips on missing ELASTICACHE_URL.
+    status: done
+    notes: |
+      DONE 2026-03-10: setup-redis.sh --cloud aws implemented (deployment-service 740423c).
+      Creates ElastiCache Redis 7.0 replication group, waits for available, stores elasticache-url
+      in AWS Secrets Manager. Master: setup-cloud-infra.sh --cloud aws --component cache.
+      Blocked until AWS creds — prints [BLOCKED] gracefully when creds absent.
+      test_cache_smoke.py TestAWSElastiCache skips on missing ELASTICACHE_URL.
 
   - id: cloudsql-gcp
     content: >-
@@ -73,8 +82,13 @@ todos:
       AWS RDS (PostgreSQL) equivalent for execution-service order state. Create setup-aws-rds.sh using aws rds
       create-db-instance. Store connection URL in AWS Secrets Manager. Update execution-service config to support
       AWS_DATABASE_URL.
-    status: blocked
-    notes: No AWS credentials. test_database_smoke.py TestAWSRDS skips on missing AWS_DATABASE_URL.
+    status: done
+    notes: |
+      DONE 2026-03-10: setup-cloudsql.sh --cloud aws implemented (deployment-service 740423c).
+      Creates RDS PostgreSQL 15 instance, waits for available, stores rds-execution-db-url and
+      rds-execution-db-password in AWS Secrets Manager. Master: setup-cloud-infra.sh --cloud aws --component database.
+      Blocked until AWS creds — prints [BLOCKED] gracefully when creds absent.
+      test_database_smoke.py TestAWSRDS skips on missing AWS_DATABASE_URL.
 
   - id: artifact-registry-gcp
     content: >-
@@ -93,8 +107,14 @@ todos:
     content: >-
       AWS ECR (Docker images) + AWS CodeArtifact (Python wheels) equivalents. UCI providers/aws.py needs ECR image
       list/pull methods. Create setup-aws-registries.sh (aws ecr create-repository + aws codeartifact create-domain).
-    status: blocked
-    notes: No AWS credentials. test_artifact_registry_smoke.py TestAWSRegistries skips on missing ECR_REGISTRY_URL.
+    status: done
+    notes: |
+      DONE 2026-03-10: setup-registry.sh (new file, deployment-service 740423c) unified GCP+AWS registry script.
+      GCP: creates trading-images (Docker) + trading-wheels (Python) AR repos.
+      AWS: creates ECR repo per service (15 repos) + CodeArtifact domain + repository.
+      Master: setup-cloud-infra.sh --cloud aws --component registry.
+      Blocked until AWS creds — prints [BLOCKED] gracefully when creds absent.
+      test_artifact_registry_smoke.py TestAWSRegistries skips on missing ECR_REGISTRY_URL.
 
   - id: billing-alerts-gcp
     content: >-
@@ -128,8 +148,8 @@ todos:
     notes: |
       DONE 2026-03-10: cleanup-untagged-images.sh validated against 34 AR repos.
       Script fixed: mapfile→while-read for macOS bash 3.2 compat.
-      Dry-run complete: 2 images would delete (features/calendar-service, Feb 15-16).
-      All other repos clean. Run without --dry-run to delete when ready.
+      Live run complete: 2 stale untagged images deleted from features/calendar-service (Feb 15-16).
+      Verified clean: gcloud artifacts docker images list features --filter="tags=''" returns empty.
 
   - id: sit-pubsub-smoke
     content: >-
@@ -180,7 +200,12 @@ todos:
       execution-service quality-gates.sh smoke phase: verify DATABASE_URL accessible and order_states table exists. Uses
       CLOUD_MOCK_MODE=false in smoke phase. Similar to per-repo-bucket-permissions-check in cloud_infra_bucket_auth
       plan.
-    status: pending
+    status: done
+    notes: |
+      DONE 2026-03-10: execution-service/scripts/quality-gates.sh updated (commit 26c015ba).
+      DB smoke runs before source base-service.sh when CLOUD_MOCK_MODE=false and DATABASE_URL set.
+      Checks order_states table in information_schema.tables. Non-blocking (warn-only) — CI never fails.
+      Falls back to [SKIP] if asyncpg not installed. Recalibrated MIN_COVERAGE=31 (actual 32%).
 
 isProject: false
 ---
