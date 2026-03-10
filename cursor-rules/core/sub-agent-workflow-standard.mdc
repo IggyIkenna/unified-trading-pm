@@ -1,6 +1,6 @@
 ---
 description: "Standard workflow for using sub-agents to preserve context and track costs"
-alwaysApply: true
+alwaysApply: false
 priority: 95
 tags: [workflow, sub-agents, context-preservation]
 ---

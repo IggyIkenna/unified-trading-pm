@@ -1,6 +1,6 @@
 ---
 description: "Search for existing implementations in unified libraries before writing new code"
-alwaysApply: true
+alwaysApply: false
 priority: 90
 tags:
   - refactoring

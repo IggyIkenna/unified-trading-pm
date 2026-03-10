@@ -1,6 +1,8 @@
 ---
 description: "Always use UTC datetime — never naive or utcnow()"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 80
 tags: [datetime, utc, timezone]
 ---

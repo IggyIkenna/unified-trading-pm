@@ -1,6 +1,8 @@
 ---
 description: "Services share 90% code between batch and live modes — only 4 seams differ"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 75
 tags: [architecture, batch-live, symmetry]
 ---

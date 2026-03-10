@@ -1,6 +1,6 @@
 ---
 description: "Master index for all schema governance rules. Canonical reference for the three-layer schema ownership model (UAC / UIC / service-local). Read this first, then follow links to specific enforcement rules."
-alwaysApply: true
+alwaysApply: false
 priority: 95
 tags:
   - contracts

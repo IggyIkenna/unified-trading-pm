@@ -1,6 +1,8 @@
 ---
 description: "Adapter-private Pydantic response models belong in unified-api-contracts, not in interface adapter directories"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 80
 tags:
   - contracts

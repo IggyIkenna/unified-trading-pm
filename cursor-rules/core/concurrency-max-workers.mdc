@@ -1,6 +1,8 @@
 ---
 description: "MAX_WORKERS concurrency limits — I/O vs CPU bound, adaptive RAM thresholds"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 75
 tags: [concurrency, performance, max-workers]
 ---

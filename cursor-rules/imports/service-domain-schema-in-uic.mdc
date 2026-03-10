@@ -1,6 +1,8 @@
 ---
 description: "Service domain data schemas (BaseModel/TypedDict/dataclass contracts) belong in unified-internal-contracts domain/<service>/, not in service repos"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 80
 tags: [schema, contracts, uic, domain]
 ---

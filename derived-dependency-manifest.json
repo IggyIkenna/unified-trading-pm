@@ -1417,6 +1417,7 @@
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
+        "botocore": ["botocore>=1.34.0,<2.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
@@ -1429,7 +1430,7 @@
         "ruff": ["ruff==0.15.0"]
       },
       "internal_count": 4,
-      "external_count": 12
+      "external_count": 13
     },
     "batch-audit-ui": {
       "internal_deps": {},

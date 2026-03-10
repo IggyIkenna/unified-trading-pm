@@ -1,6 +1,6 @@
 ---
 description: "Major version bump protocol for breaking changes in libraries and services"
-alwaysApply: true
+alwaysApply: false
 priority: 90
 tags: [versioning, breaking-changes, dependencies, ci-cd]
 ---
