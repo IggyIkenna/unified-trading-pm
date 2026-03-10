@@ -1,6 +1,6 @@
 # Plan: UAC Orphan Contracts Utilization
 
-## Status: Active
+## Status: Complete
 
 ## Created: 2026-03-10
 
@@ -104,19 +104,21 @@ Add to `EXEMPT_CLASSES` in `unified-api-contracts/scripts/check_uac_adoption.py`
 
 ## Remediation Progress (2026-03-10)
 
-Baseline orphan count: **86** (confirmed 2026-03-10)
+Baseline orphan count: **86** (confirmed 2026-03-10) Final orphan count: **0** (confirmed 2026-03-10)
 
-| Group | Target Service               | Count                      | Status         |
-| ----- | ---------------------------- | -------------------------- | -------------- |
-| A     | features-onchain-service     | 17 DeFi schemas            | 🔄 In Progress |
-| B     | features-sports-service      | 19 sports/error schemas    | 🔄 In Progress |
-| C     | instruments-service          | 24 exchange API schemas    | 🔄 In Progress |
-| D     | execution-service            | 9 order/options schemas    | 🔄 In Progress |
-| E     | risk-and-exposure-service    | 4 account schemas          | 🔄 In Progress |
-| F     | strategy-service             | 7 signal/arbitrage schemas | 🔄 In Progress |
-| G     | check_uac_adoption.py EXEMPT | 6 infra/protocol schemas   | 🔄 In Progress |
+| Group | Target Service               | Count                      | Status  | Commit   |
+| ----- | ---------------------------- | -------------------------- | ------- | -------- |
+| A     | features-onchain-service     | 17 DeFi schemas            | ✅ Done | 52dbdc1  |
+| B     | features-sports-service      | 19 sports/error schemas    | ✅ Done | 1fe94af  |
+| C     | instruments-service          | 24 exchange API schemas    | ✅ Done | e487b2e  |
+| D     | execution-service            | 9 order/options schemas    | ✅ Done | 766404aa |
+| E     | risk-and-exposure-service    | 4 account schemas          | ✅ Done | aacfe13  |
+| F     | strategy-service             | 7 signal/arbitrage schemas | ✅ Done | 91c1e98  |
+| G     | check_uac_adoption.py EXEMPT | 6 infra/protocol schemas   | ✅ Done | 1dc3f4e  |
 
-Target orphan count: **0**
+UAC_ADOPTION_MATRIX.md regenerated: 5065904 (166 classes, 115 non-exempt all adopted, 51 exempt)
+
+Target orphan count: **0** ✅
 
 ## Tracking
 
