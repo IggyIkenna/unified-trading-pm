@@ -24,6 +24,12 @@ from typing import TypeAlias
 
 JsonDict: TypeAlias = dict[str, object]
 
+
+class _Args(argparse.Namespace):
+    repo: str | None
+    apply: bool
+
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT = PM_ROOT.parent
@@ -130,7 +136,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Enforce canonical npm devDependency versions across UI repos")
     parser.add_argument("--apply", action="store_true", help="Write updated package.json files")
     parser.add_argument("--repo", type=str, default=None, help="Process only this repo")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_Args())
 
     if not MANIFEST_PATH.exists():
         print(f"❌ Manifest not found: {MANIFEST_PATH}", file=sys.stderr)
