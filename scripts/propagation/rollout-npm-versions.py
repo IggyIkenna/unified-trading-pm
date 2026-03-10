@@ -70,7 +70,8 @@ def write_json(path: Path, data: JsonDict) -> None:
 
 
 def get_ui_repos(manifest: JsonDict, only_repo: str | None) -> list[str]:
-    repos: JsonDict = manifest.get("repositories", {})  # type: ignore[assignment]
+    repos_raw = manifest.get("repositories")
+    repos: JsonDict = repos_raw if isinstance(repos_raw, dict) else {}  # type: ignore[assignment]
     result: list[str] = []
     for name, info in repos.items():
         if not isinstance(info, dict):
