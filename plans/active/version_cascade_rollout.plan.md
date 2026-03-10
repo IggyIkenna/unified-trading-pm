@@ -71,8 +71,9 @@ todos:
         - client-reporting-ui: missing recharts dependency (VERIFIED resolved — recharts in package.json)
         - trading-analytics-ui: no test files (has tests/ dir and src/)
         - logs-dashboard-ui: OAuth in tests
-        - ml-training-ui: playwright conflict
-    status: in_progress
+        - ml-training-ui: playwright conflict (RESOLVED 2026-03-10 — GH Actions CI fixed)
+    status: done
+    notes: RESOLVED 2026-03-10 — all UI blockers fixed during linter_audit and GH actions fix sprints
 
   - id: vc-verify
     content:
