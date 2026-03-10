@@ -16,9 +16,10 @@ todos:
     status: blocked
     notes: |
       PARTIAL (2026-03-10): 59/62 repos have TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID set (propagated 2026-03-07).
-      Missing: ml-inference-api, ml-training-api, trading-analytics-api (added 2026-03-10 — not yet in propagation run).
-      To fix: TELEGRAM_BOT_TOKEN=xxx TELEGRAM_CHAT_ID=-5288420200 bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo ml-inference-api
-      Repeat for ml-training-api and trading-analytics-api. TELEGRAM_CHAT_ID is -5288420200 (visible in gh variable list for any existing repo).
+      GH_PAT + TELEGRAM_CHAT_ID (-5288420200) set on all 3 new repos (ml-inference-api, ml-training-api,
+      trading-analytics-api) 2026-03-10. TELEGRAM_BOT_TOKEN still missing on 3 new repos — run:
+        TELEGRAM_BOT_TOKEN=<token> bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo ml-inference-api
+      Repeat for ml-training-api and trading-analytics-api. Also need: ANTHROPIC_API_KEY, GCP_SA_KEY.
   - id: write-pm-rules-alignment-workflow
     content:
       "Create unified-trading-pm/.github/workflows/rules-alignment-agent.yml: trigger on push paths plans/active/**,
