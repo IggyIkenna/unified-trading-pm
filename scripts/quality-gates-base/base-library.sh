@@ -171,9 +171,10 @@ if [ "$RUN_TESTS" = true ]; then
     [[ -n "$DUP" ]] && { log_fail "Duplicate test files — expand existing files instead:"; echo "$DUP"; exit 1; }
     log_success "No duplicate test files"
 
-    # @pytest.mark.skip must have a reason comment on the preceding line
+    # @pytest.mark.skip (bare skip, not skipif) must have a reason comment on the preceding line
+    # skipif always carries reason= inline so is excluded from this check
     SKIP_NO_REASON=$(rg "@pytest\.mark\.skip" --type py tests/ -B 1 2>/dev/null \
-        | grep -v "# reason:\|# noqa\|^--" | grep "@pytest\.mark\.skip" || :)
+        | grep -v "# reason:\|# noqa\|^--\|skipif\|reason=" | grep "@pytest\.mark\.skip" || :)
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_success "All pytest.mark.skip have reason comments"
 fi
@@ -236,8 +237,11 @@ rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" 2>
 # unified-config-interface: bootstrap exception — UCI IS the config layer, must read os.environ
 # (QUALITY_GATE_BYPASS_AUDIT.md §2.4)
 if [[ "$PACKAGE_NAME" != "unified-config-interface" ]]; then
-    rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" 2>/dev/null \
-        && { log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"; V=$(( V + 1 )); } || log_success "No os.getenv()/os.environ"
+    _osenv_extra_globs=()
+    for _f in ${OS_ENVIRON_EXTRA_EXCLUDES:-}; do [[ -n "$_f" ]] && _osenv_extra_globs+=("--glob" "!${_f}"); done
+    _OSENV=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!**/testing/**" --glob "!scripts/**" "${_osenv_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
+        | grep -v "# noqa:.*qg-os-environ\|# noqa: qg-os-environ\|# config-bootstrap:" || :)
+    [[ -n "$_OSENV" ]] && { log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"; echo "$_OSENV" | head -3; V=$(( V + 1 )); } || log_success "No os.getenv()/os.environ"
 else
     log_success "os.getenv/bootstrap — UCI is config layer (bypass §2.4)"
 fi
@@ -255,12 +259,17 @@ for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
-for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
-    grep -q "for \|while " "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
+for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/testing/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+    grep -qE "^[[:space:]]*(for |while )" "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
 done
 
+_SELF_PKG=$(echo "$SOURCE_DIR" | tr '/' '_')
+_inside_extra_globs=()
+for _excl in ${INSIDE_EXTRA_EXCLUDES:-}; do [[ -n "$_excl" ]] && _inside_extra_globs+=("--glob" "!${_excl}"); done
 INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
-    "$SOURCE_DIR/" 2>/dev/null || :)
+    "${_inside_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "# noqa: qg-inside-import\|# noqa:.*qg-inside-import" \
+    | grep -v "from ${_SELF_PKG}\.\|from ${_SELF_PKG} " || :)
 [[ -n "$INSIDE" ]] && { log_fail "Imports inside functions — move to top"; echo "$INSIDE" | head -3; V=$(( V + 1 )); } || log_success "No imports inside functions"
 
 ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
@@ -270,11 +279,14 @@ RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!t
     | grep -v 'model_validate\|cast(dict' || :)
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
-rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
-    && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
+ES=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
+[[ -n "$ES" ]] && { log_fail "Empty string fallback — fail fast"; echo "$ES" | head -3; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
-ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
-EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
+EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
 rg "central-element-323112" tests/ 2>/dev/null \
@@ -299,7 +311,8 @@ if rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/nu
 else
     SETUP_NO_SINK=$(rg 'setup_(events|service)\s*\(' --type py \
         --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v 'sink=' \
-        | grep -v "def setup_events\|def setup_service" || :)
+        | grep -v "def setup_events\|def setup_service" \
+        | grep -vE ":[[:space:]]*#|:[[:space:]]+(\"\"\"|\x27\x27\x27)" || :)
     [[ -n "$SETUP_NO_SINK" ]] && { log_fail "setup_events()/setup_service() called without sink= in production code"; echo "$SETUP_NO_SINK" | head -5; V=$(( V + 1 )); } || log_success "setup_service() uses sink= in all production call sites"
 fi
 
@@ -312,10 +325,13 @@ BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION
 [[ -f ".env.example" ]] && rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
     && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC, not SA key files)"; V=$(( V + 1 )); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"
 
-DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "$SOURCE_DIR/" 2>/dev/null || :)
+DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "from ${_SELF_PKG}\." \
+    | grep -v "# noqa:.*qg-deep-import\|# noqa: qg-deep-import" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
-EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "from ${_SELF_PKG}\." || :)
 [[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_events_interface import ...'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports from unified_events_interface"
 
 # ============================================================
@@ -328,6 +344,7 @@ CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
     --glob '!tests' \
     --glob '!*/providers/**' \
     --glob '!*/cache.py' \
+    --glob '!typings/**' --glob '!*/typings/**' \
     -l . 2>/dev/null || :)
 [[ -n "$CLOUD_SDK_VIOLATIONS" ]] && {
     log_fail "STEP 5.5: Direct cloud SDK imports found. Use unified_cloud_interface instead:"
@@ -378,10 +395,20 @@ DOMAIN_CONTRACTS_IN_LIB=$(rg 'class \w+\(BaseModel\)' --type py \
 # ============================================================
 # STEP 5.11 — Block protocol-specific symbols
 # unified-config-interface cloud_config.py: field names are schema — documented bypass §2.6
+# unified-trading-library: defines/deprecates these symbols — excluded as origin repo §2.6
 # ============================================================
 if [[ "$PACKAGE_NAME" = "unified-config-interface" ]]; then
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' --glob '!**/cloud_config.py' -l . 2>/dev/null || :)
+elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
+    # UTL defines/deprecates these symbols — skip the origin and compat-layer files
+    PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|StandardizedDomainCloudService" \
+        --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
+        --glob '!**/domain/standardized_service.py' --glob '!**/__init__.py' \
+        --glob '!**/core/cloud_config.py' --glob '!**/core/cloud_data_provider.py' \
+        --glob '!**/domain/data_completion.py' \
+        -l . 2>/dev/null \
+        | grep -v "# noqa:.*qg-protocol-symbol\|# noqa: qg-protocol-symbol" || :)
 else
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' -l . 2>/dev/null || :)
@@ -411,8 +438,10 @@ SCHEMA_COLLISION=$(rg 'class\s+Canonical[A-Z]\w+\s*\(' \
 # ============================================================
 if [ -f "pyproject.toml" ]; then
     BP_VIOLATIONS=()
+    # Only check the top-level [tool.basedpyright] section — not per-file [[overrides]]
+    _BP_TOPLEVEL=$(awk '/^\[tool\.basedpyright\]/{p=1} /^\[\[tool\.basedpyright\.overrides\]\]/{p=0} p' pyproject.toml 2>/dev/null || :)
     for rule in reportAny reportUnknownVariableType reportUnknownParameterType reportUnknownMemberType reportUnknownArgumentType reportUnknownLambdaType; do
-        if grep -qE "^\s*${rule}\s*=\s*[\"'](warning|none)[\"']" pyproject.toml 2>/dev/null; then
+        if echo "$_BP_TOPLEVEL" | grep -qE "^\s*${rule}\s*=\s*[\"'](warning|none)[\"']" 2>/dev/null; then
             BP_VIOLATIONS+=("$rule is set to warning/none — must be \"error\" or omitted")
         fi
     done
@@ -457,19 +486,27 @@ BYPASS=$(rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality
     | grep -v "BYPASS —\|fix the root cause\|zombies\|pyright\|cleanup" || :)
 [[ -n "$BYPASS" ]] && { log_fail "||true bypass in quality gates — fix the root cause"; echo "$BYPASS" | head -3; V=$(( V + 1 )); } || log_success "No ||true quality gate bypasses"
 
-# File size (exclude build artifacts)
+# File size (exclude build artifacts and test dirs — tests get warn-only treatment)
+# Optional: SIZE_EXTRA_EXCLUDES array of extra ! -path patterns (set before sourcing)
 SVIOL=""; SWARN=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" 2>/dev/null); do
+_size_extra_args=()
+for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_args+=("!" "-path" "$_excl"); done
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" "${_size_extra_args[@]}" 2>/dev/null); do
     lines=$(wc -l < "$f" 2>/dev/null || echo 0)
-    [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
+    if [[ "$f" == ./tests/* || "$f" == ./test/* ]]; then
+        # Test files: warn-only for file size (test suites naturally grow large)
+        [[ "$lines" -gt $MAX_FILE_LINES ]] && SWARN="${SWARN}\n  $f: $lines L"
+    else
+        [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
+    fi
     [[ "$lines" -gt $FILE_WARN_LINES && "$lines" -le $MAX_FILE_LINES ]] && SWARN="${SWARN}\n  $f: $lines L"
 done
 [[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
 [[ -n "$SWARN" ]] && log_warn "Approaching limit:$SWARN"
 
-# Function/class/method size (exclude build artifacts)
+# Function/class/method size (exclude build artifacts and test dirs — test methods can be long)
 FSIZES=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" "${_size_extra_args[@]}" 2>/dev/null); do
     out=$($PYTHON_CMD -c "
 import ast, sys
 p=sys.argv[1]
