@@ -1,0 +1,83 @@
+date_range:
+  start: "2024-01-01"
+  end: "2025-01-01" # 1 year
+
+instruments:
+  crypto_cefi:
+    - { symbol: "BTC/USDT", venue: binance, interval: 1m }
+    - { symbol: "ETH/USDT", venue: binance, interval: 1m }
+    - { symbol: "SOL/USDT", venue: binance, interval: 1m }
+    - { symbol: "BTC-PERP", venue: deribit, interval: 1m }
+    - { symbol: "ETH-PERP", venue: deribit, interval: 1m }
+  crypto_defi:
+    - { protocol: uniswap_v3, pair: "ETH/USDC", interval: 5m, chain: ethereum }
+    - { protocol: aave_v3, asset: USDC, interval: 1h, chain: ethereum }
+    - { protocol: curve, pool: 3pool, interval: 1h, chain: ethereum }
+    - { protocol: lido, asset: stETH, interval: 1h, chain: ethereum }
+  tradfi:
+    - { symbol: SPY, venue: databento, interval: 1d }
+    - { symbol: QQQ, venue: databento, interval: 1d }
+    - { symbol: AAPL, venue: databento, interval: 1d }
+    - { symbol: TSLA, venue: databento, interval: 1d }
+    - { symbol: GLD, venue: databento, interval: 1d }
+  sports:
+    - { league: premier_league, venue: pinnacle, type: match_odds }
+    - { league: nba, venue: odds_api, type: moneyline }
+
+instruments_total: 100 # across all asset classes
+
+# GBM parameters per asset class: (annualised_vol, annualised_drift, base_price)
+gbm_params:
+  BTC/USDT: { vol: 0.80, drift: 0.0, base_price: 42000.0 }
+  ETH/USDT: { vol: 0.75, drift: 0.0, base_price: 2500.0 }
+  SOL/USDT: { vol: 0.90, drift: 0.05, base_price: 100.0 }
+  BTC-PERP: { vol: 0.80, drift: 0.0, base_price: 42000.0 }
+  ETH-PERP: { vol: 0.75, drift: 0.0, base_price: 2500.0 }
+  ETH/USDC: { vol: 0.75, drift: 0.0, base_price: 2500.0 }
+  SPY: { vol: 0.18, drift: 0.12, base_price: 470.0 }
+  QQQ: { vol: 0.22, drift: 0.15, base_price: 400.0 }
+  AAPL: { vol: 0.25, drift: 0.10, base_price: 185.0 }
+  TSLA: { vol: 0.55, drift: 0.05, base_price: 230.0 }
+  GLD: { vol: 0.14, drift: 0.08, base_price: 190.0 }
+
+# Cross-asset correlations for correlated GBM
+correlations:
+  rho_btc_eth: 0.85
+  rho_btc_sol: 0.75
+  rho_btc_ethperp: 0.98
+  rho_eth_ethusdc: 0.99
+
+# DeFi yield mean-reversion parameters (Ornstein-Uhlenbeck)
+defi_yield_params:
+  aave_v3_USDC: { mean: 0.045, kappa: 2.0, sigma: 0.01, base_apy: 0.045 }
+  curve_3pool: { mean: 0.035, kappa: 1.5, sigma: 0.008, base_apy: 0.035 }
+  lido_stETH: { mean: 0.042, kappa: 3.0, sigma: 0.003, base_apy: 0.042 }
+  uniswap_v3_ETH_USDC: { mean: 0.15, kappa: 1.0, sigma: 0.05, base_apy: 0.15 }
+
+modes:
+  quick: # fast dev start (1 month, 5 symbols)
+    date_range_override: "2024-12-01 to 2025-01-01"
+    symbols_override:
+      - BTC/USDT
+      - ETH/USDT
+      - SPY
+      - ETH/USDC
+      - premier_league
+  full: # complete (1 year, all symbols above)
+    date_range_override: null
+    symbols_override: null
+
+# Output format
+output:
+  format: parquet
+  partition_template: "{symbol}/{year}/{month}/{day}/"
+  compression: snappy
+  timestamp_col: timestamp
+  timezone: UTC
+
+# GCS paths (used by seed-dev-project.sh)
+gcs:
+  project: unified-trading-dev
+  bucket_tick: gs://unified-trading-dev-tick-data
+  bucket_models: gs://unified-trading-dev-models
+  model_version: "1"
