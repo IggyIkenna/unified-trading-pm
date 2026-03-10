@@ -82,6 +82,21 @@ bash scripts/setup-workspace.sh   # clones PM + all direct manifest deps as sibl
 
 Pre-flight outcomes: required dep clone failure → `exit 1` | optional failure → warn | version mismatch → warn.
 
+What `setup-workspace.sh` also sets up for you:
+
+- **Cursor rules** — copied as real files (not symlinks) to `$WORKSPACE_ROOT/.cursor/rules/` from PM
+- **`.cursorrules`** — copied to `$WORKSPACE_ROOT/.cursorrules` from PM
+- **`.claude/CLAUDE.md`** — workspace-root symlink → PM `cursor-configs/CLAUDE.md`
+- **Cleanup script** — `$WORKSPACE_ROOT/.cleanup-cursor-rules.sh` generated automatically
+
+**Cursor rule cleanup is mandatory before quickmerge / PR creation:**
+
+```bash
+bash $WORKSPACE_ROOT/.cleanup-cursor-rules.sh   # removes ephemeral .cursor/rules + .cursorrules
+```
+
+The per-repo `.claude/CLAUDE.md` and `AGENTS.md` are committed symlinks — no action needed for those.
+
 ---
 
 ## Quality Gates & Pushing
@@ -113,6 +128,46 @@ bash scripts/quickmerge.sh "your message" --agent   # ALWAYS --agent in Claude C
 - Search unified libraries before implementing anything new
 
 Full standards: `unified-trading-codex/06-coding-standards/README.md`
+
+**No summary files** — never create `*_SUMMARY.md`, `*_STATUS.md`, `READY_TO_*`, `COMPLETION_*` files. Report results as
+text in the chat, not as committed documents. Rule: `cursor-rules/core/no-summary-docs.mdc`
+
+---
+
+## Reporting — Telegram
+
+Every agent job must send a Telegram notification on completion (success or failure). Secrets are pre-set on every repo:
+`TELEGRAM_BOT_TOKEN` (secret) + `TELEGRAM_CHAT_ID` (variable).
+
+**GHA step template** (copy into any workflow's `steps`, after your main job step):
+
+```yaml
+- name: Notify Telegram
+  if: always()
+  env:
+    TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+    STATUS: ${{ job.status }}
+    RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  run: |
+    ICON=$([ "$STATUS" = "success" ] && echo "✅" || echo "❌")
+    CHANGES=$(git log --oneline origin/main..HEAD 2>/dev/null | head -5 || echo "no commits")
+    TEXT="${ICON} *${{ github.workflow }}* | ${STATUS} | repo: \`${{ github.repository }}\`"
+    TEXT="${TEXT}"$'\n'"Changes: \`${CHANGES}\`"
+    TEXT="${TEXT}"$'\n'"[view run](${RUN_URL})"
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      -d chat_id="${TELEGRAM_CHAT_ID}" \
+      -d text="${TEXT}" \
+      -d parse_mode="Markdown" || true
+```
+
+To propagate secrets to all repos (or new repos added to manifest):
+
+```bash
+bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh
+# or for a single repo:
+bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo <name>
+```
 
 ---
 
