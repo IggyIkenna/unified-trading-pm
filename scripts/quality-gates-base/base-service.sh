@@ -120,7 +120,7 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore 2>/dev/null \
+        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore $([ -f .prettierignore ] && echo "--ignore-path .prettierignore") 2>/dev/null \
             && log_success "Prettier: non-Python files formatted" \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
@@ -173,6 +173,15 @@ for f in sorted(Path("tests").rglob("*.py")):
         if re.search(r"@pytest\.mark\.skip", line):
             if "# noqa" in line:
                 continue
+            # skipif always carries reason= inline — not subject to this check
+            if "skipif" in line:
+                continue
+            # reason= as argument inline satisfies the requirement
+            if "reason=" in line:
+                continue
+            # # reason: comment on the same line satisfies the requirement
+            if "# reason:" in line:
+                continue
             prev = lines[i - 1].strip() if i > 0 else ""
             if "# noqa" in prev or prev.startswith("# reason:"):
                 continue
@@ -187,8 +196,8 @@ fi
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
 log_section "[3.5/6] IMPORT PATTERNS"
-IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"
-[ ! -f "$IP" ] && IP="${REPO_ROOT}/.cursor/scripts/check-import-patterns.py"  # legacy fallback
+IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
+[ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 if [ -f "$IP" ]; then
     # Bypass: add --exclude flags for files whitelisted in QUALITY_GATE_BYPASS_AUDIT.md §1.2
     $PYTHON_CMD "$IP" --verbose 2>/dev/null && log_success "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
@@ -275,7 +284,15 @@ for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
-for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+# ASYNCIO_RUN_EXCLUDE_GLOBS: optional array set in quality-gates.sh to exclude
+# known-false-positive files (asyncio.run() as entry-point in file that also has loops).
+# Document each exclusion in QUALITY_GATE_BYPASS_AUDIT.md §1.1.
+# Example: ASYNCIO_RUN_EXCLUDE_GLOBS=("!**/cli/batch_fetch.py")
+ASYNCIO_EXTRA_GLOBS=()
+for g in "${ASYNCIO_RUN_EXCLUDE_GLOBS[@]+"${ASYNCIO_RUN_EXCLUDE_GLOBS[@]}"}"; do
+    ASYNCIO_EXTRA_GLOBS+=(--glob "$g")
+done
+for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" "${ASYNCIO_EXTRA_GLOBS[@]+"${ASYNCIO_EXTRA_GLOBS[@]}"}" "$SOURCE_DIR/" -l 2>/dev/null || :); do
     grep -q "for \|while " "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
 done
 
@@ -518,11 +535,17 @@ DOMAIN_CONTRACTS_IN_SERVICE=$(rg 'class \w+\(BaseModel\)' --type py \
 } || log_success "No domain BaseModel contracts in service source"
 
 # Detect TypedDict domain contracts in service source
+# Exempt: underscore-prefix classes (e.g. class _Foo(TypedDict)) — private implementation types
+# Exempt: lines with # CORRECT-LOCAL comment — explicitly marked as local-only, non-shared types
 TYPEDDICT_IN_SERVICE=$(rg 'class \w+\(TypedDict\)' --type py \
     --glob "!tests/**" --glob "!**/output_schemas.py" \
-    "$SOURCE_DIR/" 2>/dev/null || :)
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '#.*CORRECT-LOCAL' \
+    | grep -v 'class _[A-Z]' \
+    || :)
 [[ -n "$TYPEDDICT_IN_SERVICE" ]] && {
     log_fail "TypedDict contracts found in service source — belong in UIC domain/<service-name>/"
+    log_fail "  Exception: underscore-prefix classes (private) or lines with # CORRECT-LOCAL are exempt"
     echo "$TYPEDDICT_IN_SERVICE" | head -3
     V=$(( V + 1 ))
 } || log_success "No TypedDict domain contracts in service source"
@@ -647,17 +670,17 @@ fi
 echo "=== STEP 5.17: cloudbuild.yaml structural compliance ==="
 if [ -f "cloudbuild.yaml" ]; then
     CB_FAIL=0
-    rg 'id:\s*"?(quality-gates|run-tests|test-in-image)' cloudbuild.yaml 2>/dev/null \
+    rg "id:\s*[\"']?(quality-gates|run-tests|test-in-image)" cloudbuild.yaml 2>/dev/null \
         | grep -qE 'quality-gates|run-tests|test-in-image' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing test step (quality-gates / run-tests / test-in-image)"; CB_FAIL=1; V=$(( V + 1 )); }
-    rg 'id:\s*"?(vulnerability-scan|scan-check|trivy)' cloudbuild.yaml 2>/dev/null \
+    rg "id:\s*[\"']?(vulnerability-scan|scan-check|trivy)" cloudbuild.yaml 2>/dev/null \
         | grep -qE 'vulnerability-scan|scan-check|trivy' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing vulnerability scan step (vulnerability-scan / scan-check / trivy)"; CB_FAIL=1; V=$(( V + 1 )); }
-    rg 'id:\s*"?push' cloudbuild.yaml 2>/dev/null \
+    rg "id:\s*[\"']?push" cloudbuild.yaml 2>/dev/null \
         | grep -q 'push' || \
         rg '"push"' cloudbuild.yaml 2>/dev/null | grep -q 'push' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing push step"; CB_FAIL=1; V=$(( V + 1 )); }
-    rg 'id:\s*"?(deploy|notify-deployment)|gcloud run deploy' cloudbuild.yaml 2>/dev/null \
+    rg "id:\s*[\"']?(deploy|notify-deployment)|gcloud run deploy" cloudbuild.yaml 2>/dev/null \
         | grep -qE 'deploy|notify-deployment' || {
         log_warn "STEP 5.17: cloudbuild.yaml has no deploy/notify-deployment step (advisory — some services deploy via dispatch)"; }
     [ "$CB_FAIL" -eq 0 ] && log_success "STEP 5.17: cloudbuild.yaml structure OK"
