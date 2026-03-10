@@ -25,10 +25,18 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
-from typing import TypeAlias
+from typing import TypeAlias, cast
 
 JsonDict: TypeAlias = dict[str, object]
+
+
+class _Args(argparse.Namespace):
+    json: bool
+    no_color: bool
+    repo: str | None
+
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
@@ -113,7 +121,7 @@ def parse_ui_coverage(repo_path: Path) -> int | None:
     if not summary_path.exists():
         return None
     try:
-        data: JsonDict = json.loads(summary_path.read_text())
+        data: JsonDict = cast(JsonDict, json.loads(summary_path.read_text()))
         total = data.get("total")
         if not isinstance(total, dict):
             return None
@@ -143,7 +151,7 @@ def has_vitest_unit_test_script(repo_path: Path) -> bool:
     if not pkg.exists():
         return False
     try:
-        pkg_data: JsonDict = json.loads(pkg.read_text())
+        pkg_data: JsonDict = cast(JsonDict, json.loads(pkg.read_text()))
         scripts = pkg_data.get("scripts")
         if not isinstance(scripts, dict):
             return False
@@ -251,7 +259,7 @@ def _has_coverage_v8(repo_path: Path) -> bool:
     if not pkg.exists():
         return False
     try:
-        data: JsonDict = json.loads(pkg.read_text())
+        data: JsonDict = cast(JsonDict, json.loads(pkg.read_text()))
         raw_deps = data.get("dependencies")
         raw_dev_deps = data.get("devDependencies")
         deps: dict[str, object] = {}
@@ -299,7 +307,7 @@ def print_report(results: list[RepoResult], c: Colors) -> None:
     oks = [r for r in results if r.status == "ok"]
     excepts = [r for r in results if r.status == "exception"]
 
-    today = __import__("datetime").date.today().isoformat()
+    today = date.today().isoformat()
     print(f"\n{c.BOLD}━━━ Coverage Audit ━━━{c.NC}  ({today})\n")
 
     # [A] Below floor
@@ -399,7 +407,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
     parser.add_argument("--no-color", action="store_true", help="Disable ANSI color output")
     parser.add_argument("--repo", type=str, help="Audit a single repo by name")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_Args())
 
     if not MANIFEST_PATH.exists():
         print(f"❌ Manifest not found: {MANIFEST_PATH}", file=sys.stderr)
