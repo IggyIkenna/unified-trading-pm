@@ -97,76 +97,77 @@ todos:
 
 **Goal:** Every repo passes lint with zero ruff/ESLint errors. No production code excluded. Fix root causes.
 
-**Command:** `RUN_INTEGRATION=false bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --lint --skip-alignment --skip-setup`
+**Command:**
+`RUN_INTEGRATION=false bash unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh --lint --skip-alignment --skip-setup`
 
 ---
 
 ## Repo Checklist (Topological Order — L0 First)
 
-| Tier | Repo | Type | Status | Notes |
-|------|------|------|--------|-------|
-| L0 | unified-trading-pm | pm | ⬜ pending | |
-| L1 | unified-trading-codex | codex | ⬜ SKIP (docs-only, no QG) | |
-| L2 | matching-engine-library | library | ⬜ pending | |
-| L2 | unified-api-contracts | library | ⬜ pending | |
-| L2 | unified-cloud-interface | library | ⬜ pending | |
-| L2 | unified-events-interface | library | ⬜ pending | |
-| L2 | unified-internal-contracts | library | ⬜ pending | |
-| L2 | unified-reference-data-interface | library | ⬜ pending | |
-| L3 | unified-config-interface | library | ⬜ pending | |
-| L3 | unified-trading-library | library | ⬜ pending | |
-| L4 | execution-algo-library | library | ⬜ pending | |
-| L4 | unified-feature-calculator-library | library | ⬜ pending | |
-| L5 | unified-domain-client | library | ⬜ pending | |
-| L5 | unified-market-interface | library | ⬜ pending | |
-| L5 | unified-ml-interface | library | ⬜ pending | |
-| L5 | unified-position-interface | library | ⬜ pending | |
-| L5 | unified-trade-execution-interface | library | ⬜ pending | |
-| L6 | unified-defi-execution-interface | library | ⬜ pending | |
-| L6 | unified-sports-execution-interface | library | ⬜ pending | |
-| L7 | instruments-service | service | ⬜ pending | |
-| L8 | alerting-service | service | ⬜ pending | |
-| L8 | execution-service | service | ⬜ pending | |
-| L8 | features-calendar-service | service | ⬜ pending | |
-| L8 | features-commodity-service | service | ⬜ pending | |
-| L8 | features-cross-instrument-service | service | ⬜ pending | |
-| L8 | features-delta-one-service | service | ⬜ pending | |
-| L8 | features-multi-timeframe-service | service | ⬜ pending | |
-| L8 | features-onchain-service | service | ⬜ pending | |
-| L8 | features-sports-service | service | ⬜ pending | |
-| L8 | features-volatility-service | service | ⬜ pending | |
-| L8 | market-data-processing-service | service | ⬜ pending | |
-| L8 | market-tick-data-service | service | ⬜ pending | |
-| L8 | ml-inference-service | service | ⬜ pending | |
-| L8 | ml-training-service | service | ⬜ pending | |
-| L8 | pnl-attribution-service | service | ⬜ pending | |
-| L8 | strategy-service | service | ⬜ pending | |
-| L8 | trading-agent-service | service | ⬜ pending | |
-| L9 | client-reporting-api | api | ⬜ pending | |
-| L9 | execution-results-api | api | ⬜ pending | |
-| L9 | market-data-api | api | ⬜ pending | |
-| L9 | ml-inference-api | api | ⬜ pending | |
-| L9 | ml-training-api | api | ⬜ pending | |
-| L9 | position-balance-monitor-service | service | ⬜ pending | |
-| L9 | risk-and-exposure-service | service | ⬜ pending | |
-| L9 | strategy-validation-service | service | ⬜ pending | |
-| L9 | trading-analytics-api | api | ⬜ pending | |
-| L10 | deployment-api | api | ⬜ pending | |
-| L10 | deployment-service | service | ⬜ pending | |
-| L11 | batch-audit-ui | ui | ⬜ pending | |
-| L11 | client-reporting-ui | ui | ⬜ pending | |
-| L11 | deployment-ui | ui | ⬜ pending | |
-| L11 | execution-analytics-ui | ui | ⬜ pending | |
-| L11 | live-health-monitor-ui | ui | ⬜ pending | |
-| L11 | logs-dashboard-ui | ui | ⬜ pending | |
-| L11 | ml-training-ui | ui | ⬜ pending | |
-| L11 | onboarding-ui | ui | ⬜ pending | |
-| L11 | settlement-ui | ui | ⬜ pending | |
-| L11 | strategy-ui | ui | ⬜ pending | |
-| L11 | trading-analytics-ui | ui | ⬜ pending | |
-| L11 | unified-trading-ui-auth | ui | ⬜ pending | |
-| L12 | ibkr-gateway-infra | infra | ⬜ pending | |
-| L12 | system-integration-tests | integration | ⬜ pending | |
+| Tier | Repo                               | Type        | Status                     | Notes |
+| ---- | ---------------------------------- | ----------- | -------------------------- | ----- |
+| L0   | unified-trading-pm                 | pm          | ⬜ pending                 |       |
+| L1   | unified-trading-codex              | codex       | ⬜ SKIP (docs-only, no QG) |       |
+| L2   | matching-engine-library            | library     | ⬜ pending                 |       |
+| L2   | unified-api-contracts              | library     | ⬜ pending                 |       |
+| L2   | unified-cloud-interface            | library     | ⬜ pending                 |       |
+| L2   | unified-events-interface           | library     | ⬜ pending                 |       |
+| L2   | unified-internal-contracts         | library     | ⬜ pending                 |       |
+| L2   | unified-reference-data-interface   | library     | ⬜ pending                 |       |
+| L3   | unified-config-interface           | library     | ⬜ pending                 |       |
+| L3   | unified-trading-library            | library     | ⬜ pending                 |       |
+| L4   | execution-algo-library             | library     | ⬜ pending                 |       |
+| L4   | unified-feature-calculator-library | library     | ⬜ pending                 |       |
+| L5   | unified-domain-client              | library     | ⬜ pending                 |       |
+| L5   | unified-market-interface           | library     | ⬜ pending                 |       |
+| L5   | unified-ml-interface               | library     | ⬜ pending                 |       |
+| L5   | unified-position-interface         | library     | ⬜ pending                 |       |
+| L5   | unified-trade-execution-interface  | library     | ⬜ pending                 |       |
+| L6   | unified-defi-execution-interface   | library     | ⬜ pending                 |       |
+| L6   | unified-sports-execution-interface | library     | ⬜ pending                 |       |
+| L7   | instruments-service                | service     | ⬜ pending                 |       |
+| L8   | alerting-service                   | service     | ⬜ pending                 |       |
+| L8   | execution-service                  | service     | ⬜ pending                 |       |
+| L8   | features-calendar-service          | service     | ⬜ pending                 |       |
+| L8   | features-commodity-service         | service     | ⬜ pending                 |       |
+| L8   | features-cross-instrument-service  | service     | ⬜ pending                 |       |
+| L8   | features-delta-one-service         | service     | ⬜ pending                 |       |
+| L8   | features-multi-timeframe-service   | service     | ⬜ pending                 |       |
+| L8   | features-onchain-service           | service     | ⬜ pending                 |       |
+| L8   | features-sports-service            | service     | ⬜ pending                 |       |
+| L8   | features-volatility-service        | service     | ⬜ pending                 |       |
+| L8   | market-data-processing-service     | service     | ⬜ pending                 |       |
+| L8   | market-tick-data-service           | service     | ⬜ pending                 |       |
+| L8   | ml-inference-service               | service     | ⬜ pending                 |       |
+| L8   | ml-training-service                | service     | ⬜ pending                 |       |
+| L8   | pnl-attribution-service            | service     | ⬜ pending                 |       |
+| L8   | strategy-service                   | service     | ⬜ pending                 |       |
+| L8   | trading-agent-service              | service     | ⬜ pending                 |       |
+| L9   | client-reporting-api               | api         | ⬜ pending                 |       |
+| L9   | execution-results-api              | api         | ⬜ pending                 |       |
+| L9   | market-data-api                    | api         | ⬜ pending                 |       |
+| L9   | ml-inference-api                   | api         | ⬜ pending                 |       |
+| L9   | ml-training-api                    | api         | ⬜ pending                 |       |
+| L9   | position-balance-monitor-service   | service     | ⬜ pending                 |       |
+| L9   | risk-and-exposure-service          | service     | ⬜ pending                 |       |
+| L9   | strategy-validation-service        | service     | ⬜ pending                 |       |
+| L9   | trading-analytics-api              | api         | ⬜ pending                 |       |
+| L10  | deployment-api                     | api         | ⬜ pending                 |       |
+| L10  | deployment-service                 | service     | ⬜ pending                 |       |
+| L11  | batch-audit-ui                     | ui          | ⬜ pending                 |       |
+| L11  | client-reporting-ui                | ui          | ⬜ pending                 |       |
+| L11  | deployment-ui                      | ui          | ⬜ pending                 |       |
+| L11  | execution-analytics-ui             | ui          | ⬜ pending                 |       |
+| L11  | live-health-monitor-ui             | ui          | ⬜ pending                 |       |
+| L11  | logs-dashboard-ui                  | ui          | ⬜ pending                 |       |
+| L11  | ml-training-ui                     | ui          | ⬜ pending                 |       |
+| L11  | onboarding-ui                      | ui          | ⬜ pending                 |       |
+| L11  | settlement-ui                      | ui          | ⬜ pending                 |       |
+| L11  | strategy-ui                        | ui          | ⬜ pending                 |       |
+| L11  | trading-analytics-ui               | ui          | ⬜ pending                 |       |
+| L11  | unified-trading-ui-auth            | ui          | ⬜ pending                 |       |
+| L12  | ibkr-gateway-infra                 | infra       | ⬜ pending                 |       |
+| L12  | system-integration-tests           | integration | ⬜ pending                 |       |
 
 ---
 
