@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import TypeAlias
@@ -35,8 +36,6 @@ SKIP_STATUSES = frozenset({"deprecated", "archived", "deleted"})
 def parse_semver(spec: str) -> tuple[int, int, int]:
     """Extract numeric version from a semver range spec like '^2.0.0', '~1.3.0', '>=16.0.0'.
     Returns (major, minor, patch) tuple for comparison. Returns (0,0,0) if unparseable."""
-    import re
-
     m = re.search(r"(\d+)\.(\d+)\.(\d+)", spec)
     if m:
         return int(m.group(1)), int(m.group(2)), int(m.group(3))

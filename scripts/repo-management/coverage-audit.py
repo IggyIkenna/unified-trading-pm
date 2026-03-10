@@ -97,7 +97,7 @@ def parse_python_coverage(repo_path: Path) -> int | None:
     if not xml_path.exists():
         return None
     try:
-        tree = ET.parse(xml_path)
+        tree = ET.parse(xml_path)  # nosec B314 — local coverage.xml, not untrusted input
         root = tree.getroot()
         line_rate = root.get("line-rate")
         if line_rate is not None:
@@ -113,9 +113,13 @@ def parse_ui_coverage(repo_path: Path) -> int | None:
     if not summary_path.exists():
         return None
     try:
-        data = json.loads(summary_path.read_text())
-        total = data.get("total", {})
-        lines = total.get("lines", {})
+        data: JsonDict = json.loads(summary_path.read_text())
+        total = data.get("total")
+        if not isinstance(total, dict):
+            return None
+        lines = total.get("lines")
+        if not isinstance(lines, dict):
+            return None
         pct = lines.get("pct")
         if pct is not None:
             return int(float(pct))
@@ -139,9 +143,14 @@ def has_vitest_unit_test_script(repo_path: Path) -> bool:
     if not pkg.exists():
         return False
     try:
-        scripts = json.loads(pkg.read_text()).get("scripts", {})
-        test_cmd = scripts.get("test", "")
-        return bool(test_cmd) and "playwright" not in test_cmd
+        pkg_data: JsonDict = json.loads(pkg.read_text())
+        scripts = pkg_data.get("scripts")
+        if not isinstance(scripts, dict):
+            return False
+        test_cmd = scripts.get("test")
+        if not test_cmd or not isinstance(test_cmd, str):
+            return False
+        return "playwright" not in test_cmd
     except Exception:
         return False
 
@@ -242,8 +251,14 @@ def _has_coverage_v8(repo_path: Path) -> bool:
     if not pkg.exists():
         return False
     try:
-        data = json.loads(pkg.read_text())
-        deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
+        data: JsonDict = json.loads(pkg.read_text())
+        raw_deps = data.get("dependencies")
+        raw_dev_deps = data.get("devDependencies")
+        deps: dict[str, object] = {}
+        if isinstance(raw_deps, dict):
+            deps.update(raw_deps)
+        if isinstance(raw_dev_deps, dict):
+            deps.update(raw_dev_deps)
         return "@vitest/coverage-v8" in deps or "@vitest/coverage-istanbul" in deps
     except Exception:
         return False
@@ -394,7 +409,7 @@ def main() -> int:
     with open(MANIFEST_PATH) as f:
         manifest: JsonDict = json.load(f)  # type: ignore[assignment]
 
-    repos_raw = manifest.get("repositories", {})
+    repos_raw = manifest.get("repositories")
     if not isinstance(repos_raw, dict):
         print("❌ Invalid manifest: 'repositories' must be a dict.", file=sys.stderr)
         return 2
