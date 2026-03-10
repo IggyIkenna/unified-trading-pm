@@ -567,9 +567,10 @@ HARDCODED_PROTO=$(rg \
   'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b|StandardizedDomainCloudService\b' \
   --type py \
   --glob '!.venv*' \
+  --glob '!**/.venv*/**' \
   --glob '!tests/**' \
   --glob '!scripts/**' \
-  -l 2>/dev/null || :)
+  -l "$SOURCE_DIR" 2>/dev/null || :)
 if [ -n "$HARDCODED_PROTO" ]; then
     log_fail "STEP 5.12: Hardcoded protocol/cloud names in service source (use get_data_sink/get_event_bus):"
     echo "$HARDCODED_PROTO"
