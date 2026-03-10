@@ -10,7 +10,7 @@ overview: |
   No Python tooling (no uv, no basedpyright, no pytest) per ui-no-python-quality-gates.mdc.
 status: active
 created: 2026-03-09
-updated: 2026-03-09
+updated: 2026-03-10
 isProject: true
 todos:
   - id: create-github-repo
@@ -18,7 +18,7 @@ todos:
       Create GitHub repo per new-repo-setup.mdc: `gh repo create IggyIkenna/unified-admin-ui --private --clone`. Grant
       team access: `gh api /repos/IggyIkenna/unified-admin-ui/collaborators/CosmicTrader -f permission='push'` and same
       for datado. Set default branch to main. Verify remote shows private and correct collaborators before proceeding.
-    status: pending
+    status: done
 
   - id: scaffold-npm-workspace
     content: >-
@@ -26,7 +26,7 @@ todos:
       `"workspaces": ["packages/*"]`. Create packages/core/ with sub-dirs: src/components/, src/hooks/, src/auth/,
       src/api-client/. Add packages/core/package.json (`"name": "@unified-admin/core"`). Create index files and
       placeholder exports. Add root .gitignore (node_modules, dist, .turbo, coverage). Add .nvmrc pinning Node LTS.
-    status: pending
+    status: done
 
   - id: configure-tooling
     content: >-
@@ -35,7 +35,7 @@ todos:
       (`"no-unused-vars": "error"`). Vitest config at root with coverage threshold >80% per package. Playwright config
       at root with smoke tests for each package entry point. Confirm `tsc --noEmit` and `eslint --max-warnings 0` pass
       on empty scaffold before adding any UI code.
-    status: pending
+    status: done
 
   - id: update-workspace-manifest
     content: >-
@@ -43,7 +43,7 @@ todos:
       "ui"`, `"status": "active"`. Update `"lastUpdated"` and increment notes entry. Repo count moves from 59 to 60.
       Confirm count with: `python3 -c "import json; d=json.load(open('workspace-manifest.json'));
       print(len(d['repositories']))"`.
-    status: pending
+    status: done
 
   - id: update-workspace-configs
     content: >-
@@ -51,14 +51,14 @@ todos:
       `.cursor/workspace-configs/workspace-uis.code-workspace`: add `{"path": "../../unified-admin-ui"}` to the
       `folders` array. Edit `unified-trading-system-repos.code-workspace`: add the same path entry. Verify both files
       open the new folder in VS Code without errors.
-    status: pending
+    status: done
 
   - id: npm-install-initial
     content: >-
       From the unified-admin-ui repo root, run `npm install` to generate package-lock.json. Commit package-lock.json to
       the repo. Do NOT run uv or pip — this is a UI repo with no Python dependencies (ui-no-python-quality-gates.mdc).
       Verify `npm run build` and `npm run test` scripts are defined and exit 0 on the empty scaffold.
-    status: pending
+    status: done
 
   - id: push-initial-scaffold
     content: >-
@@ -66,7 +66,7 @@ todos:
       workspace with packages/core"`, then `bash scripts/quickmerge.sh "feat: scaffold unified-admin-ui npm workspace"`.
       Confirm CI passes (tsc --noEmit, ESLint zero-warnings, Vitest coverage >80% on scaffold, Playwright smoke) before
       moving to per-UI-repo migration todos.
-    status: pending
+    status: done
 
   - id: migrate-batch-audit-ui
     content: >-

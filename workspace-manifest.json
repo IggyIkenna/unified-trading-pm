@@ -3,7 +3,7 @@
   "title": "Unified Trading System — Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
   "lastUpdated": "2026-03-10",
-  "notes": "Updated 2026-03-10: Added batch-audit-api and batch-live-reconciliation-service (T+1 reconciliation + audit trail). Updated 2026-03-10: Added 3 new API repos to manifest: ml-inference-api, ml-training-api, trading-analytics-api (api-service, arch_tier: api, merge_level 9, cluster: api-services). Updated 2026-03-06: (15) Added deployment_topology L0 section (cloud_provider_env_var, protocol_defaults, messaging_topology, colocation_groups, infra_authority). Added service_declaration per service (mode, capabilities_needed, protocol_default_set). Added infra_primitives per library/interface. Updated 2026-03-05: (14) Added ibkr-gateway-infra (orphan repo in workspace). type: infrastructure, arch_tier: infrastructure, merge_level 12, completion_path: tradfi. Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services → unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 — codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI→UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
+  "notes": "Updated 2026-03-10: Added unified-admin-ui (npm workspace monorepo, packages/core, TypeScript strict, 60th repo). Updated 2026-03-10: Added batch-audit-api and batch-live-reconciliation-service (T+1 reconciliation + audit trail). Updated 2026-03-10: Added 3 new API repos to manifest: ml-inference-api, ml-training-api, trading-analytics-api (api-service, arch_tier: api, merge_level 9, cluster: api-services). Updated 2026-03-06: (15) Added deployment_topology L0 section (cloud_provider_env_var, protocol_defaults, messaging_topology, colocation_groups, infra_authority). Added service_declaration per service (mode, capabilities_needed, protocol_default_set). Added infra_primitives per library/interface. Updated 2026-03-05: (14) Added ibkr-gateway-infra (orphan repo in workspace). type: infrastructure, arch_tier: infrastructure, merge_level 12, completion_path: tradfi. Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services → unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 — codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI→UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -92,7 +92,8 @@
     "features-multi-timeframe-service": "0.1.1",
     "ml-inference-api": "0.1.0",
     "ml-training-api": "0.1.0",
-    "trading-analytics-api": "0.1.0"
+    "trading-analytics-api": "0.1.0",
+    "unified-admin-ui": "0.1.0"
   },
   "repositories": {
     "unified-api-contracts": {
@@ -2066,6 +2067,28 @@
       "codex_sections": ["05-infrastructure"],
       "github_url": "https://github.com/IggyIkenna/deployment-ui"
     },
+    "unified-admin-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "merge_level": 11,
+      "status": "active",
+      "version": "0.1.0",
+      "description": "npm workspace monorepo — shared packages/core (@unified-admin/core) with components, hooks, auth, api-client. Centralises UI boilerplate from 11 existing UI repos.",
+      "dependencies": [],
+      "cluster": "admin-ui",
+      "completion_path": "core",
+      "notes": "Created 2026-03-10. npm workspaces (Node 22 LTS). TypeScript strict mode, ESLint zero-warnings, Vitest >80% coverage, Playwright smoke. No Python tooling (no uv, no basedpyright, no pytest). Repo count: 59 -> 60.",
+      "ci_status": "HAS_QG",
+      "coverage_pct": 100,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "doc_standard": "ui-canonical",
+      "version_source": "package.json",
+      "codex_sections": ["05-infrastructure"],
+      "github_url": "https://github.com/IggyIkenna/unified-admin-ui"
+    },
     "system-integration-tests": {
       "type": "test-harness",
       "arch_tier": "integration",
@@ -2775,6 +2798,7 @@
           "settlement-ui",
           "strategy-ui",
           "trading-analytics-ui",
+          "unified-admin-ui",
           "unified-trading-ui-auth"
         ]
       },
