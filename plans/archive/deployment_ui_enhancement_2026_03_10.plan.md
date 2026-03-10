@@ -18,7 +18,7 @@ DataStatusTab 7. "Deploy Missing" shortcut from Data Status → pre-fills Deploy
 (vCPU/memory estimate) 9. Bulk delete, tag edit, cross-region egress warning 10. SIT smoke tests: 7 smoke + 6 e2e tests
 covering batch + live deploy workflows
 
-status: active created: 2026-03-10 updated: 2026-03-10T00:00:00Z isProject: true todos:
+status: done created: 2026-03-10 updated: 2026-03-10T12:00:00Z isProject: true completed: 2026-03-10 todos:
 
 # ── STEP 0 ────────────────────────────────────────────────────────────────
 
