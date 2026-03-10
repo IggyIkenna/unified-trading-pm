@@ -159,6 +159,19 @@ todos:
       instruments-service=51, alerting-service=78 (all non-default 70, matching test-coverage-targets.mdc guidance).
       PASS (all sampled repos show calibrated values, not default 70). RE-AUDITED 2026-03-10T02:31:37Z — PASS. 8/8 key
       repos MIN_COVERAGE ↔ fail_under aligned.
+  - id: coverage-recalibrate-post-remediation
+    content: >
+      "Run `python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --recalibrate` once ALL
+      repos in the coverage audit exit 0 (no FAILs). Blocked by: (1) execution-service broken imports (dump_to_csv,
+      get_unified_monitor, nautilus_trader) cap coverage at 32%; (2) out-of-scope repos needing separate remediation
+      campaigns (strategy-service, UDC, ml-training-api, trading-analytics-api, UIs). Do NOT run --recalibrate with
+      stale coverage.xml — it will corrupt thresholds. Re-run each repo's tests first: cd <repo> && .venv/bin/pytest
+      tests/ --cov=<package> --cov-report=xml before recalibrating."
+    status: pending
+    note:
+      "Added 2026-03-10. Follow-on from coverage_remediation_2026_03_10 plan (archived). 14 of 14 Section A repos now
+      above floor. Recalibrate deferred until remaining FAIL repos also resolved."
+
   - id: audit-cloud-agnostic-api
     content: >
       "Audit Section 12 — Cloud-Agnostic API Compliance: Only unified-cloud-interface may contain
