@@ -428,14 +428,28 @@ Suggested order — lowest effort + most CRITICAL consumers first:
 
 ## Completion Criteria
 
-- [ ] All 68 classes removed from `EXEMPT_MISSING` in `check_uac_completeness.py`
-- [ ] All 68 classes removed from `_UAC_EXEMPT` in `test_uac_completeness.py`
-- [ ] All 68 classes added to `unified_api_contracts/__init__.py` `__all__`
-- [ ] All CRITICAL consumer services have import wiring
-- [ ] All STRONG consumer services have import wiring
-- [ ] `check_uac_adoption.py` exits 0 (all newly promoted classes have ≥1 importer)
-- [ ] `test_uac_completeness_no_gaps` passes in SIT with no mock/skip
+- [x] All 68 classes removed from `EXEMPT_MISSING` in `check_uac_completeness.py` — **done 2026-03-10**
+- [x] All 68 classes removed from `_UAC_EXEMPT` in `test_uac_completeness.py` — **done 2026-03-10**
+- [x] All 68 classes added to `unified_api_contracts/__init__.py` `__all__` — **done 2026-03-10**
+- [x] All CRITICAL consumer services have import wiring — **done 2026-03-10**
+- [x] All STRONG consumer services have import wiring — **done 2026-03-10**
+- [x] `check_uac_adoption.py` exits 0 (all newly promoted classes have ≥1 importer)
+- [x] `test_uac_completeness_no_gaps` passes in SIT with no mock/skip
+
+## UAC Completeness Achievement (2026-03-10)
+
+UAC `__all__` grew from **166 → 329 entries** across three commits:
+
+| Commit    | Change                                        | `__all__` size |
+| --------- | --------------------------------------------- | -------------- |
+| `5384a0e` | +68 specialty classes (G1–G8 groups)          | 234            |
+| `7cd753b` | Narrow `EXEMPT_MISSING` to 14 (internal only) | 234            |
+| `38b58cd` | +95 core classes (domain, errors, execution)  | 329            |
+
+`check_uac_completeness.py` now exits 0: **224 defined, 14 exempt, 0 missing**.
+
+All 18 terminal consumer services wired with appropriate UAC specialty type imports.
 
 ## Status
 
-Created: 2026-03-10 Status: Active — not yet started
+Created: 2026-03-10 **Completed: 2026-03-10** — all groups wired, completeness gate clean, adoption matrix regenerated.
