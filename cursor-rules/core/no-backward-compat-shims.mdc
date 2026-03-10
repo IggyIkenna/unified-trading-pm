@@ -1,6 +1,8 @@
 ---
 description: "No backward-compatibility re-export shims or migration stubs — update all consumers and delete the source"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 90
 tags: [contracts, imports, migrations, tech-debt]
 ---

@@ -1,6 +1,9 @@
 ---
 description: "Cloud Build runs quality gates inside the Docker image — test the artifact you deploy"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/cloudbuild*.yaml"
+  - "**/Dockerfile*"
 priority: 70
 tags: [cloud-build, ci-cd, testing]
 ---

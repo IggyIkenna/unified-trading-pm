@@ -18,10 +18,9 @@ quality-gates-base/
 ├── base-service.sh   # 28 service repos (FastAPI apps, workers, APIs)
 ├── base-library.sh   # 17 library/interface repos
 ├── base-codex.sh     # 1 docs-only repo (unified-trading-codex)
+├── base-ui.sh        # 11 TypeScript/React UI repos
 └── README.md         # This file
 ```
-
-UI repos (~12) are out of scope — already have minimal JS/TS stubs and a separate toolchain.
 
 ## Stub Templates
 
@@ -61,6 +60,26 @@ source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ser
 Required variables: `SERVICE_NAME`, `SOURCE_DIR`, `MIN_COVERAGE`, `RUN_INTEGRATION`
 
 Optional variables: `PYTEST_WORKERS` (default: 2), `LOCAL_DEPS` (default: empty array)
+
+### UI repos (~8 lines)
+
+```bash
+#!/usr/bin/env bash
+# Quality Gates Stub — TypeScript/React UI
+EXPECTED_BASE_VERSION="1.0"
+WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." && pwd)}"
+BASE_UI="${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-ui.sh"
+[[ ! -f "$BASE_UI" ]] && { echo "❌ Cannot find base-ui.sh at: $BASE_UI" >&2; exit 1; }
+source "$BASE_UI" "$@"
+```
+
+No required variables — UI repos are self-describing via `package.json`.
+
+Runs: TypeScript typecheck (`npm run typecheck`), ESLint (`npm run lint`), vitest unit tests + coverage,
+`npm run build`.
+
+Flags: `--test` (typecheck + tests, skip lint + build), `--lint` (typecheck + lint, skip tests + build), `--quick`
+(alias for `--lint` in UI), `--no-fix` (no-op; kept for caller compatibility).
 
 ### CODEX / DOCS repos (~8 lines)
 
@@ -131,6 +150,12 @@ bash scripts/quality-gates.sh --skip-typecheck  # Skip basedpyright
 1. Edit `base-library.sh` in this directory
 2. Commit to `unified-trading-pm`
 3. No rollout needed — all repos source this file directly
+
+**For all UI repos** (11 repos):
+
+1. Edit `base-ui.sh` in this directory
+2. Commit to `unified-trading-pm`
+3. No rollout needed — all UI repos source this file directly
 
 ## New Repo Setup
 

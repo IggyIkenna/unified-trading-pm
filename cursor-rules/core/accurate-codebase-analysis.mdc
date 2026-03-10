@@ -1,6 +1,6 @@
 ---
 description: "Exclude .venv, tests, docs from architectural analysis; use correct rg/grep globs"
-alwaysApply: true
+alwaysApply: false
 priority: 85
 tags:
   - analysis

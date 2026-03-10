@@ -1,6 +1,8 @@
 ---
 description: "PM repo is L0 root — SSOT template host, workspace management, not a service"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "unified-trading-pm/**"
 priority: 100
 tags:
   - pm

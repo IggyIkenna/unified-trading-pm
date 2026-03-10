@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 def _load_module():
     repo_root = Path(__file__).resolve().parents[2]
-    path = repo_root / "scripts" / "check-import-patterns.py"
+    path = repo_root / "scripts" / "validation" / "check-import-patterns.py"
     spec = importlib.util.spec_from_file_location("check_import_patterns", path)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
