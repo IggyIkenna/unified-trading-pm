@@ -44,10 +44,10 @@
 
 ## Issues (Discovered in "Other 41" scan)
 
-| #   | Repo               | Issue Type           | Details                                                                                                                                 | Agent | Status      |
-| --- | ------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------- |
-| 23  | deployment-api     | test_fail + coverage | Fixed: 74 test API-mismatch failures (UCI StorageClient) + missing helpers re-exports → 1749 passed, 70.57% (commits 4d9bbf6 + earlier) | —     | verified    |
-| 24  | deployment-service | test_fail            | 12 turbo/missing-data tests fail: old GCS mock API vs UCI StorageClient; fix agent running                                              | af8d1 | in_progress |
+| #   | Repo               | Issue Type           | Details                                                                                                                                 | Agent | Status   |
+| --- | ------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----- | -------- |
+| 23  | deployment-api     | test_fail + coverage | Fixed: 74 test API-mismatch failures (UCI StorageClient) + missing helpers re-exports → 1749 passed, 70.57% (commits 4d9bbf6 + earlier) | —     | verified |
+| 24  | deployment-service | test_fail + coverage | Fixed: 14 API-mismatch tests fixed + 28 new coverage tests → 1922 passed, 80.00% (commits 159b0ce, 77bca87)                             | —     | verified |
 
 ---
 
