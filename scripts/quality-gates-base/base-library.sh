@@ -240,7 +240,7 @@ rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" 2>
 # (QUALITY_GATE_BYPASS_AUDIT.md §2.4)
 if [[ "$PACKAGE_NAME" != "unified-config-interface" ]]; then
     _osenv_extra_globs=()
-    for _f in ${OS_ENVIRON_EXTRA_EXCLUDES:-}; do [[ -n "$_f" ]] && _osenv_extra_globs+=("--glob" "!${_f}"); done
+    for _f in "${OS_ENVIRON_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_f" ]] && _osenv_extra_globs+=("--glob" "!${_f}"); done
     _OSENV=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!**/testing/**" --glob "!scripts/**" "${_osenv_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
         | grep -v "# noqa:.*qg-os-environ\|# noqa: qg-os-environ\|# config-bootstrap:" || :)
     [[ -n "$_OSENV" ]] && { log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"; echo "$_OSENV" | head -3; V=$(( V + 1 )); } || log_success "No os.getenv()/os.environ"
@@ -267,7 +267,7 @@ done
 
 _SELF_PKG=$(echo "$SOURCE_DIR" | tr '/' '_')
 _inside_extra_globs=()
-for _excl in ${INSIDE_EXTRA_EXCLUDES:-}; do [[ -n "$_excl" ]] && _inside_extra_globs+=("--glob" "!${_excl}"); done
+for _excl in "${INSIDE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _inside_extra_globs+=("--glob" "!${_excl}"); done
 INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
     "${_inside_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa: qg-inside-import\|# noqa:.*qg-inside-import" \
@@ -487,10 +487,12 @@ fi
 PIP_SH=$(rg " pip install " --glob "**/*.sh" . 2>/dev/null | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
 [[ -n "$PIP_SH" ]] && { log_fail "Use 'uv pip install' not 'pip install' in scripts"; echo "$PIP_SH" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install in scripts"
 
-BE=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+_be_extra_globs=()
+for _excl in "${BROAD_EXCEPT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _be_extra_globs+=("--glob" "!${_excl}"); done
+BE=$(rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
-SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \
+SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" -A 2 2>/dev/null \
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; V=$(( V + 1 )); } || log_success "No swallowed errors"
 
