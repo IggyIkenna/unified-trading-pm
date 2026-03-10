@@ -331,6 +331,23 @@ def rollout_ui_repo(repo_name: str, repo_path: Path, dry_run: bool, force: bool)
             dest.write_text(content)
         results[fname] = "dry-run" if dry_run else "written"
 
+    # Validate cloudbuild.yaml after writing (portable schema validation)
+    if not dry_run and (repo_path / "cloudbuild.yaml").exists():
+        validator = WORKSPACE_ROOT / "unified-trading-pm" / "scripts" / "validation" / "validate-cloudbuild.py"
+        if validator.exists():
+            import subprocess
+
+            r = subprocess.run(
+                [sys.executable, str(validator), str(repo_path / "cloudbuild.yaml")],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=str(WORKSPACE_ROOT),
+            )
+            if r.returncode != 0:
+                print(r.stderr, file=sys.stderr)
+                sys.exit(1)
+
     return results
 
 
