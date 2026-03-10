@@ -102,7 +102,7 @@ def parse_python_coverage(repo_path: Path) -> int | None:
         line_rate = root.get("line-rate")
         if line_rate is not None:
             return int(float(line_rate) * 100)
-    except Exception:
+    except (ET.ParseError, ValueError):
         pass
     return None
 
@@ -123,7 +123,7 @@ def parse_ui_coverage(repo_path: Path) -> int | None:
         pct = lines.get("pct")
         if pct is not None:
             return int(float(pct))
-    except Exception:
+    except (json.JSONDecodeError, ValueError, OSError):
         pass
     return None
 
@@ -151,7 +151,7 @@ def has_vitest_unit_test_script(repo_path: Path) -> bool:
         if not test_cmd or not isinstance(test_cmd, str):
             return False
         return "playwright" not in test_cmd
-    except Exception:
+    except (json.JSONDecodeError, OSError):
         return False
 
 
@@ -260,7 +260,7 @@ def _has_coverage_v8(repo_path: Path) -> bool:
         if isinstance(raw_dev_deps, dict):
             deps.update(raw_dev_deps)
         return "@vitest/coverage-v8" in deps or "@vitest/coverage-istanbul" in deps
-    except Exception:
+    except (json.JSONDecodeError, OSError):
         return False
 
 

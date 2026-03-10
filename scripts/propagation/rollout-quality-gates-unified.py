@@ -178,7 +178,7 @@ def measure_coverage(repo_path: Path, source_dir: str) -> int | None:
             line_rate = root.get("line-rate")
             if line_rate is not None:
                 return int(float(line_rate) * 100)
-        except Exception:  # noqa: BLE001
+        except (ET.ParseError, ValueError):
             pass  # fall through to pytest
 
     # Slow path: run pytest --cov
