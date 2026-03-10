@@ -37,6 +37,7 @@ max-complexity = 7
 
 [tool.ruff.lint.per-file-ignores]
 "tests/test_generate_workspace_dag.py" = ["E402"]
+"scripts/propagation/rollout-ui-build-infra.py" = ["E501"]
 
 [tool.basedpyright]
 extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management"]
