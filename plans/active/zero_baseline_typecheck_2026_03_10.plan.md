@@ -25,31 +25,32 @@ Eliminate ALL `.basedpyright-baseline.json` suppression across every repo. Every
 
 ---
 
-## Phase 1 — Trivial Repos (74 errors) ✅ Target: 0
+## Phase 1 — Trivial Repos (74 errors) ✅ COMPLETE (2026-03-10)
 
-### strategy-service (3 errors)
+All three repos were already at 0 errors with no baseline files (fixed in prior sessions). Verified: `basedpyright` on
+each repo shows `0 errors, 0 warnings, 0 notes`.
 
-- [ ] `strategy_service/cli/main.py`: delete unused import (1 `reportAny`)
-- [ ] `strategy_service/engine/core/components/math_utilities.py`: type numpy/scipy returns (2 `reportAny`)
-- [ ] Delete `.basedpyright-baseline.json`
-- [ ] Commit: `fix: zero basedpyright baseline in strategy-service`
+### strategy-service — DONE ✅ (0 errors, no baseline)
 
-### execution-results-api (39 errors)
+### execution-results-api — DONE ✅ (0 errors, no baseline)
 
-- [ ] Remove unused imports in `execution_results_api/main.py`
-- [ ] Replace private FastAPI access with public APIs
-- [ ] Remove unnecessary cast in `analysis_service.py`
-- [ ] Fix remaining ~36 errors with proper type annotations
-- [ ] Delete `.basedpyright-baseline.json`
-- [ ] Commit: `fix: zero basedpyright baseline in execution-results-api`
+### unified-trade-execution-interface — DONE ✅ (0 errors, no baseline)
 
-### unified-trade-execution-interface (32 errors)
+**Execution-service broken imports also fixed (2026-03-10):**
 
-- [ ] Define `Protocol` for ccxt.Exchange fields actually accessed
-- [ ] Define `Protocol` for ib_insync contract objects
-- [ ] Fix aiohttp/httpx parameter type mismatches (11 `reportArgumentType`)
-- [ ] Delete `.basedpyright-baseline.json`
-- [ ] Commit: `fix: zero basedpyright baseline in unified-trade-execution-interface`
+- Commit `1c1551f3` in execution-service: resolved 15 broken ImportErrors blocking coverage recalibration
+  - `dump_to_csv` → `CSVSampler().sample()` (defi.py, tick_data.py, result_formatter.py)
+  - `get_unified_monitor` → `logger.debug()` (trades_builder.py)
+  - `DataCompletionChecker`: import directly from UTL with Protocol pattern (validation.py)
+  - `validate_config`: UTC → UCI (grid_generator_v2.py)
+  - Removed dead cleanup functions in grid_utils.py
+  - `get_project_identifier` → `get_project_id` (initializer.py)
+  - DeribitAdapter: `venues.cefi` → `venues.deribit`
+  - nautilus_trader: correct module paths for TradingNodeConfig, TradingNode, InstrumentProvider
+  - binance: `binance.um_futures.UMFutures` → `binance.futures.Futures`
+  - Removed AlphaComparator/AMMFillSimulator (never existed)
+  - Created `execution_service/config/live_loader.py`
+- Commit `8c7829c` in unified-domain-client: added `py.typed` marker
 
 ---
 
