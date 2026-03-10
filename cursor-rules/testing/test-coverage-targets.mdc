@@ -65,14 +65,14 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 | execution-results-api | 66% → floor | 70 |
 | features-cross-instrument-service | 64% → floor | 70 |
 | instruments-service | 51% → floor | 70 |
-| features-multi-timeframe-service | 55% → floor | 70 |
-| pnl-attribution-service | 46% → floor | 70 |
-| trading-agent-service | 50% → floor | 70 |
+| features-multi-timeframe-service | 86% | 85 |
+| pnl-attribution-service | 75% | 74 |
+| trading-agent-service | 80% | 79 |
 | ml-training-service | 39% → floor | 70 |
 | features-onchain-service | 39% → floor | 70 |
 | market-data-processing-service | 38% → floor | 70 |
 | market-tick-data-service | 16% → floor | 70 |
-| features-commodity-service | 15% → floor | 70 |
+| features-commodity-service | 81% | 80 |
 | execution-service | 6% → floor | 70 |
 | ibkr-gateway-infra | 52% → override | 51 |
 | system-integration-tests | — → override | 0 |
