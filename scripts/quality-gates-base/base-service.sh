@@ -159,9 +159,28 @@ if [ "$RUN_TESTS" = true ]; then
     [[ -n "$DUP" ]] && { log_fail "Duplicate test files — expand existing files instead:"; echo "$DUP"; exit 1; }
     log_success "No duplicate test files"
 
-    # @pytest.mark.skip must have a reason comment on the preceding line
-    SKIP_NO_REASON=$(rg "@pytest\.mark\.skip" --type py tests/ -B 1 2>/dev/null \
-        | grep -v "# reason:\|# noqa\|^--" | grep "@pytest\.mark\.skip" || :)
+    # @pytest.mark.skip must have a # reason: comment on the immediately preceding line
+    SKIP_NO_REASON=$(python3 - <<'PYEOF' 2>/dev/null || :
+import re
+from pathlib import Path
+violations = []
+for f in sorted(Path("tests").rglob("*.py")):
+    try:
+        lines = f.read_text().splitlines()
+    except Exception:
+        continue
+    for i, line in enumerate(lines):
+        if re.search(r"@pytest\.mark\.skip", line):
+            if "# noqa" in line:
+                continue
+            prev = lines[i - 1].strip() if i > 0 else ""
+            if "# noqa" in prev or prev.startswith("# reason:"):
+                continue
+            violations.append(f"{f}:{i+1}: {line.strip()}")
+for v in violations:
+    print(v)
+PYEOF
+)
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_success "All pytest.mark.skip have reason comments"
 fi
