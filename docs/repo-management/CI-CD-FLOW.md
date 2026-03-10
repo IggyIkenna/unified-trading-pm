@@ -50,7 +50,7 @@ for repo list, tiers, and versions.
 run-version-alignment.sh --fix      # align pyproject.toml versions + manifest
   └── auto-calls sync-workspace-venv.sh   # refresh .venv-workspace editable installs
 
-run-all-setup.sh --rollout-first    # propagate QG templates + rebuild per-repo .venv
+run-all-setup.sh --rollout-first    # propagate setup.sh + QG stubs + rebuild per-repo .venv
 
 run-all-quality-gates.sh            # local e2e smoke test (all tiers, parallel within tier)
   └── --repo X / --repos "X Y"      # subset mode — skip alignment + setup checks
@@ -75,13 +75,16 @@ See `unified-trading-codex/06-coding-standards/quality-gates.md § Tool Version 
 repos get `uv lock`, venv, path deps; UI repos get `npm install`. No repo-specific customization needed; each repo has
 its own `pyproject.toml` or `package.json`.
 
-**quality-gates.sh** — Propagated from templates by repo type. `rollout-quality-gates-unified.py` (or
-`run-all-setup.sh --rollout-first`) copies the right template per `workspace-manifest.json` type: library → library
-template; service/api-service → service template; ui → TypeScript (npm typecheck, lint, smoketest). Repos never need to
-know each other's dependencies.
+**quality-gates.sh** — A ~10-line config stub per repo (sets `SERVICE_NAME`/`PACKAGE_NAME`, `SOURCE_DIR`,
+`MIN_COVERAGE`, `RUN_INTEGRATION`, `LOCAL_DEPS`) that sources the appropriate base script from PM:
+`unified-trading-pm/scripts/quality-gates-base/base-{service,library,codex}.sh`. Gate logic lives only in those base
+scripts — never in per-repo files. UI repos have a minimal TypeScript stub (npm typecheck, lint, smoketest).
 
-**Rollout** — Copies `setup.sh` + `quality-gates.sh` into each repo. Run when templates change in PM, or use
-`--rollout-first` for first-time bootstrap.
+To add or change a gate check: edit the PM base script. It applies instantly to all repos — no rollout needed. To change
+the stub interface (new required variable): edit the codex scaffold template, run rollout, commit stubs.
+
+**Rollout** — Copies `setup.sh` into each repo and writes QG config stubs (not full gate logic). Run when `setup.sh`
+changes in PM, when the stub interface changes, or use `--rollout-first` for first-time bootstrap.
 
 ---
 
@@ -117,12 +120,13 @@ Update VM venvs and uv.lock in every repo so they match pyproject.toml.
 # Standard: run setup.sh in each repo
 bash unified-trading-pm/scripts/repo-management/run-all-setup.sh
 
-# First-time bootstrap or after template changes: rollout templates first, then setup
+# First-time bootstrap or after setup.sh / stub interface changes: rollout first, then setup
 bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first
 ```
 
-Runs `scripts/setup.sh` per repo in topological order. `setup.sh` runs `uv lock` when pyproject.toml is newer than
-uv.lock. With `--rollout-first`, propagates `setup.sh` + `quality-gates.sh` from PM to all repos before running setup.
+Runs `scripts/setup.sh` per repo in topological order. `setup.sh` **always** runs `uv lock` (timestamp skip was removed
+— sibling version bumps don't touch `pyproject.toml`, so timestamps are unreliable). With `--rollout-first`, propagates
+`setup.sh` + QG config stubs from PM to all repos before running setup.
 
 **After:** Commit and push any changed `pyproject.toml`, `uv.lock`, `workspace-manifest.json` so agents and CI get
 identical deps.
@@ -227,16 +231,16 @@ from main by resolving conflicts with a broken local state.
 
 ### Day-to-day (after any dep or code change)
 
-| Step | Command                                                                | When                                                                 |
-| ---- | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1    | `run-version-alignment.sh`                                             | Always first when deps may have changed                              |
-| 2    | `run-version-alignment.sh --fix`                                       | If step 1 reports misalignment (auto-calls `sync-workspace-venv.sh`) |
-| 3    | `run-all-setup.sh` (`--rollout-first` for template changes)            | After alignment OK — rebuilds per-repo `.venv`                       |
-| 4    | Commit + push pyproject.toml, uv.lock, manifest                        | After run-all-setup                                                  |
-| 5    | `run-all-quality-gates.sh`                                             | Local e2e smoke test; use `--repo X` for subset                      |
-| 6    | `sync-all-to-main.sh` (`--dep-branch NAME` if DEPENDENCY CONFLICT)     | When pushing to main                                                 |
-| 7a   | If sync fails: merge conflict → resolve manually, re-run sync          | Per conflicted repo                                                  |
-| 7b   | If sync fails: `run-all-quality-gates.sh --repo X` on conflicted repos | Verify our version passes before fixing                              |
+| Step | Command                                                                      | When                                                                 |
+| ---- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1    | `run-version-alignment.sh`                                                   | Always first when deps may have changed                              |
+| 2    | `run-version-alignment.sh --fix`                                             | If step 1 reports misalignment (auto-calls `sync-workspace-venv.sh`) |
+| 3    | `run-all-setup.sh` (`--rollout-first` if setup.sh or stub interface changed) | After alignment OK — rebuilds per-repo `.venv`                       |
+| 4    | Commit + push pyproject.toml, uv.lock, manifest                              | After run-all-setup                                                  |
+| 5    | `run-all-quality-gates.sh`                                                   | Local e2e smoke test; use `--repo X` for subset                      |
+| 6    | `sync-all-to-main.sh` (`--dep-branch NAME` if DEPENDENCY CONFLICT)           | When pushing to main                                                 |
+| 7a   | If sync fails: merge conflict → resolve manually, re-run sync                | Per conflicted repo                                                  |
+| 7b   | If sync fails: `run-all-quality-gates.sh --repo X` on conflicted repos       | Verify our version passes before fixing                              |
 
 **If all pass → system-integration-tests → deployment**
 
