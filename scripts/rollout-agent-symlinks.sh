@@ -3,13 +3,16 @@
 # rollout-agent-symlinks.sh — Commit cursor rules + CLAUDE.md + AGENTS.md symlinks to ALL repos
 #
 # For each repo in workspace-manifest.json (including UI repos), creates relative symlinks:
-#   .cursor/rules         → ../../unified-trading-pm/cursor-rules/
 #   .claude/CLAUDE.md     → ../../unified-trading-pm/cursor-configs/CLAUDE.md
-#   .cursorrules          → ../unified-trading-pm/cursor-configs/cursorrules
 #   AGENTS.md             → ../unified-trading-pm/AGENTS.md
 #
+# NOTE: .cursor/rules and .cursorrules are intentionally NOT committed as symlinks.
+# Committing them to every repo causes Cursor IDE to read 60+ rule sets simultaneously.
+# Instead, setup-workspace-from-manifest.sh copies cursor rules as ephemeral real files
+# during GHA runs, cleaned up before quickmerge. See scripts/setup-workspace-from-manifest.sh.
+#
 # These relative symlinks work both locally (sibling repos) and in GHA (after PM is cloned).
-# Enables autonomous Cursor agents and Claude Code agents to find rules/instructions in every repo.
+# Enables autonomous Claude Code agents and Codex runners to find instructions in every repo.
 #
 # Usage:
 #   bash scripts/rollout-agent-symlinks.sh [--dry-run] [--repo <name>] [--skip-commit]
@@ -42,15 +45,11 @@ warn() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 
 # Verify PM source files exist
-PM_CURSOR_RULES="$PM_DIR/cursor-rules"
 PM_CLAUDE_MD="$PM_DIR/cursor-configs/CLAUDE.md"
-PM_CURSORRULES="$PM_DIR/cursor-configs/cursorrules"
 PM_AGENTS_MD="$PM_DIR/AGENTS.md"
 
-[ -d "$PM_CURSOR_RULES" ]   || { echo -e "${RED}❌ Missing: $PM_CURSOR_RULES${NC}" >&2; exit 1; }
-[ -f "$PM_CLAUDE_MD" ]      || { echo -e "${RED}❌ Missing: $PM_CLAUDE_MD${NC}" >&2; exit 1; }
-[ -f "$PM_CURSORRULES" ]    || { echo -e "${RED}❌ Missing: $PM_CURSORRULES${NC}" >&2; exit 1; }
-[ -f "$PM_AGENTS_MD" ]      || { echo -e "${RED}❌ Missing: $PM_AGENTS_MD${NC}" >&2; exit 1; }
+[ -f "$PM_CLAUDE_MD" ]  || { echo -e "${RED}❌ Missing: $PM_CLAUDE_MD${NC}" >&2; exit 1; }
+[ -f "$PM_AGENTS_MD" ]  || { echo -e "${RED}❌ Missing: $PM_AGENTS_MD${NC}" >&2; exit 1; }
 
 # Get all repos (all types including UI, excluding only PM itself)
 get_all_repos() {
@@ -105,7 +104,7 @@ TOTAL=$(echo "$ALL_REPOS" | grep -c . || true)
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Rollout: agent symlinks (cursor rules + CLAUDE.md + AGENTS.md)"
+echo "  Rollout: agent symlinks (CLAUDE.md + AGENTS.md; cursor rules = ephemeral)"
 echo "  Repos:   $TOTAL targets (all types incl. UI)"
 echo "  DRY_RUN: $DRY_RUN | SKIP_COMMIT: $SKIP_COMMIT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -123,29 +122,29 @@ while IFS= read -r repo; do
 
     if $DRY_RUN; then
         echo "DRY-RUN: $repo"
-        echo "  .cursor/rules -> ../../unified-trading-pm/cursor-rules/"
         echo "  .claude/CLAUDE.md -> ../../unified-trading-pm/cursor-configs/CLAUDE.md"
-        echo "  .cursorrules -> ../unified-trading-pm/cursor-configs/cursorrules"
         echo "  AGENTS.md -> ../unified-trading-pm/AGENTS.md"
+        echo "  (cursor rules: ephemeral copy at GHA runtime, NOT committed)"
         PASS=$((PASS + 1))
         continue
     fi
 
     # ── CREATE SYMLINKS ────────────────────────────────────────────────────────
-    # .cursor/rules  (relative: from .cursor/ dir, ../../unified-trading-pm/cursor-rules/)
-    ensure_symlink "$repo_dir/.cursor/rules" "../../unified-trading-pm/cursor-rules/" false
-
-    # .claude/CLAUDE.md  (relative: from .claude/ dir, ../../unified-trading-pm/cursor-configs/CLAUDE.md)
+    # .claude/CLAUDE.md  (relative: from .claude/ dir → PM/cursor-configs/CLAUDE.md)
     ensure_symlink "$repo_dir/.claude/CLAUDE.md" "../../unified-trading-pm/cursor-configs/CLAUDE.md" false
 
-    # .cursorrules  (relative: from repo root, ../unified-trading-pm/cursor-configs/cursorrules)
-    ensure_symlink "$repo_dir/.cursorrules" "../unified-trading-pm/cursor-configs/cursorrules" false
-
-    # AGENTS.md  (relative: from repo root, ../unified-trading-pm/AGENTS.md)
+    # AGENTS.md  (relative: from repo root → PM/AGENTS.md)
     ensure_symlink "$repo_dir/AGENTS.md" "../unified-trading-pm/AGENTS.md" false
 
+    # Remove any previously committed cursor rules symlinks (if accidentally added before)
+    _remove_cursor_symlinks=false
+    if [ -L "$repo_dir/.cursor/rules" ] || [ -L "$repo_dir/.cursorrules" ]; then
+        rm -f "$repo_dir/.cursor/rules" "$repo_dir/.cursorrules"
+        _remove_cursor_symlinks=true
+    fi
+
     if $SKIP_COMMIT; then
-        ok "$repo: symlinks created (no commit)"
+        ok "$repo: symlinks set (no commit)"
         PASS=$((PASS + 1))
         continue
     fi
@@ -154,30 +153,25 @@ while IFS= read -r repo; do
     (
         cd "$repo_dir"
 
-        # Stage only the symlinks (not any other dirty state)
-        git add \
-            ".cursor/rules" \
-            ".claude/CLAUDE.md" \
-            ".cursorrules" \
-            "AGENTS.md" \
-            2>/dev/null || true
+        git add ".claude/CLAUDE.md" "AGENTS.md" 2>/dev/null || true
+        # If cursor rule symlinks were removed, stage their deletion
+        $_remove_cursor_symlinks && git rm --cached ".cursor/rules" ".cursorrules" 2>/dev/null || true
 
         if git diff --cached --quiet; then
-            info "$repo: no changes to commit (symlinks already up-to-date)"
+            info "$repo: no changes to commit"
         else
-            git commit -m "chore: add agent symlinks for cursor rules + CLAUDE.md + AGENTS.md
+            git commit -m "chore: add CLAUDE.md + AGENTS.md symlinks; cursor rules now ephemeral
 
-Relative symlinks so Cursor and Claude Code agents find workspace rules in every repo:
-  .cursor/rules         -> ../../unified-trading-pm/cursor-rules/
-  .claude/CLAUDE.md     -> ../../unified-trading-pm/cursor-configs/CLAUDE.md
-  .cursorrules          -> ../unified-trading-pm/cursor-configs/cursorrules
-  AGENTS.md             -> ../unified-trading-pm/AGENTS.md
+Committed symlinks for Claude Code + agent runners:
+  .claude/CLAUDE.md -> ../../unified-trading-pm/cursor-configs/CLAUDE.md
+  AGENTS.md         -> ../unified-trading-pm/AGENTS.md
 
-Symlinks resolve after PM is cloned (via setup-workspace.sh or agent-audit.yml bootstrap).
-Enables autonomous Cursor and Claude Code agents in all repos.
+Cursor rules (.cursor/rules, .cursorrules) are NOT committed — they are
+copied as real files ephemerally by setup-workspace-from-manifest.sh
+during GHA runs. This prevents Cursor IDE from reading 60+ rule sets at once.
 
 Auto-generated by scripts/rollout-agent-symlinks.sh"
-            ok "$repo: committed symlinks"
+            ok "$repo: committed"
         fi
     ) && PASS=$((PASS + 1)) || { warn "$repo: failed"; FAIL=$((FAIL + 1)); }
 
