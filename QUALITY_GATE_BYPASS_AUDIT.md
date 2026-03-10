@@ -207,3 +207,18 @@ replaces `importlib.util.find_spec`. No bypass needed.
 
 **Rationale:** Path deps and workspace-local packages require workspace context for resolution. Documented for S4 audit
 traceability.
+
+## basedpyright-baseline: `.basedpyright-baseline.json` (33 pre-existing errors)
+
+**Added:** 2026-03-10 — typecheck fix pass **Status:** JUSTIFIED — untyped third-party dependencies; target is zero when
+stubs become available **Errors suppressed:** 33
+
+**Reason:** Script automation tools: json.loads()/yaml.safe_load() return Any by design (dynamic data); argparse
+namespace attrs typed as Any; subprocess results Any. Root cause: these scripts parse dynamic external data where Any is
+inherent.
+
+**Scope:** All errors in `.basedpyright-baseline.json` are from untyped third-party libraries or unresolvable import
+chains in workspace venv context — NOT architectural violations. No `reportAny` errors in first-party code are
+suppressed.
+
+**Target:** Remove baseline when upstream type stubs are available.
