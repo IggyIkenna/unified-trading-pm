@@ -303,12 +303,31 @@ todos:
         client-reporting-api (workflow only — cloudbuild has pre-existing YAML issue),
         market-data-api (workflow only — cloudbuild has pre-existing YAML issue),
         ibkr-gateway-infra (no cloudbuild changes needed)
-      KNOWN ISSUE: client-reporting-api and market-data-api cloudbuild.yaml have pre-existing
-        check-yaml hook failures (inline Python code `import json, sys` at column 0 inside block scalar).
-        Coverage flags were added to the pytest command but cannot be committed until the YAML is fixed.
-        TODO: fix the YAML escape in their vulnerability scan steps.
+      DONE 2026-03-10 (follow-up): client-reporting-api and market-data-api YAML issues fixed.
+        Fixed inline Python `import json, sys` at column 0 in scan-check step → single-line python3 -c.
+        Coverage enforcement also added: client-reporting-api --cov-fail-under=85, market-data-api --cov-fail-under=79.
+        Both check-yaml hook and coverage enforcement now pass. WARNs cleared from alignment check.
       check_test_alignment.sh check [5] updated: now accepts either quality-gates.sh OR --cov-fail-under
         (library inline pattern is acceptable since QG stub cannot run in Cloud Build without pm clone step).
+
+  - id: rollout-deployment-infra-missing-repos
+    content: >
+      UI repos (11) and batch/API repos (batch-audit-api, batch-live-reconciliation-service) were missing Docker
+      deployment infrastructure (Dockerfile, cloudbuild.yaml, buildspec.aws.yaml). Frontends and batch services must be
+      deployed per runtime DAG topology — no repo can be exempt. UI pattern: QG runs in node:20-alpine step before
+      docker build; lean nginx:alpine runtime (no npm in container). Service pattern: docker build → docker run QG
+      inside image → push → vulnerability scan. Propagation script:
+      unified-trading-pm/scripts/propagation/rollout-ui-build-infra.py (UI repos only).
+    status: completed
+    notes: |
+      DONE 2026-03-10: All 11 UI repos and 2 batch repos fully provisioned.
+      UI repos (all got Dockerfile + nginx.conf + cloudbuild.yaml + buildspec.aws.yaml):
+        batch-audit-ui, client-reporting-ui, execution-analytics-ui, live-health-monitor-ui,
+        logs-dashboard-ui, ml-training-ui, onboarding-ui, settlement-ui, strategy-ui,
+        trading-analytics-ui, unified-admin-ui
+      Batch/API repos (got cloudbuild.yaml + buildspec.aws.yaml; batch-audit-api also got Dockerfile):
+        batch-audit-api, batch-live-reconciliation-service
+      Final alignment check: 53 PASS, 0 WARN, 0 FAIL (was 49 PASS, 4 WARN before this work).
 
   - id: verify-ui-coverage-floor
     content: >
