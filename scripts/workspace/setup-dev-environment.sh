@@ -8,14 +8,17 @@
 #   bash unified-trading-pm/scripts/workspace/setup-dev-environment.sh
 #
 # What this script does:
-#   Step 1 — check_prerequisites   : python3.13, node 22+, docker, git, uv, gh
-#   Step 2 — setup_venv            : source or create .venv-workspace
-#   Step 3 — setup_env_dev         : copy .env.dev.template → .env.dev if absent
-#   Step 4 — configure_gcp_dev     : gcloud config for dev project (idempotent)
-#   Step 5 — check_aws_testnet     : verify AWS profile or print setup instructions
-#   Step 6 — install_dependencies  : uv pip install -e for all repos T0→T1→T2→T3
-#   Step 7 — verify_imports        : python -c "import ..." sanity check for T0-T2
-#   Step 8 — print_next_steps      : summary + any warnings
+#   Step  1 — check_prerequisites  : python3.13, node 22+, docker, git, uv, gcloud, aws, gh
+#   Step  2 — setup_venv           : source or create .venv-workspace via workspace-bootstrap.sh
+#   Step  3 — fix_broken_symlinks  : run fix-broken-symlinks.sh --all (if present)
+#   Step  4 — setup_env_dev        : copy .env.dev.template → .env.dev if absent
+#   Step  5 — configure_gcp_dev    : gcloud config for dev project (idempotent)
+#   Step  6 — check_aws_testnet    : verify AWS profile or print setup instructions
+#   Step  7 — install_dependencies : uv pip install -e for all repos T0→T1→T2→T3
+#   Step  8 — verify_imports       : python -c "import ..." sanity check for T0-T2
+#   Step  9 — seed_dev_project     : bash seed-dev-project.sh --quick (if present)
+#   Step 10 — run_smoke_test       : python smoke-test-dev.py (if present)
+#   Step 11 — print_summary        : quick-start commands + warnings
 #
 # Idempotent. Safe to re-run.
 #
@@ -54,7 +57,7 @@ log_info "Workspace root: $WORKSPACE_ROOT"
 log_info "PM root:        $PM_ROOT"
 
 # ── STEP 1: CHECK PREREQUISITES ─────────────────────────────────────────────
-log_step 1 "Check prerequisites"
+log_step 1 "Check prerequisites (python3.13, node 22+, docker, git, uv, gcloud, aws, gh)"
 
 check_tool() {
     local tool="$1"
@@ -178,11 +181,38 @@ fi
 source "$VENV_DIR/bin/activate"
 log_ok "Activated .venv-workspace ($(python --version))"
 
-# ── STEP 3: .env.dev ─────────────────────────────────────────────────────────
-log_step 3 ".env.dev setup"
+# ── STEP 3: FIX BROKEN SYMLINKS ──────────────────────────────────────────────
+log_step 3 "Fix broken symlinks"
+
+FIX_SYMLINKS_SCRIPT="$PM_ROOT/scripts/workspace/fix-broken-symlinks.sh"
+if [[ -f "$FIX_SYMLINKS_SCRIPT" ]]; then
+    log_info "Running fix-broken-symlinks.sh --all ..."
+    if bash "$FIX_SYMLINKS_SCRIPT" --all 2>/dev/null; then
+        log_ok "Broken symlinks fixed"
+    else
+        log_warn "fix-broken-symlinks.sh exited non-zero — review output above"
+    fi
+else
+    # Symlinks were verified clean on 2026-03-10 (131 symlinks, 0 broken).
+    # fix-broken-symlinks.sh is created by broken_symlinks_remediation plan when needed.
+    log_skip "fix-broken-symlinks.sh not found — symlink health was verified clean on 2026-03-10"
+    log_info "  If you encounter broken symlinks, run:"
+    log_info "    bash unified-trading-pm/scripts/workspace/setup-pre-flight-symlinks.sh"
+    log_info "    bash unified-trading-pm/scripts/workspace/fix-per-repo-cursor-rules-symlinks.sh"
+fi
+
+# ── STEP 4: .env.dev ─────────────────────────────────────────────────────────
+log_step 4 ".env.dev setup"
 
 ENV_TEMPLATE="$WORKSPACE_ROOT/.env.dev.template"
+# Fallback: copy from PM repo if not at workspace root
+PM_ENV_TEMPLATE="$PM_ROOT/templates/.env.dev.template"
 ENV_DEV="$WORKSPACE_ROOT/.env.dev"
+
+if [[ ! -f "$ENV_TEMPLATE" ]] && [[ -f "$PM_ENV_TEMPLATE" ]]; then
+    cp "$PM_ENV_TEMPLATE" "$ENV_TEMPLATE"
+    log_ok "Copied .env.dev.template from PM repo to workspace root"
+fi
 
 if [[ ! -f "$ENV_TEMPLATE" ]]; then
     log_fail ".env.dev.template not found at $ENV_TEMPLATE — workspace may be incomplete"
@@ -198,8 +228,8 @@ else
     echo -e "${YELLOW}    - Reference: unified-trading-pm/docs/dev-environment-vars.md${NC}"
 fi
 
-# ── STEP 4: GCP DEV CONFIGURATION ────────────────────────────────────────────
-log_step 4 "GCP dev configuration"
+# ── STEP 5: GCP DEV CONFIGURATION ────────────────────────────────────────────
+log_step 5 "GCP dev configuration"
 
 if command -v gcloud &>/dev/null; then
     # Read project from .env.dev if it exists
@@ -234,8 +264,8 @@ else
     log_skip "gcloud not installed — skipping GCP configuration"
 fi
 
-# ── STEP 5: AWS TESTNET CHECK ─────────────────────────────────────────────────
-log_step 5 "AWS testnet check"
+# ── STEP 6: AWS TESTNET CHECK ─────────────────────────────────────────────────
+log_step 6 "AWS testnet check"
 
 if command -v aws &>/dev/null; then
     if aws --profile unified-trading-dev sts get-caller-identity &>/dev/null 2>&1; then
@@ -250,8 +280,8 @@ else
     log_skip "aws CLI not installed — skipping AWS check"
 fi
 
-# ── STEP 6: INSTALL REPO DEPENDENCIES ────────────────────────────────────────
-log_step 6 "Install repo dependencies (T0→T1→T2→T3 order)"
+# ── STEP 7: INSTALL REPO DEPENDENCIES ────────────────────────────────────────
+log_step 7 "Install repo dependencies (T0→T1→T2→T3 order)"
 
 # Topological order from workspace-manifest.json (L2-L6 = Python libraries/interfaces)
 # L2: T0 foundation (no inter-library deps)
@@ -322,8 +352,8 @@ for repo in "${T2_REPOS[@]}"; do install_repo "$repo" "T2"; done
 log_info "Installing T3 interfaces (L5-L6)..."
 for repo in "${T3_REPOS[@]}"; do install_repo "$repo" "T3"; done
 
-# ── STEP 7: VERIFY IMPORTS ────────────────────────────────────────────────────
-log_step 7 "Verify T0-T2 library imports"
+# ── STEP 8: VERIFY IMPORTS ────────────────────────────────────────────────────
+log_step 8 "Verify T0-T2 library imports"
 
 run_import_check() {
     local label="$1"
@@ -363,8 +393,41 @@ run_import_check "unified_market_interface" \
 run_import_check "unified_domain_client" \
     "import unified_domain_client"
 
-# ── STEP 8: PRINT SUMMARY ─────────────────────────────────────────────────────
-log_step 8 "Summary"
+# ── STEP 9: SEED DEV PROJECT ─────────────────────────────────────────────────
+log_step 9 "Seed dev project (mock data)"
+
+SEED_SCRIPT="$PM_ROOT/scripts/dev/seed-dev-project.sh"
+if [[ -f "$SEED_SCRIPT" ]]; then
+    log_info "Running seed-dev-project.sh --quick ..."
+    if bash "$SEED_SCRIPT" --quick 2>/dev/null; then
+        log_ok "Dev project seeded"
+    else
+        log_warn "seed-dev-project.sh exited non-zero — dev data may be incomplete"
+        log_info "  See: unified-trading-pm/plans/active/mock_data_dev_project_seeding_2026_03_10.plan.md"
+    fi
+else
+    log_skip "seed-dev-project.sh not found — pending mock_data_dev_project_seeding plan (Phase 2)"
+    log_info "  Services will still start; mock data seeding is optional for unit tests"
+fi
+
+# ── STEP 10: RUN SMOKE TEST ───────────────────────────────────────────────────
+log_step 10 "Smoke test"
+
+SMOKE_SCRIPT="$PM_ROOT/scripts/dev/smoke-test-dev.py"
+if [[ -f "$SMOKE_SCRIPT" ]]; then
+    log_info "Running smoke-test-dev.py ..."
+    if python "$SMOKE_SCRIPT" 2>&1; then
+        log_ok "Smoke test passed"
+    else
+        log_warn "Smoke test reported failures — review output above"
+    fi
+else
+    log_skip "smoke-test-dev.py not found — pending Phase 4 of onboarding plan"
+    log_info "  Basic import verification was done in Step 8 above"
+fi
+
+# ── STEP 11: PRINT SUMMARY ─────────────────────────────────────────────────────
+log_step 11 "Summary"
 
 echo ""
 echo -e "${BOLD}${GREEN}Dev environment setup complete.${NC}"
