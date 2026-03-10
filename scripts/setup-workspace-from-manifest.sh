@@ -228,17 +228,47 @@ else
     info "unified-trading-codex: already present"
 fi
 
-# ── CURSOR RULES SYMLINK ──────────────────────────────────────────────────────
+# ── AGENT SYMLINKS (workspace root + per-service) ────────────────────────────
+# Wire cursor rules, CLAUDE.md, cursorrules, AGENTS.md so Cursor and Claude Code
+# agents can find them whether running at workspace root or inside the service dir.
 echo ""
-echo "--- Setting up cursor rules symlink ---"
-CURSOR_RULES_SRC="$WORKSPACE_ROOT/unified-trading-pm/cursor-rules"
-CURSOR_RULES_DEST="$WORKSPACE_ROOT/.cursor/rules"
-if [ -d "$CURSOR_RULES_SRC" ]; then
-    mkdir -p "$(dirname "$CURSOR_RULES_DEST")"
-    ln -sfn "$CURSOR_RULES_SRC" "$CURSOR_RULES_DEST"
-    ok ".cursor/rules → unified-trading-pm/cursor-rules/"
-else
-    warn "cursor-rules not found at $CURSOR_RULES_SRC (symlink skipped)"
+echo "--- Setting up agent symlinks ---"
+
+PM_DEST="$WORKSPACE_ROOT/unified-trading-pm"
+SERVICE_DIR="$WORKSPACE_ROOT/$SERVICE_NAME"
+
+_symlink() {
+    local link_path="$1"
+    local target="$2"
+    local label="$3"
+    mkdir -p "$(dirname "$link_path")"
+    ln -sfn "$target" "$link_path"
+    ok "  $label"
+}
+
+# Workspace-root level (for Claude Code traversal up from any service dir)
+if [ -d "$PM_DEST/cursor-rules" ]; then
+    _symlink "$WORKSPACE_ROOT/.cursor/rules" "$PM_DEST/cursor-rules" ".cursor/rules → PM/cursor-rules/"
+fi
+if [ -f "$PM_DEST/cursor-configs/CLAUDE.md" ]; then
+    _symlink "$WORKSPACE_ROOT/.claude/CLAUDE.md" "$PM_DEST/cursor-configs/CLAUDE.md" ".claude/CLAUDE.md → PM/cursor-configs/CLAUDE.md"
+fi
+
+# Per-service level (for agents running inside the service checkout)
+# Relative symlinks: work regardless of absolute WORKSPACE_ROOT path
+if [ -d "$SERVICE_DIR" ] && [ "$SERVICE_NAME" != "unified-trading-pm" ]; then
+    if [ -d "$PM_DEST/cursor-rules" ]; then
+        _symlink "$SERVICE_DIR/.cursor/rules" "../../unified-trading-pm/cursor-rules/" "$SERVICE_NAME/.cursor/rules → relative PM/cursor-rules/"
+    fi
+    if [ -f "$PM_DEST/cursor-configs/CLAUDE.md" ]; then
+        _symlink "$SERVICE_DIR/.claude/CLAUDE.md" "../../unified-trading-pm/cursor-configs/CLAUDE.md" "$SERVICE_NAME/.claude/CLAUDE.md → relative PM/cursor-configs/CLAUDE.md"
+    fi
+    if [ -f "$PM_DEST/cursor-configs/cursorrules" ]; then
+        _symlink "$SERVICE_DIR/.cursorrules" "../unified-trading-pm/cursor-configs/cursorrules" "$SERVICE_NAME/.cursorrules → relative PM/cursor-configs/cursorrules"
+    fi
+    if [ -f "$PM_DEST/AGENTS.md" ]; then
+        _symlink "$SERVICE_DIR/AGENTS.md" "../unified-trading-pm/AGENTS.md" "$SERVICE_NAME/AGENTS.md → relative PM/AGENTS.md"
+    fi
 fi
 
 # ── PREFLIGHT SUMMARY ─────────────────────────────────────────────────────────
