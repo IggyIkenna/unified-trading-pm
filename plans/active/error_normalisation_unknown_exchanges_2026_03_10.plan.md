@@ -45,6 +45,64 @@ currently result in `record_failure()` vs which fall through. Output: appended t
 
 ---
 
+## Phase 0 Results (2026-03-10) — COMPLETE
+
+Full detail: `unified-trading-pm/audits/venue_error_coverage_2026_03_10.md`
+
+### P0.1 Results: Venue Coverage
+
+**Canonical errors**: 19 types confirmed in `unified_normalised_contracts/errors.py`. `CanonicalUnknownVenueError` does
+not yet exist.
+
+**VENUE_REGISTRY**: 33 venues across CeFi(9) + TradFi(9) + DeFi(14) + OnchainPerps(1) in
+`unified-market-interface/factory.py`.
+
+**VENUE_ERROR_MAP**: 17 entries, but only 13 match VENUE_REGISTRY venues. 20 of 33 registry venues have zero error
+mappings (61% missing). Sports adapters (25+ in sports/registry.py) have zero mappings.
+
+Coverage by category:
+
+- CeFi: 7/9 venues mapped (coinglass, hyblock missing), ~15% of known error codes per venue
+- TradFi: 5/9 venues mapped (barchart, fred, ecb, ofr, openbb missing), ~10% of codes
+- DeFi: 0/14 venues mapped — all 14 DeFi protocols have zero entries
+- OnchainPerps: 1/1 mapped (hyperliquid), ~20% of codes
+- Sports: 0/25+ mapped
+
+Additional defects found:
+
+- `classify_venue_error()` silently returns FAIL for unknown codes with no event emission and no structured data capture
+  — the raw error code/message is discarded
+- `yahoo_finance` maps both `RATE_LIMIT_EXCEEDED` and `429` (duplicate for same condition)
+- `DATABENTO_ERROR_MAP` is a separate dataclass dict that overlaps with the `databento` VENUE_ERROR_MAP entry — two
+  sources of truth
+- 5 venues in VENUE_ERROR_MAP (alchemy, thegraph, aster, bloxroute, versifi) are NOT in VENUE_REGISTRY — architecture
+  classification gap
+- Sports errors use `SportsError` hierarchy (not `CanonicalError` subclasses) — no bridge to canonical taxonomy
+
+### P0.2 Results: Circuit Breaker Triggers
+
+**Critical finding**: `record_failure()` has **zero production callers**. The circuit breaker module
+(`execution_service/engine/circuit_breaker.py`) is never imported by any production execution-service code. Only test
+code calls it. `LiveExecutionOrchestrator.execute_order()` has no circuit_breaker import.
+
+**Hardcoded thresholds**: `_FAILURE_THRESHOLD = 5`, `_COOLDOWN_SECONDS = 300.0` — module-level constants with no config
+loading.
+
+**No error type discrimination**: `record_failure(reason: str = "")` takes a free-form string. Cannot distinguish rate
+limit (non-fault) vs auth failure vs network error vs order rejection. All would trip the breaker identically after 5
+occurrences.
+
+**No CanonicalError plumbing**: At no layer does a CanonicalError instance flow into the circuit breaker.
+
+### Phase 0 Grade: FAIL (2 FAILs, 2 WARNs)
+
+- FAIL: 61% of registry venues unmapped; classify_venue_error() silently discards unknowns
+- FAIL: Circuit breaker has zero production callers and no error-type discrimination
+- WARN: Sports error hierarchy not bridged to CanonicalError
+- WARN: DeFi/onchain revert errors require distinct mapping approach (not HTTP codes)
+
+---
+
 ## Phase 1: Canonical error schema extensions
 
 ### P1.1 — Add CanonicalUnknownVenueError

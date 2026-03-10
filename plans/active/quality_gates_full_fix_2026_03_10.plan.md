@@ -228,14 +228,12 @@ todos:
       Delete all orphaned quality-gate scripts superseded by the canonical quality-gates.sh stub pattern. Files to
       delete:
         1. unified-trading-pm/scripts/audit/generate-quality-gates-coverage-report.py — empty 2-line stub
-        2. deployment-service/scripts/check_test_alignment.sh — stale 14-repo hardcoded list; not in CI
+        2. deployment-service/scripts/check_test_alignment.sh — refactored (not deleted; now manifest-driven)
         3. instruments-service/scripts/run_quality_gates.py — parallel reimplementation, 50% threshold (DANGEROUS)
         4. unified-trading-library/scripts/run_quality_gates.py — same pattern; verify then delete
         5. market-tick-data-service/scripts/run_quality_gates.py — same pattern; verify then delete
         6. market-tick-data-service/scripts/generate_coverage_report.py — repo-local; verify not in QG then delete
-      For each repo: confirm canonical scripts/quality-gates.sh stub exists and sources base-service/base-library.sh.
-      Then: git rm <file> and commit per repo: "chore: remove orphaned QG scripts superseded by canonical stub"
-    status: pending
+    status: completed
     notes: |
       Confirmed orphaned (2026-03-10):
         generate-quality-gates-coverage-report.py: 2 lines total — just a comment. Never implemented.
@@ -248,6 +246,29 @@ todos:
           quality-gates.sh which is already correct.
       KEEP: quality-gates.sh files in each repo — those ARE the canonical stubs.
       DELETE: only the Python run_quality_gates.py files and the stale bash alignment script.
+
+  - id: fix-gh-actions-inline-pytest
+    content: >
+      Fix 19 repos where .github/workflows/quality-gates.yml inlines pytest directly instead of calling 'bash
+      scripts/quality-gates.sh'. All GH Actions workflows must delegate to the canonical stub. Identified FAILs from
+      check_test_alignment.sh (2026-03-10):
+        batch-audit-ui, batch-live-reconciliation-service, client-reporting-ui, execution-analytics-ui,
+        features-calendar-service, features-onchain-service, features-volatility-service,
+        instruments-service, live-health-monitor-ui, logs-dashboard-ui, market-data-processing-service,
+        ml-inference-service, ml-training-ui, onboarding-ui, pnl-attribution-service, settlement-ui,
+        strategy-ui, trading-analytics-ui, (batch-audit-api missing GH Actions entirely)
+      For each: replace inline pytest block with a single step:
+        - name: Run quality gates
+          run: bash scripts/quality-gates.sh
+      Preserve: checkout, python setup, uv install, dep checkout steps. Remove only the inline pytest block. Run
+      check_test_alignment.sh after to verify 0 FAILs remain.
+    status: pending
+    notes: |
+      Root cause: GH Actions workflows were written before the canonical QG stub pattern was standardised.
+      The stub sources base-service.sh which runs the identical pytest command — inlining is redundant and
+      causes drift (e.g. instruments-service workflow had --cov-fail-under=35 while MIN_COVERAGE=70).
+      check_test_alignment.sh (now manifest-driven) is the ongoing detector for this class of misalignment.
+      Commits: one per repo, "ci: delegate quality gates to bash scripts/quality-gates.sh"
 
   - id: verify-ui-coverage-floor
     content: >
