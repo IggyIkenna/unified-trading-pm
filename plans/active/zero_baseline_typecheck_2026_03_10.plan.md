@@ -202,5 +202,10 @@ class NautilusEngineProtocol(Protocol):
 - [x] Phase 4 complete — deployment-api 2,962 → 0 errors, no baseline (commits ce897d3..c97a69e) (2026-03-10)
 - [x] Phase 5 complete — market-data-processing-service 1,348 → 0 errors, no baseline (commit 7cf0b39) (2026-03-10)
 - [x] Phase 6 complete — ml-training-service 504 → 0 errors, no baseline (commit 87808ac) (2026-03-10)
-- [ ] Phase 7 complete — execution-service ~9,107 remaining errors (background agent running 2026-03-10)
+- [ ] Phase 7 complete — execution-service 7,729 errors remaining (agent batch 2 running 2026-03-10)
+  - handlers.py 311→0, node_builder.py 293→0 done; grid_v2_registry/timeline/loader_gcs in progress
+  - Stub expansion: OrderFactory(Quantity), position.commissions(), backtest config, orders/base.pyi
 - [ ] Phase 8 complete — zero baseline verified all repos
+  - UDC baseline deleted 2026-03-10 (89ff721) — 0 real errors, inline suppressions sufficient
+  - instruments-service baseline deleted 2026-03-10 (774d0c6) — 0 real errors, previous sessions fixed all
+  - Workspace now has ZERO .basedpyright-baseline.json files ✅
