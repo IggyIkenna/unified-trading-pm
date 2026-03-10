@@ -12,9 +12,10 @@ overview: |
   trading-analytics-ui) migrate from the direct GoogleAuth.ts call-site API to the new
   AuthProvider + config pattern. No @okta/* dependencies anywhere in the workspace after this plan
   completes. Package version bumped (minor) for new public API.
-status: active
+status: completed
+completed: 2026-03-10
 created: 2026-03-09
-updated: 2026-03-09T03:40:00Z
+updated: 2026-03-10
 isProject: false
 todos:
   - id: audit-current-api-surface

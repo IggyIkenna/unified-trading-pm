@@ -112,6 +112,12 @@ SSOT: deployment-service/configs/
 
 ## Archive Cross-Reference
 
+| Archived (2026-03-10 — plans entirely complete)                                                                               | Notes |
+| ----------------------------------------------------------------------------------------------------------------------------- | ----- |
+| quality_gates_dry_refactor_2026_03_09 (10/10 todos — 47 repos, 4 base scripts, ~26,790 lines deduped)                         | DONE  |
+| ui_auth_oauth_pkce_2026_03_09 (11/11 todos — provider-agnostic OAuth2 PKCE, GoogleAdapter + CognitoAdapter, Okta dropped)     | DONE  |
+| ui_npm_dep_governance_2026_03_10 (6/6 todos — npm drift detection, canonical versions, batch-audit-ui tests, all 11 UI repos) | DONE  |
+
 | Archived (2026-03-09 — plans entirely complete)                                              | Notes  |
 | -------------------------------------------------------------------------------------------- | ------ |
 | documentation_standards_enforcement (26 service repos + 6 library stubs filled)              | DONE   |
