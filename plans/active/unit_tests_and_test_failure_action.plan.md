@@ -136,10 +136,15 @@ todos:
     notes: |
       Identified 2026-03-10 from tier-order-run summary table. NOT yet fixed.
 
-      RC-A/B (stale wheel, 20 failures):
-        unified-market-interface: 15 failed — IBKRAdapter missing ib= kwarg + normalize_ray_value/bps_to_percent not
-          in installed wheel. Fix: uv pip install -e unified-market-interface/ from workspace root.
-        unified-trade-execution-interface: 5 failed — IbkrTradFiAdapter missing ib= kwarg. Same fix.
+      RC-A/B (corrected diagnosis — 2026-03-10):
+        UTEI: 5 failures were stale wheel artefact — passes fine via bash scripts/quality-gates.sh. No fix needed.
+        UMI: NOT a stale wheel issue. Real cause: tests added in e3ba838 (raise coverage to 80%) imported ~80
+          symbols from unified_market_interface top-level that were never added to __init__.py. Tests "passed"
+          because the workspace venv's stale wheel had those exports; per-repo .venv (editable) did not.
+          FIXED 2026-03-10: added 98 missing public symbols to __init__.py; 928 failures → 12 remaining
+          (12 = pre-existing Polymarket implementation gaps: get_trades missing, schema mismatches).
+          Root lesson: always use bash scripts/quality-gates.sh not manual pytest — stale wheel masks missing exports.
+          New cursor rules: testing/no-manual-pytest.mdc + imports/library-init-exports.mdc
 
       RC-C (env-leak, 3 failures remaining):
         features-multi-timeframe-service, features-sports-service, pnl-attribution-service: test_config_instantiates_
