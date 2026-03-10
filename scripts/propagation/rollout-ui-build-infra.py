@@ -348,6 +348,23 @@ def rollout_ui_repo(repo_name: str, repo_path: Path, dry_run: bool, force: bool)
                 print(r.stderr, file=sys.stderr)
                 sys.exit(1)
 
+    # Validate buildspec.aws.yaml after writing
+    if not dry_run and (repo_path / "buildspec.aws.yaml").exists():
+        validator = WORKSPACE_ROOT / "unified-trading-pm" / "scripts" / "validation" / "validate-buildspec.py"
+        if validator.exists():
+            import subprocess
+
+            r = subprocess.run(
+                [sys.executable, str(validator), str(repo_path / "buildspec.aws.yaml")],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=str(WORKSPACE_ROOT),
+            )
+            if r.returncode != 0:
+                print(r.stderr, file=sys.stderr)
+                sys.exit(1)
+
     return results
 
 

@@ -1,0 +1,113 @@
+# execution-service Logic Audit & Test Hardening
+
+**Created**: 2026-03-10 **Status**: active **Owner**: Claude Code **Priority**: P1
+
+## Objective
+
+Audit execution-service source code logic, validate against sane execution assumptions using mock data and small
+samples, and replace try/except coverage-gaming tests with genuine behaviour-validating tests.
+
+## Context
+
+- Coverage raised 26% → 70.04% using ~9,200 tests, but ~30-40% use bare `try/except: pass` which means bugs are
+  invisible to the test suite
+- Two real import bugs were found during coverage work (nautilus_trader API drift)
+- The `vw_entry_slippage_bps` assertion was weakened — may hide a real algorithm bug
+
+## Audit Tranches
+
+### Tranche 1: Algorithm Logic (TWAP / VWAP / Passive-Aggressive)
+
+**Files**: `algorithms/impl/twap.py`, `twap_scheduling.py`, `vwap.py`, `vwap_execution.py`,
+`passive_aggressive_execution.py`, `hybrid_optimal.py` **Method**: Instantiate with synthetic order book + clock mock,
+feed tick events, assert child order schedule, quantities, timing correctness **Key assertions**:
+
+- TWAP splits total qty evenly across N intervals
+- VWAP weights slices by volume profile
+- PA starts passive (limit), switches to aggressive (market) on schedule
+- hybrid_optimal blends urgency correctly
+
+### Tranche 2: Data Converters
+
+**Files**: `data/orderbook_converter.py`, `trade_converter.py`, `ohlcv_converter.py` **Method**: Feed CSV/parquet sample
+fixtures, assert output nautilus_trader objects **Key assertions**:
+
+- Timestamp nanosecond vs microsecond detection at 1e17 boundary
+- Bid/ask price level extraction from both Tardis and GCS formats
+- Aggressor side mapping (BUYER/SELLER/1/2/A/B → BUY/SELL)
+
+### Tranche 3: PnL / Results Extraction
+
+**Files**: `results/extractor.py`, `engine/pnl_monitor.py`, `results/timeline.py` **Method**: Synthetic fill history,
+assert PnL calculations **Key assertions**:
+
+- Realized PnL from fills = sum(exit_price - entry_price) \* qty (long)
+- VW slippage = Σ(slip_i \* notional_i) / Σ(notional_i)
+- Timeline fill events match order fills
+
+### Tranche 4: Instrument Factory
+
+**Files**: `instruments/factory.py`, `factory_cefi_defi.py`, `factory_tradfi.py` **Method**: Feed instrument definition
+dicts, assert CryptoPerpetual/Equity objects **Key assertions**:
+
+- Precision capped at 16 for DeFi
+- Inverse flag detection (bool/string/settlement_type)
+- Missing tick_size falls back to default
+
+### Tranche 5: Validation Logic
+
+**Files**: `validation/instruction_validator.py`, `engine/validation/catalog_validator.py`,
+`engine/validation/backtest_validator.py` **Method**: Feed valid and deliberately invalid instruction DataFrames **Key
+assertions**:
+
+- TP > entry price for BUY (long), TP < entry price for SELL (short)
+- SL < entry for BUY, SL > entry for SELL
+- Missing required columns raise, not silently pass
+
+### Tranche 6: Grid Config Generation
+
+**Files**: `config/grid_generator_v2.py`, `grid_generator_core.py`, `grid_builder.py` **Method**: Feed strategy registry
+with known params, assert config output structure **Key assertions**:
+
+- Generated algo names follow convention
+- Horizon/timeframe combinations are valid
+- No duplicate configs generated
+
+### Tranche 7: DePrioritised (complex runtime deps)
+
+**Files**: `engine/backtest/runner.py`, `engine/backtest/engine/core.py` — skip for now, require full NautilusTrader
+kernel
+
+## Test Hardening Protocol
+
+For each tranche:
+
+1. Find existing boost tests for that area
+2. Remove bare `except: pass` wrappers on assertions — let them fail
+3. Add at least 1 "golden path" test with concrete numeric assertions
+4. Add at least 1 "error path" test that asserts the right exception
+5. Run `pytest --tb=short` on just those files to verify no silent failures
+
+## Acceptance Criteria
+
+- [ ] T1: 3+ algorithm golden-path tests with concrete quantity/timing assertions
+- [ ] T2: 3+ converter tests with real fixture data (synthetic CSV/dict)
+- [ ] T3: PnL calculation verified with hand-computed expected values
+- [ ] T4: Factory tests with concrete instrument field assertions
+- [ ] T5: Validator tests explicitly assert exception types and messages
+- [ ] T6: Grid config tests assert expected algo name format
+- [ ] All hardened tests: 0 bare `except: pass` blocks (use `pytest.raises` or explicit skips)
+- [ ] Coverage stays >= 70% after removing gaming tests
+
+## Files to Track
+
+- boost tests: `tests/unit/test_boost_exec_algo_*.py`, `test_boost_exec_results_*.py`, `test_boost_exec_data_*.py`,
+  `test_boost_exec_engine_*.py`, `test_boost_exec_venues_*.py`
+- Source files per tranche above
+
+## Notes
+
+- NautilusTrader `Actor.log` is a C-extension — cannot be patched; use `@pytest.mark.skip` with reason
+- `OrderBook` moved to `nautilus_trader.model.book` in nautilus 1.2+
+- `Portfolio` moved to `nautilus_trader.portfolio.portfolio` in nautilus 1.2+
+- Use `MagicMock(spec=TradeTick)` not plain `MagicMock()` for isinstance checks
