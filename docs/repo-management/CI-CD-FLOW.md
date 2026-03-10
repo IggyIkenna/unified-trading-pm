@@ -50,7 +50,7 @@ for repo list, tiers, and versions.
 run-version-alignment.sh --fix      # align pyproject.toml versions + manifest
   └── auto-calls sync-workspace-venv.sh   # refresh .venv-workspace editable installs
 
-run-all-setup.sh --rollout-first    # propagate setup.sh + QG stubs + rebuild per-repo .venv
+run-all-setup.sh --rollout-first    # propagate setup.sh + QG stubs + build infra (Dockerfile, cloudbuild, buildspec) + rebuild per-repo .venv
 
 run-all-quality-gates.sh            # local e2e smoke test (all tiers, parallel within tier)
   └── --repo X / --repos "X Y"      # subset mode — skip alignment + setup checks
@@ -86,8 +86,14 @@ scripts — never in per-repo files. UI repos have a minimal TypeScript stub (np
 To add or change a gate check: edit the PM base script. It applies instantly to all repos — no rollout needed. To change
 the stub interface (new required variable): edit the codex scaffold template, run rollout, commit stubs.
 
-**Rollout** — Copies `setup.sh` into each repo and writes QG config stubs (not full gate logic). Run when `setup.sh`
-changes in PM, when the stub interface changes, or use `--rollout-first` for first-time bootstrap.
+**Rollout** — `run-all-setup.sh --rollout-first` runs three propagation scripts:
+
+1. `rollout-quality-gates-unified.py` — copies `setup.sh`, `quality-gates.sh`, writes QG config stubs
+2. `rollout-quickmerge.py` — copies `quickmerge.sh`
+3. `rollout-ui-build-infra.py` — generates `Dockerfile`, `cloudbuild.yaml`, `buildspec.aws.yaml` for UI/batch/API repos
+
+Run when `setup.sh` changes in PM, when the stub interface changes, when build infra templates change, or use
+`--rollout-first` for first-time bootstrap.
 
 ---
 
