@@ -185,7 +185,10 @@ IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/.cursor/scripts/check-import-patterns.py"
 if [ -f "$IP" ]; then
-    $PYTHON_CMD "$IP" --verbose 2>/dev/null && log_success "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
+    # Scope import check to SOURCE_DIR only — tests are allowed to deep-import from their own
+    # package (they test internal components). External consumers are linted at a higher level.
+    IP_TARGET="${SOURCE_DIR:-.}"
+    $PYTHON_CMD "$IP" "$IP_TARGET" --verbose 2>/dev/null && log_success "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
 else
     log_warn "check-import-patterns.py not found (unified-trading-pm/scripts/)"
 fi

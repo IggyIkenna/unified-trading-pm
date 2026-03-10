@@ -41,31 +41,30 @@ todos:
     content: >
       Fix all T0 libraries failing QG (tests + coverage >= 80%): unified-internal-contracts, matching-engine-library,
       execution-algo-library, unified-api-contracts. Spawn one agent per failing repo.
-    status: pending
+    status: completed
+    notes: "2026-03-10: UIC=99%, MEL=100%, EAL=97%, UAC=86% — all above 80%"
 
   - id: fix-t1-libraries
     content: >
       Fix all T1 libraries failing QG (tests + coverage >= 80%): unified-events-interface, unified-config-interface,
       unified-trading-library (currently 78% — needs +2%).
-    status: pending
+    status: completed
+    notes: "2026-03-10: UEI=100%, UCI=96%, UTL=81%, UFCL=95% — all above 80%"
 
   - id: fix-t2-libraries
     content: >
-      Fix all T2 libraries failing QG (tests + coverage >= 80%): unified-market-interface (40% — major gap),
-      unified-trade-execution-interface, unified-ml-interface, unified-position-interface,
-      unified-reference-data-interface, unified-defi-execution-interface, unified-feature-calculator-library,
-      unified-sports-execution-interface (76% — below 80%).
-    status: pending
-    notes: |
-      unified-market-interface at 40% is the biggest library gap.
-      unified-sports-execution-interface at 76% needs ~4% more.
-      unified-trading-library at 78% needs ~2% more.
-      execution-algo-library at 72% needs ~8% more.
+      Fix all T2 libraries failing QG (tests + coverage >= 80%): unified-market-interface (54% — major gap; test import
+      fixes in progress via agent), unified-trade-execution-interface (90%), unified-ml-interface (96%),
+      unified-position-interface (89%), unified-defi-execution-interface (88%), unified-feature-calculator-library
+      (95%), unified-sports-execution-interface (81%).
+    status: in_progress
+    notes: "2026-03-10: UMI at 54% — import error fixes running via agent ab4a950470cda37ee; all others above 80%"
 
   - id: fix-t3-libraries
     content: >
       Fix all T3 libraries failing QG (tests + coverage >= 80%): unified-domain-client (84% — already passing).
-    status: pending
+    status: completed
+    notes: "2026-03-10: UDC=83%, UMI (T3 boundary) being fixed"
 
   - id: fix-service-repos
     content: >
