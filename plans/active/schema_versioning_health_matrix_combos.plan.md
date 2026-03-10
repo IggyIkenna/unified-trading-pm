@@ -4,7 +4,7 @@ overview: >
   Three complementary schema enhancements: (1) Combo/parlay bet support with negative-price handling for American
   moneyline and options combos; (2) Provider API version manifest + SVG health matrix; (3) CI schema validation (Option
   B) owned by interface repos that hold VCR cassettes and API auth.
-status: active
+status: DONE
 created: 2026-03-06
 ---
 
