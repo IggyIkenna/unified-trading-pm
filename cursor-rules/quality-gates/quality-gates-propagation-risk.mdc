@@ -1,5 +1,5 @@
 ---
-description: "Quality gate SSOT propagation — editing downstream quality-gates.sh risks rollout revert"
+description: "Quality gate SSOT — never edit gate logic in per-repo quality-gates.sh; edit PM base scripts"
 alwaysApply: true
 priority: 90
 tags:
@@ -7,36 +7,48 @@ tags:
   - ssot
   - propagation
 ---
-# Quality Gate Propagation Risk
-# SSOT: unified-trading-codex/06-coding-standards/quality-gates-library-template.sh
-#       unified-trading-codex/06-coding-standards/quality-gates-service-template.sh
-# Rollout: unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py
-# Trigger: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first
+# Quality Gate Architecture — Single Source of Truth
 
-RULE: When editing `scripts/quality-gates.sh` in ANY downstream repo (service, library, api, ui),
-      changes WILL be overwritten on the next `run-all-setup.sh --rollout-first` run.
-      ALWAYS propagate fixes to the codex template SSOT first.
+## Structure
 
-WHY: `rollout-quality-gates-unified.py` reads the codex templates and overwrites every repo's
-     `scripts/quality-gates.sh`. A local-only fix survives until the next rollout, then vanishes.
+```
+unified-trading-pm/scripts/quality-gates-base/
+├── base-service.sh   # Gate logic for 28 service repos (FastAPI apps, workers, APIs)
+├── base-library.sh   # Gate logic for 17 library/interface repos
+└── base-codex.sh     # Gate logic for docs-only repos (no Python source)
+```
 
-DO:
-  1. Edit the codex template FIRST:
-     - Libraries: `unified-trading-codex/06-coding-standards/quality-gates-library-template.sh`
-     - Services:  `unified-trading-codex/06-coding-standards/quality-gates-service-template.sh`
-  2. Optionally apply the same change to the downstream repo for immediate effect.
-  3. Run `python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run`
-     to preview what repos would be updated.
-  4. Document repo-specific deviations in the repo's `QUALITY_GATE_BYPASS_AUDIT.md`.
+Per-repo `scripts/quality-gates.sh` is a ~10-line config stub. It only sets:
+`SERVICE_NAME / PACKAGE_NAME`, `SOURCE_DIR`, `MIN_COVERAGE`, `RUN_INTEGRATION`, `LOCAL_DEPS`
+then sources the appropriate base: `source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"`
 
-NEVER:
-  - Edit only the downstream `scripts/quality-gates.sh` without updating the codex template.
-  - Use `rollout-quality-gates-unified.py` to REVERT intentional downstream deviations;
-    deviations belong in QUALITY_GATE_BYPASS_AUDIT.md, not in the template.
+Scaffold templates (used by rollout to write stubs to new repos — not gate logic):
+- `unified-trading-codex/06-coding-standards/quality-gates-service-template.sh`
+- `unified-trading-codex/06-coding-standards/quality-gates-library-template.sh`
 
-DEVIATIONS ALLOWED:
-  - Per-repo PACKAGE_NAME, SOURCE_DIR, LOCAL_DEPS settings (these are repo-specific placeholders).
-  - Entries in QUALITY_GATE_BYPASS_AUDIT.md for documented exceptions.
-  - The rollout script preserves these placeholders and the bypass audit file.
+## Rules
 
-CODEX: 06-coding-standards/quality-gates.md
+RULE: NEVER edit gate logic in a per-repo `scripts/quality-gates.sh`. It is a config stub only.
+NEVER: Copy gate logic from a base script into a per-repo file.
+WHY: The base scripts in PM are the SSOT. One edit in PM fixes all 47 repos instantly — no rollout needed.
+
+## When to edit what
+
+| Change type | Where to edit | Propagation? |
+|---|---|---|
+| New gate check, modified logic, new compliance step | PM `scripts/quality-gates-base/base-{service,library,codex}.sh` | None — all repos source live |
+| New required stub variable (interface change) | Codex scaffold template → run rollout → commit stubs | Yes — rollout writes stubs |
+| Per-repo config (MIN_COVERAGE, LOCAL_DEPS, RUN_INTEGRATION) | The per-repo `scripts/quality-gates.sh` stub only | None |
+| Documented repo exception | `QUALITY_GATE_BYPASS_AUDIT.md` in that repo | None |
+
+## Stub interface change protocol (rare — only when base script adds a NEW required variable)
+
+1. Add new variable with default to base script first (non-breaking — stubs not required to set it)
+2. If stubs MUST set it:
+   a. Edit the codex scaffold template to include the new variable
+   b. `python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run`
+   c. `python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py`
+   d. Commit updated stubs in each affected repo
+   e. Bump `REQUIRED_BASE_VERSION` in the base script
+
+CODEX: 06-coding-standards/quality-gates.md § Quality Gates Structure
