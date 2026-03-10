@@ -20,8 +20,8 @@ todos:
       function <200L, method <50L, class <900L; ruff + basedpyright strict + reportAny:error; zero os.getenv in
       production source; zero Any in public API. ALSO CHECK: (a) pyrightconfig.json has "exclude": ["tests"] so
       basedpyright scope matches .cursorignore — FAIL if tests/ is typechecked; (b) all codex rg checks in
-      quality-gates.sh/base-service.sh use --glob "!tests/**" so linter only scans source — FAIL if tests/ is linted
-      for os.getenv/print/bare-except etc; (c) quality-gates.sh is a thin stub delegating to base-service.sh /
+      quality-gates.sh/base-service.sh use --glob "!tests/**" so linter only scans source — FAIL if tests/ is linted for
+      os.getenv/print/bare-except etc; (c) quality-gates.sh is a thin stub delegating to base-service.sh /
       base-library.sh / base-ui.sh — FAIL if a repo has a full-body QG script (>50 lines) instead of the stub pattern.
       Score each repo.
     status: completed
@@ -252,12 +252,12 @@ todos:
       5 — AC vs UIC separation), check_observability.py (Section 6 — /health + /readiness endpoints, Prometheus
       metrics), check_technical_debt.py (Section 8 — QUALITY_GATE_BYPASS_AUDIT.md present, zero undocumented
       type:ignore), check_coverage_enforcement.py (Section 11 — MIN_COVERAGE calibrated AND --cov-fail-under wired in
-      QG), check_stubs.py (Section 13 — rg NotImplementedError/TODO/FIXME), check_orphaned_code.py (Section 14 —
-      vulture + cross-repo grep), check_ci_pipeline_quality.py (Section 15 — uv venv not --system, PATH export,
+      QG), check_stubs.py (Section 13 — rg NotImplementedError/TODO/FIXME), check_orphaned_code.py (Section 14 — vulture
+      + cross-repo grep), check_ci_pipeline_quality.py (Section 15 — uv venv not --system, PATH export,
       CLOUD_MOCK_MODE), check_ui_npm_governance.py (Section 16 — package-lock freshness, canonical versions, test
-      presence), check_tooling_ssot.py (Section 17 — QG stubs, base scripts, npm constraints, no orphaned scripts).
-      Each function signature: def check_<section>(repo: RepoContext) -> list[AuditResult]. All checks are static
-      analysis only — no network calls, no live infra required.
+      presence), check_tooling_ssot.py (Section 17 — QG stubs, base scripts, npm constraints, no orphaned scripts). Each
+      function signature: def check_<section>(repo: RepoContext) -> list[AuditResult]. All checks are static analysis
+      only — no network calls, no live infra required.
     status: pending
 
   - id: implement-regression-smoke-trigger
@@ -310,16 +310,16 @@ todos:
 
   - id: audit-ui-npm-governance
     content: >-
-      Audit Section 16 — UI/npm Governance: for each pure UI repo (package.json present, no pyproject.toml). Check:
-      (a) package-lock.json present and newer than or same age as package.json — FAIL if package.json newer (stale
-      install, detected by run-version-alignment.sh step 0.6); (b) devDependencies match workspace-npm-constraints.json
-      canonical versions for: typescript, vite/@vitejs/plugin-react, vitest, @vitest/coverage-v8,
-      @testing-library/react, eslint — FAIL if any version diverges without a documented exception; (c) at least 1
-      test file exists in src/ or tests/ — FAIL if testing_level=none in workspace-manifest.json (all UI repos must
-      have tests); (d) quality-gates.sh is a thin stub calling base-ui.sh — FAIL if full-body or absent; (e) CI
-      workflow runs quality-gates.sh. Audit command: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh
-      --ui-only --strict; python3 unified-trading-pm/scripts/propagation/rollout-npm-versions.py. Score FAIL if any UI
-      repo has stale package-lock or testing_level=none.
+      Audit Section 16 — UI/npm Governance: for each pure UI repo (package.json present, no pyproject.toml). Check: (a)
+      package-lock.json present and newer than or same age as package.json — FAIL if package.json newer (stale install,
+      detected by run-version-alignment.sh step 0.6); (b) devDependencies match workspace-npm-constraints.json canonical
+      versions for: typescript, vite/@vitejs/plugin-react, vitest, @vitest/coverage-v8, @testing-library/react, eslint —
+      FAIL if any version diverges without a documented exception; (c) at least 1 test file exists in src/ or tests/ —
+      FAIL if testing_level=none in workspace-manifest.json (all UI repos must have tests); (d) quality-gates.sh is a
+      thin stub calling base-ui.sh — FAIL if full-body or absent; (e) CI workflow runs quality-gates.sh. Audit command:
+      bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --ui-only --strict; python3
+      unified-trading-pm/scripts/propagation/rollout-npm-versions.py. Score FAIL if any UI repo has stale package-lock
+      or testing_level=none.
     status: pending
     note: "Added 2026-03-10 — not yet audited. Previously no audit coverage for UI repos beyond manifest registration."
 
@@ -331,10 +331,10 @@ todos:
       full-body QG script (duplication); (b) base-service.sh, base-library.sh, base-ui.sh exist in
       unified-trading-pm/scripts/quality-gates-base/ and are the single SSOT for all QG logic — FAIL if QG logic is
       duplicated elsewhere; (c) run-version-alignment.sh contains steps 0.5 (symlinks), 0.6 (UI npm drift), 0.7 (npm
-      version constraints), 1-4 (Python alignment) — FAIL if any step missing; (d) workspace-npm-constraints.json
-      exists and is enforced by rollout-npm-versions.py — FAIL if npm versions ungoverned; (e) no orphaned scripts in
-      unified-trading-pm/scripts/ (scripts that are never called by QG, quickmerge, version-alignment, or CI) — WARN
-      per orphaned script. Audit command: wc -l */scripts/quality-gates.sh | sort -rn | head -20 (any >50 lines is a
+      version constraints), 1-4 (Python alignment) — FAIL if any step missing; (d) workspace-npm-constraints.json exists
+      and is enforced by rollout-npm-versions.py — FAIL if npm versions ungoverned; (e) no orphaned scripts in
+      unified-trading-pm/scripts/ (scripts that are never called by QG, quickmerge, version-alignment, or CI) — WARN per
+      orphaned script. Audit command: wc -l */scripts/quality-gates.sh | sort -rn | head -20 (any >50 lines is a
       violation). Score FAIL if any full-body QG script found.
     status: pending
     note: "Added 2026-03-10 — not yet audited. Blind spot that allowed 25-30K lines of duplicated QG logic to persist."
@@ -507,8 +507,8 @@ grep -L "CLOUD_MOCK_MODE" */.github/workflows/quality-gates.yml
 
 ## Section 16 — UI/npm Governance
 
-**Goal:** All 11+ UI repos are governed by the same version constraints and test standards as Python repos.
-Previously there was no audit coverage for UI repos beyond manifest registration.
+**Goal:** All 11+ UI repos are governed by the same version constraints and test standards as Python repos. Previously
+there was no audit coverage for UI repos beyond manifest registration.
 
 **Audit commands:**
 
@@ -536,13 +536,13 @@ for r in m['repos']:
 
 **Required state per UI repo:**
 
-| Criterion | Requirement |
-|---|---|
-| `package-lock.json` | Present and not older than `package.json` |
-| `devDependencies` | Match `workspace-npm-constraints.json` (typescript, vite, vitest, @vitest/coverage-v8, @testing-library/react, eslint) |
-| Tests | At least 1 test file; `testing_level` ≠ `none` in manifest |
-| `scripts/quality-gates.sh` | Thin stub (<50 lines) calling `base-ui.sh` |
-| CI workflow | Calls `quality-gates.sh` or equivalent |
+| Criterion                  | Requirement                                                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `package-lock.json`        | Present and not older than `package.json`                                                                              |
+| `devDependencies`          | Match `workspace-npm-constraints.json` (typescript, vite, vitest, @vitest/coverage-v8, @testing-library/react, eslint) |
+| Tests                      | At least 1 test file; `testing_level` ≠ `none` in manifest                                                             |
+| `scripts/quality-gates.sh` | Thin stub (<50 lines) calling `base-ui.sh`                                                                             |
+| CI workflow                | Calls `quality-gates.sh` or equivalent                                                                                 |
 
 **Scoring:**
 
@@ -581,15 +581,15 @@ ls unified-trading-pm/scripts/propagation/rollout-npm-versions.py
 
 **Required state:**
 
-| Criterion | Requirement |
-|---|---|
-| Per-repo `quality-gates.sh` | Stub only: `source .../base-{service,library,ui}.sh` + required vars; <50 lines total |
-| `base-service.sh` | Exists in `unified-trading-pm/scripts/quality-gates-base/`; SSOT for all service QG logic |
-| `base-library.sh` | Same; SSOT for library QG logic |
-| `base-ui.sh` | Same; SSOT for UI QG logic |
-| `run-version-alignment.sh` | Contains steps 0.5 (symlinks), 0.6 (UI npm drift), 0.7 (npm versions), 1–4 (Python) |
-| `workspace-npm-constraints.json` | Exists; enforced by `rollout-npm-versions.py` in step 0.7 |
-| Orphaned scripts | Zero scripts in `unified-trading-pm/scripts/` that are never called |
+| Criterion                        | Requirement                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------- |
+| Per-repo `quality-gates.sh`      | Stub only: `source .../base-{service,library,ui}.sh` + required vars; <50 lines total     |
+| `base-service.sh`                | Exists in `unified-trading-pm/scripts/quality-gates-base/`; SSOT for all service QG logic |
+| `base-library.sh`                | Same; SSOT for library QG logic                                                           |
+| `base-ui.sh`                     | Same; SSOT for UI QG logic                                                                |
+| `run-version-alignment.sh`       | Contains steps 0.5 (symlinks), 0.6 (UI npm drift), 0.7 (npm versions), 1–4 (Python)       |
+| `workspace-npm-constraints.json` | Exists; enforced by `rollout-npm-versions.py` in step 0.7                                 |
+| Orphaned scripts                 | Zero scripts in `unified-trading-pm/scripts/` that are never called                       |
 
 **Extension to Section 2 — pyrightconfig scope and linter glob:**
 
@@ -618,8 +618,8 @@ grep -c '"!tests/\*\*"' unified-trading-pm/scripts/quality-gates-base/base-servi
 - `PASS` — all Python repos have `"exclude": ["tests"]` in pyrightconfig; base-service.sh has `!tests/**` on all codex
   checks; all QG scripts are stubs; all base scripts present; npm constraints enforced; no orphaned scripts
 - `WARN` — 1–3 repos missing `pyrightconfig.json` test exclusion; or 1 orphaned script with explanation
-- `FAIL` — any full-body QG script (>50 lines) in any repo; OR base scripts missing from PM; OR any codex check
-  linting tests/; OR npm constraints file absent
+- `FAIL` — any full-body QG script (>50 lines) in any repo; OR base scripts missing from PM; OR any codex check linting
+  tests/; OR npm constraints file absent
 
 ---
 
