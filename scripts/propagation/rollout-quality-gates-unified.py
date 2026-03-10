@@ -25,6 +25,7 @@ import re
 import subprocess
 import sys
 import typing
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import TypeAlias, cast
 
@@ -172,9 +173,7 @@ def measure_coverage(repo_path: Path, source_dir: str) -> int | None:
     xml_path = repo_path / "coverage.xml"
     if xml_path.exists():
         try:
-            import xml.etree.ElementTree as ET  # noqa: PLC0415
-
-            tree = ET.parse(xml_path)
+            tree = ET.parse(xml_path)  # nosec B314 — local coverage.xml, not untrusted input
             root = tree.getroot()
             line_rate = root.get("line-rate")
             if line_rate is not None:
