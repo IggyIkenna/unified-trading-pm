@@ -1,0 +1,110 @@
+# Circuit Breaker Configuration
+# ==============================
+# Schema: unified-internal-contracts/reference/circuit_breaker_config.py
+#         VenueCircuitBreakerConfig + CircuitBreakerConfigRegistry
+#
+# Loaded by execution-service/engine/circuit_breaker.py (Phase 2).
+# Phase 1 creates this file as the canonical source-of-truth; no code reads
+# it yet — that wiring is done in P2.1.
+#
+# Design principles
+# -----------------
+# - Rate-limit errors (CanonicalRateLimitError) are NEVER triggering: they
+#   indicate throttling, not a broken venue, and retrying with backoff is
+#   the correct response.
+# - Auth failures (CanonicalAuthenticationError) ARE triggering: a 401 in
+#   production almost always means the API key has expired or been revoked.
+# - Unknown venue errors (CanonicalUnknownVenueError) ARE triggering: they
+#   represent gaps in the canonical map, but a string of unknown errors from
+#   a single venue is a signal the venue is behaving unexpectedly.
+# - Market-closed / order-rejected errors are NOT triggering: they reflect
+#   business logic constraints, not infrastructure failures.
+#
+# All venue_type keys here must match the string passed to
+# CircuitBreakerConfigRegistry.for_venue_type() in the circuit breaker.
+
+venue_types:
+  cefi_exchange:
+    # Covers: binance, bybit, okx, deribit, coinbase, hyperliquid, upbit
+    venue_type: cefi_exchange
+    failure_threshold: 5
+    cooldown_seconds: 300
+    environment: production
+    triggering_error_classes:
+      - CanonicalNetworkError
+      - CanonicalAuthenticationError
+      - CanonicalInternalServerError
+      - CanonicalMaintenanceModeError
+      - CanonicalUnknownVenueError
+    non_triggering_error_classes:
+      - CanonicalRateLimitError
+      - CanonicalMarketClosedError
+      - CanonicalInvalidRequestError
+      - CanonicalOrderRejectedError
+      - CanonicalInstrumentHaltedError
+      - CanonicalInsufficientBalanceError
+      - CanonicalPositionLimitExceededError
+
+  defi_protocol:
+    # Covers: aave, uniswap, curve, balancer, lido, ethena, morpho, euler,
+    #         fluid, compound, etherfi (all on-chain protocols)
+    # Higher failure_threshold (10): on-chain RPC errors are noisier and
+    # transient; a longer pattern is needed before assuming the venue is down.
+    # Shorter cooldown (60s): block times are fast; recovery is faster.
+    venue_type: defi_protocol
+    failure_threshold: 10
+    cooldown_seconds: 60
+    environment: production
+    triggering_error_classes:
+      - CanonicalNetworkError
+      - CanonicalAuthenticationError
+      - CanonicalUnknownVenueError
+    non_triggering_error_classes:
+      - CanonicalRateLimitError
+      - CanonicalInvalidRequestError
+      - CanonicalContractExpiredError
+
+  data_provider:
+    # Covers: tardis, databento, glassnode, coinglass, arkham, openbb, fred,
+    #         ecb, barchart, ofr, defillama, instadapp, envio, aavescan,
+    #         hyblock (read-only data APIs — no order flow)
+    # Higher threshold (15): data provider errors rarely block trading;
+    # tolerate more noise before marking a provider as unhealthy.
+    venue_type: data_provider
+    failure_threshold: 15
+    cooldown_seconds: 120
+    environment: production
+    triggering_error_classes:
+      - CanonicalNetworkError
+      - CanonicalAuthenticationError
+    non_triggering_error_classes:
+      - CanonicalRateLimitError
+      - CanonicalSchemaError
+
+  sports_venue:
+    # Covers: betfair, pinnacle, odds_api, kalshi, smarkets, betdaq,
+    #         polymarket, and all sports-registry adapters
+    venue_type: sports_venue
+    failure_threshold: 8
+    cooldown_seconds: 180
+    environment: production
+    triggering_error_classes:
+      - CanonicalNetworkError
+      - CanonicalAuthenticationError
+      - CanonicalUnknownVenueError
+    non_triggering_error_classes:
+      - CanonicalRateLimitError
+      - CanonicalMarketClosedError
+
+# Development / staging overrides
+# --------------------------------
+# Applied when DEPLOYMENT_ENVIRONMENT != "production" in execution-service.
+# Lower thresholds let integration tests observe OPEN state quickly without
+# waiting out 300-second cooldown windows.
+#
+# These override the per-venue-type settings above; the circuit breaker merges
+# them by setting failure_threshold and cooldown_seconds from this block when
+# not in production mode.
+dev_overrides:
+  failure_threshold: 3
+  cooldown_seconds: 10
