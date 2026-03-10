@@ -5,7 +5,7 @@ overview: >
   (URDI, UMI, UTEI, UPI), cloud infrastructure (UCI factory + AWS provider), and deployment-api that are not
   specifically tracked in any other active plan. Key-blocked items (API keys not yet in SM) are included but marked
   BLOCKED pending api_keys_and_auth.plan.md resolution.
-status: active
+status: DONE
 created: 2026-03-09
 ---
 
