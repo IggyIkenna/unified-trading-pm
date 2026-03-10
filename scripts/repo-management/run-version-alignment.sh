@@ -21,14 +21,17 @@ set -euo pipefail
 
 APPLY_FIXES=false
 STRICT=false
+UI_ONLY=false
 for arg in "$@"; do
   case $arg in
     --fix) APPLY_FIXES=true ;;
     --strict) STRICT=true ;;
+    --ui-only) UI_ONLY=true ;;  # Skip Python alignment steps; run only 0.5+0.6 (symlinks + UI dep drift)
     --help | -h)
-      echo "Usage: bash run-version-alignment.sh [--fix] [--strict]"
-      echo "  --fix     Apply fixes (internal + external alignment)"
-      echo "  --strict  Treat broken symlinks as a fatal error (default: warn)"
+      echo "Usage: bash run-version-alignment.sh [--fix] [--strict] [--ui-only]"
+      echo "  --fix      Apply fixes (internal + external alignment)"
+      echo "  --strict   Treat broken symlinks / UI dep drift as a fatal error (default: warn)"
+      echo "  --ui-only  Run only pre-checks (0.5 symlinks + 0.6 UI dep drift); skip Python alignment"
       exit 0
       ;;
   esac
@@ -95,6 +98,66 @@ else
   echo "  [OK] No broken symlinks"
 fi
 echo ""
+
+# 0.6. UI dep-drift check — detect UI repos where package.json is newer than package-lock.json
+#      (means npm install hasn't been run since package.json was last edited).
+echo "[0.6/4] Checking UI repos for npm dep drift (package.json newer than package-lock.json)..."
+UI_DRIFT=()
+while IFS= read -r pkg_json; do
+  repo_dir="$(dirname "$pkg_json")"
+  lock_file="$repo_dir/package-lock.json"
+  # Only check pure UI repos (no pyproject.toml, not workspace root)
+  [ "$repo_dir" = "$WORKSPACE_ROOT" ] && continue
+  [ -f "$repo_dir/pyproject.toml" ] && continue
+  if [ ! -f "$lock_file" ]; then
+    UI_DRIFT+=("  $(basename "$repo_dir"): no package-lock.json — run: cd $(basename "$repo_dir") && npm install")
+  elif [ "$pkg_json" -nt "$lock_file" ]; then
+    UI_DRIFT+=("  $(basename "$repo_dir"): package.json newer than package-lock.json — run: cd $(basename "$repo_dir") && npm install")
+  fi
+done < <(find "$WORKSPACE_ROOT" -maxdepth 2 -name "package.json" \
+  -not \( -path "*/node_modules/*" -prune \) \
+  -not \( -path "*/.venv*" -prune \) \
+  -not \( -path "*/unified-trading-pm/*" -prune \) 2>/dev/null)
+
+if [ "${#UI_DRIFT[@]}" -gt 0 ]; then
+  echo ""
+  echo "  [WARN] UI repos with stale node_modules (${#UI_DRIFT[@]}):"
+  for d in "${UI_DRIFT[@]}"; do echo "$d"; done
+  echo ""
+  echo "  Fix: cd <repo> && npm install   OR   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first"
+  if [ "${STRICT:-false}" = true ]; then
+    exit 1
+  fi
+else
+  echo "  [OK] All UI repos have up-to-date package-lock.json"
+fi
+echo ""
+
+# 0.7. Canonical npm version check — enforce workspace-npm-constraints.json across UI repos
+echo "[0.7/4] Checking UI repos for npm version alignment (canonical constraints)..."
+if [ "$APPLY_FIXES" = true ]; then
+  if ! "$PYTHON" scripts/propagation/rollout-npm-versions.py --apply 2>&1; then
+    echo "  [WARN] npm version update failed (non-fatal) — check output above"
+  fi
+else
+  if ! "$PYTHON" scripts/propagation/rollout-npm-versions.py 2>&1; then
+    echo ""
+    echo "  Fix: python3 unified-trading-pm/scripts/propagation/rollout-npm-versions.py --apply"
+    echo "  Or:  bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix"
+    if [ "${STRICT:-false}" = true ]; then
+      exit 1
+    fi
+  fi
+fi
+echo ""
+
+# --ui-only: pre-checks complete — skip Python alignment steps
+if [ "$UI_ONLY" = true ]; then
+  echo "  --ui-only: skipping Python alignment steps (1–4)."
+  echo ""
+  echo "  Next: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh  (to reinstall stale UI deps)"
+  exit 0
+fi
 
 # 1 & 2. Generate derived + canonical manifests (parallel)
 echo "[1/4] Generating derived + canonical manifests (parallel)..."

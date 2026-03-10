@@ -592,12 +592,13 @@
         "requests": ["requests>=2.32.5,<3.0.0"],
         "rich<15.0.0,": ["rich<15.0.0,>=14.2.0"],
         "ruff": ["ruff==0.15.0"],
+        "scipy": ["scipy>=1.14.0,<2.0.0"],
         "sqlalchemy": ["sqlalchemy>=2.0.0,<3.0.0"],
         "types-requests": ["types-requests>=2.32.0,<3.0.0"],
         "websockets": ["websockets>=14.0,<15.0.0"]
       },
       "internal_count": 12,
-      "external_count": 37
+      "external_count": 38
     },
     "features-calendar-service": {
       "internal_deps": {
@@ -866,11 +867,13 @@
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "boto3": ["boto3>=1.40.70,<2.0.0"],
+        "boto3-stubs": ["boto3-stubs[s3,sqs,sns]>=1.40.0,<2.0.0"],
         "exchange-calendars<5.0.0,": ["exchange-calendars<5.0.0,>=4.5.0"],
         "mypy": ["mypy>=1.13.0,<2.0.0"],
         "numba": ["numba>=0.62.1,<1.0.0"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
         "pandas": ["pandas>=2.3.0,<3.0.0"],
+        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "polars": ["polars>=1.37.0,<2.0.0"],
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
@@ -886,10 +889,11 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "ruff": ["ruff==0.15.0"],
+        "types-aiobotocore-full": ["types-aiobotocore-full>=2.26.0,<3.0.0"]
       },
       "internal_count": 4,
-      "external_count": 25
+      "external_count": 28
     },
     "market-tick-data-service": {
       "internal_deps": {
@@ -1134,6 +1138,7 @@
         "hmmlearn": ["hmmlearn>=0.3.0,<1.0.0"],
         "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
+        "openpyxl": ["openpyxl>=3.1.0,<4.0.0"],
         "pandas": ["pandas>=2.3.0,<3.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "polars": ["polars>=1.37.0,<2.0.0"],
@@ -1153,7 +1158,7 @@
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
       },
       "internal_count": 6,
-      "external_count": 22
+      "external_count": 23
     },
     "trading-agent-service": {
       "internal_deps": {
@@ -1445,10 +1450,8 @@
       "external_count": 0
     },
     "deployment-ui": {
-      "internal_deps": {},
-      "external_deps": {},
-      "internal_count": 0,
-      "external_count": 0
+      "skipped": true,
+      "reason": "not a directory"
     },
     "execution-analytics-ui": {
       "internal_deps": {},
