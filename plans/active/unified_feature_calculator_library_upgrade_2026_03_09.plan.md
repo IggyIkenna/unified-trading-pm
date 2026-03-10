@@ -10,9 +10,9 @@ overview: |
   service to extend it — reducing per-service boilerplate and enforcing a single standards path.
   All new library code: no Any, no os.getenv, basedpyright strict, ruff line-length 120,
   MIN_COVERAGE=70 (library), >80% per service after refactor.
-status: active
+status: DONE
 created: 2026-03-09
-updated: 2026-03-10T14:00:00Z
+updated: 2026-03-10T18:00:00Z
 isProject: false
 todos:
   - id: audit-boilerplate
@@ -226,7 +226,11 @@ todos:
       sports_migration_combined.plan.md in-progress todos (b1-scraper-adapters, b5-b6-deployment). Run `bash
       scripts/quality-gates.sh`; fix failures; update coverage >80%. Commit: `"refactor(features-sports-service): extend
       BaseFeatureService from library"`.
-    status: pending
+    status: completed
+    completed_at: 2026-03-10
+    notes: >-
+      Commit 3ec0058: metrics.py deleted; engine.py uses build_feature_metrics() directly; cli/main.py uses
+      SportsFeatureService.startup()/shutdown(); 263 tests pass, 89.53% coverage.
 
   - id: refactor-features-volatility-service
     content: >-

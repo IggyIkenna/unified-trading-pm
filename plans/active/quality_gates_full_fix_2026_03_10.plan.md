@@ -120,10 +120,9 @@ todos:
 
   - id: audit-dual-coverage-sources
     content: >
-      Audit the dual coverage enforcement sources across all 49+ repos that have fail_under in pyproject.toml.
-      For each repo: compare [tool.coverage.report] fail_under vs scripts/quality-gates.sh MIN_COVERAGE.
-      Produce a diff table: repo | qg_min | toml_fail_under | delta | verdict (in-sync / stale-toml / stale-qg).
-      Run from workspace root:
+      Audit the dual coverage enforcement sources across all 49+ repos that have fail_under in pyproject.toml. For each
+      repo: compare [tool.coverage.report] fail_under vs scripts/quality-gates.sh MIN_COVERAGE. Produce a diff table:
+      repo | qg_min | toml_fail_under | delta | verdict (in-sync / stale-toml / stale-qg). Run from workspace root:
         python3 unified-trading-pm/scripts/repo-management/coverage-audit.py --json > /tmp/cov_audit.json
         grep -r "fail_under" */pyproject.toml | grep -v ".venv" > /tmp/toml_fail_under.txt
       Then reconcile. Expected: 0 delta rows after fix.
@@ -146,14 +145,13 @@ todos:
 
   - id: fix-ssot-rollout-to-sync-toml
     content: >
-      Extend rollout-quality-gates-unified.py to also sync [tool.coverage.report] fail_under in pyproject.toml
-      to match the computed MIN_COVERAGE value.
-      Rule: the pyproject.toml fail_under must equal MIN_COVERAGE (the QG script value is authoritative).
-      Implementation: after writing quality-gates.sh, parse pyproject.toml with tomllib/tomli_w and update
-      [tool.coverage.report] fail_under. Only modify if the value differs. Write back preserving structure.
-      Guard: if pyproject.toml has no [tool.coverage.report] section, skip (don't create one).
-      Run: python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run first.
-      Then: --recalibrate on repos where coverage.xml is fresh (< 1 day old); floor-only mode on others.
+      Extend rollout-quality-gates-unified.py to also sync [tool.coverage.report] fail_under in pyproject.toml to match
+      the computed MIN_COVERAGE value. Rule: the pyproject.toml fail_under must equal MIN_COVERAGE (the QG script value
+      is authoritative). Implementation: after writing quality-gates.sh, parse pyproject.toml with tomllib/tomli_w and
+      update [tool.coverage.report] fail_under. Only modify if the value differs. Write back preserving structure.
+      Guard: if pyproject.toml has no [tool.coverage.report] section, skip (don't create one). Run: python3
+      unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run first. Then: --recalibrate on
+      repos where coverage.xml is fresh (< 1 day old); floor-only mode on others.
     status: pending
     notes: |
       SSOT rule: quality-gates.sh MIN_COVERAGE is the single source of truth.
@@ -162,17 +160,17 @@ todos:
 
   - id: fix-race-condition-recalibrate
     content: >
-      Fix the stale coverage.xml race condition in rollout-quality-gates-unified.py measure_coverage().
-      Current bug: fast-path reads coverage.xml if it exists without checking file age. A stale coverage.xml
-      (from a different branch or before recent code changes) causes measure_coverage() to return stale data,
-      setting MIN_COVERAGE to wrong value via max(floor, stale_actual - 1).
-      Fix: before trusting coverage.xml, verify it is newer than the newest .py source file in the package.
+      Fix the stale coverage.xml race condition in rollout-quality-gates-unified.py measure_coverage(). Current bug:
+      fast-path reads coverage.xml if it exists without checking file age. A stale coverage.xml (from a different branch
+      or before recent code changes) causes measure_coverage() to return stale data, setting MIN_COVERAGE to wrong value
+      via max(floor, stale_actual - 1). Fix: before trusting coverage.xml, verify it is newer than the newest .py source
+      file in the package.
         import os, stat; newest_src = max(p.stat().st_mtime for p in Path(source_dir).rglob("*.py"))
         xml_mtime = xml_path.stat().st_mtime
         if xml_mtime < newest_src: fall through to slow path (run pytest --cov)
-      Add --force-rerun flag to always use slow path regardless of xml age.
-      Document: coverage-audit.py reads coverage.xml too — same staleness risk exists there. Add warning
-      header to audit output if any coverage.xml is older than its source tree.
+      Add --force-rerun flag to always use slow path regardless of xml age. Document: coverage-audit.py reads
+      coverage.xml too — same staleness risk exists there. Add warning header to audit output if any coverage.xml is
+      older than its source tree.
     status: pending
     notes: |
       This is not a true concurrency race (no threads). It is a staleness race:
@@ -183,15 +181,15 @@ todos:
   - id: check-propagation-does-not-break-coverage
     content: >
       Verify that running rollout-quality-gates-unified.py without --recalibrate does NOT degrade any repo's
-      MIN_COVERAGE below its current value (only raises to floor if below floor, never lowers).
-      Verify the formula logic in copy_quality_gates():
+      MIN_COVERAGE below its current value (only raises to floor if below floor, never lowers). Verify the formula logic
+      in copy_quality_gates():
         no-recalibrate: new_coverage = max(floor, existing_int or floor) — can only raise, never lower ✓
         recalibrate:    new_coverage = max(floor, actual - 1) — can lower if actual dropped legitimately
-      Check: confirm base-service.sh and base-library.sh pass --cov-fail-under=$MIN_COVERAGE to pytest.
-      Confirm: no pyproject.toml [tool.coverage.report] fail_under > MIN_COVERAGE (toml is stricter = bad).
-      If toml fail_under > MIN_COVERAGE: toml silently rejects runs that QG would pass — fix by lowering toml.
-      Run: python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run
-      Confirm: no repo shows MIN_COVERAGE decreasing from current state.
+      Check: confirm base-service.sh and base-library.sh pass --cov-fail-under=$MIN_COVERAGE to pytest. Confirm: no
+      pyproject.toml [tool.coverage.report] fail_under > MIN_COVERAGE (toml is stricter = bad). If toml fail_under >
+      MIN_COVERAGE: toml silently rejects runs that QG would pass — fix by lowering toml. Run: python3
+      unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --dry-run Confirm: no repo shows
+      MIN_COVERAGE decreasing from current state.
     status: pending
     notes: |
       Confirmed (2026-03-10): rollout without --recalibrate is safe — max(floor, existing) never lowers.
@@ -209,8 +207,8 @@ todos:
            Expected: [C] INFO rows show stale thresholds; no [A] FAIL regressions from alignment runs.
         4. python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --recalibrate --dry-run
            Expected: preview shows max(floor, actual-1) per repo; no values < floor.
-      After each dry-run: verify no repo's MIN_COVERAGE would be lowered below its floor.
-      Document: alignment script verdict (helps / neutral / hinders) per script.
+      After each dry-run: verify no repo's MIN_COVERAGE would be lowered below its floor. Document: alignment script
+      verdict (helps / neutral / hinders) per script.
     status: pending
     notes: |
       Alignment scripts evaluated (2026-03-10 discovery run):
@@ -218,23 +216,49 @@ todos:
         rollout-quality-gates-unified.py (--recalibrate):     RISKY if stale xml (see race condition fix)
         run-version-alignment.sh:                             NEUTRAL — does not touch coverage config
         coverage-audit.py:                                   HELPS — read-only audit; raises [C] INFO on drift
-        deployment-service/scripts/check_test_alignment.sh:  UNKNOWN — repo-local; must read before verdict
+        deployment-service/scripts/check_test_alignment.sh:  HINDERS — stale hardcoded 14-repo list; DELETE
         unified-trading-codex/scripts/validate-alignment.py: NEUTRAL — codex doc validator; skips broken symlinks
         manifest/check-dependency-alignment.py:              NEUTRAL — package version checks only
         manifest/fix-internal-dependency-alignment.py:       NEUTRAL — package version fixes only
       Blocking issue: rollout does NOT sync pyproject.toml fail_under — this HINDERS because
         local pytest (no QG wrapper) uses toml value; CI uses QG MIN_COVERAGE; two different outcomes possible.
 
+  - id: delete-orphaned-qg-scripts
+    content: >
+      Delete all orphaned quality-gate scripts superseded by the canonical quality-gates.sh stub pattern. Files to
+      delete:
+        1. unified-trading-pm/scripts/audit/generate-quality-gates-coverage-report.py — empty 2-line stub
+        2. deployment-service/scripts/check_test_alignment.sh — stale 14-repo hardcoded list; not in CI
+        3. instruments-service/scripts/run_quality_gates.py — parallel reimplementation, 50% threshold (DANGEROUS)
+        4. unified-trading-library/scripts/run_quality_gates.py — same pattern; verify then delete
+        5. market-tick-data-service/scripts/run_quality_gates.py — same pattern; verify then delete
+        6. market-tick-data-service/scripts/generate_coverage_report.py — repo-local; verify not in QG then delete
+      For each repo: confirm canonical scripts/quality-gates.sh stub exists and sources base-service/base-library.sh.
+      Then: git rm <file> and commit per repo: "chore: remove orphaned QG scripts superseded by canonical stub"
+    status: pending
+    notes: |
+      Confirmed orphaned (2026-03-10):
+        generate-quality-gates-coverage-report.py: 2 lines total — just a comment. Never implemented.
+        check_test_alignment.sh: REPOS list includes non-existent repos (market-tick-data-handler,
+          execution-services, sports-betting-service). Not called from CI. QG stub + template already ensures
+          uniform behavior.
+        instruments-service/run_quality_gates.py: 597 lines. 50% default threshold is most dangerous — passes
+          at 50% when CI requires 70%. Violations: pip not uv, os.getenv() not UnifiedCloudConfig,
+          coverage.json not coverage.xml (invisible to coverage-audit.py). Completely parallel to existing
+          quality-gates.sh which is already correct.
+      KEEP: quality-gates.sh files in each repo — those ARE the canonical stubs.
+      DELETE: only the Python run_quality_gates.py files and the stale bash alignment script.
+
   - id: verify-ui-coverage-floor
     content: >
-      Verify UI repos have vitest coverage configured with a floor matching the SSOT.
-      SSOT standard: UIs must have smoke tests; no Python coverage floor; vitest statement coverage >= 60%.
-      Current state: quality-gates-ui-template.sh is deployed but does it enforce a vitest coverage floor?
-      Check: cat unified-trading-codex/06-coding-standards/quality-gates-ui-template.sh
-      Confirm: vitest --coverage is called and coverage/coverage-summary.json is produced.
-      Confirm: coverage-audit.py parse_ui_coverage() reads coverage/coverage-summary.json correctly.
-      If no coverage floor is enforced for UIs: add minimum of 60% lines to UI template and rollout.
-      No Python fail_under issue for UI repos (no pyproject.toml); risk is vitest coverage-summary.json absent.
+      Verify UI repos have vitest coverage configured with a floor matching the SSOT. SSOT standard: UIs must have smoke
+      tests; no Python coverage floor; vitest statement coverage >= 60%. Current state: quality-gates-ui-template.sh is
+      deployed but does it enforce a vitest coverage floor? Check: cat
+      unified-trading-codex/06-coding-standards/quality-gates-ui-template.sh Confirm: vitest --coverage is called and
+      coverage/coverage-summary.json is produced. Confirm: coverage-audit.py parse_ui_coverage() reads
+      coverage/coverage-summary.json correctly. If no coverage floor is enforced for UIs: add minimum of 60% lines to UI
+      template and rollout. No Python fail_under issue for UI repos (no pyproject.toml); risk is vitest
+      coverage-summary.json absent.
     status: pending
     notes: |
       UIs: deployment-ui, execution-analytics-ui, live-health-monitor-ui, logs-dashboard-ui, ml-training-ui,
@@ -313,27 +337,28 @@ All items above must be fully fixed. No threshold lowering. No skipping.
 
 Two independent mechanisms enforce coverage floors, and they are **not kept in sync**:
 
-| Source | Where | Who writes it | When used |
-|--------|-------|---------------|-----------|
-| `MIN_COVERAGE` in `scripts/quality-gates.sh` | Each repo | `rollout-quality-gates-unified.py` (automated) | CI via `--cov-fail-under=$MIN_COVERAGE` |
-| `fail_under` in `pyproject.toml` `[tool.coverage.report]` | Each repo | Manual / one-off scripts | Local `pytest` runs without the QG wrapper |
+| Source                                                    | Where     | Who writes it                                  | When used                                  |
+| --------------------------------------------------------- | --------- | ---------------------------------------------- | ------------------------------------------ |
+| `MIN_COVERAGE` in `scripts/quality-gates.sh`              | Each repo | `rollout-quality-gates-unified.py` (automated) | CI via `--cov-fail-under=$MIN_COVERAGE`    |
+| `fail_under` in `pyproject.toml` `[tool.coverage.report]` | Each repo | Manual / one-off scripts                       | Local `pytest` runs without the QG wrapper |
 
-**Result:** A developer running `pytest` locally sees a different pass/fail than CI. The audit tool (`coverage-audit.py`) only reads `quality-gates.sh`, so pyproject.toml drift is invisible to audits.
+**Result:** A developer running `pytest` locally sees a different pass/fail than CI. The audit tool
+(`coverage-audit.py`) only reads `quality-gates.sh`, so pyproject.toml drift is invisible to audits.
 
 **Confirmed examples (2026-03-10):**
 
-| Repo | QG `MIN_COVERAGE` | `pyproject.toml fail_under` | Delta |
-|------|--------------------|------------------------------|-------|
-| `alerting-service` | 82 | 78 | −4 (toml stale) |
-| `instruments-service` | 70 | 70 | 0 (in sync) |
-| `unified-events-interface` | 99 | 99 | 0 (in sync) |
+| Repo                       | QG `MIN_COVERAGE` | `pyproject.toml fail_under` | Delta           |
+| -------------------------- | ----------------- | --------------------------- | --------------- |
+| `alerting-service`         | 82                | 78                          | −4 (toml stale) |
+| `instruments-service`      | 70                | 70                          | 0 (in sync)     |
+| `unified-events-interface` | 99                | 99                          | 0 (in sync)     |
 
 49+ repos have `fail_under` in `pyproject.toml`. Unknown how many are drifted.
 
 ### Problem: Stale `coverage.xml` Race in `--recalibrate` Mode
 
-`rollout-quality-gates-unified.py measure_coverage()` fast-path reads `coverage.xml` without checking its age.
-If `coverage.xml` predates recent source changes, `max(floor, stale_actual - 1)` sets the wrong `MIN_COVERAGE`.
+`rollout-quality-gates-unified.py measure_coverage()` fast-path reads `coverage.xml` without checking its age. If
+`coverage.xml` predates recent source changes, `max(floor, stale_actual - 1)` sets the wrong `MIN_COVERAGE`.
 
 ### Coverage Formula (SSOT)
 
@@ -351,13 +376,13 @@ The `-1` tolerance allows one-point natural churn between runs without requiring
 
 ### Propagation Script Verdict
 
-| Script | Effect on coverage config | Verdict |
-|--------|---------------------------|---------|
-| `rollout-quality-gates-unified.py` (no flags) | Raises MIN_COVERAGE to floor; never lowers | SAFE |
-| `rollout-quality-gates-unified.py --recalibrate` | Sets `max(floor, actual-1)` from coverage.xml | RISKY if xml stale |
-| `run-version-alignment.sh` | No interaction with coverage | NEUTRAL |
-| `coverage-audit.py` | Read-only; raises [C] INFO on QG drift | SAFE |
-| `rollout-quality-gates-unified.py` on pyproject.toml | **Does NOT update toml** — this is the gap | HINDERS |
+| Script                                               | Effect on coverage config                     | Verdict            |
+| ---------------------------------------------------- | --------------------------------------------- | ------------------ |
+| `rollout-quality-gates-unified.py` (no flags)        | Raises MIN_COVERAGE to floor; never lowers    | SAFE               |
+| `rollout-quality-gates-unified.py --recalibrate`     | Sets `max(floor, actual-1)` from coverage.xml | RISKY if xml stale |
+| `run-version-alignment.sh`                           | No interaction with coverage                  | NEUTRAL            |
+| `coverage-audit.py`                                  | Read-only; raises [C] INFO on QG drift        | SAFE               |
+| `rollout-quality-gates-unified.py` on pyproject.toml | **Does NOT update toml** — this is the gap    | HINDERS            |
 
 ### Action Items
 
