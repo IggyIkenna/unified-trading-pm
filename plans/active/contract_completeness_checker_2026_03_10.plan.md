@@ -1,6 +1,6 @@
 # Plan: Contract Completeness Checkers (UIC + UAC)
 
-## Status: Active
+## Status: Partial (scripts done; SIT tests + GHA wiring + UAC curation pending)
 
 ## Created: 2026-03-10
 
@@ -188,14 +188,40 @@ In the `contract-adoption-check` job, add two new steps after the existing UIC/U
 
 ## Key Files
 
-| File                                                                  | Action                                     |
-| --------------------------------------------------------------------- | ------------------------------------------ |
-| `unified-internal-contracts/scripts/check_uic_completeness.py`        | CREATE                                     |
-| `unified-api-contracts/scripts/check_uac_completeness.py`             | CREATE                                     |
-| `unified-internal-contracts/unified_internal_contracts/__init__.py`   | ADD 10 missing domain classes to `__all__` |
-| `system-integration-tests/tests/integration/test_uic_completeness.py` | CREATE                                     |
-| `system-integration-tests/tests/integration/test_uac_completeness.py` | CREATE                                     |
-| `system-integration-tests/.github/workflows/smoke-test-gate.yml`      | ADD 2 new steps (warn-mode)                |
+| File                                                                  | Action                                     | Status                                             |
+| --------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| `unified-internal-contracts/scripts/check_uic_completeness.py`        | CREATE                                     | ✅ Done (94411e6) — 0 missing                      |
+| `unified-api-contracts/scripts/check_uac_completeness.py`             | CREATE                                     | ✅ Done (3761420) — 163 missing (curation backlog) |
+| `unified-internal-contracts/unified_internal_contracts/__init__.py`   | ADD 10 missing domain classes to `__all__` | Pending                                            |
+| `system-integration-tests/tests/integration/test_uic_completeness.py` | CREATE                                     | Pending                                            |
+| `system-integration-tests/tests/integration/test_uac_completeness.py` | CREATE                                     | Pending                                            |
+| `system-integration-tests/.github/workflows/smoke-test-gate.yml`      | ADD 2 new steps (warn-mode)                | Pending                                            |
+
+## Baseline Results (2026-03-10)
+
+### UIC (check_uic_completeness.py)
+
+- 195 exported in `__all__`, 186 defined in source
+- **0 missing** — UIC is fully covered ✅
+- Note: `__all__` has 9 more entries than source classes because it includes non-class constants
+  (`VM_INFRASTRUCTURE_EVENTS`, `EXECUTION_AUDIT`, `STRATEGY_AUDIT`) and some re-exported enums
+
+### UAC (check_uac_completeness.py)
+
+- 166 exported in `__all__`, 224 defined in scoped source
+- **163 missing** — curation backlog
+- Source breakdown:
+  - `unified_normalised_contracts/domain.py`: 40 classes (CanonicalTicker, CanonicalTrade, CanonicalOrderBook, etc.)
+  - `unified_normalised_contracts/errors.py`: 23 classes (CanonicalError, CanonicalRateLimitError, etc.)
+  - `unified_normalised_contracts/execution.py`: 15 classes (OrderSide, OrderType, TimeInForce, etc.)
+  - `schemas/derivatives.py`: 20 classes (VolSurface, PositionRisk, etc.)
+  - `schemas/risk.py`: 10 classes (VaR, stress tests)
+  - `schemas/protocol_sdks.py`: 35 classes (DeFi protocol action params)
+  - Other schemas/\*: remaining 41 classes
+- Many in `unified_normalised_contracts/` are core canonical schemas that SHOULD be in `__all__`
+- UAC `__init__.py` does selective promotion (no `from .schemas import *`) — gaps are intentional narrowing vs true gaps
+- Next step: curator review — for each of the 163, decide PROMOTE (add to `__all__`) or EXEMPT (add to checker's
+  `EXEMPT_MISSING`)
 
 ---
 
