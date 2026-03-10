@@ -11,16 +11,21 @@ overview: |
   unified-trading-pm/scripts/quality-gates-base/ (PM is already a transitive dependency
   of every repo). Each repo's quality-gates.sh becomes a ~10-line config-and-source stub.
 
-  Repo type mapping (confirmed from audit):
-    - Service  (27 repos, 623–641L): SERVICE_NAME + SOURCE_DIR + MIN_COVERAGE + LOCAL_DEPS
-    - Library  (17 repos, 473L):     SOURCE_DIR + MIN_COVERAGE + LOCAL_DEPS (no SERVICE_NAME)
-    - Codex    (1 repo,  488L):      SOURCE_DIR="" + docs-only variant
-    - PM       (1 repo,  641L):      self-hosting — owns the base scripts themselves
-    - UIs      (12 repos, 39L):      JS/TS stub — already minimal, out of scope
+  Repo type mapping (confirmed from audit 2026-03-10):
+    - Service  (28 repos, 647L): SERVICE_NAME + SOURCE_DIR + MIN_COVERAGE + LOCAL_DEPS
+      Includes: all service/* repos + API repos (client-reporting-api, deployment-api,
+      execution-results-api, market-data-api) + ibkr-gateway-infra + trading-agent-service
+      + system-integration-tests. No separate base-api variant needed — APIs are FastAPI
+      services and use base-service.sh identically.
+    - Library  (17 repos, 473L): PACKAGE_NAME + SOURCE_DIR + MIN_COVERAGE + LOCAL_DEPS
+    - Codex    (1 repo,  488L):  SOURCE_DIR="" + docs-only variant
+    - PM       (1 repo,  641L):  self-hosting — owns the base scripts themselves
+    - UIs      (~12 repos, 39–75L): JS/TS stub — already minimal, out of scope.
+      No base-ui variant needed.
 
 status: in-progress
 created: 2026-03-09
-updated: 2026-03-10
+updated: 2026-03-11
 isProject: false
 todos:
   - id: extract-service-base
@@ -39,12 +44,17 @@ todos:
     content: >-
       Extract the shared body of scripts/quality-gates.sh (library variant, 473L canonical — use
       unified-events-interface as reference) into unified-trading-pm/scripts/quality-gates-base/base-library.sh.
-      Differences from service variant: no SERVICE_NAME required (libraries don't have a service identity); no
-      RUN_INTEGRATION flag (libraries have no integration tests by default); slightly shorter test section (unit only
-      unless overridden). Validate required vars: SOURCE_DIR, MIN_COVERAGE. Add version header "#
-      quality-gates-base-library v1.0 — owned by unified-trading-pm". Test by sourcing from unified-events-interface
-      manually. Commit to unified-trading-pm.
-    status: done
+      Differences from service variant: uses PACKAGE_NAME instead of SERVICE_NAME; no RUN_INTEGRATION flag
+      (libraries run unit tests only by default); workspace venv preference in bootstrap; BASEDPYRIGHT_CACHE_DIR
+      keyed on PACKAGE_NAME; conditional pip check (only if Dockerfile exists); schema placement check is advisory
+      (log_warn not log_fail); UCI-specific os.getenv bypass for unified-config-interface. Validate required vars:
+      PACKAGE_NAME, SOURCE_DIR, MIN_COVERAGE. Add version header "# quality-gates-base-library v1.0 — owned by
+      unified-trading-pm". Commit to unified-trading-pm.
+    status: todo
+    notes: >-
+      Previously marked done but base-library.sh was subsequently deleted (README said "no callers"). Architecture
+      decision reversed 2026-03-11: all 17 library repos will use source stubs (Option A). Must recreate
+      base-library.sh before migrate-library-repos can proceed.
 
   - id: extract-codex-base
     content: >-
@@ -99,7 +109,7 @@ todos:
 
   - id: migrate-service-repos
     content: >-
-      Migrate all 27 service repos to the thin-wrapper stub. Repos: alerting-service, client-reporting-api,
+      Migrate all 28 service repos to the thin-wrapper stub. Repos: alerting-service, client-reporting-api,
       deployment-api, deployment-service, execution-results-api, execution-service, features-calendar-service,
       features-commodity-service, features-cross-instrument-service, features-delta-one-service,
       features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service,
@@ -108,13 +118,15 @@ todos:
       position-balance-monitor-service, risk-and-exposure-service, strategy-service, strategy-validation-service,
       system-integration-tests, trading-agent-service. For each: (a) preserve existing SERVICE_NAME, SOURCE_DIR,
       MIN_COVERAGE, RUN_INTEGRATION, LOCAL_DEPS values exactly; (b) replace body with source stub; (c) run `bash
-      scripts/quality-gates.sh --quick` to verify gate still passes; (d) commit per-repo with message
-      "chore(quality-gates): replace body with centralized base-service.sh stub". Batch in groups of 5 to keep commits
-      reviewable. NOTE: ibkr-gateway-infra and trading-agent-service were not found in workspace — migrated 25 of 27.
+      scripts/quality-gates.sh --lint --skip-typecheck` to verify stub sources correctly; (d) commit per-repo with
+      message "chore(quality-gates): replace body with centralized base-service.sh stub". Run in parallel batches of
+      5-6 repos. Note: all 28 repos confirmed present in workspace 2026-03-11 (ibkr-gateway-infra, trading-agent-service,
+      system-integration-tests all verified to exist with 647L full-inline quality-gates.sh).
     status: todo
     notes: >-
-      Incorrectly marked done — no commit hashes recorded. Verified 2026-03-10: all 25 service repos
-      still have full-inline quality-gates.sh (800+ lines). Migration not performed.
+      Verified 2026-03-11: all 28 service repos have full-inline quality-gates.sh (647L). Migration not yet
+      performed. Count corrected from 27→28 (ibkr-gateway-infra, trading-agent-service, system-integration-tests
+      all exist in workspace — previous "not found" note was incorrect).
 
   - id: migrate-library-repos
     content: >-
@@ -128,8 +140,9 @@ todos:
       "chore(quality-gates): replace body with centralized base-library.sh stub".
     status: todo
     notes: >-
-      Incorrectly marked done — no commit hashes recorded. Verified 2026-03-10: all 17 library/interface
-      repos still have full-inline quality-gates.sh. Migration not performed.
+      Verified 2026-03-11: all 17 library/interface repos have full-inline quality-gates.sh (473L).
+      Migration blocked on extract-library-base completing first (base-library.sh must exist).
+      Library stub uses PACKAGE_NAME (not SERVICE_NAME) and sources base-library.sh.
 
   - id: migrate-codex
     content: >-
@@ -215,12 +228,15 @@ Missed repos silently run stale gates.
 
 | Type                 | Count  | Current Lines | After Refactor | Lines Saved         |
 | -------------------- | ------ | ------------- | -------------- | ------------------- |
-| Services             | 27     | 623–641       | ~12            | ~16,800             |
+| Services + APIs      | 28     | 647           | ~12            | ~17,780             |
 | Libraries/Interfaces | 17     | 473           | ~10            | ~7,900              |
 | Codex (docs-only)    | 1      | 488           | ~8             | ~480                |
 | PM (self)            | 1      | 641           | ~10            | ~630                |
-| **Total**            | **46** |               |                | **~25,810**         |
-| UIs                  | 12     | 39            | unchanged      | 0 (already minimal) |
+| **Total**            | **47** |               |                | **~26,790**         |
+| UIs                  | ~12    | 39–75         | unchanged      | 0 (already minimal) |
+
+Note: APIs (client-reporting-api, deployment-api, execution-results-api, market-data-api) are FastAPI services — no
+separate base-api variant. UIs have JS/TS toolchain — no base-ui variant.
 
 ## Base Script Variants
 
