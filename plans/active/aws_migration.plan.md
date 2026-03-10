@@ -267,3 +267,72 @@ isProject: false
 - unified-trading-codex/05-infrastructure/README.md
 - unified-trading-codex/11-project-management/dual-cloud-cost-ops-playbook.md
 - cursor-rules: cloud-agnostic.mdc
+
+---
+
+## GCP → AWS Equivalence Matrix (added 2026-03-10)
+
+Complete mapping of every GCP service used to its AWS equivalent, with specific operational steps required per phase.
+This ensures no GCP capability is missed when running CLOUD_PROVIDER=aws.
+
+| GCP Service                | AWS Equivalent        | Phase | Specific Ops Required                                                                                              |
+| -------------------------- | --------------------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
+| Cloud Run                  | ECS Fargate           | 0c/3a | Task definition per service (CPU/mem from table below), ECS service + ALB, auto-scaling policy                     |
+| GCS                        | S3                    | 0/3b  | Bucket per GCS bucket (same naming convention), bucket policy matching GCS IAM, versioning on, lifecycle rules     |
+| Pub/Sub                    | SQS + SNS             | 3d    | Queue per Pub/Sub subscription, SNS topic per Pub/Sub topic, DLQs with 3-retry policy, 7-day retention             |
+| BigQuery                   | Athena + S3 + Glue    | 3e    | S3 bucket for raw data, Glue database + table schemas, Athena workgroup, partition scheme matching BQ              |
+| Cloud Build                | CodeBuild             | 2b/2c | buildspec.aws.yaml (already distributed), CodeBuild project per repo, OIDC role, ECR pull permission               |
+| Secret Manager             | AWS Secrets Manager   | 3c    | Secret per GCP secret (same names), rotation config, resource policy per service role                              |
+| Cloud Scheduler            | EventBridge           | 3a    | EventBridge rule per Cloud Scheduler job, target = ECS task run or Lambda                                          |
+| Artifact Registry          | ECR                   | 0f    | Repository per service, image scanning enabled, lifecycle: keep last 10                                            |
+| Cloud IAM (SA per service) | IAM role per ECS task | 0c    | ECS task execution role + task role per service, OIDC federation for GHA                                           |
+| Cloud Logging              | CloudWatch Logs       | 3a    | Log group per service (`/unified-trading/{service}`), metric filters for ERROR/CRITICAL, 30d retention             |
+| Cloud Monitoring           | CloudWatch Metrics    | 3a    | Dashboard per service, alarms: CPU>80%, memory>80%, error_rate>1%                                                  |
+| Cloud Run jobs (batch)     | ECS task runs         | 3a    | One-off task execution via `aws ecs run-task` for batch jobs                                                       |
+| VPC (auto)                 | VPC + subnets         | 0     | VPC with private subnets (one per AZ in ap-northeast-1 + ap-southeast-1), NAT gateway, security groups per service |
+| Cloud DNS                  | Route 53              | 4     | Hosted zone, A/ALIAS records for each service endpoint                                                             |
+| Memorystore Redis          | ElastiCache Redis     | 3a    | Redis cluster per env (dev/staging/prod), security group access only from service SGs                              |
+| Cloud SQL                  | RDS Postgres          | 3a    | Required for Grafana state if deploying Grafana to AWS                                                             |
+
+### ECS Task Resource Sizes (per service tier)
+
+| Service Tier                   | CPU (vCPU) | Memory   | Notes                      |
+| ------------------------------ | ---------- | -------- | -------------------------- |
+| T0–T2 libraries (no runtime)   | N/A        | N/A      | Library only, no container |
+| Data services (MTDH, MDPS)     | 0.5        | 2048 MB  | I/O bound                  |
+| Feature services (all 8)       | 0.5        | 1536 MB  | Compute + GCS reads        |
+| ML inference                   | 1.0        | 4096 MB  | Model loading + inference  |
+| ML training                    | 4.0        | 16384 MB | Fargate Spot recommended   |
+| Strategy service               | 0.5        | 1024 MB  | Signal generation          |
+| Execution service              | 0.5        | 2048 MB  | Order management           |
+| Monitoring services (PBS, PNL) | 0.25       | 512 MB   | Lightweight                |
+
+### S3 Bucket creation requirements (Phase 3b)
+
+File to create: `unified-trading-pm/scripts/aws/setup-s3-buckets.sh`
+
+Required S3 buckets (mirroring GCS):
+
+- `unified-trading-{env}-tick-data` → GCS: `unified-trading-{env}-tick-data`
+- `unified-trading-{env}-features` → GCS: `unified-trading-{env}-features`
+- `unified-trading-{env}-models` → GCS: `unified-trading-{env}-models`
+- `unified-trading-{env}-instruments` → GCS: `unified-trading-{env}-instruments`
+- `unified-trading-{env}-artifacts` → GCS: `unified-trading-{env}-artifacts`
+
+All buckets: versioning ON, SSE-S3 encryption, public access blocked, lifecycle: archive to Glacier after 90 days.
+
+### SQS/SNS topic requirements (Phase 3d)
+
+File to create: `unified-trading-pm/scripts/aws/setup-sqs-sns.sh`
+
+Creates SQS queues + SNS topics for every Pub/Sub topic in `runtime-topology.yaml`. Dead-letter queues: 3 retry
+attempts, then DLQ with 14-day retention. FIFO queues for execution service (order preservation required).
+
+### CloudWatch Alarms (Phase 3a — add to Terraform)
+
+Per service:
+
+- `{service}-cpu-high`: CPU utilization >80% for 5 minutes → SNS alert
+- `{service}-memory-high`: memory utilization >80% for 5 minutes → SNS alert
+- `{service}-error-rate`: >1% error rate on ALB target group → SNS alert
+- `{service}-task-stopped`: ECS task stopped unexpectedly → SNS alert (immediate)
