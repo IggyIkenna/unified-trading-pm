@@ -163,13 +163,14 @@ todos:
       unified-trading-pm/scripts/rollout-manifest-driven-setup.sh generates and commits the wrapper to all non-UI repos.
       Enables: missing import detection, missing .toml detection, quickmerge dep-deviation check, SIT orchestration
       dependency validation.
-    status: in_progress
+    status: completed
     notes: |
-      Started 2026-03-10. Architecture: thin wrapper per repo (sets SERVICE_NAME only) + shared PM script
-      (manifest-driven logic). PM script at scripts/setup-workspace-from-manifest.sh. Pre-flight checks:
+      RESOLVED 2026-03-10. Architecture: thin wrapper per repo (sets SERVICE_NAME only) + shared PM script
+      (manifest-driven logic). PM script at scripts/setup-workspace-from-manifest.sh. Rollout ran across
+      50 repos via 5 parallel agents — 50/50 committed, 0 failed. market-tick-data-service replaced its
+      bespoke hardcoded script (-95/+22 lines); all others were net-new. Pre-flight checks active:
       required dep clone failures = exit 1; optional = warn; pyproject.toml version vs manifest semver
-      constraint = warn if mismatch; missing pyproject.toml = warn. Rollout targets all non-UI repos
-      (49 repos). UI repos skipped (no Python deps).
+      constraint = warn if mismatch; missing pyproject.toml = warn. UI repos skipped (no Python deps).
   - id: pm-manifest-remote-ssot-check
     content: >-
       Add a pre-check to quickmerge.sh (before Stage 1): fetch origin/main of PM, compare versions block against local
