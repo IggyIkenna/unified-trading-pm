@@ -77,11 +77,29 @@ fi
 # ── [3] UNIT TESTS + COVERAGE ──────────────────────────────────────────────
 # Runs only when package.json has a "test" script that is NOT playwright-only
 # (vitest/jest produce coverage; playwright e2e does not).
+# After tests: enforces MIN_UI_COVERAGE floor (default 70) by reading
+# coverage/coverage-summary.json — belt-and-suspenders alongside vitest thresholds.
+MIN_UI_COVERAGE=${MIN_UI_COVERAGE:-70}
 if [ "$SKIP_TESTS" = false ]; then
   log_section "[3/4] UNIT TESTS + COVERAGE"
   if node -e "const s=require('./package.json').scripts||{}; process.exit(('test' in s && !s.test.includes('playwright')) ? 0 : 1)" 2>/dev/null; then
     if npm test -- --coverage --reporter=verbose 2>&1; then
-      log_success "Unit tests + coverage passed"
+      log_success "Unit tests passed"
+      # ── Coverage floor check ────────────────────────────────────────────
+      SUMMARY="coverage/coverage-summary.json"
+      if [ -f "$SUMMARY" ]; then
+        LINES_PCT=$(node -e "const d=require('./${SUMMARY}'); console.log(d.total&&d.total.lines?d.total.lines.pct:0)" 2>/dev/null || echo "0")
+        LINES_INT=${LINES_PCT%.*}
+        if [ "${LINES_INT:-0}" -lt "$MIN_UI_COVERAGE" ]; then
+          log_fail "Coverage floor FAILED: ${LINES_PCT}% lines < ${MIN_UI_COVERAGE}% required"
+          log_fail "Add tests or lower MIN_UI_COVERAGE — do NOT just skip this check"
+          exit 1
+        fi
+        log_success "Coverage floor passed: ${LINES_PCT}% lines ≥ ${MIN_UI_COVERAGE}%"
+      else
+        log_fail "coverage/coverage-summary.json not found — ensure vitest.config.ts has reporter: ['json-summary']"
+        exit 1
+      fi
     else
       log_fail "Unit tests FAILED"; exit 1
     fi
