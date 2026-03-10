@@ -85,6 +85,34 @@ todos:
       trading-agent-service, system-integration-tests) — all tests pass. Files are real compliance tests
       (not stubs): test_event_logging.py checks log_event import, event markers in source, MockEventSink,
       setup_events signature; test_config.py tests the service config class extends UnifiedCloudConfig.
+  - id: qg-failures-session-2-3
+    content:
+      "Fix all quality-gate failures across UI repos and service repos (sessions 2026-03-10): basedpyright reportAny
+      (deployment-service 26 errors, risk-and-exposure-service 13 errors, position-balance-monitor-service 3 errors), UI
+      vitest failures (trading-analytics-ui GitCompare mock, unified-trading-ui-auth waitFor + AuthContext infinite
+      re-render, logs-dashboard-ui/execution-analytics-ui/live-health-monitor-ui vite.config), trading-analytics-api
+      test_event_logging.py missing, ml-training-api xdist+coverage parallel, unified-cloud-interface stale
+      coverage.xml."
+    status: completed
+    notes: |
+      All fixed 2026-03-10 (two sessions):
+
+      Python repos:
+        deployment-service: 26 reportAny errors fixed with cast() on getattr/json.loads/yaml.safe_load/ctx.obj/argparse
+        risk-and-exposure-service: 13 errors fixed (__all__ re-exports + cast psutil + extraPaths); deleted stale baseline
+        position-balance-monitor-service: 3 errors fixed (__all__ re-exports + extraPaths); deleted stale baseline
+        ml-training-api: added [tool.coverage.run] parallel=true for xdist+cov compat; 38 passed, 95% coverage
+        trading-analytics-api: created tests/unit/test_event_logging.py with 4 lifecycle event tests
+        unified-cloud-interface: stale coverage.xml showed 79.36%; live run confirmed 81.21% — already passing
+
+      UI repos (vitest):
+        trading-analytics-ui App.test.tsx: added GitCompare mock + 3 recon page mocks (ReconRunsPage etc.)
+        unified-trading-ui-auth: (1) waitFor → vi.waitFor in CognitoAdapter.test.ts; (2) eventDetails wrapped
+          in useMemo() — plain object in useEffect deps caused infinite re-render loop → OOM heap crash (4GB+)
+        logs-dashboard-ui: /api → /api/ proxy path; "type": "module" in package.json
+        execution-analytics-ui: /api/ proxy + extended mock-api.ts route handlers + Playwright selector fixes
+        live-health-monitor-ui: /api/ proxy + package-lock deps update
+
   - id: fix-coverage-pct-placeholders
     content:
       "WARN 1.12: 35/59 repos in workspace-manifest.json show coverage_pct = 70 — a uniform placeholder. Run actual
@@ -98,6 +126,33 @@ todos:
       "DONE 2026-03-09: Real coverage measured for all 37 placeholder repos; workspace-manifest.json updated (commit
       9539e7d in unified-trading-pm). Notable: features-commodity-service=3%, market-tick-data-service=16%,
       execution-service=26% (1 failing test), pnl-attribution-service=46%, instruments-service=53%."
+
+  - id: remaining-tier-order-failures
+    content:
+      "Fix 4 remaining root-cause patterns from tier-order-run summary: RC-A/B stale wheel (UMI 15 + UTEI 5 failures),
+      RC-C env-leak (features-multi-timeframe, features-sports, pnl-attribution — 1 each), RC-D missing setup_events
+      (alerting-service 2 failures), coverage threshold (unified-feature-calculator-library 92.83% < 93%)."
+    status: in-progress
+    notes: |
+      Identified 2026-03-10 from tier-order-run summary table. NOT yet fixed.
+
+      RC-A/B (stale wheel, 20 failures):
+        unified-market-interface: 15 failed — IBKRAdapter missing ib= kwarg + normalize_ray_value/bps_to_percent not
+          in installed wheel. Fix: uv pip install -e unified-market-interface/ from workspace root.
+        unified-trade-execution-interface: 5 failed — IbkrTradFiAdapter missing ib= kwarg. Same fix.
+
+      RC-C (env-leak, 3 failures remaining):
+        features-multi-timeframe-service, features-sports-service, pnl-attribution-service: test_config_instantiates_
+          with_local_provider asserts cloud_provider=='local' but env has gcp. Fix: @patch.dict(os.environ,
+          {'CLOUD_PROVIDER': 'local'}, clear=False) on each test. (position-balance-monitor-service already fixed.)
+
+      RC-D (missing setup_events, 2 failures):
+        alerting-service: verify_api_key() calls log_event() but setup_events() not called in test. Gets
+          RuntimeError instead of HTTPException. Fix: add MockEventSink fixture in conftest.
+
+      Coverage threshold (1 repo):
+        unified-feature-calculator-library: 92.83% < 93.00%. All 224 tests pass. Fix: raise threshold to 93% or
+          add 1-2 tests for service_base/base_service.py (lines 96-99, 107, 112, 117, 147-198).
 
   - id: tier-order-run
     content:
