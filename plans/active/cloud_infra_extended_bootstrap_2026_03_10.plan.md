@@ -16,12 +16,13 @@ todos:
       pull subscriptions per downstream consumer. Idempotent — safe to re-run.
     status: done
     notes: |
-      DONE 2026-03-10 (deployment-service commit — setup-pubsub.sh created):
-      Script written: deployment-service/scripts/setup-pubsub.sh
-      17 topic entries, each with pull subscriptions. DRY_RUN + LIST_ONLY modes.
-      Run: GCP_PROJECT_ID=central-element-323112 bash scripts/setup-pubsub.sh --dry-run
-      verify_infra.py already has verify_pubsub_topics() — can validate post-create.
-      Actual GCP creation: pending (run script against project).
+      DONE 2026-03-10: 18 topics + 41 subscriptions live in central-element-323112.
+      Script fixed: arg parsing (GCP_PROJECT_ID env var), removed --retain-acked-messages=false.
+      Topics: deployment-events, deployment-status, deployment-alerts, fill-events-{binance,bybit,
+      okx,deribit,hyperliquid}, circuit-breaker-events, risk-breach-alerts, position-updates,
+      cascade-predictions, ml-predictions, strategy-sports-signals, strategy-signals,
+      config-updates, system-health-events, audit-log-events, billing-alerts (via billing script).
+      verify_infra.py verify_pubsub_topics() can validate post-create.
 
   - id: pubsub-aws-sns
     content: >-
@@ -38,11 +39,11 @@ todos:
       asia-northeast1. Script stores redis-url, redis-host, redis-port, redis-password in GCP Secret Manager. UCI
       get_cache_client(provider='gcp') reads redis-url SM secret. SIT test_cache_smoke.py validates ping +
       set/get/delete.
-    status: pending
+    status: done
     notes: |
-      setup-redis.sh already exists (161 lines, idempotent). UCI cache.py has RedisProvider.
-      Redis instance may already exist — verify: gcloud redis instances list --region=asia-northeast1
-      SIT tests written: test_cache_smoke.py (skip if no REDIS_URL / redis-url SM secret).
+      DONE 2026-03-10 (pre-existing): trading-cache REDIS_7_0 BASIC 1GB at 10.37.84.139:6379 READY.
+      Created 2026-02-26. No action needed — instance already running.
+      REDIS_URL or redis-url SM secret needed for SIT test_cache_smoke.py to run live Redis tests.
 
   - id: redis-aws-elasticache
     content: >-
@@ -60,11 +61,12 @@ todos:
       'cloudsql-execution-db-url' in Secret Manager. Grants roles/cloudsql.client to github-actions-deploy SA.
     status: done
     notes: |
-      DONE 2026-03-10: setup-cloudsql.sh written (deployment-service).
-      Provisions: instance + database + user + SM secrets + IAM grant.
-      Actual GCP creation: pending (run script — takes 3-5 min).
-      SIT tests written: test_database_smoke.py (skip if no DATABASE_URL / SM secret).
-      execution-service already has OrderStateRepository (postgresql.py) ready to use.
+      DONE 2026-03-10: trading-order-state POSTGRES_15 db-g1-small RUNNABLE at 34.104.179.12.
+      Database order_state created. User execution_svc created.
+      SM secrets: cloudsql-execution-db-url, cloudsql-execution-db-password stored.
+      Script fixed: arg parsing (GCP_PROJECT_ID env var + --dry-run flag).
+      SIT tests: test_database_smoke.py (skip if no DATABASE_URL / SM secret).
+      execution-service OrderStateRepository (postgresql.py) ready to use.
 
   - id: rds-aws
     content: >-
@@ -102,12 +104,13 @@ todos:
       BigQuery billing export (--export-bq flag). Daily breakdown query documented in script.
     status: done
     notes: |
-      DONE 2026-03-10: setup-billing-alerts.sh written (deployment-service).
-      Requires: GCP billing account ID (gcloud billing accounts list) + billing.budgetAdmin role.
-      Creates billing-alerts Pub/Sub topic + subscription.
-      Daily cost query: SELECT date, service, SUM(cost) FROM billing_export GROUP BY 1,2 ORDER BY 1.
-      AWS Cost Explorer: documented in script --cloud aws section (blocked until AWS creds).
-      Actual budget creation: pending (run script with GCP_BILLING_ACCOUNT set).
+      DONE 2026-03-10: Budgets + billing-alerts topic LIVE in central-element-323112.
+      Billing account: 016B25-109840-AF2ACB (odum_gcp_acc, GBP currency).
+      Script fixed: auto-detect currency (was hardcoded USD), fix basis=current-spend.
+      Created: billing-alerts Pub/Sub topic + billing-alerts-monitor subscription.
+      Created: unified-trading-monthly-budget (500GBP) + unified-trading-dev-budget (50GBP).
+      Thresholds: 50%/80%/100%/120% → Pub/Sub billing-alerts.
+      BigQuery billing export: enable manually in GCP Console (cannot be done via CLI).
 
   - id: billing-alerts-aws
     content: >-
@@ -123,9 +126,10 @@ todos:
       accumulation.
     status: done
     notes: |
-      DONE 2026-03-10: cleanup-untagged-images.sh written (deployment-service).
-      Supports: --dry-run, --days-old N, --keep-count N, --repo NAME, --location REGION.
-      Actual cleanup: pending (run --dry-run first to review what would be deleted).
+      DONE 2026-03-10: cleanup-untagged-images.sh validated against 34 AR repos.
+      Script fixed: mapfile→while-read for macOS bash 3.2 compat.
+      Dry-run complete: 2 images would delete (features/calendar-service, Feb 15-16).
+      All other repos clean. Run without --dry-run to delete when ready.
 
   - id: sit-pubsub-smoke
     content: >-
