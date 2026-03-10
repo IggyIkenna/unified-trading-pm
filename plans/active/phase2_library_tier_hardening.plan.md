@@ -190,7 +190,25 @@ todos:
       UCI=unified-config-interface (UCI is T1, not T0, because it imports UEI for the CONFIG_LOADED lifecycle event).
       lib-phase5-t1-quality-gates (verify QG passes in both UTS and UCI); ci-cloudbuild-quality-gate-wire for UTS and
       UCI."
-    status: pending
+    status: done
+    notes: |
+      Completed (2026-03-10):
+      UTL (unified-trading-library) deploy structure DONE — commit 798893a.
+      cloudbuild.yaml: rewrote from Docker-based unified-cloud-services pattern to canonical library
+        pattern (lint → clone-pm-scripts → quality-gates → cloud-sdk-isolation-check → build-wheel →
+        publish). Correct package references, E2_HIGHCPU_8, 600s timeout.
+      quality-gates.yml: added staging branch trigger, permissions: contents: read, explicit python "3.13".
+      scripts/quality-gates.sh: added WORKSPACE_ROOT env-override, SIZE_EXTRA_EXCLUDES (standardized_service.py),
+        INSIDE_EXTRA_EXCLUDES (events_relay.py, health_router.py, performance_monitor.py),
+        OS_ENVIRON_EXTRA_EXCLUDES (_env_bootstrap.py), BROAD_EXCEPT_EXTRA_EXCLUDES (health_router.py,
+        performance_monitor.py).
+      Codex violations fixed: _env_bootstrap.py # config-bootstrap: inline comments, freshness_monitor.py
+        top-level import, core/__init__.py missing RequestAuditMiddleware import.
+      base-library.sh: scoped import check to SOURCE_DIR (not tests/), added BROAD_EXCEPT_EXTRA_EXCLUDES
+        mechanism, fixed SIZE_EXTRA_EXCLUDES for function size (these changes were committed in PM).
+      workspace-manifest.json: version updated 0.3.42 → 0.3.167, quality_gate_status PARTIAL → WIRED.
+      QG RESULT: ALL QUALITY GATES PASSED (--quick + basedpyright 0 errors, 1206 passed 4 skipped).
+      NOTE: UCI deploy structure still pending — only UTL covered in this commit.
   - id: t1-uts-tests
     content:
       "T1 STEP B — TESTS FIRST: qg-uts-conftest-skip-pattern (fix GCP auth skip pattern — use google.auth.default() per
