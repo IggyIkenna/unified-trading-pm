@@ -153,7 +153,8 @@ jobs:
           minor = int(parts[1])
           for name, data in m.get("repositories", {}).items():
               for dep in data.get("dependencies", []):
-                  if dep.get("name") == repo:
+                  dep_name = dep.get("name") if isinstance(dep, dict) else dep
+                  if dep_name == repo:
                       constraint = f">={major}.{minor}.0,<{major+1}.0.0"
                       print(json.dumps({"repo": name, "dep_name": repo, "dep_version": version, "constraint": constraint, "bump_type": bump_type}))
           PYEOF
