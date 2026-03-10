@@ -70,7 +70,7 @@ jobs:
         if: steps.uv-cache.outputs.cache-hit != 'true'
         working-directory: unified-trading-pm
         run: |
-          uv venv .venv
+          uv venv --clear .venv
           uv pip install -e ".[dev]"
 
       - name: Checkout Codex (sibling)
