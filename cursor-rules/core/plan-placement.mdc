@@ -1,6 +1,6 @@
 ---
 description: "Plans go in exactly three places: unified-trading-pm, unified-trading-pm/plans/ai/, or unified-trading-pm/plans/active/"
-alwaysApply: true
+alwaysApply: false
 priority: 95
 tags:
   - documentation

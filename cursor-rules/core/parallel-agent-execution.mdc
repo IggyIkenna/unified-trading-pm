@@ -1,6 +1,6 @@
 ---
 description: "Always parallelize independent tasks across repos (different repos = zero conflict risk)"
-alwaysApply: true
+alwaysApply: false
 priority: 70
 tags: [agents, parallelization]
 ---

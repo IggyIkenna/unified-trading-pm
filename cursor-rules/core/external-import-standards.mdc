@@ -1,6 +1,8 @@
 ---
 description: "Import from top-level package only, never from internal modules"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 50
 tags: [imports, dependencies, refactoring]
 ---

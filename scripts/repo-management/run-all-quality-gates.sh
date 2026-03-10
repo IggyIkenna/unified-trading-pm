@@ -51,6 +51,7 @@ SEQUENTIAL=false
 DRY_RUN=false
 SKIP_TYPECHECK=false
 LINT_ONLY=false
+TEST_ONLY=false
 REPO_LIST=()  # empty = all repos
 
 while [[ $# -gt 0 ]]; do
@@ -61,6 +62,7 @@ while [[ $# -gt 0 ]]; do
     --dry-run)         DRY_RUN=true; shift ;;
     --skip-typecheck)  SKIP_TYPECHECK=true; shift ;;
     --lint)            LINT_ONLY=true; shift ;;
+    --test)            TEST_ONLY=true; shift ;;
     --repo)            REPO_LIST+=("$2"); shift 2 ;;
     --repos)           read -ra _r <<< "$2"; REPO_LIST+=("${_r[@]}"); shift 2 ;;
     --help | -h)
@@ -73,6 +75,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --dry-run              Print what would run, do not execute"
       echo "  --skip-typecheck       Skip basedpyright type check (pass-through to quality-gates.sh)"
       echo "  --lint                 Run lint only, skip tests (pass-through to quality-gates.sh)"
+      echo "  --test                 Run tests + typecheck only, skip lint (pass-through to quality-gates.sh)"
       exit 0
       ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
@@ -125,6 +128,7 @@ echo "━━━ Phase 3: Quality gates ━━━"
 echo "  Mode: $([ "$SEQUENTIAL" = true ] && echo 'SEQUENTIAL' || echo 'PARALLEL within tier')"
 [[ "$SKIP_TYPECHECK" = true ]] && echo "  Typecheck: SKIPPED"
 [[ "$LINT_ONLY" = true ]]      && echo "  Tests: SKIPPED (lint only)"
+[[ "$TEST_ONLY" = true ]]      && echo "  Lint: SKIPPED (test only)"
 echo ""
 
 LEVEL_DATA=$("$PYTHON" -c "
@@ -153,6 +157,7 @@ run_qg() {
   local qg_args=(--no-fix)
   [[ "$SKIP_TYPECHECK" = true ]] && qg_args+=(--skip-typecheck)
   [[ "$LINT_ONLY" = true ]]      && qg_args+=(--lint)
+  [[ "$TEST_ONLY" = true ]]      && qg_args+=(--test)
 
   if [[ -f "$rp/scripts/quality-gates.sh" ]]; then
     if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/quality-gates.sh "${qg_args[@]}" 2>&1) >"$log" 2>&1; then

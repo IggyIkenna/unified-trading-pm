@@ -1,6 +1,6 @@
 ---
 description: "Append 'use context7' when working with external libraries or APIs"
-alwaysApply: true
+alwaysApply: false
 priority: 70
 tags: [context7, external-libs]
 ---

@@ -1,6 +1,8 @@
 ---
 description: "Service→UDS→UCS domain boundary, instruments domain reader, and API key resolution"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 70
 tags: [instruments, api-keys, data-access, uds, domain-layer]
 ---

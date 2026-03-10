@@ -1,6 +1,8 @@
 ---
 description: "Use aiohttp for async HTTP — never requests in async functions"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 80
 tags: [async, http, aiohttp]
 ---

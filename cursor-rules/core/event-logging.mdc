@@ -1,6 +1,8 @@
 ---
 description: "Use setup_events/log_event from unified-events-interface, 11 batch / 12 live lifecycle events"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 75
 tags: [observability, event-logging]
 ---

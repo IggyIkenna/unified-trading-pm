@@ -1,6 +1,6 @@
 ---
 description: "Plan complete on one repo does not mean workspace complete — track partial rollouts"
-alwaysApply: true
+alwaysApply: false
 priority: 70
 tags:
   - documentation
