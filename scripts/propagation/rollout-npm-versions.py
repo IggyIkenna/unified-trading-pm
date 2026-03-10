@@ -36,6 +36,7 @@ def parse_semver(spec: str) -> tuple[int, int, int]:
     """Extract numeric version from a semver range spec like '^2.0.0', '~1.3.0', '>=16.0.0'.
     Returns (major, minor, patch) tuple for comparison. Returns (0,0,0) if unparseable."""
     import re
+
     m = re.search(r"(\d+)\.(\d+)\.(\d+)", spec)
     if m:
         return int(m.group(1)), int(m.group(2)), int(m.group(3))
@@ -113,9 +114,7 @@ def check_repo(
         # Only flag if the repo's version floor is strictly OLDER than the canonical floor.
         # Repos with newer patch/minor versions are OK — do not downgrade them.
         if version_is_below_canonical(current, canonical_spec):
-            mismatches.append(
-                f"  {repo_name}/{package}: {current!r} → {canonical_spec!r}"
-            )
+            mismatches.append(f"  {repo_name}/{package}: {current!r} → {canonical_spec!r}")
             if apply:
                 dev_deps[package] = canonical_spec
                 updated = True
@@ -128,9 +127,7 @@ def check_repo(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Enforce canonical npm devDependency versions across UI repos"
-    )
+    parser = argparse.ArgumentParser(description="Enforce canonical npm devDependency versions across UI repos")
     parser.add_argument("--apply", action="store_true", help="Write updated package.json files")
     parser.add_argument("--repo", type=str, default=None, help="Process only this repo")
     args = parser.parse_args()

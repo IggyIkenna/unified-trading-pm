@@ -37,20 +37,30 @@ WORKSPACE_ROOT = SCRIPT_DIR.parent.parent.parent
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
 # Repos exempt from standard floors — these have documented override reasons
-EXCEPTIONS: frozenset[str] = frozenset({
-    "ibkr-gateway-infra",       # gateway client; limited unit-testable surface (override=51)
-    "system-integration-tests", # pure test-harness repo; no source package (override=0)
-    "unified-trading-pm",       # self-managed; rollout skips it
-    "unified-trading-codex",    # docs-only repo; no Python source
-})
+EXCEPTIONS: frozenset[str] = frozenset(
+    {
+        "ibkr-gateway-infra",  # gateway client; limited unit-testable surface (override=51)
+        "system-integration-tests",  # pure test-harness repo; no source package (override=0)
+        "unified-trading-pm",  # self-managed; rollout skips it
+        "unified-trading-codex",  # docs-only repo; no Python source
+    }
+)
 
 # Repo types that are Python repos (expect coverage.xml)
-PYTHON_TYPES: frozenset[str] = frozenset({
-    "service", "api-service", "library", "infrastructure", "test-harness", "devops",
-})
+PYTHON_TYPES: frozenset[str] = frozenset(
+    {
+        "service",
+        "api-service",
+        "library",
+        "infrastructure",
+        "test-harness",
+        "devops",
+    }
+)
 
 # Repo types that are UI (expect coverage/coverage-summary.json from vitest)
 UI_TYPES: frozenset[str] = frozenset({"ui"})
+
 
 # Coverage floor by repo type
 def coverage_floor(repo_type: str, template_type: str) -> int:
@@ -65,19 +75,21 @@ def _is_library(repo_type: str) -> bool:
 
 # ── Data structures ───────────────────────────────────────────────────────────
 
+
 @dataclass
 class RepoResult:
     name: str
     repo_type: str
     floor: int
-    actual_pct: int | None          # None = could not measure
-    min_coverage: int | None        # from quality-gates.sh; None = not set / UI repo
-    expected_min: int | None        # max(floor, actual-1); None = no data
-    status: str                     # "fail", "warn", "info", "ok", "skip", "exception"
+    actual_pct: int | None  # None = could not measure
+    min_coverage: int | None  # from quality-gates.sh; None = not set / UI repo
+    expected_min: int | None  # max(floor, actual-1); None = no data
+    status: str  # "fail", "warn", "info", "ok", "skip", "exception"
     note: str = ""
 
 
 # ── Parsers ───────────────────────────────────────────────────────────────────
+
 
 def parse_python_coverage(repo_path: Path) -> int | None:
     """Return coverage % from coverage.xml, or None if not present/parseable."""
@@ -136,6 +148,7 @@ def has_vitest_unit_test_script(repo_path: Path) -> bool:
 
 # ── Core audit logic ──────────────────────────────────────────────────────────
 
+
 def audit_repo(
     name: str,
     repo_info: JsonDict,
@@ -184,22 +197,39 @@ def audit_repo(
 
         if actual_pct is None:
             if has_pyproject:
-                return RepoResult(name, repo_type, floor, None, min_coverage, None, "warn",
-                                  "pyproject.toml exists but no coverage.xml")
+                return RepoResult(
+                    name,
+                    repo_type,
+                    floor,
+                    None,
+                    min_coverage,
+                    None,
+                    "warn",
+                    "pyproject.toml exists but no coverage.xml",
+                )
             return RepoResult(name, repo_type, floor, None, min_coverage, None, "skip", "no pyproject.toml")
 
         expected_min = max(floor, actual_pct - 1)
 
         if is_exception:
-            return RepoResult(name, repo_type, floor, actual_pct, min_coverage, expected_min, "exception",
-                              "approved exception")
+            return RepoResult(
+                name, repo_type, floor, actual_pct, min_coverage, expected_min, "exception", "approved exception"
+            )
 
         if actual_pct < floor:
             return RepoResult(name, repo_type, floor, actual_pct, min_coverage, expected_min, "fail")
 
         if min_coverage is not None and min_coverage != expected_min:
-            return RepoResult(name, repo_type, floor, actual_pct, min_coverage, expected_min, "info",
-                              f"MIN_COVERAGE={min_coverage} but expected {expected_min}")
+            return RepoResult(
+                name,
+                repo_type,
+                floor,
+                actual_pct,
+                min_coverage,
+                expected_min,
+                "info",
+                f"MIN_COVERAGE={min_coverage} but expected {expected_min}",
+            )
 
         return RepoResult(name, repo_type, floor, actual_pct, min_coverage, expected_min, "ok")
 
@@ -220,6 +250,7 @@ def _has_coverage_v8(repo_path: Path) -> bool:
 
 
 # ── Formatting ────────────────────────────────────────────────────────────────
+
 
 class Colors:
     RED = "\033[0;31m"
@@ -247,10 +278,10 @@ def _gap(actual: int | None, floor: int) -> str:
 
 
 def print_report(results: list[RepoResult], c: Colors) -> None:
-    fails   = [r for r in results if r.status == "fail"]
-    warns   = [r for r in results if r.status == "warn"]
-    infos   = [r for r in results if r.status == "info"]
-    oks     = [r for r in results if r.status == "ok"]
+    fails = [r for r in results if r.status == "fail"]
+    warns = [r for r in results if r.status == "warn"]
+    infos = [r for r in results if r.status == "info"]
+    oks = [r for r in results if r.status == "ok"]
     excepts = [r for r in results if r.status == "exception"]
 
     today = __import__("datetime").date.today().isoformat()
@@ -260,17 +291,22 @@ def print_report(results: list[RepoResult], c: Colors) -> None:
     label_a = f"{c.RED}[FAIL]{c.NC}" if fails else f"{c.GREEN}[PASS]{c.NC}"
     print(f"{c.BOLD}[A] BELOW FLOOR — {len(fails)} repo(s)  {label_a}{c.NC}")
     if fails:
-        for r in sorted(fails, key=lambda x: (x.actual_pct or 0)):
+        for r in sorted(fails, key=lambda x: x.actual_pct or 0):
             gap = _gap(r.actual_pct, r.floor)
-            print(f"  {c.RED}[FAIL]{c.NC}  {r.name:<45}  {r.repo_type:<12}  "
-                  f"actual={_pct(r.actual_pct):<6}  floor={r.floor}%  gap={gap}")
+            print(
+                f"  {c.RED}[FAIL]{c.NC}  {r.name:<45}  {r.repo_type:<12}  "
+                f"actual={_pct(r.actual_pct):<6}  floor={r.floor}%  gap={gap}"
+            )
     else:
         print(f"  {c.GREEN}All repos meet their coverage floor.{c.NC}")
 
     # [B] Non-uniform reporters
-    print(f"\n{c.BOLD}[B] NON-UNIFORM REPORTERS — {len(warns)} repo(s)  "
-          f"({'⚠' if warns else c.GREEN + 'PASS' + c.NC}){c.NC}" if not warns else
-          f"\n{c.BOLD}[B] NON-UNIFORM REPORTERS — {len(warns)} repo(s)  {c.YELLOW}[WARN]{c.NC}{c.NC}")
+    print(
+        f"\n{c.BOLD}[B] NON-UNIFORM REPORTERS — {len(warns)} repo(s)  "
+        f"({'⚠' if warns else c.GREEN + 'PASS' + c.NC}){c.NC}"
+        if not warns
+        else f"\n{c.BOLD}[B] NON-UNIFORM REPORTERS — {len(warns)} repo(s)  {c.YELLOW}[WARN]{c.NC}{c.NC}"
+    )
     for r in sorted(warns, key=lambda x: x.name):
         print(f"  {c.YELLOW}[WARN]{c.NC}  {r.name:<45}  {r.repo_type:<12}  {r.note}")
 
@@ -319,23 +355,25 @@ def to_json(results: list[RepoResult]) -> dict[str, object]:
             "status": r.status,
             "note": r.note,
         }
+
     return {
-        "below_floor":       [_row(r) for r in results if r.status == "fail"],
-        "non_uniform":       [_row(r) for r in results if r.status == "warn"],
-        "stale_threshold":   [_row(r) for r in results if r.status == "info"],
-        "compliant":         [_row(r) for r in results if r.status == "ok"],
-        "exceptions":        [_row(r) for r in results if r.status == "exception"],
+        "below_floor": [_row(r) for r in results if r.status == "fail"],
+        "non_uniform": [_row(r) for r in results if r.status == "warn"],
+        "stale_threshold": [_row(r) for r in results if r.status == "info"],
+        "compliant": [_row(r) for r in results if r.status == "ok"],
+        "exceptions": [_row(r) for r in results if r.status == "exception"],
         "summary": {
-            "below_floor":     sum(1 for r in results if r.status == "fail"),
-            "non_uniform":     sum(1 for r in results if r.status == "warn"),
+            "below_floor": sum(1 for r in results if r.status == "fail"),
+            "non_uniform": sum(1 for r in results if r.status == "warn"),
             "stale_threshold": sum(1 for r in results if r.status == "info"),
-            "compliant":       sum(1 for r in results if r.status == "ok"),
-            "exceptions":      sum(1 for r in results if r.status == "exception"),
+            "compliant": sum(1 for r in results if r.status == "ok"),
+            "exceptions": sum(1 for r in results if r.status == "exception"),
         },
     }
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
