@@ -1,0 +1,46 @@
+---
+description: "Never run pytest directly — always use bash scripts/quality-gates.sh"
+alwaysApply: true
+priority: 90
+tags:
+  - testing
+  - quality-gates
+  - enforcement
+---
+# No Manual pytest Invocations
+RULE: NEVER run `pytest`, `python -m pytest`, or `python -m coverage` directly. ALWAYS use `bash scripts/quality-gates.sh` to run tests.
+WHY: Direct pytest invocations use the active workspace venv (.venv-workspace) which may have stale installed wheels. The QG script activates the per-repo `.venv` with editable installs, matching CI exactly. Manual runs produce false results — failures that don't exist in CI, or passes that hide CI failures.
+CODEX: 06-coding-standards/quality-gates.md §Two-Pass Workflow Model
+
+DO:
+  - `bash scripts/quality-gates.sh` — full quality gate (lint + tests + typecheck + codex)
+  - `bash scripts/quality-gates.sh --skip-typecheck` — skip typecheck for speed
+  - Per-file targeted run: `cd <repo> && .venv/bin/pytest tests/unit/test_foo.py -q` — ONLY after QG confirmed the venv is set up (i.e., `.venv/` exists). Never from workspace root.
+
+NEVER:
+  - `pytest tests/` — uses workspace venv, may resolve wrong package versions
+  - `python -m pytest` — same problem
+  - `python -m pytest tests/unit/ -v` from workspace shell — uses .venv-workspace
+  - Interpreting results from a manual pytest run as the ground truth for CI
+
+## Why This Matters (Root Cause)
+
+The workspace venv (`.venv-workspace`) is for IDE IntelliSense only — NOT for running tests.
+Each repo has its own `.venv/` with editable installs of all local deps.
+When you run `pytest` from the workspace shell:
+  - Python resolves `import unified_market_interface` from `.venv-workspace/lib/.../site-packages/`
+  - That wheel may be older than the local source
+  - New symbols in source code won't exist in the wheel
+  - Tests that should pass appear to fail (stale wheel pattern)
+  - Tests that should fail appear to pass (wheel hides missing exports)
+
+`bash scripts/quality-gates.sh` uses `.venv/bin/python` — the repo-local venv with `uv pip install -e .` — giving CI-faithful results.
+
+## Exception: Targeted debugging
+
+ONLY acceptable after verifying `.venv/` exists and has the repo installed:
+```bash
+cd unified-market-interface
+.venv/bin/pytest tests/unit/test_foo.py -xvs  # repo-local venv, not workspace
+```
+Never `cd unified-market-interface && pytest tests/unit/test_foo.py` (uses workspace PATH).
