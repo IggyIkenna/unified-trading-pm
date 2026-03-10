@@ -72,7 +72,7 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 | features-onchain-service | 39% → floor | 70 |
 | market-data-processing-service | 38% → floor | 70 |
 | market-tick-data-service | 16% → floor | 70 |
-| features-commodity-service | 81% | 80 |
+| features-commodity-service | 99% | 97 |
 | execution-service | 6% → floor | 70 |
 | ibkr-gateway-infra | 52% → override | 51 |
 | system-integration-tests | — → override | 0 |
