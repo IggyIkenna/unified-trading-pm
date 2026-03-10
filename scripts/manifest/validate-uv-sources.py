@@ -224,7 +224,7 @@ def check_repo(
     for dep in internal_deps:
         if dep == normalize(repo_name):
             continue  # skip self-references
-        entry = uv_sources.get(dep, {})
+        entry = uv_sources.get(dep)
         if not entry:
             issues.append(
                 {
