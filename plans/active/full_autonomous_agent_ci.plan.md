@@ -151,6 +151,25 @@ todos:
       RESOLVED 2026-03-09: scripts/update-pm-plan-status.sh created — takes --service, --todo, --status, --notes,
       --plan, --dry-run; auto-discovers plan file by service name or todo ID; Python-based YAML line editor;
       auto-commits plan change to PM branch. Committed f771289.
+  - id: manifest-driven-dep-checkout-gha
+    content: >-
+      All 60 repos must clone their direct manifest dependencies as siblings in GHA (not a hardcoded list). Problem:
+      current setup-workspace.sh in market-tick-data-service has a hardcoded dep list; all other repos have no
+      setup-workspace.sh at all. Solution: (1) Create unified-trading-pm/scripts/setup-workspace-from-manifest.sh —
+      reads workspace-manifest.json, looks up SERVICE_NAME's dependencies block, clones each dep + pm + codex, runs
+      pre-flight checks (required dep clone fail=hard-fail, optional=warn; pyproject.toml version vs manifest constraint
+      check; missing pyproject.toml warn). (2) Each repo gets a thin-wrapper scripts/setup-workspace.sh that sets
+      SERVICE_NAME and delegates to PM's shared script. (3) Rollout script
+      unified-trading-pm/scripts/rollout-manifest-driven-setup.sh generates and commits the wrapper to all non-UI repos.
+      Enables: missing import detection, missing .toml detection, quickmerge dep-deviation check, SIT orchestration
+      dependency validation.
+    status: in_progress
+    notes: |
+      Started 2026-03-10. Architecture: thin wrapper per repo (sets SERVICE_NAME only) + shared PM script
+      (manifest-driven logic). PM script at scripts/setup-workspace-from-manifest.sh. Pre-flight checks:
+      required dep clone failures = exit 1; optional = warn; pyproject.toml version vs manifest semver
+      constraint = warn if mismatch; missing pyproject.toml = warn. Rollout targets all non-UI repos
+      (49 repos). UI repos skipped (no Python deps).
   - id: pm-manifest-remote-ssot-check
     content: >-
       Add a pre-check to quickmerge.sh (before Stage 1): fetch origin/main of PM, compare versions block against local
