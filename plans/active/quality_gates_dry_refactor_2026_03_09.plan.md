@@ -23,7 +23,7 @@ overview: |
     - UIs      (~12 repos, 39–75L): JS/TS stub — already minimal, out of scope.
       No base-ui variant needed.
 
-status: in-progress
+status: completed
 created: 2026-03-09
 updated: 2026-03-11
 isProject: false
@@ -50,11 +50,10 @@ todos:
       (log_warn not log_fail); UCI-specific os.getenv bypass for unified-config-interface. Validate required vars:
       PACKAGE_NAME, SOURCE_DIR, MIN_COVERAGE. Add version header "# quality-gates-base-library v1.0 — owned by
       unified-trading-pm". Commit to unified-trading-pm.
-    status: todo
+    status: completed
     notes: >-
-      Previously marked done but base-library.sh was subsequently deleted (README said "no callers"). Architecture
-      decision reversed 2026-03-11: all 17 library repos will use source stubs (Option A). Must recreate
-      base-library.sh before migrate-library-repos can proceed.
+      base-library.sh created at unified-trading-pm/scripts/quality-gates-base/base-library.sh (~280L).
+      All 17 library repos sourcing it successfully. Committed to PM as 22f02ca.
 
   - id: extract-codex-base
     content: >-
@@ -122,11 +121,11 @@ todos:
       message "chore(quality-gates): replace body with centralized base-service.sh stub". Run in parallel batches of
       5-6 repos. Note: all 28 repos confirmed present in workspace 2026-03-11 (ibkr-gateway-infra, trading-agent-service,
       system-integration-tests all verified to exist with 647L full-inline quality-gates.sh).
-    status: todo
+    status: completed
     notes: >-
-      Verified 2026-03-11: all 28 service repos have full-inline quality-gates.sh (647L). Migration not yet
-      performed. Count corrected from 27→28 (ibkr-gateway-infra, trading-agent-service, system-integration-tests
-      all exist in workspace — previous "not found" note was incorrect).
+      All 28 service repos migrated to 10-line stubs. Committed per-repo. Sample hashes: alerting-service
+      38d0159, execution-service 7fb090ef, features-calendar-service c92bc86, strategy-service 46b5ff8,
+      ibkr-gateway-infra bd8c2cd, trading-agent-service 1cae499, system-integration-tests 18b7c98.
 
   - id: migrate-library-repos
     content: >-
@@ -138,11 +137,11 @@ todos:
       unified-trade-execution-interface, unified-trading-library. For each: preserve SOURCE_DIR and MIN_COVERAGE
       exactly; replace body with library stub; run `bash scripts/quality-gates.sh --quick`; commit with message
       "chore(quality-gates): replace body with centralized base-library.sh stub".
-    status: todo
+    status: completed
     notes: >-
-      Verified 2026-03-11: all 17 library/interface repos have full-inline quality-gates.sh (473L).
-      Migration blocked on extract-library-base completing first (base-library.sh must exist).
-      Library stub uses PACKAGE_NAME (not SERVICE_NAME) and sources base-library.sh.
+      All 17 library repos migrated to 9-line stubs sourcing base-library.sh. Committed per-repo. Sample
+      hashes: unified-events-interface f9c33de, unified-market-interface 6d0a212, unified-trading-library
+      65fcb7f, execution-algo-library 91ac18d, unified-config-interface 9c5fe4e.
 
   - id: migrate-codex
     content: >-
