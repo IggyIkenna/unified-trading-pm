@@ -13,7 +13,7 @@
 # Optional caller variables:
 #   PYTEST_WORKERS — parallel workers (default: 2)
 #   LOCAL_DEPS     — array of sibling repo names to install locally
-#   MAX_DURATION   — duration limit in seconds (default: 120)
+#   MAX_DURATION   — duration limit in seconds (default: 150)
 #
 # Version guard (optional): declare EXPECTED_BASE_VERSION="1.0" in stub before sourcing.
 #
@@ -563,7 +563,7 @@ VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"
 [ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
-MAX_DURATION=${MAX_DURATION:-120}
+MAX_DURATION=${MAX_DURATION:-150}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 [ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"

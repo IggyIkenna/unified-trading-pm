@@ -77,6 +77,50 @@ todos:
       secret names (bybit_api_key underscore) are an SM-level rename, no code change required. Rename should be done via
       SM console/Terraform when safe. graph-api-key deprecated — no code references found."
     status: done
+  - id: phase-2-barchart
+    content: |
+      Barchart API key — barchart_adapter.py exists in UMI TradFi adapters but key not yet in SM.
+      (1) Obtain Barchart OnDemand API key: https://www.barchart.com/ondemand/api
+      (2) Add to Secret Manager as: barchart-api-key
+      (3) Record VCR cassette for: historical commodities, equity OHLCV, options chain endpoints
+      (4) Update barchart_adapter.py to use get_secret_client().get_secret("barchart-api-key")
+      (5) Add test: tests/unit/test_barchart_adapter.py with cassette playback
+      Gate: barchart_adapter.py runs in VCR_MODE=playback without real API key.
+    status: pending
+  - id: free-sources-audit
+    content: |
+      Audit of all free data sources (no API key needed) — VCR cassette only required.
+      These are confirmed free-tier / no-auth sources that must have cassettes committed:
+
+      FREE (no key, cassette required):
+      - DefiLlama: free, no API key, rate limit 300 req/min — cassette: TVL, yields, stablecoin endpoints
+      - Fear & Greed Index (alternative.me): free, no key — cassette: current + history endpoint
+      - Yahoo Finance (via yfinance): free, no key — cassette: OHLCV + dividends + splits
+      - FRED (basic tier): free, no key at standard rate limits — cassette: series + releases endpoints
+      - ECB (European Central Bank): free, no key — cassette: FX rates + bond yields
+      - OFR (Office of Financial Research): free, no key — cassette: financial stability data
+      - CoinGecko free tier: no key, 10-30 req/min — cassette: prices + market data
+
+      OPTIONAL PAID (upgrade only if needed):
+      - CoinGecko Pro: $129/month, full history + 500 req/min — only add key if free tier insufficient
+
+      All free sources: add to VENUE_ERROR_MAP in unified-api-contracts (at minimum: 429, 500 error codes).
+      Gate: rg "DefiLlama|fear_greed|yfinance|fred_adapter|ecb_adapter|ofr_adapter|coingecko" shows
+            all adapters use VCR_MODE-aware request logic (no raw requests.get() without cassette support).
+    status: pending
+  - id: full-source-coverage-audit
+    content: |
+      Final audit: confirm NO external data source is orphaned (has adapter but no SM secret or cassette).
+      Total external data sources: 30 venues.
+      - 15 requiring API keys: all tracked in phases 1-4 above
+      - 7 free (no key): covered by free-sources-audit above
+      - 8 free + auth header: TheGraph, Alchemy, Envio, Aavescan (phase-2-http), Glassnode, Coinglass,
+        Arkham (phase-3-keys), Barchart (phase-2-barchart)
+
+      Run: python scripts/check_api_key_coverage.py
+      Checks: for each adapter in UMI/UTEI/URDI/UPI, confirms either SM secret OR free-tier flag is set.
+      Gate: zero adapters without coverage classification; zero adapters with raw os.getenv() in prod source.
+    status: pending
 isProject: false
 ---
 
