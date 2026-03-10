@@ -62,18 +62,18 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 | features-delta-one-service | 71% | 70 |
 | deployment-api | 71% | 70 |
 | features-calendar-service | 70% | 70 |
-| execution-results-api | 66% → floor | 70 |
-| features-cross-instrument-service | 64% → floor | 70 |
-| instruments-service | 51% → floor | 70 |
+| execution-results-api | 79% | 78 |
+| features-cross-instrument-service | 92% | 90 |
+| instruments-service | 52% → floor | 70 |
 | features-multi-timeframe-service | 86% | 85 |
 | pnl-attribution-service | 75% | 74 |
 | trading-agent-service | 80% | 79 |
-| ml-training-service | 39% → floor | 70 |
-| features-onchain-service | 39% → floor | 70 |
+| ml-training-service | 77% | 75 |
+| features-onchain-service | 61% → floor | 70 |
 | market-data-processing-service | 38% → floor | 70 |
-| market-tick-data-service | 16% → floor | 70 |
+| market-tick-data-service | 37% → floor | 70 |
 | features-commodity-service | 99% | 97 |
-| execution-service | 6% → floor | 70 |
+| execution-service | 31% → floor | 70 |
 | ibkr-gateway-infra | 52% → override | 51 |
 | system-integration-tests | — → override | 0 |
 
