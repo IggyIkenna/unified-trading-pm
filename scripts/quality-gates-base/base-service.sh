@@ -684,6 +684,17 @@ if [ -f "cloudbuild.yaml" ]; then
         | grep -qE 'deploy|notify-deployment' || {
         log_warn "STEP 5.17: cloudbuild.yaml has no deploy/notify-deployment step (advisory — some services deploy via dispatch)"; }
     [ "$CB_FAIL" -eq 0 ] && log_success "STEP 5.17: cloudbuild.yaml structure OK"
+elif [ -f "buildspec.aws.yaml" ]; then
+    VALIDATOR="${REPO_ROOT}/unified-trading-pm/scripts/validation/validate-buildspec.py"
+    if [ -f "$VALIDATOR" ]; then
+        if run_timeout 30 "$PYTHON_CMD" "$VALIDATOR" buildspec.aws.yaml 2>/dev/null; then
+            log_success "STEP 5.17: buildspec.aws.yaml schema OK"
+        else
+            log_fail "STEP 5.17: buildspec.aws.yaml schema validation failed"; V=$(( V + 1 ));
+        fi
+    else
+        log_success "STEP 5.17: buildspec.aws.yaml present (validator not available)"
+    fi
 else
     log_success "STEP 5.17: no cloudbuild.yaml (buildspec.aws.yaml or GitHub Actions — skipped)"
 fi

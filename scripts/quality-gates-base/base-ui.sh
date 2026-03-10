@@ -104,6 +104,31 @@ else
   log_section "[4/4] BUILD — skipped (--lint / --test / --quick)"
 fi
 
+# ── [5] BUILD CONFIG VALIDATION ─────────────────────────────────────────────
+# Validate cloudbuild.yaml and buildspec.aws.yaml when present (same as base-service STEP 5.17)
+PM_ROOT="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null && cd .. && pwd)}/unified-trading-pm"
+run_timeout() { timeout "${1:-30}" "${@:2}" 2>/dev/null || true; }
+if [ -f "cloudbuild.yaml" ]; then
+  VALIDATOR="${PM_ROOT}/scripts/validation/validate-cloudbuild.py"
+  if [ -f "$VALIDATOR" ]; then
+    if run_timeout 30 python3 "$VALIDATOR" cloudbuild.yaml 2>/dev/null; then
+      log_success "cloudbuild.yaml schema OK"
+    else
+      log_fail "cloudbuild.yaml schema validation failed"; exit 1
+    fi
+  fi
+fi
+if [ -f "buildspec.aws.yaml" ]; then
+  VALIDATOR="${PM_ROOT}/scripts/validation/validate-buildspec.py"
+  if [ -f "$VALIDATOR" ]; then
+    if run_timeout 30 python3 "$VALIDATOR" buildspec.aws.yaml 2>/dev/null; then
+      log_success "buildspec.aws.yaml schema OK"
+    else
+      log_fail "buildspec.aws.yaml schema validation failed"; exit 1
+    fi
+  fi
+fi
+
 # ── DURATION ───────────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-180}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
