@@ -51,10 +51,16 @@
       "path": "../../execution-results-api",
     },
     {
-      "path": "../../execution-service",
+      "path": "../../ml-inference-api",
     },
     {
-      "path": "../../execution-analytics-ui",
+      "path": "../../ml-training-api",
+    },
+    {
+      "path": "../../trading-analytics-api",
+    },
+    {
+      "path": "../../execution-service",
     },
     {
       "path": "../../features-calendar-service",

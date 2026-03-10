@@ -27,6 +27,12 @@
       "path": "../../ml-training-service",
     },
     {
+      "path": "../../ml-inference-api",
+    },
+    {
+      "path": "../../ml-training-api",
+    },
+    {
       "path": "../../ml-training-ui",
     },
     {
