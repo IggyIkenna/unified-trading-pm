@@ -1,6 +1,6 @@
 # Zero Baseline Typecheck — Full Remediation Plan
 
-**Created:** 2026-03-10 **Status:** IN PROGRESS **SSOT-INDEX:** register under `08-type-safety` **Linked codex
+**Created:** 2026-03-10 **Status:** DONE (2026-03-10) **SSOT-INDEX:** register under `08-type-safety` **Linked codex
 section:** `unified-trading-codex/06-coding-standards/README.md`
 
 ## Goal

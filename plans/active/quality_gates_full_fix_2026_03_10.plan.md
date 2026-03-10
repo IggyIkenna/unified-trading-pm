@@ -262,9 +262,10 @@ todos:
           run: bash scripts/quality-gates.sh
       Preserve: checkout, python setup, uv install, dep checkout steps. Remove only the inline pytest block. Run
       check_test_alignment.sh after to verify 0 FAILs remain.
-    status: pending
+    status: completed
     notes: |
-      Root cause: GH Actions workflows were written before the canonical QG stub pattern was standardised.
+      DONE 2026-03-10: All 17 of the 19 repos fixed by agents (batch-live-reconciliation-service and batch-audit-api
+      added new workflow). Root cause: GH Actions workflows were written before the canonical QG stub pattern was standardised.
       The stub sources base-service.sh which runs the identical pytest command — inlining is redundant and
       causes drift (e.g. instruments-service workflow had --cov-fail-under=35 while MIN_COVERAGE=70).
       check_test_alignment.sh (now manifest-driven) is the ongoing detector for this class of misalignment.
