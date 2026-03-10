@@ -33,6 +33,9 @@
       "path": "../../ml-training-api",
     },
     {
+      "path": "../../trading-analytics-api",
+    },
+    {
       "path": "../../ml-training-ui",
     },
     {

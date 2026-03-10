@@ -27,6 +27,9 @@
       "path": "../../execution-results-api",
     },
     {
+      "path": "../../trading-analytics-api",
+    },
+    {
       "path": "../../execution-analytics-ui",
     },
     {
