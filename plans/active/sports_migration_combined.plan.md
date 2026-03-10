@@ -4,9 +4,9 @@ overview: |
   Consolidates sports_migration_gap_fix and sports_migration_phase2_full (merged 2026-03-09).
   All actionable todos complete. Remaining: USEI Betfair/Pinnacle live VCR cassettes blocked
   by API keys (phase-4-blockers), strategy/execution wiring blocked by USEI adapters.
-status: active
+status: DONE
 created: 2026-03-02
-updated: 2026-03-10 (b5-b6-deployment completed)
+updated: 2026-03-10 (all todos done; live VCR cassettes blocked on api_keys_and_auth phase-4)
 isProject: false
 todos:
   # ── From sports_migration_gap_fix (Part B) ──────────────────────────────
