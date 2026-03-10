@@ -1,6 +1,6 @@
 # Plan: UIC Orphan Contracts Utilization
 
-## Status: Active
+## Status: Complete
 
 ## Created: 2026-03-10
 
@@ -160,3 +160,23 @@ these internally but services should own the type reference.
 
 Gate: `system-integration-tests/.github/workflows/smoke-test-gate.yml` — `contract-adoption-check` job Checker:
 `unified-internal-contracts/scripts/check_uic_adoption.py --orphans-only`
+
+## Remediation Progress (2026-03-10)
+
+Baseline orphan count: **57** (confirmed 2026-03-10) Final orphan count: **0** (resolved 2026-03-10) ADOPTION_MATRIX.md
+regenerated: commit 81c92dd (unified-internal-contracts)
+
+| Group | Target Service                                    | Schemas                                                            | Status                       |
+| ----- | ------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------- |
+| 1     | market-tick-data-service                          | MarketTickMessage, DerivativeTickerMessage                         | ✅ Done (38aa816)            |
+| 2     | ml-training-service                               | TrainingJobRequest, TrainingJobResult, TrainingPeriod              | ✅ Done (8c6ebec)            |
+| 3     | ml-inference-service + features-delta-one-service | MLPredictionMessage, FeatureUpdateMessage, FeatureSnapshotRequest  | ✅ Done (8d7560c, 1662848)   |
+| 4     | features-sports-service + instruments-service     | 12 sports schemas + DataSourceConstraint, OHLCVSource              | ✅ Done (aaa9162, b83643b)   |
+| 5+10  | execution-service                                 | 6 execution schemas + 10 lifecycle schemas                         | ✅ Done (098a35e5, 96ead4b9) |
+| 6     | strategy-service                                  | StrategySignalMessage, DataBroadcastDetails                        | ✅ Done (7db7d37)            |
+| 7     | alerting-service                                  | AlertContextData, AuthFailureDetails, AuthFailureEvent             | ✅ Done (ad6f99d)            |
+| 8     | risk-and-exposure-service                         | MarginState, InternalPosition, AccountState, PositionUpdateMessage | ✅ Done (bf27cd2)            |
+| 9     | features-onchain-service                          | 7 onchain schemas                                                  | ✅ Done (cbed155)            |
+| 11    | strategy-service                                  | CanonicalOptionsChainEntry (UIC≠UAC: distinct types, both kept)    | ✅ Done (9e5b45d)            |
+
+Target orphan count: **0**
