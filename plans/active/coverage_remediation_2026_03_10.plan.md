@@ -27,8 +27,11 @@ todos:
     status: done
 
   - id: close-gap-instruments-service
-    content: "instruments-service: actual=52%, floor=70%, gap=-18%. Agent working in session — pending verification."
-    status: pending
+    content:
+      "instruments-service: DONE 2026-03-10. 52%->70.2% (MIN_COVERAGE=69). Added test_config_modules,
+      test_corporate_actions_update_handler, test_generate_date_views_handler, test_instrument_processing_mixins — 78
+      new tests."
+    status: done
 
   - id: close-gap-trading-agent
     content: "trading-agent-service: DONE 2026-03-10. 50%->80% (MIN_COVERAGE=79). Added loop tests."
@@ -74,9 +77,10 @@ todos:
 
   - id: close-gap-unified-market-interface
     content:
-      "unified-market-interface: actual=61%, floor=80% (library), gap=-19%. Agent working in session — pending
-      verification."
-    status: pending
+      "unified-market-interface: DONE 2026-03-10. 61%->82.1% (MIN_COVERAGE=79). Fixed 15 test failures (asyncio.run,
+      wrong mocks, wrong API names), wrote test_defi_graph_models.py (20 tests), extended test_defi_adapters_boost_2.py
+      (AavePositions deep paths). 2055 tests passing."
+    status: done
 
   - id: recalibrate-after-fix
     content:
@@ -130,7 +134,7 @@ Ordered easiest→hardest (by gap size):
 | execution-results-api             | api-service | 66%    | 70%   | -4%  | 69                  |
 | features-cross-instrument-service | service     | 64%    | 70%   | -6%  | 69                  |
 | features-multi-timeframe-service  | service     | 55%    | 70%   | -15% | 69                  |
-| instruments-service               | service     | 52%    | 70%   | -18% | 69                  |
+| instruments-service               | service     | 70.2%  | 70%   | +0%  | 69 ✓ DONE           |
 | trading-agent-service             | service     | 50%    | 70%   | -20% | 69                  |
 | pnl-attribution-service           | service     | 46%    | 70%   | -24% | 69                  |
 | ml-training-service               | service     | 39%    | 70%   | -31% | 69                  |
@@ -140,7 +144,7 @@ Ordered easiest→hardest (by gap size):
 | market-tick-data-service          | service     | 16%    | 70%   | -54% | 69                  |
 | features-commodity-service        | service     | 14%    | 70%   | -56% | 69                  |
 | unified-trading-library           | library     | 78%    | 80%   | -2%  | 79                  |
-| unified-market-interface          | library     | 61%    | 80%   | -19% | 79                  |
+| unified-market-interface          | library     | 82.1%  | 80%   | +2%  | 79 ✓ DONE           |
 
 ### [B] WARN — UI repos missing coverage reports (13 repos)
 
