@@ -1,5 +1,5 @@
 ---
-description: "Per-repo coverage targets set to actual coverage - 1% to prevent regression; never hardcode 70% as floor"
+description: "Coverage threshold formula: MIN_COVERAGE = max(floor, actual-1). Floor: service=70%, library=80%."
 alwaysApply: false
 priority: 55
 globs:
@@ -12,40 +12,106 @@ tags:
 ---
 # Test Coverage Targets
 
-RULE: `MIN_COVERAGE` in `scripts/quality-gates.sh` and `fail_under` in `pyproject.toml` must be set to **actual measured coverage - 1%**. Never leave it at the template default of 70% if actual coverage is higher.
+RULE: `MIN_COVERAGE` in `scripts/quality-gates.sh` must equal `max(floor, actual_coverage - 1)`.
+- **Service / api-service / infrastructure floor**: 70%
+- **Library / interface floor**: 80%
 
-WHY: Hardcoded 70% floor allows silent coverage regression from 95% down to 71% without any gate failure. Per-repo targets lock in current coverage and detect regression immediately.
+WHY: A fixed 70% floor lets high-coverage repos silently regress from 95% → 71% with no gate failure. The `actual-1` target locks in current coverage as a regression guard. The floor ensures a minimum baseline is always enforced regardless of historical lows.
 
-## Required per-repo targets (update after intentional coverage improvements)
+## Authoritative per-repo targets (recalibrated 2026-03-10)
 
-| Repo | MIN_COVERAGE |
-|------|-------------|
-| unified-events-interface | 99 |
-| unified-internal-contracts | 99 |
-| execution-algo-library | 95 |
-| unified-feature-calculator-library | 93 |
-| unified-ml-interface | 91 |
-| unified-defi-execution-interface | 88 |
-| matching-engine-library | 88 |
-| unified-reference-data-interface | 87 |
-| unified-config-interface | 77 |
-| unified-sports-execution-interface | 73 |
-| unified-trade-execution-interface | 72 |
+Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` from last QG run.
 
-## How to set coverage target
+### Libraries (floor = 80%)
 
-1. Run tests with coverage: `pytest tests/ --cov=<package> --cov-report=term-missing`
-2. Note total coverage %
-3. Set `MIN_COVERAGE = <actual> - 1` in `scripts/quality-gates.sh`
-4. Set `fail_under = <actual> - 1` in `pyproject.toml [tool.coverage.report]`
-5. Commit. Comment: `# Set to actual coverage - 1%. Update after intentional coverage improvements.`
+| Repo | Actual | MIN_COVERAGE |
+|------|--------|-------------|
+| unified-events-interface | 100% | 99 |
+| matching-engine-library | 100% | 99 |
+| unified-internal-contracts | 99% | 98 |
+| unified-feature-calculator-library | 96% | 95 |
+| execution-algo-library | 96% | 95 |
+| unified-config-interface | 95% | 94 |
+| unified-ml-interface | 95% | 94 |
+| unified-reference-data-interface | 92% | 91 |
+| unified-trade-execution-interface | 89% | 88 |
+| unified-position-interface | 88% | 87 |
+| unified-defi-execution-interface | 87% | 86 |
+| unified-sports-execution-interface | 82% | 81 |
+| unified-cloud-interface | 82% | 81 |
+| unified-domain-client | 83% | 82 |
+| unified-api-contracts | 83% | 82 |
+| unified-trading-library | 78% → floor | 80 |
+| unified-market-interface | 61% → floor | 80 |
+
+### Services (floor = 70%)
+
+| Repo | Actual | MIN_COVERAGE |
+|------|--------|-------------|
+| strategy-validation-service | 98% | 97 |
+| features-sports-service | 88% | 87 |
+| client-reporting-api | 86% | 85 |
+| alerting-service | 83% | 82 |
+| deployment-service | 80% | 79 |
+| market-data-api | 80% | 79 |
+| position-balance-monitor-service | 77% | 76 |
+| ml-inference-service | 75% | 74 |
+| risk-and-exposure-service | 74% | 73 |
+| features-volatility-service | 73% | 72 |
+| strategy-service | 72% | 71 |
+| features-delta-one-service | 71% | 70 |
+| deployment-api | 71% | 70 |
+| features-calendar-service | 70% | 70 |
+| execution-results-api | 66% → floor | 70 |
+| features-cross-instrument-service | 64% → floor | 70 |
+| instruments-service | 51% → floor | 70 |
+| features-multi-timeframe-service | 55% → floor | 70 |
+| pnl-attribution-service | 46% → floor | 70 |
+| trading-agent-service | 50% → floor | 70 |
+| ml-training-service | 39% → floor | 70 |
+| features-onchain-service | 39% → floor | 70 |
+| market-data-processing-service | 38% → floor | 70 |
+| market-tick-data-service | 16% → floor | 70 |
+| features-commodity-service | 15% → floor | 70 |
+| execution-service | 6% → floor | 70 |
+| ibkr-gateway-infra | 52% → override | 51 |
+| system-integration-tests | — → override | 0 |
+
+### Approved floor exceptions (closed list)
+
+**Only these four repos are permanently exempt from the standard floors.** No other repo may lower MIN_COVERAGE below its type floor.
+
+| Repo | Status | Reason |
+|------|--------|--------|
+| `unified-trading-pm` | Skipped by rollout | Has its own quality-gates; rollout never overwrites |
+| `unified-trading-codex` | Skipped by rollout | Has its own quality-gates; rollout never overwrites |
+| `ibkr-gateway-infra` | Override → 51 | Gateway client wraps proprietary IBKR API; most paths require live broker connection |
+| `system-integration-tests` | Override → 0 | Pure test-harness repo — no production source package to measure |
+
+The overrides are enforced in `MIN_COVERAGE_OVERRIDES` in `unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py`. Adding a new entry requires explicit approval and a `QUALITY_GATE_BYPASS_AUDIT.md` justification in the affected repo.
+
+## How to recalibrate
+
+Automated (reads `coverage.xml` fast-path, falls back to running pytest):
+```bash
+python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py --recalibrate
+```
+
+Manual (single repo):
+1. Run `pytest tests/unit/ --cov=<package> --cov-report=term-missing`
+2. Note TOTAL %
+3. Compute `MIN_COVERAGE = max(floor, total - 1)`  — floor is 80 for libraries, 70 for services
+4. Edit `MIN_COVERAGE=N` in `scripts/quality-gates.sh`
+5. Commit: `chore: recalibrate MIN_COVERAGE to max(floor, actual-1)`
 
 DO:
-- Set MIN_COVERAGE to actual - 1% after any significant coverage improvement
-- Update the table above when targets change
-- Review coverage targets during PR review to catch silent regressions
+- Run `--recalibrate` after significant coverage improvements to lock in the new baseline
+- Update this table when targets change
+- Review MIN_COVERAGE during PR review to catch regressions
 
 NEVER:
-- Leave MIN_COVERAGE=70 if actual coverage is higher
-- Lower MIN_COVERAGE without a documented reason in QUALITY_GATE_BYPASS_AUDIT.md
+- Manually set MIN_COVERAGE below floor (70 service / 80 library) for any repo outside the approved exception list
+- Lower MIN_COVERAGE to make failing tests pass — write tests to reach the floor instead
+- Add a repo to MIN_COVERAGE_OVERRIDES without explicit approval and QUALITY_GATE_BYPASS_AUDIT.md entry
+- Use `# pragma: no cover` on non-entry-point code to inflate coverage numbers
 - Skip tests to pass the coverage gate
