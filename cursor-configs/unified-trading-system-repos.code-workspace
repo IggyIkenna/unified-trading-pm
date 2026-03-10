@@ -93,6 +93,12 @@
       "path": "market-data-api",
     },
     {
+      "path": "ml-inference-api",
+    },
+    {
+      "path": "ml-training-api",
+    },
+    {
       "path": "market-data-processing-service",
     },
     {
@@ -139,6 +145,9 @@
     },
     {
       "path": "trading-agent-service",
+    },
+    {
+      "path": "trading-analytics-api",
     },
     {
       "path": "trading-analytics-ui",
