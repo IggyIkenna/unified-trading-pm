@@ -664,6 +664,12 @@ fi
 echo "=== STEP 5.17: cloudbuild.yaml structural compliance ==="
 if [ -f "cloudbuild.yaml" ]; then
     CB_FAIL=0
+    # Schema validation (SchemaStore + jsonschema) — portable, no gcloud required
+    VALIDATOR="${REPO_ROOT}/unified-trading-pm/scripts/validation/validate-cloudbuild.py"
+    if [ -f "$VALIDATOR" ]; then
+        run_timeout 30 "$PYTHON_CMD" "$VALIDATOR" cloudbuild.yaml 2>/dev/null || {
+            log_fail "STEP 5.17: cloudbuild.yaml schema validation failed"; CB_FAIL=1; V=$(( V + 1 )); }
+    fi
     rg "id:\s*[\"']?(quality-gates|run-tests|test-in-image)" cloudbuild.yaml 2>/dev/null \
         | grep -qE 'quality-gates|run-tests|test-in-image' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing test step (quality-gates / run-tests / test-in-image)"; CB_FAIL=1; V=$(( V + 1 )); }
