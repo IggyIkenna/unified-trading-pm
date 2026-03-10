@@ -14,13 +14,23 @@ todos:
       "Propagate canonical version-bump.yml to all 58 non-PM repos: adds dispatch step + uses GH_PAT + dynamic repo
       name. Run: python3 scripts/propagation/rollout-version-bump-workflow.py. Then quickmerge each repo (parallel
       agents, one per tier batch)."
-    status: in_progress
+    status: done
+    notes: |
+      RESOLVED 2026-03-10: All 58 manifest repos already had version-bump.yml (UP-TO-DATE). After adding
+      ml-inference-api, ml-training-api, trading-analytics-api to manifest (now 62 repos total), rollout script
+      wrote version-bump.yml to all 3 new repos (committed bdb5f0f, 69ba6b9, a4eb327). Total: 62 version-bump.yml
+      files across workspace, all YAML-valid.
 
   - id: vc-dep-rollout
     content:
       "Propagate update-dependency-version.yml to all 37 repos with dependencies. Run: python3
       scripts/propagation/rollout-dependency-update-workflow.py. Then quickmerge each repo (parallel agents)."
-    status: in_progress
+    status: done
+    notes: |
+      RESOLVED 2026-03-10: 38 repos already had update-dependency-version.yml. Script wrote to 3 previously missing
+      repos (execution-results-api d4668cc, market-data-api already had it, client-reporting-api dfe1f2e) and 3
+      new repos (ml-inference-api, ml-training-api, trading-analytics-api). Total: 47 update-dependency-version.yml
+      files. All YAML-valid. 44 repos with dependencies now covered (3 new repos added to manifest).
 
   - id: vc-ibkr-vb
     content:

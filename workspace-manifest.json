@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Unified Trading System \u2014 Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
-  "lastUpdated": "2026-03-06",
-  "notes": "Updated 2026-03-06: (15) Added deployment_topology L0 section (cloud_provider_env_var, protocol_defaults, messaging_topology, colocation_groups, infra_authority). Added service_declaration per service (mode, capabilities_needed, protocol_default_set). Added infra_primitives per library/interface. Updated 2026-03-05: (14) Added ibkr-gateway-infra (orphan repo in workspace). type: infrastructure, arch_tier: infrastructure, merge_level 12, completion_path: tradfi. Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services \u2192 unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 \u2014 codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI\u2192UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
+  "lastUpdated": "2026-03-10",
+  "notes": "Updated 2026-03-10: Added 3 new API repos to manifest: ml-inference-api, ml-training-api, trading-analytics-api (api-service, arch_tier: api, merge_level 9, cluster: api-services). Updated 2026-03-06: (15) Added deployment_topology L0 section (cloud_provider_env_var, protocol_defaults, messaging_topology, colocation_groups, infra_authority). Added service_declaration per service (mode, capabilities_needed, protocol_default_set). Added infra_primitives per library/interface. Updated 2026-03-05: (14) Added ibkr-gateway-infra (orphan repo in workspace). type: infrastructure, arch_tier: infrastructure, merge_level 12, completion_path: tradfi. Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (13) L7 foundational = instruments only (no service-domain-data dependency). market-tick-data-service moved to L8 (depends on instruments for domain data). Updated 2026-03-02: (12) deployment-engine renamed to deployment-service (manifest, codex, PM docs/cursor-rules). Tier 0: added doc deps (PM, codex). Tier 1/L3: Cloud services runtime -> Services runtime. Topological reorder: L7 foundational (instruments only), L8 data-flow services (incl. ml-training, market-tick-data), L9 operational, L10 deployment (deployment-api, deployment-service). Regenerated WORKSPACE_MANIFEST_DAG.svg. Updated 2026-03-02: (11) Canonical manifest sports: removed five archived sports repos (sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service) from repositories and versions; only unified-sports-execution-interface and features-sports-service remain as sports entries. Updated 2026-03-02: (10) UTL rename: unified-trading-services \u2192 unified-trading-library in manifest (repositories, versions, topologicalOrder, tier_rules, deps). Updated 2026-03-01: (9) Sports consolidation: sports-reference-data-service archived (merged into instruments-service), sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. Dependency lists updated for consolidated services. features-sports-service and unified-sports-execution-interface remain standalone. Updated 2026-03-01: (8) Sports Phase 3: added sports-reference-data-service, sports-odds-data-service, sports-odds-processing-service, sports-strategy-service, sports-execution-service to repositories, versions, topologicalOrder L7, completion_paths.sports, futureRepos. Updated 2026-02-28: (1) UDC arch_tier corrected to 3 (was 2 \u2014 codex+DAG SSOT is T3). (2) MEL arch_tier corrected to 0 (pure compute leaf). (3) Added 4 orphan repos: execution-results-api, market-data-api, client-reporting-api, strategy-ui. (4) Added features-sports-service and unified-sports-execution-interface as workspace-scaffolded repos (status: planned). (5) Added completion_paths section (CeFi, DeFi, Sports, TradFi). (6) Tier_rules updated to 5-tier model. (7) UMI\u2192UDC dep violation flagged. Original: Promoted from DEPENDENCY-MATRIX-CANONICAL.json. corporate-actions removed (operational mode within instruments-service). 2026-02-28: Added unified-trading-pm, deployment-ui, ibkr-gateway-infra, strategy-validation-service; deleted execution_service.",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -89,7 +89,10 @@
     "instruments-service": "0.1.22",
     "market-tick-data-service": "0.3.1",
     "features-cross-instrument-service": "0.1.1",
-    "features-multi-timeframe-service": "0.1.1"
+    "features-multi-timeframe-service": "0.1.1",
+    "ml-inference-api": "0.1.0",
+    "ml-training-api": "0.1.0",
+    "trading-analytics-api": "0.1.0"
   },
   "repositories": {
     "unified-api-contracts": {
@@ -2434,6 +2437,137 @@
         "capabilities_needed": ["event_bus", "data_source", "data_sink", "cache"],
         "protocol_default_set": "gcp_live"
       }
+    },
+    "ml-inference-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["ml-training-ui"],
+      "proxies_service": "ml-inference-service",
+      "notes": "FastAPI service fronting ml-inference-service \u2014 model registry and prediction reads.",
+      "github_url": "https://github.com/IggyIkenna/ml-inference-api",
+      "completion_path": "ml",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_PENDING",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      }
+    },
+    "ml-training-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["ml-training-ui"],
+      "proxies_service": "ml-training-service",
+      "notes": "REST API fronting the ml-training-service 3-phase batch pipeline.",
+      "github_url": "https://github.com/IggyIkenna/ml-training-api",
+      "completion_path": "ml",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_PENDING",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus"],
+        "protocol_default_set": "gcp_live"
+      }
+    },
+    "trading-analytics-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["trading-analytics-ui"],
+      "proxies_service": "execution-service",
+      "notes": "Aggregated analytics API for trading-analytics-ui \u2014 trades, slippage, signals, predictions, risk.",
+      "github_url": "https://github.com/IggyIkenna/trading-analytics-api",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_PENDING",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus"],
+        "protocol_default_set": "gcp_live"
+      }
     }
   },
   "topologicalOrder": {
@@ -2522,9 +2656,12 @@
           "client-reporting-api",
           "execution-results-api",
           "market-data-api",
+          "ml-inference-api",
+          "ml-training-api",
           "position-balance-monitor-service",
           "risk-and-exposure-service",
-          "strategy-validation-service"
+          "strategy-validation-service",
+          "trading-analytics-api"
         ]
       },
       {
