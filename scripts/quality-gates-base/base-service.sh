@@ -231,30 +231,14 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
         log_fail "SOURCE_DIR not set — cannot run basedpyright safely"; exit 1
     fi
     # ── BASELINE FILE GATE ────────────────────────────────────────────────────
-    # .basedpyright-baseline.json silently suppresses type errors from CI output.
-    # Policy (escalated to ERROR 2026-03-10): any non-zero suppression is a hard block.
-    #   • Present + suppressed errors > 0 → FAIL (hard block; resolve errors and delete baseline)
-    #   • Present + suppressed errors = 0 → continue (empty baseline is harmless)
+    # Zero-baseline policy (2026-03-10): presence of .basedpyright-baseline.json is a hard block.
+    # Delete the file and resolve all underlying type errors before re-running.
     if [ -f ".basedpyright-baseline.json" ]; then
-        _SUPPRESSED=$(python3 -c "
-import json, sys
-try:
-    d = json.load(open('.basedpyright-baseline.json'))
-    files = d.get('files', d)
-    total = sum(len(v) for v in files.values() if isinstance(v, list))
-    print(total)
-except Exception:
-    print(0)
-" 2>/dev/null || echo 0)
-        if [ "${_SUPPRESSED:-0}" -gt 0 ]; then
-            log_fail "TYPE CHECK: .basedpyright-baseline.json is suppressing ${_SUPPRESSED} error(s) — resolve all type errors and delete the baseline file"; exit 1
-        fi
+        log_fail "TYPE CHECK: .basedpyright-baseline.json present — baseline suppression not allowed (zero-baseline policy); delete the file and fix all type errors"; exit 1
     fi
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${SERVICE_NAME:-$(basename "$PWD")}"
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
-    BASELINE_FLAG=""; [ -f ".basedpyright-baseline.json" ] && BASELINE_FLAG="--baselinefile .basedpyright-baseline.json"
-    # shellcheck disable=SC2086
-    PYRIGHT_OUT=$(run_timeout 120 "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" $BASELINE_FLAG 2>&1); PYRIGHT_EXIT=$?
+    PYRIGHT_OUT=$(run_timeout 120 "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" 2>&1); PYRIGHT_EXIT=$?
     if [ "$PYRIGHT_EXIT" -ne 0 ]; then echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout"; exit 1; fi
     WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
     if [ "${WARN_COUNT:-0}" -gt 0 ]; then
@@ -652,28 +636,13 @@ fi
 
 # STEP 5.22 — basedpyright baseline suppression audit
 # .basedpyright-baseline.json silently hides errors from CI.
-# Policy (escalated from WARN to ERROR 2026-03-10):
-#   • Present + suppressed errors > 0  → ERROR (FAIL): resolve type errors and delete baseline
-#   • Present + suppressed errors = 0  → PASS (harmless empty baseline; recommend deletion)
-#   • Not present                      → PASS (clean)
-# Documentation in QUALITY_GATE_BYPASS_AUDIT.md no longer exempts baseline suppression.
+# Zero-baseline policy (enforced as ERROR 2026-03-10):
+#   • Present (any state)  → FAIL: baseline suppression not allowed; delete the file
+#   • Not present          → PASS (clean)
+# Documentation in QUALITY_GATE_BYPASS_AUDIT.md does NOT exempt baseline suppression.
 echo "=== STEP 5.22: basedpyright baseline suppression ==="
 if [ -f ".basedpyright-baseline.json" ]; then
-    SUPPRESSED=$(python3 -c "
-import json, sys
-try:
-    d = json.load(open('.basedpyright-baseline.json'))
-    files = d.get('files', d)
-    total = sum(len(v) for v in files.values() if isinstance(v, list))
-    print(total)
-except Exception:
-    print(0)
-" 2>/dev/null || echo 0)
-    if [ "${SUPPRESSED:-0}" -gt 0 ]; then
-        log_fail "STEP 5.22: .basedpyright-baseline.json is suppressing ${SUPPRESSED} error(s) — ERROR: resolve all type errors and delete the baseline file"; V=$(( V + 1 ))
-    else
-        log_success "STEP 5.22: .basedpyright-baseline.json present but suppresses 0 errors (harmless — consider deleting it)"
-    fi
+    log_fail "STEP 5.22: .basedpyright-baseline.json present — baseline suppression not allowed (zero-baseline policy)"; V=$(( V + 1 ))
 else
     log_success "STEP 5.22: no basedpyright baseline (clean)"
 fi
