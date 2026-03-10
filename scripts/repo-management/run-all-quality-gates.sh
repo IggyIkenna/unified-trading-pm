@@ -52,6 +52,7 @@ DRY_RUN=false
 SKIP_TYPECHECK=false
 LINT_ONLY=false
 TEST_ONLY=false
+FROM_TIER=0
 REPO_LIST=()  # empty = all repos
 
 while [[ $# -gt 0 ]]; do
@@ -63,6 +64,7 @@ while [[ $# -gt 0 ]]; do
     --skip-typecheck)  SKIP_TYPECHECK=true; shift ;;
     --lint)            LINT_ONLY=true; shift ;;
     --test)            TEST_ONLY=true; shift ;;
+    --from-tier)       FROM_TIER="$2"; shift 2 ;;
     --repo)            REPO_LIST+=("$2"); shift 2 ;;
     --repos)           read -ra _r <<< "$2"; REPO_LIST+=("${_r[@]}"); shift 2 ;;
     --help | -h)
@@ -76,6 +78,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --skip-typecheck       Skip basedpyright type check (pass-through to quality-gates.sh)"
       echo "  --lint                 Run lint only, skip tests (pass-through to quality-gates.sh)"
       echo "  --test                 Run tests + typecheck only, skip lint (pass-through to quality-gates.sh)"
+      echo "  --from-tier N         Run QG from tier N upwards (skip tiers 0..N-1)"
       exit 0
       ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
@@ -129,6 +132,7 @@ echo "  Mode: $([ "$SEQUENTIAL" = true ] && echo 'SEQUENTIAL' || echo 'PARALLEL 
 [[ "$SKIP_TYPECHECK" = true ]] && echo "  Typecheck: SKIPPED"
 [[ "$LINT_ONLY" = true ]]      && echo "  Tests: SKIPPED (lint only)"
 [[ "$TEST_ONLY" = true ]]      && echo "  Lint: SKIPPED (test only)"
+[[ -n "${FROM_TIER:-}" ]]         && echo "  From tier: $FROM_TIER (skipping tiers 0..$((FROM_TIER-1)))"
 echo ""
 
 LEVEL_DATA=$("$PYTHON" -c "
@@ -226,6 +230,7 @@ if [[ ${#REPO_LIST[@]} -gt 0 ]]; then
 else
   # Full workspace — tier-by-tier from manifest, parallel within tier
   while IFS=: read -r LEVEL REPOS_STR; do
+    [[ -n "${FROM_TIER:-}" && "$LEVEL" -lt "$FROM_TIER" ]] && continue
     ALL_REPOS=($REPOS_STR)
     echo "  ── Tier $LEVEL (${#ALL_REPOS[@]} repo(s)$([ "$SEQUENTIAL" = false ] && echo ', parallel' || echo '')) ──"
     run_list "${ALL_REPOS[@]}"

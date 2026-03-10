@@ -85,6 +85,11 @@ class ImportChecker:
                     package = match.group(1)
                     module_path = match.group(2)
 
+                    # Skip same-package imports (avoids circular imports)
+                    path_str = str(file_path).replace("\\", "/")
+                    if f"/{package}/" in path_str or path_str.startswith(package + "/"):
+                        continue
+
                     # Extract what's being imported
                     import_match = FROM_IMPORT_PATTERN.match(line)
                     if import_match:
