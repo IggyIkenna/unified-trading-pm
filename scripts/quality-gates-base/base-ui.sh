@@ -80,7 +80,7 @@ fi
 if [ "$SKIP_TESTS" = false ]; then
   log_section "[3/4] UNIT TESTS + COVERAGE"
   if node -e "const s=require('./package.json').scripts||{}; process.exit(('test' in s && !s.test.includes('playwright')) ? 0 : 1)" 2>/dev/null; then
-    if npm test -- --coverage --provider=v8 --reporter=verbose 2>&1; then
+    if npm test -- --coverage --reporter=verbose 2>&1; then
       log_success "Unit tests + coverage passed"
     else
       log_fail "Unit tests FAILED"; exit 1
