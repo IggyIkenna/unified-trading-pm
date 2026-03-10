@@ -1,6 +1,6 @@
 # Plan: Contract Completeness Checkers (UIC + UAC)
 
-## Status: Partial (scripts done; SIT tests + GHA wiring + UAC curation pending)
+## Status: DONE (2026-03-10) — scripts + SIT tests + GHA wiring all complete; UIC 0 missing, UAC 0 missing
 
 ## Created: 2026-03-10
 
