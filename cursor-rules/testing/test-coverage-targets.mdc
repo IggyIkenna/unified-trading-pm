@@ -98,16 +98,55 @@ python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py 
 ```
 
 Manual (single repo):
-1. Run `pytest tests/unit/ --cov=<package> --cov-report=term-missing`
-2. Note TOTAL %
-3. Compute `MIN_COVERAGE = max(floor, total - 1)`  — floor is 80 for libraries, 70 for services
-4. Edit `MIN_COVERAGE=N` in `scripts/quality-gates.sh`
-5. Commit: `chore: recalibrate MIN_COVERAGE to max(floor, actual-1)`
+1. `cd <repo>` — MUST be inside the repo dir before running pytest
+2. Run `.venv/bin/pytest tests/ --cov=<package_name> --cov-report=xml --cov-report=term-missing`
+   - `<package_name>` = the Python import name (underscores, e.g. `instruments_service`), NOT the repo name (dashes)
+   - `--cov-report=xml` writes `coverage.xml` — this is what the audit script reads
+   - `--cov-report=term-missing` shows uncovered line numbers in terminal
+3. Note TOTAL % from terminal output (NOT from a separate audit run — audit reads coverage.xml on disk)
+4. Compute `MIN_COVERAGE = max(floor, total - 1)`  — floor is 80 for libraries, 70 for services
+5. Edit `MIN_COVERAGE=N` in `scripts/quality-gates.sh`
+6. Commit: `chore: recalibrate MIN_COVERAGE to max(floor, actual-1)`
+
+## CRITICAL: How the coverage audit reads data
+
+The coverage audit script (`coverage-audit.py`) reads `coverage.xml` from **disk** in each repo's root directory.
+
+**Common mistakes that corrupt coverage readings:**
+
+1. **Wrong working directory**: Running `pytest --cov=instruments_service` from a DIFFERENT repo's directory
+   writes `coverage.xml` to the wrong repo, corrupting its coverage reading.
+   **FIX**: Always `cd <repo>` before running pytest.
+
+2. **Wrong package name**: Running `--cov=my-repo-with-dashes` instead of `--cov=my_repo_package`
+   measures 0 lines (no matching Python module) and writes a near-zero `coverage.xml`.
+   **FIX**: Use the Python import package name (with underscores), not the repo directory name.
+
+3. **No XML report**: Running `pytest --cov=pkg --cov-report=term` without `--cov-report=xml`
+   doesn't update `coverage.xml` on disk. The audit will still read the OLD (stale) XML.
+   **FIX**: Always include `--cov-report=xml` to update disk state.
+
+4. **Terminal % ≠ audit %**: The terminal shows real-time coverage; the audit reads `coverage.xml`.
+   If they disagree, re-run with `--cov-report=xml` to sync them.
+   **FIX**: After writing tests, always re-run with `--cov-report=xml` before checking audit.
+
+## Per-repo package names (for --cov argument)
+
+| Repo dir name | --cov package name |
+|---|---|
+| instruments-service | `instruments_service` |
+| unified-market-interface | `unified_market_interface` |
+| execution-service | `execution_service` |
+| market-tick-data-service | `market_tick_data_service` |
+| features-*-service | `features_<name>_service` (verify with `ls <repo>/<pkg>/`) |
+
+To find the package name: `ls <repo>/` and look for the directory with `__init__.py`.
 
 DO:
 - Run `--recalibrate` after significant coverage improvements to lock in the new baseline
 - Update this table when targets change
 - Review MIN_COVERAGE during PR review to catch regressions
+- Always verify audit output after running tests (audit may read stale XML)
 
 NEVER:
 - Manually set MIN_COVERAGE below floor (70 service / 80 library) for any repo outside the approved exception list
@@ -115,3 +154,4 @@ NEVER:
 - Add a repo to MIN_COVERAGE_OVERRIDES without explicit approval and QUALITY_GATE_BYPASS_AUDIT.md entry
 - Use `# pragma: no cover` on non-entry-point code to inflate coverage numbers
 - Skip tests to pass the coverage gate
+- Run pytest from the wrong directory — always `cd <repo>` first
