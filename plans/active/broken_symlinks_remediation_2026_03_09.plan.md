@@ -1,9 +1,10 @@
 ---
 id: broken_symlinks_remediation_2026_03_09
 title: Broken Symlinks Remediation — All Workspace Repos
-status: TODO
+status: DONE
 priority: P2
 created: 2026-03-09
+completed: 2026-03-10
 owner: agent
 ---
 
@@ -66,34 +67,29 @@ auto-generates these symlinks by scanning all `cursor-rules/**/*.mdc` files.
 
 ## Tasks
 
-- [ ] **A: Fix pre-flight-audit.sh depth** — write a one-shot script:
+- [x] **A: Fix pre-flight-audit.sh depth** — Verified 2026-03-10: all 57 `scripts/pre-flight-audit.sh` symlinks already
+      point to `../../unified-trading-pm/scripts/validation/pre-flight-audit.sh` (correct depth). No fixes required; all
+      symlinks resolve successfully.
 
-  ```bash
-  # For each affected repo:
-  rm <repo>/scripts/pre-flight-audit.sh
-  ln -sf ../../unified-trading-pm/scripts/validation/pre-flight-audit.sh <repo>/scripts/pre-flight-audit.sh
-  ```
+- [x] **B: Fix .cursor/rules depth** — Verified 2026-03-10: all `.cursor/rules` symlinks in all repos (60+) already
+      point to `../../unified-trading-pm/cursor-rules` (correct depth). No fixes required; all symlinks resolve
+      successfully.
 
-  First verify `unified-trading-pm/scripts/validation/pre-flight-audit.sh` exists (it does as of 2026-03-09). Commit to
-  each affected repo individually via quickmerge (or batch via run-all-setup.sh hook).
+- [x] **C: Fix PM .cursor/rules/\*.mdc symlinks** — Verified 2026-03-10: `unified-trading-pm/.cursor/rules` is already a
+      directory symlink to `../cursor-rules` (same pattern as workspace root). No per-file `.mdc` symlinks exist inside
+      it. Fix was applied in a prior session.
 
-- [ ] **B: Fix .cursor/rules depth** — for each of 8 repos:
+- [x] **D: Fix codex RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg** — Verified 2026-03-10: SVG symlink already re-targeted to
+      `../../deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` and resolves successfully.
 
-  ```bash
-  rm <repo>/.cursor/rules
-  ln -sf ../../unified-trading-pm/cursor-rules <repo>/.cursor/rules
-  ```
+- [x] **Verify** — Comprehensive scan on 2026-03-10: **131 total symlinks, 0 broken** across all workspace repos
+      (maxdepth 5, excluding .venv/node_modules/.egg-info). All categories A, B, C, D are clean.
 
-- [ ] **C: Fix PM .cursor/rules/\*.mdc symlinks** — replace all 62 individual .mdc symlinks with a single directory
-      symlink: `rm -rf unified-trading-pm/.cursor/rules && ln -sf ../cursor-rules unified-trading-pm/.cursor/rules` This
-      is the same pattern as the workspace root `.cursor/rules` symlink. Verify Cursor still loads rules after the
-      change.
+## Outcome
 
-- [ ] **D: Fix codex RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg** — check if SVG exists in deployment-service/configs/;
-      re-target or remove.
-
-- [ ] **Verify** — run `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --strict` and confirm 0
-      broken symlinks.
+**All 122 originally-reported broken symlinks are resolved.** Verification on 2026-03-10 shows 131 symlinks
+workspace-wide with 0 broken. The fixes were applied in prior sessions before this audit ran; this session confirmed the
+clean state and closed the plan.
 
 ## Implementation Note
 
@@ -104,5 +100,3 @@ All fixes should be done via a single agent session that:
 3. Handles category D (codex)
 4. Commits each repo with `chore(symlinks): fix pre-flight-audit.sh depth ../ → ../../`
 5. Runs version-alignment --strict to verify
-
-Do NOT fix in this session — plan only.
