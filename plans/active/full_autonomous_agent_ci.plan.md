@@ -6,19 +6,19 @@ todos:
   - id: bootstrap-telegram
     content: >-
       Create Telegram bot via BotFather, note token. Start conversation with bot to get chat_id. Propagation script
-      created: scripts/workspace/propagate-github-secrets.sh — runs against all 59 repos from workspace-manifest.json
-      using gh secret set (TELEGRAM_BOT_TOKEN secret) and gh variable set (TELEGRAM_CHAT_ID variable). Steps: (1)
-      @BotFather /newbot → copy token. (2) Get chat_id via @userinfobot or by sending a message and calling getUpdates.
-      (3) Fill TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .act-secrets at workspace root. (4) Run:
-      TELEGRAM_BOT_TOKEN=xxx TELEGRAM_CHAT_ID=yyy bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh
-      (or run interactively — will prompt). (5) Verify: gh secret list --repo IggyIkenna/unified-trading-pm shows
-      TELEGRAM_BOT_TOKEN; gh variable list shows TELEGRAM_CHAT_ID. GATE: dry-run passes (--dry-run flag) then live run
-      shows 59 OK / 0 FAILED.
+      created: scripts/workspace/propagate-github-secrets.sh — runs against all repos from workspace-manifest.json using
+      gh secret set (TELEGRAM_BOT_TOKEN secret) and gh variable set (TELEGRAM_CHAT_ID variable). Steps: (1) @BotFather
+      /newbot → copy token. (2) Get chat_id via @userinfobot or by sending a message and calling getUpdates. (3) Fill
+      TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .act-secrets at workspace root. (4) Run: TELEGRAM_BOT_TOKEN=xxx
+      TELEGRAM_CHAT_ID=yyy bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh (or run interactively —
+      will prompt). (5) Verify: gh secret list --repo IggyIkenna/unified-trading-pm shows TELEGRAM_BOT_TOKEN; gh
+      variable list shows TELEGRAM_CHAT_ID. GATE: dry-run passes (--dry-run flag) then live run shows 62 OK / 0 FAILED.
     status: blocked
     notes: |
-      BLOCKED on external secret setup: requires human to create Telegram bot via BotFather and obtain
-      TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID. Propagation script already exists at
-      scripts/workspace/propagate-github-secrets.sh. Run manually when credentials are available.
+      PARTIAL (2026-03-10): 59/62 repos have TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID set (propagated 2026-03-07).
+      Missing: ml-inference-api, ml-training-api, trading-analytics-api (added 2026-03-10 — not yet in propagation run).
+      To fix: TELEGRAM_BOT_TOKEN=xxx TELEGRAM_CHAT_ID=-5288420200 bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo ml-inference-api
+      Repeat for ml-training-api and trading-analytics-api. TELEGRAM_CHAT_ID is -5288420200 (visible in gh variable list for any existing repo).
   - id: write-pm-rules-alignment-workflow
     content:
       "Create unified-trading-pm/.github/workflows/rules-alignment-agent.yml: trigger on push paths plans/active/**,
@@ -151,6 +151,37 @@ todos:
       RESOLVED 2026-03-09: scripts/update-pm-plan-status.sh created — takes --service, --todo, --status, --notes,
       --plan, --dry-run; auto-discovers plan file by service name or todo ID; Python-based YAML line editor;
       auto-commits plan change to PM branch. Committed f771289.
+  - id: agent-symlinks-rollout
+    content: >-
+      Commit .claude/CLAUDE.md and AGENTS.md as relative symlinks to every repo (all 62 including UI and codex) so
+      autonomous Cursor and Claude Code agents find workspace instructions. .claude/CLAUDE.md →
+      ../../unified-trading-pm/cursor-configs/CLAUDE.md; AGENTS.md → ../unified-trading-pm/AGENTS.md. Cursor rules
+      (.cursor/rules, .cursorrules) must NOT be committed — they clutter Cursor IDE which reads all repos
+      simultaneously. Instead, setup-workspace-from-manifest.sh copies cursor rules as real ephemeral files at GHA
+      runtime to $WORKSPACE_ROOT/.cursor/rules/ and generates $WORKSPACE_ROOT/.cleanup-cursor-rules.sh for
+      pre-quickmerge cleanup. Rollout script: unified-trading-pm/scripts/rollout-agent-symlinks.sh (handles all 62
+      repos, removes any previously committed cursor rule symlinks).
+    status: completed
+    notes: |
+      RESOLVED 2026-03-10. Rolled out via 5 parallel agents (libs×17, services-p1×11, services-p2×10,
+      api/devops/infra×12, UI×11). All 62 repos committed .claude/CLAUDE.md + AGENTS.md symlinks.
+      Corrective pass also ran to remove previously committed .cursor/rules + .cursorrules symlinks
+      from all repos. setup-workspace-from-manifest.sh updated to copy cursor rules as real files
+      ephemerally (not symlinks) and generate cleanup script. Workspace root .cursor/rules remains
+      as a local symlink → ../unified-trading-pm/cursor-rules (not committed to any repo git).
+  - id: agents-md-workspace-generic
+    content: >-
+      Rewrite unified-trading-pm/AGENTS.md from PM-specific to workspace-generic instructions applicable to all 62 repos
+      (since every repo symlinks to it). Must cover: token optimization rules, workspace multi-repo structure, manifest
+      schema (type/arch_tier/merge_level/dependencies), manifest-driven dep checkout via setup-workspace.sh, quality
+      gates two-pass model, coding rules quick reference, sub-agent prompting template, plans/tracking conventions,
+      cursor rules ephemeral setup + mandatory cleanup before quickmerge, no-summary-docs rule, Telegram reporting GHA
+      step template.
+    status: completed
+    notes: |
+      RESOLVED 2026-03-10. Commits: 2679494 (initial workspace-generic rewrite), d752fb6 (added workspace
+      setup/cleanup/Telegram/no-summary sections). AGENTS.md now covers all required topics for any repo agent.
+      Telegram GHA step template included; propagate-github-secrets.sh referenced for secret rollout.
   - id: manifest-driven-dep-checkout-gha
     content: >-
       All 60 repos must clone their direct manifest dependencies as siblings in GHA (not a hardcoded list). Problem:
