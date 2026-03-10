@@ -1,59 +1,182 @@
-# Orphan Contracts Utilisation Plan
+# Plan: UIC Orphan Contracts Utilization
 
-**Status:** Active (Phase 1 complete; Phase 2+ pending — augmented by Plan #0c findings) **Created:** 2026-03-04
-**Related:** unified-trading-codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md. Schema normalization completion plan — UAC
-normalization coverage (all external schemas → canonical) is part of contracts utilization; orphan schemas without
-normalizers are in scope. **Feeds from:** [schema_contracts_full_audit.plan.md](schema_contracts_full_audit.plan.md)
-(Plan #0c) — comprehensive 60-repo orphan scan will append new orphan schemas to the table below.
+## Status: Complete
 
----
+## Created: 2026-03-10
 
-## Purpose
+## Source: check_uic_adoption.py --orphans-only (57 schemas, no terminal consumer importer)
 
-Schemas in unified-api-contracts and unified-internal-contracts that are not imported anywhere are "orphans". This plan
-proposes testing and utilising them. **Decision required:** Use, deprecate, or leave as-is.
+These 57 schemas are in UIC `__all__` and have clear intended consumers but are not yet explicitly imported by any of
+the 20 scanned repos (18 terminal services + UMI + USEI). The GHA `contract-adoption-check` job will fail until these
+are wired in or moved to `EXEMPT_CLASSES`.
 
 ---
 
-## Orphan Schemas (from audit)
+## Group 1: market-tick-data-service (2)
 
-| Schema                                         | Package         | Notes                                  |
-| ---------------------------------------------- | --------------- | -------------------------------------- |
-| InferenceRequest, InferenceResult              | UIC ml.py       | ml-inference-service uses own models   |
-| DeltaOneFeatureRecord, FeatureSnapshotRequest  | UIC features.py | features-delta-one uses output_schemas |
-| OptionsIvRecord, FuturesTermStructureRecord    | UIC features.py | TBD                                    |
-| CircuitBreakerEventMessage, HealthAlertMessage | UIC pubsub.py   | TBD                                    |
+Target: `market-tick-data-service` — should import these for its canonical output models.
 
----
+- `MarketTickMessage` — canonical websocket tick published to PubSub
+- `DerivativeTickerMessage` — derivative-specific tick (funding rate, open interest)
 
-## Options
-
-**A. Migrate consumers** — ml-inference to UIC ml.py; features services to UIC features.py **B. Add tests** — Unit tests
-in UIC/UAC that instantiate each schema **C. Deprecate** — Remove superseded schemas **D. Document** — Mark as
-future-facing
+**Action:** Add `from unified_internal_contracts import MarketTickMessage, DerivativeTickerMessage` to
+`market_tick_data_service/publisher.py` or equivalent output layer.
 
 ---
 
-## Recommended
+## Group 2: ml-training-service (3)
 
-1. Phase 1: Add unit tests for all UIC/UAC schemas (Option B)
-2. Phase 2: Per-schema — ML types migrate (A); feature types migrate if aligned
-3. Phase 3: Deprecate confirmed superseded (C)
-4. Phase 4: Align with schema normalization completion — ensure orphan external schemas get normalizers per UAC
-   ideology.
+Target: `ml-training-service` — job lifecycle schemas.
+
+- `TrainingJobRequest`
+- `TrainingJobResult`
+- `TrainingPeriod`
+
+**Action:** Import in `ml_training_service/job_manager.py` or training runner.
 
 ---
 
-## Decision Log
+## Group 3: ml-inference-service + feature services (3)
 
-| Date       | Decision                     | Owner |
-| ---------- | ---------------------------- | ----- |
-| 2026-03-04 | Plan created; pending review | —     |
+Target: `ml-inference-service` + `features-*` services.
 
-## Phase 1 Completed (2026-03-05)
+- `MLPredictionMessage` — prediction output published to PubSub
+- `FeatureUpdateMessage` — feature snapshot published downstream
+- `FeatureSnapshotRequest` — request schema for on-demand feature pull
 
-- Added `unified-internal-contracts/tests/unit/test_orphan_schemas.py` with 8 tests for:
-  - ml.py: InferenceRequest, InferenceResult
-  - features.py: DeltaOneFeatureRecord, FeatureSnapshotRequest, OptionsIvRecord, FuturesTermStructureRecord
-  - pubsub.py: CircuitBreakerEventMessage, HealthAlertMessage
-- ml-inference-service migrated to UIC InferenceRequest (import from unified_internal_contracts)
+**Action:** Import in ml-inference output layer and each features-\* publisher.
+
+---
+
+## Group 4: features-sports-service + instruments-service (13)
+
+Sports reference data schemas — belong in sports feature pipeline.
+
+- `FixtureRecord`, `FixtureEventsRecord`, `FixtureLineupsRecord`, `FixturePlayerStatsRecord`
+- `LeagueRecord`, `TeamRecord`, `PlayerRecord`, `RefereeRecord`
+- `RoundRecord`, `StandingsRecord`, `InjuryRecord`, `VenueRecord`
+
+Also: `DataSourceConstraint`, `OHLCVSource` → `instruments-service` reference data layer.
+
+**Action:** Import sports schemas in `features_sports_service/data_models.py` or equivalent; import
+`DataSourceConstraint`/`OHLCVSource` in `instruments_service/reference/` layer.
+
+---
+
+## Group 5: execution-service (6)
+
+Execution lifecycle and risk schemas.
+
+- `ExecutionResultMessage` — canonical fill/order result published to PubSub
+- `OrderRequestMessage` — inbound order request canonical schema
+- `LiquidationMessage` — liquidation event published downstream
+- `CircuitBreakerEventMessage` — circuit breaker state change event
+- `RiskAlertMessage` — risk limit breach alert
+- `HealthAlertMessage` — service health alert (also alerting-service)
+
+**Action:** Import in `execution_service/engine/` or `execution_service/publishers/`.
+
+---
+
+## Group 6: strategy-service (2)
+
+- `StrategySignalMessage` — canonical signal published to PubSub
+- `DataBroadcastDetails` — data broadcast lifecycle detail (also used by market-data-processing-service)
+
+**Action:** Import in `strategy_service/signal_publisher.py`.
+
+---
+
+## Group 7: alerting-service (3)
+
+- `AlertContextData` — structured alert context payload
+- `AuthFailureDetails` — auth failure event detail
+- `AuthFailureEvent` — auth failure event envelope
+
+**Action:** Import in `alerting_service/handlers/` or alert router.
+
+---
+
+## Group 8: risk-and-exposure-service (4)
+
+- `MarginState` — current margin snapshot
+- `InternalPosition` — internal position tracking model
+- `AccountState` — account-level state snapshot
+- `PositionUpdateMessage` — position delta published to PubSub
+
+**Action:** Import in `risk_and_exposure_service/models/` or position tracker.
+
+---
+
+## Group 9: features-onchain-service (7)
+
+DeFi / onchain data schemas.
+
+- `DeFiLPPosition` — liquidity provider position
+- `DeFiStakingPosition` — staking position
+- `GasCostAction`, `GasCostEstimate` — gas cost tracking
+- `LendingEntry` — DeFi lending position
+- `FeeStructure` — protocol fee structure
+- `OnchainDataFreshnessConfig` — staleness config for onchain data
+
+**Action:** Import in `features_onchain_service/models/` or data normalizer.
+
+---
+
+## Group 10: all services via UTL/UEI lifecycle (10)
+
+Service lifecycle event schemas — should be imported wherever services publish lifecycle events. Currently UTL wraps
+these internally but services should own the type reference.
+
+- `ServiceLifecycleEventMessage` — service start/stop lifecycle envelope
+- `ConfigChangedDetails`, `ConfigChangedEvent` — config reload event
+- `StartedDetails`, `StartedEvent` — service started lifecycle
+- `StoppedDetails`, `FailedDetails`, `FailedEvent` — service stopped/failed lifecycle
+- `SecretAccessedDetails`, `SecretAccessedEvent` — secret access audit event
+- `DataIngestionDetails`, `DataIngestionCompletedDetails` — data ingestion lifecycle
+
+**Action:** Import in each service's `UnifiedCloudService` subclass or event publisher setup. Start with
+`execution-service` and `strategy-service` as the highest-value consumers.
+
+---
+
+## Group 11: options pipeline (1)
+
+- `CanonicalOptionsChainEntry` — UIC's own version (UAC has a parallel); used in options normalizer. Belongs in
+  `strategy-service` options module or `execution-service` strike mapping.
+
+**Action:** Confirm whether services should use the UIC or UAC version; consolidate if duplicate.
+
+---
+
+## Priority Order
+
+1. Groups 1-3 (market data + ML pipeline) — high-signal; GHA gate fails loudest here
+2. Groups 5-6 (execution + strategy) — core trading path
+3. Group 4 (sports reference data) — next major feature area
+4. Groups 7-10 — lifecycle + monitoring; lower urgency but complete the picture
+
+## Tracking
+
+Gate: `system-integration-tests/.github/workflows/smoke-test-gate.yml` — `contract-adoption-check` job Checker:
+`unified-internal-contracts/scripts/check_uic_adoption.py --orphans-only`
+
+## Remediation Progress (2026-03-10)
+
+Baseline orphan count: **57** (confirmed 2026-03-10) Final orphan count: **0** (resolved 2026-03-10) ADOPTION_MATRIX.md
+regenerated: commit 81c92dd (unified-internal-contracts)
+
+| Group | Target Service                                    | Schemas                                                            | Status                       |
+| ----- | ------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------- |
+| 1     | market-tick-data-service                          | MarketTickMessage, DerivativeTickerMessage                         | ✅ Done (38aa816)            |
+| 2     | ml-training-service                               | TrainingJobRequest, TrainingJobResult, TrainingPeriod              | ✅ Done (8c6ebec)            |
+| 3     | ml-inference-service + features-delta-one-service | MLPredictionMessage, FeatureUpdateMessage, FeatureSnapshotRequest  | ✅ Done (8d7560c, 1662848)   |
+| 4     | features-sports-service + instruments-service     | 12 sports schemas + DataSourceConstraint, OHLCVSource              | ✅ Done (aaa9162, b83643b)   |
+| 5+10  | execution-service                                 | 6 execution schemas + 10 lifecycle schemas                         | ✅ Done (098a35e5, 96ead4b9) |
+| 6     | strategy-service                                  | StrategySignalMessage, DataBroadcastDetails                        | ✅ Done (7db7d37)            |
+| 7     | alerting-service                                  | AlertContextData, AuthFailureDetails, AuthFailureEvent             | ✅ Done (ad6f99d)            |
+| 8     | risk-and-exposure-service                         | MarginState, InternalPosition, AccountState, PositionUpdateMessage | ✅ Done (bf27cd2)            |
+| 9     | features-onchain-service                          | 7 onchain schemas                                                  | ✅ Done (cbed155)            |
+| 11    | strategy-service                                  | CanonicalOptionsChainEntry (UIC≠UAC: distinct types, both kept)    | ✅ Done (9e5b45d)            |
+
+Target orphan count: **0**
