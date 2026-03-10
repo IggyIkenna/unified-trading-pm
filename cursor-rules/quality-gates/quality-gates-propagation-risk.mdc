@@ -1,6 +1,9 @@
 ---
 description: "Quality gate SSOT — never edit gate logic in per-repo quality-gates.sh; edit PM base scripts"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/quality-gates.sh"
+  - "**/scripts/*.sh"
 priority: 90
 tags:
   - quality-gates

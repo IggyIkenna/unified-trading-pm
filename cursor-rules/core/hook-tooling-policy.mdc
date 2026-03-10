@@ -1,6 +1,6 @@
 ---
 description: "Use prek (pre-commit) for git hooks — not custom hook scripts"
-alwaysApply: true
+alwaysApply: false
 priority: 70
 tags: [hooks, git, pre-commit, prek]
 ---

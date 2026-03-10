@@ -20,8 +20,8 @@ overview: |
     - Library  (17 repos, 473L): PACKAGE_NAME + SOURCE_DIR + MIN_COVERAGE + LOCAL_DEPS
     - Codex    (1 repo,  488L):  SOURCE_DIR="" + docs-only variant
     - PM       (1 repo,  641L):  self-hosting — owns the base scripts themselves
-    - UIs      (~12 repos, 39–75L): JS/TS stub — already minimal, out of scope.
-      No base-ui variant needed.
+    - UIs      (11 repos): JS/TS stub sourcing base-ui.sh (added 2026-03-10).
+      base-ui.sh adds --test flag support (skip lint, run typecheck+tests).
 
 status: completed
 created: 2026-03-09
@@ -192,6 +192,20 @@ todos:
       Templates table updated to base-service/library/codex.sh. Committed to unified-trading-codex as
       8318139 (docs(quality-gates): document centralized base scripts structure).
 
+  - id: extract-ui-base
+    content: >-
+      Create base-ui.sh for the 11 TypeScript/React UI repos. Add --test flag support (skip lint,
+      run typecheck + tests). Convert quality-gates-ui-template.sh in codex to a stub. Run rollout
+      for all 11 ui-type repos. Update docs in codex README.md, quality-gates.md, and
+      quality-gates-base/README.md to reflect UI in the stub architecture.
+    status: completed
+    notes: >-
+      base-ui.sh created at unified-trading-pm/scripts/quality-gates-base/base-ui.sh. Flags: --test
+      (typecheck + tests, skip lint + build), --lint (typecheck + lint, skip tests + build), --quick
+      (alias for --lint in UI). quality-gates-ui-template.sh in codex is now a ~10-line stub sourcing
+      base-ui.sh. Rollout applied to all 11 ui-type repos. Docs updated in codex README.md,
+      quality-gates.md, and quality-gates-base/README.md. (2026-03-10)
+
   - id: update-quickmerge-template
     content: >-
       Update the quickmerge new-service template in unified-trading-pm/cursor-configs/ or deployment-service scaffold to
@@ -225,17 +239,17 @@ Missed repos silently run stale gates.
 
 ## Repo Type Distribution (confirmed 2026-03-09)
 
-| Type                 | Count  | Current Lines | After Refactor | Lines Saved         |
-| -------------------- | ------ | ------------- | -------------- | ------------------- |
-| Services + APIs      | 28     | 647           | ~12            | ~17,780             |
-| Libraries/Interfaces | 17     | 473           | ~10            | ~7,900              |
-| Codex (docs-only)    | 1      | 488           | ~8             | ~480                |
-| PM (self)            | 1      | 641           | ~10            | ~630                |
-| **Total**            | **47** |               |                | **~26,790**         |
-| UIs                  | ~12    | 39–75         | unchanged      | 0 (already minimal) |
+| Type                 | Count  | Current Lines | After Refactor | Lines Saved                        |
+| -------------------- | ------ | ------------- | -------------- | ---------------------------------- |
+| Services + APIs      | 28     | 647           | ~12            | ~17,780                            |
+| Libraries/Interfaces | 17     | 473           | ~10            | ~7,900                             |
+| Codex (docs-only)    | 1      | 488           | ~8             | ~480                               |
+| PM (self)            | 1      | 641           | ~10            | ~630                               |
+| **Total**            | **47** |               |                | **~26,790**                        |
+| UIs                  | 11     | 39–75         | ~8 (stub)      | minimal; gains --test flag support |
 
 Note: APIs (client-reporting-api, deployment-api, execution-results-api, market-data-api) are FastAPI services — no
-separate base-api variant. UIs have JS/TS toolchain — no base-ui variant.
+separate base-api variant. UIs use base-ui.sh (added 2026-03-10) — JS/TS toolchain, no Python checks.
 
 ## Base Script Variants
 
@@ -244,6 +258,7 @@ unified-trading-pm/scripts/quality-gates-base/
 ├── base-service.sh      # Services (FastAPI apps, workers, APIs) — ~620L body
 ├── base-library.sh      # Libraries and interfaces — ~470L body
 ├── base-codex.sh        # Docs-only repos (no Python source) — ~480L body
+├── base-ui.sh           # TypeScript/React UI repos — 11 repos, added 2026-03-10
 └── README.md            # Stub templates + version bump protocol
 ```
 

@@ -1,6 +1,10 @@
 ---
 description: "UI code must never live inside a service repo"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "*-ui/**"
+  - "*-ui/**/*.ts"
+  - "*-ui/**/*.tsx"
 priority: 90
 tags:
   - architecture

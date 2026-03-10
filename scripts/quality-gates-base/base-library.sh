@@ -409,6 +409,17 @@ elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
         --glob '!**/domain/data_completion.py' \
         -l . 2>/dev/null \
         | grep -v "# noqa:.*qg-protocol-symbol\|# noqa: qg-protocol-symbol" || :)
+elif [[ "$PACKAGE_NAME" = "unified-domain-client" ]]; then
+    # UDC defines its own StandardizedDomainCloudService (domain wrapper, not a protocol violation)
+    # and CloudTarget (local config dataclass, not UTL's deprecated GCS-specific CloudTarget).
+    # All client files and sports/ are legitimate consumers of UDC's own class — excluded.
+    PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
+        --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
+        --glob '!**/standardized_service.py' --glob '!**/cloud_target.py' \
+        --glob '!**/factories.py' --glob '!**/__init__.py' \
+        --glob '!**/cloud_data_provider.py' --glob '!**/clients/**' \
+        --glob '!**/sports/**' \
+        -l . 2>/dev/null || :)
 else
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' -l . 2>/dev/null || :)

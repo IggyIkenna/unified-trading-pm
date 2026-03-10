@@ -1,6 +1,6 @@
 ---
 description: "Canonical Plans → Code → Tested → Deployable workflow; supersedes pm_codex, other_alignment plans"
-alwaysApply: true
+alwaysApply: false
 priority: 90
 tags:
   - plans

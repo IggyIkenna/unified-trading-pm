@@ -1,6 +1,8 @@
 ---
 description: "No technical debt after refactor — delete old code, no parallel paths, single source of truth"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 95
 tags:
   - refactoring

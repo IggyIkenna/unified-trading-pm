@@ -22,3 +22,9 @@ When any condition below applies, fetch the named rule before proceeding.
 | Running independent tasks across multiple repos | @parallel-agent-execution |
 | About to implement something from scratch | @search-before-implementing |
 | Context window is large / optimizing token usage | @token-optimization |
+| Doing codebase architecture analysis | @accurate-codebase-analysis |
+| Following a plan through to deployable code | @plans-to-deployable-workflow |
+| Creating or setting up a new repo | @mandatory-setup-sh |
+| Configuring git hooks | @hook-tooling-policy |
+| Running or debugging quality gates | @strict-quality-gates |
+| Reviewing common anti-patterns | @anti-patterns-quick-reference |

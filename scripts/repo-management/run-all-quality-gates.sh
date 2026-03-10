@@ -161,13 +161,37 @@ run_qg() {
 
   if [[ -f "$rp/scripts/quality-gates.sh" ]]; then
     if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" bash scripts/quality-gates.sh "${qg_args[@]}" 2>&1) >"$log" 2>&1; then
-      echo "  [OK]   $repo"; rm -f "$log"; return 0
+      # Extract coverage: pytest TOTAL line or vitest/istanbul "All files" line
+      local cov_pct=""
+      local cov_line; cov_line=$(grep -E '^TOTAL\s+[0-9]' "$log" | tail -1)
+      if [[ -n "$cov_line" ]]; then
+        cov_pct=$(echo "$cov_line" | awk '{print $NF}')
+      else
+        # vitest/istanbul: "All files | 85.71 | ..." — take first numeric column
+        local js_line; js_line=$(grep -E '^\s*All files\s*\|' "$log" | tail -1)
+        if [[ -n "$js_line" ]]; then
+          cov_pct=$(echo "$js_line" | awk -F'|' '{gsub(/ /,"",$2); print $2"%"}')
+        fi
+      fi
+      if [[ -n "$cov_pct" ]]; then
+        echo "  [OK]   $repo  (coverage: $cov_pct)"
+      else
+        echo "  [OK]   $repo  (no cov)"
+      fi
+      rm -f "$log"; return 0
     fi
   else
     echo "  [SKIP] $repo — no quality-gates.sh (run rollout-quality-gates-unified.py)"; rm -f "$log"; return 0
   fi
 
-  echo "  [FAIL] $repo"
+  # On failure: show coverage line if present, then last 20 lines of output
+  local cov_line; cov_line=$(grep -E '^TOTAL\s+[0-9]' "$log" | tail -1)
+  if [[ -n "$cov_line" ]]; then
+    local cov_pct; cov_pct=$(echo "$cov_line" | awk '{print $NF}')
+    echo "  [FAIL] $repo  (coverage: $cov_pct)"
+  else
+    echo "  [FAIL] $repo"
+  fi
   tail -20 "$log" | sed 's/^/    /'
   rm -f "$log"
   return 1

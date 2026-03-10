@@ -54,6 +54,9 @@ run-all-setup.sh --rollout-first    # propagate setup.sh + QG stubs + rebuild pe
 
 run-all-quality-gates.sh            # local e2e smoke test (all tiers, parallel within tier)
   └── --repo X / --repos "X Y"      # subset mode — skip alignment + setup checks
+  └── --skip-typecheck               # skip basedpyright (fast iteration)
+  └── --lint                         # lint only, skip tests (fastest)
+  └── --test                         # tests + typecheck only, skip lint
 
 → if all pass → system-integration-tests → deployment
 ```
@@ -231,16 +234,16 @@ from main by resolving conflicts with a broken local state.
 
 ### Day-to-day (after any dep or code change)
 
-| Step | Command                                                                      | When                                                                 |
-| ---- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1    | `run-version-alignment.sh`                                                   | Always first when deps may have changed                              |
-| 2    | `run-version-alignment.sh --fix`                                             | If step 1 reports misalignment (auto-calls `sync-workspace-venv.sh`) |
-| 3    | `run-all-setup.sh` (`--rollout-first` if setup.sh or stub interface changed) | After alignment OK — rebuilds per-repo `.venv`                       |
-| 4    | Commit + push pyproject.toml, uv.lock, manifest                              | After run-all-setup                                                  |
-| 5    | `run-all-quality-gates.sh`                                                   | Local e2e smoke test; use `--repo X` for subset                      |
-| 6    | `sync-all-to-main.sh` (`--dep-branch NAME` if DEPENDENCY CONFLICT)           | When pushing to main                                                 |
-| 7a   | If sync fails: merge conflict → resolve manually, re-run sync                | Per conflicted repo                                                  |
-| 7b   | If sync fails: `run-all-quality-gates.sh --repo X` on conflicted repos       | Verify our version passes before fixing                              |
+| Step | Command                                                                      | When                                                                                                 |
+| ---- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1    | `run-version-alignment.sh`                                                   | Always first when deps may have changed                                                              |
+| 2    | `run-version-alignment.sh --fix`                                             | If step 1 reports misalignment (auto-calls `sync-workspace-venv.sh`)                                 |
+| 3    | `run-all-setup.sh` (`--rollout-first` if setup.sh or stub interface changed) | After alignment OK — rebuilds per-repo `.venv`                                                       |
+| 4    | Commit + push pyproject.toml, uv.lock, manifest                              | After run-all-setup                                                                                  |
+| 5    | `run-all-quality-gates.sh`                                                   | Local e2e smoke test; use `--repo X` for subset; `--lint` / `--skip-typecheck` to speed up iteration |
+| 6    | `sync-all-to-main.sh` (`--dep-branch NAME` if DEPENDENCY CONFLICT)           | When pushing to main                                                                                 |
+| 7a   | If sync fails: merge conflict → resolve manually, re-run sync                | Per conflicted repo                                                                                  |
+| 7b   | If sync fails: `run-all-quality-gates.sh --repo X` on conflicted repos       | Verify our version passes before fixing                                                              |
 
 **If all pass → system-integration-tests → deployment**
 

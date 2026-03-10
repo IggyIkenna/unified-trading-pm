@@ -1,6 +1,8 @@
 ---
 description: "When repo venv fails, workspace venv is fine — same name across workspaces"
-alwaysApply: true
+alwaysApply: false
+globs:
+  - "**/*.py"
 priority: 45
 tags:
   - workspace

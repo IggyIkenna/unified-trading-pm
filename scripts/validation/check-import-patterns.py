@@ -23,6 +23,7 @@ EXTERNAL_PACKAGES = {
     "unified_config_service",
     "unified_events_interface",
     "unified_domain_client",
+    "unified_trading_library",
     "unified_trading_services",
     "unified_market_interface",
     "unified_trade_execution_interface",
