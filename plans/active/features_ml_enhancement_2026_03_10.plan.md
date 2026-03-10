@@ -87,6 +87,8 @@ New files pass basedpyright with 0 errors. Pre-existing errors in `numba_kernels
 - [x] Run `bash scripts/quality-gates.sh` in `features-delta-one-service` — PASSED lint/tests/types (2026-03-10)
 - [x] Run `bash scripts/quality-gates.sh` in `features-multi-timeframe-service` — PASSED lint/tests/types (2026-03-10)
 - [x] Register `features_ml_enhancement_2026_03_10` in `unified-trading-codex/00-SSOT-INDEX.md` — committed `bd90fe9`
-- [ ] Wire `TfRiskRewardCalculator` into the MTF orchestrator's calculator list (if separate from registry)
-- [ ] Update ML model feature manifests in `ml-inference-service` to include `wedge_quality` and `risk_reward` feature
-      groups
+- [x] Wire `TfRiskRewardCalculator` into the MTF orchestrator's calculator list — added `wedge_confluence` +
+      `tf_risk_reward` to `DEFAULT_FEATURE_GROUPS`; added `polynomial_trendline@1h/4h/1d` to
+      `DEFAULT_SOURCE_FEATURE_GROUP_TIMEFRAMES` so poly columns arrive in the joined frame. Committed `aa3ee9b`
+- [x] Update ML model feature manifests in `ml-inference-service` to include `wedge_quality`, `risk_reward`,
+      `wedge_confluence`, `tf_risk_reward` in `EXPECTED_FEATURE_GROUPS`. Committed `858f9a7`
