@@ -105,6 +105,48 @@ standards.
 
 ---
 
+## 9. Plan Format Rules
+
+- **New plans go to `plans/ai/` first** — NEVER directly to `plans/active/` unless the user has explicitly approved the
+  plan
+- **Promotion requires:** conflict check in INDEX.md, then user confirmation, then move to `plans/active/` with full
+  YAML
+- **Every `.plan.md` in `plans/active/` MUST have** `completion_gates` and `repo_gates` in YAML frontmatter (see format
+  below)
+- **NEVER mark a plan done/archived** unless ALL repos in `repo_gates` have reached the level declared in
+  `completion_gates`
+- **Gate levels by plan type:**
+  - `code`: needs C5 (quickmerge) for all repos to archive
+  - `infra` / `deployment`: needs D3 (staging SIT — real service calls) for all repos — even during code-completion epic
+  - `business`: needs B6 (user approved) + B3 domain KPIs
+  - `mixed`: highest required gate across declared types
+- **blocked_by** goes on the todo item, not on completion_gates — gates represent what THIS plan owns
+- **Format SSOT:** `unified-trading-pm/plans/PLAN_FORMAT.md`
+
+```yaml
+# Required YAML frontmatter for every active plan
+---
+name: plan-slug
+overview: One-line description
+type: code | infra | deployment | business | mixed
+epic: epic-code-completion | epic-deployment | epic-business | epic-infra | none
+completion_gates:
+  code: C5 # C0-C5 or "none"
+  deployment: none
+  business: none
+repo_gates:
+  - repo: repo-name
+    code: C2 # highest gate currently reached
+    deployment: none
+    business: none
+depends_on: []
+todos: []
+isProject: false
+---
+```
+
+---
+
 **Venv vs testing:** `.venv-workspace` = IDE only. Tests use per-repo `.venv` via quality-gates.sh. See
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 

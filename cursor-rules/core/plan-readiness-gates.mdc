@@ -1,0 +1,92 @@
+---
+description: "Every plan in plans/active/ must declare completion_gates and repo_gates; 3-tier readiness model (Code/Deployment/Business) governs archive eligibility"
+alwaysApply: true
+priority: 96
+tags:
+  - plans
+  - quality-gates
+  - critical
+  - workflow
+---
+
+# Plan Readiness Gates — 3-Tier Model
+
+SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md`
+
+## RULE: Required YAML Fields
+
+Every `.plan.md` file in `plans/active/` MUST include these fields in YAML frontmatter:
+- `type`: one of `code | infra | deployment | business | mixed`
+- `epic`: one of `epic-code-completion | epic-deployment | epic-business | epic-infra | none`
+- `completion_gates`: with `code`, `deployment`, and `business` subkeys
+- `repo_gates`: list of repos this plan touches with their current gate level
+
+Missing these fields is a plan format violation — fix before committing.
+
+## RULE: ai/ vs active/ Split
+
+- AI-generated plans → `plans/ai/` ONLY (never directly to `plans/active/`)
+- User-approved plans → `plans/active/` (must have full YAML format)
+- On promotion: check INDEX.md for slug conflicts; resolve before moving
+
+## RULE: Archive Eligibility
+
+A plan is eligible for archive ONLY when ALL repos in `repo_gates` have reached the level
+declared in `completion_gates`. Partial repo coverage is NOT sufficient.
+
+| Plan type | Minimum gate to archive |
+|-----------|------------------------|
+| `code` | C5 (quickmerge) for all repos |
+| `infra` / `deployment` | D3 (staging integration) for all repos — required even during code-completion epic |
+| `business` | B6 (user approved) + domain B3 KPIs met |
+| `mixed` | Highest required gate across declared types |
+
+NEVER mark a plan done/archived because most todos are complete while some repos are still at C0–C4.
+
+## RULE: Gate Definitions
+
+### Code (C)
+- C0 = not started
+- C1 = implementation complete, not tested
+- C2 = unit tests passing, coverage maintained
+- C3 = linter + codex gates (ruff, basedpyright)
+- C4 = full quality-gates.sh Pass 1
+- C5 = quickmerge complete (merged to staging/main)
+
+### Deployment (D)
+- D1 = deployable (infra, configs, Docker)
+- D2 = CI/GHA smoke tests pass — emulators/mocks, NO real service calls
+- D3 = staging integration tests pass — REAL service/API calls (SIT suite)
+- D4 = load/performance tests pass in staging
+- D5 = production-ready (security + operational gates green)
+
+### Business (B)
+- B1 = acceptance criteria defined
+- B2 = scenario analysis complete
+- B3 = performance targets met (ML accuracy, P&L, execution alpha, latency — declared per plan)
+- B4 = batch vs live validation (t+1 check)
+- B5 = staging vs live parity (N-minute replay)
+- B6 = user approved
+
+## RULE: blocked_by in Todos
+
+When a plan is blocked by another plan's incomplete work, use `blocked_by: <plan-slug>` on the
+specific todo item — not on the completion_gates. The gates represent what this plan owns;
+external dependencies belong in todos.
+
+## RULE: New Plans from AI Sessions
+
+When any agent (Claude Code, Cursor, GHA autonomous) generates a new plan:
+1. Write it to `plans/ai/` with proposed frontmatter
+2. Do NOT write it to `plans/active/`
+3. Include a comment at the top: `# AI-GENERATED — awaiting user review and promotion`
+4. When the user promotes it, run the conflict check and add to INDEX.md
+
+## WHY This Matters
+
+Plans were previously archived when most todos were done, ignoring partial repo coverage and
+infrastructure gaps owned by separate plans. A plan that "implements X" but skips 3 repos is
+not done. A plan that needs deployment infra that doesn't exist yet isn't blocked — it just
+needs the right gates declared. This model makes blocking relationships explicit.
+
+CODEX: unified-trading-codex/06-coding-standards/README.md

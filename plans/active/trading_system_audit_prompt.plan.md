@@ -31,7 +31,14 @@ todos:
       SYSTEM_AUDIT_REPORT_2026_03_09.md Section 2. RE-AUDITED 2026-03-10T02:31:37Z — FAIL. quality-gates.sh missing from
       5 key repos (market-data-processing-service, execution-service, strategy-service, ml-inference-service,
       unified-market-interface); OrchestrationWorkersMixin 728L; write_candles() 204L. pyrightconfig exclude+linter
-      scope criteria added 2026-03-10 — not yet re-audited against new criteria.
+      scope criteria added 2026-03-10 — not yet re-audited against new criteria. RE-AUDITED 2026-03-11 — WARN.
+      quality-gates.sh now present in all repos (all stubs ≤26 lines, zero violations). OrchestrationWorkersMixin
+      reduced to 17L (was 728L). write_candles() reduced to 167L (was 204L — still above 200L limit in
+      output_writer_service.py:263). 12 repos missing pyrightconfig.json "exclude": ["tests"]
+      (unified-defi-execution-interface, unified-sports-execution-interface, unified-ml-interface,
+      system-integration-tests, features-volatility-service, unified-feature-calculator-library, execution-algo-library,
+      risk-and-exposure-service, unified-position-interface, ml-training-service, ml-inference-service,
+      alerting-service). Zero os.getenv violations in non-bootstrap source.
   - id: audit-security
     content:
       "Audit Section 3 — Security (items 10.1–10.19): no hardcoded API keys; all secrets via get_secret_client(); no
@@ -41,7 +48,8 @@ todos:
     note: >-
       RESOLVED 2026-03-08 — see SYSTEM_AUDIT_REPORT_2026_03_08.md (Section 3, WARN). RE-AUDITED 2026-03-10T02:31:37Z —
       WARN. execution-service/auth.py:83 + alerting-service/auth.py:37,40 missing AUTH_FAILURE on 401
-      (market-data-api/execution-results-api previously fixed).
+      (market-data-api/execution-results-api previously fixed). RE-AUDITED 2026-03-11 — PASS. AUTH_FAILURE now present
+      at execution-service/auth.py:47,57,86 and alerting-service/auth.py:40,52. All 401 paths logged.
   - id: audit-architecture
     content:
       "Audit Section 4 — Architecture: tier boundaries respected (no service→service Python imports); no UI embedded in
@@ -61,7 +69,10 @@ todos:
     note: >-
       RESOLVED 2026-03-08 — see SYSTEM_AUDIT_REPORT_2026_03_08.md (Section 5, WARN). RE-AUDITED 2026-03-10T02:31:37Z —
       FAIL. 13+ float price fields in unified-internal-contracts/features.py:122,238-240,267 and
-      domain/features_liquidity/__init__.py:77,100-103,212,218.
+      domain/features_liquidity/__init__.py:77,100-103,212,218. RE-AUDITED 2026-03-11 — PASS. All price/monetary fields
+      in features.py now use Decimal (bid_ask_spread, open_interest, spot_price, front_month_price, price_ratio,
+      price_ratio_ma_20, price_ratio_std_20). Remaining float fields annotated with # financial-ratio: float-ok or #
+      volatility-pct: float-ok or # time-based: float-ok — all appropriate use of float.
   - id: audit-observability
     content:
       "Audit Section 6 — Observability: /health + /readiness endpoints on all API services; correlation_id propagated
@@ -110,7 +121,9 @@ todos:
       (version, deployment_profiles, clusters, service_flows keys confirmed). PASS. RE-AUDITED 2026-03-10T02:31:37Z —
       FAIL (now fixed). quality_gates_dry_refactor + ui_auth_oauth_pkce plans were missing from SSOT-INDEX; 2 phantom
       entries (foundational_repos_remediation, schema_governance_full_audit) removed. SSOT-INDEX now current. PASS after
-      fix.
+      fix. RE-AUDITED 2026-03-11 — WARN. 65 repos in manifest. 35 active .plan.md files; 3 unregistered in SSOT-INDEX:
+      audit_remediation_2026_03_11.plan.md, position_precision_pnl_hardening_2026_03_11.plan.md,
+      uei_pending_event_additions.plan.md. These are new plans from 2026-03-11 session; must be registered.
   - id: audit-output
     content:
       "Produce final audit output: per-criterion PASS/WARN/FAIL/N/A table; overall grade (PASS=0 FAILs, CONDITIONAL=≥1
@@ -119,7 +132,18 @@ todos:
     status: completed
     note: >-
       RESOLVED 2026-03-08 — see SYSTEM_AUDIT_REPORT_2026_03_08.md. Overall grade: CONDITIONAL PASS. RE-AUDITED
-      2026-03-10T02:31:37Z — see SYSTEM_AUDIT_REPORT_2026_03_09.md. Overall grade: FAIL (4 FAILs, 5 WARNs).
+      2026-03-10T02:31:37Z — see SYSTEM_AUDIT_REPORT_2026_03_09.md. Overall grade: FAIL (4 FAILs, 5 WARNs). RE-AUDITED
+      2026-03-11 — Overall grade: CONDITIONAL PASS (0 FAILs, 3 WARNs). Resolved: §2 QG presence/size, §3 AUTH_FAILURE,
+      §5 float→Decimal schema, §11 coverage recalibration (65 repos, 0 errors). Remaining WARNs: §2 write_candles 167L
+      (target <200L — borderline), §2 pyrightconfig missing tests exclusion in 12 repos, §9 3 new plans unregistered in
+      SSOT-INDEX. Coverage floors met: all 14 key repos PASS against calibrated MIN_COVERAGE (execution-service=70%,
+      features-multi-timeframe=97%, instruments=74%, trading-agent=95%, pnl-attribution=90%,
+      unified-market-interface=85%, ml-training=87%, features-onchain=71%, market-data-processing=78%,
+      market-tick-data=73%, features-commodity=99%, execution-results-api=80%, unified-trading-library=81%,
+      features-cross-instrument=91%). Logic bugs fixed: LONG/SHORT aliases in instruction_validator.py, int64 threshold
+      1e6→1e10 in trade_converter.py. Low-coverage outliers with no plan: batch-live-reconciliation-service=13%,
+      ibkr-gateway-infra=52%, elysium-defi-lite=45% (ibkr tracked by ibkr_gateway_rollout.plan.md; others need coverage
+      plans).
   - id: audit-config-injection
     content:
       "Audit Section on dynamic config injection compliance — GCP_PROJECT_ID banned, DomainConfigReloader used for
