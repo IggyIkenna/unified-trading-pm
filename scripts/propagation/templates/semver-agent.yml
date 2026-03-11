@@ -195,7 +195,11 @@ jobs:
           case "$BUMP" in
             breaking)
               if [ "$MAJOR" = "0" ]; then
-                # Pre-1.0.0: downgrade MAJOR → MINOR
+                # Pre-1.0.0: downgrade MAJOR → MINOR (hard cap: NEVER auto-cross to 1.0.0).
+                # MINOR is simply incremented and MAJOR stays at 0.
+                # Example: 0.9.0 + MINOR = 0.10.0 (correct; NOT 1.0.0).
+                # 0.10.0, 0.11.0, etc. are all valid pre-stable versions.
+                # The only way to reach 1.0.0 is via human approval through the issue flow.
                 MINOR=$((MINOR + 1)); PATCH=0
                 BUMP_REASON="feat!: on pre-1.0.0 repo (downgraded to MINOR per pre-stable override)"
                 echo "Pre-1.0.0 override applied: breaking → MINOR ($CURRENT → ${MAJOR}.${MINOR}.${PATCH})"
@@ -251,6 +255,7 @@ jobs:
           CURRENT="${{ steps.compute.outputs.current_version }}"
           NEXT="${{ steps.compute.outputs.next_version }}"
           BUMP_REASON="${{ steps.compute.outputs.bump_reason }}"
+          SHA="${{ github.event.workflow_run.head_sha }}"
 
           echo "Opening MAJOR bump approval issue for $REPO_NAME ($CURRENT → $NEXT)"
 
@@ -258,10 +263,13 @@ jobs:
           CHECKLIST_FILE="../unified-trading-codex/10-audit/repos/${REPO_NAME}.yaml"
           CHECKLIST_BODY=""
           if [ -f "$CHECKLIST_FILE" ]; then
-            CHECKLIST_BODY=$(cat "$CHECKLIST_FILE" | head -80)
+            CHECKLIST_BODY=$(head -80 "$CHECKLIST_FILE")
           else
             CHECKLIST_BODY="Readiness checklist file not found at: 10-audit/repos/${REPO_NAME}.yaml"
           fi
+
+          # Machine-parseable metadata block (parsed by major-bump-issue-handler.yml)
+          METADATA_JSON="{\"repo\":\"${REPO_NAME}\",\"proposed_version\":\"${NEXT}\",\"current_version\":\"${CURRENT}\",\"staging_branch\":\"staging\",\"staging_commit\":\"${SHA}\",\"reason\":\"${BUMP_REASON}\"}"
 
           ISSUE_BODY="## Major Version Bump Approval Required
 
@@ -269,7 +277,7 @@ jobs:
           **Current version:** \`$CURRENT\`
           **Proposed version:** \`$NEXT\`
           **Reason:** $BUMP_REASON
-          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${{ github.event.workflow_run.head_sha }}\`)
+          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${SHA}\`)
 
           ---
 
@@ -295,24 +303,41 @@ jobs:
 
           ---
 
-          ## How to Proceed
+          ## How to Approve or Reject
 
-          Once ALL checklist items above are verified, re-run quickmerge with the \`--user-approved\` flag:
+          Comment \`/approve\` on this issue to approve the MAJOR bump.
+          Comment \`/reject\` on this issue to reject it and close without bumping.
 
-          \`\`\`bash
-          bash scripts/quickmerge.sh \"feat!: ...\" --to-staging --user-approved
-          \`\`\`
+          Only users with **write access** to this repo may approve or reject.
 
-          > **Note:** \`--user-approved\` is NEVER set by \`--agent\` automatically. This requires explicit human action.
+          > Approving triggers \`major-bump-issue-handler.yml\` which bumps pyproject.toml on \`staging\` ONLY.
 
-          /cc @IggyIkenna"
+          /cc @IggyIkenna
 
-          gh issue create \
+          <!-- major-bump-metadata
+          ${METADATA_JSON}
+          -->"
+
+          ISSUE_URL=$(gh issue create \
             --repo "${GH_ORG}/${REPO_NAME}" \
-            --title "[MAJOR BUMP REQUIRED] ${REPO_NAME}: ${BUMP_REASON}" \
+            --title "[MAJOR BUMP PENDING] ${REPO_NAME}: ${CURRENT} → ${NEXT}" \
             --body "$ISSUE_BODY" \
-            --label "major-bump-approval" \
-            || echo "WARNING: Issue creation failed (label may not exist) — continuing"
+            --label "major-bump-pending" \
+            --json url --jq '.url' 2>/dev/null || echo "")
+
+          if [ -n "$ISSUE_URL" ]; then
+            echo "GitHub Issue created: $ISSUE_URL"
+          else
+            echo "WARNING: Issue creation failed (label may not exist yet)"
+          fi
+
+          # Send Telegram alert (after issue creation so we can embed the issue URL)
+          if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] && [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
+            MSG="Major version bump requires approval - Repo: ${REPO_NAME} - Version: ${CURRENT} to ${NEXT} - Reason: ${BUMP_REASON} - Approve: ${ISSUE_URL}"
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=${MSG}" || true
+            echo "Telegram alert sent"
+          fi
 
           echo "Issue created. Skipping version-bump dispatch until user approves."
 
