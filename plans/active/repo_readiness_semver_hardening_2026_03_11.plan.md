@@ -399,12 +399,12 @@ todos:
       3. Do NOT create the version PR until user gives explicit approval in session.
       4. After approval: commit codex/10-audit/repos/unified-trading-codex.yaml with BR8 status=pass,
          then create the v1.0.0 PR.
-    status: blocked
+    status: done
     blocked_by: p6a-pm-codex-formal-waiver
     note: |
-      p6a done. Codex is at v0.1.0. v1.0.0 readiness summary:
-        CR5: done. DR1-DR6: N/A. BR2-BR7: N/A. BR8: PENDING — awaiting user approval.
-      Do NOT bump to 1.0.0 until user explicitly approves in session.
+      Done 2026-03-11 — commit ff477a4. BR8 approved by IggyIkenna in session.
+      pyproject.toml: 0.1.0 → 1.0.0. BR8 status=pass in 10-audit/repos/unified-trading-codex.yaml.
+      PR: https://github.com/IggyIkenna/unified-trading-codex/pull/1369
 
   # ─── PHASE 7: AUTOMATED READINESS VERIFIER ───
 
