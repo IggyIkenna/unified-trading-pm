@@ -20,26 +20,10 @@ repo_gates:
     readiness_note:
       "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
 
-depends_on: []
+depends_on:
+  - api_keys_and_auth
 
 todos:
-  - id: bootstrap-telegram
-    content: >-
-      Create Telegram bot via BotFather, note token. Start conversation with bot to get chat_id. Propagation script
-      created: scripts/workspace/propagate-github-secrets.sh — runs against all repos from workspace-manifest.json using
-      gh secret set (TELEGRAM_BOT_TOKEN secret) and gh variable set (TELEGRAM_CHAT_ID variable). Steps: (1) @BotFather
-      /newbot → copy token. (2) Get chat_id via @userinfobot or by sending a message and calling getUpdates. (3) Fill
-      TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .act-secrets at workspace root. (4) Run: TELEGRAM_BOT_TOKEN=xxx
-      TELEGRAM_CHAT_ID=yyy bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh (or run interactively —
-      will prompt). (5) Verify: gh secret list --repo IggyIkenna/unified-trading-pm shows TELEGRAM_BOT_TOKEN; gh
-      variable list shows TELEGRAM_CHAT_ID. GATE: dry-run passes (--dry-run flag) then live run shows 62 OK / 0 FAILED.
-    status: blocked
-    notes: |
-      PARTIAL (2026-03-10): 59/62 repos have TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID set (propagated 2026-03-07).
-      GH_PAT + TELEGRAM_CHAT_ID (-5288420200) set on all 3 new repos (ml-inference-api, ml-training-api,
-      trading-analytics-api) 2026-03-10. TELEGRAM_BOT_TOKEN still missing on 3 new repos — run:
-        TELEGRAM_BOT_TOKEN=<token> bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --repo ml-inference-api
-      Repeat for ml-training-api and trading-analytics-api. Also need: ANTHROPIC_API_KEY, GCP_SA_KEY.
   - id: write-pm-rules-alignment-workflow
     content:
       "Create unified-trading-pm/.github/workflows/rules-alignment-agent.yml: trigger on push paths plans/active/**,
@@ -149,20 +133,6 @@ todos:
       context; quality-gates was added alongside. deployment-api had PR review settings only (no status check gate)
       — both contexts added fresh. The plan mentions 52 repos but workspace-manifest.json only has 25 repos of type
       service/api-service; the remaining repos are libraries/interfaces/UI/infra which use different CI patterns.
-  - id: set-anthropic-api-key-sit
-    content: >-
-      Add ANTHROPIC_API_KEY secret to system-integration-tests repo so sit-plan-sync-agent.yml can run. Command: gh
-      secret set ANTHROPIC_API_KEY --repo IggyIkenna/system-integration-tests. Verify: gh run list --workflow
-      sit-plan-sync-agent.yml after next push to SIT main.
-    status: blocked
-    notes: |
-      BLOCKED on external secret setup: requires human to run:
-      gh secret set ANTHROPIC_API_KEY --repo IggyIkenna/system-integration-tests
-      Cannot be done in an agent session without the key value being provided interactively.
-      M2 CONFLICT NOTE (2026-03-11): When bootstrap-telegram and set-anthropic-api-key-sit unblock,
-      semver-agent.yml has already been modified by cicd_versioning_cloud_build_2026_03_11 (DONE).
-      Read the CURRENT semver-agent.yml before making any further edits — do NOT overwrite existing
-      functionality. Extend rather than replace.
   - id: repos-update-pm-plans-in-gha
     content: >-
       Each service repo's agent-audit.yml adds a post-quickmerge step: after successful QG run, clone PM sibling
@@ -244,7 +214,8 @@ todos:
       branch, runs the smoke test suite (pytest tests/smoke/ or similar), and on success dispatches staging-validated
       event to unified-trading-pm. PM staging-to-main.yml is already wired to receive this dispatch and promote all
       repos from staging to main in topological order. This closes the loop on the staging-to-main automation. Blocked
-      until: (1) SIT smoke tests exist in tests/smoke/, (2) SIT ANTHROPIC_API_KEY set (set-anthropic-api-key-sit todo).
+      until: (1) SIT smoke tests exist in tests/smoke/, (2) SIT ANTHROPIC_API_KEY set (see api_keys_and_auth:
+      set-anthropic-api-key-sit).
     status: completed
     notes: |
       RESOLVED 2026-03-09: smoke-test-gate.yml created in system-integration-tests/.github/workflows/.

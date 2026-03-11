@@ -27,7 +27,8 @@
 #   --repos "a b c"       Space-separated list of repo names to process.
 #   --skip-protection     Skip the GitHub API protect/unprotect cycle.
 #   --no-commit           Skip git add / git commit; only force-push current HEAD.
-#   --preserve-local      Stage, commit, push — but skip switching to main. Stay on current
+#   --preserve-local      (default) Stage, commit, push — skip switching to main. Stay on current
+#   --switch-to-main     After push, switch local branch to main (old behavior)
 #                        branch. All changes committed and pushed; nothing lost.
 #
 # Prerequisites:
@@ -67,7 +68,7 @@ REPOS_LIST=""
 COMMIT_MSG="chore: admin force-sync"
 SKIP_PROTECTION=false
 NO_COMMIT=false
-SKIP_CHECKOUT=false
+SKIP_CHECKOUT=true
 MAX_WORKERS=${MAX_WORKERS:-8}
 
 # ---------------------------------------------------------------------------
@@ -85,6 +86,7 @@ while [[ $# -gt 0 ]]; do
     --skip-protection) SKIP_PROTECTION=true; shift ;;
     --no-commit)       NO_COMMIT=true; shift ;;
     --preserve-local)  SKIP_CHECKOUT=true; shift ;;
+    --switch-to-main)  SKIP_CHECKOUT=false; shift ;;
     --max-workers)     MAX_WORKERS="$2"; shift 2 ;;
     *) echo "Unknown flag: $1"; shift ;;
   esac

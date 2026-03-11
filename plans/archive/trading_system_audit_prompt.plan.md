@@ -167,8 +167,8 @@ todos:
       market-tick-data=73%, features-commodity=99%, execution-results-api=80%, unified-trading-library=81%,
       features-cross-instrument=91%). Logic bugs fixed: LONG/SHORT aliases in instruction_validator.py, int64 threshold
       1e6→1e10 in trade_converter.py. Low-coverage outliers with no plan: batch-live-reconciliation-service=13%,
-      ibkr-gateway-infra=52%, elysium-defi-lite=45% (ibkr tracked by ibkr_gateway_rollout.plan.md; others need coverage
-      plans).
+      ibkr-gateway-infra=52%, elysium-defi-system=45% (ibkr tracked by ibkr_gateway_rollout.plan.md; others need
+      coverage plans).
   - id: audit-config-injection
     content:
       "Audit Section on dynamic config injection compliance — GCP_PROJECT_ID banned, DomainConfigReloader used for
@@ -220,7 +220,7 @@ todos:
     note:
       "Added 2026-03-10. Follow-on from coverage_remediation_2026_03_10 plan (archived). 14 of 14 Section A repos above
       floor. COMPLETED 2026-03-11: 65 repos processed, 0 errors. MIN_COVERAGE updated per repo to actual-1%. Below-floor
-      repos (batch-live-reconciliation=13%, ibkr-gateway=52%, elysium-defi-lite=45%) retained floor=70 pending
+      repos (batch-live-reconciliation=13%, ibkr-gateway=52%, elysium-defi-system=45%) retained floor=70 pending
       campaigns."
 
   - id: audit-cloud-agnostic-api

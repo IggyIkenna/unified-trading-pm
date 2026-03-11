@@ -9,10 +9,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
+_PM_ROOT = Path(__file__).resolve().parent.parent.parent  # unified-trading-pm/
+WORKSPACE_ROOT = _PM_ROOT.parent  # workspace root (parent of PM)
 
 
-def get_repos():
+def get_repos(repo_filter: str | None = None) -> list[Path]:
+    if repo_filter:
+        p = WORKSPACE_ROOT / repo_filter
+        if not (p / ".git").exists():
+            raise SystemExit(f"Repo not found or not a git repo: {repo_filter}")
+        return [p]
     repos = []
     for d in WORKSPACE_ROOT.iterdir():
         if d.is_dir() and (d / ".git").exists():
@@ -42,8 +48,19 @@ def tracked_ignored_files(repo: Path) -> list[str]:
 
 
 def main() -> None:
-    dry_run = "--dry-run" in sys.argv
-    repos = get_repos()
+    # --dry-run: report only, no git rm
+    # --untrack: explicit apply mode (used by sync-gitignore-cursorignore.py); same as default but
+    #            named so callers can be explicit about intent
+    # --repo NAME: limit to a single repo
+    dry_run = "--dry-run" in sys.argv and "--untrack" not in sys.argv
+    repo_filter: str | None = None
+    argv = sys.argv[1:]
+    for i, arg in enumerate(argv):
+        if arg == "--repo" and i + 1 < len(argv):
+            repo_filter = argv[i + 1]
+        elif arg.startswith("--repo="):
+            repo_filter = arg.split("=", 1)[1]
+    repos = get_repos(repo_filter)
     total_removed = 0
     for repo in repos:
         name = repo.name

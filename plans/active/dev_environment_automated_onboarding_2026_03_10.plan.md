@@ -23,6 +23,7 @@ repo_gates:
 depends_on:
   - broken_symlinks_remediation_2026_03_09
   - mock_data_dev_project_seeding_2026_03_10
+  - api_keys_and_auth
 
 todos:
   - id: phase-0-env-vars-doc
@@ -49,8 +50,6 @@ isProject: false
 ---
 
 # Plan: Automated Dev Environment Setup & Onboarding
-
-status: active priority: P1 owner: infra target: 2026-03-15
 
 ## Context
 

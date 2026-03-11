@@ -366,18 +366,75 @@ Full hardening details: `unified-trading-pm/plans/archive/cicd_mock_hardening_20
 
 ## Workspace Scripts (scripts/workspace/)
 
-| Script                                | Purpose                                                                                                                                             | When it runs                                                                                                         |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **workspace-bootstrap.sh**            | New machine setup: system deps, clone all repos from manifest, workspace venv (via setup-workspace-venv.sh), per-repo setup, smoke test.            | Once, on fresh machine.                                                                                              |
-| **sync-workspace-venv.sh**            | Day-to-day `.venv-workspace` refresh: pinned tools + editable installs from manifest. Thin wrapper over `setup-workspace-venv.sh`.                  | Auto-called by `run-version-alignment.sh --fix`. Run manually after `git pull` on PM.                                |
-| **setup-workspace-venv.sh**           | Underlying venv setup logic: creates venv, installs `ruff==0.15.0` + `basedpyright==1.38.2`, installs all repos as editable in topo order.          | Called by both `workspace-bootstrap.sh` (Phase 3) and `sync-workspace-venv.sh`. Single source of truth.              |
-| **validate-workspace-constraints.py** | Validates `workspace-constraints.toml` resolves without dependency conflicts (runs `uv pip compile`). Caches result by file hash.                   | Called by `validate-dependency-conflicts.py` during Phase 1 (step 4 of run-version-alignment.sh).                    |
-| **resolve-canonical-versions.py**     | Derives `workspace-constraints.toml` from all repo `pyproject.toml` files (topological order). Picks tightest constraint per package.               | **Not** called by `--fix`. Called only by `validate-dependency-conflicts.py --regenerate` when constraints conflict. |
-| **aggregate-workspace-deps.py**       | Legacy: installs all repo deps into `.venv-workspace` using `workspace-constraints.toml`. Superseded by `setup-workspace-venv.sh` for standard use. | Only if explicitly needed for constraint-based resolution outside the standard flow.                                 |
+| Script                                | Purpose                                                                                                                                                                                                                                                                                                                                               | When it runs                                                                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **workspace-bootstrap.sh**            | New machine setup: system deps, clone all repos from manifest, workspace venv (via setup-workspace-venv.sh), per-repo setup, smoke test.                                                                                                                                                                                                              | Once, on fresh machine.                                                                                               |
+| **sync-workspace-venv.sh**            | Day-to-day `.venv-workspace` refresh: pinned tools + editable installs from manifest. Thin wrapper over `setup-workspace-venv.sh`.                                                                                                                                                                                                                    | Auto-called by `run-version-alignment.sh --fix`. Run manually after `git pull` on PM.                                 |
+| **setup-workspace-venv.sh**           | Underlying venv setup logic: creates venv, installs `ruff==0.15.0` + `basedpyright==1.38.2`, installs all repos as editable in topo order.                                                                                                                                                                                                            | Called by both `workspace-bootstrap.sh` (Phase 3) and `sync-workspace-venv.sh`. Single source of truth.               |
+| **validate-workspace-constraints.py** | Validates `workspace-constraints.toml` resolves without dependency conflicts (runs `uv pip compile`). Caches result by file hash.                                                                                                                                                                                                                     | Called by `validate-dependency-conflicts.py` during Phase 1 (step 4 of run-version-alignment.sh).                     |
+| **resolve-canonical-versions.py**     | Derives `workspace-constraints.toml` from all repo `pyproject.toml` files (topological order). Picks tightest constraint per package.                                                                                                                                                                                                                 | **Not** called by `--fix`. Called only by `validate-dependency-conflicts.py --regenerate` when constraints conflict.  |
+| **aggregate-workspace-deps.py**       | Legacy: installs all repo deps into `.venv-workspace` using `workspace-constraints.toml`. Superseded by `setup-workspace-venv.sh` for standard use.                                                                                                                                                                                                   | Only if explicitly needed for constraint-based resolution outside the standard flow.                                  |
+| **sync-gitignore-cursorignore.py**    | Writes `.gitignore` + `.cursorignore` to every repo from PM central templates (`scripts/templates/.gitignore.central`, `.cursorignore.central`). Preserves per-repo exception blocks (under `# --- Repo-specific exceptions ---` header). After writing, calls `untrack-ignored-files.py --untrack` to remove newly-ignored files from the git index. | Run after editing central templates in PM.                                                                            |
+| **untrack-ignored-files.py**          | Finds files tracked in the git index that now match `.gitignore` rules and removes them with `git rm --cached`. `--dry-run`: report only, no removal. `--untrack`: explicit apply mode (used by `sync-gitignore-cursorignore.py`). Default (no flags): also applies.                                                                                  | Called automatically by `sync-gitignore-cursorignore.py --untrack`. Run manually to audit/clean any repo at any time. |
 
 **Location:** `unified-trading-pm/scripts/workspace/`
 
 ---
+
+---
+
+## Gitignore Sync & Untrack
+
+Central `.gitignore` and `.cursorignore` templates live in `unified-trading-pm/scripts/templates/`. A single script
+syncs them to all repos **and** removes newly-ignored files from every git index in one step.
+
+```bash
+# Sync .gitignore + .cursorignore to all repos, then untrack newly-ignored files
+python3 unified-trading-pm/scripts/workspace/sync-gitignore-cursorignore.py
+```
+
+**What it does:**
+
+1. Reads `scripts/templates/.gitignore.central` and `.cursorignore.central` from PM.
+2. Writes `.gitignore` and `.cursorignore` into every workspace repo. Per-repo exception blocks (lines under
+   `# --- Repo-specific exceptions ---`) are preserved across re-syncs.
+3. After all writes complete, calls `untrack-ignored-files.py --untrack` — runs `git ls-files -i -c --exclude-standard`
+   in each repo and issues `git rm --cached` for every match.
+
+**Why step 3 is required:** Writing `.gitignore` does not affect files already in the git index. Without the untrack
+step, previously-tracked files stay tracked and continue to appear in `git status` and remotes despite being ignored.
+The `--untrack` flag makes the call explicit and machine-readable; `--dry-run` still works for inspection.
+
+**Per-repo exception block** — to add patterns that only apply to one repo, edit that repo's `.gitignore` and place
+additions under the header line:
+
+```
+# --- Repo-specific exceptions (add below; sync preserves this section) ---
+!tests/fixtures/*.csv
+```
+
+Re-running the sync script will preserve everything under that header.
+
+**Hardcoded per-repo additions** (applied programmatically, not via the exception block) live in
+`REPO_GITIGNORE_ADDITIONS` in `sync-gitignore-cursorignore.py`. Edit that dict to add permanent per-repo patterns that
+should survive from a fresh sync without manual edits to the target repo.
+
+**Dry-run / audit only (no writes):**
+
+```bash
+python3 unified-trading-pm/scripts/workspace/untrack-ignored-files.py --dry-run
+```
+
+**Single repo:**
+
+```bash
+python3 unified-trading-pm/scripts/workspace/untrack-ignored-files.py --repo alerting-service --dry-run
+python3 unified-trading-pm/scripts/workspace/untrack-ignored-files.py --repo alerting-service --untrack
+```
+
+**After running:** Commit the changed `.gitignore` files and any `git rm --cached` removals in each affected repo, then
+push via quickmerge. Old clones automatically stop seeing the files on their next `git pull` — the removal is permanent
+in git history from that commit forward.
 
 ---
 
@@ -394,37 +451,66 @@ Full hardening details: `unified-trading-pm/plans/archive/cicd_mock_hardening_20
 
 Overwrites `origin/main` with the current local state for all (or selected) repos. Works from **any local branch** — no
 checkout to `main` required. Auto-stages and commits all local changes (including untracked files and deletions) before
-pushing, so the push reflects true local state. After a successful push, automatically switches the local branch to
-`main` to avoid post-sync branch confusion.
+pushing, so the push reflects true local state.
+
+**Default (preserve-local):** After push, you **stay on your current branch** — local state unchanged. Use
+`--switch-to-main` for the old behavior (switch to main after push).
+
+#### sync-main (convenience command)
+
+Add to `~/.zshrc` for a short command:
+
+```bash
+sync-main() {
+  cd "${UNIFIED_TRADING_WORKSPACE_ROOT:-$HOME/Code/unified-trading-system-repos}" && bash unified-trading-pm/scripts/sync-main.sh "$@"
+}
+```
+
+Then run from anywhere:
+
+```bash
+sync-main                    # sync with default message, stay on current branch
+sync-main --dry-run          # dry run
+sync-main --message "custom" # custom commit message
+sync-main --switch-to-main   # old behavior: switch to main after push
+```
+
+**Script:** `scripts/sync-main.sh` — wrapper that runs admin-force-sync with `--admin-confirm` and default message.
+
+#### Full admin-force-sync usage
 
 ```bash
 # All repos — dry run first to inspect what would be committed + pushed
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --dry-run
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --dry-run
 
-# All repos — force push (disables + restores branch protection automatically)
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh
+# All repos — force push (preserve-local default: stay on current branch)
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm
 
 # Single repo
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --repo unified-trading-pm
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --repo unified-trading-pm
 
 # Multiple specific repos (comma-separated)
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --repos "unified-trading-pm,unified-events-interface"
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --repos "unified-trading-pm,unified-events-interface"
+
+# Switch to main after push (old behavior)
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --switch-to-main
 
 # Skip staging/committing (push current committed HEAD as-is)
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --no-commit
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --no-commit
 
 # Skip branch protection disable/restore (if already disabled or not configured)
-bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --skip-protection
+bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh --admin-confirm --skip-protection
 ```
 
 **What it does per repo:**
 
 1. `git add -A` — stages all modifications, deletions, and untracked files (from any local branch)
-2. `git commit -m "chore: force-sync local state"` — commits staged changes (pre-commit hooks run normally)
+2. ruff + prettier format, then `git commit -m "<message>"` — commits staged changes
 3. Disables branch protection + rulesets
 4. `git push --force origin HEAD:main` — pushes current HEAD to remote main (works from any branch)
 5. Restores branch protection immediately after push
-6. `git checkout -B main` — resets local `main` pointer to current HEAD and switches to it
+6. **Default:** Stay on current branch (preserve-local). **With `--switch-to-main`:** `git checkout -B main` — resets
+   local `main` pointer to current HEAD and switches to it
 
 **When to use:**
 

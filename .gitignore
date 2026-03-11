@@ -126,4 +126,6 @@ logs/
 # profile_default/
 
 # --- Repo-specific: keep github-integration data on remote ---
+!github-integration/
+!github-integration/data/
 !github-integration/data/*.json

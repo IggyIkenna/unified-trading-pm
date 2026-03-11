@@ -6,6 +6,8 @@ Preserves the "Repo-specific exceptions" block in each .gitignore so manual addi
 Run from workspace root: python3 unified-trading-pm/scripts/sync-gitignore-cursorignore.py
 """
 
+import subprocess
+import sys
 from pathlib import Path
 
 PM = Path(__file__).resolve().parent.parent.parent
@@ -21,7 +23,12 @@ KEEP_THESE_LINE = "# --- Keep these (do not ignore): uv.lock, package.json, .env
 
 
 # Repos to process (must have .git at root)
-def get_repos():
+def get_repos(repo_filter: str | None = None) -> list[Path]:
+    if repo_filter:
+        p = WORKSPACE_ROOT / repo_filter
+        if not (p / ".git").exists():
+            raise SystemExit(f"Repo not found or not a git repo: {repo_filter}")
+        return [p]
     repos = []
     for d in WORKSPACE_ROOT.iterdir():
         if d.is_dir() and (d / ".git").exists():
@@ -52,23 +59,38 @@ REPO_GITIGNORE_ADDITIONS = {
     "features-delta-one-service": [
         "",
         "# --- Repo-specific: keep mock data on remote ---",
+        "!data/",
+        "!data/mock/",
         "!data/mock/ETHUSDT.csv",
         "!data/mock/SOLUSDT.csv",
     ],
     "unified-trading-pm": [
         "",
         "# --- Repo-specific: keep github-integration data on remote ---",
+        "!github-integration/",
+        "!github-integration/data/",
         "!github-integration/data/*.json",
     ],
     "features-sports-service": [
         "",
         "# --- Repo-specific: keep data writer on remote ---",
+        "!features_sports_service/",
+        "!features_sports_service/data/",
         "!features_sports_service/data/writer.py",
     ],
     "instruments-service": [
         "",
         "# --- Repo-specific: keep sp500 tickers on remote ---",
+        "!instruments_service/",
+        "!instruments_service/data/",
         "!instruments_service/data/sp500_tickers.json",
+    ],
+    "execution-service": [
+        "",
+        "# --- Repo-specific: keep data module (source code) on remote ---",
+        "!execution_service/",
+        "!execution_service/data/",
+        "!execution_service/data/**",
     ],
 }
 
@@ -128,10 +150,23 @@ def gitignore_for_repo(repo_name: str, central: str, preserved_block: str = "") 
 
 
 def main():
+    repo_filter: str | None = None
+    argv = sys.argv[1:]
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--repo" and i + 1 < len(argv):
+            repo_filter = argv[i + 1]
+            i += 2
+        elif argv[i].startswith("--repo="):
+            repo_filter = argv[i].split("=", 1)[1]
+            i += 1
+        else:
+            i += 1
+
     central_git = read_central(CENTRAL_GITIGNORE)
     central_cursor = read_central(CENTRAL_CURSORIGNORE)
 
-    repos = get_repos()
+    repos = get_repos(repo_filter)
     for repo in repos:
         name = repo.name
         gitignore_path = repo / ".gitignore"
@@ -146,6 +181,18 @@ def main():
         print(f"Updated {name}/ (.gitignore, .cursorignore)")
 
     print(f"Done. Synced {len(repos)} repos.")
+
+    # Now untrack any files that are now matched by the updated .gitignore rules.
+    untrack_script = Path(__file__).parent / "untrack-ignored-files.py"
+    untrack_cmd = [sys.executable, str(untrack_script), "--untrack"]
+    if repo_filter:
+        untrack_cmd += ["--repo", repo_filter]
+    sys.stdout.flush()
+    print("\nRunning untrack-ignored-files.py --untrack ...")
+    sys.stdout.flush()
+    result = subprocess.run(untrack_cmd, check=False)
+    if result.returncode != 0:
+        print("untrack-ignored-files.py exited with errors (see above).", file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -445,7 +445,7 @@
       "github_url": "https://github.com/IggyIkenna/deployment-ui",
       "semver_rules_ref": "ui"
     },
-    "elysium-defi-lite": {
+    "elysium-defi-system": {
       "type": "service",
       "arch_tier": "4",
       "doc_standard": "service-canonical",
@@ -461,7 +461,7 @@
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
       "status": "active",
-      "github_url": "https://github.com/IggyIkenna/elysium-defi-lite",
+      "github_url": "https://github.com/IggyIkenna/elysium-defi-system",
       "completion_path": "defi",
       "semver_rules_ref": "service"
     },

@@ -35,7 +35,7 @@ todos:
     status: done
   - id: qg-scripts-collapse-stubs
     content:
-      "§2.1/§17 — Collapse 6 oversized quality-gates.sh scripts (execution-service 194L, elysium-defi-lite 122L,
+      "§2.1/§17 — Collapse 6 oversized quality-gates.sh scripts (execution-service 194L, elysium-defi-system 122L,
       deployment-api 94L, deployment-service 73L, instruments-service 59L, market-tick-data-service 57L) into <50L stubs
       sourcing base-service.sh"
     status: done
@@ -131,14 +131,14 @@ Two waves of parallel agents (1 agent per 2 tasks). Wave 2 starts after Wave 1 c
 
 ## Wave 1 Agent Assignments
 
-| Agent | Tasks                                           | Repos                                                                                                                   |
-| ----- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| A1    | §5.1a/b float fields + §8.3 ImportError         | unified-defi-execution-interface, unified-api-contracts, deployment-service                                             |
-| A2    | §4.3a/b deployment HTTP server + remove imports | deployment-service, deployment-api                                                                                      |
-| A3    | §15.2+§15.3 CI rollout script                   | unified-trading-pm                                                                                                      |
-| A4    | §2.1/§17 QG stubs + §15.4 --no-fix              | execution-service, deployment-api, deployment-service, instruments-service, market-tick-data-service, elysium-defi-lite |
-| A5    | §9.1 register plans + §9.2 remove phantoms      | unified-trading-codex                                                                                                   |
-| A6    | §11.5 fail_under + §11.6 markers + §8.2 docs    | execution-service, strategy-service, unified-domain-client, unified-trading-library                                     |
+| Agent | Tasks                                           | Repos                                                                                                                     |
+| ----- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| A1    | §5.1a/b float fields + §8.3 ImportError         | unified-defi-execution-interface, unified-api-contracts, deployment-service                                               |
+| A2    | §4.3a/b deployment HTTP server + remove imports | deployment-service, deployment-api                                                                                        |
+| A3    | §15.2+§15.3 CI rollout script                   | unified-trading-pm                                                                                                        |
+| A4    | §2.1/§17 QG stubs + §15.4 --no-fix              | execution-service, deployment-api, deployment-service, instruments-service, market-tick-data-service, elysium-defi-system |
+| A5    | §9.1 register plans + §9.2 remove phantoms      | unified-trading-codex                                                                                                     |
+| A6    | §11.5 fail_under + §11.6 markers + §8.2 docs    | execution-service, strategy-service, unified-domain-client, unified-trading-library                                       |
 
 ## Wave 2 Agent Assignments
 

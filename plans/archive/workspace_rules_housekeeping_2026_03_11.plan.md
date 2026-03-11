@@ -53,6 +53,6 @@ Cursor rules audit, script symlink consolidation, and workspace config cleanup.
 - `docs/repo-management/CI-CD-FLOW.md` — 3 gaps fixed: pyrightconfig.json (IDE-only, not CI), test-harness exemption
   (string deps invisible to alignment scanner), --agent flag + two-pass model
 - `scripts/repo-management/run-version-alignment.sh` step [0.55/4] — fixed false positive: PM now excluded; check scoped
-  to manifest repos only (not untracked on-disk repos like elysium-defi-lite)
+  to manifest repos only (not untracked on-disk repos like elysium-defi-system)
 - `unified-trading-ui-kit` — `npm install` run to resolve stale package-lock
 - All active plans scanned — no regressions from any session changes

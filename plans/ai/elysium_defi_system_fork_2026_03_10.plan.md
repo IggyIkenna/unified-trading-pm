@@ -1,5 +1,5 @@
 ---
-name: elysium-defi-lite-fork-2026-03-10
+name: elysium-defi-system-fork-2026-03-10
 overview:
   Create a standalone elysium-defi-system repo forked from DeFi strategy/execution components, delivered as a private
   GitHub repo + Docker image for Elysium Capital
@@ -30,6 +30,7 @@ repo_gates:
 
 depends_on:
   - elysium_defi_presentation_2026_03_10
+  - api_keys_and_auth
 
 todos:
   - id: phase-1-repo-setup
@@ -58,8 +59,6 @@ isProject: false
 ---
 
 # Plan: Elysium DeFi Lite Fork
-
-status: active priority: P1 owner: backend target: 2026-03-25
 
 ## Context
 

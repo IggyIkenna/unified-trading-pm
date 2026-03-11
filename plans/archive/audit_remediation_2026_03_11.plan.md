@@ -118,7 +118,7 @@ todos:
     note: >-
       DONE 2026-03-11. Phase 9 appended to zero_baseline_typecheck_2026_03_10.plan.md. ~100 instances found.
       Categorised: ~95 ALLOWED (google-auth stubs, Protocol stubs, hasattr-guarded, pandas type-arg, dynamic backends,
-      elysium-defi-lite). 5 TODO items: funding_recon_engine.py:214, yield_recon_engine.py:280,
+      elysium-defi-system). 5 TODO items: funding_recon_engine.py:214, yield_recon_engine.py:280,
       instrument_processing_handlers.py:71, pnl_reader.py:63, deployment_state.py (5x reportPrivateUsage).
 
   - id: follow-on-commit-all-repos
@@ -165,5 +165,5 @@ isProject: false
 - §8: 13 repos had type baselines (all Phase 9 todos tracked above)
 - §11: pyproject fail_under mismatches in alerting/strategy/risk — covered by coverage recalibration (todo pending
   post-coverage-remediation)
-- §13: elysium-defi-lite Phase 2 stubs — by design (concrete classes returning None in paper mode, TODOs for Phase 2
+- §13: elysium-defi-system Phase 2 stubs — by design (concrete classes returning None in paper mode, TODOs for Phase 2
   web3)

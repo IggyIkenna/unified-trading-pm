@@ -80,8 +80,6 @@ isProject: false
 
 # Plan: Mock Data Dev Project Seeding (No Prod APIs)
 
-status: active priority: P1 owner: infra target: 2026-03-15
-
 ## Context
 
 Services can run in `CLOUD_MOCK_MODE=true` (no real GCS) or with VCR cassettes (no live API calls). However, no

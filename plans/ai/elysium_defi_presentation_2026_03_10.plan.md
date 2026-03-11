@@ -2,7 +2,7 @@
 name: elysium-defi-presentation-2026-03-10
 overview:
   Create a standalone HTML presentation for Elysium Capital demonstrating DeFi strategies, 14 supported protocols,
-  backtest results, and the elysium-defi-lite-fork deliverable
+  backtest results, and the elysium-defi-system-fork deliverable
 type: business
 epic: epic-business
 status: active
@@ -20,7 +20,7 @@ repo_gates:
     readiness_note: "DR N/A: presentation/documentation — no infrastructure deployment required."
 
 depends_on:
-  - elysium_defi_lite_fork_2026_03_10
+  - elysium_defi_system_fork_2026_03_10
   - e2e_smoke_and_portable_backtests
 
 todos:
@@ -54,7 +54,7 @@ status: active priority: P2 owner: product target: 2026-03-25 (deliver with or b
 ## Context
 
 Elysium Capital needs a standalone presentation demonstrating: what DeFi strategies we've built, the 14 protocols
-supported, backtest results, and what the elysium-defi-lite-fork delivers to them. The presentation must stand alone —
+supported, backtest results, and what the elysium-defi-system-fork delivers to them. The presentation must stand alone —
 Elysium may share it internally. Style matches the existing 10 HTML presentations in
 `unified-trading-pm/presentations/`.
 
@@ -227,5 +227,5 @@ Add to `unified-trading-pm/presentations/tests/`:
 
 ## Dependencies
 
-- `elysium_defi_lite_fork_2026_03_10.plan.md` (content accuracy — fork details)
+- `elysium_defi_system_fork_2026_03_10.plan.md` (content accuracy — fork details)
 - `e2e_smoke_and_portable_backtests.plan.md` (backtest result numbers)

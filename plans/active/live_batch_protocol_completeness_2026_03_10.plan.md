@@ -200,8 +200,6 @@ isProject: false
 
 # Plan: Live vs Batch Mode Protocol Completeness Audit
 
-status: active priority: P1 owner: backend target: 2026-03-17
-
 ## Context
 
 `unified-cloud-interface` defines `RuntimeMode.BATCH` and `RuntimeMode.LIVE`. The codex (`batch-live-symmetry.md`)

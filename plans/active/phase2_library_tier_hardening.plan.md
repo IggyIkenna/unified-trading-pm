@@ -229,14 +229,15 @@ EXECUTED by their owning interface repos:
   (D1-D3 equivalent, local). D4/D5 require quickmerge.
 - id: t0-progressive-validation content: "T0 STEP D→E — PROGRESSIVE VALIDATION [8 agents PARALLEL]: D1 (quickmerge
   --lint-only) → D2 (--unit-only) → D3 (--qg-only) → D4 (--quick) → D5 (full, no flags) = T0 TIER GREEN GATE. ALL 8 T0
-  repos must pass D5 before any T1 work starts." status: done notes: | D1 PASS (2026-03-08): All 6 T0 repos ruff-clean
-  (0 errors, all files unchanged after format). Repos: UEI, AC, UIC, URDI, EAL, MEL. D2 PASS (2026-03-08): All 6 T0
-  repos unit tests pass. UEI: 71/71 | AC: 666/666 | UIC: 608/608 (incl. 15 new alignment tests) | URDI: 227/227 | EAL:
-  94/94 | MEL: 83/83. Fixed: test_uic_ac_alignment.py — missing RiskMetrics fields (cash_balance, \*\_status); RiskAlert
-  class → AlertMessage (correct class name). D3 PASS (2026-03-08): All 6 T0 repos basedpyright 0 errors, 0 warnings.
-  TIER GREEN GATE CONFIRMED (2026-03-11): D4/D5 quickmerge requirement REMOVED (gate is now QG exit 0). UAC and UEI both
-  pass bash scripts/quality-gates.sh exit 0. Fixed: pytest-socket added to venvs + conftest.py --block-network fixture.
-  T0 TIER GREEN: CONFIRMED.
+  repos must pass D5 before any T1 work starts." status: pending notes: | D1 PASS (2026-03-08): All 6 T0 repos
+  ruff-clean (0 errors, all files unchanged after format). Repos: UEI, AC, UIC, URDI, EAL, MEL. D2 PASS (2026-03-08):
+  All 6 T0 repos unit tests pass. UEI: 71/71 | AC: 666/666 | UIC: 608/608 (incl. 15 new alignment tests) | URDI: 227/227
+  | EAL: 94/94 | MEL: 83/83. Fixed: test_uic_ac_alignment.py — missing RiskMetrics fields (cash_balance, \*\_status);
+  RiskAlert class → AlertMessage (correct class name). D3 PASS (2026-03-08): All 6 T0 repos basedpyright 0 errors, 0
+  warnings. NOTE (2026-03-11): D4/D5 quickmerge requirement REMOVED (gate is now QG exit 0). Prior session notes claim
+  UAC and UEI passed QG exit 0. NOT YET DIRECTLY VALIDATED: bash scripts/quality-gates.sh has not been run directly by
+  Claude for any T0 repo (AC, UIC_INT, UEI, UCI-cloud, URDI, EAL, MEL) in the current session. Re-run QG for all T0
+  repos to confirm T0 TIER GREEN before advancing.
 - id: t1-uts-deploy-structure content: "T1 STEP A — DEPLOY STRUCTURE [REQUIRES: all T0 repos green at D5]: T1 repos are
   UTS=unified-trading-services AND UCI=unified-config-interface (UCI is T1, not T0, because it imports UEI for the
   CONFIG_LOADED lifecycle event). lib-phase5-t1-quality-gates (verify QG passes in both UTS and UCI);
@@ -272,13 +273,14 @@ EXECUTED by their owning interface repos:
   needed. Remaining items (dag-uts-v22-feature-audit, quality-importerror-fallbacks, uts-v5-cleanup) can proceed without
   blocking T2 — rename conflict risk is resolved.
 - id: t1-uts-progressive-validation content: "T1 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0 green]: D1 → D2 → D3 →
-  D4 → D5. T1 TIER GREEN GATE = D5 passes." status: done notes: | TIER GREEN GATE CONFIRMED (2026-03-11): Gate is QG
+  D4 → D5. T1 TIER GREEN GATE = D5 passes." status: pending notes: | Prior session notes claim (2026-03-11): Gate is QG
   exit 0. UTL (unified-trading-library) passes bash scripts/quality-gates.sh exit 0 after: INSIDE_EXTRA_EXCLUDES (9
   files), BROAD_EXCEPT_EXTRA_EXCLUDES (2 files), SIZE_EXTRA_EXCLUDES (standardized_service.py),
   OS_ENVIRON_EXTRA_EXCLUDES (\_env_bootstrap.py), deep import fix (logging.py), backward-compat comment fix
   (gcp_clients.py), performance_monitor noqa. UCI (unified-config-interface) passes QG exit 0 after: UP047 TypeVar → PEP
-  695 type param in loaders.py, E501 line-length fix in paths/registry.py, --block-network conftest fixture. T1 TIER
-  GREEN: CONFIRMED.
+  695 type param in loaders.py, E501 line-length fix in paths/registry.py, --block-network conftest fixture. NOT YET
+  DIRECTLY VALIDATED: bash scripts/quality-gates.sh has not been run directly by Claude for UTL or UCI in the current
+  session. Re-run QG for both T1 repos to confirm T1 TIER GREEN before advancing.
 - id: t2-deploy-structure content: "T2 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1 green] [7 agents PARALLEL, 1 per
   repo]: lib-phase5-t2-quality-gates (UMI, UTEI, UML, UFC, UPI, UDEI, USEI — per-library QG checklist);
   ci-quality-gates-missing-repos (UTEI, UPI); cohesion-umi-udc-dep-violation (CRITICAL: remove UDC from UMI
@@ -295,7 +297,7 @@ EXECUTED by their owning interface repos:
   uml-protocol-refactor (define ModelArtifactStore protocol in UML, remove direct UDC imports — UML must NOT import
   T3)." status: pending
 - id: t2-progressive-validation content: "T2 STEP D→E — PROGRESSIVE VALIDATION [7 agents PARALLEL] [REQUIRES: T0+T1
-  green]: D1 → D2 → D3 → D4 → D5. T2 TIER GREEN GATE = all 7 repos pass D5." status: done notes: | NOTE:
+  green]: D1 → D2 → D3 → D4 → D5. T2 TIER GREEN GATE = all 7 repos pass D5." status: pending notes: | NOTE:
   unified-portfolio-interface (UPI) does not exist in the workspace — repo absent, skipped. D1 PASS (2026-03-08): All 6
   present T2 repos ruff-clean after fixes. UMI: 0 errors. UFC: 0 errors. UML: 0 errors. UDC: 0 errors. UDEI: 0 errors.
   USEI: Fixed 5 I001 unsorted-imports; now 0 errors. D2 PASS (2026-03-08): All 6 T2 repos unit tests pass. UMI:
@@ -303,15 +305,17 @@ EXECUTED by their owning interface repos:
   repos at 0 basedpyright errors. UMI: fixed pyrightconfig extraPaths + asyncio.run() moved out of loop (removed
   duplicate \_safe_async_run from uniswapv4/uniswapv2/balancer adapters; import from \_async_utils.py). UDEI: 0 errors
   (pydantic model_validate and uniswap.py issues resolved). All repos: --block-network conftest fixture added +
-  pytest-socket installed. D4/D5 FULL QG PASS (2026-03-11): Gate is bash scripts/quality-gates.sh exit 0 (quickmerge
-  removed from requirement per plan note). UMI: ALL QUALITY GATES PASSED (RAW_JSON_EXTRA_EXCLUDES +
-  EMPTY_FALLBACK_EXTRA_EXCLUDES + DEEP_IMPORT_EXTRA_EXCLUDES + SIZE_EXTRA_EXCLUDES added; base-library.sh enhanced).
-  UTEI: ALL QUALITY GATES PASSED. UML: ALL QUALITY GATES PASSED (block-network conftest). UFC: ALL QUALITY GATES PASSED
-  (DEEP_IMPORT_EXTRA_EXCLUDES for service_base/base_service.py intra-package imports). UDC: ALL QUALITY GATES PASSED
-  (INSIDE_EXTRA_EXCLUDES for artifact_store.py lazy joblib; pd.isna type narrowing fix). UDEI: ALL QUALITY GATES PASSED
-  (DEEP_IMPORT_EXTRA_EXCLUDES for protocols/\_hyperliquid_schemas.py UAC deep import). USEI: ALL QUALITY GATES PASSED
-  (DEEP_IMPORT_EXTRA_EXCLUDES + SIZE_EXTRA_EXCLUDES for exchange adapters; MARKETS_URL regex fix for non-numeric fixture
-  IDs). T2 TIER GREEN: CONFIRMED.
+  pytest-socket installed. DIRECTLY VALIDATED BY CLAUDE (2026-03-11) — bash scripts/quality-gates.sh exit 0 confirmed:
+  ✅ UMI (unified-market-interface): ALL QUALITY GATES PASSED — 84.67% coverage, 0 type errors (multiple runs
+  confirmed). ✅ UTEI (unified-trade-execution-interface): ALL QUALITY GATES PASSED — 0 type errors (multiple runs
+  confirmed). ✅ USEI (unified-sports-execution-interface): ALL QUALITY GATES PASSED — 82.23% coverage, 0 type errors
+  (multiple runs confirmed; DEEP_IMPORT_EXTRA_EXCLUDES + SIZE_EXTRA_EXCLUDES for exchange adapters; MARKETS_URL regex
+  fix). ✅ UDEI (unified-defi-execution-interface): ALL QUALITY GATES PASSED — exit 0 confirmed. NOT YET DIRECTLY
+  VALIDATED (prior session notes claim passing, not confirmed by Claude in current session): ❌ UML
+  (unified-ml-library): claimed passing in prior notes but not run directly. ❌ UFC (unified-football-client): claimed
+  passing in prior notes but not run directly. ❌ UDC (unified-domain-client): claimed passing in prior notes but not
+  run directly. T2 TIER GREEN requires all 6 repos (UPI absent). 4/6 directly confirmed. Run QG for UML, UFC, UDC to
+  complete gate.
 - id: t3-udc-deploy-structure content: "T3 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1+T2 green]:
   lib-phase1-udc-tier2-compliance (replace CloudTarget/get_config/market_category imports from UTS with UCLI
   equivalents; remove unified-trading-services from UDC pyproject.toml; add unified-cloud-interface>=1.0.0,<2.0.0);
@@ -336,12 +340,13 @@ EXECUTED by their owning interface repos:
   UML, never reverse; ML services inject at runtime via protocol only, never import CloudModelArtifactStore directly)."
   status: pending
 - id: t3-udc-progressive-validation content: "T3 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0+T1+T2 green]: D1 → D2 →
-  D3 → D4 → D5. T3 TIER GREEN GATE = D5 passes. Phase 2 COMPLETE when T3 D5 passes." status: done notes: | D1 PASS
+  D3 → D4 → D5. T3 TIER GREEN GATE = D5 passes. Phase 2 COMPLETE when T3 D5 passes." status: pending notes: | D1 PASS
   (2026-03-08): ruff-clean (0 errors). D2 PASS (2026-03-08): 385/385 unit tests passed. D3 PASS (2026-03-08):
-  basedpyright 0 errors, 0 warnings, 0 notes. D4/D5 FULL QG PASS (2026-03-11): Gate is bash scripts/quality-gates.sh
-  exit 0. UDC ALL QUALITY GATES PASSED: INSIDE_EXTRA_EXCLUDES for artifact_store.py lazy joblib; pd.isna type narrowing
-  fix (instruction_schema.py); --block-network conftest added. T3 TIER GREEN: CONFIRMED. Phase 2 COMPLETE. isProject:
-  true
+  basedpyright 0 errors, 0 warnings, 0 notes. Prior session notes claim (2026-03-11): UDC ALL QUALITY GATES PASSED:
+  INSIDE_EXTRA_EXCLUDES for artifact_store.py lazy joblib; pd.isna type narrowing fix (instruction_schema.py);
+  --block-network conftest added. NOT YET DIRECTLY VALIDATED: bash scripts/quality-gates.sh has not been run directly by
+  Claude for UDC (unified-domain-client) in the current session. Re-run QG for UDC to confirm T3 TIER GREEN and Phase 2
+  COMPLETE. isProject: true
 
 ---
 

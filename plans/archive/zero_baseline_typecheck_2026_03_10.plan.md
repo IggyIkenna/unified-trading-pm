@@ -373,10 +373,10 @@ pandas-stubs does not support fully generic `pd.Series[T]` in all contexts.
 - `deployment-api/...deployment_manager.py` — dynamic object dispatch (runtime polymorphism via importlib) ✅
 - `deployment-api/...sync_service.py,auto_sync.py,event_processor.py` — dynamic backend objects ✅
 
-### ALLOWED — elysium-defi-lite (standalone fork, not production service)
+### ALLOWED — elysium-defi-system (standalone fork, not production service)
 
-- `elysium-defi-lite/src/...` — 6 occurrences in strategies/adapters: adapter.fetch_prices() returns `object` (Protocol
-  stub) ✅
+- `elysium-defi-system/src/...` — 6 occurrences in strategies/adapters: adapter.fetch_prices() returns `object`
+  (Protocol stub) ✅
 
 ### TODO — fixable with proper typing
 

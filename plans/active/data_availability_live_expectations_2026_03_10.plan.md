@@ -120,8 +120,6 @@ isProject: false
 
 # Plan: Data Availability vs Expectations (Live Monitoring)
 
-status: active priority: P0 owner: backend target: 2026-03-17
-
 ## Context
 
 `unified-internal-contracts` has staleness thresholds for onchain data per blockchain (`onchain_freshness.py`). Nothing
