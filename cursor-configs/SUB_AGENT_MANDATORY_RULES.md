@@ -147,6 +147,61 @@ isProject: false
 
 ---
 
+## §10 Readiness Checklist & Semver Rules
+
+### MANDATORY RULE: Check Readiness Before Claiming Stage Complete
+
+NEVER declare a repo has reached a readiness stage (CR1, CR2, DR3, BR3, etc.) unless ALL criteria for that stage are
+fully met. The criteria are defined in:
+
+- Template: `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
+- Per-repo: `cat {repo}/.readiness-ref` → gives path to `codex/10-audit/repos/{repo-name}.yaml`
+
+To check current declared state for a repo:
+
+```bash
+cat $(cat {repo}/.readiness-ref 2>/dev/null || echo "unified-trading-codex/10-audit/repos/{repo}.yaml")
+```
+
+### MANDATORY RULE: Three Axes — All Required
+
+Every repo has CR (Code), DR (Deployment), BR (Business) readiness. A repo is NEVER "done" by checking only one axis.
+Libraries satisfy DR and BR N/A for many items — but must declare N/A with reasons explicitly in their checklist file.
+
+Stage summary (full criteria in codex YAML):
+
+- CR1-CR5: functionality → unit tests → integration tests → QG → quickmerge
+- DR1-DR6: infra → CI smoke → feature env → SIT → load/perf → prod-ready (per batch/live mode)
+- BR1-BR8: acceptance criteria → circuit breaker → events → PnL targets → optimization → batch/live parity → USER
+  APPROVED
+
+### MANDATORY RULE: v1.0.0 Requires User Approval (BR8)
+
+NEVER set version = "1.0.0" in pyproject.toml or package.json autonomously. NEVER trigger a version dispatch that would
+result in a 1.0.0 tag. NEVER mark BR8 as complete without explicit user statement in the current session.
+
+If gates are met, present the checklist summary to the user and WAIT for explicit approval.
+
+### MANDATORY RULE: Pre-1.0.0 MAJOR → MINOR
+
+On 0.x.x repos: feat!: bumps MINOR (0.x.y → 0.x+1.0), never MAJOR (0.x.y → 1.0.0).
+
+### MANDATORY RULE: Per-Repo Semver Rules Lookup
+
+Before proposing ANY commit message prefix (feat!:, feat:, fix:):
+
+1. Read `semver_rules_ref` from `workspace-manifest.json` for this repo
+2. Read `unified-trading-pm/docs/per-repo-semver-rules.yaml` for this repo type
+3. Classify the actual change and verify the prefix matches
+4. If post-1.0.0 and change is MAJOR: STOP, report to user, do NOT quickmerge
+
+### MANDATORY RULE: Post-1.0.0 Major Bump Blocked
+
+On repos at version >=1.0.0, quickmerge.sh Stage 0.3 will BLOCK feat!: commits. The --user-approved flag is required.
+Agents MUST NOT pass --user-approved automatically.
+
+---
+
 **Venv vs testing:** `.venv-workspace` = IDE only. Tests use per-repo `.venv` via quality-gates.sh. See
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 
