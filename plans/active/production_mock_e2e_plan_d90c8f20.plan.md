@@ -67,9 +67,15 @@ todos:
   - id: phase2-service-mock-replay
     content: Add mock data replay E2E/integration tests for all services (live + batch)
     status: pending
+    notes:
+      "CI gate: deployment-smoke.yml on staging PRs runs these tests automatically. See
+      staging_deployment_mock_gate_2026_03_11.plan.md for the gate implementation."
   - id: phase2-error-events
     content: Add error handling and event propagation tests per service
     status: pending
+    notes:
+      "CI gate: deployment-smoke.yml on staging PRs runs these tests automatically. See
+      staging_deployment_mock_gate_2026_03_11.plan.md for the gate implementation."
   - id: phase2-load-memory
     content: Add load and memory behavior tests where applicable
     status: pending

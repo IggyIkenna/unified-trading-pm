@@ -1,0 +1,155 @@
+# deployment-smoke.yml — Per-repo staging deployment smoke gate
+# Rolled out to all 63 repos via propagation script (ds4).
+# Required status check: "Deployment Smoke / deployment-smoke"
+#
+# Logic:
+#   library | ui | infra → auto-pass (no container needed)
+#   service → docker-compose profile=service (PubSub + GCS + target)
+#   api     → docker-compose profile=api (GCS + target)
+
+name: Deployment Smoke
+
+on:
+  pull_request:
+    branches:
+      - staging
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+jobs:
+  deployment-smoke:
+    name: deployment-smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR source
+        uses: actions/checkout@v4
+
+      - name: Fetch repo type from workspace manifest
+        id: repo-type
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          MANIFEST=$(gh api \
+            repos/IggyIkenna/unified-trading-pm/contents/workspace-manifest.json \
+            --jq '.content' | base64 -d)
+          REPO_NAME="${{ github.event.repository.name }}"
+          REPO_TYPE=$(echo "$MANIFEST" | python3 -c "
+          import json, sys
+          manifest = json.load(sys.stdin)
+          repos = manifest.get('repositories', [])
+          for r in repos:
+              if r.get('name') == sys.argv[1]:
+                  print(r.get('repo_type', 'service'))
+                  sys.exit(0)
+          print('service')
+          " "$REPO_NAME")
+          echo "repo_type=$REPO_TYPE" >> "$GITHUB_OUTPUT"
+
+      - name: Auto-pass for library / ui / infra repos
+        if:
+          steps.repo-type.outputs.repo_type == 'library' || steps.repo-type.outputs.repo_type == 'ui' ||
+          steps.repo-type.outputs.repo_type == 'infra'
+        run: |
+          echo "Library/UI/infra repo — no deployment smoke needed. ✅"
+
+      - name: Set compose profile
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        id: compose-profile
+        run: |
+          if [ "${{ steps.repo-type.outputs.repo_type }}" = "api" ]; then
+            echo "profile=api" >> "$GITHUB_OUTPUT"
+          else
+            echo "profile=service" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout unified-trading-pm for compose template
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-pm
+          token: ${{ secrets.GH_PAT }}
+          path: unified-trading-pm
+
+      - name: Build and start service stack
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        env:
+          SERVICE_REPO: ${{ github.event.repository.name }}
+        timeout-minutes: 5
+        run: |
+          cp unified-trading-pm/docker/docker-compose.single.yml ./docker-compose.single.yml
+          docker compose -f docker-compose.single.yml \
+            --profile ${{ steps.compose-profile.outputs.profile }} \
+            up -d --build
+
+      - name: Wait for service health
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        timeout-minutes: 3
+        run: |
+          echo "Waiting for service to become healthy..."
+          for i in $(seq 1 18); do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "Service healthy ✅"
+              exit 0
+            fi
+            echo "Attempt $i/18 — not ready yet, waiting 10s..."
+            sleep 10
+          done
+          echo "Service failed to become healthy within 3 minutes ❌"
+          docker compose -f docker-compose.single.yml logs
+          exit 1
+
+      - name: Set up Python
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-timeout
+          if [ -f pyproject.toml ]; then
+            pip install -e ".[dev]" 2>/dev/null || pip install -e ".[test]" 2>/dev/null || true
+          fi
+
+      - name: Run deployment tests
+        if:
+          steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        run: |
+          # Run deployment_test-marked tests if they exist; fall back to tests/smoke/
+          if python -m pytest tests/ --collect-only -m deployment_test -q 2>/dev/null | grep -q "test session starts"; then
+            python -m pytest tests/ -m deployment_test --timeout=120 -q --tb=short
+          elif [ -d tests/smoke ]; then
+            python -m pytest tests/smoke/ --timeout=120 -q --tb=short
+          else
+            echo "No deployment_test markers or tests/smoke/ found — health check passed, skipping pytest. ✅"
+          fi
+
+      - name: Tear down stack
+        if:
+          always() && steps.repo-type.outputs.repo_type != 'library' && steps.repo-type.outputs.repo_type != 'ui' &&
+          steps.repo-type.outputs.repo_type != 'infra'
+        run: |
+          docker compose -f docker-compose.single.yml \
+            --profile ${{ steps.compose-profile.outputs.profile }} \
+            down -v --remove-orphans 2>/dev/null || true

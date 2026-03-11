@@ -1,0 +1,76 @@
+# docker-compose.single.yml — Parameterised single-service smoke stack
+# Used by deployment-smoke.yml GHA workflow on staging PRs.
+#
+# SERVICE_REPO env var: set by deployment-smoke.yml to ${{ github.event.repository.name }}
+# COMPOSE_PROFILE: "service" for T3/T4, "api" for T5
+#
+# Profiles:
+#   service: pubsub-emulator + gcs-emulator + target-service
+#   api:     gcs-emulator + target-service (no PubSub)
+#
+# Libraries and UIs: deployment-smoke.yml auto-passes (this file is not used for them).
+
+version: "3.9"
+
+x-mock-env: &mock-env
+  CLOUD_PROVIDER: local
+  CLOUD_MOCK_MODE: "true"
+  PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+  STORAGE_EMULATOR_HOST: http://gcs-emulator:4443
+  BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+  LOG_LEVEL: INFO
+
+services:
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    command: >
+      gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=mock-project
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    profiles:
+      - service
+
+  gcs-emulator:
+    image: fsouza/fake-gcs-server:latest
+    ports:
+      - "4443:4443"
+    command: -scheme http -port 4443
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4443/storage/v1/b"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    profiles:
+      - service
+      - api
+
+  target-service:
+    build:
+      context: ../../${SERVICE_REPO:-execution-service}
+      dockerfile: Dockerfile
+    environment:
+      <<: *mock-env
+      SERVICE_PORT: "8000"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    depends_on:
+      pubsub-emulator:
+        condition: service_healthy
+      gcs-emulator:
+        condition: service_healthy
+    profiles:
+      - service
+      - api

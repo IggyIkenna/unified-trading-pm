@@ -108,7 +108,7 @@ todos:
       Each repo's `Dockerfile` must already exist (tracked in production_mock_e2e_plan h10-1 — docker-compose.mock.yml
       already builds each service from source using build: context: ../../{service}).
       CRITICAL: SERVICE_REPO env var is set by deployment-smoke.yml to `${{ github.event.repository.name }}`.
-    status: todo
+    status: done
     note: "Blocked only by availability of Dockerfiles. Most services already have them from docker-compose.mock.yml."
 
   - id: ds2-deployment-smoke-gha-template
@@ -144,7 +144,7 @@ todos:
 
       IMPORTANT: libraries/ui repos emit a soft-pass message: "Library repo — no deployment smoke needed. ✅"
       and exit 0. This ensures the status check always resolves (never stays pending).
-    status: todo
+    status: done
     blocked_by: ds1-docker-single-service-template
 
   # ─── PHASE 2: PER-REPO DEPLOYMENT TEST MARKERS ───
@@ -176,7 +176,7 @@ todos:
 
       This todo is satisfied when: ≥1 deployment_test-marked test exists in each T4+T5 repo.
       Full coverage (all integration tests marked) tracked in production_mock_e2e_plan phase2-service-mock-replay.
-    status: todo
+    status: done
 
   # ─── PHASE 3: ROLLOUT ───
 
@@ -239,7 +239,7 @@ todos:
          See staging_deployment_mock_gate_2026_03_11.plan.md for the gate implementation."
 
       This clarifies the relationship: production_mock_e2e = test CONTENT; this plan = CI WIRING.
-    status: todo
+    status: done
 
 isProject: false
 ---
