@@ -22,7 +22,7 @@ todos:
       "P1: Add moto[s3,secretsmanager,sqs]>=5.0.0 to unified-cloud-interface test deps; create
       tests/integration/test_aws_mode.py with @mock_aws coverage for S3StorageClient, AWSSecretClient, SQS queue; gate
       aws_migration codebuild-canary-run"
-    status: pending
+    status: completed
   - id: h1-1-pubsub-emulator
     content:
       "P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into unified-cloud-interface/tests/conftest.py and
@@ -71,7 +71,7 @@ todos:
       "P3: Create unified-trading-pm/scripts/dev/fixtures/fault_injection.py (FaultInjectionMiddleware — latency,
       error_rate, timeout_rate for httpx/aiohttp); add test_fault_scenarios.py to execution-service,
       market-data-service, unified-cloud-interface covering: timeout→circuit breaker, 429→backoff, cascade→alert event"
-    status: pending
+    status: done
   - id: h9-tick-replay
     content:
       "P3: Create unified-trading-pm/scripts/dev/fixtures/tick_replay.py (TickReplayEngine — reads mock_data_dev_project
@@ -82,12 +82,12 @@ todos:
     content:
       "P3: Wire ghcr.io/goccy/bigquery-emulator:latest (port 9050) into trading-analytics-api and client-reporting-api
       test suites via BIGQUERY_EMULATOR_HOST; document known emulator gaps in window functions"
-    status: pending
+    status: done
   - id: h1-4-secret-rotation-test
     content:
       "P3: Add tests/integration/test_secret_rotation.py to unified-cloud-interface using LocalSecretProvider (no
       emulator needed); validates rotation logic not currently tested"
-    status: pending
+    status: done
   - id: h5-1-cassette-drift
     content:
       "P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly 02:00 UTC; re-records
