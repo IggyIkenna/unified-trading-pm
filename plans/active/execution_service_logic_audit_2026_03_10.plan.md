@@ -1,6 +1,7 @@
 # execution-service Logic Audit & Test Hardening
 
-**Created**: 2026-03-10 **Status**: active **Owner**: Claude Code **Priority**: P1
+**Created**: 2026-03-10 **Status**: DONE ✅ (2026-03-11 — all 8 acceptance criteria complete) **Owner**: Claude Code
+**Priority**: P1
 
 ## Objective
 
@@ -98,14 +99,14 @@ For each tranche:
 
 ## Acceptance Criteria
 
-- [ ] T1: 3+ algorithm golden-path tests with concrete quantity/timing assertions
-- [ ] T2: 3+ converter tests with real fixture data (synthetic CSV/dict)
-- [ ] T3: PnL calculation verified with hand-computed expected values
-- [ ] T4: Factory tests with concrete instrument field assertions
-- [ ] T5: Validator tests explicitly assert exception types and messages
-- [ ] T6: Grid config tests assert expected algo name format
-- [ ] All hardened tests: 0 bare `except: pass` blocks (use `pytest.raises` or explicit skips)
-- [ ] Coverage stays >= 70% after removing gaming tests
+- [x] T1: 3+ algorithm golden-path tests with concrete quantity/timing assertions
+- [x] T2: 3+ converter tests with real fixture data (synthetic CSV/dict)
+- [x] T3: PnL calculation verified with hand-computed expected values
+- [x] T4: Factory tests with concrete instrument field assertions
+- [x] T5: Validator tests explicitly assert exception types and messages
+- [x] T6: Grid config tests assert expected algo name format
+- [x] All hardened tests: 0 bare `except: pass` blocks (use `pytest.raises` or explicit skips)
+- [x] Coverage stays >= 70% after removing gaming tests
 
 ## Files to Track
 

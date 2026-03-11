@@ -50,7 +50,7 @@ P5: Stream 5 — settlement backend + UI        (closes the attribution loop vis
 
 ### Phase B — Fee Reconciliation + Fee Schedule Infrastructure
 
-- [ ] **URDI**: Add `get_exchange_fee_schedule(venue, client_id)` to `BaseReferenceDataAdapter`; implement in Bybit and
+- [x] **URDI**: Add `get_exchange_fee_schedule(venue, client_id)` to `BaseReferenceDataAdapter`; implement in Bybit and
       OKX
 - [x] **trading-analytics-api**: Add `fee_schedule_store.py` (GCS-backed, PB entity + client link resolution)
 - [x] **trading-analytics-api**: Add `routes/prime_brokers.py` (CRUD for `PrimeBrokerEntity`)
@@ -70,7 +70,7 @@ P5: Stream 5 — settlement backend + UI        (closes the attribution loop vis
       (`services/funding_recon_engine.py`)
 - [x] **strategy-service**: Add `exchange_reported_amount`, `reconciliation_status`, `discrepancy_bps` to
       `SettlementDelta`
-- [ ] **batch-live-reconciliation-service**: Add `ReconStage.FEE_RECON` and `ReconStage.FUNDING_RECON` enum entries
+- [x] **batch-live-reconciliation-service**: Add `ReconStage.FEE_RECON` and `ReconStage.FUNDING_RECON` enum entries
 
 ### Phase D — Yield Reconciliation + Settlement Backend
 
@@ -78,10 +78,16 @@ P5: Stream 5 — settlement backend + UI        (closes the attribution loop vis
       `EigenLayerRewardReconciliation` (`services/yield_recon_engine.py`)
 - [x] **trading-analytics-api**: Add `routes/settlements.py` (submit/confirm/pending/residuals endpoints)
 - [x] **trading-analytics-api**: Add `settlements_store.py` (GCS-backed NDJSON)
-- [ ] **trading-analytics-api**: Wire existing empty stubs in `routes/recon.py` to GCS reads
+- [x] **trading-analytics-api**: Wire existing empty stubs in `routes/recon.py` to GCS reads
 - [x] **settlement-ui**: Add `Settlements.tsx` page (pending table + confirm form + residual donut)
 
 ### Phase E — P&L Attribution Loop Closure
+
+> ⚠️ **H2 SEQUENCING NOTE (2026-03-11):** Phase E's `UNEXPLAINED_PNL_RESIDUAL` UEI event is tracked in
+> `uei_pending_event_additions.plan.md`. Coordinate with recon_rebalancing and data_availability UEI batches to avoid
+> schemas.py conflicts. Also: `batch-live-reconciliation-service` changes in Phase C (`ReconStage` enum additions) must
+> be committed before `recon_rebalancing_order_recovery_2026_03_10` begins its own `ReconStage` additions — check
+> current enum state before Phase C additions to avoid duplication. Phase C items confirmed DONE 2026-03-11.
 
 - [x] **strategy-service**: Add `fee_recon_confirmed`, `funding_recon_confirmed`, `staking_recon_confirmed`,
       `eigenlayer_recon_confirmed` to `PnLAttribution`

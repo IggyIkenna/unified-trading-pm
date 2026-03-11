@@ -46,17 +46,20 @@ todos:
     content:
       "P0: Add test_cassette_schema_parity.py to UAC — validates every committed cassette against UAC Pydantic models on
       every commit"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h8-credential-free-gate
     content:
       "P0: Add credential-free CI gate to system-integration-tests — network_block_plugin.py + CLOUD_PROVIDER=local +
       CLOUD_MOCK_MODE=true; fails if any live network call escapes"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h2-moto-aws
     content:
       "P1: Add moto[s3,secretsmanager,sqs]>=5.0.0 to UCI test deps; create tests/integration/test_aws_mode.py with
       @mock_aws coverage for all UCI AWS provider impls; gates aws_migration codebuild canary"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h1-1-pubsub-emulator
     content:
       "P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into UCI + system-integration-tests conftest; run
@@ -67,13 +70,15 @@ todos:
       "P1: Add responses library fixtures for Hyperliquid REST (order place/cancel/query) in
       unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py; assert passthrough=False so zero live
       calls escape"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h3-websocket-simulator
     content:
       "P2: Create MockWebSocketFeed in unified-market-interface/tests/fixtures/mock_ws_server.py; add
       ws_ticks_binance/deribit/hyperliquid.json fixtures; add integration tests for UMI WS manager and execution-service
       deribit_ws"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h1-2-gcs-emulator
     content:
       "P2: Wire fsouza/fake-gcs-server (port 4443) into UCI + system-integration-tests conftest via
@@ -83,17 +88,20 @@ todos:
     content:
       "P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy/Infura JSON-RPC, and
       complete VCR cassette coverage for Databento/Tardis used endpoints"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h6-fault-injection
     content:
       "P3: Create FaultInjectionMiddleware in unified-trading-pm/scripts/dev/fixtures/fault_injection.py; add
       test_fault_scenarios.py to execution-service, market-data-service, UCI tests"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h9-tick-replay
     content:
       "P3: Create TickReplayEngine in unified-trading-pm/scripts/dev/fixtures/tick_replay.py; reads from
       mock_data_dev_project seed fixtures; freezegun integration; UAC-validated Tick schema"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h1-3-bigquery-emulator
     content:
       "P3: Wire ghcr.io/goccy/bigquery-emulator (port 9050) into trading-analytics-api and client-reporting-api test
@@ -103,17 +111,20 @@ todos:
     content:
       "P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly re-record cassettes vs real
       APIs, schema-level diff, GitHub issue + Telegram alert on drift"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h10-1-docker-compose-mock
     content:
       "P4: Create unified-trading-pm/docker/docker-compose.mock.yml — all T2/T3 services in CLOUD_MOCK_MODE=true,
       optional GCP emulator containers, seed fixture mounts"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h10-2-demo-mode-script
     content:
       "P4: Create unified-trading-pm/scripts/demo-mode.sh — single-command demo: starts all services (mock) + all UIs
       (VITE_MOCK_API=true) + seeds data; stakeholder-ready"
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
 isProject: false
 ---
 

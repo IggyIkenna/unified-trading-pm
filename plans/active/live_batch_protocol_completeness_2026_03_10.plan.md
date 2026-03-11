@@ -239,30 +239,30 @@ Remove from the 28-combination target; target is 26 combinations (13 services ×
 Each missing handler → create a dedicated `live_mode_handler.py` or `batch_handler.py` using the reference patterns in
 P1.1.
 
-**P1-TODO-01** `market-tick-data-service`: Create `cli/handlers/live_mode_handler.py` — wraps `DownloadHandler` but adds
-PubSub-style trigger (subscribe to INSTRUMENTS_READY, then run). Move live coordination event subscription out of
-`cli/main.py` into dedicated handler class.
+**P1-TODO-01** ✅ DONE `market-tick-data-service`: Create `cli/handlers/live_mode_handler.py` — wraps `DownloadHandler`
+but adds PubSub-style trigger (subscribe to INSTRUMENTS_READY, then run). Move live coordination event subscription out
+of `cli/main.py` into dedicated handler class.
 
-**P1-TODO-02** `features-volatility-service`: Create `cli/handlers/live_handler.py` — wire
+**P1-TODO-02** ✅ DONE `features-volatility-service`: Create `cli/handlers/live_handler.py` — wire
 `adapters/live_data_source.py` (already has `get_queue_client()` seam) into a handler run loop subscribing to candle
 events and writing to `broadcast_sink.py`.
 
-**P1-TODO-03** `features-calendar-service`: Create `cli/handlers/live_handler.py` — subscribe to upstream features-ready
-topic, re-compute calendar features on each event, publish to output topic. Remove "not yet implemented" stub from
-`batch_handler.py`.
+**P1-TODO-03** ✅ DONE `features-calendar-service`: Create `cli/handlers/live_handler.py` — subscribe to upstream
+features-ready topic, re-compute calendar features on each event, publish to output topic. Remove "not yet implemented"
+stub from `batch_handler.py`.
 
-**P1-TODO-04** `features-onchain-service`: Create `cli/handlers/live_handler.py` — wire `adapters/live_data_source.py`
-seam into run loop.
+**P1-TODO-04** ✅ DONE `features-onchain-service`: Create `cli/handlers/live_handler.py` — wire
+`adapters/live_data_source.py` seam into run loop.
 
 **P1-TODO-05** `features-commodity-service`: Create `cli/handlers/` directory with `live_handler.py` (PubSub subscribe
 to commodity data topic, publish signals) and `batch_handler.py` (GCS read/write, date-range). Add `--mode batch|live`
 to `cli/main.py`.
 
-**P1-TODO-06** `features-cross-instrument-service`: Create `cli/handlers/` directory with `live_handler.py` and
+**P1-TODO-06** ✅ DONE `features-cross-instrument-service`: Create `cli/handlers/` directory with `live_handler.py` and
 `batch_handler.py`. Implement both (currently all logic is TODO stubs — coordinate with FCIS backlog).
 
-**P1-TODO-07** `features-multi-timeframe-service`: Create `cli/handlers/` directory with `live_handler.py` (replace
-`orchestrator.run_live()` stub with real PubSub subscriber) and `batch_handler.py` (extract batch loop from
+**P1-TODO-07** ✅ DONE `features-multi-timeframe-service`: Create `cli/handlers/` directory with `live_handler.py`
+(replace `orchestrator.run_live()` stub with real PubSub subscriber) and `batch_handler.py` (extract batch loop from
 orchestrator).
 
 **P1-TODO-08** `market-data-processing-service`: Add `--mode batch|live` to `cli/parser.py`. Wire selection so
@@ -285,9 +285,9 @@ in repo `docs/` — exempt from live-mode handler requirement. Rename handlers t
 `cli/handlers/live_handler.py`. Add `--mode` to `cli/parser.py` choices (currently batch only). Align with codex
 pattern.
 
-**P1-TODO-14** `execution-service`: Add unified `--mode batch|live` flag to `cli/main.py` or `cli/argument_parser.py`
-(currently uses subcommands). Ensure `--mode live` routes to `live_execution_handler.py` and `--mode batch` routes to
-`batch_backtest.py`.
+**P1-TODO-14** ✅ DONE `execution-service`: Add unified `--mode batch|live` flag to `cli/main.py` or
+`cli/argument_parser.py` (currently uses subcommands). Ensure `--mode live` routes to `live_execution_handler.py` and
+`--mode batch` routes to `batch_backtest.py`.
 
 **P1-TODO-15** (all services with seam-only live tests): Add `test_live_mode_handler.py` unit tests for FDS, FVS, FCS,
 FOS, STR — test the handler class directly with mocked transport, not just importability.

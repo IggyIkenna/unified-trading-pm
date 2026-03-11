@@ -247,10 +247,10 @@ After recording: confirm cassette file exists and vcr_endpoints.py entry has a n
 
 ## Env Var Inconsistencies — Already Fixed / TODO
 
-| Fixed?   | Was (wrong)      | Now (correct)        | Location fixed                                      |
-| -------- | ---------------- | -------------------- | --------------------------------------------------- |
-| ✅ Done  | THEGRAPH_API_KEY | THE_GRAPH_API_KEY    | uniswapv2_adapter.py, uniswapv4_adapter.py          |
-| [ ] TODO | API_FOOTBALL_KEY | API_FOOTBALL_API_KEY | sports-betting-services/footballbets/core/config.py |
+| Fixed?   | Was (wrong)      | Now (correct)        | Location fixed                                                    |
+| -------- | ---------------- | -------------------- | ----------------------------------------------------------------- |
+| ✅ Done  | THEGRAPH_API_KEY | THE_GRAPH_API_KEY    | uniswapv2_adapter.py, uniswapv4_adapter.py                        |
+| [x] Done | API_FOOTBALL_KEY | API_FOOTBALL_API_KEY | N/A — target file absent; vcr_endpoints uses API_FOOTBALL_API_KEY |
 
 ---
 

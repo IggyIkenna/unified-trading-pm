@@ -15,7 +15,8 @@ todos:
     content:
       Layer 2–3 — deployment-service verify_infra.py; system-integration-tests smoke + full_e2e (blocks first
       deployment)
-    status: pending
+    status: done
+    notes: "DONE 2026-03-11: verify_infra.py, smoke + full_e2e wired in system-integration-tests"
   - id: portable-backtests-cefi-tradfi-defi
     content: Portable backtests — CEFI, TradFi, DeFi via run_parallel_backtests.sh and runners
     status: completed

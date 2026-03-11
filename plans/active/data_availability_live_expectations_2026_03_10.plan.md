@@ -113,6 +113,11 @@ def assert_market_data_fresh(venue: str, last_tick_ts: datetime) -> None:
 
 ## Phase 2: New UEI events
 
+> ⚠️ **H1 CONSOLIDATION NOTE (2026-03-11):** These 5 UEI events are tracked in the consolidated plan
+> `uei_pending_event_additions.plan.md` along with events from recon_rebalancing and position_precision_pnl. All UEI
+> event additions must be batched into a single PR to avoid merge conflicts on schemas.py. Do not add these events
+> independently — coordinate via the consolidated plan.
+
 ### P2.1 — Add to unified-events-interface/schemas.py
 
 ```python
@@ -169,7 +174,7 @@ File: `system-integration-tests/tests/integration/test_data_freshness.py`
 
 ## Verification Gates
 
-- [ ] All 30 data sources have `DataFreshnessContract` entries
+- [x] All 30 data sources have `DataFreshnessContract` entries
 - [ ] `FreshnessMonitor` wired in all 10 data-producing services
 - [ ] `strategy-service` and `execution-service` have freshness gates blocking stale data
 - [ ] SIT freshness test green

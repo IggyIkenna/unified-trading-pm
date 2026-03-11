@@ -15,7 +15,7 @@ complete, schema-valid dataset in the GCP dev project within 5 minutes, zero liv
 
 ## Phase 0: Define seed data spec
 
-### P0.1 — Seed spec file
+### P0.1 — Seed spec file ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/fixtures/seed_spec.yaml`
 
@@ -57,7 +57,7 @@ modes:
     symbols_override: null
 ```
 
-### P0.2 — Data format validation
+### P0.2 — Data format validation ✅ DONE 2026-03-11
 
 All seed data must:
 
@@ -70,7 +70,7 @@ All seed data must:
 
 ## Phase 1: Synthetic data generator
 
-### P1.1 — Generator script
+### P1.1 — Generator script ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/generate_synthetic_data.py`
 
@@ -92,7 +92,7 @@ class SyntheticDataGenerator:
     def generate_match_odds(self, league: str, ...) -> pd.DataFrame: ...
 ```
 
-### P1.2 — Instruments metadata seeder
+### P1.2 — Instruments metadata seeder ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/seed_instruments.py`
 
@@ -109,7 +109,7 @@ All validated against UIC `InstrumentSchema` before writing.
 
 ## Phase 2: GCS seed script
 
-### P2.1 — Main seed script
+### P2.1 — Main seed script ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/seed-dev-project.sh`
 
@@ -145,7 +145,7 @@ python scripts/dev/seed_ml_artifacts.py --project unified-trading-dev $DRY_RUN
 step "Done. Seed data available in unified-trading-dev project."
 ```
 
-### P2.2 — Feature seeder
+### P2.2 — Feature seeder ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/seed_features.py`
 
@@ -158,7 +158,7 @@ Sequence:
 2. Run `features-cross-instrument`, `features-commodity` in parallel
 3. Run `features-multi-timeframe` (depends on above)
 
-### P2.3 — ML artifact seeder
+### P2.3 — ML artifact seeder ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/seed_ml_artifacts.py`
 
@@ -198,7 +198,7 @@ Creates BigQuery dataset + tables with correct schemas:
 
 ## Phase 4: Schema validation
 
-### P4.1 — Seed validator
+### P4.1 — Seed validator ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/scripts/dev/seed_validator.py`
 

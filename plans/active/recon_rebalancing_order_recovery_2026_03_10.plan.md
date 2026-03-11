@@ -2,6 +2,18 @@
 
 status: active priority: P0 owner: backend target: 2026-03-19
 
+> ⚠️ **M4 SEQUENCING NOTE (2026-03-11):** This plan adds 8 UEI events to `unified-events-interface/schemas.py`. These
+> events are tracked in `uei_pending_event_additions.plan.md` — coordinate all UEI additions as a single PR batch to
+> avoid schemas.py merge conflicts.
+>
+> **M5 UNBLOCKED (2026-03-11):** `error_normalisation_unknown_exchanges_2026_03_10` Phase 1 (P1.1
+> `CanonicalUnknownVenueError`) is now DONE. The dependency that was blocking `CorrectionDispatcher` (Stream A) is
+> resolved. This plan is now unblocked for implementation.
+>
+> **M4 SEQUENCING NOTE (Grafana):** Commit all `strategy-service` changes in this plan before
+> `strategy_visibility_grafana_2026_03_10` begins. Grafana plan depends on `DEFI_VAULT_REBALANCED` and other events from
+> this plan being in strategy-service schemas.
+
 ## Context
 
 `position-balance-monitor-service` has a reconciliation engine (`PBS/core/reconciliation_engine.py`) that compares

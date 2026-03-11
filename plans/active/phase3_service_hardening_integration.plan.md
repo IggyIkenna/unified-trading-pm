@@ -352,7 +352,7 @@ todos:
       entries. Layer 2 runs ONLY after successful deployment — never in quickmerge, never pre-deploy. This is
       infrastructure verification via deployment-service/scripts/verify_infra.py. Quickmerge (with Layer 1.5) is the
       last local gate. REQUIRES: deployment-service extracted (Phase 1 STREAM B) + all tiers green."
-    status: pending
+    status: done
   - id: p3-integration-layer3
     content:
       "INTEGRATION LAYER 3 — PIPELINE SMOKE + E2E (system-integration-tests/ repo, post-deploy): Layer 3a (smoke,
@@ -360,7 +360,7 @@ todos:
       (full, @pytest.mark.full_e2e, 15–30 min): corner cases, auth, multi-date, perf baseline. Sequential: 3a must pass
       before 3b. Zero Python imports from services — HTTP/GCS/PubSub interaction only. REQUIRES:
       system-integration-tests repo (Phase 1 STREAM B) + ALL tiers green + Layer 2 passes."
-    status: pending
+    status: done
   - id: p3-postrefactor-sandbox-deploy
     content:
       "POST-REFACTOR STEP 1 — SANDBOX DEPLOY: REQUIRES all T0–T6 green + final QG sweep done.

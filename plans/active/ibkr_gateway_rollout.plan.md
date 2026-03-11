@@ -62,7 +62,8 @@ todos:
     content:
       "Wire ibkr-gateway-infra into deployment-service: add to runtime-topology.yaml, add Cloud Run service definition.
       Ensure IB Gateway credentials (ibkr-account-credentials) are in Secret Manager before deploy."
-    status: todo
+    status: done
+    notes: "DONE 2026-03-11: runtime-topology.yaml updated, terraform/infra/ibkr-gateway wired"
   - id: ibkr-sm-credentials
     content:
       "Add IBKR credentials to GCP Secret Manager as 'ibkr-account-credentials'. Resolves the [EXTERNAL] blocker in

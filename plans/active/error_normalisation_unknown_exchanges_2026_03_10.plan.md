@@ -105,7 +105,13 @@ occurrences.
 
 ## Phase 1: Canonical error schema extensions
 
-### P1.1 — Add CanonicalUnknownVenueError
+> ⚠️ **C2 CONFLICT NOTE (2026-03-11):** `execution-service/engine/circuit_breaker.py` was already modified by
+> `institutional_hardening_2026_03_10` (DONE) to add exponential backoff and DEGRADED state machine. P2.2+ in this plan
+> must integrate with the existing DEGRADED-state circuit breaker — do NOT overwrite or revert the exponential
+> backoff/DEGRADED state machine. Read the current `circuit_breaker.py` before implementing P2.2+ and extend rather than
+> replace.
+
+### P1.1 — Add CanonicalUnknownVenueError ✅ DONE 2026-03-11
 
 File: `unified-api-contracts/unified_api_contracts/unified_normalised_contracts/errors.py`
 
@@ -121,7 +127,7 @@ class CanonicalUnknownVenueError(CanonicalError):
 
 Export from `unified_api_contracts/__init__.py`.
 
-### P1.2 — Add UEI event UNKNOWN_VENUE_ERROR_RECEIVED
+### P1.2 — Add UEI event UNKNOWN_VENUE_ERROR_RECEIVED ✅ DONE 2026-03-11
 
 File: `unified-events-interface/unified_events_interface/schemas.py` Add to `EventType` enum:
 
@@ -132,7 +138,7 @@ UNKNOWN_VENUE_ERROR_RECEIVED = "UNKNOWN_VENUE_ERROR_RECEIVED"
 Payload schema fields: `venue`, `raw_code`, `raw_message`, `endpoint`, `order_id` (optional), `timestamp`. This event
 feeds the normalisation backlog — ops team reviews weekly and adds missing codes.
 
-### P1.3 — Circuit breaker config schema
+### P1.3 — Circuit breaker config schema ✅ DONE 2026-03-11
 
 File: `unified-internal-contracts/unified_internal_contracts/reference/circuit_breaker_config.py`
 
@@ -146,7 +152,7 @@ class VenueCircuitBreakerConfig(BaseModel):
     environment: str = "production"         # "production" | "staging" | "dev"
 ```
 
-### P1.4 — Write circuit_breaker_config.yaml
+### P1.4 — Write circuit_breaker_config.yaml ✅ DONE 2026-03-11
 
 File: `unified-trading-pm/configs/circuit_breaker_config.yaml`
 
@@ -212,7 +218,7 @@ dev_overrides: # all venues in dev/staging
 
 ## Phase 2: Circuit breaker hardening
 
-### P2.1 — Load config in circuit_breaker.py
+### P2.1 — Load config in circuit_breaker.py ✅ DONE 2026-03-11
 
 File: `execution-service/execution_service/engine/circuit_breaker.py`
 
@@ -304,7 +310,7 @@ File: `system-integration-tests/tests/integration/test_error_normalisation.py`
 
 - [ ] Zero bare `except Exception` without `CanonicalUnknownVenueError` wrapping in adapters
 - [ ] `VENUE_ERROR_MAP` covers all 33 venues from `UMI factory.py`
-- [ ] Circuit breaker thresholds loaded from YAML, not hardcoded
+- [x] Circuit breaker thresholds loaded from YAML, not hardcoded
 - [ ] SIT tests P4.1–P4.3 all green
 - [ ] `rg "record_failure" execution-service/` — all calls pass `CanonicalError` instance
 - [ ] `unified-trading-pm/audits/venue_error_coverage_2026_03_10.md` documents 100% coverage

@@ -139,6 +139,10 @@ todos:
       BLOCKED on external secret setup: requires human to run:
       gh secret set ANTHROPIC_API_KEY --repo IggyIkenna/system-integration-tests
       Cannot be done in an agent session without the key value being provided interactively.
+      M2 CONFLICT NOTE (2026-03-11): When bootstrap-telegram and set-anthropic-api-key-sit unblock,
+      semver-agent.yml has already been modified by cicd_versioning_cloud_build_2026_03_11 (DONE).
+      Read the CURRENT semver-agent.yml before making any further edits — do NOT overwrite existing
+      functionality. Extend rather than replace.
   - id: repos-update-pm-plans-in-gha
     content: >-
       Each service repo's agent-audit.yml adds a post-quickmerge step: after successful QG run, clone PM sibling

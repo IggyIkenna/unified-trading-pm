@@ -1,7 +1,13 @@
 # Zero Baseline Typecheck — Full Remediation Plan
 
-**Created:** 2026-03-10 **Status:** COMPLETE ✅ (2026-03-11) **SSOT-INDEX:** register under `08-type-safety` **Linked
-codex section:** `unified-trading-codex/06-coding-standards/README.md`
+**Created:** 2026-03-10 **Status:** Phases 1–8 COMPLETE ✅ | Phase 9 IN PROGRESS **SSOT-INDEX:** register under
+`08-type-safety` **Linked codex section:** `unified-trading-codex/06-coding-standards/README.md`
+
+> ⚠️ **M3 SEQUENCING NOTE (2026-03-11):** Phase 9 TODO items in `funding_recon_engine.py:214` and
+> `yield_recon_engine.py:280` (severity arg-type fixes) depend on `position_precision_pnl_hardening` Phase C being
+> committed first — those files were created by that plan. Do not attempt the `funding_recon_engine.py` and
+> `yield_recon_engine.py` Phase 9 fixes until Phase C from `position_precision_pnl_hardening_2026_03_11` is confirmed
+> merged.
 
 ## Goal
 
@@ -58,15 +64,15 @@ each repo shows `0 errors, 0 warnings, 0 notes`.
 
 ### `stubs/nautilus_trader/cache.pyi`
 
-- [ ] `Cache.account(venue) -> Account | None` (was `object`)
-- [ ] `Cache.positions() -> list[Position]` (was `list[object]`)
-- [ ] `Cache.orders() -> list[Order]`
-- [ ] `Cache.order(client_order_id) -> Order | None`
-- [ ] `Cache.instrument(instrument_id) -> Instrument | None`
-- [ ] `Cache.instruments() -> list[Instrument]`
-- [ ] `Cache.bar(bar_type) -> Bar | None`
-- [ ] `Cache.quote_tick(instrument_id) -> QuoteTick | None`
-- [ ] `Cache.trade_tick(instrument_id) -> TradeTick | None`
+- [x] `Cache.account(venue) -> Account | None` (was `object`)
+- [x] `Cache.positions() -> list[Position]` (was `list[object]`)
+- [x] `Cache.orders() -> list[Order]`
+- [x] `Cache.order(client_order_id) -> Order | None`
+- [x] `Cache.instrument(instrument_id) -> Instrument | None`
+- [x] `Cache.instruments() -> list[Instrument]`
+- [x] `Cache.bar(bar_type) -> Bar | None`
+- [x] `Cache.quote_tick(instrument_id) -> QuoteTick | None`
+- [x] `Cache.trade_tick(instrument_id) -> TradeTick | None`
 
 ### `stubs/nautilus_trader/model/objects.pyi`
 

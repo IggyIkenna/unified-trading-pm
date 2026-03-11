@@ -334,7 +334,12 @@ todos:
       unified-trading-pm/scripts/propagation/rollout-npm-versions.py. Score FAIL if any UI repo has stale package-lock
       or testing_level=none.
     status: pending
-    note: "Added 2026-03-10 — not yet audited. Previously no audit coverage for UI repos beyond manifest registration."
+    note: |
+      Added 2026-03-10. M6 UPDATE (2026-03-11): ui_design_system_upgrade_2026_03_10 (DONE) added vitest
+      to all 11 UI repos. Re-run Section 16 audit against current state — expected result: all 11 UI repos
+      now pass testing_level check (vitest present). 3 UI repos (trading-analytics-ui,
+      execution-analytics-ui, batch-audit-ui) were flagged as FAIL §16 in the 2026-03-11 full audit;
+      verify these are resolved post ui_design_system_upgrade.
 
   - id: audit-tooling-ssot-quality
     content: >-

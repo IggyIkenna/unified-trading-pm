@@ -15,7 +15,7 @@ or regressions.
 
 ## Phase 0: Performance targets
 
-### P0.1 — Define targets
+### P0.1 — Define targets ✅ DONE 2026-03-11
 
 File: `unified-trading-codex/06-coding-standards/performance-targets.md` (new)
 
@@ -55,7 +55,7 @@ File: `unified-trading-codex/06-coding-standards/performance-targets.md` (new)
 
 ## Phase 1: Extend existing execution-service benchmarks
 
-### P1.1 — Add latency histogram to existing benchmarks
+### P1.1 — Add latency histogram to existing benchmarks ✅ DONE 2026-03-11
 
 Files: `execution-service/benchmarks/test_algorithm_performance.py`,
 `execution-service/benchmarks/test_matching_engine_performance.py`
@@ -90,7 +90,7 @@ async def test_order_submission_p99_within_500ms(mock_venue):
 
 ## Phase 2: System-level performance test suite
 
-### P2.1 — SIT performance directory
+### P2.1 — SIT performance directory ✅ DONE 2026-03-11
 
 Directory: `system-integration-tests/tests/performance/`
 
@@ -106,7 +106,7 @@ performance/
 └── test_pubsub_throughput.py      # event bus throughput
 ```
 
-### P2.2 — Load scenarios (applied to every test)
+### P2.2 — Load scenarios (applied to every test) ✅ DONE 2026-03-11
 
 ```python
 # In conftest_performance.py

@@ -192,10 +192,10 @@ In the `contract-adoption-check` job, add two new steps after the existing UIC/U
 | --------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
 | `unified-internal-contracts/scripts/check_uic_completeness.py`        | CREATE                                     | ✅ Done (94411e6) — 0 missing                      |
 | `unified-api-contracts/scripts/check_uac_completeness.py`             | CREATE                                     | ✅ Done (3761420) — 163 missing (curation backlog) |
-| `unified-internal-contracts/unified_internal_contracts/__init__.py`   | ADD 10 missing domain classes to `__all__` | Pending                                            |
-| `system-integration-tests/tests/integration/test_uic_completeness.py` | CREATE                                     | Pending                                            |
-| `system-integration-tests/tests/integration/test_uac_completeness.py` | CREATE                                     | Pending                                            |
-| `system-integration-tests/.github/workflows/smoke-test-gate.yml`      | ADD 2 new steps (warn-mode)                | Pending                                            |
+| `unified-internal-contracts/unified_internal_contracts/__init__.py`   | ADD 10 missing domain classes to `__all__` | Done                                               |
+| `system-integration-tests/tests/integration/test_uic_completeness.py` | CREATE                                     | Done                                               |
+| `system-integration-tests/tests/integration/test_uac_completeness.py` | CREATE                                     | Done                                               |
+| `system-integration-tests/.github/workflows/smoke-test-gate.yml`      | ADD 2 new steps (warn-mode)                | Done                                               |
 
 ## Baseline Results (2026-03-10)
 

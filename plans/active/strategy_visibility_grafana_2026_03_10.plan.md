@@ -2,6 +2,11 @@
 
 status: active priority: P1 owner: fullstack/backend target: 2026-03-21
 
+> ⚠️ **M4 SEQUENCING NOTE (2026-03-11):** This plan depends on `recon_rebalancing_order_recovery_2026_03_10` being
+> committed to `strategy-service` first. Grafana dashboards reference `DEFI_VAULT_REBALANCED` and other events/metrics
+> from the recon_rebalancing plan. Do not begin Grafana integration (Phase 2+) until recon_rebalancing strategy-service
+> changes are merged.
+
 ## Context
 
 alerting-service exposes Prometheus metrics (RECORDS_PROCESSED, PROCESSING_LATENCY). strategy-service has

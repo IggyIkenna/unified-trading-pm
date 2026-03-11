@@ -202,14 +202,22 @@ Do NOT run: `uv`, `basedpyright`, `pytest`, `ruff`, `pip` — this is a UI-only 
 
 ## Per-Repo Migration Checklist
 
+> ⚠️ **H3 SCOPE CONSTRAINT (2026-03-11):** `ui_design_system_upgrade_2026_03_10` (DONE) already extracted design tokens,
+> base components (dark terminal aesthetic), layout system, and mock infrastructure into `@unified-trading/ui-kit`
+> across all 11 UI repos. Migration todos here MUST NOT re-extract those items into `@unified-admin/core`. Scope of
+> `@unified-admin/core` is strictly: **auth patterns** (token fetch/refresh, session management) and **API client
+> patterns** (base URL, headers, interceptors, error handling). Do not extract design tokens, base components, layout,
+> charts, or mock infrastructure.
+
 For each of the 11 UI repos during migration:
 
-1. Audit for duplicated: Vite config, TS config, ESLint config, auth logic, API client, shared components
-2. Move net-new duplicates (not yet in core) to `packages/core`
+1. Audit for duplicated: **auth logic** (token fetch/refresh) and **API client setup** (base URL, headers, interceptors)
+   only
+2. Move net-new auth/API client duplicates (not yet in core) to `packages/core`
 3. Update all imports to `@unified-admin/core`
 4. Run `npm test`; fix failures; update coverage to >80%
 5. Delete superseded top-level files
-6. Commit: `"refactor(<repo>): extract duplicates to @unified-admin/core"`
+6. Commit: `"refactor(<repo>): extract auth/api-client to @unified-admin/core"`
 
 ## Standards
 
