@@ -57,10 +57,10 @@ todos:
          0.10.0 instead of 1.0.0. The 1.0.0 cross ALWAYS requires human approval via the issue flow.
       3. Current label used by semver-agent is "major-bump-approval" — change to "major-bump-pending"
          for consistency with the new handler.
-    status: todo
+    status: done
     note: |
-      Telegram step: send AFTER gh issue create so we can embed the issue URL.
-      issue_url=$(gh issue create ... --json url --jq '.url') → use output variable.
+      Done 2026-03-11 — commit b99a826. Label fixed to major-bump-pending, Telegram alert added,
+      metadata JSON block embedded in issue body. MINOR overflow cap comment added.
 
   - id: s1b-create-request-major-bump-workflow
     content: |
@@ -82,7 +82,8 @@ todos:
 
       This replaces the existing major-bump-approval.yml's "immediately dispatch" pattern.
       The old major-bump-approval.yml becomes a deprecated alias (add header: DEPRECATED — use request-major-bump.yml).
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit b99a826. request-major-bump.yml created with workflow_dispatch + issue + Telegram."
 
   - id: s1c-create-major-bump-issue-handler
     content: |
@@ -123,8 +124,9 @@ todos:
 
       IMPORTANT: Use `|| true` on Telegram curl so workflow never fails due to Telegram unavailability.
       IMPORTANT: The step that bumps pyproject.toml must run ONLY on /approve (not /reject or unrecognized).
-    status: todo
+    status: done
     blocked_by: s1a-update-semver-agent-telegram
+    note: "Done 2026-03-11 — commit b99a826. major-bump-issue-handler.yml created with full /approve and /reject flows."
 
   - id: s1d-update-approve-major-bump-script
     content: |
@@ -139,8 +141,9 @@ todos:
 
       Update the INPUTS_JSON to match request-major-bump.yml inputs (proposed_version, reason, approver).
       Update the workflow URL from major-bump-approval.yml to request-major-bump.yml.
-    status: todo
+    status: done
     blocked_by: s1b-create-request-major-bump-workflow
+    note: "Done 2026-03-11 — commit b99a826. approve-major-bump.sh updated to use request-major-bump.yml."
 
   - id: s1e-propagate-issue-handler-to-all-repos
     content: |
@@ -155,7 +158,7 @@ todos:
          Add DEPRECATED header comment pointing to request-major-bump.yml.
     status: todo
     blocked_by: s1c-create-major-bump-issue-handler
-    note: "Propagation runs after all template files are finalized and committed."
+    note: "Pending — templates finalized in b99a826. Rollout to all 65 repos is next step."
 
   # ─── STREAM 2: RULES PROPAGATION ───
 
@@ -214,7 +217,9 @@ todos:
       On 0.x.x repos: feat!: bumps MINOR (0.x.y → 0.x+1.0), NOT MAJOR.
       Semver-agent.yml enforces this. No agent should auto-generate 1.0.0.
       MINOR overflow cap: 0.9.x + MINOR → 0.10.0 (NOT 1.0.0). Hard cap.
-    status: todo
+    status: done
+    note:
+      "Done 2026-03-11 — commit dd02598. major-bump-approval-required.mdc created (alwaysApply: true, priority: 99)."
 
   - id: s2b-agents-md-strengthen-major-bump
     content: |
@@ -236,7 +241,8 @@ todos:
         - Edit pyproject.toml to increase MAJOR version
         - Dispatch version-bump events with MAJOR version increase
         - Comment /approve on major-bump-pending issues (agents cannot self-approve)
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit dd02598. AGENTS.md §10 MAJOR Bump Approval Gate subsection added."
 
   - id: s2c-sub-agent-rules-major-bump
     content: |
@@ -258,7 +264,8 @@ todos:
          Requires human approval. Run: bash scripts/approve-major-bump.sh {repo} {X+1}.0.0 --reason '...' --admin-pat $GH_PAT"
 
       This rule has NO exceptions — not for infra repos, not for 0.x.x → 1.0.0, not for "obvious" cases.
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit dd02598. ABSOLUTE PROHIBITION subsection added to SUB_AGENT_MANDATORY_RULES.md §10."
 
   - id: s2d-overnight-orchestrator-inject-prohibition
     content: |
@@ -275,7 +282,9 @@ todos:
        Any attempt to bypass this rule will be detected by rules-alignment-agent.yml."
 
       This injection must appear BEFORE the existing prompt text in each tier.
-    status: todo
+    status: done
+    note:
+      "Done 2026-03-11 — commit dd02598. MAJOR BUMP PROHIBITION block injected at top of all 4 tier heredocs (T0–T3)."
 
   - id: s2e-rules-alignment-check-major-bump
     content: |
@@ -290,7 +299,9 @@ todos:
       4. Always advisory (warn, not fail) — but Telegram alert is mandatory
 
       This gives an audit trail and catches any policy bypasses.
-    status: todo
+    status: done
+    note:
+      "Done 2026-03-11 — commit dd02598. Compliance audit step added to rules-alignment-agent.yml (advisory, exit 0)."
 
   # ─── STREAM 3: CODEX STANDARDS UPDATE ───
 
@@ -305,7 +316,8 @@ todos:
       - Monitoring: rules-alignment-agent.yml audits compliance daily
       - Reference: unified-trading-pm/scripts/propagation/templates/major-bump-issue-handler.yml
       - Reference: unified-trading-pm/scripts/approve-major-bump.sh
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit 9e51dcf (codex feat/v1.0.0-release branch). semver.md created with full gate spec."
 
 isProject: false
 ---
