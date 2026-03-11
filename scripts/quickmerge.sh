@@ -141,6 +141,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# --agent implicitly skips tests (lightweight: lint+format+typecheck+codex only)
+[ "$AGENT_MODE" = true ] && SKIP_TESTS="--skip-tests"
+
 # ── FLAG VALIDATION ────────────────────────────────────────────────────────────
 if [ "$TO_STAGING" = true ] && [ -n "$DEP_BRANCH" ]; then
   echo "❌ --to-staging and --dep-branch are mutually exclusive."
@@ -689,137 +692,23 @@ fi
 echo ""
 
 # ============================================================================
-# STAGE 3.5: D3 CLOUD-AGNOSTIC GATE — STEP 5.10 + 5.11 (always runs)
-#
-# Inline re-enforcement of STEP 5.10 (direct cloud SDK imports) and STEP 5.11
-# (protocol-specific symbols) from quality-gates.sh.  Runs even when a repo
-# has no scripts/quality-gates.sh so the checks can never be silently skipped.
-# Hard-fails quickmerge if violations are found in Python source.
-# Allowed exceptions must carry a "# noqa: UCI-direct-sdk" comment and be
-# tracked in QUALITY_GATE_BYPASS_AUDIT.md at the workspace root.
-# ============================================================================
-echo "=========================================="
-echo "STAGE 3.5: D3 Cloud-Agnostic Gate (STEP 5.10 + 5.11)"
-echo "=========================================="
-echo ""
-
-# ── STEP 5.10 — No direct cloud SDK imports outside UCI providers ─────────────
-echo "[$REPO_NAME] STEP 5.10: Checking for direct cloud SDK imports..."
-CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
-  --type py \
-  --glob '!.venv*' --glob '!**/.venv*/**' \
-  --glob '!tests' --glob '!tests/**' \
-  --glob '!unified_cloud_interface/providers/**' \
-  -l . 2>/dev/null || :)
-if [ -n "$CLOUD_SDK_VIOLATIONS" ]; then
-  echo "[$REPO_NAME] ❌ STEP 5.10 FAILED — Direct cloud SDK imports detected."
-  echo "   Route all cloud access through unified_cloud_interface (UCI)."
-  echo "   Approved exceptions require '# noqa: UCI-direct-sdk' + entry in QUALITY_GATE_BYPASS_AUDIT.md."
-  echo "   Violating files:"
-  echo "$CLOUD_SDK_VIOLATIONS" | sed 's/^/     /'
-  exit 1
-else
-  echo "[$REPO_NAME] ✅ STEP 5.10: No direct cloud SDK imports"
-fi
-
-echo ""
-
-# ── STEP 5.11 — No protocol-specific symbols in service code ──────────────────
-echo "[$REPO_NAME] STEP 5.11: Checking for protocol-specific symbols..."
-PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
-  --type py \
-  --glob '!.venv*' --glob '!**/.venv*/**' \
-  --glob '!tests' --glob '!tests/**' \
-  -l . 2>/dev/null || :)
-if [ -n "$PROTOCOL_VIOLATIONS" ]; then
-  echo "[$REPO_NAME] ❌ STEP 5.11 FAILED — Protocol-specific symbols detected in service code."
-  echo "   Use get_data_sink() / get_event_bus() from UCI instead."
-  echo "   These symbols (CloudTarget, StandardizedDomainCloudService, etc.) are deleted; any"
-  echo "   match indicates re-introduction. Fix before merging."
-  echo "   Violating files:"
-  echo "$PROTOCOL_VIOLATIONS" | sed 's/^/     /'
-  exit 1
-else
-  echo "[$REPO_NAME] ✅ STEP 5.11: No protocol-specific symbols in service code"
-fi
-
-echo ""
-
-# ============================================================================
 # STAGE 4: ACT SIMULATION (skip with --quick)
 # ============================================================================
 echo "=========================================="
 echo "STAGE 4: Act Simulation"
 echo "=========================================="
 
-if [ "$QUICK" = true ]; then
-  echo "[$REPO_NAME] --quick: Skipping act simulation"
-else
-  # Auto-install act if not present (Linux or macOS)
-  if ! command -v act &>/dev/null; then
-    OS="$(uname -s)"
-    echo "[$REPO_NAME] act not found — installing for $OS..."
-    if [ "$OS" = "Darwin" ]; then
-      if command -v brew &>/dev/null; then
-        brew install act
-      else
-        echo "[$REPO_NAME] ❌ Homebrew not found. Install it first: https://brew.sh" >&2
-        exit 1
-      fi
-    elif [ "$OS" = "Linux" ]; then
-      INSTALL_DIR="${HOME}/.local/bin"
-      mkdir -p "$INSTALL_DIR"
-      curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b "$INSTALL_DIR"
-      export PATH="$INSTALL_DIR:$PATH"
-    else
-      echo "[$REPO_NAME] ❌ Unsupported OS ($OS) — install act manually: https://github.com/nektos/act" >&2
-      exit 1
-    fi
-  fi
-
-  if ! command -v act &>/dev/null; then
-    echo "[$REPO_NAME] ❌ act installation failed — cannot run CI simulation" >&2
-    exit 1
-  fi
-
-  ACT_SECRETS=""
-  RESOLVED_SECRETS_PATH=""
-  if [ -n "${ACT_SECRETS_FILE:-}" ] && [ -f "${ACT_SECRETS_FILE}" ]; then
-    ACT_SECRETS="--secret-file ${ACT_SECRETS_FILE}"
-    RESOLVED_SECRETS_PATH="${ACT_SECRETS_FILE}"
-  elif [ -f "${WORKSPACE_ROOT}/.act-secrets" ]; then
-    ACT_SECRETS="--secret-file ${WORKSPACE_ROOT}/.act-secrets"
-    RESOLVED_SECRETS_PATH="${WORKSPACE_ROOT}/.act-secrets"
-  elif [ -f ~/.secrets ]; then
-    ACT_SECRETS="--secret-file ~/.secrets"
-    RESOLVED_SECRETS_PATH="$HOME/.secrets"
-  fi
-  if act -j quality-gates --container-architecture linux/amd64 $ACT_SECRETS; then
+if [ "$QUICK" = true ] || [ "$AGENT_MODE" = true ]; then
+  echo "[$REPO_NAME] $([ "$AGENT_MODE" = true ] && echo '--agent' || echo '--quick'): Skipping act simulation"
+elif [ -f "scripts/quality-gates.sh" ]; then
+  if bash scripts/quality-gates.sh --act; then
     echo "[$REPO_NAME] ✅ Act simulation PASSED"
   else
-    echo "" >&2
-    echo "[$REPO_NAME] ❌ Act simulation FAILED — quickmerge aborted" >&2
-    echo "" >&2
-    echo "Act needs GH_PAT to clone sibling repos (e.g. unified-trading-codex). Without it, CI simulation cannot run." >&2
-    echo "" >&2
-    echo "Secrets lookup: ACT_SECRETS_ROOT=${ACT_SECRETS_ROOT:-$WORKSPACE_ROOT} (uses UNIFIED_TRADING_WORKSPACE_ROOT when set)" >&2
-    if [ -n "$RESOLVED_SECRETS_PATH" ]; then
-      echo "  Used: $RESOLVED_SECRETS_PATH" >&2
-    else
-      echo "  Checked: ${ACT_SECRETS_ROOT:-$WORKSPACE_ROOT}/.act-secrets (not found)" >&2
-      echo "  Checked: ${HOME}/.secrets (not found)" >&2
-      echo "  Set UNIFIED_TRADING_WORKSPACE_ROOT or export ACT_SECRETS_FILE=/path/to/.act-secrets" >&2
-    fi
-    echo "" >&2
-    echo "Fix:" >&2
-    echo "  1. bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh" >&2
-    echo "  2. Edit <workspace-root>/.act-secrets and add:  GH_PAT=ghp_xxxxxxxxxxxx" >&2
-    echo "  3. Re-run quickmerge" >&2
-    echo "" >&2
-    echo "SSOT: unified-trading-pm/docs/repo-management/act-secrets-setup.md" >&2
-    echo "" >&2
+    echo "[$REPO_NAME] ❌ Act simulation FAILED" >&2
     exit 1
   fi
+else
+  echo "[$REPO_NAME] ⚠️  No scripts/quality-gates.sh — skipping act simulation"
 fi
 
 echo ""

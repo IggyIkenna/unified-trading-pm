@@ -66,13 +66,14 @@ run_timeout() {
 }
 
 # ── MODE ──────────────────────────────────────────────────────────────────────
-FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
+FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false
 for arg in "$@"; do
     case $arg in
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
         --skip-tests) RUN_TESTS=false ;;
         --fix) FIX_MODE=true ;;       --skip-typecheck) SKIP_TYPECHECK=true ;;
+        --act) ACT_MODE=true ;;
     esac
 done
 
@@ -573,6 +574,36 @@ log_success "Codex compliance PASSED"
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"
 [ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
+
+# ── [ACT] GITHUB ACTIONS SIMULATION (opt-in via --act) ───────────────────────
+if [ "$ACT_MODE" = true ]; then
+    log_section "[ACT] GitHub Actions Simulation"
+    if ! command -v act &>/dev/null; then
+        OS="$(uname -s)"
+        if [ "$OS" = "Darwin" ] && command -v brew &>/dev/null; then
+            brew install act
+        elif [ "$OS" = "Linux" ]; then
+            INSTALL_DIR="${HOME}/.local/bin"
+            mkdir -p "$INSTALL_DIR"
+            curl -fsSL https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b "$INSTALL_DIR"
+            export PATH="$INSTALL_DIR:$PATH"
+        else
+            log_fail "act not found — install: https://github.com/nektos/act"; exit 1
+        fi
+    fi
+    ACT_SECRETS_ARG=""
+    for _sp in "${ACT_SECRETS_FILE:-}" "${REPO_ROOT}/.act-secrets" "${HOME}/.secrets"; do
+        [ -n "$_sp" ] && [ -f "$_sp" ] && { ACT_SECRETS_ARG="--secret-file $_sp"; break; }
+    done
+    if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG}; then
+        log_success "Act simulation PASSED"
+    else
+        log_fail "Act simulation FAILED — act needs GH_PAT to clone sibling repos"
+        [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets"
+        log_warn "Fix: bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh"
+        exit 1
+    fi
+fi
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-150}
