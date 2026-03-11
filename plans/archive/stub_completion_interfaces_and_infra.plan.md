@@ -5,8 +5,13 @@ overview:
   deployment-api not tracked by other active plans.
 type: code
 epic: epic-code-completion
-status: active
+status: archived
 created: 2026-03-09
+archived: 2026-03-11
+archive_reason: >-
+  All unblocked tracks complete (A-F, I, J, K, UAC — 35+ todos done). Blocked items migrated: UPI adapters (8) + UMI
+  onchain (3) → api_keys_and_auth.plan.md in plans/ai/; GH-BACKLOG items (5) →
+  phase3_service_hardening_integration.plan.md.
 
 completion_gates:
   code: C5
