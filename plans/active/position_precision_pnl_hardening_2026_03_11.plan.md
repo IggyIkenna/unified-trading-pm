@@ -5,7 +5,7 @@ overview:
   to eliminate unexplained P&L and achieve attribution correctness.
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5
@@ -127,14 +127,14 @@ todos:
     note: "DONE 2026-03-11 (except UEI UNEXPLAINED_PNL_RESIDUAL event)"
   - id: phase-e-uei-event
     content: "UEI: Emit UNEXPLAINED_PNL_RESIDUAL event hourly + AlertEvent when > 2% of total PnL"
-    status: todo
-    note: "Coordinate with uei_pending_event_additions plan"
+    status: done
+    note: "DONE 2026-03-11 — PnLResidualEmitter in strategy_service/engine/core/components/pnl_residual_emitter.py"
 isProject: false
 ---
 
 # Plan: Position Precision & P&L Attribution Hardening
 
-**Created:** 2026-03-11 **Status:** IN PROGRESS **Priority:** P0 — Correctness + Attribution Quality
+**Created:** 2026-03-11 **Status:** DONE **Priority:** P0 — Correctness + Attribution Quality
 
 ---
 
