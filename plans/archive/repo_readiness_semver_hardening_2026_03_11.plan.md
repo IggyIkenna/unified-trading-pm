@@ -6,12 +6,12 @@ overview: |
   (sibling-clone for GHA), and system-integration-tests. Harden per-repo semver bump rules, add agent
   major-bump gate in quickmerge.sh, and propagate all rules to AGENTS.md, SUB_AGENT_MANDATORY_RULES, and
   GHA autonomous agent prompts.
-  Infrastructure work (deployment-api integration, GHA readiness gates, deployment-service legacy cleanup)
-  is complete as of 2026-03-11. The sole remaining deliverable is p1b: creating the 65 per-repo YAML
-  files in codex/10-audit/repos/.
+  All work complete as of 2026-03-11: 65 per-repo YAML files confirmed in codex/10-audit/repos/,
+  deployment-api wired to codex v3.0 SSOT, staging-to-main hard gate added, daily Telegram readiness
+  summary, legacy deployment-service checklist configs deleted.
 type: infra
 epic: epic-infra
-status: active
+status: done
 
 session_notes_2026_03_11:
   - "deployment-api checklist.py rewritten to codex v3.0 SSOT (no legacy fallback); reads exclusively\
@@ -155,12 +155,12 @@ todos:
         T4-strategy+execution+monitoring, T5-apis, T6-uis, infra
       After each tier agent completes: add a deprecation header comment to the corresponding
       deployment-service/configs/checklist.{service}.yaml files pointing to the new canonical location.
-    status: todo
+    status: done
     blocked_by: p1a-consolidated-checklist-template
     note: |
-      Output: 65 YAML files in codex/10-audit/repos/ (one per repo in workspace-manifest.json).
-      PM/codex: infra template, BR2-BR7 all N/A with reasons; BR8 still required for v1.0.0.
-      Libraries: deployment_modes field set appropriately; DR3 = AR wheel published (not Cloud Run).
+      65 YAML files confirmed present in codex/10-audit/repos/ as of 2026-03-11 (schema_version: "3.0",
+      code_readiness/deployment_readiness/business_readiness sections). Files were generated in a prior
+      session. Statuses are not_assessed (to be updated per-repo as work progresses).
 
   - id: p1c-codex-10-audit-readme
     content: |
