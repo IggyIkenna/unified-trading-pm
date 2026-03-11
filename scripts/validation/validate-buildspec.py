@@ -61,12 +61,14 @@ BUILDSPEC_SCHEMA = {
 
 def load_yaml(path: Path) -> object:
     import yaml
+
     with open(path) as f:
         return yaml.safe_load(f)
 
 
 def validate_file(path: Path, schema: dict) -> tuple[bool, str | None]:
     import jsonschema
+
     try:
         data = load_yaml(path)
     except Exception as e:
