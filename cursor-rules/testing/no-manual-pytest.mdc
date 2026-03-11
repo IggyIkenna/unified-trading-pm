@@ -44,3 +44,21 @@ cd unified-market-interface
 .venv/bin/pytest tests/unit/test_foo.py -xvs  # repo-local venv, not workspace
 ```
 Never `cd unified-market-interface && pytest tests/unit/test_foo.py` (uses workspace PATH).
+
+## Debugging with Emulators
+
+For targeted debugging of Layer 1.5 integration tests that need emulators:
+
+```bash
+# Start emulator first (choose one):
+docker compose -f unified-trading-pm/docker/docker-compose.mock.yml up pubsub-emulator
+# or: docker run -d -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+
+# Then run targeted test with emulator env var:
+PUBSUB_EMULATOR_HOST=localhost:8085 cd <repo> && .venv/bin/pytest tests/integration/test_pubsub_emulator.py -xvs
+
+# Same pattern for GCS:
+STORAGE_EMULATOR_HOST=http://localhost:4443 .venv/bin/pytest tests/integration/test_gcs_emulator.py -xvs
+```
+
+**Note**: Always use per-repo `.venv` (not `.venv-workspace`) for targeted debug runs. `quality-gates.sh` handles venv activation automatically for full runs.
