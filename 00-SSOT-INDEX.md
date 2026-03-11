@@ -13,12 +13,13 @@ docs.
 
 ## Manifest and Topology
 
-| Doc                | Location                                                        |
-| ------------------ | --------------------------------------------------------------- |
-| Workspace manifest | `workspace-manifest.json`                                       |
-| Topology DAG       | `WORKSPACE_MANIFEST_DAG.svg`                                    |
-| Runtime topology   | `../deployment-service/configs/runtime-topology.yaml`           |
-| Checklist template | `../deployment-service/configs/checklist.template.service.yaml` |
+| Doc                              | Location                                                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Workspace manifest               | `workspace-manifest.json`                                                                      |
+| Topology DAG                     | `WORKSPACE_MANIFEST_DAG.svg`                                                                   |
+| Runtime topology                 | `../deployment-service/configs/runtime-topology.yaml`                                          |
+| Repo readiness checklists (SSOT) | `../unified-trading-codex/10-audit/repos/{repo}.yaml` (codex v3.0 — CR1-CR5, DR1-DR6, BR1-BR8) |
+| Readiness schema template        | `../unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml`                              |
 
 ## Audit and Gates
 
