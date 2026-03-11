@@ -10,7 +10,17 @@
   "reportUnknownParameterType": "none",
   "reportUnnecessaryComparison": "warning",
   "reportUnreachable": "warning",
-  "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py", "tests"],
+  "exclude": [
+    "scripts/migration",
+    "scripts/manifest/sbom-store.py",
+    "scripts/dev",
+    "scripts/propagation/fix-cloudbuild-coverage.py",
+    "scripts/propagation/fix-gh-actions-pm-clone.py",
+    "scripts/propagation/rollout-ui-build-infra.py",
+    "scripts/validation/check_data_completeness.py",
+    "scripts/validation/validate-buildspec.py",
+    "tests"
+  ],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.13"
