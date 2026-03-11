@@ -14,7 +14,7 @@ completion_gates:
 
 repo_gates:
   - repo: unified-events-interface
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
@@ -32,20 +32,23 @@ todos:
       Add 5 data freshness events from data_availability_live_expectations_2026_03_10.plan.md Phase 2: DATA_STALE,
       DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY, DATA_COMPLETENESS_CHECK. Payload schema for
       DATA_STALE/FEED_UNHEALTHY: source, age_seconds, max_age_seconds, asset_class, criticality, timestamp.
-    status: pending
+    status: done
+    note: "DONE 2026-03-11 — all 5 events in schemas.py"
 
   - id: uei-recon-rebalancing-events
     content: >-
       Add 8 reconciliation/rebalancing events from recon_rebalancing_order_recovery_2026_03_10.plan.md Stream A+B+C+D:
       POSITION_CORRECTION_DISPATCHED, POSITION_CORRECTION_FAILED, ORDER_RECOVERY_INITIATED, ORDER_RECOVERY_COMPLETED,
       ORDER_RECOVERY_FAILED, PORTFOLIO_REBALANCE_TRIGGERED, PORTFOLIO_REBALANCE_COMPLETED, DEFI_VAULT_REBALANCED.
-    status: pending
+    status: done
+    note: "DONE 2026-03-11 — all 8 events in schemas.py"
 
   - id: uei-pnl-residual-event
     content: >-
       Add 1 P&L attribution event from position_precision_pnl_hardening_2026_03_11.plan.md Phase E:
       UNEXPLAINED_PNL_RESIDUAL — emitted hourly + AlertEvent when > 2% of total PnL.
-    status: pending
+    status: done
+    note: "DONE 2026-03-11 — UNEXPLAINED_PNL_RESIDUAL in schemas.py"
 
   - id: uei-batch-pr
     content: >-
@@ -53,7 +56,8 @@ todos:
       plans to reference this plan's todo IDs instead of tracking individually. After merge, cascade version bump to all
       dependent repos (UMI, UTEI, UPI, URDI, strategy-service, execution-service, alerting-service,
       position-balance-monitor-service).
-    status: pending
+    status: done
+    note: "DONE 2026-03-11 — all 14 events committed, ORDER_RECOVERY_INITIATED was the last missing one"
 isProject: false
 ---
 
