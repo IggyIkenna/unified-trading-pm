@@ -22,8 +22,8 @@ docs.
 
 ## Audit and Gates
 
-| Doc                      | Location                                           |
-| ------------------------ | -------------------------------------------------- |
-| Audit prompt             | `plans/active/trading_system_audit_prompt.plan.md` |
-| Tested gate criteria     | plans_to_deployable_unified_audit § Phase 9        |
-| Deployable gate criteria | plans_to_deployable_unified_audit § Phase 10       |
+| Doc                      | Location                                     |
+| ------------------------ | -------------------------------------------- |
+| Audit prompt             | `plans/audit/trading_system_audit_prompt.md` |
+| Tested gate criteria     | plans_to_deployable_unified_audit § Phase 9  |
+| Deployable gate criteria | plans_to_deployable_unified_audit § Phase 10 |

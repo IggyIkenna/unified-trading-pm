@@ -80,7 +80,7 @@ Exception: Plans of type `infra` or `deployment` must also reach D3 regardless o
 - **Format spec:** `unified-trading-pm/plans/PLAN_FORMAT.md`
 - **Cursor rule:** `unified-trading-pm/cursor-rules/core/plan-readiness-gates.mdc`
 - **Deployment topology:** `deployment-service/configs/` — runtime-topology, checklists
-- **Audit prompt:** `unified-trading-pm/plans/active/trading_system_audit_prompt.plan.md`
+- **Audit prompt:** `unified-trading-pm/plans/audit/trading_system_audit_prompt.md`
 - **INDEX:** `unified-trading-pm/plans/active/INDEX.md`
 
 DO: Reference the 3-tier model when assessing plan completeness.

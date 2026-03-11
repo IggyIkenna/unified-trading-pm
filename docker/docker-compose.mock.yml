@@ -3,10 +3,18 @@
 # No credentials required.
 #
 # Usage:
-#   docker compose -f docker-compose.mock.yml up
-#   docker compose -f docker-compose.mock.yml up --seed  # with fixture data
+#   docker compose -f docker-compose.mock.yml up                   # all default services
+#   docker compose -f docker-compose.mock.yml --profile v1 up -d  # SIT deployment-tests (v1 services)
+#   docker compose -f docker-compose.mock.yml --profile gcp-emulators up -d  # GCP emulators only
 #
-# GCP Emulators (optional, comment out if not needed):
+# Profile overview:
+#   services      — for local dev (default service set)
+#   v1            — for SIT deployment-tests in CI; includes all mock services and GCP emulators
+#                   smoke-test-gate.yml runs with --profile v1; only >=1.0.0 repos land on staging
+#                   (enforced by staging-version-gate.yml), so all v1-profiled services are v1+ by design
+#   gcp-emulators — Pub/Sub, GCS, BigQuery emulators only
+#
+# GCP Emulators:
 #   Pub/Sub: gcr.io/google.com/cloudsdktool/google-cloud-cli on port 8085
 #   GCS: fsouza/fake-gcs-server on port 4443
 #   BigQuery: ghcr.io/goccy/bigquery-emulator on port 9050
@@ -30,7 +38,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    profiles: ["gcp-emulators"]
+    profiles: ["gcp-emulators", "v1"]
 
   gcs-emulator:
     image: fsouza/fake-gcs-server:latest
@@ -42,7 +50,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    profiles: ["gcp-emulators"]
+    profiles: ["gcp-emulators", "v1"]
 
   bigquery-emulator:
     image: ghcr.io/goccy/bigquery-emulator:latest
@@ -55,7 +63,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    profiles: ["gcp-emulators"]
+    profiles: ["gcp-emulators", "v1"]
 
   # ─── T2 Core Services ────────────────────────────────────────────────────────
   market-data-service:
@@ -73,7 +81,7 @@ services:
       pubsub-emulator:
         condition: service_healthy
         required: false
-    profiles: ["services"]
+    profiles: ["services", "v1"]
 
   execution-service:
     image: unified-trading/execution-service:mock
@@ -89,7 +97,7 @@ services:
       pubsub-emulator:
         condition: service_healthy
         required: false
-    profiles: ["services"]
+    profiles: ["services", "v1"]
 
   trading-analytics-api:
     image: unified-trading/trading-analytics-api:mock
@@ -101,4 +109,4 @@ services:
       BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
     ports:
       - "8010:8000"
-    profiles: ["services"]
+    profiles: ["services", "v1"]

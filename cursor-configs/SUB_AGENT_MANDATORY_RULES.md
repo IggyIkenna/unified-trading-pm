@@ -32,6 +32,14 @@ standards.
 - **Never bump versions manually** — CI bumps on merge to main
 - **Untrack ignored files** — if tracked files match `.gitignore`: detect with
   `git ls-files --ignored --exclude-standard`, then `git rm --cached <files>`. Never bare `git rm` (deletes files)
+- **Revert MUST be file-scoped:** If you need to undo your changes, ONLY restore the specific files you touched in this
+  session. NEVER `git checkout <branch>` (switches whole branch) or `git reset --hard` (destroys all uncommitted work
+  including other agents' changes). Correct pattern:
+  ```bash
+  # Revert only YOUR files using the backup branch as source
+  git restore --source=$BACKUP_BRANCH -- path/to/file1.py path/to/file2.py
+  ```
+  Keep a list of every file you modify at task start — this is your revert scope.
 
 ---
 

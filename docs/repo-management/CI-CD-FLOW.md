@@ -613,6 +613,30 @@ any remaining ordering dependency at staging time.
 
 ---
 
+## Per-Repo Staging Version Gate
+
+Individual repos are blocked from auto-merging to staging until their version reaches **1.0.0**. This is a per-repo gate
+— a repo at 1.0.0 merges freely even if other repos are still on 0.x.x.
+
+**Enforcement:** `staging-version-gate.yml` (required status check on staging branch protection). Triggered on every PR
+to staging. Reads version from `pyproject.toml` (Python repos) or `package.json` (UI/TS repos). Fails with an actionable
+message if version < 1.0.0.
+
+**Exemptions:** `unified-trading-pm` is exempt — it manages the workspace manifest and has no semver gate.
+
+**Version 1.0.0 decision:** Always a manual human choice, made via the production checklist plan. `semver-agent.yml`
+never auto-crosses to 1.0.0 (pre-1.0.0 breaking changes downgrade to MINOR).
+
+**SIT version scope:** `smoke-test-gate.yml` only tests repos with `staging_versions[repo] >= 1.0.0`. If no such repos
+exist on staging, SIT exits immediately (no lock dispatched).
+
+```
+Repo at 0.x.x → PR to staging → staging-version-gate FAILS → PR cannot merge
+Repo bumped to 1.0.0 → PR to staging → staging-version-gate PASSES → enters auto-merge queue
+```
+
+---
+
 ## Staging Lock Lifecycle
 
 SIT owns the staging lock. The lock is set when SIT **starts** (not when a major bump happens). Unlock on either pass or
@@ -621,9 +645,9 @@ fail so engineers can push fixes without waiting.
 ```
 feat/* passes QG → quickmerge --to-staging → PR to staging (GitHub auto-merge queue)
 
-GitHub auto-merge queue: staging-gate check
-  PASS    if staging_status.locked == false
-  PENDING if staging_status.locked == true  ← PRs queue here during SIT
+GitHub auto-merge queue: two required checks
+  staging-version-gate: PASS if repo version >= 1.0.0 (else FAIL — PR cannot merge)
+  staging-lock-gate:    PASS if staging_status.locked == false (else PENDING — PR queues during SIT)
 
 SIT debounce (GHA concurrency group, 10-min quiet):
   staging push → triggers smoke-test-gate.yml
@@ -652,12 +676,13 @@ SIT FAIL:
 
 **Workflows involved:**
 
-| Workflow                    | Trigger                      | Action                                       |
-| --------------------------- | ---------------------------- | -------------------------------------------- |
-| `sit-gate.yml` (PM)         | `sit-lock` dispatch          | Sets lock + records staging_commits SHAs     |
-| `sit-unlock.yml` (PM)       | `sit-failed` dispatch        | Clears lock, reason = "SIT failed"           |
-| `staging-to-main.yml` (PM)  | `staging-validated` dispatch | Promotes versions + clears lock on pass      |
-| `smoke-test-gate.yml` (SIT) | push to staging              | Debounce → lock → run tests → unlock/promote |
+| Workflow                              | Trigger                      | Action                                                                        |
+| ------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------- |
+| `sit-gate.yml` (PM)                   | `sit-lock` dispatch          | Sets lock + records staging_commits SHAs                                      |
+| `sit-unlock.yml` (PM)                 | `sit-failed` dispatch        | Clears lock, reason = "SIT failed"                                            |
+| `staging-to-main.yml` (PM)            | `staging-validated` dispatch | Promotes versions + clears lock on pass                                       |
+| `smoke-test-gate.yml` (SIT)           | push to staging              | Debounce → skip guard → lock → code-tests → deployment-tests → unlock/promote |
+| `staging-version-gate.yml` (per-repo) | PR to staging                | Fails if repo version < 1.0.0                                                 |
 
 **quickmerge --to-staging behavior when locked:** Informs the user that staging is locked and PR creation will proceed.
 GitHub's auto-merge queue holds the PR until the lock clears. Does not abort.
@@ -789,17 +814,18 @@ promoted to main — each entry has the exact `commit_shas` and the tag formula 
 
 ## References
 
-| Doc                                                     | Purpose                                                                |
-| ------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **This doc**                                            | Full CI/CD flow SSOT                                                   |
-| `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md` | Phase 1–2 detail                                                       |
-| `docs/repo-management/sync-to-main-flow.md`             | Phase 3 detail                                                         |
-| `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`       | Internal alignment                                                     |
-| `scripts/repo-management/check-dep-alignment.py`        | Dep reconciliation gate (Phase 4)                                      |
-| `scripts/hooks/pre-push`                                | Git pre-push hook for dep check on staging pushes                      |
-| `.github/workflows/sit-gate.yml`                        | Sets staging lock at SIT start                                         |
-| `.github/workflows/sit-unlock.yml`                      | Clears staging lock on SIT failure                                     |
-| `.github/workflows/cloud-build-router.yml`              | Routes qg-passed to correct GCP Cloud Build project                    |
-| `terraform/environments/`                               | GCP project provisioning (dev/staging/prod)                            |
-| **Codex**                                               | `06-coding-standards/setup-standards.md`, `dependency-management.md`   |
-| **Cursor rules**                                        | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc` |
+| Doc                                                      | Purpose                                                                |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **This doc**                                             | Full CI/CD flow SSOT                                                   |
+| `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`  | Phase 1–2 detail                                                       |
+| `docs/repo-management/sync-to-main-flow.md`              | Phase 3 detail                                                         |
+| `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`        | Internal alignment                                                     |
+| `scripts/repo-management/check-dep-alignment.py`         | Dep reconciliation gate (Phase 4)                                      |
+| `scripts/hooks/pre-push`                                 | Git pre-push hook for dep check on staging pushes                      |
+| `.github/workflows/sit-gate.yml`                         | Sets staging lock at SIT start                                         |
+| `.github/workflows/sit-unlock.yml`                       | Clears staging lock on SIT failure                                     |
+| `.github/workflows/cloud-build-router.yml`               | Routes qg-passed to correct GCP Cloud Build project                    |
+| `scripts/propagation/templates/staging-version-gate.yml` | Per-repo staging version gate template (propagated to all repos)       |
+| `terraform/environments/`                                | GCP project provisioning (dev/staging/prod)                            |
+| **Codex**                                                | `06-coding-standards/setup-standards.md`, `dependency-management.md`   |
+| **Cursor rules**                                         | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc` |

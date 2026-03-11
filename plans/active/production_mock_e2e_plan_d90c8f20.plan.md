@@ -217,8 +217,7 @@ orphans.
 
 ### 1.2 External Interfaces (7 repos)
 
-Per [trading_system_audit_prompt.plan.md](unified-trading-pm/plans/active/trading_system_audit_prompt.plan.md) Section
-10:
+Per [trading_system_audit_prompt.md](unified-trading-pm/plans/audit/trading_system_audit_prompt.md) Section 10:
 
 - `unified-market-interface`, `unified-trade-execution-interface`, `unified-reference-data-interface`,
   `unified-position-interface`, `unified-sports-execution-interface`, `unified-defi-execution-interface`,
@@ -373,13 +372,13 @@ WebSockets covered.
 
 ## Key Files and References
 
-| Reference                                                                                                  | Purpose                                       |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| [trading_system_audit_prompt.plan.md](unified-trading-pm/plans/active/trading_system_audit_prompt.plan.md) | Audit Sections 10 (integration), 14 (orphans) |
-| [integration-testing-layers.mdc](.cursor/rules/testing/integration-testing-layers.mdc)                     | 5-layer strategy; cassette placement          |
-| [CI-CD-FLOW.md](unified-trading-pm/docs/repo-management/CI-CD-FLOW.md)                                     | run-all-quality-gates, CLOUD_MOCK_MODE        |
-| [observability-compliance.mdc](.cursor/rules/misc/observability-compliance.mdc)                            | Event requirements                            |
-| `unified_api_contracts_external/<venue>/mocks/`                                                            | Canonical cassette location                   |
+| Reference                                                                                       | Purpose                                       |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [trading_system_audit_prompt.md](unified-trading-pm/plans/audit/trading_system_audit_prompt.md) | Audit Sections 10 (integration), 14 (orphans) |
+| [integration-testing-layers.mdc](.cursor/rules/testing/integration-testing-layers.mdc)          | 5-layer strategy; cassette placement          |
+| [CI-CD-FLOW.md](unified-trading-pm/docs/repo-management/CI-CD-FLOW.md)                          | run-all-quality-gates, CLOUD_MOCK_MODE        |
+| [observability-compliance.mdc](.cursor/rules/misc/observability-compliance.mdc)                 | Event requirements                            |
+| `unified_api_contracts_external/<venue>/mocks/`                                                 | Canonical cassette location                   |
 
 ---
 
