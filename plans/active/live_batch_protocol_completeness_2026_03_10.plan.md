@@ -128,36 +128,52 @@ todos:
     content:
       "features-commodity-service: Create cli/handlers/ with live_handler.py and batch_handler.py; add --mode batch|live
       to cli/main.py"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — cli/handlers/live_handler.py and batch_handler.py created; --mode batch|live added to cli/main.py with
+      BatchHandler/LiveHandler dispatch. Commit b187ad0."
   - id: p1-todo-08
     content: "market-data-processing-service: Add --mode batch|live to cli/parser.py; wire mode selection"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — --mode batch|live added to process subparser; _mode_dispatch_handler routes to LiveModeHandler (lazy
+      import) or process_candles_handler. Commit 6a3b920."
   - id: p1-todo-09
     content: "instruments-service: Rename --run-mode to --mode in cli/parser.py; create cli/handlers/batch_handler.py"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — --run-mode renamed to --mode with deprecated --run-mode alias (both dest='mode'); validate_arguments()
+      enforces required. Commit 9c313ef."
   - id: p1-todo-10
     content: "features-sports-service: Add unit tests for batch_handler.py"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — tests/unit/test_batch_handler.py created; 6 unit tests covering BatchHandler.run() lifecycle. Commit
+      d389213."
   - id: p1-todo-11
     content: "market-tick-data-service: Add unit tests for cli/batch_handler.py"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — tests/unit/test_batch_handler.py created; 6 unit tests covering DownloadBatchHandler
+      init/set_date/run/validate_config. Commit c85e0f8."
   - id: p1-todo-12
     content: "ml-training-service: Document as batch-only service in codex; rename handlers"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — unified-trading-codex/04-architecture/batch-live-symmetry.md updated with Batch-Only Service Exemptions
+      section documenting MLTR as batch-only by design. Commit e1d8545."
   - id: p1-todo-13
     content: "strategy-service: Consolidate live routing from service_entry.py to cli/handlers/live_handler.py"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — cli/handlers/live_handler.py created as synchronous facade over StrategyLiveHandler; exported from
+      handlers __init__. Commit 70d8605."
   - id: p1-todo-15
     content: "Add test_live_mode_handler.py unit tests for FDS, FVS, FCS, FOS, STR"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — FVS and FOS had pre-existing tests; FCS: tests/unit/test_live_mode_handler.py (commit 0a4d03f); STR:
+      tests/unit/test_live_mode_handler.py (commit a03a607). FDS repo does not exist."
   - id: phase2-transport-tests
     content: "Add tests/unit/test_mode_switching.py and tests/integration/test_mode_switching.py per service"
     status: todo
@@ -168,8 +184,10 @@ todos:
     note: ""
   - id: phase4-codex-update
     content: "Update unified-trading-codex/04-architecture/batch-live-symmetry.md with final audit matrix"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — Service Audit Matrix (2026-03-11) added covering 13 services with batch/live handler status, --mode flag,
+      test coverage, and Handler Pattern Reference. Commit 8655262."
 isProject: false
 ---
 
