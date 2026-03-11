@@ -323,8 +323,8 @@ todos:
          br8_user_approved.approved_by={approver}, br8_user_approved.approved_date={today}
 
       Create the approval script: unified-trading-pm/scripts/approve-major-bump.sh
-    status: todo
-    note: "Admin script uses GH_PAT with admin rights to trigger the GHA approval workflow programmatically."
+    status: done
+    note: "Done 2026-03-11 — commit ed5ad3b: major-bump-approval.yml template + approve-major-bump.sh created"
 
   # ─── PHASE 5: PROPAGATION TO AGENT CONTEXTS ───
 
