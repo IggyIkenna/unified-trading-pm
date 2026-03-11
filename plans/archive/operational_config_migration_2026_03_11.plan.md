@@ -5,7 +5,7 @@ overview:
   cross-service dependency in deployment-api
 type: infra
 epic: epic-infra
-status: active
+status: done
 
 completion_gates:
   code: C5
@@ -41,7 +41,9 @@ todos:
       "Replace moved files in deployment-service/configs/ with symlinks to ../../unified-trading-pm/configs/, delete
       dead checklist.template.*.yaml"
     status: done
-    note: "DONE — Symlinks created, dead templates deleted. Commit: TBD"
+    note:
+      "DONE — All 51 symlinks subsequently REMOVED (backward compat approach rejected). deployment-service/configs/ is
+      now clean. Commit: af31e2e"
   - id: deployment-api-symlink
     content: "Create deployment-api/pm-configs symlink → ../unified-trading-pm/configs, remove old configs symlink"
     status: done
@@ -70,6 +72,29 @@ todos:
     content: "Run bash scripts/quality-gates.sh in deployment-api — all tests must pass"
     status: done
     note: "DONE — All tests pass, coverage maintained"
+  - id: remove-backward-compat-symlinks
+    content:
+      "Remove all 51 backward-compat symlinks from deployment-service/configs/ — clean migration, no transitional shims"
+    status: done
+    note: "DONE — git rm of all symlinks. Commit: af31e2e (deployment-service)"
+  - id: update-code-references
+    content:
+      "Update all deployment-service/configs/ path references in Python/YAML source files to unified-trading-pm/configs/"
+    status: done
+    note:
+      "DONE — instruments-service catalogue_updater.py + CI workflow (c12c35e, 824e723); strategy-service
+      cascade_subscriber.py (07e1044); system-integration-tests error string (3a41740); deployment-api docstrings
+      (3ba90bf)"
+  - id: clean-ssot-docs
+    content: "Remove all backward-compat symlink language from SSOT docs (00-SSOT-INDEX.md, 10-audit/README.md)"
+    status: done
+    note: "DONE — 4 backward-compat references removed from codex. Commit: 009e823 (unified-trading-codex)"
+  - id: update-gha-path-triggers
+    content:
+      "Update GHA workflow paths: triggers in sync-check.yml, epic-alignment-check.yml, weekly-sync.yml to point to
+      unified-trading-pm/configs/"
+    status: done
+    note: "DONE — All 3 workflow files updated. Commit: 20ca23e (unified-trading-codex)"
 
 isProject: false
 ---
