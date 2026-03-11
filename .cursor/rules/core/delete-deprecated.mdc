@@ -1,0 +1,66 @@
+---
+description: "No technical debt after refactor — delete old code, no parallel paths, no backward-compat shims"
+alwaysApply: false
+globs:
+  - "**/*.py"
+priority: 95
+tags:
+  - refactoring
+  - deletion
+  - technical-debt
+  - critical
+---
+
+# Refactor Cleanup — No Technical Debt, No Parallel Code Paths
+
+When refactoring or replacing something, DELETE the old implementation completely. There must be exactly one source of truth — no parallel code paths (old schema + new schema, old import + new import). Tests run only under the new structure.
+
+## Core rule
+
+- **No parallel code paths.** If you switch to a different schema, only the new schema exists; if a script switches to import from a different place, only that import path exists.
+- **Tests under new structure only.** After refactor, tests must pass under the new structure.
+- **Safe rollback:** Commit just before starting the refactor so you can roll back if the implementation fails.
+
+## No backward compatibility
+
+- Never add fallbacks, legacy aliases, or dual-format support. Fail fast with clear error.
+- NEVER: try/except import fallbacks; config.old or config.new; alias for backward compat.
+- DO: Bump version; update all consumers; remove old code; document migration in codex if needed.
+
+## No backward-compatibility shims or re-export stubs
+
+NEVER create re-export stub files when moving a module to a new canonical location:
+1. Find ALL consumers of the old location using `rg`
+2. Update every consumer to import from the new canonical location
+3. Delete the old file completely — no re-export stub, no `# MIGRATED` comment
+
+```python
+# PROHIBITED — re-export stub
+from new_location import MyClass  # backward compat re-export
+
+# PROHIBITED — X as X shim
+from .account_schemas import BinanceFeeRate as BinanceFeeRate  # 100 more lines...
+```
+
+The ONLY permitted re-export is a package `__init__.py` defining the package's declared public API (not a migration shim, exports ALL public symbols).
+
+## Never leave old code in place
+
+NEVER:
+- Leave `# deprecated`, `# legacy`, `# kept for backward compat` comments
+- Create `_old.py`, `_legacy.py`, `_deprecated.py` copies
+- Keep both old and new schema/import paths "for compatibility"
+
+RULE: A deleted function that causes a FAILING TEST is BETTER than a deprecated function that causes SILENT WRONG BEHAVIOR.
+
+## When to delete (examples)
+
+- Removing a duplicate config class → delete it immediately
+- Moving ConfigStore from UCI to UCS → delete from UCI immediately
+- Replacing `os.getenv()` with config class → delete the `os.getenv()` call
+- Switching to a new schema → remove old schema and all code that used it
+- Moving `_<venue>_models.py` to UAC → delete from interface adapter, update all importers
+
+Only safe fallback: git history. Code is never truly gone — use `git blame`.
+
+CODEX: 06-coding-standards/error-handling.md

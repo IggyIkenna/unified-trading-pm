@@ -1,0 +1,30 @@
+---
+description: "When repo venv fails, use workspace venv; sync both when pyproject.toml changes"
+alwaysApply: false
+globs:
+  - "**/*.py"
+priority: 45
+tags:
+  - workspace
+  - venv
+  - dependencies
+---
+
+# Workspace Venv Fallback and Sync
+
+## Fallback: use workspace venv when repo venv fails
+
+If a repo's local `.venv` is broken or missing, use the workspace venv:
+```bash
+source /home/hk/unified-trading-system-repos/.venv-workspace/bin/activate
+```
+The workspace venv has all unified libraries installed and works across all repos.
+
+## Sync: keep both venvs aligned when pyproject.toml changes
+
+When you update a repo's `pyproject.toml` (add/remove/update dependencies):
+1. Install in the repo venv: `cd <repo> && uv pip install -e ".[dev]"`
+2. Install in the workspace venv: `cd /home/hk/unified-trading-system-repos && uv pip install -e "<repo>/[dev]"`
+3. Commit `uv.lock` with your changes (quickmerge handles this automatically)
+
+NEVER: manually create venvs outside of `uv`; use `pip install` instead of `uv pip install`
