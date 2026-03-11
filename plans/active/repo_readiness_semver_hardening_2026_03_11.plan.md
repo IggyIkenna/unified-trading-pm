@@ -6,9 +6,28 @@ overview: |
   (sibling-clone for GHA), and system-integration-tests. Harden per-repo semver bump rules, add agent
   major-bump gate in quickmerge.sh, and propagate all rules to AGENTS.md, SUB_AGENT_MANDATORY_RULES, and
   GHA autonomous agent prompts.
+  Infrastructure work (deployment-api integration, GHA readiness gates, deployment-service legacy cleanup)
+  is complete as of 2026-03-11. The sole remaining deliverable is p1b: creating the 65 per-repo YAML
+  files in codex/10-audit/repos/.
 type: infra
 epic: epic-infra
 status: active
+
+session_notes_2026_03_11:
+  - "deployment-api checklist.py rewritten to codex v3.0 SSOT (no legacy fallback); reads exclusively\
+    \ from unified-trading-codex/10-audit/repos/{repo}.yaml; returns 503 when codex_dir is None"
+  - "deployment-api get_codex_dir()/get_plans_dir() added to service_utils.py; lifespan.py wired with\
+    \ app.state.codex_dir and app.state.plans_dir at startup"
+  - "deployment-api Dockerfile: COPY codex-data/ and pm-plans/ bundled at build time"
+  - "deployment-api cloudbuild.yaml: fetch-readiness-data step clones codex + PM repos and populates\
+    \ codex-data/ and pm-plans/ before docker build; uses github-pat availableSecrets"
+  - "deployment-api codex-data/ symlink -> ../unified-trading-codex/10-audit/repos (local dev)"
+  - "deployment-api pm-plans/ symlink -> ../unified-trading-pm/plans (local dev)"
+  - "deployment-service: 18 old phase_N_ checklist.*.yaml configs deleted; codex v3.0 is now sole SSOT"
+  - "unified-trading-pm staging-to-main.yml: hard readiness gate added before merge step; checks\
+    \ cr4_quality_gate and dr4_sit_pass; explicit fail status blocks (exit 1); not_assessed passes (advisory)"
+  - "unified-trading-pm readiness-verifier.yml: Telegram step changed from exit_code==1 to always();\
+    \ sends daily summary regardless of outcome with PASS/FAIL/WARN/MISMATCH counts"
 
 completion_gates:
   code: C5
