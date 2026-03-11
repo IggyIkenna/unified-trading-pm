@@ -45,7 +45,7 @@ todos:
       "P2: Create unified-market-interface/tests/fixtures/mock_ws_server.py (MockWebSocketFeed — aiohttp.test_utils WS
       server); add ws_ticks_binance.json, ws_ticks_deribit.json, ws_ticks_hyperliquid.json fixtures; add
       test_ws_manager.py and execution-service test_deribit_ws.py"
-    status: pending
+    status: done
   - id: h1-2-gcs-emulator
     content:
       "P2: Wire fsouza/fake-gcs-server:latest (port 4443) into UCI + SIT conftest via
