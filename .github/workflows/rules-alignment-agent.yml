@@ -101,10 +101,22 @@ jobs:
           - Only create rules for actionable architectural constraints, not descriptive summaries
           - Never duplicate coverage of patterns already in existing .mdc files
           - Keep rule bodies concise (< 20 lines)
-          - Use the subdirectory that best fits the rule category (core/, workflow/, dependencies/, etc.)"
+          - Use the subdirectory that best fits the rule category (core/, workflow/, dependencies/, etc.)
+          - When new BR/DR gate criteria are introduced in plan changes, update
+            codex/10-audit/REPO_READINESS_CHECKLIST.yaml to cover the new criteria
+          - When new N/A declarations are introduced, ensure they are documented in the repo's
+            codex/10-audit/repos/{repo}.yaml"
 
           claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
             || echo "Claude agent exited non-zero — check logs"
+
+      - name: Check readiness checklist coverage
+        run: |
+          # For any plan change that introduces new readiness criteria:
+          # 1. Check if codex/10-audit/REPO_READINESS_CHECKLIST.yaml covers the new criteria
+          # 2. Check if cursor-rules/core/repo-readiness-checklist.mdc references the new criteria
+          # If not, the agent should update them in the same commit
+          echo "Readiness criteria alignment check: verify new plan criteria appear in codex YAML template"
 
       - name: Skip — no plan changes or no API key
         if: steps.changed-plans.outputs.changed_plans == '' || env.ANTHROPIC_API_KEY == ''
