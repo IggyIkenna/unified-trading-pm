@@ -558,6 +558,53 @@ done
 
 echo -e "\n  Cloned: $CLONE_OK | Existing: $CLONE_SKIP | Failed: $CLONE_FAIL"
 
+# ── PHASE 2.5: READINESS-REF FILES ───────────────────────────────────────────
+# Create .readiness-ref (committed text file) in each repo pointing to its
+# canonical checklist in unified-trading-codex. Path is RELATIVE so it works
+# on GHA runners where workspace root differs from local machines.
+# The companion .readiness symlink is gitignored and created fresh by
+# setup-workspace.sh.
+
+if [ "$CHECK_ONLY" = false ]; then
+  log_phase "2.5" "Readiness-Ref Files (.readiness-ref)"
+  READINESS_OK=0
+  READINESS_SKIP=0
+
+  for repo in $REPOS; do
+    REPO_PATH="$WORKSPACE_ROOT/$repo"
+    [ -d "$REPO_PATH" ] || continue
+
+    READINESS_REF_FILE="$REPO_PATH/.readiness-ref"
+    READINESS_REF_CONTENT="../../unified-trading-codex/10-audit/repos/${repo}.yaml"
+
+    if [ -f "$READINESS_REF_FILE" ]; then
+      EXISTING=$(cat "$READINESS_REF_FILE")
+      if [ "$EXISTING" = "$READINESS_REF_CONTENT" ]; then
+        READINESS_SKIP=$((READINESS_SKIP + 1))
+        continue
+      fi
+    fi
+
+    echo "$READINESS_REF_CONTENT" > "$READINESS_REF_FILE"
+    git -C "$REPO_PATH" add .readiness-ref 2>/dev/null || true
+    READINESS_OK=$((READINESS_OK + 1))
+
+    # Add .readiness (symlink version) to .gitignore if not already present
+    GITIGNORE="$REPO_PATH/.gitignore"
+    if [ -f "$GITIGNORE" ]; then
+      if ! grep -q "^\.readiness$" "$GITIGNORE" 2>/dev/null; then
+        echo ".readiness" >> "$GITIGNORE"
+        git -C "$REPO_PATH" add .gitignore 2>/dev/null || true
+      fi
+    else
+      echo ".readiness" > "$GITIGNORE"
+      git -C "$REPO_PATH" add .gitignore 2>/dev/null || true
+    fi
+  done
+
+  echo -e "\n  Readiness-ref created/updated: $READINESS_OK | Already correct: $READINESS_SKIP"
+fi
+
 # ── PHASE 3: VERSION ALIGNMENT ────────────────────────────────────────────────
 log_phase 3 "Version Alignment"
 

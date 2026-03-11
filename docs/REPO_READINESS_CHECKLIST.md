@@ -1,5 +1,8 @@
 # Repo Readiness Checklist — SSOT
 
+> **CANONICAL CHECKLIST TEMPLATE:** `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml` **Per-repo status:**
+> `unified-trading-codex/10-audit/repos/{repo-name}.yaml`
+
 **Canonical definition of per-repo readiness stages for all 65 repos in the workspace manifest.**
 
 Every repo must progress through three independent readiness axes: **Code (CR)**, **Deployment (DR)**, and **Business
