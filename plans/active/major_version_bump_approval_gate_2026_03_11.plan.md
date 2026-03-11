@@ -156,9 +156,13 @@ todos:
          exist in each repo. Add a label-creation step to the propagation script if missing.
       4. Deprecate major-bump-approval.yml in each repo:
          Add DEPRECATED header comment pointing to request-major-bump.yml.
-    status: todo
+    status: done
     blocked_by: s1c-create-major-bump-issue-handler
-    note: "Pending — templates finalized in b99a826. Rollout to all 65 repos is next step."
+    note: |
+      Done 2026-03-11. 63 repos processed (all manifest repos excl. pm + codex).
+      Workflow files copied + labels created in all 63. ~32 pushed to main directly;
+      ~24 have open PRs on branch chore/major-bump-workflows-plan64.
+      Labels: major-bump-pending (D93F0B), major-bump-approved (0E8A16), major-bump-rejected (B60205).
 
   # ─── STREAM 2: RULES PROPAGATION ───
 
