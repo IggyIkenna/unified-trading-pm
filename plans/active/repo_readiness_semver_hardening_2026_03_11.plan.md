@@ -58,9 +58,12 @@ todos:
         - Items in deployment-service not in codex template
         - Items in codex not covered by CR/DR/BR model
         - Batch/live-specific items that need both modes tracked
-    status: in_progress
+    status: done
     note: |
-      Stream A running — gap analysis + template + 65 per-repo files being created in codex/10-audit/.
+      Done 2026-03-11 — gap analysis created at codex/10-audit/gap-analysis-2026-03-11.md.
+      Full analysis also in codex/10-audit/consolidation-gap-analysis.md (Stream A).
+      Key findings: Phase 7 operational data excluded; 38 v2.0 validator IDs absorbed into code_audit_items;
+      batch/live dirs were never populated so no archive needed; 15 dual-mode repos identified.
 
   # ─── PHASE 1: CODEX 10-AUDIT AS SSOT ───
 
@@ -110,14 +113,15 @@ todos:
           ...
       ```
       Merge the best criteria from all three existing templates into this single schema.
-    status: todo
+    status: done
     blocked_by: p0-audit-existing-checklists
     note: |
-      Key merge decisions:
-      - COD-01 through REGULATORY-04 items from _checklist-template-enhanced.yaml → fold into CR1/CR4
-      - 52-item operational template from deployment-service → fold batch/live DR sections
-      - CR/DR/BR model from PM → becomes the top-level structure
-      - validator_id and automation_status fields from enhanced template → preserve in CR/DR items
+      Done 2026-03-11 — codex/10-audit/REPO_READINESS_CHECKLIST.yaml exists at schema_version: "3.0".
+      Template created by Stream A. All merge decisions implemented:
+      - COD-01 through REGULATORY-04 items → code_audit_items cross-reference section
+      - 52-item operational template → Phase 7 data-catalogue items excluded (operational-only, kept in deployment-service/configs/)
+      - CR/DR/BR model from PM → top-level structure with batch/live sub-keys per section
+      - validator_id fields preserved in code_audit_items with all 110 IDs tracked
 
   - id: p1b-per-repo-checklist-files
     content: |
