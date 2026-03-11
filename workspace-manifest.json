@@ -1994,7 +1994,13 @@
       "status": "scaffolded",
       "version": "0.2.0",
       "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports — HTTP/GCS/PubSub only.",
-      "dependencies": ["deployment-api", "unified-api-contracts", "unified-internal-contracts"],
+      "dependencies": [
+        { "name": "unified-api-contracts", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-internal-contracts", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-events-interface", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-trading-library", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "market-data-processing-service", "version": ">=0.1.0,<1.0.0", "required": true }
+      ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md",
       "ci_status": "SCAFFOLDED",
@@ -2607,6 +2613,11 @@
         {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
