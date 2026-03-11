@@ -5,7 +5,7 @@ overview:
   rebalancing with full observability.
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5

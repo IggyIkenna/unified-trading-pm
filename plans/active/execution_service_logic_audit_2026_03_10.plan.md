@@ -5,7 +5,7 @@ overview:
   behaviour-validating tests across 7 tranches
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5

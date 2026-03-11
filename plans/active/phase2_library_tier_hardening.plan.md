@@ -103,27 +103,29 @@ Each tier follows the same step sequence — do NOT skip or reorder:
 - **Step A**: Deploy Structure — CI/CD wiring, QG config, pyproject.toml, workspace-manifest.json
 - **Step B**: Tests First — write/fix tests before any code rewrite
 - **Step C**: Code Rewrite — implement todos, fix violations, restructure
-- **Step D1**: `quickmerge --lint-only` — fastest feedback (syntax, import ordering, formatting)
-- **Step D2**: `quickmerge --unit-only` — import errors, type errors, unit tests
-- **Step D3**: `quickmerge --qg-only` — full QG, no git ops (integration test failures, coverage gaps)
-- **Step D4**: `quickmerge --quick` — full QG + git ops, skip act simulation
-- **Step D5**: `quickmerge` (no flags) — full with act simulation; **TIER GREEN GATE**
+- **Step D1**: `ruff check <src>/ --fix && ruff format <src>/` — syntax, import ordering, formatting
+- **Step D2**: `cd <repo> && bash scripts/quality-gates.sh` — unit tests, type checks
+- **Step D3**: `cd <repo> && bash scripts/quality-gates.sh` — integration tests, coverage gate
+- **Step D4/D5 (REMOVED)**: ~~quickmerge~~ — **replaced by**: `git add <files> && git commit -m "feat: ..."`. In Claude
+  Code sessions, `quality-gates.sh` exit 0 = TIER GREEN GATE. No quickmerge required.
+
+> **NOTE (2026-03-11):** D4/D5 quickmerge steps removed from tier-green requirement. `bash scripts/quality-gates.sh`
+> exit 0 is the gate. Quickmerge is only needed when explicitly requested by the user.
 
 ## INVARIANT
 
-**Never touch tier N until tier N-1 is fully green (all D5 passes).**
+**Never touch tier N until tier N-1 is fully green (quality-gates.sh passes for all N-1 repos).**
 
 > **Tier disambiguation:** "T0/T1/T2/T3" here = library architecture tiers (code dependency depth). Separate from
 > workspace-manifest.json `merge_level` (CI/CD cascade order, L0–L10 as of 2026-02-28 restructure). Do not confuse the
-> two. T0 repos must ALL pass D5 before any T1 work starts. T0 + T1 must both be green before any T2 work starts. T0 +
+> two. T0 repos must ALL pass QG before any T1 work starts. T0 + T1 must both be green before any T2 work starts. T0 +
 > T1 + T2 must all be green before T3 work starts.
 
 ## Progressive Validation
 
 D1 catches the fastest-failing issues (formatting, import order) and is nearly free. D2 adds unit tests and type
 checking — catches import-time errors early. D3 runs integration tests and coverage analysis without touching git — safe
-to retry. D4 runs everything plus git staging/branch ops but skips act (Cloud Build simulation). D5 is the full pipeline
-including act simulation — the only gate that counts for tier promotion.
+to retry. Commit after D3 passes.
 
 ## Integration Layer 0
 
@@ -260,7 +262,13 @@ EXECUTED by their owning interface repos:
   create_instruments_client, create_market_candle_data_client, StandardizedDomainCloudService re-exports from
   **init**.py); lib-phase2-uts-rename-step1 (add unified_trading_services/ re-export package for dual publish; update
   pyproject.toml, workspace-manifest.json, cursor rules, codex docs); dag-uts-v22-feature-audit (verify all UTS
-  components implemented); quality-importerror-fallbacks (UTS only); uts-v5-cleanup." status: pending
+  components implemented); quality-importerror-fallbacks (UTS only); uts-v5-cleanup." status: done notes: | DONE
+  (confirmed 2026-03-11): lib-phase1-uts-domain-cleanup DONE — create_instruments_client,
+  create_market_candle_data_client, StandardizedDomainCloudService removed; tombstone comments at **init**.py:576-577
+  and 691-692 confirm. lib-phase2-uts-rename-step1 DONE — rename unified-trading-services → unified-trading-library
+  completed 2026-03-02 per workspace-manifest.json notes. Package is unified_trading_library, no dual-publish re-export
+  needed. Remaining items (dag-uts-v22-feature-audit, quality-importerror-fallbacks, uts-v5-cleanup) can proceed without
+  blocking T2 — rename conflict risk is resolved.
 - id: t1-uts-progressive-validation content: "T1 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0 green]: D1 → D2 → D3 →
   D4 → D5. T1 TIER GREEN GATE = D5 passes." status: pending
 - id: t2-deploy-structure content: "T2 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1 green] [7 agents PARALLEL, 1 per

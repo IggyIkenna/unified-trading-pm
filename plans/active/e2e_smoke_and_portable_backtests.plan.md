@@ -5,7 +5,7 @@ overview:
   CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5

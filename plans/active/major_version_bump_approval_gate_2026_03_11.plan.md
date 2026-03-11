@@ -12,7 +12,7 @@ overview: |
   cursor rules, overnight-orchestrator tier prompts, and GHA agent prompt injections.
 type: infra
 epic: epic-infra
-status: active
+status: done
 
 completion_gates:
   code: C5
