@@ -127,8 +127,11 @@ todos:
       base-service.sh, this plan file), strategy-service (CI workflow), unified-api-contracts (29 stub.yaml files),
       unified-market-interface (test scaffolding), unified-reference-data-interface (test scaffolding),
       unified-trade-execution-interface (test scaffolding), zero_baseline_typecheck plan update.
-    status: pending
-    note: "Pending — commits not yet made. Run per-repo git add + git commit."
+    status: done
+    note:
+      "DONE 2026-03-11. All per-repo commits confirmed present per individual item notes (A–E). SSOT-INDEX also updated
+      2026-03-11 with 3 additional plan registrations (audit_remediation, position_precision_pnl_hardening,
+      uei_pending_event_additions)."
 isProject: false
 ---
 
