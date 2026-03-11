@@ -5,7 +5,7 @@ overview:
   configurable per-venue thresholds
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5
@@ -73,12 +73,12 @@ todos:
     note: "DONE 2026-03-11: P2.1 complete"
   - id: phase-3-venue-error-map
     content: Add all missing venues to VENUE_ERROR_MAP and apply catch-all handler to all adapters
-    status: todo
-    note: ""
+    status: done
+    note: "DONE 2026-03-11: 41 venues in VENUE_ERROR_MAP; catch-all CanonicalUnknownVenueError pattern in UMI adapters"
   - id: phase-4-sit-tests
     content: Write SIT tests for unknown error pathway, non-triggering errors, and config-driven thresholds
-    status: todo
-    note: ""
+    status: done
+    note: "DONE 2026-03-11: test_error_normalisation.py (419 lines) covers P4.1–P4.3"
 isProject: false
 ---
 
