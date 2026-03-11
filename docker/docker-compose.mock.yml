@@ -1,0 +1,104 @@
+# Mock infrastructure for local development and CI
+# All services run with CLOUD_MOCK_MODE=true and CLOUD_PROVIDER=local
+# No credentials required.
+#
+# Usage:
+#   docker compose -f docker-compose.mock.yml up
+#   docker compose -f docker-compose.mock.yml up --seed  # with fixture data
+#
+# GCP Emulators (optional, comment out if not needed):
+#   Pub/Sub: gcr.io/google.com/cloudsdktool/google-cloud-cli on port 8085
+#   GCS: fsouza/fake-gcs-server on port 4443
+#   BigQuery: ghcr.io/goccy/bigquery-emulator on port 9050
+
+version: "3.9"
+
+x-mock-env: &mock-env
+  CLOUD_PROVIDER: local
+  CLOUD_MOCK_MODE: "true"
+  LOG_LEVEL: INFO
+
+services:
+  # ─── GCP Emulators (optional) ───────────────────────────────────────────────
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=mock-project
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    profiles: ["gcp-emulators"]
+
+  gcs-emulator:
+    image: fsouza/fake-gcs-server:latest
+    ports:
+      - "4443:4443"
+    command: -scheme http -port 4443
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4443/storage/v1/b"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    profiles: ["gcp-emulators"]
+
+  bigquery-emulator:
+    image: ghcr.io/goccy/bigquery-emulator:latest
+    ports:
+      - "9050:9050"
+      - "9060:9060"
+    command: --project=mock-project --dataset=trading_analytics
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9050/discovery/v1/apis/bigquery/v2/rest"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    profiles: ["gcp-emulators"]
+
+  # ─── T2 Core Services ────────────────────────────────────────────────────────
+  market-data-service:
+    image: unified-trading/market-data-service:mock
+    build:
+      context: ../../market-data-service
+      dockerfile: Dockerfile
+    environment:
+      <<: *mock-env
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      STORAGE_EMULATOR_HOST: http://gcs-emulator:4443
+    ports:
+      - "8001:8000"
+    depends_on:
+      pubsub-emulator:
+        condition: service_healthy
+        required: false
+    profiles: ["services"]
+
+  execution-service:
+    image: unified-trading/execution-service:mock
+    build:
+      context: ../../execution-service
+      dockerfile: Dockerfile
+    environment:
+      <<: *mock-env
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+    ports:
+      - "8002:8000"
+    depends_on:
+      pubsub-emulator:
+        condition: service_healthy
+        required: false
+    profiles: ["services"]
+
+  trading-analytics-api:
+    image: unified-trading/trading-analytics-api:mock
+    build:
+      context: ../../trading-analytics-api
+      dockerfile: Dockerfile
+    environment:
+      <<: *mock-env
+      BIGQUERY_EMULATOR_HOST: bigquery-emulator:9050
+    ports:
+      - "8010:8000"
+    profiles: ["services"]
