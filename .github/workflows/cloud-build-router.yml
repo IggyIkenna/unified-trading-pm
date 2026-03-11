@@ -1,0 +1,132 @@
+name: cloud-build-router
+
+# Routes qg-passed events from individual repos to the correct GCP Cloud Build project.
+# Triggered by repository_dispatch from any repo's quality-gates.yml on QG success.
+#
+# Routing logic:
+#   feat/*   → uts-dev-ikenna     (tag: {semver}-{branch-slug})
+#   staging  → uts-staging-ikenna (tag: {semver}-staging)
+#   main     → uts-prod-ikenna    (tag: {semver})
+#
+# Library repos: build Python wheel (not Docker image) and push to Artifact Registry.
+# Service/API/UI repos: build Docker image.
+#
+# Payload: { repo, branch, commit_sha, version, repo_type }
+
+on:
+  repository_dispatch:
+    types: [qg-passed]
+
+permissions:
+  contents: read
+
+jobs:
+  route-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine build target
+        id: route
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          BRANCH="${{ github.event.client_payload.branch }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          REPO_TYPE="${{ github.event.client_payload.repo_type }}"
+
+          echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
+
+          # Determine GCP project + image tag from branch
+          BRANCH_SLUG=$(echo "$BRANCH" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]')
+
+          if [ "$BRANCH" = "main" ]; then
+            GCP_PROJECT="uts-prod-ikenna"
+            IMAGE_TAG="${VERSION}"
+            ENV="prod"
+          elif [ "$BRANCH" = "staging" ]; then
+            GCP_PROJECT="uts-staging-ikenna"
+            IMAGE_TAG="${VERSION}-staging"
+            ENV="staging"
+          else
+            GCP_PROJECT="uts-dev-ikenna"
+            IMAGE_TAG="${VERSION}-${BRANCH_SLUG}"
+            ENV="dev"
+          fi
+
+          echo "gcp_project=$GCP_PROJECT" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "env=$ENV" >> "$GITHUB_OUTPUT"
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "repo_type=$REPO_TYPE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+
+          echo "Routing: $REPO ($REPO_TYPE) branch=$BRANCH → $GCP_PROJECT tag=$IMAGE_TAG"
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json:
+            ${{ steps.route.outputs.env == 'dev' && secrets.GCP_SA_KEY_DEV || steps.route.outputs.env == 'staging' &&
+            secrets.GCP_SA_KEY_STAGING || secrets.GCP_SA_KEY_PROD }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Trigger Cloud Build (Docker image — service/api/ui)
+        if: steps.route.outputs.repo_type != 'library'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          BRANCH="${{ steps.route.outputs.branch }}"
+          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
+          ENV="${{ steps.route.outputs.env }}"
+          AR_HOST="asia-northeast1-docker.pkg.dev"
+
+          echo "Triggering Cloud Build in $GCP_PROJECT for $REPO:$IMAGE_TAG"
+
+          gcloud builds triggers run "${REPO}-${ENV}" \
+            --project="$GCP_PROJECT" \
+            --region="asia-northeast1" \
+            --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+            2>/dev/null || \
+          gcloud builds submit \
+            --project="$GCP_PROJECT" \
+            --region="asia-northeast1" \
+            --config=cloudbuild.yaml \
+            --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+            --no-source \
+            || echo "WARNING: Cloud Build trigger not yet configured for $REPO. Manual setup required."
+
+      - name: Trigger Cloud Build (Python wheel — library)
+        if: steps.route.outputs.repo_type == 'library'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          ENV="${{ steps.route.outputs.env }}"
+
+          echo "Library repo: $REPO — would build Python wheel $VERSION for $GCP_PROJECT"
+          echo "NOTE: Wheel build via Cloud Build not yet provisioned. Track in Phase 5 implementation."
+          # Future: gcloud builds triggers run "${REPO}-wheel-${ENV}" --project="$GCP_PROJECT" ...
+
+      - name: Log routing decision
+        if: always()
+        run: |
+          echo "Build routing summary:"
+          echo "  repo:       ${{ steps.route.outputs.repo }}"
+          echo "  type:       ${{ steps.route.outputs.repo_type }}"
+          echo "  branch:     ${{ steps.route.outputs.branch }}"
+          echo "  gcp_project: ${{ steps.route.outputs.gcp_project }}"
+          echo "  image_tag:  ${{ steps.route.outputs.image_tag }}"
+          echo "  env:        ${{ steps.route.outputs.env }}"

@@ -1,0 +1,63 @@
+name: sit-unlock
+
+# Triggered by system-integration-tests when SIT FAILS.
+# Clears staging_status.locked so queued PRs can merge and engineers can push fixes.
+
+on:
+  repository_dispatch:
+    types: [sit-failed]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  unlock-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Unlock staging on SIT failure
+        run: |
+          set -euo pipefail
+          python3 - <<PYEOF
+          import json
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+
+          manifest["staging_status"]["locked"] = False
+          manifest["staging_status"]["locked_since"] = None
+          manifest["staging_status"]["locked_reason"] = "SIT failed — open for fixes"
+          manifest["staging_status"]["lock_version"] = None
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print("Staging unlocked after SIT failure. Engineers can push fixes.")
+          PYEOF
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No changes. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): SIT unlock — staging_status.locked=false (SIT failed) [skip ci]"
+          git push

@@ -643,6 +643,15 @@ if [ -d "$WORKSPACE_VENV/bin" ] && [ -d "$PM_ROOT/scripts/shared" ]; then
   log_ok "Shared scripts installed to .venv-workspace/bin (run_timeout etc.)"
 fi
 
+# Install git hooks in all repos
+echo ""
+echo "=== Phase 4: Installing git hooks ==="
+if [ -f "$SCRIPT_DIR_RESOLVED/install-hooks.sh" ]; then
+  bash "$SCRIPT_DIR_RESOLVED/install-hooks.sh"
+else
+  echo "WARNING: install-hooks.sh not found — skipping hook installation"
+fi
+
 # ── PHASE 5: PER-REPO SETUP (CI/CD Phase 2) ──────────────────────────────────
 log_phase 5 "Per-Repo Setup (CI/CD Phase 2)"
 

@@ -402,23 +402,26 @@ suite. SSOT: `unified-trading-codex/06-coding-standards/quality-gates.md § Two-
 
 **Version bump rules on feature branches:**
 
-- `semver-agent.yml` and the disabled `version-bump.yml` only fire on `main` or `staging` — never on `feat/*`
-- `pyproject.toml` versions are **never** bumped on feature branches
-- Version bumping only happens when the PR from `feat/*` merges to `main` and semver-agent fires
+- `semver-agent.yml` and the disabled `version-bump.yml` only fire on `staging` — never on `feat/*` or `main`
+- `pyproject.toml` versions are **never** bumped on feature branches or at main merge
+- Version bumping happens exactly once: when the PR from `feat/*` merges to `staging`
 
 **Flow:**
 
 ```
 feat/my-feature branch
-  → quickmerge (--dep-branch feat/my-feature)
-    → STAGE 0: cascade ancestors to feat/my-feature
-    → STAGE 1-5: QG + PR to main
-  → PR auto-merges to main
-  → semver-agent.yml fires on main push
+  → quickmerge --to-staging (--dep-branch feat/my-feature)
+    → STAGE 0: dep alignment check (check-dep-alignment.py — staging or main reference)
+    → STAGE 1-5: QG + PR to staging (GitHub auto-merge queue holds if staging locked)
+  → PR auto-merges to staging
+  → semver-agent.yml fires on staging push
     → Claude-Haiku reads commit + API diff → decides patch/minor/major
-    → bumps pyproject.toml on main
-    → dispatches version-bump to PM → PM manifest updated
+    → bumps pyproject.toml on staging
+    → dispatches version-bump to PM → PM updates staging_versions + staging_commits
     → cascade dispatches to dependents
+  → SIT runs (10-min quiet debounce) → staging-to-main.yml on pass
+    → promotes staging_versions → versions (no re-bump on main)
+    → main merge commit uses [skip ci] — semver-agent does NOT re-run
 ```
 
 ---
@@ -427,7 +430,8 @@ feat/my-feature branch
 
 `semver-agent.yml` is the **sole owner** of version bumping. `version-bump.yml` is disabled (`if: false`).
 
-**When it fires:** push to `main` or `staging` only (never on `feat/*`).
+**When it fires:** push to `staging` only (never on `feat/*` or `main`). Version is decided once at staging merge. Main
+merge uses `[skip ci]` — no re-bump.
 
 **What it does:**
 
@@ -438,10 +442,20 @@ feat/my-feature branch
    - `feat:` or new public export → minor
    - `fix:` or no API change → patch
 4. Updates `pyproject.toml` + prepends to `CHANGELOG.md`
-5. Commits `chore: bump version to X.Y.Z [skip ci]` → pushes to same branch
-6. Dispatches `version-updated` to PM → PM updates `workspace-manifest.json`
+5. Commits `chore: bump version to X.Y.Z [skip ci]` → pushes to staging
+6. Dispatches `version-bump` to PM with `{ repo, version, branch: "staging", commit_sha }` → PM updates
+   `staging_versions[repo]` and `staging_commits[repo]`
 
 **Pre-1.0.0 rule:** breaking changes bump MINOR (never auto-cross to 1.0.0). 1.0.0 is set manually.
+
+**Manifest fields:**
+
+| Field                    | When set                                        | What it means                                             |
+| ------------------------ | ----------------------------------------------- | --------------------------------------------------------- |
+| `staging_versions[repo]` | After semver-agent fires on staging push        | In-flight version, not yet SIT-validated                  |
+| `versions[repo]`         | After SIT passes + staging-to-main.yml promotes | Stable version on main                                    |
+| `staging_commits[repo]`  | Written alongside staging_versions              | Exact commit SHA under test in current SIT run            |
+| `main_commits.history`   | After each SIT pass                             | Rolling last 5 promoted staging sets (rollback reference) |
 
 ---
 
@@ -463,21 +477,32 @@ manifest check is needed.
 
 ## Autonomous Agent GHA Flow
 
-After a PR merges to `main` in any service repo:
+After a PR merges to `staging` in any service repo:
 
 ```
-push to main
-  → quality-gates.yml (required status check)
+push to staging
+  → quality-gates.yml (required status check) → dispatches qg-passed to PM
   → plan-alignment-agent.yml (advisory PR comment — never blocks)
-  → semver-agent.yml
+  → semver-agent.yml (fires on staging push only)
       claude-haiku reads commit message + API diff
-      → bumps pyproject.toml + CHANGELOG
-      → pushes chore: bump version [skip ci] to main
-      → dispatches version-updated to PM
+      → bumps pyproject.toml + CHANGELOG on staging
+      → pushes chore: bump version [skip ci] to staging
+      → dispatches version-bump to PM (payload: repo, version, branch=staging, commit_sha)
   → PM: update-repo-version.yml receives dispatch
-      → updates versions or staging_versions in workspace-manifest.json
+      → updates staging_versions[repo] = version
+      → updates staging_commits[repo] = commit_sha
       → dispatches dependency-update to downstream repos
   → each dependent: receives dep-update, creates PR updating its own pyproject.toml constraint
+  → PM: cloud-build-router.yml receives qg-passed dispatch
+      → routes to uts-staging-ikenna Cloud Build
+      → builds Docker image tagged {semver}-staging
+      → updates deployed_versions.staging in manifest
+
+After SIT passes → staging-to-main.yml:
+  → promotes staging_versions → versions (no re-bump)
+  → appends staging_commits to main_commits.history (keep last 5)
+  → clears staging_commits + staging_status.locked
+  → merges staging → main with [skip ci] commit message (semver-agent does NOT re-run)
 ```
 
 **Overnight orchestrator** (`overnight-agent-orchestrator.yml`, cron `0 1 * * *`):
@@ -505,6 +530,180 @@ any remaining ordering dependency at staging time.
 
 ---
 
+## Staging Lock Lifecycle
+
+SIT owns the staging lock. The lock is set when SIT **starts** (not when a major bump happens). Unlock on either pass or
+fail so engineers can push fixes without waiting.
+
+```
+feat/* passes QG → quickmerge --to-staging → PR to staging (GitHub auto-merge queue)
+
+GitHub auto-merge queue: staging-gate check
+  PASS    if staging_status.locked == false
+  PENDING if staging_status.locked == true  ← PRs queue here during SIT
+
+SIT debounce (GHA concurrency group, 10-min quiet):
+  staging push → triggers smoke-test-gate.yml
+  concurrency group (cancel-in-progress: true) cancels prior run if new push arrives within 10 min
+  after 10-min quiet → job proceeds (batch covers all repos pushed in that window)
+
+SIT START:
+  → reads staging_commits from PM manifest (exact SHA set)
+  → dispatches sit-lock to PM (payload: { commit_shas: {...} })
+  → PM's sit-gate.yml: sets locked=true, locked_since=utcnow(), locked_reason="SIT running"
+  → SIT clones each repo at its staging_commits[repo] SHA — not latest HEAD
+
+SIT PASS:
+  → dispatches staging-validated to PM
+  → staging-to-main.yml:
+      appends staging_commits to main_commits.history (keep last 5)
+      promotes staging_versions → versions
+      clears staging_commits, staging_status.locked=false
+
+SIT FAIL:
+  → dispatches sit-failed to PM
+  → sit-unlock.yml: sets locked=false, reason="SIT failed — open for fixes"
+  → Queued PRs to staging can now merge (gate passes again)
+  → Engineers push fix to feat/* → quickmerge --to-staging → new SIT run
+```
+
+**Workflows involved:**
+
+| Workflow                    | Trigger                      | Action                                       |
+| --------------------------- | ---------------------------- | -------------------------------------------- |
+| `sit-gate.yml` (PM)         | `sit-lock` dispatch          | Sets lock + records staging_commits SHAs     |
+| `sit-unlock.yml` (PM)       | `sit-failed` dispatch        | Clears lock, reason = "SIT failed"           |
+| `staging-to-main.yml` (PM)  | `staging-validated` dispatch | Promotes versions + clears lock on pass      |
+| `smoke-test-gate.yml` (SIT) | push to staging              | Debounce → lock → run tests → unlock/promote |
+
+**quickmerge --to-staging behavior when locked:** Informs the user that staging is locked and PR creation will proceed.
+GitHub's auto-merge queue holds the PR until the lock clears. Does not abort.
+
+---
+
+## SIT Batching
+
+Multiple `feat/*` PRs merging to staging within 10 minutes form a **batch** — a single SIT run covers the full batch.
+
+**How it works:**
+
+- `smoke-test-gate.yml` has a GHA concurrency group:
+  ```yaml
+  concurrency:
+    group: sit-staging
+    cancel-in-progress: true
+  ```
+- The job sleeps 600s at start. If a new staging push arrives within 10 min, the prior run is cancelled and a new run
+  starts (resetting the clock).
+- After 10-min quiet, the job proceeds and tests ALL repos currently on staging — not just the last-pushed one.
+- SIT reads `staging_commits` from the PM manifest to get the exact SHA set to test.
+
+**Result:** Two repos pushed to staging 3 min apart → one SIT run covering both. No partial-set testing.
+
+---
+
+## Dependency Reference Rules
+
+When checking if a repo's direct deps are aligned before a push or quickmerge, the reference branch depends on context:
+
+```
+for each direct dep:
+    if dep is in manifest.staging_versions AND (push target is staging OR --to-staging flag):
+        compare to origin/staging
+    else:
+        compare to origin/main
+```
+
+**Why:** When a library is promoted to staging but not yet merged to main, its `pyproject.toml` on `origin/main` still
+shows the old version. Checking against `origin/staging` avoids a chicken-and-egg block where valid staging work is
+refused because its dep hasn't been promoted to main yet.
+
+**Enforcement points:**
+
+1. **quickmerge Stage 0** — `check-dep-alignment.py` runs before cascade; exits 1 if misaligned
+2. **git pre-push hook** — same check, fires on `git push origin staging` only; no-op for `feat/*`
+3. **Script:**
+   `scripts/repo-management/check-dep-alignment.py --repo <name> --to-staging <true|false> --manifest <path>`
+4. **Hook source:** `scripts/hooks/pre-push` (installed to all repos by `scripts/workspace/install-hooks.sh`)
+
+---
+
+## Multi-Project Cloud Build
+
+Three isolated GCP projects — one per environment. Build triggered by QG pass (not raw push).
+
+### Routing Table
+
+| Branch    | GCP Project          | Image Tag Format         |
+| --------- | -------------------- | ------------------------ |
+| `feat/*`  | `uts-dev-ikenna`     | `{semver}-{branch-slug}` |
+| `staging` | `uts-staging-ikenna` | `{semver}-staging`       |
+| `main`    | `uts-prod-ikenna`    | `{semver}`               |
+
+### Trigger Flow
+
+```
+QG passes in any repo
+  → quality-gates.yml dispatches qg-passed to PM
+      payload: { repo, branch, commit_sha, version, repo_type }
+  → PM: cloud-build-router.yml receives dispatch
+      → determines GCP project + image tag from branch
+      → authenticates with env-specific SA key (GCP_SA_KEY_DEV / _STAGING / _PROD)
+      → triggers Cloud Build in the correct project
+```
+
+### Artifact Types
+
+- **Library repos** (`repo_type == "library"`) → Python wheel build (not Docker). Wheel pushed to Artifact Registry.
+- **Service/API/UI repos** → Docker image build. Image pushed to AR with immutable tag.
+
+### Image Tag Immutability
+
+**Tags are never overwritten.** To fix a bad image at the same semver, bump the version first (creates a new tag).
+
+### uv.lock Frozen
+
+All service Dockerfiles use `uv sync --frozen --no-dev`. `uv.lock` is the reproducibility SSOT. `pyproject.toml`
+`>=X.Y.Z` ranges are API compatibility contracts — never pinned in pyproject.toml (let uv.lock handle it).
+
+```dockerfile
+RUN uv sync --frozen --no-dev
+```
+
+### Terraform
+
+GCP project provisioning: `unified-trading-pm/terraform/environments/{dev,staging,prod}/main.tf`
+
+Each environment creates: `google_project_service` (cloudbuild, artifactregistry, run, secretmanager), AR repository
+`unified-trading`, Cloud Build SA with AR Writer + Cloud Run Developer + Secret Manager Accessor IAM roles.
+
+GitHub secrets required: `GCP_SA_KEY_DEV`, `GCP_SA_KEY_STAGING`, `GCP_SA_KEY_PROD`.
+
+---
+
+## Rollback
+
+Images are kept indefinitely in staging and prod Artifact Registry. Dev AR has a 90-day lifecycle cleanup policy.
+
+**Rollback procedure:**
+
+```bash
+# Via deployment-api
+POST /deployments/{service}/rollback
+Body: { "image_tag": "0.3.165", "environment": "prod" }
+```
+
+This triggers `gcloud run deploy --image {ar_host}/{project}/{repo}/{service}:{tag}` and updates
+`deployed_versions.prod.{repo}` in the PM manifest.
+
+**Finding known-good tags:** `main_commits.history` in `workspace-manifest.json` contains the last 5 staging sets
+promoted to main — each entry has the exact `commit_shas` and the tag formula produces the known-good image tag.
+
+**Deployment UI (Phase 7 — future):** Will expose a version dropdown per service per environment, reading
+`deployed_versions` + AR tag list, with a "Last known good" shortcut from `main_commits.history[0]`.
+
+---
+
 ## References
 
 | Doc                                                     | Purpose                                                                |
@@ -513,5 +712,11 @@ any remaining ordering dependency at staging time.
 | `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md` | Phase 1–2 detail                                                       |
 | `docs/repo-management/sync-to-main-flow.md`             | Phase 3 detail                                                         |
 | `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`       | Internal alignment                                                     |
+| `scripts/repo-management/check-dep-alignment.py`        | Dep reconciliation gate (Phase 4)                                      |
+| `scripts/hooks/pre-push`                                | Git pre-push hook for dep check on staging pushes                      |
+| `.github/workflows/sit-gate.yml`                        | Sets staging lock at SIT start                                         |
+| `.github/workflows/sit-unlock.yml`                      | Clears staging lock on SIT failure                                     |
+| `.github/workflows/cloud-build-router.yml`              | Routes qg-passed to correct GCP Cloud Build project                    |
+| `terraform/environments/`                               | GCP project provisioning (dev/staging/prod)                            |
 | **Codex**                                               | `06-coding-standards/setup-standards.md`, `dependency-management.md`   |
 | **Cursor rules**                                        | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc` |

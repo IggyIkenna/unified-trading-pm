@@ -1,0 +1,135 @@
+name: semver-agent
+
+# Computes the next semver for this repo based on conventional commits since the last tag,
+# then dispatches a version-bump event to unified-trading-pm with the computed version and
+# the commit SHA that triggered it.
+#
+# Trigger: push to staging ONLY (not main — main receives version bumps from staging promotions).
+#
+# Pre-1.0.0 semver rules (mirrors version-bump.yml in each repo):
+#   feat!: / BREAKING CHANGE: → MINOR bump (never auto-cross to 1.0.0)
+#   feat:                      → MINOR bump
+#   fix:                       → PATCH bump
+#   chore:/docs:/etc.          → no bump (skip)
+#
+# Dispatch payload to unified-trading-pm:
+#   { repo, version, branch, commit_sha }
+#
+# Requires: GH_PAT secret (cross-repo dispatch).
+
+on:
+  push:
+    branches: [staging]
+
+permissions:
+  contents: read
+
+jobs:
+  semver-agent:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Compute next semver from conventional commits since last tag
+        id: compute
+        run: |
+          set -euo pipefail
+
+          # Resolve last tag; fall back to first commit if no tags exist yet
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          echo "Last tag / base ref: $LAST_TAG"
+
+          # Collect all commit messages since the last tag (exclusive)
+          COMMITS=$(git log "${LAST_TAG}..HEAD" --pretty=format:"%s" 2>/dev/null || true)
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits since $LAST_TAG. Nothing to bump."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Commits since $LAST_TAG:"
+          echo "$COMMITS"
+
+          # Determine the highest-priority bump across ALL commits in the range
+          BUMP=""
+
+          while IFS= read -r msg; do
+            # Full commit message may contain BREAKING CHANGE footer — check first line only here
+            # because git log --pretty="%s" gives subject line; breaking footer won't appear.
+            # Breaking prefix (feat!/fix!/etc.) takes priority.
+            if echo "$msg" | grep -qE "^[a-z]+!(\(.+\))?:"; then
+              BUMP="breaking"
+              break  # highest priority — no need to continue
+            elif echo "$msg" | grep -qE "^feat(\(.+\))?:"; then
+              [ "$BUMP" != "breaking" ] && BUMP="minor"
+            elif echo "$msg" | grep -qE "^fix(\(.+\))?:"; then
+              [ "$BUMP" != "breaking" ] && [ "$BUMP" != "minor" ] && BUMP="patch"
+            fi
+          done <<< "$COMMITS"
+
+          if [ -z "$BUMP" ]; then
+            echo "No feat:/fix:/breaking commits found. Skipping version bump."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Resolved bump category: $BUMP"
+
+          # Read current version from pyproject.toml
+          CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "$BUMP" in
+            breaking)
+              # Pre-1.0.0 rule: breaking changes bump MINOR, never cross to 1.0.0 automatically.
+              # 1.0.0 is set manually when the repo is declared production-stable.
+              if [ "$MAJOR" = "0" ]; then
+                MINOR=$((MINOR + 1)); PATCH=0
+              else
+                MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+              fi ;;
+            minor)
+              MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch)
+              PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "Version: $CURRENT → $NEW_VERSION (bump=$BUMP)"
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch version-bump to unified-trading-pm
+        if: steps.compute.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.repository.name }}"
+          VERSION="${{ steps.compute.outputs.new_version }}"
+          BRANCH="${{ github.ref_name }}"
+          COMMIT_SHA="${{ github.sha }}"
+          OWNER="${{ github.repository_owner }}"
+
+          echo "Dispatching version-bump: repo=$REPO version=$VERSION branch=$BRANCH commit_sha=$COMMIT_SHA"
+
+          HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"${REPO}\", \"version\": \"${VERSION}\", \"branch\": \"${BRANCH}\", \"commit_sha\": \"${COMMIT_SHA}\"}}")
+
+          if [ "$HTTP_STATUS" = "204" ]; then
+            echo "Dispatched successfully to unified-trading-pm"
+          else
+            echo "ERROR: HTTP $HTTP_STATUS dispatching to unified-trading-pm"
+            cat /tmp/dispatch_response.json || true
+            exit 1
+          fi

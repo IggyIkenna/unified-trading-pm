@@ -1,0 +1,81 @@
+name: sit-gate
+
+# Triggered by system-integration-tests at the START of a SIT run.
+# Sets staging_status.locked=true and records the exact commit SHAs being tested.
+# Payload: { repos: ["repo1", "repo2", ...], commit_shas: {"repo1": "abc123", ...} }
+
+on:
+  repository_dispatch:
+    types: [sit-lock]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  lock-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Lock staging and record commit SHAs
+        run: |
+          set -euo pipefail
+          python3 - <<PYEOF
+          import json, datetime
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          # Lock staging
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+          manifest["staging_status"]["locked"] = True
+          manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
+          manifest["staging_status"]["locked_reason"] = "SIT running"
+          manifest["staging_status"]["lock_version"] = None
+
+          # Record commit SHAs from payload
+          payload_shas_raw = '${{ toJson(github.event.client_payload.commit_shas) }}'
+          try:
+              import sys
+              payload_shas = json.loads(payload_shas_raw)
+          except Exception:
+              payload_shas = {}
+
+          if "staging_commits" not in manifest:
+              manifest["staging_commits"] = {"_note": "Exact commit SHAs under test in the current SIT run."}
+
+          # Merge payload SHAs into staging_commits (preserve _note)
+          for repo, sha in payload_shas.items():
+              manifest["staging_commits"][repo] = sha
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print(f"Staging locked. Recorded {len(payload_shas)} commit SHAs.")
+          for repo, sha in payload_shas.items():
+              print(f"  {repo}: {sha}")
+          PYEOF
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No changes. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): SIT lock — staging_status.locked=true, commit SHAs recorded [skip ci]"
+          git push

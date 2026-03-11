@@ -44,6 +44,7 @@ jobs:
           VERSION="${{ github.event.client_payload.version }}"
           BRANCH="${{ github.event.client_payload.branch }}"
           BRANCH="${BRANCH:-main}"  # default to main if not provided
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
 
           if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
             echo "Missing repo or version in client_payload. Skipping."
@@ -70,6 +71,7 @@ jobs:
           repo = "${REPO}"
           version = "${VERSION}"
           branch = "${BRANCH}"
+          commit_sha = "${COMMIT_SHA}"
           version_parts = version.split(".")
           major = int(version_parts[0])
           bump_type = "major" if major > 0 else "patch"  # simplified; will be overridden below
@@ -96,9 +98,16 @@ jobs:
               if "staging_versions" not in manifest:
                   manifest["staging_versions"] = {}
               manifest["staging_versions"][repo] = version
+              # Record the commit SHA that produced this staging version
+              if commit_sha:
+                  if "staging_commits" not in manifest:
+                      manifest["staging_commits"] = {}
+                  manifest["staging_commits"][repo] = commit_sha
               # If major bump on staging, set staging_status.locked
               if bump_type == "major":
                   import datetime
+                  if "staging_status" not in manifest:
+                      manifest["staging_status"] = {"locked": False, "locked_since": None, "locked_reason": None, "lock_version": None}
                   manifest["staging_status"]["locked"] = True
                   manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
                   manifest["staging_status"]["locked_reason"] = f"Major bump cascade: {repo}={version}"

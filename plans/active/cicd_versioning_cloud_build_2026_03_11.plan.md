@@ -1,6 +1,6 @@
 # Plan: CI/CD Versioning, Multi-Project Cloud Build & Staging Queue
 
-**Status:** Active **Created:** 2026-03-11 **Supersedes:** `version_control_ci_cd_overhaul_2026_03_11.plan.md`
+**Status:** In Progress **Created:** 2026-03-11 **Supersedes:** `version_control_ci_cd_overhaul_2026_03_11.plan.md`
 (absorbed + deleted), `semver_multi_project_env_2026_03_10.plan.md` (superseded) **Refs:**
 
 - `docs/repo-management/CI-CD-FLOW.md`
@@ -30,7 +30,7 @@ branch/version/environment.
 
 ---
 
-## Phase 1: Manifest Schema Extensions (prerequisite for everything)
+## Phase 1: Manifest Schema Extensions (prerequisite for everything) ✅ DONE
 
 **Touches:** `unified-trading-pm/workspace-manifest.json`
 
@@ -65,7 +65,7 @@ Initialize all missing fields:
 
 ---
 
-## Phase 2: Semver at Staging Merge
+## Phase 2: Semver at Staging Merge ✅ DONE (semver-agent.yml already staging-only; update-repo-version.yml + staging-to-main.yml updated)
 
 **Goal:** Version decided once when `feat/*` merges to staging. Main merge is silent (`[skip ci]`). No double-bump.
 
@@ -103,7 +103,7 @@ Initialize all missing fields:
 
 ---
 
-## Phase 3: SIT Lock Lifecycle
+## Phase 3: SIT Lock Lifecycle ✅ DONE (sit-gate.yml + sit-unlock.yml created; smoke-test-gate.yml + quickmerge.sh updated)
 
 **Goal:** SIT owns the staging lock. Lock is set when SIT starts (not earlier). Unlock on failure so engineers can push
 fixes.
@@ -185,7 +185,7 @@ PR creation will proceed — GitHub will hold it until SIT completes.
 
 ---
 
-## Phase 4: Dependency Reconciliation Gate
+## Phase 4: Dependency Reconciliation Gate ✅ DONE (check-dep-alignment.py + pre-push hook + install-hooks.sh + workspace-bootstrap.sh integration)
 
 **Goal:** Block pushes when a repo's direct deps are not aligned with the correct remote reference (staging or main
 depending on context).
@@ -277,7 +277,7 @@ bash unified-trading-pm/scripts/workspace/install-hooks.sh
 
 ---
 
-## Phase 5: Multi-Project GCP Cloud Build
+## Phase 5: Multi-Project GCP Cloud Build ✅ DONE (Terraform environments, cloud-build-router.yml, cloudbuild.yaml template, qg-passed dispatch in quality-gates.yml)
 
 **Goal:** Three isolated GCP projects. Builds triggered by QG pass (not push). Images tagged with semver + environment
 suffix. Libraries build Python wheels; services/APIs/UIs build Docker images.
@@ -396,7 +396,7 @@ prod builds.
 
 ---
 
-## Phase 6: CI-CD-FLOW.md Update
+## Phase 6: CI-CD-FLOW.md Update ✅ DONE (Staging Lock Lifecycle, SIT Batching, Dep Reference Rules, Multi-Project Cloud Build, Semver Lifecycle, Rollback sections added)
 
 **File:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md`
 

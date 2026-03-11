@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Blocks git push to staging when direct deps are out of alignment.
+# Delegates to check-dep-alignment.py (same logic as quickmerge Stage 0).
+# Only fires when pushing to staging branch — no-op for feat/* pushes.
+
+set -euo pipefail
+
+REMOTE="$1"
+PUSHING_TO_STAGING=false
+
+while IFS=' ' read -r local_ref local_sha remote_ref remote_sha; do
+  if echo "$remote_ref" | grep -q "refs/heads/staging"; then
+    PUSHING_TO_STAGING=true
+  fi
+done
+
+if [ "$PUSHING_TO_STAGING" = false ]; then exit 0; fi
+
+# Navigate to workspace root (two levels up from repo root)
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+WORKSPACE_ROOT="${REPO_ROOT}/../../"
+MANIFEST="${WORKSPACE_ROOT}unified-trading-pm/workspace-manifest.json"
+REPO_NAME=$(basename "$REPO_ROOT")
+CHECK_SCRIPT="${WORKSPACE_ROOT}unified-trading-pm/scripts/repo-management/check-dep-alignment.py"
+
+# If no manifest or script found, skip check (graceful degradation)
+if [ ! -f "$MANIFEST" ] || [ ! -f "$CHECK_SCRIPT" ]; then
+  echo "pre-push: dep-alignment check skipped (manifest or script not found)"
+  exit 0
+fi
+
+echo "pre-push: checking dep alignment for $REPO_NAME before push to staging..."
+python3 "$CHECK_SCRIPT" --repo "$REPO_NAME" --to-staging true --manifest "$MANIFEST"
+exit $?

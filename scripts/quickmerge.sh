@@ -867,6 +867,21 @@ PR_BODY="Automated PR. Will auto-merge once quality gates pass.
 
 ${ISSUE_REFS}"
 
+# Check staging lock status and inform user (do not abort — GitHub auto-merge queue will hold the PR)
+if [ "$TO_STAGING" = true ]; then
+  MANIFEST_PATH="${WORKSPACE_ROOT}/unified-trading-pm/workspace-manifest.json"
+  if [ -f "$MANIFEST_PATH" ]; then
+    LOCKED=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(str(m.get('staging_status', {}).get('locked', False)).lower())" 2>/dev/null || echo "false")
+    if [ "$LOCKED" = "true" ]; then
+      LOCK_REASON=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(m.get('staging_status', {}).get('locked_reason', 'unknown'))" 2>/dev/null || echo "unknown")
+      LOCK_SINCE=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(m.get('staging_status', {}).get('locked_since', 'unknown'))" 2>/dev/null || echo "unknown")
+      echo "⚠️  [$REPO_NAME] Staging is locked: \"${LOCK_REASON}\" (since ${LOCK_SINCE})."
+      echo "⚠️  [$REPO_NAME] Your --to-staging PR will queue automatically via GitHub's staging-gate check."
+      echo "⚠️  [$REPO_NAME] PR creation will proceed — GitHub will hold it until SIT completes."
+    fi
+  fi
+fi
+
 # Determine PR base branch
 if [ "$TO_STAGING" = true ]; then
   PR_BASE="staging"
