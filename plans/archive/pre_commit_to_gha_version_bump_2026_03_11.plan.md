@@ -6,7 +6,7 @@ overview:
   promotion (previously the cascade never fired because version-bump.yml skips chore(release) merge commits).
 type: infra
 epic: epic-infra
-status: active
+status: done
 
 completion_gates:
   code: C3
@@ -40,7 +40,14 @@ todos:
       sole authoritative version bumper. Local hook caused incorrect PATCH pre-bumps on feature branches and a
       double-bump when the GHA MINOR/MAJOR bump then fired on squash-merge to main. Run --dry-run first to confirm
       scope, then run without flag.
-    status: pending
+    status: completed
+    notes:
+      "RESOLVED 2026-03-11: 18 repos changed (49 already absent), 0 failed. Each repo committed with [skip ci]. Repos
+      changed: execution-algo-library, instruments-service, matching-engine-library, unified-api-contracts,
+      unified-cloud-interface, unified-config-interface, unified-defi-execution-interface, unified-domain-client,
+      unified-events-interface, unified-internal-contracts, unified-market-interface, unified-ml-interface,
+      unified-position-interface, unified-reference-data-interface, unified-sports-execution-interface,
+      unified-trade-execution-interface, unified-trading-library, unified-trading-ui-auth."
 
 isProject: false
 ---
