@@ -95,4 +95,4 @@ jobs:
         working-directory: unified-trading-pm
         run: |
           source .venv/bin/activate
-          bash scripts/quality-gates.sh
+          bash scripts/quality-gates.sh --no-fix
