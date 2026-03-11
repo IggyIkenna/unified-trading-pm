@@ -49,7 +49,7 @@ def _read_ohlcv_files(data_dir: Path) -> pd.DataFrame:
         try:
             table = pq.read_table(str(pf))
             frames.append(table.to_pandas())
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.warning("Failed to read %s: %s", pf, exc)
 
     if not frames:

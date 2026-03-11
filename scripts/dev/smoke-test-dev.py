@@ -115,7 +115,7 @@ LIBRARY_IMPORTS: list[tuple[str, str, bool]] = [
 
 for label, stmt, mandatory in LIBRARY_IMPORTS:
     try:
-        exec(stmt)  # noqa: S102
+        exec(stmt)
         _pass(label)
     except ImportError as exc:
         if mandatory:
@@ -135,7 +135,7 @@ if cloud_mock in ("1", "true", "yes"):
 
         cfg = UnifiedCloudConfig()
         _pass("UnifiedCloudConfig instantiated", f"project={cfg.gcp_project_id}")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         record_fail("UnifiedCloudConfig instantiation", str(exc))
 else:
     record_warn(
@@ -204,7 +204,7 @@ try:
     _pass("setup_events() executed", "no real Pub/Sub connection required")
     log_event("smoke_test_check", {"check": 6, "status": "pass"})
     _pass("log_event() executed")
-except Exception as exc:  # noqa: BLE001
+except Exception as exc:
     record_fail("setup_events() / log_event()", str(exc))
 
 # ── Check 7: ruff check unified-trading-library/ ─────────────────────────────

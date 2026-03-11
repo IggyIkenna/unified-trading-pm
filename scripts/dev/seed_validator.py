@@ -205,7 +205,7 @@ def _validate_file(parquet_path: Path, strict: bool) -> FileReport:
                     if nan_count > 0:
                         errors.append(f"Required column '{col}' has {nan_count} NaN values")
 
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         errors.append(f"Failed to read Parquet: {exc}")
 
     passed = len(errors) == 0

@@ -131,6 +131,20 @@ steps:
         echo "=== Quality gates passed ==="
     waitFor: ["-"]
 
+  # Step 0.5: Pre-pull base images (fail fast if unavailable)
+  - name: "gcr.io/cloud-builders/docker"
+    id: "pre-pull-images"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        echo "Pulling base images..."
+        docker pull node:20-alpine
+        docker pull nginx:alpine
+        echo "Base images pulled successfully"
+    waitFor: ["-"]
+
   # Step 1: Configure Docker authentication
   - name: "gcr.io/cloud-builders/gcloud"
     id: "configure-docker"
@@ -168,7 +182,7 @@ steps:
       - "-t"
       - "{ar_host}/$PROJECT_ID/{ar_repo}/{repo_name}:latest"
       - "."
-    waitFor: ["quality-gates", "ensure-repo", "configure-docker"]
+    waitFor: ["quality-gates", "ensure-repo", "configure-docker", "pre-pull-images"]
 
   # Step 4: Push image ONLY if quality gates and build passed
   - name: "gcr.io/cloud-builders/docker"
@@ -259,6 +273,10 @@ phases:
       - aws ecr describe-repositories --repository-names $REPO_NAME
         || aws ecr create-repository --repository-name $REPO_NAME
           --image-scanning-configuration scanOnPush=true
+      - echo "Pulling base images..."
+      - docker pull node:20-alpine
+      - docker pull nginx:alpine
+      - echo "Base images pulled successfully"
       - echo "--- Typecheck ---"
       - npm run typecheck 2>/dev/null || npm run type-check
       - echo "--- Lint ---"

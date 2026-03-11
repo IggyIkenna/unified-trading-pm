@@ -1,9 +1,10 @@
 ---
 id: institutional_hardening_2026_03_10
 title: Institutional Hardening — Stress Market Resilience, Research Integrity, Maintainability
-status: active
+status: DONE
 priority: P0
 created: 2026-03-10
+completed: 2026-03-11
 owner: agent
 ---
 
@@ -947,75 +948,75 @@ def validate_return_series_coverage(
 
 ### Stream A (Float → Decimal)
 
-- [ ] `oms.py` `quantity` and `price` fields are `Decimal`; float input raises `TypeError`
-- [ ] `risk.py` position accumulation uses Decimal arithmetic; verified with 100-fill exact test
-- [ ] `order_recovery.py` uses Decimal for all quantity/fill fields
-- [ ] `features.py` derived price fields (`basis`, `price_ratio`, etc.) are `Decimal`
-- [ ] Parquet encoding decision documented in codex; migration utility present
-- [ ] All existing tests pass with no float-quantity regressions
+- [x] `oms.py` `quantity` and `price` fields are `Decimal`; float input raises `TypeError`
+- [x] `risk.py` position accumulation uses Decimal arithmetic; verified with 100-fill exact test
+- [x] `order_recovery.py` uses Decimal for all quantity/fill fields
+- [x] `features.py` derived price fields (`basis`, `price_ratio`, etc.) are `Decimal`
+- [x] Parquet encoding decision documented in codex; migration utility present
+- [x] All existing tests pass with no float-quantity regressions
 
 ### Stream B (VaR)
 
-- [ ] `parametric_var_cornish_fisher()` implemented and exported
-- [ ] `InsufficientDataError` raised for n<30 (parametric), n<10 (historical)
-- [ ] Stress multipliers read from `UnifiedCloudConfig`
-- [ ] All 6 VaR tests pass
+- [x] `parametric_var_cornish_fisher()` implemented and exported
+- [x] `InsufficientDataError` raised for n<30 (parametric), n<10 (historical)
+- [x] Stress multipliers read from `UnifiedCloudConfig`
+- [x] All 6 VaR tests pass
 
 ### Stream C (Lookahead Bias)
 
-- [ ] `PointInTimeEnforcer` in UTL, exported from `__init__`
-- [ ] All 8 feature services call `enforce_point_in_time()` before storage write
-- [ ] ML training pipeline: split before normalize, `TrainTestSplitValidator` present
-- [ ] `WalkForwardEvaluator` implemented with no-overlap guarantee
-- [ ] Strategy backtest has PIT reference data guard
-- [ ] `compute_tc_sensitivity()` implemented
+- [x] `PointInTimeEnforcer` in UTL, exported from `__init__`
+- [x] All 8 feature services call `enforce_point_in_time()` before storage write
+- [x] ML training pipeline: split before normalize, `TrainTestSplitValidator` present
+- [x] `WalkForwardEvaluator` implemented with no-overlap guarantee
+- [x] Strategy backtest has PIT reference data guard
+- [x] `compute_tc_sensitivity()` implemented
 
 ### Stream D (Kill Switch)
 
-- [ ] Kill switch backed by config store; survives process restart
-- [ ] Startup guard blocks order submission if switch is active
-- [ ] `KILL_SWITCH_ACTIVATED` / `KILL_SWITCH_DEACTIVATED` events in UEI
+- [x] Kill switch backed by config store; survives process restart
+- [x] Startup guard blocks order submission if switch is active
+- [x] `KILL_SWITCH_ACTIVATED` / `KILL_SWITCH_DEACTIVATED` events in UEI
 
 ### Stream E (Order Recovery)
 
-- [ ] Orphan age threshold from config, per-venue override supported
-- [ ] Cancel confirmation loop: unconfirmed cancels emit `ORDER_CANCEL_UNCONFIRMED`
-- [ ] Unconfirmed cancelled orders stay PENDING, not removed from internal state
+- [x] Orphan age threshold from config, per-venue override supported
+- [x] Cancel confirmation loop: unconfirmed cancels emit `ORDER_CANCEL_UNCONFIRMED`
+- [x] Unconfirmed cancelled orders stay PENDING, not removed from internal state
 
 ### Stream F (Stale Price Guard)
 
-- [ ] `get_position()` returns `(data, timestamp)` tuple
-- [ ] Pre-trade risk rejects orders when position data older than config threshold
-- [ ] `STALE_POSITION_DATA` event in UEI
+- [x] `get_position()` returns `(data, timestamp)` tuple
+- [x] Pre-trade risk rejects orders when position data older than config threshold
+- [x] `STALE_POSITION_DATA` event in UEI
 
 ### Stream G (Circuit Breaker)
 
-- [ ] Exponential backoff implemented; 3-cycle progression verified by test
-- [ ] `_STATE_DEGRADED` present; enters at 30% failure rate
-- [ ] Max cooldown capped at 3600s
+- [x] Exponential backoff implemented; 3-cycle progression verified by test
+- [x] `_STATE_DEGRADED` present; enters at 30% failure rate
+- [x] Max cooldown capped at 3600s
 
 ### Stream H (Multi-Leg Race)
 
-- [ ] Cancel confirmation required before clearing imbalance state
-- [ ] Unconfirmed cancel → spread halted in durable config store
+- [x] Cancel confirmation required before clearing imbalance state
+- [x] Unconfirmed cancel → spread halted in durable config store
 
 ### Stream I (Position Model)
 
-- [ ] `PositionQuantityProtocol` in UIC
-- [ ] Cross-asset aggregator uses Decimal arithmetic
-- [ ] DeFi + CeFi positions satisfy protocol (runtime check)
+- [x] `PositionQuantityProtocol` in UIC
+- [x] Cross-asset aggregator uses Decimal arithmetic
+- [x] DeFi + CeFi positions satisfy protocol (runtime check)
 
 ### Stream J (Orchestration Refactor)
 
-- [ ] `OrchestrationWorkersMixin` replaced by 4 focused classes
-- [ ] Each class < 200L with its own test file
-- [ ] All existing candle generation tests pass
+- [x] `OrchestrationWorkersMixin` replaced by 4 focused classes
+- [x] Each class < 200L with its own test file
+- [x] All existing candle generation tests pass
 
 ### Stream K (Research Quality)
 
-- [ ] `MarketRegime` classifier implemented
-- [ ] `compute_capacity_curve()` implemented
-- [ ] `SurvivorshipReport` validator implemented
+- [x] `MarketRegime` classifier implemented
+- [x] `compute_capacity_curve()` implemented
+- [x] `SurvivorshipReport` validator implemented
 
 ---
 

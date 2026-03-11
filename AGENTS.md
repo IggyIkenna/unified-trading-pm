@@ -1,7 +1,7 @@
 # AGENTS.md — Unified Trading System
 
 Shared instructions for all autonomous agents (Claude Code, Codex, Cursor) in any repo of this workspace. Symlinked into
-every repo: `AGENTS.md → ../unified-trading-pm/AGENTS.md`
+every repo: AGENTS.md is ephemeral (copied from PM during setup, removed after use)
 
 ---
 
@@ -86,16 +86,18 @@ What `setup-workspace.sh` also sets up for you:
 
 - **Cursor rules** — copied as real files (not symlinks) to `$WORKSPACE_ROOT/.cursor/rules/` from PM
 - **`.cursorrules`** — copied to `$WORKSPACE_ROOT/.cursorrules` from PM
+- **AGENTS.md** — copied as a real file to `$WORKSPACE_ROOT/AGENTS.md` from PM (ephemeral)
 - **`.claude/CLAUDE.md`** — workspace-root symlink → PM `cursor-configs/CLAUDE.md`
 - **Cleanup script** — `$WORKSPACE_ROOT/.cleanup-cursor-rules.sh` generated automatically
 
 **Cursor rule cleanup is mandatory before quickmerge / PR creation:**
 
 ```bash
-bash $WORKSPACE_ROOT/.cleanup-cursor-rules.sh   # removes ephemeral .cursor/rules + .cursorrules
+bash $WORKSPACE_ROOT/.cleanup-cursor-rules.sh   # removes ephemeral .cursor/rules + .cursorrules + AGENTS.md
 ```
 
-The per-repo `.claude/CLAUDE.md` and `AGENTS.md` are committed symlinks — no action needed for those.
+The per-repo `.claude/CLAUDE.md` is a committed symlink. AGENTS.md is ephemeral (copied during setup, removed by
+cleanup).
 
 ---
 

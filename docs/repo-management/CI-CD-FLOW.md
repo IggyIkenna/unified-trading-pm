@@ -222,12 +222,25 @@ When sync fails with merge conflicts:
      bash unified-trading-pm/scripts/repo-management/sync-all-to-main.sh --repo <repo-name>
      ```
 
+
 3. **If our version fails quality gates** — fix quality gate issues first, then resolve conflicts.
+
 
 **Why:** Running quality gates on conflicted repos confirms our branch is valid before we merge. Avoids losing good work
 from main by resolving conflicts with a broken local state.
 
+
+
 ---
+
+## Build Order Assumptions
+
+Cloud Build and the deployment pipeline assume the following:
+
+- **Dependencies built first:** Library and interface dependencies must be built and pushed to Artifact Registry before any service that depends on them. The manifest defines the build order.
+- **Manifest up to date:** `workspace-manifest.json` must reflect the current versions of all internal dependencies. Run `run-version-alignment.sh --fix` before building.
+- **Validation before build:** Quality gates and validation run before the build step. A failed validation blocks the build.
+
 
 ## Quick Reference: Full Flow
 

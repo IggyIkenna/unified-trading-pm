@@ -13,6 +13,7 @@
 #   2. generate_canonical_dependency_manifest.py → canonical from workspace-constraints.toml
 #   3. check-dependency-alignment.py → compare derived vs manifest + canonical
 #   3.5. validate-uv-sources.py → every internal dep has [tool.uv.sources.*] editable = true
+#   3.6. validate-internal-editable.py → internal deps must be editable, not from Artifact Registry
 #   4. validate-dependency-conflicts.py → verify constraints resolve (uv pip compile)
 #   5. fix-internal-dependency-alignment.py --apply (if internal misalignment)
 #   6. fix_external_dependency_alignment.py --apply (if external misalignment)
@@ -62,6 +63,22 @@ else
 fi
 
 echo "━━━ Version alignment ━━━"
+echo ""
+echo "Checks performed (dry run = report only; --fix = apply auto-fixes):"
+echo "  [0]     Tracked-but-gitignored audit          — informational only"
+echo "  [0.5]   Broken symlinks                       — manual: rm <path> && ln -sf <target> <path>"
+echo "  [0.6]   UI npm dep drift (pkg.json vs lock)   — manual: cd <repo> && npm install"
+echo "  [0.7]   Canonical npm version alignment       — auto-fix with --fix"
+echo "  [1–2]   Derived + canonical manifests         — generated (prerequisite)"
+echo "  [3]     Dependency alignment (internal+external)— auto-fix with --fix"
+echo "  [3.5]   [tool.uv.sources] editable entries   — auto-fix with --fix"
+echo "  [3.6]   Internal deps editable (not registry) — manual: uv sync in each repo"
+echo "  [4]     Constraint resolution (uv pip compile)— manual: validate-dependency-conflicts.py --regenerate"
+echo ""
+echo "Downstream CI (not run here; alignment must pass first):"
+echo "  • Cloud Build (GCP): library pre-checks, Docker builds — add-cloudbuild-prechecks.py"
+echo "  • Code Build (AWS): UI buildspec.aws.yaml — rollout-ui-build-infra.py"
+echo "  Run: bash run-all-setup.sh --rollout-first  to propagate build infra."
 echo ""
 
 # 0. Audit tracked-but-gitignored files (informational; never blocks)
@@ -202,8 +219,17 @@ else
   fi
 fi
 
+
+# 3.6. Validate internal deps are editable (not from Artifact Registry)
+echo "[3.6/5] Validating internal deps are editable (not from Artifact Registry)..."
+if ! "$PYTHON" scripts/manifest/validate-internal-editable.py; then
+  echo ""
+  echo "  Internal deps must be path/editable. Run: uv sync in each repo."
+  exit 1
+fi
+
 # 4. Validate constraints resolve
-echo "[4/4] Validating constraints..."
+echo "[4/5] Validating constraints..."
 
 
 if ! "$PYTHON" scripts/manifest/validate-dependency-conflicts.py 2>/dev/null; then
