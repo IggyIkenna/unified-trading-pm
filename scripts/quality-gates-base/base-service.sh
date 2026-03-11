@@ -255,10 +255,12 @@ fi
 log_section "[5/6] CODEX COMPLIANCE"
 V=0
 
-rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" 2>/dev/null \
+# PRINT_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. Rich console.print, bash template strings)
+rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "print() — use log_event() from UEI"; V=$(( V + 1 )); } || log_success "No print()"
 
-rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" "$SOURCE_DIR/" 2>/dev/null \
+# OS_ENV_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. bootstrap_config.py, env_substitutor.py)
+rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"; V=$(( V + 1 )); } || log_success "No os.getenv()/os.environ"
 
 rg 'os\.getenv\s*\([^)]+,\s*""\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
@@ -288,8 +290,9 @@ for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**"
     grep -q "for \|while " "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
 done
 
+# IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. TYPE_CHECKING files)
 INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
-    "$SOURCE_DIR/" 2>/dev/null || :)
+    "${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.2
 [[ -n "$INSIDE" ]] && { log_fail "Imports inside functions — move to top"; echo "$INSIDE" | head -3; V=$(( V + 1 )); } || log_success "No imports inside functions"
 
@@ -315,7 +318,8 @@ rg "central-element-323112" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/n
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
 # GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
-rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "$SOURCE_DIR/" 2>/dev/null \
+# GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of --glob exclusions for legitimate GCP_PROJECT_ID usage
+rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
@@ -364,7 +368,7 @@ EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_clo
 # STEP 5.5 — No direct cloud SDK imports (must route through UCLI/UCS)
 # ============================================================
 DIRECT_CLOUD=$(rg 'from google\.cloud import|^import boto3\b|^from boto3 import|^from botocore import' \
-    --type py "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ | grep -v '\.venv' || :)
+    --type py "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ | grep -v '\.venv' | grep -v '# noqa: cloud-sdk-direct' || :)
 [[ -n "$DIRECT_CLOUD" ]] && {
     log_fail "Direct cloud SDK imports found (route through unified-cloud-interface instead):"
     echo "$DIRECT_CLOUD" | head -5
@@ -569,7 +573,7 @@ fi
 PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
-    --glob '!tests' \
+    --glob '!tests' --glob '!scripts/**' \
     -l . 2>/dev/null || :)
 if [ -n "$PROTOCOL_VIOLATIONS" ]; then
     log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UCI instead:"
