@@ -5,7 +5,7 @@ overview:
   empty/absent baseline files.
 type: code
 epic: epic-code-completion
-status: active
+status: complete
 
 completion_gates:
   code: C5
@@ -76,35 +76,36 @@ depends_on:
 todos:
   - id: phase9-type-ignore-triage
     content: "Phase 9: enumerate and triage remaining # type: ignore in production source; fix fixable ones"
-    status: in_progress
-    note:
-      "funding_recon_engine.py:214 and yield_recon_engine.py:280 blocked on position_precision_pnl_hardening Phase C"
+    status: done
+    note: "All fixable type:ignore resolved 2026-03-11"
   - id: phase9-funding-recon-severity
     content: "execution-service/services/funding_recon_engine.py:214 — fix severity arg-type with AlertSeverity enum"
-    status: blocked
-    note: "Blocked on position_precision_pnl_hardening_2026_03_11 Phase C"
+    status: done
+    note: "Fixed 2026-03-11: narrowed _publish_alert severity param to Literal type (Phase C confirmed done)"
   - id: phase9-yield-recon-severity
     content: "execution-service/services/yield_recon_engine.py:280 — same severity arg-type pattern"
-    status: blocked
-    note: "Blocked on position_precision_pnl_hardening_2026_03_11 Phase C"
+    status: done
+    note: "Fixed 2026-03-11: narrowed _publish_alert severity param to Literal type"
   - id: phase9-instruments-override
     content: "instruments-service/instrument_processing_handlers.py:71 — # type: ignore[override] UTL-DEC-02 mixin"
-    status: todo
-    note: ""
+    status: done
+    note: "Already fixed (no type:ignore present)"
   - id: phase9-client-reporting-pnl-reader
     content: "client-reporting-api/core/pnl_reader.py:63 — df.to_dict cast to list[dict[str, object]]"
-    status: todo
-    note: ""
+    status: done
+    note: "Fixed 2026-03-11: replaced type:ignore with cast()"
   - id: phase9-deployment-api-state
     content: "deployment-api/services/deployment_state.py:269,293,324,358,436 — _reportPrivateUsage on sync helpers"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "Fixed 2026-03-11: renamed 5 _sync functions to public in routes/deployment_state.py; updated imports in services
+      + tests"
 isProject: false
 ---
 
 # Zero Baseline Typecheck — Full Remediation Plan
 
-**Created:** 2026-03-10 **Status:** Phases 1–8 COMPLETE ✅ | Phase 9 IN PROGRESS **SSOT-INDEX:** register under
+**Created:** 2026-03-10 **Completed:** 2026-03-11 **Status:** ALL PHASES COMPLETE ✅ **SSOT-INDEX:** register under
 `08-type-safety` **Linked codex section:** `unified-trading-codex/06-coding-standards/README.md`
 
 > ⚠️ **M3 SEQUENCING NOTE (2026-03-11):** Phase 9 TODO items in `funding_recon_engine.py:214` and

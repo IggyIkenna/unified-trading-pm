@@ -1,8 +1,9 @@
 ---
 name: cicd-versioning-cloud-build-2026-03-11
 overview:
-  Fix 6 CI/CD pipeline gaps — staging lock lifecycle, dep reconciliation, multi-project GCP Cloud Build isolation, SIT
-  SHA pinning, semver-at-staging, and manifest schema extensions.
+  Fix 6 CI/CD pipeline gaps + 3 new phases: per-repo ≥1.0.0 staging gate, SIT code/deployment test split, and
+  deployment UI build selector. Staging lock lifecycle, dep reconciliation, multi-project GCP Cloud Build isolation,
+  SIT SHA pinning, semver-at-staging, manifest schema extensions.
 type: infra
 epic: epic-infra
 status: active
@@ -26,6 +27,12 @@ repo_gates:
     readiness_note:
       "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
   - repo: deployment-api
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: deployment-ui
     code: C1
     deployment: none
     business: none
@@ -73,10 +80,26 @@ todos:
     note: "DONE — CI-CD-FLOW.md updated."
   - id: phase-7-deployment-ui
     content:
-      "Track deployment UI branch/version selector in deployment_ui_version_selector.plan.md — environment dropdown,
-      version list, rollback button."
+      "Deployment UI build selector: BuildSelector.tsx dropdown + GET /builds/{service} AR tag listing endpoint +
+      POST /deployments/{service}/deploy endpoint. Display format: '{version} @ {branch}'. Pre-1.0.0 builds allowed
+      for manual deploys. Create deployment_ui_version_selector.plan.md."
     status: todo
-    note: "Tracked separately in deployment_ui_version_selector.plan.md."
+    note: "In progress — see Phase 7 section below for full spec."
+  - id: phase-8-staging-version-gate
+    content:
+      "Create staging-version-gate.yml template: blocks PRs to staging if repo version < 1.0.0. PM repo exempt.
+      Propagate to all repos via propagate-canonical-versions.py. Register as required status check on staging
+      branch protection in each repo."
+    status: todo
+    note: "Gap in existing plan — staging-gate check was described but no workflow file existed."
+  - id: phase-9-sit-code-deployment-split
+    content:
+      "Split smoke-test-gate.yml into three jobs: setup (v1 repo filter + skip guard), code-tests (static,
+      <10 min, pytest -m code_test), deployment-tests (docker-compose mock stack, pytest -m deployment_test).
+      Add code_test/deployment_test markers to pyproject.toml and all 34 test files. Update
+      docker-compose.mock.yml with v1 service profiles."
+    status: todo
+    note: "Preserves all existing tests — classification only, no test logic changes."
 isProject: false
 ---
 
@@ -530,18 +553,260 @@ Add / update the following sections to reflect the new pipeline:
 
 ---
 
-## Phase 7: Deployment UI Branch/Version Selection (P2 — future)
+## Phase 7: Deployment UI Build Selector (In Progress)
 
-Track separately: `deployment_ui_version_selector.plan.md`
+**Tracked in:** `deployment_ui_version_selector.plan.md` (to be created)
 
-- Environment dropdown (Dev/Staging/Prod)
-- Version list from `deployed_versions.{env}` + AR tag list
-- "Last known good" from `main_commits.history[0]`
-- Rollback button → `POST /deployments/{service}/rollback`
+**Goal:** Dropdown in deployment-ui showing available builds as `{version} @ {branch}` parsed from AR tags. Select any
+build to deploy to any environment. Pre-1.0.0 builds allowed (manual deploy, no version gate here).
+
+### Tag → display name mapping
+
+| AR Tag                    | Display                     |
+| ------------------------- | --------------------------- |
+| `0.3.168`                 | `0.3.168 @ main`            |
+| `0.3.168-staging`         | `0.3.168 @ staging`         |
+| `0.3.168-feat-my-feature` | `0.3.168 @ feat/my-feature` |
+
+Parse: version = leading `M.N.P` digits; branch slug = suffix (reverse `-` to `/` for `feat-`, `fix-`, `chore-`).
+Idempotent: same version + same branch always refers to the same artifact (enforced by immutable tags in Phase 5d).
+
+### New API endpoints (`deployment-api/deployment_api/routes/builds.py`)
+
+**`GET /builds/{service}?env=dev|staging|prod`**
+
+- Lists AR tags for `{service}` in the GCP project for `env`
+- Returns: `[{ "tag": str, "display": str, "version": str, "branch": str, "is_v1": bool }]` sorted version desc
+- Falls back to `deployed_versions` from PM manifest if AR unreachable
+
+**`POST /deployments/{service}/deploy`**
+
+- Body: `{ "image_tag": str, "environment": "dev|staging|prod" }`
+- Deploys any tag (including pre-1.0.0) to any environment — manual deploys have no version gate
+- Same Cloud Run mechanics as existing rollback endpoint
+- Register in `deployment_api/main.py`
+
+### New UI component (`deployment-ui/src/components/BuildSelector.tsx`)
+
+- Fetches from `GET /builds/{service}?env={selectedEnv}` on env/service change
+- Dropdown: shows `{display}` label, sorted version desc
+- Badge: `v1` (green) for `is_v1: true`; `pre-v1` (amber) for `is_v1: false`
+- On select: pre-fills `image_tag` field in DeployForm (user can still type manually)
+
+### Files
+
+- `deployment-api/deployment_api/routes/builds.py` (NEW)
+- `deployment-api/deployment_api/main.py` (register builds router)
+- `deployment-ui/src/components/BuildSelector.tsx` (NEW)
+- `deployment-ui/src/components/DeployForm.tsx` (extend: add BuildSelector above image_tag input)
+- `deployment-ui/src/api/deploymentApi.ts` (add `fetchBuilds`, `deployBuild`)
+- `unified-trading-pm/plans/active/deployment_ui_version_selector.plan.md` (CREATE)
 
 ---
 
-## Implementation Order
+## Phase 8: Per-Repo Staging Version Gate (NEW)
+
+**Goal:** Block PRs from individual repos to staging when their version < 1.0.0. Per-repo gate — a repo at 1.0.0 merges
+freely even if other repos are still on 0.x.x. PM repo (`unified-trading-pm`) is exempt (it manages the manifest, has no
+semver).
+
+### Gap addressed
+
+The plan described a "staging-gate check" (GitHub branch protection required status check) but no workflow file
+implemented it. Only `staging_status.locked` was enforced. This phase fills that gap.
+
+### `staging-version-gate.yml` template
+
+**File:** `unified-trading-pm/scripts/propagation/templates/staging-version-gate.yml`
+
+```yaml
+name: Staging Version Gate
+on:
+  pull_request:
+    branches: [staging]
+
+jobs:
+  version-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version >= 1.0.0
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          if [ "$REPO" = "unified-trading-pm" ]; then
+            echo "PM repo exempt from version gate — pass."; exit 0
+          fi
+          if [ -f pyproject.toml ]; then
+            VERSION=$(grep -m1 '^version\s*=' pyproject.toml | sed 's/.*= *"\([^"]*\)".*/\1/')
+          elif [ -f package.json ]; then
+            VERSION=$(node -p "require('./package.json').version")
+          else
+            echo "::error::No version file found (pyproject.toml or package.json)"; exit 1
+          fi
+          echo "Version: $VERSION"
+          python3 -c "
+          from packaging.version import Version
+          v = Version('$VERSION')
+          if v < Version('1.0.0'):
+              raise SystemExit(
+                  f'::error::Version {v} < 1.0.0 — blocked from staging. '
+                  f'Reach 1.0.0 via production checklist before this PR can merge.'
+              )
+          print(f'Version {v} >= 1.0.0 — staging gate passed.')
+          "
+```
+
+**Propagation:** `propagate-canonical-versions.py` — same mechanism as `semver-agent.yml` (Phase 2). Deploy to all repos
+listed in `workspace-manifest.json`.
+
+**GitHub branch protection:** Add `Staging Version Gate / version-gate` as required status check on the staging branch
+protection rule of each repo (or `staging-version-gate` check name).
+
+### Files
+
+- `unified-trading-pm/scripts/propagation/templates/staging-version-gate.yml` (NEW)
+- Each repo's `.github/workflows/staging-version-gate.yml` (propagated)
+- `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (add "Per-Repo Version Gate" section)
+
+---
+
+## Phase 9: SIT Code-Tests / Deployment-Tests Split (NEW)
+
+**Goal:** Split monolithic `smoke-test-gate.yml` into fast code-tests (<10 min) and slower deployment-tests
+(docker-compose mock stack). Both scoped to repos with `staging_versions[repo] >= 1.0.0`. All existing tests preserved —
+classification only, no test logic changes.
+
+### Skip guard
+
+When `staging_versions` has no repos with version ≥1.0.0, SIT exits immediately (no lock dispatched):
+
+```python
+v1_repos = [r for r, v in staging_versions.items()
+            if not r.startswith('_') and Version(v) >= Version('1.0.0')]
+if not v1_repos:
+    print("No repos >= 1.0.0 on staging. Skipping SIT.")
+    sys.exit(0)
+```
+
+### Test classification
+
+**`code_test` marker** (static, no live services, <10 min total):
+
+| File                             | Directory    |
+| -------------------------------- | ------------ |
+| `test_layer0_contracts.py`       | smoke/       |
+| `test_layer1_services.py`        | smoke/       |
+| `test_portable_criteria.py`      | smoke/       |
+| `test_cli_worker_smoke.py`       | smoke/       |
+| `test_library_imports.py`        | integration/ |
+| `test_contract_coverage.py`      | integration/ |
+| `test_uac_completeness.py`       | integration/ |
+| `test_uic_completeness.py`       | integration/ |
+| `test_uac_contract_coverage.py`  | integration/ |
+| `test_utl_contract_coverage.py`  | integration/ |
+| `test_uac_uic_compat.py`         | integration/ |
+| `test_uac_uic_schema_compat.py`  | integration/ |
+| `test_uac_deep_import_health.py` | integration/ |
+| `test_uei_event_dispatch.py`     | integration/ |
+| `test_error_normalisation.py`    | integration/ |
+| `test_config.py`                 | unit/        |
+| `test_event_logging.py`          | unit/        |
+
+**`deployment_test` marker** (needs docker-compose mock stack):
+
+| File                               | Directory    |
+| ---------------------------------- | ------------ |
+| `test_api_smoke.py`                | smoke/       |
+| `test_deployment_smoke.py`         | smoke/       |
+| `test_internal_services_smoke.py`  | smoke/       |
+| `test_pipeline_smoke.py`           | smoke/       |
+| `test_cache_smoke.py`              | smoke/       |
+| `test_database_smoke.py`           | smoke/       |
+| `test_pubsub_smoke.py`             | smoke/       |
+| `test_artifact_registry_smoke.py`  | smoke/       |
+| `test_cloud_infra_smoke.py`        | smoke/       |
+| `test_cross_service_chains.py`     | integration/ |
+| `test_data_freshness.py`           | integration/ |
+| `test_data_freshness_contracts.py` | integration/ |
+| `test_recon_rebalancing.py`        | integration/ |
+| `test_deployment_e2e.py`           | e2e/         |
+| `test_auth_e2e.py`                 | e2e/         |
+| `test_pipeline_e2e.py`             | e2e/         |
+| `test_version_cascade_e2e.py`      | e2e/         |
+| `test_aws_s3_smoke.py`             | e2e/         |
+| `test_execution_latency.py`        | performance/ |
+
+### Workflow restructure (`smoke-test-gate.yml`)
+
+Three jobs (sequential via `needs:`):
+
+```
+setup
+  → reads staging_versions, computes v1_repos
+  → sets output has_v1_repos: true/false
+  → if false: exits success (no lock dispatched)
+
+code-tests (needs: setup, if: has_v1_repos)
+  → timeout-minutes: 10
+  → dispatches sit-lock to PM
+  → pytest tests/ -m code_test
+  → on failure: dispatches sit-failed
+
+deployment-tests (needs: code-tests, if: has_v1_repos)
+  → docker compose -f docker/docker-compose.mock.yml --profile v1 up -d
+  → waits for health checks
+  → pytest tests/ -m deployment_test
+  → docker compose down
+  → on success: dispatches staging-validated
+  → on failure: dispatches sit-failed
+```
+
+The existing `contract-adoption-check` job is classified as `code_test` work and merged into the `code-tests` job (no
+separate job needed — reduces GHA minutes).
+
+### docker-compose.mock.yml `v1` profile
+
+Services for repos with version ≥1.0.0 get `profiles: [v1]`. The `setup` job writes a `.env.v1` file (list of enabled
+services) — compose reads it to decide which `v1` profile services to start. Avoids hardcoding the v1 set in the compose
+file.
+
+### Files
+
+- `system-integration-tests/.github/workflows/smoke-test-gate.yml` (restructure)
+- `system-integration-tests/pyproject.toml` (add `code_test` and `deployment_test` markers)
+- `system-integration-tests/tests/smoke/test_layer0_contracts.py` + 16 other code_test files (add
+  `@pytest.mark.code_test`)
+- `system-integration-tests/tests/smoke/test_api_smoke.py` + 18 other deployment_test files (add
+  `@pytest.mark.deployment_test`)
+- `unified-trading-pm/docker/docker-compose.mock.yml` (add `profiles: [v1]` to each service)
+
+---
+
+## Implementation Order (updated)
+
+```
+Phase 1–6: DONE
+
+Phase 8 (staging version gate)         ← independent, no deps
+  → create template → test on 1 repo → propagate all
+
+Phase 9 (SIT split)                    ← independent of Phase 8
+  → add markers to pyproject.toml
+  → add @pytest.mark decorators to 34 test files
+  → restructure smoke-test-gate.yml
+  → update docker-compose.mock.yml
+
+Phase 7 (deployment UI build selector) ← independent
+  → builds.py route (GET + POST)
+  → register in main.py
+  → BuildSelector.tsx
+  → extend DeployForm.tsx
+  → create deployment_ui_version_selector.plan.md
+```
+
+---
+
+## Original Implementation Order (Phases 1–6, all DONE)
 
 ```
 Phase 1 (manifest schema)
@@ -549,7 +814,6 @@ Phase 1 (manifest schema)
   → Phase 4 (dep check) — needs Phase 2 (staging_versions exists) + Phase 3 (lock check in quickmerge)
   → Phase 5 (Cloud Build) — needs Phase 1 (deployed_versions); Terraform can start in parallel
   → Phase 6 (CI-CD-FLOW.md) — update after Phase 1–5 committed so doc reflects real state
-  → Phase 7 (deployment UI) — needs Phase 5
 ```
 
 ---

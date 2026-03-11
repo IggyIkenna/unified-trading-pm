@@ -5,9 +5,9 @@ overview:
   existing UI repos into the shared core package.
 type: code
 epic: epic-code-completion
-status: active
+status: done
 created: 2026-03-09
-updated: 2026-03-10
+updated: 2026-03-11
 isProject: true
 
 completion_gates:
@@ -165,71 +165,71 @@ todos:
       boundaries). Move duplicates to packages/core, update all imports in batch-audit-ui to `@unified-admin/core`. Run
       `npm test` in batch-audit-ui; update coverage to >80%; fix any failures. Delete top-level duplicate config files
       that are now in core.
-    status: pending
+    status: done
 
   - id: migrate-client-reporting-ui
     content: >-
       Audit client-reporting-ui for duplicated patterns (same categories as batch-audit-ui). Move any new duplicates not
       yet in core to packages/core. Update all imports. Run `npm test`; update coverage to >80%; fix failures. Delete
       superseded files.
-    status: pending
+    status: done
 
   - id: migrate-deployment-ui
     content: >-
       Audit deployment-ui for duplicated patterns. Move new duplicates to packages/core. Update imports. Run `npm test`;
       update coverage to >80%; fix failures. Delete superseded files. Pay attention to deployment-specific API client
       patterns that may generalize.
-    status: pending
+    status: done
 
   - id: migrate-execution-analytics-ui
     content: >-
       Audit execution-analytics-ui for duplicated patterns. Move new duplicates (e.g. charting base config, analytics
       hooks) to packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded
       files.
-    status: pending
+    status: done
 
   - id: migrate-live-health-monitor-ui
     content: >-
       Audit live-health-monitor-ui for duplicated patterns. Move new duplicates (e.g. polling hooks, WebSocket wrappers)
       to packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded files.
-    status: pending
+    status: done
 
   - id: migrate-logs-dashboard-ui
     content: >-
       Audit logs-dashboard-ui for duplicated patterns. Move new duplicates (e.g. log-stream hooks, virtualized list
       components) to packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete
       superseded files.
-    status: pending
+    status: done
 
   - id: migrate-ml-training-ui
     content: >-
       Audit ml-training-ui for duplicated patterns. Move new duplicates (e.g. progress-bar components, experiment table)
       to packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded files.
-    status: pending
+    status: done
 
   - id: migrate-onboarding-ui
     content: >-
       Audit onboarding-ui for duplicated patterns. Move new duplicates (e.g. form components, stepper) to packages/core.
       Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded files.
-    status: pending
+    status: done
 
   - id: migrate-settlement-ui
     content: >-
       Audit settlement-ui for duplicated patterns. Move new duplicates (e.g. reconciliation table, currency formatters)
       to packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded files.
-    status: pending
+    status: done
 
   - id: migrate-strategy-ui
     content: >-
       Audit strategy-ui for duplicated patterns. Move new duplicates (e.g. signal chart, parameter form) to
       packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded files.
-    status: pending
+    status: done
 
   - id: migrate-trading-analytics-ui
     content: >-
       Audit trading-analytics-ui for duplicated patterns. Move new duplicates (e.g. P&L chart, position table) to
       packages/core. Update imports. Run `npm test`; update coverage >80%; fix failures. Delete superseded files.
-    status: pending
+    status: done
 
   - id: delete-remaining-top-level-duplicates
     content: >-
@@ -237,14 +237,14 @@ todos:
       of files that now live in packages/core. Delete any that remain. Run `npm run lint` (zero warnings) and `npm run
       type-check` (tsc --noEmit) in each repo after deletion to confirm nothing is broken. Commit deletions per repo
       with message `"chore: remove top-level duplicates moved to @unified-admin/core"`.
-    status: pending
+    status: done
 
   - id: playwright-full-smoke
     content: >-
       Run full Playwright smoke tests across all packages from unified-admin-ui workspace root: `npm run test:e2e`.
       Confirm all critical user flows pass for every UI app. Fix any failures. Confirm ESLint zero-warnings and tsc
       --noEmit both pass at root level before marking plan done.
-    status: pending
+    status: done
 ---
 
 # Unified Admin UI — npm Workspace Creation
