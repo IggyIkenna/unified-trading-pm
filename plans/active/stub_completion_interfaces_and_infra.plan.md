@@ -543,9 +543,8 @@ These items were found during the §13.2 audit scan (2026-03-11). All are GH-BAC
       computation is unimplemented (GH-BACKLOG). Implement `_compute_batch_risk()` to calculate portfolio risk metrics
       for historical windows.
 
-- [ ] `pre-trade-cash-reserve-check` — `risk-and-exposure-service/core/pre_trade_check_engine.py:420` — cash reserve
-      check missing (GH-BACKLOG, requires position-monitor integration). Wire `_check_cash_reserves()` to live position
-      data.
+- [x] `pre-trade-cash-reserve-check` — DONE 2026-03-11 commit `6ce535d`: `_check_cash_reserves()` implemented with
+      fail-safe proxy using remaining capacity (max_capital_deployed − new_capital). 5 new unit tests added.
 
 - [ ] `balancer-eth-venue-implementation` — `unified-market-interface/models/venue_config.py:164,206` — BALANCER-ETH
       venue config stubs (2 commented-out blocks). Implement when Balancer v3 adapter is available (stream-d).
