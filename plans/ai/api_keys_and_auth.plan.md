@@ -206,6 +206,24 @@ todos:
       to .env.dev. Gate: verify command exits 0; dev_environment_automated_onboarding phase-2 AWS doc
       (setup-dev-environment.sh step 6) unblocked. See unified-trading-pm/docs/aws-testnet-setup.md.
     status: pending
+  # ── Migrated from ibkr_gateway_rollout.plan.md (2026-03-11) ──
+  - id: ibkr-sm-credentials
+    content: >-
+      Add IBKR credentials to GCP Secret Manager as 'ibkr-account-credentials'. These are the Interactive Brokers
+      account username and password used by IB Gateway on the GCE VM. (1) Obtain IBKR credentials (account login +
+      trading password). (2) Store as JSON: gcloud secrets create ibkr-account-credentials --data-file=- <<< '{"username":
+      "...", "password": "..."}'. (3) Grant access to github-actions-deploy SA: gcloud secrets add-iam-policy-binding
+      ibkr-account-credentials --member=serviceAccount:github-actions-deploy@central-element-323112.iam.gserviceaccount.com
+      --role=roles/secretmanager.secretAccessor. (4) Verify ibkr_gateway_rollout ibkr-vm-deploy can read the secret on the
+      VM.
+      Gate: gcloud secrets versions access latest --secret=ibkr-account-credentials exits 0 with valid JSON.
+    status: pending
+    notes: >-
+      Migrated from ibkr_gateway_rollout.plan.md (2026-03-11). Secret resource
+      ibkr-account-credentials CREATED in SM 2026-03-11; ibkr-gateway-sa granted secretAccessor.
+      STILL REQUIRED: add credentials version — gcloud secrets versions add
+      ibkr-account-credentials --data-file=- <<< '{"username":"...","password":"..."}'.
+      VM ibkr-gateway-vm is running at 34.146.71.13 and waiting for credentials.
 
 isProject: false
 ---
