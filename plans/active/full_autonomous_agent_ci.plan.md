@@ -251,6 +251,119 @@ todos:
       Triggers on push to staging branch + workflow_dispatch; runs pytest tests/smoke/ -m smoke;
       on success dispatches staging-validated repository_dispatch to PM with source_repo/branch/commit/run_id payload.
       Fails hard on test failure with clear error about staging NOT being promoted. Commit 46fde35.
+
+  - id: implement-audit-agent-core
+    content: >-
+      Implement AuditResolutionAgent in system-integration-tests repo at system_integration_tests/audit/agent.py. The
+      agent is a Python class that: (a) reads unified-trading-pm/workspace-manifest.json to discover all registered
+      repos + their arch_tier and dependencies; (b) for each repo, runs each audit section from the canonical audit
+      prompt (plans/audit/trading_system_audit_prompt.md) as a programmatic check — not a subprocess call to a
+      human-readable script, but typed Python functions that return AuditResult(section, repo, status, evidence); (c)
+      aggregates results into a structured AuditReport with per-section PASS/WARN/FAIL/N/A scores and file:line
+      evidence; (d) writes the report to system-integration-tests/reports/audit_<date>.json and a human-readable .md
+      summary. No os.getenv — config via UnifiedCloudConfig. No Any types. No try/except ImportError. Full basedpyright
+      strict.
+    status: pending
+
+  - id: implement-repo-discovery-and-cloning
+    content: >-
+      Add repo discovery + shallow clone logic to system_integration_tests/audit/repo_manager.py. In CI (Cloud Build /
+      CodeBuild), system-integration-tests is expected to clone all sibling repos during audit runs. Implementation: (a)
+      read workspace-manifest.json repos[] array; (b) for each repo, check if a sibling directory exists at ../repo-name
+      relative to the SIT workspace root — if yes, use it directly; if no (CI cold run), shallow-clone from the repo's
+      git_url with depth=1 into a temp directory; (c) return a RepoContext(name, local_path, arch_tier, deps) TypedDict
+      for each repo. This enables the agent to run audit checks against actual source files without requiring a
+      pre-configured monorepo checkout. Add cloudbuild.yaml step to pre-clone all repos before invoking the audit agent.
+    status: pending
+
+  - id: implement-audit-section-checks
+    content: >-
+      Implement one Python function per audit section in system_integration_tests/audit/checks/. Each check module
+      corresponds to a section in the canonical audit prompt (plans/audit/trading_system_audit_prompt.md):
+      check_workspace_governance.py (§1), check_code_quality.py (§2 — file/function/class size limits, ruff config,
+      basedpyright config, pyrightconfig excludes tests/, QG script stub compliance, zero os.getenv in prod source),
+      check_security.py (§3 — no hardcoded keys, get_secret_client usage, AUTH_FAILURE events), check_architecture.py
+      (§4 — tier boundary validation via import graph), check_schema_governance.py (§5), check_observability.py (§6 —
+      /health + /readiness, Prometheus metrics), check_technical_debt.py (§8), check_coverage_enforcement.py (§11),
+      check_stubs.py (§13), check_orphaned_code.py (§14), check_ci_pipeline_quality.py (§15), check_ui_npm_governance.py
+      (§16), check_tooling_ssot.py (§17). Each function signature: def check_<section>(repo: RepoContext) ->
+      list[AuditResult]. All checks are static analysis only — no network calls, no live infra required.
+    status: pending
+
+  - id: implement-regression-smoke-trigger
+    content: >-
+      Wire the audit agent to trigger smoke + e2e tests when a regression is detected. A "regression" is: any section
+      that previously scored PASS or WARN now scores FAIL, OR any section that previously scored PASS now scores WARN.
+      Implementation: (a) agent loads previous audit report from reports/audit_<prev_date>.json; (b) if regressions
+      detected, writes regression_report.json with affected repos + sections; (c) a pytest fixture in
+      tests/audit/conftest.py reads regression_report.json and marks smoke + e2e suites as required; (d) cloudbuild.yaml
+      / buildspec.aws.yaml runs audit agent first, then conditionally invokes pytest tests/smoke/ tests/e2e/ only when
+      regression_report.json is non-empty. If reports/audit_<prev_date>.json does not exist (first run), treat all
+      non-PASS results as regressions.
+    status: pending
+
+  - id: implement-audit-pytest-entry-point
+    content: >-
+      Add tests/audit/test_audit_agent.py as the pytest entry point for the audit agent. This file: (a) instantiates
+      AuditResolutionAgent with the workspace root path from a conftest fixture; (b) calls agent.run_full_audit() which
+      returns AuditReport; (c) asserts report.overall_grade != "FAIL" — the test fails if any section regresses to FAIL;
+      (d) writes the report to reports/ for regression comparison in the next run; (e) prints the PASS/WARN/FAIL/N/A
+      table to stdout (visible in CI logs). Add pytest marker "audit" so the test can be run in isolation: `pytest
+      tests/audit/ -m audit`. Register the marker in pyproject.toml [tool.pytest.ini_options] markers.
+    status: pending
+
+  - id: wire-audit-into-ci
+    content: >-
+      Update system-integration-tests/cloudbuild.yaml and system-integration-tests/buildspec.aws.yaml to run the audit
+      agent as a pre-step before Layer 3a smoke and Layer 3b e2e. CI sequence: (1) Shallow-clone all sibling repos
+      (repo_manager.py); (2) Run audit agent (pytest tests/audit/ -m audit --tb=short); (3) If audit passes — run Layer
+      3a smoke (pytest tests/smoke/ --timeout=300); (4) If smoke passes AND e2e enabled — run Layer 3b e2e (pytest
+      tests/e2e/ --timeout=1800); (5) Upload reports/audit_<date>.json to artifact store via UCI StorageClient, not
+      direct GCS. WARN results are non-blocking; only FAIL results block the pipeline. Document in
+      system-integration-tests/README.md.
+    status: pending
+
+  - id: audit-ci-pipeline-quality
+    content: >-
+      Audit §15 — CI/CD Pipeline Quality: for each Python repo, inspect .github/workflows/quality-gates.yml. Check: (a)
+      install step uses "uv venv .venv && uv pip install --python .venv/bin/python" — FAIL if "uv pip install --system"
+      or bare "pip install" used; (b) run step exports "PATH=$(pwd)/.venv/bin:$PATH" before calling bash
+      scripts/quality-gates.sh — FAIL if PATH not set; (c) CLOUD_MOCK_MODE=true and GCP_PROJECT_ID set in env — FAIL if
+      absent; (d) quality-gates.sh called with --no-fix — FAIL if called without it. For UI repos: (e) npm ci used
+      instead of npm install — WARN if npm install used; (f) quality-gates.sh or equivalent called in CI. Score FAIL if
+      any Python repo has --system install or missing PATH export.
+    status: pending
+    note: "Added 2026-03-10 — not yet audited. Blind spot that allowed --system CI venv bug to pass undetected."
+
+  - id: audit-ui-npm-governance
+    content: >-
+      Audit §16 — UI/npm Governance: for each pure UI repo (package.json present, no pyproject.toml). Check: (a)
+      package-lock.json present and newer than or same age as package.json — FAIL if stale; (b) devDependencies match
+      workspace-npm-constraints.json canonical versions for: typescript, vite/@vitejs/plugin-react, vitest,
+      @vitest/coverage-v8, @testing-library/react, eslint — FAIL if any version diverges without documented exception;
+      (c) at least 1 test file exists in src/ or tests/ — FAIL if testing_level=none; (d) quality-gates.sh is a thin
+      stub calling base-ui.sh — FAIL if full-body or absent; (e) CI workflow runs quality-gates.sh. Audit command: bash
+      unified-trading-pm/scripts/repo-management/run-version-alignment.sh --ui-only --strict. Score FAIL if any UI repo
+      has stale package-lock or testing_level=none.
+    status: pending
+    note: |
+      Added 2026-03-10. M6 UPDATE (2026-03-11): ui_design_system_upgrade_2026_03_10 (DONE) added vitest
+      to all 11 UI repos. Re-run §16 audit against current state — expected result: all 11 UI repos now pass
+      testing_level check. 3 UI repos (trading-analytics-ui, execution-analytics-ui, batch-audit-ui) were
+      flagged as FAIL §16 in the 2026-03-11 full audit; verify these are resolved post ui_design_system_upgrade.
+
+  - id: audit-tooling-ssot-quality
+    content: >-
+      Audit §17 — Tooling SSOT & DRY Quality: audit workspace tooling scripts themselves. Check: (a) every Python repo's
+      scripts/quality-gates.sh is a stub (<50 lines) delegating to
+      unified-trading-pm/scripts/quality-gates-base/base-service.sh or base-library.sh — FAIL if full-body; (b)
+      base-service.sh, base-library.sh, base-ui.sh exist in unified-trading-pm/scripts/quality-gates-base/ and are the
+      SSOT — FAIL if QG logic duplicated elsewhere; (c) run-version-alignment.sh contains steps 0.5–0.7 and 1–4 — FAIL
+      if any step missing; (d) workspace-npm-constraints.json exists and enforced by rollout-npm-versions.py; (e) no
+      orphaned scripts in unified-trading-pm/scripts/ — WARN per orphaned script. Audit command: wc -l
+      */scripts/quality-gates.sh | sort -rn | head -20. Score FAIL if any full-body QG script found.
+    status: pending
+    note: "Added 2026-03-10 — not yet audited. Blind spot that allowed 25-30K lines of duplicated QG logic to persist."
 isProject: false
 ---
 
