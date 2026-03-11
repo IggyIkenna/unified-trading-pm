@@ -384,7 +384,8 @@ todos:
         DR N/A; BR N/A; v1.0.0 eligible per infra exemption.
       Add readiness_note with formal waiver rationale for each.
       Create codex/10-audit/repos/unified-trading-pm.yaml and unified-trading-codex.yaml with infra template.
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit c682dff: formal waivers in codex/10-audit/repos/unified-trading-{pm,codex}.yaml"
 
   - id: p6b-codex-version-bump
     content: |
@@ -398,9 +399,12 @@ todos:
       3. Do NOT create the version PR until user gives explicit approval in session.
       4. After approval: commit codex/10-audit/repos/unified-trading-codex.yaml with BR8 status=pass,
          then create the v1.0.0 PR.
-    status: todo
+    status: blocked
     blocked_by: p6a-pm-codex-formal-waiver
-    note: "BR8 required even for infra repos — consistent rule, no exceptions."
+    note: |
+      p6a done. Codex is at v0.1.0. v1.0.0 readiness summary:
+        CR5: done. DR1-DR6: N/A. BR2-BR7: N/A. BR8: PENDING — awaiting user approval.
+      Do NOT bump to 1.0.0 until user explicitly approves in session.
 
   # ─── PHASE 7: AUTOMATED READINESS VERIFIER ───
 
@@ -414,7 +418,8 @@ todos:
       - CR4: check for ruff/basedpyright error files from last QG run
       - DR3 (services): check if .readiness-ref health endpoint is reachable (non-blocking)
       Outputs declared vs verified table. Flags UNVERIFIED mismatches. Does NOT modify checklist files.
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit e720924: scripts/check-repo-readiness.py created"
 
   - id: p7b-readiness-verifier-gha
     content: |
@@ -422,7 +427,8 @@ todos:
       Trigger: workflow_dispatch (tier filter), schedule: "0 3 * * *" daily.
       Clones codex as sibling, runs check-repo-readiness.py for specified tier.
       Output: GitHub Step Summary table + Telegram alert on mismatches.
-    status: todo
+    status: done
+    note: "Done 2026-03-11 — commit 0541c8a: .github/workflows/readiness-verifier.yml created"
     blocked_by: p7a-readiness-verifier-script
 
 isProject: false
