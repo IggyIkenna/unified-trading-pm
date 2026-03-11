@@ -161,8 +161,9 @@ todos:
       - Keep the CR/DR/BR stage NAMES and brief descriptions (the PM doc is the developer-facing summary)
       - Add a note: "Per-repo status: codex/10-audit/repos/{repo-name}.yaml"
       Do NOT delete PM's doc — it's the human-readable summary; codex YAML is machine-readable.
-    status: todo
+    status: done
     blocked_by: p1c-codex-10-audit-readme
+    note: "Done 2026-03-11 — REPO_READINESS_CHECKLIST.md banner added pointing to codex SSOT."
 
   - id: p2b-setup-workspace-codex-link
     content: |
@@ -174,13 +175,11 @@ todos:
       workspace root differs from local machine. Absolute paths break across environments.
       Also commit a plain text .readiness-ref file: "../../unified-trading-codex/10-audit/repos/{repo-name}.yaml"
       .readiness-ref is the GHA-safe fallback (text file, no symlink needed, just cat it to get path).
-    status: todo
+    status: done
     blocked_by: p1b-per-repo-checklist-files
     note: |
-      Symlink: ln -sfn ../../unified-trading-codex/10-audit/repos/{repo}.yaml .readiness  (relative)
-      NOT: ln -s /Users/ikennaigboaka/Code/.../unified-trading-codex/10-audit/repos/{repo}.yaml (absolute — WRONG)
-      .readiness → gitignore (created fresh by setup-workspace; path varies per machine/GHA runner)
-      .readiness-ref → committed (stable relative path string; GHA reads this to resolve checklist)
+      Done 2026-03-11 — commit 1a27d7a. workspace-bootstrap.sh Phase 2.5 writes .readiness-ref per repo.
+      Relative path: ../../unified-trading-codex/10-audit/repos/{repo-name}.yaml. .readiness → gitignore.
 
   - id: p2c-deployment-service-sibling-clone
     content: |
@@ -196,8 +195,9 @@ todos:
       ```
       This makes codex/10-audit/repos/ available to deployment-service GHA workflows.
       Update deployment-service/configs/checklist.*.yaml: add a header comment pointing to codex canonical.
-    status: todo
+    status: done
     blocked_by: p1b-per-repo-checklist-files
+    note: "Done 2026-03-11 — commit 691e5a8. deployment-service quality-gates.yml has codex sibling-clone step."
 
   - id: p2d-sit-symlink-readiness
     content: |
@@ -210,8 +210,9 @@ todos:
          Flags repos where dr3_feature_env.status != "pass" — SIT cannot validate an undeployed service.
          Outputs a markdown table to GitHub Step Summary.
       3. This is ADVISORY (warn, not fail) — SIT may still run even if some repos haven't reached DR3.
-    status: todo
+    status: done
     blocked_by: p1b-per-repo-checklist-files
+    note: "Done 2026-03-11 — commit 2cf0502. smoke-test-gate.yml + scripts/check-sit-readiness.py (advisory, exits 0)."
 
   # ─── PHASE 3: PER-REPO SEMVER RULES ───
 
