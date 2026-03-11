@@ -28,7 +28,7 @@ todos:
       "P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into unified-cloud-interface/tests/conftest.py and
       system-integration-tests/tests/conftest.py; add gcr.io/google.com/cloudsdktool/google-cloud-cli Docker service to
       CI workflows"
-    status: pending
+    status: done
   - id: h4-1-hyperliquid-responses
     content:
       "P1: Create unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py using responses library
