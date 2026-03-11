@@ -17,15 +17,17 @@ import json
 import sys
 import urllib.request
 from pathlib import Path
+from typing import cast
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_URL = "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/cloudbuild.json"
 
 
-def load_schema() -> dict:
+def load_schema() -> dict[str, object]:
     """Fetch Cloud Build JSON schema from SchemaStore."""
-    with urllib.request.urlopen(SCHEMA_URL, timeout=10) as resp:
-        return json.loads(resp.read().decode())
+    with urllib.request.urlopen(SCHEMA_URL, timeout=10) as resp:  # type: ignore[arg-type]
+        data: bytes = resp.read()  # type: ignore[union-attr]
+        return json.loads(data.decode())  # type: ignore[no-any-return]
 
 
 def load_yaml(path: Path) -> object:
@@ -33,10 +35,10 @@ def load_yaml(path: Path) -> object:
     import yaml
 
     with open(path) as f:
-        return yaml.safe_load(f)
+        return yaml.safe_load(f)  # type: ignore[no-any-return]
 
 
-def validate_file(path: Path, schema: dict) -> tuple[bool, str | None]:
+def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | None]:
     """Validate a single Cloud Build YAML file. Returns (ok, error_msg)."""
     import jsonschema
 
@@ -49,9 +51,9 @@ def validate_file(path: Path, schema: dict) -> tuple[bool, str | None]:
         return False, "Empty file"
 
     try:
-        jsonschema.validate(instance=data, schema=schema)
+        jsonschema.validate(instance=data, schema=schema)  # type: ignore[no-untyped-call]
         return True, None
-    except jsonschema.ValidationError as e:
+    except jsonschema.ValidationError as e:  # type: ignore[no-untyped-call]
         return False, str(e)
 
 
@@ -68,15 +70,20 @@ def main() -> None:
     parser.add_argument("--quiet", "-q", action="store_true", help="Only print failures")
     args = parser.parse_args()
 
-    schema = load_schema()
+    arg_workspace: bool = cast(bool, args.workspace)
+    arg_dir: str | None = cast("str | None", args.dir)
+    arg_paths: list[str] = cast("list[str]", args.paths)
+    arg_quiet: bool = cast(bool, args.quiet)
+
+    schema: dict[str, object] = load_schema()
 
     files: list[Path] = []
-    if args.workspace:
+    if arg_workspace:
         files = find_cloudbuild_files(WORKSPACE_ROOT)
-    elif args.dir:
-        files = find_cloudbuild_files(Path(args.dir).resolve())
-    elif args.paths:
-        for p in args.paths:
+    elif arg_dir:
+        files = find_cloudbuild_files(Path(arg_dir).resolve())
+    elif arg_paths:
+        for p in arg_paths:
             path = Path(p).resolve()
             if path.is_dir():
                 files.extend(find_cloudbuild_files(path))
@@ -101,7 +108,7 @@ def main() -> None:
         except ValueError:
             rel = path
         if ok:
-            if not args.quiet:
+            if not arg_quiet:
                 print(f"OK {rel}")
         else:
             print(f"FAIL {rel}: {err}", file=sys.stderr)
