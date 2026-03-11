@@ -84,6 +84,27 @@ standards.
 
 ---
 
+## 8. Testing & Mock Infrastructure
+
+- **Credential-free requirement**: All CI tests must pass with `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true` — no live
+  cloud calls
+- **GCP tests**: Use `PUBSUB_EMULATOR_HOST`, `STORAGE_EMULATOR_HOST`, `BIGQUERY_EMULATOR_HOST` env vars in conftest
+  fixtures — NOT live GCP APIs
+- **AWS tests**: Use `@mock_aws` (moto) decorator — NOT `unittest.mock.patch` on boto3 internals unless unavoidable
+- **WS tests**: Use `MockWebSocketFeed` from `unified-market-interface/tests/fixtures/mock_ws_server.py`
+- **DeFi/Hyperliquid tests**: Use `responses` library with `passthrough=False` — proven zero live HTTP calls
+- **Network blocking**: When writing new integration tests, add `@pytest.mark.allow_network` ONLY for tests that connect
+  to local emulators (not live APIs) — emit a comment explaining why
+- **Cassette tests**: VCR cassettes live in `unified-api-contracts/unified_api_contracts_external/*/mocks/`; parity
+  tested on every commit via `test_cassette_schema_parity.py`
+- **Fault injection**: Use `FaultInjectionTransport` from `unified-trading-pm/scripts/dev/fixtures/fault_injection.py`
+  for circuit breaker tests
+- **Tick replay**: Use `TickReplayEngine` from `unified-trading-pm/scripts/dev/fixtures/tick_replay.py` for
+  deterministic tick streams
+- **Full infra reference**: `unified-trading-pm/plans/active/cicd_mock_hardening_2026_03_11.plan.md`
+
+---
+
 **Venv vs testing:** `.venv-workspace` = IDE only. Tests use per-repo `.venv` via quality-gates.sh. See
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 

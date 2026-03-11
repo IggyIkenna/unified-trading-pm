@@ -40,6 +40,29 @@ Read these before making ANY code changes:
 - No `# type: ignore` to hide architectural violations — fix the root cause
 - No `try/except ImportError` around library imports — fail loud
 
+## Testing Infrastructure (Emulators & Mocks)
+
+All tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mocks
+replace live cloud services (Plan #60 — `cicd_mock_hardening_2026_03_11.plan.md`).
+
+**GCP Emulators** (auto-detected by SDK via env vars):
+
+- Pub/Sub: `PUBSUB_EMULATOR_HOST=localhost:8085`
+- GCS: `STORAGE_EMULATOR_HOST=http://localhost:4443` (fsouza/fake-gcs-server)
+- BigQuery: `BIGQUERY_EMULATOR_HOST=localhost:9050`
+
+**AWS**: `@mock_aws` decorator (moto) — no credentials, no emulator process needed.
+
+**Network blocking**: `pytest --block-network` blocks all sockets; `@pytest.mark.allow_network` opts out.
+
+**WS tests**: Use `MockWebSocketFeed` from `unified-market-interface/tests/fixtures/mock_ws_server.py`.
+
+**DeFi tests**: Use `responses` library (`@responses.activate`, `passthrough=False`) for Hyperliquid REST.
+
+**Local stack**: `bash unified-trading-pm/scripts/demo-mode.sh --seed` — no credentials required.
+
+**Cassette parity**: `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py` — runs on every commit.
+
 ## This is a Multi-Repo Workspace (NOT a monorepo)
 
 Each subdirectory is an independent git repo. When editing, only commit to the target repo. Never run `basedpyright .`
