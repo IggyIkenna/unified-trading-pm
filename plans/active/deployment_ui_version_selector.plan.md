@@ -6,7 +6,7 @@ overview:
   and forward deploys.
 type: feature
 epic: epic-infra
-status: active
+status: done
 
 completion_gates:
   code: C3
@@ -33,34 +33,34 @@ todos:
     content:
       "Add GET /api/builds/{service}?env=dev|staging|prod to deployment-api/deployment_api/routes/builds.py. Lists AR
       tags, parses to display name '{version} @ {branch}', returns is_v1 flag."
-    status: todo
+    status: done
     note: "New route file: deployment-api/deployment_api/routes/builds.py"
   - id: deploy-api-endpoint
     content:
       "Add POST /api/deployments/{service}/deploy to deployment-api/deployment_api/routes/builds.py. Body: {image_tag,
       environment}. Deploys any tag (including pre-1.0.0) to any environment. No version gate on manual deploys — that's
       the whole point."
-    status: todo
+    status: done
     note: "Same route file as builds API."
   - id: register-builds-router
     content: "Register builds router in deployment-api/deployment_api/main.py."
-    status: todo
+    status: done
     note: "Add import + include_router call."
   - id: build-selector-ui
     content:
       "Create deployment-ui/src/components/BuildSelector.tsx — dropdown fetching from GET
       /api/builds/{service}?env={env}. Shows '{version} @ {branch}' labels, v1/pre-v1 badges."
-    status: todo
+    status: done
     note: "New component."
   - id: deploy-form-extend
     content:
       "Extend deployment-ui/src/components/DeployForm.tsx — add BuildSelector above the image_tag input field. Selecting
       a build pre-fills image_tag."
-    status: todo
+    status: done
     note: "User can still type a tag manually."
   - id: deploy-api-client
     content: "Add fetchBuilds() and deployBuild() to deployment-ui/src/api/deploymentApi.ts."
-    status: todo
+    status: done
     note: "Type-safe API client functions."
 isProject: false
 ---
