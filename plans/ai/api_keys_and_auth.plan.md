@@ -225,6 +225,63 @@ todos:
       ibkr-account-credentials --data-file=- <<< '{"username":"...","password":"..."}'.
       VM ibkr-gateway-vm is running at 34.146.71.13 and waiting for credentials.
 
+  # ── Migrated from stub_completion_interfaces_and_infra (2026-03-11) ──
+  # UPI adapters — blocked on api key phases above
+  - id: upi-binance-impl
+    content: >-
+      Implement get_balance()+get_positions() in unified-position-interface/adapters/binance.py using
+      /sapi/v1/asset/wallet/balance and /fapi/v2/positionRisk. Blocked: binance-read-api-key must be in SM (phase-2-ws).
+    status: blocked
+  - id: upi-bybit-impl
+    content: >-
+      Implement using Bybit V5 /v5/account/wallet-balance and /v5/position/list.
+      Blocked: bybit-api-key must be in SM (phase-2-http).
+    status: blocked
+  - id: upi-deribit-impl
+    content: >-
+      Implement using Deribit /private/get_account_summary and /private/get_positions.
+      Blocked: deribit-read-api-key must be in SM (phase-2-ws).
+    status: blocked
+  - id: upi-okx-impl
+    content: >-
+      Implement using OKX /api/v5/account/balance and /api/v5/account/positions.
+      Blocked: okx key must be in SM (phase-2-http).
+    status: blocked
+  - id: upi-hyperliquid-impl
+    content: >-
+      Implement using Hyperliquid REST /info (clearinghouse state + perpetuals position).
+      Blocked: hyperliquid key in SM (phase-2-http).
+    status: blocked
+  - id: upi-ccxt-impl
+    content: >-
+      Implement using ccxt.fetchBalance() and ccxt.fetchPositions(). Blocked: exchange keys in SM (phase-2-http).
+    status: blocked
+  - id: upi-polymarket-impl
+    content: >-
+      Implement using Polymarket CLOB REST API. Blocked: polymarket-api-key in SM (phase-3-keys, polymarket-api-keys-sm
+      todo above). Also requires USDC.e wallet on Polygon to be funded.
+    status: blocked
+  - id: upi-betfair-impl
+    content: >-
+      Implement using Betfair Accounts API. Blocked: betfair-api-key in SM (phase-4-blockers).
+    status: blocked
+  # UMI OnChain adapters — blocked on phase-3-keys
+  - id: umi-mev-impl
+    content: >-
+      Implement MEV provider adapter in unified-market-interface. Currently BLACKLISTED_NO_ACCESS.
+      Blocked: MEV provider key in SM (phase-3-keys).
+    status: blocked
+  - id: umi-glassnode-impl
+    content: >-
+      Implement Glassnode adapter in unified-market-interface. Currently BLACKLISTED_NO_ACCESS.
+      Blocked: glassnode-api-key in SM (phase-3-keys, glassnode row above).
+    status: blocked
+  - id: umi-arkham-impl
+    content: >-
+      Implement Arkham adapter in unified-market-interface. Currently BLACKLISTED_NO_ACCESS.
+      Blocked: arkham-api-key in SM (phase-3-keys, arkham row above).
+    status: blocked
+
 isProject: false
 ---
 

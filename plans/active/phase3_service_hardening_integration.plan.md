@@ -625,6 +625,30 @@ not wired". Some OAuth (deployment-ui, ml-training-ui, client-reporting-ui, onbo
 
 ---
 
+---
+
+## GH-BACKLOG Items (Migrated from stub_completion_interfaces_and_infra 2026-03-11)
+
+These items were tracked in stub_completion plan but belong here as T4 service work.
+
+- [ ] `risk-batch-compute-unimplemented` — `risk-and-exposure-service/cli/handlers/compute_handler.py:30` — implement
+      `_compute_batch_risk()` to calculate portfolio risk metrics for historical windows.
+
+- [ ] `gas-estimator-live-umi-feed` — `strategy-service/engine/rebalancing/gas_estimator.py:175` — replace static $3800
+      ETH gas price lookup with `get_price()` from UMI (stream-d phase).
+
+- [ ] `balancer-eth-venue-implementation` — `unified-market-interface/models/venue_config.py:164,206` — BALANCER-ETH
+      venue config stubs. Implement when Balancer v3 adapter is available.
+
+- [ ] `futures-roll-adjuster-calendar` — `features-delta-one-service/app/core/futures_roll_adjuster.py:345` — roll
+      calendar prices unimplemented. Fetch roll prices from reference data service.
+
+- [ ] `futures-basis-mark-price-features` —
+      `features-delta-one-service/features_service/app/calculators/futures_basis.py:70` — mark price features commented
+      out. Implement when live mark price feed available.
+
+---
+
 ### Cross-references
 
 - [Phase 1](phase1_foundation_prep.plan.md) — T0–T1, deployment structure, system-integration-tests repo
