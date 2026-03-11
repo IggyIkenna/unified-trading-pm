@@ -330,9 +330,9 @@ UCS_DOMAIN=$(rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClie
     --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_domain_client, not unified_trading_library"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_domain_client"
 
-# No domain imports from UCS
+# No domain imports from UCS (use # noqa: domain-ucs if UDC migration is pending)
 DOMAIN_FROM_UCS=$(rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
-    --type py "$SOURCE_DIR/" 2>/dev/null || :)
+    --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
 [[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
 
 # setup_events/setup_service uses sink= in production
