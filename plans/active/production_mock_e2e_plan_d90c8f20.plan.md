@@ -119,7 +119,11 @@ todos:
     content:
       "P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into UCI + system-integration-tests conftest; run
       gcr.io/google.com/cloudsdktool/google-cloud-cli emulator in CI Docker before test suite"
-    status: pending
+    status: done
+    notes:
+      "DONE 2026-03-11: pubsub_emulator_host + with_pubsub_emulator fixtures already in both conftest.py files; added
+      pubsub-emulator Docker service + PUBSUB_EMULATOR_HOST env to quality-gates.yml in system-integration-tests
+      (bca6482) and unified-cloud-interface (6cfc26f)"
   - id: h4-1-hyperliquid-responses
     content:
       "P1: Add responses library fixtures for Hyperliquid REST (order place/cancel/query) in
@@ -138,7 +142,11 @@ todos:
     content:
       "P2: Wire fsouza/fake-gcs-server (port 4443) into UCI + system-integration-tests conftest via
       STORAGE_EMULATOR_HOST; covers bucket lifecycle, ACLs, signed URLs missing from LocalStorageProvider"
-    status: pending
+    status: done
+    notes:
+      "DONE 2026-03-11: gcs_emulator + with_gcs_emulator + storage_client_emulator fixtures already in both conftest.py
+      files; added gcs-emulator Docker service + STORAGE_EMULATOR_HOST env to quality-gates.yml in
+      system-integration-tests (bca6482) and unified-cloud-interface (6cfc26f)"
   - id: h7-thirdparty-fixtures
     content:
       "P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy/Infura JSON-RPC, and
