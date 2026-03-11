@@ -27,4 +27,6 @@ When any condition below applies, fetch the named rule before proceeding.
 | Creating or setting up a new repo | @mandatory-setup-sh |
 | Configuring git hooks | @hook-tooling-policy |
 | Running or debugging quality gates | @strict-quality-gates |
+| Venv conflict / pytest / .venv vs .venv-workspace | @venv-usage-ssot |
+| Working with .gitignore or files that should be ignored | @git-untrack-ignored |
 | Reviewing common anti-patterns | @anti-patterns-quick-reference |

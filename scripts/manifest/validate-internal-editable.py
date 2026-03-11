@@ -12,6 +12,7 @@ Usage:
 
 Run from workspace root after uv sync. Uses each repo's .venv for uv pip show.
 """
+
 from __future__ import annotations
 
 import argparse

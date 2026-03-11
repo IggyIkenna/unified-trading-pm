@@ -1,6 +1,6 @@
 ---
 description: "No technical debt after refactor — delete old code, no parallel paths, single source of truth"
-alwaysApply: false
+alwaysApply: true
 globs:
   - "**/*.py"
 priority: 95

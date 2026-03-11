@@ -1,7 +1,12 @@
 ---
 name: Canonical .gitignore / .cursorignore Sync
 archived: "2026-03-09"
-archiveReason: "Plan completed — .feather rules added, sync script created, repo-specific exceptions documented."
+archiveReason: |
+  Partially implemented. Sync script exists: scripts/workspace/sync-gitignore-cursorignore.py
+  (Python, not shell). Central templates exist: scripts/templates/.gitignore.central and
+  .cursorignore.central. *.feather was NOT added to templates — only *.parquet present.
+  Repo-specific exceptions (data/sample, sample_data, data/sample_features) not in script.
+  Dry-run/apply flags, old-style upgrade, untrack-ignored-files, and full propagate not done.
 overview: |
   Update the canonical .gitignore and .cursorignore files in unified-trading-pm, then
   propagate them to all 55 git repos in the workspace. The canonical files are the SSOT —

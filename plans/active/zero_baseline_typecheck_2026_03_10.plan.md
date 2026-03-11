@@ -214,3 +214,71 @@ class NautilusEngineProtocol(Protocol):
   - execution-service baseline deleted — 0 real errors across full tree
   - `find . -name ".basedpyright-baseline.json"` → empty (workspace-wide verification ✅)
   - **GOAL ACHIEVED: 0 errors, 0 baseline files across all repos**
+- [ ] Phase 9 — enumerate remaining `# type: ignore` in production source (2026-03-11)
+
+---
+
+## Phase 9 — Enumerate & Triage Remaining `# type: ignore` in Production Source
+
+**Added:** 2026-03-11 (2026-03-11 full audit found 100+ instances across ~10 repos) **Goal:** Every `# type: ignore`
+must have a comment justifying it. Unjustified ones get a todo to fix root cause.
+
+**Categorised inventory** (from audit 2026-03-11):
+
+### ALLOWED — third-party stubs incomplete (no action)
+
+These arise because google-auth, google-cloud-build, and nautilus_trader have incomplete or absent type stubs.
+Suppression is correct; fixing would require contributing stubs upstream.
+
+- `deployment-api/deployment_api/routes/service_status.py:23` — `google.auth` import-untyped (google-auth stubs
+  incomplete) ✅
+- `deployment-api/deployment_api/routes/service_status.py:59,62,63,74` — google-auth untyped ✅
+- `deployment-api/deployment_api/routes/cloud_builds.py` — CloudBuild stubs partial (14 occurrences) ✅
+- `deployment-api/deployment_api/utils/artifact_registry.py:58,63,64` — google-auth stubs incomplete ✅
+
+### ALLOWED — Protocol empty-body stubs (no action)
+
+Required by basedpyright when Protocol/ABC methods have `...` body.
+
+- `execution-service/execution_service/algorithms/impl/passive_aggressive_core.py:45` ✅
+- `execution-service/execution_service/algorithms/impl/passive_aggressive_execution.py:104,107,110` ✅
+- `execution-service/execution_service/algorithms/impl/twap_pricing.py:33` ✅
+- `execution-service/execution_service/algorithms/impl/vwap_core.py:55,58` ✅
+
+### ALLOWED — hasattr-guarded union-attr (no action)
+
+`hasattr(x, "attr")` check precedes attribute access; basedpyright doesn't narrow through `hasattr`.
+
+- `execution-service/execution_service/algorithms/impl/vwap_execution.py:279,297,319,384,403` ✅
+- `deployment-api/deployment_api/routes/cloud_builds.py:561,563` ✅
+
+### ALLOWED — pandas generic type-arg (pd.Series without type param, deployment-api dynamic objects)
+
+pandas-stubs does not support fully generic `pd.Series[T]` in all contexts.
+
+- `market-data-processing-service/...base_adapter.py:30,33,35,153,211,213,215,495` ✅
+- `market-data-processing-service/.../rewards_adapter.py:137,141,146` ✅
+- `features-sports-service/...` — 6 `dtype=object` suppressions ✅
+- `deployment-api/...deployment_manager.py` — dynamic object dispatch (runtime polymorphism via importlib) ✅
+- `deployment-api/...sync_service.py,auto_sync.py,event_processor.py` — dynamic backend objects ✅
+
+### ALLOWED — elysium-defi-lite (standalone fork, not production service)
+
+- `elysium-defi-lite/src/...` — 6 occurrences in strategies/adapters: adapter.fetch_prices() returns `object` (Protocol
+  stub) ✅
+
+### TODO — fixable with proper typing
+
+- [ ] `execution-service/execution_service/services/funding_recon_engine.py:214` — `severity` arg-type: verify
+      AlertSeverity enum is imported; fix with explicit cast or correct type annotation
+- [ ] `execution-service/execution_service/services/yield_recon_engine.py:280` — same pattern as above
+- [ ] `instruments-service/...instrument_processing_handlers.py:71` — `# type: ignore[override]` UTL-DEC-02 decorated
+      mixin: investigate whether Protocol or overload can resolve without suppression
+- [ ] `client-reporting-api/client_reporting_api/core/pnl_reader.py:63` — `df.to_dict(orient="records")` typed as
+      `list[dict[str, object]]`; basedpyright infers `list[dict[str, Any]]`; fix with explicit
+      `cast(list[dict[str, object]], df.to_dict(orient="records"))`
+- [ ] `deployment-api/deployment_api/services/deployment_state.py:269,293,324,358,436` — `_reportPrivateUsage` on sync
+      helpers: expose as semi-private (`_func`) or move to module scope
+
+**Tracking:** Each TODO above → open as individual fix PR once Phase 8 is stable. No rush — none are architectural
+violations.

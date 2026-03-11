@@ -1,6 +1,6 @@
 ---
 description: "Anti-patterns quick reference — don't/do pairs for common mistakes"
-alwaysApply: false
+alwaysApply: true
 priority: 80
 tags:
   - standards

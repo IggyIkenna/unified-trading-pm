@@ -11,6 +11,7 @@ For each repo with both cloudbuild.yaml and pyproject.toml:
 Usage:
     python3 scripts/propagation/add-cloudbuild-prechecks.py [--dry-run] [--repo NAME]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,14 +24,10 @@ PM_ROOT = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT = PM_ROOT.parent
 
 # Artifact Registry Python index (same as cloudbuild-service-template)
-ARTIFACT_REGISTRY_INDEX = (
-    "https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/"
-)
+ARTIFACT_REGISTRY_INDEX = "https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/"
 
 # Internal dep pattern: unified-*, *-library, *-interface (captures full spec with constraint)
-INTERNAL_DEP_PATTERN = re.compile(
-    r'^\s*"((?:unified-[^"]+|[^"]+-library|[^"]+-interface)[^"]*)"\s*,?\s*$'
-)
+INTERNAL_DEP_PATTERN = re.compile(r'^\s*"((?:unified-[^"]+|[^"]+-library|[^"]+-interface)[^"]*)"\s*,?\s*$')
 
 LIBRARY_PRECHECK_STEP = f'''  # Library pre-check: verify internal deps exist in Artifact Registry
   - name: "ghcr.io/astral-sh/uv:python3.13"
@@ -85,11 +82,7 @@ def insert_precheck_step(cloudbuild_content: str) -> str:
     first_step = cloudbuild_content.find("  - name:", steps_end)
     if first_step == -1:
         return cloudbuild_content
-    return (
-        cloudbuild_content[:first_step]
-        + LIBRARY_PRECHECK_STEP
-        + cloudbuild_content[first_step:]
-    )
+    return cloudbuild_content[:first_step] + LIBRARY_PRECHECK_STEP + cloudbuild_content[first_step:]
 
 
 def main() -> int:

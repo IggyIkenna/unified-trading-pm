@@ -116,6 +116,53 @@ else
 fi
 echo ""
 
+# 0.55. Required symlink presence check — verify .cursor/scripts/check-import-patterns.py
+#        exists (as a symlink, not a local copy) in all Python manifest repos
+echo "[0.55/4] Checking .cursor/scripts/check-import-patterns.py symlinks in Python repos..."
+MISSING_SYMLINKS=()
+STALE_COPIES=()
+# Only check manifest repos (not arbitrary on-disk dirs) — matches rollout-agent-symlinks.sh scope
+_manifest_python_repos=$(python3 - "$PM_ROOT/workspace-manifest.json" "$WORKSPACE_ROOT" <<'PYEOF'
+import json, sys, os
+with open(sys.argv[1]) as f:
+    manifest = json.load(f)
+workspace = sys.argv[2]
+repos = manifest.get("repositories", {})
+for name, _ in repos.items():
+    if name == "unified-trading-pm":
+        continue
+    repo_dir = os.path.join(workspace, name)
+    if os.path.isfile(os.path.join(repo_dir, "pyproject.toml")):
+        print(name)
+PYEOF
+)
+while IFS= read -r repo_name; do
+    [ -z "$repo_name" ] && continue
+    repo_dir="$WORKSPACE_ROOT/$repo_name"
+    script_path="$repo_dir/.cursor/scripts/check-import-patterns.py"
+    if [ -L "$script_path" ]; then
+        : # correct — symlink exists
+    elif [ -f "$script_path" ]; then
+        STALE_COPIES+=("  $repo_name: local copy (not symlink) — run rollout-agent-symlinks.sh")
+    else
+        MISSING_SYMLINKS+=("  $repo_name: missing — run rollout-agent-symlinks.sh")
+    fi
+done <<< "$_manifest_python_repos"
+
+if [ "${#MISSING_SYMLINKS[@]}" -gt 0 ] || [ "${#STALE_COPIES[@]}" -gt 0 ]; then
+    [ "${#MISSING_SYMLINKS[@]}" -gt 0 ] && echo "  [WARN] Missing check-import-patterns.py symlinks (${#MISSING_SYMLINKS[@]}):" && \
+        for s in "${MISSING_SYMLINKS[@]}"; do echo "$s"; done
+    [ "${#STALE_COPIES[@]}" -gt 0 ] && echo "  [WARN] Stale local copies (should be symlinks) (${#STALE_COPIES[@]}):" && \
+        for s in "${STALE_COPIES[@]}"; do echo "$s"; done
+    echo "  Fix: bash unified-trading-pm/scripts/rollout-agent-symlinks.sh"
+    if [ "${STRICT:-false}" = true ]; then
+        exit 1
+    fi
+else
+    echo "  [OK] All Python repos have check-import-patterns.py symlinks"
+fi
+echo ""
+
 # 0.6. UI dep-drift check — detect UI repos where package.json is newer than package-lock.json
 #      (means npm install hasn't been run since package.json was last edited).
 echo "[0.6/4] Checking UI repos for npm dep drift (package.json newer than package-lock.json)..."

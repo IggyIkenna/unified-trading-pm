@@ -205,6 +205,9 @@
     },
   ],
   "settings": {
+    "terminal.integrated.env.osx": {
+      "UNIFIED_TRADING_WORKSPACE_ROOT": "${workspaceFolder}",
+    },
     "scm.repositories.visible": 100,
     "git.maxRepositoryCount": 100,
     "git.repositoryScanMaxDepth": 2,
@@ -218,6 +221,10 @@
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
     "python.terminal.activateEnvironment": true,
     "python.envFile": "${workspaceFolder}/.env",
+    "python.languageServer": "None",
+    "mypy-type-checker.enabled": false,
+    "ms-python.black-formatter.enabled": false,
+    "isort.enabled": false,
     "cursorpyright.analysis.typeCheckingMode": "strict",
     "cursorpyright.analysis.reportAny": "error",
     "cursorpyright.analysis.autoSearchPaths": true,
@@ -298,5 +305,13 @@
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
+  },
+  "extensions": {
+    "unwantedRecommendations": [
+      "ms-python.pylance",
+      "ms-python.mypy-type-checker",
+      "ms-python.black-formatter",
+      "ms-python.isort",
+    ],
   },
 }

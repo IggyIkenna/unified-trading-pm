@@ -11,6 +11,8 @@ tags:
 ---
 # Workspace Venv Fallback
 
+**SSOT:** venv-usage-ssot.mdc — quality gates always use per-repo `.venv`. This rule is a **debug fallback** only.
+
 RULE: If a repo's local venv (e.g. `.venv`) isn't working — missing deps, wrong Python, import errors — using the workspace venv is fine.
 
 WHY: Repo venvs can be out of sync or missing transitive deps (e.g. google-cloud-pubsub, unified-feature-calculator). The workspace venv (`.venv-workspace`) is shared and typically has all deps installed.

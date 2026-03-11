@@ -19,14 +19,18 @@ prompts:
 - Delete deprecated code; no parallel code paths
 - Search unified libraries before implementing anything new
 
-## For sub-agents (Task tool)
+## For sub-agents (Task tool) — FULL RULES REQUIRED
 
-When launching any sub-agent, add to the prompt:
+Sub-agents get reduced context and do NOT inherit rules. You MUST pass the full rules.
 
-"Follow all workspace cursor rules in .cursorrules. See no-summary-docs.mdc for documentation rules; plans only in
-unified-trading-pm or unified-trading-pm/plans/ai/. uv not pip, basedpyright not pyright, quickmerge not git push.
-Delete deprecated code; no parallel code paths — see delete-deprecated.mdc. Search unified libraries before implementing
-anything new."
+**Option 1 (preferred):** Paste the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the
+TOP of the prompt.
+
+**Option 2:** Include at TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
+and follow ALL rules strictly. WORKSPACE_ROOT is <path>. For quality gates: cd <repo> && bash scripts/quality-gates.sh
+(per-repo .venv). Never .venv-workspace for pytest." See venv-usage-ssot.mdc.
+
+Never rely on reminders alone — sub-agents need the full rules set.
 
 ## External libs
 

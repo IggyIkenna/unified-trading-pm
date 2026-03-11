@@ -117,6 +117,13 @@ bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh
 **Unresolvable:** Tier violations and constraint conflicts are reported and exit 1. Resolve manually (e.g. update
 manifest, relax constraints) before proceeding.
 
+**Test-harness repos (e.g. `system-integration-tests`):** These repos use plain-string dep format in
+`workspace-manifest.json` (e.g. `"unified-trading-library"` not `{"name": "unified-trading-library", "version": "..."}`)
+and have no `pyproject.toml` editable deps pointing to internal services. This is intentional — SIT has zero Python
+imports from services (codex SSOT constraint: `unified-trading-codex/05-infrastructure/sit-standards.md`). The alignment
+scanner (`check-dependency-alignment.py`) silently skips plain-string manifest deps, so these repos will always report
+`"aligned": true` regardless of changes to their `pyproject.toml`. No alignment action is needed or expected for them.
+
 **Ref:** `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`, `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`
 
 ---
@@ -222,14 +229,10 @@ When sync fails with merge conflicts:
      bash unified-trading-pm/scripts/repo-management/sync-all-to-main.sh --repo <repo-name>
      ```
 
-
 3. **If our version fails quality gates** — fix quality gate issues first, then resolve conflicts.
-
 
 **Why:** Running quality gates on conflicted repos confirms our branch is valid before we merge. Avoids losing good work
 from main by resolving conflicts with a broken local state.
-
-
 
 ---
 
@@ -237,10 +240,12 @@ from main by resolving conflicts with a broken local state.
 
 Cloud Build and the deployment pipeline assume the following:
 
-- **Dependencies built first:** Library and interface dependencies must be built and pushed to Artifact Registry before any service that depends on them. The manifest defines the build order.
-- **Manifest up to date:** `workspace-manifest.json` must reflect the current versions of all internal dependencies. Run `run-version-alignment.sh --fix` before building.
-- **Validation before build:** Quality gates and validation run before the build step. A failed validation blocks the build.
-
+- **Dependencies built first:** Library and interface dependencies must be built and pushed to Artifact Registry before
+  any service that depends on them. The manifest defines the build order.
+- **Manifest up to date:** `workspace-manifest.json` must reflect the current versions of all internal dependencies. Run
+  `run-version-alignment.sh --fix` before building.
+- **Validation before build:** Quality gates and validation run before the build step. A failed validation blocks the
+  build.
 
 ## Quick Reference: Full Flow
 
@@ -355,11 +360,11 @@ gates, PR review, and semver-agent. Always prefer Phase 3 (quickmerge) for stand
 
 ## Troubleshooting
 
-| Failure                                    | Fix                                                                                                                                                                                  |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Prettier (pre-commit)**                  | Quickmerge auto-runs Prettier before commit. If it still fails, run `npx prettier --write .` in the repo, then re-run quickmerge.                                                    |
-| **Act simulation (GH_PAT)**                | Quickmerge **fails** (does not skip) when act fails. SSOT: unified-trading-pm/docs/repo-management/act-secrets-setup.md. Run generate-act-secrets.sh, edit .act-secrets, add GH_PAT. |
-| **Type check (.venv-workspace not found)** | PM `pyrightconfig.json` uses `.venv` (repo-local). Ensure `bash scripts/setup.sh` ran so `.venv` exists.                                                                             |
+| Failure                     | Fix                                                                                                                                                                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Prettier (pre-commit)**   | Quickmerge auto-runs Prettier before commit. If it still fails, run `npx prettier --write .` in the repo, then re-run quickmerge.                                                                                                                               |
+| **Act simulation (GH_PAT)** | Quickmerge **fails** (does not skip) when act fails. SSOT: unified-trading-pm/docs/repo-management/act-secrets-setup.md. Run generate-act-secrets.sh, edit .act-secrets, add GH_PAT.                                                                            |
+| **Type check fails**        | Each repo owns `[tool.basedpyright]` in its `pyproject.toml` — that is the CI type-check config. The workspace-root `pyrightconfig.json` is an IDE-only helper (not used by CI or QG scripts). Ensure `bash scripts/setup.sh` ran so the repo's `.venv` exists. |
 
 ## Feature Branch Flow
 
@@ -371,7 +376,20 @@ bash unified-trading-pm/scripts/quickmerge.sh "feat: my change"
 
 # Feature branch: local dep changes present
 bash unified-trading-pm/scripts/quickmerge.sh "feat: my change" --dep-branch feat/my-feature
+
+# Agent / Claude Code sessions — always pass --agent (skips act simulation + tests; lint+format+typecheck+codex only)
+bash unified-trading-pm/scripts/quickmerge.sh "feat: my change" --agent
 ```
+
+**Two-pass model (REQUIRED for all code changes):**
+
+- **Pass 1** — `bash scripts/quality-gates.sh` — full run (lint, tests, typecheck, codex, security). Cannot be skipped.
+- **Pass 2** — `bash scripts/quickmerge.sh "msg" --agent` — lightweight (lint+format+typecheck+codex, no tests, no act).
+  Only run after Pass 1 is green.
+
+`--agent` is **required** in all Claude Code / GHA agent sessions. `--quick` skips act only (tests still run) and is the
+human shorthand for interactive use. Never use quickmerge as a substitute for Pass 1 — it does not run the full test
+suite. SSOT: `unified-trading-codex/06-coding-standards/quality-gates.md § Two-Pass Workflow Model`.
 
 **What `--dep-branch feat/my-feature` does (STAGE 0 — Cascade):**
 

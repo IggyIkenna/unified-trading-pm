@@ -46,8 +46,10 @@ info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 
 # Verify PM source files exist
 PM_CLAUDE_MD="$PM_DIR/cursor-configs/CLAUDE.md"
+PM_CHECK_IMPORT="$PM_DIR/scripts/validation/check-import-patterns.py"
 
-[ -f "$PM_CLAUDE_MD" ]  || { echo -e "${RED}❌ Missing: $PM_CLAUDE_MD${NC}" >&2; exit 1; }
+[ -f "$PM_CLAUDE_MD" ]       || { echo -e "${RED}❌ Missing: $PM_CLAUDE_MD${NC}" >&2; exit 1; }
+[ -f "$PM_CHECK_IMPORT" ]    || { echo -e "${RED}❌ Missing: $PM_CHECK_IMPORT${NC}" >&2; exit 1; }
 
 # Get all repos (all types including UI, excluding only PM itself)
 get_all_repos() {
@@ -102,8 +104,8 @@ TOTAL=$(echo "$ALL_REPOS" | grep -c . || true)
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Rollout: CLAUDE.md symlink (AGENTS.md + cursor rules = ephemeral)"
-echo "  Repos:   $TOTAL targets (all types incl. UI)"
+echo "  Rollout: CLAUDE.md + check-import-patterns.py symlinks (AGENTS.md + cursor rules = ephemeral)"
+echo "  Repos:   $TOTAL targets (all types incl. UI; check-import-patterns.py: Python repos only)"
 echo "  DRY_RUN: $DRY_RUN | SKIP_COMMIT: $SKIP_COMMIT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
@@ -118,9 +120,14 @@ while IFS= read -r repo; do
         continue
     fi
 
+    # Detect Python repos (have pyproject.toml)
+    _is_python_repo=false
+    [ -f "$repo_dir/pyproject.toml" ] && _is_python_repo=true
+
     if $DRY_RUN; then
         echo "DRY-RUN: $repo"
         echo "  .claude/CLAUDE.md -> ../../unified-trading-pm/cursor-configs/CLAUDE.md"
+        $_is_python_repo && echo "  .cursor/scripts/check-import-patterns.py -> ../../../unified-trading-pm/scripts/validation/check-import-patterns.py"
         echo "  (cursor rules: ephemeral copy at GHA runtime, NOT committed)"
         PASS=$((PASS + 1))
         continue
@@ -129,6 +136,13 @@ while IFS= read -r repo; do
     # ── CREATE SYMLINKS ────────────────────────────────────────────────────────
     # .claude/CLAUDE.md  (relative: from .claude/ dir → PM/cursor-configs/CLAUDE.md)
     ensure_symlink "$repo_dir/.claude/CLAUDE.md" "../../unified-trading-pm/cursor-configs/CLAUDE.md" false
+
+    # .cursor/scripts/check-import-patterns.py (Python repos only)
+    # relative: from .cursor/scripts/ → ../../../unified-trading-pm/scripts/validation/check-import-patterns.py
+    if $_is_python_repo; then
+        ensure_symlink "$repo_dir/.cursor/scripts/check-import-patterns.py" \
+            "../../../unified-trading-pm/scripts/validation/check-import-patterns.py" false
+    fi
 
 
     # Remove any previously committed cursor rules symlinks (if accidentally added before)
@@ -156,6 +170,8 @@ while IFS= read -r repo; do
         cd "$repo_dir"
 
         git add ".claude/CLAUDE.md" 2>/dev/null || true
+        # Stage check-import-patterns.py symlink for Python repos
+        $_is_python_repo && git add ".cursor/scripts/check-import-patterns.py" 2>/dev/null || true
         # If cursor rule symlinks were removed, stage their deletion
         $_remove_cursor_symlinks && git rm --cached ".cursor/rules" ".cursorrules" 2>/dev/null || true
         $_remove_agents_md && git rm --cached "AGENTS.md" 2>/dev/null || true
@@ -163,10 +179,11 @@ while IFS= read -r repo; do
         if git diff --cached --quiet; then
             info "$repo: no changes to commit"
         else
-            git commit -m "chore: add CLAUDE.md symlink; AGENTS.md + cursor rules ephemeral
+            git commit -m "chore: add CLAUDE.md + check-import-patterns.py symlinks; AGENTS.md + cursor rules ephemeral
 
-Committed symlink for Claude Code + agent runners:
+Committed symlinks for Claude Code + agent runners:
   .claude/CLAUDE.md -> ../../unified-trading-pm/cursor-configs/CLAUDE.md
+  .cursor/scripts/check-import-patterns.py -> ../../../unified-trading-pm/scripts/validation/check-import-patterns.py (Python repos only)
 
 AGENTS.md and cursor rules (.cursor/rules, .cursorrules) are NOT committed —
 they are copied as real files ephemerally by setup-workspace-from-manifest.sh

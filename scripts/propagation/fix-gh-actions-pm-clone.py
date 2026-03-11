@@ -50,7 +50,7 @@ NEW_CLONE_STEP = (
     "          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}\n"
     "        run: |\n"
     '          BRANCH="${DEP_BRANCH:-main}"\n'
-    "          (git clone -b \"$BRANCH\""
+    '          (git clone -b "$BRANCH"'
     ' "https://x-access-token:${GH_PAT}@github.com/IggyIkenna/unified-trading-pm.git"'
     " ../unified-trading-pm 2>/dev/null \\\n"
     "            || git clone -b main"

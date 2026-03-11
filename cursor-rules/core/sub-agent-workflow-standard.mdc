@@ -11,6 +11,8 @@ Sub-agents preserve your context (cursor rules stay fresh) and cost ~10x less th
 
 **When to use:** Multi-repo operations, 3+ steps, tasks requiring >100K token file reads, parallel independent tasks.
 
+**CRITICAL — Full rules for sub-agents:** Sub-agents do NOT inherit rules. When launching: paste `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at TOP of prompt, or instruct sub-agent to read it before any action. See agents-follow-cursor-rules.mdc.
+
 **Example:** `Execute unified-trading-pm/plans/ai/tasks/TASK_X_[NAME].md in full` — task doc launches sub-agents.
 
 **Full docs:** `unified-trading-pm/plans/ai/tasks/` (TEMPLATE.md, TOKEN_TRACKING_GUIDE.md, RESUME_PATTERN.md)

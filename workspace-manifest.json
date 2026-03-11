@@ -154,7 +154,7 @@
       "codex_sections": ["05-infrastructure", "02-data"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 2,
+      "merge_level": 4,
       "dependencies": [
         {
           "name": "unified-cloud-interface",
@@ -2705,18 +2705,17 @@
           "unified-api-contracts",
           "unified-cloud-interface",
           "unified-events-interface",
-          "unified-internal-contracts",
-          "unified-reference-data-interface"
+          "unified-internal-contracts"
         ]
       },
       {
         "level": 3,
         "description": "Services runtime (Tier 1)",
-        "repos": ["unified-config-interface", "unified-trading-library"]
+        "repos": ["unified-config-interface", "unified-reference-data-interface", "unified-trading-library"]
       },
       {
         "level": 4,
-        "description": "Domain client + interfaces (Tier 2-3)",
+        "description": "T1c + T2 libraries (reference-data, algo, feature-calculator)",
         "repos": ["execution-algo-library", "unified-feature-calculator-library"]
       },
       {
@@ -2923,14 +2922,13 @@
           "unified-api-contracts",
           "unified-internal-contracts",
           "unified-events-interface",
-          "unified-cloud-interface",
-          "unified-reference-data-interface"
+          "unified-cloud-interface"
         ],
         "reason": "Foundation packages with no dependencies (Tier 0)"
       },
       {
         "step": 2,
-        "packages": ["unified-config-interface", "unified-trading-library"],
+        "packages": ["unified-config-interface", "unified-reference-data-interface", "unified-trading-library"],
         "reason": "Tier 1 packages. UCI depends on UEI. UTL depends on T0 libs."
       },
       {

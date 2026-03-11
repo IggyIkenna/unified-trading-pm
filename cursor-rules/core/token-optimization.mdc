@@ -1,6 +1,6 @@
 ---
 description: "Strict token optimization mode + follow cursor rules — use @token-optimization to activate"
-alwaysApply: false
+alwaysApply: true
 priority: 55
 tags:
   - token
@@ -18,7 +18,7 @@ tags:
 - No technical debt after refactor: delete deprecated code, no parallel code paths — see delete-deprecated.mdc
 - Search unified libraries before implementing anything new
 
-When launching sub-agents: include the line "Follow all workspace cursor rules in .cursorrules" at the TOP of the prompt.
+When launching sub-agents: MUST paste the contents of unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md at the TOP of the prompt, OR include: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly." Sub-agents get reduced context and do NOT inherit rules — full rules must be passed explicitly.
 
 ---
 
@@ -49,12 +49,12 @@ Full guidance: CODEX: 06-coding-standards/token-optimization.md
 SUB-AGENT ENVIRONMENT (Python / deps):
 - Sub-agent VM may not have Python 3.13 or workspace .venv-workspace; it often uses system/default Python (e.g. 3.9) and has no path-installed sibling repos (e.g. unified-cloud-interface).
 - Quality-gate or test runs inside a sub-agent are best-effort: failures due to "Python 3.9", "tomllib", "ModuleNotFoundError: unified_cloud_interface" are environment gaps, not code bugs.
-- When prompting sub-agents: prefer "make the code change; run quality gates in repo if env allows, else note: run quality gates locally from workspace root with source .venv-workspace/bin/activate".
-- Full dependency validation: run locally (source .venv-workspace/bin/activate; uv pip install -e repo; bash scripts/quality-gates.sh) or in CI.
+- When prompting sub-agents: prefer "make the code change; run quality gates in repo if env allows, else note: run quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-repo .venv)".
+- Full dependency validation: run locally (cd <repo> && uv sync --extra dev && bash scripts/quality-gates.sh) or in CI. Uses per-repo .venv, not .venv-workspace.
 
 RUNNER USING WORKSPACE (always use workspace venv):
 - sessionStart hook: use .cursor/hooks.json + .cursor/hooks/session-init-workspace.sh to inject workspace root and venv instructions into every new session (additional_context). Main agent then sees "run from WORKSPACE_ROOT and source .venv-workspace/bin/activate".
-- Subagents do not inherit session context; they get only what the parent sends. When launching sub-agents, include in the prompt: "WORKSPACE_ROOT is <path>. For any shell command that runs Python, pytest, or quality gates: cd WORKSPACE_ROOT && source .venv-workspace/bin/activate first; then run the command."
+- Subagents do not inherit session context; they get only what the parent sends. When launching sub-agents, include in the prompt: "WORKSPACE_ROOT is <path>. For tests/quality gates: cd <repo> && bash scripts/quality-gates.sh (per-repo .venv). Never use .venv-workspace for pytest. For other Python: WORKSPACE_ROOT + venv as needed."
 - Path: use CURSOR_PROJECT_DIR in hooks (Cursor sets it); in prompts use the actual workspace root path or tell the subagent to use the workspace root directory (first folder of the project).
 
 OUTPUT LIMITS:

@@ -42,10 +42,15 @@ See `.cursor/rules/always-use-quickmerge.mdc`
 
 ---
 
-## Sub-Agent Rule Inheritance
+## Sub-Agent Rule Inheritance — FULL RULES REQUIRED
 
-Sub-agents start with FRESH context — always-apply rules are NOT inherited.
-ALWAYS include "Follow all workspace cursor rules in .cursorrules" at the TOP of every sub-agent prompt.
+Sub-agents start with FRESH context — always-apply rules are NOT inherited. Reduced context makes them miss rules.
+
+**MANDATORY when launching any sub-agent:**
+1. Paste contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at TOP of prompt, OR
+2. Include at TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
+
+Never rely on reminders alone — sub-agents need the full rules set.
 See `.cursor/rules/agents-follow-cursor-rules.mdc`
 
 ---

@@ -4,7 +4,6 @@ priority: 75
 globs:
   - "scripts/**/*.py"
   - "github-integration/**/*.py"
-  - "tests/*.py"
 tags:
   - pm
   - python
@@ -19,7 +18,7 @@ Python scripts in PM are automation tools, not service code. Same quality bar ap
 
 ```bash
 python3 -m ruff check scripts/ github-integration/ tests/
-python3 -m basedpyright scripts/ tests/
+python3 -m basedpyright scripts/
 ```
 
 - Line length: 120

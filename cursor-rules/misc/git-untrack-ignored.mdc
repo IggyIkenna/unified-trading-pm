@@ -1,0 +1,38 @@
+---
+description: "Untrack files that match .gitignore when they are already tracked"
+priority: 50
+tags: [git, gitignore, setup, maintenance]
+---
+
+# Git Untrack Ignored Files
+
+RULE: When files that match .gitignore are already tracked by git, agents MUST untrack them with `git rm --cached` (or `git rm -r --cached` for dirs) so history is cleaned and clones don't get bad files.
+WHY: Tracked files that match .gitignore remain in the index and get pushed to remotes — new clones receive files that should be ignored (e.g. credentials, build artifacts, local config).
+
+## Safe Workflow
+
+1. **Detect** — List tracked files that match .gitignore:
+   ```bash
+   git ls-files --ignored --exclude-standard
+   ```
+2. **Review** — Inspect the list before untracking.
+3. **Untrack** — Use `git rm --cached` for each path (NEVER bare `git rm` — that deletes files from disk):
+   ```bash
+   git rm --cached <path>           # single file
+   git rm -r --cached <path>        # directory
+   ```
+
+## When to Apply
+
+- Setting up repos
+- Syncing .gitignore across repos
+- After .gitignore was updated and previously-committed files now match
+
+## NEVER
+
+```bash
+git rm <path>        # deletes file from disk
+git rm -r <path>     # deletes directory from disk
+```
+
+Always use `--cached` to remove from index only; files stay on disk.

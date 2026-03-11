@@ -42,6 +42,78 @@ todos:
   - id: phase6-rollout
     content: Rollout across all 60+ repos; create per-repo checklist from manifest
     status: pending
+  - id: h5-2-cassette-parity
+    content:
+      "P0: Add test_cassette_schema_parity.py to UAC — validates every committed cassette against UAC Pydantic models on
+      every commit"
+    status: pending
+  - id: h8-credential-free-gate
+    content:
+      "P0: Add credential-free CI gate to system-integration-tests — network_block_plugin.py + CLOUD_PROVIDER=local +
+      CLOUD_MOCK_MODE=true; fails if any live network call escapes"
+    status: pending
+  - id: h2-moto-aws
+    content:
+      "P1: Add moto[s3,secretsmanager,sqs]>=5.0.0 to UCI test deps; create tests/integration/test_aws_mode.py with
+      @mock_aws coverage for all UCI AWS provider impls; gates aws_migration codebuild canary"
+    status: pending
+  - id: h1-1-pubsub-emulator
+    content:
+      "P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into UCI + system-integration-tests conftest; run
+      gcr.io/google.com/cloudsdktool/google-cloud-cli emulator in CI Docker before test suite"
+    status: pending
+  - id: h4-1-hyperliquid-responses
+    content:
+      "P1: Add responses library fixtures for Hyperliquid REST (order place/cancel/query) in
+      unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py; assert passthrough=False so zero live
+      calls escape"
+    status: pending
+  - id: h3-websocket-simulator
+    content:
+      "P2: Create MockWebSocketFeed in unified-market-interface/tests/fixtures/mock_ws_server.py; add
+      ws_ticks_binance/deribit/hyperliquid.json fixtures; add integration tests for UMI WS manager and execution-service
+      deribit_ws"
+    status: pending
+  - id: h1-2-gcs-emulator
+    content:
+      "P2: Wire fsouza/fake-gcs-server (port 4443) into UCI + system-integration-tests conftest via
+      STORAGE_EMULATOR_HOST; covers bucket lifecycle, ACLs, signed URLs missing from LocalStorageProvider"
+    status: pending
+  - id: h7-thirdparty-fixtures
+    content:
+      "P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy/Infura JSON-RPC, and
+      complete VCR cassette coverage for Databento/Tardis used endpoints"
+    status: pending
+  - id: h6-fault-injection
+    content:
+      "P3: Create FaultInjectionMiddleware in unified-trading-pm/scripts/dev/fixtures/fault_injection.py; add
+      test_fault_scenarios.py to execution-service, market-data-service, UCI tests"
+    status: pending
+  - id: h9-tick-replay
+    content:
+      "P3: Create TickReplayEngine in unified-trading-pm/scripts/dev/fixtures/tick_replay.py; reads from
+      mock_data_dev_project seed fixtures; freezegun integration; UAC-validated Tick schema"
+    status: pending
+  - id: h1-3-bigquery-emulator
+    content:
+      "P3: Wire ghcr.io/goccy/bigquery-emulator (port 9050) into trading-analytics-api and client-reporting-api test
+      suites via BIGQUERY_EMULATOR_HOST"
+    status: pending
+  - id: h5-1-cassette-drift
+    content:
+      "P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly re-record cassettes vs real
+      APIs, schema-level diff, GitHub issue + Telegram alert on drift"
+    status: pending
+  - id: h10-1-docker-compose-mock
+    content:
+      "P4: Create unified-trading-pm/docker/docker-compose.mock.yml — all T2/T3 services in CLOUD_MOCK_MODE=true,
+      optional GCP emulator containers, seed fixture mounts"
+    status: pending
+  - id: h10-2-demo-mode-script
+    content:
+      "P4: Create unified-trading-pm/scripts/demo-mode.sh — single-command demo: starts all services (mock) + all UIs
+      (VITE_MOCK_API=true) + seeds data; stakeholder-ready"
+    status: pending
 isProject: false
 ---
 
@@ -49,14 +121,20 @@ isProject: false
 
 ## Current State (from audit + explore)
 
-| Area              | Status                                                                    | Gap                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| **VCR cassettes** | UAC has `unified_api_contracts_external/<venue>/mocks/`; 46 cassette dirs | `unified-defi-execution-interface`, `execution-service` use per-repo `tests/cassettes/` — not aligned |
-| **Libraries**     | Integration tests in 7+ interface repos; UAC/UIC alignment tests          | Orphan cassette check; vcrpy vs manual YAML; cassette placement rule enforcement                      |
-| **Services**      | `tests/integration/` in many; CLOUD_MOCK_MODE in base scripts             | API-level mock replay; error/event/load/memory checks; batch vs live symmetry                         |
-| **APIs**          | Some conftest fixtures                                                    | Often lack `tests/integration/`; domain data mocking                                                  |
-| **UIs**           | `mock-api.ts` + `VITE_MOCK_API` per UI                                    | No shared mock package; smoke coverage gaps; WebSocket mock; demo mode                                |
-| **Sandbox**       | Not formalized                                                            | No `CLOUD_SANDBOX_MODE` / `VITE_SANDBOX_MODE` for optional live-like runs                             |
+| Area               | Status                                                                    | Gap                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **VCR cassettes**  | UAC has `unified_api_contracts_external/<venue>/mocks/`; 46 cassette dirs | `unified-defi-execution-interface`, `execution-service` use per-repo `tests/cassettes/` — not aligned |
+| **Libraries**      | Integration tests in 7+ interface repos; UAC/UIC alignment tests          | Orphan cassette check; vcrpy vs manual YAML; cassette placement rule enforcement                      |
+| **Services**       | `tests/integration/` in many; CLOUD_MOCK_MODE in base scripts             | API-level mock replay; error/event/load/memory checks; batch vs live symmetry                         |
+| **APIs**           | Some conftest fixtures                                                    | Often lack `tests/integration/`; domain data mocking                                                  |
+| **UIs**            | `mock-api.ts` + `VITE_MOCK_API` per UI                                    | No shared mock package; smoke coverage gaps; WebSocket mock; demo mode                                |
+| **Sandbox**        | Not formalized                                                            | No `CLOUD_SANDBOX_MODE` / `VITE_SANDBOX_MODE` for optional live-like runs                             |
+| **GCP emulators**  | None — UCI uses in-memory LocalProvider                                   | No `PUBSUB_EMULATOR_HOST`, `STORAGE_EMULATOR_HOST`, `BIGQUERY_EMULATOR_HOST` in any repo or CI        |
+| **AWS mock**       | `unittest.mock.patch` only                                                | No moto; AWS migration active with pending CodeBuild canary                                           |
+| **WS feeds**       | UMI WebSocket manager has zero mock coverage                              | No `MockWebSocketFeed`; Deribit WS, Binance WS entirely untested in CI                                |
+| **DeFi REST**      | Hyperliquid VCR explicitly excluded (`is_live=True` gate)                 | Full DeFi execution path unreachable in CI without live credentials                                   |
+| **Cassette drift** | Static YAML committed to git                                              | No nightly re-record; no cassette → UAC schema parity check; stale cassettes fail silently            |
+| **CI hermeticity** | No gate                                                                   | No proof CI makes zero live network calls; TheGraph 9-key rotation fires in CI                        |
 
 ---
 
@@ -279,3 +357,125 @@ flowchart TB
 - **UIs:** Smoke tests for all major flows; mock API and WebSocket; demo mode works.
 - **Sandbox:** Optional CI mode when secrets present; documented.
 - **Extreme:** Fixtures and scenarios for load and market stress; replayable in tests.
+- **CI hermeticity (Phase 7):** Zero live network calls in CI proven by credential-free gate; all cassettes validate
+  against UAC schemas; GCP emulators + moto replace all live cloud calls.
+
+---
+
+## Phase 7: CI/CD Hardening — Citadel-Grade Mock Infrastructure
+
+**Goal:** Prove CI is fully hermetic (zero live calls), cloud interactions are protocol-faithful, and cassettes never
+silently diverge from real exchange APIs.
+
+### 7.1 Credential-Free CI Gate (H8) — P0
+
+- **New pytest plugin:** `unified-trading-pm/scripts/dev/network_block_plugin.py`
+  - Registers `responses` in `passthrough=False` mode for the full session
+  - Any unexpected network call → immediate test failure with URL logged
+- **CI step** in `system-integration-tests` workflow:
+  `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true pytest -m "not sandbox"`
+- **Gate:** CI exits non-zero if any test makes a live network call
+
+### 7.2 Cassette → UAC Schema Parity (H5.2) — P0
+
+- **New file:** `unified-api-contracts/tests/test_cassette_schema_parity.py`
+- Loads every YAML cassette from all `unified_api_contracts_external/<venue>/mocks/` dirs
+- Validates response body against the corresponding UAC Pydantic model
+- Runs on every commit (fast — no network); fails QG on schema violation
+- Catches stale cassettes that recorded responses now violating current contracts
+
+### 7.3 AWS Mock via moto (H2) — P1
+
+- **Add to** `unified-cloud-interface/pyproject.toml` test deps: `"moto[s3,secretsmanager,sqs]>=5.0.0,<6.0.0"`
+- **New file:** `unified-cloud-interface/tests/integration/test_aws_mode.py`
+  - `@mock_aws` wrapping all S3StorageClient, AWSSecretClient, SQS queue tests
+  - Protocol-faithful: real bucket/key semantics in memory
+- **Gate for** `aws_migration.plan.md` `codebuild-canary-run` todo: moto tests must pass first
+
+### 7.4 GCP Pub/Sub Emulator (H1.1) — P1
+
+- **Env:** `PUBSUB_EMULATOR_HOST=localhost:8085` — `google-cloud-pubsub` SDK auto-detects; no code changes
+- **CI:** Add Docker service `gcr.io/google.com/cloudsdktool/google-cloud-cli` before test suite
+- **conftest.py** fixture in `system-integration-tests/` and per-service integration dirs
+- **Scope:** Any test exercising `log_event()`, `EventBus.publish()`, subscription pull
+
+### 7.5 Hyperliquid `responses` Mock (H4.1) — P1
+
+- **New file:** `unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py`
+  - `@responses.activate` wrapping order placement, cancellation, status query
+  - `passthrough=False` asserted — zero live calls escape
+- **Note:** VCR not applicable for this repo; `responses` library is the correct pattern
+- Unblocks the entire DeFi execution path in CI without live credentials
+
+### 7.6 GCS Emulator (H1.2) — P2
+
+- **Docker:** `fsouza/fake-gcs-server:latest` port `4443`
+- **Env:** `STORAGE_EMULATOR_HOST=http://localhost:4443`
+- **Scope:** bucket lifecycle, ACLs, signed URL generation — not covered by UCI LocalStorageProvider
+- Required by `cloud_infra_bucket_auth_2026_03_10.plan.md` tests
+
+### 7.7 WebSocket Feed Simulator (H3) — P2
+
+- **New file:** `unified-market-interface/tests/fixtures/mock_ws_server.py`
+  - `MockWebSocketFeed` — replays JSON tick fixtures over a local WS server (aiohttp.test_utils)
+- **Fixture files:** `ws_ticks_binance.json`, `ws_ticks_deribit.json`, `ws_ticks_hyperliquid.json` (UAC-validated)
+- **Tests:** `unified-market-interface/tests/integration/test_ws_manager.py`,
+  `execution-service/tests/integration/test_deribit_ws.py`
+
+### 7.8 Third-Party Data Provider Fixtures (H7) — P2
+
+| Provider                                  | Fix                                                                                                       |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **TheGraph** (9-key rotation fires in CI) | `aioresponses` fixtures per query hash in `unified-market-interface/tests/fixtures/thegraph_responses.py` |
+| **Alchemy/Infura** (live RPC)             | `responses` fixtures for JSON-RPC `eth_call` patterns                                                     |
+| **Databento, Tardis**                     | Complete VCR cassette coverage for all used endpoints                                                     |
+| **Pyth, BloxRoute**                       | Fixtures if used in any production code path                                                              |
+
+### 7.9 Fault Injection / Chaos Middleware (H6) — P3
+
+- **New file:** `unified-trading-pm/scripts/dev/fixtures/fault_injection.py`
+  - `FaultInjectionMiddleware(latency_ms, error_rate, timeout_rate)` for httpx/aiohttp
+- **Test files:** `test_fault_scenarios.py` in execution-service, market-data-service, UCI
+- **Scenarios:** timeout → circuit breaker opens; 429 → backoff; 50% error → degraded mode; cascade → alert event
+
+### 7.10 Deterministic Tick Replay Engine (H9) — P3
+
+- **New file:** `unified-trading-pm/scripts/dev/fixtures/tick_replay.py`
+  - `TickReplayEngine` reads from `mock_data_dev_project` seed fixtures
+  - `freezegun` for deterministic time; UAC `Tick` schema validation
+- **Depends on:** `mock_data_dev_project_seeding_2026_03_10.plan.md` seed fixtures
+
+### 7.11 BigQuery Emulator (H1.3) — P3
+
+- **Docker:** `ghcr.io/goccy/bigquery-emulator:latest` port `9050`
+- **Env:** `BIGQUERY_EMULATOR_HOST=localhost:9050`
+- **Scope:** trading-analytics-api, client-reporting-api DataSink writes
+
+### 7.12 Nightly Cassette Drift Detection (H5.1) — P4
+
+- **Workflow:** `unified-trading-pm/.github/workflows/cassette-drift-check.yml` — nightly 02:00 UTC
+- Re-records cassettes against real APIs; schema-level diff (not byte diff) via Pydantic
+- On drift: GitHub issue + Telegram alert (alerting-only, not blocking CI)
+
+### 7.13 docker-compose.mock.yml + Demo Mode (H10) — P4
+
+- **`unified-trading-pm/docker/docker-compose.mock.yml`** — all T2/T3 services in mock mode; optional GCP emulators;
+  seed mounts
+- **`unified-trading-pm/scripts/demo-mode.sh`** — single command: services + UIs (VITE_MOCK_API=true) + seeded data
+
+---
+
+### 7.x Venue / API Coverage Matrix
+
+| Domain           | Venues                                                     | Current CI State             | After Phase 7       |
+| ---------------- | ---------------------------------------------------------- | ---------------------------- | ------------------- |
+| CeFi execution   | Binance, Coinbase, ByBit, OKX, Deribit, Hyperliquid, Upbit | `mode="sim"` ✓               | + fault injection   |
+| TradFi execution | CME, CBOE, NYSE, NASDAQ, ICE, FX (IBKR)                    | `MagicMock(spec=IB)` ✓       | + WS TWS mock       |
+| DeFi execution   | Hyperliquid REST, Aave, Morpho, Uniswap, Lido, EtherFi     | Hyperliquid excluded ✗       | H4.1 `responses` ✓  |
+| Sports execution | 1xBet + others                                             | `aioresponses` + VCR ✓       | Complete cassettes  |
+| Market data WS   | Binance WS, Deribit WS, OKX WS                             | No mock ✗                    | H3 WS simulator ✓   |
+| Market data REST | Databento, Tardis, Yahoo Finance                           | VCR partial                  | H7 complete         |
+| Market data DeFi | TheGraph, Alchemy, Pyth, BloxRoute                         | Live calls in CI ✗           | H7 `aioresponses` ✓ |
+| Cloud infra GCP  | GCS, Pub/Sub, Secret Manager, BigQuery                     | LocalProvider partial        | H1 emulators ✓      |
+| Cloud infra AWS  | S3, SQS, Secrets Manager                                   | `unittest.mock.patch` only ✗ | H2 moto ✓           |
+| Reference data   | Databento, Tardis, OpenBB, FRED, ECB                       | VCR partial                  | H7 complete         |

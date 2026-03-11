@@ -1,23 +1,24 @@
 # Unified Trading System — Claude Code Instructions
 
-## Environment: Venv Split (SSOT: venv-usage-ssot.mdc)
+## Environment: Always Use Workspace Venv
 
-| Use case                  | Venv                        | Command                                                      |
-| ------------------------- | --------------------------- | ------------------------------------------------------------ |
-| **Quality gates / tests** | Repo `.venv`                | `cd <repo> && bash scripts/quality-gates.sh` — no activation |
-| **IDE / general Python**  | Workspace `.venv-workspace` | `source \${WORKSPACE_ROOT}/.venv-workspace/bin/activate`     |
-
-**Never** run `pytest` directly — uses wrong venv. Always use `quality-gates.sh`.
-
-At session start, for general Python (not tests):
+At the start of EVERY session, verify the workspace venv is active:
 
 ```bash
-# WORKSPACE_ROOT = $UNIFIED_TRADING_WORKSPACE_ROOT or first workspace folder
-source "\${WORKSPACE_ROOT:-.}/.venv-workspace/bin/activate"
-which python  # .venv-workspace/bin/python
+which python  # must be .venv-workspace/bin/python
+python --version  # must be 3.13.x
+which ruff      # must be .venv-workspace/bin/ruff
+which basedpyright  # must be .venv-workspace/bin/basedpyright
 ```
 
-`.claude/settings.json` may prepend `.venv-workspace/bin` to PATH — if so, checks pass without manual activation.
+If any tool resolves outside `.venv-workspace/bin/`, run:
+
+```bash
+source /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/activate
+```
+
+**The `env` in `.claude/settings.json` prepends `.venv-workspace/bin` to PATH automatically. If that worked, the checks
+above will pass without manual activation.**
 
 ## Rules: Read Before Coding
 
@@ -45,19 +46,15 @@ Read these before making ANY code changes:
 Each subdirectory is an independent git repo. When editing, only commit to the target repo. Never run `basedpyright .`
 from workspace root — always run per-repo with timeout.
 
+
 ## Sub-Agents: Full Rules Required (MANDATORY)
 
-Sub-agents (Task tool, mcp_task) start with FRESH context and do NOT inherit your rules. Reduced context makes them miss
-rules unless you explicitly provide them.
+Sub-agents (Task tool, mcp_task) start with FRESH context and do NOT inherit your rules. Reduced context makes them miss rules unless you explicitly provide them.
 
 **When launching ANY sub-agent:**
-
-1. **Paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt,
-   OR
-2. **If impractical:** Include at TOP: "Before any action, read
-   unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
-3. **Always include:** WORKSPACE_ROOT path. For tests: `cd <repo> && bash scripts/quality-gates.sh` (per-repo .venv).
-   Never .venv-workspace for pytest.
+1. **Paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt, OR
+2. **If impractical:** Include at TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
+3. **Always include:** WORKSPACE_ROOT path. For tests: `cd <repo> && bash scripts/quality-gates.sh` (per-repo .venv). Never .venv-workspace for pytest.
 
 Never rely on sub-agents "inheriting" rules — they cannot. Always pass the full rules.
 

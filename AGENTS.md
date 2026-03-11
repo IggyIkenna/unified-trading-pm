@@ -1,7 +1,7 @@
 # AGENTS.md — Unified Trading System
 
-Shared instructions for all autonomous agents (Claude Code, Codex, Cursor) in any repo of this workspace. Symlinked into
-every repo: AGENTS.md is ephemeral (copied from PM during setup, removed after use)
+Shared instructions for all autonomous agents (Claude Code, Codex, Cursor) in any repo of this workspace. Ephemeral:
+copied from PM during setup-workspace-from-manifest.sh, removed by cleanup script before quickmerge/PR.
 
 ---
 
@@ -13,21 +13,20 @@ every repo: AGENTS.md is ephemeral (copied from PM during setup, removed after u
 - Sub-agents: ONE narrowly scoped task each; return ONLY final result (≤400 tokens)
 - NEVER pass `model=` in sub-agent Task calls — omitting it = auto mode = free
 - Sub-agents do NOT inherit session context; always pass `WORKSPACE_ROOT` + venv path explicitly
-- Full guidance: `unified-trading-pm/cursor-rules/core/token-optimization.mdc`
+- **Sub-agents MUST get full rules:** paste contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
+  at TOP of prompt, OR instruct: "Before any action, read SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly"
+- Full guidance: `unified-trading-pm/cursor-rules/core/token-optimization.mdc`, `agents-follow-cursor-rules.mdc`
 
 ---
 
 ## Environment
 
-```bash
-# Activate workspace venv (Python 3.13, ruff, basedpyright, all libs editable-installed)
-source <WORKSPACE_ROOT>/.venv-workspace/bin/activate
+| Use case                  | Venv                        | Command                                                      |
+| ------------------------- | --------------------------- | ------------------------------------------------------------ |
+| **Quality gates / tests** | Repo `.venv`                | `cd <repo> && bash scripts/quality-gates.sh` — no activation |
+| **IDE / general Python**  | Workspace `.venv-workspace` | `source <WORKSPACE_ROOT>/.venv-workspace/bin/activate`       |
 
-# Per-repo venv for isolated test/typecheck runs
-uv sync --extra dev && source .venv/bin/activate
-```
-
-Verify: `which python` → `.venv-workspace/bin/python` (or `.venv/bin/python` for isolated runs).
+**Never** run `pytest` directly. Always use `quality-gates.sh` (uses per-repo `.venv`).
 
 ---
 
@@ -115,6 +114,10 @@ bash scripts/quickmerge.sh "your message" --agent   # ALWAYS --agent in Claude C
 - `--agent --skip-typecheck` for max speed (lint + format + codex only)
 - Staging lock: `staging_status.locked=true` in manifest = SIT running, do not merge to main
 
+**Untrack ignored files** — If tracked files match `.gitignore`, untrack them so history is clean and clones don't get
+bad files. Safe workflow: (1) detect: `git ls-files --ignored --exclude-standard`; (2) untrack:
+`git rm --cached <files>` (or `git rm -r --cached <dir>` for dirs). Never bare `git rm` — that deletes files from disk.
+
 ---
 
 ## Coding Rules (Quick Reference)
@@ -189,8 +192,8 @@ Include at the top of every sub-agent prompt:
 ```
 Follow all workspace cursor rules in .cursorrules.
 WORKSPACE_ROOT: <absolute path>
-For any shell command using Python, pytest, or quality gates:
-  cd <WORKSPACE_ROOT> && source .venv-workspace/bin/activate first.
+For tests/quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-repo .venv; never .venv-workspace for pytest).
+For other Python: cd <WORKSPACE_ROOT> && source .venv-workspace/bin/activate as needed.
 ```
 
 ---

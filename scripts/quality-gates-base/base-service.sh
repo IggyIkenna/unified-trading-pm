@@ -36,6 +36,20 @@ if [[ ${#_qg_missing[@]} -gt 0 ]]; then
 fi
 unset _qg_missing
 
+# ── CI RUNTIME ENV VAR ENFORCEMENT (GitHub Actions only) ──────────────────────
+if [[ "${CI:-}" == "true" ]]; then
+    _ci_missing=()
+    [[ "${CLOUD_MOCK_MODE:-}" != "true" ]] && _ci_missing+=("CLOUD_MOCK_MODE=true")
+    [[ -z "${GCP_PROJECT_ID:-}" ]]         && _ci_missing+=("GCP_PROJECT_ID")
+    [[ -z "${CLOUD_PROVIDER:-}" ]]         && _ci_missing+=("CLOUD_PROVIDER")
+    if [[ ${#_ci_missing[@]} -gt 0 ]]; then
+        echo "❌ base-service.sh: CI env vars not set: ${_ci_missing[*]}" >&2
+        echo "   Add these to your workflow env: block." >&2
+        exit 1
+    fi
+    unset _ci_missing
+fi
+
 set -e
 
 QG_START=$(date +%s)
