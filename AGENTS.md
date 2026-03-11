@@ -196,6 +196,63 @@ For tests/quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-re
 For other Python: cd <WORKSPACE_ROOT> && source .venv-workspace/bin/activate as needed.
 ```
 
+## 10. Repo Readiness Checklist & Semver Rules
+
+**Readiness SSOT:** `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml` (template) +
+`unified-trading-codex/10-audit/repos/{repo-name}.yaml` (per-repo status)
+
+Every repo progresses through three independent axes:
+
+**Code Readiness (CR)**
+
+- CR1: Functionality 100% — zero NotImplementedError/stubs/TODO in prod paths; audit §2 passes
+- CR2: Unit tests 100% passing — QG unit stage green; coverage ≥ floor; cov-report=xml written
+- CR3: Integration tests 100% passing — every direct manifest dep has tests/integration/ coverage
+- CR4: Quality gate locally green — `bash scripts/quality-gates.sh` Pass 1 fully green
+- CR5: Quickmerge to feature branch — CI passes on feat/code-readiness-{repo}
+
+**Deployment Readiness (DR)** — tracked per mode (batch | live | both per repo's deployment_modes)
+
+- DR1: Deployable (Docker builds, infra provisioned, setup-workspace.sh succeeds)
+- DR2: CI smoke tests pass (emulators only, zero live calls)
+- DR3: Feature environment deployed (GET /health 200, GET /readiness 200)
+- DR4: Staging SIT pass (system-integration-tests full suite green)
+- DR5: Load/performance pass (P99 ≤ SLA, no memory leaks)
+- DR6: Production-ready (zero CRITICAL CVEs, auth verified, runbook exists, 24hr health)
+
+**Business Readiness (BR)** — tracked per mode (batch | live | both per repo's business_modes)
+
+- BR1: Acceptance criteria defined in owning plan
+- BR2: Circuit breaker validated (N/A for libraries and UIs)
+- BR3: UEI event handling validated (all events fire with correct schema + correlation_id)
+- BR4: PnL/performance targets declared AND measured (not estimated)
+- BR5: PnL optimization validated via backtest (revenue-path repos only)
+- BR6: Batch vs live validation (t+1 check within tolerance)
+- BR7: Staging vs live parity (N-minute replay within tolerance)
+- BR8: User approved — human sign-off. **NO AGENT MAY SET BR8 AUTONOMOUSLY.**
+
+### v1.0.0 Gate
+
+**NEVER promote a repo to v1.0.0 autonomously.** v1.0.0 requires ALL of:
+
+- CR5 (merged to main via cascade) + DR3 + DR4 + BR2 (services) + BR3 + BR4 + BR8 (no exceptions)
+
+Pre-1.0.0 rule: `feat!:` on `0.x.x` bumps MINOR only. CI never auto-crosses to 1.0.0.
+
+### Per-Repo Semver Rules
+
+Before proposing any commit message with `feat!:`, `feat:`, or `fix:`:
+
+1. Look up `semver_rules_ref` for this repo in `unified-trading-pm/workspace-manifest.json`
+2. Read the matching rule set from `unified-trading-pm/docs/per-repo-semver-rules.yaml`
+3. Verify the change matches the declared bump level
+4. Post-1.0.0: if change is MAJOR — stop and request user approval before proceeding
+
+Check a repo's current readiness state: `cat {repo}/.readiness-ref` to get path to its codex YAML.
+
+Cursor rules: `cursor-rules/core/repo-readiness-checklist.mdc`, `cursor-rules/core/semver-v1-hardening.mdc`,
+`cursor-rules/core/per-repo-semver-rules.mdc`
+
 ---
 
 ## Plans & Tracking

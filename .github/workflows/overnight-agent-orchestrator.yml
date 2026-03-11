@@ -42,6 +42,33 @@ jobs:
       results: ${{ steps.poll.outputs.results }}
 
     steps:
+      - name: Checkout unified-trading-codex (readiness checklists)
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          path: ../unified-trading-codex
+
+      - name: Prepare readiness context for tier agents
+        id: readiness-ctx
+        run: |
+          CONTEXT_FILE=$(mktemp)
+          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          READINESS CONTEXT FOR THIS TIER:
+          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
+          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
+          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
+            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
+            Commit the update to unified-trading-codex with:
+            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
+            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
+          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
+            Before any bump proposal, read this file and classify the actual change.
+          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
+          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
+          READINESS_CONTEXT
+          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
+
       - name: Dispatch agent-audit.yml to T0 repos
         id: dispatch
         env:
@@ -113,6 +140,33 @@ jobs:
       results: ${{ steps.poll.outputs.results }}
 
     steps:
+      - name: Checkout unified-trading-codex (readiness checklists)
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          path: ../unified-trading-codex
+
+      - name: Prepare readiness context for tier agents
+        id: readiness-ctx
+        run: |
+          CONTEXT_FILE=$(mktemp)
+          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          READINESS CONTEXT FOR THIS TIER:
+          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
+          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
+          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
+            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
+            Commit the update to unified-trading-codex with:
+            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
+            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
+          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
+            Before any bump proposal, read this file and classify the actual change.
+          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
+          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
+          READINESS_CONTEXT
+          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
+
       - name: Dispatch agent-audit.yml to T1 repos
         id: dispatch
         env:
@@ -164,6 +218,33 @@ jobs:
       results: ${{ steps.poll.outputs.results }}
 
     steps:
+      - name: Checkout unified-trading-codex (readiness checklists)
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          path: ../unified-trading-codex
+
+      - name: Prepare readiness context for tier agents
+        id: readiness-ctx
+        run: |
+          CONTEXT_FILE=$(mktemp)
+          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          READINESS CONTEXT FOR THIS TIER:
+          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
+          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
+          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
+            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
+            Commit the update to unified-trading-codex with:
+            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
+            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
+          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
+            Before any bump proposal, read this file and classify the actual change.
+          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
+          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
+          READINESS_CONTEXT
+          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
+
       - name: Dispatch agent-audit.yml to T2 repos
         id: dispatch
         env:
@@ -216,6 +297,33 @@ jobs:
       results: ${{ steps.poll.outputs.results }}
 
     steps:
+      - name: Checkout unified-trading-codex (readiness checklists)
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          path: ../unified-trading-codex
+
+      - name: Prepare readiness context for tier agents
+        id: readiness-ctx
+        run: |
+          CONTEXT_FILE=$(mktemp)
+          cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          READINESS CONTEXT FOR THIS TIER:
+          - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
+          - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
+          - After any quickmerge, update unified-trading-codex/10-audit/repos/{repo}.yaml:
+            Set cr5_quickmerge.status to "pass" and cr5_quickmerge.branch to the branch name.
+            Commit the update to unified-trading-codex with:
+            git -C ../unified-trading-codex add 10-audit/repos/{repo}.yaml &&
+            git -C ../unified-trading-codex commit -m "chore: update {repo} readiness to CR5"
+          - Per-repo semver rules: unified-trading-pm/docs/per-repo-semver-rules.yaml
+            Before any bump proposal, read this file and classify the actual change.
+          - NEVER set BR8 or v1.0.0 autonomously. Present readiness summary to user.
+          - v1.0.0 gate: CR5(main-merged) + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 (no exceptions, ever)
+          READINESS_CONTEXT
+          echo "context_file=$CONTEXT_FILE" >> $GITHUB_OUTPUT
+
       - name: Dispatch agent-audit.yml to T3 repos
         id: dispatch
         env:
