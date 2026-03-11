@@ -1,0 +1,168 @@
+name: Cassette Drift Check
+
+# Nightly schema-level drift detection for VCR cassettes in unified-api-contracts.
+# Re-records cassettes against real APIs and diffs Pydantic model schemas.
+# Alerting-only — NOT CI-blocking. Drift creates a GH issue + Telegram alert.
+#
+# Secrets required:
+#   GH_PAT                    — checkout unified-api-contracts + create issues
+#   BINANCE_API_KEY_DRIFT     — read-only key for Binance re-record
+#   COINBASE_API_KEY_DRIFT    — read-only key for Coinbase re-record
+#   DERIBIT_CLIENT_ID_DRIFT   — read-only credential for Deribit re-record
+#   TELEGRAM_BOT_TOKEN        — alert notification
+#   TELEGRAM_CHAT_ID          — target chat
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (detect drift but do not create issue)"
+        type: boolean
+        default: false
+
+jobs:
+  detect-cassette-drift:
+    name: Detect Cassette Schema Drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          path: unified-trading-pm
+
+      - name: Checkout unified-api-contracts
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/unified-api-contracts
+          token: ${{ secrets.GH_PAT }}
+          path: unified-api-contracts
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install unified-api-contracts dev dependencies
+        run: |
+          cd unified-api-contracts
+          uv pip install -e ".[dev]" --system 2>/dev/null \
+            || uv pip install pydantic pyyaml --system
+
+      - name: Run drift detection
+        id: drift_check
+        env:
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY_DRIFT }}
+          COINBASE_API_KEY: ${{ secrets.COINBASE_API_KEY_DRIFT }}
+          DERIBIT_CLIENT_ID: ${{ secrets.DERIBIT_CLIENT_ID_DRIFT }}
+        run: |
+          python unified-trading-pm/scripts/dev/detect_cassette_drift.py \
+            --cassette-dir unified-api-contracts \
+            --output-json drift_report.json \
+          && echo "drift_detected=false" >> "$GITHUB_OUTPUT" \
+          || { echo "drift_detected=true" >> "$GITHUB_OUTPUT"; }
+
+      - name: Show drift report
+        if: always()
+        run: |
+          if [ -f drift_report.json ]; then
+            echo "=== Drift Report ==="
+            cat drift_report.json
+          else
+            echo "No drift_report.json produced."
+          fi
+
+      - name: Create GitHub Issue on drift
+        if: steps.drift_check.outputs.drift_detected == 'true' && !inputs.dry_run
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PAT }}
+          script: |
+            const fs = require('fs');
+            let report = { summary: 'No report file found.', drifted_cassettes: [], total_checked: 0 };
+            try {
+              report = JSON.parse(fs.readFileSync('drift_report.json', 'utf8'));
+            } catch (e) {
+              console.log('Could not read drift_report.json:', e.message);
+            }
+
+            const date = new Date().toISOString().split('T')[0];
+            const cassettes = report.drifted_cassettes || [];
+            const cassettesSection = cassettes.length > 0
+              ? cassettes.map(c => `- \`${c}\``).join('\n')
+              : '_None listed_';
+
+            const body = [
+              '## Cassette Schema Drift Detected',
+              '',
+              `**Date:** ${date}`,
+              `**Total cassettes checked:** ${report.total_checked ?? 'unknown'}`,
+              `**Drifted:** ${cassettes.length}`,
+              '',
+              '### Summary',
+              report.summary || '_No summary provided._',
+              '',
+              '### Affected Cassettes',
+              cassettesSection,
+              '',
+              '### Action Required',
+              '- Review the drifted cassettes and update Pydantic models in `unified-api-contracts`.',
+              '- Re-record cassettes once schema changes are understood.',
+              '',
+              `[Workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: 'unified-api-contracts',
+              title: `[Cassette Drift] Schema changes detected ${date}`,
+              body,
+              labels: ['cassette-drift', 'automated'],
+            });
+
+      - name: Telegram alert on drift
+        if: steps.drift_check.outputs.drift_detected == 'true' && !inputs.dry_run
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          DATE=$(date +"%Y-%m-%d")
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MESSAGE="*[Cassette Drift] Schema changes detected ${DATE}*
+          VCR cassettes in unified-api-contracts have drifted from live APIs.
+          Review and update Pydantic models before next release.
+
+          Run: ${RUN_URL}"
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${MESSAGE}" \
+              -d parse_mode="Markdown" || true
+          else
+            echo "Telegram not configured — skipping alert"
+          fi
+
+      - name: Telegram success notification
+        if: steps.drift_check.outputs.drift_detected == 'false'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          DATE=$(date +"%Y-%m-%d")
+          MESSAGE="*[Cassette Drift] No drift detected ${DATE}*
+          All VCR cassettes match live API schemas."
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${MESSAGE}" \
+              -d parse_mode="Markdown" || true
+          else
+            echo "Telegram not configured — skipping notification"
+          fi
