@@ -6,7 +6,7 @@ overview:
   SIT SHA pinning, semver-at-staging, manifest schema extensions.
 type: infra
 epic: epic-infra
-status: active
+status: done
 
 completion_gates:
   code: C5
@@ -83,30 +83,31 @@ todos:
       "Deployment UI build selector: BuildSelector.tsx dropdown + GET /builds/{service} AR tag listing endpoint +
       POST /deployments/{service}/deploy endpoint. Display format: '{version} @ {branch}'. Pre-1.0.0 builds allowed
       for manual deploys. Create deployment_ui_version_selector.plan.md."
-    status: todo
-    note: "In progress — see Phase 7 section below for full spec."
+    status: done
+    note: "DONE — builds.py route, main.py registration, BuildSelector.tsx, DeployForm.tsx extension, deploymentApi.ts, deployment_ui_version_selector.plan.md all created."
   - id: phase-8-staging-version-gate
     content:
       "Create staging-version-gate.yml template: blocks PRs to staging if repo version < 1.0.0. PM repo exempt.
       Propagate to all repos via propagate-canonical-versions.py. Register as required status check on staging
       branch protection in each repo."
-    status: todo
-    note: "Gap in existing plan — staging-gate check was described but no workflow file existed."
+    status: done
+    note: "DONE — staging-version-gate.yml template created; CI-CD-FLOW.md updated with Per-Repo Version Gate section."
   - id: phase-9-sit-code-deployment-split
     content:
       "Split smoke-test-gate.yml into three jobs: setup (v1 repo filter + skip guard), code-tests (static,
       <10 min, pytest -m code_test), deployment-tests (docker-compose mock stack, pytest -m deployment_test).
-      Add code_test/deployment_test markers to pyproject.toml and all 34 test files. Update
+      Add code_test/deployment_test markers to pyproject.toml and all 35 test files. Update
       docker-compose.mock.yml with v1 service profiles."
-    status: todo
-    note: "Preserves all existing tests — classification only, no test logic changes."
+    status: done
+    note: "DONE — smoke-test-gate.yml restructured; pyproject.toml markers added; 35 test files marked; docker-compose.mock.yml v1 profiles added."
 isProject: false
 ---
 
 # Plan: CI/CD Versioning, Multi-Project Cloud Build & Staging Queue
 
-**Status:** In Progress **Created:** 2026-03-11 **Supersedes:** `version_control_ci_cd_overhaul_2026_03_11.plan.md`
-(absorbed + deleted), `semver_multi_project_env_2026_03_10.plan.md` (superseded) **Refs:**
+**Status:** DONE **Created:** 2026-03-11 **Completed:** 2026-03-11 **Supersedes:**
+`version_control_ci_cd_overhaul_2026_03_11.plan.md` (absorbed + deleted), `semver_multi_project_env_2026_03_10.plan.md`
+(superseded) **Refs:**
 
 - `docs/repo-management/CI-CD-FLOW.md`
 - `scripts/quickmerge.sh`
