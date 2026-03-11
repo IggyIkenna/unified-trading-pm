@@ -112,6 +112,44 @@ SOURCE_DIRS="${STAGED:-$SOURCE_DIR/ tests/}"
 
 export CLOUD_MOCK_MODE="true"; export GCP_PROJECT_ID="test-project"
 
+# ── EMULATOR REACHABILITY CHECK (warn-only; emulators optional in local dev) ──
+check_emulator_reachability() {
+    if [[ "${CLOUD_MOCK_MODE:-}" == "true" ]]; then
+        if [[ -n "${PUBSUB_EMULATOR_HOST:-}" ]]; then
+            local ps_host ps_port
+            ps_host=$(echo "$PUBSUB_EMULATOR_HOST" | cut -d: -f1)
+            ps_port=$(echo "$PUBSUB_EMULATOR_HOST" | cut -d: -f2)
+            if nc -z "$ps_host" "$ps_port" 2>/dev/null; then
+                log_success "EMULATOR CHECK: PUBSUB reachable ($PUBSUB_EMULATOR_HOST)"
+            else
+                log_warn "EMULATOR CHECK: PUBSUB not reachable ($PUBSUB_EMULATOR_HOST) — warning only; CI injects emulators via env"
+            fi
+        fi
+        if [[ -n "${STORAGE_EMULATOR_HOST:-}" ]]; then
+            local gcs_url gcs_host gcs_port
+            gcs_url="${STORAGE_EMULATOR_HOST#http://}"
+            gcs_url="${gcs_url#https://}"
+            gcs_host=$(echo "$gcs_url" | cut -d: -f1)
+            gcs_port=$(echo "$gcs_url" | cut -d: -f2)
+            if nc -z "$gcs_host" "$gcs_port" 2>/dev/null; then
+                log_success "EMULATOR CHECK: GCS (STORAGE) reachable ($STORAGE_EMULATOR_HOST)"
+            else
+                log_warn "EMULATOR CHECK: GCS (STORAGE) not reachable ($STORAGE_EMULATOR_HOST) — warning only; CI injects emulators via env"
+            fi
+        fi
+        if [[ -n "${BIGQUERY_EMULATOR_HOST:-}" ]]; then
+            local bq_host bq_port
+            bq_host=$(echo "$BIGQUERY_EMULATOR_HOST" | cut -d: -f1)
+            bq_port=$(echo "$BIGQUERY_EMULATOR_HOST" | cut -d: -f2)
+            if nc -z "$bq_host" "$bq_port" 2>/dev/null; then
+                log_success "EMULATOR CHECK: BIGQUERY reachable ($BIGQUERY_EMULATOR_HOST)"
+            else
+                log_warn "EMULATOR CHECK: BIGQUERY not reachable ($BIGQUERY_EMULATOR_HOST) — warning only; CI injects emulators via env"
+            fi
+        fi
+    fi
+}
+
 # ── [0] ENVIRONMENT ────────────────────────────────────────────────────────────
 log_section "[0/6] ENVIRONMENT"
 ACTUAL_PY=$($PYTHON_CMD --version 2>&1 | awk '{print $2}' | cut -d'.' -f1,2)
@@ -154,14 +192,15 @@ fi
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
 if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
+    check_emulator_reachability
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     COV="--cov=$SOURCE_DIR --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
     PARGS="-n $PYTEST_WORKERS --timeout=60 -v --tb=short"
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ]; then
-        $PYTHON_CMD -m pytest tests/unit/ $PARGS $COV || exit 1
+        $PYTHON_CMD -m pytest tests/unit/ --block-network $PARGS $COV || exit 1
     else
-        $PYTHON_CMD -m pytest tests/unit/ tests/integration/ $PARGS $COV || exit 1
+        $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --block-network $PARGS $COV || exit 1
     fi
     log_success "Tests PASSED"
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
