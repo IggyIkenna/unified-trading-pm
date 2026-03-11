@@ -43,7 +43,7 @@ Read these before making ANY code changes:
 ## Testing Infrastructure (Emulators & Mocks)
 
 All tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mocks
-replace live cloud services (Plan #60 — `cicd_mock_hardening_2026_03_11.plan.md`).
+replace live cloud services (see `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md`).
 
 **GCP Emulators** (auto-detected by SDK via env vars):
 

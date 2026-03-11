@@ -328,7 +328,7 @@ See `unified-trading-pm/docker/docker-compose.mock.yml` for the full service def
 
 ### Implementation Reference
 
-Full hardening details: `unified-trading-pm/plans/active/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60)
+Full hardening details: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60)
 
 ## Quick Reference: Full Flow
 

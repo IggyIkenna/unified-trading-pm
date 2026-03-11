@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Mock Infrastructure Patterns (Plan #60)
 
-Reference: `unified-trading-pm/plans/active/cicd_mock_hardening_2026_03_11.plan.md`
+Reference: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md`
 
 ## H1 — GCP Emulators
 

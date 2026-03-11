@@ -101,7 +101,7 @@ standards.
   for circuit breaker tests
 - **Tick replay**: Use `TickReplayEngine` from `unified-trading-pm/scripts/dev/fixtures/tick_replay.py` for
   deterministic tick streams
-- **Full infra reference**: `unified-trading-pm/plans/active/cicd_mock_hardening_2026_03_11.plan.md`
+- **Full infra reference**: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md`
 
 ---
 
