@@ -119,7 +119,15 @@ todos:
       and verify IB Gateway Java process starts: bash scripts/start_gateway.sh. (4) Run scripts/health_check.sh — expect
       HTTP 200 from :4001/v1/api/iserver/auth/status after login. GATE: health_check.sh exits 0; terraform state shows
       google_compute_instance.ibkr_gateway = running.
-    status: todo
+    status: done
+    notes: >-
+      DONE 2026-03-11: terraform apply completed. VM ibkr-gateway-vm running in asia-northeast1-a (external IP
+      34.146.71.13, internal 10.146.0.2). Service account ibkr-gateway-sa created with secretAccessor + logWriter roles.
+      Firewall allow-ibkr-internal created (ports 4001/4002 from trading-service tagged VMs). Fixed backend bucket
+      variable interpolation bug. Startup script installs Java 17 + IB Gateway + Xvfb + systemd units.
+      ibkr-account-credentials secret created in SM (empty — add credentials: gcloud secrets versions add
+      ibkr-account-credentials --data-file=creds.json). NEXT: one-time GUI login via bash scripts/open_auth_tunnel.sh
+      then VNC to localhost:5900.
   - id: ibkr-vm-long-lived
     content: >-
       Configure IB Gateway as a long-lived systemd service that survives crashes and VM reboots. (1) Install systemd
