@@ -102,26 +102,25 @@ check_python_deps
 echo "    Python: $("$PYTHON" --version)"
 
 step "Generating synthetic data (mode=${MODE})"
-"$PYTHON" "${SCRIPT_DIR}/generate_synthetic_data.py" \
+"$PYTHON" -m unified_internal_contracts.testing.synthetic \
     --mode "${MODE}" \
-    --output "${SEED_DATA_DIR}" \
-    --spec "${SCRIPT_DIR}/fixtures/seed_spec.yaml"
+    --output "${SEED_DATA_DIR}"
 
 step "Seeding instruments metadata"
-"$PYTHON" "${SCRIPT_DIR}/seed_instruments.py" \
+"$PYTHON" -m unified_internal_contracts.testing.seed_instruments \
     --output "${SEED_DATA_DIR}" \
     --project "${GCS_PROJECT}" \
     ${DRY_RUN}
 
 step "Validating generated data against UAC schemas"
-"$PYTHON" "${SCRIPT_DIR}/seed_validator.py" \
+"$PYTHON" -m unified_internal_contracts.testing.seed_validator \
     "${SEED_DATA_DIR}" \
     --strict \
     --json-report "${SEED_DATA_DIR}/validation_report.json" \
 || die "Schema validation failed — check ${SEED_DATA_DIR}/validation_report.json for details"
 
 step "Pre-computing feature data"
-"$PYTHON" "${SCRIPT_DIR}/seed_features.py" \
+"$PYTHON" -m unified_internal_contracts.testing.seed_features \
     --mode "${MODE}" \
     --input "${SEED_DATA_DIR}" \
     --output "${SEED_FEATURES_DIR}" \
@@ -129,7 +128,7 @@ step "Pre-computing feature data"
     ${DRY_RUN}
 
 step "Seeding ML model artifacts"
-"$PYTHON" "${SCRIPT_DIR}/seed_ml_artifacts.py" \
+"$PYTHON" -m unified_internal_contracts.testing.seed_ml_artifacts \
     --output "${SEED_MODELS_DIR}" \
     --version "${MODEL_VERSION}" \
     --project "${GCS_PROJECT}" \
