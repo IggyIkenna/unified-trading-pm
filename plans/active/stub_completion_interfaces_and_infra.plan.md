@@ -106,8 +106,11 @@ todos:
     note: ""
   - id: pre-trade-cash-reserve-check
     content: "Wire _check_cash_reserves() to live position data in pre_trade_check_engine.py:420"
-    status: todo
-    note: ""
+    status: completed
+    note:
+      "Implemented 2026-03-11 (commit 6ce535d). PositionMonitorClient has no live cash balance endpoint; used
+      conservative proxy remaining_capacity=max_capital_deployed-new_capital. Fail-safe rejects when ceiling
+      unconfigured. 5 unit tests added."
   - id: gas-estimator-live-umi-feed
     content: "Replace static gas price lookup with get_price() from UMI in gas_estimator.py:175"
     status: todo
