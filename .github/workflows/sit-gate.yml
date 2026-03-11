@@ -79,3 +79,23 @@ jobs:
           git add workspace-manifest.json
           git commit -m "chore(manifest): SIT lock — staging_status.locked=true, commit SHAs recorded [skip ci]"
           git push
+
+      - name: Dispatch staging-locked to all repos (re-runs Staging Lock Check on open PRs)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          OWNER="IggyIkenna"
+          REPOS=$(python3 -c "import json; m=json.load(open('workspace-manifest.json')); print('\n'.join(m.get('repositories',{}).keys()))")
+          FAILED=""
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            gh api "repos/$OWNER/$REPO/dispatches" \
+              -X POST \
+              -f event_type="staging-locked" \
+              2>/dev/null || FAILED="$FAILED $REPO"
+          done <<< "$REPOS"
+          if [ -n "$FAILED" ]; then
+            echo "WARNING: Failed to dispatch to:$FAILED (repos may not exist or be archived)"
+          fi
+          echo "Dispatched staging-locked to all repos"
