@@ -1,0 +1,150 @@
+---
+description: "v1.0.0 is a hard gate requiring code + deployment + business readiness plus user approval — no agent may autonomously promote a repo to 1.0.0; defines rules for incremental semver bumps on 0.x.x"
+alwaysApply: true
+priority: 97
+tags:
+  - semver
+  - versioning
+  - critical
+  - readiness
+  - workflow
+---
+
+# Semver v1.0.0 Hardening Rules
+
+SSOT: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md § v1.0.0 Gate`
+Readiness checklist rule: `unified-trading-pm/cursor-rules/core/repo-readiness-checklist.mdc`
+
+---
+
+## RULE: v1.0.0 Means More Than Quickmerge Passing
+
+v1.0.0 is a stability contract, not a CI artefact. It signals that the repo has:
+
+1. **Shipped** — deployed to a real (feature or staging) environment at least once (DR3)
+2. **Validated at system level** — staging SIT suite passed with this repo in the loop (DR4)
+3. **Circuit breaker verified** — fault injection confirmed 3-state recovery (BR2, services only)
+4. **Events correct** — all UEI events fire with correct schema and correlation_id (BR3)
+5. **Performance measured** — domain KPIs declared AND met, not just estimated (BR4)
+6. **PnL optimized** — backtest confirms positive P&L contribution for revenue-path repos (BR5)
+7. **User approved** — human sign-off that the commercial objective is met (BR8)
+
+Quickmerge passing (C5 / CR5) is necessary but NOT sufficient for v1.0.0.
+
+---
+
+## RULE: No Agent May Set v1.0.0 Autonomously
+
+The following actions are PROHIBITED for any agent (Claude Code, Cursor, GHA autonomous agent, Codex):
+
+- Setting `version = "1.0.0"` in `pyproject.toml` directly
+- Setting `version = "1.0.0"` in `package.json` directly
+- Triggering a `version-bump.yml` dispatch that results in a `1.0.0` tag
+- Merging a PR that bumps any repo from `0.x.x` to `1.0.0`
+- Marking BR8 as complete in any plan without explicit user statement in the session
+
+If the current version is `0.x.x` and an agent believes all other gates are met, the agent MUST:
+1. List all met gates (CR5, DR3, DR4, BR2, BR3, BR4, BR5 where applicable)
+2. List any items declared N/A with their declared reason
+3. Present the summary to the user and wait for explicit "approve" or equivalent
+4. Only after user approval: update the plan `repo_gates` to include `business: BR8` and create the version PR
+
+---
+
+## RULE: Pre-1.0.0 Minor Bump on Breaking Change
+
+On `0.x.x`, a breaking change (`feat!:`) bumps the MINOR version only:
+- `0.3.5 → 0.4.0` (correct)
+- `0.3.5 → 1.0.0` (FORBIDDEN — even if feat!: is breaking)
+
+The `1.0.0` threshold is crossed ONLY via the explicit user-approval path above.
+
+---
+
+## RULE: Version Bumps Are GHA-Only — Never Local
+
+**Version bumps NEVER happen inside quickmerge.sh or any local script.**
+
+The SOLE authority for version bumps is `semver-agent.yml` (GHA workflow), which:
+1. Triggers on `quality-gates.yml` passing with `conclusion=success` on the `staging` branch
+2. Reads active PM plans to understand what work was done vs what was planned
+3. Analyzes the git diff and classifies bump magnitude using `docs/per-repo-semver-rules.yaml`
+4. Dispatches `version-bump` to PM → updates `staging_versions` in `workspace-manifest.json`
+5. For MAJOR bumps on post-1.0.0 repos: triggers `major-bump-approval.yml` workflow instead
+
+**No agent, no script, no human should edit `version = "..."` in pyproject.toml directly.**
+
+## RULE: Incremental Bump Eligibility (GHA-Only)
+
+All bumps happen exclusively via `semver-agent.yml`. The agent:
+
+### patch (0.x.y → 0.x.y+1)
+- Triggered when: QG passes on staging AND agent classifies diff as PATCH-only
+- PATCH criteria: bug fix, refactor, docs, perf improvement — no API surface change
+- No human intervention required
+
+### minor (0.x.y → 0.x+1.0) — also covers pre-1.0.0 "breaking"
+- Triggered when: QG passes on staging AND agent classifies diff as MINOR or MAJOR (pre-1.0.0)
+- MINOR criteria: new export/endpoint/event type, new feature, new optional param
+- Pre-1.0.0 override: MAJOR diff is classified as MINOR (0.x.x never auto-crosses to 1.0.0)
+- No human intervention required
+
+### MAJOR (x.0.0 → x+1.0.0) — post-1.0.0 only
+- Triggered when: QG passes on staging AND agent classifies diff as MAJOR AND current version >= 1.0.0
+- Agent does NOT bump — triggers `major-bump-approval.yml` workflow instead
+- Human must approve via `workflow_dispatch` on `major-bump-approval.yml`
+  OR admin script: `bash unified-trading-pm/scripts/approve-major-bump.sh {repo} {version} --admin-pat $GH_PAT`
+- Approval workflow verifies all readiness gates before executing bump
+
+---
+
+## RULE: v1.0.0 Checklist (Agent Verification Workflow)
+
+When a user asks "is `<repo>` ready for v1.0.0?", the agent MUST run through this checklist and report each item:
+
+```
+□ CR5: Repo merged to main (not just feat/*) with CI green?
+□ DR3: Feature environment successfully deployed at least once?
+□ DR4: Staging SIT suite passed with this repo in scope?
+□ BR2: Circuit breaker fault injection test passed? (or N/A declared in plan)
+□ BR3: All UEI events fire with correct schema and correlation_id?
+□ BR4: Domain KPIs declared AND measured (not estimated)?
+□ BR5: PnL/backtest positive for revenue-path repos? (or N/A declared)
+□ BR6: Batch vs live validation complete?
+□ BR7: Staging vs live parity confirmed?
+□ BR8: USER HAS APPROVED — human confirmation received?
+□ Every undone item has an active plan with a completion timeline?
+```
+
+If any item is unchecked and not declared N/A with a reason, the repo is NOT v1.0.0 eligible.
+
+---
+
+## RULE: Version Lock During SIT
+
+When `staging_status.locked = true` in `workspace-manifest.json`:
+- No repo may be merged to `main`
+- No version bumps to any `0.x.x` repo
+- No `1.0.0` promotions
+- Agent must wait for SIT to complete or user to unlock
+
+---
+
+## RULE: N/A Declarations Are Permanent Record
+
+When a checklist item is declared N/A for a repo (e.g., "BR2 N/A — MEL is a library, no circuit breaker"), this
+declaration must appear in the `repo_gates` `readiness_note` in the active plan AND in the repo's `REPO_NOTES.md`
+if it exists. N/A declarations without documented reasons are treated as missing items.
+
+---
+
+## WHY v1.0.0 Is This Strict
+
+Before 1.0.0, dependents use `>=0.x.x,<1.0.0` bounds. After 1.0.0, they use `>=1.0.0,<2.0.0`. A premature 1.0.0:
+- Breaks all `<1.0.0` constraints across the cascade
+- Signals production-readiness that hasn't been validated
+- Triggers version cascade dispatches to all downstream repos
+
+A missed circuit breaker or unvalidated PnL path discovered post-1.0.0 is a production incident, not a PR.
+
+CODEX: unified-trading-codex/06-coding-standards/README.md
