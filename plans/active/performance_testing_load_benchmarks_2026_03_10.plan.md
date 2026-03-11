@@ -5,7 +5,7 @@ overview:
   live trading; add CI gates for latency and throughput regressions.
 type: code
 epic: epic-code-completion
-status: active
+status: done
 
 completion_gates:
   code: C5
@@ -59,8 +59,9 @@ todos:
     note: "DONE 2026-03-11"
   - id: p1-e2e-latency
     content: "Create execution-service/benchmarks/test_e2e_latency.py for order submission p99 ≤ 500ms"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE 2026-03-11 — test_e2e_latency.py created with 100-iteration histogram, p99<=500ms and p50<=200ms assertions"
   - id: p2-sit-performance-dir
     content: "Create system-integration-tests/tests/performance/ with 7 test files"
     status: done
@@ -71,24 +72,27 @@ todos:
     note: "DONE 2026-03-11"
   - id: p2-resource-leak-detection
     content: "Add ResourceMonitor to conftest_performance.py for memory leak detection"
-    status: todo
-    note: ""
+    status: done
+    note: "DONE 2026-03-11 — ResourceMonitor class and resource_monitor fixture added to conftest_performance.py"
   - id: p3-gha-perf-job
     content: "Create system-integration-tests/.github/workflows/performance-test.yml for nightly CI"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE 2026-03-11 — nightly 2am UTC cron + workflow_dispatch; uploads artifacts to performance-results-<run_id>"
   - id: p3-regression-detection
     content: "Create compare_benchmark_baseline.py and commit baselines/baseline.json"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE 2026-03-11 — CLI tool compares p50/p95/p99/max vs baseline; fails CI if >20% regression; baseline.json
+      seeded from performance-targets.md"
   - id: p4-memory-profiling
     content: "Create unified-trading-pm/scripts/ops/profile-memory.sh"
-    status: todo
-    note: ""
+    status: done
+    note: "DONE 2026-03-11 — memray flamegraph + psutil RSS sampling fallback; asserts <10% growth over duration"
   - id: p4-cpu-profiling
     content: "Create unified-trading-pm/scripts/ops/profile-cpu.sh"
-    status: todo
-    note: ""
+    status: done
+    note: "DONE 2026-03-11 — py-spy speedscope flamegraph + cProfile fallback with pstats top-50 report"
 isProject: false
 ---
 
