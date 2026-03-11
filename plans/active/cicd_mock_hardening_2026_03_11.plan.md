@@ -34,12 +34,12 @@ todos:
       "P1: Create unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py using responses library
       (@responses.activate passthrough=False) for order place/cancel/query; add responses>=0.24.1 to pyproject.toml test
       deps if missing"
-    status: pending
+    status: completed
   - id: h4-2-defi-zero-io-assertion
     content:
       "P1: Wrap all DeFi adapter tests (Aave/Morpho/Uniswap/Lido/EtherFi) with responses passthrough=False to prove zero
       network calls in CI; any future accidental live call fails fast"
-    status: pending
+    status: completed
   - id: h3-websocket-simulator
     content:
       "P2: Create unified-market-interface/tests/fixtures/mock_ws_server.py (MockWebSocketFeed — aiohttp.test_utils WS
@@ -51,16 +51,16 @@ todos:
       "P2: Wire fsouza/fake-gcs-server:latest (port 4443) into UCI + SIT conftest via
       STORAGE_EMULATOR_HOST=http://localhost:4443; covers bucket lifecycle, ACLs, signed URLs not covered by
       LocalStorageProvider"
-    status: pending
+    status: done
   - id: h7-thegraph-fixtures
     content:
       "P2: Create unified-market-interface/tests/fixtures/thegraph_responses.py with aioresponses fixtures per query
       hash (replaces 9-key live rotation in CI)"
-    status: pending
+    status: done
   - id: h7-alchemy-fixtures
     content:
       "P2: Create responses fixtures for Alchemy/Infura JSON-RPC eth_call patterns used in DeFi market data paths"
-    status: pending
+    status: done
   - id: h7-cassette-completion
     content:
       "P2: Complete VCR cassette coverage for all Databento and Tardis endpoints used in
@@ -77,7 +77,7 @@ todos:
       "P3: Create unified-trading-pm/scripts/dev/fixtures/tick_replay.py (TickReplayEngine — reads mock_data_dev_project
       seed fixtures, freezegun time control, UAC Tick schema validation); depends on
       mock_data_dev_project_seeding_2026_03_10 seed fixtures"
-    status: pending
+    status: done
   - id: h1-3-bigquery-emulator
     content:
       "P3: Wire ghcr.io/goccy/bigquery-emulator:latest (port 9050) into trading-analytics-api and client-reporting-api
@@ -93,17 +93,17 @@ todos:
       "P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly 02:00 UTC; re-records
       cassettes against real APIs; schema-level Pydantic diff (not byte diff); GitHub issue + Telegram alert on drift;
       alerting-only (not CI-blocking)"
-    status: pending
+    status: done
   - id: h10-1-docker-compose-mock
     content:
       "P4: Create unified-trading-pm/docker/docker-compose.mock.yml — all T2/T3 services with CLOUD_MOCK_MODE=true
       CLOUD_PROVIDER=local; optional GCP emulator containers (Pub/Sub, GCS); seed fixture volume mounts"
-    status: pending
+    status: done
   - id: h10-2-demo-mode-script
     content:
       "P4: Create unified-trading-pm/scripts/demo-mode.sh — single command: starts all services (mock) + all UIs
       (VITE_MOCK_API=true) + seeds data from mock_data_dev_project fixtures; stakeholder-ready with --open-browser flag"
-    status: pending
+    status: done
 isProject: true
 ---
 
