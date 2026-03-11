@@ -27,7 +27,8 @@
 #   --repos "a b c"       Space-separated list of repo names to process.
 #   --skip-protection     Skip the GitHub API protect/unprotect cycle.
 #   --no-commit           Skip git add / git commit; only force-push current HEAD.
-#   --max-workers N       Parallel workers per tier (default: 8).
+#   --preserve-local      Stage, commit, push — but skip switching to main. Stay on current
+#                        branch. All changes committed and pushed; nothing lost.
 #
 # Prerequisites:
 #   - gh CLI authenticated as IggyIkenna (admin of all target repos).
@@ -66,6 +67,7 @@ REPOS_LIST=""
 COMMIT_MSG="chore: admin force-sync"
 SKIP_PROTECTION=false
 NO_COMMIT=false
+SKIP_CHECKOUT=false
 MAX_WORKERS=${MAX_WORKERS:-8}
 
 # ---------------------------------------------------------------------------
@@ -82,6 +84,7 @@ while [[ $# -gt 0 ]]; do
     --message)         COMMIT_MSG="$2"; shift 2 ;;
     --skip-protection) SKIP_PROTECTION=true; shift ;;
     --no-commit)       NO_COMMIT=true; shift ;;
+    --preserve-local)  SKIP_CHECKOUT=true; shift ;;
     --max-workers)     MAX_WORKERS="$2"; shift 2 ;;
     *) echo "Unknown flag: $1"; shift ;;
   esac
@@ -396,12 +399,15 @@ sync_repo() {
     echo "OK"
     echo "OK:$repo" > "$rf"
     # Switch local branch to main after successful push (avoids post-sync branch confusion)
-    local current_branch
-    current_branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-    if [[ -n "$current_branch" && "$current_branch" != "main" ]]; then
-      (cd "$dir" && git checkout -B main 2>/dev/null) \
-        && echo "    [checkout] $repo — switched local branch to main" \
-        || echo "    [checkout] WARN: could not switch to main for $repo"
+    # Skip when --preserve-local: stay on current branch; changes are committed and pushed
+    if [[ "$SKIP_CHECKOUT" != "true" ]]; then
+      local current_branch
+      current_branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+      if [[ -n "$current_branch" && "$current_branch" != "main" ]]; then
+        (cd "$dir" && git checkout -B main 2>/dev/null) \
+          && echo "    [checkout] $repo — switched local branch to main" \
+          || echo "    [checkout] WARN: could not switch to main for $repo"
+      fi
     fi
   else
     echo "FAIL"
@@ -417,7 +423,7 @@ sync_repo() {
 }
 
 export -f sync_repo _disable_protection _restore_protection _repo_key
-export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR
+export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT SKIP_CHECKOUT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR
 
 # ---------------------------------------------------------------------------
 # Parallel batch runner
