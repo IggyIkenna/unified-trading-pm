@@ -5,7 +5,7 @@ overview:
   deployment-api not tracked by other active plans.
 type: code
 epic: epic-code-completion
-status: DONE
+status: active
 created: 2026-03-09
 
 completion_gates:
