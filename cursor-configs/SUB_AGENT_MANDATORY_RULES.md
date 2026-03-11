@@ -200,6 +200,28 @@ Before proposing ANY commit message prefix (feat!:, feat:, fix:):
 On repos at version >=1.0.0, quickmerge.sh Stage 0.3 will BLOCK feat!: commits. The --user-approved flag is required.
 Agents MUST NOT pass --user-approved automatically.
 
+### ABSOLUTE PROHIBITION: MAJOR Version Bumps (No Self-Approval)
+
+You are a sub-agent. You are PROHIBITED from:
+
+- Editing any `pyproject.toml` to increase the `MAJOR` version component
+- Dispatching any `version-bump` event where the proposed version is a MAJOR increase
+- Writing any commit that bumps a repo's MAJOR version (including 0.x.x → 1.0.0)
+- Commenting `/approve` on any GitHub issue — you cannot self-approve MAJOR bumps
+
+**If your task would logically require a MAJOR bump:**
+
+1. Complete the code changes (normal commit/quickmerge flow)
+2. Do NOT touch the version
+3. Report back to the orchestrator/user:
+   ```
+   MAJOR bump required for {repo}: current={X.Y.Z} → proposed={X+1}.0.0
+   Initiate with: bash scripts/approve-major-bump.sh {repo} {X+1}.0.0 --reason "..." --admin-pat $GH_PAT
+   ```
+
+This rule has NO exceptions — not for infra repos, not for 0.x.x → 1.0.0, not for "obviously needed" cases. The human
+must always be in the loop for MAJOR version promotions.
+
 ---
 
 **Venv vs testing:** `.venv-workspace` = IDE only. Tests use per-repo `.venv` via quality-gates.sh. See

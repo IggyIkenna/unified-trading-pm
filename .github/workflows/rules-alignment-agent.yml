@@ -118,6 +118,75 @@ jobs:
           # If not, the agent should update them in the same commit
           echo "Readiness criteria alignment check: verify new plan criteria appear in codex YAML template"
 
+      - name: Audit major-bump policy compliance
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_ORG: IggyIkenna
+        run: |
+          set -euo pipefail
+
+          echo "=== Major Bump Policy Compliance Audit ==="
+          echo "Checking for unauthorized MAJOR version bumps in recent commits..."
+
+          VIOLATIONS=""
+          TODAY=$(date +%Y-%m-%d)
+
+          # Read all repos from PM manifest
+          REPOS=$(python3 -c "
+          import json
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+          for r in m.get('repos', []):
+              print(r.get('name', ''))
+          " 2>/dev/null || echo "")
+
+          for REPO in $REPOS; do
+            if [ -z "$REPO" ]; then continue; fi
+
+            # Get recent commits on staging (last 24h)
+            RECENT=$(gh api "repos/${GH_ORG}/${REPO}/commits?sha=staging&per_page=10" \
+              --jq '.[].commit | select(.message | test("bump version to [1-9][0-9]*\\.0\\.0")) | {sha: .tree.sha, message: .message, author: .author.name}' \
+              2>/dev/null || echo "")
+
+            if [ -n "$RECENT" ]; then
+              # Check if there's a corresponding "major-bump approved by" message
+              AUTHORIZED=$(echo "$RECENT" | python3 -c "
+          import json, sys
+          for line in sys.stdin:
+              line = line.strip()
+              if 'major-bump approved by' in line.lower():
+                  print('yes')
+                  break
+          " 2>/dev/null || echo "")
+
+              if [ -z "$AUTHORIZED" ]; then
+                VIOLATIONS="${VIOLATIONS}\n  - ${REPO}: MAJOR bump commit without approval token"
+              fi
+            fi
+          done
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo "WARNING: MAJOR BUMP POLICY VIOLATIONS DETECTED:"
+            printf "$VIOLATIONS\n"
+
+            # Send Telegram alert
+            BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
+            CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}"
+            if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
+              MSG="Warning: Major bump policy violation detected on ${TODAY}%0AViolations:$(echo "$VIOLATIONS" | tr '\n' '%0A')"
+              curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+                -d "chat_id=${CHAT_ID}&text=${MSG}" || true
+            fi
+
+            echo "violations_found=true" >> "$GITHUB_OUTPUT" || true
+          else
+            echo "No unauthorized MAJOR version bumps detected"
+            echo "violations_found=false" >> "$GITHUB_OUTPUT" || true
+          fi
+
+          # Advisory only — never fail the workflow
+          exit 0
+
       - name: Skip — no plan changes or no API key
         if: steps.changed-plans.outputs.changed_plans == '' || env.ANTHROPIC_API_KEY == ''
         run: |

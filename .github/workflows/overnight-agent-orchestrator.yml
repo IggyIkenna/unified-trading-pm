@@ -54,6 +54,13 @@ jobs:
         run: |
           CONTEXT_FILE=$(mktemp)
           cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
+          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
+          - Do NOT edit pyproject.toml to increase the MAJOR component
+          - Do NOT dispatch version-bump events with a higher MAJOR version
+          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
+          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
+
           READINESS CONTEXT FOR THIS TIER:
           - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
           - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
@@ -152,6 +159,13 @@ jobs:
         run: |
           CONTEXT_FILE=$(mktemp)
           cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
+          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
+          - Do NOT edit pyproject.toml to increase the MAJOR component
+          - Do NOT dispatch version-bump events with a higher MAJOR version
+          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
+          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
+
           READINESS CONTEXT FOR THIS TIER:
           - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
           - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
@@ -230,6 +244,13 @@ jobs:
         run: |
           CONTEXT_FILE=$(mktemp)
           cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
+          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
+          - Do NOT edit pyproject.toml to increase the MAJOR component
+          - Do NOT dispatch version-bump events with a higher MAJOR version
+          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
+          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
+
           READINESS CONTEXT FOR THIS TIER:
           - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
           - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly
@@ -309,6 +330,13 @@ jobs:
         run: |
           CONTEXT_FILE=$(mktemp)
           cat > "$CONTEXT_FILE" << 'READINESS_CONTEXT'
+          ABSOLUTE RULE — MAJOR VERSION BUMP PROHIBITION:
+          You are NOT permitted to bump any repo's MAJOR version (including 0.x.x → 1.0.0).
+          - Do NOT edit pyproject.toml to increase the MAJOR component
+          - Do NOT dispatch version-bump events with a higher MAJOR version
+          - If a MAJOR bump is needed: stop, report it, do not proceed with the bump
+          Only the issue-approval flow (major-bump-issue-handler.yml) may perform MAJOR bumps after human /approve.
+
           READINESS CONTEXT FOR THIS TIER:
           - Readiness SSOT: unified-trading-codex/10-audit/repos/{repo}.yaml for each repo
           - Before any quickmerge, check the repo's current CR stage and verify you are advancing it correctly

@@ -253,6 +253,33 @@ Check a repo's current readiness state: `cat {repo}/.readiness-ref` to get path 
 Cursor rules: `cursor-rules/core/repo-readiness-checklist.mdc`, `cursor-rules/core/semver-v1-hardening.mdc`,
 `cursor-rules/core/per-repo-semver-rules.mdc`
 
+### MAJOR Bump Approval Gate (ABSOLUTE — all repos, no exceptions)
+
+No agent may bump MAJOR version autonomously. The **only** approved path:
+
+1. `semver-agent.yml` detects MAJOR needed → creates GitHub Issue (label: `major-bump-pending`) → sends Telegram alert
+2. Human comments `/approve` on the issue (or `/reject` to cancel)
+3. `major-bump-issue-handler.yml` fires → bumps `pyproject.toml` on `staging` branch ONLY → dispatches version-bump to
+   PM manifest
+
+To **request** a MAJOR bump from CLI:
+
+```bash
+bash unified-trading-pm/scripts/approve-major-bump.sh {repo} {X.0.0} \
+  --reason "Breaking change description" \
+  --admin-pat $GH_PAT
+```
+
+**Agents MUST NOT:**
+
+- Edit `pyproject.toml` to increase MAJOR version
+- Dispatch `version-bump` events with a MAJOR version increase
+- Comment `/approve` on issues (agents cannot self-approve — humans only)
+- Set `staging_versions` in `workspace-manifest.json` to a MAJOR increase autonomously
+
+**Applies to:** all repos including infra (PM, codex, deployment-service). **Applies to:** the initial 0.x.x → 1.0.0
+promotion — requires the same issue flow.
+
 ---
 
 ## Plans & Tracking
