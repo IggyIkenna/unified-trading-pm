@@ -247,6 +247,89 @@ Cloud Build and the deployment pipeline assume the following:
 - **Validation before build:** Quality gates and validation run before the build step. A failed validation blocks the
   build.
 
+## Mock Infrastructure & Emulator Setup
+
+All CI tests run credential-free with `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`. Protocol-faithful emulators replace
+live GCP/AWS services. This section documents how to activate each layer.
+
+### Environment Variables
+
+| Variable                 | Default | Purpose                                                  |
+| ------------------------ | ------- | -------------------------------------------------------- |
+| `CLOUD_PROVIDER`         | `gcp`   | Set to `local` for credential-free CI                    |
+| `CLOUD_MOCK_MODE`        | `false` | Set to `true` for in-memory mock providers               |
+| `PUBSUB_EMULATOR_HOST`   | —       | `localhost:8085` — GCP Pub/Sub emulator                  |
+| `STORAGE_EMULATOR_HOST`  | —       | `http://localhost:4443` — GCS emulator (fake-gcs-server) |
+| `BIGQUERY_EMULATOR_HOST` | —       | `localhost:9050` — BigQuery emulator                     |
+
+### GCP Emulators (Docker)
+
+```bash
+# Pub/Sub (google-cloud-pubsub SDK auto-detects PUBSUB_EMULATOR_HOST)
+docker run -d -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli \
+  gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=mock-project
+
+# GCS — fake-gcs-server (supports bucket lifecycle, ACLs, signed URLs)
+docker run -d -p 4443:4443 fsouza/fake-gcs-server:latest -scheme http -port 4443
+
+# BigQuery emulator (known gap: window functions not fully supported)
+docker run -d -p 9050:9050 ghcr.io/goccy/bigquery-emulator:latest \
+  --project=mock-project --dataset=trading_analytics
+```
+
+Or start all at once via:
+
+```bash
+docker compose -f unified-trading-pm/docker/docker-compose.mock.yml --profile gcp-emulators up
+```
+
+### AWS Moto (No Docker Required)
+
+AWS services are mocked at the SDK level using `moto`. No emulator process or credentials needed:
+
+- Tests in `unified-cloud-interface/tests/integration/test_aws_mode.py` use `@mock_aws` decorator
+- S3, Secrets Manager, SQS all covered (26 tests)
+
+### Credential-Free CI Gate
+
+The `network_block_plugin.py` pytest plugin blocks all socket connections at the OS level:
+
+```bash
+# Activate in CI to prove zero live network calls
+CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true pytest --block-network -m "not sandbox"
+```
+
+Tests that legitimately connect to local emulators use `@pytest.mark.allow_network`. Each opt-out emits a WARNING in CI
+logs — the count should stay minimal and stable.
+
+Plugin location: `unified-trading-pm/scripts/dev/network_block_plugin.py`
+
+### Cassette Parity & Drift Detection
+
+- **Parity test** (every commit): `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py` — validates
+  all 74+ cassette YAMLs against UAC Pydantic models. 256 tests, zero network calls.
+- **Drift detection** (nightly 02:00 UTC): `.github/workflows/cassette-drift-check.yml` re-records cassettes against
+  real APIs and diffs against committed YAMLs. Schema-level diff only — creates GitHub issue + Telegram alert on drift.
+  Alerting-only, not CI-blocking.
+
+### Local Demo Mode
+
+Start the full system locally (no credentials required):
+
+```bash
+bash unified-trading-pm/scripts/demo-mode.sh --seed --open-browser
+# With GCP emulators:
+bash unified-trading-pm/scripts/demo-mode.sh --seed --gcp-emulators --open-browser
+```
+
+This starts all T2/T3 services with `CLOUD_MOCK_MODE=true`, seeds fixture data, and opens the UI.
+
+See `unified-trading-pm/docker/docker-compose.mock.yml` for the full service definition.
+
+### Implementation Reference
+
+Full hardening details: `unified-trading-pm/plans/active/cicd_mock_hardening_2026_03_11.plan.md` (Plan #60)
+
 ## Quick Reference: Full Flow
 
 ### New machine (once)
