@@ -27,6 +27,8 @@
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
 #   --skip-codex       Skip codex compliance check (Stage 3 §5). Human-only escape hatch; never use with --agent.
 #   --skip-preflight   Skip pre-flight audit (Stage 2). Human-only escape hatch; never use with --agent.
+#   --user-approved    Bypass Stage 0.3 major-bump gate (post-1.0.0 repos). NEVER set by --agent automatically.
+#                      Only use when user has explicitly confirmed the major bump is intentional.
 #
 # When to use --to-staging:
 #   feat!: / BREAKING CHANGE: commits that break downstream API contracts.
@@ -78,6 +80,8 @@ QUICK=false
 NO_PR=false
 SKIP_CODEX=""
 SKIP_PREFLIGHT=false
+USER_APPROVED=false
+AGENT_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -120,6 +124,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-preflight)
       SKIP_PREFLIGHT=true
+      shift
+      ;;
+    --user-approved)
+      USER_APPROVED=true
+      shift
+      ;;
+    --agent)
+      AGENT_MODE=true
       shift
       ;;
     *)
@@ -328,6 +340,78 @@ if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff orig
   echo "[$REPO_NAME] Nothing to commit — exiting fast"
   exit 0
 fi
+
+# ============================================================================
+# --- Stage 0.3: Major bump gate (post-1.0.0 repos) ---
+# Blocks feat!: commits on repos with version >= 1.0.0 unless --user-approved is passed.
+# Pre-1.0.0 repos (0.x.x): gate does NOT fire — feat!: on 0.x.x bumps MINOR (existing behavior).
+# --agent does NOT imply --user-approved. User must explicitly confirm major bumps.
+# ============================================================================
+echo "=========================================="
+echo "STAGE 0.3: Major Bump Gate (post-1.0.0 repos)"
+echo "=========================================="
+
+_FIRST_LINE_MSG=$(printf '%s' "$COMMIT_MSG" | head -n1)
+_IS_FEAT_BREAKING=false
+if printf '%s' "$_FIRST_LINE_MSG" | grep -qiE "^feat!(\(.*\))?:"; then
+  _IS_FEAT_BREAKING=true
+fi
+
+if [ "$_IS_FEAT_BREAKING" = "true" ]; then
+  # Read current version from pyproject.toml or package.json
+  _CURRENT_VERSION=""
+  _REPO_LABEL=""
+  if [ -f "pyproject.toml" ]; then
+    _CURRENT_VERSION=$(grep -E '^version = ' pyproject.toml | head -1 | sed 's/version = "//;s/"//' 2>/dev/null || echo "")
+    _REPO_LABEL=$(grep -E '^name = ' pyproject.toml | head -1 | sed 's/name = "//;s/"//' 2>/dev/null || echo "$REPO_NAME")
+  elif [ -f "package.json" ] && command -v node &>/dev/null; then
+    _CURRENT_VERSION=$(node -e "console.log(require('./package.json').version)" 2>/dev/null || echo "")
+    _REPO_LABEL=$(node -e "console.log(require('./package.json').name)" 2>/dev/null || echo "$REPO_NAME")
+  fi
+
+  if [ -n "$_CURRENT_VERSION" ]; then
+    _MAJOR_COMPONENT=$(printf '%s' "$_CURRENT_VERSION" | cut -d. -f1)
+    _IS_POST_STABLE=false
+    if [ -n "$_MAJOR_COMPONENT" ] && [ "$_MAJOR_COMPONENT" -ge 1 ] 2>/dev/null; then
+      _IS_POST_STABLE=true
+    fi
+
+    if [ "$_IS_POST_STABLE" = "true" ]; then
+      if [ "$USER_APPROVED" = "true" ]; then
+        echo "[$REPO_NAME] ✅ Stage 0.3: --user-approved flag set — major bump gate bypassed"
+        echo "[$REPO_NAME]    Repo: $_REPO_LABEL | Current: $_CURRENT_VERSION"
+      else
+        _NEXT_MAJOR=$((_MAJOR_COMPONENT + 1))
+        # Use terminal color codes when stdout is a terminal
+        if [ -t 1 ]; then
+          _RED='\033[0;31m'; _NC='\033[0m'
+        else
+          _RED=''; _NC=''
+        fi
+        printf "${_RED}"
+        printf '╔══════════════════════════════════════════════════════════════╗\n'
+        printf '║  BLOCKED: Major bump on post-1.0.0 repo requires user approval\n'
+        printf '║  Repo:    %s\n' "$_REPO_LABEL"
+        printf '║  Current: %s\n' "$_CURRENT_VERSION"
+        printf '║  Would become: %s.0.0\n' "$_NEXT_MAJOR"
+        printf '║  \n'
+        printf '║  To proceed: re-run with --user-approved flag\n'
+        printf '║  Note: --user-approved is NEVER set by --agent automatically\n'
+        printf '╚══════════════════════════════════════════════════════════════╝\n'
+        printf "${_NC}"
+        exit 1
+      fi
+    else
+      echo "[$REPO_NAME] ✅ Stage 0.3: pre-1.0.0 repo ($_CURRENT_VERSION) — feat!: bumps MINOR only, no gate"
+    fi
+  else
+    echo "[$REPO_NAME] ⚠️  Stage 0.3: could not read version — skipping major bump gate"
+  fi
+else
+  echo "[$REPO_NAME] ✅ Stage 0.3: not a feat!: commit — major bump gate not applicable"
+fi
+
+echo ""
 
 # ============================================================================
 # STAGE 0.5: PM MANIFEST STALENESS CHECK
