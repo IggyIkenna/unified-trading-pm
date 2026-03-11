@@ -604,6 +604,28 @@ else
     log_success "STEP 5.12: No hardcoded protocol names"
 fi
 
+# ============================================================
+# STEP 5.12b — §12 No hardcoded gs:// or s3:// URIs outside unified-cloud-interface
+# ============================================================
+echo "=== STEP 5.12b: No hardcoded gs:// or s3:// URIs outside UCI ==="
+GCS_URI_VIOLATIONS=$(rg '"gs://|"s3://' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    --glob '!**/unified-cloud-interface/**' \
+    -l "$SOURCE_DIR" 2>/dev/null \
+    | xargs -I{} grep -l '"gs://\|"s3://' {} 2>/dev/null \
+    | xargs grep -n '"gs://\|"s3://' 2>/dev/null \
+    | grep -v '# noqa: gs-uri' \
+    || :)
+if [ -n "$GCS_URI_VIOLATIONS" ]; then
+    log_fail "STEP 5.12b: Hardcoded cloud URIs found (use UCI StorageClient — download_bytes/upload_bytes/list_blobs):"
+    echo "$GCS_URI_VIOLATIONS" | head -10
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.12b: No hardcoded gs:// or s3:// URIs outside UCI"
+fi
+
 # STEP 5.13 — Schema placement advisory (cross-repo contract check)
 # =====================================================================
 echo "=== STEP 5.13: Schema placement advisory (cross-repo contract check) ==="
