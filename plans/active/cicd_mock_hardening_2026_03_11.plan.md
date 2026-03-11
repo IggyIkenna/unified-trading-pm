@@ -10,13 +10,13 @@ todos:
     content:
       "P0: Create unified-api-contracts/tests/test_cassette_schema_parity.py — loads every committed cassette YAML and
       validates response body against UAC Pydantic model; fails QG on violation; zero network calls"
-    status: pending
+    status: completed
   - id: h8-credential-free-gate
     content:
       "P0: Create unified-trading-pm/scripts/dev/network_block_plugin.py (pytest plugin — responses passthrough=False
       for full session); add credential-free CI step to system-integration-tests workflow with CLOUD_PROVIDER=local
       CLOUD_MOCK_MODE=true"
-    status: pending
+    status: completed
   - id: h2-moto-aws
     content:
       "P1: Add moto[s3,secretsmanager,sqs]>=5.0.0 to unified-cloud-interface test deps; create
@@ -65,7 +65,7 @@ todos:
     content:
       "P2: Complete VCR cassette coverage for all Databento and Tardis endpoints used in
       unified-reference-data-interface and market-data-service; add Pyth/BloxRoute fixtures if used in production paths"
-    status: pending
+    status: done
   - id: h6-fault-injection
     content:
       "P3: Create unified-trading-pm/scripts/dev/fixtures/fault_injection.py (FaultInjectionMiddleware — latency,
