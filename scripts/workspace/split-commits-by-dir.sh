@@ -37,8 +37,8 @@ git commit -m "chore: plans active"
 git -c pack.window=0 -c pack.depth=0 push origin main --no-verify
 
 echo ""
-echo "Step 4: Commit and push cursor-rules/..."
-git add cursor-rules/
+echo "Step 4: Commit and push .cursor/rules/..."
+git add .cursor/rules/
 git commit -m "feat: cursor rules by category"
 git -c pack.window=0 -c pack.depth=0 push origin main --no-verify
 

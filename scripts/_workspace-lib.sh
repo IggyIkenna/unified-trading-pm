@@ -39,7 +39,7 @@ _lib_script_dir() { cd "$(dirname "${BASH_SOURCE[1]}")" && pwd; }
 #   │   └── rules/                    ← local working copy (IDE reads here)
 #   ├── .cursorrules                  ← workspace-level Cursor config
 #   ├── unified-trading-pm/           ← THIS repo (must be a sibling, not the root)
-#   │   ├── cursor-rules/             ← git-tracked source of truth
+#   │   ├── .cursor/rules/            ← git-tracked source of truth
 #   │   ├── cursor-configs/
 #   │   ├── scripts/
 #   │   └── workspace-manifest.json
@@ -76,7 +76,7 @@ validate_workspace_structure() {
     ((errors++))
   fi
 
-  # 3. .cursor/rules/ must exist (symlink to cursor-rules/)
+  # 3. .cursor/rules/ must exist (symlink to .cursor/rules/)
   if [ -L "$WORKSPACE_ROOT/.cursor/rules" ]; then
     # Symlink — verify it points to the right place
     local rules_target
@@ -127,8 +127,8 @@ validate_workspace_structure() {
   fi
 
   # 6. cursor-rules/ must exist in PM repo (for pull)
-  if [ ! -d "$PM_ROOT/cursor-rules" ]; then
-    echo "${YELLOW}⚠  WARNING: $PM_ROOT/cursor-rules/ does not exist.${NC}" >&2
+  if [ ! -d "$PM_ROOT/.cursor/rules" ]; then
+    echo "${YELLOW}⚠  WARNING: $PM_ROOT/.cursor/rules/ does not exist.${NC}" >&2
     echo "  Run 'git pull' to fetch the latest rules from the remote." >&2
   fi
 

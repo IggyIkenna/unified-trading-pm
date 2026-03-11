@@ -229,12 +229,14 @@ EXECUTED by their owning interface repos:
   (D1-D3 equivalent, local). D4/D5 require quickmerge.
 - id: t0-progressive-validation content: "T0 STEP D→E — PROGRESSIVE VALIDATION [8 agents PARALLEL]: D1 (quickmerge
   --lint-only) → D2 (--unit-only) → D3 (--qg-only) → D4 (--quick) → D5 (full, no flags) = T0 TIER GREEN GATE. ALL 8 T0
-  repos must pass D5 before any T1 work starts." status: in_progress notes: | D1 PASS (2026-03-08): All 6 T0 repos
-  ruff-clean (0 errors, all files unchanged after format). Repos: UEI, AC, UIC, URDI, EAL, MEL. D2 PASS (2026-03-08):
-  All 6 T0 repos unit tests pass. UEI: 71/71 | AC: 666/666 | UIC: 608/608 (incl. 15 new alignment tests) | URDI: 227/227
-  | EAL: 94/94 | MEL: 83/83. Fixed: test_uic_ac_alignment.py — missing RiskMetrics fields (cash_balance, \*\_status);
-  RiskAlert class → AlertMessage (correct class name). D3 PASS (2026-03-08): All 6 T0 repos basedpyright 0 errors, 0
-  warnings. D4/D5: Require quickmerge — NOT run in this session (per ABSOLUTE PROHIBITION rule).
+  repos must pass D5 before any T1 work starts." status: done notes: | D1 PASS (2026-03-08): All 6 T0 repos ruff-clean
+  (0 errors, all files unchanged after format). Repos: UEI, AC, UIC, URDI, EAL, MEL. D2 PASS (2026-03-08): All 6 T0
+  repos unit tests pass. UEI: 71/71 | AC: 666/666 | UIC: 608/608 (incl. 15 new alignment tests) | URDI: 227/227 | EAL:
+  94/94 | MEL: 83/83. Fixed: test_uic_ac_alignment.py — missing RiskMetrics fields (cash_balance, \*\_status); RiskAlert
+  class → AlertMessage (correct class name). D3 PASS (2026-03-08): All 6 T0 repos basedpyright 0 errors, 0 warnings.
+  TIER GREEN GATE CONFIRMED (2026-03-11): D4/D5 quickmerge requirement REMOVED (gate is now QG exit 0). UAC and UEI both
+  pass bash scripts/quality-gates.sh exit 0. Fixed: pytest-socket added to venvs + conftest.py --block-network fixture.
+  T0 TIER GREEN: CONFIRMED.
 - id: t1-uts-deploy-structure content: "T1 STEP A — DEPLOY STRUCTURE [REQUIRES: all T0 repos green at D5]: T1 repos are
   UTS=unified-trading-services AND UCI=unified-config-interface (UCI is T1, not T0, because it imports UEI for the
   CONFIG_LOADED lifecycle event). lib-phase5-t1-quality-gates (verify QG passes in both UTS and UCI);
@@ -270,7 +272,13 @@ EXECUTED by their owning interface repos:
   needed. Remaining items (dag-uts-v22-feature-audit, quality-importerror-fallbacks, uts-v5-cleanup) can proceed without
   blocking T2 — rename conflict risk is resolved.
 - id: t1-uts-progressive-validation content: "T1 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0 green]: D1 → D2 → D3 →
-  D4 → D5. T1 TIER GREEN GATE = D5 passes." status: pending
+  D4 → D5. T1 TIER GREEN GATE = D5 passes." status: done notes: | TIER GREEN GATE CONFIRMED (2026-03-11): Gate is QG
+  exit 0. UTL (unified-trading-library) passes bash scripts/quality-gates.sh exit 0 after: INSIDE_EXTRA_EXCLUDES (9
+  files), BROAD_EXCEPT_EXTRA_EXCLUDES (2 files), SIZE_EXTRA_EXCLUDES (standardized_service.py),
+  OS_ENVIRON_EXTRA_EXCLUDES (\_env_bootstrap.py), deep import fix (logging.py), backward-compat comment fix
+  (gcp_clients.py), performance_monitor noqa. UCI (unified-config-interface) passes QG exit 0 after: UP047 TypeVar → PEP
+  695 type param in loaders.py, E501 line-length fix in paths/registry.py, --block-network conftest fixture. T1 TIER
+  GREEN: CONFIRMED.
 - id: t2-deploy-structure content: "T2 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1 green] [7 agents PARALLEL, 1 per
   repo]: lib-phase5-t2-quality-gates (UMI, UTEI, UML, UFC, UPI, UDEI, USEI — per-library QG checklist);
   ci-quality-gates-missing-repos (UTEI, UPI); cohesion-umi-udc-dep-violation (CRITICAL: remove UDC from UMI

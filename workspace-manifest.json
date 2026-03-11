@@ -96,225 +96,29 @@
     "unified-admin-ui": "0.1.0"
   },
   "repositories": {
-    "unified-api-contracts": {
-      "type": "library",
-      "arch_tier": "0",
-      "arch_tier_sub": "L2a",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
-      "version": "0.1.20",
-      "version_source": "pyproject.toml",
-      "merge_level": 2,
-      "dependencies": [],
-      "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
-      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
-      "cloud_build_trigger": "unified-api-contracts-build",
-      "status": "active",
-      "ci_status": "FAILING",
-      "coverage_pct": 85,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "FAILING",
-      "infra_primitives": ["normalization functions", "CanonicalTrade", "CanonicalOrderBook", "CanonicalFill"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t0"
-    },
-    "unified-internal-contracts": {
-      "type": "library",
-      "arch_tier": "0",
-      "arch_tier_sub": "L2b",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
-      "version": "0.1.2",
-      "version_source": "pyproject.toml",
-      "merge_level": 3,
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.1,<1.0.0",
-          "required": true
-        }
-      ],
-      "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
-      "status": "active",
-      "notes": "Internal message schemas, topic names, request/response/error contracts, domain/<service>/ output schemas. NO cloud SDKs. T0-L2b: may import UAC normalization canonicals; UAC must NOT import UIC. Build order: UAC (L2a, merge_level=2) must build before UIC (L2b, merge_level=3).",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 99,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "infra_primitives": ["internal message schemas", "topic names"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t0"
-    },
-    "unified-reference-data-interface": {
-      "type": "library",
-      "arch_tier": "1",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "02-data"],
+    "alerting-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "github_url": "https://github.com/IggyIkenna/alerting-service",
+      "codex_sections": ["03-observability"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 4,
+      "merge_level": 8,
       "dependencies": [
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "github_url": "https://github.com/IggyIkenna/unified-reference-data-interface",
-      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-reference-data-interface",
-      "cloud_build_trigger": "unified-reference-data-interface-build",
-      "status": "active",
-      "notes": "REST-only reference data: instrument definitions, options chains, expiry calendars, corporate actions. Phase 8 of io_interface plan.",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 87,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t1"
-    },
-    "unified-config-interface": {
-      "type": "library",
-      "arch_tier": "1",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
-      "version": "0.1.17",
-      "version_source": "pyproject.toml",
-      "merge_level": 3,
-      "dependencies": [
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "PASSING",
-      "coverage_pct": 97,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "infra_primitives": ["UnifiedCloudConfig"],
-      "github_url": "https://github.com/IggyIkenna/unified-config-interface",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t1"
-    },
-    "unified-events-interface": {
-      "type": "library",
-      "arch_tier": "0",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["03-observability", "05-infrastructure"],
-      "version": "0.2.2",
-      "version_source": "pyproject.toml",
-      "merge_level": 2,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 97,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "status": "active",
-      "infra_primitives": ["setup_events", "log_event"],
-      "github_url": "https://github.com/IggyIkenna/unified-events-interface",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t0"
-    },
-    "unified-cloud-interface": {
-      "type": "library",
-      "arch_tier": "0",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
-      "version": "0.11.6",
-      "version_source": "pyproject.toml",
-      "merge_level": 2,
-      "dependencies": [],
-      "status": "active",
-      "notes": "Cloud abstraction layer: storage, pub/sub, logging. Tier 0 pure leaf.",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 82,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "infra_primitives": [
-        "StorageClient",
-        "SecretClient",
-        "QueueClient",
-        "AnalyticsClient",
-        "CacheClient",
-        "AsyncCacheClient",
-        "ComputeClient",
-        "DataSink",
-        "DataSource",
-        "EventBus",
-        "ServiceMode",
-        "ProtocolConfig",
-        "get_storage_client",
-        "get_secret_client",
-        "get_analytics_client",
-        "get_data_sink",
-        "get_data_source",
-        "get_event_bus",
-        "get_service_mode"
-      ],
-      "github_url": "https://github.com/IggyIkenna/unified-cloud-interface",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t0"
-    },
-    "unified-trading-library": {
-      "type": "library",
-      "arch_tier": "1",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure", "06-coding-standards"],
-      "version": "0.3.167",
-      "version_source": "pyproject.toml",
-      "merge_level": 3,
-      "github_url": "https://github.com/IggyIkenna/unified-trading-library",
-      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
-      "cloud_build_trigger": "unified-trading-library-build",
-      "status": "active",
-      "dependencies": [
-        {
-          "name": "unified-cloud-interface",
+          "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
         {
           "name": "unified-config-interface",
-          "version": ">=0.1.3,<1.0.0",
+          "version": ">=0.1.0,<1.0.0",
           "required": true
         },
         {
           "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
+          "version": ">=0.1.0,<1.0.0",
           "required": true
         },
         {
@@ -323,25 +127,35 @@
           "required": true
         }
       ],
-      "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 78,
+      "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
+      "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "WIRED",
-      "infra_primitives": ["UnifiedCloudService", "CloudStorageService", "CloudPubSubService"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t1"
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "infrastructure",
+      "semver_rules_ref": "service"
     },
-    "unified-domain-client": {
-      "type": "library",
-      "arch_tier": "3",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["01-domain", "02-data", "05-infrastructure"],
-      "version": "0.1.14",
+    "batch-audit-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 5,
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["batch-audit-ui"],
+      "notes": "Audit trail, data health, compliance, and batch job monitoring API for batch-audit-ui.",
+      "github_url": "https://github.com/IggyIkenna/batch-audit-api",
+      "completion_path": "cefi",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -359,7 +173,117 @@
           "required": true
         },
         {
-          "name": "unified-api-contracts",
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_PENDING",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus"],
+        "protocol_default_set": "gcp_live"
+      },
+      "semver_rules_ref": "api"
+    },
+    "batch-audit-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "monitoring",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["03-observability", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/batch-audit-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
+    },
+    "batch-live-reconciliation-service": {
+      "type": "batch-service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 10,
+      "status": "active",
+      "cluster": "batch-services",
+      "notes": "Nightly T+1 orchestrator: replays ML\u2192strategy\u2192execution pipeline vs live events, attributes deviations per stage, writes recon reports to GCS.",
+      "github_url": "https://github.com/IggyIkenna/batch-live-reconciliation-service",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_PENDING",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
+        "protocol_default_set": "gcp_batch"
+      },
+      "semver_rules_ref": "service"
+    },
+    "client-reporting-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["01-domain", "04-architecture"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["client-reporting-ui"],
+      "proxies_service": "pnl-attribution-service",
+      "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients.",
+      "github_url": "https://github.com/IggyIkenna/client-reporting-api",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -367,26 +291,179 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-ml-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/unified-domain-client",
-      "folder_name": "unified-domain-client",
-      "notes": "TIER 3: Cloud storage I/O layer \u2014 reads/writes GCS/S3 domain data. Imports T0 (UCLI, UCI, UEI) + T1 (UTS). arch_tier corrected from 2\u21923 on 2026-02-28 per canonical DAG and codex SSOT (04-architecture/TIER-ARCHITECTURE.md).",
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 84,
+      "coverage_pct": 18,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t3"
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "semver_rules_ref": "api"
+    },
+    "client-reporting-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "analytics",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/client-reporting-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
+    },
+    "deployment-api": {
+      "type": "api-service",
+      "arch_tier": "devops",
+      "merge_level": 10,
+      "status": "active",
+      "version": "0.1.1",
+      "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
+      "dependencies": [
+        "unified-cloud-interface",
+        "unified-events-interface",
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.3,<1.0.0",
+          "required": true
+        }
+      ],
+      "completion_path": "cefi",
+      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth.",
+      "ci_status": "HAS_QG",
+      "coverage_pct": 71,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "HAS_QG",
+      "doc_standard": "api-canonical",
+      "version_source": "pyproject.toml",
+      "codex_sections": ["05-infrastructure"],
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/deployment-api",
+      "semver_rules_ref": "api"
+    },
+    "deployment-service": {
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "merge_level": 10,
+      "status": "active",
+      "version": "0.1.1",
+      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
+      "dependencies": [
+        "unified-trading-library",
+        "unified-config-interface",
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.3,<1.0.0",
+          "required": true
+        }
+      ],
+      "completion_path": "cefi",
+      "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
+      "ci_status": "PASSING",
+      "github_url": "https://github.com/IggyIkenna/deployment-service",
+      "coverage_pct": 81,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "doc_standard": "infrastructure-canonical",
+      "version_source": "pyproject.toml",
+      "codex_sections": ["05-infrastructure"],
+      "semver_rules_ref": "infra"
+    },
+    "deployment-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "merge_level": 11,
+      "status": "scaffolded",
+      "version": "0.1.0",
+      "description": "Deployment management UI \u2014 orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
+      "dependencies": ["deployment-api"],
+      "cluster": "devops-ui",
+      "completion_path": "cefi",
+      "notes": "UI split from unified-trading-deployment-v3 per ui-service-separation rule. React/TypeScript. Scaffolded 2026-02-28. After four-way split: depends on deployment-api.",
+      "ci_status": "NO_QG",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "doc_standard": "ui-canonical",
+      "version_source": "package.json",
+      "codex_sections": ["05-infrastructure"],
+      "github_url": "https://github.com/IggyIkenna/deployment-ui",
+      "semver_rules_ref": "ui"
+    },
+    "elysium-defi-lite": {
+      "type": "service",
+      "arch_tier": "4",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["01-domain", "04-architecture", "05-infrastructure"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 12,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PARTIAL",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/elysium-defi-lite",
+      "completion_path": "defi",
+      "semver_rules_ref": "service"
     },
     "execution-algo-library": {
       "type": "library",
@@ -409,382 +486,43 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0"
     },
-    "matching-engine-library": {
-      "type": "library",
-      "arch_tier": "0",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
-      "version": "0.1.3",
-      "version_source": "pyproject.toml",
-      "merge_level": 2,
+    "execution-analytics-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "analytics",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
       "dependencies": [],
-      "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 89,
+      "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "github_url": "https://github.com/IggyIkenna/matching-engine-library",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t0"
-    },
-    "unified-feature-calculator-library": {
-      "type": "library",
-      "arch_tier": "2",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 4,
-      "dependencies": [
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.3.42,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 95,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/unified-feature-calculator-library",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t2"
-    },
-    "unified-market-interface": {
-      "type": "library",
-      "arch_tier": "2",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["02-data", "05-infrastructure"],
-      "version": "0.3.2",
-      "version_source": "pyproject.toml",
-      "merge_level": 5,
-      "known_violations": [],
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 40,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "PARTIAL",
-      "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "github_url": "https://github.com/IggyIkenna/unified-market-interface",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t2"
-    },
-    "unified-ml-interface": {
-      "type": "library",
-      "arch_tier": "2",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["05-infrastructure"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 5,
-      "dependencies": [
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 96,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "github_url": "https://github.com/IggyIkenna/unified-ml-interface",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t2"
-    },
-    "unified-trade-execution-interface": {
-      "type": "library",
-      "arch_tier": "2",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
-      "version": "0.1.1",
-      "version_source": "pyproject.toml",
-      "merge_level": 5,
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-sports-execution-interface",
-          "version": ">=0.1.1,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 89,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "status": "active",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "github_url": "https://github.com/IggyIkenna/unified-trade-execution-interface",
-      "completion_path": "core",
-      "semver_rules_ref": "library-t2"
-    },
-    "unified-sports-execution-interface": {
-      "type": "library",
-      "arch_tier": "1",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
-      "version": "0.1.1",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "status": "scaffolded",
-      "completion_path": "sports",
-      "notes": "Scaffolded 2026-02-28. BaseSportsAdapter protocol exists. Betfair (CLOB via UTEI) and Pinnacle adapters planned v1.0.0. NOT required for CeFi/TradFi completion.",
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.1,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.2,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 76,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "NEEDS_WORK",
-      "github_url": "https://github.com/IggyIkenna/unified-sports-execution-interface",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "semver_rules_ref": "library-t1"
-    },
-    "unified-defi-execution-interface": {
-      "type": "library",
-      "arch_tier": "2",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
-      "version": "0.1.1",
-      "version_source": "pyproject.toml",
-      "merge_level": 6,
-      "dependencies": [
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.20,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 88,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/unified-defi-execution-interface",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "completion_path": "defi",
-      "semver_rules_ref": "library-t2"
-    },
-    "unified-position-interface": {
-      "type": "library",
-      "arch_tier": "2",
-      "doc_standard": "library-canonical",
-      "codex_sections": ["04-architecture", "05-infrastructure"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 5,
-      "status": "future",
-      "notes": "Not yet built. Planned: per-client position feeds, normalises exchange-native format to canonical CanonicalPosition. Consumers: execution-service, position-balance-monitor-service.",
-      "dependencies": [
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 90,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "github_url": "https://github.com/IggyIkenna/unified-position-interface",
-      "infra_primitives": ["venue adapters", "domain ABCs"],
-      "completion_path": "core",
-      "semver_rules_ref": "library-t2"
-    },
-    "instruments-service": {
-      "type": "service",
-      "arch_tier": "service",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
-      "version": "0.1.22",
-      "version_source": "pyproject.toml",
-      "merge_level": 7,
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-domain-client",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-market-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-reference-data-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "PASSING",
-      "coverage_pct": 53,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PASSING",
-      "notes": "Now includes sports reference data functionality (merged from sports-reference-data-service 2026-03-01).",
       "status": "active",
-      "service_declaration": {
-        "mode": "batch",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
-        "protocol_default_set": "gcp_batch"
-      },
-      "github_url": "https://github.com/IggyIkenna/instruments-service",
-      "completion_path": "core",
-      "semver_rules_ref": "service"
+      "github_url": "https://github.com/IggyIkenna/execution-analytics-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
     },
-    "market-tick-data-service": {
-      "type": "service",
-      "arch_tier": "service",
+    "execution-results-api": {
+      "type": "api-service",
+      "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
-      "version": "0.3.1",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 8,
-      "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["trading-analytics-ui", "live-health-monitor-ui"],
+      "proxies_service": "execution-service",
+      "notes": "FastAPI + OAuth middleware. HTTP boundary between execution-service and UIs. P0: replace dict[str, Any] at all API boundaries with TypedDict/Pydantic (p0-exec-results-api-types).",
+      "github_url": "https://github.com/IggyIkenna/execution-results-api",
+      "completion_path": "cefi",
       "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
@@ -801,52 +539,48 @@
           "required": true
         },
         {
-          "name": "unified-domain-client",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-market-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-sports-execution-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 16,
+      "coverage_pct": 66,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
+      "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_READY",
-      "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
-      "completion_path": "cefi",
-      "semver_rules_ref": "service"
+      "semver_rules_ref": "api"
     },
-    "market-data-processing-service": {
+    "execution-service": {
       "type": "service",
       "arch_tier": "service",
+      "folder_name": "execution-service",
+      "github_url": "https://github.com/IggyIkenna/execution-service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
-      "version": "0.2.0",
+      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
+      "version": "0.1.1",
       "version_source": "pyproject.toml",
       "merge_level": 8,
+      "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
           "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -856,30 +590,59 @@
           "required": true
         },
         {
-          "name": "unified-domain-client",
+          "name": "unified-market-interface",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trade-execution-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "execution-algo-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "matching-engine-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.1,<1.0.0",
           "required": true
         },
         {
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-defi-execution-interface",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 39,
+      "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "PARTIAL",
-      "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01).",
+      "quality_gate_status": "BASELINE_READY",
+      "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters.",
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "capabilities_needed": ["event_bus", "cache", "config_store"],
         "protocol_default_set": "gcp_live"
       },
-      "github_url": "https://github.com/IggyIkenna/market-data-processing-service",
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
@@ -944,6 +707,120 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
+    "features-commodity-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "completion_path": "tradfi",
+      "notes": "Config-driven commodity fundamental factor engine. FACTOR_REGISTRY + IC calibration + 4-state HMM regime detection + CommoditySignal composition and publishing. EIA/CFTC/BakerHughes/OpenMeteo/Yahoo data sources.",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.3,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<2.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "github_url": "https://github.com/IggyIkenna/features-commodity-service",
+      "ci_status": "NOT_CONFIGURED",
+      "coverage_pct": 3,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "NOT_CONFIGURED",
+      "status": "scaffolded",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
+        "protocol_default_set": "gcp_batch"
+      },
+      "semver_rules_ref": "service"
+    },
+    "features-cross-instrument-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.1.1",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "status": "active",
+      "completion_path": "cefi",
+      "notes": "Cross-instrument feature aggregation service. Computes regime features (HMM volatility regimes, correlation regimes), cross-venue spreads, realized vs implied vol, cross-asset correlation. Aggregates outputs from features-delta-one-service, features-volatility-service, and market-data-processing-service.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 65,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PARTIAL",
+      "github_url": "https://github.com/IggyIkenna/features-cross-instrument-service",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
+        "protocol_default_set": "gcp_batch"
+      },
+      "semver_rules_ref": "service"
+    },
     "features-delta-one-service": {
       "type": "service",
       "arch_tier": "service",
@@ -995,14 +872,16 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
-    "features-volatility-service": {
+    "features-multi-timeframe-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": ["02-data", "03-observability", "04-architecture"],
-      "version": "0.2.0",
+      "version": "0.1.1",
       "version_source": "pyproject.toml",
       "merge_level": 8,
+      "completion_path": "cefi",
+      "notes": "Multi-timeframe feature aggregation service (Layer 3b). Symmetric counterpart to features-cross-instrument-service. Computes cross-TF alignment, structure context, vol compression, and session context features by aggregating delta-one features at 5m/15m/1h/4h/1d per instrument.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1020,17 +899,7 @@
           "required": true
         },
         {
-          "name": "unified-domain-client",
-          "version": ">=0.1.12,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -1040,20 +909,19 @@
           "required": true
         }
       ],
+      "github_url": "https://github.com/IggyIkenna/features-multi-timeframe-service",
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 35,
+      "coverage_pct": 57,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
+      "quality_gate_status": "NOT_CONFIGURED",
       "status": "active",
       "service_declaration": {
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
-      "github_url": "https://github.com/IggyIkenna/features-volatility-service",
-      "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
     "features-onchain-service": {
@@ -1179,16 +1047,14 @@
       },
       "semver_rules_ref": "service"
     },
-    "features-multi-timeframe-service": {
+    "features-volatility-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
       "codex_sections": ["02-data", "03-observability", "04-architecture"],
-      "version": "0.1.1",
+      "version": "0.2.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
-      "completion_path": "cefi",
-      "notes": "Multi-timeframe feature aggregation service (Layer 3b). Symmetric counterpart to features-cross-instrument-service. Computes cross-TF alignment, structure context, vol compression, and session context features by aggregating delta-one features at 5m/15m/1h/4h/1d per instrument.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1206,61 +1072,13 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-feature-calculator",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "github_url": "https://github.com/IggyIkenna/features-multi-timeframe-service",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 57,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "quality_gate_status": "NOT_CONFIGURED",
-      "status": "active",
-      "service_declaration": {
-        "mode": "batch",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
-        "protocol_default_set": "gcp_batch"
-      },
-      "semver_rules_ref": "service"
-    },
-    "features-cross-instrument-service": {
-      "type": "service",
-      "arch_tier": "service",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
-      "version": "0.1.1",
-      "version_source": "pyproject.toml",
-      "merge_level": 8,
-      "status": "active",
-      "completion_path": "cefi",
-      "notes": "Cross-instrument feature aggregation service. Computes regime features (HMM volatility regimes, correlation regimes), cross-venue spreads, realized vs implied vol, cross-asset correlation. Aggregates outputs from features-delta-one-service, features-volatility-service, and market-data-processing-service.",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
+          "name": "unified-domain-client",
+          "version": ">=0.1.12,<1.0.0",
           "required": true
         },
         {
           "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
+          "version": ">=0.11.6,<1.0.0",
           "required": true
         },
         {
@@ -1270,32 +1088,177 @@
         },
         {
           "name": "unified-feature-calculator",
-          "version": ">=0.2.0,<1.0.0",
+          "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 65,
+      "coverage_pct": 35,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
+      "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "PARTIAL",
-      "github_url": "https://github.com/IggyIkenna/features-cross-instrument-service",
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
       "service_declaration": {
         "mode": "batch",
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
+      "github_url": "https://github.com/IggyIkenna/features-volatility-service",
+      "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
-    "ml-training-service": {
+    "ibkr-gateway-infra": {
+      "type": "infrastructure",
+      "arch_tier": "infrastructure",
+      "doc_standard": "infrastructure-canonical",
+      "codex_sections": ["05-infrastructure"],
+      "version": "0.1.0",
+      "version_source": "version-file",
+      "merge_level": 12,
+      "dependencies": [],
+      "status": "active",
+      "completion_path": "tradfi",
+      "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
+      "ci_status": "PASSING",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "none",
+      "skipped_gates": ["terraform-validate"],
+      "quality_gate_status": "EXEMPT",
+      "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
+      "semver_rules_ref": "infra"
+    },
+    "instruments-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
+      "version": "0.1.22",
+      "version_source": "pyproject.toml",
+      "merge_level": 7,
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-reference-data-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "PASSING",
+      "coverage_pct": 53,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "notes": "Now includes sports reference data functionality (merged from sports-reference-data-service 2026-03-01).",
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
+        "protocol_default_set": "gcp_batch"
+      },
+      "github_url": "https://github.com/IggyIkenna/instruments-service",
+      "completion_path": "core",
+      "semver_rules_ref": "service"
+    },
+    "live-health-monitor-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "hybrid",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["03-observability", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "notes": "Hybrid: monitoring dashboard + manual trading control (calls execution-service /manual/instruction)",
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/live-health-monitor-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
+    },
+    "logs-dashboard-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "monitoring",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["03-observability", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/logs-dashboard-ui",
+      "completion_path": "infrastructure",
+      "semver_rules_ref": "ui"
+    },
+    "market-data-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 8,
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["trading-analytics-ui", "batch-audit-ui"],
+      "proxies_service": "market-data-processing-service",
+      "notes": "FastAPI + OAuth middleware. Exposes processed market data to UIs. SSE endpoint for live price streaming.",
+      "github_url": "https://github.com/IggyIkenna/market-data-api",
+      "completion_path": "cefi",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1308,7 +1271,35 @@
           "required": true
         },
         {
-          "name": "unified-domain-client",
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 77,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "NO_TESTS",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "semver_rules_ref": "api"
+    },
+    "market-data-processing-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.2.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -1318,26 +1309,168 @@
           "required": true
         },
         {
-          "name": "unified-ml-interface",
+          "name": "unified-domain-client",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 35,
+      "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
       "quality_gate_status": "PARTIAL",
+      "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01).",
       "status": "active",
       "service_declaration": {
-        "mode": "batch",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
-        "protocol_default_set": "gcp_batch"
+        "mode": "live",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
       },
-      "github_url": "https://github.com/IggyIkenna/ml-training-service",
+      "github_url": "https://github.com/IggyIkenna/market-data-processing-service",
       "completion_path": "cefi",
       "semver_rules_ref": "service"
+    },
+    "market-tick-data-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.3.1",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 16,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "cefi",
+      "semver_rules_ref": "service"
+    },
+    "matching-engine-library": {
+      "type": "library",
+      "arch_tier": "0",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "version": "0.1.3",
+      "version_source": "pyproject.toml",
+      "merge_level": 2,
+      "dependencies": [],
+      "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 89,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/matching-engine-library",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t0"
+    },
+    "ml-inference-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["ml-training-ui"],
+      "proxies_service": "ml-inference-service",
+      "notes": "FastAPI service fronting ml-inference-service \u2014 model registry and prediction reads.",
+      "github_url": "https://github.com/IggyIkenna/ml-inference-api",
+      "completion_path": "ml",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_PENDING",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "semver_rules_ref": "api"
     },
     "ml-inference-service": {
       "type": "service",
@@ -1400,23 +1533,29 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
-    "strategy-service": {
-      "type": "service",
-      "arch_tier": "service",
+    "ml-training-api": {
+      "type": "api-service",
+      "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "merge_level": 8,
-      "deployment_note": "One instance per client (separately managed accounts)",
+      "merge_level": 9,
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": ["ml-training-ui"],
+      "proxies_service": "ml-training-service",
+      "notes": "REST API fronting the ml-training-service 3-phase batch pipeline.",
+      "github_url": "https://github.com/IggyIkenna/ml-training-api",
+      "completion_path": "ml",
       "dependencies": [
         {
-          "name": "unified-config-interface",
+          "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
         {
-          "name": "unified-domain-client",
+          "name": "unified-config-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -1424,56 +1563,27 @@
           "name": "unified-events-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.4.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.1,<1.0.0",
-          "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 72,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
+      "ci_status": "BASELINE_PENDING",
+      "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "notes": "Now includes sports strategy functionality (merged from sports-strategy-service 2026-03-01). Supports arbitrage + ML strategy modes for sports.",
-      "status": "active",
+      "quality_gate_status": "BASELINE_PENDING",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "capabilities_needed": ["data_source", "event_bus"],
         "protocol_default_set": "gcp_live"
       },
-      "github_url": "https://github.com/IggyIkenna/strategy-service",
-      "completion_path": "cefi",
-      "semver_rules_ref": "service"
+      "semver_rules_ref": "api"
     },
-    "execution-service": {
+    "ml-training-service": {
       "type": "service",
       "arch_tier": "service",
-      "folder_name": "execution-service",
-      "github_url": "https://github.com/IggyIkenna/execution-service",
       "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
-      "version": "0.1.1",
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
       "merge_level": 8,
-      "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1496,107 +1606,68 @@
           "required": true
         },
         {
-          "name": "unified-market-interface",
+          "name": "unified-ml-interface",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trade-execution-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "execution-algo-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-sports-execution-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "matching-engine-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.1,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-defi-execution-interface",
-          "version": ">=0.1.1,<1.0.0",
           "required": true
         }
       ],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 26,
+      "coverage_pct": 35,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters.",
+      "quality_gate_status": "PARTIAL",
       "status": "active",
       "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["event_bus", "cache", "config_store"],
-        "protocol_default_set": "gcp_live"
+        "mode": "batch",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
+        "protocol_default_set": "gcp_batch"
       },
+      "github_url": "https://github.com/IggyIkenna/ml-training-service",
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
-    "alerting-service": {
-      "type": "service",
-      "arch_tier": "service",
-      "doc_standard": "service-canonical",
-      "github_url": "https://github.com/IggyIkenna/alerting-service",
-      "codex_sections": ["03-observability"],
+    "ml-training-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "control",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["06-coding-standards"],
       "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 8,
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
+      "version_source": "package.json",
+      "merge_level": 11,
+      "dependencies": [],
       "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 87,
+      "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
+      "quality_gate_status": "PASSING",
       "status": "active",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
-        "protocol_default_set": "gcp_live"
-      },
-      "completion_path": "infrastructure",
-      "semver_rules_ref": "service"
+      "github_url": "https://github.com/IggyIkenna/ml-training-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
+    },
+    "onboarding-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "control",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/onboarding-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1762,6 +1833,114 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
+    "settlement-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "control",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "notes": "Settlement UI \u2014 empty directory, not yet implemented.",
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/settlement-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
+    },
+    "strategy-service": {
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 8,
+      "deployment_note": "One instance per client (separately managed accounts)",
+      "dependencies": [
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 72,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "notes": "Now includes sports strategy functionality (merged from sports-strategy-service 2026-03-01). Supports arbitrage + ML strategy modes for sports.",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/strategy-service",
+      "completion_path": "cefi",
+      "semver_rules_ref": "service"
+    },
+    "strategy-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "control",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "status": "active",
+      "cluster": "api-services",
+      "notes": "Strategy configuration and deployment UI. Calls strategy-service via FastAPI. OAuth (TRADER role).",
+      "github_url": "https://github.com/IggyIkenna/strategy-ui",
+      "completion_path": "cefi",
+      "dependencies": [],
+      "ci_status": "NO_QG",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "semver_rules_ref": "ui"
+    },
     "strategy-validation-service": {
       "type": "service",
       "arch_tier": "service",
@@ -1804,336 +1983,6 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service"
     },
-    "execution-results-api": {
-      "type": "api-service",
-      "arch_tier": "api",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["04-architecture", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 9,
-      "status": "active",
-      "cluster": "api-services",
-      "serves_ui": ["trading-analytics-ui", "live-health-monitor-ui"],
-      "proxies_service": "execution-service",
-      "notes": "FastAPI + OAuth middleware. HTTP boundary between execution-service and UIs. P0: replace dict[str, Any] at all API boundaries with TypedDict/Pydantic (p0-exec-results-api-types).",
-      "github_url": "https://github.com/IggyIkenna/execution-results-api",
-      "completion_path": "cefi",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 66,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "event_bus", "cache"],
-        "protocol_default_set": "gcp_live"
-      },
-      "semver_rules_ref": "api"
-    },
-    "market-data-api": {
-      "type": "api-service",
-      "arch_tier": "api",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "04-architecture"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 9,
-      "status": "active",
-      "cluster": "api-services",
-      "serves_ui": ["trading-analytics-ui", "batch-audit-ui"],
-      "proxies_service": "market-data-processing-service",
-      "notes": "FastAPI + OAuth middleware. Exposes processed market data to UIs. SSE endpoint for live price streaming.",
-      "github_url": "https://github.com/IggyIkenna/market-data-api",
-      "completion_path": "cefi",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 77,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "NO_TESTS",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "event_bus", "cache"],
-        "protocol_default_set": "gcp_live"
-      },
-      "semver_rules_ref": "api"
-    },
-    "client-reporting-api": {
-      "type": "api-service",
-      "arch_tier": "api",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "04-architecture"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 9,
-      "status": "active",
-      "cluster": "api-services",
-      "serves_ui": ["client-reporting-ui"],
-      "proxies_service": "pnl-attribution-service",
-      "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients.",
-      "github_url": "https://github.com/IggyIkenna/client-reporting-api",
-      "completion_path": "cefi",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-internal-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 18,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_READY",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "event_bus", "cache"],
-        "protocol_default_set": "gcp_live"
-      },
-      "semver_rules_ref": "api"
-    },
-    "strategy-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "control",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "status": "active",
-      "cluster": "api-services",
-      "notes": "Strategy configuration and deployment UI. Calls strategy-service via FastAPI. OAuth (TRADER role).",
-      "github_url": "https://github.com/IggyIkenna/strategy-ui",
-      "completion_path": "cefi",
-      "dependencies": [],
-      "ci_status": "NO_QG",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "semver_rules_ref": "ui"
-    },
-    "ibkr-gateway-infra": {
-      "type": "infrastructure",
-      "arch_tier": "infrastructure",
-      "doc_standard": "infrastructure-canonical",
-      "codex_sections": ["05-infrastructure"],
-      "version": "0.1.0",
-      "version_source": "version-file",
-      "merge_level": 12,
-      "dependencies": [],
-      "status": "active",
-      "completion_path": "tradfi",
-      "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
-      "ci_status": "PASSING",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
-      "skipped_gates": ["terraform-validate"],
-      "quality_gate_status": "EXEMPT",
-      "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
-      "semver_rules_ref": "infra"
-    },
-    "deployment-service": {
-      "type": "infrastructure",
-      "arch_tier": "devops",
-      "merge_level": 10,
-      "status": "active",
-      "version": "0.1.1",
-      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
-      "dependencies": [
-        "unified-trading-library",
-        "unified-config-interface",
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.4.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.3,<1.0.0",
-          "required": true
-        }
-      ],
-      "completion_path": "cefi",
-      "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "PASSING",
-      "github_url": "https://github.com/IggyIkenna/deployment-service",
-      "coverage_pct": 81,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "doc_standard": "infrastructure-canonical",
-      "version_source": "pyproject.toml",
-      "codex_sections": ["05-infrastructure"],
-      "semver_rules_ref": "infra"
-    },
-    "deployment-api": {
-      "type": "api-service",
-      "arch_tier": "devops",
-      "merge_level": 10,
-      "status": "active",
-      "version": "0.1.1",
-      "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
-      "dependencies": [
-        "unified-cloud-interface",
-        "unified-events-interface",
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.4.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.3,<1.0.0",
-          "required": true
-        }
-      ],
-      "completion_path": "cefi",
-      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth.",
-      "ci_status": "HAS_QG",
-      "coverage_pct": 71,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "HAS_QG",
-      "doc_standard": "api-canonical",
-      "version_source": "pyproject.toml",
-      "codex_sections": ["05-infrastructure"],
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["event_bus", "cache"],
-        "protocol_default_set": "gcp_live"
-      },
-      "github_url": "https://github.com/IggyIkenna/deployment-api",
-      "semver_rules_ref": "api"
-    },
-    "deployment-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "merge_level": 11,
-      "status": "scaffolded",
-      "version": "0.1.0",
-      "description": "Deployment management UI \u2014 orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
-      "dependencies": ["deployment-api"],
-      "cluster": "devops-ui",
-      "completion_path": "cefi",
-      "notes": "UI split from unified-trading-deployment-v3 per ui-service-separation rule. React/TypeScript. Scaffolded 2026-02-28. After four-way split: depends on deployment-api.",
-      "ci_status": "NO_QG",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "doc_standard": "ui-canonical",
-      "version_source": "package.json",
-      "codex_sections": ["05-infrastructure"],
-      "github_url": "https://github.com/IggyIkenna/deployment-ui",
-      "semver_rules_ref": "ui"
-    },
-    "unified-admin-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "merge_level": 11,
-      "status": "active",
-      "version": "0.1.0",
-      "description": "npm workspace monorepo \u2014 shared packages/core (@unified-admin/core) with components, hooks, auth, api-client. Centralises UI boilerplate from 11 existing UI repos.",
-      "dependencies": [],
-      "cluster": "admin-ui",
-      "completion_path": "core",
-      "notes": "Created 2026-03-10. npm workspaces (Node 22 LTS). TypeScript strict mode, ESLint zero-warnings, Vitest >80% coverage, Playwright smoke. No Python tooling (no uv, no basedpyright, no pytest). Repo count: 59 -> 60.",
-      "ci_status": "HAS_QG",
-      "coverage_pct": 100,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "doc_standard": "ui-canonical",
-      "version_source": "package.json",
-      "codex_sections": ["05-infrastructure"],
-      "github_url": "https://github.com/IggyIkenna/unified-admin-ui",
-      "semver_rules_ref": "ui"
-    },
     "system-integration-tests": {
       "type": "test-harness",
       "arch_tier": "integration",
@@ -2155,319 +2004,6 @@
       "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "github_url": "https://github.com/IggyIkenna/system-integration-tests",
       "semver_rules_ref": "infra"
-    },
-    "unified-trading-codex": {
-      "type": "infrastructure",
-      "arch_tier": "infrastructure",
-      "doc_standard": "infrastructure-canonical",
-      "codex_sections": [],
-      "version": "0.1.0",
-      "version_source": "manual",
-      "merge_level": 1,
-      "dependencies": ["unified-trading-pm"],
-      "notes": "Standards & codex repo. Coding standards, architecture docs, quality gate templates. Depends on PM for workspace-manifest.json, setup.sh template, cursor rules. CI infrastructure dep for ALL repos.",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 0,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
-      "skipped_gates": [],
-      "quality_gate_status": "NO_TESTS",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/unified-trading-codex",
-      "completion_path": "infrastructure",
-      "semver_rules_ref": "infra"
-    },
-    "batch-audit-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "monitoring",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["03-observability", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/batch-audit-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "trading-analytics-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "analytics",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/trading-analytics-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "live-health-monitor-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "hybrid",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["03-observability", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "notes": "Hybrid: monitoring dashboard + manual trading control (calls execution-service /manual/instruction)",
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/live-health-monitor-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "client-reporting-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "analytics",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/client-reporting-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "logs-dashboard-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "monitoring",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["03-observability", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/logs-dashboard-ui",
-      "completion_path": "infrastructure",
-      "semver_rules_ref": "ui"
-    },
-    "onboarding-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "control",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/onboarding-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "settlement-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "control",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "notes": "Settlement UI \u2014 empty directory, not yet implemented.",
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/settlement-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "unified-trading-pm": {
-      "type": "devops",
-      "arch_tier": "devops",
-      "merge_level": 0,
-      "status": "active",
-      "version": "1.2.0",
-      "description": "Project management SSOT \u2014 workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
-      "dependencies": [],
-      "completion_path": "all",
-      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": 93,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
-      "skipped_gates": [],
-      "quality_gate_status": "NO_TESTS",
-      "doc_standard": "infrastructure-canonical",
-      "version_source": "pyproject.toml",
-      "codex_sections": [],
-      "github_url": "https://github.com/IggyIkenna/unified-trading-pm",
-      "semver_rules_ref": "infra"
-    },
-    "unified-trading-ui-auth": {
-      "type": "library",
-      "arch_tier": "ui",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "status": "active",
-      "description": "Shared Google OAuth auth library for all Unified Trading UIs. Provides GoogleAuth, RequireAuth, authFetch, useAuthToken.",
-      "dependencies": [],
-      "ci_status": "NO_QG",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "none",
-      "skipped_gates": [],
-      "quality_gate_status": "EXEMPT",
-      "infra_primitives": ["GoogleAuth", "RequireAuth", "authFetch", "useAuthToken"],
-      "github_url": "https://github.com/IggyIkenna/unified-trading-ui-auth",
-      "completion_path": "core",
-      "semver_rules_ref": "ui"
-    },
-    "execution-analytics-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "analytics",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["01-domain", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/execution-analytics-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "ml-training-ui": {
-      "type": "ui",
-      "arch_tier": "ui",
-      "ui_type": "control",
-      "doc_standard": "ui-canonical",
-      "codex_sections": ["06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "package.json",
-      "merge_level": 11,
-      "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
-      "coverage_pct": "N/A",
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "PASSING",
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/ml-training-ui",
-      "completion_path": "cefi",
-      "semver_rules_ref": "ui"
-    },
-    "features-commodity-service": {
-      "type": "service",
-      "arch_tier": "service",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["02-data", "03-observability", "04-architecture"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 8,
-      "completion_path": "tradfi",
-      "notes": "Config-driven commodity fundamental factor engine. FACTOR_REGISTRY + IC calibration + 4-state HMM regime detection + CommoditySignal composition and publishing. EIA/CFTC/BakerHughes/OpenMeteo/Yahoo data sources.",
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.4.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.3,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<2.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-feature-calculator",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "github_url": "https://github.com/IggyIkenna/features-commodity-service",
-      "ci_status": "NOT_CONFIGURED",
-      "coverage_pct": 3,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "NOT_CONFIGURED",
-      "status": "scaffolded",
-      "service_declaration": {
-        "mode": "batch",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
-        "protocol_default_set": "gcp_batch"
-      },
-      "semver_rules_ref": "service"
     },
     "trading-agent-service": {
       "type": "service",
@@ -2521,97 +2057,6 @@
       },
       "semver_rules_ref": "service"
     },
-    "ml-inference-api": {
-      "type": "api-service",
-      "arch_tier": "api",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["04-architecture", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 9,
-      "status": "active",
-      "cluster": "api-services",
-      "serves_ui": ["ml-training-ui"],
-      "proxies_service": "ml-inference-service",
-      "notes": "FastAPI service fronting ml-inference-service \u2014 model registry and prediction reads.",
-      "github_url": "https://github.com/IggyIkenna/ml-inference-api",
-      "completion_path": "ml",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_PENDING",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_PENDING",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "event_bus", "cache"],
-        "protocol_default_set": "gcp_live"
-      },
-      "semver_rules_ref": "api"
-    },
-    "ml-training-api": {
-      "type": "api-service",
-      "arch_tier": "api",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["04-architecture", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 9,
-      "status": "active",
-      "cluster": "api-services",
-      "serves_ui": ["ml-training-ui"],
-      "proxies_service": "ml-training-service",
-      "notes": "REST API fronting the ml-training-service 3-phase batch pipeline.",
-      "github_url": "https://github.com/IggyIkenna/ml-training-api",
-      "completion_path": "ml",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_PENDING",
-      "testing_level": "unit",
-      "skipped_gates": [],
-      "quality_gate_status": "BASELINE_PENDING",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "event_bus"],
-        "protocol_default_set": "gcp_live"
-      },
-      "semver_rules_ref": "api"
-    },
     "trading-analytics-api": {
       "type": "api-service",
       "arch_tier": "api",
@@ -2655,66 +2100,188 @@
       },
       "semver_rules_ref": "api"
     },
-    "batch-audit-api": {
-      "type": "api-service",
-      "arch_tier": "api",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["04-architecture", "06-coding-standards"],
+    "trading-analytics-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "analytics",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 9,
-      "status": "active",
-      "cluster": "api-services",
-      "serves_ui": ["batch-audit-ui"],
-      "notes": "Audit trail, data health, compliance, and batch job monitoring API for batch-audit-ui.",
-      "github_url": "https://github.com/IggyIkenna/batch-audit-api",
-      "completion_path": "cefi",
-      "dependencies": [
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_PENDING",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_PENDING",
-      "service_declaration": {
-        "mode": "live",
-        "capabilities_needed": ["data_source", "event_bus"],
-        "protocol_default_set": "gcp_live"
-      },
-      "semver_rules_ref": "api"
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/trading-analytics-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui"
     },
-    "batch-live-reconciliation-service": {
-      "type": "batch-service",
-      "arch_tier": "service",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["04-architecture", "06-coding-standards"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "merge_level": 10,
+    "unified-admin-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "merge_level": 11,
       "status": "active",
-      "cluster": "batch-services",
-      "notes": "Nightly T+1 orchestrator: replays ML\u2192strategy\u2192execution pipeline vs live events, attributes deviations per stage, writes recon reports to GCS.",
-      "github_url": "https://github.com/IggyIkenna/batch-live-reconciliation-service",
-      "completion_path": "cefi",
+      "version": "0.1.0",
+      "description": "npm workspace monorepo \u2014 shared packages/core (@unified-admin/core) with components, hooks, auth, api-client. Centralises UI boilerplate from 11 existing UI repos.",
+      "dependencies": [],
+      "cluster": "admin-ui",
+      "completion_path": "core",
+      "notes": "Created 2026-03-10. npm workspaces (Node 22 LTS). TypeScript strict mode, ESLint zero-warnings, Vitest >80% coverage, Playwright smoke. No Python tooling (no uv, no basedpyright, no pytest). Repo count: 59 -> 60.",
+      "ci_status": "HAS_QG",
+      "coverage_pct": 100,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "doc_standard": "ui-canonical",
+      "version_source": "package.json",
+      "codex_sections": ["05-infrastructure"],
+      "github_url": "https://github.com/IggyIkenna/unified-admin-ui",
+      "semver_rules_ref": "ui"
+    },
+    "unified-api-contracts": {
+      "type": "library",
+      "arch_tier": "0",
+      "arch_tier_sub": "L2a",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "version": "0.1.20",
+      "version_source": "pyproject.toml",
+      "merge_level": 2,
+      "dependencies": [],
+      "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
+      "cloud_build_trigger": "unified-api-contracts-build",
+      "status": "active",
+      "ci_status": "FAILING",
+      "coverage_pct": 85,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "FAILING",
+      "infra_primitives": ["normalization functions", "CanonicalTrade", "CanonicalOrderBook", "CanonicalFill"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t0"
+    },
+    "unified-cloud-interface": {
+      "type": "library",
+      "arch_tier": "0",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "version": "0.11.6",
+      "version_source": "pyproject.toml",
+      "merge_level": 2,
+      "dependencies": [],
+      "status": "active",
+      "notes": "Cloud abstraction layer: storage, pub/sub, logging. Tier 0 pure leaf.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 82,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": [
+        "StorageClient",
+        "SecretClient",
+        "QueueClient",
+        "AnalyticsClient",
+        "CacheClient",
+        "AsyncCacheClient",
+        "ComputeClient",
+        "DataSink",
+        "DataSource",
+        "EventBus",
+        "ServiceMode",
+        "ProtocolConfig",
+        "get_storage_client",
+        "get_secret_client",
+        "get_analytics_client",
+        "get_data_sink",
+        "get_data_source",
+        "get_event_bus",
+        "get_service_mode"
+      ],
+      "github_url": "https://github.com/IggyIkenna/unified-cloud-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t0"
+    },
+    "unified-config-interface": {
+      "type": "library",
+      "arch_tier": "1",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "version": "0.1.17",
+      "version_source": "pyproject.toml",
+      "merge_level": 3,
+      "dependencies": [
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "PASSING",
+      "coverage_pct": 97,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "infra_primitives": ["UnifiedCloudConfig"],
+      "github_url": "https://github.com/IggyIkenna/unified-config-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t1"
+    },
+    "unified-defi-execution-interface": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "version": "0.1.1",
+      "version_source": "pyproject.toml",
+      "merge_level": 6,
+      "dependencies": [
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 88,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-defi-execution-interface",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "completion_path": "defi",
+      "semver_rules_ref": "library-t2"
+    },
+    "unified-domain-client": {
+      "type": "library",
+      "arch_tier": "3",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["01-domain", "02-data", "05-infrastructure"],
+      "version": "0.1.14",
+      "version_source": "pyproject.toml",
+      "merge_level": 5,
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -2732,21 +2299,494 @@
           "required": true
         },
         {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-domain-client",
+      "folder_name": "unified-domain-client",
+      "notes": "TIER 3: Cloud storage I/O layer \u2014 reads/writes GCS/S3 domain data. Imports T0 (UCLI, UCI, UEI) + T1 (UTS). arch_tier corrected from 2\u21923 on 2026-02-28 per canonical DAG and codex SSOT (04-architecture/TIER-ARCHITECTURE.md).",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 84,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t3"
+    },
+    "unified-events-interface": {
+      "type": "library",
+      "arch_tier": "0",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["03-observability", "05-infrastructure"],
+      "version": "0.2.2",
+      "version_source": "pyproject.toml",
+      "merge_level": 2,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 97,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "infra_primitives": ["setup_events", "log_event"],
+      "github_url": "https://github.com/IggyIkenna/unified-events-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t0"
+    },
+    "unified-feature-calculator-library": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.42,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 95,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-feature-calculator-library",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2"
+    },
+    "unified-internal-contracts": {
+      "type": "library",
+      "arch_tier": "0",
+      "arch_tier_sub": "L2b",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "version": "0.1.2",
+      "version_source": "pyproject.toml",
+      "merge_level": 3,
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
+        }
+      ],
+      "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
+      "status": "active",
+      "notes": "Internal message schemas, topic names, request/response/error contracts, domain/<service>/ output schemas. NO cloud SDKs. T0-L2b: may import UAC normalization canonicals; UAC must NOT import UIC. Build order: UAC (L2a, merge_level=2) must build before UIC (L2b, merge_level=3).",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 99,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": ["internal message schemas", "topic names"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t0"
+    },
+    "unified-market-interface": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["02-data", "05-infrastructure"],
+      "version": "0.3.2",
+      "version_source": "pyproject.toml",
+      "merge_level": 5,
+      "known_violations": [],
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
           "name": "unified-events-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
-      "ci_status": "BASELINE_PENDING",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 40,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "PARTIAL",
+      "status": "active",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/unified-market-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2"
+    },
+    "unified-ml-interface": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 5,
+      "dependencies": [
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 96,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/unified-ml-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2"
+    },
+    "unified-position-interface": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 5,
+      "status": "future",
+      "notes": "Not yet built. Planned: per-client position feeds, normalises exchange-native format to canonical CanonicalPosition. Consumers: execution-service, position-balance-monitor-service.",
+      "dependencies": [
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 90,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "github_url": "https://github.com/IggyIkenna/unified-position-interface",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2"
+    },
+    "unified-reference-data-interface": {
+      "type": "library",
+      "arch_tier": "1",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure", "02-data"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "merge_level": 4,
+      "dependencies": [
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "github_url": "https://github.com/IggyIkenna/unified-reference-data-interface",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-reference-data-interface",
+      "cloud_build_trigger": "unified-reference-data-interface-build",
+      "status": "active",
+      "notes": "REST-only reference data: instrument definitions, options chains, expiry calendars, corporate actions. Phase 8 of io_interface plan.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 87,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t1"
+    },
+    "unified-sports-execution-interface": {
+      "type": "library",
+      "arch_tier": "1",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "version": "0.1.1",
+      "version_source": "pyproject.toml",
+      "merge_level": 6,
+      "status": "scaffolded",
+      "completion_path": "sports",
+      "notes": "Scaffolded 2026-02-28. BaseSportsAdapter protocol exists. Betfair (CLOB via UTEI) and Pinnacle adapters planned v1.0.0. NOT required for CeFi/TradFi completion.",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 76,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "quality_gate_status": "BASELINE_PENDING",
-      "service_declaration": {
-        "mode": "batch",
-        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
-        "protocol_default_set": "gcp_batch"
-      },
-      "semver_rules_ref": "service"
+      "quality_gate_status": "NEEDS_WORK",
+      "github_url": "https://github.com/IggyIkenna/unified-sports-execution-interface",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "semver_rules_ref": "library-t1"
+    },
+    "unified-trade-execution-interface": {
+      "type": "library",
+      "arch_tier": "2",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["04-architecture", "05-infrastructure"],
+      "version": "0.1.1",
+      "version_source": "pyproject.toml",
+      "merge_level": 5,
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 89,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "BASELINE_READY",
+      "status": "active",
+      "infra_primitives": ["venue adapters", "domain ABCs"],
+      "github_url": "https://github.com/IggyIkenna/unified-trade-execution-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2"
+    },
+    "unified-trading-codex": {
+      "type": "infrastructure",
+      "arch_tier": "infrastructure",
+      "doc_standard": "infrastructure-canonical",
+      "codex_sections": [],
+      "version": "0.1.0",
+      "version_source": "manual",
+      "merge_level": 1,
+      "dependencies": ["unified-trading-pm"],
+      "notes": "Standards & codex repo. Coding standards, architecture docs, quality gate templates. Depends on PM for workspace-manifest.json, setup.sh template, cursor rules. CI infrastructure dep for ALL repos.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "none",
+      "skipped_gates": [],
+      "quality_gate_status": "NO_TESTS",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-codex",
+      "completion_path": "infrastructure",
+      "semver_rules_ref": "infra"
+    },
+    "unified-trading-library": {
+      "type": "library",
+      "arch_tier": "1",
+      "doc_standard": "library-canonical",
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
+      "version": "0.3.167",
+      "version_source": "pyproject.toml",
+      "merge_level": 3,
+      "github_url": "https://github.com/IggyIkenna/unified-trading-library",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
+      "cloud_build_trigger": "unified-trading-library-build",
+      "status": "active",
+      "dependencies": [
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.3,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 78,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "quality_gate_status": "WIRED",
+      "infra_primitives": ["UnifiedCloudService", "CloudStorageService", "CloudPubSubService"],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t1"
+    },
+    "unified-trading-pm": {
+      "type": "devops",
+      "arch_tier": "devops",
+      "merge_level": 0,
+      "status": "active",
+      "version": "1.2.0",
+      "description": "Project management SSOT \u2014 workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
+      "dependencies": [],
+      "completion_path": "all",
+      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 93,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "none",
+      "skipped_gates": [],
+      "quality_gate_status": "NO_TESTS",
+      "doc_standard": "infrastructure-canonical",
+      "version_source": "pyproject.toml",
+      "codex_sections": [],
+      "github_url": "https://github.com/IggyIkenna/unified-trading-pm",
+      "semver_rules_ref": "infra"
+    },
+    "unified-trading-ui-auth": {
+      "type": "library",
+      "arch_tier": "ui",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 11,
+      "status": "active",
+      "description": "Shared Google OAuth auth library for all Unified Trading UIs. Provides GoogleAuth, RequireAuth, authFetch, useAuthToken.",
+      "dependencies": [],
+      "ci_status": "NO_QG",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "none",
+      "skipped_gates": [],
+      "quality_gate_status": "EXEMPT",
+      "infra_primitives": ["GoogleAuth", "RequireAuth", "authFetch", "useAuthToken"],
+      "github_url": "https://github.com/IggyIkenna/unified-trading-ui-auth",
+      "completion_path": "core",
+      "semver_rules_ref": "ui"
+    },
+    "unified-trading-ui-kit": {
+      "type": "library",
+      "arch_tier": "ui",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "merge_level": 10,
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-ui-kit",
+      "completion_path": "core",
+      "semver_rules_ref": "ui"
     }
   },
   "topologicalOrder": {

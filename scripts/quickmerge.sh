@@ -171,7 +171,7 @@ if [ "$TO_STAGING" = false ] && [ "$NO_PR" = false ]; then
 fi
 
 # NOTE: Cursor rules sync was previously done here as Stage 0 (copy-based).
-# Rules are now symlinked (.cursor/rules/ -> unified-trading-pm/cursor-rules/)
+# Rules are now symlinked (.cursor/rules/ -> unified-trading-pm/.cursor/rules/)
 # so no sync step is needed — edits go directly to the git-tracked source.
 
 REPO_DIR="$(git rev-parse --show-toplevel 2>/dev/null || echo "$REPO_ROOT")"

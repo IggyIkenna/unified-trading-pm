@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup-cursor-rules-symlink.sh — Point .cursor/rules/ at unified-trading-pm/cursor-rules/
+# setup-cursor-rules-symlink.sh — Point .cursor/rules/ at unified-trading-pm/.cursor/rules/
 #
 # After this, edits in .cursor/rules/ directly modify the PM repo's git-tracked files.
 # No sync scripts needed — changes are committed with quickmerge like any other file.
@@ -10,7 +10,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-TARGET_DIR="$WORKSPACE_ROOT/unified-trading-pm/cursor-rules"
+TARGET_DIR="$WORKSPACE_ROOT/unified-trading-pm/.cursor/rules"
 SYMLINK_PATH="$WORKSPACE_ROOT/.cursor/rules"
 
 # Ensure target directory exists
@@ -50,12 +50,12 @@ if [ -d "$SYMLINK_PATH" ] && [ ! -L "$SYMLINK_PATH" ]; then
         fname="$(basename "$f")"
         if [ ! -f "$TARGET_DIR/$fname" ]; then
             cp "$f" "$TARGET_DIR/"
-            echo "  [MOVED] $fname -> cursor-rules/ (was local-only)"
+            echo "  [MOVED] $fname -> .cursor/rules/ (was local-only)"
             ((local_only++)) || true
         fi
     done
     if [ "$local_only" -gt 0 ]; then
-        echo "  Migrated $local_only local-only rule(s) into cursor-rules/"
+        echo "  Migrated $local_only local-only rule(s) into .cursor/rules/"
     fi
 
     rm -rf "$SYMLINK_PATH"
@@ -66,8 +66,8 @@ fi
 mkdir -p "$WORKSPACE_ROOT/.cursor"
 
 # Create symlink
-ln -s "../unified-trading-pm/cursor-rules" "$SYMLINK_PATH"
-echo "[OK] Created symlink: .cursor/rules -> ../unified-trading-pm/cursor-rules"
+ln -s "../unified-trading-pm/.cursor/rules" "$SYMLINK_PATH"
+echo "[OK] Created symlink: .cursor/rules -> ../unified-trading-pm/.cursor/rules"
 
 # Verify
 echo ""

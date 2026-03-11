@@ -33,6 +33,87 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
+      - name: Checkout unified-trading-codex (readiness gate)
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          path: ../unified-trading-codex
+
+      - name: Readiness gate — block if any promoted repo has explicit fail
+        # Blocks promotion only on EXPLICIT fail status in codex readiness YAML.
+        # not_assessed = advisory (promotion proceeds). fail = hard block.
+        # Gate checks: cr4_quality_gate and dr4_sit_pass sections.
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          import pathlib
+          import sys
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging = manifest.get("staging_versions", {})
+          stable = manifest.get("versions", {})
+
+          # Repos being promoted in this run
+          promoting = [
+              r for r, sv in staging.items()
+              if not r.startswith("_") and sv != stable.get(r)
+          ]
+
+          codex = pathlib.Path("../unified-trading-codex/10-audit/repos")
+          blocked: list[str] = []
+          warnings: list[str] = []
+
+          # Minimal line-by-line gate: no yaml dep required
+          GATE_SECTIONS = {"cr4_quality_gate", "dr4_sit_pass"}
+
+          for repo in promoting:
+              yaml_file = codex / f"{repo}.yaml"
+              if not yaml_file.exists():
+                  warnings.append(f"  WARN {repo}: no codex YAML — gate skipped")
+                  continue
+
+              lines = yaml_file.read_text().splitlines()
+              active_section: str | None = None
+
+              for line in lines:
+                  stripped = line.strip()
+                  # Detect entry into a gate section
+                  for section in GATE_SECTIONS:
+                      if stripped.startswith(f"{section}:"):
+                          active_section = section
+                          break
+                  # If we're in a gate section, look for explicit fail
+                  if active_section and stripped.startswith("status:"):
+                      val = stripped.split(":", 1)[1].strip().strip("\"'")
+                      if val == "fail":
+                          blocked.append(f"  BLOCK {repo}: {active_section}=fail")
+                      active_section = None  # only check first status line per section
+
+          print("=== Readiness Gate ===")
+          print(f"Repos being promoted: {len(promoting)}")
+          for r in promoting:
+              print(f"  {r}")
+          print()
+
+          if warnings:
+              for w in warnings:
+                  print(w)
+              print()
+
+          if blocked:
+              print("BLOCKED — explicit readiness failures (fix in codex/10-audit/repos/{{repo}}.yaml):")
+              for b in blocked:
+                  print(b)
+              print()
+              print("To override: set cr4_quality_gate.status or dr4_sit_pass.status to 'partial' or 'not_assessed'.")
+              sys.exit(1)
+
+          print("OK: No explicit readiness failures. Promotion proceeding.")
+          PYEOF
+
       - name: Merge staging → main for all repos with staging changes
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}

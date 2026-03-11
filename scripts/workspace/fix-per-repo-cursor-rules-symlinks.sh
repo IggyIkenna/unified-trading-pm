@@ -2,7 +2,7 @@
 # fix-per-repo-cursor-rules-symlinks.sh — Replace per-repo .cursor/rules copies with symlinks
 #
 # Per-repo .cursor/rules (real dirs with 108 .mdc files) cause context bloat when Cursor loads
-# rules per workspace folder. Replacing them with symlinks to unified-trading-pm/cursor-rules
+# rules per workspace folder. Replacing them with symlinks to unified-trading-pm/.cursor/rules
 # eliminates ~80K–100K tokens of duplicate rule content.
 #
 # Before replacing: compares per-repo rules with workspace rules. If identical, replaces directly.
@@ -18,7 +18,7 @@ DRY_RUN=false
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-TARGET_DIR="$WORKSPACE_ROOT/unified-trading-pm/cursor-rules"
+TARGET_DIR="$WORKSPACE_ROOT/unified-trading-pm/.cursor/rules"
 
 if [ ! -d "$TARGET_DIR" ]; then
     echo "[ERROR] Target directory not found: $TARGET_DIR"
@@ -34,8 +34,14 @@ skipped=0
 backed_up=0
 
 for repo in "$WORKSPACE_ROOT"/*/; do
+
+    # PM repo is the source of truth — skip it
     [ -d "$repo" ] || continue
     repo_name="$(basename "$repo")"
+    # PM repo is the source of truth — skip it
+    if [[ "$repo_name" == "unified-trading-pm" ]]; then
+        continue
+    fi
     rules_path="$repo/.cursor/rules"
 
     if [ ! -e "$rules_path" ]; then
@@ -44,7 +50,7 @@ for repo in "$WORKSPACE_ROOT"/*/; do
 
     if [ -L "$rules_path" ]; then
         current="$(readlink "$rules_path")"
-        if [[ "$current" == *"unified-trading-pm/cursor-rules"* ]] || [[ "$current" == *"cursor-rules" ]]; then
+        if [[ "$current" == *"unified-trading-pm/.cursor/rules"* ]] || [[ "$current" == *".cursor/rules" ]]; then
             echo "[SKIP] $repo_name — already symlinked"
             ((skipped++)) || true
             continue
@@ -73,7 +79,7 @@ for repo in "$WORKSPACE_ROOT"/*/; do
         if ! $DRY_RUN; then
             rm -rf "$rules_path"
             mkdir -p "$(dirname "$rules_path")"
-            ln -sf "../../unified-trading-pm/cursor-rules" "$rules_path"
+            ln -sf "../../unified-trading-pm/.cursor/rules" "$rules_path"
         fi
         echo "[FIX] $repo_name — replaced real dir with symlink"
         ((fixed++)) || true

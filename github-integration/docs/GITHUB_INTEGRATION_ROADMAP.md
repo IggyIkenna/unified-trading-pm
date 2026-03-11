@@ -303,37 +303,35 @@ Control plane UIs 13. `_service-ui-observability.yaml` — Monitoring/alerting U
 
 #### Validation Against Service Checklists
 
-Stage 4 validation includes ALL items from 15 service checklists:
+Stage 4 validation reads from codex v3.0 SSOT (`unified-trading-codex/10-audit/repos/`). Old
+`deployment-service/configs/checklist.{service}.yaml` (phase*N*\* schema) were removed 2026-03-11.
 
-**Core Services:**
+**Core Services (codex v3.0 paths):**
 
-- `checklist.unified-trading-services.yaml`
-- `checklist.execution-service.yaml`
-- `checklist.strategy-service.yaml`
+- `unified-trading-codex/10-audit/repos/execution-service.yaml`
+- `unified-trading-codex/10-audit/repos/strategy-service.yaml`
 
 **Data Pipeline Services:**
 
-- `checklist.market-tick-data-handler.yaml`
-- `checklist.market-data-processing-service.yaml`
-- `checklist.instruments-service.yaml`
+- `unified-trading-codex/10-audit/repos/market-tick-data-service.yaml`
+- `unified-trading-codex/10-audit/repos/market-data-processing-service.yaml`
+- `unified-trading-codex/10-audit/repos/instruments-service.yaml`
 
 **Feature Services:**
 
-- `checklist.features-calendar-service.yaml`
-- `checklist.features-delta-one-service.yaml`
-- `checklist.features-onchain-service.yaml`
-- `checklist.features-volatility-service.yaml`
+- `unified-trading-codex/10-audit/repos/features-calendar-service.yaml`
+- `unified-trading-codex/10-audit/repos/features-delta-one-service.yaml`
+- `unified-trading-codex/10-audit/repos/features-onchain-service.yaml`
+- `unified-trading-codex/10-audit/repos/features-volatility-service.yaml`
 
 **ML Services:**
 
-- `checklist.ml-training-service.yaml`
-- `checklist.ml-inference-service.yaml`
+- `unified-trading-codex/10-audit/repos/ml-training-service.yaml`
+- `unified-trading-codex/10-audit/repos/ml-inference-service.yaml`
 
-**Prerequisites & Priorities:**
+**Prerequisites (operational config — not readiness checklists):**
 
-- `checklist.prerequisites.yaml`
-- `checklist.PRIORITY_SUMMARY.yaml`
-- `checklist.template.yaml`
+- `deployment-service/configs/checklist.prerequisites.yaml` (infrastructure prerequisites — kept, operational)
 
 ---
 

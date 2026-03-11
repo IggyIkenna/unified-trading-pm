@@ -277,17 +277,22 @@ INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob 
 ANY=$(rg ": Any|-> Any|\[Any\]" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v "type: ignore" || :)
 [[ -n "$ANY" ]] && { log_fail "Any types (including dict[str, Any]) — use Pydantic models or specific types"; echo "$ANY" | head -3; V=$(( V + 1 )); } || log_success "No Any types"
 
-RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v 'model_validate\|cast(dict' || :)
+_raw_json_extra_globs=()
+for _excl in "${RAW_JSON_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _raw_json_extra_globs+=("--glob" "!${_excl}"); done
+RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!tests/**" "${_raw_json_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v 'model_validate\|cast(dict' \
+    | grep -v "# noqa:.*qg-raw-json\|# noqa: qg-raw-json" || :)
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
-ES=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+_efb_extra_globs=()
+for _excl in "${EMPTY_FALLBACK_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _efb_extra_globs+=("--glob" "!${_excl}"); done
+ES=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
 [[ -n "$ES" ]] && { log_fail "Empty string fallback — fail fast"; echo "$ES" | head -3; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
-ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
-EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
@@ -327,7 +332,9 @@ BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION
 [[ -f ".env.example" ]] && rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
     && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC, not SA key files)"; V=$(( V + 1 )); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"
 
-DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "$SOURCE_DIR/" 2>/dev/null \
+_di_extra_globs=()
+for _excl in "${DEEP_IMPORT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _di_extra_globs+=("--glob" "!${_excl}"); done
+DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "${_di_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "from ${_SELF_PKG}\." \
     | grep -v "# noqa:.*qg-deep-import\|# noqa: qg-deep-import" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"

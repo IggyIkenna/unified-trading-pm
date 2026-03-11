@@ -261,12 +261,12 @@ fi
 # Cursor rules: COPY as real files (ephemeral, not committed, not symlinks)
 # Written to workspace root so agents and IDE can find them without per-repo noise.
 EPHEMERAL_CURSOR_RULES=""
-if [ -d "$PM_DEST/cursor-rules" ]; then
+if [ -d "$PM_DEST/.cursor/rules" ]; then
     EPHEMERAL_CURSOR_RULES="$WORKSPACE_ROOT/.cursor/rules"
     mkdir -p "$WORKSPACE_ROOT/.cursor"
     rm -rf "$WORKSPACE_ROOT/.cursor/rules"
-    cp -r "$PM_DEST/cursor-rules" "$WORKSPACE_ROOT/.cursor/rules"
-    ok "  workspace .cursor/rules ← copied from PM/cursor-rules/ (ephemeral)"
+    cp -r "$PM_DEST/.cursor/rules" "$WORKSPACE_ROOT/.cursor/rules"
+    ok "  workspace .cursor/rules ← copied from PM/.cursor/rules/ (ephemeral)"
 fi
 if [ -f "$PM_DEST/cursor-configs/cursorrules" ]; then
     cp "$PM_DEST/cursor-configs/cursorrules" "$WORKSPACE_ROOT/.cursorrules"

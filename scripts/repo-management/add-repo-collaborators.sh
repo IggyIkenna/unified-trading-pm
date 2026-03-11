@@ -1,38 +1,45 @@
 #!/usr/bin/env bash
-# Add datadodo and CosmicTrader as collaborators (read or write) to the 11 repos.
-# Requires: gh CLI installed and authenticated (gh auth login).
+# Add datadodo and CosmicTrader as collaborators (read or write) to ALL repos in workspace-manifest.json.
+# Repo list is derived entirely from the manifest — no hardcoded list.
+# Requires: gh CLI + jq installed and authenticated (gh auth login).
 # Usage:
 #   bash scripts/repo-management/add-repo-collaborators.sh              # write (push) for both
 #   bash scripts/repo-management/add-repo-collaborators.sh --read        # read (pull) for both
+#   bash scripts/repo-management/add-repo-collaborators.sh --dry-run     # preview only
 #   GITHUB_OWNER=MyOrg bash scripts/repo-management/add-repo-collaborators.sh
 
 set -euo pipefail
 
-# Resolve workspace root from cwd (must run from workspace root)
+# ---------------------------------------------------------------------------
+# Resolve workspace root (must run from workspace root or PM subdir)
+# ---------------------------------------------------------------------------
 if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
   WORKSPACE_ROOT="$(pwd)"
-elif [ -f "$(pwd)/workspace-manifest.json" ]; then
+elif [ -f "$(pwd)/../unified-trading-pm/workspace-manifest.json" ]; then
   WORKSPACE_ROOT="$(cd .. && pwd)"
 else
-  echo "Error: Run from workspace root. Expected unified-trading-pm/workspace-manifest.json"
+  echo "Error: Run from workspace root. Expected unified-trading-pm/workspace-manifest.json" >&2
   exit 1
 fi
 MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 
-REPOS=(
-  alerting-service
-  deployment-api
-  deployment-service
-  execution-analytics-ui
-  execution-analytics-ui
-  features-multi-timeframe-service
-  ibkr-gateway-infra
-  ml-training-ui
-  system-integration-tests
-  unified-api-contracts
-  unified-cloud-interface
-  unified-trading-ui-auth
-)
+# ---------------------------------------------------------------------------
+# Derive repo list from manifest (no hardcoded list)
+# ---------------------------------------------------------------------------
+if ! command -v jq &>/dev/null; then
+  echo "Error: jq not found. Install: https://stedolan.github.io/jq/" >&2
+  exit 1
+fi
+
+REPOS=()
+while IFS= read -r repo; do
+  REPOS+=("$repo")
+done < <(jq -r '.repositories | keys[]' "$MANIFEST" | sort)
+
+if [[ ${#REPOS[@]} -eq 0 ]]; then
+  echo "Error: No repositories found in manifest: $MANIFEST" >&2
+  exit 1
+fi
 
 COLLABORATORS=(datadodo CosmicTrader)
 
@@ -59,8 +66,8 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: $0 [--read|--write] [--dry-run]" >&2
       echo "  --read     grant read-only (pull)" >&2
       echo "  --write    grant read+write (push); default" >&2
-      echo "  --dry-run  print commands only" >&2
-      echo "  GITHUB_OWNER=owner $0  override repo owner" >&2
+      echo "  --dry-run  print commands only, no API calls" >&2
+      echo "  GITHUB_OWNER=owner $0  override repo owner (default: IggyIkenna)" >&2
       exit 1
       ;;
   esac
@@ -76,9 +83,10 @@ if [[ -z "$DRY_RUN" ]] && ! gh auth status &>/dev/null; then
   exit 1
 fi
 
-echo "Owner: $OWNER | Permission: $PERMISSION (write=push, read=pull)"
+echo "Owner:        $OWNER"
+echo "Permission:   $PERMISSION (push=read+write, pull=read-only)"
 echo "Collaborators: ${COLLABORATORS[*]}"
-echo "Repos: ${REPOS[*]}"
+echo "Repos (${#REPOS[@]} from manifest): ${REPOS[*]}"
 if [[ -n "$DRY_RUN" ]]; then
   echo "[DRY RUN] No API calls will be made."
 fi
@@ -106,11 +114,11 @@ done
 if [[ $FAILED -eq 1 ]]; then
   echo "" >&2
   echo "Some adds failed. Common causes:" >&2
-  echo "  404 = repo does not exist under $OWNER (create it or set GITHUB_OWNER)" >&2
+  echo "  404 = repo does not exist under $OWNER (create it first or set GITHUB_OWNER)" >&2
   echo "  403 = no admin rights on the repo" >&2
   echo "  422 = user not found or invalid" >&2
   exit 1
 fi
 
 echo ""
-echo "Done. Users will receive an invite email if they did not already have access."
+echo "Done. ${#REPOS[@]} repos processed. Users will receive an invite email if they did not already have access."

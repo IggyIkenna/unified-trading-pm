@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # setup-repo-cursor-rules-symlinks.sh — Replace per-repo .cursor/rules copies with symlinks
 #
-# P0 of CONTEXT_BLOAT_REMEDIATION: each repo's .cursor/rules points at unified-trading-pm/cursor-rules.
+# P0 of CONTEXT_BLOAT_REMEDIATION: each repo's .cursor/rules points at unified-trading-pm/.cursor/rules.
 # Edits in .cursor/rules/ directly modify PM's git-tracked files. No sync needed.
 #
 # Usage: bash unified-trading-pm/scripts/workspace/setup-repo-cursor-rules-symlinks.sh
@@ -11,9 +11,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-TARGET_ABS="$WORKSPACE_ROOT/unified-trading-pm/cursor-rules"
-# Relative from repo/.cursor/ to unified-trading-pm/cursor-rules
-TARGET_REL="../unified-trading-pm/cursor-rules"
+TARGET_ABS="$WORKSPACE_ROOT/unified-trading-pm/.cursor/rules"
+# Relative from repo/.cursor/ to unified-trading-pm/.cursor/rules
+TARGET_REL="../../unified-trading-pm/.cursor/rules"
 
 REPOS=(
   batch-audit-ui
@@ -58,7 +58,7 @@ for repo in "${REPOS[@]}"; do
       fname="$(basename "$f")"
       if [ ! -f "$TARGET_ABS/$fname" ]; then
         cp "$f" "$TARGET_ABS/"
-        echo "  [MOVED] $fname -> cursor-rules/"
+        echo "  [MOVED] $fname -> .cursor/rules/"
         ((local_only++)) || true
       fi
     done
