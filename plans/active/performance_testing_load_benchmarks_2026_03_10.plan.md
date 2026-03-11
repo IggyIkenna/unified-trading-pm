@@ -1,3 +1,97 @@
+---
+name: performance-testing-load-benchmarks-2026-03-10
+overview:
+  Establish system-wide performance baselines, load benchmarks, and resource limits across all critical paths before
+  live trading; add CI gates for latency and throughput regressions.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: execution-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: system-integration-tests
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-trading-pm
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-trading-codex
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - phase3_service_hardening_integration
+  - mock_data_dev_project_seeding_2026_03_10
+
+todos:
+  - id: p0-define-targets
+    content:
+      "Create unified-trading-codex/06-coding-standards/performance-targets.md with latency, throughput, and resource
+      targets"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p1-latency-histogram
+    content: "Add p50/p95/p99 latency histograms and assertions to existing execution-service benchmarks"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p1-e2e-latency
+    content: "Create execution-service/benchmarks/test_e2e_latency.py for order submission p99 ≤ 500ms"
+    status: todo
+    note: ""
+  - id: p2-sit-performance-dir
+    content: "Create system-integration-tests/tests/performance/ with 7 test files"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p2-load-scenarios
+    content: "Add normal/peak/sustained load scenarios to conftest_performance.py"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p2-resource-leak-detection
+    content: "Add ResourceMonitor to conftest_performance.py for memory leak detection"
+    status: todo
+    note: ""
+  - id: p3-gha-perf-job
+    content: "Create system-integration-tests/.github/workflows/performance-test.yml for nightly CI"
+    status: todo
+    note: ""
+  - id: p3-regression-detection
+    content: "Create compare_benchmark_baseline.py and commit baselines/baseline.json"
+    status: todo
+    note: ""
+  - id: p4-memory-profiling
+    content: "Create unified-trading-pm/scripts/ops/profile-memory.sh"
+    status: todo
+    note: ""
+  - id: p4-cpu-profiling
+    content: "Create unified-trading-pm/scripts/ops/profile-cpu.sh"
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Performance Testing, Load Benchmarks & Resource Baselines
 
 status: active priority: P1 owner: backend/infra target: 2026-03-21

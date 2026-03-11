@@ -1,6 +1,24 @@
 ---
-name: Master Pre-Deployment Plan Chain
+name: master-pre-deployment-plan-chain
 overview: Ordered plan sequence (1–9) with parallel-work split for 2 people. CI/CD resolves conflicts. Deadlines: plans complete March 12, live trading week March 20.
+type: mixed
+epic: none
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C2
+    deployment: none
+    business: none
+    readiness_note: "Meta/orchestration plan spanning all epics. DR tracked in constituent plans (phase3_service_hardening, cloud_infra_bucket_auth, aws_migration). BR N/A: internal coordination plan, no commercial KPI."
+
+depends_on: []
+
 todos:
   - id: phase0-environment
     content: "Phase 0 — Audit Remediation (phase0_audit_remediation.plan.md). All 5 streams complete: secrets/UCI/config (S1), UTL/FDS (S2), instruments/strategy/ml-training/deployment (S3), execution/MTDS/sports (S4), WARN cleanup (S5)."

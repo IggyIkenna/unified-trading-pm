@@ -5,6 +5,29 @@ overview: |
   for all required buckets, BigQuery external table setup, SIT smoke tests for bucket availability
   and cloud auth (GCP + AWS), and a framework for dual-cloud auth testing (GCP always; AWS when
   creds available). Covers the question: "do all services have their buckets, and can they auth?"
+type: deployment
+epic: epic-deployment
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: deployment-service
+    code: C5
+    deployment: D3
+    business: none
+    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+  - repo: system-integration-tests
+    code: C5
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+
+depends_on: []
+
 todos:
   - id: gcp-sa-key-create-propagate
     content: >-

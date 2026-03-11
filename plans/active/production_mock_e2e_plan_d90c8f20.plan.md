@@ -1,9 +1,58 @@
 ---
-name: Production Mock E2E Plan
+name: production-mock-e2e-plan-d90c8f20
 overview:
   "Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC/UIC validation and VCR cassettes;
   services and APIs via mock data replay, error handling, events, and load/performance checks; UIs via mock API, smoke
   tests, and demo mode. Mock-only default in CI; optional sandbox mode when secrets present."
+type: infra
+epic: epic-infra
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-api-contracts
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-cloud-interface
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-market-interface
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-defi-execution-interface
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: system-integration-tests
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-trading-pm
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on: []
+
 todos:
   - id: phase1-vcr-consolidate
     content:

@@ -1,11 +1,51 @@
 ---
-name: IBKR Gateway — Single Source Rollout
-overview: |
-  Create ibkr-gateway-infra as the single IB Gateway process for all IBKR connectivity.
-  Consolidate the four duplicated IBKR adapter connection/auth implementations in UMI, UTEI,
-  UPI, and URDI into thin shims that connect to a single long-lived gateway process.
-  Resolve the open TWS test-mocking design decision (HTTP VCR does not apply to the TWS
-  socket protocol — mock at the ib_insync Python object level instead).
+name: ibkr-gateway-rollout
+overview:
+  Consolidate four duplicated IBKR adapter connection implementations into thin shims pointing to a single long-lived
+  ibkr-gateway-infra process, resolving the TWS test-mocking design decision
+type: mixed
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: ibkr-gateway-infra
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-market-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-trade-execution-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-position-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-reference-data-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-config-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+
+depends_on: []
+
 todos:
   - id: ibkr-repo-create
     content:

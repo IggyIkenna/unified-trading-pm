@@ -1,3 +1,93 @@
+---
+name: production-backfill-step-by-step-2026-03-10
+overview:
+  Step-by-step runbook for sequencing production GCP backfill (instruments → tick data → features → ML training →
+  validation backtests) with validation gates at each step before live trading week.
+type: deployment
+epic: epic-deployment
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: instruments-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: market-tick-data-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: market-data-processing-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: ml-training-api
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: execution-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-trading-pm
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: system-integration-tests
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+
+depends_on:
+  - cloud_infra_bucket_auth_2026_03_10
+  - api_keys_and_auth
+  - phase3_service_hardening_integration
+
+todos:
+  - id: step1-instruments
+    content:
+      "Backfill instruments for all asset classes (crypto CeFi, TradFi, DeFi, Sports); run
+      validate-instruments-completeness.py gate"
+    status: todo
+    note: ""
+  - id: step2-tick-data
+    content:
+      "Backfill tick data by priority: CeFi (Tardis) → TradFi (Databento) → DeFi (TheGraph/Alchemy) → Alt data → Sports;
+      run validate-tick-data-completeness.py gate"
+    status: todo
+    note: ""
+  - id: step3-features
+    content:
+      "Backfill features in DAG order: MTDH → MDPS → feature services parallel → FCIS → FMTF → FSS; run
+      validate-features-completeness.py gate"
+    status: todo
+    note: ""
+  - id: step4-ml-training
+    content: "Train all ML models on 2023–2024 data; run validate-model-artifacts.py gate"
+    status: todo
+    note: ""
+  - id: step5-validation-backtest
+    content: "Run all 4 portable backtests; verify positive PnL for CeFi, DeFi, TradFi, Sports"
+    status: todo
+    note: ""
+  - id: ops-scripts
+    content: "Create validate-*.py ops scripts and run-full-backfill.sh orchestrator"
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Production Backfill — Step-by-Step Runbook
 
 status: active priority: P0 owner: infra/backend target: 2026-03-19 (must complete before live trading week 2026-03-20)

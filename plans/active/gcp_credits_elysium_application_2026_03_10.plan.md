@@ -1,3 +1,43 @@
+---
+name: gcp-credits-elysium-application-2026-03-10
+overview:
+  Apply for Google Cloud for Startups credits via Elysium Capital partnership to cover $130k+ in annual GCP costs for
+  the trading infrastructure
+type: business
+epic: epic-business
+status: active
+
+completion_gates:
+  code: none
+  deployment: none
+  business: B6
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "DR N/A: presentation/documentation — no infrastructure deployment required."
+
+depends_on:
+  - elysium_defi_lite_fork_2026_03_10
+
+todos:
+  - id: phase-1-program-research
+    content: Identify applicable GCP credit programs and complete eligibility checklist
+    status: todo
+    note: ""
+  - id: phase-2-application-materials
+    content: Create GCP spend estimate, technical summary, use case doc, Elysium profile, and application draft
+    status: todo
+    note: ""
+  - id: phase-3-submission
+    content: Elysium review, submit application, set follow-up cadence, document AWS backup plan
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: GCP Credits Application via Elysium Partnership
 
 status: active priority: P2 owner: product/business target: 2026-03-31 (submit before board meeting)

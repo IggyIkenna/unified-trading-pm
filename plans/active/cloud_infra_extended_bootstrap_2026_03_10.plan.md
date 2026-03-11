@@ -6,6 +6,35 @@ overview: |
   billing budget alerts with daily breakdown, deployment cleanup scripts, and SIT smoke tests
   for all of the above. Both GCP (primary) and AWS (blocked until creds) equivalents.
   Strategy: test what's real now; mock/skip AWS; validate everything via SIT smoke tests.
+type: deployment
+epic: epic-deployment
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: deployment-service
+    code: C5
+    deployment: D3
+    business: none
+    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+  - repo: system-integration-tests
+    code: C5
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+  - repo: execution-service
+    code: C5
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+
+depends_on:
+  - cloud_infra_bucket_auth_2026_03_10
+
 todos:
   - id: pubsub-topics-gcp
     content: >-

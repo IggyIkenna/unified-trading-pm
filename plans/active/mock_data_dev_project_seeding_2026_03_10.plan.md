@@ -1,3 +1,83 @@
+---
+name: mock-data-dev-project-seeding-2026-03-10
+overview:
+  Create a systematic seeded dataset covering all 4 asset classes with schema-validated synthetic data so any developer
+  gets a complete GCP dev environment within 5 minutes, zero live API calls.
+type: infra
+epic: epic-infra
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C3
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: system-integration-tests
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on:
+  - api_keys_and_auth
+  - dev_environment_automated_onboarding_2026_03_10
+
+todos:
+  - id: p0-seed-spec
+    content: "Create unified-trading-pm/scripts/dev/fixtures/seed_spec.yaml"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p0-data-format-validation
+    content: "Define Parquet format, UTC timestamps, UAC schema requirements for seed data"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p1-generator
+    content: "Create generate_synthetic_data.py with GBM price series, DeFi yields, sports odds"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p1-instruments-seeder
+    content: "Create seed_instruments.py for 100 instruments across all asset classes"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p2-seed-script
+    content: "Create seed-dev-project.sh orchestrating all seed steps"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p2-feature-seeder
+    content: "Create seed_features.py running all 8 feature services in batch mode"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p2-ml-artifact-seeder
+    content: "Create seed_ml_artifacts.py for lightweight model artifacts"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p3-pubsub-setup
+    content: "Create setup-dev-pubsub.sh for all Pub/Sub topics and subscriptions in unified-trading-dev"
+    status: todo
+    note: ""
+  - id: p3-bigquery-setup
+    content: "Create setup-dev-bigquery.sh with correct schemas for all dev tables"
+    status: todo
+    note: ""
+  - id: p4-seed-validator
+    content: "Create seed_validator.py for UAC/UIC schema validation of all seed data"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: p4-ci-seed-check
+    content: "Add nightly SIT CI check for dev seed data freshness and schema validity"
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Mock Data Dev Project Seeding (No Prod APIs)
 
 status: active priority: P1 owner: infra target: 2026-03-15

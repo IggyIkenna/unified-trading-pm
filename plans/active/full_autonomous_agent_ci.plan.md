@@ -1,7 +1,27 @@
 ---
 name: full-autonomous-agent-ci
-overview: |
-  Full multi-repo autonomous agent CI suite. Extends the single-repo agent_ci_prototype to all repos and adds four specialized agent types. Agents run overnight in tier order (T0->T1->T2->T3). Each tier runs repos in parallel via GHA matrix strategy. On QG failure, agents retry up to 3x with failure context. Telegram delivers morning summary. Dependency chain ordering enforced by GHA needs graph — no cross-tier contamination.
+overview:
+  Full multi-repo autonomous agent CI suite extending agent_ci_prototype to all repos with four specialized agent types,
+  overnight tier-ordered execution, and Telegram morning summary
+type: infra
+epic: epic-infra
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on: []
+
 todos:
   - id: bootstrap-telegram
     content: >-

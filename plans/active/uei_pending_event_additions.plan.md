@@ -1,11 +1,31 @@
 ---
-name: UEI Pending Event Additions (Consolidated)
-overview: |
-  Single consolidated plan for all pending additions to unified-events-interface/schemas.py.
-  Three source plans each need new UEI events; they must be batched into a single PR to avoid
-  merge conflicts on the shared schemas.py file. This plan is the coordination point.
-  Source plans: data_availability_live_expectations, recon_rebalancing_order_recovery,
-  position_precision_pnl_hardening.
+name: uei-pending-event-additions
+overview:
+  Consolidated batch PR for all pending unified-events-interface/schemas.py additions from 3 source plans to avoid merge
+  conflicts.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-events-interface
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - data_availability_live_expectations_2026_03_10
+  - recon_rebalancing_order_recovery_2026_03_10
+  - position_precision_pnl_hardening_2026_03_11
+
 todos:
   - id: uei-data-freshness-events
     content: >-

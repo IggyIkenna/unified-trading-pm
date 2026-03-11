@@ -1,8 +1,36 @@
 ---
-name: AWS Migration Plan
-overview:
+name: aws-migration
+overview: >-
   Dual-cloud readiness for GCP primary and AWS secondary. Cloud-agnostic abstractions via unified-cloud-interface;
   migration phases for build path, runtime, and full dual-cloud deployment.
+type: deployment
+epic: epic-deployment
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: unified-cloud-interface
+    code: C5
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: deployment-service
+    code: C1
+    deployment: D3
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: instruments-service
+    code: C5
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+
+depends_on: []
+
 todos:
   - id: phase-1-cloud-agnostic
     content:

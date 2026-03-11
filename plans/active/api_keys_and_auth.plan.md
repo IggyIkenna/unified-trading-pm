@@ -1,8 +1,42 @@
 ---
-name: API Keys and Auth Plan
-overview:
+name: api-keys-and-auth
+overview: >-
   Consolidates API keys, auth rules, and VCR cassette recording. Single source for secrets management, audit alignment,
   and per-venue VCR status (Phases 1–5). Supersedes VCR_CREDENTIAL_RECORDING_PLAN.md.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-api-contracts
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-trading-library
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-market-interface
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on: []
+
 todos:
   - id: remove-fallback-env-var
     content:

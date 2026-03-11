@@ -1,3 +1,53 @@
+---
+name: dev-environment-automated-onboarding-2026-03-10
+overview:
+  Automated dev environment setup script that puts a developer into a fully working local dev environment in <15 minutes
+  with zero live API calls
+type: infra
+epic: epic-infra
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on:
+  - broken_symlinks_remediation_2026_03_09
+  - mock_data_dev_project_seeding_2026_03_10
+
+todos:
+  - id: phase-0-env-vars-doc
+    content: Document all required env vars and create .env.dev.template
+    status: todo
+    note: ""
+  - id: phase-1-setup-script
+    content: Create setup-dev-environment.sh with all 10 steps
+    status: todo
+    note: ""
+  - id: phase-2-dev-configs
+    content: Create dev runtime topology YAML and AWS/testnet docs
+    status: todo
+    note: ""
+  - id: phase-3-vcr-mode
+    content: Wire VCR_MODE toggle across all services
+    status: todo
+    note: ""
+  - id: phase-4-smoke-test
+    content: Create smoke-test-dev.py with 8 checks
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Automated Dev Environment Setup & Onboarding
 
 status: active priority: P1 owner: infra target: 2026-03-15

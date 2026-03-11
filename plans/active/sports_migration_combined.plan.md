@@ -1,13 +1,66 @@
 ---
-name: Sports Migration — Combined (Gap Fix + Phase 2 Full)
-overview: |
-  Consolidates sports_migration_gap_fix and sports_migration_phase2_full (merged 2026-03-09).
-  All actionable todos complete. Remaining: USEI Betfair/Pinnacle live VCR cassettes blocked
-  by API keys (phase-4-blockers), strategy/execution wiring blocked by USEI adapters.
+name: sports-migration-combined
+overview:
+  Consolidates sports_migration_gap_fix and sports_migration_phase2_full — all actionable todos complete; live VCR
+  cassettes blocked on api_keys_and_auth phase-4.
+type: code
+epic: epic-code-completion
 status: DONE
 created: 2026-03-02
 updated: 2026-03-10 (all todos done; live VCR cassettes blocked on api_keys_and_auth phase-4)
 isProject: false
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-sports-execution-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: market-tick-data-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-sports-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: strategy-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: execution-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: deployment-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - api_keys_and_auth
 todos:
   # ── From sports_migration_gap_fix (Part B) ──────────────────────────────
   - id: b1-scraper-adapters

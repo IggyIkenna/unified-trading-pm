@@ -5,6 +5,31 @@ overview: >-
   against institutional-grade standards. Covers workspace governance, code quality, security, architecture, schema
   governance, observability, deployment, technical debt, cross-repo alignment, CI/CD pipeline quality, UI/npm
   governance, and tooling SSOT quality (Sections 1–17).
+type: infra
+epic: none
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: system-integration-tests
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-trading-pm
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on: []
+
 todos:
   - id: audit-workspace-governance
     content:

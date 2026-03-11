@@ -1,3 +1,52 @@
+---
+name: elysium-defi-presentation-2026-03-10
+overview:
+  Create a standalone HTML presentation for Elysium Capital demonstrating DeFi strategies, 14 supported protocols,
+  backtest results, and the elysium-defi-lite-fork deliverable
+type: business
+epic: epic-business
+status: active
+
+completion_gates:
+  code: none
+  deployment: none
+  business: B6
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "DR N/A: presentation/documentation — no infrastructure deployment required."
+
+depends_on:
+  - elysium_defi_lite_fork_2026_03_10
+  - e2e_smoke_and_portable_backtests
+
+todos:
+  - id: create-html-presentation
+    content: Create unified-trading-pm/presentations/10-defi-elysium.html following existing HTML/CSS structure
+    status: todo
+    note: ""
+  - id: create-architecture-svg
+    content: Create defi-architecture.svg data flow diagram
+    status: todo
+    note: ""
+  - id: create-backtest-data
+    content: Create defi-backtest-data.json from portable backtest output
+    status: todo
+    note: ""
+  - id: update-master-html
+    content: Add Slide 10 to 00-master.html navigation index
+    status: todo
+    note: ""
+  - id: playwright-tests
+    content: Add Playwright tests verifying slide loads, PnL chart renders, 14-row protocol table
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Elysium DeFi Presentation
 
 status: active priority: P2 owner: product target: 2026-03-25 (deliver with or before fork)

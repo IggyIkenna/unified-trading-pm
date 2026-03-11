@@ -1,3 +1,60 @@
+---
+name: execution-service-logic-audit-2026-03-10
+overview:
+  Audit execution-service source code logic and replace try/except coverage-gaming tests with genuine
+  behaviour-validating tests across 7 tranches
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: execution-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on: []
+
+todos:
+  - id: tranche-1-algorithm-logic
+    content: Golden-path tests for TWAP/VWAP/Passive-Aggressive algorithms with concrete assertions
+    status: done
+    note: "DONE 2026-03-11"
+  - id: tranche-2-data-converters
+    content: Converter tests with real fixture data for orderbook, trade, and OHLCV converters
+    status: done
+    note: "DONE 2026-03-11"
+  - id: tranche-3-pnl-extraction
+    content: PnL calculation verified with hand-computed expected values
+    status: done
+    note: "DONE 2026-03-11"
+  - id: tranche-4-instrument-factory
+    content: Factory tests with concrete instrument field assertions
+    status: done
+    note: "DONE 2026-03-11"
+  - id: tranche-5-validation-logic
+    content: Validator tests explicitly asserting exception types and messages
+    status: done
+    note: "DONE 2026-03-11"
+  - id: tranche-6-grid-config
+    content: Grid config tests asserting expected algo name format
+    status: done
+    note: "DONE 2026-03-11"
+  - id: coverage-gate
+    content: Coverage stays >= 70% after removing gaming tests
+    status: done
+    note: "DONE 2026-03-11"
+isProject: false
+---
+
 # execution-service Logic Audit & Test Hardening
 
 **Created**: 2026-03-10 **Status**: DONE ✅ (2026-03-11 — all 8 acceptance criteria complete) **Owner**: Claude Code

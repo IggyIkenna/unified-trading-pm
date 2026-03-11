@@ -1,3 +1,85 @@
+---
+name: strategy-visibility-grafana-2026-03-10
+overview:
+  Deploy Grafana on Cloud Run with Prometheus and BigQuery data sources; add Prometheus metrics to strategy, execution,
+  PnL services; build 5 dashboards; embed panels in UI.
+type: mixed
+epic: epic-deployment
+status: active
+
+completion_gates:
+  code: C5
+  deployment: D3
+  business: none
+
+repo_gates:
+  - repo: strategy-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: execution-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: pnl-attribution-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-trading-library
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-admin-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note: "BR N/A: deployment/migration plan — no commercial KPI or user sign-off required."
+  - repo: unified-trading-pm
+    code: C0
+    deployment: D1
+    business: none
+    readiness_note:
+      "Infrastructure configs (grafana/cloud-run-grafana.yaml, provisioning YAML, dashboard JSON) live here. BR N/A:
+      deployment/migration plan — no commercial KPI or user sign-off required."
+
+depends_on:
+  - phase3_service_hardening_integration
+  - data_availability_live_expectations_2026_03_10
+  - recon_rebalancing_order_recovery_2026_03_10
+
+todos:
+  - id: phase1-infra
+    content:
+      "Phase 1: Grafana Cloud Run deployment, Prometheus data source, BigQuery data source, Docker Compose dev setup"
+    status: todo
+    note: ""
+  - id: phase2-metrics
+    content:
+      "Phase 2: Prometheus metrics in strategy-service, execution-service, pnl-attribution-service, feature pipeline"
+    status: todo
+    note: ""
+  - id: phase3-dashboards
+    content:
+      "Phase 3: 5 Grafana dashboard JSON files (strategy performance, market data health, execution quality, system
+      health, DeFi)"
+    status: todo
+    note: ""
+  - id: phase4-ui-integration
+    content:
+      "Phase 4: GrafanaPanel component in unified-admin-ui; replace charts in strategy-analysis-ui; add nav links"
+    status: todo
+    note: ""
+  - id: phase5-strategy-dev
+    content: "Phase 5: Per-strategy scoring breakdown view and strategy comparison dashboard"
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Strategy Visibility — Grafana Integration
 
 status: active priority: P1 owner: fullstack/backend target: 2026-03-21

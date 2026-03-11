@@ -1,17 +1,107 @@
 ---
-name: Unified Admin UI — npm Workspace Creation
-overview: |
-  Create the unified-admin-ui GitHub repo as an npm workspace monorepo (making total workspace repo count 60).
-  The monorepo contains packages/core (shared components, hooks, auth, api-client) plus one package per UI
-  app. All 11 existing UI repos (batch-audit-ui, client-reporting-ui, deployment-ui,
-  execution-analytics-ui, live-health-monitor-ui, logs-dashboard-ui, ml-training-ui, onboarding-ui,
-  settlement-ui, strategy-ui, trading-analytics-ui) will remove duplicate code and import from the
-  core package. Quality gates are TypeScript-only: tsc --noEmit, ESLint zero-warnings, Vitest, Playwright.
-  No Python tooling (no uv, no basedpyright, no pytest) per ui-no-python-quality-gates.mdc.
+name: unified-admin-ui-creation-2026-03-09
+overview:
+  Create unified-admin-ui as an npm workspace monorepo with packages/core; migrate auth and API client patterns from 11
+  existing UI repos into the shared core package.
+type: code
+epic: epic-code-completion
 status: active
 created: 2026-03-09
 updated: 2026-03-10
 isProject: true
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-admin-ui
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: batch-audit-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: client-reporting-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: deployment-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: execution-analytics-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: live-health-monitor-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: logs-dashboard-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: ml-training-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: onboarding-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: settlement-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: strategy-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: trading-analytics-ui
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on: []
 todos:
   - id: create-github-repo
     content: >-

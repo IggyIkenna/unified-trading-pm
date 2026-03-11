@@ -1,3 +1,137 @@
+---
+name: position-precision-pnl-hardening-2026-03-11
+overview:
+  Fix inverse perp is_inverse hardcode, add margin_type to instruments, and add fee/funding/yield reconciliation engines
+  to eliminate unexplained P&L and achieve attribution correctness.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-internal-contracts
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-reference-data-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: execution-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: position-balance-monitor-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: risk-and-exposure-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: strategy-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: trading-analytics-api
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: batch-live-reconciliation-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: onboarding-ui
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: settlement-ui
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-events-interface
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - uei_pending_event_additions
+  - recon_rebalancing_order_recovery_2026_03_10
+
+todos:
+  - id: phase-a-uic-margin-type
+    content: "UIC v0.1.82: Add MarginType enum, fee_schedule.py; export all new types"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: phase-a-urdi-adapters
+    content: "URDI Bybit/OKX/Deribit adapters: populate margin_type"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: phase-a-exec-is-inverse
+    content: "execution-service: Fix is_inverse=False hardcode at factory_cefi_defi.py:468; add notional_calculator.py"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: phase-b-fee-recon
+    content:
+      "URDI, trading-analytics-api, position-balance-monitor, execution-service: Add fee reconciliation infrastructure"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: phase-c-funding-recon
+    content: "execution-service, strategy-service, batch-live-reconciliation-service: Add funding reconciliation"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: phase-d-yield-recon
+    content: "execution-service, trading-analytics-api, settlement-ui: Add yield reconciliation and settlements backend"
+    status: done
+    note: "DONE 2026-03-11"
+  - id: phase-e-pnl-loop-closure
+    content: "strategy-service, risk-and-exposure-service: Close P&L attribution loop"
+    status: done
+    note: "DONE 2026-03-11 (except UEI UNEXPLAINED_PNL_RESIDUAL event)"
+  - id: phase-e-uei-event
+    content: "UEI: Emit UNEXPLAINED_PNL_RESIDUAL event hourly + AlertEvent when > 2% of total PnL"
+    status: todo
+    note: "Coordinate with uei_pending_event_additions plan"
+isProject: false
+---
+
 # Plan: Position Precision & P&L Attribution Hardening
 
 **Created:** 2026-03-11 **Status:** IN PROGRESS **Priority:** P0 — Correctness + Attribution Quality

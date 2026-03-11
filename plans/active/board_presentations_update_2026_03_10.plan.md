@@ -1,3 +1,66 @@
+---
+name: board-presentations-update-2026-03-10
+overview:
+  Update all 10 existing HTML presentations and create 3 new ones for the March 31 board meeting, with rehearsals on
+  March 13 and March 18.
+type: business
+epic: epic-business
+status: active
+
+completion_gates:
+  code: none
+  deployment: none
+  business: B6
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: none
+    deployment: none
+    business: B6
+    readiness_note: "DR N/A: presentation/documentation — no infrastructure deployment required."
+
+depends_on: []
+
+todos:
+  - id: cross-cutting-updates
+    content:
+      Apply traction bar, system status callout, cloud/data story, and history slide to all 10 existing presentations
+      (A1–A4).
+    status: todo
+    note: ""
+  - id: per-presentation-updates
+    content: Apply per-presentation specific updates to presentations 01–09 (B1–B9).
+    status: todo
+    note: ""
+  - id: new-presentations
+    content:
+      Create 3 new presentations — 11-analytics-screening.html, 12-financials-projections.html,
+      13-status-quo-traction.html.
+    status: todo
+    note: ""
+  - id: master-index-update
+    content: Update 00-master.html to include presentations 10–13 and rehearsal schedule.
+    status: todo
+    note: ""
+  - id: pdf-export-script
+    content: Write scripts/export-presentations-pdf.sh for Playwright headless PDF export.
+    status: todo
+    note: ""
+  - id: rehearsal-1
+    content: Run rehearsal 1 (Thursday March 13) — all 13 presentations, timing check, capture action items.
+    status: todo
+    note: ""
+  - id: rehearsal-2
+    content: Run rehearsal 2 (Tuesday March 18) — updated decks, narrative flow, Q&A preparation.
+    status: todo
+    note: ""
+  - id: board-meeting
+    content: Board meeting March 31 — present 5–6 selected decks, PDF backup ready.
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Board Presentations Update & Rehearsal
 
 status: active priority: P1 owner: product target: 2026-03-31 (board meeting) rehearsals: 2026-03-13 (Thursday),

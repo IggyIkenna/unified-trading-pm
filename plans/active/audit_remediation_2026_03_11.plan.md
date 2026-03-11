@@ -5,6 +5,61 @@ overview: >-
   positives (float fields fixed in c76695a; UI vitest already installed). This plan tracks the 5 concrete items:
   SSOT-INDEX registration, strategy-service CI integration tests, base-service.sh CI env var enforcement, VCR cassette
   coverage for 29 missing venues, and type:ignore enumeration.
+type: infra
+epic: epic-infra
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-trading-codex
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-trading-pm
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: strategy-service
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-api-contracts
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-market-interface
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-reference-data-interface
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: unified-trade-execution-interface
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on: []
+
 todos:
   - id: item-a-ssot-index-registration
     content: >-

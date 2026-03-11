@@ -1,3 +1,88 @@
+---
+name: contract-completeness-checker-2026-03-10
+overview:
+  Add AST-based completeness checkers for UIC and UAC that detect public classes defined in source but absent from
+  __all__, with SIT tests and GHA wiring.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-internal-contracts
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-api-contracts
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: system-integration-tests
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on: []
+
+todos:
+  - id: write-check-uic-completeness
+    content:
+      Write unified-internal-contracts/scripts/check_uic_completeness.py — AST-scan UIC source, diff against __all__,
+      exit 1 if gaps.
+    status: done
+    note: "DONE (94411e6) — 0 missing."
+  - id: add-10-missing-uic-classes
+    content:
+      Add 10 missing UIC domain classes (features_liquidity + features_sports domains) to
+      unified_internal_contracts/__init__.py __all__.
+    status: done
+    note: "DONE — 0 missing after fix."
+  - id: write-check-uac-completeness
+    content:
+      Write unified-api-contracts/scripts/check_uac_completeness.py — AST-scan UAC source, diff against __all__, exit 1
+      if gaps.
+    status: done
+    note: "DONE (3761420) — 163 missing (curation backlog)."
+  - id: write-sit-uic-completeness
+    content:
+      Write system-integration-tests/tests/integration/test_uic_completeness.py — parametrized SIT test mirroring the
+      script.
+    status: done
+    note: "DONE."
+  - id: write-sit-uac-completeness
+    content:
+      Write system-integration-tests/tests/integration/test_uac_completeness.py — parametrized SIT test mirroring the
+      script.
+    status: done
+    note: "DONE."
+  - id: wire-gha
+    content:
+      Add UIC + UAC completeness check steps (warn-mode) to
+      system-integration-tests/.github/workflows/smoke-test-gate.yml contract-adoption-check job.
+    status: done
+    note: "DONE."
+  - id: uac-curator-review
+    content:
+      Curator review of 163 UAC missing classes — decide PROMOTE (add to __all__) or EXEMPT (add to checker
+      EXEMPT_MISSING) for each.
+    status: todo
+    note: "163 gaps remain; tracked as curation backlog."
+isProject: false
+---
+
 # Plan: Contract Completeness Checkers (UIC + UAC)
 
 ## Status: DONE (2026-03-10) — scripts + SIT tests + GHA wiring all complete; UIC 0 missing, UAC 0 missing

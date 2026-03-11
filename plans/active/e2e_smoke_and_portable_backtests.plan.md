@@ -1,8 +1,42 @@
 ---
-name: E2E Smoke and Portable Backtests Plan
+name: e2e-smoke-and-portable-backtests
 overview:
   Layer 0–3 E2E smoke (contract alignment → schema robustness → infra verification → system smoke/full_e2e) plus
-  CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures.
+  CEFI/TradFi/DeFi/Sports portable backtests with VCR/fixtures
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: system-integration-tests
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: strategy-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: execution-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on: []
+
 todos:
   - id: layer-0-1-smoke
     content:

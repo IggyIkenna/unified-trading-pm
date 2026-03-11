@@ -1,3 +1,62 @@
+---
+name: elysium-defi-lite-fork-2026-03-10
+overview:
+  Create a standalone elysium-defi-system repo forked from DeFi strategy/execution components, delivered as a private
+  GitHub repo + Docker image for Elysium Capital
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: elysium-defi-system
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-market-interface
+    code: C2
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - elysium_defi_presentation_2026_03_10
+
+todos:
+  - id: phase-1-repo-setup
+    content:
+      Create elysium-defi-system repo structure, copy and strip source modules from strategy-service, execution-service,
+      and unified-market-interface
+    status: todo
+    note: ""
+  - id: phase-2-runner
+    content: Implement config model, main runner, and paper trader
+    status: todo
+    note: ""
+  - id: phase-3-web-ui
+    content: Build FastAPI endpoints and dashboard HTML
+    status: todo
+    note: ""
+  - id: phase-4-testing
+    content: Record VCR cassettes for all 14 protocols and write integration tests
+    status: todo
+    note: ""
+  - id: phase-5-docs
+    content: Write README, setup.md, and strategy-guide.md
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Elysium DeFi Lite Fork
 
 status: active priority: P1 owner: backend target: 2026-03-25

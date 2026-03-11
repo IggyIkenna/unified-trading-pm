@@ -1,3 +1,85 @@
+---
+name: cicd-versioning-cloud-build-2026-03-11
+overview:
+  Fix 6 CI/CD pipeline gaps — staging lock lifecycle, dep reconciliation, multi-project GCP Cloud Build isolation, SIT
+  SHA pinning, semver-at-staging, and manifest schema extensions.
+type: infra
+epic: epic-infra
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: system-integration-tests
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+  - repo: deployment-api
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
+
+depends_on: []
+
+todos:
+  - id: phase-1-manifest-schema
+    content:
+      "Initialize staging_versions, staging_status, staging_commits, main_commits, deployed_versions fields in
+      workspace-manifest.json."
+    status: done
+    note: "DONE — manifest schema extended."
+  - id: phase-2-semver-at-staging
+    content:
+      "semver-agent.yml triggers on staging only (not main); update-repo-version.yml writes staging_commits[repo]=sha;
+      staging-to-main.yml confirmed [skip ci]."
+    status: done
+    note: "DONE — semver-agent.yml and update-repo-version.yml updated."
+  - id: phase-3-sit-lock
+    content:
+      "Create sit-gate.yml + sit-unlock.yml; add concurrency debounce + sit-lock dispatch to smoke-test-gate.yml;
+      quickmerge.sh informs on locked staging."
+    status: done
+    note: "DONE — sit-gate.yml + sit-unlock.yml created."
+  - id: phase-4-dep-reconciliation
+    content:
+      "Create check-dep-alignment.py; add pre-push hook; add to quickmerge Stage 0; integrate in workspace-bootstrap.sh."
+    status: done
+    note: "DONE — check-dep-alignment.py + pre-push hook + install-hooks.sh created."
+  - id: phase-5-multi-project-cloud-build
+    content:
+      "Terraform for 3 GCP projects; qg-passed dispatch in quality-gates.yml template; cloud-build-router.yml;
+      cloudbuild.yaml multi-project substitutions; uv sync --frozen in Dockerfiles; rollback endpoint in deployment-api."
+    status: done
+    note:
+      "DONE — Terraform environments, cloud-build-router.yml, cloudbuild.yaml template, qg-passed dispatch all created."
+  - id: phase-6-cicd-flow-doc
+    content:
+      "Update docs/repo-management/CI-CD-FLOW.md with staging lock lifecycle, SIT batching, dep ref rules, multi-project
+      Cloud Build, semver lifecycle, rollback sections."
+    status: done
+    note: "DONE — CI-CD-FLOW.md updated."
+  - id: phase-7-deployment-ui
+    content:
+      "Track deployment UI branch/version selector in deployment_ui_version_selector.plan.md — environment dropdown,
+      version list, rollback button."
+    status: todo
+    note: "Tracked separately in deployment_ui_version_selector.plan.md."
+isProject: false
+---
+
 # Plan: CI/CD Versioning, Multi-Project Cloud Build & Staging Queue
 
 **Status:** In Progress **Created:** 2026-03-11 **Supersedes:** `version_control_ci_cd_overhaul_2026_03_11.plan.md`

@@ -1,3 +1,107 @@
+---
+name: zero-baseline-typecheck-2026-03-10
+overview:
+  Eliminate all .basedpyright-baseline.json suppressions across every repo so basedpyright runs with 0 errors and
+  empty/absent baseline files.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: execution-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: deployment-api
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: market-data-processing-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: ml-training-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-sports-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: strategy-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: execution-results-api
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: unified-trade-execution-interface
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - position_precision_pnl_hardening_2026_03_11
+
+todos:
+  - id: phase9-type-ignore-triage
+    content: "Phase 9: enumerate and triage remaining # type: ignore in production source; fix fixable ones"
+    status: in_progress
+    note:
+      "funding_recon_engine.py:214 and yield_recon_engine.py:280 blocked on position_precision_pnl_hardening Phase C"
+  - id: phase9-funding-recon-severity
+    content: "execution-service/services/funding_recon_engine.py:214 — fix severity arg-type with AlertSeverity enum"
+    status: blocked
+    note: "Blocked on position_precision_pnl_hardening_2026_03_11 Phase C"
+  - id: phase9-yield-recon-severity
+    content: "execution-service/services/yield_recon_engine.py:280 — same severity arg-type pattern"
+    status: blocked
+    note: "Blocked on position_precision_pnl_hardening_2026_03_11 Phase C"
+  - id: phase9-instruments-override
+    content: "instruments-service/instrument_processing_handlers.py:71 — # type: ignore[override] UTL-DEC-02 mixin"
+    status: todo
+    note: ""
+  - id: phase9-client-reporting-pnl-reader
+    content: "client-reporting-api/core/pnl_reader.py:63 — df.to_dict cast to list[dict[str, object]]"
+    status: todo
+    note: ""
+  - id: phase9-deployment-api-state
+    content: "deployment-api/services/deployment_state.py:269,293,324,358,436 — _reportPrivateUsage on sync helpers"
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Zero Baseline Typecheck — Full Remediation Plan
 
 **Created:** 2026-03-10 **Status:** Phases 1–8 COMPLETE ✅ | Phase 9 IN PROGRESS **SSOT-INDEX:** register under

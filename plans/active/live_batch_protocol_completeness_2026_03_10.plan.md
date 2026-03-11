@@ -1,3 +1,178 @@
+---
+name: live-batch-protocol-completeness-2026-03-10
+overview:
+  Audit and remediate all 14 T4 services to ensure both batch and live mode handlers, CLI flags, transport switching,
+  and tests are present and functional.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: instruments-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: market-tick-data-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: market-data-processing-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-delta-one-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-volatility-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-calendar-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-onchain-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-commodity-service
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-cross-instrument-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-multi-timeframe-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: features-sports-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: ml-training-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: strategy-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: execution-service
+    code: C1
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+  - repo: system-integration-tests
+    code: C0
+    deployment: none
+    business: none
+    readiness_note:
+      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+      required for a code plan."
+
+depends_on:
+  - mock_data_dev_project_seeding_2026_03_10
+  - phase3_service_hardening_integration
+
+todos:
+  - id: p1-todo-05
+    content:
+      "features-commodity-service: Create cli/handlers/ with live_handler.py and batch_handler.py; add --mode batch|live
+      to cli/main.py"
+    status: todo
+    note: ""
+  - id: p1-todo-08
+    content: "market-data-processing-service: Add --mode batch|live to cli/parser.py; wire mode selection"
+    status: todo
+    note: ""
+  - id: p1-todo-09
+    content: "instruments-service: Rename --run-mode to --mode in cli/parser.py; create cli/handlers/batch_handler.py"
+    status: todo
+    note: ""
+  - id: p1-todo-10
+    content: "features-sports-service: Add unit tests for batch_handler.py"
+    status: todo
+    note: ""
+  - id: p1-todo-11
+    content: "market-tick-data-service: Add unit tests for cli/batch_handler.py"
+    status: todo
+    note: ""
+  - id: p1-todo-12
+    content: "ml-training-service: Document as batch-only service in codex; rename handlers"
+    status: todo
+    note: ""
+  - id: p1-todo-13
+    content: "strategy-service: Consolidate live routing from service_entry.py to cli/handlers/live_handler.py"
+    status: todo
+    note: ""
+  - id: p1-todo-15
+    content: "Add test_live_mode_handler.py unit tests for FDS, FVS, FCS, FOS, STR"
+    status: todo
+    note: ""
+  - id: phase2-transport-tests
+    content: "Add tests/unit/test_mode_switching.py and tests/integration/test_mode_switching.py per service"
+    status: todo
+    note: ""
+  - id: phase3-sit-symmetry
+    content: "Create system-integration-tests/tests/integration/test_batch_live_symmetry.py for 13 services"
+    status: todo
+    note: ""
+  - id: phase4-codex-update
+    content: "Update unified-trading-codex/04-architecture/batch-live-symmetry.md with final audit matrix"
+    status: todo
+    note: ""
+isProject: false
+---
+
 # Plan: Live vs Batch Mode Protocol Completeness Audit
 
 status: active priority: P1 owner: backend target: 2026-03-17
