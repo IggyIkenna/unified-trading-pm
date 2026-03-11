@@ -226,7 +226,7 @@
         "pyyaml<7.0.0,": ["pyyaml<7.0.0,>=6.0.1"],
         "ruff": ["ruff==0.15.0"],
         "starlette": ["starlette>=0.40.0,<1.0.0"],
-        "web3": ["web3>=7.0.0,<8.0.0"]
+        "web3": ["web3>=6.0.0,<7.0.0"]
       },
       "internal_count": 4,
       "external_count": 26
@@ -526,7 +526,7 @@
         "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
         "ruff": ["ruff==0.15.0"],
-        "web3": ["web3>=7.0.0,<8.0.0"],
+        "web3": ["web3>=6.0.0,<7.0.0"],
         "yfinance": ["yfinance>=0.2.66,<1.0.0"]
       },
       "internal_count": 9,
@@ -1699,7 +1699,7 @@
         "ruff": ["ruff==0.15.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"],
         "vcrpy": ["vcrpy>=8.0.0,<9.0.0"],
-        "web3": ["web3>=7.0.0,<8.0.0"]
+        "web3": ["web3>=6.15.0,<7.0.0"]
       },
       "internal_count": 0,
       "external_count": 12
@@ -1849,7 +1849,7 @@
     "types_requests": "types-requests>=2.32.0,<3.0.0",
     "uvicorn[standard]": "uvicorn[standard]>=0.27.0,<1.0.0",
     "vcrpy": "vcrpy>=8.0.0,<9.0.0",
-    "web3": "web3>=7.0.0,<8.0.0",
+    "web3": "web3>=6.0.0,<7.0.0",
     "websockets": "websockets>=14.0,<15.0.0",
     "yfinance": "yfinance>=0.2.66,<1.0.0",
     "zstandard": "zstandard>=0.22.0,<1.0.0"

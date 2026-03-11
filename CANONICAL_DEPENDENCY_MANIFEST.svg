@@ -323,7 +323,7 @@
   <text x="951" y="832" text-anchor="middle" class="ver">vcrpy&gt;=8.0.0,&lt;9.0.0</text>
   <rect x="40" y="852" width="124" height="32" class="pkg-box" />
   <text x="102" y="866" text-anchor="middle" class="label">web3</text>
-  <text x="102" y="878" text-anchor="middle" class="ver">web3&gt;=7.0.0,&lt;8.0.0</text>
+  <text x="102" y="878" text-anchor="middle" class="ver">web3&gt;=6.0.0,&lt;7.0.0</text>
   <rect x="172" y="852" width="160" height="32" class="pkg-box" />
   <text x="252" y="866" text-anchor="middle" class="label">websockets</text>
   <text x="252" y="878" text-anchor="middle" class="ver">websockets&gt;=14.0,&lt;15.0.0</text>
