@@ -2,29 +2,35 @@
   "folders": [
     {
       "path": ".",
-      "name": "📁 Workspace Root",
+      "name": "\ud83d\udcc1 Workspace Root",
     },
     {
       "path": ".cursor",
-      "name": "⚙️ Cursor Config",
+      "name": "\u2699\ufe0f Cursor Config",
     },
     {
       "path": ".venv-workspace",
-      "name": "🐍 Venv",
+      "name": "\ud83d\udc0d Venv",
     },
     {
       "path": "unified-trading-codex",
-      "name": "📚 Codex",
+      "name": "\ud83d\udcda Codex",
     },
     {
       "path": "unified-trading-pm",
-      "name": "📋 Project Management",
+      "name": "\ud83d\udccb Project Management",
     },
     {
       "path": "alerting-service",
     },
     {
+      "path": "batch-audit-api",
+    },
+    {
       "path": "batch-audit-ui",
+    },
+    {
+      "path": "batch-live-reconciliation-service",
     },
     {
       "path": "client-reporting-api",
@@ -42,6 +48,9 @@
       "path": "deployment-ui",
     },
     {
+      "path": "elysium-defi-system",
+    },
+    {
       "path": "execution-algo-library",
     },
     {
@@ -51,13 +60,13 @@
       "path": "execution-results-api",
     },
     {
-      "path": "features-commodity-service",
-    },
-    {
       "path": "execution-service",
     },
     {
       "path": "features-calendar-service",
+    },
+    {
+      "path": "features-commodity-service",
     },
     {
       "path": "features-cross-instrument-service",
@@ -78,10 +87,10 @@
       "path": "features-volatility-service",
     },
     {
-      "path": "instruments-service",
+      "path": "ibkr-gateway-infra",
     },
     {
-      "path": "ibkr-gateway-infra",
+      "path": "instruments-service",
     },
     {
       "path": "live-health-monitor-ui",
@@ -93,12 +102,6 @@
       "path": "market-data-api",
     },
     {
-      "path": "ml-inference-api",
-    },
-    {
-      "path": "ml-training-api",
-    },
-    {
       "path": "market-data-processing-service",
     },
     {
@@ -108,7 +111,13 @@
       "path": "matching-engine-library",
     },
     {
+      "path": "ml-inference-api",
+    },
+    {
       "path": "ml-inference-service",
+    },
+    {
+      "path": "ml-training-api",
     },
     {
       "path": "ml-training-service",
@@ -151,6 +160,9 @@
     },
     {
       "path": "trading-analytics-ui",
+    },
+    {
+      "path": "unified-admin-ui",
     },
     {
       "path": "unified-api-contracts",
@@ -198,10 +210,10 @@
       "path": "unified-trading-library",
     },
     {
-      "path": "unified-admin-ui",
+      "path": "unified-trading-ui-auth",
     },
     {
-      "path": "unified-trading-ui-auth",
+      "path": "unified-trading-ui-kit",
     },
   ],
   "settings": {

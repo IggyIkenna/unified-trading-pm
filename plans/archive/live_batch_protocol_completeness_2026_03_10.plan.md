@@ -187,8 +187,10 @@ todos:
       execution-service (7 tests). All 88 tests pass."
   - id: phase3-sit-symmetry
     content: "Create system-integration-tests/tests/integration/test_batch_live_symmetry.py for 13 services"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE 2026-03-11 — test_batch_live_symmetry.py written; 5 parametrized test functions covering all 13 services
+      from audit matrix (repo_exists, batch_handler_exists, live_handler_exists, both_modes_present, matrix_coverage)."
   - id: phase4-codex-update
     content: "Update unified-trading-codex/04-architecture/batch-live-symmetry.md with final audit matrix"
     status: done

@@ -34,6 +34,9 @@ Read these before making ANY code changes:
 - `bash scripts/quickmerge.sh "message" --agent` not `git push` — always use `--agent` in Claude Code sessions
 - Two-pass model: `bash scripts/quality-gates.sh` first (Pass 1 — full), then `quickmerge --agent` (Pass 2 —
   lint/format/typecheck/codex, no tests, no act)
+- **NEVER use `--dep-branch` in agent/Claude Code sessions** — it is a human-only flag. Quickmerge exits(1) if
+  `--dep-branch` is combined with `--agent`. Branch is read automatically from `active_feature_branch` in
+  `workspace-manifest.json` (currently: `live-defi-rollout`). Dep conflict? Commit dep repo first, then re-run.
 - `from unified_events_interface import setup_events, log_event` — no fallbacks
 - `basedpyright` not `pyright` (and always with `run_timeout 120 basedpyright <source_dir>/`)
 - No `os.getenv()` — use `UnifiedCloudConfig`

@@ -28,7 +28,9 @@ standards.
 - **Conventional commits required:** `feat:`, `fix:`, `chore:`, `feat!:` (breaking)
 - **Never** `git reset --hard`, `git clean -fd`, `git restore` that discards uncommitted work — unless user explicitly
   requests
-- **Dependency conflict:** ALWAYS use `--dep-branch` — never suggest `git reset --hard` on deps
+- **Dependency conflict:** If a dep repo has uncommitted changes, commit them first on the `active_feature_branch` (read
+  from `workspace-manifest.json`), then re-run quickmerge. NEVER use `--dep-branch` — that flag is HUMAN-ONLY and will
+  cause quickmerge to exit with an error in `--agent` mode.
 - **Never bump versions manually** — CI bumps on merge to main
 - **Untrack ignored files** — if tracked files match `.gitignore`: detect with
   `git ls-files --ignored --exclude-standard`, then `git rm --cached <files>`. Never bare `git rm` (deletes files)
@@ -87,7 +89,10 @@ standards.
 ## 7. Agent-Specific (Quickmerge)
 
 - Use `--agent` in agent sessions: `bash scripts/quickmerge.sh "feat: ..." --agent`
-- Use `--dep-branch` when dependencies differ from main
+- **NEVER use `--dep-branch`** — it is HUMAN-ONLY. Quickmerge will exit(1) if you pass it with `--agent`.
+  - Branch is read automatically from `active_feature_branch` in `workspace-manifest.json` (currently:
+    `live-defi-rollout`)
+  - If a dep repo has uncommitted changes: commit them first (same feature branch), then re-run here
 - Breaking changes: `--to-staging`
 
 ---

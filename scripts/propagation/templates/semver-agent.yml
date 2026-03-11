@@ -1,10 +1,14 @@
 name: semver-agent
 
-# Computes the next semver for this repo based on diff analysis since last staging_versions
+# Computes the next semver for this repo based on diff analysis since last versions
 # baseline, then dispatches a version-bump event to unified-trading-pm with the computed version.
 #
-# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the staging branch.
-# This ensures semver bumps are only computed for code that has passed quality checks.
+# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the main branch.
+# This ensures semver bumps are computed AFTER SIT validates staging and the code
+# is promoted to main — not prematurely at staging time.
+#
+# Pipeline position:
+#   live-defi-rollout → staging → SIT → main → [this workflow] → version bump
 #
 # Pre-1.0.0 semver rules:
 #   feat!: / BREAKING CHANGE: → MINOR bump (never auto-cross to 1.0.0)
@@ -26,7 +30,7 @@ on:
   workflow_run:
     workflows: ["Quality Gates"]
     types: [completed]
-    branches: [staging]
+    branches: [main]
 
 permissions:
   contents: read
@@ -38,7 +42,7 @@ jobs:
     # Only run when Quality Gates passed — never on failure
     if: github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Checkout repo at staging commit
+      - name: Checkout repo at main commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -348,7 +352,7 @@ jobs:
 
           REPO="${{ github.event.repository.name }}"
           VERSION="${{ steps.compute.outputs.new_version }}"
-          BRANCH="staging"
+          BRANCH="main"
           COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
           OWNER="${{ github.repository_owner }}"
 

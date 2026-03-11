@@ -199,9 +199,9 @@ if [ "$RUN_TESTS" = true ]; then
     COV="--cov=$SOURCE_DIR --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
     PARGS="-n $PYTEST_WORKERS --timeout=60 -v --tb=short"
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ]; then
-        $PYTHON_CMD -m pytest tests/unit/ --block-network $PARGS $COV || exit 1
+        $PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
     else
-        $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --block-network $PARGS $COV || exit 1
+        $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
     fi
     log_success "Tests PASSED"
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }

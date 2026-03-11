@@ -7,7 +7,7 @@ overview: |
   creds available). Covers the question: "do all services have their buckets, and can they auth?"
 type: deployment
 epic: epic-deployment
-status: active
+status: completed
 
 completion_gates:
   code: C5
@@ -173,10 +173,10 @@ todos:
       provision S3 buckets per aws_bucket_mappings in bucket_config.yaml. AWS equivalent buckets use account_id instead
       of project_id. Currently skipped — aws configure not set up. SIT test_aws_s3_smoke.py already skips gracefully
       when no boto3 creds.
-    status: blocked
+    status: done
     notes:
-      AWS credentials (access key, secret, account ID) not set up yet. Placeholder bucket test exists in
-      test_aws_s3_smoke.py.
+      "MIGRATED 2026-03-11 → aws_migration.plan.md todo aws-s3-bucket-setup. Script already written (setup-buckets.py
+      --cloud aws). Runs when AWS creds available (aws-account-setup completes)."
 
   - id: dual-cloud-auth-strategy
     content: >-

@@ -8,7 +8,7 @@ overview: |
   Strategy: test what's real now; mock/skip AWS; validate everything via SIT smoke tests.
 type: deployment
 epic: epic-deployment
-status: active
+status: completed
 
 completion_gates:
   code: C5
@@ -165,8 +165,10 @@ todos:
     content: >-
       AWS Cost Explorer / CloudWatch billing alarms equivalent. Create AWS Budgets entry and CloudWatch billing alarm
       via setup-billing-alerts.sh --cloud aws. Documented in script but blocked on AWS credentials.
-    status: blocked
-    notes: Commands documented in setup-billing-alerts.sh --cloud aws section.
+    status: done
+    notes:
+      "MIGRATED 2026-03-11 → aws_migration.plan.md todo aws-billing-alerts. Commands documented in
+      setup-billing-alerts.sh --cloud aws section. Runs when AWS creds available (aws-account-setup completes)."
 
   - id: deployment-cleanup-untagged-images
     content: >-

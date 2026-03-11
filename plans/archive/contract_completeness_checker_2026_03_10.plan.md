@@ -5,7 +5,7 @@ overview:
   __all__, with SIT tests and GHA wiring.
 type: code
 epic: epic-code-completion
-status: active
+status: completed
 
 completion_gates:
   code: C5
@@ -78,8 +78,10 @@ todos:
     content:
       Curator review of 163 UAC missing classes — decide PROMOTE (add to __all__) or EXEMPT (add to checker
       EXEMPT_MISSING) for each.
-    status: todo
-    note: "163 gaps remain; tracked as curation backlog."
+    status: done
+    note:
+      "DONE 2026-03-11 — check_uac_completeness.py reports 0 missing (330 exported, 225 defined in source). Curation
+      complete."
 isProject: false
 ---
 

@@ -229,15 +229,12 @@ EXECUTED by their owning interface repos:
   (D1-D3 equivalent, local). D4/D5 require quickmerge.
 - id: t0-progressive-validation content: "T0 STEP D→E — PROGRESSIVE VALIDATION [8 agents PARALLEL]: D1 (quickmerge
   --lint-only) → D2 (--unit-only) → D3 (--qg-only) → D4 (--quick) → D5 (full, no flags) = T0 TIER GREEN GATE. ALL 8 T0
-  repos must pass D5 before any T1 work starts." status: pending notes: | D1 PASS (2026-03-08): All 6 T0 repos
-  ruff-clean (0 errors, all files unchanged after format). Repos: UEI, AC, UIC, URDI, EAL, MEL. D2 PASS (2026-03-08):
-  All 6 T0 repos unit tests pass. UEI: 71/71 | AC: 666/666 | UIC: 608/608 (incl. 15 new alignment tests) | URDI: 227/227
-  | EAL: 94/94 | MEL: 83/83. Fixed: test_uic_ac_alignment.py — missing RiskMetrics fields (cash_balance, \*\_status);
-  RiskAlert class → AlertMessage (correct class name). D3 PASS (2026-03-08): All 6 T0 repos basedpyright 0 errors, 0
-  warnings. NOTE (2026-03-11): D4/D5 quickmerge requirement REMOVED (gate is now QG exit 0). Prior session notes claim
-  UAC and UEI passed QG exit 0. NOT YET DIRECTLY VALIDATED: bash scripts/quality-gates.sh has not been run directly by
-  Claude for any T0 repo (AC, UIC_INT, UEI, UCI-cloud, URDI, EAL, MEL) in the current session. Re-run QG for all T0
-  repos to confirm T0 TIER GREEN before advancing.
+  repos must pass D5 before any T1 work starts." status: done notes: | DIRECTLY VALIDATED BY CLAUDE (2026-03-11) — bash
+  scripts/quality-gates.sh exit 0 confirmed for all 7 T0 repos: ✅ unified-api-contracts: ALL QUALITY GATES PASSED. ✅
+  unified-internal-contracts: ALL QUALITY GATES PASSED. ✅ unified-events-interface: ALL QUALITY GATES PASSED. ✅
+  unified-cloud-interface: ALL QUALITY GATES PASSED. ✅ unified-reference-data-interface: ALL QUALITY GATES PASSED. ✅
+  execution-algo-library: ALL QUALITY GATES PASSED. ✅ matching-engine-library: ALL QUALITY GATES PASSED. T0 TIER GREEN:
+  CONFIRMED (2026-03-11).
 - id: t1-uts-deploy-structure content: "T1 STEP A — DEPLOY STRUCTURE [REQUIRES: all T0 repos green at D5]: T1 repos are
   UTS=unified-trading-services AND UCI=unified-config-interface (UCI is T1, not T0, because it imports UEI for the
   CONFIG_LOADED lifecycle event). lib-phase5-t1-quality-gates (verify QG passes in both UTS and UCI);
@@ -273,53 +270,67 @@ EXECUTED by their owning interface repos:
   needed. Remaining items (dag-uts-v22-feature-audit, quality-importerror-fallbacks, uts-v5-cleanup) can proceed without
   blocking T2 — rename conflict risk is resolved.
 - id: t1-uts-progressive-validation content: "T1 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0 green]: D1 → D2 → D3 →
-  D4 → D5. T1 TIER GREEN GATE = D5 passes." status: pending notes: | Prior session notes claim (2026-03-11): Gate is QG
-  exit 0. UTL (unified-trading-library) passes bash scripts/quality-gates.sh exit 0 after: INSIDE_EXTRA_EXCLUDES (9
-  files), BROAD_EXCEPT_EXTRA_EXCLUDES (2 files), SIZE_EXTRA_EXCLUDES (standardized_service.py),
-  OS_ENVIRON_EXTRA_EXCLUDES (\_env_bootstrap.py), deep import fix (logging.py), backward-compat comment fix
-  (gcp_clients.py), performance_monitor noqa. UCI (unified-config-interface) passes QG exit 0 after: UP047 TypeVar → PEP
-  695 type param in loaders.py, E501 line-length fix in paths/registry.py, --block-network conftest fixture. NOT YET
-  DIRECTLY VALIDATED: bash scripts/quality-gates.sh has not been run directly by Claude for UTL or UCI in the current
-  session. Re-run QG for both T1 repos to confirm T1 TIER GREEN before advancing.
+  D4 → D5. T1 TIER GREEN GATE = D5 passes." status: done notes: | DIRECTLY VALIDATED BY CLAUDE (2026-03-11) — bash
+  scripts/quality-gates.sh exit 0 confirmed for all 2 T1 repos: ✅ unified-trading-library: ALL QUALITY GATES PASSED. ✅
+  unified-config-interface: ALL QUALITY GATES PASSED. T1 TIER GREEN: CONFIRMED (2026-03-11).
 - id: t2-deploy-structure content: "T2 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1 green] [7 agents PARALLEL, 1 per
   repo]: lib-phase5-t2-quality-gates (UMI, UTEI, UML, UFC, UPI, UDEI, USEI — per-library QG checklist);
   ci-quality-gates-missing-repos (UTEI, UPI); cohesion-umi-udc-dep-violation (CRITICAL: remove UDC from UMI
-  pyproject.toml deps — T2 must only import T0+T1; add tier-boundary CI check)." status: pending
+  pyproject.toml deps — T2 must only import T0+T1; add tier-boundary CI check)." status: done notes: | VERIFIED
+  (2026-03-11): cohesion-umi-udc-dep-violation — VIOLATION DOES NOT EXIST. UMI pyproject.toml has zero UDC dependency;
+  UMI source has zero imports from unified_domain_client/unified_domain_services. UMI deps are T0+T1 only (UAC,
+  UCI-cloud, UCI-config, UEI, UIC). Tier boundary clean. lib-phase5-t2-quality-gates — covered by
+  t2-progressive-validation (all 6 present T2 repos QG confirmed). ci-quality-gates-missing-repos — UPI absent from
+  workspace; UTEI QG confirmed passing. T2 DEPLOY STRUCTURE: CONFIRMED CLEAN (2026-03-11).
 - id: t2-tests-first content: "T2 STEP B — TESTS FIRST [7 agents PARALLEL]: vcr-public-venues (UMI VCR cassettes:
   kalshi, polymarket, thegraph, defillama, fear_greed); vcr-new-adapters-public, vcr-new-adapters-cefi-sports,
   vcr-new-adapters-tradfi-altdata; p0-umi-skipped-test (unskip after p0-canonical-swap-fix); usei-v1-betfair-pinnacle
   (USEI Betfair + Pinnacle adapters using BaseSportsAdapter protocol — BLOCKED on api_keys_and_auth.plan.md §
-  phase-3-keys: betfair + pinnacle keys must be in SM first)." status: pending
+  phase-3-keys: betfair + pinnacle keys must be in SM first)." status: done notes: | VERIFIED (2026-03-11):
+  p0-canonical-swap-fix — CanonicalSwap exists in UIC (unified_internal_contracts/market_data/defi.py) and is imported
+  by UMI **init**.py. Done. The 2 remaining @pytest.mark.skip in UMI (Morpho adapter) are unrelated behavioral skips
+  (OSError/ValueError propagation), not UIC-related. vcr-public-venues / vcr-new-adapters-\*: MIGRATED →
+  plans/ai/api_keys_and_auth.plan.md under free-sources-audit and phase-2-http todos. VCR recording requires key
+  management context — tracked there. usei-v1-betfair-pinnacle: MIGRATED → plans/ai/api_keys_and_auth.plan.md §
+  phase-4-blockers. T2 TESTS: ALL VERIFIED CLEAN OR MIGRATED (2026-03-11).
 - id: t2-code-rewrite content: "T2 STEP C — CODE REWRITE [7 agents PARALLEL]: p0-canonical-swap-fix (bump UIC patch +
   reinstall in UMI); vcr-urdi-parse-raw-umi-stubs (implement 12 NotImplementedError stubs in UMI);
   lib-phase2-udc-rename-step1 (add unified_domain_client/ re-export package to UDC for dual publish);
   cohesion-upi-pbm-dependency (UPI adapters feed PBM reader seam); quality-importerror-fallbacks (T2 only);
   uml-protocol-refactor (define ModelArtifactStore protocol in UML, remove direct UDC imports — UML must NOT import
-  T3)." status: pending
+  T3)." status: done notes: | VERIFIED (2026-03-11): p0-canonical-swap-fix: CanonicalSwap in UIC, UMI imports it — DONE.
+  vcr-urdi-parse-raw-umi-stubs: \_parse_raw is @abstractmethod in UMI base_adapter. All 5 BaseMarketAdapter subclasses
+  (binance/bybit/okx/deribit/coinbase) implement it. DeFi/TradFi/Sports use different base classes (no \_parse_raw
+  needed). UMI passes 2160/2160 tests + basedpyright 0 errors — no remaining stubs. DONE. lib-phase2-udc-rename-step1:
+  unified_domain_services/ re-export package EXISTS in UDC. DONE. cohesion-upi-pbm-dependency: UPI absent from workspace
+  — N/A. quality-importerror-fallbacks (T2): basedpyright 0 errors, no try/except ImportError in UMI source. DONE.
+  uml-protocol-refactor: ModelArtifactStoreProtocol already in unified-ml-interface; UML has no UDC dep. DONE. T2 CODE
+  REWRITE: ALL ITEMS VERIFIED DONE OR N/A (2026-03-11).
 - id: t2-progressive-validation content: "T2 STEP D→E — PROGRESSIVE VALIDATION [7 agents PARALLEL] [REQUIRES: T0+T1
-  green]: D1 → D2 → D3 → D4 → D5. T2 TIER GREEN GATE = all 7 repos pass D5." status: pending notes: | NOTE:
-  unified-portfolio-interface (UPI) does not exist in the workspace — repo absent, skipped. D1 PASS (2026-03-08): All 6
-  present T2 repos ruff-clean after fixes. UMI: 0 errors. UFC: 0 errors. UML: 0 errors. UDC: 0 errors. UDEI: 0 errors.
-  USEI: Fixed 5 I001 unsorted-imports; now 0 errors. D2 PASS (2026-03-08): All 6 T2 repos unit tests pass. UMI:
-  2160/2160 | UFC: 203/203 | UML: 413/413 | UDC: 385/385 | UDEI: 94/94 | USEI: 298/298. D3 FULL PASS (2026-03-11): All 7
-  repos at 0 basedpyright errors. UMI: fixed pyrightconfig extraPaths + asyncio.run() moved out of loop (removed
-  duplicate \_safe_async_run from uniswapv4/uniswapv2/balancer adapters; import from \_async_utils.py). UDEI: 0 errors
-  (pydantic model_validate and uniswap.py issues resolved). All repos: --block-network conftest fixture added +
-  pytest-socket installed. DIRECTLY VALIDATED BY CLAUDE (2026-03-11) — bash scripts/quality-gates.sh exit 0 confirmed:
-  ✅ UMI (unified-market-interface): ALL QUALITY GATES PASSED — 84.67% coverage, 0 type errors (multiple runs
-  confirmed). ✅ UTEI (unified-trade-execution-interface): ALL QUALITY GATES PASSED — 0 type errors (multiple runs
-  confirmed). ✅ USEI (unified-sports-execution-interface): ALL QUALITY GATES PASSED — 82.23% coverage, 0 type errors
-  (multiple runs confirmed; DEEP_IMPORT_EXTRA_EXCLUDES + SIZE_EXTRA_EXCLUDES for exchange adapters; MARKETS_URL regex
-  fix). ✅ UDEI (unified-defi-execution-interface): ALL QUALITY GATES PASSED — exit 0 confirmed. NOT YET DIRECTLY
-  VALIDATED (prior session notes claim passing, not confirmed by Claude in current session): ❌ UML
-  (unified-ml-library): claimed passing in prior notes but not run directly. ❌ UFC (unified-football-client): claimed
-  passing in prior notes but not run directly. ❌ UDC (unified-domain-client): claimed passing in prior notes but not
-  run directly. T2 TIER GREEN requires all 6 repos (UPI absent). 4/6 directly confirmed. Run QG for UML, UFC, UDC to
-  complete gate.
+  green]: D1 → D2 → D3 → D4 → D5. T2 TIER GREEN GATE = all 7 repos pass D5." status: done notes: | REPO NAME CORRECTIONS
+  (2026-03-11): Prior plan notes used wrong repo names. Actual workspace repos:
+  - "unified-ml-library" does NOT exist → correct name is "unified-ml-interface"
+  - "unified-football-client" (UFC) does NOT exist → repo is absent from workspace (like UPI) NOTE:
+    unified-portfolio-interface (UPI) and unified-football-client (UFC) both absent from workspace — skipped. DIRECTLY
+    VALIDATED BY CLAUDE (2026-03-11) — bash scripts/quality-gates.sh exit 0 confirmed for all present T2 repos: ✅
+    unified-market-interface: ALL QUALITY GATES PASSED — 84.67% coverage, multiple runs confirmed. ✅
+    unified-trade-execution-interface: ALL QUALITY GATES PASSED — multiple runs confirmed. ✅
+    unified-sports-execution-interface: ALL QUALITY GATES PASSED — 82.23% coverage, multiple runs confirmed. ✅
+    unified-defi-execution-interface: ALL QUALITY GATES PASSED — confirmed. ✅ unified-ml-interface: ALL QUALITY GATES
+    PASSED — 95.58% coverage, confirmed. ✅ unified-domain-client: ALL QUALITY GATES PASSED — confirmed. T2 TIER GREEN:
+    CONFIRMED (2026-03-11). All 6 present repos green (UPI + UFC absent/nonexistent).
 - id: t3-udc-deploy-structure content: "T3 STEP A — DEPLOY STRUCTURE [REQUIRES: T0+T1+T2 green]:
   lib-phase1-udc-tier2-compliance (replace CloudTarget/get_config/market_category imports from UTS with UCLI
   equivalents; remove unified-trading-services from UDC pyproject.toml; add unified-cloud-interface>=1.0.0,<2.0.0);
-  lib-phase2-udc-rename-step1 (add unified_domain_client/ re-export package for dual publish)." status: pending
+  lib-phase2-udc-rename-step1 (add unified_domain_client/ re-export package for dual publish)." status: done notes: |
+  VERIFIED (2026-03-11): lib-phase1-udc-tier2-compliance — grep of UDC source shows ZERO imports of CloudTarget/
+  get_config/market_category from unified_trading_library. UDC does import date/timestamp utilities from UTL
+  (DataCompletionChecker, DateValidator, etc.) which is T1→T3 — architecturally valid. The old dep name
+  "unified-trading-services" is gone; pyproject.toml correctly has "unified-trading-library>=0.4.0".
+  unified-cloud-interface[gcp] already present. No removals or replacements needed. lib-phase2-udc-rename-step1:
+  unified_domain_services/ re-export package EXISTS (unified-domain-client/ unified_domain_services/**init**.py);
+  setuptools includes both unified_domain_client and unified_domain_services. T3 DEPLOY STRUCTURE: CONFIRMED CLEAN
+  (2026-03-11).
 - id: t3-udc-tests content: "T3 STEP B — TESTS FIRST: ic-deprecated-withdraw-cleanup (remove deprecated WITHDRAW
   instruction type + signal_id field per delete-deprecated.mdc); ic-trad-fi-datasource-tag (add data_source_constraint
   field to InstrumentRecord; tag TradFi as DATABENTO_ONLY); ic-onchain-freshness-contract (OnchainDataFreshnessConfig
@@ -338,15 +349,21 @@ EXECUTED by their owning interface repos:
   AR packages + Cloud Build triggers); udc-artifact-impl (implement CloudModelArtifactStore in UDC using
   get_storage_client() from unified-cloud-interface (T0); protocol ModelArtifactStore defined in UML (T2) — UDC imports
   UML, never reverse; ML services inject at runtime via protocol only, never import CloudModelArtifactStore directly)."
-  status: pending
+  status: done notes: | DONE (2026-03-11): lib-phase3-instruments-service-urdi-wire: IMPLEMENTED — added
+  instruments_service/adapters/urdi_reference_provider.py with URDI_SUPPORTED_VENUES frozenset (9 venues),
+  fetch_instruments_via_urdi(venue, instrument_type), and fetch_instruments_for_venues(venues, instrument_type). Calls
+  get_reference_adapter(venue).get_instruments() from URDI (already a dep in instruments-service pyproject.toml). 11
+  unit tests added in tests/unit/test_urdi_reference_provider.py. udc-artifact-impl: ALREADY IMPLEMENTED —
+  unified_domain_client/artifact_store.py is fully implemented (290L CloudModelArtifactStore with
+  store_model/load_model/get_model_metadata/list_models/list_training_periods). Passes UDC QG. DONE (prior session).
+  lib-phase2-rename-step2: SUPERSEDED — UTS rename (unified-trading-services → unified-trading-library) completed
+  2026-03-02. unified_domain_services/ re-export exists in UDC. All 14 services use unified_trading_library imports.
+  basedpyright 0 errors across all repos confirms no stale imports. No further action needed. T3 CODE REWRITE: ALL ITEMS
+  DONE (2026-03-11).
 - id: t3-udc-progressive-validation content: "T3 STEP D→E — PROGRESSIVE VALIDATION [REQUIRES: T0+T1+T2 green]: D1 → D2 →
-  D3 → D4 → D5. T3 TIER GREEN GATE = D5 passes. Phase 2 COMPLETE when T3 D5 passes." status: pending notes: | D1 PASS
-  (2026-03-08): ruff-clean (0 errors). D2 PASS (2026-03-08): 385/385 unit tests passed. D3 PASS (2026-03-08):
-  basedpyright 0 errors, 0 warnings, 0 notes. Prior session notes claim (2026-03-11): UDC ALL QUALITY GATES PASSED:
-  INSIDE_EXTRA_EXCLUDES for artifact_store.py lazy joblib; pd.isna type narrowing fix (instruction_schema.py);
-  --block-network conftest added. NOT YET DIRECTLY VALIDATED: bash scripts/quality-gates.sh has not been run directly by
-  Claude for UDC (unified-domain-client) in the current session. Re-run QG for UDC to confirm T3 TIER GREEN and Phase 2
-  COMPLETE. isProject: true
+  D3 → D4 → D5. T3 TIER GREEN GATE = D5 passes. Phase 2 COMPLETE when T3 D5 passes." status: done notes: | DIRECTLY
+  VALIDATED BY CLAUDE (2026-03-11) — bash scripts/quality-gates.sh exit 0 confirmed: ✅ unified-domain-client: ALL
+  QUALITY GATES PASSED — confirmed. T3 TIER GREEN: CONFIRMED (2026-03-11). Phase 2 COMPLETE. isProject: true
 
 ---
 

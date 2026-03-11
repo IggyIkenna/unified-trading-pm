@@ -227,6 +227,27 @@ todos:
       get_storage_client/get_secret_client calls confirmed; (2) no hardcoded GCP project IDs or bucket names in
       production source; (3) buildspec.aws.yaml present; (4) secret names documented in credentials-registry.yaml."
     status: pending
+  # ── Migrated from cloud_infra_bucket_auth_2026_03_10 (archived 2026-03-11) ──
+  - id: aws-s3-bucket-setup
+    content: >-
+      Run setup-buckets.py --cloud aws --include-test --dry-run first, then --create to provision S3 buckets per
+      aws_bucket_mappings in bucket_config.yaml. AWS equivalent buckets use account_id instead of project_id. Script
+      already written and tested (deployment-service). Runs after aws-account-setup completes. Gate: setup-buckets.py
+      --cloud aws --dry-run exits 0; all bucket names listed match bucket_config.yaml aws_bucket_mappings; SIT
+      test_aws_s3_smoke.py passes with AWS creds.
+    status: pending
+    notes: "Migrated from cloud_infra_bucket_auth_2026_03_10.plan.md todo aws-bucket-setup (archived 2026-03-11)."
+  # ── Migrated from cloud_infra_extended_bootstrap_2026_03_10 (archived 2026-03-11) ──
+  - id: aws-billing-alerts
+    content: >-
+      Run setup-billing-alerts.sh --cloud aws to create AWS Budgets entry and CloudWatch billing alarm. Script already
+      written (deployment-service/scripts/setup-billing-alerts.sh --cloud aws section). Equivalent to GCP
+      unified-trading-monthly-budget ($500/month) + unified-trading-dev-budget ($50). Thresholds: 50%/80%/100%/120%.
+      Alerts → SNS → alerting-service → Telegram. Gate: aws budgets describe-budgets lists both budgets; CloudWatch
+      billing alarm ALARM triggers below threshold.
+    status: pending
+    notes:
+      "Migrated from cloud_infra_extended_bootstrap_2026_03_10.plan.md todo billing-alerts-aws (archived 2026-03-11)."
 isProject: false
 ---
 
