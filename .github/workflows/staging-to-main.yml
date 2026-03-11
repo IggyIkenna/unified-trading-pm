@@ -15,6 +15,12 @@ name: staging-to-main
 on:
   repository_dispatch:
     types: [staging-validated]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual promotion (e.g. hotfix fast-track)"
+        required: false
+        default: "manual hotfix fast-track"
 
 permissions:
   contents: write
