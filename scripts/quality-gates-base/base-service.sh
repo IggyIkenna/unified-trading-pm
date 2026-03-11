@@ -467,8 +467,9 @@ else
 fi
 
 # Security: bandit
+# BANDIT_EXTRA_ARGS: optional per-repo override (e.g. BANDIT_EXTRA_ARGS="-c pyproject.toml")
 if command -v bandit &>/dev/null; then
-    run_timeout 30 bandit -r "$SOURCE_DIR/" -ll 2>/dev/null && log_success "bandit clean" || { log_fail "bandit issues"; V=$(( V + 1 )); }
+    run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>/dev/null && log_success "bandit clean" || { log_fail "bandit issues"; V=$(( V + 1 )); }
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi
