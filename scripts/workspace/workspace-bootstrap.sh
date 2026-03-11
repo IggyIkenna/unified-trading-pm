@@ -631,6 +631,18 @@ else
   fi
 fi
 
+# ── INSTALL SHARED SCRIPTS INTO .venv-workspace/bin ─────────────────────────
+# Makes run_timeout (and any future shared scripts) available as system
+# binaries in any subshell without sourcing quality-gates.sh.
+if [ -d "$WORKSPACE_VENV/bin" ] && [ -d "$PM_ROOT/scripts/shared" ]; then
+  for _script in "$PM_ROOT/scripts/shared/"*; do
+    _name=$(basename "$_script")
+    cp "$_script" "$WORKSPACE_VENV/bin/$_name"
+    chmod +x "$WORKSPACE_VENV/bin/$_name"
+  done
+  log_ok "Shared scripts installed to .venv-workspace/bin (run_timeout etc.)"
+fi
+
 # ── PHASE 5: PER-REPO SETUP (CI/CD Phase 2) ──────────────────────────────────
 log_phase 5 "Per-Repo Setup (CI/CD Phase 2)"
 

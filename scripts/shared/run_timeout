@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# run_timeout — standalone wrapper for quality-gates timeout calls.
+#
+# Usage: run_timeout <seconds> <command> [args...]
+#
+# Identical logic to the run_timeout() shell function in base-service.sh so
+# that background subshells (Claude Code tasks, CI steps that don't source
+# quality-gates.sh) can call it without a "command not found" error.
+#
+# Install location: .venv-workspace/bin/run_timeout  (auto-installed by
+# unified-trading-pm/scripts/workspace/workspace-bootstrap.sh Phase 4)
+# Canonical source: unified-trading-pm/scripts/shared/run_timeout
+set -euo pipefail
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: run_timeout <seconds> <command> [args...]" >&2
+    exit 1
+fi
+
+secs=$1; shift
+
+if   command -v timeout   &>/dev/null; then timeout "$secs" "$@"
+elif command -v gtimeout  &>/dev/null; then gtimeout "$secs" "$@"
+elif command -v perl      &>/dev/null; then perl -e 'alarm shift; exec @ARGV' -- "$secs" "$@"
+else "$@"
+fi
