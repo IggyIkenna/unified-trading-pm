@@ -216,10 +216,12 @@ todos:
       campaigns (strategy-service, UDC, ml-training-api, trading-analytics-api, UIs). Do NOT run --recalibrate with
       stale coverage.xml — it will corrupt thresholds. Re-run each repo's tests first: cd <repo> && .venv/bin/pytest
       tests/ --cov=<package> --cov-report=xml before recalibrating."
-    status: pending
+    status: completed
     note:
-      "Added 2026-03-10. Follow-on from coverage_remediation_2026_03_10 plan (archived). 14 of 14 Section A repos now
-      above floor. Recalibrate deferred until remaining FAIL repos also resolved."
+      "Added 2026-03-10. Follow-on from coverage_remediation_2026_03_10 plan (archived). 14 of 14 Section A repos above
+      floor. COMPLETED 2026-03-11: 65 repos processed, 0 errors. MIN_COVERAGE updated per repo to actual-1%. Below-floor
+      repos (batch-live-reconciliation=13%, ibkr-gateway=52%, elysium-defi-lite=45%) retained floor=70 pending
+      campaigns."
 
   - id: audit-cloud-agnostic-api
     content: >
