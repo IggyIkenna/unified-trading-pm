@@ -1,8 +1,6 @@
 # =============================================================================
 # Central .cursorignore — workspace SSOT (reduce Cursor index size)
-# Canonical: unified-trading-pm/cursor-configs/cursorignore
-# Workspace root symlink: .cursorignore → unified-trading-pm/cursor-configs/cursorignore
-# PM repo symlink: unified-trading-pm/.cursorignore → cursor-configs/cursorignore
+# Copy to repo root as .cursorignore. Source: unified-trading-pm/scripts/templates/
 # =============================================================================
 
 # Venvs and runtimes
@@ -31,7 +29,7 @@
 **/data/
 **/logs/
 
-# Common data / document file types (large or binary)
+# Common data / document file types (large or binary, exclude from index)
 **/*.csv
 **/*.tsv
 **/*.parquet
@@ -60,38 +58,7 @@
 **/.vscode/
 **/.DS_Store
 
-# Boilerplate and low-value config files
-**/LICENSE
-**/.gitignore
-**/.actrc
-**/index.html
-**/vite-env.d.ts
-**/.gitkeep
-**/.python-version
-
-# Backup and dump files
-**/*.bak
-
-# Generated configs — machine-generated, low semantic value
-**/configs/generated/**
-
-# Temp audit docs
-**/docs/.temp-audit/**
-
-# Build/config metadata
-**/.dependency-matrix.json
-**/pip.conf
-
-# Archived docs — low indexing value
-unified-trading-pm/github-integration/archived/
-
-# Sub-repo .cursor/ — no longer ignored so agent can read/edit rules and configs.
-
 # Optional: Terraform (uncomment if used)
 # **/.terraform/
 # **/*.tfstate
 # **/*.tfstate.*
-
-# Explicitly allow .mdc (rules) and .sh (scripts) — agent must be able to read/write these
-!**/*.mdc
-!**/*.sh

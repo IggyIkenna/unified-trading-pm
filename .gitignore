@@ -124,3 +124,6 @@ logs/
 # --- Optional: Jupyter (uncomment if repo has notebooks) ---
 # .ipynb_checkpoints/
 # profile_default/
+
+# --- Repo-specific: keep github-integration data on remote ---
+!github-integration/data/*.json

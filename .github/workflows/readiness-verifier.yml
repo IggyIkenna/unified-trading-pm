@@ -1,0 +1,98 @@
+name: Readiness Verifier
+
+# Daily automated check that declared CR/DR/BR states in codex match
+# automated verification results.  Alerts via Telegram on any mismatch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "Tier to verify (T0/T1/T2/T3/T4/T5/T6/infra/all)"
+        required: false
+        default: "all"
+      repo_filter:
+        description: "Single repo name to verify (optional)"
+        required: false
+  schedule:
+    - cron: "0 3 * * *" # 3:00 UTC daily
+
+env:
+  WORKSPACE_ROOT: ${{ github.workspace }}/..
+
+jobs:
+  verify-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout unified-trading-codex (readiness checklists)
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-codex
+          token: ${{ secrets.GH_PAT }}
+          path: ../unified-trading-codex # RELATIVE sibling clone
+
+      - name: Checkout workspace repos for the specified tier
+        # Clone only the repos in the tier being verified using the
+        # setup-workspace-from-manifest.sh script with a tier filter.
+        run: |
+          bash scripts/workspace/setup-workspace-from-manifest.sh \
+            --tier "${{ github.event.inputs.tier || 'all' }}" \
+            --skip-fresh
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv and dependencies
+        run: |
+          pip install uv
+          python -m venv .venv
+          source .venv/bin/activate
+          uv pip install pyyaml
+
+      - name: Run readiness verifier
+        id: verify
+        run: |
+          source .venv/bin/activate
+          EXIT_CODE=0
+          if [ -n "${{ github.event.inputs.repo_filter }}" ]; then
+            python scripts/check-repo-readiness.py \
+              --repo "${{ github.event.inputs.repo_filter }}" \
+              --workspace-root "${{ env.WORKSPACE_ROOT }}" \
+              2>&1 | tee readiness-report.txt || EXIT_CODE=$?
+          else
+            python scripts/check-repo-readiness.py \
+              --tier "${{ github.event.inputs.tier || 'all' }}" \
+              --workspace-root "${{ env.WORKSPACE_ROOT }}" \
+              2>&1 | tee readiness-report.txt || EXIT_CODE=$?
+          fi
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Add to Job Summary
+        if: always()
+        run: |
+          echo "## Readiness Verification Report" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat readiness-report.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Telegram alert on mismatches
+        if: steps.verify.outputs.exit_code == '1'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MISMATCHES=$(grep -c "MISMATCH" readiness-report.txt || true)
+          TIER_LABEL="${{ github.event.inputs.tier || 'all' }}"
+          MESSAGE="⚠️ READINESS MISMATCH: ${MISMATCHES} declared gate(s) failed verification (tier: ${TIER_LABEL}). See GHA run for details."
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MESSAGE}" \
+            -d "parse_mode=Markdown" || true

@@ -8,8 +8,8 @@ Run from workspace root: python3 unified-trading-pm/scripts/sync-gitignore-curso
 
 from pathlib import Path
 
-WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent
-PM = WORKSPACE_ROOT / "unified-trading-pm"
+PM = Path(__file__).resolve().parent.parent.parent
+WORKSPACE_ROOT = PM.parent
 TEMPLATES = PM / "scripts" / "templates"
 CENTRAL_GITIGNORE = TEMPLATES / ".gitignore.central"
 CENTRAL_CURSORIGNORE = TEMPLATES / ".cursorignore.central"
@@ -48,6 +48,27 @@ REPO_GITIGNORE_ADDITIONS = {
         "",
         "# --- Repo-specific: keep example env on remote ---",
         "!.env.example",
+    ],
+    "features-delta-one-service": [
+        "",
+        "# --- Repo-specific: keep mock data on remote ---",
+        "!data/mock/ETHUSDT.csv",
+        "!data/mock/SOLUSDT.csv",
+    ],
+    "unified-trading-pm": [
+        "",
+        "# --- Repo-specific: keep github-integration data on remote ---",
+        "!github-integration/data/*.json",
+    ],
+    "features-sports-service": [
+        "",
+        "# --- Repo-specific: keep data writer on remote ---",
+        "!features_sports_service/data/writer.py",
+    ],
+    "instruments-service": [
+        "",
+        "# --- Repo-specific: keep sp500 tickers on remote ---",
+        "!instruments_service/data/sp500_tickers.json",
     ],
 }
 
