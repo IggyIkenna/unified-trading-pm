@@ -421,3 +421,35 @@ any downstream repo. Remediation completed 2026-03-09:
       `DataAvailability`, `EndpointSpec`, `ResponseFormat` imported and added to `__all__` in
       `unified_api_contracts/__init__.py`; all `# orphan:` comments removed from `endpoint_registry.py`; basedpyright
       clean (0 errors).
+
+---
+
+## Track L — §13.2 Trading-Critical TODO Tracking (2026-03-11 Audit)
+
+These items were found during the §13.2 audit scan (2026-03-11). All are GH-BACKLOG items formally tracked here.
+
+### Todos
+
+- [ ] `risk-batch-compute-unimplemented` — `risk-and-exposure-service/cli/handlers/compute_handler.py:30` — batch risk
+      computation is unimplemented (GH-BACKLOG). Implement `_compute_batch_risk()` to calculate portfolio risk metrics
+      for historical windows.
+
+- [ ] `pre-trade-cash-reserve-check` — `risk-and-exposure-service/core/pre_trade_check_engine.py:420` — cash reserve
+      check missing (GH-BACKLOG, requires position-monitor integration). Wire `_check_cash_reserves()` to live position
+      data.
+
+- [ ] `balancer-eth-venue-implementation` — `unified-market-interface/models/venue_config.py:164,206` — BALANCER-ETH
+      venue config stubs (2 commented-out blocks). Implement when Balancer v3 adapter is available (stream-d).
+
+- [ ] `gas-estimator-live-umi-feed` — `strategy-service/engine/rebalancing/gas_estimator.py:175` — live UMI price feed
+      not wired (stream-d phase). Replace static gas price lookup with `get_price()` from UMI.
+
+- [ ] `futures-roll-adjuster-calendar` — `features-delta-one-service/app/core/futures_roll_adjuster.py:345` — roll
+      calendar prices unimplemented (GH-BACKLOG). Fetch roll prices from reference data service.
+
+- [ ] `futures-basis-mark-price-features` —
+      `features-delta-one-service/features_service/app/calculators/futures_basis.py:70` — mark price features commented
+      out (GH-BACKLOG). Implement mark_price-based basis calculations when live mark price feed available.
+
+- [x] `mft-audit-remediation-plan-registered` — `mft_audit_full_remediation_2026_03_11.plan.md` created and registered.
+      All 20 tasks tracked. Wave 1 complete. Wave 2 in progress.
