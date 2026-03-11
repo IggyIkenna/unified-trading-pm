@@ -176,8 +176,15 @@ todos:
       tests/unit/test_live_mode_handler.py (commit a03a607). FDS repo does not exist."
   - id: phase2-transport-tests
     content: "Add tests/unit/test_mode_switching.py and tests/integration/test_mode_switching.py per service"
-    status: todo
-    note: ""
+    status: done
+    note:
+      "DONE — tests/unit/test_mode_switching.py added and committed for all 13 services: instruments-service (5 tests,
+      source-inspection for live mode), market-data-processing-service (6 tests), market-tick-data-service (7 tests,
+      INSTRUMENTS_READY coordination event), features-volatility-service (7 tests), features-delta-one-service (5
+      tests), features-calendar-service (7 tests), features-onchain-service (6 tests), features-commodity-service (6
+      tests), features-cross-instrument-service (7 tests), features-multi-timeframe-service (6 tests),
+      features-sports-service (8 tests), strategy-service (7 tests, sys.modules pre-seeding for circular import),
+      execution-service (7 tests). All 88 tests pass."
   - id: phase3-sit-symmetry
     content: "Create system-integration-tests/tests/integration/test_batch_live_symmetry.py for 13 services"
     status: todo
