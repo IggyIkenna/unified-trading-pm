@@ -152,8 +152,12 @@ todos:
       - Reference ssot-reference-mapping.md for where this fits in the broader SSOT hierarchy
       - Add SSOT declaration: "This supersedes deployment-service/configs/checklist.*.yaml for readiness criteria"
       - Note: deployment-service/configs/ remains SSOT for operational data (sharding, venues, data-catalogue)
-    status: todo
+    status: done
     blocked_by: p1a-consolidated-checklist-template
+    note: >-
+      Done 2026-03-11 — README.md already existed at codex/10-audit/README.md (committed as 5a6d5ba). Declares SSOT
+      boundary, 3-axis CR/DR/BR model, v3.0 schema upgrade path, batch/live split, supersedes note for
+      deployment-service/configs/checklist.*.yaml, and references ssot-reference-mapping.md. All p1c criteria satisfied.
 
   # ─── PHASE 2: SYMLINK AND DISTRIBUTION STRATEGY ───
 
