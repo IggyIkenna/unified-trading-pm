@@ -211,12 +211,31 @@ jobs:
           set -euo pipefail
 
           python3 - <<PYEOF
-          import json, datetime
+          import json, datetime, os
 
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
 
           staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+
+          # Capture old→new version pairs BEFORE clearing staging_versions
+          # so the cascade step can compute bump_type correctly.
+          promoted_map = {}
+          for repo, new_version in staging_versions.items():
+              if repo.startswith("_"):
+                  continue
+              old_version = stable_versions.get(repo, "0.0.0")
+              promoted_map[repo] = {"old": old_version, "new": new_version}
+
+          # Write to GITHUB_ENV for the cascade step (JSON, single line)
+          github_env = os.environ.get("GITHUB_ENV", "")
+          if github_env:
+              import json as _json
+              with open(github_env, "a") as ef:
+                  ef.write("PROMOTED_JSON<<PROMOTED_EOF\n")
+                  ef.write(_json.dumps(promoted_map))
+                  ef.write("\nPROMOTED_EOF\n")
 
           # Promote each staging version to the stable versions map
           promoted = []
@@ -280,6 +299,114 @@ jobs:
           git add workspace-manifest.json
           git commit -m "chore(manifest): promote staging_versions → versions, clear staging lock [skip ci]"
           git push
+
+      - name: Dispatch dependency-update cascade for promoted repos
+        # Fires dependency-update events to all direct downstream dependents of each promoted repo.
+        # version-bump.yml on each repo skips staging→main merge commits (chore(release): prefix),
+        # so this step ensures the cascade fires even when version-bump.yml cannot detect the bump.
+        # bump_type is computed from the old stable version vs new promoted version (not always patch).
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          OWNER="${{ github.repository_owner }}"
+          TOKEN="${{ secrets.GH_PAT }}"
+
+          if [ -z "$TOKEN" ]; then
+            echo "GH_PAT not set — skipping cascade dispatch."
+            exit 0
+          fi
+
+          if [ -z "${PROMOTED_JSON:-}" ]; then
+            echo "PROMOTED_JSON not set (nothing was promoted or no staging_versions existed). Skipping cascade."
+            exit 0
+          fi
+
+          python3 - <<'PYEOF'
+          import json, os, subprocess, sys
+
+          promoted = json.loads(os.environ["PROMOTED_JSON"])
+          owner = os.environ["OWNER"]
+          token = os.environ["TOKEN"]
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          repos_data = manifest.get("repositories", {})
+
+          def compute_bump_type(old: str, new: str) -> str:
+              try:
+                  om, omin, op = (int(x) for x in old.split("."))
+                  nm, nmin, np = (int(x) for x in new.split("."))
+              except ValueError:
+                  return "patch"
+              if nm > om:
+                  return "major"
+              if nmin > omin:
+                  return "minor"
+              return "patch"
+
+          def find_dependents(repo_name: str) -> list[str]:
+              deps = []
+              for name, data in repos_data.items():
+                  for dep in data.get("dependencies", []):
+                      dep_name = dep.get("name") if isinstance(dep, dict) else dep
+                      if dep_name == repo_name:
+                          deps.append(name)
+              return deps
+
+          dispatched_total = 0
+          failed_total = 0
+
+          for repo, info in promoted.items():
+              old_v = info.get("old") or "0.0.0"
+              new_v = info["new"]
+              bump_type = compute_bump_type(old_v, new_v)
+
+              parts = new_v.split(".")
+              major = int(parts[0])
+              minor = int(parts[1])
+              constraint = f">={major}.{minor}.0,<{major+1}.0.0"
+
+              dependents = find_dependents(repo)
+              if not dependents:
+                  print(f"  {repo} {old_v}→{new_v} ({bump_type}): no dependents")
+                  continue
+
+              print(f"  {repo} {old_v}→{new_v} ({bump_type}): cascading to {len(dependents)} dependent(s)")
+
+              for dep_repo in dependents:
+                  payload = json.dumps({
+                      "event_type": "dependency-update",
+                      "client_payload": {
+                          "dep_name": repo,
+                          "dep_version": new_v,
+                          "constraint": constraint,
+                          "bump_type": bump_type,
+                      }
+                  })
+                  result = subprocess.run(
+                      ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
+                       "-X", "POST",
+                       "-H", f"Authorization: Bearer {token}",
+                       "-H", "Accept: application/vnd.github+json",
+                       f"https://api.github.com/repos/{owner}/{dep_repo}/dispatches",
+                       "-d", payload],
+                      capture_output=True, text=True
+                  )
+                  http_status = result.stdout.strip()
+                  if http_status == "204":
+                      print(f"    ✅ {dep_repo}")
+                      dispatched_total += 1
+                  else:
+                      print(f"    ⚠️  {dep_repo} HTTP {http_status}")
+                      failed_total += 1
+
+          print(f"\nCascade complete: {dispatched_total} dispatched, {failed_total} failed")
+          if failed_total > 0:
+              sys.exit(1)
+          PYEOF
 
       - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
         env:

@@ -46,6 +46,14 @@ todos:
       pyproject.toml version field, append CHANGELOG.md entry with date and summary, dispatch repository_dispatch
       type=version-updated to all dependent repos listed in workspace-manifest.json"
     status: completed
+    notes: |
+      IMPORTANT: semver-agent.yml is intended to REPLACE version-bump.yml entirely (not coexist).
+      Both bump pyproject.toml on push to main/staging — running both causes double-bumps.
+      The local bump-library-version pre-commit hook has been removed across all repos
+      (pre_commit_to_gha_version_bump plan, 2026-03-11) — version-bump.yml GHA is now the
+      sole authoritative bumper until semver-agent.yml rollout replaces it.
+      Rollout of semver-agent.yml MUST remove version-bump.yml simultaneously (see
+      rollout-semver-agent-yml-replacing-version-bump todo below).
   - id: write-tier-orchestrator
     content:
       "Create unified-trading-pm/.github/workflows/overnight-agent-orchestrator.yml: schedule cron 0 1 * * *, read
@@ -335,6 +343,17 @@ todos:
       */scripts/quality-gates.sh | sort -rn | head -20. Score FAIL if any full-body QG script found.
     status: pending
     note: "Added 2026-03-10 — not yet audited. Blind spot that allowed 25-30K lines of duplicated QG logic to persist."
+
+  - id: rollout-semver-agent-yml-replacing-version-bump
+    content: >-
+      Roll out semver-agent.yml to all repos while simultaneously removing version-bump.yml. semver-agent.yml
+      (Claude-based, reads API surface diffs + commit messages) must REPLACE version-bump.yml (simple regex bumper) —
+      they must not coexist as both bump pyproject.toml on push to main/staging. Rollout script:
+      unified-trading-pm/scripts/rollout-semver-agent.sh (copy semver-agent.yml template, delete version-bump.yml,
+      commit per repo as "chore(ci): replace version-bump.yml with semver-agent.yml [skip ci]"). Prereq:
+      bump-library-version hook removal complete (pre_commit_to_gha_version_bump plan, done 2026-03-11).
+    status: pending
+    notes: "Added 2026-03-11 — prerequisite for clean GHA-only version bump chain."
 isProject: false
 ---
 
