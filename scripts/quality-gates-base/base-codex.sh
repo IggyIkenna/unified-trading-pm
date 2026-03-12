@@ -105,15 +105,12 @@ if command -v npx &>/dev/null || command -v prettier &>/dev/null; then
     if [ "$FIX_MODE" = true ]; then
         run_timeout 60 $PRETTIER_CMD --write "**/*.md" "**/*.yaml" "**/*.yml" "**/*.json" \
             --ignore-path .gitignore \
-            2>/dev/null \
-            && log_success "Prettier auto-fix complete" \
+            >/dev/null 2>&1 \
             || log_warn "Prettier auto-fix had warnings"
     fi
-    run_timeout 60 $PRETTIER_CMD --check "**/*.md" "**/*.yaml" "**/*.yml" "**/*.json" \
-        --ignore-path .gitignore \
-        2>/dev/null \
-        && log_success "Prettier formatting PASSED" \
-        || log_warn "Prettier formatting warnings (run with --fix to auto-format)"
+    _pret_out=$(run_timeout 60 $PRETTIER_CMD --check "**/*.md" "**/*.yaml" "**/*.yml" "**/*.json" \
+        --ignore-path .gitignore 2>&1) \
+        || log_warn "Prettier formatting warnings (run with --fix to auto-format): $(echo "$_pret_out" | grep -c '\[warn\]' 2>/dev/null || :) file(s)"
 else
     log_warn "prettier not installed — skipping (install: npm install -g prettier)"
 fi

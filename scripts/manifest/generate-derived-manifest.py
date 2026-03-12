@@ -104,11 +104,7 @@ def parse_pyproject(repo_path: Path) -> tuple[dict[str, str], dict[str, list[str
         raw = project.get("dependencies")
         if isinstance(raw, list):
             deps_raw.extend(str(d) for d in raw)
-        opt = project.get("optional-dependencies")
-        if isinstance(opt, dict):
-            dev = opt.get("dev")
-            if isinstance(dev, list):
-                deps_raw.extend(str(d) for d in dev)
+        # No optional-dependencies — all repos use flat [project.dependencies] only
 
     uv_sources: dict[str, str] = {}
     tool = data.get("tool")

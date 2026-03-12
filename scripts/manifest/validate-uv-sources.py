@@ -67,7 +67,7 @@ def get_workspace_repo_names(manifest: JsonDict) -> frozenset[str]:
 def parse_internal_deps(pyproject_path: Path, workspace_repos: frozenset[str]) -> list[str]:
     """Extract internal dep names from [project] dependencies in pyproject.toml."""
     content = pyproject_path.read_text()
-    # Extract all dep specs from [project] dependencies = [...] (and optional-dependencies sections)
+    # Extract all dep specs from [project] dependencies = [...] (flat deps — no optional-dependencies)
     # Simple line-based parse: find quoted package names and check if they're workspace repos
     found: list[str] = []
     # Match dependency lines like: "unified-foo>=0.1.0,<1.0.0" or "unified-foo[extra]>=..."

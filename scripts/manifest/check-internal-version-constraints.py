@@ -180,9 +180,9 @@ def check_per_repo_install(manifest: dict[str, object], skip_repos: set[str] | N
         if not pyproject.is_file():
             continue
 
-        # Check installability of the package with [dev] extras
+        # Check installability of the package with all deps (flat — no extras)
         result = subprocess.run(
-            ["uv", "pip", "install", "--dry-run", f"-e{WORKSPACE_ROOT / repo_name}[dev]"],
+            ["uv", "pip", "install", "--dry-run", f"-e{WORKSPACE_ROOT / repo_name}"],
             capture_output=True,
             text=True,
             cwd=str(WORKSPACE_ROOT / repo_name),
@@ -200,7 +200,7 @@ def check_per_repo_install(manifest: dict[str, object], skip_repos: set[str] | N
                     Issue(
                         repo=repo_name,
                         dep="(extras resolution)",
-                        constraint="[dev]",
+                        constraint="(base deps)",
                         current_version="",
                         kind="install_conflict",
                         detail="\n".join(error_lines[:5]),

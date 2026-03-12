@@ -250,9 +250,7 @@ def find_and_collect_fixes(
     project = _jdict(data.get("project")) or {}
     deps_raw = _jlist(project.get("dependencies")) or []
     deps = [_jstr(x) for x in deps_raw]
-    optional = _jdict(project.get("optional-dependencies")) or {}
-    dev_raw = _jlist(optional.get("dev")) or []
-    dev_deps = [_jstr(x) for x in dev_raw]
+    dev_deps: list[str] = []  # no optional-dependencies — flat [project.dependencies] only
 
     def _collect(dep_list: list[str], section: str) -> None:
         for dep_str in dep_list:
