@@ -69,8 +69,10 @@ cd "$PROJECT_ROOT"
 unset _BASE_CALLER
 
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
-MAX_FILE_LINES=900; FILE_WARN_LINES=700
-MAX_FUNCTION_LINES=200; MAX_CLASS_LINES=900; MAX_METHOD_LINES=50
+# Per-repo overrides: set MAX_FILE_LINES / MAX_FUNCTION_LINES / MAX_METHOD_LINES
+# BEFORE sourcing this script (${VAR:-default} preserves pre-set values).
+MAX_FILE_LINES=${MAX_FILE_LINES:-900}; FILE_WARN_LINES=${FILE_WARN_LINES:-700}
+MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
 
 # ── PORTABLE TIMEOUT ──────────────────────────────────────────────────────────
 run_timeout() {
@@ -410,7 +412,8 @@ BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION
 [[ -f ".env.example" ]] && rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
     && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC, not SA key files)"; V=$(( V + 1 )); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"
 
-DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "$SOURCE_DIR/" 2>/dev/null \
+DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
+    "${DEEP_IMPORT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
