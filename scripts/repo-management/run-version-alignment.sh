@@ -350,4 +350,8 @@ if [ "$APPLY_FIXES" = true ]; then
   fi
 fi
 
+# Always regenerate canonical manifest + SVG at end-of-run — guarantees the visual
+# is fresh whether constraints were just fixed or simply re-validated.
+"$PYTHON" scripts/manifest/generate_canonical_dependency_manifest.py
+
 echo "  Next: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh"

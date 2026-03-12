@@ -10,6 +10,9 @@
 #   sync-main --switch-to-main      # switch to main after push (old behavior)
 #   sync-main --feat-branch         # push to active_feature_branch from workspace-manifest.json
 #   sync-main --stag-branch         # push to staging branch
+#   sync-main --switch-only         # local branch switch only — no commit, no push (stays on main)
+#   sync-main --feat-branch --switch-only  # switch all repos to active feature branch, no push
+#   sync-main --stag-branch --switch-only  # switch all repos to staging, no push
 #   sync-main --dry-run
 #
 # All other flags (--limit, --repo, --filter, --repos, --skip-protection,
@@ -31,7 +34,14 @@ else
 fi
 
 cd "$WORKSPACE_ROOT"
+
+# --message conflicts with --switch-only; omit it when --switch-only is present
+_has_switch_only=false
+for _a in "$@"; do [[ "$_a" == "--switch-only" ]] && _has_switch_only=true; done
+_msg_args=()
+[[ "$_has_switch_only" == "false" ]] && _msg_args=(--message "chore: admin force sync")
+
 exec bash "$PM_ROOT/scripts/repo-management/admin-force-sync-all-to-main.sh" \
   --admin-confirm \
-  --message "chore: admin force sync" \
+  "${_msg_args[@]+"${_msg_args[@]}"}" \
   "$@"

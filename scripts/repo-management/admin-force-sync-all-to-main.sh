@@ -35,6 +35,10 @@
 #                        overrides branch protection on that branch, same as main.
 #   --stag-branch         Force-push to the staging branch ("staging"). Admin
 #                        overrides branch protection on staging, same as main.
+#   --switch-only         Local branch switch ONLY — no commit, no push, no protection changes.
+#                        Runs git checkout -B TARGET_BRANCH in every repo. Overrides all sync
+#                        behaviour. Incompatible with: --message, --no-commit, --skip-protection,
+#                        --switch-to-main, --preserve-local.
 #
 # Prerequisites:
 #   - gh CLI authenticated as IggyIkenna (admin of all target repos).
@@ -76,6 +80,8 @@ NO_COMMIT=false
 SKIP_CHECKOUT=true
 MAX_WORKERS=${MAX_WORKERS:-8}
 TARGET_BRANCH="main"
+SWITCH_ONLY=false
+_SO_CONFLICT=""
 
 # ---------------------------------------------------------------------------
 # Parse args
@@ -88,11 +94,12 @@ while [[ $# -gt 0 ]]; do
     --repo)            REPO_FILTER="$2"; shift 2 ;;
     --filter)          FILTER_PATTERN="$2"; shift 2 ;;
     --repos)           REPOS_LIST="$2"; shift 2 ;;
-    --message)         COMMIT_MSG="$2"; shift 2 ;;
-    --skip-protection) SKIP_PROTECTION=true; shift ;;
-    --no-commit)       NO_COMMIT=true; shift ;;
-    --preserve-local)  SKIP_CHECKOUT=true; shift ;;
-    --switch-to-main)  SKIP_CHECKOUT=false; shift ;;
+    --message)         _SO_CONFLICT+="${_SO_CONFLICT:+ }--message"; COMMIT_MSG="$2"; shift 2 ;;
+    --skip-protection) _SO_CONFLICT+="${_SO_CONFLICT:+ }--skip-protection"; SKIP_PROTECTION=true; shift ;;
+    --no-commit)       _SO_CONFLICT+="${_SO_CONFLICT:+ }--no-commit"; NO_COMMIT=true; shift ;;
+    --preserve-local)  _SO_CONFLICT+="${_SO_CONFLICT:+ }--preserve-local"; SKIP_CHECKOUT=true; shift ;;
+    --switch-to-main)  _SO_CONFLICT+="${_SO_CONFLICT:+ }--switch-to-main"; SKIP_CHECKOUT=false; shift ;;
+    --switch-only)     SWITCH_ONLY=true; shift ;;
     --max-workers)     MAX_WORKERS="$2"; shift 2 ;;
     --feat-branch)     TARGET_BRANCH="__feat__"; shift ;;
     --stag-branch)     TARGET_BRANCH="staging"; shift ;;
@@ -112,6 +119,12 @@ if [[ "$TARGET_BRANCH" == "__feat__" ]]; then
   TARGET_BRANCH="$_feat"
 fi
 
+# --switch-only conflict check — must come after __feat__ resolution so TARGET_BRANCH is set
+if [[ "$SWITCH_ONLY" == "true" && -n "$_SO_CONFLICT" ]]; then
+  echo "ERROR: --switch-only cannot be combined with: $_SO_CONFLICT"
+  exit 1
+fi
+
 # --preserve-local means "don't auto-switch to main after pushing main".
 # When targeting a non-main branch (--feat-branch, --stag-branch), always
 # checkout to TARGET_BRANCH as a final step so all repos land on that branch.
@@ -120,9 +133,9 @@ if [[ "$TARGET_BRANCH" != "main" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Safety gate 1: --admin-confirm required
+# Safety gate 1: --admin-confirm required (skipped for --switch-only)
 # ---------------------------------------------------------------------------
-if [[ "$ADMIN_CONFIRM" != "true" ]]; then
+if [[ "$SWITCH_ONLY" != "true" && "$ADMIN_CONFIRM" != "true" ]]; then
   cat <<'EOF'
 ADMIN FORCE-SYNC: Overwrites remote main with your local HEAD for every repo.
 This CANNOT be undone without reflog recovery on the server side.
@@ -136,18 +149,20 @@ EOF
 fi
 
 # ---------------------------------------------------------------------------
-# Safety gate 2: authenticated GitHub user must be IggyIkenna
+# Safety gate 2: authenticated GitHub user must be IggyIkenna (skipped for --switch-only)
 # ---------------------------------------------------------------------------
-if ! command -v gh &>/dev/null; then
-  echo "ERROR: gh CLI not found. Install gh CLI first."
-  exit 1
-fi
-
-GH_USER=$(gh api user --jq .login 2>/dev/null || echo "")
-if [[ "$GH_USER" != "IggyIkenna" ]]; then
-  echo "ERROR: This script may only be run by IggyIkenna (repo admin)."
-  echo "       Authenticated as: '${GH_USER:-<unauthenticated>}'"
-  exit 1
+GH_USER=""
+if [[ "$SWITCH_ONLY" != "true" ]]; then
+  if ! command -v gh &>/dev/null; then
+    echo "ERROR: gh CLI not found. Install gh CLI first."
+    exit 1
+  fi
+  GH_USER=$(gh api user --jq .login 2>/dev/null || echo "")
+  if [[ "$GH_USER" != "IggyIkenna" ]]; then
+    echo "ERROR: This script may only be run by IggyIkenna (repo admin)."
+    echo "       Authenticated as: '${GH_USER:-<unauthenticated>}'"
+    exit 1
+  fi
 fi
 
 # ---------------------------------------------------------------------------
@@ -451,8 +466,46 @@ sync_repo() {
   _restore_protection "$repo"
 }
 
-export -f sync_repo _disable_protection _restore_protection _repo_key
-export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT SKIP_CHECKOUT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR TARGET_BRANCH
+
+# ---------------------------------------------------------------------------
+# --switch-only worker: local git checkout only, no commit / push / protection
+# ---------------------------------------------------------------------------
+switch_repo() {
+  local repo="$1"
+  local rf="$RESULT_DIR/${repo//\//__}.result"
+  local dir="$WORKSPACE_ROOT/$repo"
+
+  if [[ ! -d "$dir" || ! -d "$dir/.git" ]]; then
+    echo "  (skip) $repo — not in workspace"
+    echo "SKIP:$repo" > "$rf"
+    return
+  fi
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    echo "  [dry]  $repo → $TARGET_BRANCH"
+    echo "OK:$repo" > "$rf"
+    return
+  fi
+
+  echo -n "  $repo ... "
+  local current_branch
+  current_branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  if [[ "$current_branch" == "$TARGET_BRANCH" ]]; then
+    echo "already on $TARGET_BRANCH"
+    echo "OK:$repo" > "$rf"
+    return
+  fi
+  if (cd "$dir" && git checkout -B "$TARGET_BRANCH" 2>/dev/null); then
+    echo "→ $TARGET_BRANCH"
+    echo "OK:$repo" > "$rf"
+  else
+    echo "FAIL (could not switch to $TARGET_BRANCH)"
+    echo "FAIL:$repo" > "$rf"
+  fi
+}
+
+export -f sync_repo switch_repo _disable_protection _restore_protection _repo_key
+export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT SKIP_CHECKOUT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR TARGET_BRANCH SWITCH_ONLY
 
 # ---------------------------------------------------------------------------
 # Parallel batch runner
@@ -466,7 +519,11 @@ run_batch() {
       wait "${pids[0]}" 2>/dev/null || true
       pids=("${pids[@]:1}")
     done
-    sync_repo "$repo" &
+    if [[ "$SWITCH_ONLY" == "true" ]]; then
+      switch_repo "$repo" &
+    else
+      sync_repo "$repo" &
+    fi
     pids+=("$!")
   done
 
@@ -479,14 +536,21 @@ run_batch() {
 # Header
 # ---------------------------------------------------------------------------
 echo "============================================================"
-echo " ADMIN FORCE-SYNC: local HEAD -> remote $TARGET_BRANCH"
-echo " User   : $GH_USER"
+if [[ "$SWITCH_ONLY" == "true" ]]; then
+  echo " BRANCH SWITCH: switching all repos to $TARGET_BRANCH (local only)"
+else
+  echo " ADMIN FORCE-SYNC: local HEAD -> remote $TARGET_BRANCH"
+fi
+echo " User   : ${GH_USER:-$(whoami)}"
 echo " Owner  : ${GH_OWNER:-N/A}"
 echo " Target : $TARGET_BRANCH"
-echo " Commit : $( [[ "$NO_COMMIT" == "true" ]] && echo "(skipped)" || echo "\"$COMMIT_MSG\"" )"
-echo " Workers: $MAX_WORKERS per tier"
-echo " Protect: $( [[ "$SKIP_PROTECTION" == "true" ]] && echo "skip (--skip-protection)" || echo "via GitHub API (save + restore)" )"
-[[ "$DRY_RUN" == "true" ]] && echo " MODE   : DRY RUN — no changes will be made"
+if [[ "$SWITCH_ONLY" != "true" ]]; then
+  echo " Commit : $( [[ "$NO_COMMIT" == "true" ]] && echo "(skipped)" || echo "\"$COMMIT_MSG\"" )"
+  echo " Workers: $MAX_WORKERS per tier"
+  echo " Protect: $( [[ "$SKIP_PROTECTION" == "true" ]] && echo "skip (--skip-protection)" || echo "via GitHub API (save + restore)" )"
+fi
+[[ "$DRY_RUN" == "true" ]]    && echo " MODE   : DRY RUN — no changes will be made"
+[[ "$SWITCH_ONLY" == "true" ]] && echo " MODE   : SWITCH ONLY — no commit, no push, local checkout only"
 echo "============================================================"
 echo ""
 

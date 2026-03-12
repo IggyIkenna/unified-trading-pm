@@ -90,7 +90,7 @@ for arg in "$@"; do
     case $arg in
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
-        --skip-tests) RUN_TESTS=false ;;
+        --skip-tests) RUN_TESTS=false ;; --skip-lint) RUN_LINT=false ;;
         --fix) FIX_MODE=true ;;       --skip-typecheck) SKIP_TYPECHECK=true ;;
         --act) ACT_MODE=true ;;
     esac

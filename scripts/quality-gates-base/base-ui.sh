@@ -38,12 +38,15 @@ log_section() { echo -e "\n${GREEN}── $* ──${NC}"; }
 SKIP_LINT=false
 SKIP_TESTS=false
 SKIP_BUILD=false
+FIX_MODE=false
 for arg in "$@"; do
   case "$arg" in
-    --test)   SKIP_LINT=true;  SKIP_BUILD=true ;;   # tests + typecheck only
-    --lint)   SKIP_TESTS=true; SKIP_BUILD=true ;;   # lint + typecheck only
-    --quick)  SKIP_TESTS=true; SKIP_BUILD=true ;;   # alias for --lint in UI
-    --no-fix) ;;  # no-op; kept for interface compatibility
+    --test)      SKIP_LINT=true;  SKIP_BUILD=true ;;   # tests + typecheck only
+    --lint)      SKIP_TESTS=true; SKIP_BUILD=true ;;   # lint + typecheck only
+    --quick)     SKIP_TESTS=true; SKIP_BUILD=true ;;   # alias for --lint in UI
+    --skip-lint) SKIP_LINT=true ;;                     # tests + typecheck + build only
+    --fix)       FIX_MODE=true ;;                      # run eslint --fix before verify
+    --no-fix)    FIX_MODE=false ;;                     # verify only (default)
   esac
 done
 
@@ -65,6 +68,10 @@ fi
 # ── [2] LINT ───────────────────────────────────────────────────────────────
 if [ "$SKIP_LINT" = false ]; then
   log_section "[2/4] LINT"
+  if [ "$FIX_MODE" = true ]; then
+    npm run lint -- --fix 2>&1 || true  # best-effort auto-fix; verify pass follows
+    log_success "ESLint auto-fix applied"
+  fi
   if npm run lint 2>&1; then
     log_success "ESLint passed"
   else
