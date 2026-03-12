@@ -11,7 +11,7 @@ This catches issues like:
 
 Also detects per-repo extras conflicts by running uv pip install --dry-run for
 every repo with a pyproject.toml (catches intra-package issues like
-gcsfs vs fsspec in UTL[gcp]).
+gcsfs vs fsspec in UTL).
 
 Exit: 0 = all constraints satisfiable, 1 = one or more issues found.
 

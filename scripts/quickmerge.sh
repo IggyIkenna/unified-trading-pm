@@ -843,11 +843,11 @@ fi
 # Run twice to handle idempotency
 if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier" .pre-commit-config.yaml 2>/dev/null; then
   if command -v pre-commit &>/dev/null; then
-    pre-commit run prettier --all-files 2>/dev/null || true
-    pre-commit run prettier --all-files 2>/dev/null || true
+    pre-commit run prettier --all-files >/dev/null 2>&1 || true
+    pre-commit run prettier --all-files >/dev/null 2>&1 || true
   else
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown 2>/dev/null || true
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown 2>/dev/null || true
+    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
+    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
   fi
 fi
 

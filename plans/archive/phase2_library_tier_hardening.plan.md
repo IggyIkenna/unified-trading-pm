@@ -327,7 +327,7 @@ EXECUTED by their owning interface repos:
   get_config/market_category from unified_trading_library. UDC does import date/timestamp utilities from UTL
   (DataCompletionChecker, DateValidator, etc.) which is T1→T3 — architecturally valid. The old dep name
   "unified-trading-services" is gone; pyproject.toml correctly has "unified-trading-library>=0.4.0".
-  unified-cloud-interface[gcp] already present. No removals or replacements needed. lib-phase2-udc-rename-step1:
+  unified-cloud-interface already present. No removals or replacements needed. lib-phase2-udc-rename-step1:
   unified_domain_services/ re-export package EXISTS (unified-domain-client/ unified_domain_services/**init**.py);
   setuptools includes both unified_domain_client and unified_domain_services. T3 DEPLOY STRUCTURE: CONFIRMED CLEAN
   (2026-03-11).

@@ -74,7 +74,7 @@ todos:
         - "MOCK" badge: yellow/amber, when health.mock_mode === true
         - "LIVE" badge: green, when health.mock_mode === false
         - Fallback: show "?" if cloud_provider undefined (API not yet updated)
-      Badge format: "[GCP] [MOCK]" or "[AWS] [LIVE]" in top-right header.
+      Badge format: " [MOCK]" or "[AWS] [LIVE]" in top-right header.
       Cloud provider text: uppercase("gcp" -> "GCP", "aws" -> "AWS",
       "local" -> "LOCAL"). Use existing Tailwind + Radix Tooltip for hover
       detail ("Cloud: Google Cloud Platform • Mode: Mock/Sandbox").

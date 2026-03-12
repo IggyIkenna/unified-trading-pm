@@ -36,7 +36,7 @@ developer's machine. Root cause analysis:
 
 1. **UCI optional extras gap** — `unified-cloud-interface/factory.py` unconditionally imports both `providers/gcp.py`
    and `providers/aws.py` at module level (lines 32–51), making `google-cloud-*` and `boto3` hard runtime requirements.
-   These were declared as `[gcp]`/`[aws]` optional extras. `setup.sh` never requested optional extras, so fresh installs
+   These were declared as ``/`[aws]`optional extras.`setup.sh` never requested optional extras, so fresh installs
    silently skipped them. The original developer's machine worked only because GCP packages had accumulated from prior
    installs.
 
@@ -60,16 +60,17 @@ developer's machine. Root cause analysis:
 
 - **[a1] DONE** `unified-cloud-interface/pyproject.toml`: moved all GCP packages (`google-cloud-storage`,
   `google-cloud-secret-manager`, `google-cloud-pubsub`, `google-cloud-logging`, `google-auth`, `PyJWT`,
-  `google-cloud-bigquery`, `gcsfs`) and AWS packages (`boto3`, `botocore`) from optional `[gcp]`/`[aws]` extras to base
-  `dependencies`. Added comment: "UCI is the sole cloud-SDK boundary — no other repo should declare google-cloud-\* or
-  boto3 directly."
-- **[a2] DONE** `unified-cloud-interface`: removed `[gcp]`, `[aws]`, `[cache]` optional extras entirely. Stripped
-  redundant cloud packages from `dev` (kept `google-cloud-build`, `boto3-stubs`, `moto`, `vcrpy` as dev-only).
+  `google-cloud-bigquery`, `gcsfs`) and AWS packages (`boto3`, `botocore`) from optional
+  ``/`[aws]`extras to base`dependencies`. Added comment: "UCI is the sole cloud-SDK boundary — no other repo should
+  declare google-cloud-\* or boto3 directly."
+- **[a2] DONE** `unified-cloud-interface`: removed
+  ``, `[aws]`, `[cache]`optional extras entirely. Stripped redundant cloud packages from`dev`(kept`google-cloud-build`, `boto3-stubs`, `moto`, `vcrpy`
+  as dev-only).
 - **[a3] DONE** `uv lock` in `unified-cloud-interface` → resolved 120 packages.
 
-### Phase B — Fix 8 repos using `[gcp]`/`[gcp,aws]` refs [DONE]
+### Phase B — Fix 8 repos using ``/`[gcp,aws]` refs [DONE]
 
-Changed `unified-cloud-interface[gcp]` → `unified-cloud-interface` (bare) in all 8 repos:
+Changed `unified-cloud-interface` → `unified-cloud-interface` (bare) in all 8 repos:
 
 - **[b1] DONE** `client-reporting-api/pyproject.toml`
 - **[b2] DONE** `unified-ml-interface/pyproject.toml`
@@ -105,8 +106,8 @@ Policy: only `[schema-validation]` in `unified-api-contracts` (VCR cassette reco
 `[databento]` in UTL (heavy data feed SDK) are genuinely optional. Everything else is flattened or removed.
 
 - **[f1] DONE** `unified-trading-library/pyproject.toml`: added UCI, UEI, UCI, and all opentelemetry packages to base
-  `dependencies`. Removed `[aws]`, `[gcp]`, `[api]` (fastapi in a library is wrong), `[observability]`,
-  `[split-libraries]`, `[all]`. Kept `[databento]`.
+  `dependencies`. Removed `[aws]`,
+  ``, `[api]`(fastapi in a library is wrong),`[observability]`, `[split-libraries]`, `[all]`. Kept `[databento]`.
 - **[f2] DONE** `unified-config-interface/pyproject.toml`: removed `[aws]` extra (boto3/botocore now in UCI base).
 - **[f3] DONE** `unified-ml-interface/pyproject.toml`: removed `[aws]` extra.
 - **[f4] DONE** `strategy-service/pyproject.toml`: removed `[viz]` extra (matplotlib/seaborn — dead code, zero callers
@@ -157,7 +158,7 @@ adds complexity with zero benefit.
   REMOVE (not used anywhere): 631 packages flattened into `[project.dependencies]`, 3 removed entirely (`responses`,
   `line-profiler`, `memory-profiler` from `market-tick-data-service`).
 - **[h3] DONE** Stale internal extras refs stripped from base deps: `unified-trading-library[observability]` →
-  `unified-trading-library` (alerting-service), `unified-trading-library[gcp]` → `unified-trading-library`
+  `unified-trading-library` (alerting-service), `unified-trading-library` → `unified-trading-library`
   (deployment-service). Third-party extras (`uvicorn[standard]`, `anyio[trio]`) left intact.
 - **[h4] DONE** Verified: 0 repos retain `[project.optional-dependencies]` after changes.
 
