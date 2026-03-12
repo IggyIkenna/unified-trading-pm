@@ -1323,13 +1323,13 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "PASSING",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "quality_gate_status": "PARTIAL",
-      "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01).",
+      "quality_gate_status": "PASSING",
+      "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01). QG passing 2026-03-11.",
       "status": "active",
       "service_declaration": {
         "mode": "live",
