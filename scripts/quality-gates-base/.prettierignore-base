@@ -1,0 +1,13 @@
+# Shared base .prettierignore — auto-applied to all repos via base-service.sh
+# Per-repo overrides go in the repo's own .prettierignore
+
+# Template files with placeholder syntax ({{VAR}}) that break YAML parsers
+scripts/propagation/templates/
+
+# CloudBuild templates
+configs/cloudbuild-service-template.yaml
+
+# Lock files and generated artifacts
+uv.lock
+package-lock.json
+*.egg-info/

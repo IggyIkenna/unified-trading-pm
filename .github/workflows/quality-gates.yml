@@ -22,7 +22,7 @@ jobs:
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.13.9"
 
       - name: Install uv
         run: pip install uv
@@ -79,14 +79,14 @@ jobs:
         working-directory: unified-trading-pm
         run: |
           uv venv --clear .venv
-          uv pip install -e ".[dev]"
+          uv sync --extra dev
 
       - name: Checkout Codex (sibling)
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/unified-trading-codex
           path: unified-trading-codex
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 1
         continue-on-error: true
 

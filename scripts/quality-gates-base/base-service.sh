@@ -175,7 +175,9 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore $([ -f .prettierignore ] && echo "--ignore-path .prettierignore") 2>/dev/null \
+        _BASE_IGNORE="${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/.prettierignore-base"
+        _PRETTIER_IGNORES="--ignore-path .gitignore $([ -f .prettierignore ] && echo '--ignore-path .prettierignore') $([ -f "$_BASE_IGNORE" ] && echo "--ignore-path $_BASE_IGNORE")"
+        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} 2>/dev/null \
             && log_success "Prettier: non-Python files formatted" \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
@@ -802,6 +804,22 @@ else
     log_success "STEP 5.17: no cloudbuild.yaml (buildspec.aws.yaml or GitHub Actions — skipped)"
 fi
 
+# ============================================================
+echo "=== STEP 5.18: GitHub Actions cross-repo token check ==="
+if [ -d ".github/workflows" ]; then
+    WT_VALIDATOR="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-workflow-tokens.py"
+    if [ -f "$WT_VALIDATOR" ]; then
+        if run_timeout 15 "$PYTHON_CMD" "$WT_VALIDATOR" --dir .github/workflows 2>/dev/null; then
+            log_success "STEP 5.18: No cross-repo GITHUB_TOKEN violations"
+        else
+            log_fail "STEP 5.18: Cross-repo checkout/artifact uses GITHUB_TOKEN — must use GH_PAT"
+            V=$(( V + 1 ))
+        fi
+    fi
+else
+    log_success "STEP 5.18: no .github/workflows dir (skipped)"
+fi
+
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
 log_success "Codex compliance PASSED"
 
@@ -817,6 +835,16 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
         log_success "Workflow lint PASSED"
     else
         log_warn "actionlint not found — skipping workflow lint (install: brew install actionlint)"
+    fi
+
+    # Cross-repo checkout must use GH_PAT, not GITHUB_TOKEN (GITHUB_TOKEN is repo-scoped only)
+    _TOKEN_CHECKER="${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check-workflow-tokens.py"
+    if [ -f "$_TOKEN_CHECKER" ]; then
+        if ! $PYTHON_CMD "$_TOKEN_CHECKER" --dir "${REPO_ROOT}/.github/workflows" 2>&1; then
+            log_fail "Workflow: cross-repo checkout uses secrets.GITHUB_TOKEN — must use secrets.GH_PAT"
+            exit 1
+        fi
+        log_success "Workflow: GH_PAT used for cross-repo checkouts"
     fi
 fi
 
@@ -849,8 +877,8 @@ if [ "$ACT_MODE" = true ]; then
     if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_success "Act simulation PASSED"
     else
-        log_fail "Act simulation FAILED — last 30 lines of act output:"
-        tail -30 "$_ACT_LOG" >&2
+        log_fail "Act simulation FAILED — full act output:"
+        cat "$_ACT_LOG" >&2
         [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets — GH_PAT may be missing"
         log_warn "Fix: bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh"
         rm -f "$_ACT_LOG"

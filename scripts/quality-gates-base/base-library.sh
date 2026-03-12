@@ -599,8 +599,8 @@ if [ "$ACT_MODE" = true ]; then
     if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_success "Act simulation PASSED"
     else
-        log_fail "Act simulation FAILED — last 30 lines of act output:"
-        tail -30 "$_ACT_LOG" >&2
+        log_fail "Act simulation FAILED — full act output:"
+        cat "$_ACT_LOG" >&2
         [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets — GH_PAT may be missing"
         log_warn "Fix: bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh"
         rm -f "$_ACT_LOG"

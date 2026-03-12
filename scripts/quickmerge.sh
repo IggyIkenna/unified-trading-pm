@@ -458,21 +458,32 @@ echo "=========================================="
 MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 if [ -f "$MANIFEST_PATH" ]; then
   DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?.name // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
+  # Resolve the reference branch: active_feature_branch from manifest, or fall back to main
+  ACTIVE_FEATURE_BRANCH=$(jq -r '.active_feature_branch // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
+  DEP_REF_BRANCH="${ACTIVE_FEATURE_BRANCH:-main}"
   if [ -n "$DEPS" ]; then
-    echo "Checking dependencies vs origin/main (from workspace-manifest.json)..."
+    echo "Checking dependencies vs origin/$DEP_REF_BRANCH (from workspace-manifest.json active_feature_branch)..."
     HAS_DIFF=false
     LAST_DEP_PATH=""
     for dep in $DEPS; do
       dep_path="$WORKSPACE_ROOT/$dep"
       if [ -d "$dep_path" ]; then
         cd "$dep_path"
-        git fetch origin main --quiet 2>/dev/null || true
-        if ! git diff origin/main --quiet 2>/dev/null; then
+        # Fetch the feature branch (and main as fallback)
+        git fetch origin "$DEP_REF_BRANCH" --quiet 2>/dev/null || true
+        [ "$DEP_REF_BRANCH" != "main" ] && git fetch origin main --quiet 2>/dev/null || true
+        # Check against feature branch; fall back to main if feature branch doesn't exist remotely
+        if git rev-parse "origin/$DEP_REF_BRANCH" &>/dev/null 2>&1; then
+          REF="origin/$DEP_REF_BRANCH"
+        else
+          REF="origin/main"
+        fi
+        if ! git diff "$REF" --quiet 2>/dev/null; then
           HAS_DIFF=true
           LAST_DEP_PATH="$dep_path"
-          echo "❌ $dep: DIFFERS from main"
+          echo "❌ $dep: DIFFERS from $REF"
         else
-          echo "✅ $dep: Matches main"
+          echo "✅ $dep: Matches $REF"
         fi
         cd "$REPO_DIR"
       fi
@@ -484,7 +495,7 @@ if [ -f "$MANIFEST_PATH" ]; then
       echo "❌ DEPENDENCY CONFLICT DETECTED"
       echo "═══════════════════════════════════════════════════════"
       echo ""
-      echo "Dependencies differ from main, but no --dep-branch specified."
+      echo "Dependencies differ from $REF, but no --dep-branch specified."
       echo "Your local dependency changes are intentional — do NOT discard them."
       echo ""
       echo "── If you are a HUMAN developer ──────────────────────────────────────"

@@ -46,6 +46,8 @@ SKIP_REPOS = {
 PATH_EXPORT = 'export PATH="$(pwd)/.venv/bin:$PATH"'
 CLOUD_MOCK_ENV_KEY = "CLOUD_MOCK_MODE"
 CLOUD_MOCK_ENV_VAL = '"true"'
+CLOUD_PROVIDER_KEY = "CLOUD_PROVIDER"
+CLOUD_PROVIDER_VAL = '"local"'
 NO_FIX_FLAG = "--no-fix"
 
 # ── YAML-aware helpers (text-based — preserves comments and formatting) ───────
@@ -109,41 +111,44 @@ def _ensure_path_export(step_text: str) -> tuple[str, bool]:
 
 
 def _ensure_cloud_mock_env(step_text: str) -> tuple[str, bool]:
-    """Add CLOUD_MOCK_MODE: "true" to the step env block if not present."""
-    if CLOUD_MOCK_ENV_KEY in step_text:
-        return step_text, False
+    """Add CLOUD_MOCK_MODE, CLOUD_PROVIDER to the step env block if not present."""
+    changed = False
 
     # Look for existing `env:` block inside the step
-    env_block = re.compile(r"(^( +)env:\n)", re.MULTILINE)
-    m = env_block.search(step_text)
+    env_block_re = re.compile(r"(^( +)env:\n)", re.MULTILINE)
+    m = env_block_re.search(step_text)
+
     if m:
+        # env block already exists — insert missing keys after `env:`
         indent = m.group(2)
         inner_indent = indent + "  "
         insert_pos = m.end()
-        new_text = (
-            step_text[:insert_pos]
-            + inner_indent
-            + f"{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
-            + step_text[insert_pos:]
-        )
-        return new_text, True
+        additions = ""
+        if CLOUD_MOCK_ENV_KEY not in step_text:
+            additions += inner_indent + f"{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
+        if CLOUD_PROVIDER_KEY not in step_text:
+            additions += inner_indent + f"{CLOUD_PROVIDER_KEY}: {CLOUD_PROVIDER_VAL}\n"
+        if additions:
+            step_text = step_text[:insert_pos] + additions + step_text[insert_pos:]
+            changed = True
+    elif CLOUD_MOCK_ENV_KEY not in step_text:
+        # No env block — insert one before `run:`
+        run_line = re.compile(r"(^( +)run:)", re.MULTILINE)
+        m2 = run_line.search(step_text)
+        if m2:
+            indent = m2.group(2)
+            inner_indent = indent + "  "
+            insert_pos = m2.start()
+            env_block_text = (
+                f"{indent}env:\n"
+                f"{inner_indent}{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
+                f"{inner_indent}{CLOUD_PROVIDER_KEY}: {CLOUD_PROVIDER_VAL}\n"
+                f'{inner_indent}GCP_PROJECT_ID: "test-project"\n'
+            )
+            step_text = step_text[:insert_pos] + env_block_text + step_text[insert_pos:]
+            changed = True
 
-    # No env block — insert one before `run:`
-    run_line = re.compile(r"(^( +)run:)", re.MULTILINE)
-    m = run_line.search(step_text)
-    if m:
-        indent = m.group(2)
-        inner_indent = indent + "  "
-        insert_pos = m.start()
-        env_block_text = (
-            f"{indent}env:\n"
-            f"{inner_indent}{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
-            f'{inner_indent}GCP_PROJECT_ID: "test-project"\n'
-        )
-        new_text = step_text[:insert_pos] + env_block_text + step_text[insert_pos:]
-        return new_text, True
-
-    return step_text, False
+    return step_text, changed
 
 
 def _ensure_no_fix_flag(step_text: str) -> tuple[str, bool]:
@@ -175,7 +180,7 @@ def fix_workflow(content: str) -> tuple[str, list[str]]:
 
     step_text, changed = _ensure_cloud_mock_env(step_text)
     if changed:
-        changes.append("added CLOUD_MOCK_MODE env var")
+        changes.append("added CLOUD_MOCK_MODE/CLOUD_PROVIDER env vars")
 
     step_text, changed = _ensure_path_export(step_text)
     if changed:
