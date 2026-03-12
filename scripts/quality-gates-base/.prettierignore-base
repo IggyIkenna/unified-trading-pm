@@ -3,6 +3,7 @@
 
 # Template files with placeholder syntax ({{VAR}}) that break YAML parsers
 scripts/propagation/templates/
+scripts/templates/
 
 # CloudBuild templates
 configs/cloudbuild-service-template.yaml

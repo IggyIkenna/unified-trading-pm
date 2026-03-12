@@ -259,7 +259,7 @@ IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 if [ -f "$IP" ]; then
     # Bypass: add --exclude flags for files whitelisted in QUALITY_GATE_BYPASS_AUDIT.md §1.2
-    $PYTHON_CMD "$IP" 2>/dev/null && log_ok "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
+    $PYTHON_CMD "$IP" --quiet 2>/dev/null && log_ok "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
 else
     log_warn "check-import-patterns.py not found (unified-trading-pm/scripts/)"
 fi
@@ -275,12 +275,14 @@ fi
 log_section "[4/6] TYPE CHECK"
 if [ "$SKIP_TYPECHECK" != "true" ]; then
     cleanup_zombie_pyright() {
+        # || : on every line + after done: CI uses set -eo pipefail; grep exits 1 when no processes
+        # found, which would kill the script before basedpyright even starts without these guards.
         ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep | \
         while read -r pid etime _; do
-            hours=0; echo "$etime" | grep -q '-' && hours=$(($(echo "$etime" | cut -d'-' -f1) * 24))
-            [ "$(echo "$etime" | tr ':' '\n' | wc -l)" -eq 3 ] && hours=$(echo "$etime" | cut -d':' -f1)
+            hours=0; echo "$etime" | grep -q '-' && hours=$(($(echo "$etime" | cut -d'-' -f1) * 24)) || :
+            [ "$(echo "$etime" | tr ':' '\n' | wc -l)" -eq 3 ] && hours=$(echo "$etime" | cut -d':' -f1) || :
             [ "${hours:-0}" -ge 2 ] && log_warn "Killing zombie basedpyright PID $pid" && kill -9 "$pid" 2>/dev/null || :
-        done
+        done || :
     }
     cleanup_zombie_pyright
     [ ! -f "$BASEDPYRIGHT_CMD" ] && ! command -v basedpyright &>/dev/null && { log_fail "basedpyright required: uv pip install basedpyright==1.38.2"; exit 1; }

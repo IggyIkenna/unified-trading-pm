@@ -25,17 +25,22 @@ CHECK_ONLY=false
 ROLLOUT_FIRST=false
 SYNC_GIT=false
 SYNC_GIT_BRANCH=""
+FORCE=false
 for arg in "$@"; do
   case $arg in
     --check) CHECK_ONLY=true ;;
     --rollout-first) ROLLOUT_FIRST=true ;;
+    --force) FORCE=true ;;
     --sync-git) SYNC_GIT=true ;;
     --sync-git=*) SYNC_GIT=true; SYNC_GIT_BRANCH="${arg#--sync-git=}" ;;
     --help | -h)
-      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--sync-git[=BRANCH]]"
+      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--force] [--sync-git[=BRANCH]]"
       echo "  --check              Run setup.sh --check only (verify, no install)"
       echo "  --rollout-first      Propagate setup.sh + quality-gates.sh + quickmerge.sh + build infra first"
       echo "                       Rollout failures are non-fatal — setup continues with warnings"
+      echo "  --force              Force reinstall: wipe and recreate each repo's .venv from scratch"
+      echo "                       Passes --force to each repo's setup.sh. Use on fresh machines or"
+      echo "                       after dependency changes to ensure a clean, reproducible environment."
       echo "  --sync-git[=BRANCH]  git fetch all repos, then report drift against a reference branch"
       echo "                       BRANCH: main | staging | feature (default) | any-branch-name"
       echo "                       'feature' (default) reads active_feature_branch from workspace-manifest.json"
@@ -169,7 +174,7 @@ fi
 
 echo "━━━ Run setup in all repos (topological tier order, parallel within tier) ━━━"
 echo "  Workspace: $WORKSPACE_ROOT"
-echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || echo 'INSTALL')"
+echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || ([ "$FORCE" = true ] && echo 'FORCE REINSTALL' || echo 'INSTALL'))"
 echo ""
 
 # ── Parse manifest into "LEVEL:repo1 repo2 ..." lines ────────────────────────
@@ -225,6 +230,7 @@ while IFS=: read -r LEVEL REPOS_STR; do
     (
       setup_cmd="bash scripts/setup.sh"
       [ "$CHECK_ONLY" = true ] && setup_cmd="bash scripts/setup.sh --check"
+      [ "$FORCE" = true ] && setup_cmd="bash scripts/setup.sh --force"
       if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" $setup_cmd 2>&1) >"$log"; then
         echo "  [OK]   $repo"
         rm -f "$log"
