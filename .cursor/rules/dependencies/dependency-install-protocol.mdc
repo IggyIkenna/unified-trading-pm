@@ -1,0 +1,72 @@
+---
+description: "Never pip/uv pip install a package directly — always update pyproject.toml + manifest + uv lock first; direct installs create invisible state that breaks other devs and CI"
+alwaysApply: true
+priority: 95
+tags:
+  - dependencies
+  - package-manager
+  - ssot
+  - ci-cd
+  - critical
+---
+
+# Dependency Install Protocol — No Direct Installs
+
+SSOT: `unified-trading-pm/docs/ci-cd-ssot.md § 2. The No-Direct-Install Principle`
+
+## The Rule
+
+**NEVER run `pip install`, `uv pip install`, `npm install <pkg>`, or `npm add <pkg>`
+to add a new dependency** — in a local shell, agent session, CI step, or VM.
+
+This creates invisible state. CI runs a fresh venv every time. Another developer clones
+the repo and it doesn't work. The version alignment script flags a mismatch. The `uv.lock`
+goes out of sync. One local install fix can mask a broken `pyproject.toml` for everyone else.
+
+## Correct Flow for Adding a Python Dependency
+
+```
+1. pyproject.toml    →  add to [project.dependencies] or [project.optional-dependencies.dev]
+2. Source code       →  write the import and code that uses it
+3. workspace-manifest.json  →  if it's a new internal sibling repo dep, add to dependencies[]
+4. uv lock           →  cd <repo> && uv lock          (regenerates uv.lock)
+5. Install locally   →  uv sync --extra dev            (installs from lock file)
+6. Quality gates     →  bash scripts/quality-gates.sh  (validates everything)
+```
+
+## Correct Flow for Adding a Node/npm Dependency
+
+```
+1. package.json      →  npm install --save <pkg> OR manually add to dependencies/devDependencies
+2. Source code       →  write the import and code that uses it
+3. Lock file         →  npm ci or npm install  (updates package-lock.json)
+4. Quality gates     →  bash scripts/quality-gates.sh
+```
+
+## Why the Manifest Matters for Internal Deps
+
+`workspace-manifest.json` `dependencies[]` is the SSOT for which sibling repos each repo
+depends on. Three things read from it:
+
+- **CI dep-clone step** in `python-quality-gates.yml` uses `dep_repos` derived from it
+- **Version alignment script** (`run-version-alignment.sh`) checks manifest vs pyproject.toml
+- **Rollout script** regenerates thin CI callers with the correct `dep_repos` input
+
+If you add an internal dep without updating the manifest, CI won't clone it and tests will fail.
+
+## Version Alignment Will Catch Drift
+
+```bash
+bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh
+```
+
+Checks: manifest versions ↔ pyproject.toml versions ↔ import usage ↔ uv.lock currency.
+Any direct install that bypasses pyproject.toml will be flagged here.
+
+## NEVER
+
+NEVER: `pip install ruff` or `uv pip install ruff` to fix a missing tool → add to `pyproject.toml [dev]` or fix in `python-quality-gates.yml`
+NEVER: `npm install axios` in a terminal to make a test pass → add to `package.json`
+NEVER: Install something in CI with `run: pip install ...` as a one-off fix → fix the reusable workflow
+NEVER: `uv pip install -e ../some-dep` without that dep being in `pyproject.toml` path deps
+NEVER: Install a package in one agent session and assume it persists for other devs
