@@ -217,20 +217,33 @@ fi
 echo ""
 
 # 0.8. uv.lock drift detection — stale lockfile (pyproject.toml newer) or uncommitted changes
+# Branch context: reads active_feature_branch from workspace-manifest.json (default comparison target).
+# Each drift message includes the repo's current branch so you know whether drift is expected
+# (e.g. on a feature branch with in-progress dep changes) vs unexpected (stale on main).
 echo "[0.8/4] Checking uv.lock staleness and uncommitted changes across all repos..."
+ACTIVE_BRANCH="$(python3 -c "
+import json, sys
+try:
+    m = json.load(open('$PM_ROOT/workspace-manifest.json'))
+    print(m.get('active_feature_branch', 'main'))
+except Exception:
+    print('main')
+" 2>/dev/null || echo "main")"
 LOCK_DRIFT=()
 while IFS= read -r lock_file; do
   repo_dir="$(dirname "$lock_file")"
   repo_name="$(basename "$repo_dir")"
   [ "$repo_dir" = "$WORKSPACE_ROOT" ] && continue
   pyproject="$repo_dir/pyproject.toml"
+  repo_branch="$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
+  branch_tag="branch: $repo_branch"
   # pyproject.toml newer than uv.lock → lockfile needs regeneration
   if [ -f "$pyproject" ] && [ "$pyproject" -nt "$lock_file" ]; then
-    LOCK_DRIFT+=("  $repo_name: pyproject.toml newer than uv.lock — run: cd $repo_name && uv lock")
+    LOCK_DRIFT+=("  $repo_name: pyproject.toml newer than uv.lock ($branch_tag) — run: cd $repo_name && uv lock")
   fi
   # uncommitted changes to uv.lock on the working tree
   if git -C "$repo_dir" status --porcelain uv.lock 2>/dev/null | grep -q 'uv\.lock'; then
-    LOCK_DRIFT+=("  $repo_name: uv.lock has uncommitted local changes")
+    LOCK_DRIFT+=("  $repo_name: uv.lock has uncommitted local changes ($branch_tag)")
   fi
 done < <(find "$WORKSPACE_ROOT" -maxdepth 2 -name "uv.lock" \
   -not \( -path "*/.venv*" -prune \) \
@@ -238,7 +251,7 @@ done < <(find "$WORKSPACE_ROOT" -maxdepth 2 -name "uv.lock" \
 
 if [ "${#LOCK_DRIFT[@]}" -gt 0 ]; then
   echo ""
-  echo "  [WARN] uv.lock drift detected (${#LOCK_DRIFT[@]} issue(s)):"
+  echo "  [WARN] uv.lock drift detected (${#LOCK_DRIFT[@]} issue(s)) — active_feature_branch=${ACTIVE_BRANCH}:"
   for d in "${LOCK_DRIFT[@]}"; do echo "$d"; done
   echo ""
   echo "  Fix: cd <repo> && uv lock   (regenerate from pyproject.toml)"
