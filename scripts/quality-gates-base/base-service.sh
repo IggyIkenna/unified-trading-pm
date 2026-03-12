@@ -805,6 +805,21 @@ fi
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
 log_success "Codex compliance PASSED"
 
+# ── [5.5] WORKFLOW LINT (actionlint) ──────────────────────────────────────────
+if [ -d "${REPO_ROOT}/.github/workflows" ]; then
+    log_section "[5.5/6] WORKFLOW LINT (actionlint)"
+    if command -v actionlint &>/dev/null; then
+        WORKFLOW_ERRORS=0
+        while IFS= read -r -d '' wf; do
+            actionlint "$wf" 2>&1 || WORKFLOW_ERRORS=$(( WORKFLOW_ERRORS + 1 ))
+        done < <(find "${REPO_ROOT}/.github/workflows" -name "*.yml" -print0 2>/dev/null)
+        [ $WORKFLOW_ERRORS -gt 0 ] && { log_fail "Workflow lint FAILED: $WORKFLOW_ERRORS file(s) with errors"; exit 1; }
+        log_success "Workflow lint PASSED"
+    else
+        log_warn "actionlint not found — skipping workflow lint (install: brew install actionlint)"
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"

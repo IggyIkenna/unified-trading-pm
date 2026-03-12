@@ -27,12 +27,12 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      - name: Cache tools (ripgrep, shellcheck, bats)
+      - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
         uses: actions/cache@v4
         with:
           path: ~/.local/act-tools
-          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12
+          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
 
       - name: Install ripgrep
         if: steps.tools-cache.outputs.cache-hit != 'true'
@@ -56,22 +56,26 @@ jobs:
           git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
           /tmp/bats-core/install.sh ~/.local/act-tools
 
+      - name: Install actionlint
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        run: |
+          AL_VER="1.7.4"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz" \
+            | tar -xz -C ~/.local/act-tools/bin actionlint
+
       - name: Add tools to PATH
         run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
 
-      - name: Cache uv dependencies
-        id: uv-cache
+      - name: Cache uv download cache
         uses: actions/cache@v4
         with:
-          path: |
-            unified-trading-pm/.venv
-            ~/.cache/uv
+          path: ~/.cache/uv
           key: uv-${{ runner.os }}-${{ hashFiles('unified-trading-pm/uv.lock') }}
           restore-keys: |
             uv-${{ runner.os }}-
 
       - name: Install PM dev deps (ruff, basedpyright, pytest)
-        if: steps.uv-cache.outputs.cache-hit != 'true'
         working-directory: unified-trading-pm
         run: |
           uv venv --clear .venv
