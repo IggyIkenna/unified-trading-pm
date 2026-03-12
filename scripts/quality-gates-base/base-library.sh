@@ -164,7 +164,7 @@ if [ "$RUN_TESTS" = true ]; then
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     COV="--cov=$SOURCE_DIR --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
     PARGS="-n ${PYTEST_WORKERS:-2} --timeout=60 -v --tb=short"
-    $PYTHON_CMD -m pytest tests/unit/ --block-network $PARGS $COV || exit 1
+    $PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
     log_success "Tests PASSED"
 
     # No duplicate test files (test_*_extended.py, test_*_additional.py)
