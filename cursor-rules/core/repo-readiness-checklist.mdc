@@ -1,0 +1,127 @@
+---
+description: "Per-repo readiness checklist (CR/DR/BR stages) governs what 'done' means for every repo in the workspace manifest — feeds into v1.0.0 semver gate and Code Readiness Master Plan"
+alwaysApply: true
+priority: 97
+tags:
+  - readiness
+  - quality-gates
+  - semver
+  - critical
+  - workflow
+---
+
+# Repo Readiness Checklist — Per-Repo Standards
+
+SSOT: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md`
+Master tracker: `unified-trading-pm/plans/active/code_readiness_master_plan_2026_03_11.plan.md`
+Semver rule: `unified-trading-pm/cursor-rules/core/semver-v1-hardening.mdc`
+
+---
+
+## RULE: Three Readiness Axes (CR / DR / BR)
+
+Every repo has independent progress on three axes. A repo is NEVER "done" by checking only one axis.
+
+### Code Readiness (CR)
+
+| Stage | Pass Criteria |
+|-------|--------------|
+| CR0 | Not started |
+| CR1 | Functionality 100% — zero `NotImplementedError` in core paths; zero stub handlers; no `TODO`/`FIXME` in prod-path code; audit §2 passes |
+| CR2 | Unit tests 100% passing — QG unit stage green; coverage ≥ floor (80% libs / 70% services); `--cov-report=xml` written |
+| CR3 | Integration tests 100% passing — every direct manifest dependency exercised by an integration test; credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`) |
+| CR4 | Quality gate passing locally — `bash scripts/quality-gates.sh` Pass 1 green; 0 ruff errors; 0 basedpyright errors; no bypass shortcuts added |
+| CR5 | Quickmerge to feature branch — CI passes on `feat/code-readiness-<repo>` or equivalent |
+
+**CR3 manifest rule:** Count the repo's `dependencies[]` in `workspace-manifest.json`. Each dep must appear in
+`tests/integration/`. Repos with zero manifest dependencies satisfy CR3 automatically.
+
+### Deployment Readiness (DR)
+
+| Stage | Pass Criteria |
+|-------|--------------|
+| DR0 | Not started |
+| DR1 | Docker builds; cloudbuild.yaml correct; infra provisioned; `setup-workspace.sh` succeeds |
+| DR2 | CI smoke tests pass — `production_mock_e2e` GHA suite green; zero live calls; emulators only |
+| DR3 | Feature environment deployed — `GET /health` 200; `GET /readiness` 200; smoke route returns expected payload |
+| DR4 | Staging SIT pass — system-integration-tests full suite green; no circuit breaker trips during run |
+| DR5 | Load/performance pass — P99 latency ≤ SLA; no memory leaks; throughput ≥ target |
+| DR6 | Production-ready — zero CRITICAL CVEs; auth middleware verified; runbook in `docs/`; ≥24 hr health post-deploy |
+
+### Business Readiness (BR)
+
+| Stage | Pass Criteria |
+|-------|--------------|
+| BR0 | Not started |
+| BR1 | Acceptance criteria defined in the owning plan |
+| BR2 | Circuit breaker validated (fault injection + 3-state machine). **N/A for libraries and UIs.** |
+| BR3 | Event handling validated — all UEI events fire; schema matches UAC canonical; correlation_id propagated |
+| BR4 | PnL/performance targets met — domain KPIs measured; declare "N/A" with reason for non-revenue repos |
+| BR5 | PnL optimization validated — backtest confirms positive contribution; artifacts in GCS. Revenue repos only. |
+| BR6 | Batch vs live validation — t+1 check passes within tolerance |
+| BR7 | Staging vs live parity — N-minute replay within tolerance |
+| BR8 | **User approved** — human sign-off. **No agent may set BR8 autonomously.** |
+
+---
+
+## RULE: v1.0.0 Requires Specific Axis Minimums
+
+A repo CANNOT be promoted to v1.0.0 unless:
+- CR5 (merged to `main` via cascade — not just `feat/*`)
+- DR3 (has shipped to feature environment at least once)
+- DR4 (staging SIT passed)
+- BR2 (circuit breaker — services only)
+- BR3 (event handling — all repos that emit UEI events)
+- BR4 (performance targets measured and met)
+- BR8 (user approved — no exceptions)
+
+Full gate table: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md § v1.0.0 Gate`
+
+---
+
+## RULE: Every Undone Item Must Have a Plan
+
+Before claiming a repo is v1.0.0 eligible, EVERY unmet checklist item must be tracked in an active plan
+(in `plans/active/`) with a completion timeline. If an item is declared N/A, the reason must appear in the plan's
+`repo_gates` `readiness_note` field. No silent gaps.
+
+---
+
+## RULE: Agent Semver Limits
+
+| Bump | Agent can auto-approve? | Conditions |
+|------|------------------------|------------|
+| patch (0.x.y → 0.x.y+1) | Yes | CR4 at time of merge; CI auto-bumps via `version-bump.yml` |
+| minor (0.x.y → 0.x+1.0) | Yes | CR5 (CI on feat branch passed); no FAIL items in audit |
+| minor breaking (feat!:) | Yes | CR5 + DR2 (CI smoke); must use `--to-staging` path |
+| **1.0.0** | **No — user required** | All axes met + BR8 (user approval) |
+
+---
+
+## RULE: Code Readiness Master Plan Is the Tracker
+
+`plans/active/code_readiness_master_plan_2026_03_11.plan.md` is the authoritative per-repo CR/DR/BR state tracker
+for all 65 repos. Do NOT track individual repo readiness in ad-hoc comments or chat — update the master plan.
+
+Active sub-plans (phase2_library_tier_hardening, phase3_service_hardening_integration, etc.) align to the master
+plan. They contain the actual implementation todos. The master plan tracks aggregate stage state.
+
+---
+
+## RULE: Tier Blocking (Readiness Promotion Only)
+
+The tier-blocking invariant applies to readiness promotion (not day-to-day development):
+
+```
+T0 all CR5+DR3 → T1 promotion unblocked
+T0+T1 all CR5+DR3 → T2 promotion unblocked
+T0+T1+T2 all CR5+DR3 → T3 promotion unblocked
+T3 CR5+DR3 → Services (T4) promotion unblocked
+T4 CR5+DR4 → APIs (T5) promotion unblocked
+T5 CR5+DR4 → UIs (T6) promotion unblocked
+```
+
+WHY: Tier N cannot be verified against a broken Tier N-1. Promoting a T2 repo before T1 is CR5+DR3 means
+integration tests at T2 are testing against an unreleased T1.
+
+CODEX: unified-trading-codex/06-coding-standards/README.md

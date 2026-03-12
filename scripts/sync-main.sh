@@ -7,8 +7,13 @@
 # Usage:
 #   sync-main
 #   sync-main --message "chore: custom message"
-#   sync-main --switch-to-main   # old behavior: switch to main after push
+#   sync-main --switch-to-main      # switch to main after push (old behavior)
+#   sync-main --feat-branch         # push to active_feature_branch from workspace-manifest.json
+#   sync-main --stag-branch         # push to staging branch
 #   sync-main --dry-run
+#
+# All other flags (--limit, --repo, --filter, --repos, --skip-protection,
+# --no-commit, --max-workers) are passed straight through.
 #
 # Run from workspace root. Add to .zshrc:
 #   sync-main() { cd "${WORKSPACE_ROOT:-$HOME/Code/unified-trading-system-repos}" && bash unified-trading-pm/scripts/sync-main.sh "$@"; }

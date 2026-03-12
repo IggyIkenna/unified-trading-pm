@@ -30,6 +30,11 @@
 #   --preserve-local      (default) Stage, commit, push — skip switching to main. Stay on current
 #   --switch-to-main     After push, switch local branch to main (old behavior)
 #                        branch. All changes committed and pushed; nothing lost.
+#   --feat-branch         Force-push to the active feature branch read from
+#                        workspace-manifest.json (.active_feature_branch). Admin
+#                        overrides branch protection on that branch, same as main.
+#   --stag-branch         Force-push to the staging branch ("staging"). Admin
+#                        overrides branch protection on staging, same as main.
 #
 # Prerequisites:
 #   - gh CLI authenticated as IggyIkenna (admin of all target repos).
@@ -70,6 +75,7 @@ SKIP_PROTECTION=false
 NO_COMMIT=false
 SKIP_CHECKOUT=true
 MAX_WORKERS=${MAX_WORKERS:-8}
+TARGET_BRANCH="main"
 
 # ---------------------------------------------------------------------------
 # Parse args
@@ -88,9 +94,23 @@ while [[ $# -gt 0 ]]; do
     --preserve-local)  SKIP_CHECKOUT=true; shift ;;
     --switch-to-main)  SKIP_CHECKOUT=false; shift ;;
     --max-workers)     MAX_WORKERS="$2"; shift 2 ;;
+    --feat-branch)     TARGET_BRANCH="__feat__"; shift ;;
+    --stag-branch)     TARGET_BRANCH="staging"; shift ;;
     *) echo "Unknown flag: $1"; shift ;;
   esac
 done
+
+# ---------------------------------------------------------------------------
+# Resolve --feat-branch to actual branch name from manifest
+# ---------------------------------------------------------------------------
+if [[ "$TARGET_BRANCH" == "__feat__" ]]; then
+  _feat=$(jq -r '.active_feature_branch // empty' "$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json" 2>/dev/null || true)
+  if [[ -z "$_feat" ]]; then
+    echo "ERROR: --feat-branch: no active_feature_branch found in workspace-manifest.json"
+    exit 1
+  fi
+  TARGET_BRANCH="$_feat"
+fi
 
 # ---------------------------------------------------------------------------
 # Safety gate 1: --admin-confirm required
@@ -192,10 +212,10 @@ _disable_protection() {
 
   # Classic branch protection
   local prot_json
-  prot_json=$(gh api "repos/$GH_OWNER/$repo/branches/main/protection" 2>/dev/null || echo "NONE")
+  prot_json=$(gh api "repos/$GH_OWNER/$repo/branches/$TARGET_BRANCH/protection" 2>/dev/null || echo "NONE")
   if [[ "$prot_json" != "NONE" ]]; then
     printf '%s\n' "$prot_json" > "$PROT_TMPDIR/${key}.classic.json"
-    gh api -X DELETE "repos/$GH_OWNER/$repo/branches/main/protection" &>/dev/null || true
+    gh api -X DELETE "repos/$GH_OWNER/$repo/branches/$TARGET_BRANCH/protection" &>/dev/null || true
     sleep 1  # wait for GitHub to propagate the protection removal before force-push
   fi
 
@@ -270,7 +290,7 @@ _restore_protection() {
         )
       }' "$classicfile" 2>/dev/null) || true
       if [[ -n "$put_body" ]]; then
-        gh api -X PUT "repos/$GH_OWNER/$repo/branches/main/protection" \
+        gh api -X PUT "repos/$GH_OWNER/$repo/branches/$TARGET_BRANCH/protection" \
           --input - <<< "$put_body" &>/dev/null || \
           echo "  WARN: $repo — could not restore classic branch protection"
       fi
@@ -395,20 +415,20 @@ sync_repo() {
   # Disable branch protection
   _disable_protection "$repo"
 
-  # Force-push current HEAD → remote main (works from any local branch)
+  # Force-push current HEAD → remote target branch (works from any local branch)
   local push_err; push_err=$(mktemp)
-  if (cd "$dir" && git push --force origin HEAD:main 2>"$push_err"); then
+  if (cd "$dir" && git push --force origin HEAD:"$TARGET_BRANCH" 2>"$push_err"); then
     echo "OK"
     echo "OK:$repo" > "$rf"
-    # Switch local branch to main after successful push (avoids post-sync branch confusion)
+    # Switch local branch to target after successful push (avoids post-sync branch confusion)
     # Skip when --preserve-local: stay on current branch; changes are committed and pushed
     if [[ "$SKIP_CHECKOUT" != "true" ]]; then
       local current_branch
       current_branch=$(cd "$dir" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-      if [[ -n "$current_branch" && "$current_branch" != "main" ]]; then
-        (cd "$dir" && git checkout -B main 2>/dev/null) \
-          && echo "    [checkout] $repo — switched local branch to main" \
-          || echo "    [checkout] WARN: could not switch to main for $repo"
+      if [[ -n "$current_branch" && "$current_branch" != "$TARGET_BRANCH" ]]; then
+        (cd "$dir" && git checkout -B "$TARGET_BRANCH" 2>/dev/null) \
+          && echo "    [checkout] $repo — switched local branch to $TARGET_BRANCH" \
+          || echo "    [checkout] WARN: could not switch to $TARGET_BRANCH for $repo"
       fi
     fi
   else
@@ -425,7 +445,7 @@ sync_repo() {
 }
 
 export -f sync_repo _disable_protection _restore_protection _repo_key
-export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT SKIP_CHECKOUT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR
+export GH_OWNER WORKSPACE_ROOT DRY_RUN NO_COMMIT SKIP_CHECKOUT COMMIT_MSG SKIP_PROTECTION PROT_TMPDIR RESULT_DIR TARGET_BRANCH
 
 # ---------------------------------------------------------------------------
 # Parallel batch runner
@@ -452,9 +472,10 @@ run_batch() {
 # Header
 # ---------------------------------------------------------------------------
 echo "============================================================"
-echo " ADMIN FORCE-SYNC: local HEAD -> remote main"
+echo " ADMIN FORCE-SYNC: local HEAD -> remote $TARGET_BRANCH"
 echo " User   : $GH_USER"
 echo " Owner  : ${GH_OWNER:-N/A}"
+echo " Target : $TARGET_BRANCH"
 echo " Commit : $( [[ "$NO_COMMIT" == "true" ]] && echo "(skipped)" || echo "\"$COMMIT_MSG\"" )"
 echo " Workers: $MAX_WORKERS per tier"
 echo " Protect: $( [[ "$SKIP_PROTECTION" == "true" ]] && echo "skip (--skip-protection)" || echo "via GitHub API (save + restore)" )"
