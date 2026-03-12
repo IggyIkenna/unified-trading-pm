@@ -1,0 +1,37 @@
+---
+description: "Sub-agents do not inherit always-apply rules — MUST pass full rules in every prompt"
+alwaysApply: true
+priority: 95
+tags:
+  - agents
+  - workflow
+  - critical
+---
+
+# Agents Must Follow Cursor Rules
+
+Sub-agents launched via Task tool start with FRESH context and do NOT automatically
+inherit the parent's always-apply rules. Reduced context makes them miss rules unless
+the master agent explicitly provides them.
+
+## MANDATORY: Full Rules in Every Sub-Agent Prompt
+
+When launching ANY sub-agent (Task tool, generalPurpose, explore, shell, fast):
+
+1. **Read and paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt — this is the consolidated full rules set.
+2. **If paste is impractical** (token limit): Include this instruction at the TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly. You are a sub-agent with fresh context — you do NOT inherit parent rules."
+3. **Always include:** WORKSPACE_ROOT path and: "For tests/quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-repo .venv). Never use .venv-workspace for pytest."
+
+For multi-step agents: put the full rules block at the TOP of the prompt, not buried at the end.
+
+## Minimum Reminders (if full paste skipped)
+
+If you cannot paste the full file, at minimum include:
+- Follow all workspace cursor rules in .cursorrules and .cursor/rules
+- uv not pip, basedpyright not pyright, quickmerge not git push
+- Delete deprecated code; no parallel code paths — see delete-deprecated.mdc
+- Search unified libraries before implementing anything new
+- No *_SUMMARY.md; plans only in unified-trading-pm/plans/
+- Never git reset --hard; use --dep-branch for dependency conflicts
+
+CODEX: 06-coding-standards/cursor-rules-system.md

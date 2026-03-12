@@ -261,7 +261,7 @@ def _check_cr2(repo_path: Path, declared_coverage: str) -> GateResult:
         )
 
     try:
-        tree = ET.parse(str(coverage_xml))
+        tree = ET.parse(str(coverage_xml))  # nosec B314 — coverage.xml from our own QG run, not untrusted  # nosec B314 — coverage.xml from pytest-cov, not untrusted
         root = tree.getroot()
         line_rate_str = root.get("line-rate", "")
         if not line_rate_str:

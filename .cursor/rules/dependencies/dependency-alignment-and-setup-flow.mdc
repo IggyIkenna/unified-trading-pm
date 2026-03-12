@@ -1,0 +1,38 @@
+---
+description: "Dependency alignment + run-all-setup workflow — SSOT for version alignment and uv.lock updates"
+alwaysApply: false
+priority: 50
+tags: [dependencies, alignment, setup, uv.lock]
+---
+
+# Dependency Alignment + Run-All-Setup Flow
+
+## Rule
+
+When changing dependencies across the workspace:
+
+1. **Run version alignment first** — `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh`
+2. **If misaligned** — `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix`
+3. **Then run setup** — `bash unified-trading-pm/scripts/repo-management/run-all-setup.sh`
+4. **Commit uv.lock** — run-all-setup updates uv.lock via setup.sh; commit and push so agents/CI get identical deps
+
+## uv.lock
+
+- **setup.sh** runs `uv lock` when pyproject.toml is newer than uv.lock
+- **run-all-setup** runs setup.sh per repo → updates uv.lock everywhere deps changed
+- **uv.lock is committed** (never in .gitignore) — agents pull it via git
+- After run-all-setup, commit any changed uv.lock files
+
+## SSOT
+
+- **Full CI/CD flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (alignment + setup + sync + conflict resolution)
+- **Workflow doc:** `unified-trading-pm/scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`
+- **Internal alignment:** `unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`
+- **Codex:** `06-coding-standards/setup-standards.md`, `dependency-management.md`
+
+## Related
+
+- `uv-lock-file.mdc` — commit uv.lock when deps change
+- `dependency-version-alignment.mdc` — version selection
+- `always-use-quickmerge.mdc` — quickmerge runs quality gates and uv lock
+- `docs/repo-management/CI-CD-FLOW.md` — full flow including sync-to-main and conflict resolution

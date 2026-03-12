@@ -7,10 +7,13 @@
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
+        "httpx": ["httpx>=0.28.1,<1.0.0"],
+        "jsonschema": ["jsonschema>=4.0.0,<5.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "pytest-asyncio<2.0.0,": ["pytest-asyncio<2.0.0,>=0.25.0"],
         "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
         "pytest-mock<4.0.0,": ["pytest-mock<4.0.0,>=3.15.0"],
+        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
         "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
         "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
         "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.1"],
@@ -18,7 +21,7 @@
         "tomli-w": ["tomli-w>=1.0.0"]
       },
       "internal_count": 0,
-      "external_count": 11
+      "external_count": 14
     },
     "unified-trading-codex": {
       "internal_deps": {},
@@ -195,7 +198,7 @@
     },
     "unified-trading-library": {
       "internal_deps": {
-        "unified-cloud-interface": "path",
+        "unified-cloud-interface": "unified-cloud-interface[gcp]",
         "unified-config-interface": "path",
         "unified-events-interface": "path",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
@@ -293,6 +296,7 @@
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
+        "joblib": ["joblib>=1.3.0,<2.0.0"],
         "pandas": ["pandas>=2.3.0,<3.0.0"],
         "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
@@ -309,7 +313,7 @@
         "ruff": ["ruff==0.15.0"]
       },
       "internal_count": 6,
-      "external_count": 16
+      "external_count": 17
     },
     "unified-market-interface": {
       "internal_deps": {
@@ -506,6 +510,7 @@
         "databento": ["databento>=0.32.0,<1.0.0"],
         "eth-abi<6.0.0,": ["eth-abi<6.0.0,>=5.0.1"],
         "exchange-calendars": ["exchange-calendars>=4.5.0,<5.0.0"],
+        "ib-insync": ["ib_insync>=0.9.86,<1.0.0"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
         "pandas": ["pandas>=2.3.0,<3.0.0"],
         "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
@@ -530,7 +535,7 @@
         "yfinance": ["yfinance>=0.2.66,<1.0.0"]
       },
       "internal_count": 9,
-      "external_count": 28
+      "external_count": 29
     },
     "alerting-service": {
       "internal_deps": {
@@ -1686,23 +1691,8 @@
       "external_count": 0
     },
     "elysium-defi-system": {
-      "internal_deps": {},
-      "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "fastapi": ["fastapi>=0.110.0,<1.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"],
-        "web3": ["web3>=6.15.0,<7.0.0"]
-      },
-      "internal_count": 0,
-      "external_count": 12
+      "skipped": true,
+      "reason": "not a directory"
     },
     "ibkr-gateway-infra": {
       "internal_deps": {},

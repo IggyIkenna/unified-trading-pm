@@ -1,0 +1,99 @@
+---
+description: "5-layer integration testing strategy — contract alignment, schema robustness, per-component integration, infra verification, pipeline E2E"
+alwaysApply: false
+priority: 70
+tags:
+  - testing
+  - integration
+  - quality-gates
+---
+# Integration Testing Layers
+
+RULE: 5 testing layers, cumulative (Layer N+1 meaningless if Layer N fails). Each layer has a defined location, trigger, and credential requirement.
+WHY: Prevents silent schema drift, infrastructure provisioning gaps, and pipeline wire mismatches from reaching production.
+CODEX: 06-coding-standards/integration-testing-layers.md (SSOT)
+
+## Quick Reference
+
+| Layer | What | Where | In quickmerge? | Credentials |
+|-------|------|-------|----------------|-------------|
+| 0 | Contract alignment (AC↔UIC schema pairs) | unified-api-contracts + unified-internal-contracts tests/ | Yes | None |
+| 1 | Schema robustness (fail-fast, corner cases) | Each repo: tests/unit/test_schema_robustness.py | Yes | None |
+| 1.5 | Per-component integration (adapter/event/config wiring with mocks) | Each repo: tests/integration/test_<component>_integration.py | Yes (blocking, last local gate) | None |
+| 2 | Infrastructure verify (buckets, topics, IAM) | deployment-service/scripts/verify_infra.py | No (post-deploy) | GCP |
+| 3a | Pipeline smoke (happy path, fast) | system-integration-tests/ `@pytest.mark.smoke` | No (post-deploy) | GCP sandbox |
+| 3b | Full E2E (corner cases, auth, perf) | system-integration-tests/ `@pytest.mark.full_e2e` | No (post-deploy) | GCP sandbox |
+
+## When Writing Tests
+
+Layer 0: If you change a schema in AC or UIC, add or update a contract alignment test in that repo.
+Layer 1: If you add/change a Pydantic model any service consumes, add test_schema_robustness.py tests.
+Layer 1.5: If you add/change a service adapter, EventSink wiring, or config loading, add a component integration test with mocked dependencies.
+Layer 2: If you add a new GCS bucket or PubSub topic, add it to verify_infra.py resource list.
+Layer 3: If you add a new service-to-service data flow, add a smoke test in system-integration-tests.
+
+DO:
+  Layer 0 in AC/UIC; Layer 1 per-service; Layer 1.5 per-service (tests/integration/); Layer 2 in deployment-service; Layer 3 in system-integration-tests
+  Sequential: 3a passes before 3b runs
+  system-integration-tests interacts via HTTP/GCS/PubSub only — zero Python imports from services
+  Layer 1.5: mock all external dependencies (no live GCS, no live PubSub, no live Secret Manager)
+  Run Layer 1.5: `pytest tests/integration/ -v --timeout=30`
+
+## Private Dependency Integration Tests (Layer 1.5 — Required)
+
+Every repo that lists internal unified_* packages as dependencies MUST have Layer 1.5 integration tests:
+
+- Location: `tests/integration/test_<dep_name>_integration.py`
+- Use `unittest.mock` or `pytest-mock` — NO live cloud calls
+- Test the actual wiring: config loading, adapter init, event emission, schema round-trip
+- One test file per private dependency boundary
+
+```python
+# Example: testing unified-trading-library dep wiring with mocks
+@pytest.fixture(autouse=True)
+def mock_cloud_clients():
+    with patch("unified_cloud_interface.get_storage_client") as mock_storage, \
+         patch("unified_cloud_interface.get_secret_client") as mock_secret:
+        mock_storage.return_value = MagicMock(spec=StorageClient)
+        mock_secret.return_value = MagicMock(spec=SecretClient)
+        yield mock_storage, mock_secret
+
+def test_service_initialises_with_utl_deps(mock_cloud_clients):
+    # Real import, mocked I/O — Layer 1.5 pattern
+    svc = MyService(config=MyConfig.model_validate({"ENV": "test", ...}))
+    assert svc.is_ready()
+```
+
+## External Interface VCR Tests (Layer 1 — Required for Interface Repos)
+
+The six external-facing interface repos MUST have VCR-recorded integration tests:
+- unified-market-interface
+- unified-trade-execution-interface
+- unified-reference-data-interface
+- unified-position-interface
+- unified-sports-execution-interface
+- unified-defi-execution-interface
+
+VCR cassettes live in: `unified-api-contracts/unified_api_contracts/unified_api_contracts_external/<venue>/mocks/<endpoint>.yaml`
+
+```python
+import vcr
+from pathlib import Path
+
+CASSETTE_DIR = Path("../unified-api-contracts/unified_api_contracts/unified_api_contracts_external")
+
+@vcr.use_cassette(str(CASSETTE_DIR / "binance/mocks/ticker_24hr.yaml"))
+def test_binance_ticker_validates_against_ac_schema():
+    # Real HTTP call recorded in cassette — validates against AC schema
+    from unified_api_contracts.binance.schemas import BinanceTicker24hr
+    response = adapter.fetch_ticker("BTCUSDT")
+    BinanceTicker24hr.model_validate(response)  # fails if schema drifts
+```
+
+Re-record cassettes when venue API changes. Store cassettes in unified-api-contracts only (never copy to consumers).
+
+NEVER:
+  Layer 3 tests that import service internals (creates cross-service Python dependency)
+  Skip Layer 0 when modifying schemas ("it's just a field rename")
+  Put infra verification in quickmerge (needs cloud credentials)
+  Use live cloud resources in Layer 1.5 (belongs in Layer 2+)

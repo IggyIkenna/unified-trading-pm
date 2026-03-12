@@ -1,0 +1,30 @@
+---
+description: "Full CI/CD flow SSOT — alignment, setup, sync-to-main, conflict resolution"
+alwaysApply: false
+priority: 60
+tags: [ci-cd, alignment, setup, sync, quickmerge, quality-gates]
+---
+
+# Full CI/CD Flow — SSOT
+
+## Rule
+
+When aligning dependencies, pushing to main, or resolving merge conflicts, follow the full flow in order:
+
+1. **Version alignment** — `run-version-alignment.sh` (then `--fix` if needed)
+2. **Run setup** — `run-all-setup.sh` (updates venvs + uv.lock)
+3. **Commit + push** — pyproject.toml, uv.lock, manifest
+4. **Sync to main** — `sync-all-to-main.sh` (quickmerge per repo)
+5. **If merge conflict** — run `run-all-quality-gates.sh --repo X` on conflicted repos; verify our version passes; resolve manually in Cursor; re-run sync
+
+## SSOT
+
+**`unified-trading-pm/docs/repo-management/CI-CD-FLOW.md`** — full local dev flow (alignment, setup, sync, conflict resolution).
+**`unified-trading-pm/docs/repo-management/version-cascade-flow.md`** — three-tier branch model, version dispatch chain, selective cascade, hotfix vs breaking, stability criteria.
+
+## Related
+
+- `dependency-alignment-and-setup-flow.mdc` — Phase 1–2 detail
+- `always-use-quickmerge.mdc` — quickmerge usage and three-tier branch model
+- `dependencies/breaking-change-major-version-protocol.mdc` — what counts as a breaking change
+- `docs/repo-management/sync-to-main-flow.md` — Phase 3 detail

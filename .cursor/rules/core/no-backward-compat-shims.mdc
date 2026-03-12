@@ -1,0 +1,79 @@
+---
+description: "No backward-compatibility re-export shims or migration stubs — update all consumers and delete the source"
+alwaysApply: false
+globs:
+  - "**/*.py"
+priority: 90
+tags: [contracts, imports, migrations, tech-debt]
+---
+# No Backward-Compatibility Shims
+
+## Rule
+
+NEVER create backward-compatibility re-export files. When moving a schema or module to a new canonical location:
+
+1. Find ALL consumers (importers) of the old location using `rg`
+2. Update every consumer to import from the new canonical location
+3. Delete the old file completely — do NOT leave a re-export stub
+
+## What This Prohibits
+
+**Prohibited — re-export stub file:**
+```python
+# old_location.py
+# MIGRATED: This class now lives in new_location.
+from new_location import MyClass  # re-export for backward compat
+__all__ = ["MyClass"]
+```
+
+**Prohibited — X as X re-export shim:**
+```python
+# schemas.py
+# Re-export all schemas from split modules for backward compatibility
+from .account_schemas import BinanceDepositAddress as BinanceDepositAddress
+from .account_schemas import BinanceFeeRate as BinanceFeeRate
+# ... (100 more lines)
+```
+
+**Prohibited — alias stub:**
+```python
+# old_module.py
+from unified_internal_contracts.features import OnchainFeatureRecord as OnchainFeature  # MIGRATED
+```
+
+## What This Requires
+
+```python
+# CORRECT: update the consumer directly
+# Before (consumer file):
+from old_location import MyClass
+
+# After (consumer file, updated directly):
+from canonical_new_location import MyClass
+```
+
+## WHY this matters
+
+Re-export stubs are invisible tech debt:
+- Type checkers accept them, so violations are never surfaced
+- Future developers import from the wrong location because the shim "works"
+- The shim file accumulates divergence over time (becomes stale)
+- CI/CD import checks cannot distinguish a shim from a real source
+- Audit tools cannot determine canonical ownership from the import graph
+
+## Exceptions
+
+The ONLY permitted re-export is in a package `__init__.py` that acts as the package's **declared public API** — not a migration shim. If `__init__.py` re-exports for the package's public surface, it must include ALL public symbols (not a subset that was "moved") and must NOT have a "backward compat" comment.
+
+## Quality Gate Check
+
+```bash
+# Detect backward-compat shims, re-export stubs, and migration markers
+rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward|re-export.*compat" \
+    --type py --glob '!tests/**' --glob '!.venv*' "$SOURCE_DIR/" 2>/dev/null \
+    && log_fail "Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims" \
+    || log_success "No backward-compat stubs"
+```
+
+CODEX: 06-coding-standards/README.md (no backwards-compatibility hacks rule)
+AUDIT: plans/active/SCHEMA_CONTRACTS_AUDIT.md

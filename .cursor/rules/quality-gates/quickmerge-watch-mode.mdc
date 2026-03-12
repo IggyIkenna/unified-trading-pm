@@ -1,0 +1,20 @@
+---
+description: "Quickmerge watch mode - auto-fix pre-push failures via LLM"
+alwaysApply: false
+priority: 40
+tags:
+  - quickmerge
+  - ci-cd
+---
+# Quickmerge Watch Mode
+RULE: Watch mode default. If act fails, LLM auto-fixes (max 3 attempts). Use --no-watch only when user requests.
+WHY: Reduces manual fix cycles; catches CI failures before push.
+CODEX: .cursor/rules/always-use-quickmerge.mdc, scripts/quickmerge.sh, unified-trading-pm/scripts/validate-workspace-quickmerge.sh
+WORKSPACE-WIDE VALIDATION: bash unified-trading-pm/scripts/validate-workspace-quickmerge.sh — runs all repos in topological dependency order per workspace-manifest.json. Produces artifacts/quickmerge-matrix.json with per-repo pass/fail. Run this before declaring workspace-level green.
+DO: bash scripts/quickmerge.sh "message" (watch enabled); let LLM fix act failures
+NEVER: Use --no-watch unless user asks; skip act simulation; use --no-verify or bypass STEP 5.10/5.11 checks
+
+HARDENING NOTES (STEP 5.10/5.11 — exit 1 in all quality-gate templates):
+- STEP 5.10: blocks `from google.cloud|import boto3|import botocore` outside UCI providers
+- STEP 5.11: blocks `CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService` in service/library code
+When LLM auto-fix encounters a STEP 5.10/5.11 failure, it MUST fix the root violation (remove banned import/symbol) — NOT bypass the gate. These are architectural constraints, not suppressible warnings.

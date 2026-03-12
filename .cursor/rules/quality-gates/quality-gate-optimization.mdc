@@ -1,0 +1,24 @@
+---
+description: "Optimize quality gate execution for faster CI/CD feedback"
+alwaysApply: false
+priority: 75
+tags:
+  - quality-gates
+  - ci-cd
+---
+# Quality Gate Optimization
+RULE: Quality gates must complete in <3 minutes. Use pytest-xdist, skip slow tests in quick mode, synthetic fixtures.
+WHY: Fast feedback is essential; CI rejects merges without quality gate evidence; skipping Pass 1 causes CI failures.
+CODEX: 06-coding-standards/quality-gates.md § Two-Pass Workflow Model
+
+Two-pass model — BOTH passes are MANDATORY for agents. Pass 1 cannot be skipped:
+- Pass 1 (REQUIRED FIRST): `bash scripts/quality-gates.sh` — full run (lint, tests, typecheck, codex, security)
+- Pass 2 (after Pass 1 green): `bash scripts/quickmerge.sh "msg" --agent` — lightweight verify + commit/PR
+
+Flag semantics:
+- `--agent` (agent/CI): skip act + skip tests — quickmerge is a fast format/lint/typecheck gate, NOT a substitute for Pass 1
+- `--quick` (human only): skip act only — tests still run
+- `--agent --skip-typecheck`: lint + format + codex only — only valid if Pass 1 typecheck already passed
+
+DO: Run Pass 1 first always; use pytest-xdist; mark slow tests; `--tb=short`; `--agent` for agent quickmerge
+NEVER: Skip Pass 1 and go straight to quickmerge; use `--quick` from agent sessions; use quickmerge as a substitute for quality-gates.sh; exceed 5min total

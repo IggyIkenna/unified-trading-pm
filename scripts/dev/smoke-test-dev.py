@@ -115,7 +115,7 @@ LIBRARY_IMPORTS: list[tuple[str, str, bool]] = [
 
 for label, stmt, mandatory in LIBRARY_IMPORTS:
     try:
-        exec(stmt)
+        exec(stmt)  # nosec B102 — intentional: dynamic import check for dev smoke test  # nosec B102 — dev smoke test: stmt is from known LIBRARY_IMPORTS list only
         _pass(label)
     except ImportError as exc:
         if mandatory:

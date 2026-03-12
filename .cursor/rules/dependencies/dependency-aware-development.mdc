@@ -1,0 +1,33 @@
+---
+description: "Check canonical dependency matrix before dependency changes"
+alwaysApply: false
+priority: 55
+tags:
+  - dependencies
+  - quickmerge
+---
+# Dependency-Aware Development
+RULE: Check unified-trading-pm/workspace-manifest.json before adding/removing deps. Use --dep-branch when deps differ from main.
+WHY: Quickmerge uses matrix for cascade; wrong order breaks CI.
+CODEX: unified-trading-pm/workspace-manifest.json, .cursor/rules/always-use-quickmerge.mdc
+DO: Consult matrix before changes; use --dep-branch for differential branching; merge dependency before consumer
+NEVER: Change deps without matrix check; push consumer before dependency; skip cascade
+
+## Internal Dependency Source of Truth: manifest first, pyproject second
+
+`workspace-manifest.json` is the SSOT for internal deps. The alignment pipeline syncs pyproject.toml FROM the manifest.
+
+**Adding an internal dep:**
+1. Add the entry to `workspace-manifest.json` under the consuming repo's `dependencies` array
+2. Run `python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply`
+3. The script writes the correct version spec + `[tool.uv.sources]` entry into pyproject.toml automatically
+
+**Removing an internal dep:**
+1. Remove the entry from `workspace-manifest.json`
+2. Run `python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply`
+3. The script removes the dep spec + uv.sources entry from pyproject.toml automatically
+
+**Never edit pyproject.toml internal deps by hand** — the alignment pipeline will detect the mismatch and either restore or remove the entry on the next `--apply` run, undoing manual edits.
+
+**Recovery if dep missing from both manifest and pyproject.toml** (e.g. after a bug strips both):
+Add the entry to the manifest first, then run `--apply`. The script cannot bootstrap from scratch — it only fixes mismatches between the two files.

@@ -1,0 +1,46 @@
+---
+description: "Python scripts in PM must pass basedpyright + ruff — same standards as service repos"
+priority: 75
+globs:
+  - "scripts/**/*.py"
+  - "github-integration/**/*.py"
+tags:
+  - pm
+  - python
+  - quality
+---
+
+# PM Python Standards
+
+Python scripts in PM are automation tools, not service code. Same quality bar applies.
+
+## Linting
+
+```bash
+python3 -m ruff check scripts/ github-integration/ tests/
+python3 -m basedpyright scripts/
+```
+
+- Line length: 120
+- Rules: E, F, W, I (ruff)
+- basedpyright: strict mode (matches workspace pyrightconfig.json)
+- No `Any` types — use `cast()` at JSON boundaries with documented rationale
+
+## Testing
+
+```bash
+python3 -m pytest tests/  # Python tests
+bats tests/               # Shell tests
+```
+
+- Every Python script with logic should have a corresponding test in `tests/`
+- Use `tmp_path` fixtures for file I/O tests
+- Include a smoke test against real data (e.g., real `workspace-manifest.json`)
+
+## JSON Typing Pattern
+
+For scripts that parse JSON (e.g., workspace-manifest.json):
+- Define `JsonDict` type alias at module level
+- Use `cast(JsonDict, json.load(f))` at the deserialization boundary
+- Use typed helper functions (`_jdict`, `_jstr`, `_jint`) for safe extraction
+- See `generate_workspace_dag.py` for the reference pattern

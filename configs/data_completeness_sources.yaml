@@ -1,0 +1,71 @@
+# Data completeness check — sources to monitor.
+# PM is tier 0 (no internal deps). This config mirrors the structure in
+# unified_internal_contracts.reference.data_freshness for traceability.
+# Update when new sources are added to UIC.
+#
+# Fields: source, asset_class, expected_cadence_seconds, criticality
+
+sources:
+  binance: { source: binance, asset_class: crypto_cefi, expected_cadence_seconds: 1, criticality: critical }
+  bybit: { source: bybit, asset_class: crypto_cefi, expected_cadence_seconds: 1, criticality: critical }
+  okx: { source: okx, asset_class: crypto_cefi, expected_cadence_seconds: 1, criticality: critical }
+  coinbase: { source: coinbase, asset_class: crypto_cefi, expected_cadence_seconds: 1, criticality: critical }
+  hyperliquid: { source: hyperliquid, asset_class: crypto_cefi, expected_cadence_seconds: 1, criticality: critical }
+  deribit: { source: deribit, asset_class: crypto_cefi, expected_cadence_seconds: 1, criticality: critical }
+  uniswap_v3: { source: uniswap_v3, asset_class: crypto_defi, expected_cadence_seconds: 12, criticality: critical }
+  aave_v3: { source: aave_v3, asset_class: crypto_defi, expected_cadence_seconds: 12, criticality: critical }
+  curve: { source: curve, asset_class: crypto_defi, expected_cadence_seconds: 12, criticality: critical }
+  balancer: { source: balancer, asset_class: crypto_defi, expected_cadence_seconds: 12, criticality: critical }
+  databento_intraday:
+    { source: databento_intraday, asset_class: tradfi, expected_cadence_seconds: 60, criticality: important }
+  databento_eod: { source: databento_eod, asset_class: tradfi, expected_cadence_seconds: 86400, criticality: important }
+  yahoo_finance: { source: yahoo_finance, asset_class: tradfi, expected_cadence_seconds: 86400, criticality: important }
+  openbb: { source: openbb, asset_class: tradfi, expected_cadence_seconds: 86400, criticality: informational }
+  fred: { source: fred, asset_class: tradfi, expected_cadence_seconds: 86400, criticality: informational }
+  ecb: { source: ecb, asset_class: tradfi, expected_cadence_seconds: 86400, criticality: informational }
+  ofr: { source: ofr, asset_class: tradfi, expected_cadence_seconds: 86400, criticality: informational }
+  pinnacle: { source: pinnacle, asset_class: sports, expected_cadence_seconds: 30, criticality: important }
+  odds_api: { source: odds_api, asset_class: sports, expected_cadence_seconds: 30, criticality: important }
+  betfair: { source: betfair, asset_class: sports, expected_cadence_seconds: 5, criticality: important }
+  glassnode: { source: glassnode, asset_class: onchain, expected_cadence_seconds: 3600, criticality: important }
+  coinglass: { source: coinglass, asset_class: onchain, expected_cadence_seconds: 3600, criticality: important }
+  arkham: { source: arkham, asset_class: onchain, expected_cadence_seconds: 3600, criticality: informational }
+  features-delta-one-service:
+    { source: features-delta-one-service, asset_class: feature, expected_cadence_seconds: 60, criticality: critical }
+  features-volatility-service:
+    { source: features-volatility-service, asset_class: feature, expected_cadence_seconds: 60, criticality: critical }
+  features-onchain-service:
+    { source: features-onchain-service, asset_class: feature, expected_cadence_seconds: 300, criticality: important }
+  features-calendar-service:
+    {
+      source: features-calendar-service,
+      asset_class: feature,
+      expected_cadence_seconds: 3600,
+      criticality: informational,
+    }
+  features-commodity-service:
+    {
+      source: features-commodity-service,
+      asset_class: feature,
+      expected_cadence_seconds: 3600,
+      criticality: informational,
+    }
+  features-cross-instrument-service:
+    {
+      source: features-cross-instrument-service,
+      asset_class: feature,
+      expected_cadence_seconds: 60,
+      criticality: important,
+    }
+  features-multi-timeframe-service:
+    {
+      source: features-multi-timeframe-service,
+      asset_class: feature,
+      expected_cadence_seconds: 60,
+      criticality: critical,
+    }
+  features-sports-service:
+    { source: features-sports-service, asset_class: feature, expected_cadence_seconds: 60, criticality: important }
+  ml-inference-api: { source: ml-inference-api, asset_class: ml, expected_cadence_seconds: 60, criticality: critical }
+  ml-training-api:
+    { source: ml-training-api, asset_class: ml, expected_cadence_seconds: 86400, criticality: informational }

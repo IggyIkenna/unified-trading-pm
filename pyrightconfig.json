@@ -11,11 +11,7 @@
   "reportUnnecessaryComparison": "warning",
   "reportUnreachable": "warning",
   "exclude": ["scripts/migration", "scripts/manifest/sbom-store.py", "tests"],
-  "extraPaths": [
-    "../unified-events-interface",
-    "../unified-internal-contracts",
-    "../unified-api-contracts"
-  ],
+  "extraPaths": ["../unified-events-interface", "../unified-internal-contracts", "../unified-api-contracts"],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.13"

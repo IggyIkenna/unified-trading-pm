@@ -1,0 +1,64 @@
+---
+description: "When repo venv fails, workspace venv is fine — same name across workspaces"
+alwaysApply: false
+globs:
+  - "**/*.py"
+priority: 45
+tags:
+  - workspace
+  - venv
+  - fallback
+---
+# Workspace Venv Fallback
+
+**SSOT:** venv-usage-ssot.mdc — quality gates always use per-repo `.venv`. This rule is a **debug fallback** only.
+
+RULE: If a repo's local venv (e.g. `.venv`) isn't working — missing deps, wrong Python, import errors — using the workspace venv is fine.
+
+WHY: Repo venvs can be out of sync or missing transitive deps (e.g. google-cloud-pubsub, unified-feature-calculator). The workspace venv (`.venv-workspace`) is shared and typically has all deps installed.
+
+## Workspace venv name
+
+The workspace venv is always named `.venv-workspace` across workspaces. Use:
+
+```bash
+source .venv-workspace/bin/activate
+```
+
+or from workspace root:
+
+```bash
+cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate
+```
+
+## When to use workspace venv
+
+- Repo `.venv` has `ModuleNotFoundError` for transitive deps
+- Repo `.venv` uses wrong Python version
+- Quality gates or tests fail due to env gaps in repo venv
+- Running cross-repo commands (e.g. features-delta-one-service + features-calendar-service)
+
+## DO
+
+- Use workspace venv for pytest, quality gates, and imports when repo venv fails
+- Document in prompts: "run from WORKSPACE_ROOT with source .venv-workspace/bin/activate"
+
+## NEVER
+
+- Assume repo venv is always correct; workspace venv is a valid fallback
+- Block on repo venv issues when workspace venv works
+
+## pyrightconfig.json
+
+Each repo must have a `pyrightconfig.json` referencing the workspace venv Python path so basedpyright
+resolves imports correctly:
+```json
+{
+  "pythonPath": "/Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.venv-workspace/bin/python",
+  "typeCheckingMode": "strict",
+  "reportAny": "error",
+  "reportUnknownMemberType": "error",
+  "reportUnknownVariableType": "error"
+}
+```
+Run `run_timeout 120 basedpyright <source_dir>/` per-repo — never `basedpyright .` from workspace root.

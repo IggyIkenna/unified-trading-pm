@@ -33,7 +33,7 @@ class _ParsedArgs(argparse.Namespace):
 
 def load_schema() -> dict[str, object]:
     """Fetch Cloud Build JSON schema from SchemaStore."""
-    response: http.client.HTTPResponse = cast(http.client.HTTPResponse, urllib.request.urlopen(SCHEMA_URL, timeout=10))  # noqa: S310
+    response: http.client.HTTPResponse = cast(http.client.HTTPResponse, urllib.request.urlopen(SCHEMA_URL, timeout=10))  # nosec B310 — hardcoded SchemaStore https URL
     try:
         raw: bytes = response.read()
     finally:

@@ -1,0 +1,16 @@
+---
+description: "All repos must use aligned dependency versions from codex"
+alwaysApply: false
+priority: 60
+tags:
+  - dependencies
+  - versioning
+---
+# Dependency Version Alignment
+RULE: Check workspace-constraints.toml (SSOT) before adding/updating deps. Do not hardcode version numbers here — always use the canonical range from unified-trading-pm/workspace-constraints.toml or canonical-dependency-manifest.json.
+WHY: Prevents import failures, test incompatibilities, deployment issues across 30+ repos. Hardcoded versions in cursor rules drift; workspace-constraints.toml is the single source of truth.
+CODEX: 06-coding-standards/dependency-management.md. PM push: see pm-dependency-alignment-push.mdc; scripts: unified-trading-pm/scripts/manifest/
+SSOT: unified-trading-pm/workspace-constraints.toml (canonical ranges); unified-trading-pm/canonical-dependency-manifest.json (generated view)
+DO: Check workspace-constraints.toml or canonical-dependency-manifest.json for the version range; update codex first if new dep; update ALL repos; run `uv lock`; run validate-dependency-conflicts.py to detect drift; run `uv lock --check` to verify lock is current
+NEVER: Add dep without workspace-constraints.toml check; update one repo only; skip uv.lock; hardcode a version range in cursor rules (refer to SSOT instead)
+See also: `uv-lock-file.mdc` — how to maintain the lock file (lock file mechanics); this rule covers version selection only.

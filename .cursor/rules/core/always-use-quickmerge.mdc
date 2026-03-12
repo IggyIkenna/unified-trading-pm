@@ -1,0 +1,84 @@
+---
+description: "Always use quickmerge.sh, never run quality gates standalone"
+alwaysApply: true
+priority: 90
+tags: [ci-cd, quickmerge]
+---
+
+# Always Use Quickmerge
+
+RULE: ALWAYS run `bash scripts/quickmerge.sh "message"`. NEVER run `scripts/quality-gates.sh` standalone. Use `--dep-branch` when dependencies differ from main. Branch protection rejects direct push to main.
+WHY: Quickmerge runs dependency cascade, pre-flight audit, quality gates, Act simulation, and PR creation. Standalone quality gates miss critical checks.
+CODEX: 06-coding-standards/feature-branch-workflow.md, 06-coding-standards/quality-gates.md
+
+## Three-Tier Branch Model
+
+```
+feat/*   → QG only, no PR (feature iteration — auto-detected, no --no-pr needed)
+staging  → convergence zone; breaking changes + SIT; auto-PR targets main after SIT
+main     → always stable; NEVER a direct target for breaking changes
+```
+
+| Commit type | Target | Command |
+|-------------|--------|---------|
+| `fix:` / `feat:` / `chore:` | main (direct) | `bash scripts/quickmerge.sh "fix: ..."` |
+| `feat!:` / `BREAKING CHANGE:` | staging (via --to-staging) | `bash scripts/quickmerge.sh "feat!: ..." --to-staging` |
+| Feature iteration | no PR | auto when on `feat/*` branch |
+
+**Hotfix path:** Non-breaking commits go directly to main. No staging gate needed.
+**Breaking change path:** MUST use `--to-staging`. Cascade runs through staging. SIT validates. `staging-to-main.yml` merges to main automatically after SIT passes.
+**Staging lock:** If `staging_status.locked = true` in `workspace-manifest.json`, `--to-staging` exits with queue message. Non-breaking quickmerge to main is NOT blocked.
+
+## Dependency Cascade
+
+- **Feature mode (--dep-branch):** cascades across dep repos on a named feature branch; QG only, no PR. Branch auto-derived from current git branch.
+- **Staging mode (--to-staging):** cascades breaking change through ALL actual dependents (recursive DAG walk via `topologicalOrder`); PRs target staging. Branch auto-derived from HEAD.
+- **`--branch NAME` + `--to-staging`** → hard fail (mutually exclusive).
+- The cascade is **selective**: only repos with a dependency edge to the changed repo are touched. Not all 60 repos.
+
+**SSOT:** `unified-trading-pm/docs/repo-management/version-cascade-flow.md`
+
+## Agent Sessions — MANDATORY
+
+RULE: Agents (Claude Code, CI agents, run-agent.sh) MUST pass `--agent` to quickmerge.
+
+Two-pass model:
+- **Pass 1** — full QG: `bash scripts/quality-gates.sh` or `run-all-quality-gates.sh` — tests, typecheck, lint, codex all run
+- **Pass 2** — quickmerge: lightweight verify only — lint + format + typecheck + codex; tests already passed in pass 1
+
+`--agent` = skip act + skip tests. Quickmerge becomes a fast format/lint gate before PR creation.
+
+```bash
+bash scripts/quickmerge.sh "feat: ..." --agent                          # skip act + tests
+bash scripts/quickmerge.sh "feat: ..." --agent --skip-typecheck         # also skip typecheck
+bash scripts/quickmerge.sh "feat: ..." --agent --skip-tests             # redundant (--agent already skips tests)
+```
+
+User can harden by omitting `--agent` (full QG re-runs including tests + act). Use `--quick` for human shortcut (skips act only, tests still run).
+
+## Key Flags
+
+`--to-staging` (breaking change cascade) | `--no-pr` (QG only, auto on feat/*) | `--dep-branch "feat/X"` (feature cascade) | `--unit-only` | `--agent` (agent sessions — skip act) | `--quick` (human shortcut — skip act) | `--skip-tests` | `--files "a.py b.py"`
+
+Full flags: CODEX 06-coding-standards/quality-gates.md
+
+## DO
+
+```bash
+bash scripts/quickmerge.sh "feat: add ConfigReloader"
+bash scripts/quickmerge.sh "fix: tier boundary" --dep-branch "feat/rollback"
+bash scripts/quickmerge.sh "chore: cleanup" --no-pr
+```
+
+## NEVER
+
+```bash
+bash scripts/quality-gates.sh                   # standalone — misses dep validation + PR
+git add -A && git commit && git push            # bypasses all quality gates
+git reset --hard origin/main                    # FORBIDDEN — destroys local changes
+Finish with uncommitted changes in any modified repo
+```
+
+## Nothing-to-Commit on Staging
+
+`git commit --allow-empty -m "chore: promote feat/X to staging"` then `bash scripts/quickmerge.sh "chore: promote feat/X to staging"`

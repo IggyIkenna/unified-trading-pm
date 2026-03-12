@@ -1,0 +1,63 @@
+---
+description: "provider_api_versions.yaml is the SSOT for which API version each external provider's schemas target. Every schema file must carry __api_version__ matching the YAML. STEP 5.17 fails CI if any provider is red."
+alwaysApply: false
+priority: 80
+tags: [schema, versioning, providers, api-version, health-matrix, uac]
+---
+
+# Provider API Version Manifest
+
+CODEX: [02-data/provider-api-version-manifest.md](../../unified-trading-codex/02-data/provider-api-version-manifest.md)
+
+---
+
+## Rule summary
+
+Every external provider schema module (`unified_api_contracts_external/{provider}/*.py`)
+must carry a **module-level `__api_version__` constant** matching the `api_version`
+entry in `provider_api_versions.yaml`.
+
+```python
+# DO — at the top of each schema file (after the module docstring)
+__api_version__ = "v3"  # matches provider_api_versions.yaml
+```
+
+```python
+# NEVER — omit the constant or use a different version than the YAML
+```
+
+---
+
+## DO
+
+- Keep `provider_api_versions.yaml` updated whenever a provider releases a new version
+- Set `status: yellow` after bumping `api_version` until cassettes are re-recorded
+- Set `status: green` only after schema validation tests pass against live/cassette data
+- Update `last_verified` to today's ISO date when re-recording cassettes
+- Run `python3 scripts/generate_schema_version_matrix.py` after any YAML change
+
+## NEVER
+
+- Set `status: red` except to signal a real breaking change (STEP 5.17 will fail CI)
+- Let `__api_version__` in a schema file differ from `api_version` in the YAML — this auto-computes `red`
+- Add a provider schema directory without a corresponding entry in the YAML
+- Hard-code the version string in `__api_version__` to something other than what the live API uses
+
+---
+
+## Status definitions (quick ref)
+
+| Status | Meaning | CI impact |
+|--------|---------|-----------|
+| `green` | Verified < 90 days | None |
+| `yellow` | Unverified or > 90 days | Warn only |
+| `red` | Breaking change / mismatch | **STEP 5.17 fails** |
+
+---
+
+## Generated files (do not edit manually)
+
+- `docs/SCHEMA_VERSION_MATRIX.md` — full provider health table
+- `docs/schema_health.svg` — visual green/yellow/red grid
+
+Regenerate: `python3 scripts/generate_schema_version_matrix.py`

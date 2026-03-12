@@ -1,0 +1,57 @@
+---
+description: "Test imports from library top-level must be backed by __init__.py exports"
+alwaysApply: false
+priority: 85
+tags:
+  - imports
+  - testing
+  - libraries
+  - enforcement
+---
+# Library __init__.py Must Back All Test Imports
+RULE: Every symbol a test imports from a library's top-level package (e.g. `from unified_market_interface import Foo`) MUST be explicitly exported in that package's `__init__.py` AND listed in `__all__`.
+WHY: If `__init__.py` doesn't export the symbol, tests pass only because the workspace venv's stale wheel happens to have it. When CI uses the repo-local `.venv` (editable install), the import fails. This caused 928 UMI test failures that were invisible under manual pytest.
+CODEX: 06-coding-standards/README.md
+
+DO:
+  - When adding a new class/function to a library, immediately add it to `__init__.py` imports AND `__all__`
+  - When writing tests: verify the symbol is in `__init__.py.__all__` before writing `from pkg import Symbol`
+  - For internal helpers (`_prefixed` names): import from the submodule path, NOT top-level
+    ```python
+    # CORRECT — internal symbol: import from submodule
+    from unified_market_interface.adapters.defi import block_utils
+    from unified_market_interface.adapters.defi.aave import _ensure_dict
+
+    # WRONG — internal symbol at top-level
+    from unified_market_interface import _ensure_dict
+    ```
+  - For public symbols: add to `__init__.py` before writing the test
+    ```python
+    # In unified_market_interface/__init__.py:
+    from .adapters.onchain import ArkhamAdapter, GlassnodeAdapter, MevAdapter
+    # AND in __all__:
+    __all__ = [..., "ArkhamAdapter", "GlassnodeAdapter", "MevAdapter"]
+    ```
+
+NEVER:
+  - Write `from unified_market_interface import Foo` without verifying `Foo` is in `__init__.py`
+  - Add a class to the source tree without updating `__init__.py` + `__all__`
+  - Import private symbols (`_foo`) from the top-level package
+  - Import a submodule by name from the top-level (`from unified_market_interface import block_utils`)
+  - Assume "it works in my shell" means it works in CI (stale wheel trap)
+
+## Verification Command
+
+After adding a new symbol to a library, verify it's importable from the top-level:
+```bash
+cd <repo>
+.venv/bin/python -c "from <package> import <Symbol>; print('OK')"
+```
+
+## Root Cause: The Stale Wheel Trap
+
+When `.venv-workspace` has an installed wheel of the library, `from pkg import Foo` resolves
+to the WHEEL's `__init__.py`, not the local source. The wheel may contain exports that were
+never added to the local `__init__.py`. Tests pass locally but fail in CI (which uses the
+editable per-repo `.venv`). The fix is always: update `__init__.py` + `__all__` when adding
+a new public symbol — don't rely on the wheel to bridge the gap.

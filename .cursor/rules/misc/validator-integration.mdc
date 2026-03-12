@@ -1,0 +1,16 @@
+---
+description: "Integration pattern for validators in quality gates (Step 5, blocking)"
+alwaysApply: false
+priority: 40
+globs:
+  - "**/scripts/quality-gates.sh"
+tags:
+  - validators
+  - quality-gates
+---
+# Validator Integration
+RULE: Add validators as Step 5 in quality-gates.sh. Blocking — failures fail quality gates and block merge.
+WHY: Production readiness is non-negotiable; silent validator failures hide real architectural violations.
+CODEX: validators/CI_CD_INTEGRATION_SUMMARY.md, .cursor/rules/production-readiness-validators.mdc
+DO: Run run-all-validators.sh --category alignment; propagate exit code; fail fast on validator failure
+NEVER: Suppress validator exit codes; ignore validator failures; skip validators in new services

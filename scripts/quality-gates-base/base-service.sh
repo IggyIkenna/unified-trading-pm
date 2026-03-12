@@ -346,9 +346,13 @@ for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**"
     grep -q "for \|while " "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
 done
 
-# IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. TYPE_CHECKING files)
+# IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/smoke-test-dev.py"); base adds --glob
+IMPORT_INSIDE_EXTRA=()
+for g in "${IMPORT_INSIDE_EXCLUDE_GLOBS[@]+"${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}"}"; do
+    IMPORT_INSIDE_EXTRA+=(--glob "$g")
+done
 INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
-    "${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
+    "${IMPORT_INSIDE_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.2
 [[ -n "$INSIDE" ]] && { log_fail "Imports inside functions — move to top"; echo "$INSIDE" | head -3; V=$(( V + 1 )); } || log_success "No imports inside functions"
 
@@ -360,11 +364,15 @@ RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!t
     | grep -v 'model_validate\|cast(dict' || :)
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
-rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+EMPTY_STR_EXTRA=()
+for g in "${EMPTY_STR_EXCLUDE_GLOBS[@]+"${EMPTY_STR_EXCLUDE_GLOBS[@]}"}"; do EMPTY_STR_EXTRA+=(--glob "$g"); done
+rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
-ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
-EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
+ED_EL_EXTRA=()
+for g in "${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]+"${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}"}"; do ED_EL_EXTRA+=(--glob "$g"); done
+ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
+EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
 rg "central-element-323112" tests/ 2>/dev/null \
@@ -374,8 +382,10 @@ rg "central-element-323112" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/n
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
 # GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
-# GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of --glob exclusions for legitimate GCP_PROJECT_ID usage
-rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+# GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/rollout-*.py")
+GCP_EXTRA=()
+for g in "${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}"; do GCP_EXTRA+=(--glob "$g"); done
+rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
@@ -396,8 +406,10 @@ DOMAIN_FROM_UCS=$(rg 'from unified_trading_library import.*(market_category|Doma
 if rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/null; then
     log_success "setup_service() check skipped (repo defines setup_events/setup_service)"
 else
+    SETUP_EXTRA=()
+    for g in "${SETUP_NO_SINK_EXCLUDE_GLOBS[@]+"${SETUP_NO_SINK_EXCLUDE_GLOBS[@]}"}"; do SETUP_EXTRA+=(--glob "$g"); done
     SETUP_NO_SINK=$(rg 'setup_(events|service)\s*\(' --type py \
-        --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null | grep -v 'sink=' \
+        --glob "!tests/**" "$SOURCE_DIR/" "${SETUP_EXTRA[@]}" 2>/dev/null | grep -v 'sink=' \
         | grep -v "def setup_events\|def setup_service" || :)
     [[ -n "$SETUP_NO_SINK" ]] && { log_fail "setup_events()/setup_service() called without sink= in production code"; echo "$SETUP_NO_SINK" | head -5; V=$(( V + 1 )); } || log_success "setup_service() uses sink= in all production call sites"
 fi
@@ -412,8 +424,10 @@ BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION
 [[ -f ".env.example" ]] && rg "GOOGLE_APPLICATION_CREDENTIALS" .env.example 2>/dev/null \
     && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC, not SA key files)"; V=$(( V + 1 )); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"
 
+DI_EXTRA=()
+for g in "${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}"; do DI_EXTRA+=(--glob "$g"); done
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
-    "${DEEP_IMPORT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+    "${DI_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
@@ -461,7 +475,11 @@ PIP=$(rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --glob "**
     | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
 [[ -n "$PIP" ]] && { log_fail "Use 'uv pip install' not 'pip install'"; echo "$PIP" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install"
 
-BE=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+BE_EXTRA_GLOBS=()
+for g in "${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}"; do
+    BE_EXTRA_GLOBS+=(--glob "!$g")
+done
+BE=$(rg "except Exception:" --type py --glob "!tests/**" "${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"}" "$SOURCE_DIR/" 2>/dev/null || :)
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
 [[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; V=$(( V + 1 )); } || log_success "No broad except Exception"
 

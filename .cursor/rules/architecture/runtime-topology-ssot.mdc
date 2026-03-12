@@ -1,0 +1,24 @@
+---
+description: "Runtime topology SSOT — two machine-readable SSOTs for code DAG and runtime interactions"
+priority: 50
+---
+
+# Runtime Topology SSOT
+
+RULE: Runtime messaging/storage/API interaction policy is owned by `unified-trading-pm/configs/runtime-topology.yaml` (canonical SSOT). `deployment-service/configs/runtime-topology.yaml` is a partial local view with `ssot_ref` pointing back to PM. Code dependency DAG must live in `unified-trading-pm/workspace-manifest.json`. Human-readable topology diagram lives in `unified-trading-pm/TOPOLOGY-DAG.md`. Do not hardcode runtime transport behavior in service repos or create service-to-service dependencies for live paths.
+WHY: DAG boundaries stay clean only when runtime deployment topology is declarative and PM-owned.
+CODEX: 00-SSOT-INDEX.md, 04-architecture/TOPOLOGY-DAG.md, 04-architecture/batch-live-symmetry.md
+
+DO:
+- Use exactly two machine-readable SSOTs: `unified-trading-pm/workspace-manifest.json` (code DAG) + `unified-trading-pm/configs/runtime-topology.yaml` (runtime interactions; PM-canonical)
+- Treat `deployment-service/configs/runtime-topology.yaml` as a local view of the PM SSOT (has `ssot_ref` field); do not edit it independently
+- Treat `unified-trading-pm/TOPOLOGY-DAG.md` as the human-readable documentation paired with runtime-topology.yaml; derived, not machine-readable
+- Treat `dependencies.yaml` as derived readiness-check data, not a primary SSOT
+- Configure per-edge mode behavior (`batch` vs `live`) via `transport` and `deployment_profile`
+- Use `in_memory` only when `deployment_profile=co_located_vm`
+- Keep services thin: they select mode/adapters, not infrastructure discovery logic
+
+NEVER:
+- Add service-to-service import or pyproject dependency to enable live in-memory handoff
+- Encode co-location assumptions directly in service code
+- Use runtime topology docs that diverge from `runtime-topology.yaml`
