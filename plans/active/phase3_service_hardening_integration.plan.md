@@ -21,7 +21,7 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: market-tick-data-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
