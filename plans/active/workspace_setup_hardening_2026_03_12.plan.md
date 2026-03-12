@@ -13,7 +13,7 @@ tags: [workspace, setup, linux, python-version, ci-cd, hardening]
 
 ## Motivation
 
-A collaborator on a new Linux machine hit a cluster of env-setup failures that were not caught by existing
+A collaborator on a new Linux machine hit a whole cluster of env-setup failures that were not caught by existing
 bootstrap/setup scripts:
 
 1. **Missing editable internal deps** — `features-calendar-service`, `cross-instrument-service`,

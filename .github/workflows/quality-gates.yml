@@ -9,6 +9,10 @@ on:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+    env:
+      CLOUD_MOCK_MODE: "true"
+      CLOUD_PROVIDER: "local"
+      GCP_PROJECT_ID: "unified-trading-ci"
     steps:
       - name: Checkout unified-trading-pm
         uses: actions/checkout@v4
@@ -18,17 +22,17 @@ jobs:
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.13.9"
 
       - name: Install uv
         run: pip install uv
 
-      - name: Cache tools (ripgrep, shellcheck, bats)
+      - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
         uses: actions/cache@v4
         with:
           path: ~/.local/act-tools
-          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12
+          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
 
       - name: Install ripgrep
         if: steps.tools-cache.outputs.cache-hit != 'true'
@@ -52,35 +56,59 @@ jobs:
           git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
           /tmp/bats-core/install.sh ~/.local/act-tools
 
+      - name: Install actionlint
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        run: |
+          AL_VER="1.7.4"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz" \
+            | tar -xz -C ~/.local/act-tools/bin actionlint
+
       - name: Add tools to PATH
         run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
 
-      - name: Cache uv dependencies
-        id: uv-cache
+      - name: Cache uv download cache
         uses: actions/cache@v4
         with:
-          path: |
-            unified-trading-pm/.venv
-            ~/.cache/uv
+          path: ~/.cache/uv
           key: uv-${{ runner.os }}-${{ hashFiles('unified-trading-pm/uv.lock') }}
           restore-keys: |
             uv-${{ runner.os }}-
 
       - name: Install PM dev deps (ruff, basedpyright, pytest)
-        if: steps.uv-cache.outputs.cache-hit != 'true'
         working-directory: unified-trading-pm
         run: |
           uv venv --clear .venv
-          uv pip install -e ".[dev]"
+          uv sync
 
       - name: Checkout Codex (sibling)
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/unified-trading-codex
           path: unified-trading-codex
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 1
         continue-on-error: true
+
+      - name: Clone basedpyright sibling deps
+        # basedpyright extraPaths references ../unified-events-interface and
+        # ../unified-internal-contracts — clone them so type checking resolves imports.
+        # Clones to $GITHUB_WORKSPACE/{repo} which is "../{repo}" relative to unified-trading-pm.
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          BRANCH="${DEP_BRANCH:-main}"
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          clone_dep() {
+            local name="$1"
+            git clone --depth=1 -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "$name" 2>/dev/null \
+              || git clone --depth=1 -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "$name" 2>/dev/null \
+              || echo "Warning: could not clone $name (skipping)"
+          }
+          clone_dep unified-events-interface
+          clone_dep unified-internal-contracts
 
       - name: Simulate sibling workspace layout
         # Scripts infer workspace root as parent of unified-trading-pm/.
@@ -94,5 +122,5 @@ jobs:
       - name: Run quality gates
         working-directory: unified-trading-pm
         run: |
-          source .venv/bin/activate
+          export PATH="$(pwd)/.venv/bin:$PATH"
           bash scripts/quality-gates.sh --no-fix

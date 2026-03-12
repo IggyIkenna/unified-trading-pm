@@ -237,9 +237,11 @@ while IFS= read -r lock_file; do
   pyproject="$repo_dir/pyproject.toml"
   repo_branch="$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")"
   branch_tag="branch: $repo_branch"
-  # pyproject.toml newer than uv.lock → lockfile needs regeneration
-  if [ -f "$pyproject" ] && [ "$pyproject" -nt "$lock_file" ]; then
-    LOCK_DRIFT+=("  $repo_name: pyproject.toml newer than uv.lock ($branch_tag) — run: cd $repo_name && uv lock")
+  # uv lock --check: exit 1 means lock is out of sync with pyproject.toml
+  # Prefer this over timestamp comparison (-nt) which gives false positives when
+  # pyproject.toml is edited but uv lock produces no content changes.
+  if [ -f "$pyproject" ] && ! (cd "$repo_dir" && uv lock --check 2>/dev/null); then
+    LOCK_DRIFT+=("  $repo_name: uv.lock out of sync with pyproject.toml ($branch_tag) — run: cd $repo_name && uv lock")
   fi
   # uncommitted changes to uv.lock on the working tree
   if git -C "$repo_dir" status --porcelain uv.lock 2>/dev/null | grep -q 'uv\.lock'; then
@@ -347,5 +349,9 @@ if [ "$APPLY_FIXES" = true ]; then
     echo ""
   fi
 fi
+
+# Always regenerate canonical manifest + SVG at end-of-run — guarantees the visual
+# is fresh whether constraints were just fixed or simply re-validated.
+"$PYTHON" scripts/manifest/generate_canonical_dependency_manifest.py
 
 echo "  Next: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh"

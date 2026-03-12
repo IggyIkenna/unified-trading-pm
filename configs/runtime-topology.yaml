@@ -738,6 +738,8 @@ batch_and_live_services:
   - features-cross-instrument-service
   - features-multi-timeframe-service
   - features-sports-service
+  - features-commodity-service
+  - elysium-defi-system
   - ml-inference-service
   - strategy-service
   - execution-service
@@ -745,6 +747,7 @@ batch_and_live_services:
   - risk-and-exposure-service
   - pnl-attribution-service
   - alerting-service
+  - batch-live-reconciliation-service
   # note: see comment below
   # These services support --mode batch|live. In batch, transport=GCS.
   # In live, transport=PubSub (or in_memory for co-located).
@@ -1487,6 +1490,12 @@ deployment_targets:
         reason: Live mode needs MDPS event subscription
       features-cross-instrument-service:
         reason: Live mode subscribes to multiple MDPS topics per underlying
+      features-multi-timeframe-service:
+        reason: Live mode subscribes to MDPS candle topics; batch runs T+1
+      features-sports-service:
+        reason: Live mode subscribes to sports-odds PubSub topic; batch runs intraday
+      features-commodity-service:
+        reason: Live mode subscribes to commodity market-tick topics; batch runs T+1
 
   cloud_run_job_scale_to_zero:
     deploy_type: cloud_run_job
@@ -1501,6 +1510,8 @@ deployment_targets:
       # pnl-attribution-service moved to cloud_run_service_always_on (continuous subscriber)
       strategy-validation-service:
         reason: Daily T+1 reconciliation run
+      batch-live-reconciliation-service:
+        reason: Triggered T+1 reconciliation run; compares live positions to exchange records
 
   cloud_run_service_auto_scale:
     deploy_type: cloud_run_service
@@ -1519,6 +1530,18 @@ deployment_targets:
       client-reporting-api:
         port: 8005
         reason: Batch report generation; target state includes live SSE
+      ml-inference-api:
+        port: 8010
+        reason: REST API for inference requests; scales with request count
+      ml-training-api:
+        port: 8011
+        reason: REST API for training job management; request-driven
+      trading-analytics-api:
+        port: 8012
+        reason: REST/SSE API for analytics queries; scales with query load
+      batch-audit-api:
+        port: 8013
+        reason: REST API for audit queries against BigQuery audit dataset
 
   cloud_run_service_ui:
     deploy_type: cloud_run_service
@@ -1538,6 +1561,31 @@ deployment_targets:
       - onboarding-ui
       - client-reporting-ui
       - settlement-ui
+      - unified-admin-ui
+
+  # ---------------------------------------------------------------------------
+  # DeFi execution system — persistent WebSocket connections to DeFi protocols
+  # ---------------------------------------------------------------------------
+  vm_colocated_defi:
+    deploy_type: vm
+    scaling: always_on
+    services:
+      elysium-defi-system:
+        reason: >
+          Persistent WebSocket connections to Hyperliquid + on-chain perps; co-located with market-tick-data-service for
+          in_memory DeFi market feed. Handles order placement, position management, and liquidation monitoring.
+
+  # ---------------------------------------------------------------------------
+  # Trading agent — LLM-driven strategy commentary and signal generation
+  # ---------------------------------------------------------------------------
+  vm_standalone_agents:
+    deploy_type: vm
+    scaling: manual_or_scheduled
+    services:
+      trading-agent-service:
+        reason: >
+          LLM inference loops (Claude API); not latency-sensitive but memory-heavy. Runs on demand or scheduled; not a
+          persistent 24/7 service.
 
 # ---------------------------------------------------------------------------
 # PROTOCOL DEFINITIONS

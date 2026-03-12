@@ -25,6 +25,9 @@
 #   UI.1. Check Node.js version
 #   UI.2. Run npm install (idempotent: skips if node_modules newer than package.json)
 #   UI.3. Check TypeScript / tsc available
+#   UI.4. Build library dist/ if missing (only for repos where "main" points to dist/)
+#         Library repos (e.g. unified-trading-ui-kit) have dist/ gitignored; consumers
+#         reference them via file: paths and need dist/ to exist before QG can run.
 #   → exits 0 after UI setup (never falls through to Python steps)
 #
 #   ── PYTHON REPO PATH ──────────────────────────────────────────────────────
@@ -39,9 +42,9 @@
 #       Reads unified-trading-pm/workspace-manifest.json; installs sibling repos
 #       Installs jq automatically (apt/brew) if needed; exits 1 if jq unavailable
 #       NOTE: step 7 runs BEFORE step 8 so siblings are resolvable during install.
-#    8. Install project + dev deps (uv pip install -e ".[dev]")
+#    8. Install project + dev deps (uv pip install -e .)
 #    8b. Re-pin workspace sibling deps as editable (re-runs after step 8)
-#        uv pip install -e ".[dev]" in step 8 may resolve siblings from PyPI/
+#        uv pip install -e . in step 8 may resolve siblings from PyPI/
 #        Artifact Registry and overwrite the editable installs from step 7.
 #        Step 8b forces the local editable version to win.
 #    9. Verify ripgrep available (required by quality-gates.sh) — always runs
@@ -56,9 +59,9 @@
 #          lock file only updates on successful npm install; node_modules dir mtime is fragile)
 #   - .venv creation: skipped if .venv/ exists with correct Python version
 #   - uv lock: always runs (sibling version bumps don't update pyproject.toml timestamps)
-#   - Dep install: skipped if .setup-stamp is newer than pyproject.toml + uv.lock
+#   - Dep install: always runs — same reason as uv lock; timestamp/stamp checks are
+#     unreliable across machines and timezones; uv pip install is fast/idempotent
 #   - Each step prints [SKIP] or [OK], never re-does work unnecessarily
-#   - --force bypasses all skip checks and reinstalls from scratch
 #
 # CI detection (GITHUB_ACTIONS, CI, or CLOUD_BUILD set):
 #   Python repo: steps 1-8 (install/setup) are skipped — CI manages its own env.
@@ -153,7 +156,6 @@ if [ -n "${GITHUB_ACTIONS:-}" ] || [ -n "${CI:-}" ] || [ -n "${CLOUD_BUILD:-}" ]
     echo -e "  ${YELLOW}CI detected — skipping venv/deps setup (CI manages its own env)${NC}"
 fi
 
-SETUP_STAMP="$PROJECT_ROOT/.setup-stamp"
 ISSUES=0
 
 # ── REPO TYPE DETECTION ─────────────────────────────────────────────────────
@@ -211,6 +213,38 @@ if [ "$IS_UI_REPO" = true ]; then
         log_ok "tsc $TSC_VER"
     else
         log_warn "tsc not found in node_modules (will be available after npm install)"
+    fi
+
+    # ── [UI.4] BUILD LIBRARY (if this repo is a library with gitignored dist/) ──
+    # Detected by: package.json has "main" or "exports" pointing to dist/.
+    # Libraries (e.g. unified-trading-ui-kit) have dist/ gitignored; consumers reference
+    # them via file: paths and need dist/ to exist before quality-gates can run.
+    # This step auto-builds dist/ when it is missing or empty — skipped for app repos.
+    if [ "$IN_CI" = false ] && [ "$CHECK_ONLY" = false ]; then
+        IS_LIB_REPO=false
+        if [ -f "package.json" ]; then
+            PKG_MAIN=$(node -e "const p=require('./package.json'); console.log(p.main||'')" 2>/dev/null || echo "")
+            if [[ "$PKG_MAIN" == *"dist/"* ]]; then
+                IS_LIB_REPO=true
+            fi
+        fi
+        if [ "$IS_LIB_REPO" = true ]; then
+            DIST_EMPTY=true
+            if [ -d "dist" ] && [ "$(ls -A dist 2>/dev/null)" ]; then
+                DIST_EMPTY=false
+            fi
+            if [ "$DIST_EMPTY" = true ] || [ "$FORCE" = true ]; then
+                log_step "Build library dist/ (main points to dist/, dist/ missing or empty)"
+                if npm run build --silent 2>&1; then
+                    log_ok "npm run build complete — dist/ ready"
+                else
+                    log_warn "npm run build failed — consumers may fail to import; run: npm run build"
+                    ISSUES=$((ISSUES + 1))
+                fi
+            else
+                log_skip "dist/ exists and is non-empty (library already built)"
+            fi
+        fi
     fi
 
     echo ""
@@ -410,7 +444,7 @@ else
     #
     # Graceful fallback: repos with irreconcilable optional extras (e.g. openbb vs ruff)
     # cause uv lock to fail trying to resolve all extras simultaneously.
-    # In that case we fall through to uv pip install -e ".[dev]" in step [8] directly.
+    # In that case we fall through to uv pip install -e . in step [8] directly.
     UV_LOCK_FAILED=false
     if ! uv lock 2>/dev/null; then
         log_warn "uv lock failed — optional dep conflict likely (e.g. incompatible extras)"
@@ -422,7 +456,7 @@ else
 fi
 
 # ── [7] LOCAL PATH DEPENDENCIES ─────────────────────────────────────────────
-# NOTE: Step 7 runs BEFORE step 8 (uv pip install -e ".[dev]") so that sibling
+# NOTE: Step 7 runs BEFORE step 8 (uv pip install -e .) so that sibling
 # packages are already present as editables when pip resolves the dependency
 # graph. Step 8b (below) re-pins them afterwards to guard against step 8
 # overwriting editables with wheels pulled from PyPI/Artifact Registry.
@@ -462,9 +496,17 @@ else
         for dep in $DEPS; do
             DEP_PATH="$WORKSPACE_ROOT/$dep"
             if [ -d "$DEP_PATH" ] && [ -f "$DEP_PATH/pyproject.toml" ]; then
-                uv pip install -e "$DEP_PATH" --reinstall --quiet 2>/dev/null && log_ok "$dep" || log_warn "$dep install failed"
+                if ! uv pip install -e "$DEP_PATH" --reinstall --quiet 2>/dev/null; then
+                    log_fail "$dep editable install failed — check pyproject.toml and uv.lock in $dep"
+                    ISSUES=$((ISSUES + 1))
+                    [ "$CHECK_ONLY" = true ] || exit 1
+                fi
+                log_ok "$dep"
             else
-                log_warn "$dep not found at $DEP_PATH — install from Artifact Registry if needed"
+                log_fail "$dep not found at $DEP_PATH — sibling repo must be checked out locally"
+                log_fail "  Clone it, then re-run setup: bash scripts/setup.sh"
+                ISSUES=$((ISSUES + 1))
+                [ "$CHECK_ONLY" = true ] || exit 1
             fi
         done
     else
@@ -475,28 +517,22 @@ fi
 # ── [8] PROJECT DEPS ───────────────────────────────────────────────────────
 log_step "Project dependencies"
 
+# Always run — same reasoning as uv lock (step [6]): timestamp/stamp checks are
+# unreliable across machines, timezones, and sibling version bumps that don't touch
+# this repo's pyproject.toml. uv pip install is fast/idempotent when nothing changed.
 if [ "$IN_CI" = true ]; then
     log_skip "CI mode"
 elif [ "$CHECK_ONLY" = true ]; then
     log_skip "Check mode"
 elif [ ! -f "pyproject.toml" ]; then
     log_skip "No pyproject.toml"
-elif [ -f "$SETUP_STAMP" ] && [ "$SETUP_STAMP" -nt "pyproject.toml" ] && [ "$FORCE" != true ]; then
-    if [ ! -f "uv.lock" ] || [ "$SETUP_STAMP" -nt "uv.lock" ]; then
-        log_skip "Dependencies up to date (stamp is current)"
-    else
-        uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null
-        touch "$SETUP_STAMP"
-        log_ok "Dependencies installed (uv.lock changed)"
-    fi
 else
-    uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null
-    touch "$SETUP_STAMP"
+    uv pip install -e . --quiet 2>/dev/null
     log_ok "Dependencies installed"
 fi
 
 # ── [8b] RE-PIN WORKSPACE SIBLING DEPS AS EDITABLE ─────────────────────────
-# NOTE: Step 8 (uv pip install -e ".[dev]") resolves ALL deps from pyproject.toml
+# NOTE: Step 8 (uv pip install -e .) resolves ALL deps from pyproject.toml
 # and may pull workspace siblings as wheels from PyPI/Artifact Registry,
 # overwriting the editable installs from step 7. This step re-pins every local
 # sibling back to its editable source so the local checkout always wins.
@@ -505,13 +541,35 @@ if [ "$IN_CI" = true ] || [ "$CHECK_ONLY" = true ] || [ "$ISOLATED" = true ]; th
 elif [ ! -f "$MANIFEST_PATH" ]; then
     : # no manifest — nothing to re-pin
 elif [ -n "${DEPS:-}" ]; then
+    REPIN_FAIL=false
     for dep in $DEPS; do
         DEP_PATH="$WORKSPACE_ROOT/$dep"
         if [ -d "$DEP_PATH" ] && [ -f "$DEP_PATH/pyproject.toml" ]; then
-            uv pip install -e "$DEP_PATH" --reinstall --quiet 2>/dev/null || true
+            if ! uv pip install -e "$DEP_PATH" --reinstall --quiet 2>/dev/null; then
+                log_fail "$dep re-pin failed in step 8b — step 8 may have overwritten it with a wheel"
+                REPIN_FAIL=true
+            fi
         fi
     done
+    if [ "$REPIN_FAIL" = true ]; then
+        log_fail "One or more sibling deps could not be re-pinned as editable — do not proceed"
+        exit 1
+    fi
     log_ok "Workspace sibling deps re-pinned as editable (step 8b)"
+fi
+
+# ── [8c] UV SYNC (transitive deps of path deps) ─────────────────────────────
+# Steps 8 / 8b use uv pip install -e . and re-pin editables; that can leave
+# transitive deps of path packages (e.g. google-cloud-storage from UCI) missing.
+# uv sync applies the full lock file so all transitives are installed.
+if [ "$IN_CI" = true ] || [ "$CHECK_ONLY" = true ]; then
+    : # skip — CI manages env; check mode is read-only
+elif [ -f "uv.lock" ] && [ -f "pyproject.toml" ]; then
+    if uv sync --quiet 2>/dev/null; then
+        log_ok "uv sync (lock applied, transitives installed)"
+    else
+        log_warn "uv sync failed — import smoke test may fail; run: uv sync"
+    fi
 fi
 
 # ── [9] RIPGREP CHECK ──────────────────────────────────────────────────────
@@ -548,18 +606,24 @@ else
 fi
 
 # ── [11] IMPORT SMOKE TEST ─────────────────────────────────────────────────
-log_step "pytest deps (required by quality-gates.sh)"
+log_step "pytest deps (installed by step [8] uv pip install -e ., verifying now)"
 if [ -d "tests" ]; then
   PY_CMD="${PYTHON_CMD:-python3}"
   [ -f ".venv/bin/python" ] && PY_CMD=".venv/bin/python"
+  PYTEST_MISSING=()
   for mod in pytest pytest_cov pytest_timeout xdist; do
     if $PY_CMD -c "import $mod" 2>/dev/null; then
       log_ok "$mod"
     else
-      log_fail "$mod not found — add to pyproject.toml [project.optional-dependencies] dev: pytest, pytest-cov, pytest-xdist, pytest-timeout"
-      ISSUES=$((ISSUES + 1))
+      PYTEST_MISSING+=("$mod")
     fi
   done
+  if [ "${#PYTEST_MISSING[@]}" -gt 0 ]; then
+    log_warn "pytest deps not installed (step [8] should have done this): ${PYTEST_MISSING[*]}"
+    log_warn "Add missing entries to pyproject.toml [project.dependencies]:"
+    log_warn "  pytest, pytest-cov, pytest-xdist, pytest-timeout"
+    log_warn "Then re-run: bash scripts/setup.sh --force"
+  fi
 else
   log_skip "No tests/ — pytest deps optional"
 fi

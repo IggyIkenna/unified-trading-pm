@@ -50,7 +50,7 @@ SUB-AGENT ENVIRONMENT (Python / deps):
 - Sub-agent VM may not have Python 3.13 or workspace .venv-workspace; it often uses system/default Python (e.g. 3.9) and has no path-installed sibling repos (e.g. unified-cloud-interface).
 - Quality-gate or test runs inside a sub-agent are best-effort: failures due to "Python 3.9", "tomllib", "ModuleNotFoundError: unified_cloud_interface" are environment gaps, not code bugs.
 - When prompting sub-agents: prefer "make the code change; run quality gates in repo if env allows, else note: run quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-repo .venv)".
-- Full dependency validation: run locally (cd <repo> && uv sync --extra dev && bash scripts/quality-gates.sh) or in CI. Uses per-repo .venv, not .venv-workspace.
+- Full dependency validation: run locally (cd <repo> && uv sync && bash scripts/quality-gates.sh) or in CI. Uses per-repo .venv, not .venv-workspace.
 
 RUNNER USING WORKSPACE (always use workspace venv):
 - sessionStart hook: use .cursor/hooks.json + .cursor/hooks/session-init-workspace.sh to inject workspace root and venv instructions into every new session (additional_context). Main agent then sees "run from WORKSPACE_ROOT and source .venv-workspace/bin/activate".

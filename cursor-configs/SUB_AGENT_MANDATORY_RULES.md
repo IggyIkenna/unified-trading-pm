@@ -9,6 +9,11 @@ standards.
 
 ## 1. Environment & Tooling
 
+- **Flat deps only** — every `pyproject.toml` has ONE list: `[project.dependencies]`. There is NO
+  `[project.optional-dependencies]` anywhere. Never add `[dev]`, `[test]`, or any optional group. Never reference
+  `.[dev]` or any extra (e.g. `uv pip install -e ".[dev]"` → use `uv pip install -e .`). Reason: tests run locally,
+  Cloud Build, Code Build, and GHA — all environments need all deps. Optional groups create silent omissions and
+  conflicts with zero benefit.
 - **uv not pip** — always `uv pip install`
 - **basedpyright not pyright** — run as `timeout 120 basedpyright <source_dir>/` — NEVER `basedpyright .` or
   `basedpyright` (no args)
@@ -81,8 +86,8 @@ standards.
   NEVER use `.venv-workspace` for pytest — it has stale wheels; per-repo `.venv` matches CI.
 - **Targeted pytest (debug only):** `cd <repo> && .venv/bin/pytest tests/unit/test_foo.py` — per-repo venv, not
   workspace.
-- **General Python (non-test):** `.venv-workspace` for IDE; `uv sync --extra dev && source .venv/bin/activate` for
-  per-repo isolated runs.
+- **General Python (non-test):** `.venv-workspace` for IDE; `uv sync && source .venv/bin/activate` for per-repo isolated
+  runs (no extras — flat deps only).
 
 ---
 

@@ -39,7 +39,7 @@ run_library_canary() {
   command -v uv >/dev/null || { log_fail "uv not found"; return 1; }
 
   # Pre_build phase
-  uv pip install -e ".[dev]" 2>/dev/null || uv pip install -e . || { log_fail "uv pip install failed"; return 1; }
+  uv pip install -e . || { log_fail "uv pip install failed"; return 1; }
 
   # Build phase: lint
   ruff check --line-length 120 "$pkg/" || { log_fail "ruff check failed"; return 1; }

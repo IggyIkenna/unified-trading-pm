@@ -1,8 +1,9 @@
 ---
-description: "Always use UTC datetime — never naive or utcnow()"
+description: "Always use UTC datetime — never naive or utcnow(); no mtime freshness checks in shell"
 alwaysApply: false
 globs:
   - "**/*.py"
+  - "**/*.sh"
 priority: 80
 tags: [datetime, utc, timezone]
 ---
@@ -13,13 +14,28 @@ RULE: All datetime objects must be timezone-aware UTC. Never use naive datetimes
 WHY: Naive datetimes cause silent DST bugs, incorrect comparisons, and partition misalignment in GCS time-series data.
 CODEX: 06-coding-standards/README.md
 
-DO:
+DO (Python):
   from datetime import datetime, timezone
   now = datetime.now(timezone.utc)
   ts = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
-NEVER:
+NEVER (Python):
   datetime.now()         # naive — no timezone
   datetime.utcnow()      # deprecated since Python 3.12
   datetime.today()       # naive
   timezone-naive timestamps in any GCS schema or event metadata
+
+## Shell Scripts: No Timestamp-Based Freshness Checks
+
+RULE: Shell scripts MUST NOT use filesystem mtime to decide whether to re-run steps.
+WHY: `-nt`, `-mtime`, and `stat` mtime comparisons use the local system clock timezone. A file created at 17:00 IST and compared on a UK machine running UTC appears "in the future" or "stale" incorrectly. This caused real setup failures for developers in India vs UK.
+
+NEVER (shell):
+  [ "pyproject.toml" -nt "uv.lock" ]         # local mtime — timezone-broken
+  find . -mtime +1 -name "*.stamp" -delete   # 24h periods from local midnight
+  touch .setup-stamp && check if -nt         # stamp files for freshness
+
+DO INSTEAD (shell):
+  uv lock --check            # semantic: exits 1 if lock is out of sync
+  uv pip install (idempotent) # always re-run; uv is fast and skips unchanged deps
+  hash/checksum comparison   # content-based, not time-based

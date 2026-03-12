@@ -53,7 +53,7 @@ jobs:
       - name: Install unified-api-contracts dev dependencies
         run: |
           cd unified-api-contracts
-          uv pip install -e ".[dev]" --system 2>/dev/null \
+          uv pip install -e . --system 2>/dev/null \
             || uv pip install pydantic pyyaml --system
 
       - name: Run drift detection

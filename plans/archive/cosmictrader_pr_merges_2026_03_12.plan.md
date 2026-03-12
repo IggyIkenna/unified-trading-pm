@@ -29,7 +29,7 @@ closed as superseded. All quality gates passing post-merge.
   `{"skipped": true, "reason": "not a directory"}` back to full external deps (aiohttp, fastapi, httpx, pydantic,
   pytest, pytest-asyncio, python-dotenv, pyyaml, ruff, uvicorn, vcrpy, web3; external_count: 12). Also picked up:
   `httpx>=0.28.1` for PM, `joblib` for UTL, `ib-insync` for UMI, `pytest-socket` for PM; UTL dep on UCI changed to
-  `unified-cloud-interface[gcp]`.
+  `unified-cloud-interface`.
 - **Stash resolution** — stash held old versions of `canonical-dependency-manifest.json` and
   `derived-dependency-manifest.json`. Used `git checkout stash@{0} -- <specific-files>` to selectively restore only
   non-conflicting files (`.github/workflows/quality-gates.yml`, audit scripts, `workspace-manifest.json`).

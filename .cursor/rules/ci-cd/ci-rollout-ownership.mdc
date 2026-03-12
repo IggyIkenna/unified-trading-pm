@@ -1,0 +1,63 @@
+---
+description: "CI/CD rollout ownership — before fixing a CI workflow or QG in one repo, check if the fix belongs in a PM base script or rollout script (would fix all 65 repos at once)"
+alwaysApply: true
+priority: 95
+tags:
+  - ci-cd
+  - quality-gates
+  - ssot
+  - propagation
+  - critical
+---
+
+# CI/CD Rollout Ownership — Fix in PM, Not in the Repo
+
+SSOT: `unified-trading-pm/docs/ci-cd-ssot.md`
+
+## The Core Rule
+
+Before changing ANY CI workflow or quality gate file in a service repo, ask:
+**"Does this fix belong in PM and propagate to all 65 repos?"**
+
+If yes, make the change in PM. If you fix it in just one repo, the other 64 stay broken
+and the fix will be overwritten the next time a rollout runs.
+
+## What Is Owned in PM (Never Edit Per-Repo)
+
+| Per-repo file | Real owner in PM | Propagation |
+| ------------- | ---------------- | ----------- |
+| `.github/workflows/quality-gates.yml` | `.github/workflows/python-quality-gates.yml` or `ui-quality-gates.yml` (reusable workflow) | `rollout-quality-gates-ci-workflows.py --workflow-call` |
+| `scripts/quality-gates.sh` (logic) | `scripts/quality-gates-base/base-service.sh` or `base-library.sh` or `base-ui.sh` | Instant — sourced live at runtime |
+| `.prettierignore` (shared rules) | `scripts/quality-gates-base/.prettierignore-base` | Instant — inherited via base script |
+| CI env vars (CLOUD_MOCK_MODE, CLOUD_PROVIDER, GCP_PROJECT_ID) | `python-quality-gates.yml` job-level env | Rollout |
+
+## What IS Per-Repo (Edit in the Repo)
+
+- `scripts/quality-gates.sh` **config** (SERVICE_NAME, SOURCE_DIR, MIN_COVERAGE, LOCAL_DEPS) — stub only
+- `.github/workflows/quality-gates.yml` `on:` branch filters — repo-specific
+- `.github/workflows/quality-gates.yml` `dep_repos:` input — derives from manifest `dependencies[]`
+- Repo-specific prettier ignores beyond the shared base
+
+## Rollout Script Reference
+
+```
+# Patch CI workflow env vars / flags across all repos:
+python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflows.py
+
+# Regenerate thin workflow_call callers from manifest (after reusable workflow changes):
+python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflows.py --workflow-call
+
+# Single repo:
+python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflows.py --repo <name>
+
+# Dry run first:
+python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflows.py --dry-run
+```
+
+## Anti-Patterns — NEVER Do These
+
+NEVER: Edit a per-repo `quality-gates.yml` to add/fix an env var → fix `python-quality-gates.yml`
+NEVER: Add a gate check to a per-repo `quality-gates.sh` → add to `base-service.sh`
+NEVER: Make a per-repo workaround so one repo's QG passes → fix the root cause in the base
+NEVER: Add `pip install ruff` or any tool install to a per-repo CI step → fix in `python-quality-gates.yml` or `setup-python-tools/action.yml`
+NEVER: Edit `.prettierignore` in one repo for a shared pattern → add to `.prettierignore-base`

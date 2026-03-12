@@ -11,10 +11,11 @@ RULE: Every repo MUST have scripts/setup.sh copied from the canonical SSOT templ
 SSOT: unified-trading-pm/scripts/setup.sh
 CODEX: 06-coding-standards/setup-standards.md
 KEY PROPERTIES:
-  - Idempotent — safe to re-run at any time without side effects.
-  - Skips completed steps — the .setup-stamp file tracks when deps were last installed; setup.sh skips reinstall if the stamp is current.
+  - Idempotent — safe to re-run at any time without side effects. Steps must be safe to repeat; use semantic checks (e.g. `uv lock --check`, version comparison) not timestamps.
   - No interactive prompts — must run unattended in CI and locally.
   - CI-aware — detects CI environments and adjusts behavior accordingly.
+FORBIDDEN (ADDITIONAL):
+  - Timestamp-based freshness checks (`.setup-stamp`, `-nt`, `-mtime`, `stat` mtime comparisons) — local filesystem mtimes are timezone-dependent and break for teams across timezones (e.g. India vs UK). A file written at 17:00 IST appears "older" than a file written at 13:00 UTC on the same machine clock but a different wall clock. Use semantic checks instead: `uv lock --check`, hash comparison, or idempotent re-runs.
 FORBIDDEN:
   - `pip install` — always use `uv`.
   - Manual venv creation outside setup.sh.

@@ -14,5 +14,6 @@ tags:
 RULE: Always use uv. No exceptions — not in Docker, not in CI, not in scripts.
 WHY: uv 10-100x faster; consistent tooling everywhere eliminates environment drift.
 CODEX: 06-coding-standards/dependency-management.md
-DO: uv pip install -e ".[dev]"; RUN uv pip install --system in Dockerfile; uv lock
+DO: uv pip install -e .; RUN uv pip install --system -e . in Dockerfile; uv lock; uv sync
 NEVER: pip install -e .; pip install ruff; python -m pip install; RUN pip install in Dockerfiles
+NEVER: uv pip install -e ".[dev]" or uv sync --extra dev — no optional extras exist (flat deps only)

@@ -25,17 +25,22 @@ CHECK_ONLY=false
 ROLLOUT_FIRST=false
 SYNC_GIT=false
 SYNC_GIT_BRANCH=""
+FORCE=false
 for arg in "$@"; do
   case $arg in
     --check) CHECK_ONLY=true ;;
     --rollout-first) ROLLOUT_FIRST=true ;;
+    --force) FORCE=true ;;
     --sync-git) SYNC_GIT=true ;;
     --sync-git=*) SYNC_GIT=true; SYNC_GIT_BRANCH="${arg#--sync-git=}" ;;
     --help | -h)
-      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--sync-git[=BRANCH]]"
+      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--force] [--sync-git[=BRANCH]]"
       echo "  --check              Run setup.sh --check only (verify, no install)"
       echo "  --rollout-first      Propagate setup.sh + quality-gates.sh + quickmerge.sh + build infra first"
       echo "                       Rollout failures are non-fatal — setup continues with warnings"
+      echo "  --force              Force reinstall: wipe and recreate each repo's .venv from scratch"
+      echo "                       Passes --force to each repo's setup.sh. Use on fresh machines or"
+      echo "                       after dependency changes to ensure a clean, reproducible environment."
       echo "  --sync-git[=BRANCH]  git fetch all repos, then report drift against a reference branch"
       echo "                       BRANCH: main | staging | feature (default) | any-branch-name"
       echo "                       'feature' (default) reads active_feature_branch from workspace-manifest.json"
@@ -62,35 +67,12 @@ else
 fi
 MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 
-# Prefer workspace venv python; fall back to python3
-PYTHON="$WORKSPACE_ROOT/.venv-workspace/bin/python3"
-[ -x "$PYTHON" ] || PYTHON="python3"
+# Use system python3 for manifest JSON parsing (no workspace venv dependency)
+PYTHON="python3"
 
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
 echo "━━━ Pre-flight checks ━━━"
 PREFLIGHT_WARN=false
-
-# Check .venv-workspace pyvenv.cfg home= dir exists (broken if uv Python cache was wiped)
-VENV_WS_CFG="$WORKSPACE_ROOT/.venv-workspace/pyvenv.cfg"
-if [ -f "$VENV_WS_CFG" ]; then
-  VENV_WS_HOME=$(grep '^home = ' "$VENV_WS_CFG" | sed 's/home = //' 2>/dev/null || true)
-  if [ -n "$VENV_WS_HOME" ] && [ ! -d "$VENV_WS_HOME" ]; then
-    echo "  [WARN] .venv-workspace is broken: home=$VENV_WS_HOME no longer exists"
-    echo "         The workspace Python was deleted or moved (uv cache wiped?)."
-    echo "         Fix: rm -rf $WORKSPACE_ROOT/.venv-workspace"
-    echo "              bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-fresh"
-    PREFLIGHT_WARN=true
-  else
-    echo "  [OK]   .venv-workspace pyvenv.cfg home is valid"
-  fi
-elif [ -d "$WORKSPACE_ROOT/.venv-workspace" ]; then
-  echo "  [WARN] .venv-workspace exists but pyvenv.cfg missing — venv may be corrupt"
-  echo "         Fix: rm -rf $WORKSPACE_ROOT/.venv-workspace && bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh"
-  PREFLIGHT_WARN=true
-else
-  echo "  [WARN] .venv-workspace not found — run workspace-bootstrap.sh first"
-  PREFLIGHT_WARN=true
-fi
 
 # Warn if UV_PYTHON_DOWNLOADS is not set to "never" (guards against uv auto-downloading Python)
 if [ "${UV_PYTHON_DOWNLOADS:-}" = "never" ]; then
@@ -192,7 +174,7 @@ fi
 
 echo "━━━ Run setup in all repos (topological tier order, parallel within tier) ━━━"
 echo "  Workspace: $WORKSPACE_ROOT"
-echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || echo 'INSTALL')"
+echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || ([ "$FORCE" = true ] && echo 'FORCE REINSTALL' || echo 'INSTALL'))"
 echo ""
 
 # ── Parse manifest into "LEVEL:repo1 repo2 ..." lines ────────────────────────
@@ -248,6 +230,7 @@ while IFS=: read -r LEVEL REPOS_STR; do
     (
       setup_cmd="bash scripts/setup.sh"
       [ "$CHECK_ONLY" = true ] && setup_cmd="bash scripts/setup.sh --check"
+      [ "$FORCE" = true ] && setup_cmd="bash scripts/setup.sh --force"
       if (cd "$rp" && WORKSPACE_ROOT="$WORKSPACE_ROOT" $setup_cmd 2>&1) >"$log"; then
         echo "  [OK]   $repo"
         rm -f "$log"

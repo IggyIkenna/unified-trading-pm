@@ -2,22 +2,31 @@
 """
 rollout-quality-gates-ci-workflows.py
 
-Propagates three CI/CD fixes to all Python-stack repos' quality-gates.yml:
+Propagates CI/CD fixes to all repos' quality-gates.yml.
 
+Default mode — patches existing workflow in-place:
   1. `export PATH="$(pwd)/.venv/bin:$PATH"` in the "Run quality gates" run block
   2. `CLOUD_MOCK_MODE: "true"` in the "Run quality gates" env block
   3. `--no-fix` flag on the `bash scripts/quality-gates.sh` invocation
+  4. Composite action ref pinned to active_feature_branch from workspace-manifest.json
 
-Repos that are UI-only (stack: ui) are skipped — they use npm/vitest, not
-Python quality-gates.sh. Repos without a quality-gates.yml are reported as
-MISSING. Repos that already have all three fixes are reported as SKIP.
+--workflow-call mode — replaces the entire file with a minimal workflow_call
+  thin caller that delegates all steps to the reusable workflows in PM:
+    python-quality-gates.yml  (Python service/api/library repos)
+    ui-quality-gates.yml      (UI repos, type=ui)
+  dep_repos is populated from manifest dependencies[].name.
+  The branch ref in uses: is the same active_feature_branch so the reusable
+  workflow definition is loaded from the current feature branch.
 
 Usage:
     python rollout-quality-gates-ci-workflows.py [--dry-run] [--repo REPO_NAME]
+                                                  [--action-ref REF] [--workflow-call]
 
 Options:
-    --dry-run    Print what would change without writing any files.
-    --repo       Process a single repo by name.
+    --dry-run         Print what would change without writing any files.
+    --repo            Process a single repo by name.
+    --action-ref      Override the ref (default: active_feature_branch from manifest).
+    --workflow-call   Replace workflows with workflow_call thin callers.
 """
 
 from __future__ import annotations
@@ -34,8 +43,9 @@ from typing import cast
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
-# Stacks that are pure TypeScript/UI — no Python quality-gates.sh
-SKIP_STACKS = {"ui"}
+# UI repos use vitest/playwright but still call scripts/quality-gates.sh for
+# linting/type checks — they need the same CI env vars as Python service repos.
+SKIP_STACKS: set[str] = set()
 
 # Repos with non-standard quality-gates.yml that we should not touch
 SKIP_REPOS = {
@@ -43,9 +53,13 @@ SKIP_REPOS = {
     "unified-trading-codex",  # Has no "Run quality gates" step — custom bash/python syntax checks
 }
 
+ACTION_USES_RE = re.compile(r"(uses:\s+IggyIkenna/unified-trading-pm/\.github/actions/[^\s@]+)@(\S+)")
+
 PATH_EXPORT = 'export PATH="$(pwd)/.venv/bin:$PATH"'
 CLOUD_MOCK_ENV_KEY = "CLOUD_MOCK_MODE"
 CLOUD_MOCK_ENV_VAL = '"true"'
+CLOUD_PROVIDER_KEY = "CLOUD_PROVIDER"
+CLOUD_PROVIDER_VAL = '"local"'
 NO_FIX_FLAG = "--no-fix"
 
 # ── YAML-aware helpers (text-based — preserves comments and formatting) ───────
@@ -109,41 +123,44 @@ def _ensure_path_export(step_text: str) -> tuple[str, bool]:
 
 
 def _ensure_cloud_mock_env(step_text: str) -> tuple[str, bool]:
-    """Add CLOUD_MOCK_MODE: "true" to the step env block if not present."""
-    if CLOUD_MOCK_ENV_KEY in step_text:
-        return step_text, False
+    """Add CLOUD_MOCK_MODE, CLOUD_PROVIDER to the step env block if not present."""
+    changed = False
 
     # Look for existing `env:` block inside the step
-    env_block = re.compile(r"(^( +)env:\n)", re.MULTILINE)
-    m = env_block.search(step_text)
+    env_block_re = re.compile(r"(^( +)env:\n)", re.MULTILINE)
+    m = env_block_re.search(step_text)
+
     if m:
+        # env block already exists — insert missing keys after `env:`
         indent = m.group(2)
         inner_indent = indent + "  "
         insert_pos = m.end()
-        new_text = (
-            step_text[:insert_pos]
-            + inner_indent
-            + f"{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
-            + step_text[insert_pos:]
-        )
-        return new_text, True
+        additions = ""
+        if CLOUD_MOCK_ENV_KEY not in step_text:
+            additions += inner_indent + f"{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
+        if CLOUD_PROVIDER_KEY not in step_text:
+            additions += inner_indent + f"{CLOUD_PROVIDER_KEY}: {CLOUD_PROVIDER_VAL}\n"
+        if additions:
+            step_text = step_text[:insert_pos] + additions + step_text[insert_pos:]
+            changed = True
+    elif CLOUD_MOCK_ENV_KEY not in step_text:
+        # No env block — insert one before `run:`
+        run_line = re.compile(r"(^( +)run:)", re.MULTILINE)
+        m2 = run_line.search(step_text)
+        if m2:
+            indent = m2.group(2)
+            inner_indent = indent + "  "
+            insert_pos = m2.start()
+            env_block_text = (
+                f"{indent}env:\n"
+                f"{inner_indent}{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
+                f"{inner_indent}{CLOUD_PROVIDER_KEY}: {CLOUD_PROVIDER_VAL}\n"
+                f'{inner_indent}GCP_PROJECT_ID: "test-project"\n'
+            )
+            step_text = step_text[:insert_pos] + env_block_text + step_text[insert_pos:]
+            changed = True
 
-    # No env block — insert one before `run:`
-    run_line = re.compile(r"(^( +)run:)", re.MULTILINE)
-    m = run_line.search(step_text)
-    if m:
-        indent = m.group(2)
-        inner_indent = indent + "  "
-        insert_pos = m.start()
-        env_block_text = (
-            f"{indent}env:\n"
-            f"{inner_indent}{CLOUD_MOCK_ENV_KEY}: {CLOUD_MOCK_ENV_VAL}\n"
-            f'{inner_indent}GCP_PROJECT_ID: "test-project"\n'
-        )
-        new_text = step_text[:insert_pos] + env_block_text + step_text[insert_pos:]
-        return new_text, True
-
-    return step_text, False
+    return step_text, changed
 
 
 def _ensure_no_fix_flag(step_text: str) -> tuple[str, bool]:
@@ -163,19 +180,90 @@ def _ensure_no_fix_flag(step_text: str) -> tuple[str, bool]:
     return step_text, False
 
 
-def fix_workflow(content: str) -> tuple[str, list[str]]:
+ON_BLOCK_RE = re.compile(r"^on:\n(?:[ \t]+.*\n)*", re.MULTILINE)
+
+UI_TYPE = "ui"
+WORKFLOW_CALL_PYTHON = "python-quality-gates.yml"
+WORKFLOW_CALL_UI = "ui-quality-gates.yml"
+
+
+def _extract_on_block(content: str) -> str:
+    """Return the raw `on:` YAML block from a workflow, or a sensible default."""
+    m = ON_BLOCK_RE.search(content)
+    return m.group(0).rstrip() if m else "on:\n  pull_request:\n    branches: [main]\n  push:\n    branches: [main]"
+
+
+def _dep_repos_for(repo_info: dict[str, object]) -> str:
+    """Return space-separated dep repo names from manifest dependencies, excluding PM."""
+    deps: list[object] = cast(list[object], repo_info.get("dependencies") or [])
+    names = []
+    for d in deps:
+        name = d["name"] if isinstance(d, dict) else str(d)  # type: ignore[index]
+        if name != "unified-trading-pm":
+            names.append(name)
+    return " ".join(names)
+
+
+def generate_workflow_call_yaml(
+    repo_name: str,
+    repo_info: dict[str, object],
+    existing_content: str,
+    action_ref: str,
+) -> str:
+    """Generate a minimal workflow_call thin caller for this repo."""
+    is_ui = cast(str, repo_info.get("type") or "") == UI_TYPE
+    on_block = _extract_on_block(existing_content)
+    reusable = WORKFLOW_CALL_UI if is_ui else WORKFLOW_CALL_PYTHON
+    uses_line = f"uses: IggyIkenna/unified-trading-pm/.github/workflows/{reusable}@{action_ref}"
+
+    if is_ui:
+        with_block = '      node-version: "22"'
+    else:
+        dep_repos = _dep_repos_for(repo_info)
+        with_block = f'      dep_repos: "{dep_repos}"' if dep_repos else '      dep_repos: ""'
+
+    return (
+        f"name: Quality Gates\n\n"
+        f"{on_block}\n\n"
+        f"jobs:\n"
+        f"  quality-gates:\n"
+        f"    {uses_line}\n"
+        f"    with:\n"
+        f"{with_block}\n"
+        f"    secrets:\n"
+        f"      GH_PAT: ${{{{ secrets.GH_PAT }}}}\n"
+    )
+
+
+def _ensure_action_ref(content: str, target_ref: str) -> tuple[str, bool]:
+    """Replace any composite action @<ref> with @target_ref throughout the file."""
+    new_content, count = ACTION_USES_RE.subn(
+        lambda m: f"{m.group(1)}@{target_ref}" if m.group(2) != target_ref else m.group(0),
+        content,
+    )
+    return new_content, count > 0
+
+
+def fix_workflow(content: str, action_ref: str = "main") -> tuple[str, list[str]]:
     """Apply all three fixes to the workflow content. Return (new_content, changes)."""
+    changes: list[str] = []
+
+    # Fix 1: composite action ref (file-level, not step-scoped)
+    content, changed = _ensure_action_ref(content, action_ref)
+    if changed:
+        changes.append(f"pinned composite action ref to @{action_ref}")
+
+    # Fixes 2-4: scoped to "Run quality gates" step
     span = _find_step_span(content, "Run quality gates")
     if span is None:
-        return content, []
+        return content, changes
 
     start, end = span
     step_text = content[start:end]
-    changes: list[str] = []
 
     step_text, changed = _ensure_cloud_mock_env(step_text)
     if changed:
-        changes.append("added CLOUD_MOCK_MODE env var")
+        changes.append("added CLOUD_MOCK_MODE/CLOUD_PROVIDER env vars")
 
     step_text, changed = _ensure_path_export(step_text)
     if changed:
@@ -184,9 +272,6 @@ def fix_workflow(content: str) -> tuple[str, list[str]]:
     step_text, changed = _ensure_no_fix_flag(step_text)
     if changed:
         changes.append("added --no-fix flag")
-
-    if not changes:
-        return content, []
 
     new_content = content[:start] + step_text + content[end:]
     return new_content, changes
@@ -211,12 +296,26 @@ def validate_yaml(path: Path) -> bool:
 class _ParsedArgs(argparse.Namespace):
     dry_run: bool
     repo: str
+    action_ref: str
+    workflow_call: bool
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", dest="dry_run", help="Show changes without writing files")
     parser.add_argument("--repo", default="", help="Process a single repo by name")
+    parser.add_argument(
+        "--action-ref",
+        default="",
+        dest="action_ref",
+        help="Composite action ref to pin (default: active_feature_branch from manifest)",
+    )
+    parser.add_argument(
+        "--workflow-call",
+        action="store_true",
+        dest="workflow_call",
+        help="Replace workflows with minimal workflow_call thin callers",
+    )
     args = parser.parse_args(namespace=_ParsedArgs())
 
     dry_run: bool = args.dry_run
@@ -229,6 +328,10 @@ def main() -> None:
     with MANIFEST_PATH.open() as f:
         manifest: dict[str, object] = cast(dict[str, object], json.load(f))
     repos: dict[str, dict[str, object]] = cast(dict[str, dict[str, object]], manifest.get("repositories") or {})
+
+    # Resolve action ref: CLI arg > manifest active_feature_branch > "main"
+    action_ref: str = args.action_ref or cast(str, manifest.get("active_feature_branch") or "") or "main"
+    print(f"Composite action ref: @{action_ref}")
 
     # If single-repo mode, restrict list
     if target_repo:
@@ -264,20 +367,28 @@ def main() -> None:
 
         content = workflow_path.read_text()
 
-        # Quick pre-check: does step exist?
-        if "Run quality gates" not in content:
-            print(f"SKIP  {repo_name} (no 'Run quality gates' step — special workflow)")
-            stats["skipped"] += 1
-            continue
+        if args.workflow_call:
+            # Generate a brand-new minimal workflow_call thin caller
+            new_content = generate_workflow_call_yaml(repo_name, repo_info, content, action_ref)
+            if new_content == content:
+                print(f"OK    {repo_name} (already workflow_call thin caller)")
+                stats["already_ok"] += 1
+                continue
+            changes_str = "replaced with workflow_call thin caller"
+        else:
+            # Quick pre-check: does step exist?
+            if "Run quality gates" not in content:
+                print(f"SKIP  {repo_name} (no 'Run quality gates' step — special workflow)")
+                stats["skipped"] += 1
+                continue
 
-        new_content, changes = fix_workflow(content)
+            new_content, changes = fix_workflow(content, action_ref)
+            if not changes:
+                print(f"OK    {repo_name} (all fixes already present)")
+                stats["already_ok"] += 1
+                continue
+            changes_str = ", ".join(changes)
 
-        if not changes:
-            print(f"OK    {repo_name} (all fixes already present)")
-            stats["already_ok"] += 1
-            continue
-
-        changes_str = ", ".join(changes)
         if dry_run:
             print(f"WOULD FIX  {repo_name}: {changes_str}")
             stats["fixed"] += 1

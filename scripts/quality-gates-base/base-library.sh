@@ -38,8 +38,8 @@ set -e
 
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { echo -e "\n${BLUE}$1${NC}"; echo "----------------------------------------------------------------------"; }
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+log_section() { :; }
+log_success() { :; }
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
@@ -91,7 +91,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
         for lib in "${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}"; do
             [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
         done
-        uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || :
+        uv pip install -e . --quiet 2>/dev/null || :
     fi
 fi
 if [ -f ".venv/bin/python" ]; then
@@ -140,21 +140,20 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore 2>/dev/null \
-            && log_success "Prettier: non-Python files formatted" \
+        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"
     fi
-    run_timeout 30 $RUFF_CMD format $SOURCE_DIRS || exit 1
-    run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS || exit 1
+    run_timeout 30 $RUFF_CMD format $SOURCE_DIRS >/dev/null 2>&1 || :
+    run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS >/dev/null 2>&1 || :
     log_success "Auto-fix complete"
 fi
 
 # ── [2] LINT (ruff, 30s) ──────────────────────────────────────────────────────
 if [ "$RUN_LINT" = true ]; then
     log_section "[2/6] LINT"
-    run_timeout 30 $RUFF_CMD check $SOURCE_DIRS && log_success "Lint PASSED" || { log_fail "Lint FAILED"; exit 1; }
+    _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
 fi
 
 # ── [3] TESTS (pytest, unit only — libraries have no integration tests by default) ──
@@ -162,9 +161,10 @@ if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
-    COV="--cov=$SOURCE_DIR --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
-    PARGS="-n ${PYTEST_WORKERS:-2} --timeout=60 -v --tb=short"
-    $PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
+    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    PARGS="-n ${PYTEST_WORKERS:-2} --timeout=60 -q -r a --tb=short --no-header"
+    _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+        || { echo "$_pytest_out"; exit 1; }
     log_success "Tests PASSED"
 
     # No duplicate test files (test_*_extended.py, test_*_additional.py)
@@ -189,7 +189,7 @@ if [ -f "$IP" ]; then
     # Scope import check to SOURCE_DIR only — tests are allowed to deep-import from their own
     # package (they test internal components). External consumers are linted at a higher level.
     IP_TARGET="${SOURCE_DIR:-.}"
-    $PYTHON_CMD "$IP" "$IP_TARGET" --verbose 2>/dev/null && log_success "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
+    _ip_out=$($PYTHON_CMD "$IP" "$IP_TARGET" 2>/dev/null) || { echo "$_ip_out"; log_fail "Import patterns FAILED"; exit 1; }
 else
     log_warn "check-import-patterns.py not found (unified-trading-pm/scripts/)"
 fi
@@ -480,7 +480,6 @@ fi
 #   • Present (any state)  → FAIL: baseline suppression not allowed; delete the file
 #   • Not present          → PASS (clean)
 # ============================================================
-echo "=== STEP 5.22: basedpyright baseline suppression ==="
 if [ -f ".basedpyright-baseline.json" ]; then
     log_fail "STEP 5.22: .basedpyright-baseline.json present — baseline suppression not allowed (zero-baseline policy)"; V=$(( V + 1 ))
 else
@@ -553,16 +552,17 @@ done
 
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
-    $PYTHON_CMD -m pip_audit 2>/dev/null && log_success "pip-audit clean" || { log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+    _pa_out=$($PYTHON_CMD -m pip_audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 elif command -v pip-audit &>/dev/null; then
-    pip-audit 2>/dev/null && log_success "pip-audit clean" || { log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
+    _pa_out=$(pip-audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 else
     log_fail "pip-audit required: uv pip install pip-audit"; V=$(( V + 1 ))
 fi
 
 # Security: bandit (use python -m bandit for venv reliability)
 if $PYTHON_CMD -c "import bandit" 2>/dev/null; then
-    run_timeout 30 $PYTHON_CMD -m bandit -r "$SOURCE_DIR/" -ll 2>/dev/null && log_success "bandit clean" || { log_fail "bandit issues"; V=$(( V + 1 )); }
+    _bandit_out=$(run_timeout 30 $PYTHON_CMD -m bandit -r "$SOURCE_DIR/" -ll 2>&1) \
+        || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi
@@ -595,14 +595,18 @@ if [ "$ACT_MODE" = true ]; then
     for _sp in "${ACT_SECRETS_FILE:-}" "${REPO_ROOT}/.act-secrets" "${HOME}/.secrets"; do
         [ -n "$_sp" ] && [ -f "$_sp" ] && { ACT_SECRETS_ARG="--secret-file $_sp"; break; }
     done
-    if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG}; then
+    _ACT_LOG="$(mktemp /tmp/act-output.XXXXXX)"
+    if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_success "Act simulation PASSED"
     else
-        log_fail "Act simulation FAILED — act needs GH_PAT to clone sibling repos"
-        [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets"
+        log_fail "Act simulation FAILED — full act output:"
+        cat "$_ACT_LOG" >&2
+        [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets — GH_PAT may be missing"
         log_warn "Fix: bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh"
+        rm -f "$_ACT_LOG"
         exit 1
     fi
+    rm -f "$_ACT_LOG"
 fi
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────

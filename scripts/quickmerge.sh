@@ -458,21 +458,51 @@ echo "=========================================="
 MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 if [ -f "$MANIFEST_PATH" ]; then
   DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?.name // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
+  # Resolve the reference branch: active_feature_branch from manifest, or fall back to main
+  ACTIVE_FEATURE_BRANCH=$(jq -r '.active_feature_branch // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
+  DEP_REF_BRANCH="${ACTIVE_FEATURE_BRANCH:-main}"
   if [ -n "$DEPS" ]; then
-    echo "Checking dependencies vs origin/main (from workspace-manifest.json)..."
+    echo "Checking dependencies vs origin/$DEP_REF_BRANCH (from workspace-manifest.json active_feature_branch)..."
     HAS_DIFF=false
     LAST_DEP_PATH=""
     for dep in $DEPS; do
       dep_path="$WORKSPACE_ROOT/$dep"
       if [ -d "$dep_path" ]; then
         cd "$dep_path"
-        git fetch origin main --quiet 2>/dev/null || true
-        if ! git diff origin/main --quiet 2>/dev/null; then
+        # Fetch the feature branch
+        git fetch origin "$DEP_REF_BRANCH" --quiet 2>/dev/null || true
+        if ! git rev-parse "origin/$DEP_REF_BRANCH" &>/dev/null 2>&1; then
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "❌ REMOTE BRANCH MISSING: $dep"
+          echo "═══════════════════════════════════════════════════════"
+          echo ""
+          echo "Branch 'origin/$DEP_REF_BRANCH' does not exist remotely for: $dep"
+          echo "active_feature_branch in workspace-manifest.json is '$DEP_REF_BRANCH'."
+          echo ""
+          echo "── Fix options ────────────────────────────────────────────────"
+          echo "1. Create and push the branch in this dep repo:"
+          echo "     cd $dep_path"
+          echo "     git checkout -b $DEP_REF_BRANCH && git push origin $DEP_REF_BRANCH"
+          echo ""
+          echo "2. Do the same for ALL dep repos missing the branch (check each)."
+          echo ""
+          echo "3. Update active_feature_branch in workspace-manifest.json (HUMAN ONLY):"
+          echo "     cd $WORKSPACE_ROOT/unified-trading-pm"
+          echo "     edit workspace-manifest.json → change active_feature_branch"
+          echo "═══════════════════════════════════════════════════════"
+          if [ "$AGENT_MODE" = true ]; then
+            echo "⛔ Agent mode: cannot proceed — human must resolve branch mismatch."
+          fi
+          exit 1
+        fi
+        REF="origin/$DEP_REF_BRANCH"
+        if ! git diff "$REF" --quiet 2>/dev/null; then
           HAS_DIFF=true
           LAST_DEP_PATH="$dep_path"
-          echo "❌ $dep: DIFFERS from main"
+          echo "❌ $dep: DIFFERS from $REF"
         else
-          echo "✅ $dep: Matches main"
+          echo "✅ $dep: Matches $REF"
         fi
         cd "$REPO_DIR"
       fi
@@ -484,7 +514,7 @@ if [ -f "$MANIFEST_PATH" ]; then
       echo "❌ DEPENDENCY CONFLICT DETECTED"
       echo "═══════════════════════════════════════════════════════"
       echo ""
-      echo "Dependencies differ from main, but no --dep-branch specified."
+      echo "Dependencies differ from $REF, but no --dep-branch specified."
       echo "Your local dependency changes are intentional — do NOT discard them."
       echo ""
       echo "── If you are a HUMAN developer ──────────────────────────────────────"
@@ -496,7 +526,7 @@ if [ -f "$MANIFEST_PATH" ]; then
       echo "── If you are an AGENT ────────────────────────────────────────────────"
       echo "Do NOT use --dep-branch. Commit the dependency changes first (in the"
       echo "dep repo) using the active_feature_branch from workspace-manifest.json,"
-      echo "then re-run quickmerge in this repo."
+      echo "then quickmerge that branch, then re-run quickmerge in this repo."
       echo ""
       echo "═══════════════════════════════════════════════════════"
       exit 1
@@ -683,11 +713,20 @@ echo "=========================================="
 echo ""
 
 if [ -f "scripts/quality-gates.sh" ]; then
-  echo "[$REPO_NAME] Phase 1: auto-fix (ruff format + ruff check --fix)..."
-  bash scripts/quality-gates.sh $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX
+  # Phase 1: lint auto-fix only (fast — ruff/eslint --fix, no tests/typecheck/build)
+  echo "[$REPO_NAME] Phase 1: lint auto-fix..."
+  bash scripts/quality-gates.sh --lint --fix $SKIP_CODEX
 
-  echo "[$REPO_NAME] Phase 2: verify (--no-fix mode)..."
-  if ! bash scripts/quality-gates.sh --no-fix $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX; then
+  # Phase 2: verify lint is clean after fixes (abort early if unfixable lint errors remain)
+  echo "[$REPO_NAME] Phase 2: lint verify (--no-fix)..."
+  if ! bash scripts/quality-gates.sh --no-fix --lint $SKIP_CODEX; then
+    echo "[$REPO_NAME] ❌ Lint FAILED — fix remaining issues before merging"
+    exit 1
+  fi
+
+  # Phase 3: full gates minus lint (tests + typecheck + codex run exactly once)
+  echo "[$REPO_NAME] Phase 3: full gates (tests + typecheck + codex, lint already verified)..."
+  if ! bash scripts/quality-gates.sh --no-fix --skip-lint $SKIP_TESTS $SKIP_TYPECHECK $SKIP_CODEX; then
     echo "[$REPO_NAME] ❌ Quality gates FAILED — fix remaining issues before merging"
     exit 1
   fi
@@ -804,11 +843,11 @@ fi
 # Run twice to handle idempotency
 if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier" .pre-commit-config.yaml 2>/dev/null; then
   if command -v pre-commit &>/dev/null; then
-    pre-commit run prettier --all-files 2>/dev/null || true
-    pre-commit run prettier --all-files 2>/dev/null || true
+    pre-commit run prettier --all-files >/dev/null 2>&1 || true
+    pre-commit run prettier --all-files >/dev/null 2>&1 || true
   else
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown 2>/dev/null || true
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown 2>/dev/null || true
+    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
+    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
   fi
 fi
 
@@ -838,7 +877,11 @@ else
   git add -A
 fi
 
-if ! git commit -m "$COMMIT_MSG" --quiet; then
+if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)" ]; then
+  # Nothing staged and working tree is clean — changes were already committed
+  # in a previous quickmerge run. Skip commit and go straight to push + PR.
+  echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed. Proceeding to push."
+elif ! git commit -m "$COMMIT_MSG" --quiet; then
   # Pre-commit may have modified files (e.g. Prettier). Stage and retry once.
   git add -A
   if ! git commit -m "$COMMIT_MSG" --quiet; then

@@ -1,0 +1,53 @@
+name: ui-quality-gates
+
+# Reusable workflow — called by all TypeScript/React UI repos.
+# Loaded at the ref pinned by rollout-quality-gates-ci-workflows.py
+# (active_feature_branch from workspace-manifest.json).
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: Node.js version
+        type: string
+        default: "22"
+    secrets:
+      GH_PAT:
+        required: true
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUD_MOCK_MODE: "true"
+      CLOUD_PROVIDER: "local"
+      GCP_PROJECT_ID: "test-project"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+
+      - name: Clone unified-trading-pm
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          BRANCH="${DEP_BRANCH:-main}"
+          (git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" ../unified-trading-pm 2>/dev/null \
+            || git clone -b main "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm.git" ../unified-trading-pm 2>/dev/null) || true
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Run quality gates
+        shell: bash
+        run: bash scripts/quality-gates.sh --no-fix
