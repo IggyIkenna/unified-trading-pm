@@ -117,11 +117,9 @@ if [ "$SYNC_GIT" = true ]; then
 
   # Fetch in parallel, suppress output; record failures
   FETCH_PIDS=()
-  FETCH_DIRS=()
   for rp in "${FETCH_REPOS[@]}"; do
     (git -C "$rp" fetch origin --quiet 2>/dev/null) &
     FETCH_PIDS+=($!)
-    FETCH_DIRS+=("$rp")
   done
   FETCH_FAIL=0
   for i in "${!FETCH_PIDS[@]}"; do
@@ -129,33 +127,46 @@ if [ "$SYNC_GIT" = true ]; then
   done
   [ "$FETCH_FAIL" -gt 0 ] && echo "  [WARN] $FETCH_FAIL repo(s) could not fetch (no remote / network issue)"
 
-  # Report branches that are behind their remote tracking branch
+  # Resolve the reference branch to compare against
+  if [ -z "$SYNC_GIT_BRANCH" ] || [ "$SYNC_GIT_BRANCH" = "feature" ]; then
+    # Default: active_feature_branch from manifest (same SSOT as quickmerge)
+    SYNC_TARGET=$(python3 -c \
+      "import json; m=json.load(open('$MANIFEST')); print(m.get('active_feature_branch','main'))" \
+      2>/dev/null || echo "main")
+    echo "  Branch: origin/$SYNC_TARGET (active_feature_branch from manifest)"
+  else
+    SYNC_TARGET="$SYNC_GIT_BRANCH"
+    echo "  Branch: origin/$SYNC_TARGET"
+  fi
+
+  # Report which repos are behind/diverged relative to origin/$SYNC_TARGET
   BEHIND=()
   for rp in "${FETCH_REPOS[@]}"; do
     repo_name="$(basename "$rp")"
-    # Get current branch (empty if detached HEAD)
     branch=$(git -C "$rp" symbolic-ref --short HEAD 2>/dev/null || true)
     [ -z "$branch" ] && continue
-    # Check if remote tracking ref exists
-    remote_ref="origin/$branch"
-    git -C "$rp" rev-parse --verify "$remote_ref" &>/dev/null || continue
-    behind=$(git -C "$rp" rev-list --count HEAD.."$remote_ref" 2>/dev/null || echo 0)
-    ahead=$(git -C "$rp"  rev-list --count "$remote_ref"..HEAD 2>/dev/null || echo 0)
+    remote_ref="origin/$SYNC_TARGET"
+    if ! git -C "$rp" rev-parse --verify "$remote_ref" &>/dev/null; then
+      BEHIND+=("  $repo_name ($branch): origin/$SYNC_TARGET not found — branch may not exist in this repo")
+      continue
+    fi
+    behind=$(git -C "$rp" rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
+    ahead=$(git -C "$rp"  rev-list --count "${remote_ref}..HEAD" 2>/dev/null || echo 0)
     if [ "$behind" -gt 0 ] && [ "$ahead" -eq 0 ]; then
-      BEHIND+=("  $repo_name ($branch): $behind commit(s) behind origin/$branch — run: cd $repo_name && git pull --ff-only")
+      BEHIND+=("  $repo_name ($branch): $behind commit(s) behind origin/$SYNC_TARGET — run: cd $repo_name && git pull --ff-only origin $SYNC_TARGET")
     elif [ "$behind" -gt 0 ] && [ "$ahead" -gt 0 ]; then
-      BEHIND+=("  $repo_name ($branch): diverged — $behind behind / $ahead ahead of origin/$branch (manual merge needed)")
+      BEHIND+=("  $repo_name ($branch): diverged — $behind behind / $ahead ahead of origin/$SYNC_TARGET (manual merge needed)")
     fi
   done
 
   if [ "${#BEHIND[@]}" -gt 0 ]; then
     echo ""
-    echo "  [WARN] Repos with remote commits not yet pulled (${#BEHIND[@]}):"
+    echo "  [WARN] Repos with drift from origin/$SYNC_TARGET (${#BEHIND[@]}):"
     for b in "${BEHIND[@]}"; do echo "$b"; done
     echo ""
     echo "  Note: setup will continue with current local state — pull manually if needed."
   else
-    echo "  [OK] All repos are up to date with their remote tracking branch"
+    echo "  [OK] All repos are up to date with origin/$SYNC_TARGET"
   fi
   echo ""
 fi

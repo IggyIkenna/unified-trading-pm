@@ -11,28 +11,46 @@ cd "$WORKSPACE_ROOT"
 
 echo "=== §27 Contract Adoption ==="
 
-run_checker() {
-  local section="$1" criterion="$2" script="$3"
-  if [ ! -f "$script" ]; then
-    emit "$section" "$criterion" "WARN" "checker not found: $script"
-    return
-  fi
-  if python3 "$script" > /tmp/contract-check.txt 2>&1; then
-    emit "$section" "$criterion" "PASS" "$(tail -1 /tmp/contract-check.txt)"
-  else
-    issues=$(grep -i 'fail\|error\|missing\|orphan' /tmp/contract-check.txt | head -3 | tr '\n' '; ')
-    emit "$section" "$criterion" "WARN" "${issues:-see /tmp/contract-check.txt}"
-  fi
+_TMP=$(mktemp -d)
+trap 'rm -rf "$_TMP"' EXIT
+
+run_checker_bg() {
+  local section="$1" criterion="$2" script="$3" key="$4"
+  local out="$_TMP/${key}.out" rc="$_TMP/${key}.rc"
+  (
+    if [ ! -f "$script" ]; then
+      echo "WARN|checker not found: $script" > "$out"
+    elif python3 "$script" > "$_TMP/${key}.log" 2>&1; then
+      echo "PASS|$(tail -1 "$_TMP/${key}.log")" > "$out"
+    else
+      issues=$(grep -i 'fail\|error\|missing\|orphan' "$_TMP/${key}.log" | head -3 | tr '\n' '; ')
+      echo "WARN|${issues:-see log}" > "$out"
+    fi
+  ) &
 }
 
-run_checker "§27" "UIC adoption (check_uic_adoption.py)" \
-  "system-integration-tests/tests/adoption/check_uic_adoption.py"
+# Launch all 3 checkers in parallel
+run_checker_bg "§27" "UIC adoption (check_uic_adoption.py)" \
+  "system-integration-tests/tests/adoption/check_uic_adoption.py" "uic"
+run_checker_bg "§27" "UAC adoption (check_uac_adoption.py)" \
+  "system-integration-tests/tests/adoption/check_uac_adoption.py" "uac"
+run_checker_bg "§27" "UTL adoption (check_utl_adoption.py)" \
+  "system-integration-tests/tests/adoption/check_utl_adoption.py" "utl"
 
-run_checker "§27" "UAC adoption (check_uac_adoption.py)" \
-  "system-integration-tests/tests/adoption/check_uac_adoption.py"
-
-run_checker "§27" "UTL adoption (check_utl_adoption.py)" \
-  "system-integration-tests/tests/adoption/check_utl_adoption.py"
+# Wait for all 3 to complete, then emit in canonical order
+wait
+for pair in "uic|UIC adoption (check_uic_adoption.py)" \
+            "uac|UAC adoption (check_uac_adoption.py)" \
+            "utl|UTL adoption (check_utl_adoption.py)"; do
+  key="${pair%%|*}"; criterion="${pair##*|}"
+  out="$_TMP/${key}.out"
+  if [ -f "$out" ]; then
+    IFS='|' read -r status evidence < "$out"
+    emit "§27" "$criterion" "$status" "$evidence"
+  else
+    emit "§27" "$criterion" "WARN" "checker did not complete"
+  fi
+done
 
 # VCR cassette counts per interface repo (§10 overlap)
 echo ""

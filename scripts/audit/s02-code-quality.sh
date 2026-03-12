@@ -49,7 +49,7 @@ fi
 
 # File size >900 lines — delegate to existing checker (fast, per-repo)
 large_files=$(bash "$(dirname "${BASH_SOURCE[0]}")/../validation/check-codsize-violations.sh" \
-  --threshold 900 2>/dev/null | grep 'VIOLATION' | head -10 || true)
+  --threshold 900 2>/dev/null | grep ' lines: ' | head -10 || true)
 if [ -z "$large_files" ]; then
   emit "§2" "no source files >900L" "PASS" "none"
 else

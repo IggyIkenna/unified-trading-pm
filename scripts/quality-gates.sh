@@ -6,7 +6,7 @@ MIN_COVERAGE=70
 RUN_INTEGRATION=false
 PYTEST_WORKERS=${PYTEST_WORKERS:-2}
 LOCAL_DEPS=("unified-events-interface" "unified-internal-contracts")
-MAX_DURATION=300  # PM has many scripts+plans; allow up to 5 min
+MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
 PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time on slow CI runners
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 

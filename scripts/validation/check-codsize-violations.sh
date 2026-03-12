@@ -58,38 +58,54 @@ total_violations=0
 repos_with_violations=0
 violation_list=""
 
+# Filter to existing repos for the rg call
+existing_repos=()
 for repo in "${REPOS[@]}"; do
-  if [ ! -d "$repo" ]; then
-    continue
-  fi
+  [ -d "$repo" ] && existing_repos+=("$repo")
+done
 
-  # Find Python files exceeding threshold (excluding tests, scripts).
-  # Use -exec {} + (batch mode) instead of {} \; to avoid forking one wc per file.
-  violations=$(find "$repo" -name "*.py" -type f \
-    ! -path "*/tests/*" \
-    ! -path "*/scripts/*" \
-    ! -path "*/.venv/*" \
-    ! -path "*/node_modules/*" \
-    ! -path "*/__pycache__/*" \
-    ! -path "*/build/*" \
-    ! -path "*/dist/*" \
-    ! -path "*/htmlcov/*" \
-    -exec wc -l {} + 2>/dev/null \
-    | awk -v thresh="$THRESHOLD" '$1 > thresh && $2 != "total" {printf "%4d lines: %s\n", $1, $2}' \
-    | sort -rn)
+if [ ${#existing_repos[@]} -eq 0 ]; then
+  echo "No repos found."
+  exit 0
+fi
 
-  if [ -n "$violations" ]; then
-    count=$(echo "$violations" | wc -l | tr -d ' ')
+# Two-phase approach for speed:
+# Phase 1: find with -prune (stops traversal of .venv/node_modules/etc, no content reads)
+#           + -size pre-filter (stat-only metadata check, ~40KB ≈ 900 lines)
+# Phase 2: wc -l only on the small subset of candidate large files (exact line count)
+# This avoids reading file content for the vast majority of source files.
+SIZE_BYTES=$(( THRESHOLD * 45 ))  # ~45 bytes/line heuristic for pre-filter
+all_large=$(find "${existing_repos[@]}" \
+  \( -name '.venv' -o -name '.venv-workspace' -o -name 'node_modules' \
+     -o -name '__pycache__' -o -name 'htmlcov' -o -name 'build' \
+     -o -name 'dist' -o -name 'tests' -o -name 'scripts' \
+     -o -name '*.egg-info' -o -name '.git' \) -prune \
+  -o -name "*.py" -type f -size "+${SIZE_BYTES}c" -print \
+  2>/dev/null \
+  | xargs -r wc -l 2>/dev/null \
+  | awk -v thresh="$THRESHOLD" '$1 > thresh && $2 != "total" {printf "%4d lines: %s\n", $1, $2}' \
+  | sort -rn)
+
+# Group by repo for per-repo output
+if [ -n "$all_large" ]; then
+  declare -A repo_lines
+  while IFS= read -r line; do
+    filepath=$(echo "$line" | awk '{print $NF}')
+    repo=$(echo "$filepath" | cut -d/ -f1)
+    repo_lines["$repo"]+="$line"$'\n'
+  done <<< "$all_large"
+
+  for repo in "${!repo_lines[@]}"; do
+    count=$(printf '%s' "${repo_lines[$repo]}" | grep -c .)
     total_violations=$((total_violations + count))
     repos_with_violations=$((repos_with_violations + 1))
     violation_list="$violation_list  - $repo: $count files\n"
-
     echo "=== $repo ==="
     echo "❌ $count files exceed $THRESHOLD lines:"
-    echo "$violations"
+    printf '%s' "${repo_lines[$repo]}"
     echo ""
-  fi
-done
+  done
+fi
 
 echo "=== Summary ==="
 echo "Repos scanned: ${#REPOS[@]}"

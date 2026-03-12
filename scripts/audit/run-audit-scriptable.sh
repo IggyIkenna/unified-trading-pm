@@ -71,42 +71,61 @@ echo ""
 OVERALL_FAILS=0
 OVERALL_WARNS=0
 
-run_section() {
+TMPDIR_AUDIT=$(mktemp -d)
+trap 'rm -rf "$TMPDIR_AUDIT"' EXIT
+
+run_section_bg() {
   local num="$1" script="$2"
   shift 2
   local extra_args=("$@")
 
   ! should_run "$num" && return 0
 
-  echo ""
-  # Hard timeout: each section must complete within 60s
-  if timeout 60 bash "$SCRIPT_DIR/$script" "${extra_args[@]}" 2>/dev/null; then
-    true
-  else
-    local rc=$?
-    if [ "$rc" -eq 124 ]; then
-      echo "  §$num TIMEOUT (>60s) — script killed to prevent runaway"
-      OVERALL_FAILS=$((OVERALL_FAILS + 1))
-    else
-      OVERALL_FAILS=$((OVERALL_FAILS + 1))
-    fi
-  fi
+  local outfile="$TMPDIR_AUDIT/s${num}.out"
+  local rcfile="$TMPDIR_AUDIT/s${num}.rc"
+  (
+    set +e  # prevent -e from killing subshell before rcfile is written
+    timeout 60 bash "$SCRIPT_DIR/$script" "${extra_args[@]}" > "$outfile" 2>/dev/null
+    echo $? > "$rcfile"
+  ) &
 }
 
 # §13 can take --repo argument
 s13_args=()
 [ -n "$REPO_FILTER" ] && s13_args=("--repo" "$REPO_FILTER")
 
-run_section 1  s01-governance.sh
-run_section 2  s02-code-quality.sh
-run_section 3  s03-security.sh
-run_section 4  s04-architecture.sh
-run_section 6  s06-observability.sh
-run_section 8  s08-tech-debt.sh
-run_section 9  s09-cross-repo.sh
-run_section 11 s11-coverage.sh
-run_section 13 s13-stubs.sh "${s13_args[@]}"
-run_section 27 s27-contracts.sh
+# Launch all sections in parallel (they are independent rg/grep/find scans).
+# Each section writes to a temp file; we wait for all, then print in canonical order.
+run_section_bg 1  s01-governance.sh
+run_section_bg 2  s02-code-quality.sh
+run_section_bg 3  s03-security.sh
+run_section_bg 4  s04-architecture.sh
+run_section_bg 6  s06-observability.sh
+run_section_bg 8  s08-tech-debt.sh
+run_section_bg 9  s09-cross-repo.sh
+run_section_bg 11 s11-coverage.sh
+run_section_bg 13 s13-stubs.sh "${s13_args[@]}"
+run_section_bg 27 s27-contracts.sh
+
+# Wait for all background jobs to finish (|| true: prevent -e on non-zero section exit)
+wait || true
+
+# Print results in canonical section order and tally FAILs
+for num in 1 2 3 4 6 8 9 11 13 27; do
+  ! should_run "$num" && continue
+  outfile="$TMPDIR_AUDIT/s${num}.out"
+  rcfile="$TMPDIR_AUDIT/s${num}.rc"
+  echo ""
+  cat "$outfile" 2>/dev/null || true
+  rc=0
+  [ -f "$rcfile" ] && rc=$(cat "$rcfile")
+  if [ "$rc" -eq 124 ]; then
+    echo "  §$num TIMEOUT (>60s) — script killed to prevent runaway"
+    OVERALL_FAILS=$((OVERALL_FAILS + 1))
+  elif [ "$rc" -ne 0 ]; then
+    OVERALL_FAILS=$((OVERALL_FAILS + 1))
+  fi
+done
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
