@@ -14,7 +14,7 @@ completion_gates:
 
 repo_gates:
   - repo: instruments-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
@@ -42,7 +42,7 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: features-volatility-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
@@ -63,14 +63,14 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: features-sports-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: features-cross-instrument-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
