@@ -9,6 +9,10 @@ on:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+    env:
+      CLOUD_MOCK_MODE: "true"
+      CLOUD_PROVIDER: "local"
+      GCP_PROJECT_ID: "unified-trading-ci"
     steps:
       - name: Checkout unified-trading-pm
         uses: actions/checkout@v4

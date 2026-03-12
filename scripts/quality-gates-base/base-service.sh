@@ -830,14 +830,18 @@ if [ "$ACT_MODE" = true ]; then
     for _sp in "${ACT_SECRETS_FILE:-}" "${REPO_ROOT}/.act-secrets" "${HOME}/.secrets"; do
         [ -n "$_sp" ] && [ -f "$_sp" ] && { ACT_SECRETS_ARG="--secret-file $_sp"; break; }
     done
-    if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG}; then
+    _ACT_LOG="$(mktemp /tmp/act-output.XXXXXX)"
+    if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_success "Act simulation PASSED"
     else
-        log_fail "Act simulation FAILED — act needs GH_PAT to clone sibling repos"
-        [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets"
+        log_fail "Act simulation FAILED — last 30 lines of act output:"
+        tail -30 "$_ACT_LOG" >&2
+        [ -z "$ACT_SECRETS_ARG" ] && log_warn "No .act-secrets found at ${REPO_ROOT}/.act-secrets or ~/.secrets — GH_PAT may be missing"
         log_warn "Fix: bash unified-trading-pm/scripts/workspace/generate-act-secrets.sh"
+        rm -f "$_ACT_LOG"
         exit 1
     fi
+    rm -f "$_ACT_LOG"
 fi
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────

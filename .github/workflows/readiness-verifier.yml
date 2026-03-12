@@ -107,15 +107,12 @@ jobs:
           # Build compact summary from report (first 20 lines of key results)
           SUMMARY=$(grep -E "MISMATCH|FAIL|PASS|WARN|CR[0-9]|DR[0-9]" readiness-report.txt 2>/dev/null | head -20 | tr '\n' '\n' || true)
 
-          MESSAGE="${STATUS_ICON} *Readiness Verifier — ${STATUS_LABEL}*
-Tier: ${TIER_LABEL} | $(date -u '+%Y-%m-%d %H:%M UTC')
-PASS: ${PASSES} | FAIL: ${FAILS} | WARN: ${WARNS} | MISMATCH: ${MISMATCHES}
-
-\`\`\`
-${SUMMARY}
-\`\`\`
-
-Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          MESSAGE=$(printf '%b' \
+            "${STATUS_ICON} *Readiness Verifier — ${STATUS_LABEL}*\n" \
+            "Tier: ${TIER_LABEL} | $(date -u '+%Y-%m-%d %H:%M UTC')\n" \
+            "PASS: ${PASSES} | FAIL: ${FAILS} | WARN: ${WARNS} | MISMATCH: ${MISMATCHES}\n\n" \
+            "\`\`\`\n${SUMMARY}\n\`\`\`\n\n" \
+            "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}")
 
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
