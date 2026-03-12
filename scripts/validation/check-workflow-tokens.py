@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import cast
 
 
 def _find_violations(workflow_file: Path) -> list[str]:
@@ -115,7 +116,7 @@ def main() -> int:
     parser.add_argument("--workspace", action="store_true", help="Check all repos in the workspace")
     args = parser.parse_args()
 
-    if args.workspace:
+    if cast(bool, args.workspace):
         workspace_root = Path(__file__).resolve().parents[3]
         total = 0
         for repo_dir in sorted(workspace_root.iterdir()):
@@ -133,7 +134,7 @@ def main() -> int:
         print("No cross-repo GITHUB_TOKEN violations found.")
         return 0
     else:
-        wf_dir = Path(args.dir)
+        wf_dir = Path(cast(str, args.dir))
         total = check_dir(wf_dir)
         if total:
             print(
