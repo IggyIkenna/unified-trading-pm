@@ -1,1 +1,5 @@
 configs/cloudbuild-service-template.yaml
+# Template files contain shell heredocs ($(cat <<BODY...BODY)) at column 0 inside
+# YAML run: blocks, which breaks prettier's YAML parser. Templates must not be formatted.
+scripts/templates/*.yml
+scripts/propagation/templates/*.yml

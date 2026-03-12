@@ -50,7 +50,7 @@ git ls-remote --heads origin ${DEP_BRANCH} && \
   git clone -b ${DEP_BRANCH} ... ../unified-trading-services || \
   git clone ... ../unified-trading-services
 uv pip install --system -e ../unified-trading-services
-uv pip install --system -e ".[dev]"
+uv pip install --system -e .
 ```
 
 ## NEVER

@@ -16,7 +16,7 @@ CODEX: 06-coding-standards/quality-gates.md
 
 Architecture:
   1. Pull unified-trading-services:latest base image (requires auth)
-  2. Build service image (includes source + tests + dev deps via uv pip install .[dev])
+  2. Build service image (includes source + tests + all deps via uv pip install -e .)
   3. Run quality-gates.sh --no-fix --quick INSIDE the image
   4. Push image ONLY if tests pass
 

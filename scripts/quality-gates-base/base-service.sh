@@ -105,7 +105,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     for lib in "${LOCAL_DEPS[@]}"; do
         [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
     done
-    uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || :
+    uv pip install -e . --quiet 2>/dev/null || :
 fi
 PYTHON_CMD=".venv/bin/python"; [ ! -f "$PYTHON_CMD" ] && PYTHON_CMD="python3"
 
@@ -178,21 +178,20 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     if command -v npx &>/dev/null; then
         _BASE_IGNORE="${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/.prettierignore-base"
         _PRETTIER_IGNORES="--ignore-path .gitignore $([ -f .prettierignore ] && echo '--ignore-path .prettierignore') $([ -f "$_BASE_IGNORE" ] && echo "--ignore-path $_BASE_IGNORE")"
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} 2>/dev/null \
-            && log_success "Prettier: non-Python files formatted" \
+        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"
     fi
-    run_timeout 30 $RUFF_CMD format $SOURCE_DIRS || exit 1
-    run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS || exit 1
+    run_timeout 30 $RUFF_CMD format $SOURCE_DIRS >/dev/null 2>&1 || :
+    run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS >/dev/null 2>&1 || :
     log_ok "Auto-fix complete"
 fi
 
 # ── [2] LINT (ruff, 30s) ──────────────────────────────────────────────────────
 if [ "$RUN_LINT" = true ]; then
     log_section "[2/6] LINT"
-    run_timeout 30 $RUFF_CMD check $SOURCE_DIRS && log_ok "Lint PASSED" || { log_fail "Lint FAILED"; exit 1; }
+    _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
 fi
 
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
@@ -202,11 +201,13 @@ if [ "$RUN_TESTS" = true ]; then
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
-    PARGS="-n $PYTEST_WORKERS --timeout=60 -q -r a --tb=short"
+    PARGS="-n $PYTEST_WORKERS --timeout=60 -q -r a --tb=short --no-header"
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ]; then
-        $PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
+        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+            || { echo "$_pytest_out"; exit 1; }
     else
-        $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
+        _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
+            || { echo "$_pytest_out"; exit 1; }
     fi
     log_ok "Tests PASSED"
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
@@ -553,7 +554,8 @@ fi
 # Security: bandit
 # BANDIT_EXTRA_ARGS: optional per-repo override (e.g. BANDIT_EXTRA_ARGS="-c pyproject.toml")
 if command -v bandit &>/dev/null; then
-    run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>/dev/null && log_success "bandit clean" || { log_fail "bandit issues"; V=$(( V + 1 )); }
+    _bandit_out=$(run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
+        || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi

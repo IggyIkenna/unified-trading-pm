@@ -23,14 +23,25 @@ This creates invisible state. CI runs a fresh venv every time. Another developer
 the repo and it doesn't work. The version alignment script flags a mismatch. The `uv.lock`
 goes out of sync. One local install fix can mask a broken `pyproject.toml` for everyone else.
 
+## ABSOLUTE RULE: Flat Dependencies Only
+
+**Every repo has exactly ONE dependency list: `[project.dependencies]`.**
+`[project.optional-dependencies]` MUST NOT exist in any pyproject.toml — not `dev`, not `test`,
+not any group. All dependencies are mandatory and declared flat.
+
+**Why:** Tests run locally, Cloud Build, Code Build, and GitHub Actions. Every environment
+needs every dependency. Optional groups create silent omissions that cause "works on my machine"
+failures and version conflicts between environments. There is no deployment scenario where we
+build different images per-role. The complexity has zero benefit.
+
 ## Correct Flow for Adding a Python Dependency
 
 ```
-1. pyproject.toml    →  add to [project.dependencies] or [project.optional-dependencies.dev]
+1. pyproject.toml    →  add to [project.dependencies] ONLY — never optional-dependencies
 2. Source code       →  write the import and code that uses it
 3. workspace-manifest.json  →  if it's a new internal sibling repo dep, add to dependencies[]
 4. uv lock           →  cd <repo> && uv lock          (regenerates uv.lock)
-5. Install locally   →  uv sync --extra dev            (installs from lock file)
+5. Install locally   →  uv sync                        (installs from lock file)
 6. Quality gates     →  bash scripts/quality-gates.sh  (validates everything)
 ```
 
@@ -65,7 +76,8 @@ Any direct install that bypasses pyproject.toml will be flagged here.
 
 ## NEVER
 
-NEVER: `pip install ruff` or `uv pip install ruff` to fix a missing tool → add to `pyproject.toml [dev]` or fix in `python-quality-gates.yml`
+NEVER: `pip install ruff` or `uv pip install ruff` to fix a missing tool → add to `pyproject.toml [project.dependencies]` or fix in `python-quality-gates.yml`
+NEVER: add `[project.optional-dependencies]` to any pyproject.toml — flat deps only, always
 NEVER: `npm install axios` in a terminal to make a test pass → add to `package.json`
 NEVER: Install something in CI with `run: pip install ...` as a one-off fix → fix the reusable workflow
 NEVER: `uv pip install -e ../some-dep` without that dep being in `pyproject.toml` path deps

@@ -77,15 +77,24 @@ shell, agent session, or CI step.**
 This creates invisible state: one dev's machine has it, another's doesn't. CI uses a fresh venv on every run. The
 version alignment script won't see it. You get "works on my machine" failures and drift between developers.
 
+### Flat Dependencies Rule
+
+**Every repo has exactly one dependency list: `[project.dependencies]`. No `[project.optional-dependencies]` exists
+anywhere — not `dev`, not `test`, not any group.**
+
+All deps are mandatory and declared flat. Tests run locally, in Cloud Build, Code Build, and GitHub Actions. Every
+environment needs every dependency. Optional groups create silent omissions and version conflicts between environments.
+There is no deployment scenario where we build per-role images. The complexity is pointless.
+
 ### Correct Flow for Adding a Dependency
 
 ```
-1. Edit pyproject.toml   →   add to [project.dependencies] or [project.optional-dependencies]
+1. Edit pyproject.toml   →   add to [project.dependencies] ONLY — never optional-dependencies
 2. Edit imports          →   use the new package in source code
 3. Update manifest       →   if it's a new internal/sibling dep, add to dependencies[] in
                               workspace-manifest.json for that repo
 4. Run uv lock           →   cd <repo> && uv lock   (updates uv.lock)
-5. Run setup             →   uv sync --extra dev    (installs locally)
+5. Run setup             →   uv sync                (installs locally — no extras)
 6. Run QG                →   bash scripts/quality-gates.sh
 ```
 

@@ -30,6 +30,10 @@ Read these before making ANY code changes:
 
 ## Key Rules (Quick Reference)
 
+- **Flat deps only** — every `pyproject.toml` has ONE list: `[project.dependencies]`. No
+  `[project.optional-dependencies]` ever — not `dev`, not `test`, not any group. Never use `.[dev]` extras (e.g.
+  `uv pip install -e .` not `uv pip install -e ".[dev]"`). Tests run locally, Cloud Build, Code Build, and GHA — all
+  need all deps. Optional groups are pointless and create conflicts.
 - `uv pip install` not `pip install`
 - `ARG PROJECT_ID` +
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`

@@ -9,8 +9,11 @@ globs: ["**/pyproject.toml"]
 
 When adding dependencies to any repo's pyproject.toml, ALWAYS install at BOTH levels:
 
-1. **Repo level**: `cd repo && uv pip install -e ".[dev]"`
+1. **Repo level**: `cd repo && uv pip install -e .`  (no extras — flat deps only)
 2. **Workspace level**: `cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate && uv pip install package-name`
+
+**FLAT DEPS RULE**: All repos use a single `[project.dependencies]` list. There is no
+`[project.optional-dependencies]` in any repo. Never use `.[dev]`, `.[test]`, or any extra.
 
 This ensures IDE health (Pylance, type checking) works across the workspace.
 

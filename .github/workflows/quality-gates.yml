@@ -79,7 +79,7 @@ jobs:
         working-directory: unified-trading-pm
         run: |
           uv venv --clear .venv
-          uv sync --extra dev
+          uv sync
 
       - name: Checkout Codex (sibling)
         uses: actions/checkout@v4
