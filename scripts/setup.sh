@@ -523,6 +523,20 @@ elif [ -n "${DEPS:-}" ]; then
     log_ok "Workspace sibling deps re-pinned as editable (step 8b)"
 fi
 
+# ── [8c] UV SYNC (transitive deps of path deps) ─────────────────────────────
+# Steps 8 / 8b use uv pip install -e . and re-pin editables; that can leave
+# transitive deps of path packages (e.g. google-cloud-storage from UCI) missing.
+# uv sync applies the full lock file so all transitives are installed.
+if [ "$IN_CI" = true ] || [ "$CHECK_ONLY" = true ]; then
+    : # skip — CI manages env; check mode is read-only
+elif [ -f "uv.lock" ] && [ -f "pyproject.toml" ]; then
+    if uv sync --quiet 2>/dev/null; then
+        log_ok "uv sync (lock applied, transitives installed)"
+    else
+        log_warn "uv sync failed — import smoke test may fail; run: uv sync"
+    fi
+fi
+
 # ── [9] RIPGREP CHECK ──────────────────────────────────────────────────────
 log_step "ripgrep (required by quality-gates.sh)"
 

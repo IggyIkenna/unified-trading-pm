@@ -102,5 +102,5 @@ jobs:
       - name: Run quality gates
         working-directory: unified-trading-pm
         run: |
-          source .venv/bin/activate
+          export PATH="$(pwd)/.venv/bin:$PATH"
           bash scripts/quality-gates.sh --no-fix
