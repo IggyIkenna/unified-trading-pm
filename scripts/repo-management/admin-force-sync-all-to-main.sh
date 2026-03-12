@@ -112,6 +112,13 @@ if [[ "$TARGET_BRANCH" == "__feat__" ]]; then
   TARGET_BRANCH="$_feat"
 fi
 
+# --preserve-local means "don't auto-switch to main after pushing main".
+# When targeting a non-main branch (--feat-branch, --stag-branch), always
+# checkout to TARGET_BRANCH as a final step so all repos land on that branch.
+if [[ "$TARGET_BRANCH" != "main" ]]; then
+  SKIP_CHECKOUT=false
+fi
+
 # ---------------------------------------------------------------------------
 # Safety gate 1: --admin-confirm required
 # ---------------------------------------------------------------------------
