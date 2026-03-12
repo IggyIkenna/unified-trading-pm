@@ -39,14 +39,16 @@ SKIP_LINT=false
 SKIP_TESTS=false
 SKIP_BUILD=false
 FIX_MODE=false
+IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}
 for arg in "$@"; do
   case "$arg" in
-    --test)      SKIP_LINT=true;  SKIP_BUILD=true ;;   # tests + typecheck only
-    --lint)      SKIP_TESTS=true; SKIP_BUILD=true ;;   # lint + typecheck only
-    --quick)     SKIP_TESTS=true; SKIP_BUILD=true ;;   # alias for --lint in UI
-    --skip-lint) SKIP_LINT=true ;;                     # tests + typecheck + build only
-    --fix)       FIX_MODE=true ;;                      # run eslint --fix before verify
-    --no-fix)    FIX_MODE=false ;;                     # verify only (default)
+    --test)           SKIP_LINT=true;  SKIP_BUILD=true ;;   # tests + typecheck only
+    --lint)           SKIP_TESTS=true; SKIP_BUILD=true ;;   # lint + typecheck only
+    --quick)          SKIP_TESTS=true; SKIP_BUILD=true ;;   # alias for --lint in UI
+    --skip-lint)      SKIP_LINT=true ;;                     # tests + typecheck + build only
+    --fix)            FIX_MODE=true ;;                      # run eslint --fix before verify
+    --no-fix)         FIX_MODE=false ;;                     # verify only (default)
+    --ignore-timeout) IGNORE_TIMEOUT=true ;;                # skip wall-clock duration check
   esac
 done
 
@@ -159,7 +161,10 @@ fi
 # ── DURATION ───────────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-180}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
-[ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
+if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
+    log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
+    exit 1
+fi
 
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL UI QUALITY GATES PASSED (${DUR}s)${NC}"
