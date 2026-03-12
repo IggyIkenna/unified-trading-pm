@@ -1,0 +1,67 @@
+name: Setup Python CI Tools
+description: >
+  Set up Python, install uv, cache and install ripgrep/shellcheck/bats/actionlint, and add tools to PATH. Used by all
+  Python service repos via quality-gates.yml.
+
+inputs:
+  python-version:
+    description: Python version to install
+    required: false
+    default: "3.13.9"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install uv
+      shell: bash
+      run: pip install uv
+
+    - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
+      id: tools-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/act-tools
+        key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
+
+    - name: Install ripgrep
+      if: steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        RG_VER="14.1.1"
+        mkdir -p ~/.local/act-tools/bin
+        curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
+          | tar -xz --strip-components=1 -C ~/.local/act-tools/bin "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
+
+    - name: Install shellcheck
+      if: steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        SC_VER="v0.10.0"
+        mkdir -p ~/.local/act-tools/bin
+        curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VER}/shellcheck-${SC_VER}.linux.x86_64.tar.xz" \
+          | tar -xJ --strip-components=1 -C ~/.local/act-tools/bin "shellcheck-${SC_VER}/shellcheck"
+
+    - name: Install bats-core
+      if: steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
+        /tmp/bats-core/install.sh ~/.local/act-tools
+
+    - name: Install actionlint
+      if: steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        AL_VER="1.7.4"
+        mkdir -p ~/.local/act-tools/bin
+        curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz" \
+          | tar -xz -C ~/.local/act-tools/bin actionlint
+
+    - name: Add tools to PATH
+      shell: bash
+      run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
