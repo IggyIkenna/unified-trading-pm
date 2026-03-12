@@ -19,6 +19,24 @@ NC='\033[0m'
 echo "🤖 Running Pre-Flight Audit Agent for $REPO_NAME..."
 echo ""
 
+# ── Cloud auth pre-flight ────────────────────────────────────────────────────
+# GCP ADC
+if command -v gcloud &>/dev/null; then
+  if ! gcloud auth application-default print-access-token &>/dev/null 2>&1; then
+    echo "⚠️  GCP ADC not active — run: gcloud auth application-default login"
+  fi
+fi
+
+# AWS credentials
+if command -v aws &>/dev/null; then
+  if ! aws sts get-caller-identity &>/dev/null 2>&1; then
+    echo "⚠️  AWS credentials not configured — run: aws configure"
+  else
+    AWS_ACCT=$(aws sts get-caller-identity --query 'Account' --output text 2>/dev/null || echo "unknown")
+    echo "  AWS account: $AWS_ACCT"
+  fi
+fi
+
 # Check for API key (never write to world-readable temp file)
 if [ -z "${CURSOR_API_KEY:-}" ]; then
   PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID must be set to fetch cursor-api-key from Secret Manager}"

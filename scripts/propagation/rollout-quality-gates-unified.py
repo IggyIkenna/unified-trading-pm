@@ -14,7 +14,7 @@ from repo-type templates if missing, creates QUALITY_GATE_BYPASS_AUDIT.md stub
 when doc_standard requires it. Skips deprecated/archived repos.
 
 Usage:
-    python3 scripts/propagation/rollout-quality-gates-unified.py [--dry-run] [--repo NAME]
+    python3 scripts/propagation/rollout-quality-gates-unified.py [--dry-run] [--repo NAME] [--skip-missing]
 """
 
 from __future__ import annotations
@@ -365,6 +365,7 @@ def process_repo(
     workspace_root: Path,
     dry_run: bool,
     recalibrate: bool = False,
+    skip_missing: bool = False,
 ) -> bool:
     """Process a single repository. Returns True on success."""
     status = repo_info.get("status", "active")
@@ -380,6 +381,9 @@ def process_repo(
     template_type = select_template_type(repo_type)
     repo_path = workspace_root / repo_name
     if not repo_path.exists():
+        if skip_missing:
+            print(f"\n⚠️ {repo_name}: directory not found — skipping (--skip-missing)")
+            return True
         print(f"\n⚠️ {repo_name}: directory not found at {repo_path}")
         return False
     # Override: package.json + no pyproject = TypeScript (manifest may mislabel UI as library)
@@ -424,6 +428,14 @@ def main() -> int:
             "floor only: max(floor, existing). floor=80 library, 70 service."
         ),
     )
+    parser.add_argument(
+        "--skip-missing",
+        action="store_true",
+        help=(
+            "Warn (instead of error) when a manifest repo directory is not found locally. "
+            "Useful on partial checkouts or new-machine setups where not all repos are cloned yet."
+        ),
+    )
     args = parser.parse_args()
 
     if not MANIFEST_PATH.exists():
@@ -437,6 +449,7 @@ def main() -> int:
     repositories = cast(dict[str, JsonDict], repos_raw) if repos_raw else {}
     dry_run = cast(bool, args.dry_run)
     recalibrate = cast(bool, args.recalibrate)
+    skip_missing = cast(bool, args.skip_missing)
     repo_filter = cast(str | None, args.repo)
     if repo_filter is not None:
         if repo_filter not in repositories:
@@ -451,12 +464,14 @@ def main() -> int:
         print("🔍 Dry run — no files will be written")
     if recalibrate:
         print("📊 Recalibrate mode: measuring actual coverage per repo (runs pytest)")
+    if skip_missing:
+        print("⚠️  --skip-missing: missing repo directories will warn, not error")
 
     success = 0
     errors = 0
     for repo_name in sorted(repositories.keys()):
         try:
-            if process_repo(repo_name, repositories[repo_name], WORKSPACE_ROOT, dry_run, recalibrate):
+            if process_repo(repo_name, repositories[repo_name], WORKSPACE_ROOT, dry_run, recalibrate, skip_missing):
                 success += 1
             else:
                 errors += 1

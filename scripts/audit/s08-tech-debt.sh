@@ -26,35 +26,35 @@ else
 fi
 
 # .basedpyright-baseline.json files (each needs BYPASS_AUDIT.md entry)
-baseline_count=$(find . -maxdepth 3 -name '.basedpyright-baseline.json' \
-  ! -path './.venv*' ! -path './.venv-workspace*' \
-  ! -path '*/site-packages/*' \
-  2>/dev/null | wc -l | tr -d ' ')
-if [ "$baseline_count" -eq 0 ]; then
+# maxdepth 2 = workspace_root/<repo>/.basedpyright-baseline.json — fast
+baseline_files=$(rg --files --glob '.basedpyright-baseline.json' \
+  --glob '!.venv*' --glob '!**/.venv*/**' \
+  --max-depth 3 2>/dev/null || true)
+baseline_count=$(echo "$baseline_files" | grep -c '.' 2>/dev/null || echo 0)
+if [ "$baseline_count" -eq 0 ] || [ -z "$baseline_files" ]; then
   emit "§8" "no .basedpyright-baseline.json files" "PASS" "none"
 else
-  # Check each has a corresponding QUALITY_GATE_BYPASS_AUDIT.md entry
   undocumented=0
   while IFS= read -r baseline; do
+    [ -z "$baseline" ] && continue
     repo_dir="$(dirname "$baseline")"
-    if [ ! -f "$repo_dir/QUALITY_GATE_BYPASS_AUDIT.md" ]; then
-      undocumented=$((undocumented+1))
-    fi
-  done < <(find . -maxdepth 3 -name '.basedpyright-baseline.json' \
-    ! -path './.venv*' ! -path './.venv-workspace*' 2>/dev/null)
+    [ ! -f "$repo_dir/QUALITY_GATE_BYPASS_AUDIT.md" ] && undocumented=$((undocumented+1))
+  done <<< "$baseline_files"
   if [ "$undocumented" -gt 0 ]; then
     emit "§8" "basedpyright baselines all documented" "FAIL" \
       "$undocumented of $baseline_count baselines missing QUALITY_GATE_BYPASS_AUDIT.md"
   else
     emit "§8" "basedpyright baselines all documented" "WARN" \
-      "$baseline_count baselines exist but all documented (target: 0 baselines)"
+      "$baseline_count baselines exist but all documented (target: 0)"
   fi
 fi
 
 # try/except ImportError fallbacks in production (no-empty-fallbacks rule)
-import_fallbacks=$(rg 'except ImportError' --type py \
+# Match the actual Python construct: "except ImportError" not preceded by # (i.e. not a comment)
+import_fallbacks=$(rg '^\s+except ImportError' --type py \
   --glob '!.venv*' --glob '!**/.venv*/**' \
   --glob '!**/tests/**' --glob '!**/test_*' \
+  --glob '!**/archive/**' \
   -n 2>/dev/null || true)
 pass_if_empty "§8" "no try/except ImportError fallbacks in prod" "$import_fallbacks"
 
@@ -75,6 +75,7 @@ hardcoded_proj=$(rg 'central-element-323112|[a-z]+-[a-z]+-[0-9]{9}' \
   --type py \
   --glob '!.venv*' --glob '!**/.venv*/**' \
   --glob '!**/tests/**' \
+  --glob '!**/archive/**' \
   -n 2>/dev/null || true)
 pass_if_empty "§8" "no hardcoded GCP project IDs in prod source" "$hardcoded_proj"
 

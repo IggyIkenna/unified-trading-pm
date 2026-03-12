@@ -63,7 +63,8 @@ for repo in "${REPOS[@]}"; do
     continue
   fi
 
-  # Find Python files exceeding threshold (excluding tests, scripts)
+  # Find Python files exceeding threshold (excluding tests, scripts).
+  # Use -exec {} + (batch mode) instead of {} \; to avoid forking one wc per file.
   violations=$(find "$repo" -name "*.py" -type f \
     ! -path "*/tests/*" \
     ! -path "*/scripts/*" \
@@ -73,8 +74,8 @@ for repo in "${REPOS[@]}"; do
     ! -path "*/build/*" \
     ! -path "*/dist/*" \
     ! -path "*/htmlcov/*" \
-    -exec wc -l {} \; 2>/dev/null \
-    | awk -v thresh="$THRESHOLD" '$1 > thresh {printf "%4d lines: %s\n", $1, $2}' \
+    -exec wc -l {} + 2>/dev/null \
+    | awk -v thresh="$THRESHOLD" '$1 > thresh && $2 != "total" {printf "%4d lines: %s\n", $1, $2}' \
     | sort -rn)
 
   if [ -n "$violations" ]; then

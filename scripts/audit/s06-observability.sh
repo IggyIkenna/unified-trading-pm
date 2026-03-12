@@ -66,8 +66,8 @@ else
 fi
 
 # test_event_logging.py presence (target ≥40 repos)
-event_log_tests=$(find . -name 'test_event_logging.py' \
-  ! -path './.venv*' ! -path './.venv-workspace*' \
+event_log_tests=$(rg --files --glob 'test_event_logging.py' \
+  --glob '!.venv*' --glob '!**/.venv*/**' \
   2>/dev/null | wc -l | tr -d ' ')
 if [ "$event_log_tests" -ge 40 ]; then
   emit "§6" "test_event_logging.py present (≥40 repos)" "PASS" "$event_log_tests files"
@@ -80,8 +80,9 @@ else
 fi
 
 # Grafana dashboard files
-grafana_dash=$(find . -name 'trading-overview.json' -o -name 'system-health.json' \
-  ! -path './.venv*' 2>/dev/null | wc -l | tr -d ' ')
+grafana_dash=$(rg --files --glob 'trading-overview.json' --glob 'system-health.json' \
+  --glob '!.venv*' --glob '!**/.venv*/**' \
+  2>/dev/null | wc -l | tr -d ' ')
 if [ "$grafana_dash" -ge 2 ]; then
   emit "§6" "Grafana dashboards present (trading-overview + system-health)" "PASS" \
     "$grafana_dash dashboard files"

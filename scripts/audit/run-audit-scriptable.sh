@@ -79,11 +79,17 @@ run_section() {
   ! should_run "$num" && return 0
 
   echo ""
-  if bash "$SCRIPT_DIR/$script" "${extra_args[@]}" 2>/dev/null; then
+  # Hard timeout: each section must complete within 60s
+  if timeout 60 bash "$SCRIPT_DIR/$script" "${extra_args[@]}" 2>/dev/null; then
     true
   else
-    # Script exited non-zero (has FAILs) — count them
-    OVERALL_FAILS=$((OVERALL_FAILS + 1))
+    local rc=$?
+    if [ "$rc" -eq 124 ]; then
+      echo "  §$num TIMEOUT (>60s) — script killed to prevent runaway"
+      OVERALL_FAILS=$((OVERALL_FAILS + 1))
+    else
+      OVERALL_FAILS=$((OVERALL_FAILS + 1))
+    fi
   fi
 }
 

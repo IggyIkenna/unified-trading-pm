@@ -104,11 +104,16 @@ def patch_workflow(path: Path, dry_run: bool) -> str:
     return "unknown_pattern"
 
 
+class _ParsedArgs(argparse.Namespace):
+    dry_run: bool
+    repo: str
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Add unified-trading-pm clone to GH Actions workflows")
-    parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run", help="Preview changes without writing")
     parser.add_argument("--repo", default="", help="Only process this one repo")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     if args.repo:
         workflow_files = [WORKSPACE_ROOT / args.repo / ".github" / "workflows" / "quality-gates.yml"]

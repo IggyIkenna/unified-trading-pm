@@ -240,7 +240,23 @@ if [ "$SKIP_AUTH_CHECK" = false ] && [ "$CHECK_ONLY" = false ]; then
     echo "  Required GCP project: $REQUIRED_GCP_PROJECT"
   fi
 
-  # 4. act secrets file (~/.act-secrets)
+  # 4. AWS CLI credentials
+  if command -v aws &>/dev/null; then
+    AWS_IDENTITY=$(aws sts get-caller-identity --output text 2>/dev/null || echo "")
+    if [ -n "$AWS_IDENTITY" ]; then
+      AWS_ACCT=$(echo "$AWS_IDENTITY" | awk '{print $1}')
+      log_ok "AWS credentials active (account: $AWS_ACCT)"
+    else
+      log_warn "AWS CLI installed but no credentials configured"
+      echo "  Fix: aws configure"
+      echo "  Or:  set AWS_PROFILE=<profile> if using named profiles"
+      AUTH_ISSUES=$((AUTH_ISSUES + 1))
+    fi
+  else
+    log_warn "AWS CLI not found — AWS auth check skipped (installed in Phase 1)"
+  fi
+
+  # 5. act secrets file (~/.act-secrets)
   if [ -f "$REQUIRED_ACT_SECRETS" ]; then
     log_ok "act secrets found: $REQUIRED_ACT_SECRETS"
   else
@@ -391,6 +407,21 @@ fi
 
 if [ -n "$PYTHON_CMD" ]; then
   log_ok "Python $REQUIRED_PYTHON_FULL ($PYTHON_CMD)"
+  # Warn if Python is from uv's own managed cache — venvs break when cache is wiped
+  if echo "$PYTHON_CMD" | grep -q "\.local/share/uv/python"; then
+    log_warn "Python resolved from uv's internal cache: $PYTHON_CMD"
+    echo "  All venvs will have home = $(dirname "$PYTHON_CMD") in pyvenv.cfg."
+    echo "  If ~/.local/share/uv/python/ is ever cleared, all 50+ venvs break."
+    echo "  Recommended: install via pyenv and add these to ~/.bashrc / ~/.profile:"
+    echo "    export PYENV_ROOT=\"\$HOME/.pyenv\""
+    echo "    export PATH=\"\$PYENV_ROOT/bin:\$PYENV_ROOT/shims:\$PATH\""
+    echo "    export UV_PYTHON=\"\$PYENV_ROOT/versions/$REQUIRED_PYTHON_FULL/bin/python3.13\""
+    echo "    export UV_PYTHON_PREFERENCE=system"
+    echo "    export UV_PYTHON_DOWNLOADS=never"
+    echo "    export PYENV_VIRTUALENV_DISABLE_PROMPT=1"
+  fi
+  # Rehash pyenv shims so this version is visible as python3.13 etc. (no-op if no pyenv)
+  command -v pyenv &>/dev/null && pyenv rehash 2>/dev/null || true
 else
   # Show what version the system has
   CURRENT_PY_VER=""
@@ -458,6 +489,34 @@ fi
 # Keep REQUIRED_PYTHON for compat with downstream sections that reference it
 REQUIRED_PYTHON="$REQUIRED_PYTHON_MM"
 
+# ── Pyenv health check ────────────────────────────────────────────────────────
+# If pyenv is installed, verify the global version exists and shims are valid.
+# A missing global version breaks ALL pyenv shims and makes every prompt
+# silently wipe VIRTUAL_ENV via pyenv-virtualenv's sh-activate hook.
+if command -v pyenv &>/dev/null; then
+  PYENV_GLOBAL_VER=$(pyenv global 2>/dev/null | head -1 || echo "")
+  if [ -n "$PYENV_GLOBAL_VER" ] && [ "$PYENV_GLOBAL_VER" != "system" ] && \
+     [ ! -d "$HOME/.pyenv/versions/$PYENV_GLOBAL_VER" ]; then
+    log_warn "pyenv global '$PYENV_GLOBAL_VER' is set but $HOME/.pyenv/versions/$PYENV_GLOBAL_VER does not exist"
+    echo "  This breaks pyenv shims and silently wipes VIRTUAL_ENV on every prompt."
+    if [ "$CHECK_ONLY" = false ] && [ "$SKIP_SYSTEM" = false ]; then
+      echo "  Attempting: pyenv install $REQUIRED_PYTHON_FULL && pyenv global $REQUIRED_PYTHON_FULL"
+      pyenv install "$REQUIRED_PYTHON_FULL" 2>/dev/null && \
+        pyenv global "$REQUIRED_PYTHON_FULL" && \
+        pyenv rehash && \
+        log_ok "pyenv $REQUIRED_PYTHON_FULL installed and set as global" || \
+        log_warn "pyenv auto-install failed — run manually: pyenv install $REQUIRED_PYTHON_FULL && pyenv global $REQUIRED_PYTHON_FULL"
+    else
+      echo "  Fix: pyenv install $REQUIRED_PYTHON_FULL && pyenv global $REQUIRED_PYTHON_FULL && pyenv rehash"
+    fi
+    SYSTEM_ISSUES=$((SYSTEM_ISSUES + 1))
+  elif [ -n "$PYENV_GLOBAL_VER" ] && [ "$PYENV_GLOBAL_VER" != "system" ]; then
+    # Global version exists — rehash to ensure shims are current
+    pyenv rehash 2>/dev/null || true
+    log_ok "pyenv global: $PYENV_GLOBAL_VER (shims refreshed)"
+  fi
+fi
+
 # uv
 install_cmd "uv" "uv" "uv" "uv" || true
 if ! command -v uv &>/dev/null && [ -n "$PYTHON_CMD" ] && [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ]; then
@@ -469,6 +528,9 @@ install_cmd "ripgrep" "rg" "ripgrep" "ripgrep" || true
 
 # jq
 install_cmd "jq" "jq" "jq" "jq" || true
+
+# awscli
+install_cmd "AWS CLI" "aws" "awscli" "awscli" || true
 
 if [ "$SYSTEM_ISSUES" -gt 0 ]; then
   log_warn "$SYSTEM_ISSUES system dependency issue(s) — some steps may fail"
@@ -616,11 +678,14 @@ if [ "$CHECK_ONLY" = true ]; then
     log_warn "run-version-alignment.sh not found"
   fi
 elif [ -f "$VERSION_ALIGN_SCRIPT" ]; then
-  echo "  Running version alignment..."
-  if (cd "$WORKSPACE_ROOT" && bash "$VERSION_ALIGN_SCRIPT" --fix 2>&1 | tail -10); then
-    log_ok "Version alignment complete"
+  echo "  Running version alignment (including validate-uv-sources.py --fix)..."
+  VA_LOG=$(mktemp /tmp/version-align-XXXXXX.log)
+  if (cd "$WORKSPACE_ROOT" && bash "$VERSION_ALIGN_SCRIPT" --fix 2>&1 | tee "$VA_LOG" | tail -30); then
+    log_ok "Version alignment complete (full log: $VA_LOG)"
   else
     log_warn "Version alignment had issues (non-fatal — continuing)"
+    echo "  Full log: $VA_LOG"
+    echo "  Key step: validate-uv-sources.py --fix adds missing [tool.uv.sources.*] entries"
   fi
 else
   log_warn "run-version-alignment.sh not found — skipping"
@@ -839,4 +904,17 @@ echo "    bash bootstrap.sh --check"
 echo ""
 echo "  Add new repos / re-sync:"
 echo "    bash bootstrap.sh --skip-fresh"
+echo ""
+echo "  ── Linux / pyenv recommended shell config (~/.bashrc or ~/.profile) ──"
+echo "  If using pyenv, add these to prevent uv from downloading its own Python"
+echo "  (broken uv Python cache = all 50+ venvs break simultaneously):"
+echo ""
+echo "    export PYENV_ROOT=\"\$HOME/.pyenv\""
+echo "    export PATH=\"\$PYENV_ROOT/bin:\$PYENV_ROOT/shims:\$PATH\""
+echo "    export UV_PYTHON=\"\$PYENV_ROOT/versions/$REQUIRED_PYTHON_FULL/bin/python3.13\""
+echo "    export UV_PYTHON_PREFERENCE=system    # uv uses PATH/pyenv Python, not its own"
+echo "    export UV_PYTHON_DOWNLOADS=never      # prevents uv auto-download of CPython"
+echo "    export PYENV_VIRTUALENV_DISABLE_PROMPT=1  # prevents prompt clobbering VIRTUAL_ENV"
+echo ""
+echo "  (macOS: not needed — Homebrew Python is on PATH and uv respects it)"
 echo ""

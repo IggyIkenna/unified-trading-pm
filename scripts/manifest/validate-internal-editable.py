@@ -88,7 +88,8 @@ def parse_internal_deps(pyproject_path: Path, workspace_repos: frozenset[str]) -
 
 
 def pip_show_editable_location(repo_path: Path, pkg: str) -> str | None:
-    """Run uv pip show for pkg in repo's venv. Return Editable project location or None."""
+    """Run uv pip show for pkg in repo's venv. Return editable location path, empty string if
+    installed-but-not-editable (from Artifact Registry), or None if not installed at all."""
     venv_python = repo_path / ".venv" / "bin" / "python"
     if not venv_python.exists():
         return None
@@ -99,17 +100,21 @@ def pip_show_editable_location(repo_path: Path, pkg: str) -> str | None:
         cwd=str(PM_ROOT),
     )
     if out.returncode != 0:
-        return None
+        return None  # not installed
     for line in out.stdout.splitlines():
         if line.startswith("Editable project location:"):
             return line.split(":", 1)[1].strip()
-    return None
+    return ""  # installed from Artifact Registry (wheel), not editable
+
+
+class _ParsedArgs(argparse.Namespace):
+    repo: str | None
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate internal deps are editable")
     parser.add_argument("--repo", help="Check only this repo")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     manifest = load_manifest()
     workspace_repos = get_workspace_repo_names(manifest)
@@ -122,7 +127,14 @@ def main() -> int:
         for dep in internal_deps:
             loc = pip_show_editable_location(repo_path, dep)
             if loc is None:
-                errors.append(f"  {repo_name}: {dep} — not editable (from Artifact Registry or not installed)")
+                errors.append(f"  {repo_name}: {dep} — not installed (run: cd {repo_name} && bash scripts/setup.sh)")
+                continue
+            if loc == "":
+                errors.append(
+                    f"  {repo_name}: {dep} — installed from Artifact Registry (not editable)"
+                    f" — add [tool.uv.sources.{dep}] path entry in pyproject.toml then re-run:"
+                    f" cd {repo_name} && uv sync"
+                )
                 continue
             try:
                 loc_path = Path(loc).resolve()
@@ -137,7 +149,8 @@ def main() -> int:
         for e in errors:
             print(e)
         print("")
-        print("Fix: run uv sync in each repo so internal deps resolve from workspace paths.")
+        print("Fix: run scripts/repo-management/run-version-alignment.sh --fix to auto-add")
+        print("     [tool.uv.sources.*] entries, then: bash scripts/repo-management/run-all-setup.sh")
         return 1
     return 0
 

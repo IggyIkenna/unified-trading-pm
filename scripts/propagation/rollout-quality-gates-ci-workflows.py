@@ -27,6 +27,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -207,11 +208,16 @@ def validate_yaml(path: Path) -> bool:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 
+class _ParsedArgs(argparse.Namespace):
+    dry_run: bool
+    repo: str
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="Show changes without writing files")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run", help="Show changes without writing files")
     parser.add_argument("--repo", default="", help="Process a single repo by name")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     dry_run: bool = args.dry_run
     target_repo: str = args.repo
@@ -221,8 +227,8 @@ def main() -> None:
 
     # Load manifest
     with MANIFEST_PATH.open() as f:
-        manifest = json.load(f)
-    repos: dict[str, dict] = manifest.get("repositories", {})
+        manifest: dict[str, object] = cast(dict[str, object], json.load(f))
+    repos: dict[str, dict[str, object]] = cast(dict[str, dict[str, object]], manifest.get("repositories") or {})
 
     # If single-repo mode, restrict list
     if target_repo:
@@ -235,7 +241,7 @@ def main() -> None:
     fixed_repos: list[str] = []
 
     for repo_name, repo_info in sorted(repos.items()):
-        stack: str = repo_info.get("stack", repo_info.get("type", ""))
+        stack: str = cast(str, repo_info.get("stack") or repo_info.get("type") or "")
 
         # Skip pure UI repos
         if stack in SKIP_STACKS:

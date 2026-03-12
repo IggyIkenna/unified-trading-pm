@@ -26,7 +26,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Optional
+from typing import Optional, cast
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -36,41 +36,48 @@ DEFAULT_OWNER = "IggyIkenna"
 # ── Argument Parsing ─────────────────────────────────────────────────────────
 
 
-def parse_args() -> argparse.Namespace:
+class _ParsedArgs(argparse.Namespace):
+    repo: str
+    to_staging: str
+    manifest: str
+
+
+def parse_args() -> _ParsedArgs:
     parser = argparse.ArgumentParser(description="Check dep alignment against remote pyproject.toml versions.")
     parser.add_argument("--repo", required=True, help="Repo name to check (e.g. trading-service)")
     parser.add_argument(
         "--to-staging",
         required=True,
         choices=["true", "false"],
+        dest="to_staging",
         help="Whether this push is targeting staging branch",
     )
     parser.add_argument("--manifest", required=True, help="Path to workspace-manifest.json")
-    return parser.parse_args()
+    return parser.parse_args(namespace=_ParsedArgs())
 
 
 # ── Manifest Helpers ──────────────────────────────────────────────────────────
 
 
-def load_manifest(manifest_path: str) -> dict:
+def load_manifest(manifest_path: str) -> dict[str, object]:
     with open(manifest_path) as f:
-        return json.load(f)
+        return cast(dict[str, object], json.load(f))
 
 
-def get_repo_entry(manifest: dict, repo_name: str) -> dict:
-    repos = manifest.get("repositories", {})
+def get_repo_entry(manifest: dict[str, object], repo_name: str) -> dict[str, object]:
+    repos: dict[str, object] = cast(dict[str, object], manifest.get("repositories") or {})
     if repo_name not in repos:
         print(f"ERROR: repo '{repo_name}' not found in manifest")
         sys.exit(1)
-    return repos[repo_name]
+    return cast(dict[str, object], repos[repo_name])
 
 
-def get_repo_dependencies(repo_entry: dict) -> list[str]:
+def get_repo_dependencies(repo_entry: dict[str, object]) -> list[str]:
     """Return list of dep names from the repo entry.
 
     Items may be plain strings or dicts with a 'name' key.
     """
-    raw_deps = repo_entry.get("dependencies", [])
+    raw_deps: list[object] = cast(list[object], repo_entry.get("dependencies") or [])
     names: list[str] = []
     for dep in raw_deps:
         if isinstance(dep, dict):
@@ -82,26 +89,26 @@ def get_repo_dependencies(repo_entry: dict) -> list[str]:
     return names
 
 
-def get_dep_constraint(repo_entry: dict, dep_name: str) -> Optional[str]:
+def get_dep_constraint(repo_entry: dict[str, object], dep_name: str) -> Optional[str]:
     """Return the constraint string for a dep, if declared in the manifest."""
-    raw_deps = repo_entry.get("dependencies", [])
+    raw_deps: list[object] = cast(list[object], repo_entry.get("dependencies") or [])
     for dep in raw_deps:
         if isinstance(dep, dict) and dep.get("name") == dep_name:
-            return dep.get("constraint")
+            return cast(Optional[str], dep.get("constraint"))
     return None
 
 
-def get_staging_versions(manifest: dict) -> set[str]:
+def get_staging_versions(manifest: dict[str, object]) -> set[str]:
     """Return the set of dep names that have a staging_versions entry."""
-    staging = manifest.get("staging_versions", {})
+    staging: dict[str, object] = cast(dict[str, object], manifest.get("staging_versions") or {})
     return set(staging.keys())
 
 
-def get_owner_from_manifest(manifest: dict, dep_name: str) -> str:
+def get_owner_from_manifest(manifest: dict[str, object], dep_name: str) -> str:
     """Detect GitHub org owner from manifest git_url, or fall back to env/default."""
-    repos = manifest.get("repositories", {})
-    dep_entry = repos.get(dep_name, {})
-    git_url = dep_entry.get("git_url", "")
+    repos: dict[str, object] = cast(dict[str, object], manifest.get("repositories") or {})
+    dep_entry: dict[str, object] = cast(dict[str, object], repos.get(dep_name) or {})
+    git_url: str = cast(str, dep_entry.get("git_url") or "")
 
     # Parse owner from git_url patterns:
     #   git@github.com:Owner/repo.git
@@ -137,8 +144,8 @@ def fetch_remote_pyproject(owner: str, repo_name: str, branch: str) -> Optional[
         return None
 
     try:
-        data = json.loads(result.stdout)
-        content_b64 = data.get("content", "")
+        data: dict[str, object] = cast(dict[str, object], json.loads(result.stdout))
+        content_b64: str = cast(str, data.get("content") or "")
         # GitHub API may include newlines in base64 — strip them
         content_b64 = content_b64.replace("\n", "")
         return base64.b64decode(content_b64).decode("utf-8")

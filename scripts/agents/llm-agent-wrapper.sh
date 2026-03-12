@@ -77,6 +77,20 @@ detect_llm_tool() {
   echo "none"
 }
 
+# ── Cloud auth pre-flight ─────────────────────────────────────────────────────
+if command -v gcloud &>/dev/null; then
+  gcloud auth application-default print-access-token &>/dev/null 2>&1 || \
+    echo "⚠️  GCP ADC not active — run: gcloud auth application-default login"
+fi
+if command -v aws &>/dev/null; then
+  if aws sts get-caller-identity &>/dev/null 2>&1; then
+    AWS_ACCT=$(aws sts get-caller-identity --query 'Account' --output text 2>/dev/null || echo "unknown")
+    echo "  AWS account: $AWS_ACCT"
+  else
+    echo "⚠️  AWS credentials not configured — run: aws configure"
+  fi
+fi
+
 LLM_TOOL=$(detect_llm_tool)
 
 case "$LLM_TOOL" in

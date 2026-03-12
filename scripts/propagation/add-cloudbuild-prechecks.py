@@ -85,11 +85,16 @@ def insert_precheck_step(cloudbuild_content: str) -> str:
     return cloudbuild_content[:first_step] + LIBRARY_PRECHECK_STEP + cloudbuild_content[first_step:]
 
 
+class _ParsedArgs(argparse.Namespace):
+    dry_run: bool
+    repo: str | None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dry-run", action="store_true", help="Print changes, do not write")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run", help="Print changes, do not write")
     parser.add_argument("--repo", type=str, help="Limit to single repo")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     modified = 0
     for repo_dir in sorted(WORKSPACE_ROOT.iterdir()):

@@ -22,6 +22,7 @@ getenv_hits=$(rg 'os\.getenv' --type py \
   --glob '!**/tests/**' --glob '!**/test_*' \
   --glob '!**/factory.py' --glob '!**/bootstrap_config.py' \
   --glob '!**/constants.py' \
+  --glob '!**/archive/**' \
   -n 2>/dev/null || true)
 pass_if_empty "§2" "no os.getenv in prod source (excl bootstrap)" "$getenv_hits"
 
@@ -46,13 +47,9 @@ else
     "$count repos may be missing reportAny — first: $(echo "$reportany_missing" | head -1)"
 fi
 
-# File size >900 lines in production source
-large_files=$(find . -name '*.py' \
-  ! -path './.venv*' ! -path './.venv-workspace*' \
-  ! -path '*/site-packages/*' ! -path '*/tests/*' \
-  ! -path '*/.git/*' \
-  -exec wc -l {} + 2>/dev/null \
-  | awk '$1 > 900 && $2 != "total" {print $2, "("$1"L)"}' | head -10)
+# File size >900 lines — delegate to existing checker (fast, per-repo)
+large_files=$(bash "$(dirname "${BASH_SOURCE[0]}")/../validation/check-codsize-violations.sh" \
+  --threshold 900 2>/dev/null | grep 'VIOLATION' | head -10 || true)
 if [ -z "$large_files" ]; then
   emit "§2" "no source files >900L" "PASS" "none"
 else

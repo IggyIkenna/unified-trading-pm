@@ -13,6 +13,37 @@ Run scripts in this order. Do not skip steps when dependencies or code have chan
 
 Two distinct entry points — do not conflate them:
 
+### Linux prerequisites (before running bootstrap)
+
+On Linux with pyenv, add these to `~/.bashrc` (or `~/.profile`) **before** running the bootstrap. Without them, `uv`
+auto-downloads its own CPython into `~/.local/share/uv/python/`, all 50+ venvs point to that cache, and when the cache
+is cleaned every venv breaks simultaneously. The pyenv-virtualenv hook also silently wipes `VIRTUAL_ENV` on every prompt
+if the global pyenv version does not exist on disk.
+
+```bash
+# ~/.bashrc additions (Linux + pyenv)
+
+# pyenv init
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+eval "$(pyenv init -)"
+# eval "$(pyenv virtualenv-init -)"   # only if you use pyenv-virtualenv
+
+# Force uv to use pyenv Python — never auto-download its own CPython
+export UV_PYTHON="$PYENV_ROOT/versions/3.13.9/bin/python3.13"
+export UV_PYTHON_PREFERENCE=system    # resolve version specs via PATH/pyenv shims
+export UV_PYTHON_DOWNLOADS=never      # hard-block uv from downloading CPython
+
+# Prevent pyenv-virtualenv hook from double-prefixing PS1 or clobbering VIRTUAL_ENV
+export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+```
+
+After editing `~/.bashrc`: `source ~/.bashrc && pyenv install 3.13.9 && pyenv global 3.13.9 && pyenv rehash`
+
+These settings are not needed on macOS — Homebrew Python is on PATH and uv respects it.
+
+---
+
 ### New Machine (run once)
 
 ```bash

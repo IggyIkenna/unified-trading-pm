@@ -33,6 +33,7 @@ import sys
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from typing import cast
 
 from unified_events_interface import DATA_COMPLETENESS_CHECK, log_event, setup_events
 from unified_internal_contracts.reference.data_freshness import (
@@ -235,19 +236,24 @@ def main(argv: list[str] | None = None) -> int:
         help="Path for the markdown report (default: reports/data_completeness_YYYY-MM-DD.md)",
     )
 
-    args = parser.parse_args(argv)
+    class _ParsedArgs(argparse.Namespace):
+        date: str | None
+        mock: bool
+        output: str | None
+
+    parsed_args = parser.parse_args(argv, namespace=_ParsedArgs())
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
     # Resolve check date
-    if args.date:
-        check_date = date.fromisoformat(args.date)
+    if parsed_args.date:
+        check_date: date = date.fromisoformat(parsed_args.date)
     else:
         check_date = datetime.now(UTC).date() - timedelta(days=1)
 
     # Resolve output path
-    if args.output:
-        output_path = Path(args.output)
+    if parsed_args.output:
+        output_path = Path(cast(str, parsed_args.output))
     else:
         reports_dir = Path(__file__).parent.parent.parent / "reports"
         output_path = reports_dir / f"data_completeness_{check_date.isoformat()}.md"
@@ -258,13 +264,13 @@ def main(argv: list[str] | None = None) -> int:
     logger.info(
         "Starting data completeness check: date=%s mock=%s output=%s",
         check_date,
-        args.mock,
+        parsed_args.mock,
         output_path,
     )
 
     results = run_completeness_check(
         check_date=check_date,
-        mock=args.mock,
+        mock=parsed_args.mock,
         output_path=output_path,
     )
 

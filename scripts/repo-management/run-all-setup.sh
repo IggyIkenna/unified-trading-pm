@@ -9,8 +9,11 @@
 #
 # Usage:
 #   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh
-#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --check         # verify only, no install
-#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first # propagate templates first
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --check              # verify only, no install
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first      # propagate templates first
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --sync-git           # fetch + report drift vs active_feature_branch (from manifest)
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --sync-git=main      # fetch + report drift vs origin/main
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --sync-git=staging   # fetch + report drift vs origin/staging
 #
 # Run from workspace root (parent of unified-trading-pm):
 #   cd /path/to/unified-trading-system-repos
@@ -20,14 +23,23 @@ set -uo pipefail  # no -e: background job exit codes collected via wait
 
 CHECK_ONLY=false
 ROLLOUT_FIRST=false
+SYNC_GIT=false
+SYNC_GIT_BRANCH=""
 for arg in "$@"; do
   case $arg in
     --check) CHECK_ONLY=true ;;
     --rollout-first) ROLLOUT_FIRST=true ;;
+    --sync-git) SYNC_GIT=true ;;
+    --sync-git=*) SYNC_GIT=true; SYNC_GIT_BRANCH="${arg#--sync-git=}" ;;
     --help | -h)
-      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first]"
-      echo "  --check         Run setup.sh --check only (verify, no install)"
-      echo "  --rollout-first Propagate setup.sh + quality-gates.sh + quickmerge.sh + build infra (Dockerfile, cloudbuild, buildspec) first"
+      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--sync-git[=BRANCH]]"
+      echo "  --check              Run setup.sh --check only (verify, no install)"
+      echo "  --rollout-first      Propagate setup.sh + quality-gates.sh + quickmerge.sh + build infra first"
+      echo "                       Rollout failures are non-fatal — setup continues with warnings"
+      echo "  --sync-git[=BRANCH]  git fetch all repos, then report drift against a reference branch"
+      echo "                       BRANCH: main | staging | feature (default) | any-branch-name"
+      echo "                       'feature' (default) reads active_feature_branch from workspace-manifest.json"
+      echo "                       Never merges — read-only. Useful on new machines to see stale repos."
       echo ""
       echo "Run from workspace root (parent of unified-trading-pm):"
       echo "  cd /path/to/unified-trading-system-repos"
@@ -54,12 +66,116 @@ MANIFEST="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
 PYTHON="$WORKSPACE_ROOT/.venv-workspace/bin/python3"
 [ -x "$PYTHON" ] || PYTHON="python3"
 
+# ── Pre-flight checks ─────────────────────────────────────────────────────────
+echo "━━━ Pre-flight checks ━━━"
+PREFLIGHT_WARN=false
+
+# Check .venv-workspace pyvenv.cfg home= dir exists (broken if uv Python cache was wiped)
+VENV_WS_CFG="$WORKSPACE_ROOT/.venv-workspace/pyvenv.cfg"
+if [ -f "$VENV_WS_CFG" ]; then
+  VENV_WS_HOME=$(grep '^home = ' "$VENV_WS_CFG" | sed 's/home = //' 2>/dev/null || true)
+  if [ -n "$VENV_WS_HOME" ] && [ ! -d "$VENV_WS_HOME" ]; then
+    echo "  [WARN] .venv-workspace is broken: home=$VENV_WS_HOME no longer exists"
+    echo "         The workspace Python was deleted or moved (uv cache wiped?)."
+    echo "         Fix: rm -rf $WORKSPACE_ROOT/.venv-workspace"
+    echo "              bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh --skip-fresh"
+    PREFLIGHT_WARN=true
+  else
+    echo "  [OK]   .venv-workspace pyvenv.cfg home is valid"
+  fi
+elif [ -d "$WORKSPACE_ROOT/.venv-workspace" ]; then
+  echo "  [WARN] .venv-workspace exists but pyvenv.cfg missing — venv may be corrupt"
+  echo "         Fix: rm -rf $WORKSPACE_ROOT/.venv-workspace && bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh"
+  PREFLIGHT_WARN=true
+else
+  echo "  [WARN] .venv-workspace not found — run workspace-bootstrap.sh first"
+  PREFLIGHT_WARN=true
+fi
+
+# Warn if UV_PYTHON_DOWNLOADS is not set to "never" (guards against uv auto-downloading Python)
+if [ "${UV_PYTHON_DOWNLOADS:-}" = "never" ]; then
+  echo "  [OK]   UV_PYTHON_DOWNLOADS=never"
+else
+  echo "  [WARN] UV_PYTHON_DOWNLOADS is not 'never' (current: '${UV_PYTHON_DOWNLOADS:-unset}')"
+  echo "         Without this, uv may auto-download CPython and venvs break when that cache is wiped."
+  echo "         Add to ~/.bashrc (Linux) or ~/.zshrc (macOS): export UV_PYTHON_DOWNLOADS=never"
+  PREFLIGHT_WARN=true
+fi
+
+[ "$PREFLIGHT_WARN" = true ] && echo ""
+echo ""
+
+# ── Optional: git fetch + drift report (read-only, no merge) ─────────────────
+if [ "$SYNC_GIT" = true ]; then
+  echo "━━━ git fetch (all repos, parallel) ━━━"
+  # Collect all repo dirs that have a .git directory
+  FETCH_REPOS=()
+  for d in "$WORKSPACE_ROOT"/*/; do
+    [ -d "$d/.git" ] && FETCH_REPOS+=("$d")
+  done
+  echo "  Fetching ${#FETCH_REPOS[@]} repos..."
+
+  # Fetch in parallel, suppress output; record failures
+  FETCH_PIDS=()
+  FETCH_DIRS=()
+  for rp in "${FETCH_REPOS[@]}"; do
+    (git -C "$rp" fetch origin --quiet 2>/dev/null) &
+    FETCH_PIDS+=($!)
+    FETCH_DIRS+=("$rp")
+  done
+  FETCH_FAIL=0
+  for i in "${!FETCH_PIDS[@]}"; do
+    wait "${FETCH_PIDS[$i]}" || FETCH_FAIL=$((FETCH_FAIL + 1))
+  done
+  [ "$FETCH_FAIL" -gt 0 ] && echo "  [WARN] $FETCH_FAIL repo(s) could not fetch (no remote / network issue)"
+
+  # Report branches that are behind their remote tracking branch
+  BEHIND=()
+  for rp in "${FETCH_REPOS[@]}"; do
+    repo_name="$(basename "$rp")"
+    # Get current branch (empty if detached HEAD)
+    branch=$(git -C "$rp" symbolic-ref --short HEAD 2>/dev/null || true)
+    [ -z "$branch" ] && continue
+    # Check if remote tracking ref exists
+    remote_ref="origin/$branch"
+    git -C "$rp" rev-parse --verify "$remote_ref" &>/dev/null || continue
+    behind=$(git -C "$rp" rev-list --count HEAD.."$remote_ref" 2>/dev/null || echo 0)
+    ahead=$(git -C "$rp"  rev-list --count "$remote_ref"..HEAD 2>/dev/null || echo 0)
+    if [ "$behind" -gt 0 ] && [ "$ahead" -eq 0 ]; then
+      BEHIND+=("  $repo_name ($branch): $behind commit(s) behind origin/$branch — run: cd $repo_name && git pull --ff-only")
+    elif [ "$behind" -gt 0 ] && [ "$ahead" -gt 0 ]; then
+      BEHIND+=("  $repo_name ($branch): diverged — $behind behind / $ahead ahead of origin/$branch (manual merge needed)")
+    fi
+  done
+
+  if [ "${#BEHIND[@]}" -gt 0 ]; then
+    echo ""
+    echo "  [WARN] Repos with remote commits not yet pulled (${#BEHIND[@]}):"
+    for b in "${BEHIND[@]}"; do echo "$b"; done
+    echo ""
+    echo "  Note: setup will continue with current local state — pull manually if needed."
+  else
+    echo "  [OK] All repos are up to date with their remote tracking branch"
+  fi
+  echo ""
+fi
+
 # ── Optional: propagate templates first ──────────────────────────────────────
+ROLLOUT_WARNINGS=()
 if [ "$ROLLOUT_FIRST" = true ]; then
   echo "━━━ Phase 0: Rollout templates (setup.sh + quality-gates.sh + quickmerge.sh + build infra) ━━━"
-  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py" || exit 1
-  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quickmerge.py" || exit 1
-  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-ui-build-infra.py" || exit 1
+  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quality-gates-unified.py" --skip-missing \
+    || ROLLOUT_WARNINGS+=("rollout-quality-gates-unified.py (non-fatal — templates may be stale in some repos)")
+  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-quickmerge.py" \
+    || ROLLOUT_WARNINGS+=("rollout-quickmerge.py (non-fatal — quickmerge.sh may be stale in some repos)")
+  "$PYTHON" "$WORKSPACE_ROOT/unified-trading-pm/scripts/propagation/rollout-ui-build-infra.py" \
+    || ROLLOUT_WARNINGS+=("rollout-ui-build-infra.py (non-fatal — UI build infra may be stale in some repos)")
+  if [ "${#ROLLOUT_WARNINGS[@]}" -gt 0 ]; then
+    echo ""
+    echo "  [WARN] Phase 0 rollout had non-fatal failures:"
+    for w in "${ROLLOUT_WARNINGS[@]}"; do echo "    - $w"; done
+    echo "  Setup will continue. Re-run with --rollout-first after fixing the above."
+  fi
   echo ""
 fi
 

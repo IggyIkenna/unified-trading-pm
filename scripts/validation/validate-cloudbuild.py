@@ -13,19 +13,32 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import sys
 import urllib.request
 from pathlib import Path
+from typing import cast
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_URL = "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/cloudbuild.json"
 
 
-def load_schema() -> dict:
+class _ParsedArgs(argparse.Namespace):
+    paths: list[str]
+    dir: str | None
+    workspace: bool
+    quiet: bool
+
+
+def load_schema() -> dict[str, object]:
     """Fetch Cloud Build JSON schema from SchemaStore."""
-    with urllib.request.urlopen(SCHEMA_URL, timeout=10) as resp:
-        return json.loads(resp.read().decode())
+    response: http.client.HTTPResponse = cast(http.client.HTTPResponse, urllib.request.urlopen(SCHEMA_URL, timeout=10))  # noqa: S310
+    try:
+        raw: bytes = response.read()
+    finally:
+        response.close()
+    return cast(dict[str, object], json.loads(raw.decode()))
 
 
 def load_yaml(path: Path) -> object:
@@ -33,10 +46,10 @@ def load_yaml(path: Path) -> object:
     import yaml
 
     with open(path) as f:
-        return yaml.safe_load(f)
+        return cast(object, yaml.safe_load(f))
 
 
-def validate_file(path: Path, schema: dict) -> tuple[bool, str | None]:
+def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | None]:
     """Validate a single Cloud Build YAML file. Returns (ok, error_msg)."""
     import jsonschema
 
@@ -66,7 +79,7 @@ def main() -> None:
     parser.add_argument("--dir", help="Validate all cloudbuild*.yaml in directory")
     parser.add_argument("--workspace", action="store_true", help="Validate all cloudbuild*.yaml in workspace")
     parser.add_argument("--quiet", "-q", action="store_true", help="Only print failures")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     schema = load_schema()
 

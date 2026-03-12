@@ -264,20 +264,47 @@ else
     log_skip "gcloud not installed — skipping GCP configuration"
 fi
 
-# ── STEP 6: AWS TESTNET CHECK ─────────────────────────────────────────────────
-log_step 6 "AWS testnet check"
+# ── STEP 6: AWS CLI INSTALL + AUTH CHECK ─────────────────────────────────────
+log_step 6 "AWS CLI install + auth check"
+
+# Install if missing
+if ! command -v aws &>/dev/null; then
+    log_info "aws CLI not found — installing via Homebrew..."
+    if command -v brew &>/dev/null; then
+        brew install awscli && log_ok "aws CLI installed via Homebrew"
+    elif command -v apt-get &>/dev/null; then
+        sudo apt-get install -y awscli && log_ok "aws CLI installed via apt"
+    else
+        log_warn "Cannot auto-install aws CLI — install manually: https://aws.amazon.com/cli/"
+    fi
+fi
 
 if command -v aws &>/dev/null; then
-    if aws --profile unified-trading-dev sts get-caller-identity &>/dev/null 2>&1; then
-        ACCOUNT=$(aws --profile unified-trading-dev sts get-caller-identity --query 'Account' --output text 2>/dev/null || echo "unknown")
-        log_ok "AWS profile 'unified-trading-dev' active (account: $ACCOUNT)"
+    # Check default credentials first
+    if aws sts get-caller-identity &>/dev/null 2>&1; then
+        ACCOUNT=$(aws sts get-caller-identity --query 'Account' --output text 2>/dev/null || echo "unknown")
+        REGION=$(aws configure get region 2>/dev/null || echo "not set")
+        log_ok "AWS credentials active (account: $ACCOUNT, region: $REGION)"
+        # Warn if region is not Tokyo (closest to Binance)
+        if [[ "$REGION" != "ap-northeast-1" ]]; then
+            log_warn "AWS region '$REGION' — expected ap-northeast-1 (Tokyo, closest to Binance)"
+            log_info "  Fix: aws configure  → set region ap-northeast-1"
+        fi
     else
-        log_warn "AWS profile 'unified-trading-dev' not configured or credentials expired"
-        log_info "  Run: aws configure --profile unified-trading-dev"
-        log_info "  See: unified-trading-pm/docs/aws-testnet-setup.md"
+        log_warn "AWS credentials not configured or expired"
+        log_info "  Run: aws configure"
+        log_info "  Region: ap-northeast-1 (Tokyo — closest to Binance exchange)"
+    fi
+
+    # Also check named dev profile if present
+    if aws --profile unified-trading-dev sts get-caller-identity &>/dev/null 2>&1; then
+        DEV_ACCOUNT=$(aws --profile unified-trading-dev sts get-caller-identity --query 'Account' --output text 2>/dev/null || echo "unknown")
+        log_ok "AWS profile 'unified-trading-dev' active (account: $DEV_ACCOUNT)"
+    else
+        log_info "AWS profile 'unified-trading-dev' not configured (optional — see docs/aws-testnet-setup.md)"
     fi
 else
-    log_skip "aws CLI not installed — skipping AWS check"
+    log_warn "aws CLI still not found — install manually: https://aws.amazon.com/cli/"
 fi
 
 # ── STEP 7: INSTALL REPO DEPENDENCIES ────────────────────────────────────────

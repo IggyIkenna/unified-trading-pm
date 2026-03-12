@@ -23,7 +23,7 @@ import argparse
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -66,7 +66,7 @@ BR_ORDINALS: dict[str, int] = {
 
 def load_yaml(path: Path) -> dict[str, Any]:
     with path.open() as f:
-        data = yaml.safe_load(f)
+        data: dict[str, Any] | None = cast(dict[str, Any] | None, yaml.safe_load(f))
     return data if data is not None else {}
 
 
@@ -105,10 +105,10 @@ def get_branch_status(
     asset_class: str,
 ) -> dict[str, Any]:
     """Return branch_status dict for the given asset class (or core fallback)."""
-    acr = repo_data.get("asset_class_readiness", {})
+    acr: dict[str, Any] = cast(dict[str, Any], repo_data.get("asset_class_readiness") or {})
     # Prefer exact class key, fall back to "core"
-    class_data: dict[str, Any] = acr.get(asset_class) or acr.get("core") or {}
-    return class_data.get("branch_status", {})
+    class_data: dict[str, Any] = cast(dict[str, Any], acr.get(asset_class) or acr.get("core") or {})
+    return cast(dict[str, Any], class_data.get("branch_status") or {})
 
 
 def is_repo_complete(
@@ -126,19 +126,23 @@ def is_repo_complete(
     3. asset_class_readiness.{asset_class|core}.branch_status.main.quickmerged = true
     """
     # ── CR check ──────────────────────────────────────────────────────────
-    cr_current = repo_data.get("code_readiness", {}).get("current_stage", "CR0")
+    cr_current: str = cast(
+        str, cast(dict[str, Any], repo_data.get("code_readiness") or {}).get("current_stage") or "CR0"
+    )
     if cr_ordinal(cr_current) < cr_ordinal(min_cr_stage):
         return False, f"CR stage: {cr_current} (need {min_cr_stage.upper()})"
 
     # ── BR check ──────────────────────────────────────────────────────────
     if min_br_stage.lower() != "na":
-        br_current = repo_data.get("business_readiness", {}).get("current_stage", "BR0")
+        br_current: str = cast(
+            str, cast(dict[str, Any], repo_data.get("business_readiness") or {}).get("current_stage") or "BR0"
+        )
         if br_ordinal(br_current) < br_ordinal(min_br_stage):
             return False, f"BR stage: {br_current} (need {min_br_stage.upper()})"
 
     # ── Branch gate ───────────────────────────────────────────────────────
     branch_status = get_branch_status(repo_data, asset_class)
-    main_status: dict[str, Any] = branch_status.get("main", {})
+    main_status: dict[str, Any] = cast(dict[str, Any], branch_status.get("main") or {})
     if not main_status.get("quickmerged", False):
         return False, "branch_status.main.quickmerged = false"
 
@@ -155,9 +159,9 @@ def compute_epic(
     repos: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     """Compute readiness status for a single epic definition."""
-    epic_id: str = epic["epic_id"]
-    required: list[dict[str, Any]] = epic.get("required_repos", [])
-    optional: list[dict[str, Any]] = epic.get("optional_repos", [])
+    epic_id: str = cast(str, epic["epic_id"])
+    required: list[dict[str, Any]] = cast(list[dict[str, Any]], epic.get("required_repos") or [])
+    optional: list[dict[str, Any]] = cast(list[dict[str, Any]], epic.get("optional_repos") or [])
 
     total_required = len(required)
     completed = 0
@@ -165,10 +169,10 @@ def compute_epic(
     completed_repos: list[str] = []
 
     for req in required:
-        repo_name: str = req["repo"]
-        min_cr: str = req.get("min_stage", "cr5")
-        min_br: str = req.get("min_br_stage", "na")
-        asset_class: str = req.get("asset_class", "core")
+        repo_name: str = cast(str, req["repo"])
+        min_cr: str = cast(str, req.get("min_stage") or "cr5")
+        min_br: str = cast(str, req.get("min_br_stage") or "na")
+        asset_class: str = cast(str, req.get("asset_class") or "core")
 
         repo_data = repos.get(repo_name)
         if repo_data is None:
@@ -189,10 +193,16 @@ def compute_epic(
             completed += 1
             completed_repos.append(repo_name)
         else:
-            cr_current = repo_data.get("code_readiness", {}).get("current_stage", "CR0")
-            br_current = repo_data.get("business_readiness", {}).get("current_stage", "BR0")
+            cr_current = cast(
+                str, cast(dict[str, Any], repo_data.get("code_readiness") or {}).get("current_stage") or "CR0"
+            )
+            br_current = cast(
+                str, cast(dict[str, Any], repo_data.get("business_readiness") or {}).get("current_stage") or "BR0"
+            )
             branch_status = get_branch_status(repo_data, asset_class)
-            main_qm = branch_status.get("main", {}).get("quickmerged", False)
+            main_qm: bool = cast(
+                bool, cast(dict[str, Any], branch_status.get("main") or {}).get("quickmerged") or False
+            )
             blocking_repos.append(
                 {
                     "repo": repo_name,
@@ -211,11 +221,11 @@ def compute_epic(
     # Optional repos summary
     optional_status: list[dict[str, Any]] = []
     for opt in optional:
-        repo_name = opt["repo"]
-        asset_class = opt.get("asset_class", "")
+        repo_name = cast(str, opt["repo"])
+        asset_class = cast(str, opt.get("asset_class") or "")
         repo_data = repos.get(repo_name)
         cr_current = (
-            repo_data.get("code_readiness", {}).get("current_stage", "CR0")
+            cast(str, cast(dict[str, Any], repo_data.get("code_readiness") or {}).get("current_stage") or "CR0")
             if repo_data
             else None
         )
@@ -251,12 +261,18 @@ def compute_epic(
 # ---------------------------------------------------------------------------
 
 
+class _ParsedArgs(argparse.Namespace):
+    output_dir: Path
+    epic: str | None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Compute epic readiness from per-repo YAML checklists")
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=EPICS_DIR,
+        dest="output_dir",
         help="Directory to write {epic_id}-status.yaml files (default: epics/)",
     )
     parser.add_argument(
@@ -265,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Compute a single epic by ID (e.g. defi). Default: all epics.",
     )
-    args = parser.parse_args(argv)
+    args = parser.parse_args(argv, namespace=_ParsedArgs())
 
     if not REPOS_DIR.exists():
         print(f"ERROR: repos dir not found: {REPOS_DIR}", file=sys.stderr)
@@ -287,7 +303,7 @@ def main(argv: list[str] | None = None) -> int:
     any_errors = False
 
     for epic in epics:
-        epic_id = epic.get("epic_id", "unknown")
+        epic_id: str = cast(str, epic.get("epic_id") or "unknown")
         if args.epic and epic_id != args.epic:
             continue
 
@@ -305,7 +321,8 @@ def main(argv: list[str] | None = None) -> int:
             f"→ {out_path.relative_to(WORKSPACE_ROOT)}"
         )
         if result["blocking_repos"]:
-            for br in result["blocking_repos"]:
+            blocking: list[dict[str, Any]] = cast(list[dict[str, Any]], result["blocking_repos"])
+            for br in blocking:
                 print(f"   ✗ {br['repo']} [{br['asset_class']}]: {br['blocking_reason']}")
 
     return 1 if any_errors else 0

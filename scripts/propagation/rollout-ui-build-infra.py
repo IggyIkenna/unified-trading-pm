@@ -25,6 +25,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import cast
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
@@ -317,7 +318,9 @@ def get_typecheck_script(repo_path: Path) -> str:
     pkg = repo_path / "package.json"
     if not pkg.exists():
         return "typecheck"
-    scripts = json.loads(pkg.read_text()).get("scripts", {})
+    scripts: dict[str, object] = cast(
+        dict[str, object], cast(dict[str, object], json.loads(pkg.read_text())).get("scripts") or {}
+    )
     if "typecheck" in scripts:
         return "typecheck"
     if "type-check" in scripts:
@@ -386,17 +389,24 @@ def rollout_ui_repo(repo_name: str, repo_path: Path, dry_run: bool, force: bool)
     return results
 
 
-def load_manifest() -> dict[str, dict]:
+def load_manifest() -> dict[str, dict[str, object]]:
     with open(MANIFEST_PATH) as f:
-        return json.load(f)["repositories"]
+        data: dict[str, object] = cast(dict[str, object], json.load(f))
+    return cast(dict[str, dict[str, object]], data["repositories"])
+
+
+class _ParsedArgs(argparse.Namespace):
+    dry_run: bool
+    repo: str
+    force: bool
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Rollout UI build infra (Dockerfile + cloudbuild + buildspec)")
-    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run")
     parser.add_argument("--repo", default="", help="Single repo name")
     parser.add_argument("--force", action="store_true", help="Overwrite existing files")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     repos = load_manifest()
 
@@ -406,7 +416,7 @@ def main() -> None:
             continue
         if info.get("status") in {"deprecated", "archived", "deleted", "future", "scaffolded"}:
             continue
-        repo_type = info.get("type", "service")
+        repo_type: str = cast(str, info.get("type") or "service")
         if repo_type != "ui":
             continue
         target_repos.append((name, repo_type))

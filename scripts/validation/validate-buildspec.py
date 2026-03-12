@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import cast
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 
@@ -59,14 +60,21 @@ BUILDSPEC_SCHEMA = {
 }
 
 
+class _ParsedArgs(argparse.Namespace):
+    paths: list[str]
+    dir: str | None
+    workspace: bool
+    quiet: bool
+
+
 def load_yaml(path: Path) -> object:
     import yaml
 
     with open(path) as f:
-        return yaml.safe_load(f)
+        return cast(object, yaml.safe_load(f))
 
 
-def validate_file(path: Path, schema: dict) -> tuple[bool, str | None]:
+def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | None]:
     import jsonschema
 
     try:
@@ -102,7 +110,7 @@ def main() -> None:
     parser.add_argument("--dir", help="Validate all buildspec*.aws.yaml in directory")
     parser.add_argument("--workspace", action="store_true", help="Validate all in workspace")
     parser.add_argument("--quiet", "-q", action="store_true", help="Only print failures")
-    args = parser.parse_args()
+    args = parser.parse_args(namespace=_ParsedArgs())
 
     files: list[Path] = []
     if args.workspace:

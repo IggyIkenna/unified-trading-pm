@@ -200,9 +200,9 @@ try:
     from unified_events_interface import log_event, setup_events  # type: ignore[import-not-found]
 
     # setup_events with a test service name; CLOUD_MOCK_MODE=true prevents real PubSub init
-    setup_events("smoke-test")
+    setup_events("smoke-test", mode="test")
     _pass("setup_events() executed", "no real Pub/Sub connection required")
-    log_event("smoke_test_check", {"check": 6, "status": "pass"})
+    log_event("smoke_test_check", severity="INFO", details={"check": 6, "status": "pass"})
     _pass("log_event() executed")
 except Exception as exc:
     record_fail("setup_events() / log_event()", str(exc))

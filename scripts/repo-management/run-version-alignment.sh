@@ -69,6 +69,7 @@ echo "  [0]     Tracked-but-gitignored audit          — informational only"
 echo "  [0.5]   Broken symlinks                       — manual: rm <path> && ln -sf <target> <path>"
 echo "  [0.6]   UI npm dep drift (pkg.json vs lock)   — manual: cd <repo> && npm install"
 echo "  [0.7]   Canonical npm version alignment       — auto-fix with --fix"
+echo "  [0.8]   uv.lock drift (pyproject newer / uncommitted changes) — warn or --strict fatal"
 echo "  [1–2]   Derived + canonical manifests         — generated (prerequisite)"
 echo "  [3]     Dependency alignment (internal+external)— auto-fix with --fix"
 echo "  [3.5]   [tool.uv.sources] editable entries   — auto-fix with --fix"
@@ -212,6 +213,41 @@ else
       exit 1
     fi
   fi
+fi
+echo ""
+
+# 0.8. uv.lock drift detection — stale lockfile (pyproject.toml newer) or uncommitted changes
+echo "[0.8/4] Checking uv.lock staleness and uncommitted changes across all repos..."
+LOCK_DRIFT=()
+while IFS= read -r lock_file; do
+  repo_dir="$(dirname "$lock_file")"
+  repo_name="$(basename "$repo_dir")"
+  [ "$repo_dir" = "$WORKSPACE_ROOT" ] && continue
+  pyproject="$repo_dir/pyproject.toml"
+  # pyproject.toml newer than uv.lock → lockfile needs regeneration
+  if [ -f "$pyproject" ] && [ "$pyproject" -nt "$lock_file" ]; then
+    LOCK_DRIFT+=("  $repo_name: pyproject.toml newer than uv.lock — run: cd $repo_name && uv lock")
+  fi
+  # uncommitted changes to uv.lock on the working tree
+  if git -C "$repo_dir" status --porcelain uv.lock 2>/dev/null | grep -q 'uv\.lock'; then
+    LOCK_DRIFT+=("  $repo_name: uv.lock has uncommitted local changes")
+  fi
+done < <(find "$WORKSPACE_ROOT" -maxdepth 2 -name "uv.lock" \
+  -not \( -path "*/.venv*" -prune \) \
+  -not \( -path "*/unified-trading-pm/*" -prune \) 2>/dev/null)
+
+if [ "${#LOCK_DRIFT[@]}" -gt 0 ]; then
+  echo ""
+  echo "  [WARN] uv.lock drift detected (${#LOCK_DRIFT[@]} issue(s)):"
+  for d in "${LOCK_DRIFT[@]}"; do echo "$d"; done
+  echo ""
+  echo "  Fix: cd <repo> && uv lock   (regenerate from pyproject.toml)"
+  echo "  Pass --strict to treat uv.lock drift as a fatal error."
+  if [ "${STRICT:-false}" = true ]; then
+    exit 1
+  fi
+else
+  echo "  [OK] All uv.lock files are up to date"
 fi
 echo ""
 
