@@ -1,7 +1,15 @@
-"""Rollout canonical quickmerge.sh to all repos in workspace-manifest.json.
+"""Rollout canonical quickmerge.sh symlink to all repos in workspace-manifest.json.
 
-Overwrites any existing scripts/quickmerge.sh with the canonical version from PM.
-The script works for any repo without modification (reads REPO_NAME dynamically).
+Replaces any existing scripts/quickmerge.sh (file or stale symlink) with a symlink
+pointing to ../../unified-trading-pm/scripts/quickmerge.sh.
+
+Why symlinks instead of copies:
+  - Each repo's quality-gates.yml already clones PM to ../unified-trading-pm before
+    running any scripts, so PM is always on disk in the same relative position both
+    locally (workspace sibling) and in CI (cloned sibling).
+  - Symlinks mean a change to PM's quickmerge.sh is immediately live in all repos
+    with no rollout needed. The CI workflow (rollout-quickmerge.yml) only needs to
+    run once to set up the symlink; after that it becomes a no-op.
 
 Usage:
     python3 scripts/propagation/rollout-quickmerge.py [--dry-run] [--repo REPO_NAME]
@@ -19,8 +27,11 @@ from typing import TypeAlias, cast
 JsonDict: TypeAlias = dict[str, object]
 
 MANIFEST_PATH = Path(__file__).parent.parent.parent / "workspace-manifest.json"
-TEMPLATE_PATH = Path(__file__).parent.parent / "quickmerge.sh"
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent
+
+# Symlink target — relative from scripts/quickmerge.sh in each repo:
+#   scripts/ → repo-root/ → workspace-root/ → unified-trading-pm/scripts/quickmerge.sh
+SYMLINK_TARGET = Path("../../unified-trading-pm/scripts/quickmerge.sh")
 
 # PM manages its own quickmerge.sh — skip it in rollout
 SKIP_REPOS = {"unified-trading-pm"}
@@ -34,7 +45,6 @@ def main() -> None:
 
     with open(MANIFEST_PATH) as f:
         manifest = cast(JsonDict, json.load(f))
-    template = TEMPLATE_PATH.read_text()
 
     repos_raw = manifest.get("repositories")
     repositories: dict[str, JsonDict] = cast(dict[str, JsonDict], repos_raw) if isinstance(repos_raw, dict) else {}
@@ -64,12 +74,11 @@ def main() -> None:
         scripts_dir = repo_path / "scripts"
         target_path = scripts_dir / "quickmerge.sh"
 
-        if target_path.exists():
-            existing = target_path.read_text()
-            if existing == template:
-                print(f"  UP-TO-DATE {repo_name}")
-                skipped += 1
-                continue
+        # Already a correct symlink — nothing to do
+        if target_path.is_symlink() and target_path.readlink() == SYMLINK_TARGET:
+            print(f"  UP-TO-DATE {repo_name}")
+            skipped += 1
+            continue
 
         if not scripts_dir.exists():
             if dry_run:
@@ -78,11 +87,19 @@ def main() -> None:
                 scripts_dir.mkdir(parents=True, exist_ok=True)
 
         if dry_run:
-            print(f"  [dry-run] Would write {target_path}")
+            verb = (
+                "replace symlink"
+                if target_path.is_symlink()
+                else "replace file"
+                if target_path.exists()
+                else "create symlink"
+            )
+            print(f"  [dry-run] Would {verb} → {SYMLINK_TARGET} in {repo_name}")
         else:
-            target_path.write_text(template)
-            target_path.chmod(0o755)
-            print(f"  WROTE {repo_name}")
+            if target_path.exists() or target_path.is_symlink():
+                target_path.unlink()
+            target_path.symlink_to(SYMLINK_TARGET)
+            print(f"  SYMLINKED {repo_name}")
         updated += 1
 
     action = "Would update" if dry_run else "Updated"

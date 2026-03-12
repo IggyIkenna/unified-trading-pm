@@ -1,0 +1,140 @@
+name: Rollout quickmerge symlink
+
+# Triggers whenever scripts/quickmerge.sh or workspace-manifest.json changes on
+# any branch in PM. For each downstream repo in the manifest:
+#   - Clones the repo on the same branch as the PM push (skips if branch absent)
+#   - Replaces scripts/quickmerge.sh with a symlink → PM canonical copy
+#   - Commits and pushes only if the symlink wasn't already correct
+#
+# Why symlinks work in CI:
+#   Every repo's quality-gates.yml already clones PM to ../unified-trading-pm
+#   before running any scripts. The symlink target (../../unified-trading-pm/scripts/quickmerge.sh)
+#   resolves to the same relative path both locally and in CI.
+#
+# Secrets required:
+#   GH_PAT — repo scope; used to clone and push to each downstream repo
+
+on:
+  push:
+    paths:
+      - "scripts/quickmerge.sh"
+      - "workspace-manifest.json"
+  workflow_dispatch:
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  ORG: IggyIkenna
+
+jobs:
+  rollout:
+    name: Rollout quickmerge symlink to all repos
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "quickmerge-rollout@ci.local"
+          git config --global user.name "Quickmerge Rollout"
+
+      - name: Rollout symlink to all downstream repos
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          TRIGGER_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          MANIFEST="workspace-manifest.json"
+          SYMLINK_TARGET="../../unified-trading-pm/scripts/quickmerge.sh"
+          WORK_DIR="/tmp/rollout-repos"
+          mkdir -p "$WORK_DIR"
+
+          # Read repo names from manifest (repositories object keys, skip PM itself)
+          REPOS=$(python3 -c "
+          import json
+          with open('$MANIFEST') as f:
+              m = json.load(f)
+          for name in m.get('repositories', {}):
+              if name != 'unified-trading-pm':
+                  print(name)
+          ")
+
+          UPDATED=0
+          SKIPPED=0
+          NO_BRANCH=0
+          FAILED=0
+
+          for REPO in $REPOS; do
+            REPO_URL="https://x-access-token:${GH_PAT}@github.com/${ORG}/${REPO}.git"
+            CLONE_DIR="${WORK_DIR}/${REPO}"
+
+            # Only push to the exact triggering branch — never fall back to main.
+            # Repos that don't have this branch yet will get the symlink when the
+            # branch is created (re-run workflow_dispatch or push to that branch).
+            if ! git clone --depth 1 -b "${TRIGGER_BRANCH}" "$REPO_URL" "$CLONE_DIR" 2>/dev/null; then
+              echo "  NO BRANCH '${TRIGGER_BRANCH}': $REPO (skipping)"
+              NO_BRANCH=$((NO_BRANCH + 1))
+              continue
+            fi
+
+            cd "$CLONE_DIR"
+            TARGET="scripts/quickmerge.sh"
+
+            # Already a correct symlink — nothing to commit
+            if [ -L "$TARGET" ] && [ "$(readlink "$TARGET")" = "$SYMLINK_TARGET" ]; then
+              echo "  UP-TO-DATE: $REPO"
+              SKIPPED=$((SKIPPED + 1))
+              cd "$WORK_DIR"
+              continue
+            fi
+
+            mkdir -p scripts
+            rm -f "$TARGET"
+            ln -s "$SYMLINK_TARGET" "$TARGET"
+            git add "$TARGET"
+
+            if git diff --cached --quiet; then
+              echo "  NO CHANGE (already staged correctly): $REPO"
+              SKIPPED=$((SKIPPED + 1))
+            else
+              git commit -m "chore: use PM symlink for quickmerge.sh (auto-rollout)"
+              if git push origin "HEAD:${TRIGGER_BRANCH}"; then
+                echo "  UPDATED: $REPO"
+                UPDATED=$((UPDATED + 1))
+              else
+                echo "  PUSH FAILED: $REPO"
+                FAILED=$((FAILED + 1))
+              fi
+            fi
+
+            cd "$WORK_DIR"
+          done
+
+          echo ""
+          echo "═══════════════════════════════════════════"
+          echo "Rollout complete"
+          echo "  Updated:    $UPDATED"
+          echo "  Skipped:    $SKIPPED"
+          echo "  No branch:  $NO_BRANCH"
+          echo "  Failed:     $FAILED"
+          echo "═══════════════════════════════════════════"
+
+          [ "$FAILED" -gt 0 ] && exit 1 || true
+
+      - name: Notify Telegram
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ job.status }}
+        run: |
+          TEXT="*rollout-quickmerge* (PM) | ${STATUS} | branch: ${{ github.ref_name }}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${TEXT}" \
+            -d parse_mode="Markdown" || true
