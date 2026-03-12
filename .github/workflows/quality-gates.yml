@@ -90,6 +90,26 @@ jobs:
           fetch-depth: 1
         continue-on-error: true
 
+      - name: Clone basedpyright sibling deps
+        # basedpyright extraPaths references ../unified-events-interface and
+        # ../unified-internal-contracts — clone them so type checking resolves imports.
+        # Clones to $GITHUB_WORKSPACE/{repo} which is "../{repo}" relative to unified-trading-pm.
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          BRANCH="${DEP_BRANCH:-main}"
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          clone_dep() {
+            local name="$1"
+            git clone --depth=1 -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "$name" 2>/dev/null \
+              || git clone --depth=1 -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "$name" 2>/dev/null \
+              || echo "Warning: could not clone $name (skipping)"
+          }
+          clone_dep unified-events-interface
+          clone_dep unified-internal-contracts
+
       - name: Simulate sibling workspace layout
         # Scripts infer workspace root as parent of unified-trading-pm/.
         # In CI the checkout lands at $GITHUB_WORKSPACE/unified-trading-pm,
