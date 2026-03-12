@@ -38,8 +38,8 @@ set -e
 
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { echo -e "\n${BLUE}$1${NC}"; echo "----------------------------------------------------------------------"; }
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+log_section() { :; }
+log_success() { :; }
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
@@ -162,8 +162,8 @@ if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
-    COV="--cov=$SOURCE_DIR --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
-    PARGS="-n ${PYTEST_WORKERS:-2} --timeout=60 -v --tb=short"
+    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    PARGS="-n ${PYTEST_WORKERS:-2} --timeout=60 -q -r a --tb=short"
     $PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
     log_success "Tests PASSED"
 
@@ -480,7 +480,6 @@ fi
 #   • Present (any state)  → FAIL: baseline suppression not allowed; delete the file
 #   • Not present          → PASS (clean)
 # ============================================================
-echo "=== STEP 5.22: basedpyright baseline suppression ==="
 if [ -f ".basedpyright-baseline.json" ]; then
     log_fail "STEP 5.22: .basedpyright-baseline.json present — baseline suppression not allowed (zero-baseline policy)"; V=$(( V + 1 ))
 else

@@ -1,0 +1,19 @@
+self-hosted-runner:
+  labels: []
+
+config-variables: null
+
+# Ignore patterns are Go regexp patterns matched against the full error message.
+# Per-path config lets us be surgical about what to suppress in workflow files.
+paths:
+  .github/workflows/**/*.yml:
+    ignore:
+      # Suppress shellcheck style/info/warning codes that are intentional in CI scripts.
+      # SC2086 (word splitting), SC2034 (unused-var obscured by GITHUB_OUTPUT), SC2129
+      # (redirect style), SC2155 (mask return values OK in CI), SC2015 (A&&B||C pattern),
+      # SC2059 (printf format), SC2001 (sed style preference), SC1010 (for-do semicolon).
+      # Keep SC ERROR-level codes so real shell bugs are still caught.
+      - "shellcheck reported issue in this script: SC[0-9]+:(info|style|warning)"
+      # version-bump.yml uses `if: false` at job level to intentionally disable the
+      # workflow while keeping it as a reference for when semver-agent is removed.
+      - "constant expression"

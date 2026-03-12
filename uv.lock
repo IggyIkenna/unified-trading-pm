@@ -732,11 +732,6 @@ name = "unified-trading-pm"
 version = "1.2.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "tomli-w" },
-]
-
-[package.optional-dependencies]
-dev = [
     { name = "bandit" },
     { name = "basedpyright" },
     { name = "httpx" },
@@ -750,26 +745,26 @@ dev = [
     { name = "pytest-timeout" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "tomli-w" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "bandit", marker = "extra == 'dev'", specifier = ">=1.7.0,<2.0.0" },
-    { name = "basedpyright", marker = "extra == 'dev'", specifier = "==1.38.2" },
-    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1,<1.0.0" },
-    { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4.0.0,<5.0.0" },
-    { name = "pip-audit", marker = "extra == 'dev'", specifier = ">=2.7.0,<3.0.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.1,<10.0.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.25.0,<2.0.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.0.0,<8.0.0" },
-    { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.15.0,<4.0.0" },
-    { name = "pytest-socket", marker = "extra == 'dev'", specifier = ">=0.7.0,<1.0.0" },
-    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.4.0,<3.0.0" },
-    { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6.0,<4.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.15.0" },
+    { name = "bandit", specifier = ">=1.7.0,<2.0.0" },
+    { name = "basedpyright", specifier = "==1.38.2" },
+    { name = "httpx", specifier = ">=0.28.1,<1.0.0" },
+    { name = "jsonschema", specifier = ">=4.0.0,<5.0.0" },
+    { name = "pip-audit", specifier = ">=2.7.0,<3.0.0" },
+    { name = "pytest", specifier = ">=9.0.1,<10.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.25.0,<2.0.0" },
+    { name = "pytest-cov", specifier = ">=7.0.0,<8.0.0" },
+    { name = "pytest-mock", specifier = ">=3.15.0,<4.0.0" },
+    { name = "pytest-socket", specifier = ">=0.7.0,<1.0.0" },
+    { name = "pytest-timeout", specifier = ">=2.4.0,<3.0.0" },
+    { name = "pytest-xdist", specifier = ">=3.6.0,<4.0.0" },
+    { name = "ruff", specifier = "==0.15.0" },
     { name = "tomli-w", specifier = ">=1.0.0" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "urllib3"

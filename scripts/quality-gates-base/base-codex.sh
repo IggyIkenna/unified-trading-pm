@@ -38,8 +38,8 @@ set -e
 
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { echo -e "\n${BLUE}$1${NC}"; echo "----------------------------------------------------------------------"; }
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+log_section() { :; }
+log_success() { :; }
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
@@ -70,9 +70,6 @@ for arg in "$@"; do
 done
 
 log_section "[0/4] ENVIRONMENT — ${SERVICE_NAME} (docs-only)"
-echo "PROJECT_ROOT : $PROJECT_ROOT"
-echo "REPO_ROOT    : $REPO_ROOT"
-echo "SERVICE_NAME : $SERVICE_NAME"
 log_success "Environment OK (docs-only repo — Python checks skipped)"
 
 # ── [1] MARKDOWN LINT ─────────────────────────────────────────────────────────

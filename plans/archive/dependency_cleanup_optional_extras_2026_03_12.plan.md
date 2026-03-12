@@ -142,12 +142,28 @@ Policy: only `[schema-validation]` in `unified-api-contracts` (VCR cassette reco
     `unified-reference-data-interface`, `ml-inference-api`, `ml-training-api`, `features-multi-timeframe-service`:
     130–181 packages each
 
-## Remaining Optional Extras (Legitimate)
+## Phase H — Full optional-dependencies elimination (2026-03-12) [DONE]
 
-| Repo                      | Extra                 | Reason                                                                                                                |
-| ------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `unified-api-contracts`   | `[schema-validation]` | Live API clients (databento, tardis-client, ccxt, ib_insync) for VCR cassette recording only — never in test playback |
-| `unified-trading-library` | `[databento]`         | Heavy data feed SDK, not needed by most consumers                                                                     |
+Follow-on work: the remaining `[schema-validation]`, `[databento]`, and all `dev` groups were also eliminated. Policy:
+every repo must have **exactly one dependency list** — `[project.dependencies]`. No optional extras of any kind.
+
+Rationale: tests run locally, in GitHub Actions, and in Cloud Build. All environments need all dependencies. Optional
+extras only make sense when you'd build different images for different roles; we don't do that. Making deps optional
+adds complexity with zero benefit.
+
+- **[h1] DONE** All 52 Python repos: removed every `[project.optional-dependencies]` section (including `dev`,
+  `schema-validation`, `databento`, `all` groups).
+- **[h2] DONE** All packages previously in optional groups classified as FLATTEN (used in source/tests/scripts) or
+  REMOVE (not used anywhere): 631 packages flattened into `[project.dependencies]`, 3 removed entirely (`responses`,
+  `line-profiler`, `memory-profiler` from `market-tick-data-service`).
+- **[h3] DONE** Stale internal extras refs stripped from base deps: `unified-trading-library[observability]` →
+  `unified-trading-library` (alerting-service), `unified-trading-library[gcp]` → `unified-trading-library`
+  (deployment-service). Third-party extras (`uvicorn[standard]`, `anyio[trio]`) left intact.
+- **[h4] DONE** Verified: 0 repos retain `[project.optional-dependencies]` after changes.
+
+## Remaining Optional Extras
+
+None. All repos now have a single flat `[project.dependencies]` list.
 
 ## Architecture Rule Reinforced
 

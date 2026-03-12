@@ -29,10 +29,10 @@ set -euo pipefail
 QG_START=$(date +%s)
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-log_success() { echo -e "${GREEN}  ✅ $*${NC}"; }
+log_success() { :; }
 log_fail()    { echo -e "${RED}  ❌ $*${NC}" >&2; }
 log_warn()    { echo -e "${YELLOW}  ⚠️  $*${NC}"; }
-log_section() { echo -e "\n${GREEN}── $* ──${NC}"; }
+log_section() { :; }
 
 # ── MODE ───────────────────────────────────────────────────────────────────
 SKIP_LINT=false
@@ -50,18 +50,16 @@ for arg in "$@"; do
   esac
 done
 
-echo "======================================================================"
-echo "  UI Quality Gates — $(basename "$(pwd)")"
-echo "======================================================================"
 
 # ── [1] TYPE CHECK ─────────────────────────────────────────────────────────
 log_section "[1/4] TYPE CHECK"
 if [ ! -f "package.json" ]; then
   log_fail "No package.json found"; exit 1
 fi
-if npm run typecheck 2>&1; then
+if _out=$(npm run typecheck 2>&1); then
   log_success "TypeScript type check passed"
 else
+  echo "$_out"
   log_fail "TypeScript type check FAILED"; exit 1
 fi
 
@@ -69,12 +67,12 @@ fi
 if [ "$SKIP_LINT" = false ]; then
   log_section "[2/4] LINT"
   if [ "$FIX_MODE" = true ]; then
-    npm run lint -- --fix 2>&1 || true  # best-effort auto-fix; verify pass follows
-    log_success "ESLint auto-fix applied"
+    npm run lint -- --fix >/dev/null 2>&1 || true  # best-effort auto-fix; verify pass follows
   fi
-  if npm run lint 2>&1; then
+  if _out=$(npm run lint 2>&1); then
     log_success "ESLint passed"
   else
+    echo "$_out"
     log_fail "ESLint FAILED"; exit 1
   fi
 else
@@ -90,24 +88,25 @@ MIN_UI_COVERAGE=${MIN_UI_COVERAGE:-70}
 if [ "$SKIP_TESTS" = false ]; then
   log_section "[3/4] UNIT TESTS + COVERAGE"
   if node -e "const s=require('./package.json').scripts||{}; process.exit(('test' in s && !s.test.includes('playwright')) ? 0 : 1)" 2>/dev/null; then
-    if npm test -- --coverage --reporter=verbose 2>&1; then
-      log_success "Unit tests passed"
+    if _out=$(npm test -- --coverage 2>&1); then
       # ── Coverage floor check ────────────────────────────────────────────
       SUMMARY="coverage/coverage-summary.json"
       if [ -f "$SUMMARY" ]; then
         LINES_PCT=$(node -e "const d=require('./${SUMMARY}'); console.log(d.total&&d.total.lines?d.total.lines.pct:0)" 2>/dev/null || echo "0")
         LINES_INT=${LINES_PCT%.*}
         if [ "${LINES_INT:-0}" -lt "$MIN_UI_COVERAGE" ]; then
+          echo "$_out"
           log_fail "Coverage floor FAILED: ${LINES_PCT}% lines < ${MIN_UI_COVERAGE}% required"
           log_fail "Add tests or lower MIN_UI_COVERAGE — do NOT just skip this check"
           exit 1
         fi
-        log_success "Coverage floor passed: ${LINES_PCT}% lines ≥ ${MIN_UI_COVERAGE}%"
       else
+        echo "$_out"
         log_fail "coverage/coverage-summary.json not found — ensure vitest.config.ts has reporter: ['json-summary']"
         exit 1
       fi
     else
+      echo "$_out"
       log_fail "Unit tests FAILED"; exit 1
     fi
   else
@@ -120,9 +119,10 @@ fi
 # ── [4] BUILD ──────────────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" = false ]; then
   log_section "[4/4] BUILD"
-  if npm run build 2>&1; then
+  if _out=$(npm run build 2>&1); then
     log_success "Build passed"
   else
+    echo "$_out"
     log_fail "Build FAILED"; exit 1
   fi
 else
@@ -136,9 +136,10 @@ run_timeout() { timeout "${1:-30}" "${@:2}" 2>/dev/null || true; }
 if [ -f "cloudbuild.yaml" ]; then
   VALIDATOR="${PM_ROOT}/scripts/validation/validate-cloudbuild.py"
   if [ -f "$VALIDATOR" ]; then
-    if run_timeout 30 python3 "$VALIDATOR" cloudbuild.yaml 2>/dev/null; then
+    if _out=$(run_timeout 30 python3 "$VALIDATOR" cloudbuild.yaml 2>&1); then
       log_success "cloudbuild.yaml schema OK"
     else
+      echo "$_out"
       log_fail "cloudbuild.yaml schema validation failed"; exit 1
     fi
   fi
@@ -146,9 +147,10 @@ fi
 if [ -f "buildspec.aws.yaml" ]; then
   VALIDATOR="${PM_ROOT}/scripts/validation/validate-buildspec.py"
   if [ -f "$VALIDATOR" ]; then
-    if run_timeout 30 python3 "$VALIDATOR" buildspec.aws.yaml 2>/dev/null; then
+    if _out=$(run_timeout 30 python3 "$VALIDATOR" buildspec.aws.yaml 2>&1); then
       log_success "buildspec.aws.yaml schema OK"
     else
+      echo "$_out"
       log_fail "buildspec.aws.yaml schema validation failed"; exit 1
     fi
   fi

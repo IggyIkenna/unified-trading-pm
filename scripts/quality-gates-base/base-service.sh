@@ -54,9 +54,9 @@ set -e
 
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { echo -e "\n${BLUE}$1${NC}"; echo "----------------------------------------------------------------------"; }
-log_success() { :; }  # per-check OK lines suppressed; use log_ok for section summaries
-log_ok()      { echo -e "${GREEN}✅ $1${NC}"; }  # section-level pass (always visible)
+log_section() { :; }
+log_success() { :; }
+log_ok()      { :; }
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
@@ -201,8 +201,8 @@ if [ "$RUN_TESTS" = true ]; then
     check_emulator_reachability
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
-    COV="--cov=$SOURCE_DIR --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
-    PARGS="-n $PYTEST_WORKERS --timeout=60 -v --tb=short"
+    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    PARGS="-n $PYTEST_WORKERS --timeout=60 -q -r a --tb=short"
     if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ]; then
         $PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
     else
@@ -870,7 +870,7 @@ if [ "$ACT_MODE" = true ]; then
         [ -n "$_sp" ] && [ -f "$_sp" ] && { ACT_SECRETS_ARG="--secret-file $_sp"; break; }
     done
     _ACT_LOG="$(mktemp /tmp/act-output.XXXXXX)"
-    if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
+    if act -j quality-gates -W .github/workflows/quality-gates.yml --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
         log_ok "Act simulation PASSED"
     else
         log_fail "Act simulation FAILED — full act output:"
