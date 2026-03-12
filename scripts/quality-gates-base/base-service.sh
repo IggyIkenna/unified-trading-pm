@@ -55,7 +55,8 @@ set -e
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 log_section() { echo -e "\n${BLUE}$1${NC}"; echo "----------------------------------------------------------------------"; }
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+log_success() { :; }  # per-check OK lines suppressed; use log_ok for section summaries
+log_ok()      { echo -e "${GREEN}✅ $1${NC}"; }  # section-level pass (always visible)
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
@@ -185,13 +186,13 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     fi
     run_timeout 30 $RUFF_CMD format $SOURCE_DIRS || exit 1
     run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS || exit 1
-    log_success "Auto-fix complete"
+    log_ok "Auto-fix complete"
 fi
 
 # ── [2] LINT (ruff, 30s) ──────────────────────────────────────────────────────
 if [ "$RUN_LINT" = true ]; then
     log_section "[2/6] LINT"
-    run_timeout 30 $RUFF_CMD check $SOURCE_DIRS && log_success "Lint PASSED" || { log_fail "Lint FAILED"; exit 1; }
+    run_timeout 30 $RUFF_CMD check $SOURCE_DIRS && log_ok "Lint PASSED" || { log_fail "Lint FAILED"; exit 1; }
 fi
 
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
@@ -207,15 +208,15 @@ if [ "$RUN_TESTS" = true ]; then
     else
         $PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV || exit 1
     fi
-    log_success "Tests PASSED"
+    log_ok "Tests PASSED"
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
     [ ! -f "tests/unit/test_config.py" ] && { log_fail "Missing tests/unit/test_config.py"; exit 1; }
-    log_success "Required test files present"
+    log_ok "Required test files present"
 
     # No duplicate test files (test_*_extended.py, test_*_additional.py)
     DUP=$(find tests/ -name "test_*_extended.py" -o -name "test_*_additional.py" 2>/dev/null | head -5 || :)
     [[ -n "$DUP" ]] && { log_fail "Duplicate test files — expand existing files instead:"; echo "$DUP"; exit 1; }
-    log_success "No duplicate test files"
+    log_ok "No duplicate test files"
 
     # @pytest.mark.skip must have a # reason: comment on the immediately preceding line
     SKIP_NO_REASON=$(python3 - <<'PYEOF' 2>/dev/null || :
@@ -249,7 +250,7 @@ for v in violations:
 PYEOF
 )
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
-    log_success "All pytest.mark.skip have reason comments"
+    log_ok "All pytest.mark.skip have reason comments"
 fi
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
@@ -258,7 +259,7 @@ IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 if [ -f "$IP" ]; then
     # Bypass: add --exclude flags for files whitelisted in QUALITY_GATE_BYPASS_AUDIT.md §1.2
-    $PYTHON_CMD "$IP" --verbose 2>/dev/null && log_success "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
+    $PYTHON_CMD "$IP" 2>/dev/null && log_ok "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
 else
     log_warn "check-import-patterns.py not found (unified-trading-pm/scripts/)"
 fi
@@ -303,7 +304,7 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
         echo "$PYRIGHT_OUT"
         log_fail "Type check FAILED — $WARN_COUNT warning(s) (zero-warning policy: promote all rules to error in [tool.basedpyright])"; exit 1
     fi
-    log_success "Type check PASSED (0 errors, 0 warnings)"
+    log_ok "Type check PASSED (0 errors, 0 warnings)"
 fi
 [ "$SKIP_TYPECHECK" = "true" ] && echo -e "${YELLOW}⚠️  Type check SKIPPED (--skip-typecheck flag)${NC}"
 
@@ -663,7 +664,6 @@ fi
 # ============================================================
 # STEP 5.12 — Services must not hardcode cloud protocol names
 # ============================================================
-echo "=== STEP 5.12: No hardcoded protocol names in service source ==="
 HARDCODED_PROTO=$(rg \
   'gcs_bucket\s*=|bigquery_dataset\s*=|upload_to_gcs|CloudTarget\b|StandardizedDomainCloudService\b' \
   --type py \
@@ -684,7 +684,6 @@ fi
 # ============================================================
 # STEP 5.12b — §12 No hardcoded gs:// or s3:// URIs outside unified-cloud-interface
 # ============================================================
-echo "=== STEP 5.12b: No hardcoded gs:// or s3:// URIs outside UCI ==="
 GCS_URI_VIOLATIONS=$(rg '"gs://|"s3://' \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
@@ -705,7 +704,6 @@ fi
 
 # STEP 5.13 — Schema placement advisory (cross-repo contract check)
 # =====================================================================
-echo "=== STEP 5.13: Schema placement advisory (cross-repo contract check) ==="
 SCHEMA_DUPES=$(rg \
   'class\s+Canonical[A-Z]\w+\s*\(.*BaseModel' \
   --type py \
@@ -726,7 +724,6 @@ fi
 
 # STEP 5.21 — basedpyright config: all Any/Unknown rules must be "error" not "warning"
 # Zero-warning policy requires rules to be errors so they block the QG at the config level too.
-echo "=== STEP 5.21: basedpyright zero-warning policy (reportAny/reportUnknown* = \"error\") ==="
 if [ -f "pyproject.toml" ]; then
     BP_VIOLATIONS=()
     for rule in reportAny reportUnknownVariableType reportUnknownParameterType reportUnknownMemberType reportUnknownArgumentType reportUnknownLambdaType; do
@@ -748,7 +745,6 @@ fi
 #   • Present (any state)  → FAIL: baseline suppression not allowed; delete the file
 #   • Not present          → PASS (clean)
 # Documentation in QUALITY_GATE_BYPASS_AUDIT.md does NOT exempt baseline suppression.
-echo "=== STEP 5.22: basedpyright baseline suppression ==="
 if [ -f ".basedpyright-baseline.json" ]; then
     log_fail "STEP 5.22: .basedpyright-baseline.json present — baseline suppression not allowed (zero-baseline policy)"; V=$(( V + 1 ))
 else
@@ -766,7 +762,6 @@ fi
 #   push        : "push"  (step id containing push)
 #   deploy      : deploy  OR  gcloud run deploy
 # ============================================================
-echo "=== STEP 5.17: cloudbuild.yaml structural compliance ==="
 if [ -f "cloudbuild.yaml" ]; then
     CB_FAIL=0
     # Schema validation (SchemaStore + jsonschema) — portable, no gcloud required
@@ -805,7 +800,6 @@ else
 fi
 
 # ============================================================
-echo "=== STEP 5.18: GitHub Actions cross-repo token check ==="
 if [ -d ".github/workflows" ]; then
     WT_VALIDATOR="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-workflow-tokens.py"
     if [ -f "$WT_VALIDATOR" ]; then
@@ -821,7 +815,7 @@ else
 fi
 
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
-log_success "Codex compliance PASSED"
+log_ok "Codex compliance PASSED"
 
 # ── [5.5] WORKFLOW LINT (actionlint) ──────────────────────────────────────────
 if [ -d "${REPO_ROOT}/.github/workflows" ]; then
@@ -832,7 +826,7 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
             actionlint "$wf" 2>&1 || WORKFLOW_ERRORS=$(( WORKFLOW_ERRORS + 1 ))
         done < <(find "${REPO_ROOT}/.github/workflows" -name "*.yml" -print0 2>/dev/null)
         [ $WORKFLOW_ERRORS -gt 0 ] && { log_fail "Workflow lint FAILED: $WORKFLOW_ERRORS file(s) with errors"; exit 1; }
-        log_success "Workflow lint PASSED"
+        log_ok "Workflow lint PASSED"
     else
         log_warn "actionlint not found — skipping workflow lint (install: brew install actionlint)"
     fi
@@ -875,7 +869,7 @@ if [ "$ACT_MODE" = true ]; then
     done
     _ACT_LOG="$(mktemp /tmp/act-output.XXXXXX)"
     if act -j quality-gates --container-architecture linux/amd64 ${ACT_SECRETS_ARG} 2>&1 | tee "$_ACT_LOG"; then
-        log_success "Act simulation PASSED"
+        log_ok "Act simulation PASSED"
     else
         log_fail "Act simulation FAILED — full act output:"
         cat "$_ACT_LOG" >&2
