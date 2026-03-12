@@ -2,26 +2,31 @@
 """
 rollout-quality-gates-ci-workflows.py
 
-Propagates CI/CD fixes to all repos' quality-gates.yml:
+Propagates CI/CD fixes to all repos' quality-gates.yml.
 
+Default mode — patches existing workflow in-place:
   1. `export PATH="$(pwd)/.venv/bin:$PATH"` in the "Run quality gates" run block
   2. `CLOUD_MOCK_MODE: "true"` in the "Run quality gates" env block
   3. `--no-fix` flag on the `bash scripts/quality-gates.sh` invocation
-  4. Composite action ref pinned to the active feature branch from workspace-manifest.json
-     (e.g. `@main` → `@live-defi-rollout`). Pass `--action-ref` to override.
+  4. Composite action ref pinned to active_feature_branch from workspace-manifest.json
 
-Repos without a quality-gates.yml are reported as MISSING.
-Repos that already have all fixes are reported as SKIP.
+--workflow-call mode — replaces the entire file with a minimal workflow_call
+  thin caller that delegates all steps to the reusable workflows in PM:
+    python-quality-gates.yml  (Python service/api/library repos)
+    ui-quality-gates.yml      (UI repos, type=ui)
+  dep_repos is populated from manifest dependencies[].name.
+  The branch ref in uses: is the same active_feature_branch so the reusable
+  workflow definition is loaded from the current feature branch.
 
 Usage:
     python rollout-quality-gates-ci-workflows.py [--dry-run] [--repo REPO_NAME]
-                                                  [--action-ref REF]
+                                                  [--action-ref REF] [--workflow-call]
 
 Options:
-    --dry-run       Print what would change without writing any files.
-    --repo          Process a single repo by name.
-    --action-ref    Override the composite action ref (default: active_feature_branch
-                    from workspace-manifest.json, or "main" if not set).
+    --dry-run         Print what would change without writing any files.
+    --repo            Process a single repo by name.
+    --action-ref      Override the ref (default: active_feature_branch from manifest).
+    --workflow-call   Replace workflows with workflow_call thin callers.
 """
 
 from __future__ import annotations
@@ -175,6 +180,61 @@ def _ensure_no_fix_flag(step_text: str) -> tuple[str, bool]:
     return step_text, False
 
 
+ON_BLOCK_RE = re.compile(r"^on:\n(?:[ \t]+.*\n)*", re.MULTILINE)
+
+UI_TYPE = "ui"
+WORKFLOW_CALL_PYTHON = "python-quality-gates.yml"
+WORKFLOW_CALL_UI = "ui-quality-gates.yml"
+
+
+def _extract_on_block(content: str) -> str:
+    """Return the raw `on:` YAML block from a workflow, or a sensible default."""
+    m = ON_BLOCK_RE.search(content)
+    return m.group(0).rstrip() if m else "on:\n  pull_request:\n    branches: [main]\n  push:\n    branches: [main]"
+
+
+def _dep_repos_for(repo_info: dict[str, object]) -> str:
+    """Return space-separated dep repo names from manifest dependencies, excluding PM."""
+    deps: list[object] = cast(list[object], repo_info.get("dependencies") or [])
+    names = []
+    for d in deps:
+        name = d["name"] if isinstance(d, dict) else str(d)  # type: ignore[index]
+        if name != "unified-trading-pm":
+            names.append(name)
+    return " ".join(names)
+
+
+def generate_workflow_call_yaml(
+    repo_name: str,
+    repo_info: dict[str, object],
+    existing_content: str,
+    action_ref: str,
+) -> str:
+    """Generate a minimal workflow_call thin caller for this repo."""
+    is_ui = cast(str, repo_info.get("type") or "") == UI_TYPE
+    on_block = _extract_on_block(existing_content)
+    reusable = WORKFLOW_CALL_UI if is_ui else WORKFLOW_CALL_PYTHON
+    uses_line = f"uses: IggyIkenna/unified-trading-pm/.github/workflows/{reusable}@{action_ref}"
+
+    if is_ui:
+        with_block = '      node-version: "22"'
+    else:
+        dep_repos = _dep_repos_for(repo_info)
+        with_block = f'      dep_repos: "{dep_repos}"' if dep_repos else '      dep_repos: ""'
+
+    return (
+        f"name: Quality Gates\n\n"
+        f"{on_block}\n\n"
+        f"jobs:\n"
+        f"  quality-gates:\n"
+        f"    {uses_line}\n"
+        f"    with:\n"
+        f"{with_block}\n"
+        f"    secrets:\n"
+        f"      GH_PAT: ${{{{ secrets.GH_PAT }}}}\n"
+    )
+
+
 def _ensure_action_ref(content: str, target_ref: str) -> tuple[str, bool]:
     """Replace any composite action @<ref> with @target_ref throughout the file."""
     new_content, count = ACTION_USES_RE.subn(
@@ -237,6 +297,7 @@ class _ParsedArgs(argparse.Namespace):
     dry_run: bool
     repo: str
     action_ref: str
+    workflow_call: bool
 
 
 def main() -> None:
@@ -248,6 +309,12 @@ def main() -> None:
         default="",
         dest="action_ref",
         help="Composite action ref to pin (default: active_feature_branch from manifest)",
+    )
+    parser.add_argument(
+        "--workflow-call",
+        action="store_true",
+        dest="workflow_call",
+        help="Replace workflows with minimal workflow_call thin callers",
     )
     args = parser.parse_args(namespace=_ParsedArgs())
 
@@ -300,20 +367,28 @@ def main() -> None:
 
         content = workflow_path.read_text()
 
-        # Quick pre-check: does step exist?
-        if "Run quality gates" not in content:
-            print(f"SKIP  {repo_name} (no 'Run quality gates' step — special workflow)")
-            stats["skipped"] += 1
-            continue
+        if args.workflow_call:
+            # Generate a brand-new minimal workflow_call thin caller
+            new_content = generate_workflow_call_yaml(repo_name, repo_info, content, action_ref)
+            if new_content == content:
+                print(f"OK    {repo_name} (already workflow_call thin caller)")
+                stats["already_ok"] += 1
+                continue
+            changes_str = "replaced with workflow_call thin caller"
+        else:
+            # Quick pre-check: does step exist?
+            if "Run quality gates" not in content:
+                print(f"SKIP  {repo_name} (no 'Run quality gates' step — special workflow)")
+                stats["skipped"] += 1
+                continue
 
-        new_content, changes = fix_workflow(content, action_ref)
+            new_content, changes = fix_workflow(content, action_ref)
+            if not changes:
+                print(f"OK    {repo_name} (all fixes already present)")
+                stats["already_ok"] += 1
+                continue
+            changes_str = ", ".join(changes)
 
-        if not changes:
-            print(f"OK    {repo_name} (all fixes already present)")
-            stats["already_ok"] += 1
-            continue
-
-        changes_str = ", ".join(changes)
         if dry_run:
             print(f"WOULD FIX  {repo_name}: {changes_str}")
             stats["fixed"] += 1

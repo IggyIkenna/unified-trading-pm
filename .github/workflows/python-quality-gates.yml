@@ -1,0 +1,137 @@
+name: python-quality-gates
+
+# Reusable workflow — called by all Python service repos.
+# Loaded at whatever ref is in the caller's `uses:` line (managed by
+# rollout-quality-gates-ci-workflows.py which pins it to active_feature_branch
+# from workspace-manifest.json). Inside the job, unified-trading-pm is cloned
+# at DEP_BRANCH = github.head_ref || github.ref_name, so base-service.sh always
+# runs from the branch that triggered CI.
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: Python version
+        type: string
+        default: "3.13.9"
+      dep_repos:
+        description:
+          Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-config-interface")
+        type: string
+        default: ""
+    secrets:
+      GH_PAT:
+        required: true
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    env:
+      CLOUD_MOCK_MODE: "true"
+      CLOUD_PROVIDER: "local"
+      GCP_PROJECT_ID: "test-project"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install uv
+        shell: bash
+        run: pip install uv
+
+      - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
+        id: tools-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/act-tools
+          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
+
+      - name: Install ripgrep
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          RG_VER="14.1.1"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
+            | tar -xz --strip-components=1 -C ~/.local/act-tools/bin "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
+
+      - name: Install shellcheck
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          SC_VER="v0.10.0"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VER}/shellcheck-${SC_VER}.linux.x86_64.tar.xz" \
+            | tar -xJ --strip-components=1 -C ~/.local/act-tools/bin "shellcheck-${SC_VER}/shellcheck"
+
+      - name: Install bats-core
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
+          /tmp/bats-core/install.sh ~/.local/act-tools
+
+      - name: Install actionlint
+        if: steps.tools-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          AL_VER="1.7.4"
+          mkdir -p ~/.local/act-tools/bin
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz" \
+            | tar -xz -C ~/.local/act-tools/bin actionlint
+
+      - name: Add tools to PATH
+        shell: bash
+        run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
+
+      - name: Clone unified-trading-pm and dependencies
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
+          DEP_REPOS: ${{ inputs.dep_repos }}
+        run: |
+          BRANCH="${DEP_BRANCH:-main}"
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          clone_repo() {
+            local name="$1"
+            (git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null \
+              || git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null) || true
+          }
+          # Always clone PM — base-service.sh lives here
+          clone_repo unified-trading-pm
+          # Clone declared deps
+          for repo in $DEP_REPOS; do
+            clone_repo "$repo"
+          done
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          uv venv .venv
+          uv sync --extra dev
+
+      - name: Run quality gates
+        shell: bash
+        run: |
+          export PATH="$(pwd)/.venv/bin:$PATH"
+          bash scripts/quality-gates.sh --no-fix
+
+      - name: Record CI status
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
+          STATUS="${{ job.status == 'success' && 'PASSING' || 'FAILING' }}"
+          curl -s -X POST \
+            -H "Authorization: token ${GH_PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"sha\": \"${GITHUB_SHA}\"}}"
