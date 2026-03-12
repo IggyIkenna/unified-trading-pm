@@ -1,0 +1,110 @@
+name: Build CI Tools Image
+
+# Builds and pushes the unified-trading-pm/ci-tools Docker image to Artifact Registry.
+# This image is the Cloud Build equivalent of the GHA composite actions — it provides
+# ripgrep, shellcheck, Python 3.13.9, uv, and Node 20 as a pre-built Cloud Build step
+# executor. All ~51 Python repos' cloudbuild.yaml files reference this image.
+#
+# Triggers:
+#   - Push to main: when docker/ci-tools/Dockerfile changes (version bump)
+#   - Manual: workflow_dispatch with optional version override
+#
+# Image tags:
+#   - latest   (always updated on main)
+#   - rg<VER>-py<VER>  (immutable, for pinned references)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/ci-tools/Dockerfile"
+  workflow_dispatch:
+    inputs:
+      rg_version:
+        description: ripgrep version override
+        default: "14.1.1"
+      python_version:
+        description: Python version override
+        default: "3.13.9"
+      force_push:
+        description: Push even if no Dockerfile change
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: asia-northeast1-docker.pkg.dev
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  IMAGE: asia-northeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/unified-trading-pm/ci-tools
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
+      - name: Ensure Artifact Registry repo exists
+        run: |
+          gcloud artifacts repositories describe unified-trading-pm \
+            --location=asia-northeast1 &>/dev/null || \
+          gcloud artifacts repositories create unified-trading-pm \
+            --repository-format=docker \
+            --location=asia-northeast1 \
+            --description="unified-trading-pm internal images (ci-tools, etc.)"
+
+      - name: Resolve tool versions
+        id: versions
+        run: |
+          RG_VER="${{ github.event.inputs.rg_version || '14.1.1' }}"
+          PY_VER="${{ github.event.inputs.python_version || '3.13.9' }}"
+          echo "rg_version=${RG_VER}" >> "$GITHUB_OUTPUT"
+          echo "python_version=${PY_VER}" >> "$GITHUB_OUTPUT"
+          echo "immutable_tag=rg${RG_VER}-py${PY_VER}" >> "$GITHUB_OUTPUT"
+
+      - name: Build ci-tools image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg RG_VERSION=${{ steps.versions.outputs.rg_version }} \
+            --build-arg PYTHON_VERSION=${{ steps.versions.outputs.python_version }} \
+            -t "${{ env.IMAGE }}:latest" \
+            -t "${{ env.IMAGE }}:${{ steps.versions.outputs.immutable_tag }}" \
+            docker/ci-tools/
+
+      - name: Push ci-tools image
+        run: |
+          docker push "${{ env.IMAGE }}:latest"
+          docker push "${{ env.IMAGE }}:${{ steps.versions.outputs.immutable_tag }}"
+          echo "✅ Pushed ${{ env.IMAGE }}:latest"
+          echo "✅ Pushed ${{ env.IMAGE }}:${{ steps.versions.outputs.immutable_tag }}"
+
+      - name: Verify image is pullable
+        run: |
+          docker pull "${{ env.IMAGE }}:latest"
+          docker run --rm "${{ env.IMAGE }}:latest" bash -c \
+            "rg --version && shellcheck --version && python --version && uv --version"
+          echo "✅ ci-tools image verified"
+
+      - name: Summary
+        run: |
+          echo "## ci-tools image built ✅" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | Image |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`latest\` | \`${{ env.IMAGE }}:latest\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| immutable | \`${{ env.IMAGE }}:${{ steps.versions.outputs.immutable_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "ripgrep: \`${{ steps.versions.outputs.rg_version }}\` | Python: \`${{ steps.versions.outputs.python_version }}\`" >> "$GITHUB_STEP_SUMMARY"

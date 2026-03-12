@@ -1,0 +1,75 @@
+name: Setup Python CI Tools
+description: >
+  Installs Python 3.13.9, uv, ripgrep (versioned + cached), jq, and shellcheck for Python service/library/interface
+  repos. Single source of truth for all Python CI tool installation — replaces inline apt-get + pip install steps across
+  ~51 repos.
+
+inputs:
+  python-version:
+    description: Python version to install
+    default: "3.13.9"
+  rg-version:
+    description: ripgrep version to install
+    default: "14.1.1"
+  shellcheck-version:
+    description: shellcheck version to install (with leading v)
+    default: "v0.10.0"
+  install-jq:
+    description: Whether to install jq (set false if repo doesn't need it)
+    default: "true"
+  install-shellcheck:
+    description: Whether to install shellcheck (set true for infra/shell-heavy repos)
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: "pip"
+
+    - name: Install uv
+      shell: bash
+      run: pip install uv
+
+    - name: Cache CI tools (ripgrep, shellcheck)
+      id: tools-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/ci-tools
+        key: ci-tools-linux-rg${{ inputs.rg-version }}-sc${{ inputs.shellcheck-version }}
+
+    - name: Install ripgrep
+      if: steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        RG_VER="${{ inputs.rg-version }}"
+        mkdir -p ~/.local/ci-tools/bin
+        curl -fsSL \
+          "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
+          | tar -xz --strip-components=1 -C ~/.local/ci-tools/bin \
+              "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
+        chmod +x ~/.local/ci-tools/bin/rg
+
+    - name: Install shellcheck
+      if: inputs.install-shellcheck == 'true' && steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        SC_VER="${{ inputs.shellcheck-version }}"
+        mkdir -p ~/.local/ci-tools/bin
+        curl -fsSL \
+          "https://github.com/koalaman/shellcheck/releases/download/${SC_VER}/shellcheck-${SC_VER}.linux.x86_64.tar.xz" \
+          | tar -xJ --strip-components=1 -C ~/.local/ci-tools/bin \
+              "shellcheck-${SC_VER}/shellcheck"
+        chmod +x ~/.local/ci-tools/bin/shellcheck
+
+    - name: Add CI tools to PATH
+      shell: bash
+      run: echo "$HOME/.local/ci-tools/bin" >> "$GITHUB_PATH"
+
+    - name: Install jq
+      if: inputs.install-jq == 'true'
+      shell: bash
+      run: sudo apt-get install -y -qq jq

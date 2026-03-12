@@ -236,7 +236,7 @@ def get_imported_internal(manifest: JsonDict, repos: set[str] | None = None) -> 
 
     Handles repos whose pyproject.toml package name differs from the repo name (e.g.
     unified-feature-calculator-library publishes 'unified-feature-calculator', so code
-    imports 'unified_feature_calculator', not 'unified_feature_calculator_library').
+    imports 'unified_feature_calculator_library', not 'unified_feature_calculator_library_library').
     """
     repos_map = _jdict(manifest.get("repositories")) or {}
     # Map import-module-name → canonical repo name.

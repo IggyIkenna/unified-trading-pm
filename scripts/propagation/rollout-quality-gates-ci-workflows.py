@@ -2,15 +2,18 @@
 """
 rollout-quality-gates-ci-workflows.py
 
-Propagates three CI/CD fixes to all Python-stack repos' quality-gates.yml:
+Propagates four CI/CD fixes to all Python-stack repos' quality-gates.yml:
 
   1. `export PATH="$(pwd)/.venv/bin:$PATH"` in the "Run quality gates" run block
   2. `CLOUD_MOCK_MODE: "true"` in the "Run quality gates" env block
   3. `--no-fix` flag on the `bash scripts/quality-gates.sh` invocation
+  4. "Record CI status" step after "Run quality gates" — dispatches ci-status-update
+     to unified-trading-pm on every main-branch push (pass or fail), so
+     workspace-manifest.json ci_status stays in sync automatically.
 
 Repos that are UI-only (stack: ui) are skipped — they use npm/vitest, not
 Python quality-gates.sh. Repos without a quality-gates.yml are reported as
-MISSING. Repos that already have all three fixes are reported as SKIP.
+MISSING. Repos that already have all four fixes are reported as SKIP.
 
 Usage:
     python rollout-quality-gates-ci-workflows.py [--dry-run] [--repo REPO_NAME]
@@ -47,6 +50,8 @@ PATH_EXPORT = 'export PATH="$(pwd)/.venv/bin:$PATH"'
 CLOUD_MOCK_ENV_KEY = "CLOUD_MOCK_MODE"
 CLOUD_MOCK_ENV_VAL = '"true"'
 NO_FIX_FLAG = "--no-fix"
+CI_STATUS_STEP_NAME = "Record CI status"
+CI_STATUS_MARKER = "ci-status-update"  # unique string present in the injected step
 
 # ── YAML-aware helpers (text-based — preserves comments and formatting) ───────
 
@@ -163,8 +168,54 @@ def _ensure_no_fix_flag(step_text: str) -> tuple[str, bool]:
     return step_text, False
 
 
+def _ensure_ci_status_step(content: str) -> tuple[str, bool]:
+    """Inject the 'Record CI status' step after 'Run quality gates' if not present.
+
+    The step dispatches ci-status-update to unified-trading-pm on every push to
+    main (pass or fail), keeping workspace-manifest.json ci_status in sync.
+    Uses `if: always()` so it runs even when QG fails.
+    """
+    if CI_STATUS_MARKER in content:
+        return content, False
+
+    span = _find_step_span(content, "Run quality gates")
+    if span is None:
+        return content, False
+
+    _, end = span
+
+    # Detect step indentation from the "Run quality gates" line
+    run_qg_line = re.compile(r"^( +)- name: Run quality gates", re.MULTILINE)
+    m = run_qg_line.search(content)
+    step_indent = m.group(1) if m else "      "
+
+    # Build the new step with the same indentation
+    i = step_indent
+    ii = i + "  "
+    new_step = (
+        f"{i}- name: {CI_STATUS_STEP_NAME}\n"
+        f"{ii}if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'\n"
+        f"{ii}env:\n"
+        f"{ii}  GH_PAT: ${{{{ secrets.GH_PAT }}}}\n"
+        f"{ii}run: |\n"
+        f'{ii}  [ -z "${{GH_PAT}}" ] && echo "GH_PAT not set — skipping {CI_STATUS_MARKER}" && exit 0\n'
+        f"{ii}  STATUS=\"${{{{ job.status == 'success' && 'PASSING' || 'FAILING' }}}}\"\n"
+        f"{ii}  curl -s -X POST \\\n"
+        f'{ii}    -H "Authorization: token ${{GH_PAT}}" \\\n'
+        f'{ii}    -H "Accept: application/vnd.github.v3+json" \\\n'
+        f'{ii}    "https://api.github.com/repos/${{{{ github.repository_owner }}}}/unified-trading-pm/dispatches" \\\n'
+        f'{ii}    -d "{{\\"event_type\\": \\"{CI_STATUS_MARKER}\\",'
+        f' \\"client_payload\\": {{\\"repo\\": \\"${{{{ github.event.repository.name }}}}\\",'
+        f' \\"status\\": \\"${{STATUS}}\\",'
+        f' \\"sha\\": \\"${{{{ github.sha }}}}\\"}}}}"\n'
+    )
+
+    new_content = content[:end] + new_step + content[end:]
+    return new_content, True
+
+
 def fix_workflow(content: str) -> tuple[str, list[str]]:
-    """Apply all three fixes to the workflow content. Return (new_content, changes)."""
+    """Apply all four fixes to the workflow content. Return (new_content, changes)."""
     span = _find_step_span(content, "Run quality gates")
     if span is None:
         return content, []
@@ -185,10 +236,15 @@ def fix_workflow(content: str) -> tuple[str, list[str]]:
     if changed:
         changes.append("added --no-fix flag")
 
+    new_content = content[:start] + step_text + content[end:]
+
+    new_content, changed = _ensure_ci_status_step(new_content)
+    if changed:
+        changes.append("injected 'Record CI status' dispatch step")
+
     if not changes:
         return content, []
 
-    new_content = content[:start] + step_text + content[end:]
     return new_content, changes
 
 

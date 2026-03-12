@@ -9,6 +9,10 @@ on:
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
+    env:
+      CLOUD_MOCK_MODE: "true"
+      GCP_PROJECT_ID: "test-project"
+      CLOUD_PROVIDER: "gcp"
     steps:
       - name: Checkout unified-trading-pm
         uses: actions/checkout@v4
@@ -18,7 +22,7 @@ jobs:
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.13.9"
 
       - name: Install uv
         run: pip install uv
@@ -78,7 +82,25 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/unified-trading-codex
           path: unified-trading-codex
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+        continue-on-error: true
+
+      - name: Checkout unified-events-interface (basedpyright extraPaths)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/unified-events-interface
+          path: unified-events-interface
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+        continue-on-error: true
+
+      - name: Checkout unified-internal-contracts (basedpyright extraPaths)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/unified-internal-contracts
+          path: unified-internal-contracts
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
         continue-on-error: true
 

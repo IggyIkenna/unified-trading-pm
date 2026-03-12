@@ -37,16 +37,16 @@ applied:** MAX_FUNCTION_LINES=200 · MAX_CLASS_LINES=900 (updated this session)
 
 ### Fixes committed
 
-| Fix                                                                                | Repo                                   | Commit         |
-| ---------------------------------------------------------------------------------- | -------------------------------------- | -------------- |
-| `ConfigDict(extra='forbid')` on all 44+ canonical models via `_CanonicalBase`      | unified-api-contracts                  | `c9218a7`      |
-| `ComplianceEventPayload` `float` → `Decimal` (MiFID II precision)                  | unified-events-interface               | `37dd5a1`      |
-| DAG edge typo: `unified-feature-calculator` → `unified-feature-calculator-library` | unified-trading-pm                     | prior session  |
-| 3× bare `except Exception:` → `except Exception as exc:`                           | strategy-service, execution-service    | prior session  |
-| `unit` pytest marker added                                                         | strategy-service, ml-inference-service | prior session  |
-| 3× `# orphan:` comments in canonical_mappings.py                                   | unified-api-contracts                  | prior session  |
-| `test_schema_robustness.py` added to 15 services                                   | 15 service repos                       | `b8b9fbd` etc. |
-| MAX_FUNCTION_LINES 100→200, MAX_CLASS_LINES 500→900                                | 58 repos + 6 SSOT files                | prior session  |
+| Fix                                                                                        | Repo                                   | Commit         |
+| ------------------------------------------------------------------------------------------ | -------------------------------------- | -------------- |
+| `ConfigDict(extra='forbid')` on all 44+ canonical models via `_CanonicalBase`              | unified-api-contracts                  | `c9218a7`      |
+| `ComplianceEventPayload` `float` → `Decimal` (MiFID II precision)                          | unified-events-interface               | `37dd5a1`      |
+| DAG edge typo: `unified-feature-calculator-library` → `unified-feature-calculator-library` | unified-trading-pm                     | prior session  |
+| 3× bare `except Exception:` → `except Exception as exc:`                                   | strategy-service, execution-service    | prior session  |
+| `unit` pytest marker added                                                                 | strategy-service, ml-inference-service | prior session  |
+| 3× `# orphan:` comments in canonical_mappings.py                                           | unified-api-contracts                  | prior session  |
+| `test_schema_robustness.py` added to 15 services                                           | 15 service repos                       | `b8b9fbd` etc. |
+| MAX_FUNCTION_LINES 100→200, MAX_CLASS_LINES 500→900                                        | 58 repos + 6 SSOT files                | prior session  |
 
 ### Remaining WARNs (backlogged, non-blocking)
 

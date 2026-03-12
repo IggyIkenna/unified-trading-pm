@@ -43,15 +43,15 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
 
 ## Section 1 — Workspace Governance
 
-| CATEGORY   | CRITERION                          | STATUS | EVIDENCE                                                                                                                        |
-| ---------- | ---------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Governance | workspace-manifest.json valid JSON | PASS   | 2825 lines, valid JSON; 59 repos                                                                                                |
-| Governance | All repos have arch_tier field     | PASS   | 59/59 repos                                                                                                                     |
-| Governance | ci_status fields present           | PASS   | 59/59 repos; 46 BASELINE_RECORDED, 5 PASSING                                                                                    |
-| Governance | DAG acyclic                        | PASS   | 178 edges, 0 cycles                                                                                                             |
-| Governance | DAG refs valid                     | WARN   | features-onchain-service depends on `unified-feature-calculator` (non-existent); should be `unified-feature-calculator-library` |
-| Governance | Repo count ~59                     | PASS   | Exactly 59 repos                                                                                                                |
-| Governance | runtime-topology.yaml valid        | PASS   | version: 6; valid YAML                                                                                                          |
+| CATEGORY   | CRITERION                          | STATUS | EVIDENCE                                                                                                                                |
+| ---------- | ---------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Governance | workspace-manifest.json valid JSON | PASS   | 2825 lines, valid JSON; 59 repos                                                                                                        |
+| Governance | All repos have arch_tier field     | PASS   | 59/59 repos                                                                                                                             |
+| Governance | ci_status fields present           | PASS   | 59/59 repos; 46 BASELINE_RECORDED, 5 PASSING                                                                                            |
+| Governance | DAG acyclic                        | PASS   | 178 edges, 0 cycles                                                                                                                     |
+| Governance | DAG refs valid                     | WARN   | features-onchain-service depends on `unified-feature-calculator-library` (non-existent); should be `unified-feature-calculator-library` |
+| Governance | Repo count ~59                     | PASS   | Exactly 59 repos                                                                                                                        |
+| Governance | runtime-topology.yaml valid        | PASS   | version: 6; valid YAML                                                                                                                  |
 
 **Score: PASS (1 WARN)**
 
@@ -314,7 +314,7 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
    `except Exception:` not fixed from prior audit. Specify exception types.
 
 10. **[WARN] Section 1** — `unified-trading-pm/workspace-manifest.json` — `features-onchain-service` depends on
-    `unified-feature-calculator` (non-existent); should be `unified-feature-calculator-library`.
+    `unified-feature-calculator-library` (non-existent); should be `unified-feature-calculator-library`.
 
 ---
 
@@ -354,7 +354,7 @@ observability, and technical debt trajectory are all improved.
    coordination
 5. Add `log_event("SECRET_ACCESSED", ...)` to UnifiedCloudConfig secret retrieval (Section 3)
 6. Add `log_event("AUTH_FAILURE", ...)` to market-data-api and execution-results-api auth handlers (Section 3)
-7. Fix DAG ref typo: `unified-feature-calculator` → `unified-feature-calculator-library` in manifest (Section 1)
+7. Fix DAG ref typo: `unified-feature-calculator-library` → `unified-feature-calculator-library` in manifest (Section 1)
 
 ### P2 — Code quality (longer horizon)
 

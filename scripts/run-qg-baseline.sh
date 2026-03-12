@@ -18,24 +18,12 @@ for d in */; do
   echo -n "QG $name... "
   if bash "${d}scripts/quality-gates.sh" --no-fix --quick &>/dev/null; then
     echo "PASS"
-    python3 -c "
-import json
-with open('$MANIFEST') as f: m=json.load(f)
-if '$name' in m.get('repositories',{}):
-  m['repositories']['$name']['ci_status']='PASSING'
-  m['repositories']['$name']['quality_gate_status']='PASSING'
-with open('$MANIFEST','w') as f: json.dump(m,f,indent=2)
-" 2>/dev/null || true
+    python3 "$WS_ROOT/unified-trading-pm/scripts/ci/record-ci-status.py" \
+      --repo "$name" --status PASSING 2>/dev/null || true
   else
     echo "FAIL"
-    python3 -c "
-import json
-with open('$MANIFEST') as f: m=json.load(f)
-if '$name' in m.get('repositories',{}):
-  m['repositories']['$name']['ci_status']='FAILING'
-  m['repositories']['$name']['quality_gate_status']='FAILING'
-with open('$MANIFEST','w') as f: json.dump(m,f,indent=2)
-" 2>/dev/null || true
+    python3 "$WS_ROOT/unified-trading-pm/scripts/ci/record-ci-status.py" \
+      --repo "$name" --status FAILING 2>/dev/null || true
   fi
 done
 echo "Done. Manifest updated."

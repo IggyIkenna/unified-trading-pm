@@ -128,7 +128,7 @@ Eliminate ALL `.basedpyright-baseline.json` suppression across every repo. Every
 | deployment-api                    | 2,962           | google-auth/redis/cachetools untyped; internal code unannotated        |
 | market-data-processing-service    | 1,348           | polars/pyarrow/numba untyped; pandas cascade                           |
 | ml-training-service               | 504             | scipy/lightgbm/ta-lib no stubs; shap untyped                           |
-| features-sports-service           | 429             | unified-feature-calculator internal lib untyped                        |
+| features-sports-service           | 429             | unified-feature-calculator-library internal lib untyped                |
 | execution-results-api             | 39              | unused imports, private API access, unnecessary casts                  |
 | unified-trade-execution-interface | 32              | ccxt/ib_insync no stubs; aiohttp param mismatches                      |
 | strategy-service                  | 3               | unused import + 2 numpy/scipy `reportAny` in math_utilities            |

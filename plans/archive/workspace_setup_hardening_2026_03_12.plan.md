@@ -1,6 +1,6 @@
 ---
 id: workspace_setup_hardening_2026_03_12
-status: active
+status: done
 created: 2026-03-12
 priority: P1
 repos:

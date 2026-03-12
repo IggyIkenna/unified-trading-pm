@@ -1,0 +1,60 @@
+name: ci-status-record
+
+# Receives repository_dispatch from individual repos after their quality gates
+# complete on the main branch. Updates ci_status in workspace-manifest.json.
+#
+# Payload: { repo, status, sha }
+#   repo:   repo name (e.g. "unified-config-interface")
+#   status: "PASSING" or "FAILING"
+#   sha:    commit SHA that was tested
+
+on:
+  repository_dispatch:
+    types: [ci-status-update]
+
+permissions:
+  contents: write
+
+# Serialise writes — multiple repos may dispatch simultaneously
+concurrency:
+  group: manifest-ci-status
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Record CI status in manifest
+        run: |
+          set -euo pipefail
+          REPO="${{ github.event.client_payload.repo }}"
+          STATUS="${{ github.event.client_payload.status }}"
+          SHA="${{ github.event.client_payload.sha }}"
+
+          if [ -z "$REPO" ] || [ -z "$STATUS" ]; then
+            echo "Missing repo or status in client_payload — skipping."
+            exit 0
+          fi
+
+          python3 scripts/ci/record-ci-status.py \
+            --repo "$REPO" \
+            --status "$STATUS" \
+            --sha "$SHA"
+
+      - name: Commit manifest update
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add workspace-manifest.json
+          if git diff --cached --quiet; then
+            echo "No change to workspace-manifest.json — nothing to commit."
+          else
+            git commit -m "ci: record ${{ github.event.client_payload.repo }} ci_status=${{ github.event.client_payload.status }}"
+            git push
+          fi

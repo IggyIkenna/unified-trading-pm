@@ -397,14 +397,16 @@ def load_manifest() -> dict[str, dict[str, object]]:
 
 class _ParsedArgs(argparse.Namespace):
     dry_run: bool
-    repo: str
+    repo: list[str]
+    ignore: list[str]
     force: bool
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Rollout UI build infra (Dockerfile + cloudbuild + buildspec)")
     parser.add_argument("--dry-run", action="store_true", dest="dry_run")
-    parser.add_argument("--repo", default="", help="Single repo name")
+    parser.add_argument("--repo", nargs="+", default=[], metavar="REPO", help="One or more repo names to target")
+    parser.add_argument("--ignore", nargs="+", default=[], metavar="REPO", help="One or more repo names to skip")
     parser.add_argument("--force", action="store_true", help="Overwrite existing files")
     args = parser.parse_args(namespace=_ParsedArgs())
 
@@ -412,7 +414,9 @@ def main() -> None:
 
     target_repos: list[tuple[str, str]] = []
     for name, info in sorted(repos.items()):
-        if args.repo and name != args.repo:
+        if args.repo and name not in args.repo:
+            continue
+        if args.ignore and name in args.ignore:
             continue
         if info.get("status") in {"deprecated", "archived", "deleted", "future", "scaffolded"}:
             continue

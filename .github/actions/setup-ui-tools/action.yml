@@ -1,0 +1,50 @@
+name: Setup UI CI Tools
+description: >
+  Sets up Node.js for UI repos (React/TypeScript). Single source of truth for all UI CI tool installation — replaces
+  inline setup-node steps across ~14 UI repos. UI repos do not need ripgrep (no codex Python checks) so this action
+  intentionally omits it. If a UI repo ever needs rg, set install-ripgrep: "true".
+
+inputs:
+  node-version:
+    description: Node.js version to install
+    default: "20"
+  install-ripgrep:
+    description: Install ripgrep (false by default — UI repos do not run codex checks)
+    default: "false"
+  rg-version:
+    description: ripgrep version (only used if install-ripgrep is true)
+    default: "14.1.1"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: "npm"
+
+    - name: Cache CI tools (ripgrep)
+      id: tools-cache
+      if: inputs.install-ripgrep == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/ci-tools
+        key: ci-tools-linux-rg${{ inputs.rg-version }}
+
+    - name: Install ripgrep
+      if: inputs.install-ripgrep == 'true' && steps.tools-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        RG_VER="${{ inputs.rg-version }}"
+        mkdir -p ~/.local/ci-tools/bin
+        curl -fsSL \
+          "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
+          | tar -xz --strip-components=1 -C ~/.local/ci-tools/bin \
+              "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
+        chmod +x ~/.local/ci-tools/bin/rg
+
+    - name: Add CI tools to PATH
+      if: inputs.install-ripgrep == 'true'
+      shell: bash
+      run: echo "$HOME/.local/ci-tools/bin" >> "$GITHUB_PATH"

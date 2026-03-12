@@ -1,0 +1,34 @@
+name: Setup Agent CI Tools
+description: >
+  Sets up the full agent tool stack: Python 3.13.9, uv, ripgrep (versioned + cached), jq, and Claude Code CLI. Used by
+  agent-audit.yml, plan-alignment-agent.yml, and semver-agent.yml workflows across ~12 service repos. Composes
+  setup-python-tools and adds the agent-specific extras on top.
+
+inputs:
+  python-version:
+    description: Python version to install
+    default: "3.13.9"
+  rg-version:
+    description: ripgrep version to install
+    default: "14.1.1"
+  shellcheck-version:
+    description: shellcheck version (with leading v)
+    default: "v0.10.0"
+  claude-code-version:
+    description: Claude Code CLI npm version specifier
+    default: "latest"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python CI tools
+      uses: IggyIkenna/unified-trading-pm/.github/actions/setup-python-tools@main
+      with:
+        python-version: ${{ inputs.python-version }}
+        rg-version: ${{ inputs.rg-version }}
+        shellcheck-version: ${{ inputs.shellcheck-version }}
+        install-jq: "true"
+
+    - name: Install Claude Code CLI
+      shell: bash
+      run: npm install -g @anthropic-ai/claude-code@${{ inputs.claude-code-version }}
