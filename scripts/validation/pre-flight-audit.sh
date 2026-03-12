@@ -91,6 +91,14 @@ fi
 
 echo ""
 
+# Fail fast: uncommitted dep changes must be resolved before quality audit
+if [ "$ERRORS" -gt 0 ]; then
+    echo -e "${RED}❌ Pre-Flight Audit FAILED: $ERRORS dep(s) have uncommitted changes.${NC}"
+    echo "Resolve the ACTION REQUIRED steps above, then re-run quickmerge."
+    echo ""
+    exit 1
+fi
+
 # ==========================================
 # Stage 2: Quality Audit
 # ==========================================

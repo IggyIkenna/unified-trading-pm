@@ -34,8 +34,9 @@ from typing import cast
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
-# Stacks that are pure TypeScript/UI — no Python quality-gates.sh
-SKIP_STACKS = {"ui"}
+# UI repos use vitest/playwright but still call scripts/quality-gates.sh for
+# linting/type checks — they need the same CI env vars as Python service repos.
+SKIP_STACKS: set[str] = set()
 
 # Repos with non-standard quality-gates.yml that we should not touch
 SKIP_REPOS = {

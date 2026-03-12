@@ -61,8 +61,7 @@ def _find_violations(workflow_file: Path) -> list[str]:
                 # Check previous block for violations
                 if has_cross_repo and has_github_token:
                     violations.append(
-                        f"  Line ~{with_start_line}: cross-repo operation uses GITHUB_TOKEN"
-                        f" — replace with GH_PAT"
+                        f"  Line ~{with_start_line}: cross-repo operation uses GITHUB_TOKEN — replace with GH_PAT"
                     )
                 in_with = False
                 has_cross_repo = False
@@ -83,18 +82,13 @@ def _find_violations(workflow_file: Path) -> list[str]:
                     has_cross_repo = True
 
             if "GITHUB_TOKEN" in stripped and (
-                "token:" in stripped
-                or "github-token:" in stripped
-                or "github_token:" in stripped
+                "token:" in stripped or "github-token:" in stripped or "github_token:" in stripped
             ):
                 has_github_token = True
 
     # Handle EOF while still in with block
     if in_with and has_cross_repo and has_github_token:
-        violations.append(
-            f"  Line ~{with_start_line}: cross-repo operation uses GITHUB_TOKEN"
-            f" — replace with GH_PAT"
-        )
+        violations.append(f"  Line ~{with_start_line}: cross-repo operation uses GITHUB_TOKEN — replace with GH_PAT")
 
     return violations
 
@@ -115,10 +109,10 @@ def check_dir(workflows_dir: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dir", default=".github/workflows",
-                        help="Workflows directory to check (default: .github/workflows)")
-    parser.add_argument("--workspace", action="store_true",
-                        help="Check all repos in the workspace")
+    parser.add_argument(
+        "--dir", default=".github/workflows", help="Workflows directory to check (default: .github/workflows)"
+    )
+    parser.add_argument("--workspace", action="store_true", help="Check all repos in the workspace")
     args = parser.parse_args()
 
     if args.workspace:
@@ -127,15 +121,14 @@ def main() -> int:
         for repo_dir in sorted(workspace_root.iterdir()):
             if not repo_dir.is_dir():
                 continue
-            if repo_dir.name.startswith(".") or repo_dir.name in (
-                "node_modules", ".venv", ".venv-workspace"
-            ):
+            if repo_dir.name.startswith(".") or repo_dir.name in ("node_modules", ".venv", ".venv-workspace"):
                 continue
             wf_dir = repo_dir / ".github" / "workflows"
             total += check_dir(wf_dir)
         if total:
-            print(f"\n{total} cross-repo GITHUB_TOKEN violation(s) found."
-                  f" Use secrets.GH_PAT for cross-repo operations.")
+            print(
+                f"\n{total} cross-repo GITHUB_TOKEN violation(s) found. Use secrets.GH_PAT for cross-repo operations."
+            )
             return 1
         print("No cross-repo GITHUB_TOKEN violations found.")
         return 0
@@ -143,8 +136,9 @@ def main() -> int:
         wf_dir = Path(args.dir)
         total = check_dir(wf_dir)
         if total:
-            print(f"\n{total} cross-repo GITHUB_TOKEN violation(s) found."
-                  f" Use secrets.GH_PAT for cross-repo operations.")
+            print(
+                f"\n{total} cross-repo GITHUB_TOKEN violation(s) found. Use secrets.GH_PAT for cross-repo operations."
+            )
             return 1
         return 0
 

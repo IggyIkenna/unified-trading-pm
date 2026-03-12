@@ -469,15 +469,34 @@ if [ -f "$MANIFEST_PATH" ]; then
       dep_path="$WORKSPACE_ROOT/$dep"
       if [ -d "$dep_path" ]; then
         cd "$dep_path"
-        # Fetch the feature branch (and main as fallback)
+        # Fetch the feature branch
         git fetch origin "$DEP_REF_BRANCH" --quiet 2>/dev/null || true
-        [ "$DEP_REF_BRANCH" != "main" ] && git fetch origin main --quiet 2>/dev/null || true
-        # Check against feature branch; fall back to main if feature branch doesn't exist remotely
-        if git rev-parse "origin/$DEP_REF_BRANCH" &>/dev/null 2>&1; then
-          REF="origin/$DEP_REF_BRANCH"
-        else
-          REF="origin/main"
+        if ! git rev-parse "origin/$DEP_REF_BRANCH" &>/dev/null 2>&1; then
+          echo ""
+          echo "═══════════════════════════════════════════════════════"
+          echo "❌ REMOTE BRANCH MISSING: $dep"
+          echo "═══════════════════════════════════════════════════════"
+          echo ""
+          echo "Branch 'origin/$DEP_REF_BRANCH' does not exist remotely for: $dep"
+          echo "active_feature_branch in workspace-manifest.json is '$DEP_REF_BRANCH'."
+          echo ""
+          echo "── Fix options ────────────────────────────────────────────────"
+          echo "1. Create and push the branch in this dep repo:"
+          echo "     cd $dep_path"
+          echo "     git checkout -b $DEP_REF_BRANCH && git push origin $DEP_REF_BRANCH"
+          echo ""
+          echo "2. Do the same for ALL dep repos missing the branch (check each)."
+          echo ""
+          echo "3. Update active_feature_branch in workspace-manifest.json (HUMAN ONLY):"
+          echo "     cd $WORKSPACE_ROOT/unified-trading-pm"
+          echo "     edit workspace-manifest.json → change active_feature_branch"
+          echo "═══════════════════════════════════════════════════════"
+          if [ "$AGENT_MODE" = true ]; then
+            echo "⛔ Agent mode: cannot proceed — human must resolve branch mismatch."
+          fi
+          exit 1
         fi
+        REF="origin/$DEP_REF_BRANCH"
         if ! git diff "$REF" --quiet 2>/dev/null; then
           HAS_DIFF=true
           LAST_DEP_PATH="$dep_path"
@@ -507,7 +526,7 @@ if [ -f "$MANIFEST_PATH" ]; then
       echo "── If you are an AGENT ────────────────────────────────────────────────"
       echo "Do NOT use --dep-branch. Commit the dependency changes first (in the"
       echo "dep repo) using the active_feature_branch from workspace-manifest.json,"
-      echo "then re-run quickmerge in this repo."
+      echo "then quickmerge that branch, then re-run quickmerge in this repo."
       echo ""
       echo "═══════════════════════════════════════════════════════"
       exit 1
