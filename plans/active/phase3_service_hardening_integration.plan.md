@@ -49,7 +49,7 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: features-calendar-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
@@ -77,7 +77,7 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: features-multi-timeframe-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
@@ -98,7 +98,7 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: strategy-service
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
@@ -118,6 +118,48 @@ repo_gates:
     readiness_note:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
+  - repo: alerting-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "QG passing with RUN_INTEGRATION=true (commit 3d43b23 2026-03-12). DR N/A: code-completion epic scope. BR N/A: no
+      commercial sign-off required for a code plan."
+  - repo: risk-and-exposure-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "QG passing with RUN_INTEGRATION=true; float→Decimal fixes in alert_adapter/risk_metrics/risk_monitor (commit
+      0ac26c6 2026-03-12). DR N/A: code-completion epic scope. BR N/A: no commercial sign-off required for a code plan."
+  - repo: pnl-attribution-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "QG passing with RUN_INTEGRATION=true (verified 2026-03-12). DR N/A: code-completion epic scope. BR N/A: no
+      commercial sign-off required for a code plan."
+  - repo: position-balance-monitor-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "QG passing with RUN_INTEGRATION=true (verified 2026-03-12). DR N/A: code-completion epic scope. BR N/A: no
+      commercial sign-off required for a code plan."
+  - repo: strategy-validation-service
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "QG passing with RUN_INTEGRATION=true (commit 2550d14 2026-03-12). DR N/A: code-completion epic scope. BR N/A: no
+      commercial sign-off required for a code plan."
+  - repo: elysium-defi-system
+    code: C4
+    deployment: none
+    business: none
+    readiness_note:
+      "QG passing with RUN_INTEGRATION=true; import/fallback exclusions added for DeFi adapters and strategies (commit
+      4c5981d 2026-03-12). DR N/A: code-completion epic scope. BR N/A: no commercial sign-off required for a code plan."
 
 depends_on:
   - phase2_library_tier_hardening
