@@ -2,22 +2,26 @@
 """
 rollout-quality-gates-ci-workflows.py
 
-Propagates three CI/CD fixes to all Python-stack repos' quality-gates.yml:
+Propagates CI/CD fixes to all repos' quality-gates.yml:
 
   1. `export PATH="$(pwd)/.venv/bin:$PATH"` in the "Run quality gates" run block
   2. `CLOUD_MOCK_MODE: "true"` in the "Run quality gates" env block
   3. `--no-fix` flag on the `bash scripts/quality-gates.sh` invocation
+  4. Composite action ref pinned to the active feature branch from workspace-manifest.json
+     (e.g. `@main` → `@live-defi-rollout`). Pass `--action-ref` to override.
 
-Repos that are UI-only (stack: ui) are skipped — they use npm/vitest, not
-Python quality-gates.sh. Repos without a quality-gates.yml are reported as
-MISSING. Repos that already have all three fixes are reported as SKIP.
+Repos without a quality-gates.yml are reported as MISSING.
+Repos that already have all fixes are reported as SKIP.
 
 Usage:
     python rollout-quality-gates-ci-workflows.py [--dry-run] [--repo REPO_NAME]
+                                                  [--action-ref REF]
 
 Options:
-    --dry-run    Print what would change without writing any files.
-    --repo       Process a single repo by name.
+    --dry-run       Print what would change without writing any files.
+    --repo          Process a single repo by name.
+    --action-ref    Override the composite action ref (default: active_feature_branch
+                    from workspace-manifest.json, or "main" if not set).
 """
 
 from __future__ import annotations
@@ -43,6 +47,8 @@ SKIP_REPOS = {
     "unified-trading-pm",  # Uses working-directory + source .venv/bin/activate (special PM structure)
     "unified-trading-codex",  # Has no "Run quality gates" step — custom bash/python syntax checks
 }
+
+ACTION_USES_RE = re.compile(r"(uses:\s+IggyIkenna/unified-trading-pm/\.github/actions/[^\s@]+)@(\S+)")
 
 PATH_EXPORT = 'export PATH="$(pwd)/.venv/bin:$PATH"'
 CLOUD_MOCK_ENV_KEY = "CLOUD_MOCK_MODE"
@@ -169,15 +175,31 @@ def _ensure_no_fix_flag(step_text: str) -> tuple[str, bool]:
     return step_text, False
 
 
-def fix_workflow(content: str) -> tuple[str, list[str]]:
+def _ensure_action_ref(content: str, target_ref: str) -> tuple[str, bool]:
+    """Replace any composite action @<ref> with @target_ref throughout the file."""
+    new_content, count = ACTION_USES_RE.subn(
+        lambda m: f"{m.group(1)}@{target_ref}" if m.group(2) != target_ref else m.group(0),
+        content,
+    )
+    return new_content, count > 0
+
+
+def fix_workflow(content: str, action_ref: str = "main") -> tuple[str, list[str]]:
     """Apply all three fixes to the workflow content. Return (new_content, changes)."""
+    changes: list[str] = []
+
+    # Fix 1: composite action ref (file-level, not step-scoped)
+    content, changed = _ensure_action_ref(content, action_ref)
+    if changed:
+        changes.append(f"pinned composite action ref to @{action_ref}")
+
+    # Fixes 2-4: scoped to "Run quality gates" step
     span = _find_step_span(content, "Run quality gates")
     if span is None:
-        return content, []
+        return content, changes
 
     start, end = span
     step_text = content[start:end]
-    changes: list[str] = []
 
     step_text, changed = _ensure_cloud_mock_env(step_text)
     if changed:
@@ -190,9 +212,6 @@ def fix_workflow(content: str) -> tuple[str, list[str]]:
     step_text, changed = _ensure_no_fix_flag(step_text)
     if changed:
         changes.append("added --no-fix flag")
-
-    if not changes:
-        return content, []
 
     new_content = content[:start] + step_text + content[end:]
     return new_content, changes
@@ -217,12 +236,19 @@ def validate_yaml(path: Path) -> bool:
 class _ParsedArgs(argparse.Namespace):
     dry_run: bool
     repo: str
+    action_ref: str
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", dest="dry_run", help="Show changes without writing files")
     parser.add_argument("--repo", default="", help="Process a single repo by name")
+    parser.add_argument(
+        "--action-ref",
+        default="",
+        dest="action_ref",
+        help="Composite action ref to pin (default: active_feature_branch from manifest)",
+    )
     args = parser.parse_args(namespace=_ParsedArgs())
 
     dry_run: bool = args.dry_run
@@ -235,6 +261,10 @@ def main() -> None:
     with MANIFEST_PATH.open() as f:
         manifest: dict[str, object] = cast(dict[str, object], json.load(f))
     repos: dict[str, dict[str, object]] = cast(dict[str, dict[str, object]], manifest.get("repositories") or {})
+
+    # Resolve action ref: CLI arg > manifest active_feature_branch > "main"
+    action_ref: str = args.action_ref or cast(str, manifest.get("active_feature_branch") or "") or "main"
+    print(f"Composite action ref: @{action_ref}")
 
     # If single-repo mode, restrict list
     if target_repo:
@@ -276,7 +306,7 @@ def main() -> None:
             stats["skipped"] += 1
             continue
 
-        new_content, changes = fix_workflow(content)
+        new_content, changes = fix_workflow(content, action_ref)
 
         if not changes:
             print(f"OK    {repo_name} (all fixes already present)")
