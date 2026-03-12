@@ -112,12 +112,13 @@ repo_gates:
       "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
       required for a code plan."
   - repo: system-integration-tests
-    code: C0
+    code: C4
     deployment: none
     business: none
     readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
+      "QG passing (basedpyright fix: pytest.approx pyright ignore comment, commit 7961788 2026-03-11). DR N/A:
+      code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required
+      for a code plan."
   - repo: alerting-service
     code: C4
     deployment: none
