@@ -51,11 +51,31 @@ python3 unified-trading-pm/scripts/sync-gitignore-cursorignore.py
 
 This writes `.gitignore` and `.cursorignore` at each **repo root** only. Subdirectory ignore files (e.g.
 `ui/.gitignore`, `frontend/.gitignore`) are left unchanged. Repo-specific exceptions (e.g. `!tests/fixtures/*.csv` for
-unified-trading-library, `!.env.example` and Terraform for unified-trading-deployment-v3) are applied automatically.
+unified-trading-library, `!.env.example` and active Terraform block for `unified-trading-deployment-v3`,
+`ibkr-gateway-infra`, and `deployment-service`) are applied automatically.
 
 Each repo’s `.gitignore` ends with a **preserved block**:
 `# --- Repo-specific exceptions (add below; sync preserves this section) ---`. Anything you add under that line (e.g.
 `!some/path/*.csv`) is kept on the next sync; the script only overwrites content above that block.
+
+### Purging committed junk from git history (one-time / exceptional)
+
+If files that should be ignored were accidentally committed, use `--purge-history` to remove them from every past
+commit:
+
+```bash
+# Preview first — no changes
+python3 unified-trading-pm/scripts/workspace/sync-gitignore-cursorignore.py --purge-history --dry-run
+
+# Run for real (single repo)
+python3 unified-trading-pm/scripts/workspace/sync-gitignore-cursorignore.py --repo <name> --purge-history
+
+# Run for all repos
+python3 unified-trading-pm/scripts/workspace/sync-gitignore-cursorignore.py --purge-history
+```
+
+**Consequences:** commits get new SHAs; a `git push --force origin HEAD` is required for each affected repo; anyone with
+a local clone must re-clone. This flag is intentionally NOT part of the normal sync workflow.
 
 ## Propagation (manual alternative)
 

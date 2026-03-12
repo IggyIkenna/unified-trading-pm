@@ -16,6 +16,44 @@ performance, and autonomous agent infrastructure (Sections 1–28).
 
 ---
 
+## AGENT FAST-PATH — Run Scripts First (~80% of audit, no runaway processes)
+
+Before doing any ad-hoc analysis, run the pre-built audit scripts. They use `rg`/`grep`/`find` exclusively (no Python
+DOTALL regex — avoids catastrophic backtracking and runaway processes).
+
+```bash
+# Full scriptable audit (§1, §2, §3, §4/12, §6, §8, §9, §11, §13, §27):
+bash unified-trading-pm/scripts/audit/run-audit-scriptable.sh
+
+# Single section:
+bash unified-trading-pm/scripts/audit/run-audit-scriptable.sh --sections 3
+
+# Section scoped to one repo:
+bash unified-trading-pm/scripts/audit/run-audit-scriptable.sh --sections 13 --repo execution-service
+
+# Individual section scripts (all in unified-trading-pm/scripts/audit/):
+bash unified-trading-pm/scripts/audit/s01-governance.sh
+bash unified-trading-pm/scripts/audit/s02-code-quality.sh
+bash unified-trading-pm/scripts/audit/s03-security.sh
+bash unified-trading-pm/scripts/audit/s04-architecture.sh   # also covers §12
+bash unified-trading-pm/scripts/audit/s06-observability.sh
+bash unified-trading-pm/scripts/audit/s08-tech-debt.sh
+bash unified-trading-pm/scripts/audit/s09-cross-repo.sh
+bash unified-trading-pm/scripts/audit/s11-coverage.sh
+bash unified-trading-pm/scripts/audit/s13-stubs.sh
+bash unified-trading-pm/scripts/audit/s27-contracts.sh
+```
+
+**Sections requiring semantic review** (no script — read section and reason manually): §5 Schema Governance · §7
+Deployment · §10 Integration Tests · §14 Orphaned Code · §15-16 CI/CD + UI · §17 Tooling SSOT · §18 Semver · §19
+Readiness Gates · §20-26 Domain/Perf/E2E
+
+**NEVER write `python3 << 'EOF'` heredocs for file searching** — use `rg` or the scripts above. Inline Python with
+`re.DOTALL` + nested quantifiers causes catastrophic backtracking (12–22 hour runaway processes have occurred on this
+machine from this exact pattern).
+
+---
+
 ## AUDITOR INSTRUCTIONS
 
 You are auditing the unified trading system workspace for production readiness and regression detection. For each
