@@ -43,15 +43,17 @@ todos:
     status: completed
   - id: phase-2-buildspec
     content:
-      "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present). FILE
-      DISTRIBUTION DONE 2026-03-05. Canary simulated CodeBuild run for 3 repos (instruments-service,
-      unified-cloud-interface, unified-events-interface) still pending — tracked in topology_dag_pm_ssot.plan.md todo
-      codebuild-canary-run. File distribution gate satisfied; canary run completes the full gate."
+      "buildspec.aws.yaml distributed to all 66 qualifying repos (unified-trading-codex intentionally excluded —
+      docs-only). Total workspace: 67 repos (confirmed 2026-03-12 via manifest + git scan; prior count of 44/63 was
+      incorrect). 5 new buildspecs added 2026-03-12: batch-live-reconciliation-service, elysium-defi-system,
+      deployment-ui (+ Dockerfile), unified-trading-ui-kit. All 66 validated via validate-buildspec.py. FILE
+      DISTRIBUTION DONE 2026-03-12. Canary simulated CodeBuild run for 3 repos (instruments-service,
+      unified-cloud-interface, unified-events-interface) still pending — tracked in codebuild-canary-run below."
     status: completed
   - id: codebuild-canary-run
     content: |
       Validate that buildspec.aws.yaml files actually work in a simulated CodeBuild environment.
-      All 44 repos have buildspec.aws.yaml files — none have been validated yet.
+      All 66 repos have buildspec.aws.yaml files (67 total workspace; unified-trading-codex excluded).
 
       Steps:
       (1) For 3 canary repos (instruments-service, unified-cloud-interface,
