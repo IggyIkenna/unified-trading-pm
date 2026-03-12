@@ -31,6 +31,9 @@ Read these before making ANY code changes:
 ## Key Rules (Quick Reference)
 
 - `uv pip install` not `pip install`
+- `ARG PROJECT_ID` +
+  `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
+  in Dockerfiles — never `python:3.13-slim` or `pip install uv`
 - `bash scripts/quickmerge.sh "message" --agent` not `git push` — always use `--agent` in Claude Code sessions
 - Two-pass model: `bash scripts/quality-gates.sh` first (Pass 1 — full), then `quickmerge --agent` (Pass 2 —
   lint/format/typecheck/codex, no tests, no act)

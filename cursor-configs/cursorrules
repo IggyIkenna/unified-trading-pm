@@ -122,6 +122,13 @@ These rules are BLOCKING — always active, never override without audit:
 See `.cursor/rules/anti-patterns-quick-reference.mdc` for the full table.
 
 ---
+## Dockerfile Standards
+
+- Always use `asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest` as FROM base for Python services (never `python:3.13-slim`, never `ghcr.io/astral-sh/uv`, never bare `pip install uv` in Dockerfile)
+- Always add `ARG PROJECT_ID` before the FROM line and `--platform=linux/amd64` to the FROM
+
+---
+
 ## Analysis Rules
 
 When analyzing codebase architecture:

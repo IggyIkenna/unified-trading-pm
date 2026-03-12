@@ -61,6 +61,30 @@ Required variables: `SERVICE_NAME`, `SOURCE_DIR`, `MIN_COVERAGE`, `RUN_INTEGRATI
 
 Optional variables: `PYTEST_WORKERS` (default: 2), `LOCAL_DEPS` (default: empty array)
 
+### Dockerfile template (Python service/library)
+
+```dockerfile
+ARG PROJECT_ID
+FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest
+
+WORKDIR /app
+
+COPY pyproject.toml .
+COPY <package_dir>/ ./<package_dir>/
+
+RUN uv pip install --system --no-cache-dir -e .
+
+# For production services — add non-root user and health check:
+# RUN useradd --create-home --uid 1000 --shell /bin/bash appuser
+# USER appuser
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#   CMD curl -f http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["python", "-m", "<package_dir>"]
+```
+
+See: `unified-trading-codex/06-coding-standards/dockerfile-standards.md` for full spec.
+
 ### UI repos (~8 lines)
 
 ```bash
