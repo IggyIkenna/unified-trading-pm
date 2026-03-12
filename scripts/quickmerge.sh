@@ -877,7 +877,11 @@ else
   git add -A
 fi
 
-if ! git commit -m "$COMMIT_MSG" --quiet; then
+if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)" ]; then
+  # Nothing staged and working tree is clean — changes were already committed
+  # in a previous quickmerge run. Skip commit and go straight to push + PR.
+  echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed. Proceeding to push."
+elif ! git commit -m "$COMMIT_MSG" --quiet; then
   # Pre-commit may have modified files (e.g. Prettier). Stage and retry once.
   git add -A
   if ! git commit -m "$COMMIT_MSG" --quiet; then

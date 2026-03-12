@@ -15,6 +15,7 @@
 #
 # Optional caller variables:
 #   MAX_DURATION      — duration limit in seconds (default: 120); set to 300 for PM/codex
+#   IGNORE_TIMEOUT    — set to "true" to skip duration check (useful when running parallel suites)
 #
 # Version guard (optional): declare EXPECTED_BASE_VERSION="1.0" in stub before sourcing.
 #
@@ -85,14 +86,14 @@ run_timeout() {
 }
 
 # ── MODE ──────────────────────────────────────────────────────────────────────
-FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false
+FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}
 for arg in "$@"; do
     case $arg in
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
         --skip-tests) RUN_TESTS=false ;; --skip-lint) RUN_LINT=false ;;
         --fix) FIX_MODE=true ;;       --skip-typecheck) SKIP_TYPECHECK=true ;;
-        --act) ACT_MODE=true ;;
+        --act) ACT_MODE=true ;;       --ignore-timeout) IGNORE_TIMEOUT=true ;;
     esac
 done
 
@@ -888,6 +889,9 @@ fi
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-120}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
-[ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
+if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
+    log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
+    exit 1
+fi
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
