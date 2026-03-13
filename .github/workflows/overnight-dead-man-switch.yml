@@ -1,8 +1,10 @@
 name: Overnight Dead Man Switch
 
 # Runs at 03:00 UTC — 2 hours after the overnight orchestrator (01:00 UTC).
-# Checks if the orchestrator had a successful run in the last 3 hours.
-# If not, sends a Telegram alert so silent failures don't go unnoticed.
+# Checks if the orchestrator completed successfully within the last 24 hours.
+# Also detects hung runs (still in_progress after 2+ hours).
+# If no healthy completion found, sends a Telegram alert so silent failures
+# don't go unnoticed.
 
 on:
   schedule:
@@ -15,8 +17,9 @@ permissions:
 jobs:
   check-orchestrator:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Check overnight orchestrator last successful run
+      - name: Check overnight orchestrator completion status
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -24,52 +27,92 @@ jobs:
         run: |
           set -euo pipefail
 
+          echo "=== Overnight Dead Man Switch ==="
           echo "Checking overnight-agent-orchestrator.yml last run..."
 
-          # Get the most recent run of the overnight orchestrator
-          LAST_RUN_JSON=$(gh api "repos/${{ github.repository }}/actions/workflows/overnight-agent-orchestrator.yml/runs?per_page=1" \
-            --jq '.workflow_runs[0]' 2>/dev/null || echo "{}")
+          # Get the most recent runs (up to 3) to handle in-progress + previous
+          RUNS_JSON=$(gh api "repos/${{ github.repository }}/actions/workflows/overnight-agent-orchestrator.yml/runs?per_page=3" \
+            --jq '.workflow_runs' 2>/dev/null || echo "[]")
 
-          if [ "$LAST_RUN_JSON" = "{}" ] || [ "$LAST_RUN_JSON" = "null" ]; then
+          RUN_COUNT=$(echo "$RUNS_JSON" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+
+          if [ "$RUN_COUNT" = "0" ]; then
             echo "No runs found for overnight-agent-orchestrator.yml"
             ALERT="true"
-            REASON="No runs found at all"
+            REASON="No runs found at all — orchestrator may never have been triggered"
           else
-            CONCLUSION=$(echo "$LAST_RUN_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('conclusion','unknown'))")
-            UPDATED_AT=$(echo "$LAST_RUN_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('updated_at',''))")
-            STATUS=$(echo "$LAST_RUN_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status','unknown'))")
-            RUN_URL=$(echo "$LAST_RUN_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('html_url',''))")
+            # Parse the most recent run
+            CONCLUSION=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('conclusion') or 'null')")
+            UPDATED_AT=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('updated_at',''))")
+            CREATED_AT=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('created_at',''))")
+            STATUS=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('status','unknown'))")
+            RUN_URL=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[0].get('html_url',''))")
 
             echo "Last run: status=$STATUS conclusion=$CONCLUSION updated_at=$UPDATED_AT"
 
-            # Check if the run completed within the last 3 hours
-            if [ -n "$UPDATED_AT" ]; then
-              LAST_EPOCH=$(date -d "$UPDATED_AT" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$UPDATED_AT" +%s 2>/dev/null || echo "0")
-              NOW_EPOCH=$(date +%s)
-              AGE_SECONDS=$((NOW_EPOCH - LAST_EPOCH))
-              THREE_HOURS=10800
+            ALERT="false"
+            REASON=""
 
-              if [ "$AGE_SECONDS" -gt "$THREE_HOURS" ]; then
-                ALERT="true"
-                AGE_HOURS=$((AGE_SECONDS / 3600))
-                REASON="Last run was ${AGE_HOURS}h ago (expected within 3h)"
-              elif [ "$CONCLUSION" != "success" ] && [ "$STATUS" = "completed" ]; then
-                ALERT="true"
-                REASON="Last run concluded with: $CONCLUSION"
-              else
-                ALERT="false"
-                echo "Orchestrator ran recently and succeeded. All good."
+            # Case 1: Run is still in_progress — check if it's been running too long (hung)
+            if [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "queued" ]; then
+              if [ -n "$CREATED_AT" ]; then
+                CREATED_EPOCH=$(date -d "$CREATED_AT" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CREATED_AT" +%s 2>/dev/null || echo "0")
+                NOW_EPOCH=$(date +%s)
+                RUNNING_SECONDS=$((NOW_EPOCH - CREATED_EPOCH))
+                TWO_HOURS=7200
+
+                if [ "$RUNNING_SECONDS" -gt "$TWO_HOURS" ]; then
+                  RUNNING_HOURS=$((RUNNING_SECONDS / 3600))
+                  ALERT="true"
+                  REASON="Orchestrator appears HUNG — status=$STATUS for ${RUNNING_HOURS}h (started: $CREATED_AT)"
+                else
+                  echo "Orchestrator still running (${RUNNING_SECONDS}s elapsed) — likely normal, no alert."
+                  # Check previous run as fallback
+                  if [ "$RUN_COUNT" -gt "1" ]; then
+                    PREV_CONCLUSION=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[1].get('conclusion') or 'null')")
+                    PREV_UPDATED=$(echo "$RUNS_JSON" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[1].get('updated_at',''))")
+                    echo "Previous run: conclusion=$PREV_CONCLUSION updated=$PREV_UPDATED"
+                  fi
+                fi
               fi
+
+            # Case 2: Run completed — check recency and conclusion
+            elif [ "$STATUS" = "completed" ]; then
+              if [ -n "$UPDATED_AT" ]; then
+                LAST_EPOCH=$(date -d "$UPDATED_AT" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$UPDATED_AT" +%s 2>/dev/null || echo "0")
+                NOW_EPOCH=$(date +%s)
+                AGE_SECONDS=$((NOW_EPOCH - LAST_EPOCH))
+                TWENTY_FOUR_HOURS=86400
+
+                if [ "$AGE_SECONDS" -gt "$TWENTY_FOUR_HOURS" ]; then
+                  AGE_HOURS=$((AGE_SECONDS / 3600))
+                  ALERT="true"
+                  REASON="Overnight orchestrator did not complete within last 24h — last run was ${AGE_HOURS}h ago"
+                elif [ "$CONCLUSION" != "success" ]; then
+                  ALERT="true"
+                  REASON="Overnight orchestrator completed with conclusion=$CONCLUSION (expected success)"
+                else
+                  echo "Orchestrator completed successfully within 24h. All good."
+                fi
+              else
+                ALERT="true"
+                REASON="Could not determine last run completion time"
+              fi
+
+            # Case 3: Unknown status
             else
               ALERT="true"
-              REASON="Could not determine last run time"
+              REASON="Unexpected orchestrator status: $STATUS"
             fi
           fi
 
+          # Send alert if needed
           if [ "$ALERT" = "true" ]; then
+            echo ""
             echo "ALERT: $REASON"
+
             if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              TEXT="⚠️ *Overnight Dead Man Switch*%0A%0AOvernnight orchestrator may have failed silently.%0AReason: ${REASON}%0A%0ACheck: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/overnight-agent-orchestrator.yml"
+              TEXT="⚠️ *Overnight Dead Man Switch*%0A%0AOvernigh orchestrator did not complete — check GHA status.%0A%0AReason: ${REASON}%0A%0ACheck: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/overnight-agent-orchestrator.yml"
               curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
                 -d chat_id="${TELEGRAM_CHAT_ID}" \
                 -d text="$TEXT" \
@@ -77,4 +120,7 @@ jobs:
             else
               echo "Telegram not configured — alert printed to logs only"
             fi
+
+            # Exit non-zero so the workflow shows as failed in GHA UI
+            exit 1
           fi
