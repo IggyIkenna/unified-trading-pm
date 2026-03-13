@@ -50,4 +50,21 @@ BE_EXCLUDE_GLOBS=(
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=("!**/check_data_completeness.py")
 
+# Exclude diagram generator from basedpyright/codex checks (uses stdlib only,
+# no project deps — type-checking it would require installing graphviz stubs)
+PYRIGHT_EXCLUDE_GLOBS=("!**/generate-cicd-diagram.py")
+EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
+EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
+IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
+BE_EXCLUDE_GLOBS+=("**/generate-cicd-diagram.py")
+
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
+
+# ── Post-gates: regenerate CI/CD pipeline diagram (SSOT: cicd-pipeline-definition.yaml) ──
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+DIAGRAM_YAML="${REPO_ROOT}/docs/repo-management/cicd-pipeline-definition.yaml"
+DIAGRAM_SCRIPT="${REPO_ROOT}/scripts/generate-cicd-diagram.py"
+if [ -f "${DIAGRAM_YAML}" ] && [ -f "${DIAGRAM_SCRIPT}" ]; then
+    echo "Regenerating CI/CD pipeline diagram..."
+    python3 "${DIAGRAM_SCRIPT}" || { echo "⚠ Diagram regeneration failed (non-blocking)" >&2; }
+fi
