@@ -24,6 +24,10 @@ on:
         default: "false"
         type: choice
         options: ["false", "true"]
+      agent_ref:
+        description: "Branch to dispatch agent-audit.yml from (default: main)"
+        required: false
+        default: "main"
 
 concurrency:
   group: overnight-orchestrator
@@ -94,7 +98,7 @@ jobs:
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
-              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo (workflow may not exist yet)"
+              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo (workflow may not exist yet)"
           done
           echo "T0 dispatches sent. Waiting 15s for runs to register..."
           sleep 15
@@ -247,7 +251,7 @@ jobs:
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
-              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
           done
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT
@@ -333,7 +337,7 @@ jobs:
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
-              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
           done
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT
@@ -417,7 +421,7 @@ jobs:
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
-              --ref main 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+              --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
           done
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT

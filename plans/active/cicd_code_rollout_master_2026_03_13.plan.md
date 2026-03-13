@@ -1,429 +1,336 @@
 ---
 name: cicd-code-rollout-master-2026-03-13
-overview: >
-  Master rollout plan consolidating 16 active plans into a single milestone-gated execution sequence. Covers: CI/CD
-  pipeline bug fixes (7 bugs), citadel-grade hardening (SIT debounce, starvation detection, Telegram rate-limiting,
-  manifest atomicity), workflow rollout to all 65 repos (composite actions, semver-agent, conflict-resolution-agent),
-  library tier completion (T0->T1->T2->T3 with invariant enforcement), service/UI hardening (19 services, 10 APIs, 13
-  UIs), deployment infrastructure (AWS, IBKR, DeFi testnet, dev onboarding), features (cloud mode indicator, Grafana,
-  Elysium fork, user management), and the 1.0.0 stability gate with full production readiness audit. Each phase has exit
-  criteria; next phase starts only when current passes.
-type: mixed
-epic: epic-infra
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D5
-  business: none
-
-repo_gates:
-  - repo: unified-trading-pm
-    code: C5
-    deployment: none
-    business: none
-    readiness_note: "Orchestrator repo. All 23 workflows hardened, diagram SSOT current."
-  - repo: system-integration-tests
-    code: C4
-    deployment: none
-    business: none
-    readiness_note: "SIT passes on main with full service stack."
-
-depends_on: []
-  # This is the master plan. Other plans depend on it, not the reverse.
-  # Inter-plan blocker: Plan 3 (DeFi Keys) Phase 1 blocks this plan's Phase 5 (backfill needs API keys).
-
-supersedes:
-  - master_pre_deployment_plan_chain
-  - code_readiness_master_plan_2026_03_11
-  - phase2_library_tier_hardening
-  - phase3_service_hardening_integration
-  - cicd_audit_remediation_2026_03_13
-  - full_autonomous_agent_ci
-  - conflict_resolution_agent_2026_03_13
-  - composite_action_qg_inheritance_2026_03_12
-  - aws_migration
-  - dev_environment_automated_onboarding_2026_03_10
-  - ibkr_gateway_rollout
-  - user_management_platform_2026_03_13
-  - ui_cloud_mode_indicator_2026_03_12
-  - strategy_visibility_grafana_2026_03_10
-  - elysium_defi_system_fork_2026_03_10
-
+overview: |
+  Master rollout plan consolidating 16 active plans into a single milestone-gated execution sequence. Covers: CI/CD pipeline bug fixes (7 bugs), citadel-grade hardening (SIT debounce, starvation detection, Telegram rate-limiting, manifest atomicity), workflow rollout to all 65 repos (composite actions, semver-agent, conflict-resolution-agent), library tier completion (T0->T1->T2->T3 with invariant enforcement), service/UI hardening (19 services, 10 APIs, 13 UIs), deployment infrastructure (AWS, IBKR, DeFi testnet, dev onboarding), features (cloud mode indicator, Grafana, Elysium fork, user management), and the 1.0.0 stability gate with full production readiness audit. Each phase has exit criteria; next phase starts only when current passes.
 todos:
-  # ── Phase 0: CLEANUP ──────────────────────────────────────────────────────
-  # Exit criteria: Zero stale artifacts, all known bugs catalogued
-
   - id: cleanup-delete-stale-develop-branch
-    content: >
-      [SCRIPT] P0. Delete stale execution-service `develop` branch. Only repo with it — confirmed stale, all repos use
-      three-tier model (feat/*/staging/main). Command: `cd execution-service && git push origin --delete develop`.
-      Verify: `git ls-remote --heads origin develop` returns empty.
+    content: |
+      [SCRIPT] P0. Delete stale execution-service `develop` branch. Only repo with it — confirmed stale, all repos use three-tier model (feat/*/staging/main). Command: `cd execution-service && git push origin --delete develop`. Verify: `git ls-remote --heads origin develop` returns empty.
     status: done
-
   - id: cleanup-fix-telegram-if-guard
-    content: >
-      [AGENT] P0. Fix BUG-1: Telegram `if:` guard broken in 3 PM workflows. `env.TELEGRAM_BOT_TOKEN` is unavailable in
-      GHA `if:` expressions (only in step-level env). Files: `semver-agent.yml:435`, `rules-alignment-agent.yml:197`,
-      `plan-health-agent.yml:89`. Fix: replace `if: always() && env.TELEGRAM_BOT_TOKEN != ''` with `if: always()` and
-      add early-exit inside run block: `if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token, skipping"; exit 0; fi`.
-      Ensure TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are in the step's `env:` block (where secrets ARE accessible).
+    content: |
+      [AGENT] P0. Fix BUG-1: Telegram `if:` guard broken in 3 PM workflows. `env.TELEGRAM_BOT_TOKEN` is unavailable in GHA `if:` expressions (only in step-level env). Files: `semver-agent.yml:435`, `rules-alignment-agent.yml:197`, `plan-health-agent.yml:89`. Fix: replace `if: always() && env.TELEGRAM_BOT_TOKEN != ''` with `if: always()` and add early-exit inside run block: `if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token, skipping"; exit 0; fi`. Ensure TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are in the step's `env:` block (where secrets ARE accessible).
     status: done
-
   - id: cleanup-fix-telegram-chat-id-secret
-    content: >
-      [AGENT] P0. Fix BUG-2: `conflict-resolution-merged.yml:68` uses `secrets.TELEGRAM_CHAT_ID` but should use
-      `vars.TELEGRAM_CHAT_ID` (repository variable, not secret). Fix the reference.
+    content: |
+      [AGENT] P0. Fix BUG-2: `conflict-resolution-merged.yml:68` uses `secrets.TELEGRAM_CHAT_ID` but should use `vars.TELEGRAM_CHAT_ID` (repository variable, not secret). Fix the reference.
     status: done
-
   - id: cleanup-verify-semver-agent-trigger
-    content: >
-      [SCRIPT] P1. Verify semver-agent trigger = `branches: [staging]` (not main) across all 65 deployed copies. Script:
-      for each repo in manifest, check `.github/workflows/semver-agent.yml` line with `branches:`. Report any repo with
-      wrong trigger. Template at `scripts/propagation/templates/semver-agent.yml` already has `branches: [staging]` —
-      verify deployed copies match.
+    content: |
+      [SCRIPT] P1. Verify semver-agent trigger = `branches: [staging]` (not main) across all 65 deployed copies. Script: for each repo in manifest, check `.github/workflows/semver-agent.yml` line with `branches:`. Report any repo with wrong trigger. Template at `scripts/propagation/templates/semver-agent.yml` already has `branches: [staging]` — verify deployed copies match.
     status: done
-
   - id: cleanup-add-orchestrator-concurrency
-    content: >
-      [AGENT] P1. Fix BUG-6: overnight-agent-orchestrator has no concurrency guard. If cron fires while previous run
-      still active, two instances overlap. Add `concurrency: { group: overnight-orchestrator, cancel-in-progress: true
-      }` to `overnight-agent-orchestrator.yml`. The newer run should take precedence.
+    content: |
+      [AGENT] P1. Fix BUG-6: overnight-agent-orchestrator has no concurrency guard. If cron fires while previous run still active, two instances overlap. Add `concurrency: { group: overnight-orchestrator, cancel-in-progress: true }` to `overnight-agent-orchestrator.yml`. The newer run should take precedence.
     status: done
-
   - id: cleanup-fix-cloud-build-timeout
-    content: >
-      [AGENT] P1. Fix BUG-5: Cloud Build polling in `cloud-build-router.yml` doesn't cleanly distinguish build TIMEOUT
-      (Cloud Build reports TIMEOUT status) from poll TIMEOUT (our loop exceeds MAX_POLLS). Fix: add explicit exit codes
-      — 0 on SUCCESS, 1 on build FAILURE/TIMEOUT/CANCELLED, 2 on poll exhaustion. Each gets a distinct Telegram message.
+    content: |
+      [AGENT] P1. Fix BUG-5: Cloud Build polling in `cloud-build-router.yml` doesn't cleanly distinguish build TIMEOUT (Cloud Build reports TIMEOUT status) from poll TIMEOUT (our loop exceeds MAX_POLLS). Fix: add explicit exit codes — 0 on SUCCESS, 1 on build FAILURE/TIMEOUT/CANCELLED, 2 on poll exhaustion. Each gets a distinct Telegram message.
     status: done
-
   - id: cleanup-fix-version-mismatch
-    content: >
-      [SCRIPT] P1. Fix BUG-7: instruments-service manifest version `0.1.22` vs pyproject.toml `0.1.117`. Scan ALL repos
-      for same drift pattern. Script: for each repo, compare `versions[repo]` in manifest with version in
-      `pyproject.toml`. Report all mismatches. Fix by updating manifest to match pyproject (pyproject is source of truth
-      for current version).
-    status: done
-
+    content: |
+      [SCRIPT] P0. Fix BUG-7: instruments-service manifest version `0.1.22` vs pyproject.toml `0.1.117` — STILL UNFIXED in manifest. Scan ALL 67 repos for same drift. Fix by updating manifest to match pyproject (source of truth). Wrong versions cause cascade dispatch to send incorrect version numbers to dependents.
+    status: pending
   - id: cleanup-update-index
-    content: >
-      [AGENT] P2. Update `plans/active/INDEX.md` — register 5 new master plans, mark all 26 old plans as superseded with
-      `superseded_by:` references.
+    content: |
+      [AGENT] P2. Update `plans/active/INDEX.md` — register 5 new master plans, mark all 26 old plans as superseded with `superseded_by:` references.
     status: done
-
-  # ── Phase 1: CI/CD HARDENING ──────────────────────────────────────────────
-  # Exit criteria: All 7 bugs fixed, all citadel enhancements deployed, zero silent failure paths
-  # Blocker: Phase 0 complete
-
+  - id: cleanup-archive-old-cicd-plan
+    content: |
+      [SCRIPT] P1. Archive `plans/cicd/00-MASTER-CICD-PLAN.md` — this old plan references act simulation, separate Docker QG images, pr-watcher.yml, and llm-agent-wrapper.sh (none of which exist). Agents or humans could act on it. Move to plans/archive/ with superseded frontmatter.
+    status: pending
+  - id: cleanup-fix-repo-count
+    content: |
+      [SCRIPT] P1. Correct all plan references from "65 repos" to "67 repos" and "23 workflows" to "25 workflows". Two new workflows (sit-debounce-trigger.yml, sit-starvation-detector.yml) were added but plan counts not updated. Manifest has 67 repos, not 65.
+    status: pending
+  - id: cleanup-remediate-failing-repo
+    content: |
+      [AGENT] P0. unified-api-contracts has ci_status=FAILING. This is a T0 repo — if it stays FAILING, it blocks the entire T0→T1→T2→T3 tier cascade in Phase 3. Identify the failure cause, fix it, and get QG passing before Phase 3.
+    status: pending
+  - id: cleanup-handle-baseline-pending
+    content: |
+      [SCRIPT] P1. 5 repos stuck at ci_status=BASELINE_PENDING: batch-audit-api, batch-live-reconciliation-service, ml-inference-api, ml-training-api, trading-analytics-api. Determine what BASELINE_PENDING means (likely: QG never ran or never completed). Run QG on each and update ci_status accordingly.
+    status: pending
   - id: harden-fix-sha-pinning-toctou
-    content: >
-      [AGENT] P0. Fix BUG-3: SHA pinning TOCTOU in `staging-to-main.yml`. Between SIT completing and the merge PR being
-      created, a concurrent push could land on staging that bypasses SIT validation. Fix: after checkout of each repo's
-      staging branch, verify `git rev-parse HEAD` matches the SHA recorded in `staging_commits[repo]`. If mismatch and
-      the new commits are NOT `[skip ci]`-only, abort the promotion and re-trigger SIT. Current code allows `[skip ci]`
-      descendants — preserve that.
+    content: |
+      [AGENT] P0. Fix BUG-3: SHA pinning TOCTOU in `staging-to-main.yml`. Between SIT completing and the merge PR being created, a concurrent push could land on staging that bypasses SIT validation. Fix: after checkout of each repo's staging branch, verify `git rev-parse HEAD` matches the SHA recorded in `staging_commits[repo]`. If mismatch and the new commits are NOT `[skip ci]`-only, abort the promotion and re-trigger SIT. Current code allows `[skip ci]` descendants — preserve that.
     status: done
-    depends_on: [cleanup-fix-telegram-if-guard]
-
   - id: harden-validate-conflict-agent-output
-    content: >
-      [AGENT] P0. Fix BUG-4: conflict-resolution-agent doesn't validate Claude output. Add validation after parsing `===
-      filename ===` markers: (a) every file in the conflict list must appear in output, (b) no `<<<<<<<` / `=======` /
-      `>>>>>>>` markers remain in resolved files, (c) Python files pass `py_compile`, YAML files pass
-      `yaml.safe_load()`. If validation fails, skip push and send Telegram "resolution incomplete — manual intervention
-      required" with the failing file list.
+    content: |
+      [AGENT] P0. Fix BUG-4: conflict-resolution-agent doesn't validate Claude output. Add validation after parsing `=== filename ===` markers: (a) every file in the conflict list must appear in output, (b) no `<<<<<<<` / `=======` / `>>>>>>>` markers remain in resolved files, (c) Python files pass `py_compile`, YAML files pass `yaml.safe_load()`. If validation fails, skip push and send Telegram "resolution incomplete — manual intervention required" with the failing file list.
     status: done
-    depends_on: [cleanup-fix-telegram-if-guard]
-
   - id: harden-audit-manifest-concurrency
-    content: >
-      [AGENT] P0. Audit all 5 manifest-mutating workflows share `concurrency: { group: manifest-update,
-      cancel-in-progress: false }`. Workflows: `update-repo-version.yml`, `staging-to-main.yml`, `sit-gate.yml`,
-      `sit-unlock.yml`, `hotfix-mode.yml`. Add to any that are missing.
-    status: done
-
+    content: |
+      [AGENT] P0. Audit all manifest-mutating workflows share `concurrency: { group: manifest-update, cancel-in-progress: false }`. Workflows: `update-repo-version.yml`, `staging-to-main.yml`, `sit-gate.yml`, `sit-unlock.yml`, `hotfix-mode.yml`. ALSO add `cloud-build-router.yml` — it writes `deployed_versions` to manifest but currently has NO concurrency group at all. Two concurrent builds racing to write deployed_versions will cause lost updates. This is a P0 race condition.
+    status: pending
   - id: harden-wire-cloud-build-telegram
-    content: >
-      [AGENT] P1. Wire Cloud Build failure alerts to Telegram in `cloud-build-router.yml`. Include: repo name, commit
-      SHA, build log URL, failure reason, and environment (dev/staging/prod). Currently only SUCCESS path updates
-      manifest — add FAILURE path with Telegram alert.
+    content: |
+      [AGENT] P1. Wire Cloud Build failure alerts to Telegram in `cloud-build-router.yml`. Include: repo name, commit SHA, build log URL, failure reason, and environment (dev/staging/prod). Currently only SUCCESS path updates manifest — add FAILURE path with Telegram alert.
     status: done
-
   - id: harden-create-composite-qg-action
-    content: >
-      [AGENT] P1. Create `run-quality-gates` composite action in `.github/actions/run-quality-gates/action.yml`. This
-      centralizes QG boilerplate so per-repo workflows become ~20 lines. Inputs: SERVICE_NAME, SOURCE_DIR, MIN_COVERAGE,
-      python-version (default 3.13.9), basedpyright-version (default 1.38.2). Existing actions `setup-python-tools` and
-      `setup-ui-tools` already exist — build on them. Test with instruments-service as canary.
+    content: |
+      [AGENT] P1. Create `run-quality-gates` composite action in `.github/actions/run-quality-gates/action.yml`. This centralizes QG boilerplate so per-repo workflows become ~20 lines. Inputs: SERVICE_NAME, SOURCE_DIR, MIN_COVERAGE, python-version (default 3.13.9), basedpyright-version (default 1.38.2). Existing actions `setup-python-tools` and `setup-ui-tools` already exist — build on them. Test with instruments-service as canary.
     status: done
-
   - id: harden-add-sit-debounce
-    content: >
-      [AGENT] P1. Add SIT debounce — if multiple repos merge to staging in rapid succession, SIT should wait for a
-      5-minute quiet period (no new staging merges) before triggering. Implementation: `sit-gate.yml` records
-      `staging_status.pending_repos[]` list with timestamps. A scheduled workflow (every 5 min) checks if the list has
-      been stable for 5 minutes — if so, triggers SIT. This prevents redundant SIT runs and wasted compute.
-    status: done
-
+    content: |
+      [AGENT] P0. SIT debounce workflow (sit-debounce-trigger.yml) EXISTS but is BROKEN: it reads `staging_status.pending_repos[]` from the manifest, but the manifest's staging_status only has {locked, locked_since, locked_reason, lock_version} — NO pending_repos field. The debounce silently sees empty/undefined and never triggers SIT. Fix: add `pending_repos` field to staging_status in manifest schema, and ensure sit-gate.yml populates it when repos merge to staging. Also add max_sit_retries counter and a drain-pending-repos manual dispatch to prevent infinite re-trigger if SIT repeatedly fails.
+    status: pending
   - id: harden-cascade-starvation-detector
-    content: >
-      [AGENT] P2. Add cascade starvation detection — if `staging_status.locked=true` persists for >1 hour, send Telegram
-      alert "SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock." Implementation:
-      scheduled workflow (every 15 min) reads `staging_status.locked` and `staging_status.locked_at` timestamp. If
-      locked and age >1hr, alert once (dedup via `locked_alert_sent` flag).
+    content: |
+      [AGENT] P2. Add cascade starvation detection — if `staging_status.locked=true` persists for >1 hour, send Telegram alert "SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock." Implementation: scheduled workflow (every 15 min) reads `staging_status.locked` and `staging_status.locked_at` timestamp. If locked and age >1hr, alert once (dedup via `locked_alert_sent` flag).
     status: done
-
   - id: harden-telegram-rate-limit
-    content: >
-      [AGENT] P2. Add Telegram rate-limit guard — max 1 alert per workflow per 60 seconds. Prevents rapid cascades from
-      spamming the channel. Implementation: add `handle-claude-api-error`-style composite action for Telegram that
-      checks last-alert timestamp in workflow artifacts or manifest.
-    status: done
-
+    content: |
+      [AGENT] P2. Add Telegram rate-limit guard — max 1 alert per workflow per 60s. CORRECTION: GHA artifacts are per-workflow-run scoped — you cannot read artifacts from other runs without the run ID. Use a flag in workspace-manifest.json (like locked_alert_sent) for rate-limit state, NOT artifacts. Add `telegram_last_alert_ts` map in manifest keyed by workflow name.
+    status: pending
   - id: harden-integrate-diagram-regen
-    content: >
-      [AGENT] P2. Integrate CI/CD diagram auto-regen into PM quality-gates.sh post-gates step. Currently exists as
-      standalone `scripts/generate-cicd-diagram.py`. Add to QG so every PM quickmerge that touches
-      `cicd-pipeline-definition.yaml` auto-regenerates SVG/HTML. (May already be done per cicd_audit plan — verify and
-      close if so.)
+    content: |
+      [AGENT] P2. Integrate CI/CD diagram auto-regen into PM quality-gates.sh post-gates step. Currently exists as standalone `scripts/generate-cicd-diagram.py`. Add to QG so every PM quickmerge that touches `cicd-pipeline-definition.yaml` auto-regenerates SVG/HTML. (May already be done per cicd_audit plan — verify and close if so.)
     status: done
-
   - id: harden-audit-manifest-atomicity
-    content: >
-      [SCRIPT] P2. Audit all manifest writes for atomic tmp+rename pattern. All 5 manifest-mutating workflows should
-      write to `.json.tmp` then `os.replace()` (or `mv`) to prevent corruption on concurrent access. Scan and report any
-      that write directly to `workspace-manifest.json`.
+    content: |
+      [SCRIPT] P2. Audit all manifest writes for atomic tmp+rename pattern. All manifest-mutating workflows should write to `.json.tmp` then `os.replace()` (or `mv`) to prevent corruption on concurrent access. Scan and report any that write directly to `workspace-manifest.json`.
     status: done
-
-  # ── Phase 2: WORKFLOW ROLLOUT TO ALL REPOS ─────────────────────────────────
-  # Exit criteria: All 65 repos have consistent CI using composite actions; ci_status promoted
-  # Blocker: Phase 1 complete
-
+  - id: harden-market-hours-guard
+    content: |
+      [AGENT] P0. Add market hours deployment guard. cloud-build-router.yml has zero protection against deploying to uts-prod-ikenna during active trading hours. A Cloud Build that completes at 09:29 JST deploys without warning. Add a pre-deploy check: for execution/strategy/risk services, reject prod Cloud Builds during exchange hours (use exchange-calendars library or a static schedule). Non-critical services (instruments, features) can deploy anytime. Guard should be bypassable via `force_deploy: true` dispatch parameter for emergencies.
+    status: pending
+  - id: harden-tier-ordered-prod-deploy
+    content: |
+      [AGENT] P0. Add tier-ordered production deployment. cloud-build-router.yml fires independently per repo, so execution-service could deploy to prod before unified-market-interface it depends on. For financial services this creates a window with incompatible interface versions. Enforce T0→T1→T2→service deployment ordering: cloud-build should check manifest tier and only deploy if all lower-tier deps have already been deployed at compatible versions.
+    status: pending
+  - id: harden-claude-api-health-precheck
+    content: |
+      [AGENT] P1. Agent workflows (conflict-resolution-agent, semver-agent, overnight-orchestrator) don't check claude-api-health-monitor state before invoking the API. If Claude API is degraded, all three fail with confusing errors instead of fast-failing. Add a pre-step to all agent workflows that reads health monitor state and skips with clear "API degraded — skipping agent run" message if unhealthy.
+    status: pending
+  - id: harden-partial-staging-promotion
+    content: |
+      [AGENT] P1. staging-to-main.yml promotes repos one by one. If the 7th of 12 fails (GH API rate limit, network blip), repos 1-6 are already on main but 7-12 are still on staging. No compensation logic exists. Add: (a) record promotion progress in manifest, (b) on failure, Telegram alert with partial state, (c) retry-from-failure dispatch that resumes from repo 7 instead of re-promoting 1-6, (d) document manual recovery runbook.
+    status: pending
+  - id: harden-post-deploy-health-check
+    content: |
+      [AGENT] P1. cloud-build-router.yml reports success after Cloud Build completes (image pushed to AR) — but doesn't verify the service actually starts. A broken image that passes build but fails at runtime shows as CI success while service is down. Add post-deploy health check: after Cloud Build success, poll the service's /health endpoint (for Cloud Run) or kubectl rollout status (for GKE). Only update deployed_versions on health check pass.
+    status: pending
+  - id: harden-post-deploy-smoke-test
+    content: |
+      [AGENT] P1. After promoting staging→main→build→push, there is no automated smoke test against the production endpoint. Add post-deploy smoke test dispatch from cloud-build-router.yml on prod builds. Use a lightweight contract test (e.g., hit /health, /readiness, and one critical endpoint with expected response shape).
+    status: pending
+  - id: harden-overnight-dead-man-switch
+    content: |
+      [AGENT] P1. Overnight orchestrator runs at 01:00 UTC. If it silently fails (GHA outage, quota exceeded), no alert fires because Telegram summary only fires on run completion. A cancelled/never-started run produces no message. Add a separate scheduled workflow at 03:00 UTC that checks if the overnight run completed within last 24 hours (via `gh run list --workflow overnight-agent-orchestrator.yml --limit 1`). Alert if not.
+    status: pending
+  - id: harden-version-bump-loop-breaker
+    content: |
+      [AGENT] P1. When update-repo-version.yml dispatches dependency-update to downstream repos, those repos update pyproject.toml with [skip ci]. But if any repo's update-dependency-version.yml doesn't properly use [skip ci], it triggers QG→qg-passed→version-bump back to PM→more dispatches (infinite loop). Add: (a) dispatch chain depth counter in payload (max 3), (b) test for this loop condition in E2E testing plan.
+    status: pending
+  - id: harden-sit-runbook
+    content: |
+      [AGENT] P1. Document SIT runbook: if SIT infrastructure fails (OOM, GCP quota, K8s issue), staging stays locked. Starvation detector catches after 1hr but links to "Check SIT status or force-unlock" with no actual command. Document: `gh api repos/IggyIkenna/unified-trading-pm/dispatches -X POST -f event_type="sit-failed"` as the force-unlock procedure. Add to deployment runbook in codex.
+    status: pending
+  - id: harden-float-isolation-phase3-gate
+    content: |
+      [AGENT] P1. Float isolation deferred to final audit (Phase 6 §5) but should be a Phase 3 exit criteria for library hardening. For PnL attribution, position tracking, and risk calculations, unverified float usage is a production blocker. Add: verify 94 float fields in features.py have execution-path isolation before declaring library tiers complete.
+    status: pending
+  - id: harden-secret-rotation-plan
+    content: |
+      [AGENT] P2. No secret rotation plan exists. GH_PAT, GCP_SA_KEY, ANTHROPIC_API_KEY_SYSHEALTH all have no rotation schedule. A PAT expiring mid-pipeline causes silent queue failures. Add: rotation schedule document, expiry monitoring (scheduled workflow checks PAT validity weekly), and what-to-do-when-expired runbook.
+    status: pending
+  - id: harden-gha-burst-throttling
+    content: |
+      [AGENT] P2. GitHub enforces 1,000 workflow run queue per repo and 500 concurrent jobs per org. Overnight orchestrator dispatches to 67 repos in parallel. During market-hour library bumps, cascades can hit org limits. Add: stagger dispatches with 10s delay between tiers, or use a queue-depth check before dispatching.
+    status: pending
+  - id: harden-cloud-build-regional-fallback
+    content: |
+      [AGENT] P2. cloud-build-router.yml hard-codes region="asia-northeast1" (lines 102, 136). Regional GCP outage causes all builds to fail silently (poll timeout). Add: fallback region (us-central1) with retry, or at minimum document regional failover runbook.
+    status: pending
+  - id: harden-canary-rollback-path
+    content: |
+      [AGENT] P1. Canary deployment for trading-critical services (execution, risk, strategy). Two mechanisms:
+      (A) Cloud Run traffic splitting (no K8s): deploy creates new revision, route 5% traffic via
+      `gcloud run services update-traffic --to-revisions=new=5,old=95`, monitor for 5 min, auto-promote to 100%
+      or instant rollback to old revision (zero rebuild time).
+      (B) Shard-based canary: route representative subset of venue shards (e.g., 2 of 33 venues — one low-volume
+      CeFi + one DeFi) to new version while rest stays on old. If canary shards process correctly for N minutes,
+      promote all shards. Tests real data paths without full exposure.
+      For non-critical services: fast rollback only (re-tag previous AR image).
+      Implement in cloud-build-router.yml with `canary_mode` dispatch param for critical services.
+    status: pending
+  - id: harden-position-reconciliation-gate
+    content: |
+      [AGENT] P0. Before deploying execution-service or risk-and-exposure-service to prod, verify open positions
+      reconcile between old and new service state. Steps: (a) pre-deploy: snapshot open positions via /positions
+      endpoint, (b) deploy new version, (c) post-deploy: query /positions again, (d) diff — if any position
+      quantity/value diverges beyond threshold, auto-rollback + Telegram alert "position reconciliation failed".
+      This prevents a deployment from silently corrupting live position state.
+    status: pending
+  - id: harden-trading-kill-switch
+    content: |
+      [AGENT] P0. Deployment should integrate with a live kill switch that halts order flow during the deploy window
+      for execution/strategy services. Implement: (a) cloud-build-router.yml sends `halt-order-flow` dispatch to
+      execution-service before prod deploy, (b) execution-service enters drain mode (complete in-flight, reject new),
+      (c) deploy completes + health check passes, (d) `resume-order-flow` dispatch, (e) if deploy fails, order flow
+      stays halted + Telegram alert. Separate from circuit breaker (which handles runtime failures).
+    status: pending
+  - id: harden-manifest-audit-log
+    content: |
+      [AGENT] P1. Add immutable append-only audit trail for all manifest mutations. Currently Telegram alerts exist
+      but are ephemeral. For regulatory-grade operation (MiFID II Article 25, SEC Rule 17a-4): every manifest write
+      must append to `manifest_audit_log[]` array in manifest with {timestamp, workflow, actor, field_changed,
+      old_value, new_value, commit_sha}. This array is append-only — no workflow may delete or modify existing entries.
+      Separately, persist to GCS bucket with object versioning for tamper-proof external backup.
+    status: pending
+  - id: harden-disaster-recovery-rto-rpo
+    content: |
+      [AGENT] P1. Define and document RTO/RPO targets for all environments. No task currently defines recovery time.
+      Targets: (a) uts-prod-ikenna full service restore: RTO <30min, RPO <5min (last healthy manifest state),
+      (b) staging: RTO <1hr, RPO <1hr, (c) dev: RTO <4hr. Document: restore procedure from manifest + AR images +
+      GCS data, test restore quarterly. Add to codex under 05-infrastructure/disaster-recovery.md.
+    status: pending
+  - id: harden-cross-plan-gate
+    content: |
+      [AGENT] P2. Inter-plan dependency "Plan 3 Phase 1 blocks Phase 5 backfill" is stated but not enforced. A human has to remember it. Add explicit blocked gate task: Phase 5 first item checks Plan 3 Phase 1 completion status in manifest before proceeding.
+    status: pending
   - id: rollout-composite-qg-workflows
-    content: >
-      [SCRIPT] P0. Roll out thin QG workflows using composite actions to all 65 repos. Script reads
-      `workspace-manifest.json` for dep lists per repo, generates slim `quality-gates.yml` (~20 lines) that calls the
-      composite action. Verify by triggering QG on 3 canary repos (one per tier).
+    content: |
+      [SCRIPT] P0. Roll out thin QG workflows using composite actions to all 65 repos. Script reads `workspace-manifest.json` for dep lists per repo, generates slim `quality-gates.yml` (~20 lines) that calls the composite action. Verify by triggering QG on 3 canary repos (one per tier).
     status: pending
-    depends_on: [harden-create-composite-qg-action]
-
   - id: rollout-corrected-semver-agent
-    content: >
-      [SCRIPT] P0. Roll out corrected `semver-agent.yml` to all repos using
-      `scripts/propagation/rollout-agent-workflows.sh`. Simultaneously REMOVE old `version-bump.yml` from each repo
-      (semver-agent replaces it). Verify all 65 have `branches: [staging]`.
+    content: |
+      [SCRIPT] P0. Roll out corrected `semver-agent.yml` to all repos using `scripts/propagation/rollout-agent-workflows.sh`. Simultaneously REMOVE old `version-bump.yml` from each repo (semver-agent replaces it). Verify all 65 have `branches: [staging]`.
     status: done
-    depends_on: [cleanup-verify-semver-agent-trigger]
-
   - id: rollout-conflict-resolution-agent
-    content: >
-      [AGENT] P1. Deploy conflict-resolution-agent.yml to PM (already exists as of audit). Wire dispatch: (a)
-      `staging-to-main.yml` dispatches `merge-conflict-detected` when `mergeable_state=dirty`, (b)
-      `feature-branch-to-staging.yml` template dispatches on merge conflicts. Include BUG-4 output validation from Phase
-      1. Test with deliberate conflict on instruments-service.
+    content: |
+      [AGENT] P1. Deploy conflict-resolution-agent.yml to PM (already exists as of audit). Wire dispatch: (a) `staging-to-main.yml` dispatches `merge-conflict-detected` when `mergeable_state=dirty`, (b) `feature-branch-to-staging.yml` template dispatches on merge conflicts. Include BUG-4 output validation from Phase 1. Test with deliberate conflict on instruments-service.
     status: done
-    depends_on: [harden-validate-conflict-agent-output]
-
   - id: rollout-artifact-registry
-    content: >
-      [AGENT] P1. Set up GCP Artifact Registry for Python packages. Currently all repos use editable local installs via
-      `[tool.uv.sources]` with `path = "../<repo>"`. This works locally but breaks in CI where sibling repos aren't
-      checked out. Create AR repository, publish T0 libraries as wheels, update CI workflows to install from AR when
-      local path unavailable.
+    content: |
+      [AGENT] P1. Set up GCP Artifact Registry for Python packages. Currently all repos use editable local installs via `[tool.uv.sources]` with `path = "../<repo>"`. This works locally but breaks in CI where sibling repos aren't checked out. Create AR repository, publish T0 libraries as wheels, update CI workflows to install from AR when local path unavailable.
     status: pending
-
   - id: rollout-promote-ci-status
-    content: >
-      [SCRIPT] P1. Run QG on all repos; promote `ci_status` from `BASELINE_RECORDED` to `VALIDATED` where passing.
-      Currently 46/65 repos stuck at BASELINE_RECORDED. Script: for each repo, run `bash scripts/quality-gates.sh`, if
-      exit 0 then update manifest `ci_status` to `VALIDATED`.
+    content: |
+      [SCRIPT] P1. Run QG on all repos; promote `ci_status` from `BASELINE_RECORDED` to `VALIDATED` where passing. Currently 46/65 repos stuck at BASELINE_RECORDED. Script: for each repo, run `bash scripts/quality-gates.sh`, if exit 0 then update manifest `ci_status` to `VALIDATED`.
     status: pending
-
   - id: rollout-dependency-update-template
-    content: >
-      [SCRIPT] P2. Roll out `update-dependency-version.yml` template to all repos. This workflow receives
-      `dependency-update` dispatch from PM and updates pyproject.toml constraints with `[skip ci]` commit.
+    content: |
+      [SCRIPT] P2. Roll out `update-dependency-version.yml` template to all repos. This workflow receives `dependency-update` dispatch from PM and updates pyproject.toml constraints with `[skip ci]` commit.
     status: done
-
-  # ── Phase 3: LIBRARY TIER COMPLETION (T0->T1->T2->T3) ─────────────────────
-  # Exit criteria: All library tiers at CR5, coverage >= 70%, basedpyright clean
-  # Blocker: Phase 2 complete; T0->T1->T2->T3 invariant enforced
-
   - id: library-t0-d4d5
-    content: >
-      [AGENT per repo] P0. T0 (6 repos): D4/D5 — QG pass + quickmerge to main. D1-D3 already PASS. Repos:
-      unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface,
-      execution-algo-library, matching-engine-library. For each: run `bash scripts/quality-gates.sh` (Pass 1), then
-      quickmerge (Pass 2). All 6 must reach CR5 before T1 starts.
+    content: |
+      [AGENT per repo] P0. T0 (6 repos): D4/D5 — QG pass + quickmerge to main. D1-D3 already PASS. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library. For each: run `bash scripts/quality-gates.sh` (Pass 1), then quickmerge (Pass 2). All 6 must reach CR5 before T1 starts.
     status: pending
-    depends_on: [rollout-composite-qg-workflows]
-
   - id: library-t1-harden
-    content: >
-      [AGENT per repo] P0. T1 (3 repos): coverage 70%, basedpyright strict, integration tests for dep edges (UTL->UEI,
-      URDI->UCI, UCI->UEI), quickmerge. Repos: unified-trading-library, unified-reference-data-interface,
-      unified-config-interface. T0 invariant: all T0 repos must be at CR5 before starting T1.
+    content: |
+      [AGENT per repo] P0. T1 (3 repos): coverage 70%, basedpyright strict, integration tests for dep edges (UTL->UEI, URDI->UCI, UCI->UEI), quickmerge. Repos: unified-trading-library, unified-reference-data-interface, unified-config-interface. T0 invariant: all T0 repos must be at CR5 before starting T1.
     status: pending
-    depends_on: [library-t0-d4d5]
-
   - id: library-t2-harden
-    content: >
-      [AGENT per repo] P1. T2 (7 repos): fix basedpyright errors (UMI 67, UDEI 78), coverage 70%, quickmerge. Repos:
-      unified-market-interface, unified-trade-execution-interface, unified-ml-interface,
-      unified-feature-calculator-library, unified-defi-execution-interface, unified-position-interface,
-      unified-sports-execution-interface. T1 invariant: all T1 repos must be at CR5 before starting T2.
+    content: |
+      [AGENT per repo] P1. T2 (7 repos): fix basedpyright errors (UMI 67, UDEI 78), coverage 70%, quickmerge. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-defi-execution-interface, unified-position-interface, unified-sports-execution-interface. T1 invariant: all T1 repos must be at CR5 before starting T2.
     status: pending
-    depends_on: [library-t1-harden]
-
   - id: library-t3-harden
-    content: >
-      [AGENT] P1. T3 (1 repo): coverage 70%, basedpyright, quickmerge. Repo: unified-domain-client. T2 invariant: all T2
-      repos must be at CR5 before starting T3.
+    content: |
+      [AGENT] P1. T3 (1 repo): coverage 70%, basedpyright, quickmerge. Repo: unified-domain-client. T2 invariant: all T2 repos must be at CR5 before starting T3.
     status: pending
-    depends_on: [library-t2-harden]
-
   - id: library-publish-ar
-    content: >
-      [SCRIPT] P1. Publish all T0-T3 libraries to GCP Artifact Registry as versioned wheels. Each library gets a wheel
-      published on every main merge via `publish-package.yml` workflow update.
+    content: |
+      [SCRIPT] P1. Publish all T0-T3 libraries to GCP Artifact Registry as versioned wheels. Each library gets a wheel published on every main merge via `publish-package.yml` workflow update.
     status: pending
-    depends_on: [rollout-artifact-registry, library-t0-d4d5]
-
-  # ── Phase 4: SERVICE & UI HARDENING ────────────────────────────────────────
-  # Exit criteria: All services/APIs/UIs at CR4+, vitest in all UI repos, SIT passes
-  # Blocker: Phase 3 complete
-
   - id: service-l7l8-harden
-    content: >
-      [AGENT per repo] P0. L7-L8 (19 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand
-      execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service,
-      execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service,
-      features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service,
-      features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service,
-      ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service, elysium-defi-system (L8).
+    content: |
+      [AGENT per repo] P0. L7-L8 (19 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service, execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service, elysium-defi-system (L8).
     status: pending
-    depends_on: [library-t3-harden]
-
   - id: service-l9-harden
-    content: >
-      [AGENT per repo] P1. L9 (10 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api,
-      client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api,
-      position-balance-monitor-service, risk-and-exposure-service, strategy-validation-service, trading-analytics-api.
+    content: |
+      [AGENT per repo] P1. L9 (10 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, strategy-validation-service, trading-analytics-api.
     status: pending
-    depends_on: [service-l7l8-harden]
-
   - id: service-l10-harden
-    content: >
-      [AGENT per repo] P1. L10 (4 deployment infra): deployment-api, deployment-service,
-      batch-live-reconciliation-service, unified-trading-ui-kit.
+    content: |
+      [AGENT per repo] P1. L10 (4 deployment infra): deployment-api, deployment-service, batch-live-reconciliation-service, unified-trading-ui-kit.
     status: pending
-    depends_on: [service-l9-harden]
-
   - id: service-l11-ui-harden
-    content: >
-      [AGENT per repo] P1. L11 (13 UIs): TypeScript strict, vitest (add to 3 missing: trading-analytics-ui,
-      execution-analytics-ui, batch-audit-ui — audit §16 FAIL), Playwright smoke tests where applicable. All 13 UI
-      repos.
+    content: |
+      [AGENT per repo] P1. L11 (13 UIs): TypeScript strict, vitest (add to 3 missing: trading-analytics-ui, execution-analytics-ui, batch-audit-ui — audit §16 FAIL), Playwright smoke tests where applicable. All 13 UI repos.
     status: pending
-    depends_on: [service-l10-harden]
-
   - id: service-full-sit
-    content: >
-      [SCRIPT] P0. Full SIT validation with all services on staging. Run system-integration-tests against the full
-      service stack. All tests must pass.
+    content: |
+      [SCRIPT] P0. Full SIT validation with all services on staging. Run system-integration-tests against the full service stack. All tests must pass.
     status: pending
-    depends_on: [service-l11-ui-harden]
-
-  # ── Phase 5: DEPLOYMENT INFRASTRUCTURE ─────────────────────────────────────
-  # Exit criteria: AWS canary validated, IBKR gateway live, DeFi testnet provisioned, dev onboarding automated
-  # Blocker: Phase 3 complete; AWS account creation [HUMAN]
-
   - id: deploy-aws-account
-    content: >
-      [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work.
-      From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service
-      roles, quota review).
+    content: |
+      [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work. From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service roles, quota review).
     status: pending
-
   - id: deploy-aws-codebuild-canary
-    content: >
-      [SCRIPT] P2. AWS CodeBuild canary — validate `buildspec.aws.yaml` (distributed to all 66 repos) actually works.
-      Run simulated CodeBuild for 3 canary repos: instruments-service, UCI, UEI.
+    content: |
+      [SCRIPT] P2. AWS CodeBuild canary — validate `buildspec.aws.yaml` (distributed to all 66 repos) actually works. Run simulated CodeBuild for 3 canary repos: instruments-service, UCI, UEI.
     status: pending
-    depends_on: [deploy-aws-account]
-
   - id: deploy-ibkr-gateway
-    content: >
-      [HUMAN+AGENT] P2. IBKR gateway: add credentials to Secret Manager (VM already running at 34.146.71.13),
-      consolidate 4 duplicated IBKR adapters into thin shims pointing to ibkr-gateway-infra. Repos: ibkr-gateway-infra,
-      UMI, UTEI, UPI, URDI, UCI.
+    content: |
+      [HUMAN+AGENT] P2. IBKR gateway: add credentials to Secret Manager (VM already running at 34.146.71.13), consolidate 4 duplicated IBKR adapters into thin shims pointing to ibkr-gateway-infra. Repos: ibkr-gateway-infra, UMI, UTEI, UPI, URDI, UCI.
     status: pending
-
   - id: deploy-defi-testnet
-    content: >
-      [AGENT] P2. DeFi dev testnet: create DeFi venue matrix SSOT document, Terraform dev environment provisioning for
-      Sepolia/Tenderly/Hyperliquid testnet, retire old setup scripts.
+    content: |
+      [AGENT] P2. DeFi dev testnet: create DeFi venue matrix SSOT document, Terraform dev environment provisioning for Sepolia/Tenderly/Hyperliquid testnet, retire old setup scripts.
     status: pending
-
   - id: deploy-dev-onboarding
-    content: >
-      [AGENT] P3. Automated developer onboarding script — `setup-dev-environment.sh` that takes a developer from clean
-      macOS to fully working local environment in <15 minutes. Covers gcloud, aws CLI, docker, .env files, workspace
-      bootstrap.
+    content: |
+      [AGENT] P3. Automated developer onboarding script — `setup-dev-environment.sh` that takes a developer from clean macOS to fully working local environment in <15 minutes. Covers gcloud, aws CLI, docker, .env files, workspace bootstrap.
     status: pending
-
-  # ── Phase 6: FEATURES & STABILITY GATE ─────────────────────────────────────
-  # Exit criteria: All features deployed, T0 repos at 1.0.0+, audit grade A (0 FAILs)
-  # Blocker: Phases 4-5 complete
-
   - id: feature-cloud-mode-indicator
-    content: >
-      [AGENT] P2. Cloud mode indicator in all UIs. Add `/api/health` response with `cloud_provider` + `mock_mode` to all
-      API repos. Add dynamic badge component to all 12 UI repos.
+    content: |
+      [AGENT] P2. Cloud mode indicator in all UIs. Add `/api/health` response with `cloud_provider` + `mock_mode` to all API repos. Add dynamic badge component to all 12 UI repos.
     status: pending
-
   - id: feature-grafana
-    content: >
-      [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add
-      Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
+    content: |
+      [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
     status: pending
-
   - id: feature-elysium-fork
-    content: >
-      [AGENT] P2. Elysium DeFi system fork — standalone repo with DeFi strategy/execution components. Replace 8 stub
-      handlers with implementations. Docker build produces working image.
+    content: |
+      [AGENT] P2. Elysium DeFi system fork — standalone repo with DeFi strategy/execution components. Replace 8 stub handlers with implementations. Docker build produces working image.
     status: pending
-
   - id: feature-user-management
-    content: >
+    content: |
       [AGENT] P2. User management platform — role-based access, authentication, admin portal.
     status: pending
-
   - id: stability-1-0-0-promotion
-    content: >
-      [SCRIPT+HUMAN] P0. 1.0.0 promotion for all repos. Order: T0 first via `feat!:` commit (triggers MINOR bump on
-      0.x.x per pre-1.0.0 rule — so this needs a manual version set or policy override to cross to 1.0.0). Then
-      T1->T2->T3 respecting tier invariant. Verify version cascade propagates cleanly at each tier. Human approves each
-      tier promotion.
+    content: |
+      [SCRIPT+HUMAN] P0. 1.0.0 promotion for all repos. Order: T0 first via `feat!:` commit (triggers MINOR bump on 0.x.x per pre-1.0.0 rule — so this needs a manual version set or policy override to cross to 1.0.0). Then T1->T2->T3 respecting tier invariant. Verify version cascade propagates cleanly at each tier. Human approves each tier promotion.
     status: pending
-    depends_on: [service-full-sit]
+  - id: overnight-agent-audit-restore
+    content: |
+      [AGENT] P1. Restore overnight audit bot — agent-audit.yml was missing from all 16 T0-T3 repos causing
+      overnight-agent-orchestrator.yml to fail every night since inception. Fix applied 2026-03-13:
+      (1) Created agent-audit.yml in all 16 T0-T3 repos (T0: 6, T1: 3, T2: 6, T3: 1). Each wraps the existing
+      python-quality-gates.yml reusable workflow via workflow_dispatch — identical to quality-gates.yml but
+      triggered by orchestrator dispatch instead of push/PR.
+      (2) Added agent_ref input to overnight-agent-orchestrator.yml so manual test runs can target
+      live-defi-rollout before merging to main (default: main for nightly cron).
+      (3) Once agent-audit.yml quickmerges to main on all 16 repos, nightly cron auto-recovers.
+      NEXT STEP: enhance agent-audit.yml to invoke run-agent.sh (Claude Code audit) per repo, following
+      market-tick-data-service as prototype. Requires ANTHROPIC_API_KEY repo secret on each T0-T3 repo.
+    status: done
+
+  - id: broad-except-exception-fix
+    content: |
+      [AGENT per repo] P2. Fix broad except Exception in prod code — QG warns but does not fail. Applied 2026-03-13.
+      Prod code narrowed to specific exceptions: trading-analytics-api (fee_schedule_store.py, settlements_store.py),
+      unified-api-contracts (scripts/generate_schema_version_matrix.py), deployment-service (scripts/sync-configs.py),
+      unified-trading-pm (scripts/validate-manifest-dag.py, scripts/manifest/validate-internal-editable.py).
+      Documented in QUALITY_GATE_BYPASS_AUDIT.md (legitimate broad catches):
+      unified-trading-library (health_router.py:67,85,98 — user-supplied callables; performance_monitor.py:48 — UEI
+      degradation path), strategy-service (scripts/*.py — CLI backtest graceful error handling).
+      Skipped: unified-cloud-interface/typings/google/ — vendored type stubs, not our code.
+    status: in-progress
 
   - id: stability-production-audit
-    content: >
-      [AGENT] P0. Full 28-section production readiness audit using
-      `unified-trading-codex/10-audit/trading_system_audit_prompt.md`. Target: grade A (0 FAILs, max 3 WARNs). Must
-      resolve all 6 FAILs from 2026-03-11 audit: §2 execution-service QG expanded, §5 float isolation verified, §7 T0 at
-      1.0.0, §9 all plans registered + ci_status promoted, §10 VCR cassettes in 3 interfaces, §16 vitest in 3 UIs.
+    content: |
+      [AGENT] P0. Full 28-section production readiness audit using `unified-trading-pm/plans/audit/trading_system_audit_prompt.md`. Target: grade A (0 FAILs, max 3 WARNs). Must resolve all 6 FAILs from 2026-03-11 audit: §2 execution-service QG expanded, §5 float isolation verified, §7 T0 at 1.0.0, §9 all plans registered + ci_status promoted, §10 VCR cassettes in 3 interfaces, §16 vitest in 3 UIs.
+      NOTE: per-repo audit report format established by ComsicTrader 2026-03-13 (see execution_algo_library_audit_2026_03_13.md).
+      Full rollout uses overnight-agent-orchestrator.yml + agent-audit.yml (now restored on all T0-T3 repos).
     status: pending
-    depends_on: [stability-1-0-0-promotion]
-
   - id: stability-final-sit
-    content: >
-      [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests
-      against all services on main branch.
+    content: |
+      [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests against all services on main branch.
     status: pending
-    depends_on: [stability-production-audit]
+isProject: false
 ---
 
 ## Notes
