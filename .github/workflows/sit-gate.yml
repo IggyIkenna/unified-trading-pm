@@ -42,6 +42,14 @@ jobs:
           manifest["staging_status"]["locked_reason"] = "SIT running"
           manifest["staging_status"]["lock_version"] = None
 
+          # Populate pending_repos from staging_versions that differ from stable versions
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+          pending = [r for r, sv in staging_versions.items()
+                     if not r.startswith("_") and sv != stable_versions.get(r)]
+          manifest["staging_status"]["pending_repos"] = pending
+          print(f"Pending repos for this SIT run: {pending}")
+
           # Record commit SHAs from payload
           payload_shas_raw = '${{ toJson(github.event.client_payload.commit_shas) }}'
           try:

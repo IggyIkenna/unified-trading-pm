@@ -3,10 +3,18 @@ name: SIT Debounce Trigger
 # Batches multiple rapid staging merges into a single SIT run.
 #
 # Debounce logic:
-#   1. Read workspace-manifest.json: check staging_versions vs versions for pending repos
-#   2. If staging is already locked (SIT running), skip
-#   3. Check last staging-related commit timestamp on this repo (proxy for last staging merge)
+#   1. Compare staging_versions vs versions for pending repos
+#   2. If staging is already locked (SIT running), skip — but track pending repos
+#   3. Check last staging-related commit timestamp (proxy for last staging merge)
 #   4. If quiet for >= 60s, dispatch sit-gate.yml to start SIT
+#
+# Pending repo tracking:
+#   staging_status.pending_repos[] is populated by sit-gate.yml on lock.
+#   This workflow reads it to determine what to batch into the next SIT run.
+#
+# Retry tracking:
+#   staging_status.sit_retry_count increments each time SIT is re-triggered
+#   after a failure. Max retries (default 3) prevents infinite SIT loops.
 
 on:
   schedule:
@@ -14,10 +22,22 @@ on:
   repository_dispatch:
     types: [staging-changed]
   workflow_dispatch:
+    inputs:
+      drain_pending:
+        description: "Force-drain all pending repos into a SIT run (ignores debounce, resets retry counter)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 concurrency:
   group: sit-debounce-check
   cancel-in-progress: true
+
+permissions:
+  contents: write
 
 jobs:
   check-and-trigger:
@@ -34,15 +54,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           DEBOUNCE_SECONDS: "60"
+          MAX_SIT_RETRIES: "3"
+          DRAIN_PENDING: ${{ github.event.inputs.drain_pending || 'false' }}
         run: |
           set -euo pipefail
 
-          # Read manifest to determine if there are pending staging changes
           python3 - <<'PYEOF'
           import json, sys, subprocess, os
           from datetime import datetime, timezone
 
           debounce_seconds = int(os.environ.get("DEBOUNCE_SECONDS", "60"))
+          max_sit_retries = int(os.environ.get("MAX_SIT_RETRIES", "3"))
+          drain_pending = os.environ.get("DRAIN_PENDING", "false") == "true"
 
           with open("workspace-manifest.json") as f:
               m = json.load(f)
@@ -50,13 +73,6 @@ jobs:
           staging_status = m.get("staging_status", {})
           staging_versions = m.get("staging_versions", {})
           stable_versions = m.get("versions", {})
-
-          # Check if staging is locked (SIT already running)
-          if staging_status.get("locked", False):
-              print("SIT is locked (already running) — skipping debounce trigger")
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("trigger=false\n")
-              sys.exit(0)
 
           # Find repos with pending staging changes (staging_versions != versions)
           pending = []
@@ -74,47 +90,106 @@ jobs:
 
           print(f"Pending staging repos ({len(pending)}): {', '.join(pending)}")
 
-          # Check quiet period: find the most recent manifest commit that touches staging_versions
-          # Use git log to find the timestamp of the last staging-related manifest commit
-          result = subprocess.run(
-              ["git", "log", "-1", "--format=%ct",
-               "--grep=staging", "--grep=manifest", "--all-match",
-               "--", "workspace-manifest.json"],
-              capture_output=True, text=True
-          )
-          last_staging_ts = result.stdout.strip()
+          # Check SIT retry counter
+          sit_retry_count = staging_status.get("sit_retry_count", 0)
 
-          if not last_staging_ts:
-              # Fallback: use the most recent commit touching workspace-manifest.json
+          if drain_pending:
+              print(f"DRAIN MODE: force-triggering SIT, resetting retry counter (was {sit_retry_count})")
+              sit_retry_count = 0
+          elif sit_retry_count >= max_sit_retries:
+              print(f"SIT retry count ({sit_retry_count}) >= max ({max_sit_retries}) — halting auto-retrigger")
+              print("Use workflow_dispatch with drain_pending=true to force a SIT run and reset counter")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=false\n")
+                  f.write(f"halted=true\n")
+                  f.write(f"retry_count={sit_retry_count}\n")
+              sys.exit(0)
+
+          # Check if staging is locked (SIT already running)
+          if staging_status.get("locked", False) and not drain_pending:
+              print("SIT is locked (already running) — skipping debounce trigger")
+              # Still update pending_repos in manifest for visibility
+              staging_status["pending_repos"] = pending
+              m["staging_status"] = staging_status
+              tmp_path = "workspace-manifest.json.tmp"
+              with open(tmp_path, "w") as f:
+                  json.dump(m, f, indent=2, ensure_ascii=False)
+                  f.write("\n")
+              import os as _os
+              _os.replace(tmp_path, "workspace-manifest.json")
+              print(f"Updated staging_status.pending_repos with {len(pending)} repos (for next SIT batch)")
+
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=false\n")
+                  f.write("manifest_changed=true\n")
+              sys.exit(0)
+
+          # Check quiet period (skip if drain mode)
+          if not drain_pending:
               result = subprocess.run(
-                  ["git", "log", "-1", "--format=%ct", "--", "workspace-manifest.json"],
+                  ["git", "log", "-1", "--format=%ct",
+                   "--grep=staging", "--grep=manifest", "--all-match",
+                   "--", "workspace-manifest.json"],
                   capture_output=True, text=True
               )
               last_staging_ts = result.stdout.strip()
 
-          if not last_staging_ts:
-              print("No manifest commits found — triggering SIT as fallback")
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("trigger=true\n")
-              sys.exit(0)
+              if not last_staging_ts:
+                  result = subprocess.run(
+                      ["git", "log", "-1", "--format=%ct", "--", "workspace-manifest.json"],
+                      capture_output=True, text=True
+                  )
+                  last_staging_ts = result.stdout.strip()
 
-          last_ts = int(last_staging_ts)
-          now_ts = int(datetime.now(timezone.utc).timestamp())
-          age = now_ts - last_ts
+              if last_staging_ts:
+                  last_ts = int(last_staging_ts)
+                  now_ts = int(datetime.now(timezone.utc).timestamp())
+                  age = now_ts - last_ts
+                  print(f"Last staging manifest commit: {age}s ago (threshold: {debounce_seconds}s)")
 
-          print(f"Last staging manifest commit: {age}s ago (threshold: {debounce_seconds}s)")
+                  if age < debounce_seconds:
+                      print(f"Still within debounce window ({age}s < {debounce_seconds}s) — waiting")
+                      with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                          f.write("trigger=false\n")
+                      sys.exit(0)
+                  else:
+                      print(f"Quiet for {age}s >= {debounce_seconds}s — triggering SIT")
+              else:
+                  print("No manifest commits found — triggering SIT as fallback")
 
-          if age >= debounce_seconds:
-              print(f"Quiet for {age}s >= {debounce_seconds}s — triggering SIT")
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("trigger=true\n")
-                  f.write(f"pending_count={len(pending)}\n")
-                  f.write(f"pending_repos={','.join(pending)}\n")
-          else:
-              print(f"Still within debounce window ({age}s < {debounce_seconds}s) — waiting")
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("trigger=false\n")
+          # Update manifest: record pending_repos and increment retry counter
+          staging_status["pending_repos"] = pending
+          staging_status["sit_retry_count"] = sit_retry_count + 1
+          m["staging_status"] = staging_status
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
+              json.dump(m, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          import os as _os
+          _os.replace(tmp_path, "workspace-manifest.json")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write("trigger=true\n")
+              f.write(f"pending_count={len(pending)}\n")
+              f.write(f"pending_repos={','.join(pending)}\n")
+              f.write(f"sit_retry_count={sit_retry_count + 1}\n")
+              f.write("manifest_changed=true\n")
           PYEOF
+
+      - name: Commit manifest updates (pending_repos tracking)
+        if: steps.check.outputs.manifest_changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No manifest changes. Skipping commit."
+            exit 0
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "chore(manifest): update staging_status.pending_repos [skip ci]"
+          git push
 
       - name: Trigger SIT
         if: steps.check.outputs.trigger == 'true'
@@ -127,23 +202,42 @@ jobs:
 
           PENDING="${{ steps.check.outputs.pending_repos }}"
           COUNT="${{ steps.check.outputs.pending_count }}"
+          RETRY="${{ steps.check.outputs.sit_retry_count }}"
 
           echo "Triggering SIT after debounce quiet period"
           echo "Pending repos ($COUNT): $PENDING"
+          echo "SIT retry count: $RETRY"
 
-          # Dispatch sit-gate to lock staging and start SIT
+          # Dispatch to system-integration-tests to start SIT
           OWNER="${{ github.repository_owner }}"
           curl -s -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${OWNER}/system-integration-tests/dispatches" \
-            -d "{\"event_type\": \"staging-changed\", \"client_payload\": {\"reason\": \"debounce-trigger\", \"pending_repos\": \"${PENDING}\"}}"
+            -d "{\"event_type\": \"staging-changed\", \"client_payload\": {\"reason\": \"debounce-trigger\", \"pending_repos\": \"${PENDING}\", \"sit_retry_count\": ${RETRY}}}"
 
-          echo "SIT triggered after quiet period (${COUNT} pending repos)"
+          echo "SIT triggered after quiet period (${COUNT} pending repos, retry #${RETRY})"
 
           # Telegram notification
           if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            TEXT="🔄 *SIT Debounce Triggered*%0APending repos: ${COUNT}%0ARepos: \`${PENDING}\`%0AQuiet period elapsed — starting SIT run."
+            TEXT="🔄 *SIT Debounce Triggered*%0APending repos: ${COUNT}%0ARepos: \`${PENDING}\`%0ARetry: ${RETRY}%0AQuiet period elapsed — starting SIT run."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="$TEXT" \
+              -d parse_mode="Markdown" > /dev/null 2>&1 || true
+          fi
+
+      - name: Alert on retry halt
+        if: steps.check.outputs.halted == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          RETRY="${{ steps.check.outputs.retry_count }}"
+          echo "WARNING: SIT auto-retrigger halted after $RETRY retries"
+
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            TEXT="⚠️ *SIT Debounce Halted*%0ARetry count: ${RETRY} (max reached)%0AManual intervention required.%0AUse workflow_dispatch with drain_pending=true to force-trigger."
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
               -d chat_id="${TELEGRAM_CHAT_ID}" \
               -d text="$TEXT" \
