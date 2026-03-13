@@ -966,7 +966,22 @@ if [ -n "$PR_NUM" ]; then
     echo "[$REPO_NAME] ✅ PR created targeting staging: $PR_URL (auto-merge to staging enabled)"
     echo "[$REPO_NAME] After staging merge: version-bump.yml will dispatch to PM → cascade to dependents"
     echo "[$REPO_NAME] SIT will validate staging → staging-to-main.yml will promote to main when ready"
-    [ "$HOTFIX" = true ] && echo "[$REPO_NAME] ⚡ Hotfix path: abbreviated SIT will run (<2 min)"
+    if [ "$HOTFIX" = true ]; then
+      echo "[$REPO_NAME] ⚡ Hotfix path: abbreviated SIT will run (<2 min)"
+      # Dispatch set-hotfix-mode to PM so smoke-test-gate.yml routes to abbreviated SIT
+      GH_TOKEN_VAL="${GH_PAT:-${GITHUB_TOKEN:-}}"
+      if [ -n "$GH_TOKEN_VAL" ]; then
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          -H "Authorization: Bearer $GH_TOKEN_VAL" \
+          -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/IggyIkenna/unified-trading-pm/dispatches" \
+          -d '{"event_type": "set-hotfix-mode"}')
+        [ "$HTTP_STATUS" = "204" ] && echo "[$REPO_NAME] ⚡ Hotfix mode set in PM manifest (abbreviated SIT)" \
+          || echo "[$REPO_NAME] ⚠️  Could not dispatch set-hotfix-mode to PM (HTTP $HTTP_STATUS) — SIT will run in full mode"
+      else
+        echo "[$REPO_NAME] ⚠️  GH_PAT not set — cannot dispatch set-hotfix-mode to PM"
+      fi
+    fi
   else
     # [skip ci] automation path: direct to main
     gh pr merge "$PR_NUM" --auto --squash --delete-branch 2>/dev/null || true

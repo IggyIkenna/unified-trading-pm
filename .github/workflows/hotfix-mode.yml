@@ -1,0 +1,81 @@
+name: hotfix-mode
+
+# Sets or clears staging_status.hotfix_mode in workspace-manifest.json.
+#
+# set-hotfix-mode:   triggered by quickmerge --hotfix after creating the staging PR.
+#                    smoke-test-gate.yml reads hotfix_mode=true → runs abbreviated SIT.
+# clear-hotfix-mode: triggered by smoke-test-gate.yml dispatch job after abbreviated SIT passes.
+#                    Cleans up so the next non-hotfix push to staging runs full SIT.
+
+on:
+  repository_dispatch:
+    types: [set-hotfix-mode, clear-hotfix-mode]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  update-hotfix-mode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Update staging_status.hotfix_mode
+        run: |
+          set -euo pipefail
+
+          EVENT_TYPE="${{ github.event.action }}"
+          HOTFIX_MODE="false"
+          if [ "$EVENT_TYPE" = "set-hotfix-mode" ]; then
+            HOTFIX_MODE="true"
+            echo "Setting staging_status.hotfix_mode = true"
+          else
+            echo "Clearing staging_status.hotfix_mode = false"
+          fi
+
+          python3 - <<PYEOF
+          import json
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+
+          manifest["staging_status"]["hotfix_mode"] = ${HOTFIX_MODE}
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print(f"staging_status.hotfix_mode = ${HOTFIX_MODE}")
+          PYEOF
+
+      - name: Commit manifest update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet workspace-manifest.json; then
+            echo "No changes. Skipping commit."
+            exit 0
+          fi
+
+          EVENT_TYPE="${{ github.event.action }}"
+          if [ "$EVENT_TYPE" = "set-hotfix-mode" ]; then
+            MSG="chore(manifest): set hotfix_mode=true — abbreviated SIT will run [skip ci]"
+          else
+            MSG="chore(manifest): clear hotfix_mode — SIT returned to full mode [skip ci]"
+          fi
+
+          git add workspace-manifest.json
+          git commit -m "$MSG"
+          git push
