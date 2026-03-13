@@ -1,0 +1,174 @@
+name: Plan Notification & Approval Gate
+
+# Gate 1 of 2 in the plan-driven governance model.
+# Fires when any plan in plans/active/*.plan.md is created or updated on PM main.
+# Sends Telegram notification for human review.
+# Human replies /approve-plan [name] → plan frontmatter updated to status: approved.
+# Agents check status: approved before implementing plan todos.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plans/active/*.plan.md"
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  # ── Notify on plan change ──────────────────────────────────────────────────
+  notify-plan-change:
+    name: Notify Telegram on plan creation/update
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed plans and send Telegram notifications
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+
+          # Find plan files changed in this push
+          CHANGED_PLANS=$(git diff --name-only HEAD~1 HEAD -- 'plans/active/*.plan.md' 2>/dev/null || true)
+
+          if [ -z "$CHANGED_PLANS" ]; then
+            echo "No plan files changed in this push."
+            exit 0
+          fi
+
+          echo "Changed plans:"
+          echo "$CHANGED_PLANS"
+
+          while IFS= read -r PLAN_FILE; do
+            [ -z "$PLAN_FILE" ] || [ ! -f "$PLAN_FILE" ] && continue
+
+            PLAN_NAME=$(basename "$PLAN_FILE" .plan.md)
+
+            # Extract overview (first non-frontmatter line after ---)
+            OVERVIEW=$(python3 - <<PYEOF
+          import re, sys
+          content = open("${PLAN_FILE}").read()
+          # Strip YAML frontmatter
+          body = re.sub(r'^---.*?---\s*', '', content, flags=re.DOTALL)
+          # Get first non-empty non-header line
+          lines = [l.strip() for l in body.splitlines() if l.strip() and not l.startswith('#')]
+          print(' '.join(lines[:2])[:200] if lines else "No overview found")
+          PYEOF
+            )
+
+            # Count pending todos
+            TODO_COUNT=$(grep -c "status: pending" "$PLAN_FILE" 2>/dev/null || echo "?")
+
+            # GitHub file link
+            REPO_URL="https://github.com/${{ github.repository }}"
+            FILE_URL="${REPO_URL}/blob/main/${PLAN_FILE}"
+
+            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+              TEXT="📋 *Plan Ready for Review*%0A%0APlan: \`${PLAN_NAME}\`%0AOverview: ${OVERVIEW}%0ATodos (pending): ${TODO_COUNT}%0AReview: ${FILE_URL}%0A%0AApprove with: \`/approve-plan ${PLAN_NAME}\`%0A%0A_Gate 1 of 2: No agent will begin implementation until this plan is approved._"
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d text="$TEXT" \
+                -d parse_mode="Markdown" > /dev/null 2>&1 || true
+              echo "Telegram notification sent for: $PLAN_NAME"
+            else
+              echo "TELEGRAM_BOT_TOKEN not set — skipping notification for $PLAN_NAME"
+            fi
+
+          done <<< "$CHANGED_PLANS"
+
+  # ── Handle /approve-plan comments ─────────────────────────────────────────
+  handle-plan-approval:
+    name: Handle /approve-plan comment
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      startsWith(github.event.comment.body, '/approve-plan')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Verify permission and approve plan
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          set -euo pipefail
+
+          # Verify permission
+          PERMISSION=$(gh api \
+            "repos/${{ github.repository }}/collaborators/$COMMENTER/permission" \
+            --jq '.permission' 2>/dev/null || echo "none")
+          if [[ "$PERMISSION" != "write" && "$PERMISSION" != "maintain" && "$PERMISSION" != "admin" ]]; then
+            echo "DENIED: $COMMENTER has $PERMISSION access — write+ required"
+            exit 0
+          fi
+
+          # Extract plan name from comment: /approve-plan plan_name_here
+          PLAN_NAME=$(echo "$COMMENT_BODY" | sed 's|/approve-plan\s*||' | tr -d '[:space:]')
+          if [ -z "$PLAN_NAME" ]; then
+            echo "No plan name provided in comment."
+            exit 0
+          fi
+
+          # Find the plan file
+          PLAN_FILE="plans/active/${PLAN_NAME}.plan.md"
+          if [ ! -f "$PLAN_FILE" ]; then
+            # Try without .plan suffix
+            PLAN_FILE=$(find plans/active/ -name "*${PLAN_NAME}*.plan.md" | head -1 || true)
+          fi
+          if [ -z "$PLAN_FILE" ] || [ ! -f "$PLAN_FILE" ]; then
+            echo "Plan not found: $PLAN_NAME"
+            exit 0
+          fi
+
+          echo "Approving plan: $PLAN_FILE"
+
+          # Update status: active → approved in frontmatter
+          git config user.name "plan-approval[bot]"
+          git config user.email "plan-approval[bot]@users.noreply.github.com"
+
+          python3 - <<PYEOF
+          import re, pathlib
+          content = pathlib.Path("$PLAN_FILE").read_text()
+          # Update status field in YAML frontmatter
+          updated = re.sub(r'^(status:\s*)active', r'\1approved', content, flags=re.MULTILINE)
+          if updated == content:
+              # Try inserting status: approved if not present
+              updated = re.sub(r'^(status:\s*\w+)', r'status: approved', content, flags=re.MULTILINE)
+          pathlib.Path("$PLAN_FILE").write_text(updated)
+          print(f"Plan status updated to approved: $PLAN_FILE")
+          PYEOF
+
+          git add "$PLAN_FILE"
+          git diff --staged --quiet && { echo "No frontmatter change needed."; exit 0; }
+          git commit -m "chore(plans): approve plan ${PLAN_NAME} (by @${COMMENTER}) [skip ci]"
+          git push
+
+          # Telegram confirmation
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            TEXT="✅ *Plan Approved*%0APlan: \`${PLAN_NAME}\`%0AApproved by: @${COMMENTER}%0AAgents may now begin implementation."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="$TEXT" \
+              -d parse_mode="Markdown" > /dev/null 2>&1 || true
+          fi
+
+          echo "Plan approved: $PLAN_NAME"

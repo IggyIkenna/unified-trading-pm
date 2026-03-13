@@ -62,6 +62,7 @@ jobs:
           BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY_DRIFT }}
           COINBASE_API_KEY: ${{ secrets.COINBASE_API_KEY_DRIFT }}
           DERIBIT_CLIENT_ID: ${{ secrets.DERIBIT_CLIENT_ID_DRIFT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
         run: |
           python unified-trading-pm/scripts/dev/detect_cassette_drift.py \
             --cassette-dir unified-api-contracts \

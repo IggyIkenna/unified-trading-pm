@@ -24,7 +24,7 @@ on:
 
 env:
   GH_TOKEN: ${{ secrets.GH_PAT }}
-  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CICD || secrets.ANTHROPIC_API_KEY }}
   PYTHON_VERSION: "3.13"
 
 jobs:
