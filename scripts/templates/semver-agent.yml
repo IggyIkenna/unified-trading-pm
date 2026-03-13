@@ -3,12 +3,14 @@ name: Semver Agent
 # Computes the next semver for this repo based on diff analysis since last staging_versions
 # baseline, then dispatches a version-bump event to unified-trading-pm with the computed version.
 #
-# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the main branch.
+# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the staging branch.
 # This ensures semver bumps are computed AFTER SIT validates staging and the code
-# is promoted to main — not prematurely at staging time.
+# is promoted from staging — not prematurely at feature-branch time.
 #
 # Pipeline position:
-#   live-defi-rollout → staging → SIT → main → [this workflow] → version bump
+#   feature branch → staging → [this workflow] → label check → bump → SIT → main
+#
+# If commit label disagrees with API diff, posts FAILING commit status on staging HEAD to block staging-to-main.yml
 #
 # Placeholders replaced by rollout-agent-workflows.sh:
 #   {{SERVICE_NAME}}  — e.g. market-tick-data-service
@@ -35,7 +37,7 @@ on:
   workflow_run:
     workflows: ["Quality Gates"]
     types: [completed]
-    branches: [main]
+    branches: [staging]
 
 env:
   GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -56,7 +58,7 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - name: Checkout repo at main commit
+      - name: Checkout repo at staging commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -79,6 +81,61 @@ jobs:
 
           echo "=== Semver Agent: {{SERVICE_NAME}} ==="
           echo "Triggered by Quality Gates passing on staging (SHA: ${{ github.event.workflow_run.head_sha }})"
+
+          # ── semver_policy check: read from PM manifest ──
+          PM_MANIFEST_POLICY=$(gh api "repos/${GH_ORG}/unified-trading-pm/contents/workspace-manifest.json" \
+            --jq '.content' | base64 -d 2>/dev/null || echo "")
+
+          SEMVER_POLICY="agent"
+          if [ -n "$PM_MANIFEST_POLICY" ]; then
+            SEMVER_POLICY=$(echo "$PM_MANIFEST_POLICY" | python3 -c "
+          import json, sys
+          m = json.load(sys.stdin)
+          repos = m.get('repositories', {})
+          repo = repos.get('{{SERVICE_NAME}}', {})
+          print(repo.get('semver_policy', 'agent'))
+          " 2>/dev/null || echo "agent")
+          fi
+
+          echo "semver_policy for {{SERVICE_NAME}}: $SEMVER_POLICY"
+
+          if [ "$SEMVER_POLICY" = "always_patch" ]; then
+            echo "semver_policy=always_patch: skipping label mismatch check, applying patch bump directly."
+            CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml 2>/dev/null || echo "")
+            if [ -z "$CURRENT" ]; then
+              echo "No version found in pyproject.toml — skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            echo "Version: $CURRENT → $NEW_VERSION (always_patch policy)"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
+            echo "bump=patch" >> "$GITHUB_OUTPUT"
+            echo "bump_reason=always_patch policy (no label check)" >> "$GITHUB_OUTPUT"
+            SHA="${{ github.event.workflow_run.head_sha }}"
+            OWNER="${{ github.repository_owner }}"
+            gh api POST "/repos/${OWNER}/{{SERVICE_NAME}}/statuses/${SHA}" \
+              --field state=success \
+              --field context="semver-agent/label-check" \
+              --field description="always_patch policy: patch bump applied, label check skipped." || true
+            HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+              -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"{{SERVICE_NAME}}\", \"version\": \"${NEW_VERSION}\", \"branch\": \"staging\", \"commit_sha\": \"${SHA}\"}}")
+            if [ "$HTTP_STATUS" = "204" ]; then
+              echo "Dispatched successfully to unified-trading-pm (always_patch)"
+            else
+              echo "ERROR: HTTP $HTTP_STATUS dispatching to unified-trading-pm"
+              cat /tmp/dispatch_response.json || true
+              exit 1
+            fi
+            exit 0
+          fi
 
           # ── Step 1: Read staging_versions baseline from PM workspace-manifest.json ──
           echo ""
@@ -192,6 +249,41 @@ jobs:
           fi
 
           echo "Resolved bump category: $BUMP"
+
+          # ── Label vs API diff mismatch check ──
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          OWNER="${{ github.repository_owner }}"
+
+          # Determine what the commit message signals
+          EXPECTED_FROM_LABEL="none"
+          LATEST_MSG=$(echo "$COMMITS" | head -1)
+          if echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ [a-z]+!(\(.+\))?:" || echo "$LATEST_MSG" | grep -qi "BREAKING CHANGE"; then
+            EXPECTED_FROM_LABEL="breaking"
+          elif echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ feat(\(.+\))?:"; then
+            EXPECTED_FROM_LABEL="minor"
+          elif echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ fix(\(.+\))?:"; then
+            EXPECTED_FROM_LABEL="patch"
+          fi
+
+          echo "Expected from commit label: $EXPECTED_FROM_LABEL"
+          echo "Resolved from API diff:     $BUMP"
+
+          if [ "$EXPECTED_FROM_LABEL" != "none" ] && [ "$EXPECTED_FROM_LABEL" != "$BUMP" ]; then
+            echo "MISMATCH: commit label says $EXPECTED_FROM_LABEL but API diff resolves $BUMP"
+            echo "Posting FAILING commit status to block staging-to-main promotion."
+            gh api POST "/repos/${OWNER}/{{SERVICE_NAME}}/statuses/${SHA}" \
+              --field state=failure \
+              --field context="semver-agent/label-check" \
+              --field description="Label mismatch: commit says ${EXPECTED_FROM_LABEL}, API diff says ${BUMP}. Fix commit message and re-push to staging." || true
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          else
+            echo "Label matches API diff (or label is chore/docs/none — no bump needed): $BUMP bump confirmed."
+            gh api POST "/repos/${OWNER}/{{SERVICE_NAME}}/statuses/${SHA}" \
+              --field state=success \
+              --field context="semver-agent/label-check" \
+              --field description="Label matches API diff: ${BUMP} bump confirmed." || true
+          fi
 
           # ── Step 4: Apply pre-1.0.0 override and compute new version ──
           echo ""
@@ -318,7 +410,7 @@ jobs:
 
           REPO="{{SERVICE_NAME}}"
           VERSION="${{ steps.compute.outputs.new_version }}"
-          BRANCH="main"
+          BRANCH="staging"
           COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
           OWNER="${{ github.repository_owner }}"
 
@@ -346,7 +438,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           STATUS: ${{ job.status }}
         run: |
-          TEXT="*semver-agent* | {{SERVICE_NAME}} | ${STATUS} | branch: main | triggered by QG pass on main (post-SIT)"
+          TEXT="*semver-agent* | {{SERVICE_NAME}} | ${STATUS} | branch: staging | triggered by QG pass on staging (pre-SIT)"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d text="${TEXT}" \

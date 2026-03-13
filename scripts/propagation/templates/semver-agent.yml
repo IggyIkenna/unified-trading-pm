@@ -1,14 +1,20 @@
-name: semver-agent
+name: Semver Agent
 
-# Computes the next semver for this repo based on diff analysis since last versions
+# Computes the next semver for this repo based on diff analysis since last staging_versions
 # baseline, then dispatches a version-bump event to unified-trading-pm with the computed version.
 #
-# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the main branch.
+# TRIGGER: Fires ONLY when the "Quality Gates" workflow passes on the staging branch.
 # This ensures semver bumps are computed AFTER SIT validates staging and the code
-# is promoted to main — not prematurely at staging time.
+# is promoted from staging — not prematurely at feature-branch time.
 #
 # Pipeline position:
-#   live-defi-rollout → staging → SIT → main → [this workflow] → version bump
+#   feature branch → staging → [this workflow] → label check → bump → SIT → main
+#
+# If commit label disagrees with API diff, posts FAILING commit status on staging HEAD to block staging-to-main.yml
+#
+# Placeholders replaced by rollout-agent-workflows.sh:
+#   {{SERVICE_NAME}}  — e.g. market-tick-data-service
+#   {{SOURCE_DIR}}    — e.g. market_tick_data_service (underscore form)
 #
 # Pre-1.0.0 semver rules:
 #   feat!: / BREAKING CHANGE: → MINOR bump (never auto-cross to 1.0.0)
@@ -24,25 +30,35 @@ name: semver-agent
 # Dispatch payload to unified-trading-pm:
 #   { repo, version, branch, commit_sha }
 #
-# Requires: GH_PAT secret (cross-repo dispatch and issue creation).
+# Secrets required:
+#   GH_PAT  — cross-repo dispatch and issue creation
 
 on:
   workflow_run:
     workflows: ["Quality Gates"]
     types: [completed]
-    branches: [main]
+    branches: [staging]
+
+env:
+  GH_TOKEN: ${{ secrets.GH_PAT }}
+  SERVICE_NAME: "{{SERVICE_NAME}}"
+  SOURCE_DIR: "{{SOURCE_DIR}}"
+  GH_ORG: IggyIkenna
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  semver-agent:
+  semver:
+    name: Semver Agent — {{SERVICE_NAME}}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Only run when Quality Gates passed — never on failure
     if: github.event.workflow_run.conclusion == 'success'
+
     steps:
-      - name: Checkout repo at main commit
+      - name: Checkout repo at staging commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -52,7 +68,7 @@ jobs:
       - name: Checkout unified-trading-codex (readiness checklist)
         uses: actions/checkout@v4
         with:
-          repository: IggyIkenna/unified-trading-codex
+          repository: ${{ env.GH_ORG }}/unified-trading-codex
           path: ../unified-trading-codex
           token: ${{ secrets.GH_PAT }}
           sparse-checkout: |
@@ -60,15 +76,66 @@ jobs:
 
       - name: Compute next semver via diff analysis
         id: compute
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-          GH_ORG: IggyIkenna
-          REPO_NAME: ${{ github.event.repository.name }}
         run: |
           set -euo pipefail
 
-          echo "=== Semver Agent: $REPO_NAME ==="
+          echo "=== Semver Agent: {{SERVICE_NAME}} ==="
           echo "Triggered by Quality Gates passing on staging (SHA: ${{ github.event.workflow_run.head_sha }})"
+
+          # ── semver_policy check: read from PM manifest ──
+          PM_MANIFEST_POLICY=$(gh api "repos/${GH_ORG}/unified-trading-pm/contents/workspace-manifest.json" \
+            --jq '.content' | base64 -d 2>/dev/null || echo "")
+
+          SEMVER_POLICY="agent"
+          if [ -n "$PM_MANIFEST_POLICY" ]; then
+            SEMVER_POLICY=$(echo "$PM_MANIFEST_POLICY" | python3 -c "
+          import json, sys
+          m = json.load(sys.stdin)
+          repos = m.get('repositories', {})
+          repo = repos.get('{{SERVICE_NAME}}', {})
+          print(repo.get('semver_policy', 'agent'))
+          " 2>/dev/null || echo "agent")
+          fi
+
+          echo "semver_policy for {{SERVICE_NAME}}: $SEMVER_POLICY"
+
+          if [ "$SEMVER_POLICY" = "always_patch" ]; then
+            echo "semver_policy=always_patch: skipping label mismatch check, applying patch bump directly."
+            CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml 2>/dev/null || echo "")
+            if [ -z "$CURRENT" ]; then
+              echo "No version found in pyproject.toml — skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            echo "Version: $CURRENT → $NEW_VERSION (always_patch policy)"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+            echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
+            echo "bump=patch" >> "$GITHUB_OUTPUT"
+            echo "bump_reason=always_patch policy (no label check)" >> "$GITHUB_OUTPUT"
+            SHA="${{ github.event.workflow_run.head_sha }}"
+            OWNER="${{ github.repository_owner }}"
+            gh api POST "/repos/${OWNER}/{{SERVICE_NAME}}/statuses/${SHA}" \
+              --field state=success \
+              --field context="semver-agent/label-check" \
+              --field description="always_patch policy: patch bump applied, label check skipped." || true
+            HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+              -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"{{SERVICE_NAME}}\", \"version\": \"${NEW_VERSION}\", \"branch\": \"staging\", \"commit_sha\": \"${SHA}\"}}")
+            if [ "$HTTP_STATUS" = "204" ]; then
+              echo "Dispatched successfully to unified-trading-pm (always_patch)"
+            else
+              echo "ERROR: HTTP $HTTP_STATUS dispatching to unified-trading-pm"
+              cat /tmp/dispatch_response.json || true
+              exit 1
+            fi
+            exit 0
+          fi
 
           # ── Step 1: Read staging_versions baseline from PM workspace-manifest.json ──
           echo ""
@@ -82,7 +149,7 @@ jobs:
           import json, sys
           m = json.load(sys.stdin)
           staging = m.get('staging_versions', {})
-          v = staging.get('$REPO_NAME', '')
+          v = staging.get('{{SERVICE_NAME}}', '')
           print(v if v else '0.0.0')
           " 2>/dev/null || echo "0.0.0")
           else
@@ -90,18 +157,16 @@ jobs:
             BASELINE="0.0.0"
           fi
 
-          echo "Baseline staging version for $REPO_NAME: $BASELINE"
+          echo "Baseline staging version for {{SERVICE_NAME}}: $BASELINE"
 
           # ── Step 2: Determine commit range for diff ──
           echo ""
           echo "--- Step 2: Determining commit range ---"
 
           if [ "$BASELINE" = "0.0.0" ]; then
-            # No prior staging run — diff ALL commits
             COMMITS=$(git log --oneline 2>/dev/null || echo "")
             echo "No prior staging version — scanning all commits"
           else
-            # Find the commit that set this baseline (tag or git log search)
             BASELINE_SHA=$(git log --oneline --all | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "")
             if [ -n "$BASELINE_SHA" ]; then
               COMMITS=$(git log --oneline "${BASELINE_SHA}..HEAD" 2>/dev/null || echo "")
@@ -125,7 +190,6 @@ jobs:
           echo ""
           echo "--- Step 3: Classifying diff ---"
 
-          # Read current version from pyproject.toml
           CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml 2>/dev/null || echo "")
           if [ -z "$CURRENT" ]; then
             echo "No version found in pyproject.toml — skipping"
@@ -136,10 +200,8 @@ jobs:
 
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
-          # Check commit messages for conventional commit bump signals
           BUMP=""
           while IFS= read -r msg; do
-            # Breaking prefix (feat!/fix!/etc.) takes priority
             if echo "$msg" | grep -qE "^[a-f0-9]+ [a-z]+!(\(.+\))?:"; then
               BUMP="breaking"
               break
@@ -150,8 +212,7 @@ jobs:
             fi
           done <<< "$COMMITS"
 
-          # Supplement commit signals with file-level diff analysis
-          # Get changed files in the diff range
+          # File-level diff analysis for public API changes
           if [ "$BASELINE" = "0.0.0" ]; then
             CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
           else
@@ -159,22 +220,20 @@ jobs:
             CHANGED_FILES=$(git diff --name-only "${BASELINE_SHA_FOR_DIFF}..HEAD" 2>/dev/null || echo "")
           fi
 
-          # Check public __init__.py exports: removed/renamed export → MAJOR signal
-          INIT_PY=$(find . -name "__init__.py" -path "*/$(echo "$REPO_NAME" | tr '-' '_')/__init__.py" | head -1 || echo "")
+          # Check public __init__.py exports
+          INIT_PY=$(find . -name "__init__.py" -path "*{{SOURCE_DIR}}/__init__.py" | head -1 || echo "")
           if [ -n "$INIT_PY" ] && echo "$CHANGED_FILES" | grep -q "__init__.py"; then
-            # Compare exports: if any __all__ symbol removed/renamed
-            ADDED_EXPORTS=$(git diff HEAD~1 HEAD -- "$INIT_PY" 2>/dev/null | grep "^+" | grep -E "^\+[^+]" | grep -v "^+++" || echo "")
             REMOVED_EXPORTS=$(git diff HEAD~1 HEAD -- "$INIT_PY" 2>/dev/null | grep "^-" | grep -E "^-[^-]" | grep -v "^---" || echo "")
+            ADDED_EXPORTS=$(git diff HEAD~1 HEAD -- "$INIT_PY" 2>/dev/null | grep "^+" | grep -E "^\+[^+]" | grep -v "^+++" || echo "")
             if [ -n "$REMOVED_EXPORTS" ] && [ "$BUMP" != "breaking" ]; then
-              echo "WARNING: Detected removed lines in public __init__.py — may indicate MAJOR (removed/renamed export)"
-              echo "Removed lines: $REMOVED_EXPORTS"
-              [ "$BUMP" != "breaking" ] && BUMP="breaking"
+              echo "WARNING: Removed lines in public __init__.py — MAJOR signal (removed/renamed export)"
+              BUMP="breaking"
             elif [ -n "$ADDED_EXPORTS" ] && [ -z "$BUMP" ]; then
               BUMP="minor"
             fi
           fi
 
-          # Check HTTP routes: removed/changed route → MAJOR signal
+          # Check HTTP route removals
           if echo "$CHANGED_FILES" | grep -qE "\.(py)$"; then
             ROUTE_REMOVALS=$(git diff HEAD~1 HEAD 2>/dev/null | grep "^-" | grep -E "@(app|router)\.(get|post|put|delete|patch)\(" | grep -v "^---" || echo "")
             if [ -n "$ROUTE_REMOVALS" ] && [ "$BUMP" != "breaking" ]; then
@@ -191,7 +250,42 @@ jobs:
 
           echo "Resolved bump category: $BUMP"
 
-          # ── Step 4: Apply pre-1.0.0 override ──
+          # ── Label vs API diff mismatch check ──
+          SHA="${{ github.event.workflow_run.head_sha }}"
+          OWNER="${{ github.repository_owner }}"
+
+          # Determine what the commit message signals
+          EXPECTED_FROM_LABEL="none"
+          LATEST_MSG=$(echo "$COMMITS" | head -1)
+          if echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ [a-z]+!(\(.+\))?:" || echo "$LATEST_MSG" | grep -qi "BREAKING CHANGE"; then
+            EXPECTED_FROM_LABEL="breaking"
+          elif echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ feat(\(.+\))?:"; then
+            EXPECTED_FROM_LABEL="minor"
+          elif echo "$LATEST_MSG" | grep -qE "^[a-f0-9]+ fix(\(.+\))?:"; then
+            EXPECTED_FROM_LABEL="patch"
+          fi
+
+          echo "Expected from commit label: $EXPECTED_FROM_LABEL"
+          echo "Resolved from API diff:     $BUMP"
+
+          if [ "$EXPECTED_FROM_LABEL" != "none" ] && [ "$EXPECTED_FROM_LABEL" != "$BUMP" ]; then
+            echo "MISMATCH: commit label says $EXPECTED_FROM_LABEL but API diff resolves $BUMP"
+            echo "Posting FAILING commit status to block staging-to-main promotion."
+            gh api POST "/repos/${OWNER}/{{SERVICE_NAME}}/statuses/${SHA}" \
+              --field state=failure \
+              --field context="semver-agent/label-check" \
+              --field description="Label mismatch: commit says ${EXPECTED_FROM_LABEL}, API diff says ${BUMP}. Fix commit message and re-push to staging." || true
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          else
+            echo "Label matches API diff (or label is chore/docs/none — no bump needed): $BUMP bump confirmed."
+            gh api POST "/repos/${OWNER}/{{SERVICE_NAME}}/statuses/${SHA}" \
+              --field state=success \
+              --field context="semver-agent/label-check" \
+              --field description="Label matches API diff: ${BUMP} bump confirmed." || true
+          fi
+
+          # ── Step 4: Apply pre-1.0.0 override and compute new version ──
           echo ""
           echo "--- Step 4: Applying semver rules ---"
 
@@ -199,19 +293,13 @@ jobs:
           case "$BUMP" in
             breaking)
               if [ "$MAJOR" = "0" ]; then
-                # Pre-1.0.0: downgrade MAJOR → MINOR (hard cap: NEVER auto-cross to 1.0.0).
-                # MINOR is simply incremented and MAJOR stays at 0.
-                # Example: 0.9.0 + MINOR = 0.10.0 (correct; NOT 1.0.0).
-                # 0.10.0, 0.11.0, etc. are all valid pre-stable versions.
-                # The only way to reach 1.0.0 is via human approval through the issue flow.
                 MINOR=$((MINOR + 1)); PATCH=0
                 BUMP_REASON="feat!: on pre-1.0.0 repo (downgraded to MINOR per pre-stable override)"
-                echo "Pre-1.0.0 override applied: breaking → MINOR ($CURRENT → ${MAJOR}.${MINOR}.${PATCH})"
+                echo "Pre-1.0.0 override: breaking → MINOR ($CURRENT → ${MAJOR}.${MINOR}.${PATCH})"
               else
-                # Post-1.0.0: MAJOR bump — opens issue, does NOT dispatch
                 MAJOR_NEW=$((MAJOR + 1))
                 BUMP_REASON="feat!: or removed public export/route (MAJOR required on post-1.0.0 repo)"
-                echo "Post-1.0.0 MAJOR bump detected: $CURRENT → ${MAJOR_NEW}.0.0"
+                echo "Post-1.0.0 MAJOR bump: $CURRENT → ${MAJOR_NEW}.0.0"
                 echo "bump=major_blocked" >> "$GITHUB_OUTPUT"
                 echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
                 echo "next_version=${MAJOR_NEW}.0.0" >> "$GITHUB_OUTPUT"
@@ -227,13 +315,13 @@ jobs:
               BUMP_REASON="fix: or internal change" ;;
           esac
 
-          # ── Step 5: Apply 0.0.0 baseline rule ──
+          # Apply 0.0.0 baseline rule
           if [ "$BASELINE" = "0.0.0" ] && [ "$CURRENT" = "0.0.0" ]; then
             case "$BUMP" in
               breaking|minor) NEW_VERSION="0.1.0" ;;
               patch)          NEW_VERSION="0.0.1" ;;
             esac
-            echo "0.0.0 baseline rule applied: first bump → $NEW_VERSION"
+            echo "0.0.0 baseline rule: first bump → $NEW_VERSION"
           else
             NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
           fi
@@ -245,43 +333,32 @@ jobs:
           echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
           echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
           echo "bump_reason=$BUMP_REASON" >> "$GITHUB_OUTPUT"
-          echo "bump_blocked=false" >> "$GITHUB_OUTPUT"
 
       - name: Open GitHub Issue for MAJOR bump approval (post-1.0.0)
         if: steps.compute.outputs.bump == 'major_blocked'
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-          REPO_NAME: ${{ github.event.repository.name }}
-          GH_ORG: IggyIkenna
         run: |
           set -euo pipefail
 
           CURRENT="${{ steps.compute.outputs.current_version }}"
           NEXT="${{ steps.compute.outputs.next_version }}"
           BUMP_REASON="${{ steps.compute.outputs.bump_reason }}"
-          SHA="${{ github.event.workflow_run.head_sha }}"
 
-          echo "Opening MAJOR bump approval issue for $REPO_NAME ($CURRENT → $NEXT)"
+          echo "Opening MAJOR bump approval issue for {{SERVICE_NAME}} ($CURRENT → $NEXT)"
 
-          # Read readiness checklist from codex if available
-          CHECKLIST_FILE="../unified-trading-codex/10-audit/repos/${REPO_NAME}.yaml"
-          CHECKLIST_BODY=""
+          CHECKLIST_FILE="../unified-trading-codex/10-audit/repos/{{SERVICE_NAME}}.yaml"
           if [ -f "$CHECKLIST_FILE" ]; then
             CHECKLIST_BODY=$(head -80 "$CHECKLIST_FILE")
           else
-            CHECKLIST_BODY="Readiness checklist file not found at: 10-audit/repos/${REPO_NAME}.yaml"
+            CHECKLIST_BODY="Readiness checklist not found at: 10-audit/repos/{{SERVICE_NAME}}.yaml"
           fi
-
-          # Machine-parseable metadata block (parsed by major-bump-issue-handler.yml)
-          METADATA_JSON="{\"repo\":\"${REPO_NAME}\",\"proposed_version\":\"${NEXT}\",\"current_version\":\"${CURRENT}\",\"staging_branch\":\"staging\",\"staging_commit\":\"${SHA}\",\"reason\":\"${BUMP_REASON}\"}"
 
           ISSUE_BODY="## Major Version Bump Approval Required
 
-          **Repo:** \`$REPO_NAME\`
+          **Repo:** \`{{SERVICE_NAME}}\`
           **Current version:** \`$CURRENT\`
           **Proposed version:** \`$NEXT\`
           **Reason:** $BUMP_REASON
-          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${SHA}\`)
+          **Triggered by:** Quality Gates passing on \`staging\` (SHA: \`${{ github.event.workflow_run.head_sha }}\`)
 
           ---
 
@@ -307,41 +384,22 @@ jobs:
 
           ---
 
-          ## How to Approve or Reject
+          ## How to Proceed
 
-          Comment \`/approve\` on this issue to approve the MAJOR bump.
-          Comment \`/reject\` on this issue to reject it and close without bumping.
+          Once ALL checklist items are verified, re-run quickmerge with the \`--user-approved\` flag:
 
-          Only users with **write access** to this repo may approve or reject.
+          \`\`\`bash
+          bash scripts/quickmerge.sh \"feat!: ...\" --to-staging --user-approved
+          \`\`\`
 
-          > Approving triggers \`major-bump-issue-handler.yml\` which bumps pyproject.toml on \`staging\` ONLY.
+          > **Note:** \`--user-approved\` is NEVER set by \`--agent\` automatically."
 
-          /cc @IggyIkenna
-
-          <!-- major-bump-metadata
-          ${METADATA_JSON}
-          -->"
-
-          ISSUE_URL=$(gh issue create \
-            --repo "${GH_ORG}/${REPO_NAME}" \
-            --title "[MAJOR BUMP PENDING] ${REPO_NAME}: ${CURRENT} → ${NEXT}" \
+          gh issue create \
+            --repo "${GH_ORG}/{{SERVICE_NAME}}" \
+            --title "[MAJOR BUMP REQUIRED] {{SERVICE_NAME}}: $BUMP_REASON" \
             --body "$ISSUE_BODY" \
-            --label "major-bump-pending" \
-            --json url --jq '.url' 2>/dev/null || echo "")
-
-          if [ -n "$ISSUE_URL" ]; then
-            echo "GitHub Issue created: $ISSUE_URL"
-          else
-            echo "WARNING: Issue creation failed (label may not exist yet)"
-          fi
-
-          # Send Telegram alert (after issue creation so we can embed the issue URL)
-          if [ -n "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] && [ -n "${{ secrets.TELEGRAM_CHAT_ID }}" ]; then
-            MSG="Major version bump requires approval - Repo: ${REPO_NAME} - Version: ${CURRENT} to ${NEXT} - Reason: ${BUMP_REASON} - Approve: ${ISSUE_URL}"
-            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-              -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}&text=${MSG}" || true
-            echo "Telegram alert sent"
-          fi
+            --label "major-bump-approval" \
+            || echo "WARNING: Issue creation failed (label may not exist) — continuing"
 
           echo "Issue created. Skipping version-bump dispatch until user approves."
 
@@ -350,9 +408,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          REPO="${{ github.event.repository.name }}"
+          REPO="{{SERVICE_NAME}}"
           VERSION="${{ steps.compute.outputs.new_version }}"
-          BRANCH="main"
+          BRANCH="staging"
           COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
           OWNER="${{ github.repository_owner }}"
 
@@ -371,3 +429,17 @@ jobs:
             cat /tmp/dispatch_response.json || true
             exit 1
           fi
+
+      # ── TELEGRAM NOTIFY ─────────────────────────────────────────────────────
+      - name: Notify Telegram
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ job.status }}
+        run: |
+          TEXT="*semver-agent* | {{SERVICE_NAME}} | ${STATUS} | branch: staging | triggered by QG pass on staging (pre-SIT)"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${TEXT}" \
+            -d parse_mode="Markdown" || true
