@@ -30,6 +30,7 @@ env:
   GH_ORG: IggyIkenna
   POLL_INTERVAL: 30
   POLL_TIMEOUT: 3600 # 1 hour max per tier
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
 
 jobs:
   # ── TIER 0: Core Libraries ────────────────────────────────────────────────────
@@ -133,6 +134,56 @@ jobs:
           echo "results=$RESULTS" >> $GITHUB_OUTPUT
           # Fail tier if any repo failed
           echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T0 FAILED: $RESULTS"; exit 1; } || echo "T0 PASSED"
+
+  # ── T0 ESCALATION: Fire immediately if T0 fails ────────────────────────────
+  t0-escalation:
+    name: T0 Failure Escalation Alert
+    runs-on: ubuntu-latest
+    needs: [t0]
+    if: always() && needs.t0.result == 'failure'
+
+    steps:
+      - name: Send T0 failure priority Telegram alert + open GH Issue
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          T0_DETAILS: ${{ needs.t0.outputs.results }}
+        run: |
+          DATE=$(date +"%Y-%m-%d %H:%M UTC")
+
+          # Priority Telegram — separate from morning summary
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            TEXT="🚨 *T0 FAILURE — Overnight Audit*%0ADate: ${DATE}%0ACore libraries failing: ${T0_DETAILS}%0AT1-T3 results are unreliable.%0A*Immediate action required.*%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="$TEXT" \
+              -d parse_mode="Markdown" > /dev/null 2>&1 || true
+          fi
+
+          # Open GH Issue for tracking
+          ISSUE_URL=$(gh issue create \
+            --repo IggyIkenna/unified-trading-pm \
+            --title "Overnight T0 failure: ${DATE}" \
+            --label "critical-audit-failure" \
+            --body "## T0 Core Library Failure
+
+          Overnight audit detected T0 failures at ${DATE}.
+
+          **Failing repos/results:** \`${T0_DETAILS}\`
+
+          T1, T2, T3 tiers were skipped because they depend on T0 passing.
+          Results from T1-T3 in any prior run are now unreliable until T0 is green.
+
+          ### Action required
+          1. Check the failing repos' quality-gates output in the run link below
+          2. Fix the root cause in the failing repo(s)
+          3. Run overnight orchestrator again manually after fixing
+
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            2>/dev/null || echo "")
+
+          echo "T0 escalation complete. Issue: ${ISSUE_URL:-N/A}"
 
   # ── TIER 1: Contract + Config Tier ───────────────────────────────────────────
   t1:

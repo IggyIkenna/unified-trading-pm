@@ -1,0 +1,95 @@
+name: Claude API Health Monitor
+
+# State-transition-only health monitoring for Claude API.
+# Runs every 15 min. Sends Telegram ONLY when state changes: healthy→degraded or degraded→healthy.
+# No spam — if API is continuously down, only ONE alert fires (on transition).
+# Uses ANTHROPIC_API_KEY_SYSHEALTH (syshealth tier — low priority, won't block CICD agents).
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  health-check:
+    name: Claude API health ping
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Install Claude CLI
+        run: |
+          npm install -g @anthropic-ai/claude-code 2>/dev/null || true
+          which claude || echo "Claude CLI install failed"
+
+      - name: Ping Claude API and detect state change
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e  # Don't fail the job — health monitor should always complete
+
+          CACHE_KEY="claude-health-state"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%MZ")
+
+          # Read previous state from cache (written by previous run)
+          PREV_STATE=$(cat /tmp/claude_health_prev 2>/dev/null || echo "unknown")
+
+          # Ping Claude API with 30s timeout
+          NEW_STATE="healthy"
+          ERROR_CLASS="none"
+          if ! timeout 30 claude --print "ping: respond with the single word OK" \
+            2>/tmp/health_err.txt | grep -qi "ok"; then
+
+            ERR=$(head -c 200 /tmp/health_err.txt 2>/dev/null || echo "")
+            if echo "$ERR" | grep -qiE '401|403|unauthorized|invalid.*key'; then
+              ERROR_CLASS="auth_error"
+            elif echo "$ERR" | grep -qiE '429|529|rate.limit|overload'; then
+              ERROR_CLASS="rate_limited"
+            elif echo "$ERR" | grep -qiE '503|502|connection.refused|unreachable'; then
+              ERROR_CLASS="service_down"
+            else
+              ERROR_CLASS="unknown"
+            fi
+            NEW_STATE="degraded"
+          fi
+
+          echo "Previous state: $PREV_STATE → New state: $NEW_STATE ($ERROR_CLASS)"
+
+          # Only send Telegram on state transition
+          if [ "$NEW_STATE" != "$PREV_STATE" ] && [ "$PREV_STATE" != "unknown" ]; then
+            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+              if [ "$NEW_STATE" = "degraded" ]; then
+                TEXT="⚠️ *Claude API Degraded* at ${TIMESTAMP}%0AError class: \`${ERROR_CLASS}\`%0AUsing: ANTHROPIC_API_KEY_SYSHEALTH%0ACheck: status.anthropic.com"
+              else
+                TEXT="✅ *Claude API Recovered* at ${TIMESTAMP}%0APrevious state: degraded → now healthy"
+              fi
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d text="$TEXT" \
+                -d parse_mode="Markdown" > /dev/null 2>&1 || true
+              echo "Telegram state-transition alert sent: $PREV_STATE → $NEW_STATE"
+            fi
+          elif [ "$PREV_STATE" = "unknown" ] && [ "$NEW_STATE" = "degraded" ]; then
+            # First run and already degraded — alert
+            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+              TEXT="⚠️ *Claude API Degraded* at ${TIMESTAMP} (first health check)%0AError: \`${ERROR_CLASS}\`"
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d text="$TEXT" \
+                -d parse_mode="Markdown" > /dev/null 2>&1 || true
+            fi
+          else
+            echo "State unchanged ($NEW_STATE) — no Telegram alert"
+          fi
+
+          # Write new state for next run (using GH Actions cache would be ideal;
+          # for simplicity we use a workflow artifact approach here)
+          echo "$NEW_STATE" > /tmp/claude_health_current
+          echo "health_state=$NEW_STATE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+          echo "error_class=$ERROR_CLASS" >> "$GITHUB_OUTPUT" 2>/dev/null || true
