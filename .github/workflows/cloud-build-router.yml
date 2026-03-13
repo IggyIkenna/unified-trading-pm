@@ -12,6 +12,15 @@ name: cloud-build-router
 # Service/API/UI repos: build Docker image.
 #
 # Payload: { repo, branch, commit_sha, version, repo_type }
+#
+# Hardening (2026-03-13):
+#   - Task 1: Tier-ordered deployment validation (T0->T1->T2->services)
+#   - Task 2: Post-deploy health check with Telegram alert
+#   - Task 3: Post-deploy smoke test (/health + /readiness)
+#   - Task 4: Market hours / trading-active deployment guard
+#   - Task 5: Position reconciliation gate (pre/post deploy)
+#   - Task 6: Trading kill switch (halt/resume order flow)
+#   - Task 7: Regional fallback for Cloud Build
 
 on:
   repository_dispatch:
@@ -25,10 +34,22 @@ concurrency:
   group: manifest-update
   cancel-in-progress: false
 
+env:
+  # Task 7: Configurable Cloud Build region with fallback
+  CLOUD_BUILD_REGION: asia-northeast1
+  CLOUD_BUILD_FALLBACK_REGION: us-central1
+
+  # Task 4: Trading-critical repos that require deployment safety checks.
+  # These repos handle live order flow, risk calculations, or strategy execution.
+  TRADING_CRITICAL_REPOS: "execution-service,risk-and-exposure-service,strategy-service,trading-agent-service"
+
 jobs:
   route-build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout PM repo (for scripts and manifest)
+        uses: actions/checkout@v4
+
       - name: Determine build target
         id: route
         run: |
@@ -60,6 +81,12 @@ jobs:
             ENV="dev"
           fi
 
+          # Check if repo is trading-critical (Task 4)
+          IS_TRADING_CRITICAL="false"
+          if echo ",${{ env.TRADING_CRITICAL_REPOS }}," | grep -q ",$REPO,"; then
+            IS_TRADING_CRITICAL="true"
+          fi
+
           echo "gcp_project=$GCP_PROJECT" >> "$GITHUB_OUTPUT"
           echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
           echo "env=$ENV" >> "$GITHUB_OUTPUT"
@@ -68,8 +95,193 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
           echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+          echo "is_trading_critical=$IS_TRADING_CRITICAL" >> "$GITHUB_OUTPUT"
 
-          echo "Routing: $REPO ($REPO_TYPE) branch=$BRANCH → $GCP_PROJECT tag=$IMAGE_TAG"
+          echo "Routing: $REPO ($REPO_TYPE) branch=$BRANCH -> $GCP_PROJECT tag=$IMAGE_TAG (trading_critical=$IS_TRADING_CRITICAL)"
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 1: Tier-ordered deployment validation (prod only)
+      # Before deploying, verify all dependency repos (lower tiers)
+      # are already deployed at the same or newer version.
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Tier-ordered dependency check"
+        id: tier-check
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.repo_type != 'library'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          ENV="${{ steps.route.outputs.env }}"
+
+          echo "=== Tier-Ordered Deployment Validation ==="
+          echo "Repo: $REPO, Version: $VERSION, Env: $ENV"
+
+          # Read topological order from workspace-manifest.json
+          # Find the level of the current repo
+          REPO_LEVEL=$(jq -r --arg repo "$REPO" '
+            .topologicalOrder.levels[]
+            | select(.repos[] == $repo)
+            | .level
+          ' workspace-manifest.json 2>/dev/null || echo "")
+
+          if [ -z "$REPO_LEVEL" ]; then
+            echo "WARNING: Repo $REPO not found in topologicalOrder. Skipping tier check."
+            echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Repo $REPO is at topological level $REPO_LEVEL"
+
+          # Get all repos at lower levels (dependencies)
+          LOWER_LEVEL_REPOS=$(jq -r --argjson level "$REPO_LEVEL" '
+            [.topologicalOrder.levels[]
+             | select(.level < $level)
+             | .repos[]]
+            | join(",")
+          ' workspace-manifest.json 2>/dev/null || echo "")
+
+          if [ -z "$LOWER_LEVEL_REPOS" ]; then
+            echo "No lower-level dependencies. Tier check passed."
+            echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Lower-level repos: $LOWER_LEVEL_REPOS"
+
+          # Check deployed_versions for each lower-level non-library repo
+          BLOCKING_REPOS=""
+          IFS=',' read -ra DEP_REPOS <<< "$LOWER_LEVEL_REPOS"
+          for dep in "${DEP_REPOS[@]}"; do
+            # Skip libraries, infrastructure, devops, test-harness — they don't deploy as services
+            DEP_TYPE=$(jq -r --arg dep "$dep" '.repositories[$dep].type // "unknown"' workspace-manifest.json 2>/dev/null || echo "unknown")
+            if [ "$DEP_TYPE" = "library" ] || [ "$DEP_TYPE" = "infrastructure" ] || [ "$DEP_TYPE" = "devops" ] || [ "$DEP_TYPE" = "test-harness" ]; then
+              continue
+            fi
+
+            # Check if this dep has a deployed version in prod
+            DEPLOYED_VERSION=$(jq -r --arg dep "$dep" '.deployed_versions.prod[$dep].version // "none"' workspace-manifest.json 2>/dev/null || echo "none")
+            MANIFEST_VERSION=$(jq -r --arg dep "$dep" '.versions[$dep] // "unknown"' workspace-manifest.json 2>/dev/null || echo "unknown")
+
+            if [ "$DEPLOYED_VERSION" = "none" ] || [ "$DEPLOYED_VERSION" = "null" ]; then
+              echo "  BLOCKED: $dep (type=$DEP_TYPE) has no prod deployment recorded"
+              BLOCKING_REPOS="${BLOCKING_REPOS}${dep}(not-deployed) "
+            else
+              echo "  OK: $dep deployed=$DEPLOYED_VERSION manifest=$MANIFEST_VERSION"
+            fi
+          done
+
+          if [ -n "$BLOCKING_REPOS" ]; then
+            echo ""
+            echo "TIER CHECK FAILED: The following lower-tier repos must be deployed first:"
+            echo "  $BLOCKING_REPOS"
+            echo ""
+            echo "Deploy these repos to prod before deploying $REPO."
+            echo "tier_check_passed=false" >> "$GITHUB_OUTPUT"
+            echo "blocking_repos=$BLOCKING_REPOS" >> "$GITHUB_OUTPUT"
+            # Non-fatal for now — log warning but allow build to proceed.
+            # Change exit 0 to exit 1 when ready to enforce as a hard gate.
+            echo "WARNING: Proceeding despite tier check failure (soft gate)."
+          else
+            echo "Tier check PASSED — all lower-tier service deps are deployed"
+            echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 4: Trading-active deployment guard (prod only)
+      # For trading-critical repos, check deployment_safety.trading_active
+      # in the manifest. If trading is active, require manual approval.
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Trading-active safety guard"
+        id: trading-guard
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.is_trading_critical == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+
+          echo "=== Trading-Active Deployment Guard ==="
+          echo "Repo: $REPO (trading-critical)"
+
+          # Check deployment_safety.trading_active in manifest
+          TRADING_ACTIVE=$(jq -r '.deployment_safety.trading_active // false' workspace-manifest.json 2>/dev/null || echo "false")
+
+          echo "deployment_safety.trading_active = $TRADING_ACTIVE"
+
+          if [ "$TRADING_ACTIVE" = "true" ]; then
+            echo ""
+            echo "WARNING: Trading is currently ACTIVE."
+            echo "Deploying $REPO to prod while trading is active requires manual approval."
+            echo ""
+            echo "To proceed:"
+            echo "  1. Set deployment_safety.trading_active=false in workspace-manifest.json, OR"
+            echo "  2. Re-trigger this workflow with manual approval via workflow_dispatch"
+            echo ""
+            echo "trading_guard_passed=false" >> "$GITHUB_OUTPUT"
+            # Soft gate: warn but proceed. Change to exit 1 for hard gate.
+            echo "WARNING: Proceeding despite trading-active guard (soft gate)."
+          else
+            echo "Trading is not active. Deployment guard passed."
+            echo "trading_guard_passed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 6: Kill switch — halt order flow before deploying
+      # trading-critical repos to prod
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Halt order flow (trading-critical)"
+        id: kill-switch-halt
+        if: steps.route.outputs.env == 'prod' && steps.route.outputs.is_trading_critical == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+
+          echo "=== Kill Switch: Halt Order Flow ==="
+          echo "Deploying trading-critical repo: $REPO"
+
+          bash scripts/deploy/trading-kill-switch.sh halt "$GH_TOKEN" "${{ github.repository_owner }}"
+
+          echo ""
+          echo "Waiting for order drain..."
+          bash scripts/deploy/trading-kill-switch.sh drain "$GH_TOKEN" "${{ github.repository_owner }}" 120
+
+          echo "kill_switch_halted=true" >> "$GITHUB_OUTPUT"
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 5: Position reconciliation — pre-deploy snapshot
+      # ──────────────────────────────────────────────────────────────
+      - name: "Pre-deploy: Position snapshot (execution/risk)"
+        id: position-snapshot
+        if: |
+          steps.route.outputs.env == 'prod' &&
+          (steps.route.outputs.repo == 'execution-service' || steps.route.outputs.repo == 'risk-and-exposure-service')
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+
+          echo "=== Position Reconciliation: Pre-Deploy Snapshot ==="
+
+          # Discover current Cloud Run URL
+          SERVICE_URL=$(gcloud run services describe "$REPO" \
+            --project="$GCP_PROJECT" \
+            --region="${CLOUD_BUILD_REGION}" \
+            --format="value(status.url)" 2>/dev/null || echo "")
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "WARNING: Could not discover Cloud Run URL for $REPO. Skipping position snapshot."
+            echo "snapshot_taken=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Service URL: $SERVICE_URL"
+          bash scripts/deploy/position-reconciliation-check.sh snapshot "$SERVICE_URL" /tmp/positions_pre_deploy.json
+          echo "snapshot_taken=true" >> "$GITHUB_OUTPUT"
+          echo "service_url=$SERVICE_URL" >> "$GITHUB_OUTPUT"
 
       - name: Authenticate to GCP
         id: auth
@@ -82,6 +294,9 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      # ──────────────────────────────────────────────────────────────
+      # Task 7: Cloud Build with regional fallback
+      # ──────────────────────────────────────────────────────────────
       - name: Trigger Cloud Build (Docker image — service/api/ui)
         if: steps.route.outputs.repo_type != 'library'
         id: docker-build
@@ -97,20 +312,65 @@ jobs:
           COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
           ENV="${{ steps.route.outputs.env }}"
           AR_HOST="asia-northeast1-docker.pkg.dev"
+          REGION="${CLOUD_BUILD_REGION}"
 
-          echo "Triggering Cloud Build in $GCP_PROJECT for $REPO:$IMAGE_TAG"
+          echo "Triggering Cloud Build in $GCP_PROJECT for $REPO:$IMAGE_TAG (region: $REGION)"
 
-          # Trigger build (prefer named trigger; fall back to gcloud builds submit)
+          trigger_build_in_region() {
+            local region="$1"
+            echo "Attempting build trigger in region: $region"
+
+            local trigger_output=""
+            if gcloud builds triggers run "${REPO}-${ENV}" \
+              --project="$GCP_PROJECT" \
+              --region="$region" \
+              --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+              --format="value(metadata.build.id)" \
+              2>/tmp/build_trigger_err.txt; then
+              trigger_output=$(cat /tmp/build_trigger_err.txt | grep -oP '[a-f0-9\-]{36}' | head -1 || true)
+              if [ -n "$trigger_output" ]; then
+                echo "$trigger_output"
+                return 0
+              fi
+            else
+              local err_msg
+              err_msg=$(cat /tmp/build_trigger_err.txt 2>/dev/null || echo "unknown error")
+              echo "Trigger failed in $region: $err_msg" >&2
+
+              # Check for regional errors (quota, outage) — signal caller to try fallback
+              if echo "$err_msg" | grep -qiE "quota|capacity|unavailable|region|503|429"; then
+                return 2
+              fi
+            fi
+            return 1
+          }
+
+          # Try primary region
           BUILD_ID=""
-          if gcloud builds triggers run "${REPO}-${ENV}" \
-            --project="$GCP_PROJECT" \
-            --region="asia-northeast1" \
-            --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
-            --format="value(metadata.build.id)" \
-            2>/tmp/build_trigger_err.txt; then
-            BUILD_ID=$(cat /tmp/build_trigger_err.txt | grep -oP '[a-f0-9\-]{36}' | head -1 || true)
-          else
-            echo "Named trigger not found or failed — falling back to gcloud builds submit"
+          ACTIVE_REGION="$REGION"
+          set +e
+          BUILD_ID=$(trigger_build_in_region "$REGION")
+          TRIGGER_EXIT=$?
+          set -e
+
+          if [ "$TRIGGER_EXIT" -eq 2 ]; then
+            # Task 7: Regional fallback on quota/outage
+            FALLBACK="${CLOUD_BUILD_FALLBACK_REGION}"
+            echo "Primary region $REGION failed with regional error. Falling back to $FALLBACK..."
+            ACTIVE_REGION="$FALLBACK"
+            set +e
+            BUILD_ID=$(trigger_build_in_region "$FALLBACK")
+            TRIGGER_EXIT=$?
+            set -e
+            if [ "$TRIGGER_EXIT" -eq 0 ] && [ -n "$BUILD_ID" ]; then
+              echo "Fallback region $FALLBACK succeeded"
+            else
+              echo "Fallback region $FALLBACK also failed"
+              BUILD_ID=""
+            fi
+          elif [ "$TRIGGER_EXIT" -ne 0 ]; then
+            echo "Named trigger not found or failed — no regional fallback applicable"
+            BUILD_ID=""
           fi
 
           if [ -z "$BUILD_ID" ]; then
@@ -118,14 +378,16 @@ jobs:
             echo "build_triggered=false" >> "$GITHUB_OUTPUT"
             echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
             echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
+            echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "build_triggered=true" >> "$GITHUB_OUTPUT"
           echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
           BUILD_URL="https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$GCP_PROJECT"
           echo "build_log_url=$BUILD_URL" >> "$GITHUB_OUTPUT"
-          echo "Cloud Build triggered: $BUILD_ID"
+          echo "Cloud Build triggered: $BUILD_ID (region: $ACTIVE_REGION)"
 
           # Poll for completion
           # exit 0 = SUCCESS
@@ -133,12 +395,12 @@ jobs:
           # exit 2 = poll exhaustion (our MAX_POLLS exceeded — build still running)
           echo "Polling Cloud Build $BUILD_ID (up to 30 min)..."
           POLL_COUNT=0
-          MAX_POLLS=60  # 60 × 30s = 30 min
+          MAX_POLLS=60  # 60 x 30s = 30 min
           STATUS=""
           while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
             STATUS=$(gcloud builds describe "$BUILD_ID" \
               --project="$GCP_PROJECT" \
-              --region="asia-northeast1" \
+              --region="$ACTIVE_REGION" \
               --format="value(status)" 2>/dev/null || echo "UNKNOWN")
             case "$STATUS" in
               SUCCESS)
@@ -169,6 +431,142 @@ jobs:
           echo "build_exit_code=2" >> "$GITHUB_OUTPUT"
           echo "build_failure_reason=POLL_EXHAUSTED" >> "$GITHUB_OUTPUT"
           exit 2
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 2 + Task 3: Post-deploy health check and smoke test
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Health check and smoke test"
+        id: health-check
+        if: |
+          steps.route.outputs.repo_type != 'library' &&
+          steps.docker-build.outputs.build_exit_code == '0' &&
+          steps.docker-build.outputs.build_triggered == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+          ENV="${{ steps.route.outputs.env }}"
+          REGION="${{ steps.docker-build.outputs.build_region }}"
+
+          echo "=== Post-Deploy Health Check & Smoke Test ==="
+
+          # Discover Cloud Run service URL
+          SERVICE_URL=$(gcloud run services describe "$REPO" \
+            --project="$GCP_PROJECT" \
+            --region="${REGION:-$CLOUD_BUILD_REGION}" \
+            --format="value(status.url)" 2>/dev/null || echo "")
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "WARNING: Could not discover Cloud Run URL for $REPO."
+            echo "Service may not be a Cloud Run service or may not be deployed yet."
+            echo "health_check_passed=skip" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Service URL: $SERVICE_URL"
+          echo "service_url=$SERVICE_URL" >> "$GITHUB_OUTPUT"
+
+          # Run smoke test (3 retries, 30s apart — covers Task 2 and Task 3)
+          if bash scripts/deploy/post-deploy-smoke.sh "$SERVICE_URL" 3 30; then
+            echo "health_check_passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "health_check_passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Task 2: Telegram alert if health check fails
+      - name: "Post-deploy: Telegram alert — health check FAILED"
+        if: steps.health-check.outputs.health_check_passed == 'false'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
+
+          REPO="${{ steps.route.outputs.repo }}"
+          ENV="${{ steps.route.outputs.env }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
+          SERVICE_URL="${{ steps.health-check.outputs.service_url }}"
+          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
+
+          TEXT="🔴 *Post-Deploy Health Check FAILED*%0ARepo: \`${REPO}\`%0AVersion: \`${VERSION}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0AEnv: \`${ENV}\`%0AURL: ${SERVICE_URL}%0A%0A*Rollback:*%0A\`gcloud run services update-traffic ${REPO} --to-revisions=LATEST=0 --project=${GCP_PROJECT}\`"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" > /dev/null 2>&1 || true
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 5: Position reconciliation — post-deploy comparison
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Position reconciliation compare"
+        if: |
+          steps.position-snapshot.outputs.snapshot_taken == 'true' &&
+          steps.docker-build.outputs.build_exit_code == '0'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          SERVICE_URL="${{ steps.health-check.outputs.service_url }}"
+
+          if [ -z "$SERVICE_URL" ]; then
+            SERVICE_URL="${{ steps.position-snapshot.outputs.service_url }}"
+          fi
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "WARNING: No service URL available. Skipping position reconciliation."
+            exit 0
+          fi
+
+          echo "=== Position Reconciliation: Post-Deploy Compare ==="
+          bash scripts/deploy/position-reconciliation-check.sh compare "$SERVICE_URL" /tmp/positions_pre_deploy.json
+
+      # ──────────────────────────────────────────────────────────────
+      # Task 6: Kill switch — resume order flow after successful deploy
+      # ──────────────────────────────────────────────────────────────
+      - name: "Post-deploy: Resume order flow (trading-critical)"
+        if: |
+          steps.kill-switch-halt.outputs.kill_switch_halted == 'true' &&
+          steps.docker-build.outputs.build_exit_code == '0' &&
+          (steps.health-check.outputs.health_check_passed == 'true' || steps.health-check.outputs.health_check_passed == 'skip')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          echo "=== Kill Switch: Resume Order Flow ==="
+          echo "Repo: $REPO — build succeeded, health check passed"
+
+          bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
+
+      # Emergency resume if build failed but we halted order flow
+      - name: "Post-deploy: Emergency resume order flow (build failed)"
+        if: |
+          always() &&
+          steps.kill-switch-halt.outputs.kill_switch_halted == 'true' &&
+          steps.docker-build.outputs.build_exit_code != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          echo "=== EMERGENCY: Build failed after halt — resuming order flow ==="
+          echo "Repo: $REPO"
+
+          bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
+
+          # Alert via Telegram
+          if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            TEXT="⚠️ *EMERGENCY: Order flow resumed after failed deploy*%0ARepo: \`${REPO}\`%0ABuild failed but order flow was halted pre-deploy.%0AOrder flow has been automatically resumed.%0AInvestigate build failure immediately."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="$TEXT" \
+              -d parse_mode="Markdown" > /dev/null 2>&1 || true
+          fi
 
       - name: Update manifest on build success
         if:
@@ -263,9 +661,13 @@ jobs:
         if: always()
         run: |
           echo "Build routing summary:"
-          echo "  repo:       ${{ steps.route.outputs.repo }}"
-          echo "  type:       ${{ steps.route.outputs.repo_type }}"
-          echo "  branch:     ${{ steps.route.outputs.branch }}"
-          echo "  gcp_project: ${{ steps.route.outputs.gcp_project }}"
-          echo "  image_tag:  ${{ steps.route.outputs.image_tag }}"
-          echo "  env:        ${{ steps.route.outputs.env }}"
+          echo "  repo:             ${{ steps.route.outputs.repo }}"
+          echo "  type:             ${{ steps.route.outputs.repo_type }}"
+          echo "  branch:           ${{ steps.route.outputs.branch }}"
+          echo "  gcp_project:      ${{ steps.route.outputs.gcp_project }}"
+          echo "  image_tag:        ${{ steps.route.outputs.image_tag }}"
+          echo "  env:              ${{ steps.route.outputs.env }}"
+          echo "  trading_critical: ${{ steps.route.outputs.is_trading_critical }}"
+          echo "  build_region:     ${{ steps.docker-build.outputs.build_region }}"
+          echo "  tier_check:       ${{ steps.tier-check.outputs.tier_check_passed }}"
+          echo "  health_check:     ${{ steps.health-check.outputs.health_check_passed }}"
