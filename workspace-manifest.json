@@ -2323,7 +2323,7 @@
       "dependencies": [],
       "status": "active",
       "notes": "Cloud abstraction layer: storage, pub/sub, logging. Tier 0 pure leaf.",
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 82,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2354,8 +2354,7 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent",
-      "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1 (stale venv or missing dep)"
+      "semver_policy": "agent"
     },
     "unified-config-interface": {
       "type": "library",
@@ -2565,7 +2564,7 @@
       "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
       "status": "active",
       "notes": "Internal message schemas, topic names, request/response/error contracts, domain/<service>/ output schemas. NO cloud SDKs. T0-L2b: may import UAC normalization canonicals; UAC must NOT import UIC. Build order: UAC (L2a, merge_level=2) must build before UIC (L2b, merge_level=3).",
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 99,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2575,8 +2574,7 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent",
-      "ci_failure_reason": "Empty string fallback check failed + pydantic warning"
+      "semver_policy": "agent"
     },
     "unified-market-interface": {
       "type": "library",
@@ -2899,7 +2897,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2909,8 +2907,7 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
-      "semver_policy": "agent",
-      "ci_failure_reason": "Codex compliance FAILED: 4 violations"
+      "semver_policy": "agent"
     },
     "unified-trading-pm": {
       "type": "devops",
