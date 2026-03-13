@@ -39,10 +39,11 @@ repo_gates:
     business: none
     readiness_note: "deployed_versions writeback + deployment ID format."
 
-depends_on:
-  - cicd_e2e_test_plan_2026_03_13
-  - conflict_resolution_agent_2026_03_13
-  - full_autonomous_agent_ci
+depends_on: []
+  # NOTE (2026-03-13 audit): Previously depended on cicd_e2e_test_plan, conflict_resolution_agent,
+  # full_autonomous_agent_ci. DECOUPLED because P0 race condition and heredoc fixes are independent
+  # of those plans and were being artificially blocked. Todo-level dependencies remain where needed
+  # (e.g. fix-semver-staging-trigger blocks on full_autonomous_agent_ci § fix-semver-agent-template-staging-trigger).
 
 todos:
   # ── Diagram SSOT (do first — unblocked) ──────────────────────────────────
@@ -182,7 +183,7 @@ todos:
       Affected files: sit-gate.yml, sit-unlock.yml, staging-to-main.yml, update-repo-version.yml, hotfix-mode.yml. Test:
       introduce a deliberate KeyError in a test branch heredoc — verify workflow fails immediately, manifest is not
       committed in corrupted state. Acceptance: no silent manifest corruption possible.
-    status: pending
+    status: done
 
   - id: fix-semver-staging-trigger
     content: >
@@ -346,7 +347,7 @@ todos:
       (2) Call validate-manifest-json.sh after EVERY manifest write in all mutating workflows. (3) Add to
       quality-gates.sh as a pre-check. Test: write invalid JSON to manifest on a test branch — verify validation catches
       it, reverts, and alerts. Acceptance: corrupted manifest never reaches a committed state.
-    status: pending
+    status: done
 
   # ── P1 silent failure fixes ───────────────────────────────────────────────
 
@@ -844,6 +845,143 @@ todos:
       deploy-{service}-{version}-{env}-{seq}. (7) Verify Docker image tag is under 50 chars and human-readable. (8)
       Verify main_commits.history entry has from/to versions, not just SHAs. Acceptance: a non-engineer can read every
       version surface and understand what version is where.
+    status: pending
+
+  # ── 2026-03-13 Citadel-grade audit additions ─────────────────────────────
+  # Findings from cross-plan conflict resolution audit. These close loopholes
+  # that could let broken code pass while reporting green.
+
+  - id: fix-zero-test-silent-pass
+    content: >
+      CRITICAL: If tests/unit/ is empty or all tests are @pytest.mark.skip, pytest exits 0 and QG passes.
+      base-library.sh has NO file-existence check (base-service.sh partially mitigates via test_event_logging.py check).
+      Fix: (1) In both base-service.sh and base-library.sh, after pytest completes, verify test count:
+          TESTS_RAN=$(grep -oP '\d+(?= passed)' pytest_output.txt || echo 0)
+          if [ "$TESTS_RAN" -eq 0 ]; then
+            log_fail "ZERO TESTS RAN — QG cannot pass with no test execution"
+            exit 1
+          fi
+      (2) Also check for 100% skip rate:
+          TESTS_SKIPPED=$(grep -oP '\d+(?= skipped)' pytest_output.txt || echo 0)
+          TESTS_TOTAL=$((TESTS_RAN + TESTS_SKIPPED))
+          if [ "$TESTS_RAN" -eq 0 ] && [ "$TESTS_SKIPPED" -gt 0 ]; then
+            log_fail "ALL $TESTS_SKIPPED TESTS SKIPPED — QG cannot pass with all tests skipped"
+            exit 1
+          fi
+      Acceptance: no repo can pass QG with zero executed tests.
+    status: pending
+
+  - id: fix-quickmerge-dev-extras
+    content: >
+      HIGH: quickmerge.sh line 365 uses `uv pip install -e ".[dev]"` which violates the flat deps rule (CLAUDE.md:
+      "Never use .[dev] extras"). The fallback to `-e .` partially mitigates but masks repos that accidentally have
+      [project.optional-dependencies]. Fix: (1) Remove `.[dev]` from quickmerge.sh line 365 — use `uv pip install -e .`
+      only. (2) Add a check in quality-gates-base scripts:
+          if grep -q 'optional-dependencies' pyproject.toml; then
+            log_fail "FLAT DEPS VIOLATION: [project.optional-dependencies] found in pyproject.toml"
+            exit 1
+          fi
+      Acceptance: `.[dev]` never used; optional-dependencies blocked by QG.
+    status: pending
+
+  - id: enforce-files-in-agent-mode
+    content: >
+      MEDIUM: quickmerge.sh `git add -A` when --files not specified can commit another agent's partial work, .env files,
+      or untracked artifacts. Fix: (1) In quickmerge.sh, when --agent is set and --files is NOT provided, fail with
+      error:
+          if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
+            echo "ERROR: --agent mode requires --files to prevent accidental staging"
+            echo "Usage: quickmerge.sh 'message' --agent --files 'file1 file2'"
+            exit 1
+          fi
+      Acceptance: agents cannot accidentally commit unintended files.
+    status: pending
+
+  - id: add-coverage-floor-governance
+    content: >
+      HIGH LOOPHOLE: Coverage floors are adjustable per-repo with no governance. Elysium lowered MIN_COVERAGE from 70 to
+      68 to pass. DeFi protocol adapters at 37-41% handle real money. Fix: (1) Create scripts/coverage-floor-guard.sh
+      that runs in QG:
+          Read MIN_COVERAGE from repo stub; read fail_under from pyproject.toml.
+          If MIN_COVERAGE < 70 (default floor): require a signed-off justification file
+          at .coverage-floor-exception.md with format:
+            Approved by: [human name]
+            Date: [date]
+            Reason: [justification]
+            Expiry: [date — must re-approve after this]
+          If file missing or expired: fail QG.
+      (2) Reconcile MIN_COVERAGE and pyproject fail_under — they MUST match. QG fails if they differ:
+          alerting (89 vs 78), strategy (72 vs 69), risk (73 vs 71) must be fixed.
+      (3) For DeFi money-handling paths (elysium-defi-system handlers/): require per-handler minimum
+          80% branch coverage even if repo-wide floor is lower.
+      Acceptance: no coverage floor reduction without human sign-off; MIN_COVERAGE = fail_under always.
+    status: pending
+
+  - id: add-tier-gate-enforcement-script
+    content: >
+      CRITICAL AUTOMATION GAP: The tier invariant ("never touch N until N-1 green") is enforced by human discipline
+      only. No CI check prevents a T4 commit when T3 QG is failing. Fix: (1) Create scripts/tier-gate-check.sh:
+          Read workspace-manifest.json for repo tier assignments.
+          For the target repo's tier N, check QG status of ALL tier N-1 repos:
+            for repo in $(get_repos_at_tier $((N-1))); do
+              STATUS=$(jq -r ".repositories[\"$repo\"].quality_gate_status" workspace-manifest.json)
+              if [ "$STATUS" != "passing" ]; then
+                echo "TIER GATE BLOCKED: $repo (tier $((N-1))) is not green — cannot work on tier $N"
+                exit 1
+              fi
+            done
+      (2) Wire into quality-gates.sh as a pre-check (runs before any repo-specific gates). (3) Wire into quickmerge.sh —
+      block PR creation if tier gate is violated. (4) Override: --skip-tier-gate for emergency hotfixes (requires
+      --agent to be absent). Acceptance: automated enforcement of tier ordering invariant.
+    status: pending
+
+  - id: add-cross-validation-protocol
+    content: >
+      HIGH LOOPHOLE: Same agent validates its own work — "VALIDATED BY CLAUDE" with no independent check. Fix: (1) In
+      overnight-agent-orchestrator.yml, after an agent completes a repo:
+          dispatch a SEPARATE validation job to a different agent instance:
+            gh workflow run agent-audit.yml --repo $REPO \
+              --field mode=validate-only \
+              --field prior_agent_run_id=$RUN_ID
+          The validation agent runs QG independently (fresh .venv, fresh checkout).
+          If QG fails: Telegram alert "Cross-validation FAILED for $REPO v$VERSION —
+          agent self-report was incorrect."
+      (2) For tier-green declarations: require TWO independent QG passes (original + cross-validation)
+          before updating manifest quality_gate_status.
+      (3) Cross-validation uses ANTHROPIC_API_KEY_SYSHEALTH (separate from implementing agent's key). Acceptance: no
+      repo is declared green based on a single agent's self-report.
+    status: pending
+
+  - id: add-baseline-growth-ci-guard
+    content: >
+      MEDIUM: The invariant "never run --writebaseline to re-suppress" is not enforced. Fix: In quality-gates-base
+      scripts, after basedpyright completes:
+          if git diff --name-only | grep -q '.basedpyright-baseline.json'; then
+            BASELINE_ADDITIONS=$(git diff .basedpyright-baseline.json | grep '^+' | grep -v '^+++' | wc -l)
+            if [ "$BASELINE_ADDITIONS" -gt 0 ]; then
+              log_fail "BASELINE GROWTH: $BASELINE_ADDITIONS new suppressions added to .basedpyright-baseline.json"
+              log_fail "Fix the type errors instead of suppressing them"
+              exit 1
+            fi
+          fi
+      Acceptance: baseline files can only shrink, never grow.
+    status: pending
+
+  - id: add-secondary-notification-channel
+    content: >
+      HIGH: Telegram is the sole notification channel. Bot token expiry, chat archive, or Telegram outage = all
+      operational visibility lost. Fix: (1) Add a GitHub Issue fallback for all critical alerts. In
+      scripts/telegram-helpers.sh (or create), wrap send_telegram:
+          function notify_critical() {
+            send_telegram "$@" || true  # best-effort TG
+            gh issue create --repo IggyIkenna/unified-trading-pm \
+              --title "ALERT: $1" --body "$2" --label "critical-alert" || true  # GH Issue fallback
+          }
+      (2) Use notify_critical for: SIT failures, T0 overnight failures, conflict agent timeouts,
+          Claude API auth errors, manifest corruption. Regular notifications (lock/unlock, promotion)
+          stay Telegram-only. (3) Add email notification via GitHub Actions notification settings
+          as a tertiary channel (already built into GHA — just enable).
+      Acceptance: critical alerts have at least 2 delivery channels.
     status: pending
 
   - id: register-ssot-index

@@ -61,6 +61,14 @@ BE_EXCLUDE_GLOBS+=("**/generate-cicd-diagram.py")
 
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
+# ── Pre-commit gate: validate workspace-manifest.json (add-manifest-json-validation) ──
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+MANIFEST="${REPO_ROOT}/workspace-manifest.json"
+if [ -f "$MANIFEST" ]; then
+    bash "${REPO_ROOT}/scripts/validate-manifest-json.sh" "$MANIFEST" \
+        || { echo "❌ workspace-manifest.json validation failed — fix before committing" >&2; exit 1; }
+fi
+
 # ── Post-gates: regenerate CI/CD pipeline diagram (SSOT: cicd-pipeline-definition.yaml) ──
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 DIAGRAM_YAML="${REPO_ROOT}/docs/repo-management/cicd-pipeline-definition.yaml"

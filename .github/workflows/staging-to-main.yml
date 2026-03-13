@@ -422,16 +422,21 @@ jobs:
           manifest["staging_status"]["locked_reason"] = None
           manifest["staging_status"]["lock_version"] = None
 
-          with open("workspace-manifest.json", "w") as f:
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
               json.dump(manifest, f, indent=2, ensure_ascii=False)
               f.write("\n")
+          import os as _os
+          _os.replace(tmp_path, "workspace-manifest.json")
 
           print(f"Promoted {len(promoted)} repos to stable versions:")
           for p in promoted:
               print(p)
           print(f"Appended staging_commits to main_commits.history (history length: {len(history)})")
           print("staging_status.locked = false")
-          PYEOF
+          PYEOF || exit 1
+          python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
+            || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
       - name: Commit manifest update
         run: |

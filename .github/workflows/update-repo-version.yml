@@ -120,12 +120,17 @@ jobs:
           with open("/tmp/bump_type.txt", "w") as f:
               f.write(bump_type)
 
-          with open("workspace-manifest.json", "w") as f:
+          tmp_path = "workspace-manifest.json.tmp"
+          with open(tmp_path, "w") as f:
               json.dump(manifest, f, indent=2, ensure_ascii=False)
               f.write("\n")
+          import os as _os
+          _os.replace(tmp_path, "workspace-manifest.json")
 
           print(f"Updated {repo} → {version} (branch={branch}, bump_type={bump_type})")
-          PYEOF
+          PYEOF || exit 1
+          python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
+            || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
           BUMP_TYPE=$(cat /tmp/bump_type.txt)
 
