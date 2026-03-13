@@ -349,6 +349,57 @@ todos:
     status: pending
     note: "Added 2026-03-10 — not yet audited. Blind spot that allowed 25-30K lines of duplicated QG logic to persist."
 
+  - id: add-manifest-sit-level-field
+    content: >-
+      Add sit_level field to workspace-manifest.json per repo (values: standard | abbreviated | none). PM and
+      unified-trading-codex get sit_level: abbreviated — they are tooling/docs repos with no runtime contracts; full SIT
+      never makes sense for them. All library/service/API/UI repos default to standard. smoke-test-gate.yml reads
+      sit_level from PM manifest for the repo being promoted and routes accordingly: abbreviated → tests/abbreviated/
+      only; standard → full smoke + e2e. semver-agent also reads sit_level: repos with abbreviated always get patch bump
+      (no API surface to validate — skip label mismatch check). Update workspace-manifest.json schema docs and
+      manifest-schema.json if it exists. Also add semver_policy field (values: agent | always_patch) — PM and Codex get
+      always_patch; everything else gets agent. This encodes the PM/Codex carve-out cleanly in the manifest rather than
+      hardcoding repo names in workflow logic.
+    status: pending
+    notes: "Added 2026-03-13 — encodes PM/Codex abbreviated-SIT and always-patch carve-out in manifest schema."
+
+  - id: convert-workflows-to-reusable-workflow-call
+    content: >-
+      Convert the key shared workflow templates to reusable workflows (workflow_call) defined in PM, so repos call them
+      with a PM ref rather than receiving a flat file copy. This enables workflow branching: test changes on a PM
+      feature branch by having repos call uses:
+      IggyIkenna/unified-trading-pm/.github/workflows/semver-agent.yml@<feature-branch> before rolling out to main.
+      Workflows to convert: semver-agent.yml, feature-branch-to-staging.yml, update-dependency-version.yml,
+      quality-gates base logic (caller pattern). Implementation: (1) Add workflow_call: trigger to each template
+      (alongside existing workflow_run/push triggers); (2) Move shared logic into the PM-owned reusable workflow; (3)
+      Each repo gets a thin caller workflow that does: uses:
+      IggyIkenna/unified-trading-pm/.github/workflows/<name>.yml@<ref> with: SERVICE_NAME: <repo-name>; (4)
+      rollout-action-ref.yml already re-pins composite action refs when active_feature_branch changes — extend it to
+      also update the PM ref in caller workflows across all repos; (5) On PM staging → main promotion,
+      rollout-action-ref.yml updates all repos to pin @main. This means workflow changes can be developed on PM feature
+      branch, tested via repos that are already on that feature branch, then promoted atomically with the branch merge.
+    status: pending
+    notes:
+      "Added 2026-03-13 — replaces flat-file propagation with reusable workflow_call + PM ref pinning. Enables safe
+      workflow iteration without affecting repos on other branches."
+
+  - id: add-workflow-sanity-checks-to-sit
+    content: >-
+      Add workflow validation to tests/abbreviated/ in system-integration-tests. Two layers: (1) Static YAML validation
+      — for each repo in the manifest, fetch .github/workflows/*.yml via gh api and validate: trigger shapes are correct
+      (workflow_run workflows names match actual workflow names in that repo), required secrets referenced (GH_PAT,
+      ANTHROPIC_API_KEY) exist as repo secrets via gh api, dispatch event_types match receiver workflow types. Flag
+      mismatches as FAIL. (2) ACT dry-run — for key shared workflows (semver-agent.yml, feature-branch-to-staging.yml,
+      update-dependency-version.yml), run act --dry-run --workflows .github/workflows/<name>.yml in a temp clone of a
+      representative repo to verify the workflow parses, jobs resolve, and steps are syntactically valid. Use nektos/act
+      installed in SIT venv or Docker. Mark tests @pytest.mark.abbreviated_sit so they run in the hotfix path and as a
+      SIT pre-check. This catches: workflow YAML syntax errors, broken trigger refs, mismatched dispatch payloads — all
+      without needing live GHA runners.
+    status: pending
+    notes:
+      "Added 2026-03-13 — workflow sanity checks in abbreviated SIT. Catches broken workflow propagations before they
+      reach production."
+
   - id: fix-semver-agent-template-staging-trigger
     content: >-
       Redesign semver-agent.yml template so it fires on staging (not main). Current template has workflow_run: branches:
@@ -380,9 +431,10 @@ todos:
       document the new staging-first invariant: "Only [skip ci] automation commits (version bumps, manifest updates, dep
       pins) go directly to main. Everything else goes through staging."
     status: pending
-    notes:
-      "Added 2026-03-13 — resolves circular label routing problem. Supersedes three-tier model where fix:/chore:
-      bypassed staging."
+    notes: >-
+      Added 2026-03-13 — resolves circular label routing problem. Supersedes three-tier model where fix:/chore: bypassed
+      staging. PM and Codex carve-out handled via sit_level/semver_policy manifest fields (see
+      add-manifest-sit-level-field todo) — quickmerge reads these from manifest rather than hardcoding repo names.
 
   - id: implement-hotfix-path-abbreviated-sit
     content: >-
@@ -481,6 +533,15 @@ Any human commit (feat:, fix:, feat!:, chore:, hotfix) → staging (ALWAYS — n
                                             dependency-update cascade to all downstream dependents
 
 [skip ci] automation commits only → direct to main (version bumps, manifest updates, dep pins)
+
+PM/Codex commits (sit_level: abbreviated, semver_policy: always_patch):
+  → staging → abbreviated SIT only → main → patch bump → zero downstream dispatch
+  → manifest-sync.yml triggers Codex sync agent on same feature branch
+
+Workflow changes (PM feature branch):
+  → repos call uses: unified-trading-pm/.github/workflows/<name>.yml@<feature-branch>
+  → test workflow changes on feature branch repos before rollout
+  → rollout-action-ref.yml re-pins all repos to @main on PM staging→main promotion
 
 Cron 01:00 UTC nightly
   └── overnight-agent-orchestrator.yml (PM)
