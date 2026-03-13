@@ -183,6 +183,14 @@ if [ "$AGENT_MODE" = true ] && [ -n "$DEP_BRANCH" ]; then
   exit 1
 fi
 
+# enforce-files-in-agent-mode: --agent MUST specify --files to prevent accidental staging
+if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
+  echo "❌ --agent mode requires --files to prevent accidental staging of unintended files."
+  echo "   Usage: quickmerge.sh 'message' --agent --files 'path/to/file1 path/to/file2'"
+  echo "   This prevents committing another agent's partial work, .env files, or artifacts."
+  exit 1
+fi
+
 if [ "$TO_STAGING" = true ] && [ -n "$DEP_BRANCH" ]; then
   echo "❌ --dep-branch cannot be used with the staging-first model."
   echo "   All human commits now route through staging automatically."

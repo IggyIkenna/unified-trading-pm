@@ -895,7 +895,7 @@ todos:
             exit 1
           fi
       Acceptance: agents cannot accidentally commit unintended files.
-    status: pending
+    status: done
 
   - id: add-coverage-floor-governance
     content: >
@@ -982,7 +982,7 @@ todos:
           stay Telegram-only. (3) Add email notification via GitHub Actions notification settings
           as a tertiary channel (already built into GHA — just enable).
       Acceptance: critical alerts have at least 2 delivery channels.
-    status: pending
+    status: done
 
   - id: register-ssot-index
     content: >
