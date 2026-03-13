@@ -244,6 +244,17 @@ if [ "$RUN_TESTS" = true ]; then
     [[ -n "$DUP" ]] && { log_fail "Duplicate test files — expand existing files instead:"; echo "$DUP"; exit 1; }
     log_ok "No duplicate test files"
 
+    # Integration test coverage for library deps (plan: integration_tests_codex_compliance)
+    # Only enforced when RUN_INTEGRATION=true (repos that actually run integration tests)
+    _INT_DEP_CHECK="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-integration-dep-coverage.py"
+    if [ -f "$_INT_DEP_CHECK" ] && [ "${RUN_INTEGRATION}" = "true" ]; then
+        if ! $PYTHON_CMD "$_INT_DEP_CHECK" --repo "$SERVICE_NAME" --project-root "$PROJECT_ROOT" --manifest "${REPO_ROOT}/unified-trading-pm/workspace-manifest.json" 2>/dev/null; then
+            log_fail "Integration test coverage missing for library deps — add tests in tests/integration/ that import each library. Bypass: QUALITY_GATE_BYPASS_AUDIT.md"
+            exit 1
+        fi
+        log_ok "Integration dep coverage OK"
+    fi
+
     # @pytest.mark.skip must have a # reason: comment on the immediately preceding line
     SKIP_NO_REASON=$(python3 - <<'PYEOF' 2>/dev/null || :
 import re
