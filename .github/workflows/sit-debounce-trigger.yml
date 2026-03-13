@@ -1,0 +1,85 @@
+name: SIT Debounce Trigger
+# Runs every 5 minutes to check if staging has been quiet long enough to trigger SIT
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sit-debounce-check
+  cancel-in-progress: true
+
+jobs:
+  check-and-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Check debounce window
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          # Read manifest
+          MANIFEST="workspace-manifest.json"
+
+          # Check if there are pending repos
+          PENDING=$(python3 -c "
+          import json, sys
+          with open('$MANIFEST') as f:
+              m = json.load(f)
+          staging = m.get('staging_status', {})
+          pending = staging.get('pending_repos', [])
+          locked = staging.get('locked', False)
+          print(f'pending={len(pending)} locked={locked}')
+          if pending and not locked:
+              # Find oldest pending timestamp
+              import datetime
+              oldest = min(r.get('queued_at', '') for r in pending if isinstance(r, dict))
+              print(f'oldest={oldest}', file=sys.stderr)
+          " 2>/tmp/debounce_detail)
+
+          echo "$PENDING"
+          cat /tmp/debounce_detail
+
+          # Parse
+          COUNT=$(echo "$PENDING" | grep -oP '(?<=pending=)\d+')
+          LOCKED=$(echo "$PENDING" | grep -oP '(?<=locked=)\w+')
+
+          if [ "$COUNT" = "0" ] || [ "$LOCKED" = "True" ]; then
+            echo "trigger=false" >> $GITHUB_OUTPUT
+            echo "No pending repos or SIT locked — skipping"
+            exit 0
+          fi
+
+          # Check if quiet for 5 minutes
+          OLDEST=$(cat /tmp/debounce_detail | grep oldest | grep -oP '(?<=oldest=)\S+' || echo "")
+          if [ -z "$OLDEST" ]; then
+            echo "trigger=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          NOW=$(date -u +%s)
+          # Parse ISO timestamp
+          OLDEST_SEC=$(date -d "$OLDEST" +%s 2>/dev/null || python3 -c "from datetime import datetime; print(int(datetime.fromisoformat('$OLDEST').timestamp()))")
+          AGE=$((NOW - OLDEST_SEC))
+
+          if [ $AGE -ge 300 ]; then
+            echo "Quiet for ${AGE}s >= 300s — triggering SIT"
+            echo "trigger=true" >> $GITHUB_OUTPUT
+          else
+            echo "Still within debounce window (${AGE}s < 300s) — waiting"
+            echo "trigger=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger SIT
+        if: steps.check.outputs.trigger == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh workflow run sit-gate.yml --repo ${{ github.repository }}
+          echo "SIT triggered after 5-minute quiet period"

@@ -1,0 +1,86 @@
+name: SIT Starvation Detector
+# Runs every 15 minutes — alerts if SIT lock is stale for >1 hour
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sit-starvation-check
+  cancel-in-progress: true
+
+jobs:
+  check-stale-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Check for stale SIT lock
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "No Telegram token, skipping"
+            exit 0
+          fi
+
+          MANIFEST="workspace-manifest.json"
+
+          python3 << 'PYEOF'
+          import json, sys
+          from datetime import datetime, timezone, timedelta
+
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+
+          staging = m.get('staging_status', {})
+          locked = staging.get('locked', False)
+          locked_alert_sent = staging.get('locked_alert_sent', False)
+
+          if not locked:
+              print("SIT not locked — no starvation")
+              sys.exit(0)
+
+          if locked_alert_sent:
+              print("Alert already sent — no duplicate")
+              sys.exit(0)
+
+          locked_at_str = staging.get('locked_at', '')
+          if not locked_at_str:
+              print("No locked_at timestamp")
+              sys.exit(0)
+
+          locked_at = datetime.fromisoformat(locked_at_str.replace('Z', '+00:00'))
+          age = datetime.now(timezone.utc) - locked_at
+
+          if age > timedelta(hours=1):
+              print(f"STALE LOCK: locked for {age} — sending alert")
+              # Mark alert as sent
+              m['staging_status']['locked_alert_sent'] = True
+              with open('workspace-manifest.json', 'w') as f:
+                  json.dump(m, f, indent=2)
+              sys.exit(2)  # exit 2 = send alert
+          else:
+              print(f"Lock age {age} < 1h — OK")
+              sys.exit(0)
+          PYEOF
+
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -eq 2 ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d "chat_id=${TELEGRAM_CHAT_ID}" \
+              -d "text=SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock: gh workflow run sit-unlock.yml"
+
+            git config user.email "ci@unified-trading.com"
+            git config user.name "CI Bot"
+            git add workspace-manifest.json
+            git commit -m "chore: mark SIT starvation alert sent [skip ci]"
+            git push
+          fi

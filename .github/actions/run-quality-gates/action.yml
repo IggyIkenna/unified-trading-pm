@@ -1,0 +1,55 @@
+name: Run Quality Gates
+description: Run unified quality gates for a Python service repo
+
+inputs:
+  service-name:
+    description: Name of the service (used in reports)
+    required: true
+  source-dir:
+    description: Python source directory (e.g. instruments_service)
+    required: true
+  min-coverage:
+    description: Minimum coverage percentage (default 70)
+    required: false
+    default: "70"
+  python-version:
+    description: Python version
+    required: false
+    default: "3.13.9"
+  basedpyright-version:
+    description: basedpyright version
+    required: false
+    default: "1.38.2"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install uv
+      shell: bash
+      run: pip install uv
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        cd ${{ github.workspace }}
+        uv pip install -e . --system
+
+    - name: Install basedpyright
+      shell: bash
+      run: pip install basedpyright==${{ inputs.basedpyright-version }}
+
+    - name: Run quality gates
+      shell: bash
+      env:
+        SERVICE_NAME: ${{ inputs.service-name }}
+        SOURCE_DIR: ${{ inputs.source-dir }}
+        MIN_COVERAGE: ${{ inputs.min-coverage }}
+        CLOUD_PROVIDER: local
+        CLOUD_MOCK_MODE: "true"
+      run: |
+        bash scripts/quality-gates.sh
