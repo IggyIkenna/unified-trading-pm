@@ -80,9 +80,7 @@ jobs:
       - name: Trigger Cloud Build (Docker image — service/api/ui)
         if: steps.route.outputs.repo_type != 'library'
         id: docker-build
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        continue-on-error: true
         run: |
           set -euo pipefail
 
@@ -113,15 +111,21 @@ jobs:
           if [ -z "$BUILD_ID" ]; then
             echo "WARNING: Cloud Build trigger not yet configured for $REPO. Manual setup required."
             echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+            echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+            echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "build_triggered=true" >> "$GITHUB_OUTPUT"
           echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          BUILD_URL="https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$GCP_PROJECT"
+          echo "build_log_url=$BUILD_URL" >> "$GITHUB_OUTPUT"
           echo "Cloud Build triggered: $BUILD_ID"
 
-          # Poll for completion (add-cloud-build-fail-alert)
-          BUILD_URL="https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$GCP_PROJECT"
+          # Poll for completion
+          # exit 0 = SUCCESS
+          # exit 1 = build FAILURE, TIMEOUT, CANCELLED, or INTERNAL_ERROR (Cloud Build status)
+          # exit 2 = poll exhaustion (our MAX_POLLS exceeded — build still running)
           echo "Polling Cloud Build $BUILD_ID (up to 30 min)..."
           POLL_COUNT=0
           MAX_POLLS=60  # 60 × 30s = 30 min
@@ -133,19 +137,15 @@ jobs:
               --format="value(status)" 2>/dev/null || echo "UNKNOWN")
             case "$STATUS" in
               SUCCESS)
-                echo "✅ Cloud Build SUCCESS: $REPO $IMAGE_TAG"
-                break
+                echo "Cloud Build SUCCESS: $REPO $IMAGE_TAG"
+                echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+                echo "build_failure_reason=" >> "$GITHUB_OUTPUT"
+                exit 0
                 ;;
               FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED)
-                echo "❌ Cloud Build $STATUS: $REPO $IMAGE_TAG"
-                # Telegram alert (add-cloud-build-fail-alert)
-                if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-                  TEXT="🔴 *Cloud Build ${STATUS}*%0ARepo: \`${REPO}\`%0ABranch: \`${BRANCH}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0ABuild: ${BUILD_URL}"
-                  curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                    -d chat_id="${TELEGRAM_CHAT_ID}" \
-                    -d text="$TEXT" \
-                    -d parse_mode="Markdown" > /dev/null 2>&1 || true
-                fi
+                echo "Cloud Build $STATUS: $REPO $IMAGE_TAG"
+                echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+                echo "build_failure_reason=$STATUS" >> "$GITHUB_OUTPUT"
                 exit 1
                 ;;
               WORKING|QUEUED)
@@ -159,17 +159,24 @@ jobs:
             sleep 30
           done
 
-          if [ "$STATUS" != "SUCCESS" ]; then
-            echo "❌ Cloud Build polling timed out after $((MAX_POLLS * 30))s (status: $STATUS)"
-            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              TEXT="⏰ *Cloud Build TIMEOUT*%0ARepo: \`${REPO}\`%0ABranch: \`${BRANCH}\`%0AStatus at timeout: ${STATUS}%0ABuild: ${BUILD_URL}"
-              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                -d chat_id="${TELEGRAM_CHAT_ID}" \
-                -d text="$TEXT" \
-                -d parse_mode="Markdown" > /dev/null 2>&1 || true
-            fi
-            exit 1
-          fi
+          # Poll exhaustion — build still running after MAX_POLLS attempts
+          echo "Cloud Build poll exhausted after $MAX_POLLS attempts (last status: $STATUS)"
+          echo "build_exit_code=2" >> "$GITHUB_OUTPUT"
+          echo "build_failure_reason=POLL_EXHAUSTED" >> "$GITHUB_OUTPUT"
+          exit 2
+
+      - name: Update manifest on build success
+        if:
+          steps.route.outputs.repo_type != 'library' && steps.docker-build.outputs.build_exit_code == '0' &&
+          steps.docker-build.outputs.build_triggered == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          ENV="${{ steps.route.outputs.env }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
+          BUILD_ID="${{ steps.docker-build.outputs.build_id }}"
 
           # Write deployed_versions back to manifest (populate-deployed-versions)
           cd "${GITHUB_WORKSPACE}"
@@ -192,6 +199,45 @@ jobs:
             git commit -m "chore: update deployed_versions[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
             git push origin main || true
           fi
+
+      - name: Telegram alert — build FAILED/TIMED OUT/CANCELLED
+        if: steps.route.outputs.repo_type != 'library' && steps.docker-build.outputs.build_exit_code == '1'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
+
+          REPO="${{ steps.route.outputs.repo }}"
+          BRANCH="${{ steps.route.outputs.branch }}"
+          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
+          ENV="${{ steps.route.outputs.env }}"
+          REASON="${{ steps.docker-build.outputs.build_failure_reason }}"
+          BUILD_LOG_URL="${{ steps.docker-build.outputs.build_log_url }}"
+
+          TEXT="🔴 *Cloud Build ${REASON}*%0ARepo: \`${REPO}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0AEnv: \`${ENV}\`%0ABranch: \`${BRANCH}\`%0ALog: ${BUILD_LOG_URL}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" > /dev/null 2>&1 || true
+
+      - name: Telegram alert — build poll exhausted
+        if: steps.route.outputs.repo_type != 'library' && steps.docker-build.outputs.build_exit_code == '2'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
+
+          REPO="${{ steps.route.outputs.repo }}"
+          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
+          BUILD_LOG_URL="${{ steps.docker-build.outputs.build_log_url }}"
+
+          TEXT="⏰ *Cloud Build poll exhausted after 60 attempts*%0ARepo: \`${REPO}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0ABuild still running or unresponsive.%0ALog: ${BUILD_LOG_URL}"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" > /dev/null 2>&1 || true
 
       - name: Trigger Cloud Build (Python wheel — library)
         if: steps.route.outputs.repo_type == 'library'

@@ -25,6 +25,10 @@ on:
         type: choice
         options: ["false", "true"]
 
+concurrency:
+  group: overnight-orchestrator
+  cancel-in-progress: true
+
 env:
   GH_TOKEN: ${{ secrets.GH_PAT }}
   GH_ORG: IggyIkenna
