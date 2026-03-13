@@ -197,6 +197,7 @@ jobs:
           exit 0
 
       - name: Read context files for Claude
+        if: steps.conflicts.outputs.conflict_count != '0'
         env:
           REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
         run: |
@@ -242,6 +243,7 @@ jobs:
           echo "Context files loaded (AGENTS.md, SUB_AGENT_MANDATORY_RULES.md, active plans)"
 
       - name: Install Claude CLI
+        if: steps.conflicts.outputs.conflict_count != '0'
         run: |
           npm install -g @anthropic-ai/claude-code 2>/dev/null || \
             pip install claude-code-cli 2>/dev/null || \
@@ -249,6 +251,7 @@ jobs:
           which claude || echo "Claude CLI not found — will attempt claude command directly"
 
       - name: Run Claude conflict resolution
+        if: steps.conflicts.outputs.conflict_count != '0'
         id: claude
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -302,6 +305,7 @@ jobs:
           echo "Claude resolution complete ($(wc -l < /tmp/claude_resolution.txt) lines)"
 
       - name: Apply resolved files
+        if: steps.conflicts.outputs.conflict_count != '0'
         id: apply
         env:
           REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
@@ -386,6 +390,7 @@ jobs:
           echo "Resolution branch pushed: $RESOLUTION_BRANCH"
 
       - name: Run quality gates
+        if: steps.conflicts.outputs.conflict_count != '0'
         id: qg
         env:
           REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
@@ -411,6 +416,7 @@ jobs:
           fi
 
       - name: Create resolution PR
+        if: steps.conflicts.outputs.conflict_count != '0'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -497,7 +503,9 @@ jobs:
             exit 0
           fi
 
-          if [ "$JOB_STATUS" = "success" ] && [ -n "$PR_URL" ]; then
+          if [ "${CONFLICT_COUNT:-0}" = "0" ]; then
+            TEXT="ℹ️ *No Conflicts Found*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0ABranches merge cleanly — no resolution needed.%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}"
+          elif [ "$JOB_STATUS" = "success" ] && [ -n "$PR_URL" ]; then
             TEXT="✅ *Conflict Resolution Ready*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0AFiles resolved: ${CONFLICT_COUNT} (${CONFLICTED_FILES})%0AQG: ${QG_EMOJI} ${QG_RESULT}%0AResolution PR: ${PR_URL}%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}%0AReview and merge when ready."
           else
             TEXT="❌ *Conflict Resolution Failed*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0AJob status: ${JOB_STATUS}%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}%0AManual resolution required."
