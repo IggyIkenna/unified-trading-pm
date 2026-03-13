@@ -76,7 +76,7 @@ jobs:
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
-          path: ../unified-trading-codex
+          path: unified-trading-codex
 
       - name: Prepare readiness context for tier agents
         id: readiness-ctx
@@ -237,7 +237,7 @@ jobs:
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
-          path: ../unified-trading-codex
+          path: unified-trading-codex
 
       - name: Prepare readiness context for tier agents
         id: readiness-ctx
@@ -324,7 +324,7 @@ jobs:
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
-          path: ../unified-trading-codex
+          path: unified-trading-codex
 
       - name: Prepare readiness context for tier agents
         id: readiness-ctx
@@ -412,7 +412,7 @@ jobs:
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
-          path: ../unified-trading-codex
+          path: unified-trading-codex
 
       - name: Prepare readiness context for tier agents
         id: readiness-ctx
