@@ -2822,7 +2822,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 89,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
