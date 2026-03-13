@@ -203,6 +203,12 @@ fi
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
 if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
+    # Coverage floor governance (add-coverage-floor-governance)
+    _REPO_QG_SCRIPT="$(dirname "${BASH_SOURCE[0]:-scripts/quality-gates-base/base-service.sh}")/../../scripts/quality-gates.sh"
+    if [ -f "$_REPO_QG_SCRIPT" ] && [ -f "pyproject.toml" ]; then
+        bash "$(cd "$(git rev-parse --show-toplevel)/../unified-trading-pm" 2>/dev/null && pwd)/scripts/coverage-floor-guard.sh" \
+            "$_REPO_QG_SCRIPT" "pyproject.toml" 2>&1 || true
+    fi
     check_emulator_reachability
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
@@ -328,6 +334,14 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
         log_fail "Type check FAILED — $WARN_COUNT warning(s) (zero-warning policy: promote all rules to error in [tool.basedpyright])"; exit 1
     fi
     log_ok "Type check PASSED (0 errors, 0 warnings)"
+    # Baseline growth guard (add-baseline-growth-ci-guard): basedpyright baseline files can only shrink
+    if git diff --name-only 2>/dev/null | grep -q '.basedpyright-baseline.json'; then
+        _BASELINE_ADDS=$(git diff .basedpyright-baseline.json 2>/dev/null | grep '^+' | grep -v '^+++' | wc -l | tr -d ' ')
+        if [ "${_BASELINE_ADDS:-0}" -gt 0 ]; then
+            log_fail "BASELINE GROWTH: ${_BASELINE_ADDS} new suppressions added to .basedpyright-baseline.json — fix the type errors instead"
+            exit 1
+        fi
+    fi
 fi
 [ "$SKIP_TYPECHECK" = "true" ] && echo -e "${YELLOW}⚠️  Type check SKIPPED (--skip-typecheck flag)${NC}"
 

@@ -915,7 +915,7 @@ todos:
       (3) For DeFi money-handling paths (elysium-defi-system handlers/): require per-handler minimum
           80% branch coverage even if repo-wide floor is lower.
       Acceptance: no coverage floor reduction without human sign-off; MIN_COVERAGE = fail_under always.
-    status: pending
+    status: done
 
   - id: add-tier-gate-enforcement-script
     content: >
@@ -933,7 +933,7 @@ todos:
       (2) Wire into quality-gates.sh as a pre-check (runs before any repo-specific gates). (3) Wire into quickmerge.sh —
       block PR creation if tier gate is violated. (4) Override: --skip-tier-gate for emergency hotfixes (requires
       --agent to be absent). Acceptance: automated enforcement of tier ordering invariant.
-    status: pending
+    status: done
 
   - id: add-cross-validation-protocol
     content: >
@@ -965,7 +965,7 @@ todos:
             fi
           fi
       Acceptance: baseline files can only shrink, never grow.
-    status: pending
+    status: done
 
   - id: add-secondary-notification-channel
     content: >
