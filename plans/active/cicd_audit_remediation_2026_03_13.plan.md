@@ -299,7 +299,7 @@ todos:
           manifest-sync.yml, overnight-agent-orchestrator.yml.
       (3) Replace all bare curl dispatch calls with dispatch_with_retry. Test: temporarily block a test repo's webhook —
       verify 3 retries fire, then Telegram alert. Acceptance: no silent dispatch failures possible.
-    status: pending
+    status: done
 
   - id: add-sit-debounce-starvation-cap
     content: >
@@ -449,7 +449,7 @@ todos:
       (2) Before opening PR, check if a resolution PR already exists:
           gh pr list --head "auto-resolve/$SOURCE-to-$TARGET" --json number
       Acceptance: duplicate conflict dispatches produce exactly one resolution PR.
-    status: pending
+    status: done
 
   # ── Bot tier isolation & Claude availability ─────────────────────────────
   # Three bot tiers, each with a dedicated API key (separate Anthropic project):

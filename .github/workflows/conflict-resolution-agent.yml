@@ -356,13 +356,21 @@ jobs:
           set -euo pipefail
           cd "$REPO_NAME"
 
-          # Create resolution branch from source branch
-          SHA=$(git rev-parse --short "origin/$SOURCE_BRANCH" 2>/dev/null || git rev-parse --short HEAD)
+          # Dedup: check if a resolution branch already exists for this source→target pair (add-conflict-agent-dedup)
           SOURCE_SLUG="${SOURCE_BRANCH//\//-}"
-          RESOLUTION_BRANCH="auto-resolve/${SOURCE_SLUG}-to-${TARGET_BRANCH}-${SHA}"
-
-          git checkout "$SOURCE_BRANCH" 2>/dev/null || git checkout -b "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
-          git checkout -b "$RESOLUTION_BRANCH"
+          EXISTING_BRANCH=$(git ls-remote --heads origin "auto-resolve/${SOURCE_SLUG}-to-${TARGET_BRANCH}-*" \
+            | awk '{print $2}' | sed 's|refs/heads/||' | head -1 || true)
+          if [ -n "$EXISTING_BRANCH" ]; then
+            echo "Resolution branch already exists: $EXISTING_BRANCH — updating instead of creating duplicate"
+            git checkout "$EXISTING_BRANCH" 2>/dev/null || git checkout -b "$EXISTING_BRANCH" "origin/$EXISTING_BRANCH"
+            RESOLUTION_BRANCH="$EXISTING_BRANCH"
+          else
+            # Create resolution branch from source branch
+            SHA=$(git rev-parse --short "origin/$SOURCE_BRANCH" 2>/dev/null || git rev-parse --short HEAD)
+            RESOLUTION_BRANCH="auto-resolve/${SOURCE_SLUG}-to-${TARGET_BRANCH}-${SHA}"
+            git checkout "$SOURCE_BRANCH" 2>/dev/null || git checkout -b "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
+            git checkout -b "$RESOLUTION_BRANCH"
+          fi
 
           # Parse Claude's output (=== filename === markers) and write resolved files
           python3 - <<'PYEOF'
