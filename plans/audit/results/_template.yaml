@@ -1,0 +1,20 @@
+# Audit Result Template
+# Copy this file as YYYY-MM-DD-<audit_type>.yaml for each audit run.
+#
+# Grade scale: PASS | WARN | FAIL
+# Section grade: PASS | WARN | FAIL | SKIP
+---
+date: "YYYY-MM-DD"
+audit_type: "full | incremental | targeted"
+grade: "PASS | WARN | FAIL"
+auditor: "agent | human | hybrid"
+commit_sha: ""
+sections:
+  - name: "section-name"
+    grade: "PASS | WARN | FAIL | SKIP"
+    findings:
+      - description: "Finding description"
+        severity: "P0 | P1 | P2 | P3"
+        remediation: "Action required or N/A"
+        resolved: false
+notes: ""
