@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-13T10:47:23.581759+00:00",
+  "generatedAt": "2026-03-13T13:51:08.445532+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -138,7 +138,7 @@
     },
     {
       "name": "google_cloud_compute",
-      "versionRange": "google-cloud-compute>=1.0.0,<2.0.0"
+      "versionRange": "google-cloud-compute>=1.45.0,<2.0.0"
     },
     {
       "name": "google_cloud_pubsub",

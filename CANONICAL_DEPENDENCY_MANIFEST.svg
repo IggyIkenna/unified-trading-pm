@@ -116,7 +116,7 @@
   <text x="774" y="326" text-anchor="middle" class="ver">google-cloud-build&gt;=3.0.0...</text>
   <rect x="886" y="300" width="220" height="32" class="pkg-box" />
   <text x="996" y="314" text-anchor="middle" class="label">google_cloud_compute</text>
-  <text x="996" y="326" text-anchor="middle" class="ver">google-cloud-compute&gt;=1.0...</text>
+  <text x="996" y="326" text-anchor="middle" class="ver">google-cloud-compute&gt;=1.4...</text>
   <rect x="40" y="346" width="220" height="32" class="pkg-box" />
   <text x="150" y="360" text-anchor="middle" class="label">google_cloud_pubsub</text>
   <text x="150" y="372" text-anchor="middle" class="ver">google-cloud-pubsub&gt;=2.28...</text>
