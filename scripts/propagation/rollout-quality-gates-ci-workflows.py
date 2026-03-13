@@ -344,9 +344,7 @@ def main() -> None:
     # Load manifest
     with MANIFEST_PATH.open() as f:
         manifest: dict[str, object] = cast(dict[str, object], json.load(f))
-    all_repos: dict[str, dict[str, object]] = cast(
-        dict[str, dict[str, object]], manifest.get("repositories") or {}
-    )
+    all_repos: dict[str, dict[str, object]] = cast(dict[str, dict[str, object]], manifest.get("repositories") or {})
     repos = dict(all_repos)
 
     # Resolve action ref: CLI arg > manifest active_feature_branch > "main"
@@ -389,9 +387,7 @@ def main() -> None:
 
         if args.workflow_call:
             # Generate a brand-new minimal workflow_call thin caller
-            new_content = generate_workflow_call_yaml(
-                repo_name, repo_info, all_repos, content, action_ref
-            )
+            new_content = generate_workflow_call_yaml(repo_name, repo_info, all_repos, content, action_ref)
             if new_content == content:
                 print(f"OK    {repo_name} (already workflow_call thin caller)")
                 stats["already_ok"] += 1

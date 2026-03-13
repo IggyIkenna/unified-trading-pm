@@ -175,6 +175,9 @@ exceptions.
   YAML
 - **Every `.plan.md` in `plans/active/` MUST have** `completion_gates` and `repo_gates` in YAML frontmatter (see format
   below)
+- **Cursor-friendly checkboxes (MANDATORY):** Every todo's first content line MUST start with `- [x]` (done) or `- [ ]`
+  (pending) so Cursor Plan Mode shows filled vs hollow circles. Format: `- [x] [SCRIPT] P0. Description...` or
+  `- [ ] [AGENT] P0. Fix...`. See `plans/PLAN_FORMAT.md` § Cursor-Friendly Todo Checkboxes.
 - **NEVER mark a plan done/archived** unless ALL repos in `repo_gates` have reached the level declared in
   `completion_gates`
 - **Gate levels by plan type:**

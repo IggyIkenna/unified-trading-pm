@@ -25,27 +25,28 @@ supersedes:
 todos:
   - id: presentations-update-existing
     content: >
-      [HUMAN] P0. Update 10 existing board presentations with latest system state: current repo count (65), CI/CD
+      - [ ] [HUMAN] P0. Update 10 existing board presentations with latest system state: current repo count (65), CI/CD
       pipeline status, version cascade, agent orchestration, coverage metrics, tier progression. Deadline: March 18
       (rehearsal 2).
     status: pending
 
   - id: presentations-create-new
     content: >
-      [HUMAN+AGENT] P0. Create 3 new presentations: (1) Analytics — data pipeline, feature engineering, ML inference,
-      (2) Financials — cost structure, GCP spend, projected revenue, (3) Status quo — current system state, what works,
-      what's in progress. Deadline: March 18.
+      - [ ] [HUMAN+AGENT] P0. Create 3 new presentations: (1) Analytics — data pipeline, feature engineering, ML
+      inference, (2) Financials — cost structure, GCP spend, projected revenue, (3) Status quo — current system state,
+      what works, what's in progress. Deadline: March 18.
     status: pending
 
   - id: presentations-elysium-defi
     content: >
-      [HUMAN+AGENT] P1. Elysium DeFi partnership presentation: architecture SVG showing 14-protocol coverage, backtest
-      data from DeFi strategies, white-label fork capabilities, partnership terms. Deadline: March 31 (board meeting).
+      - [ ] [HUMAN+AGENT] P1. Elysium DeFi partnership presentation: architecture SVG showing 14-protocol coverage,
+      backtest data from DeFi strategies, white-label fork capabilities, partnership terms. Deadline: March 31 (board
+      meeting).
     status: pending
 
   - id: presentations-gcp-credits
     content: >
-      [HUMAN] P1. GCP credits application via Google Cloud for Startups. Use Elysium Capital as applicant entity.
+      - [ ] [HUMAN] P1. GCP credits application via Google Cloud for Startups. Use Elysium Capital as applicant entity.
       Target: $150k credits covering 2-3 years compute. Requires Elysium materials from presentations-elysium-defi.
       Deadline: March 31.
     status: pending
@@ -53,13 +54,13 @@ todos:
 
   - id: presentations-rehearsal-2
     content: >
-      [HUMAN] P0. Rehearsal 2 delivery — all 13 presentations reviewed and polished. Date: March 18.
+      - [ ] [HUMAN] P0. Rehearsal 2 delivery — all 13 presentations reviewed and polished. Date: March 18.
     status: pending
     depends_on: [presentations-update-existing, presentations-create-new]
 
   - id: presentations-board-meeting
     content: >
-      [HUMAN] P0. Board meeting delivery — final presentations. Date: March 31.
+      - [ ] [HUMAN] P0. Board meeting delivery — final presentations. Date: March 31.
     status: pending
     depends_on: [presentations-rehearsal-2, presentations-elysium-defi]
 ---

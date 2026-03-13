@@ -370,17 +370,26 @@ for p in pathlib.Path('.').glob('*/pyproject.toml'):
 
 **Required state:**
 
-| Criterion                 | Requirement                                                            |
-| ------------------------- | ---------------------------------------------------------------------- |
-| Checklist phases 1–7      | Present in `deployment-service/configs/checklist.*.yaml` per service   |
-| `runtime-topology.yaml`   | Has `version`, `deployment_profiles`, `clusters`, `service_flows` keys |
-| Layer 2 infra verify      | `/infra/health` passes post-deploy                                     |
-| Layer 3a smoke            | Passes in <5 min                                                       |
-| Layer 3b full E2E         | Passes in 15–30 min                                                    |
-| Pytest markers registered | `unit`, `integration`, `smoke`, `e2e` in all `pyproject.toml`          |
+| Criterion                 | Requirement                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Checklist phases 1–7      | Present in `deployment-service/configs/checklist.*.yaml` per service                                                                     |
+| `runtime-topology.yaml`   | Has `version`, `deployment_profiles`, `clusters`, `service_flows` keys                                                                   |
+| Layer 2 infra verify      | `/infra/health` passes post-deploy                                                                                                       |
+| Layer 3a smoke            | Passes in <5 min                                                                                                                         |
+| Layer 3b full E2E         | Passes in 15–30 min                                                                                                                      |
+| Pytest markers registered | `unit`, `integration`, `smoke`, `e2e` in all `pyproject.toml`                                                                            |
+| Kill switch wiring        | `cloud-build-router.yml` calls `trading-kill-switch.sh halt` pre-deploy and `resume` post-deploy for execution/strategy services         |
+| Position reconciliation   | `cloud-build-router.yml` runs `position-reconciliation-check.sh` snapshot pre-deploy and compare post-deploy for execution/risk services |
+| Tier-ordered deploy       | `cloud-build-router.yml` validates T0→T1→T2→service deployment ordering via manifest `topologicalOrder.levels`                           |
+| Post-deploy health check  | `cloud-build-router.yml` runs `post-deploy-smoke.sh` polling `/health` + `/readiness` after Cloud Build success                          |
+| Change freeze enforcement | `cloud-build-router.yml` prod path calls `change-freeze-check.yml` as first job; blocked during macro/session windows                    |
+| Disaster recovery targets | `plans/ops/disaster-recovery-rto-rpo.md` exists with RTO/RPO per environment                                                             |
+| Secret rotation plan      | `plans/ops/secret-rotation-plan.md` exists with rotation schedule for all secrets                                                        |
 
-**Scoring:** `PASS` — all services have deployment checklist; topology YAML valid. `WARN` — 1–2 services pre-1.0.0 with
-documented reasons. `FAIL` — any service without a checklist; OR topology YAML missing required keys.
+**Scoring:** `PASS` — all services have deployment checklist; topology YAML valid; kill switch + position
+reconciliation + health check wired. `WARN` — 1–2 services pre-1.0.0 with documented reasons; OR kill switch in
+soft-gate mode. `FAIL` — any service without a checklist; OR topology YAML missing required keys; OR no kill switch
+wiring for trading-critical services.
 
 ---
 
@@ -703,11 +712,26 @@ grep -L "CLOUD_MOCK_MODE" */.github/workflows/quality-gates.yml
     bash scripts/quality-gates.sh --no-fix
 ```
 
+**CI/CD infrastructure hardening checks:**
+
+| Criterion                     | Requirement                                                                                                |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Manifest concurrency          | All manifest-mutating workflows share `concurrency: { group: manifest-update, cancel-in-progress: false }` |
+| Dead man switch               | `overnight-dead-man-switch.yml` runs at 03:00 UTC, alerts if overnight orchestrator didn't complete        |
+| Version bump loop breaker     | `update-repo-version.yml` has `CASCADE_DEPTH` counter with `MAX_CASCADE_DEPTH=3`; halts + alerts on exceed |
+| GHA burst throttling          | `overnight-agent-orchestrator.yml` staggers dispatches with delay between repos per tier                   |
+| Claude API health precheck    | All agent workflows (conflict-resolution, semver, overnight) source `claude-api-health-precheck.sh`        |
+| SIT runbook                   | `plans/ops/sit-runbook.md` documents force-unlock, failure modes, escalation path                          |
+| Manifest mutation audit trail | `log-manifest-mutation.sh` appends to `plans/audit/manifest-mutations.jsonl` on every manifest write       |
+| Change freeze calendar        | `plans/ops/change-freeze-calendar.csv` covers NFP/FOMC/ECB/BOE + session open/close windows                |
+
 **Scoring:**
 
-- `PASS` — all Python repos use `uv venv .venv` + `--python .venv/bin/python` + `PATH` export + `CLOUD_MOCK_MODE`
-- `WARN` — any UI repo missing a CI quality gate step
-- `FAIL` — any Python repo uses `--system`, bare `pip install`, or missing `PATH` export
+- `PASS` — all Python repos use `uv venv .venv` + `--python .venv/bin/python` + `PATH` export + `CLOUD_MOCK_MODE`; all
+  infrastructure hardening checks pass
+- `WARN` — any UI repo missing a CI quality gate step; OR any infrastructure check in soft-gate mode
+- `FAIL` — any Python repo uses `--system`, bare `pip install`, or missing `PATH` export; OR manifest concurrency groups
+  missing; OR no dead-man switch
 
 ---
 

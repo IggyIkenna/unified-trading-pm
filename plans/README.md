@@ -2,6 +2,11 @@
 
 Project planning, task tracking, and execution plans for the Unified Trading System workspace.
 
+## Plan Format
+
+**Format SSOT:** [PLAN_FORMAT.md](PLAN_FORMAT.md). Every plan MUST use Cursor-friendly checkboxes: `- [x]` (done) or
+`- [ ]` (pending) at the start of each todo's content so Cursor Plan Mode shows filled vs hollow circles correctly.
+
 ## Directory Structure
 
 | Directory            | Contents                                                                                                 |

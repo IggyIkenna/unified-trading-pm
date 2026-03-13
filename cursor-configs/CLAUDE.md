@@ -27,6 +27,8 @@ Read these before making ANY code changes:
 2. `.cursor/rules/no-empty-fallbacks.mdc` — no try/except fallback imports
 3. `.cursor/rules/no-type-any-use-specific.mdc` — no Any types
 4. `unified-trading-codex/06-coding-standards/README.md` — coding standards
+5. `unified-trading-pm/plans/PLAN_FORMAT.md` — plan format; **Cursor checkboxes** (`- [x]` / `- [ ]`) required on every
+   todo
 
 ## Key Rules (Quick Reference)
 
@@ -91,6 +93,13 @@ execution → `unified-trade-execution-interface`, domain utils → `unified-dom
 → check existing 13 UIs first.
 
 Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.
+
+## Plan Format (Cursor Checkboxes)
+
+When creating or editing plans in `plans/active/` or `plans/ai/`, every todo's first content line MUST start with a
+Markdown checkbox: `- [x]` for done, `- [ ]` for pending. Format: `- [x] [SCRIPT] P0. Description...` or
+`- [ ] [AGENT] P0. Fix...`. This ensures Cursor Plan Mode renders filled vs hollow circles correctly. See
+`plans/PLAN_FORMAT.md` § Cursor-Friendly Todo Checkboxes.
 
 ## Sub-Agents & Autonomous Agents: Full Rules Required (MANDATORY)
 

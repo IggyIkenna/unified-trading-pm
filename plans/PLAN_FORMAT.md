@@ -105,12 +105,34 @@ depends_on: [] # list of plan slugs this plan is blocked by
 
 todos:
   - id: task-id
-    content: Description of the task
+    content: |
+      - [ ] [SCRIPT] P0. Description of the task  # Cursor-friendly: [x] done, [ ] pending
     status: todo | in_progress | done | blocked
     blocked_by: other-plan-slug # optional, only if status: blocked
     note: ""
 isProject: false
 ---
+```
+
+---
+
+## Cursor-Friendly Todo Checkboxes (MANDATORY)
+
+Cursor Plan Mode renders Markdown checkboxes. Every todo's **first content line** MUST start with a checkbox so Cursor
+shows filled vs hollow circles correctly.
+
+| Status                | Checkbox | Example                                           |
+| --------------------- | -------- | ------------------------------------------------- |
+| `status: done`        | `- [x]`  | `- [x] [SCRIPT] P0. Delete stale branch...`       |
+| `status: pending`     | `- [ ]`  | `- [ ] [AGENT] P0. Fix BUG-1...`                  |
+| `status: in-progress` | `- [ ]`  | `- [ ] [HUMAN] P1. Create...` (hollow until done) |
+
+**Format:** `- [x]` or `- [ ]` (space inside brackets for pending) followed by the role tag `[SCRIPT]`, `[AGENT]`,
+`[HUMAN]`, or `[HUMAN+AGENT]`, then the rest of the description.
+
+**Why:** Cursor reads the checkbox from the content; `status:` in YAML alone does not render filled circles. Without
+this prefix, done tasks still appear hollow in the UI.
+
 ```
 
 ---
@@ -165,3 +187,4 @@ Plans that are infra/deployment type always enforce their D-gates regardless of 
 - Workflow: `unified-trading-pm/cursor-rules/workflow/plans-to-deployable-workflow.mdc`
 - Sub-agent rules: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` §9
 - INDEX: `unified-trading-pm/plans/active/INDEX.md`
+```

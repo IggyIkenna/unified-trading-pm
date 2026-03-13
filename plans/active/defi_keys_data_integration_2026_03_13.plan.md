@@ -53,53 +53,53 @@ todos:
 
   - id: secrets-verify-tardis
     content: >
-      [SCRIPT] P0. Tardis API key already in Secret Manager. Verify access: run `gcloud secrets versions access latest
-      --secret=tardis-api-key` and confirm non-empty response.
+      - [ ] [SCRIPT] P0. Tardis API key already in Secret Manager. Verify access: run `gcloud secrets versions access
+      latest --secret=tardis-api-key` and confirm non-empty response.
     status: pending
 
   - id: secrets-http-vendors
     content: >
-      [HUMAN] P0. Load 7 HTTP vendor API keys into GCP Secret Manager: databento-api-key, thegraph-api-key,
+      - [ ] [HUMAN] P0. Load 7 HTTP vendor API keys into GCP Secret Manager: databento-api-key, thegraph-api-key,
       alchemy-api-key, aavescan-api-key, envio-api-key, openbb-fmp-api-key, openbb-fred-api-key. All have existing
       accounts — keys just need to be stored.
     status: pending
 
   - id: secrets-defi-endpoints
     content: >
-      [HUMAN] P0. Load 16 DeFi endpoint credentials: TheGraph (subgraph API), Alchemy (mainnet), Defillama (public but
-      rate-limited), Hyperliquid (mainnet+testnet), Aave (subgraph), Compound (subgraph), Uniswap (subgraph), Curve
+      - [ ] [HUMAN] P0. Load 16 DeFi endpoint credentials: TheGraph (subgraph API), Alchemy (mainnet), Defillama (public
+      but rate-limited), Hyperliquid (mainnet+testnet), Aave (subgraph), Compound (subgraph), Uniswap (subgraph), Curve
       (subgraph), Balancer (subgraph), 1inch (API key), Paraswap (API key), dYdX (API key), GMX (subgraph), Synthetix
       (subgraph), Lido (subgraph), Rocket Pool (subgraph).
     status: pending
 
   - id: secrets-ws-vendors
     content: >
-      [HUMAN] P1. Load 3 WebSocket vendor credentials: binance-api-key+secret, deribit-client-id+secret,
+      - [ ] [HUMAN] P1. Load 3 WebSocket vendor credentials: binance-api-key+secret, deribit-client-id+secret,
       ibkr-username+password (for TWS gateway).
     status: pending
 
   - id: secrets-phase3-procurement
     content: >
-      [HUMAN] P2. Procure and load 8 Phase 3 vendor API keys (accounts needed): pinnacle-api-key, odds-api-key,
+      - [ ] [HUMAN] P2. Procure and load 8 Phase 3 vendor API keys (accounts needed): pinnacle-api-key, odds-api-key,
       api-football-key, glassnode-api-key, arkham-api-key, soccer-football-info-key, footystats-api-key,
       coinglass-api-key.
     status: pending
 
   - id: secrets-phase4-vendors
     content: >
-      [HUMAN] P3. Procure and load 6 Phase 4 vendor credentials: betfair-api-key+session, kalshi-api-key,
+      - [ ] [HUMAN] P3. Procure and load 6 Phase 4 vendor credentials: betfair-api-key+session, kalshi-api-key,
       coinbase-api-key+secret, bloxroute-auth-header, smarkets-api-key, betdaq-api-key.
     status: pending
 
   - id: secrets-defi-testnet
     content: >
-      [HUMAN] P1. Load DeFi testnet secrets: alchemy-api-key-testnet (Sepolia), tenderly-fork-rpc-url,
+      - [ ] [HUMAN] P1. Load DeFi testnet secrets: alchemy-api-key-testnet (Sepolia), tenderly-fork-rpc-url,
       hyperliquid-testnet-api-credentials, wallet-dev-private-key (test wallet only, never production).
     status: pending
 
   - id: secrets-bootstrap
     content: >
-      [HUMAN] P0. Bootstrap secrets for CI: TELEGRAM_BOT_TOKEN on 3 new repos (ml-inference-api, ml-training-api,
+      - [ ] [HUMAN] P0. Bootstrap secrets for CI: TELEGRAM_BOT_TOKEN on 3 new repos (ml-inference-api, ml-training-api,
       trading-analytics-api), ANTHROPIC_API_KEY for SIT (system-integration-tests), GCP_SA_KEY for CI service account
       authentication.
     status: pending
@@ -110,30 +110,30 @@ todos:
 
   - id: cassette-tardis
     content: >
-      [AGENT] P0. Record Tardis VCR cassette. Steps: (1) configure vcr_endpoints.py entry for Tardis, (2) run cassette
-      recording script with Tardis API key from SM, (3) commit cassette YAML to unified-api-contracts/tests/cassettes/,
-      (4) verify `pytest tests/test_cassette_schema_parity.py` passes.
+      - [ ] [AGENT] P0. Record Tardis VCR cassette. Steps: (1) configure vcr_endpoints.py entry for Tardis, (2) run
+      cassette recording script with Tardis API key from SM, (3) commit cassette YAML to
+      unified-api-contracts/tests/cassettes/, (4) verify `pytest tests/test_cassette_schema_parity.py` passes.
     status: pending
     depends_on: [secrets-verify-tardis]
 
   - id: cassette-http-vendors
     content: >
-      [AGENT] P1. Record VCR cassettes for 7 HTTP vendors: databento, thegraph, alchemy, aavescan, envio, openbb-fmp,
-      openbb-fred. For each: configure vcr_endpoints.py, record, commit, verify parity.
+      - [ ] [AGENT] P1. Record VCR cassettes for 7 HTTP vendors: databento, thegraph, alchemy, aavescan, envio,
+      openbb-fmp, openbb-fred. For each: configure vcr_endpoints.py, record, commit, verify parity.
     status: pending
     depends_on: [secrets-http-vendors]
 
   - id: cassette-defi-endpoints
     content: >
-      [AGENT] P1. Record VCR cassettes for 16 DeFi endpoints. Group by protocol type: Subgraph-based (TheGraph, Aave,
-      Compound, Uniswap, Curve, Balancer, GMX, Synthetix, Lido, Rocket Pool), REST-based (Defillama, Hyperliquid, 1inch,
-      Paraswap, dYdX). For each: configure, record, commit, verify.
+      - [ ] [AGENT] P1. Record VCR cassettes for 16 DeFi endpoints. Group by protocol type: Subgraph-based (TheGraph,
+      Aave, Compound, Uniswap, Curve, Balancer, GMX, Synthetix, Lido, Rocket Pool), REST-based (Defillama, Hyperliquid,
+      1inch, Paraswap, dYdX). For each: configure, record, commit, verify.
     status: pending
     depends_on: [secrets-defi-endpoints]
 
   - id: cassette-missing-interface-repos
     content: >
-      [AGENT] P0. Add VCR cassettes to 3 repos flagged in audit §10 FAIL: unified-market-interface,
+      - [ ] [AGENT] P0. Add VCR cassettes to 3 repos flagged in audit §10 FAIL: unified-market-interface,
       unified-trade-execution-interface, unified-reference-data-interface. Each needs at least 1 cassette per venue it
       supports. This resolves the audit FAIL.
     status: pending
@@ -141,8 +141,8 @@ todos:
 
   - id: cassette-ws-approach
     content: >
-      [AGENT] P2. Design and implement WebSocket cassette approach for Binance, Deribit, IBKR. Options: (a) record WS
-      frames to YAML like HTTP cassettes, (b) use MockWebSocketFeed from
+      - [ ] [AGENT] P2. Design and implement WebSocket cassette approach for Binance, Deribit, IBKR. Options: (a) record
+      WS frames to YAML like HTTP cassettes, (b) use MockWebSocketFeed from
       `unified-market-interface/tests/fixtures/mock_ws_server.py`. Likely (b) is correct — WS cassettes are replay-only,
       not schema-parity.
     status: pending
@@ -154,21 +154,21 @@ todos:
 
   - id: freshness-monitor-class
     content: >
-      [AGENT] P1. Implement FreshnessMonitor base class in unified-trading-library. Interface: `check_freshness(venue,
-      data_type) -> FreshnessResult` with `is_stale`, `last_update_ts`, `sla_seconds`, `staleness_seconds`. Per-source
-      freshness contracts defined in unified-internal-contracts as Pydantic models.
+      - [ ] [AGENT] P1. Implement FreshnessMonitor base class in unified-trading-library. Interface:
+      `check_freshness(venue, data_type) -> FreshnessResult` with `is_stale`, `last_update_ts`, `sla_seconds`,
+      `staleness_seconds`. Per-source freshness contracts defined in unified-internal-contracts as Pydantic models.
     status: pending
 
   - id: freshness-venue-slas
     content: >
-      [AGENT] P1. Define per-venue SLA for all 33 venues: 9 CeFi (Binance 1s, Deribit 5s, etc.), 9 TradFi (IBKR 30s,
-      etc.), 14 DeFi (Hyperliquid 10s, Aave 60s, etc.), 1 Onchain Perps. SLAs stored in unified-internal-contracts as
-      venue_freshness_slas.py.
+      - [ ] [AGENT] P1. Define per-venue SLA for all 33 venues: 9 CeFi (Binance 1s, Deribit 5s, etc.), 9 TradFi (IBKR
+      30s, etc.), 14 DeFi (Hyperliquid 10s, Aave 60s, etc.), 1 Onchain Perps. SLAs stored in unified-internal-contracts
+      as venue_freshness_slas.py.
     status: pending
 
   - id: freshness-alerting
     content: >
-      [AGENT] P2. Wire FreshnessMonitor alerts through UEI. When `is_stale=True`, emit `DATA_STALE` event via
+      - [ ] [AGENT] P2. Wire FreshnessMonitor alerts through UEI. When `is_stale=True`, emit `DATA_STALE` event via
       `log_event()`. Alerting-service subscribes and fires Telegram/PagerDuty. Target: alert fires within 60s of data
       going stale.
     status: pending
@@ -180,29 +180,29 @@ todos:
 
   - id: backfill-instruments-metadata
     content: >
-      [SCRIPT] P0. Step 1: Instruments metadata backfill. Run instruments-service in batch mode to populate GCS with
-      instrument definitions for all 33 venues. Gate: instrument count matches expected per venue.
+      - [ ] [SCRIPT] P0. Step 1: Instruments metadata backfill. Run instruments-service in batch mode to populate GCS
+      with instrument definitions for all 33 venues. Gate: instrument count matches expected per venue.
     status: pending
 
   - id: backfill-tick-data
     content: >
-      [SCRIPT] P0. Step 2: Tick data backfill (1 year per venue). Run market-tick-data-service backfill jobs per venue.
-      Order: CeFi first (highest volume), then TradFi, then DeFi. Gate: data completeness check per venue (no gaps > SLA
-      threshold).
+      - [ ] [SCRIPT] P0. Step 2: Tick data backfill (1 year per venue). Run market-tick-data-service backfill jobs per
+      venue. Order: CeFi first (highest volume), then TradFi, then DeFi. Gate: data completeness check per venue (no
+      gaps > SLA threshold).
     status: pending
     depends_on: [backfill-instruments-metadata]
 
   - id: backfill-features
     content: >
-      [SCRIPT] P1. Step 3: Feature computation. Run all features-* services in batch mode against backfilled tick data.
-      Gate: feature count and date range match expectations.
+      - [ ] [SCRIPT] P1. Step 3: Feature computation. Run all features-* services in batch mode against backfilled tick
+      data. Gate: feature count and date range match expectations.
     status: pending
     depends_on: [backfill-tick-data]
 
   - id: backfill-ml-training
     content: >
-      [SCRIPT] P1. Step 4: ML model training. Run ml-training-service against computed features. Gate: model metrics
-      meet minimum thresholds (Sharpe, accuracy, etc.).
+      - [ ] [SCRIPT] P1. Step 4: ML model training. Run ml-training-service against computed features. Gate: model
+      metrics meet minimum thresholds (Sharpe, accuracy, etc.).
     status: pending
     depends_on: [backfill-features]
 

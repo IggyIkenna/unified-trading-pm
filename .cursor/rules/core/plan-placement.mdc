@@ -73,4 +73,7 @@ Every `.plan.md` in `plans/active/` MUST include `completion_gates` and `repo_ga
 frontmatter. See `unified-trading-pm/cursor-rules/core/plan-readiness-gates.mdc` for gate
 definitions and archive criteria.
 
+**Cursor checkboxes (MANDATORY):** Every todo's first content line MUST start with `- [x]` (done) or `- [ ]` (pending)
+so Cursor Plan Mode shows filled vs hollow circles. See `plans/PLAN_FORMAT.md` § Cursor-Friendly Todo Checkboxes.
+
 CODEX: 06-coding-standards/cursor-rules-system.md
