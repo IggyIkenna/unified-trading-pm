@@ -86,12 +86,16 @@ jobs:
         run: echo "ANTHROPIC_API_KEY not set — skipping plan health agent"
 
       - name: Notify Telegram
-        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           STATUS: ${{ job.status }}
         run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "No Telegram token, skipping notification"
+            exit 0
+          fi
           ICON=$([[ "$STATUS" == "success" ]] && echo "✅" || echo "⚠️")
           TEXT="${ICON} *plan-health-agent* | ${STATUS} | PM plans checked"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
