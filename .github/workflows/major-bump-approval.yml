@@ -20,6 +20,10 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: manifest-update # unify-manifest-concurrency-groups: all manifest-mutating workflows share this group
+  cancel-in-progress: false
+
 jobs:
   handle-approval:
     name: Handle major-bump approval or rejection

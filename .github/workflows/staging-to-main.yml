@@ -26,7 +26,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: staging-to-main
+  group: manifest-update # unify-manifest-concurrency-groups: all manifest-mutating workflows share this group
   cancel-in-progress: false
 
 jobs:
@@ -45,6 +45,37 @@ jobs:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
           path: ../unified-trading-codex
+
+      - name: Idempotency check — skip if staging already promoted (add-staging-to-main-idempotency)
+        id: idempotency
+        run: |
+          set -euo pipefail
+          python3 - << 'PYEOF'
+          import json, sys
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging_commits = {k: v for k, v in manifest.get("staging_commits", {}).items() if not k.startswith("_")}
+          history = manifest.get("main_commits", {}).get("history", [])
+          last_promoted = history[0].get("commits", {}) if history else {}
+
+          if not staging_commits:
+              print("No staging_commits recorded — nothing to promote, exiting early.")
+              sys.exit(0)
+
+          # Check if all staging commits are already in main_commits.history[0]
+          already_promoted = all(
+              last_promoted.get(repo) == sha
+              for repo, sha in staging_commits.items()
+          )
+          if already_promoted:
+              print("IDEMPOTENT: staging_commits already in main_commits.history[0] — skipping duplicate promotion.")
+              sys.exit(0)
+
+          print(f"Proceeding with promotion: {len(staging_commits)} repos in staging_commits")
+          PYEOF
+          echo "idempotent_skip=$?" >> "$GITHUB_OUTPUT"
 
       - name: Readiness gate — block if any promoted repo has explicit fail
         # Blocks promotion only on EXPLICIT fail status in codex readiness YAML.

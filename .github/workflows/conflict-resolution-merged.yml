@@ -1,0 +1,77 @@
+name: Conflict Resolution Merged — Retry Promotion
+
+# Fires when an auto-resolve/* PR is merged.
+# If the PR body contains the AUTO_RETRY_PROMOTION marker, re-dispatches staging-validated
+# to retry the staging→main promotion that was blocked by the conflict.
+# See: wire-conflict-resolution-retry-promotion in cicd_audit_remediation_2026_03_13.plan.md
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  retry-promotion:
+    name: Retry staging→main promotion after conflict resolution
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'auto-resolve/')
+
+    steps:
+      - name: Check for AUTO_RETRY_PROMOTION marker
+        id: check-marker
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if echo "$PR_BODY" | grep -q "AUTO_RETRY_PROMOTION: true"; then
+            echo "retry=true" >> "$GITHUB_OUTPUT"
+            echo "✓ AUTO_RETRY_PROMOTION marker found in PR #$PR_NUMBER — will retry promotion"
+          else
+            echo "retry=false" >> "$GITHUB_OUTPUT"
+            echo "No AUTO_RETRY_PROMOTION marker in PR #$PR_NUMBER — skipping"
+          fi
+
+      - name: Wait for GitHub state to settle
+        if: steps.check-marker.outputs.retry == 'true'
+        run: sleep 30
+
+      - name: Re-dispatch staging-validated to retry staging→main promotion
+        if: steps.check-marker.outputs.retry == 'true'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPO: ${{ github.repository }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — cannot dispatch" && exit 0
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          # Extract repo name from auto-resolve/<source>-to-<target>-<sha> branch format
+          SOURCE_INFO="${HEAD_REF#auto-resolve/}"
+          echo "Dispatching staging-validated for conflict-resolved branch: $HEAD_REF"
+          curl -s -X POST \
+            -H "Authorization: token ${GH_PAT}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"staging-validated\", \"client_payload\": {\"source\": \"conflict-resolution-merged\", \"branch\": \"${SOURCE_INFO}\", \"pr_title\": \"${PR_TITLE}\"}}" \
+            && echo "✓ staging-validated dispatched" \
+            || echo "⚠ dispatch failed (non-fatal — human can manually re-trigger staging-to-main)"
+
+      - name: Telegram notification
+        if: steps.check-marker.outputs.retry == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          [ -z "${TELEGRAM_BOT_TOKEN:-}" ] && exit 0
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="✅ Conflict resolved — retrying staging→main promotion%0APR #${PR_NUMBER}: ${PR_TITLE}%0A${PR_URL}" \
+            > /dev/null 2>&1 || true

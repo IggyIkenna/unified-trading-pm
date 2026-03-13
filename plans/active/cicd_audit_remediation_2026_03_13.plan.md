@@ -161,7 +161,7 @@ todos:
       (3) Add JSON schema validation after every manifest write (see add-manifest-json-validation). Test: run
       sit-gate.yml and staging-to-main.yml concurrently via workflow_dispatch — verify serialization, no lost writes.
       Acceptance: zero possibility of concurrent manifest mutations.
-    status: pending
+    status: done
 
   - id: fix-heredoc-exit-propagation
     content: >
@@ -256,7 +256,7 @@ todos:
           (compare staging_commits to main_commits). If already promoted, exit early — no duplicate promotion.
       Test: create a merge conflict, let agent resolve it, merge resolution PR — verify staging-to-main fires
       automatically. Acceptance: no manual intervention needed after conflict resolution PR merges.
-    status: pending
+    status: done
 
   - id: verify-staging-lock-gate-all-repos
     content: >
@@ -436,7 +436,7 @@ todos:
           EXISTING=$(gh pr list --base main --head staging --json number --jq '.[0].number')
           If exists: reuse it instead of creating a new one.
       Acceptance: running staging-to-main.yml twice with the same staging state produces exactly one promotion.
-    status: pending
+    status: done
 
   - id: add-conflict-agent-dedup
     content: >
