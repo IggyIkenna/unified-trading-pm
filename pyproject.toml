@@ -61,6 +61,8 @@ omit = [
     "scripts/check-internal-advisories.py",
     "scripts/generate-cicd-diagram.py",  # Diagram generator; tested by execution in QG post-step
     "scripts/compute-epic-readiness.py",  # Reporting script; run manually, not unit-tested
+    "scripts/check-cross-plan-gates.py",  # Plan-gate checker; requires live filesystem, not unit-tested
+    "scripts/validate-manifest-dag.py",  # DAG validator; integration-only, not unit-tested
 ]
 
 [tool.coverage.report]
