@@ -7,42 +7,56 @@
 #   jobs:
 #     freeze-check:
 #       uses: ./.github/workflows/change-freeze-check.yml
+#       with:
+#         check_type: PROD_DEPLOY   # or AUTONOMOUS
+#       secrets: inherit
 #     deploy:
 #       needs: freeze-check
+#       if: needs.freeze-check.outputs.blocked != 'true'
 #       ...
 name: Change Freeze Check
 
 on:
   workflow_call:
+    inputs:
+      check_type:
+        description: "Type of operation to check: AUTONOMOUS or PROD_DEPLOY"
+        required: false
+        type: string
+        default: "PROD_DEPLOY"
     outputs:
-      frozen:
-        description: "Whether a freeze window is currently active (true/false)"
-        value: ${{ jobs.check.outputs.frozen }}
-      window_name:
-        description: "Name of the active freeze window (empty if not frozen)"
-        value: ${{ jobs.check.outputs.window_name }}
+      blocked:
+        description: "Whether the operation is blocked by a freeze window (true/false)"
+        value: ${{ jobs.check.outputs.blocked }}
+      reason:
+        description: "Description of the blocking freeze window (empty if not blocked)"
+        value: ${{ jobs.check.outputs.reason }}
 
 jobs:
   check:
     runs-on: ubuntu-latest
     outputs:
-      frozen: ${{ steps.freeze.outputs.frozen }}
-      window_name: ${{ steps.freeze.outputs.window_name }}
+      blocked: ${{ steps.freeze.outputs.blocked }}
+      reason: ${{ steps.freeze.outputs.reason }}
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: plans/ops/change-freeze-calendar.csv
+          sparse-checkout: |
+            plans/ops/change-freeze-calendar.csv
+            scripts/telegram-helpers.sh
 
       - name: Check freeze windows
         id: freeze
         shell: bash
+        env:
+          CHECK_TYPE: ${{ inputs.check_type }}
         run: |
           set -euo pipefail
 
           CALENDAR="plans/ops/change-freeze-calendar.csv"
           if [ ! -f "$CALENDAR" ]; then
-            echo "frozen=false" >> "$GITHUB_OUTPUT"
-            echo "window_name=" >> "$GITHUB_OUTPUT"
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+            echo "reason=" >> "$GITHUB_OUTPUT"
             echo "::notice::No change-freeze-calendar.csv found — no freeze windows configured"
             exit 0
           fi
@@ -53,9 +67,14 @@ jobs:
           NOW_DOW=$(date -u +"%u")  # 1=Monday, 7=Sunday
 
           echo "Current UTC time: $NOW_UTC (time=$NOW_TIME, dow=$NOW_DOW)"
+          echo "Check type: $CHECK_TYPE"
 
-          FROZEN="false"
-          WINDOW_NAME=""
+          BLOCKED="false"
+          REASON=""
+
+          # Determine which CSV column to check based on check_type
+          # AUTONOMOUS -> block_autonomous (column 8)
+          # PROD_DEPLOY -> block_prod_deploy (column 9)
 
           # Skip header line, read CSV
           tail -n +2 "$CALENDAR" | while IFS=, read -r window_id event_name event_type recurrence start_utc end_utc dst_note block_autonomous block_prod_deploy affects_venues notes; do
@@ -92,7 +111,7 @@ jobs:
                   fi
                 fi
                 ;;
-              3rd_friday_monthly|quarterly|8x_yearly)
+              1st_friday_monthly|3rd_friday_monthly|quarterly|8x_yearly)
                 # Full datetime windows (ISO format)
                 if [[ "$start_utc" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
                   START_EPOCH=$(date -u -d "$start_utc" +%s 2>/dev/null || date -j -u -f "%Y-%m-%dT%H:%M" "$start_utc" +%s 2>/dev/null || echo "0")
@@ -104,15 +123,50 @@ jobs:
                 ;;
             esac
 
-            if [ "$MATCH" = "true" ] && [ "$block_prod_deploy" = "true" ]; then
-              echo "frozen=true" >> "$GITHUB_OUTPUT"
-              echo "window_name=$event_name" >> "$GITHUB_OUTPUT"
-              echo "::error::CHANGE FREEZE ACTIVE: $event_name ($window_id) — $start_utc to $end_utc UTC. $notes"
-              exit 1
+            if [ "$MATCH" = "true" ]; then
+              # Check the appropriate blocking column based on check_type
+              SHOULD_BLOCK="false"
+              if [ "$CHECK_TYPE" = "AUTONOMOUS" ] && [ "$block_autonomous" = "true" ]; then
+                SHOULD_BLOCK="true"
+              elif [ "$CHECK_TYPE" = "PROD_DEPLOY" ] && [ "$block_prod_deploy" = "true" ]; then
+                SHOULD_BLOCK="true"
+              fi
+
+              if [ "$SHOULD_BLOCK" = "true" ]; then
+                BLOCK_REASON="$event_name ($window_id): $start_utc to $end_utc UTC — $notes"
+                echo "blocked=true" >> "$GITHUB_OUTPUT"
+                echo "reason=$BLOCK_REASON" >> "$GITHUB_OUTPUT"
+                echo "::error::CHANGE FREEZE ACTIVE [$CHECK_TYPE]: $BLOCK_REASON"
+                # Signal to the alert step
+                echo "FREEZE_BLOCKED=true" >> "$GITHUB_ENV"
+                echo "FREEZE_REASON=$BLOCK_REASON" >> "$GITHUB_ENV"
+                exit 1
+              fi
             fi
           done
 
           # If we get here, no freeze window is active
-          echo "frozen=false" >> "$GITHUB_OUTPUT"
-          echo "window_name=" >> "$GITHUB_OUTPUT"
-          echo "::notice::No active freeze window — deployments allowed"
+          echo "blocked=false" >> "$GITHUB_OUTPUT"
+          echo "reason=" >> "$GITHUB_OUTPUT"
+          echo "::notice::No active freeze window — $CHECK_TYPE operations allowed"
+
+      - name: Send Telegram alert on block
+        if: failure()
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CHECK_TYPE: ${{ inputs.check_type }}
+        run: |
+          REASON="${FREEZE_REASON:-unknown window}"
+          MSG="CHANGE FREEZE BLOCK [$CHECK_TYPE]: ${REASON}"
+
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${MSG}" \
+              -d parse_mode="HTML" \
+              > /dev/null 2>&1 || echo "Telegram send failed (non-fatal)" >&2
+          else
+            echo "Telegram not configured — skipping alert"
+          fi
