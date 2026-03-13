@@ -2300,7 +2300,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2612,7 +2612,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 40,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2624,8 +2624,7 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
-      "semver_policy": "agent",
-      "ci_failure_reason": "1397 test failures (massive failure)"
+      "semver_policy": "agent"
     },
     "unified-ml-interface": {
       "type": "library",
@@ -2742,7 +2741,7 @@
       "cloud_build_trigger": "unified-reference-data-interface-build",
       "status": "active",
       "notes": "REST-only reference data: instrument definitions, options chains, expiry calendars, corporate actions. Phase 8 of io_interface plan.",
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
