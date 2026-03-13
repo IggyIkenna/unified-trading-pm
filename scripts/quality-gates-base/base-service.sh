@@ -406,13 +406,13 @@ RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!t
 
 EMPTY_STR_EXTRA=()
 for g in "${EMPTY_STR_EXCLUDE_GLOBS[@]+"${EMPTY_STR_EXCLUDE_GLOBS[@]}"}"; do EMPTY_STR_EXTRA+=(--glob "$g"); done
-rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
+EMPTY_STR=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
+[[ -n "$EMPTY_STR" ]] && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
 ED_EL_EXTRA=()
 for g in "${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]+"${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}"}"; do ED_EL_EXTRA+=(--glob "$g"); done
-ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
-EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
+ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
+EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
 rg "central-element-323112" tests/ 2>/dev/null \

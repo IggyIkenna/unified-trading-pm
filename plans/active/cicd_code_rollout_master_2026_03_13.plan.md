@@ -438,12 +438,18 @@ todos:
       - run-parallel-agents.sh — now calls inject-mandatory-rules.sh
       - llm-agent-wrapper.sh — now calls inject-mandatory-rules.sh
 
-      **Still needs audit/fix:**
-      - codex-sync-agent.yml (unified-trading-codex) — verify rules injection
-      - overnight-agent-orchestrator.yml — verify dispatched agents receive rules
-      - Per-repo agent-audit.yml (16 T0-T3 repos) — when enhanced to invoke Claude Code audit,
-        must use inject-mandatory-rules.sh or GITHUB_ENV heredoc pattern
-      - semver-agent.yml (67 repos) — verify prompt includes mandatory rules
+      **Audited and fixed (2026-03-13, second pass):**
+      - codex-sync-agent.yml (unified-trading-codex) — added GITHUB_ENV heredoc + prompt prepend
+      - overnight-agent-orchestrator.yml — DISPATCHER ONLY (no Claude invocation). Dispatches
+        agent-audit.yml to per-repo workflows. No fix needed.
+      - semver-agent.yml (67 repos) — PURE BASH/PYTHON (no Claude invocation). Deterministic
+        diff analysis + version computation. No fix needed.
+      - Per-repo agent-audit.yml (16 T0-T3 repos) — currently QG-only (calls python-quality-gates.yml
+        reusable workflow, no Claude). When enhanced to invoke Claude Code audit (run-agent.sh),
+        MUST use inject-mandatory-rules.sh or GITHUB_ENV heredoc pattern at that time.
+      - Per-repo .claude/CLAUDE.md — ALL repos have symlinks to PM CLAUDE.md (which now includes
+        system-first architecture + autonomous agent rules). Claude Code sessions opening a single
+        repo will see the full rules.
       - Any future agent workflow MUST use inject-mandatory-rules.sh (local) or
         GITHUB_ENV heredoc (GHA) pattern. No exceptions.
 
@@ -455,7 +461,7 @@ todos:
 
       **Verification:** For each agent workflow, grep the prompt construction for either
       `MANDATORY_RULES` (GHA) or `inject-mandatory-rules.sh` (local). If neither present, it's broken.
-    status: in-progress
+    status: done
 
   - id: harden-system-first-architecture-enforcement
     content: |
