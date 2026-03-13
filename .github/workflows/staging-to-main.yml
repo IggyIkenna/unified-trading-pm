@@ -25,6 +25,10 @@ on:
         description: "Resume from this repo (skip repos before it in topo order). Leave empty for full run."
         required: false
         default: ""
+      resume_from_repo:
+        description: "Alias for start_from_repo — resume promotion from this repo, skipping already-promoted repos."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -259,7 +263,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          START_FROM_REPO: ${{ inputs.start_from_repo || '' }}
+          START_FROM_REPO: ${{ inputs.resume_from_repo || inputs.start_from_repo || '' }}
         run: |
           set -euo pipefail
 
@@ -453,6 +457,71 @@ jobs:
             echo "To resume: re-run with start_from_repo set to the first failed repo."
           fi
 
+      - name: Record promotion progress in manifest
+        if: always()
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+          FAILED: ${{ steps.promote.outputs.failed }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json, datetime, os
+
+          promoted_str = os.environ.get("PROMOTED", "").strip()
+          failed_str = os.environ.get("FAILED", "").strip()
+
+          promoted_list = [r for r in promoted_str.split() if r]
+          failed_list = [r for r in failed_str.split() if r]
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          # Record promotion progress under staging_status so a resume run
+          # can read which repos have already been promoted
+          if "staging_status" not in manifest:
+              manifest["staging_status"] = {}
+
+          manifest["staging_status"]["promoted_repos"] = promoted_list
+          manifest["staging_status"]["failed_repos"] = failed_list
+          manifest["staging_status"]["promotion_updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+
+          print(f"Recorded promotion progress: {len(promoted_list)} promoted, {len(failed_list)} failed")
+          PYEOF
+
+      - name: Notify Telegram — partial promotion failure
+        if: always() && steps.promote.outputs.failed_count != '0' && steps.promote.outputs.failed_count != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+          FAILED: ${{ steps.promote.outputs.failed }}
+          PROMOTED_COUNT: ${{ steps.promote.outputs.promoted_count }}
+          FAILED_COUNT: ${{ steps.promote.outputs.failed_count }}
+        run: |
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+            echo "Telegram not configured — skipping notification"
+            exit 0
+          fi
+
+          # Build a clear summary of what succeeded and what failed
+          PROMOTED_LIST=$(echo "$PROMOTED" | tr ' ' '\n' | sed '/^$/d' | sed 's/^/  /' || echo "  none")
+          FAILED_LIST=$(echo "$FAILED" | tr ' ' '\n' | sed '/^$/d' | sed 's/^/  /' || echo "  none")
+
+          # Find the first failed repo for the resume command
+          FIRST_FAILED=$(echo "$FAILED" | tr ' ' '\n' | sed '/^$/d' | head -1)
+
+          TEXT="🚨 *Partial Staging Promotion Failure*%0A%0A✅ *Promoted (${PROMOTED_COUNT}):*%0A${PROMOTED_LIST}%0A%0A❌ *Failed (${FAILED_COUNT}):*%0A${FAILED_LIST}%0A%0A*To resume:* re-run with \`resume_from_repo=${FIRST_FAILED}\`%0A%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" || true
+
       - name: Promote staging_versions → versions, clear staging lock
         run: |
           set -euo pipefail
@@ -521,6 +590,10 @@ jobs:
           manifest["staging_status"]["locked_since"] = None
           manifest["staging_status"]["locked_reason"] = None
           manifest["staging_status"]["lock_version"] = None
+          # Clear promotion progress tracking (full promotion complete)
+          manifest["staging_status"].pop("promoted_repos", None)
+          manifest["staging_status"].pop("failed_repos", None)
+          manifest["staging_status"].pop("promotion_updated_at", None)
 
           tmp_path = "workspace-manifest.json.tmp"
           with open(tmp_path, "w") as f:
