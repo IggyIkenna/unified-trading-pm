@@ -63,13 +63,37 @@ jobs:
           echo "changed_plans=$CHANGED" >> $GITHUB_OUTPUT
           echo "Changed plan files: $CHANGED"
 
+      # ── LOAD MANDATORY RULES ──────────────────────────────────────────────────
+      - name: Load mandatory rules into env
+        run: |
+          if [ -f "cursor-configs/SUB_AGENT_MANDATORY_RULES.md" ]; then
+            {
+              echo "MANDATORY_RULES<<RULES_EOF"
+              cat "cursor-configs/SUB_AGENT_MANDATORY_RULES.md"
+              echo "RULES_EOF"
+            } >> "$GITHUB_ENV"
+          else
+            echo "ERROR: SUB_AGENT_MANDATORY_RULES.md not found — agent must not run without rules"
+            exit 1
+          fi
+
       # ── AGENT RUN ────────────────────────────────────────────────────────────
       - name: Run Claude rules alignment agent
         if: steps.changed-plans.outputs.changed_plans != '' && env.ANTHROPIC_API_KEY != ''
         env:
           CHANGED_PLANS: ${{ steps.changed-plans.outputs.changed_plans }}
         run: |
-          PROMPT="You are running inside unified-trading-pm.
+          PROMPT="# ══════════════════════════════════════════════════════════════════
+          # MANDATORY RULES — READ BEFORE ANY ACTION
+          # ══════════════════════════════════════════════════════════════════
+
+          ${MANDATORY_RULES}
+
+          # ══════════════════════════════════════════════════════════════════
+          # TASK
+          # ══════════════════════════════════════════════════════════════════
+
+          You are running inside unified-trading-pm.
 
           Your task: ensure cursor-rules/ has .mdc coverage for every new architectural constraint introduced by the recently changed plan files.
 

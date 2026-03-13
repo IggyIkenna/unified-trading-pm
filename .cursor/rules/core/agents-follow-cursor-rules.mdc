@@ -1,5 +1,5 @@
 ---
-description: "Sub-agents do not inherit always-apply rules — MUST pass full rules in every prompt"
+description: "All agents (sub-agents, autonomous GHA agents, Claude Code sessions, Cursor background agents) MUST receive full workspace rules before doing any work"
 alwaysApply: true
 priority: 95
 tags:
@@ -8,30 +8,58 @@ tags:
   - critical
 ---
 
-# Agents Must Follow Cursor Rules
+# All Agents Must Follow Workspace Rules — No Exceptions
 
-Sub-agents launched via Task tool start with FRESH context and do NOT automatically
-inherit the parent's always-apply rules. Reduced context makes them miss rules unless
-the master agent explicitly provides them.
+ALL agents start with FRESH context and do NOT automatically inherit rules:
+- **Cursor sub-agents** (Task tool, generalPurpose, explore, shell, fast)
+- **Claude Code sub-agents** (Agent tool)
+- **Autonomous GHA agents** (conflict-resolution, plan-health, rules-alignment, semver-agent, agent-audit)
+- **Claude Code autonomous sessions** (claude --print, claude --dangerously-skip-permissions)
+- **Cursor background agents** (parallel agents via run-parallel-agents.sh)
+- **LLM wrapper agents** (llm-agent-wrapper.sh)
 
-## MANDATORY: Full Rules in Every Sub-Agent Prompt
+## MANDATORY: Full Rules in Every Agent Prompt
 
-When launching ANY sub-agent (Task tool, generalPurpose, explore, shell, fast):
+### For Cursor/Claude Code sub-agents (Task tool, Agent tool):
 
-1. **Read and paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt — this is the consolidated full rules set.
-2. **If paste is impractical** (token limit): Include this instruction at the TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly. You are a sub-agent with fresh context — you do NOT inherit parent rules."
+1. **Read and paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt.
+2. **If paste is impractical** (token limit): Include at TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly. You are a sub-agent with fresh context — you do NOT inherit parent rules."
 3. **Always include:** WORKSPACE_ROOT path and: "For tests/quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-repo .venv). Never use .venv-workspace for pytest."
 
-For multi-step agents: put the full rules block at the TOP of the prompt, not buried at the end.
+### For local scripts launching agents (--print mode):
+
+**CRITICAL: Agents in `--print` mode CANNOT read files from disk.** Telling them "read .cursorrules" is useless.
+
+Use the mandatory rules injection script:
+```bash
+RULES=$(bash unified-trading-pm/scripts/agents/inject-mandatory-rules.sh "$WORKSPACE_ROOT" "$REPO")
+FULL_PROMPT="${RULES}\n\n${TASK_PROMPT}"
+```
+
+### For GHA workflow agents:
+
+Load rules into `GITHUB_ENV` in a prior step, then prepend to prompt:
+```yaml
+- name: Load mandatory rules
+  run: |
+    { echo "MANDATORY_RULES<<RULES_EOF"; cat cursor-configs/SUB_AGENT_MANDATORY_RULES.md; echo "RULES_EOF"; } >> "$GITHUB_ENV"
+```
+
+### If rules injection fails: agent MUST NOT proceed. Exit with error.
+
+## System-First Architecture (ALL agents)
+
+Before building anything, check existing repos. The 67-repo system covers every domain.
+Do NOT build ad-hoc solutions. See SUB_AGENT_MANDATORY_RULES.md §0 for the full decision tree.
 
 ## Minimum Reminders (if full paste skipped)
 
-If you cannot paste the full file, at minimum include:
 - Follow all workspace cursor rules in .cursorrules and .cursor/rules
 - uv not pip, basedpyright not pyright, quickmerge not git push
-- Delete deprecated code; no parallel code paths — see delete-deprecated.mdc
-- Search unified libraries before implementing anything new
+- Delete deprecated code; no parallel code paths
+- Search unified libraries before implementing anything new (§0 decision tree)
 - No *_SUMMARY.md; plans only in unified-trading-pm/plans/
-- Never git reset --hard; use --dep-branch for dependency conflicts
+- Never git reset --hard; never --dep-branch with --agent
 
+SSOT: `unified-trading-pm/scripts/agents/inject-mandatory-rules.sh`
 CODEX: 06-coding-standards/cursor-rules-system.md

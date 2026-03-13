@@ -209,6 +209,59 @@ todos:
       inside PubSubMessageEnvelope, consumed by compliance subscriber, written to BigQuery.
       No new event schema needed — this extends an existing schema in the right place.
     status: pending
+  - id: audit-centralized-results
+    content: |
+      [AGENT] P1. Centralize all audit results in PM. Currently scattered: codex has per-repo YAML (current snapshot
+      only, no history), individual repos have temp markdown reports, Telegram has ephemeral alerts.
+      Create `plans/audit/results/` directory in PM. Every agent-audit.yml run writes a timestamped JSON result:
+      `{repo}_{YYYY-MM-DD}.audit.json` with {repo, date, grade, pass_count, fail_count, warn_count, sections[]}.
+      overnight-agent-orchestrator.yml aggregates into `audit_summary_{YYYY-MM-DD}.json` with all-repo rollup.
+      Historical trend visible by comparing dates. Add `audit_results_path` field to manifest pointing to this dir.
+      Codex per-repo YAML remains SSOT for current CR/DR/BR state; PM results dir is the historical archive.
+    status: pending
+  - id: audit-agent-decision-trail
+    content: |
+      [AGENT] P1. Every Claude agent workflow (semver-agent, conflict-resolution-agent, overnight-orchestrator,
+      rules-alignment-agent, plan-health-agent) must append a structured outcome to
+      `plans/audit/agent_decisions/{YYYY-MM-DD}.jsonl` (one JSON line per decision). Schema:
+      {timestamp, workflow, repo, agent_type, decision, reasoning_summary, files_changed[], commit_sha,
+      success: bool, error_message?}. Currently agent decisions exist only in GHA run logs (90-day retention)
+      and Telegram (ephemeral). This creates a permanent, searchable record of what every autonomous agent
+      did across all 67 repos. Weekly cold storage job archives old entries to GCS.
+    status: pending
+  - id: audit-enforce-execution-audit-schema
+    content: |
+      [AGENT] P0. EXECUTION_AUDIT and STRATEGY_AUDIT schemas in unified-internal-contracts are DEFINED but NOT
+      CONSUMED by execution-service or strategy-service. persist_audit_log() in execution-service only called for
+      manual orders. Fix: (a) execution-service/engine/live/ must call persist_audit_log() for every ORDER_CREATED,
+      ORDER_UPDATED, ORDER_CANCELLED, ORDER_FILLED, ORDER_REJECTED event and validate payload against
+      EXECUTION_AUDIT.required_fields, (b) strategy-service must call for STRATEGY_INSTRUCTION, SIGNAL_GENERATED,
+      (c) add validation: if payload missing required_fields, raise and alert (don't silently drop).
+      This is the difference between having audit infrastructure and actually using it.
+    status: pending
+  - id: audit-auth-security-events
+    content: |
+      [AGENT] P1. No authentication/security event logging exists. execution-service auth.py and auth_s2s.py
+      authenticate but don't log outcomes. Add: every auth decision emits a LifecycleEvent via UEI log_event()
+      with event_name from {AUTH_SUCCESS, AUTH_FAILURE, AUTH_DENIED, TOKEN_REFRESH, S2S_AUTH_SUCCESS,
+      S2S_AUTH_FAILURE}. Payload: {subject, action, resource, source_ip, timestamp, reason?}.
+      Published on InternalPubSubTopic.SERVICE_EVENTS, consumed by compliance subscriber → BQ.
+      For rate limiting: don't log every successful health check auth — only log failures + first success
+      per session + all S2S events.
+    status: pending
+  - id: audit-cold-storage-cleanup-workflow
+    content: |
+      [AGENT] P1. Weekly GHA workflow `audit-cold-storage.yml` (cron: Sunday 02:00 UTC) that:
+      (a) Moves audit results older than 30 days from `plans/audit/results/` to GCS cold storage bucket
+      (gs://uts-compliance-ikenna-audit-archive/{year}/{month}/). Keeps last 30 days in-repo for quick access.
+      (b) Moves agent decision logs older than 30 days from `plans/audit/agent_decisions/` to same GCS bucket.
+      (c) Compresses moved files (gzip) before GCS upload.
+      (d) Commits removal of old files with [skip ci] to keep repo size bounded.
+      (e) Telegram summary: "Cold storage cleanup: moved N audit files, M decision files to GCS archive."
+      (f) GCS bucket has lifecycle rule: move to Coldline after 90 days, Archive after 1 year.
+      Requires compliance-gcp-project to be set up first (separate GCP project for custody).
+    status: pending
+    depends_on: [compliance-gcp-project]
   - id: harden-disaster-recovery-rto-rpo
     content: |
       [AGENT] P1. Define and document RTO/RPO targets for all environments. No task currently defines recovery time.
@@ -370,6 +423,58 @@ todos:
       unified-trading-library (health_router.py:67,85,98 — user-supplied callables; performance_monitor.py:48 — UEI
       degradation path), strategy-service (scripts/*.py — CLI backtest graceful error handling).
       Skipped: unified-cloud-interface/typings/google/ — vendored type stubs, not our code.
+    status: in-progress
+
+  - id: harden-agent-mandatory-rules-injection
+    content: |
+      [AGENT] P0. Audit and fix ALL autonomous agent entrypoints to inject SUB_AGENT_MANDATORY_RULES.md into prompt.
+      Agents in --print mode CANNOT read files from disk — telling them "read .cursorrules" is useless.
+      Rules MUST be pasted directly into the prompt text.
+
+      **Already fixed (2026-03-13):**
+      - conflict-resolution-agent.yml — already reads + pastes rules
+      - plan-health-agent.yml — added GITHUB_ENV heredoc + prompt prepend
+      - rules-alignment-agent.yml — added GITHUB_ENV heredoc + prompt prepend
+      - run-parallel-agents.sh — now calls inject-mandatory-rules.sh
+      - llm-agent-wrapper.sh — now calls inject-mandatory-rules.sh
+
+      **Still needs audit/fix:**
+      - codex-sync-agent.yml (unified-trading-codex) — verify rules injection
+      - overnight-agent-orchestrator.yml — verify dispatched agents receive rules
+      - Per-repo agent-audit.yml (16 T0-T3 repos) — when enhanced to invoke Claude Code audit,
+        must use inject-mandatory-rules.sh or GITHUB_ENV heredoc pattern
+      - semver-agent.yml (67 repos) — verify prompt includes mandatory rules
+      - Any future agent workflow MUST use inject-mandatory-rules.sh (local) or
+        GITHUB_ENV heredoc (GHA) pattern. No exceptions.
+
+      **New infrastructure created:**
+      - `scripts/agents/inject-mandatory-rules.sh` — reusable script that outputs full rules preamble
+      - Updated SUB_AGENT_MANDATORY_RULES.md §0 (system-first architecture) + §11 (agent prompt injection)
+      - Updated CLAUDE.md with system-first architecture + autonomous agent rules
+      - Updated .cursor/rules/core/agents-follow-cursor-rules.mdc for all agent types
+
+      **Verification:** For each agent workflow, grep the prompt construction for either
+      `MANDATORY_RULES` (GHA) or `inject-mandatory-rules.sh` (local). If neither present, it's broken.
+    status: in-progress
+
+  - id: harden-system-first-architecture-enforcement
+    content: |
+      [AGENT] P1. Enforce system-first architecture rule across all agent entrypoints.
+      Added SUB_AGENT_MANDATORY_RULES.md §0 "System-First Architecture" decision tree (2026-03-13).
+      Agents MUST check existing repos before building anything new:
+      - Events → unified-events-interface
+      - Schemas → unified-internal-contracts / unified-api-contracts
+      - Cloud → unified-cloud-interface
+      - Config → unified-config-interface
+      - Market data → unified-market-interface
+      - Execution → unified-trade-execution-interface
+      - Domain utils → unified-domain-client / unified-trading-library
+      - UI → check existing 13 UIs first
+      - New repo → almost certainly NOT needed (67 repos cover every domain)
+
+      This rule is now in SUB_AGENT_MANDATORY_RULES.md (which inject-mandatory-rules.sh injects),
+      CLAUDE.md, and agents-follow-cursor-rules.mdc. Verify overnight audit agents and per-repo
+      agents actually receive and follow it by checking agent output for ad-hoc solutions.
     status: in-progress
 
   - id: stability-production-audit

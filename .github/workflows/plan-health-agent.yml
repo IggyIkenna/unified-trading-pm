@@ -47,13 +47,38 @@ jobs:
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code --quiet
 
+      - name: Load mandatory rules into env
+        run: |
+          # Agents in --print mode CANNOT read files from disk.
+          # Rules MUST be injected into the prompt text itself.
+          if [ -f "cursor-configs/SUB_AGENT_MANDATORY_RULES.md" ]; then
+            {
+              echo "MANDATORY_RULES<<RULES_EOF"
+              cat "cursor-configs/SUB_AGENT_MANDATORY_RULES.md"
+              echo "RULES_EOF"
+            } >> "$GITHUB_ENV"
+          else
+            echo "ERROR: SUB_AGENT_MANDATORY_RULES.md not found — agent must not run without rules"
+            exit 1
+          fi
+
       - name: Run plan health agent
         if: env.ANTHROPIC_API_KEY != ''
         run: |
           PLAN_DIR="plans/active"
           ARCHIVE_DIR="plans/archive"
 
-          PROMPT="You are a plan health agent for the unified-trading-system. Follow these rules exactly:
+          PROMPT="# ══════════════════════════════════════════════════════════════════
+          # MANDATORY RULES — READ BEFORE ANY ACTION
+          # ══════════════════════════════════════════════════════════════════
+
+          ${MANDATORY_RULES}
+
+          # ══════════════════════════════════════════════════════════════════
+          # TASK
+          # ══════════════════════════════════════════════════════════════════
+
+          You are a plan health agent for the unified-trading-system. Follow these rules exactly:
           - No chain-of-thought, no prose explanations
           - Output only: JSON summary + shell commands to run (if any)
           - Be minimal and precise

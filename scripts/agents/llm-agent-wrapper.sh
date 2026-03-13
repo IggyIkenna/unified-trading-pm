@@ -24,14 +24,14 @@ PARSER="$WORKSPACE_ROOT/unified-trading-pm/plans/tasks/claude-code/simple-parser
 # Read error log
 ERROR_CONTEXT=$(cat "$ERROR_LOG")
 
-# Enhanced prompt with error context (same pattern as run-agent.sh)
-FULL_PROMPT="WORKSPACE CONTEXT:
-- Workspace root: $WORKSPACE_ROOT
-- Target repo: $REPO_NAME/
-- You have READ access to entire workspace (dependencies, workspace rules)
-- You can ONLY EDIT files in $REPO_NAME/ directory
-- Read workspace .cursorrules and .cursor/rules/*.mdc
-- Read path dependencies (../unified-trading-library, etc.)
+# Inject mandatory rules preamble (agents in --print mode CANNOT read files from disk)
+RULES_PREAMBLE=$(bash "$SCRIPT_DIR/inject-mandatory-rules.sh" "$WORKSPACE_ROOT" "$REPO_NAME" 2>/dev/null) || {
+    echo "❌ Failed to inject mandatory rules — aborting (agents must not run without rules)" >&2
+    exit 1
+}
+
+# Enhanced prompt with error context + mandatory rules
+FULL_PROMPT="${RULES_PREAMBLE}
 
 TASK FOR $REPO_NAME:
 Fix CI/CD issues reported by pre-push hook (act simulation)
@@ -41,16 +41,6 @@ $ERROR_CONTEXT
 
 USER TASK:
 $PROMPT
-
-CRITICAL RESTRICTIONS:
-- ONLY edit files in $REPO_NAME/ directory
-- DO NOT edit unified-trading-library/ or other repos
-- You can read everything, but edit only $REPO_NAME/
-
-IMPORTANT: Only run basedpyright/quality-gates 2-3 times total (not every file) to avoid hanging:
-- Once at start to see errors
-- Once mid-way to check progress
-- Once at end to verify 0 errors
 "
 
 # Detect available LLM tools

@@ -46,8 +46,9 @@ todos:
 
   - id: static-actionlint
     content: >
-      [SCRIPT] P0. Run `actionlint` on all 23 PM workflows + all 7 instruments-service workflows. Verify: exit 0, zero
-      errors. Command: `actionlint .github/workflows/*.yml`.
+      [SCRIPT] P0. Run `actionlint` on all 25 PM workflows + all 7 instruments-service workflows. Verify: exit 0, zero
+      errors. Command: `actionlint .github/workflows/*.yml`. Note: 25 not 23 — sit-debounce-trigger.yml and
+      sit-starvation-detector.yml were added.
     status: pending
 
   - id: static-action-ref-consistency
@@ -86,6 +87,44 @@ todos:
       `push: branches: [main], paths: [workspace-manifest.json, "plans/**"]`, cloud-build-router on
       `repository_dispatch: types: [qg-passed]`. Verify instruments-service QG dispatches `qg-passed` only on `push` to
       `main` (not on PR).
+    status: pending
+
+  # ── Phase 1b: CRITIQUE-IDENTIFIED STATIC TESTS ──────────────────────────────
+
+  - id: static-debounce-pending-repos
+    content: >
+      [SCRIPT] P0. Verify `staging_status.pending_repos` field exists in workspace-manifest.json and is populated by
+      sit-gate.yml when repos merge to staging. sit-debounce-trigger.yml reads this field — if missing, debounce is a
+      silent no-op. Verify: jq '.staging_status.pending_repos' workspace-manifest.json returns array (not null).
+    status: pending
+
+  - id: static-cloud-build-concurrency
+    content: >
+      [SCRIPT] P0. Verify cloud-build-router.yml is in the `manifest-update` concurrency group. It writes
+      `deployed_versions` to manifest but currently has NO concurrency section. Two concurrent builds racing to write
+      deployed_versions cause lost updates. After Plan 1 fix: verify concurrency group present.
+    status: pending
+
+  - id: static-version-bump-loop-guard
+    content: >
+      [SCRIPT] P1. Verify all repos' update-dependency-version.yml properly uses [skip ci] in commit messages. If any
+      omits it: QG→qg-passed→version-bump→more dispatches = infinite loop. Also check for dispatch chain depth counter
+      in version-bump payloads (max 3).
+    status: pending
+
+  - id: static-idempotency-empty-history
+    content: >
+      [SCRIPT] P1. Test staging-to-main.yml idempotency check when main_commits.history is empty (currently an empty
+      object in manifest). The idempotency logic compares staging_commits to main_commits.history[0].commits. If history
+      is empty or has unexpected structure, idempotency check always returns "proceed" — it never blocks duplicates.
+      Create specific test for this edge case.
+    status: pending
+
+  - id: static-baseline-pending-coverage
+    content: >
+      [SCRIPT] P1. Verify rollout-promote-ci-status handles BASELINE_PENDING repos (5 repos: batch-audit-api,
+      batch-live-reconciliation-service, ml-inference-api, ml-training-api, trading-analytics-api). These would be
+      silently skipped if only BASELINE_RECORDED is checked.
     status: pending
 
   # ── Phase 2: REPO FLOW (instruments-service) ──────────────────────────────
@@ -263,8 +302,10 @@ todos:
 
   - id: failure-manifest-corruption
     content: >
-      [SCRIPT] P1. Scan all 5 manifest-mutating workflows for corruption guards: JSON validation with rollback (`git
-      checkout -- workspace-manifest.json`), atomic write (`.json.tmp` + rename). Verify all 5 have both patterns.
+      [SCRIPT] P1. Scan all 6 manifest-mutating workflows for corruption guards: JSON validation with rollback (`git
+      checkout -- workspace-manifest.json`), atomic write (`.json.tmp` + rename). Workflows: update-repo-version.yml,
+      staging-to-main.yml, sit-gate.yml, sit-unlock.yml, hotfix-mode.yml, cloud-build-router.yml. Verify all 6 have both
+      patterns.
     status: pending
 
   - id: failure-telegram-inventory
@@ -275,6 +316,87 @@ todos:
       (gap? verify), (12) SIT failed, (13) MAJOR bump pending (opens issue, check Telegram), (14) MAJOR bump approved,
       (15) Cloud Build failure, (16) Claude API state change, (17) Cassette drift, (18) Readiness verifier, (19) Semver
       agent result. For each: verify fires with correct content.
+    status: pending
+
+  # ── Phase 6b: TRADING-SYSTEM-SPECIFIC FAILURE MODES ─────────────────────────
+
+  - id: failure-market-hours-guard
+    content: >
+      [HUMAN+AGENT] P0. Test market hours deployment guard: trigger Cloud Build for execution-service during simulated
+      market hours. Verify: build is rejected with "market hours active — use force_deploy: true to override" message.
+      Then trigger with force_deploy=true and verify it proceeds.
+    status: pending
+
+  - id: failure-tier-deploy-ordering
+    content: >
+      [HUMAN+AGENT] P0. Test tier-ordered deployment: simultaneously trigger Cloud Build for execution-service (T4) and
+      unified-market-interface (T2). Verify: T2 deploys first, T4 waits until T2 deployment confirmed. If T2 fails, T4
+      should not deploy.
+    status: pending
+
+  - id: failure-partial-staging-promotion
+    content: >
+      [HUMAN+AGENT] P1. Test partial staging→main promotion: set up 3 repos for promotion, then break the 2nd (e.g., set
+      its branch protection to reject). Verify: promotion fails at repo 2, repos 1 already on main, repos 2-3 still on
+      staging. Verify Telegram alert shows partial state. Verify retry-from-failure dispatch resumes from repo 2 without
+      re-promoting repo 1.
+    status: pending
+
+  - id: failure-overnight-dead-man-switch
+    content: >
+      [HUMAN+AGENT] P1. Test dead man's switch: verify the 03:00 UTC scheduled check runs and can detect a missing
+      overnight run. Simulate by checking if the workflow correctly reports "no overnight run in last 24 hours" when the
+      overnight orchestrator hasn't fired.
+    status: pending
+
+  - id: failure-post-deploy-health-check
+    content: >
+      [HUMAN+AGENT] P1. Test post-deploy health check: after Cloud Build success, verify the workflow polls the service
+      /health endpoint before marking deployment as successful. If health check fails, verify deployed_versions is NOT
+      updated and Telegram alert fires.
+    status: pending
+
+  # ── Phase 6c: INSTITUTIONAL-GRADE DEPLOYMENT TESTS ──────────────────────────
+
+  - id: failure-canary-traffic-split
+    content: >
+      [HUMAN+AGENT] P1. Test canary deployment: trigger prod deploy of instruments-service with canary_mode=true.
+      Verify: (a) Cloud Run creates new revision with 5% traffic split (not 100%), (b) health metrics collected for 5
+      min, (c) on healthy: auto-promote to 100%, (d) simulate unhealthy canary: auto-rollback to old revision (instant,
+      no rebuild). Also test shard-based canary: route 2 venue shards to new version, verify data processed correctly
+      before full promotion.
+    status: pending
+
+  - id: failure-position-reconciliation
+    content: >
+      [HUMAN+AGENT] P0. Test position reconciliation gate: before execution-service prod deploy, verify the workflow
+      snapshots open positions, deploys, re-queries, and diffs. Simulate a position mismatch (mock /positions to return
+      different data) and verify auto-rollback fires with Telegram "position reconciliation failed".
+    status: pending
+
+  - id: failure-kill-switch
+    content: >
+      [HUMAN+AGENT] P0. Test trading kill switch: trigger execution-service prod deploy. Verify: (a) halt-order-flow
+      dispatched, (b) execution-service enters drain mode (verify via /readiness returning 503), (c) deploy completes,
+      (d) resume-order-flow dispatched, (e) /readiness returns 200. Also test failure case: deploy fails, verify order
+      flow stays halted + Telegram fires.
+    status: pending
+
+  - id: failure-manifest-audit-log
+    content: >
+      [SCRIPT] P1. After Plan 1 implements manifest audit log: verify every manifest mutation appends to
+      `manifest_audit_log[]`. Run 3 manifest-mutating operations (version-bump, sit-lock, staging-to-main) and verify
+      each produces an audit entry with {timestamp, workflow, actor, field_changed, old_value, new_value}. Verify
+      entries are append-only (no deletions).
+    status: pending
+
+  - id: failure-sit-chaos-load
+    content: >
+      [HUMAN+AGENT] P1. SIT currently tests happy paths and some failure modes but no: (a) latency regression — run SIT
+      with injected 200ms network delay on inter-service calls, verify no timeout cascades, (b) chaos — randomly kill 1
+      service pod during SIT, verify remaining services degrade gracefully (not cascade fail), (c) market stress —
+      replay 1000x normal tick rate, verify no message drops or OOM. Use instruments-service + market-tick-data-service
+      as chaos targets.
     status: pending
 
   # ── Phase 7: CODEX & DOCUMENTATION ─────────────────────────────────────────

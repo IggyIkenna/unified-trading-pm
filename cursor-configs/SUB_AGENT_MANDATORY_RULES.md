@@ -7,6 +7,50 @@ standards.
 
 ---
 
+## 0. System-First Architecture (MANDATORY — No Ad-Hoc Solutions)
+
+The Unified Trading System is a comprehensive, Citadel-grade multi-repo platform. It already has repos covering every
+domain. Before implementing ANYTHING — a feature, a fix, a refactor, a new capability — **look at the existing system
+first**. Do NOT build ad-hoc solutions, duplicate sources of truth, or create unnecessary repos/files.
+
+### Decision Tree (follow in order):
+
+1. **Events/logging?** → Use `unified-events-interface` (`setup_events`, `log_event`). Do NOT create custom loggers or
+   event systems.
+2. **New schema/data model?** → Use `unified-internal-contracts` (internal) or `unified-api-contracts` (external APIs).
+   Do NOT define schemas inline in service code.
+3. **External API/SDK integration?** → Use `unified-api-contracts` for contract definitions. Do NOT scatter API clients
+   across services.
+4. **Cloud infrastructure?** → Use `unified-cloud-interface` (`get_storage_client()`, `get_pubsub_client()`,
+   `UnifiedCloudConfig`). Do NOT import cloud SDKs directly in services.
+5. **Market data / venue adapters?** → Use `unified-market-interface`. Do NOT build one-off venue connectors.
+6. **Trade execution?** → Use `unified-trade-execution-interface`. Do NOT build separate execution paths.
+7. **Configuration?** → Use `unified-config-interface` / `UnifiedCloudConfig`. Do NOT use `os.getenv()` or create config
+   helpers.
+8. **Domain utilities?** → Check `unified-domain-client` and `unified-trading-library` first. Do NOT duplicate utilities
+   that already exist there.
+9. **Reference data?** → Use `unified-reference-data-interface`. Do NOT hardcode instrument metadata.
+10. **ML models/features?** → Use `unified-ml-interface` / `unified-feature-calculator-library`. Do NOT create ad-hoc
+    feature pipelines.
+11. **Position/balance tracking?** → Use `unified-position-interface`. Do NOT build separate position stores.
+12. **DeFi execution?** → Use `unified-defi-execution-interface`. Do NOT build standalone DeFi adapters.
+13. **UI needed?** → Check existing 13 UIs first. Can the feature go into an existing UI? Only create a new UI if no
+    existing UI covers the domain.
+14. **New repo needed?** → Almost certainly NOT. The 67-repo system covers every domain. If you think you need a new
+    repo, explain why no existing repo works. The burden of proof is on justifying a new repo, not on reusing existing
+    ones.
+
+### The Rule:
+
+**If the system already has a repo/interface/library for a capability, USE IT.** If the library is missing a feature you
+need, ADD the feature to the library (via PR to that repo). If the library's approach is wrong, FIX the library. Do NOT
+work around it by building a parallel solution in a service repo.
+
+This applies to ALL agents — autonomous GHA agents, Cursor background agents, Claude Code sessions, sub-agents. No
+exceptions.
+
+---
+
 ## 1. Environment & Tooling
 
 - **Flat deps only** — every `pyproject.toml` has ONE list: `[project.dependencies]`. There is NO
@@ -246,3 +290,27 @@ must always be in the loop for MAJOR version promotions.
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 
 **CODEX:** unified-trading-codex/06-coding-standards/README.md
+
+---
+
+## §11 Autonomous Agent Prompt Injection (MANDATORY for agent orchestrators)
+
+If you are an orchestrator, script, or workflow that LAUNCHES other agents (Claude Code `--print`, Cursor agent, etc.):
+
+1. **Agents in `--print` mode CANNOT read files from disk.** Telling them "read .cursorrules" is useless — they never
+   see it. The rules MUST be pasted directly into the prompt text.
+2. **Use `inject-mandatory-rules.sh`** for local scripts:
+   ```bash
+   RULES_PREAMBLE=$(bash unified-trading-pm/scripts/agents/inject-mandatory-rules.sh "$WORKSPACE_ROOT" "$REPO")
+   FULL_PROMPT="${RULES_PREAMBLE}\n\n${TASK_PROMPT}"
+   ```
+3. **For GHA workflows:** Load rules via `GITHUB_ENV` heredoc in a prior step:
+   ```yaml
+   - name: Load mandatory rules
+     run: |
+       { echo "MANDATORY_RULES<<RULES_EOF"; cat cursor-configs/SUB_AGENT_MANDATORY_RULES.md; echo "RULES_EOF"; } >> "$GITHUB_ENV"
+   ```
+   Then prepend `${MANDATORY_RULES}` at the TOP of the agent prompt.
+4. **If rules injection fails, the agent MUST NOT proceed.** Exit with error. Never launch an agent without rules — it
+   will silently produce work that violates workspace standards.
+5. **SSOT:** `unified-trading-pm/scripts/agents/inject-mandatory-rules.sh`

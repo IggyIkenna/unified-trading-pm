@@ -78,21 +78,47 @@ replace live cloud services (see `unified-trading-pm/plans/archive/cicd_mock_har
 Each subdirectory is an independent git repo. When editing, only commit to the target repo. Never run `basedpyright .`
 from workspace root — always run per-repo with timeout.
 
-## Sub-Agents: Full Rules Required (MANDATORY)
+## System-First Architecture (No Ad-Hoc Solutions)
 
-Sub-agents (Task tool, mcp_task) start with FRESH context and do NOT inherit your rules. Reduced context makes them miss
-rules unless you explicitly provide them.
+The 67-repo Unified Trading System already covers every domain. Before implementing anything — feature, fix, refactor,
+new capability — **look at the existing system first**. Do NOT build ad-hoc solutions, duplicate sources of truth, or
+create unnecessary repos/files. If a library is missing a feature, ADD the feature to the library. If the library's
+approach is wrong, FIX it. Never work around it.
 
-**When launching ANY sub-agent:**
+Key repo mapping: events → `unified-events-interface`, schemas → `unified-internal-contracts` / `unified-api-contracts`,
+cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data → `unified-market-interface`,
+execution → `unified-trade-execution-interface`, domain utils → `unified-domain-client` / `unified-trading-library`, UI
+→ check existing 13 UIs first.
 
-1. **Paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt,
-   OR
-2. **If impractical:** Include at TOP: "Before any action, read
+Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.
+
+## Sub-Agents & Autonomous Agents: Full Rules Required (MANDATORY)
+
+Sub-agents (Task tool, mcp_task) and autonomous agents (GHA workflows, Claude Code `--print`, Cursor background agents)
+start with FRESH context and do NOT inherit your rules. Reduced context makes them miss rules unless you explicitly
+provide them.
+
+**CRITICAL: Agents in `--print` mode CANNOT read files from disk.** Telling them "read .cursorrules" is useless — they
+never see it. Rules MUST be pasted directly into the prompt text.
+
+**When launching ANY sub-agent or autonomous agent:**
+
+1. **For local scripts:** Use `inject-mandatory-rules.sh`:
+   ```bash
+   RULES=$(bash unified-trading-pm/scripts/agents/inject-mandatory-rules.sh "$WORKSPACE_ROOT" "$REPO")
+   ```
+2. **For GHA workflows:** Load rules via `GITHUB_ENV` heredoc in a prior step, then prepend `${MANDATORY_RULES}` to the
+   prompt.
+3. **For Cursor/Claude Code sub-agents (Task tool):** Paste contents of
+   `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt.
+4. **If paste is impractical:** Include at TOP: "Before any action, read
    unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
-3. **Always include:** WORKSPACE_ROOT path. For tests: `cd <repo> && bash scripts/quality-gates.sh` (per-repo .venv).
+5. **Always include:** WORKSPACE_ROOT path. For tests: `cd <repo> && bash scripts/quality-gates.sh` (per-repo .venv).
    Never .venv-workspace for pytest.
+6. **If rules injection fails, the agent MUST NOT proceed.** Exit with error.
 
-Never rely on sub-agents "inheriting" rules — they cannot. Always pass the full rules.
+Never rely on sub-agents "inheriting" rules — they cannot. Always inject the full rules. **SSOT:**
+`unified-trading-pm/scripts/agents/inject-mandatory-rules.sh`
 
 ## Analysis Rules
 

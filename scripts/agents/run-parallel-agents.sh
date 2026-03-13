@@ -101,27 +101,16 @@ PIDS=()
 for repo in "${REPOS[@]}"; do
     echo "🚀 Launching agent for: $repo"
 
-    ENHANCED_PROMPT="WORKSPACE CONTEXT:
-- Workspace root: $WORKSPACE_ROOT
-- Target repo: $repo/
-- You have READ access to entire workspace (codex, dependencies, workspace rules)
-- You can ONLY EDIT files in $repo/ directory
-- Read unified-trading-codex/ for standards
-- Read workspace .cursorrules and .cursor/rules/*.mdc
-- Read path dependencies (../unified-trading-library, etc.)
+    # Inject mandatory rules preamble (agents in --print mode CANNOT read files from disk)
+    RULES_PREAMBLE=$(bash "$SCRIPT_DIR/inject-mandatory-rules.sh" "$WORKSPACE_ROOT" "$repo" 2>/dev/null) || {
+        echo "❌ Failed to inject mandatory rules for $repo — aborting (agents must not run without rules)"
+        exit 1
+    }
+
+    ENHANCED_PROMPT="${RULES_PREAMBLE}
 
 TASK FOR $repo:
 $PROMPT
-
-CRITICAL RESTRICTIONS:
-- ONLY edit files in $repo/ directory
-- DO NOT edit unified-trading-codex/, unified-trading-library/, or other repos
-- You can read everything, but edit only $repo/
-
-IMPORTANT: Only run basedpyright 2-3 times total (not every 5 files) to avoid hanging:
-- Once at start to see errors
-- Once mid-way to check progress
-- Once at end to verify 0 errors
 "
 
     case "$LLM_TOOL" in
