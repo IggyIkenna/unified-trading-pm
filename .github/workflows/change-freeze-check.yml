@@ -1,0 +1,118 @@
+# Reusable workflow: Change Freeze Window Check
+#
+# Reads plans/ops/change-freeze-calendar.csv and checks if the current UTC time
+# falls within an active freeze window. Exits with annotated failure if frozen.
+#
+# Usage from other workflows:
+#   jobs:
+#     freeze-check:
+#       uses: ./.github/workflows/change-freeze-check.yml
+#     deploy:
+#       needs: freeze-check
+#       ...
+name: Change Freeze Check
+
+on:
+  workflow_call:
+    outputs:
+      frozen:
+        description: "Whether a freeze window is currently active (true/false)"
+        value: ${{ jobs.check.outputs.frozen }}
+      window_name:
+        description: "Name of the active freeze window (empty if not frozen)"
+        value: ${{ jobs.check.outputs.window_name }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      frozen: ${{ steps.freeze.outputs.frozen }}
+      window_name: ${{ steps.freeze.outputs.window_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: plans/ops/change-freeze-calendar.csv
+
+      - name: Check freeze windows
+        id: freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CALENDAR="plans/ops/change-freeze-calendar.csv"
+          if [ ! -f "$CALENDAR" ]; then
+            echo "frozen=false" >> "$GITHUB_OUTPUT"
+            echo "window_name=" >> "$GITHUB_OUTPUT"
+            echo "::notice::No change-freeze-calendar.csv found — no freeze windows configured"
+            exit 0
+          fi
+
+          NOW_UTC=$(date -u +"%Y-%m-%dT%H:%M")
+          NOW_EPOCH=$(date -u -d "$NOW_UTC" +%s 2>/dev/null || date -j -u -f "%Y-%m-%dT%H:%M" "$NOW_UTC" +%s 2>/dev/null || date -u +%s)
+          NOW_TIME=$(date -u +"%H:%M")
+          NOW_DOW=$(date -u +"%u")  # 1=Monday, 7=Sunday
+
+          echo "Current UTC time: $NOW_UTC (time=$NOW_TIME, dow=$NOW_DOW)"
+
+          FROZEN="false"
+          WINDOW_NAME=""
+
+          # Skip header line, read CSV
+          tail -n +2 "$CALENDAR" | while IFS=, read -r window_id event_name event_type recurrence start_utc end_utc dst_note block_autonomous block_prod_deploy affects_venues notes; do
+            # Skip empty lines
+            [ -z "$window_id" ] && continue
+
+            MATCH="false"
+
+            case "$recurrence" in
+              daily)
+                # Time-only windows (HH:MM format)
+                if [[ "$start_utc" =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+                  if [[ "$NOW_TIME" > "$start_utc" || "$NOW_TIME" == "$start_utc" ]] && [[ "$NOW_TIME" < "$end_utc" ]]; then
+                    MATCH="true"
+                  fi
+                  # Handle midnight crossing (e.g., 23:55 - 00:05)
+                  if [[ "$start_utc" > "$end_utc" ]]; then
+                    if [[ "$NOW_TIME" > "$start_utc" || "$NOW_TIME" == "$start_utc" ]] || [[ "$NOW_TIME" < "$end_utc" ]]; then
+                      MATCH="true"
+                    fi
+                  fi
+                fi
+                ;;
+              every_8h)
+                # Same as daily — time-only windows
+                if [[ "$start_utc" =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+                  if [[ "$NOW_TIME" > "$start_utc" || "$NOW_TIME" == "$start_utc" ]] && [[ "$NOW_TIME" < "$end_utc" ]]; then
+                    MATCH="true"
+                  fi
+                  if [[ "$start_utc" > "$end_utc" ]]; then
+                    if [[ "$NOW_TIME" > "$start_utc" || "$NOW_TIME" == "$start_utc" ]] || [[ "$NOW_TIME" < "$end_utc" ]]; then
+                      MATCH="true"
+                    fi
+                  fi
+                fi
+                ;;
+              3rd_friday_monthly|quarterly|8x_yearly)
+                # Full datetime windows (ISO format)
+                if [[ "$start_utc" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+                  START_EPOCH=$(date -u -d "$start_utc" +%s 2>/dev/null || date -j -u -f "%Y-%m-%dT%H:%M" "$start_utc" +%s 2>/dev/null || echo "0")
+                  END_EPOCH=$(date -u -d "$end_utc" +%s 2>/dev/null || date -j -u -f "%Y-%m-%dT%H:%M" "$end_utc" +%s 2>/dev/null || echo "0")
+                  if [ "$NOW_EPOCH" -ge "$START_EPOCH" ] && [ "$NOW_EPOCH" -le "$END_EPOCH" ]; then
+                    MATCH="true"
+                  fi
+                fi
+                ;;
+            esac
+
+            if [ "$MATCH" = "true" ] && [ "$block_prod_deploy" = "true" ]; then
+              echo "frozen=true" >> "$GITHUB_OUTPUT"
+              echo "window_name=$event_name" >> "$GITHUB_OUTPUT"
+              echo "::error::CHANGE FREEZE ACTIVE: $event_name ($window_id) — $start_utc to $end_utc UTC. $notes"
+              exit 1
+            fi
+          done
+
+          # If we get here, no freeze window is active
+          echo "frozen=false" >> "$GITHUB_OUTPUT"
+          echo "window_name=" >> "$GITHUB_OUTPUT"
+          echo "::notice::No active freeze window — deployments allowed"
