@@ -232,7 +232,14 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No TELEGRAM_BOT_TOKEN — skipping alert"; else
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d "chat_id=${TELEGRAM_CHAT_ID}" \
+              -d "text=⚠️ staging-to-main ABORTED: staging has new non-[skip ci] commits since SIT ran. Re-triggering SIT." || true
+          fi
           OWNER="${{ github.repository_owner }}"
           echo "SHA pinning violation — re-triggering SIT for untested staging commits."
           curl -s -X POST \

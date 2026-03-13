@@ -423,6 +423,60 @@ jobs:
           print(f"\nTotal files resolved: {len(files_written)}")
           PYEOF
 
+          # Validate Claude's conflict resolution output before staging
+          CONFLICT_FILES="${{ steps.conflicts.outputs.conflicted_files }}"
+          VALIDATION_FAILED=false
+          FAILED_FILES=""
+
+          # Convert comma-separated list to space-separated for iteration
+          CONFLICT_FILES_SPACE=$(echo "$CONFLICT_FILES" | tr ',' ' ')
+
+          for conflict_file in $CONFLICT_FILES_SPACE; do
+            [ -z "$conflict_file" ] && continue
+
+            # (a) Every file in conflict list must appear in Claude output
+            if ! grep -q "=== ${conflict_file} ===" /tmp/claude_resolution.txt; then
+              echo "VALIDATION FAIL: Missing file in Claude output: ${conflict_file}"
+              VALIDATION_FAILED=true
+              FAILED_FILES="${FAILED_FILES} ${conflict_file}"
+              continue
+            fi
+
+            # (b) No conflict markers remain in the written file
+            if grep -qE '^(<<<<<<<|=======|>>>>>>>)' "${conflict_file}" 2>/dev/null; then
+              echo "VALIDATION FAIL: Conflict markers remain in: ${conflict_file}"
+              VALIDATION_FAILED=true
+              FAILED_FILES="${FAILED_FILES} ${conflict_file}"
+              continue
+            fi
+
+            # (c) Python files pass syntax check
+            if [[ "${conflict_file}" == *.py ]]; then
+              if ! python3 -c "import py_compile; py_compile.compile('${conflict_file}', doraise=True)" 2>/dev/null; then
+                echo "VALIDATION FAIL: Python syntax error in: ${conflict_file}"
+                VALIDATION_FAILED=true
+                FAILED_FILES="${FAILED_FILES} ${conflict_file}"
+              fi
+            fi
+
+            # (d) YAML files pass parse check
+            if [[ "${conflict_file}" == *.yml ]] || [[ "${conflict_file}" == *.yaml ]]; then
+              if ! python3 -c "import yaml, sys; yaml.safe_load(open('${conflict_file}'))" 2>/dev/null; then
+                echo "VALIDATION FAIL: YAML parse error in: ${conflict_file}"
+                VALIDATION_FAILED=true
+                FAILED_FILES="${FAILED_FILES} ${conflict_file}"
+              fi
+            fi
+          done
+
+          if [ "$VALIDATION_FAILED" = "true" ]; then
+            echo "Validation failed for files:${FAILED_FILES}"
+            echo "Skipping push due to validation failures"
+            exit 1
+          fi
+
+          echo "Validation passed — all resolved files are syntactically correct and conflict-free"
+
           # Stage and commit
           git add -u
           git commit -m "chore(conflict): auto-resolve ${SOURCE_BRANCH} → ${TARGET_BRANCH} [skip ci]
@@ -437,6 +491,21 @@ jobs:
 
           echo "resolution_branch=$RESOLUTION_BRANCH" >> "$GITHUB_OUTPUT"
           echo "Resolution branch pushed: $RESOLUTION_BRANCH"
+
+      - name: Notify Telegram — validation failure
+        if: always() && steps.apply.outcome == 'failure'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+          CONFLICTED_FILES: ${{ steps.conflicts.outputs.conflicted_files }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token"; exit 0; fi
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=⚠️ conflict-resolution incomplete — manual intervention required. Repo: ${REPO_NAME} (${SOURCE_BRANCH} → ${TARGET_BRANCH}). Failing files: ${CONFLICTED_FILES}" || true
 
       - name: Run quality gates
         if: steps.conflicts.outputs.conflict_count != '0'
