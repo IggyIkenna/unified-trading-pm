@@ -1,0 +1,509 @@
+name: Conflict Resolution Agent
+
+# Triggered when a merge conflict blocks a PR (feat→staging or staging→main).
+# The agent:
+#   1. Sends Telegram immediately ("working on it")
+#   2. Clones the conflicting repo + PM + codex, runs setup-workspace-from-manifest.sh
+#   3. Reads AGENTS.md + SUB_AGENT_MANDATORY_RULES.md + all active PM plans for context
+#   4. Uses Claude to propose a resolution (preserving both sides)
+#   5. Runs quality gates (advisory — PR created regardless)
+#   6. Pushes auto-resolve branch + opens resolution PR
+#   7. Sends Telegram with PR URL + QG result
+#
+# The agent NEVER self-merges. Human must review and approve the resolution PR.
+
+on:
+  repository_dispatch:
+    types: [merge-conflict-detected]
+  workflow_dispatch:
+    inputs:
+      repo_name:
+        description: "Repository name (e.g. market-tick-data-service)"
+        required: true
+      source_branch:
+        description: "Source branch (the incoming branch — e.g. staging, live-defi-rollout)"
+        required: true
+      target_branch:
+        description: "Target branch (the base — e.g. main, staging)"
+        required: true
+      original_pr_url:
+        description: "URL of the blocked PR (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group:
+    conflict-resolution-${{ github.event.client_payload.repo_name || inputs.repo_name }}-${{
+    github.event.client_payload.source_branch || inputs.source_branch }}
+  cancel-in-progress: false
+
+jobs:
+  resolve-conflict:
+    name: Resolve merge conflict
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+      GH_ORG: IggyIkenna
+
+    steps:
+      - name: Extract inputs
+        id: inputs
+        run: |
+          # Support both repository_dispatch and workflow_dispatch
+          REPO_NAME="${{ github.event.client_payload.repo_name || inputs.repo_name }}"
+          SOURCE_BRANCH="${{ github.event.client_payload.source_branch || inputs.source_branch }}"
+          TARGET_BRANCH="${{ github.event.client_payload.target_branch || inputs.target_branch }}"
+          ORIGINAL_PR_URL="${{ github.event.client_payload.original_pr_url || inputs.original_pr_url }}"
+
+          echo "repo_name=$REPO_NAME" >> "$GITHUB_OUTPUT"
+          echo "source_branch=$SOURCE_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "original_pr_url=$ORIGINAL_PR_URL" >> "$GITHUB_OUTPUT"
+
+          echo "Conflict resolution requested:"
+          echo "  Repo:          $REPO_NAME"
+          echo "  Source:        $SOURCE_BRANCH"
+          echo "  Target:        $TARGET_BRANCH"
+          echo "  Original PR:   $ORIGINAL_PR_URL"
+
+      - name: Notify Telegram — agent working
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+          ORIGINAL_PR_URL: ${{ steps.inputs.outputs.original_pr_url }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "TELEGRAM_BOT_TOKEN not set — skipping Telegram notification"
+            exit 0
+          fi
+          TEXT="⚠️ *Merge Conflict — Agent Working*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0ABlocked PR: ${ORIGINAL_PR_URL:-N/A}%0AResolving now..."
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" || true
+
+      - name: Clone repo + PM + codex
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+        run: |
+          set -euo pipefail
+
+          git config --global user.name "conflict-resolution-agent[bot]"
+          git config --global user.email "conflict-resolution-agent[bot]@users.noreply.github.com"
+
+          # Clone target repo with enough history for merge operations
+          git clone --depth=50 \
+            "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/${REPO_NAME}.git" \
+            "$REPO_NAME"
+
+          # Clone PM and codex as siblings (required by setup-workspace-from-manifest.sh)
+          git clone --depth=1 \
+            "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/unified-trading-pm.git" \
+            unified-trading-pm
+
+          git clone --depth=1 \
+            "https://x-access-token:${GH_PAT}@github.com/${GH_ORG}/unified-trading-codex.git" \
+            unified-trading-codex
+
+          echo "Cloned: $REPO_NAME, unified-trading-pm, unified-trading-codex"
+          ls -la
+
+      - name: Setup workspace (manifest-driven dep checkout)
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+        run: |
+          set -euo pipefail
+          WORKSPACE_ROOT="$(pwd)"
+          export WORKSPACE_ROOT
+          export GH_TOKEN="$GH_PAT"
+
+          echo "Running setup-workspace-from-manifest.sh for $REPO_NAME"
+          bash unified-trading-pm/scripts/setup-workspace-from-manifest.sh "$REPO_NAME" \
+            || echo "WARNING: setup-workspace-from-manifest.sh exited non-zero (continuing)"
+
+      - name: Surface merge conflicts
+        id: conflicts
+        env:
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+        run: |
+          set -euo pipefail
+          cd "$REPO_NAME"
+
+          # Fetch both branches
+          git fetch --depth=50 origin "$TARGET_BRANCH" "$SOURCE_BRANCH" 2>/dev/null || \
+            git fetch --depth=50 origin 2>/dev/null
+
+          # Checkout target branch (the base)
+          git checkout "$TARGET_BRANCH"
+
+          # Attempt merge to surface conflicts (do not commit)
+          git merge --no-commit --no-ff "origin/$SOURCE_BRANCH" || true
+
+          # List conflicted files
+          CONFLICTED=$(git diff --name-only --diff-filter=U 2>/dev/null || true)
+
+          if [ -z "$CONFLICTED" ]; then
+            echo "No conflicts detected — branches may have diverged without content conflicts."
+            echo "conflicted_files=" >> "$GITHUB_OUTPUT"
+            echo "conflict_count=0" >> "$GITHUB_OUTPUT"
+            # Abort the in-progress merge before exiting
+            git merge --abort 2>/dev/null || true
+            exit 0
+          fi
+
+          echo "Conflicted files:"
+          echo "$CONFLICTED" | while read -r f; do echo "  $f"; done
+
+          # Capture full conflict content for Claude
+          {
+            echo "=== CONFLICT DUMP ==="
+            echo "Source: origin/$SOURCE_BRANCH → Target: $TARGET_BRANCH"
+            echo ""
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              echo "=== $f ==="
+              cat "$f"
+              echo ""
+            done <<< "$CONFLICTED"
+          } > /tmp/conflict_dump.txt
+
+          CONFLICT_COUNT=$(echo "$CONFLICTED" | wc -l | tr -d ' ')
+          CONFLICTED_ONELINE=$(echo "$CONFLICTED" | tr '\n' ',' | sed 's/,$//')
+
+          echo "conflicted_files=$CONFLICTED_ONELINE" >> "$GITHUB_OUTPUT"
+          echo "conflict_count=$CONFLICT_COUNT" >> "$GITHUB_OUTPUT"
+
+          # Abort the test merge — we'll recreate it on the resolution branch
+          git merge --abort
+
+      - name: Abort if no conflicts found
+        if: steps.conflicts.outputs.conflict_count == '0'
+        run: |
+          echo "No content conflicts detected. The PR may have already been resolved or the branches merged cleanly."
+          echo "No resolution PR will be created."
+          exit 0
+
+      - name: Read context files for Claude
+        env:
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+        run: |
+          set -euo pipefail
+
+          # Read AGENTS.md for workspace instructions
+          AGENTS_MD=""
+          if [ -f "unified-trading-pm/AGENTS.md" ]; then
+            AGENTS_MD=$(head -300 "unified-trading-pm/AGENTS.md")
+          fi
+
+          # Read SUB_AGENT_MANDATORY_RULES.md
+          MANDATORY_RULES=""
+          if [ -f "unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md" ]; then
+            MANDATORY_RULES=$(head -200 "unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md")
+          fi
+
+          # Read active plans (truncated for token budget)
+          ACTIVE_PLANS=""
+          if ls unified-trading-pm/plans/active/*.plan.md 2>/dev/null | head -5 | grep -q .; then
+            ACTIVE_PLANS=$(head -100 unified-trading-pm/plans/active/*.plan.md 2>/dev/null | head -500 || true)
+          fi
+
+          # Write to env files for next step
+          {
+            echo "AGENTS_MD<<AGENTS_EOF"
+            echo "$AGENTS_MD"
+            echo "AGENTS_EOF"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "MANDATORY_RULES<<RULES_EOF"
+            echo "$MANDATORY_RULES"
+            echo "RULES_EOF"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "ACTIVE_PLANS<<PLANS_EOF"
+            echo "$ACTIVE_PLANS"
+            echo "PLANS_EOF"
+          } >> "$GITHUB_ENV"
+
+          echo "Context files loaded (AGENTS.md, SUB_AGENT_MANDATORY_RULES.md, active plans)"
+
+      - name: Install Claude CLI
+        run: |
+          npm install -g @anthropic-ai/claude-code 2>/dev/null || \
+            pip install claude-code-cli 2>/dev/null || \
+            echo "WARNING: Could not install Claude CLI via npm or pip"
+          which claude || echo "Claude CLI not found — will attempt claude command directly"
+
+      - name: Run Claude conflict resolution
+        id: claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+        run: |
+          set -euo pipefail
+
+          CONFLICT_DUMP=$(cat /tmp/conflict_dump.txt)
+
+          PROMPT="${AGENTS_MD}
+
+          ${MANDATORY_RULES}
+
+          ---
+          You are a conflict resolution agent in the unified-trading-system workspace.
+          Active plans context (truncated):
+          ${ACTIVE_PLANS}
+
+          ---
+          TASK: Resolve the git merge conflicts below.
+
+          Conflict details:
+          - Repo: ${REPO_NAME}
+          - Source branch (incoming changes): ${SOURCE_BRANCH}
+          - Target branch (base): ${TARGET_BRANCH}
+
+          Resolution rules:
+          1. Preserve changes from BOTH sides wherever semantically compatible.
+          2. For Python imports: take the UNION of all imports from both sides.
+          3. For Python functions/classes: prefer the most complete version; if semantically different, keep both with a comment explaining the choice.
+          4. For YAML: merge all keys; if the same key has different scalar values, prefer the SOURCE_BRANCH (incoming) value and add a comment.
+          5. For plan/markdown files: merge todo lists as a union (no duplicates); prefer newer status.
+          6. Do NOT blindly pick 'ours' or 'theirs' — explain briefly (inline comment) which side each conflict favors and why.
+          7. Remove ALL git conflict markers (<<<<<<, =======, >>>>>>>) — the output must be valid file content.
+
+          Output format (strict):
+          - For each conflicted file, output a line: === <filename> ===
+          - Then output the COMPLETE resolved file content (not just the conflict section).
+          - No markdown fences (no \`\`\`python etc.)
+          - No commentary outside the file blocks.
+          - If a file has no content changes needed (should not happen), output it unchanged.
+
+          Conflicted files to resolve:
+          ${CONFLICT_DUMP}"
+
+          echo "$PROMPT" | claude --print --dangerously-skip-permissions > /tmp/claude_resolution.txt 2>&1 \
+            || (echo "Claude command failed. Output:"; cat /tmp/claude_resolution.txt; exit 1)
+
+          echo "Claude resolution complete ($(wc -l < /tmp/claude_resolution.txt) lines)"
+
+      - name: Apply resolved files
+        id: apply
+        env:
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+        run: |
+          set -euo pipefail
+          cd "$REPO_NAME"
+
+          # Create resolution branch from source branch
+          SHA=$(git rev-parse --short "origin/$SOURCE_BRANCH" 2>/dev/null || git rev-parse --short HEAD)
+          SOURCE_SLUG="${SOURCE_BRANCH//\//-}"
+          RESOLUTION_BRANCH="auto-resolve/${SOURCE_SLUG}-to-${TARGET_BRANCH}-${SHA}"
+
+          git checkout "$SOURCE_BRANCH" 2>/dev/null || git checkout -b "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
+          git checkout -b "$RESOLUTION_BRANCH"
+
+          # Parse Claude's output (=== filename === markers) and write resolved files
+          python3 - <<'PYEOF'
+          import pathlib
+          import sys
+
+          resolution_file = pathlib.Path("/tmp/claude_resolution.txt")
+          content = resolution_file.read_text(errors="replace")
+
+          # Split on === filename === markers
+          import re
+          pattern = re.compile(r"^=== (.+?) ===$", re.MULTILINE)
+          parts = pattern.split(content)
+
+          if len(parts) < 3:
+              print("WARNING: Claude output did not match expected === filename === format")
+              print(f"Output preview: {content[:500]}")
+              sys.exit(1)
+
+          files_written: list[str] = []
+          # parts[0] = preamble (before first ===)
+          # parts[1] = first filename, parts[2] = first content
+          # parts[3] = second filename, parts[4] = second content, ...
+          i = 1
+          while i + 1 < len(parts):
+              filename = parts[i].strip()
+              file_content = parts[i + 1]
+              # Strip leading newline from content block
+              if file_content.startswith("\n"):
+                  file_content = file_content[1:]
+              # Trailing newline cleanup
+              if not file_content.endswith("\n"):
+                  file_content += "\n"
+
+              target = pathlib.Path(filename)
+              if not target.exists():
+                  print(f"WARNING: {filename} does not exist in repo — skipping")
+                  i += 2
+                  continue
+
+              target.write_text(file_content, encoding="utf-8")
+              files_written.append(filename)
+              print(f"Wrote resolved: {filename}")
+              i += 2
+
+          if not files_written:
+              print("ERROR: No files were resolved by Claude")
+              sys.exit(1)
+
+          print(f"\nTotal files resolved: {len(files_written)}")
+          PYEOF
+
+          # Stage and commit
+          git add -u
+          git commit -m "chore(conflict): auto-resolve ${SOURCE_BRANCH} → ${TARGET_BRANCH} [skip ci]
+
+          Agent-generated conflict resolution. Review before merging.
+          Conflicted files: ${{ steps.conflicts.outputs.conflicted_files }}
+          Resolution branch: ${RESOLUTION_BRANCH}
+
+          Co-Authored-By: conflict-resolution-agent[bot] <conflict-resolution-agent[bot]@users.noreply.github.com>"
+
+          git push "https://x-access-token:${{ secrets.GH_PAT }}@github.com/${GH_ORG}/${REPO_NAME}.git" "$RESOLUTION_BRANCH"
+
+          echo "resolution_branch=$RESOLUTION_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Resolution branch pushed: $RESOLUTION_BRANCH"
+
+      - name: Run quality gates
+        id: qg
+        env:
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+        run: |
+          cd "$REPO_NAME"
+
+          # Install Python dep if pyproject.toml exists (skip if not a Python repo)
+          if [ -f "pyproject.toml" ]; then
+            if command -v uv &>/dev/null; then
+              uv venv .venv --quiet 2>/dev/null || true
+              uv pip install -e . --python .venv/bin/python --quiet 2>/dev/null || true
+            fi
+          fi
+
+          # Run quality gates (advisory — non-zero exit does not block PR creation)
+          if bash scripts/quality-gates.sh --no-fix 2>&1 | tail -20; then
+            echo "qg_result=pass" >> "$GITHUB_OUTPUT"
+            echo "qg_emoji=✅" >> "$GITHUB_OUTPUT"
+          else
+            echo "qg_result=fail" >> "$GITHUB_OUTPUT"
+            echo "qg_emoji=⚠️" >> "$GITHUB_OUTPUT"
+            echo "QG failed on resolution branch — PR will be created but human must fix before merging"
+          fi
+
+      - name: Create resolution PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+          ORIGINAL_PR_URL: ${{ steps.inputs.outputs.original_pr_url }}
+          RESOLUTION_BRANCH: ${{ steps.apply.outputs.resolution_branch }}
+          QG_RESULT: ${{ steps.qg.outputs.qg_result }}
+          QG_EMOJI: ${{ steps.qg.outputs.qg_emoji }}
+          CONFLICTED_FILES: ${{ steps.conflicts.outputs.conflicted_files }}
+        run: |
+          set -euo pipefail
+
+          PR_BODY="## Auto-resolved Merge Conflict
+
+          **Agent-generated conflict resolution.** Review each file carefully — the agent
+          preserves changes from both sides wherever semantically compatible.
+
+          | | |
+          |---|---|
+          | **Repo** | \`${REPO_NAME}\` |
+          | **Source** | \`${SOURCE_BRANCH}\` |
+          | **Target** | \`${TARGET_BRANCH}\` |
+          | **Conflicted files** | \`${CONFLICTED_FILES}\` |
+          | **Quality gates** | ${QG_EMOJI} ${QG_RESULT} |
+          | **Original blocked PR** | ${ORIGINAL_PR_URL:-N/A} |
+
+          ### Resolution strategy
+          - Python imports: **union** of both sides
+          - Functions/classes: **most complete version** preserved
+          - YAML keys: **union** of both sides; incoming value preferred on key conflicts
+          - Plan/markdown: **union** of todo lists; newer status preferred
+
+          ### Next steps
+          1. Review the diff in this PR
+          2. Edit files in-branch if the agent's choices need correction
+          3. Merge this PR — it will unblock the original \`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\` promotion
+
+          ---
+          🤖 Generated by [conflict-resolution-agent](../../actions/workflows/conflict-resolution-agent.yml)"
+
+          PR_URL=$(gh pr create \
+            --repo "${GH_ORG}/${REPO_NAME}" \
+            --base "$TARGET_BRANCH" \
+            --head "$RESOLUTION_BRANCH" \
+            --title "auto-resolve: ${SOURCE_BRANCH} → ${TARGET_BRANCH}" \
+            --body "$PR_BODY" \
+            2>/dev/null || true)
+
+          if [ -z "$PR_URL" ]; then
+            echo "WARNING: Failed to create resolution PR — it may already exist"
+            # Try to find existing PR
+            PR_URL=$(gh pr list \
+              --repo "${GH_ORG}/${REPO_NAME}" \
+              --base "$TARGET_BRANCH" \
+              --head "$RESOLUTION_BRANCH" \
+              --state open \
+              --json url \
+              --jq '.[0].url' 2>/dev/null || echo "")
+          fi
+
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "Resolution PR: $PR_URL"
+
+      - name: Notify Telegram — resolution ready
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
+          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
+          ORIGINAL_PR_URL: ${{ steps.inputs.outputs.original_pr_url }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          QG_EMOJI: ${{ steps.qg.outputs.qg_emoji }}
+          QG_RESULT: ${{ steps.qg.outputs.qg_result }}
+          CONFLICTED_FILES: ${{ steps.conflicts.outputs.conflicted_files }}
+          CONFLICT_COUNT: ${{ steps.conflicts.outputs.conflict_count }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "TELEGRAM_BOT_TOKEN not set — skipping"
+            exit 0
+          fi
+
+          if [ "$JOB_STATUS" = "success" ] && [ -n "$PR_URL" ]; then
+            TEXT="✅ *Conflict Resolution Ready*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0AFiles resolved: ${CONFLICT_COUNT} (${CONFLICTED_FILES})%0AQG: ${QG_EMOJI} ${QG_RESULT}%0AResolution PR: ${PR_URL}%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}%0AReview and merge when ready."
+          else
+            TEXT="❌ *Conflict Resolution Failed*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0AJob status: ${JOB_STATUS}%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}%0AManual resolution required."
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" || true
