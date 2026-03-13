@@ -2375,7 +2375,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 97,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2468,7 +2468,7 @@
       "github_url": "https://github.com/IggyIkenna/unified-domain-client",
       "folder_name": "unified-domain-client",
       "notes": "TIER 3: Cloud storage I/O layer \u2014 reads/writes GCS/S3 domain data. Imports T0 (UCLI, UCI, UEI) + T1 (UTS). arch_tier corrected from 2\u21923 on 2026-02-28 per canonical DAG and codex SSOT (04-architecture/TIER-ARCHITECTURE.md).",
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 84,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2529,7 +2529,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 95,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2655,7 +2655,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": 96,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
