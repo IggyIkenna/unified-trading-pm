@@ -1,0 +1,186 @@
+name: publish-package
+
+# Reusable workflow: publishes Python library wheels to GCP Artifact Registry.
+#
+# Triggered by repository_dispatch from per-repo workflows on push to main.
+# AR repo: unified-libraries in central-element-323112/asia-northeast1
+#
+# Payload: { repo, version, commit_sha }
+#
+# Flow:
+#   1. Checkout the library repo at the given commit
+#   2. Build wheel using `python -m build`
+#   3. Authenticate to GCP Artifact Registry via SA key
+#   4. Upload wheel using `twine` to AR Python repository
+#   5. Update workspace-manifest.json with published version
+
+on:
+  repository_dispatch:
+    types: [publish-package]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-package-${{ github.event.client_payload.repo }}
+  cancel-in-progress: false
+
+env:
+  AR_REGION: asia-northeast1
+  AR_PROJECT: central-element-323112
+  AR_REPOSITORY: unified-libraries
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate payload
+        id: payload
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+
+          if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
+            echo "ERROR: Missing required payload fields (repo, version)"
+            echo "Received: repo=$REPO version=$VERSION commit_sha=$COMMIT_SHA"
+            exit 1
+          fi
+
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+
+          echo "Publishing $REPO v$VERSION (sha: ${COMMIT_SHA:-HEAD})"
+
+      - name: Checkout library repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ steps.payload.outputs.repo }}
+          ref: ${{ steps.payload.outputs.commit_sha || 'main' }}
+          token: ${{ secrets.GH_PAT }}
+          path: library-source
+
+      - name: Checkout PM repo (for manifest update)
+        uses: actions/checkout@v4
+        with:
+          path: pm
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install build tools
+        run: |
+          pip install uv
+          uv pip install --system build twine keyring keyrings.google-artifactregistry-auth
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build wheel
+        working-directory: library-source
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+
+          echo "=== Building wheel for $REPO v$VERSION ==="
+
+          # Verify version in pyproject.toml matches expected version
+          TOML_VERSION=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || echo "unknown")
+          echo "pyproject.toml version: $TOML_VERSION"
+          echo "Expected version: $VERSION"
+
+          if [ "$TOML_VERSION" != "$VERSION" ]; then
+            echo "WARNING: Version mismatch — pyproject.toml=$TOML_VERSION, payload=$VERSION"
+            echo "Proceeding with pyproject.toml version ($TOML_VERSION)"
+          fi
+
+          python -m build --wheel --outdir dist/
+
+          echo "Built wheels:"
+          ls -la dist/*.whl
+
+      - name: Upload to Artifact Registry
+        working-directory: library-source
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+          AR_URL="https://${AR_REGION}-python.pkg.dev/${AR_PROJECT}/${AR_REPOSITORY}/"
+
+          echo "=== Uploading to Artifact Registry ==="
+          echo "AR URL: $AR_URL"
+
+          # twine uses keyring + keyrings.google-artifactregistry-auth for auth
+          python -m twine upload \
+            --repository-url "$AR_URL" \
+            dist/*.whl \
+            --verbose
+
+          echo "Successfully published $REPO v$VERSION to $AR_URL"
+
+      - name: Update manifest with published version
+        working-directory: pm
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+          PUBLISHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          echo "=== Updating manifest: published_packages.$REPO ==="
+
+          jq --arg repo "$REPO" \
+             --arg version "$VERSION" \
+             --arg ts "$PUBLISHED_AT" \
+             '(.published_packages //= {}) | .published_packages[$repo] = {version: $version, published_at: $ts, registry: "artifact-registry"}' \
+             workspace-manifest.json > workspace-manifest.json.tmp \
+            && mv workspace-manifest.json.tmp workspace-manifest.json
+
+          if ! git diff --quiet workspace-manifest.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add workspace-manifest.json
+            git commit -m "chore: publish $REPO v$VERSION to Artifact Registry [skip ci]"
+            git push origin main
+          fi
+
+      - name: Telegram notification
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then exit 0; fi
+
+          REPO="${{ steps.payload.outputs.repo }}"
+          VERSION="${{ steps.payload.outputs.version }}"
+          STATUS="${{ job.status }}"
+
+          if [ "$STATUS" = "success" ]; then
+            ICON="📦"
+            MSG="published to AR"
+          else
+            ICON="🔴"
+            MSG="publish FAILED"
+          fi
+
+          TEXT="${ICON} *Package ${MSG}*%0ARepo: \`${REPO}\`%0AVersion: \`${VERSION}\`%0ARegistry: \`${AR_REGION}-python.pkg.dev/${AR_PROJECT}/${AR_REPOSITORY}\`"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d parse_mode="Markdown" > /dev/null 2>&1 || true
