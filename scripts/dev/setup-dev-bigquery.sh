@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# RETIRED 2026-03-13 — Referenced unified-trading-dev as a separate GCP project (never created).
+# Dev resources now live in central-element-323112 with -dev suffix, provisioned via Terraform:
+#   cd deployment-service/terraform/gcp
+#   terraform apply -var="environment=dev" -var="project_id=central-element-323112"
+# See: deployment-service/docs/dev-environment.md
+#
 # setup-dev-bigquery.sh — Create BigQuery dev dataset and 4 core tables (schema-correct, empty).
 #
 # Tables created (BigQuery OLAP analytics layer — NOT GCS persistence):

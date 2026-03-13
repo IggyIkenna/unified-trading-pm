@@ -167,8 +167,8 @@ Update VM venvs and uv.lock in every repo so they match pyproject.toml.
 # Standard: run setup.sh in each repo
 bash unified-trading-pm/scripts/repo-management/run-all-setup.sh
 
-# First-time bootstrap or after setup.sh / stub interface changes: rollout first, then setup
-bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first
+# First-time bootstrap or after setup.sh / stub interface changes: rollout first, then setup. --force for hard reinstall and wipe of existing dependencies
+bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --rollout-first --force
 ```
 
 Runs `scripts/setup.sh` per repo in topological order. `setup.sh` **always** runs `uv lock` (timestamp skip was removed
@@ -929,20 +929,265 @@ promoted to main — each entry has the exact `commit_shas` and the tag formula 
 
 ---
 
+---
+
+## Pipeline Diagram
+
+The canonical visual diagram (YAML-driven, regeneratable) lives alongside this doc:
+
+- **SVG** (embed in docs/GitHub): `docs/repo-management/CI-CD-PIPELINE.svg`
+- **HTML** (standalone interactive, hover for tooltips): `docs/repo-management/CI-CD-PIPELINE.html`
+- **Data source** (edit this to change the diagram): `docs/repo-management/cicd-pipeline-definition.yaml`
+- **Regenerate**: `python3 scripts/generate-cicd-diagram.py`
+
+The diagram shows all 6 swimlanes, 45 nodes, 44 connections, decision diamonds, branch color coding, version tag
+annotations, and Telegram alert nodes.
+
+---
+
+## Conflict Resolution Agent
+
+When a merge conflict is detected during `staging-to-main.yml` (or during a feature-branch-to-staging PR), an autonomous
+agent is dispatched to propose a resolution.
+
+**Status:** Implementation pending — `conflict-resolution-agent.yml` is designed but not yet created. **Plan:**
+`plans/active/conflict_resolution_agent_2026_03_13.plan.md`
+
+### Detection Points
+
+1. **staging → main**: `staging-to-main.yml` polls `gh api repos/{repo}/pulls/{pr}/mergeable_state`. If `dirty` →
+   dispatch.
+2. **feat/\* → staging**: `feature-branch-to-staging.yml` template polls `gh pr view --json mergeable` (3× with 5s
+   sleep). If `CONFLICTING` → dispatch.
+
+### Agent Flow
+
+```
+merge-conflict-detected dispatch received by conflict-resolution-agent.yml
+  → Step 1: Telegram "🔧 Working on conflict in $REPO $SOURCE_BRANCH→$TARGET_BRANCH..."
+  → Step 2: clone repo (depth=50) + PM sibling + codex sibling
+             run scripts/setup-workspace-from-manifest.sh <repo_name>
+  → Step 3: read AGENTS.md + SUB_AGENT_MANDATORY_RULES.md + all active PM plans
+  → Step 4: surface conflicts:
+             git checkout target_branch
+             git merge --no-commit --no-ff origin/source_branch || true
+             git diff --name-only --diff-filter=U  (list conflicted files)
+             capture full conflict markers per file
+             git merge --abort
+  → Step 5: claude --print --dangerously-skip-permissions
+             prompt preamble: AGENTS.md + rules + plans + conflict dump
+             output: === filename === blocks with resolved content
+  → Step 6: parse output (awk split on === markers)
+             write resolved files to branch auto-resolve/<source>-to-<target>-<sha>
+             git push
+  → Step 7: bash scripts/quality-gates.sh (advisory — non-zero = warn, PR still created)
+  → Step 8: gh pr create resolution-branch → target-branch
+             body: QG result + original PR URL + files resolved count
+  → Step 9: Telegram "✅ Resolution PR ready: <url>
+             Files resolved: N | QG: pass/warn | Original PR: <url>"
+```
+
+**Key constraint:** The agent **never self-merges**. Human review and approval required before merge.
+
+### Wiring Required (Pending)
+
+- `staging-to-main.yml`: add conflict check + dispatch in per-repo loop after PR creation fails
+- `feature-branch-to-staging.yml` template: add conflict detection step after auto-merge attempt
+
+---
+
+## YAML Syntax Validation & GHA Workflow Version Control
+
+### Pre-Push Validation (runs in quality-gates.sh)
+
+All YAML files are validated before any commit reaches remote. This catches build/workflow errors before they hit CI.
+
+| Tool                     | What it checks                                                  | Location                                    |
+| ------------------------ | --------------------------------------------------------------- | ------------------------------------------- |
+| `actionlint`             | `.github/workflows/*.yml` syntax, action refs, expression types | Cached binary in quality-gates.yml          |
+| `yamllint`               | Generic YAML structure in all `.yml` files                      | `base-service.sh`                           |
+| `validate-cloudbuild.py` | `cloudbuild.yaml` Cloud Build syntax + substitution vars        | `scripts/validation/validate-cloudbuild.py` |
+| `validate-buildspec.py`  | `buildspec.aws.yaml` CodeBuild syntax + phases/artifacts        | `scripts/validation/validate-buildspec.py`  |
+
+The validation scripts run before `git push` (via pre-push hook) **and** inside `quality-gates.sh --no-fix` in CI. Any
+YAML syntax error blocks the PR from passing the required `quality-gates` status check.
+
+### GHA Workflow Version Control
+
+GHA workflow templates live in PM and are propagated to all service repos — workflow changes follow the same three-tier
+model as code changes.
+
+**Template location:** `scripts/propagation/templates/`
+
+Key templates:
+
+- `semver-agent.yml` — per-repo version bumper (staging-trigger fix pending)
+- `staging-version-gate.yml` — blocks PRs to staging if version < 1.0.0
+- `feature-branch-to-staging.yml` — feat/\* → staging PR creation + conflict dispatch
+- `agent-audit.yml` — nightly audit with retry dispatch
+- `plan-alignment-agent.yml` — advisory PR comment on out-of-scope diffs
+
+**Propagation flow:**
+
+```
+Edit template in PM (feat/* branch)
+  → quickmerge → PR to staging (PM's own 3-tier flow)
+  → PM staging → PM main
+  → run rollout script: python3 scripts/propagation/rollout-<name>.py
+      reads workspace-manifest.json, generates per-repo workflow from template
+      commits + quickmerges each repo (idempotent — skip if already up-to-date)
+```
+
+**Composite Action Inheritance (WIP — `composite_action_qg_inheritance_2026_03_12.plan.md`):** Service repos reference
+PM composite actions — changes in PM actions take effect for all repos on next CI run without re-rollout:
+
+```yaml
+# Target shape for per-repo quality-gates.yml (~20 lines):
+- name: Setup Python CI tools
+  uses: IggyIkenna/unified-trading-pm/.github/actions/setup-python-tools@main
+  with:
+    python-version: "3.13.9"
+- name: Run quality gates
+  uses: IggyIkenna/unified-trading-pm/.github/actions/run-quality-gates@main
+```
+
+**P0 blocker:** `setup-python-tools/action.yml` is referenced by service repos but the action file doesn't exist yet.
+Fix tracked in `composite_action_qg_inheritance_2026_03_12.plan.md`.
+
+**Risk:** Composite actions load from `@main` of PM. A broken PM push breaks all repo CI simultaneously. Mitigation: use
+`@v1` SHA-pinned tag on PM for stability once the action is created.
+
+---
+
+## Telegram Notification Inventory
+
+All alerts use `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` secrets. **Critical:** these must be in the step `env:` block —
+NOT in `if:` expressions (secrets are unavailable in `if:` context, always evaluate to empty string).
+
+```yaml
+# Correct pattern:
+- name: Notify Telegram
+  if: always()
+  env:
+    TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+    TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  run: |
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      -d chat_id="${TELEGRAM_CHAT_ID}" \
+      -d text="..."
+```
+
+### Complete Alert Inventory
+
+| Event                    | Workflow                            | Message                                                                   |
+| ------------------------ | ----------------------------------- | ------------------------------------------------------------------------- | -------------------------------- |
+| Overnight agent complete | `overnight-agent-orchestrator.yml`  | `🌙 Overnight CI complete: T0-T3 ✅/❌\nPassed: N                         | Failed: N\nBlocked: [repo list]` |
+| Conflict detected        | `staging-to-main.yml`               | `⚠️ Merge Conflict: $REPO staging→main\nAgent dispatched`                 |
+| Conflict agent started   | `conflict-resolution-agent.yml`     | `🔧 Working on conflict in $REPO $SRC→$TGT...`                            |
+| Conflict PR ready        | `conflict-resolution-agent.yml`     | `✅ Resolution PR ready: <url>\nFiles: N resolved\nQG: pass/warn`         |
+| Codex sync complete      | `codex-sync-agent.yml` (codex repo) | `📚 Codex synced: manifest update reflected in docs`                      |
+| Rules alignment          | `rules-alignment-agent.yml`         | `📐 Rules updated: N new cursor rules created`                            |
+| MAJOR bump pending       | `request-major-bump.yml`            | `🚨 MAJOR bump request: $REPO\nIssue: <url>\nComment /approve or /reject` |
+| SIT locked               | `sit-gate.yml`                      | `⏳ SIT started — staging locked\nRepos under test: [list]`               |
+| SIT passed → promoting   | `staging-to-main.yml`               | `✅ SIT passed — promoting staging→main\nRepos: [list]`                   |
+| SIT failed → unlocked    | `sit-unlock.yml`                    | `❌ SIT failed — staging unlocked for fixes\nFailed: [test names]`        |
+| Cassette drift           | `cassette-drift-check.yml`          | `⚠️ Cassette drift: $REPO\nChanged schemas: [list]\nIssue: <url>`         |
+| Plan health issue        | `plan-health-agent.yml`             | `📋 Plan health: N todos blocked\nPlans: [list]`                          |
+| Repo readiness change    | `readiness-verifier.yml`            | `📊 Readiness update: $REPO now at CR$N/DR$N/BR$N`                        |
+
+### Adding a New Alert
+
+1. Add Telegram notify step to the workflow (copy pattern above).
+2. Register in this table.
+3. Test: set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` in repo secrets (`gh secret set`). Use
+   `propagate-github-secrets.sh` for bulk rollout across all repos.
+
+---
+
+## Background Agent Cursor Rules Inheritance
+
+Every autonomous agent (GHA, Claude Code, Cursor) that runs in any repo needs access to workspace standards. This is
+solved through a layered persistence model.
+
+### Persistent (committed to all 62 repos)
+
+These files are committed as relative symlinks and always available without setup:
+
+| File                | Symlink target                                      | Purpose                                                                                                                             |
+| ------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `.claude/CLAUDE.md` | `../../unified-trading-pm/cursor-configs/CLAUDE.md` | Claude Code workspace instructions                                                                                                  |
+| `AGENTS.md`         | `../unified-trading-pm/AGENTS.md`                   | Workspace-generic agent instructions (token optimization, multi-repo structure, QG two-pass model, coding rules, Telegram template) |
+
+**Rollout:** `scripts/rollout-agent-symlinks.sh` — commits symlinks to all 62 repos, removes any previously committed
+`.cursor/rules` symlinks.
+
+### Ephemeral (setup at GHA runtime, never committed)
+
+Cursor rules are **not** committed to repos (they clutter Cursor IDE which reads all repos simultaneously). Instead:
+
+```bash
+# setup-workspace-from-manifest.sh copies rules at GHA runtime:
+cp unified-trading-pm/cursor-rules/*.mdc $WORKSPACE_ROOT/.cursor/rules/
+# Generates cleanup script:
+cat > .cleanup-cursor-rules.sh << 'EOF'
+rm -rf $WORKSPACE_ROOT/.cursor/rules/*.mdc
+EOF
+```
+
+**MANDATORY:** `.cleanup-cursor-rules.sh` must run **before quickmerge** to prevent cursor rules from being committed.
+
+### Sub-Agent Rule Inheritance
+
+Sub-agents start with **fresh context** and cannot inherit rules from the parent session.
+
+**Every sub-agent invocation must include one of:**
+
+1. Full paste of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the top of the prompt
+2. Or:
+   `"Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."`
+
+**Always pass:**
+
+- `WORKSPACE_ROOT` path explicitly
+- For tests: `cd <repo> && bash scripts/quality-gates.sh` (per-repo `.venv`, not `.venv-workspace`)
+
+### Why Cursor Rules Are Ephemeral (Not Committed)
+
+Cursor IDE reads all repos in the workspace simultaneously via `.cursor/rules/` directories. If rules were committed to
+each repo, Cursor would aggregate ~62 × N rule files, causing severe context bloat and rule conflicts. The workspace
+root `.cursor/rules/` symlink (→ `unified-trading-pm/cursor-rules/`) covers all rules in one place for IDE use;
+ephemeral copies in GHA cover the runtime agent use case.
+
+---
+
 ## References
 
-| Doc                                                      | Purpose                                                                |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **This doc**                                             | Full CI/CD flow SSOT                                                   |
-| `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`  | Phase 1–2 detail                                                       |
-| `docs/repo-management/sync-to-main-flow.md`              | Phase 3 detail                                                         |
-| `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`        | Internal alignment                                                     |
-| `scripts/repo-management/check-dep-alignment.py`         | Dep reconciliation gate (Phase 4)                                      |
-| `scripts/hooks/pre-push`                                 | Git pre-push hook for dep check on staging pushes                      |
-| `.github/workflows/sit-gate.yml`                         | Sets staging lock at SIT start                                         |
-| `.github/workflows/sit-unlock.yml`                       | Clears staging lock on SIT failure                                     |
-| `.github/workflows/cloud-build-router.yml`               | Routes qg-passed to correct GCP Cloud Build project                    |
-| `scripts/propagation/templates/staging-version-gate.yml` | Per-repo staging version gate template (propagated to all repos)       |
-| `terraform/environments/`                                | GCP project provisioning (dev/staging/prod)                            |
-| **Codex**                                                | `06-coding-standards/setup-standards.md`, `dependency-management.md`   |
-| **Cursor rules**                                         | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc` |
+| Doc                                                                         | Purpose                                                                          |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **This doc**                                                                | Full CI/CD flow SSOT                                                             |
+| `docs/repo-management/CI-CD-PIPELINE.svg`                                   | Visual pipeline diagram (regenerate: `python3 scripts/generate-cicd-diagram.py`) |
+| `docs/repo-management/cicd-pipeline-definition.yaml`                        | YAML data source for diagram — edit this to change the diagram                   |
+| `docs/repo-management/version-cascade-flow.md`                              | Deep-dive: selective cascade mechanics, version bump chain                       |
+| `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`                     | Phase 1–2 detail                                                                 |
+| `docs/repo-management/sync-to-main-flow.md`                                 | Phase 3 detail                                                                   |
+| `scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`                           | Internal alignment                                                               |
+| `scripts/repo-management/check-dep-alignment.py`                            | Dep reconciliation gate (Phase 4)                                                |
+| `scripts/hooks/pre-push`                                                    | Git pre-push hook for dep check on staging pushes                                |
+| `.github/workflows/sit-gate.yml`                                            | Sets staging lock at SIT start                                                   |
+| `.github/workflows/sit-unlock.yml`                                          | Clears staging lock on SIT failure                                               |
+| `.github/workflows/cloud-build-router.yml`                                  | Routes qg-passed to correct GCP Cloud Build project                              |
+| `.github/workflows/conflict-resolution-agent.yml`                           | Autonomous conflict resolution (implementation pending)                          |
+| `.github/workflows/overnight-agent-orchestrator.yml`                        | Nightly T0→T1→T2→T3 agent audits                                                 |
+| `scripts/validation/validate-cloudbuild.py`                                 | Cloud Build YAML syntax validator                                                |
+| `scripts/validation/validate-buildspec.py`                                  | CodeBuild YAML syntax validator                                                  |
+| `scripts/propagation/templates/`                                            | GHA workflow templates propagated to all repos                                   |
+| `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`                               | Sub-agent rule file — paste at top of every agent prompt                         |
+| `scripts/rollout-agent-symlinks.sh`                                         | Rolls out .claude/CLAUDE.md + AGENTS.md symlinks to all 62 repos                 |
+| `scripts/setup-workspace-from-manifest.sh`                                  | Manifest-driven dep checkout + ephemeral cursor rules setup                      |
+| `scripts/generate-cicd-diagram.py`                                          | Diagram generator (YAML → SVG + HTML)                                            |
+| `plans/active/conflict_resolution_agent_2026_03_13.plan.md`                 | Conflict resolution agent implementation plan                                    |
+| `plans/active/work/cicd/composite_action_qg_inheritance_2026_03_12.plan.md` | Composite GHA action inheritance plan                                            |
+| `scripts/propagation/templates/staging-version-gate.yml`                    | Per-repo staging version gate template (propagated to all repos)                 |
+| `terraform/environments/`                                                   | GCP project provisioning (dev/staging/prod)                                      |
+| **Codex**                                                                   | `06-coding-standards/setup-standards.md`, `dependency-management.md`             |
+| **Cursor rules**                                                            | `dependency-alignment-and-setup-flow.mdc`, `always-use-quickmerge.mdc`           |

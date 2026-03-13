@@ -131,7 +131,7 @@ jobs:
         if: steps.drift_check.outputs.drift_detected == 'true' && !inputs.dry_run
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           DATE=$(date +"%Y-%m-%d")
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
@@ -153,7 +153,7 @@ jobs:
         if: steps.drift_check.outputs.drift_detected == 'false'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           DATE=$(date +"%Y-%m-%d")
           MESSAGE="*[Cassette Drift] No drift detected ${DATE}*

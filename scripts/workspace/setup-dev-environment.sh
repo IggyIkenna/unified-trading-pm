@@ -16,7 +16,7 @@
 #   Step  6 — check_aws_testnet    : verify AWS profile or print setup instructions
 #   Step  7 — install_dependencies : uv pip install -e for all repos T0→T1→T2→T3
 #   Step  8 — verify_imports       : python -c "import ..." sanity check for T0-T2
-#   Step  9 — seed_dev_project     : bash seed-dev-project.sh --quick (if present)
+#   Step  9 — provision_dev_infra  : RETIRED seed-dev-project.sh; points to Terraform (see deployment-service/docs/dev-environment.md)
 #   Step 10 — run_smoke_test       : python smoke-test-dev.py (if present)
 #   Step 11 — print_summary        : quick-start commands + warnings
 #
@@ -233,7 +233,9 @@ log_step 5 "GCP dev configuration"
 
 if command -v gcloud &>/dev/null; then
     # Read project from .env.dev if it exists
-    GCP_PROJECT_VALUE="unified-trading-dev"
+    # Default: central-element-323112 (single GCP project; dev resources use -dev suffix via Terraform)
+    # See: deployment-service/docs/dev-environment.md
+    GCP_PROJECT_VALUE="central-element-323112"
     if [[ -f "$ENV_DEV" ]]; then
         PARSED_PROJECT=$(grep -E '^GCP_PROJECT_ID=' "$ENV_DEV" 2>/dev/null | cut -d= -f2 | tr -d '[:space:]' || true)
         if [[ -n "$PARSED_PROJECT" ]]; then
@@ -420,22 +422,14 @@ run_import_check "unified_market_interface" \
 run_import_check "unified_domain_client" \
     "import unified_domain_client"
 
-# ── STEP 9: SEED DEV PROJECT ─────────────────────────────────────────────────
-log_step 9 "Seed dev project (mock data)"
-
-SEED_SCRIPT="$PM_ROOT/scripts/dev/seed-dev-project.sh"
-if [[ -f "$SEED_SCRIPT" ]]; then
-    log_info "Running seed-dev-project.sh --quick ..."
-    if bash "$SEED_SCRIPT" --quick 2>/dev/null; then
-        log_ok "Dev project seeded"
-    else
-        log_warn "seed-dev-project.sh exited non-zero — dev data may be incomplete"
-        log_info "  See: unified-trading-pm/plans/active/mock_data_dev_project_seeding_2026_03_10.plan.md"
-    fi
-else
-    log_skip "seed-dev-project.sh not found — pending mock_data_dev_project_seeding plan (Phase 2)"
-    log_info "  Services will still start; mock data seeding is optional for unit tests"
-fi
+# ── STEP 9: PROVISION DEV INFRASTRUCTURE ─────────────────────────────────────
+# RETIRED: seed-dev-project.sh (2026-03-13) — replaced by Terraform + VCR cassettes
+# Canonical provisioning: cd deployment-service/terraform/gcp && terraform apply -var="environment=dev"
+# See: deployment-service/docs/dev-environment.md
+log_step 9 "Provision dev infrastructure"
+log_skip "seed-dev-project.sh RETIRED — dev infra provisioned via Terraform (see deployment-service/docs/dev-environment.md)"
+log_info "  Run: cd deployment-service/terraform/gcp && terraform apply -var=\"environment=dev\" -var=\"project_id=central-element-323112\""
+log_info "  VCR cassettes replace synthetic data seeding for CI/local testing"
 
 # ── STEP 10: RUN SMOKE TEST ───────────────────────────────────────────────────
 log_step 10 "Smoke test"

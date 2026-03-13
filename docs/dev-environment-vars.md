@@ -22,15 +22,15 @@ development, CI, and `setup-dev-environment.sh`.
 
 ## Auth — GCP
 
-| Variable                         | Tag      | Dev Default                | Description                                                                                                                                                             |
-| -------------------------------- | -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GCP_PROJECT_ID`                 | REQUIRED | `unified-trading-dev`      | GCP project ID. Read by `UnifiedCloudConfig.gcp_project_id`. Also sets `project_id` via validator.                                                                      |
-| `GOOGLE_APPLICATION_CREDENTIALS` | REQUIRED | `/path/to/dev-sa-key.json` | Path to service-account JSON key. In dev, use ADC: `gcloud auth application-default login`. File path read by `UnifiedCloudConfig.google_application_credentials_path`. |
-| `GCS_REGION`                     | DEFAULT  | `us-central1`              | GCS region for bucket creation. Aliases: `GOOGLE_CLOUD_REGION`.                                                                                                         |
-| `GCS_LOCATION`                   | DEFAULT  | `US`                       | GCS multi-region location for bucket creation.                                                                                                                          |
-| `CLOUD_PROVIDER`                 | DEFAULT  | `gcp`                      | Active cloud backend: `gcp` or `aws`.                                                                                                                                   |
-| `SECRETS_CLOUD_PROVIDER`         | DEFAULT  | _(unset)_                  | Override cloud provider for secrets only (hybrid cloud).                                                                                                                |
-| `STORAGE_CLOUD_PROVIDER`         | DEFAULT  | _(unset)_                  | Override cloud provider for storage only (hybrid cloud).                                                                                                                |
+| Variable                         | Tag      | Dev Default                | Description                                                                                                                                                                                                                                    |
+| -------------------------------- | -------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GCP_PROJECT_ID`                 | REQUIRED | `central-element-323112`   | GCP project ID. Read by `UnifiedCloudConfig.gcp_project_id`. Also sets `project_id` via validator. Dev resources use `-dev` suffix (e.g. `execution-store-defi-dev-central-element-323112`). See `deployment-service/docs/dev-environment.md`. |
+| `GOOGLE_APPLICATION_CREDENTIALS` | REQUIRED | `/path/to/dev-sa-key.json` | Path to service-account JSON key. In dev, use ADC: `gcloud auth application-default login`. File path read by `UnifiedCloudConfig.google_application_credentials_path`.                                                                        |
+| `GCS_REGION`                     | DEFAULT  | `us-central1`              | GCS region for bucket creation. Aliases: `GOOGLE_CLOUD_REGION`.                                                                                                                                                                                |
+| `GCS_LOCATION`                   | DEFAULT  | `US`                       | GCS multi-region location for bucket creation.                                                                                                                                                                                                 |
+| `CLOUD_PROVIDER`                 | DEFAULT  | `gcp`                      | Active cloud backend: `gcp` or `aws`.                                                                                                                                                                                                          |
+| `SECRETS_CLOUD_PROVIDER`         | DEFAULT  | _(unset)_                  | Override cloud provider for secrets only (hybrid cloud).                                                                                                                                                                                       |
+| `STORAGE_CLOUD_PROVIDER`         | DEFAULT  | _(unset)_                  | Override cloud provider for storage only (hybrid cloud).                                                                                                                                                                                       |
 
 ---
 
@@ -57,6 +57,18 @@ development, CI, and `setup-dev-environment.sh`.
 | `TESTING_MODE`       | DEFAULT | `false`       | Skip some validations in unit tests.                                                                                |
 | `DISABLE_AUTH`       | DEFAULT | `false`       | Disable X-API-Key authentication on API services. Never `true` in prod.                                             |
 | `SERVICE_AUTH_TOKEN` | DEFAULT | _(unset)_     | Service-to-service bearer token (Phase 0 static). Loaded via Secret Manager in prod.                                |
+
+---
+
+## DeFi Execution Mode
+
+| Variable       | Tag     | Dev Default | Description                                                                                                                                                                                                                            |
+| -------------- | ------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FORK_MODE`    | DEFAULT | _(unset)_   | DeFi order routing mode: `anvil` (local Anvil mainnet fork at `http://localhost:8545`), `tenderly` (hosted Tenderly Virtual TestNet — reads `tenderly-fork-rpc-url` from SM), `""` (empty = production, use real mainnet Alchemy RPC). |
+| `TESTNET_MODE` | DEFAULT | `false`     | When `true`, Hyperliquid connector routes to `api.hyperliquid-testnet.xyz`. Does NOT affect Ethereum DeFi protocols (use `FORK_MODE` for those). Never `true` in production.                                                           |
+| `DEFI_RPC_URL` | DEFAULT | _(unset)_   | Direct RPC URL override for DeFi protocol connectors. When set, takes priority over `FORK_MODE` SM lookup. Typical local dev: `FORK_MODE=anvil DEFI_RPC_URL=http://localhost:8545`. Leave empty for Tenderly/prod.                     |
+
+See `unified-api-contracts/docs/DEFI_DATA_ORDER_STRATEGY_MATRIX.md` for per-venue routing decisions.
 
 ---
 
@@ -178,6 +190,16 @@ env vars below. With `VCR_MODE=playback`, placeholder values are sufficient.
 | `THEGRAPH_TIMEOUT`      | DEFAULT | `30`                                    | The Graph request timeout (seconds).                                                                      |
 | `AAVESCAN_API_KEY`      | VCR     | `vcr_placeholder`                       | AaveScan API key.                                                                                         |
 | `AAVESCAN_SECRET_NAME`  | DEFAULT | `aavescan-api-key`                      | Secret Manager name for AaveScan key.                                                                     |
+
+### DeFi Dev / Fork Secrets (add to SM before using `FORK_MODE` or `TESTNET_MODE`)
+
+| Variable                    | Tag    | Dev Default | Description                                                                                                          |
+| --------------------------- | ------ | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `ALCHEMY_API_KEY_TESTNET`   | SECRET | _(unset)_   | Alchemy Sepolia app key (SM: `alchemy-api-key-testnet`). Required only for Sepolia tx-mechanics tests.               |
+| `TENDERLY_FORK_RPC_URL`     | SECRET | _(unset)_   | Tenderly Virtual TestNet RPC URL (SM: `tenderly-fork-rpc-url`). Required when `FORK_MODE=tenderly`.                  |
+| `TENDERLY_API_KEY`          | SECRET | _(unset)_   | Tenderly API key (SM: `tenderly-api-key`). Required for Tenderly Virtual TestNet management.                         |
+| `HYPERLIQUID_TESTNET_CREDS` | SECRET | _(unset)_   | Hyperliquid testnet credentials JSON (SM: `hyperliquid-testnet-api-credentials`). Required when `TESTNET_MODE=true`. |
+| `WALLET_DEV_PRIVATE_KEY`    | SECRET | _(unset)_   | Dev wallet private key (SM: `wallet-dev-private-key`). For Sepolia tx signing. Never fund on mainnet.                |
 
 ---
 

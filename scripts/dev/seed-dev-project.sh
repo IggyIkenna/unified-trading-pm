@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# RETIRED 2026-03-13 — Referenced unified-trading-dev as a separate GCP project (never created).
+# Synthetic data seeding is superseded by VCR cassette playback (CI) and real batch data (dev).
+# Dev infra provisioning: cd deployment-service/terraform/gcp && terraform apply -var="environment=dev"
+# See: deployment-service/docs/dev-environment.md
+# VCR cassettes: unified-api-contracts/docs/MOCKS_AND_VCR.md
+#
 # seed-dev-project.sh — Seed the unified-trading GCP dev project with synthetic data.
 #
 # Usage:

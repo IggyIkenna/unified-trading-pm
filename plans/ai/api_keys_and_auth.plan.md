@@ -58,6 +58,27 @@ todos:
   - id: phase-2-http
     content: Phase 2 — databento, thegraph, alchemy, aavescan, envio, openbb-fmp, openbb-fred (add cassette, record)
     status: pending
+  - id: phase-2-defi-vcr
+    content: |
+      Phase 2 DeFi — add vcr_endpoints.py entries and record cassettes for DeFi endpoints (added 2026-03-13):
+      thegraph_aave (POST GraphQL gateway, key in URL), thegraph_morpho (POST free subgraph, no key),
+      thegraph_uniswap_v3 (POST, THE_GRAPH_API_KEY), thegraph_uniswap_v4 (POST gateway, THE_GRAPH_API_KEY),
+      thegraph_uniswap_v2 (POST free), thegraph_instadapp (POST free), thegraph_balancer (POST api-v3.balancer.fi free),
+      alchemy_eth_call (POST JSON-RPC, ALCHEMY_API_KEY in URL), alchemy_eth_getlogs (POST JSON-RPC),
+      defillama_tvl (GET free), defillama_yields (GET free), aavescan (GET, AAVESCAN_API_KEY),
+      hyperliquid_testnet_rest (POST, testnet key).
+      SSOT: unified-api-contracts/docs/DEFI_DATA_ORDER_STRATEGY_MATRIX.md (VCR Cassette Targets table).
+    status: pending
+  - id: defi-dev-sm-secrets
+    content: |
+      Add dev/testnet secrets for DeFi dev environment to SM central-element-323112 (added 2026-03-13):
+      alchemy-api-key-testnet (Sepolia RPC — create Sepolia app at dashboard.alchemy.com),
+      tenderly-fork-rpc-url (Tenderly Virtual TestNet RPC URL — app.tenderly.co free tier),
+      tenderly-api-key (Tenderly API key — same account),
+      hyperliquid-testnet-api-credentials (JSON with api_key/secret — register at testnet.hyperliquid.xyz),
+      wallet-dev-private-key (fresh wallet via `cast wallet new` — never fund on mainnet).
+      Ref: defi_dev_testnet_data_rollout_2026_03_13.plan.md § Phase 1 SM Gaps.
+    status: pending
   - id: phase-2-ws
     content: Phase 2 WS — binance, deribit, ibkr (cassette approach TBD)
     status: pending

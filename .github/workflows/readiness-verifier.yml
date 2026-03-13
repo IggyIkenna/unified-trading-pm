@@ -31,11 +31,12 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v4
-        with:
-          repository: IggyIkenna/unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          path: ../unified-trading-codex # RELATIVE sibling clone
+        # actions/checkout@v4 rejects paths outside $GITHUB_WORKSPACE, so use
+        # git clone directly to preserve the sibling layout WORKSPACE_ROOT expects.
+        run: |
+          git clone --depth 1 \
+            "https://x-access-token:${{ secrets.GH_PAT }}@github.com/IggyIkenna/unified-trading-codex.git" \
+            "${{ github.workspace }}/../unified-trading-codex"
 
       - name: Checkout workspace repos for the specified tier
         # Clone only the repos in the tier being verified using the
@@ -87,7 +88,7 @@ jobs:
         if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           TIER_LABEL="${{ github.event.inputs.tier || 'all' }}"
           EXIT_CODE="${{ steps.verify.outputs.exit_code }}"

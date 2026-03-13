@@ -238,7 +238,7 @@ while IFS=: read -r LEVEL REPOS_STR; do
       else
         echo "  [FAIL] $repo"
         echo "    --- output ---"
-        tail -30 "$log" | sed 's/^/    /'
+        cat "$log" | sed 's/^/    /'
         echo "    ---"
         rm -f "$log"
         exit 1

@@ -22,8 +22,8 @@ repo_gates:
 
 depends_on:
   - broken_symlinks_remediation_2026_03_09
-  - mock_data_dev_project_seeding_2026_03_10
   - api_keys_and_auth
+  - defi_dev_testnet_data_rollout_2026_03_13
 
 todos:
   - id: phase-0-env-vars-doc
@@ -71,7 +71,7 @@ Complete list:
 
 ```
 # GCP
-GCP_PROJECT_ID=unified-trading-dev
+GCP_PROJECT_ID=central-element-323112
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/dev-sa-key.json
 
 # Cloud mode
@@ -139,8 +139,12 @@ Steps the script executes:
 7. install_repo_dependencies
    - Parallel: for each repo with pyproject.toml: uv pip install -e . --quiet &
 
-8. seed_dev_project
-   - bash unified-trading-pm/scripts/dev/seed-dev-project.sh --quick
+8. provision_dev_infra
+   # seed-dev-project.sh RETIRED 2026-03-13 — use Terraform instead:
+   - cd deployment-service/terraform/gcp && terraform apply -var="environment=dev" -var="project_id=central-element-323112"
+   # For DeFi fork simulation (local):
+   - anvil --fork-url https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY} --port 8545 &
+   # See deployment-service/docs/dev-environment.md for full guide
 
 9. run_smoke_test
    - python unified-trading-pm/scripts/dev/smoke-test-dev.py

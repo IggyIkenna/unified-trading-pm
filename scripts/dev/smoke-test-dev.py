@@ -9,7 +9,7 @@ Checks (each prints PASS/FAIL):
   2. All T0-T3 libraries importable (UTL, UCI, UEI, UAC, UIC, UMI)
   3. CLOUD_MOCK_MODE=true → mock GCS read/write completes without real credentials
   4. VCR_MODE=playback → top 3 venue cassette dirs present (or graceful skip)
-  5. Dev GCP project configured (project = unified-trading-dev or env override)
+  5. Dev GCP project configured (project = central-element-323112 or env override)
   6. setup_events() from UEI works without real Pub/Sub
   7. ruff check unified-trading-library/ exits 0
   8. basedpyright unified-trading-library/ exits 0 (with run_timeout 120)
@@ -173,7 +173,7 @@ else:
 # ── Check 5: Dev GCP project configured ──────────────────────────────────────
 _section("Check 5: Dev GCP project")
 
-expected_project = os.environ.get("GCP_PROJECT_ID", "unified-trading-dev")
+expected_project = os.environ.get("GCP_PROJECT_ID", "central-element-323112")
 gcloud_result = subprocess.run(
     ["gcloud", "config", "get-value", "project"],
     capture_output=True,

@@ -171,7 +171,7 @@ jobs:
 
             # Send Telegram alert
             BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
-            CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}"
+            CHAT_ID="${{ vars.TELEGRAM_CHAT_ID }}"
             if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
               MSG="Warning: Major bump policy violation detected on ${TODAY}%0AViolations:$(echo "$VIOLATIONS" | tr '\n' '%0A')"
               curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
@@ -197,7 +197,7 @@ jobs:
         if: always() && env.TELEGRAM_BOT_TOKEN != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           STATUS: ${{ job.status }}
         run: |
           TEXT="*rules-alignment-agent* (PM) | ${STATUS} | plans: ${{ steps.changed-plans.outputs.changed_plans }}"

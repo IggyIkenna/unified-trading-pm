@@ -846,6 +846,16 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
         fi
         log_success "Workflow: GH_PAT used for cross-repo checkouts"
     fi
+
+    # Bash-guard checks: secrets.TELEGRAM_CHAT_ID (→ vars.) and $(&&) without || true
+    _BASH_GUARD_CHECKER="${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check-workflow-bash-guards.py"
+    if [ -f "$_BASH_GUARD_CHECKER" ]; then
+        if ! $PYTHON_CMD "$_BASH_GUARD_CHECKER" --dir "${REPO_ROOT}/.github/workflows" 2>&1; then
+            log_fail "Workflow bash-guard violations found — see output above"
+            exit 1
+        fi
+        log_success "Workflow bash guards OK"
+    fi
 fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────

@@ -71,7 +71,7 @@ jobs:
           - Update plans/active/INDEX.md to remove the plan entry
           List the plans you moved.
 
-          $([ \"$DRY_RUN\" = \"true\" ] && echo \"DRY RUN: Report what would be archived but do NOT run git mv or make any changes.\")
+          $([ \"$DRY_RUN\" = \"true\" ] && echo \"DRY RUN: Report what would be archived but do NOT run git mv or make any changes.\" || true)
 
           After moving files (if any), run:
             bash scripts/quickmerge.sh 'chore: archive completed plans, plan health check' --files 'plans/active/INDEX.md' --quick
@@ -89,7 +89,7 @@ jobs:
         if: always() && env.TELEGRAM_BOT_TOKEN != ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           STATUS: ${{ job.status }}
         run: |
           ICON=$([[ "$STATUS" == "success" ]] && echo "✅" || echo "⚠️")
