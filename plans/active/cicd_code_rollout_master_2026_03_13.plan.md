@@ -412,8 +412,9 @@ todos:
     status: done
   - id: feature-cloud-mode-indicator
     content: |
-      - [ ] [AGENT] P2. Cloud mode indicator in all UIs. Add `/api/health` response with `cloud_provider` + `mock_mode` to all API repos. Add dynamic badge component to all 12 UI repos.
-    status: pending
+      - [x] [AGENT] P2. Cloud mode indicator in all UIs. Add `/api/health` response with `cloud_provider` + `mock_mode` to all API repos. Add dynamic badge component to all 12 UI repos.
+      COMPLETED 2026-03-13: API repos (12): cloud_provider + mock_mode added to /health endpoints using UnifiedCloudConfig. UI Kit: CloudModeBadge component in unified-trading-ui-kit. UI repos (11): badge wired into headers/navbars. Repos: batch-audit-api, trading-analytics-api, market-data-api, ml-inference-api, ml-training-api, client-reporting-api, alerting-service, deployment-api, execution-results-api, execution-service, position-balance-monitor-service, risk-and-exposure-service + 11 UI repos.
+    status: done
   - id: feature-grafana
     content: |
       [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
@@ -425,8 +426,9 @@ todos:
     status: done
   - id: feature-user-management
     content: |
-      - [ ] [AGENT] P2. User management platform — role-based access, authentication, admin portal.
-    status: pending
+      - [x] [AGENT] P2. User management platform — role-based access, authentication, admin portal.
+      COMPLETED 2026-03-13: System-first approach — used existing UIC rbac.py schemas (UserRole, Permission, UserProfile, ROLE_PERMISSIONS). Backend: deployment-api user_management.py (CRUD + role assignment), rbac.py (require_permission/require_role FastAPI deps), routes/user_management.py (8 REST endpoints). Frontend: unified-admin-ui UserManagementTab.tsx (users table, role dropdown, create/edit dialogs). Commits: deployment-api 3b7b3dc, unified-admin-ui c749cce.
+    status: done
   - id: stability-1-0-0-promotion
     content: |
       [SCRIPT+HUMAN] P0. 1.0.0 promotion for all repos. Order: T0 first via `feat!:` commit (triggers MINOR bump on 0.x.x per pre-1.0.0 rule — so this needs a manual version set or policy override to cross to 1.0.0). Then T1->T2->T3 respecting tier invariant. Verify version cascade propagates cleanly at each tier. Human approves each tier promotion.
