@@ -195,18 +195,26 @@ jobs:
           echo "pm_version=$NEW_PM_VERSION" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
+      - name: Log manifest mutation (audit trail)
+        if: steps.update.outputs.skip != 'true'
+        run: |
+          bash scripts/agents/log-manifest-mutation.sh \
+            "update-repo-version" \
+            "${{ steps.update.outputs.repo }}=${{ steps.update.outputs.version }} (branch=${{ steps.update.outputs.branch }}, bump=${{ steps.update.outputs.bump_type }})"
+
       - name: Commit manifest and PM version bump
         if: steps.update.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet workspace-manifest.json pyproject.toml; then
+          if git diff --quiet workspace-manifest.json pyproject.toml plans/audit/manifest-mutations.jsonl 2>/dev/null; then
             echo "No changes. Skipping commit."
             exit 0
           fi
 
           git add workspace-manifest.json pyproject.toml
+          git add plans/audit/manifest-mutations.jsonl 2>/dev/null || true
           git commit -m "chore(manifest): update ${{ steps.update.outputs.repo }} to ${{ steps.update.outputs.version }}, bump PM to ${{ steps.update.outputs.pm_version }} [skip ci]"
           git push
 
