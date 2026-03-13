@@ -213,7 +213,7 @@ todos:
       [SCRIPT] P0. Roll out corrected `semver-agent.yml` to all repos using
       `scripts/propagation/rollout-agent-workflows.sh`. Simultaneously REMOVE old `version-bump.yml` from each repo
       (semver-agent replaces it). Verify all 65 have `branches: [staging]`.
-    status: pending
+    status: done
     depends_on: [cleanup-verify-semver-agent-trigger]
 
   - id: rollout-conflict-resolution-agent
@@ -244,7 +244,7 @@ todos:
     content: >
       [SCRIPT] P2. Roll out `update-dependency-version.yml` template to all repos. This workflow receives
       `dependency-update` dispatch from PM and updates pyproject.toml constraints with `[skip ci]` commit.
-    status: pending
+    status: done
 
   # ── Phase 3: LIBRARY TIER COMPLETION (T0->T1->T2->T3) ─────────────────────
   # Exit criteria: All library tiers at CR5, coverage >= 70%, basedpyright clean
