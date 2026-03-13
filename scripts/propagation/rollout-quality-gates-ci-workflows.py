@@ -14,7 +14,8 @@ Default mode — patches existing workflow in-place:
   thin caller that delegates all steps to the reusable workflows in PM:
     python-quality-gates.yml  (Python service/api/library repos)
     ui-quality-gates.yml      (UI repos, type=ui)
-  dep_repos is populated from manifest dependencies[].name.
+  dep_repos is populated from manifest transitive dependencies (walked from dependencies[]).
+  Transitive deps are required for path deps (e.g. unified-api-contracts via unified-internal-contracts).
   The branch ref in uses: is the same active_feature_branch so the reusable
   workflow definition is loaded from the current feature branch.
 
@@ -193,20 +194,36 @@ def _extract_on_block(content: str) -> str:
     return m.group(0).rstrip() if m else "on:\n  pull_request:\n    branches: [main]\n  push:\n    branches: [main]"
 
 
-def _dep_repos_for(repo_info: dict[str, object]) -> str:
-    """Return space-separated dep repo names from manifest dependencies, excluding PM."""
-    deps: list[object] = cast(list[object], repo_info.get("dependencies") or [])
-    names = []
-    for d in deps:
-        name = d["name"] if isinstance(d, dict) else str(d)  # type: ignore[index]
-        if name != "unified-trading-pm":
-            names.append(name)
-    return " ".join(names)
+def _transitive_dep_names(repo_name: str, repos: dict[str, dict[str, object]]) -> set[str]:
+    """Return transitive dependency names for a repo. CI clone needs all transitive path deps (e.g. unified-api-contracts via unified-internal-contracts)."""
+    seen: set[str] = set()
+
+    def walk(name: str) -> None:
+        if name in seen:
+            return
+        seen.add(name)
+        info = repos.get(name, {})
+        deps_list: list[object] = cast(list[object], info.get("dependencies") or [])
+        for d in deps_list:
+            dep_name = d["name"] if isinstance(d, dict) else str(d)  # type: ignore[index]
+            if dep_name != "unified-trading-pm":
+                walk(dep_name)
+
+    walk(repo_name)
+    seen.discard(repo_name)
+    return seen
+
+
+def _dep_repos_for(repo_name: str, repo_info: dict[str, object], repos: dict[str, dict[str, object]]) -> str:
+    """Return space-separated transitive dep repo names for CI clone step."""
+    names = _transitive_dep_names(repo_name, repos)
+    return " ".join(sorted(names))
 
 
 def generate_workflow_call_yaml(
     repo_name: str,
     repo_info: dict[str, object],
+    repos: dict[str, dict[str, object]],
     existing_content: str,
     action_ref: str,
 ) -> str:
@@ -219,7 +236,7 @@ def generate_workflow_call_yaml(
     if is_ui:
         with_block = '      node-version: "22"'
     else:
-        dep_repos = _dep_repos_for(repo_info)
+        dep_repos = _dep_repos_for(repo_name, repo_info, repos)
         with_block = f'      dep_repos: "{dep_repos}"' if dep_repos else '      dep_repos: ""'
 
     return (
@@ -327,18 +344,21 @@ def main() -> None:
     # Load manifest
     with MANIFEST_PATH.open() as f:
         manifest: dict[str, object] = cast(dict[str, object], json.load(f))
-    repos: dict[str, dict[str, object]] = cast(dict[str, dict[str, object]], manifest.get("repositories") or {})
+    all_repos: dict[str, dict[str, object]] = cast(
+        dict[str, dict[str, object]], manifest.get("repositories") or {}
+    )
+    repos = dict(all_repos)
 
     # Resolve action ref: CLI arg > manifest active_feature_branch > "main"
     action_ref: str = args.action_ref or cast(str, manifest.get("active_feature_branch") or "") or "main"
     print(f"Composite action ref: @{action_ref}")
 
-    # If single-repo mode, restrict list
+    # If single-repo mode, restrict list (all_repos kept for transitive dep walk)
     if target_repo:
-        if target_repo not in repos:
+        if target_repo not in all_repos:
             print(f"ERROR: repo '{target_repo}' not found in manifest", file=sys.stderr)
             sys.exit(1)
-        repos = {target_repo: repos[target_repo]}
+        repos = {target_repo: all_repos[target_repo]}
 
     stats = {"fixed": 0, "skipped": 0, "missing": 0, "already_ok": 0, "error": 0}
     fixed_repos: list[str] = []
@@ -369,7 +389,9 @@ def main() -> None:
 
         if args.workflow_call:
             # Generate a brand-new minimal workflow_call thin caller
-            new_content = generate_workflow_call_yaml(repo_name, repo_info, content, action_ref)
+            new_content = generate_workflow_call_yaml(
+                repo_name, repo_info, all_repos, content, action_ref
+            )
             if new_content == content:
                 print(f"OK    {repo_name} (already workflow_call thin caller)")
                 stats["already_ok"] += 1
