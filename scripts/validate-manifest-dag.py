@@ -113,7 +113,7 @@ def send_telegram_alert(message: str) -> None:
             method="POST",
         )
         urllib.request.urlopen(req, timeout=10)  # nosec B310 — intentional: Telegram API over HTTPS
-    except Exception:
+    except (OSError, ValueError):
         pass  # TG failure must never block; documented in QUALITY_GATE_BYPASS_AUDIT §2.9
 
 

@@ -146,7 +146,7 @@ def main() -> int:
                 ws = WORKSPACE_ROOT.resolve()
                 if not str(loc_path).startswith(str(ws)):
                     errors.append(f"  {repo_name}: {dep} — editable path outside workspace: {loc}")
-            except Exception:
+            except (OSError, ValueError):
                 errors.append(f"  {repo_name}: {dep} — editable path invalid: {loc}")
 
     if errors:
