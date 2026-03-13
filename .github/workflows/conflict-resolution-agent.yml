@@ -142,13 +142,15 @@ jobs:
           set -euo pipefail
           cd "$REPO_NAME"
 
-          # Fetch both branches
-          git fetch --depth=50 origin "$TARGET_BRANCH" "$SOURCE_BRANCH" 2>/dev/null || \
-            git fetch --depth=50 origin 2>/dev/null
+          # Fetch both branches using full refspecs to ensure remote tracking refs exist
+          git fetch --depth=50 origin \
+            "+refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}" \
+            "+refs/heads/${SOURCE_BRANCH}:refs/remotes/origin/${SOURCE_BRANCH}" 2>&1 \
+            || git fetch --depth=50 origin 2>&1 || true
 
           # Checkout target branch (the base)
-          git checkout "$TARGET_BRANCH" 2>/dev/null || \
-            git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+          git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH" 2>/dev/null || \
+            git checkout "$TARGET_BRANCH"
 
           # Attempt merge to surface conflicts (do not commit)
           git merge --no-commit --no-ff "origin/$SOURCE_BRANCH" || true
