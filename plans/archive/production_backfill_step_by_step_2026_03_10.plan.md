@@ -5,7 +5,9 @@ overview:
   backtest) with gate scripts at each step and recovery procedures, must complete before live trading week 2026-03-20.
 type: infra
 epic: epic-infra
-status: active
+status: superseded
+superseded_by: defi_keys_data_integration_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5
@@ -31,7 +33,7 @@ isProject: false
 
 # Plan: Production Backfill — Step-by-Step Runbook
 
-status: active priority: P0 owner: infra/backend target: 2026-03-19 (must complete before live trading week 2026-03-20)
+status: superseded superseded_by: defi_keys_data_integration_2026_03_13 superseded_date: 2026-03-13
 
 ## Context
 

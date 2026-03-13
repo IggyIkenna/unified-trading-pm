@@ -5,7 +5,9 @@ overview:
   materials covering the AI/ML DeFi trading use case and GCP spend estimate.
 type: business
 epic: epic-business
-status: active
+status: superseded
+superseded_by: presentations_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: none
@@ -30,7 +32,7 @@ isProject: false
 
 # Plan: GCP Credits Application via Elysium Partnership
 
-status: active priority: P2 owner: product/business target: 2026-03-31 (submit before board meeting)
+status: superseded superseded_by: presentations_2026_03_13 superseded_date: 2026-03-13
 
 ## Context
 

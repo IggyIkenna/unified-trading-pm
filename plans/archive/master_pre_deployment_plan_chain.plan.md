@@ -3,7 +3,9 @@ name: master-pre-deployment-plan-chain
 overview: Ordered plan sequence (1–9) with parallel-work split for 2 people. CI/CD resolves conflicts. Deadlines: plans complete March 12, live trading week March 20.
 type: mixed
 epic: none
-status: active
+status: superseded
+superseded_by: cicd_code_rollout_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5

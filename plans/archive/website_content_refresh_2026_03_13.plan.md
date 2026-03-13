@@ -6,7 +6,9 @@ overview: >-
   preserved.
 type: mixed
 epic: epic-website
-status: active
+status: superseded
+superseded_by: website_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5

@@ -143,6 +143,49 @@ automatically.
 
 ---
 
+## 4b. Composite Quality Gates Action
+
+A reusable composite action `run-quality-gates` is available in `.github/actions/run-quality-gates/` of the PM repo. It
+encapsulates the full Pass 1 + Pass 2 logic (install deps, run `scripts/quality-gates.sh`, run quickmerge
+`--quality-gates-only`) so that any repo's CI workflow can call it without duplicating logic.
+
+```yaml
+# Per-repo .github/workflows/quality-gates.yml — using composite action
+jobs:
+  quality-gates:
+    uses: IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates.yml@<active_branch>
+    with:
+      dep_repos: "unified-trading-library unified-config-interface"
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
+```
+
+The composite action location: `unified-trading-pm/.github/actions/run-quality-gates/action.yml`. All CI logic changes
+go there — never into per-repo workflow files.
+
+---
+
+## 4c. SIT Debounce and Starvation Detection
+
+### 5-Minute Quiet Window (Debounce)
+
+SIT (`system-integration-tests`) does not trigger immediately on every merge. A 5-minute quiet window prevents
+back-to-back merges from each launching their own SIT run (which would cause SIT starvation and queue storms).
+
+Mechanism: `staging_status.locked` is set to `true` when SIT starts. The debounce timer resets on every new merge to
+`staging`. SIT only fires after 5 minutes of no new merges.
+
+### SIT Starvation Detection
+
+If `staging_status.locked` remains `true` for more than 1 hour without SIT completing, the starvation detector fires:
+
+- Sends a Telegram alert: `SIT lock held >1h — possible starvation. Manual intervention may be required.`
+- Does NOT auto-unlock — human must investigate and unlock via `bash scripts/unlock-sit.sh`
+
+This prevents a stuck SIT run from permanently blocking the `staging → main` pathway.
+
+---
+
 ## 5. Adding a New Repo
 
 1. Add the repo to `workspace-manifest.json` with correct `type`, `dependencies`, `arch_tier`

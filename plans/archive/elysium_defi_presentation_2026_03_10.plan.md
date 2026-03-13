@@ -5,7 +5,9 @@ overview:
   backtest results, and the elysium-defi-system-fork deliverable
 type: business
 epic: epic-business
-status: active
+status: superseded
+superseded_by: presentations_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: none
@@ -49,7 +51,7 @@ isProject: false
 
 # Plan: Elysium DeFi Presentation
 
-status: active priority: P2 owner: product target: 2026-03-25 (deliver with or before fork)
+status: superseded superseded_by: presentations_2026_03_13 superseded_date: 2026-03-13
 
 ## Context
 

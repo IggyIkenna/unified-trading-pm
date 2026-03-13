@@ -5,7 +5,9 @@ overview:
   with zero live API calls
 type: infra
 epic: epic-infra
-status: active
+status: superseded
+superseded_by: cicd_code_rollout_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5
@@ -50,6 +52,21 @@ isProject: false
 ---
 
 # Plan: Automated Dev Environment Setup & Onboarding
+
+## Prerequisites (before running setup-dev-environment.sh)
+
+**Every internal team member must have the following provisioned before running this script:**
+
+- **Email (M365 Outlook)** — GitHub org invite and all internal comms go to this address. Without it, the developer
+  cannot accept GitHub membership or receive Slack invites. See `user_management_platform_2026_03_13.plan.md`.
+- **Slack** — CI/CD alerts, trading alerts, and incident channels are all Slack-based. Slack invite is sent to the M365
+  email.
+- **GitHub org membership** — required to clone private repos. Invite is accepted via M365 email.
+
+If any of these are missing, use `user-management-ui` (once built) or ask an admin to run the provisioning steps in
+`user_management_platform_2026_03_13.plan.md` first.
+
+---
 
 ## Context
 

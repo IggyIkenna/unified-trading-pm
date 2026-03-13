@@ -6,7 +6,9 @@ overview:
   unified-admin-ui.
 type: code
 epic: epic-code-completion
-status: active
+status: superseded
+superseded_by: cicd_code_rollout_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5
@@ -74,7 +76,7 @@ isProject: false
 
 # Plan: Strategy Visibility — Grafana Integration
 
-status: active priority: P1 owner: fullstack/backend target: 2026-03-21
+status: superseded superseded_by: cicd_code_rollout_master_2026_03_13 superseded_date: 2026-03-13
 
 > ⚠️ **M4 SEQUENCING NOTE (2026-03-11):** This plan depends on `recon_rebalancing_order_recovery_2026_03_10` being
 > committed to `strategy-service` first. Grafana dashboards reference `DEFI_VAULT_REBALANCED` and other events/metrics

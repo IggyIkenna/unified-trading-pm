@@ -5,7 +5,9 @@ overview:
   rehearsals on March 13 and March 18.
 type: business
 epic: epic-business
-status: active
+status: superseded
+superseded_by: presentations_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5
@@ -30,8 +32,7 @@ isProject: false
 
 # Plan: Board Presentations Update & Rehearsal
 
-status: active priority: P1 owner: product target: 2026-03-31 (board meeting) rehearsals: 2026-03-13 (Thursday),
-2026-03-18 (Tuesday)
+status: superseded superseded_by: presentations_2026_03_13 superseded_date: 2026-03-13 2026-03-18 (Tuesday)
 
 ## Context
 

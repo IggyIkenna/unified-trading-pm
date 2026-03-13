@@ -6,7 +6,9 @@ overview: >-
   role. Matches deployment-ui visual style.
 type: code
 epic: epic-auth-onboarding
-status: active
+status: superseded
+superseded_by: cicd_code_rollout_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5
@@ -194,6 +196,26 @@ Visual style matches `deployment-ui` — same sidebar nav, same `@unified-admin/
 
 **PREREQUISITE (human action before coding):** Femi needs Microsoft 365 admin + Slack Workspace Admin. Also: detach
 Outlook + Slack from Okta before implementing provisioning.
+
+---
+
+## Internal Team Access Requirements
+
+**All internal team members need both Slack and email before they can begin work.** This is a hard prerequisite — no dev
+setup, no GitHub collaboration, no internal communication is possible without it. Provisioning must happen in this order
+for any new internal hire:
+
+1. **Email (M365 Outlook)** — required for: receiving GitHub org invites, calendar access, SharePoint, and all internal
+   communication. **Every internal role** (admin, dev collaborators, accounting, operations) must have an M365 account.
+   The provisioning matrix currently omits M365 for `datadodo`/`CosmicTrader` — this must be confirmed: either provision
+   them a company Outlook account or document explicitly that they use personal email.
+2. **Slack** — required for: day-to-day comms, CI/CD alerts, trading alerts, incident channels. Every role gets at least
+   one channel (see matrix below). Slack invite goes to their M365 email address.
+3. **GitHub** (admin/dev only) — org invite is sent to the email address; cannot be accepted without step 1.
+
+> **Gap to resolve:** `datadodo`/`CosmicTrader` rows in the matrix below show `M365: N/A`. Confirm whether these
+> developers use personal email or should receive a company `@odum-research.com` Outlook account. Update the matrix and
+> the `microsoft365-provisioning` todo accordingly before implementation.
 
 ---
 

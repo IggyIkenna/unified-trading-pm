@@ -5,7 +5,9 @@ overview:
   ibkr-gateway-infra process, resolving the TWS test-mocking design decision
 type: mixed
 epic: epic-code-completion
-status: active
+status: superseded
+superseded_by: cicd_code_rollout_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5

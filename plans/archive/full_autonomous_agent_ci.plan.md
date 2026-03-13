@@ -5,7 +5,9 @@ overview:
   overnight tier-ordered execution, and Telegram morning summary
 type: infra
 epic: epic-infra
-status: active
+status: superseded
+superseded_by: cicd_code_rollout_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5

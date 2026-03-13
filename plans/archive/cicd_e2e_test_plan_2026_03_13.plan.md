@@ -7,7 +7,9 @@ overview: >
   (2026-03-13) to identify untested gaps and drive systematic production validation.
 type: infra
 epic: epic-infra
-status: active
+status: superseded
+superseded_by: cicd_e2e_testing_master_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C4

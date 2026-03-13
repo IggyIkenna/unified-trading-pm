@@ -5,7 +5,9 @@ overview: >-
   and per-venue VCR status (Phases 1–5). Supersedes VCR_CREDENTIAL_RECORDING_PLAN.md.
 type: code
 epic: epic-code-completion
-status: active
+status: superseded
+superseded_by: defi_keys_data_integration_2026_03_13
+superseded_date: 2026-03-13
 
 completion_gates:
   code: C5
