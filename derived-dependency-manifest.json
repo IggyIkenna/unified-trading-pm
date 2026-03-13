@@ -604,6 +604,7 @@
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "binance-futures-connector": ["binance-futures-connector>=2.0.0,<3.0.0"],
+        "eth-abi<6.0.0,": ["eth-abi<6.0.0,>=5.0.1"],
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
         "fsspec": ["fsspec>=2025.2.0,<2026.0.0"],
         "greenlet": ["greenlet>=3.0.0,<4.0.0"],
@@ -643,7 +644,7 @@
         "websockets": ["websockets>=14.0,<15.0.0"]
       },
       "internal_count": 12,
-      "external_count": 43
+      "external_count": 44
     },
     "features-calendar-service": {
       "internal_deps": {
@@ -1082,6 +1083,7 @@
         "matplotlib<4.0.0,": ["matplotlib<4.0.0,>=3.9.0"],
         "mypy": ["mypy>=1.13.0,<2.0.0"],
         "numpy": ["numpy>=2.3.0,<2.4.0"],
+        "optuna": ["optuna>=4.0.0,<5.0.0"],
         "pandas": ["pandas>=2.3.0,<3.0.0"],
         "pip-audit<3.0.0,": ["pip-audit<3.0.0,>=2.7.0"],
         "polars": ["polars>=1.37.0,<2.0.0"],
@@ -1100,11 +1102,12 @@
         "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
         "ruff": ["ruff==0.15.0"],
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
+        "shap": ["shap>=0.46.0,<1.0.0"],
         "ta-lib": ["ta-lib>=0.6.8,<1.0.0"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
       "internal_count": 5,
-      "external_count": 30
+      "external_count": 32
     },
     "pnl-attribution-service": {
       "internal_deps": {
@@ -1589,6 +1592,7 @@
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
+        "pygithub": ["PyGithub>=2.0.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1601,7 +1605,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 4,
-      "external_count": 23
+      "external_count": 24
     },
     "deployment-service": {
       "internal_deps": {
@@ -1615,6 +1619,10 @@
         "basedpyright": ["basedpyright==1.38.2"],
         "botocore": ["botocore>=1.34.0,<2.0.0"],
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
+        "flask": ["flask>=3.0.0,<4.0.0"],
+        "functions-framework": ["functions-framework>=3.8.0,<4.0.0"],
+        "google-cloud-compute": ["google-cloud-compute>=1.0.0,<2.0.0"],
+        "google-cloud-run<1.0.0,": ["google-cloud-run<1.0.0,>=0.15.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
@@ -1629,7 +1637,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 4,
-      "external_count": 16
+      "external_count": 20
     },
     "unified-trading-ui-kit": {
       "internal_deps": {},
@@ -1719,11 +1727,19 @@
       "internal_deps": {},
       "external_deps": {
         "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
+        "bandit": ["bandit>=1.7.0,<2.0.0"],
+        "basedpyright": ["basedpyright==1.38.2"],
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
         "httpx": ["httpx>=0.28.1,<1.0.0"],
+        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
+        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
+        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
+        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
+        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
+        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
         "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
         "ruff": ["ruff==0.15.0"],
@@ -1732,7 +1748,7 @@
         "web3": ["web3>=6.0.0,<7.0.0"]
       },
       "internal_count": 0,
-      "external_count": 12
+      "external_count": 20
     },
     "ibkr-gateway-infra": {
       "internal_deps": {},

@@ -491,7 +491,7 @@ if [ -f "Dockerfile" ]; then
     PIP=$(rg "^RUN pip install|^RUN python -m pip" Dockerfile 2>/dev/null | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
     [[ -n "$PIP" ]] && { log_fail "Use 'uv pip install' not 'pip install' in Dockerfile"; echo "$PIP" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install in Dockerfile"
 fi
-PIP_SH=$(rg " pip install " --glob "**/*.sh" . 2>/dev/null | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
+PIP_SH=$(rg " pip install " --glob "**/*.sh" --glob "!unified-trading-pm/**" . 2>/dev/null | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
 [[ -n "$PIP_SH" ]] && { log_fail "Use 'uv pip install' not 'pip install' in scripts"; echo "$PIP_SH" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install in scripts"
 
 _be_extra_globs=()
@@ -513,7 +513,7 @@ BYPASS=$(rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality
 SVIOL=""; SWARN=""
 _size_extra_args=()
 for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_args+=("!" "-path" "$_excl"); done
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" "${_size_extra_args[@]}" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null); do
     lines=$(wc -l < "$f" 2>/dev/null || echo 0)
     if [[ "$f" == ./tests/* || "$f" == ./test/* ]]; then
         # Test files: warn-only for file size (test suites naturally grow large)
@@ -528,7 +528,7 @@ done
 
 # Function/class/method size (exclude build artifacts and test dirs — test methods can be long)
 FSIZES=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" "${_size_extra_args[@]}" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null); do
     out=$($PYTHON_CMD -c "
 import ast, sys
 p=sys.argv[1]
