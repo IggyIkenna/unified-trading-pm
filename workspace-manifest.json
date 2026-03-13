@@ -528,7 +528,7 @@
       "version_source": "package.json",
       "merge_level": 11,
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "VALIDATED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -539,8 +539,7 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent",
-      "ci_failure_reason": "ESLint: arrow function 143L > 50 limit, complexity 12 > 10"
+      "semver_policy": "agent"
     },
     "execution-results-api": {
       "type": "api-service",
