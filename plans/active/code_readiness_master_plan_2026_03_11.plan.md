@@ -98,11 +98,8 @@ repo_gates:
     deployment: none
     business: none
     readiness_note: "CR2 reached (94/94 tests). CR3 pending. CR4 blocked (78 basedpyright errors — pydantic/uniswap)."
-  - repo: unified-sports-execution-interface
-    code: C1
-    deployment: none
-    business: none
-    readiness_note: "Scaffolded. See T1 entry."
+  # NOTE (2026-03-13 audit): DUPLICATE USEI entry removed. USEI appears once under T1 (line 66-70).
+  # Previously also listed here under T2 with conflicting tier assignment.
   - repo: unified-position-interface
     code: C0
     deployment: none

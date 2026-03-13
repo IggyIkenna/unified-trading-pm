@@ -39,6 +39,11 @@ repo_gates:
     readiness_note: Add cloud_provider + mock_mode to /health response
 
 depends_on: []
+  # NOTE (2026-03-13 audit): This plan modifies deployment-ui Header.tsx.
+  # cicd_audit_remediation_2026_03_13 modifies deployment-ui BuildSelector.tsx in the same repo.
+  # COORDINATION: If both plans execute concurrently on deployment-ui, merge conflicts are likely.
+  # Agent sequencing: complete cicd_audit_remediation deployment-ui changes FIRST (BuildSelector),
+  # then this plan's deployment-ui changes (Header). Or: one agent does both in a single commit.
 
 todos:
   # ── PHASE 1: API changes (add cloud_provider + mock_mode to health) ─────────

@@ -5,9 +5,9 @@ overview: |
   for all required buckets, BigQuery external table setup, SIT smoke tests for bucket availability
   and cloud auth (GCP + AWS), and a framework for dual-cloud auth testing (GCP always; AWS when
   creds available). Covers the question: "do all services have their buckets, and can they auth?"
-type: deployment
-epic: epic-deployment
-status: completed
+type: infra
+epic: epic-infra
+status: active
 
 completion_gates:
   code: C5
@@ -17,14 +17,22 @@ completion_gates:
 repo_gates:
   - repo: deployment-service
     code: C5
-    deployment: D3
+    deployment: none
     business: none
-    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+    readiness_note:
+      "C5: all quality gates passing. BR N/A: infrastructure provisioning plan — no commercial sign-off required."
   - repo: system-integration-tests
     code: C5
     deployment: none
     business: none
-    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+    readiness_note:
+      "C5: all quality gates passing. BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+  - repo: unified-trading-pm
+    code: C5
+    deployment: none
+    business: none
+    readiness_note:
+      "C5: all quality gates passing. BR N/A: infrastructure provisioning plan — no commercial sign-off required."
 
 depends_on: []
 
@@ -173,10 +181,10 @@ todos:
       provision S3 buckets per aws_bucket_mappings in bucket_config.yaml. AWS equivalent buckets use account_id instead
       of project_id. Currently skipped — aws configure not set up. SIT test_aws_s3_smoke.py already skips gracefully
       when no boto3 creds.
-    status: done
+    status: blocked
     notes:
-      "MIGRATED 2026-03-11 → aws_migration.plan.md todo aws-s3-bucket-setup. Script already written (setup-buckets.py
-      --cloud aws). Runs when AWS creds available (aws-account-setup completes)."
+      AWS credentials (access key, secret, account ID) not set up yet. Placeholder bucket test exists in
+      test_aws_s3_smoke.py.
 
   - id: dual-cloud-auth-strategy
     content: >-

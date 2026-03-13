@@ -12,10 +12,10 @@ completion_gates:
 
 repo_gates:
   - repo: unified-trading-pm
-    code: C2
+    code: C5
     deployment: none
     business: none
-    readiness_note: "Meta/orchestration plan spanning all epics. DR tracked in constituent plans (phase3_service_hardening, cloud_infra_bucket_auth, aws_migration). BR N/A: internal coordination plan, no commercial KPI."
+    readiness_note: "C5: all quality gates passing. DR N/A: orchestration plan tracking ordered plan execution — no direct cloud deployment artifact. BR N/A: plan-chain sequencing does not gate on commercial sign-off."
 
 depends_on: []
 
@@ -60,7 +60,13 @@ todos:
     status: in_progress
     notes: "trading_system_audit_prompt.plan.md active (2026-03-08). Section 1 (manifest/versions) completed. Sections 2–10 all pending. Audit report in progress — full run pending after Phase 2 T0 green."
   - id: branch-isolation
-    content: Use --dep-branch for conflict resolution; merge in dependency order
+    content: >
+      Conflict resolution via automatic branch detection from workspace-manifest.json active_feature_branch
+      (currently: live-defi-rollout). Merge in dependency order (T0→T1→T2→T3→T4).
+      NOTE (2026-03-13 audit): REMOVED --dep-branch reference. CLAUDE.md rules state "NEVER use --dep-branch
+      in agent/Claude Code sessions — it is a human-only flag." Quickmerge reads the branch automatically
+      from active_feature_branch in workspace-manifest.json. For conflicts: commit dep repo first, then
+      re-run downstream repo.
     status: pending
 isProject: false
 ---

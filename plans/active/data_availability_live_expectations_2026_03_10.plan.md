@@ -74,6 +74,30 @@ repo_gates:
 depends_on:
   - uei_pending_event_additions
 
+# AUDIT NOTES (2026-03-13 Citadel-grade cross-plan audit):
+#
+# 1. DATETIME COMPLIANCE: All FreshnessMonitor implementations MUST use datetime.now(timezone.utc),
+#    NOT datetime.utcnow(). Phase 2 global violation sweep already cleaned this pattern across repos.
+#    New code in this plan must follow suit to avoid reintroducing violations.
+#
+# 2. UEI EVENT FALLBACK: Phase 2 events blocked on uei_pending_event_additions. If that stalls,
+#    FreshnessMonitor has no events to emit. REQUIRED FALLBACK: log-only mode when UEI events are
+#    unavailable — log WARNING with structured fields (source, max_age, actual_age) so alerting
+#    can scrape logs as interim.
+#
+# 3. TRADING HOURS AWARENESS: FreshnessMonitor must distinguish trading vs non-trading hours.
+#    Databento EOD feed 12h old on Saturday = normal, NOT FEED_UNHEALTHY. Add:
+#    trading_hours: Optional[TradingHoursSchedule] to DataFreshnessContract.
+#    Outside trading hours: suppress FEED_UNHEALTHY, emit FEED_DORMANT (informational only).
+#
+# 4. CHECK INTERVAL vs MAX_AGE: For binance/bybit/okx with max_age_seconds=5, a 10s check_interval
+#    means the monitor cannot detect breaches that happen and recover within one check window.
+#    REQUIREMENT: check_interval_seconds must be <= max_age_seconds / 2 for critical feeds.
+#
+# 5. CLOCK DRIFT: FreshnessMonitor compares local time vs last_update_timestamp. Cloud VMs with
+#    NTP skew can flag fresh feeds as stale or vice versa. REQUIREMENT: document NTP sync
+#    requirement in deployment-service/docs/infra-requirements.md.
+
 todos:
   - id: phase-0-freshness-contracts
     content:

@@ -1,8 +1,10 @@
 ---
 name: phase3-service-hardening-integration
 overview:
-  Hardens all 14 T4 services, 3 T5 API services, and 11 T6 UIs in strict DAG order; closes with L2→L3a→L3b validation
+  Hardens all 19 T4 services, 3 T5 API services, and 11 T6 UIs in strict DAG order; closes with L2→L3a→L3b validation
   sequence and healthy declaration. Requires Phase 1 and Phase 2 fully complete.
+  NOTE (2026-03-13 audit): T4 count corrected from 14 to 19 per WORKSPACE_MANIFEST_DAG.svg
+  (adds FCIS, FMTS, FSS, SVS, elysium-defi-system).
 type: code
 epic: epic-code-completion
 status: active
@@ -179,9 +181,14 @@ EXEC green) T5 (ERA / MDA / CRA) starts only after ALL T4 green. T6 (11 UIs) sta
 
 ## INVARIANT
 
-Never touch tier N until tier N-1 is FULLY green (D5 full quickmerge with act simulation passes). Full quickmerge with
-act simulation (D5) is the FINAL gate before declaring any tier healthy — not --quick, not --unit-only. D5 is the only
-gate that counts.
+Never touch tier N until tier N-1 is FULLY green (`bash scripts/quality-gates.sh` exit 0 for all N-1 repos).
+
+> **NOTE (2026-03-13 audit — gate definition alignment):** Phase 2 removed D4/D5 quickmerge as the tier-green gate on
+> 2026-03-11, replacing it with `quality-gates.sh exit 0`. This plan previously required D5 quickmerge, creating a
+> conflict. **Resolved:** the canonical gate is now `quality-gates.sh exit 0` (consistent with Phase 2). Quickmerge is
+> used for committing only — it is NOT the tier health gate. The per-service D5 progression below
+> (`--lint-only → --unit-only → --qg-only → --quick → full`) remains as the COMMIT workflow, but the TIER GREEN gate is
+> QG exit 0.
 
 ## Integration Layers
 
@@ -487,9 +494,34 @@ L2 passes. Never run L3b before L3a passes.
   performance baseline. If 3b fails: investigate, fix, re-run. Do NOT declare healthy until 3b is fully green." status:
   pending
 - id: p3-postrefactor-declare-healthy content: "POST-REFACTOR STEP 5 — DECLARE HEALTHY: REQUIRES all 4 layers pass (L2 +
-  L3a + L3b + final QG sweep). deployment-api marks deployment status as 'healthy'. Merge staging → main. GitHub Action
-  bumps all versions to 1.0.0 (first stable). This is the final act of Phase 3. Full quickmerge with act simulation (D5)
-  is the FINAL gate — not --quick alone." status: pending isProject: true
+  L3a + L3b + final QG sweep) AND all zero-surprise scenario tests pass (p3-zero-surprise-scenarios). deployment-api
+  marks deployment status as 'healthy'. Merge staging → main. GitHub Action bumps all versions to 1.0.0 (first stable).
+  This is the final act of Phase 3. QG exit 0 is the gate (aligned with Phase 2 gate definition per 2026-03-13 audit)."
+  status: pending
+- id: p3-zero-surprise-scenarios content: "ZERO-SURPRISE SCENARIO TESTS (2026-03-13 Citadel-grade audit addition).
+  REQUIRES all T4-T6 green + L3b passing. These tests validate critical market scenarios that individual service QGs do
+  NOT cover. All tests go in system-integration-tests/tests/scenarios/. SCENARIO 1 — KILL SWITCH UNDER LOAD:
+  deployment-api /kill-switch activate → PubSub → execution-service + strategy-service halt within 500ms. Test: fire
+  kill switch while 10 mock orders are in-flight. Assert: all orders cancelled, no new orders accepted, all services
+  report HALTED within SLA. FAIL = cannot go live. SCENARIO 2 — DeFi LIQUIDATION CASCADE: Mock protocol exploit →
+  collateral value drops 50% → LTV breaches threshold on 3 positions → liquidation handler fires →
+  risk-and-exposure-service circuit breaker triggers → execution halted. Test: inject mock price feed showing 50%
+  collateral drop. Assert: liquidation detection within 5s, circuit breaker fires, execution-service stops accepting
+  DeFi orders. FAIL = DeFi cannot go live. SCENARIO 3 — EXCHANGE OUTAGE + PARTIAL FILL: execution-service sends order →
+  mock exchange returns 503 after partial fill → position is 50% filled → PBM detects position/order mismatch →
+  alerting-service fires POSITION_MISMATCH → manual reconciliation path triggered. Test: mock exchange returns partial
+  fill then 503. Assert: position state is consistent, alert fires within 10s, no ghost orders. SCENARIO 4 — MULTI-VENUE
+  CORRELATION EVENT: 5+ mock venues emit simultaneous 5% price dislocation → features services compute cross-instrument
+  signals → strategy-service fires on all 5 → execution hits mock rate limits on 3 venues → partial execution → net
+  position exposure calculated correctly by risk service. Test: inject correlated price moves across 5 mock venues.
+  Assert: risk exposure accurate, no position leak, rate-limited orders queued not lost. SCENARIO 5 — API KEY ROTATION
+  UNDER LOAD: Mock exchange returns 401 (expired key) mid-trading-session → unified-cloud-interface detects auth failure
+  → rotates key from Secret Manager → resumes trading. Test: mock exchange 401 on 3rd request. Assert: rotation within
+  30s, no duplicate orders, trading resumes. SCENARIO 6 — STALE DATA PROPAGATION: FreshnessMonitor detects stale market
+  data (60s old) → assert_feature_fresh() blocks strategy-service → no stale-data-based orders reach execution. Test:
+  freeze mock market data feed for 90s. Assert: strategy-service blocks, execution receives 0 orders. HUMAN OVERRIDE
+  REQUIRED: Scenarios 1 and 2 results must be signed off by human before v1.0.0 declaration. Automated pass is necessary
+  but not sufficient for these two scenarios." status: pending isProject: true
 
 ---
 

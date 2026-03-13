@@ -66,7 +66,11 @@ todos:
       unified-defi-execution-interface/unified_defi_execution_interface/protocols/base.py. get_defi_rpc_url(): if
       FORK_MODE=anvil → http://localhost:8545; if FORK_MODE=tenderly → SM secret; else → mainnet Alchemy URL.
       get_hyperliquid_api_url(): if TESTNET_MODE → testnet URL; else → mainnet. DEFI_RPC_URL env var overrides
-      everything (for local override without SM)."
+      everything (for local override without SM). CRITICAL GUARD (2026-03-13 audit): Add production safety check — if
+      FORK_MODE is empty/unset (production) AND DEFI_RPC_URL is set, FAIL LOUD: if not config.fork_mode and
+      config.defi_rpc_url: raise RuntimeError( 'DEFI_RPC_URL is set but FORK_MODE is empty — this would route production
+      DeFi ' 'trades to an override URL. Remove DEFI_RPC_URL or set FORK_MODE explicitly.' ) This prevents accidental
+      routing of live DeFi trades to a local Anvil fork or stale Tenderly URL due to a leftover env var."
     status: pending
   - id: wire-upi-defi-rpc
     content:

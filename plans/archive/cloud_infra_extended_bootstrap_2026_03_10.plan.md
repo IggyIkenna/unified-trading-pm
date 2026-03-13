@@ -6,9 +6,9 @@ overview: |
   billing budget alerts with daily breakdown, deployment cleanup scripts, and SIT smoke tests
   for all of the above. Both GCP (primary) and AWS (blocked until creds) equivalents.
   Strategy: test what's real now; mock/skip AWS; validate everything via SIT smoke tests.
-type: deployment
-epic: epic-deployment
-status: completed
+type: infra
+epic: epic-infra
+status: active
 
 completion_gates:
   code: C5
@@ -18,22 +18,19 @@ completion_gates:
 repo_gates:
   - repo: deployment-service
     code: C5
-    deployment: D3
+    deployment: none
     business: none
-    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+    readiness_note:
+      "C5: all quality gates passing. BR N/A: infrastructure provisioning plan — no commercial sign-off required."
   - repo: system-integration-tests
     code: C5
     deployment: none
     business: none
-    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
-  - repo: execution-service
-    code: C5
-    deployment: none
-    business: none
-    readiness_note: "BR N/A: infrastructure provisioning plan — no commercial sign-off required."
+    readiness_note:
+      "C5: all quality gates passing. BR N/A: infrastructure provisioning plan — no commercial sign-off required."
 
 depends_on:
-  - cloud_infra_bucket_auth_2026_03_10
+  - cloud-infra-bucket-auth
 
 todos:
   - id: pubsub-topics-gcp
@@ -165,10 +162,8 @@ todos:
     content: >-
       AWS Cost Explorer / CloudWatch billing alarms equivalent. Create AWS Budgets entry and CloudWatch billing alarm
       via setup-billing-alerts.sh --cloud aws. Documented in script but blocked on AWS credentials.
-    status: done
-    notes:
-      "MIGRATED 2026-03-11 → aws_migration.plan.md todo aws-billing-alerts. Commands documented in
-      setup-billing-alerts.sh --cloud aws section. Runs when AWS creds available (aws-account-setup completes)."
+    status: blocked
+    notes: Commands documented in setup-billing-alerts.sh --cloud aws section.
 
   - id: deployment-cleanup-untagged-images
     content: >-

@@ -56,6 +56,12 @@ repo_gates:
     code: C2
     deployment: none
     business: none
+  # NOTE (2026-03-13 audit): Hatchling migration modifies pyproject.toml [build-system] section.
+  # Phase 2 and Phase 3 also modify pyproject.toml (QG config, deps, basedpyright settings).
+  # ORDERING REQUIREMENT: Hatchling batches for a repo MUST complete BEFORE that repo's
+  # Phase 2/3 hardening work begins, to avoid pyproject.toml merge conflicts.
+  # This is not a formal depends_on (hatchling is already done for most repos) but agents
+  # must check: if a repo's hatchling batch is NOT status:done, do hatchling first.
   - repo: unified-position-interface
     code: C2
     deployment: none
