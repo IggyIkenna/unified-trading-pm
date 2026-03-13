@@ -8,6 +8,11 @@ name: Overnight Agent Orchestrator
 #   GH_PAT              — dispatch workflow_dispatch + poll run status across repos
 #   TELEGRAM_BOT_TOKEN  — morning summary notification
 #   TELEGRAM_CHAT_ID    — target chat
+#
+# NOTE: Claude API health precheck is NOT added here because this workflow is a
+# dispatcher — it dispatches agent-audit.yml to per-repo workflows. Each per-repo
+# agent-audit.yml SHOULD include the claude-api-health-precheck step itself.
+# The T0 job includes it as a gate before dispatching to catch degradation early.
 
 on:
   schedule:
