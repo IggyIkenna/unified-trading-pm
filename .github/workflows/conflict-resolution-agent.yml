@@ -51,6 +51,25 @@ jobs:
       GH_ORG: IggyIkenna
 
     steps:
+      - name: Checkout PM for health check script
+        uses: actions/checkout@v4
+        with:
+          repository: IggyIkenna/unified-trading-pm
+          token: ${{ secrets.GH_PAT }}
+          path: unified-trading-pm
+          sparse-checkout: scripts/agents/
+
+      - name: Claude API health precheck
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_ORG: IggyIkenna
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          CALLING_WORKFLOW: conflict-resolution-agent
+        run: |
+          source unified-trading-pm/scripts/agents/claude-api-health-precheck.sh
+          check_claude_api_health
+
       - name: Extract inputs
         id: inputs
         run: |

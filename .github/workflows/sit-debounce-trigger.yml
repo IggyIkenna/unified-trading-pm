@@ -1,9 +1,18 @@
 name: SIT Debounce Trigger
-# Runs every 5 minutes to check if staging has been quiet long enough to trigger SIT
+# Waits for a quiet period (no new staging merges for 60s) before triggering SIT.
+# Batches multiple rapid staging merges into a single SIT run.
+#
+# Debounce logic:
+#   1. Read workspace-manifest.json: check staging_versions vs versions for pending repos
+#   2. If staging is already locked (SIT running), skip
+#   3. Check last staging-related commit timestamp on this repo (proxy for last staging merge)
+#   4. If quiet for >= 60s, dispatch sit-gate.yml to start SIT
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/2 * * * *"
+  repository_dispatch:
+    types: [staging-changed]
   workflow_dispatch:
 
 concurrency:
@@ -18,68 +27,125 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
+          fetch-depth: 20
 
       - name: Check debounce window
         id: check
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          DEBOUNCE_SECONDS: "60"
         run: |
-          # Read manifest
-          MANIFEST="workspace-manifest.json"
+          set -euo pipefail
 
-          # Check if there are pending repos
-          PENDING=$(python3 -c "
-          import json, sys
-          with open('$MANIFEST') as f:
+          # Read manifest to determine if there are pending staging changes
+          python3 - <<'PYEOF'
+          import json, sys, subprocess, os
+          from datetime import datetime, timezone
+
+          debounce_seconds = int(os.environ.get("DEBOUNCE_SECONDS", "60"))
+
+          with open("workspace-manifest.json") as f:
               m = json.load(f)
-          staging = m.get('staging_status', {})
-          pending = staging.get('pending_repos', [])
-          locked = staging.get('locked', False)
-          print(f'pending={len(pending)} locked={locked}')
-          if pending and not locked:
-              # Find oldest pending timestamp
-              import datetime
-              oldest = min(r.get('queued_at', '') for r in pending if isinstance(r, dict))
-              print(f'oldest={oldest}', file=sys.stderr)
-          " 2>/tmp/debounce_detail)
 
-          echo "$PENDING"
-          cat /tmp/debounce_detail
+          staging_status = m.get("staging_status", {})
+          staging_versions = m.get("staging_versions", {})
+          stable_versions = m.get("versions", {})
 
-          # Parse
-          COUNT=$(echo "$PENDING" | grep -oP '(?<=pending=)\d+')
-          LOCKED=$(echo "$PENDING" | grep -oP '(?<=locked=)\w+')
+          # Check if staging is locked (SIT already running)
+          if staging_status.get("locked", False):
+              print("SIT is locked (already running) — skipping debounce trigger")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=false\n")
+              sys.exit(0)
 
-          if [ "$COUNT" = "0" ] || [ "$LOCKED" = "True" ]; then
-            echo "trigger=false" >> $GITHUB_OUTPUT
-            echo "No pending repos or SIT locked — skipping"
-            exit 0
-          fi
+          # Find repos with pending staging changes (staging_versions != versions)
+          pending = []
+          for repo, sv in staging_versions.items():
+              if repo.startswith("_"):
+                  continue
+              if sv != stable_versions.get(repo):
+                  pending.append(repo)
 
-          # Check if quiet for 5 minutes
-          OLDEST=$(cat /tmp/debounce_detail | grep oldest | grep -oP '(?<=oldest=)\S+' || echo "")
-          if [ -z "$OLDEST" ]; then
-            echo "trigger=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          if not pending:
+              print("No pending staging changes — nothing to trigger")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=false\n")
+              sys.exit(0)
 
-          NOW=$(date -u +%s)
-          # Parse ISO timestamp
-          OLDEST_SEC=$(date -d "$OLDEST" +%s 2>/dev/null || python3 -c "from datetime import datetime; print(int(datetime.fromisoformat('$OLDEST').timestamp()))")
-          AGE=$((NOW - OLDEST_SEC))
+          print(f"Pending staging repos ({len(pending)}): {', '.join(pending)}")
 
-          if [ $AGE -ge 300 ]; then
-            echo "Quiet for ${AGE}s >= 300s — triggering SIT"
-            echo "trigger=true" >> $GITHUB_OUTPUT
-          else
-            echo "Still within debounce window (${AGE}s < 300s) — waiting"
-            echo "trigger=false" >> $GITHUB_OUTPUT
-          fi
+          # Check quiet period: find the most recent manifest commit that touches staging_versions
+          # Use git log to find the timestamp of the last staging-related manifest commit
+          result = subprocess.run(
+              ["git", "log", "-1", "--format=%ct",
+               "--grep=staging", "--grep=manifest", "--all-match",
+               "--", "workspace-manifest.json"],
+              capture_output=True, text=True
+          )
+          last_staging_ts = result.stdout.strip()
+
+          if not last_staging_ts:
+              # Fallback: use the most recent commit touching workspace-manifest.json
+              result = subprocess.run(
+                  ["git", "log", "-1", "--format=%ct", "--", "workspace-manifest.json"],
+                  capture_output=True, text=True
+              )
+              last_staging_ts = result.stdout.strip()
+
+          if not last_staging_ts:
+              print("No manifest commits found — triggering SIT as fallback")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=true\n")
+              sys.exit(0)
+
+          last_ts = int(last_staging_ts)
+          now_ts = int(datetime.now(timezone.utc).timestamp())
+          age = now_ts - last_ts
+
+          print(f"Last staging manifest commit: {age}s ago (threshold: {debounce_seconds}s)")
+
+          if age >= debounce_seconds:
+              print(f"Quiet for {age}s >= {debounce_seconds}s — triggering SIT")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=true\n")
+                  f.write(f"pending_count={len(pending)}\n")
+                  f.write(f"pending_repos={','.join(pending)}\n")
+          else:
+              print(f"Still within debounce window ({age}s < {debounce_seconds}s) — waiting")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=false\n")
+          PYEOF
 
       - name: Trigger SIT
         if: steps.check.outputs.trigger == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
-          gh workflow run sit-gate.yml --repo ${{ github.repository }}
-          echo "SIT triggered after 5-minute quiet period"
+          set -euo pipefail
+
+          PENDING="${{ steps.check.outputs.pending_repos }}"
+          COUNT="${{ steps.check.outputs.pending_count }}"
+
+          echo "Triggering SIT after debounce quiet period"
+          echo "Pending repos ($COUNT): $PENDING"
+
+          # Dispatch sit-gate to lock staging and start SIT
+          OWNER="${{ github.repository_owner }}"
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/system-integration-tests/dispatches" \
+            -d "{\"event_type\": \"staging-changed\", \"client_payload\": {\"reason\": \"debounce-trigger\", \"pending_repos\": \"${PENDING}\"}}"
+
+          echo "SIT triggered after quiet period (${COUNT} pending repos)"
+
+          # Telegram notification
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            TEXT="🔄 *SIT Debounce Triggered*%0APending repos: ${COUNT}%0ARepos: \`${PENDING}\`%0AQuiet period elapsed — starting SIT run."
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="$TEXT" \
+              -d parse_mode="Markdown" > /dev/null 2>&1 || true
+          fi

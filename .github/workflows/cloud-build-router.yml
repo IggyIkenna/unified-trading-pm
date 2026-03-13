@@ -20,6 +20,11 @@ on:
 permissions:
   contents: read
 
+# Serialize with other manifest-mutating workflows (update manifest on build success step writes workspace-manifest.json)
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
 jobs:
   route-build:
     runs-on: ubuntu-latest

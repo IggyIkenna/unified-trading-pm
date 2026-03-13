@@ -51,6 +51,21 @@ jobs:
       results: ${{ steps.poll.outputs.results }}
 
     steps:
+      - name: Checkout PM for health check script
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          sparse-checkout: scripts/agents/
+
+      - name: Claude API health precheck
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          CALLING_WORKFLOW: overnight-agent-orchestrator
+        run: |
+          source scripts/agents/claude-api-health-precheck.sh
+          check_claude_api_health
+
       - name: Checkout unified-trading-codex (readiness checklists)
         uses: actions/checkout@v4
         with:
@@ -91,16 +106,22 @@ jobs:
           REPOS: >-
             unified-api-contracts unified-internal-contracts unified-events-interface unified-cloud-interface
             execution-algo-library matching-engine-library
+          # Stagger dispatches to avoid GH API burst limits (1000 queue / 500 concurrent per org)
+          DISPATCH_DELAY_SECONDS: "3"
         run: |
-          echo "Dispatching to T0 repos..."
+          echo "Dispatching to T0 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
           RUN_IDS=""
+          COUNT=0
           for repo in $REPOS; do
-            echo "  → $GH_ORG/$repo"
+            COUNT=$((COUNT + 1))
+            echo "  → $GH_ORG/$repo (#$COUNT)"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
               --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo (workflow may not exist yet)"
+            # Stagger to avoid burst throttling
+            sleep "$DISPATCH_DELAY_SECONDS"
           done
-          echo "T0 dispatches sent. Waiting 15s for runs to register..."
+          echo "T0 dispatches sent ($COUNT repos). Waiting 15s for runs to register..."
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT
 
@@ -245,13 +266,15 @@ jobs:
         env:
           REPOS: >-
             unified-reference-data-interface unified-config-interface unified-trading-library
+          DISPATCH_DELAY_SECONDS: "3"
         run: |
-          echo "Dispatching to T1 repos..."
+          echo "Dispatching to T1 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
           for repo in $REPOS; do
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
               --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+            sleep "$DISPATCH_DELAY_SECONDS"
           done
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT
@@ -331,13 +354,15 @@ jobs:
           REPOS: >-
             unified-feature-calculator-library unified-market-interface unified-ml-interface
             unified-trade-execution-interface unified-sports-execution-interface unified-defi-execution-interface
+          DISPATCH_DELAY_SECONDS: "3"
         run: |
-          echo "Dispatching to T2 repos..."
+          echo "Dispatching to T2 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
           for repo in $REPOS; do
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
               --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+            sleep "$DISPATCH_DELAY_SECONDS"
           done
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT
@@ -415,13 +440,15 @@ jobs:
         id: dispatch
         env:
           REPOS: unified-domain-client
+          DISPATCH_DELAY_SECONDS: "3"
         run: |
-          echo "Dispatching to T3 repos..."
+          echo "Dispatching to T3 repos (staggered: ${DISPATCH_DELAY_SECONDS}s between dispatches)..."
           for repo in $REPOS; do
             echo "  → $GH_ORG/$repo"
             gh workflow run agent-audit.yml \
               --repo "$GH_ORG/$repo" \
               --ref "${{ inputs.agent_ref || 'main' }}" 2>/dev/null || echo "    WARN: dispatch failed for $repo"
+            sleep "$DISPATCH_DELAY_SECONDS"
           done
           sleep 15
           echo "repos=$REPOS" >> $GITHUB_OUTPUT
