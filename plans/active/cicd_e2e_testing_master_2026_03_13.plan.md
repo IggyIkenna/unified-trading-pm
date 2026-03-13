@@ -20,7 +20,7 @@ repo_gates:
     code: C4
     deployment: none
     business: none
-    readiness_note: "All 23 workflows tested E2E."
+    readiness_note: "All 25 workflows tested E2E."
   - repo: instruments-service
     code: C3
     deployment: none
@@ -54,7 +54,7 @@ todos:
   - id: static-action-ref-consistency
     content: >
       [SCRIPT] P0. For every repo in manifest, check that `quality-gates.yml` references the same composite action ref.
-      All 65 repos should point to the same version. Script: `scripts/propagation/rollout-quality-gates-ci-workflows.py
+      All 67 repos should point to the same version. Script: `scripts/propagation/rollout-quality-gates-ci-workflows.py
       --check-only` or equivalent.
     status: pending
 
@@ -398,6 +398,53 @@ todos:
       replay 1000x normal tick rate, verify no message drops or OOM. Use instruments-service + market-tick-data-service
       as chaos targets.
     status: pending
+
+  - id: failure-change-freeze-blocks-autonomous
+    content: >
+      [SCRIPT] P1. Verify change-freeze-check blocks overnight-agent-orchestrator during an active freeze window.
+      Method: mock current UTC time to NFP window (first Friday of month, 13:30 UTC) by overriding the time-check step
+      in change-freeze-check.yml using a workflow_dispatch input `override_utc_time` (test-only). Trigger
+      overnight-agent-orchestrator.yml manually during the mock window. Expected: job 0 (change-freeze-check) outputs
+      blocked=true, reason="NFP window — US Non-Farm Payrolls 13:25–14:00 UTC", orchestration jobs are skipped, Telegram
+      message "not running — change freeze active: NFP window". Also test with mock time outside all windows: verify
+      blocked=false and orchestration proceeds normally. Verify with: `gh run view --log | grep -E "blocked|change
+      freeze"`.
+    status: pending
+    depends_on: [ops-change-freeze-enforcement]
+
+  - id: failure-change-freeze-blocks-prod-deploy
+    content: >
+      [SCRIPT] P1. Verify change-freeze-check blocks cloud-build-router prod path during a MACRO freeze window. Method:
+      trigger cloud-build-router.yml manually with `branch=main` and `override_utc_time` set to FOMC decision time
+      (18:00 UTC on a known Fed meeting date). Expected: prod Cloud Build trigger is skipped, Telegram message "prod
+      deploy blocked — change freeze: FOMC rate decision 18:00–19:00 UTC. Next window ends: 19:00 UTC". Dev and staging
+      paths must NOT be blocked (MACRO rows block_prod_deploy=true but session rows block_prod_deploy=false for staging
+      — verify correct flag filtering). Verify: `gh run view --log | grep -E "PROD_DEPLOY|blocked|FOMC"`.
+    status: pending
+    depends_on: [ops-change-freeze-enforcement]
+
+  - id: failure-change-freeze-crypto-nfp
+    content: >
+      [SCRIPT] P1. Verify that crypto/DeFi/sports/Polymarket prod deploys are also blocked during MACRO events (not just
+      equities). NFP and FOMC rows have affects_venues=all — enforcement must apply regardless of service type. Method:
+      trigger cloud-build-router.yml with branch=main, repo=hyperliquid-gateway (DeFi venue), override_utc_time=NFP
+      window. Expected: blocked=true. DeFi deploy does NOT proceed during NFP. Also test SESSION windows (e.g. US open
+      13:30 UTC) with block_prod_deploy=false on session rows: Expected: blocked=false for prod deploy check (session
+      windows only block autonomous agents, not deploys). Verify the distinction is correctly enforced based on
+      check_type input (AUTONOMOUS vs PROD_DEPLOY).
+    status: pending
+    depends_on: [ops-change-freeze-enforcement]
+
+  - id: failure-change-freeze-dst-transition
+    content: >
+      [SCRIPT] P2. Verify DST transition handling in change-freeze-check. European session open shifts from 07:00 UTC to
+      08:00 UTC when BST ends (last Sunday October). Mock time to 07:15 UTC on the day after UK DST ends — without DST
+      adjustment this would be inside European session open window; with correct DST adjustment it should be outside.
+      Expected: blocked=false after DST end (07:15 UTC is no longer inside EU session open window post-BST). Also test
+      US EDT→EST transition: US open shifts from 14:30 UTC to 13:30 UTC when US DST ends. Ensures
+      change-freeze-calendar.csv DST companion data + enforcement logic are correct.
+    status: pending
+    depends_on: [ops-change-freeze-enforcement]
 
   # ── Phase 7: CODEX & DOCUMENTATION ─────────────────────────────────────────
   # Exit criteria: Documentation pipeline verified E2E

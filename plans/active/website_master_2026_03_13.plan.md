@@ -40,7 +40,7 @@ todos:
 
   - id: website-content-refresh
     content: >
-      [HUMAN+AGENT] P2. Update all website pages with current system capabilities: 65 repos, multi-cloud architecture,
+      [HUMAN+AGENT] P2. Update all website pages with current system capabilities: 67 repos, multi-cloud architecture,
       33 venue coverage, ML pipeline, DeFi protocol support. Update team page, technology stack page, and case studies.
     status: pending
     depends_on: [website-repo-integration]

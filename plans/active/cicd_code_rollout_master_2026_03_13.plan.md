@@ -1,7 +1,7 @@
 ---
 name: cicd-code-rollout-master-2026-03-13
 overview: |
-  Master rollout plan consolidating 16 active plans into a single milestone-gated execution sequence. Covers: CI/CD pipeline bug fixes (7 bugs), citadel-grade hardening (SIT debounce, starvation detection, Telegram rate-limiting, manifest atomicity), workflow rollout to all 65 repos (composite actions, semver-agent, conflict-resolution-agent), library tier completion (T0->T1->T2->T3 with invariant enforcement), service/UI hardening (19 services, 10 APIs, 13 UIs), deployment infrastructure (AWS, IBKR, DeFi testnet, dev onboarding), features (cloud mode indicator, Grafana, Elysium fork, user management), and the 1.0.0 stability gate with full production readiness audit. Each phase has exit criteria; next phase starts only when current passes.
+  Master rollout plan consolidating 16 active plans into a single milestone-gated execution sequence. Covers: CI/CD pipeline bug fixes (7 bugs), citadel-grade hardening (SIT debounce, starvation detection, Telegram rate-limiting, manifest atomicity), workflow rollout to all 67 repos (composite actions, semver-agent, conflict-resolution-agent), library tier completion (T0->T1->T2->T3 with invariant enforcement), service/UI hardening (19 services, 10 APIs, 13 UIs), deployment infrastructure (AWS, IBKR, DeFi testnet, dev onboarding), features (cloud mode indicator, Grafana, Elysium fork, user management), and the 1.0.0 stability gate with full production readiness audit. Each phase has exit criteria; next phase starts only when current passes.
 todos:
   - id: cleanup-delete-stale-develop-branch
     content: |
@@ -30,7 +30,7 @@ todos:
   - id: cleanup-fix-version-mismatch
     content: |
       [SCRIPT] P0. Fix BUG-7: instruments-service manifest version `0.1.22` vs pyproject.toml `0.1.117` — STILL UNFIXED in manifest. Scan ALL 67 repos for same drift. Fix by updating manifest to match pyproject (source of truth). Wrong versions cause cascade dispatch to send incorrect version numbers to dependents.
-    status: pending
+    status: done
   - id: cleanup-update-index
     content: |
       [AGENT] P2. Update `plans/active/INDEX.md` — register 5 new master plans, mark all 26 old plans as superseded with `superseded_by:` references.
@@ -38,11 +38,11 @@ todos:
   - id: cleanup-archive-old-cicd-plan
     content: |
       [SCRIPT] P1. Archive `plans/cicd/00-MASTER-CICD-PLAN.md` — this old plan references act simulation, separate Docker QG images, pr-watcher.yml, and llm-agent-wrapper.sh (none of which exist). Agents or humans could act on it. Move to plans/archive/ with superseded frontmatter.
-    status: pending
+    status: done
   - id: cleanup-fix-repo-count
     content: |
       [SCRIPT] P1. Correct all plan references from "65 repos" to "67 repos" and "23 workflows" to "25 workflows". Two new workflows (sit-debounce-trigger.yml, sit-starvation-detector.yml) were added but plan counts not updated. Manifest has 67 repos, not 65.
-    status: pending
+    status: done
   - id: cleanup-remediate-failing-repo
     content: |
       [AGENT] P0. unified-api-contracts has ci_status=FAILING. This is a T0 repo — if it stays FAILING, it blocks the entire T0→T1→T2→T3 tier cascade in Phase 3. Identify the failure cause, fix it, and get QG passing before Phase 3.
@@ -275,7 +275,7 @@ todos:
     status: pending
   - id: rollout-composite-qg-workflows
     content: |
-      [SCRIPT] P0. Roll out thin QG workflows using composite actions to all 65 repos. Script reads `workspace-manifest.json` for dep lists per repo, generates slim `quality-gates.yml` (~20 lines) that calls the composite action. Verify by triggering QG on 3 canary repos (one per tier).
+      [SCRIPT] P0. Roll out thin QG workflows using composite actions to all 67 repos. Script reads `workspace-manifest.json` for dep lists per repo, generates slim `quality-gates.yml` (~20 lines) that calls the composite action. Verify by triggering QG on 3 canary repos (one per tier).
       COMPLETED 2026-03-13: Verified all BASELINE_RECORDED repos already have quality-gates.yml referencing
       @live-defi-rollout composite action. instruments-service, unified-trading-codex, unified-trading-pm use
       standalone QG (appropriate). No repos missing the workflow.
@@ -301,7 +301,7 @@ todos:
     status: done
   - id: rollout-promote-ci-status
     content: |
-      [SCRIPT] P1. Run QG on all repos; promote `ci_status` from `BASELINE_RECORDED` to `VALIDATED` where passing. Currently 46/65 repos stuck at BASELINE_RECORDED. Script: for each repo, run `bash scripts/quality-gates.sh`, if exit 0 then update manifest `ci_status` to `VALIDATED`.
+      [SCRIPT] P1. Run QG on all repos; promote `ci_status` from `BASELINE_RECORDED` to `VALIDATED` where passing. Currently 46/67 repos stuck at BASELINE_RECORDED. Script: for each repo, run `bash scripts/quality-gates.sh`, if exit 0 then update manifest `ci_status` to `VALIDATED`.
       PARTIAL 2026-03-13: Ran QG on all 45 BASELINE_RECORDED repos in parallel. Results:
       - VALIDATED (4): execution-algo-library, matching-engine-library, unified-events-interface, unified-trading-codex
       - FAILING (16): see manifest ci_failure_reason fields
@@ -486,6 +486,67 @@ todos:
   - id: stability-final-sit
     content: |
       [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests against all services on main branch.
+    status: pending
+
+  - id: ops-change-freeze-calendar
+    content: |
+      [SCRIPT] P1. Create `plans/ops/change-freeze-calendar.csv` in unified-trading-pm with columns:
+      `window_id,event_name,event_type,recurrence,start_utc,end_utc,dst_note,block_autonomous,block_prod_deploy,affects_venues,notes`
+
+      Pre-populate with recurring windows (all times UTC, DST note where applicable):
+
+      MACRO events (block_autonomous=true, block_prod_deploy=true, affects_venues=all):
+      - NFP (US Non-Farm Payrolls): first Friday of each month, 13:25–14:00 UTC
+      - FOMC rate decision: 8 per year per Fed calendar, 18:00–19:00 UTC
+      - ECB rate decision: ~8 per year per ECB calendar, 12:15–13:30 UTC
+      - BOE rate decision: ~8 per year per BOE calendar, 12:00–12:30 UTC
+
+      SESSION windows (block_autonomous=true, block_prod_deploy=false, affects_venues=respective):
+      - Asian session open: daily 00:00–00:30 UTC
+      - Asian session close: daily 06:00–06:30 UTC
+      - European session open: daily 07:00–07:30 UTC (08:00–08:30 UTC during BST/CEST — note DST)
+      - European session close: daily 16:00–16:30 UTC (15:00–15:30 UTC during BST/CEST — note DST)
+      - US session open: daily 13:30–14:00 UTC (14:30–15:00 UTC during EDT — note DST)
+      - US session close: daily 20:00–20:30 UTC (21:00–21:30 UTC during EDT — note DST)
+
+      Note: crypto/DeFi/sports/Polymarket venues trade 24/7 — session open/close windows still apply for
+      deployment risk (high volatility, order flow spike). IBKR equities additionally respects NYSE/TSE hours.
+
+      DST handling: store base UTC offsets; add a `dst_adjustments` section or companion CSV with
+      DST start/end dates (US: second Sunday March / first Sunday November; EU: last Sunday March/October)
+      and the delta to apply. The enforcement workflow must load DST offsets and compute effective window.
+
+      Populate one full year forward from 2026-03-13. Include a script `scripts/ops/generate-freeze-calendar.py`
+      that regenerates the CSV for a given year using the recurrence rules above.
+    status: pending
+
+  - id: ops-change-freeze-enforcement
+    content: |
+      [AGENT] P1. Create `change-freeze-check` reusable workflow (`.github/workflows/change-freeze-check.yml`)
+      that reads `plans/ops/change-freeze-calendar.csv`, computes current UTC time against active freeze windows
+      (with DST offset applied), and exits with an annotated failure if in a freeze window.
+
+      Interface (called as `uses: ./change-freeze-check` or `uses: unified-trading-pm/.github/workflows/change-freeze-check.yml`):
+        inputs:
+          check_type: AUTONOMOUS | PROD_DEPLOY   # AUTONOMOUS = block_autonomous=true rows; PROD_DEPLOY = block_prod_deploy=true rows
+        outputs:
+          blocked: 'true' | 'false'
+          reason: string   # e.g. "NFP window — US Non-Farm Payrolls 13:25–14:00 UTC"
+
+      Callers:
+      - `overnight-agent-orchestrator.yml` — add as first job with check_type=AUTONOMOUS; skip orchestration if blocked
+      - `cloud-build-router.yml` prod path — add as first job with check_type=PROD_DEPLOY; skip Cloud Build trigger if blocked
+      - Any future autonomous workflow MUST call this check as job 0
+
+      On block: Telegram message "🚫 [workflow] not running — change freeze active: [reason]. Next window ends: [end_utc]"
+      On pass: no-op, subsequent jobs proceed.
+
+      Important: crypto/DeFi/sports/Polymarket deployments are blocked during MACRO events (NFP, FOMC, etc.) even
+      though those venues trade 24/7. SESSION open/close windows also apply to all venues for deployment risk.
+      This is controlled by the `affects_venues=all` flag on MACRO rows — enforcement workflow reads this.
+
+      Testing: mock current time to a known freeze window and verify blocked=true output with correct reason.
+      Also mock time outside all windows and verify blocked=false.
     status: pending
 isProject: false
 ---

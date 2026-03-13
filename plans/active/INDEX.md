@@ -13,7 +13,7 @@ phase has exit criteria, no dates. Next phase starts only when current passes.
 ### 1. CI/CD & Code Rollout Master
 
 **File:** [cicd_code_rollout_master_2026_03_13.plan.md](cicd_code_rollout_master_2026_03_13.plan.md) **Type:** mixed |
-**Status:** active | **Gates:** C5/D5 **Scope:** Pipeline bug fixes (7 bugs), citadel hardening, workflow rollout to 65
+**Status:** active | **Gates:** C5/D5 **Scope:** Pipeline bug fixes (7 bugs), citadel hardening, workflow rollout to 67
 repos, library tier completion (T0->T3), service/UI hardening, deployment infra, features, 1.0.0 stability gate.
 **Phases:** 0-Cleanup → 1-CI/CD Hardening → 2-Workflow Rollout → 3-Library Tiers → 4-Service Hardening → 5-Deploy Infra
 → 6-Features & Stability Gate **Supersedes:** 16 plans (see supersession map below)
@@ -99,7 +99,7 @@ Plan 4 (Presentations)   ──blocks──> Plan 5 (Website) hosting
 | ------- | ---------------------------------------------------------------------- | ----------------------------------- |
 | Phase 0 | Cleanup & Archive Superseded Plans                                     | In Progress (actioned 2026-03-13)   |
 | Phase 1 | CI/CD Hardening (7 pipeline bugs + composite QG action + SIT debounce) | In Progress (parallel with Phase 0) |
-| Phase 2 | Workflow Rollout (65 repos)                                            | Pending                             |
+| Phase 2 | Workflow Rollout (67 repos)                                            | Pending                             |
 | Phase 3 | Library Tiers (T0→T3 completion)                                       | Pending                             |
 | Phase 4 | Service & UI Hardening                                                 | Pending                             |
 | Phase 5 | Deployment Infrastructure                                              | Pending                             |
