@@ -21,6 +21,10 @@ on:
         description: "Reason for manual promotion (e.g. hotfix fast-track)"
         required: false
         default: "manual hotfix fast-track"
+      start_from_repo:
+        description: "Resume from this repo (skip repos before it in topo order). Leave empty for full run."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -250,10 +254,12 @@ jobs:
             || true
 
       - name: Merge staging → main for all repos with staging changes
+        id: promote
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          START_FROM_REPO: ${{ inputs.start_from_repo || '' }}
         run: |
           set -euo pipefail
 
@@ -294,12 +300,39 @@ jobs:
           echo "Repos to promote (staging → main):"
           echo "$REPOS" | while read -r r; do echo "  $r"; done
 
+          # Resume support: skip repos before start_from_repo
+          SKIP_MODE="false"
+          if [ -n "$START_FROM_REPO" ]; then
+            SKIP_MODE="true"
+            echo ""
+            echo "RESUME MODE: skipping repos before '$START_FROM_REPO'"
+          fi
+
+          PROMOTED=""
           FAILED=""
+          SKIPPED=""
+          TOTAL_COUNT=0
+          PROMOTED_COUNT=0
+          FAILED_COUNT=0
+
           while IFS= read -r REPO; do
             [ -z "$REPO" ] && continue
+            TOTAL_COUNT=$((TOTAL_COUNT + 1))
+
+            # Resume: skip until we reach start_from_repo
+            if [ "$SKIP_MODE" = "true" ]; then
+              if [ "$REPO" = "$START_FROM_REPO" ]; then
+                SKIP_MODE="false"
+                echo "  Resuming from $REPO"
+              else
+                echo "  SKIP (resume): $REPO"
+                SKIPPED="$SKIPPED $REPO"
+                continue
+              fi
+            fi
 
             echo ""
-            echo "=== Promoting $REPO ==="
+            echo "=== Promoting $REPO ($((PROMOTED_COUNT + FAILED_COUNT + 1))/$TOTAL_COUNT) ==="
 
             # Check if staging branch exists
             STAGING_EXISTS=$(gh api "repos/$OWNER/$REPO/branches/staging" --jq '.name' 2>/dev/null || true)
@@ -312,6 +345,8 @@ jobs:
             COMPARE=$(gh api "repos/$OWNER/$REPO/compare/main...staging" --jq '.ahead_by' 2>/dev/null || echo "0")
             if [ "$COMPARE" = "0" ]; then
               echo "  SKIP: staging is already merged to main in $REPO (ahead_by=0)"
+              PROMOTED="$PROMOTED $REPO"
+              PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
               continue
             fi
 
@@ -330,9 +365,12 @@ jobs:
               # Enable auto-merge (requires branch protection to be configured)
               gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || \
                 echo "  WARNING: auto-merge not available for $REPO — merge PR manually: $PR_URL"
+              PROMOTED="$PROMOTED $REPO"
+              PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
             else
               echo "  PR already exists or merge conflict — checking mergeable state..."
               FAILED="$FAILED $REPO"
+              FAILED_COUNT=$((FAILED_COUNT + 1))
 
               # Check if an existing staging→main PR is blocked by a content conflict
               EXISTING_PR_NUM=$(gh pr list \
@@ -381,14 +419,38 @@ jobs:
               else
                 echo "  No open staging→main PR found for $REPO (PR creation may have failed for another reason)"
               fi
+
+              # On failure: send Telegram alert with partial promotion state and bail
+              if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+                ALERT_TEXT="🚨 *Partial Staging Promotion Failure*%0A%0ARepo \`${REPO}\` failed during promotion.%0A%0A✅ *Promoted:*${PROMOTED:- none}%0A❌ *Failed:* ${REPO}%0A⏸ *Remaining:* check workflow logs%0A%0AResume with: start_from_repo=${REPO}%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                  -d chat_id="${TELEGRAM_CHAT_ID}" \
+                  -d text="$ALERT_TEXT" \
+                  -d parse_mode="Markdown" || true
+              fi
             fi
 
           done <<< "$REPOS"
+
+          # Write promotion progress to outputs for downstream steps
+          echo "promoted=$PROMOTED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          echo "promoted_count=$PROMOTED_COUNT" >> "$GITHUB_OUTPUT"
+          echo "failed_count=$FAILED_COUNT" >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "=== Promotion Summary ==="
+          echo "Promoted ($PROMOTED_COUNT):$PROMOTED"
+          echo "Failed ($FAILED_COUNT):$FAILED"
+          if [ -n "$SKIPPED" ]; then
+            echo "Skipped (resume):$SKIPPED"
+          fi
 
           if [ -n "$FAILED" ]; then
             echo ""
             echo "WARNING: Failed to create PRs for:$FAILED"
             echo "These repos may need manual merge conflict resolution."
+            echo "To resume: re-run with start_from_repo set to the first failed repo."
           fi
 
       - name: Promote staging_versions → versions, clear staging lock
