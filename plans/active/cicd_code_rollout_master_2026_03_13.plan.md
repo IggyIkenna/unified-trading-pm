@@ -110,7 +110,7 @@ todos:
     content: >
       [AGENT] P2. Update `plans/active/INDEX.md` — register 5 new master plans, mark all 26 old plans as superseded with
       `superseded_by:` references.
-    status: pending
+    status: done
 
   # ── Phase 1: CI/CD HARDENING ──────────────────────────────────────────────
   # Exit criteria: All 7 bugs fixed, all citadel enhancements deployed, zero silent failure paths
@@ -179,7 +179,7 @@ todos:
       [AGENT] P2. Add Telegram rate-limit guard — max 1 alert per workflow per 60 seconds. Prevents rapid cascades from
       spamming the channel. Implementation: add `handle-claude-api-error`-style composite action for Telegram that
       checks last-alert timestamp in workflow artifacts or manifest.
-    status: pending
+    status: done
 
   - id: harden-integrate-diagram-regen
     content: >
@@ -194,7 +194,7 @@ todos:
       [SCRIPT] P2. Audit all manifest writes for atomic tmp+rename pattern. All 5 manifest-mutating workflows should
       write to `.json.tmp` then `os.replace()` (or `mv`) to prevent corruption on concurrent access. Scan and report any
       that write directly to `workspace-manifest.json`.
-    status: pending
+    status: done
 
   # ── Phase 2: WORKFLOW ROLLOUT TO ALL REPOS ─────────────────────────────────
   # Exit criteria: All 65 repos have consistent CI using composite actions; ci_status promoted
@@ -222,7 +222,7 @@ todos:
       `staging-to-main.yml` dispatches `merge-conflict-detected` when `mergeable_state=dirty`, (b)
       `feature-branch-to-staging.yml` template dispatches on merge conflicts. Include BUG-4 output validation from Phase
       1. Test with deliberate conflict on instruments-service.
-    status: pending
+    status: done
     depends_on: [harden-validate-conflict-agent-output]
 
   - id: rollout-artifact-registry
