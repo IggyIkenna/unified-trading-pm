@@ -1,0 +1,87 @@
+name: Handle Claude API Error
+description: >
+  Classifies a Claude CLI stderr file into auth_error / rate_limited / service_down / timeout / unknown. Sends a typed
+  Telegram alert and exports error_type + should_retry + retry_delay_s. Sources scripts/claude-helpers.sh from the
+  checked-out unified-trading-pm repo.
+
+inputs:
+  stderr_path:
+    description: "Path to the Claude CLI stderr capture file"
+    required: true
+  tier:
+    description: "API key tier: cicd | syshealth | analysis"
+    required: true
+    default: "cicd"
+  agent_name:
+    description: "Human-readable agent name for Telegram (e.g. conflict-resolution-agent)"
+    required: true
+  repo:
+    description: "Repository name context (e.g. instruments-service)"
+    required: false
+    default: "unknown"
+
+outputs:
+  error_type:
+    description: "auth_error | rate_limited | service_down | timeout | unknown"
+    value: ${{ steps.classify.outputs.error_type }}
+  should_retry:
+    description: "true if a retry is appropriate (rate_limited only)"
+    value: ${{ steps.classify.outputs.should_retry }}
+  retry_delay_s:
+    description: "Seconds to wait before first retry (0 if no retry)"
+    value: ${{ steps.classify.outputs.retry_delay_s }}
+
+runs:
+  using: composite
+  steps:
+    - name: Classify Claude API error
+      id: classify
+      shell: bash
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ env.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ env.TELEGRAM_CHAT_ID }}
+        CLAUDE_TIMEOUT_FIRED: ${{ env.CLAUDE_TIMEOUT_FIRED }}
+      run: |
+        set +e  # Do not fail the composite action itself
+
+        # Find PM scripts dir — the action runs in the GHA workspace
+        PM_DIR=""
+        for candidate in "unified-trading-pm" "../unified-trading-pm" "."; do
+          if [ -f "${candidate}/scripts/claude-helpers.sh" ]; then
+            PM_DIR="$candidate"
+            break
+          fi
+        done
+
+        if [ -z "$PM_DIR" ]; then
+          echo "WARNING: unified-trading-pm/scripts/claude-helpers.sh not found in workspace"
+          echo "error_type=unknown" >> "$GITHUB_OUTPUT"
+          echo "should_retry=false" >> "$GITHUB_OUTPUT"
+          echo "retry_delay_s=0" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        source "${PM_DIR}/scripts/claude-helpers.sh"
+
+        classify_claude_error \
+          "${{ inputs.stderr_path }}" \
+          "${{ inputs.tier }}" \
+          "${{ inputs.repo }}" \
+          "${{ inputs.agent_name }}"
+        EXIT_CODE=$?
+
+        echo "error_type=${CLAUDE_ERROR_CLASS}" >> "$GITHUB_OUTPUT"
+
+        case "$EXIT_CODE" in
+          0)  echo "should_retry=false" >> "$GITHUB_OUTPUT"
+              echo "retry_delay_s=0" >> "$GITHUB_OUTPUT"
+              ;;
+          2)  echo "should_retry=true" >> "$GITHUB_OUTPUT"
+              echo "retry_delay_s=15" >> "$GITHUB_OUTPUT"
+              ;;
+          *)  echo "should_retry=false" >> "$GITHUB_OUTPUT"
+              echo "retry_delay_s=0" >> "$GITHUB_OUTPUT"
+              ;;
+        esac
+
+        echo "Classified: ${CLAUDE_ERROR_CLASS} (exit=$EXIT_CODE)"

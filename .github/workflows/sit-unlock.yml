@@ -62,6 +62,69 @@ jobs:
           git commit -m "chore(manifest): SIT unlock — staging_status.locked=false (SIT failed) [skip ci]"
           git push
 
+      - name: Open SIT-failure GH Issue (add-sit-rollback)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+
+          # Extract lock_version from manifest (the version set when SIT started)
+          LOCK_VERSION=$(python3 -c "
+          import json
+          m = json.load(open('workspace-manifest.json'))
+          print(m.get('staging_status', {}).get('lock_version') or 'unknown')
+          " 2>/dev/null || echo "unknown")
+
+          # Find the last staging committer for assignment
+          LAST_AUTHOR=$(git log origin/staging --max-count=1 --pretty=format:"%an" 2>/dev/null || echo "")
+
+          BODY="## SIT Failed — Staging Unlocked
+
+          SIT failed at $(date -u +%Y-%m-%dT%H:%MZ).
+          Staging is now unlocked so engineers can push fixes.
+
+          **Lock version:** \`${LOCK_VERSION}\`
+
+          ### Next steps
+          1. Identify which commit(s) caused the SIT failure (check the SIT run above)
+          2. Push a fix commit to the feature branch → merge to staging
+          3. SIT will re-run automatically after the 10-min debounce
+
+          ### To revert staging to last known good
+          If a fix isn't available immediately:
+          \`\`\`bash
+          bash unified-trading-pm/scripts/repo-management/admin-force-sync-all-to-main.sh \\
+            --admin-confirm --stag-branch --message \"revert: roll back staging after SIT failure\"
+          \`\`\`
+
+          ---
+          *Auto-opened by sit-unlock.yml on SIT failure.*"
+
+          ISSUE_URL=$(gh issue create \
+            --repo IggyIkenna/unified-trading-pm \
+            --title "SIT failed: staging needs fix or revert — ${LOCK_VERSION}" \
+            --label "sit-failure" \
+            --body "$BODY" \
+            2>/dev/null || echo "")
+
+          if [ -n "$ISSUE_URL" ]; then
+            echo "Created SIT failure issue: $ISSUE_URL"
+          else
+            echo "WARNING: Failed to create SIT failure issue (label may not exist or PAT missing)"
+            ISSUE_URL="N/A"
+          fi
+
+          # Telegram alert
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            TEXT="❌ *SIT Failed — staging unlocked*%0ALock version: \`${LOCK_VERSION}\`%0AStaging open for fixes. Issue: ${ISSUE_URL}"
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="$TEXT" \
+              -d parse_mode="Markdown" > /dev/null 2>&1 || true
+          fi
+
       - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}

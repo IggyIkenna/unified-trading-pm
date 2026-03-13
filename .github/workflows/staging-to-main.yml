@@ -120,6 +120,97 @@ jobs:
           print("OK: No explicit readiness failures. Promotion proceeding.")
           PYEOF
 
+      - name: SHA verification — ensure staging HEADs match tested SHA set (fix-sha-pinning-toctou)
+        # Guards against [skip ci] or other commits landing in staging AFTER the debounce
+        # but BEFORE staging-validated was dispatched. Such commits would be promoted untested.
+        # Only [skip ci] descendants are allowed; non-skip-ci untested commits trigger SIT re-run.
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          staging_commits = manifest.get("staging_commits", {})
+          staging_versions = manifest.get("staging_versions", {})
+          owner = os.environ["OWNER"]
+
+          def get_staging_head(repo: str) -> str:
+              result = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/{repo}/git/ref/heads/staging", "--jq", ".object.sha"],
+                  capture_output=True, text=True
+              )
+              return result.stdout.strip() if result.returncode == 0 else ""
+
+          def get_commit_messages_between(repo: str, base_sha: str, head_sha: str) -> list[str]:
+              if base_sha == head_sha:
+                  return []
+              result = subprocess.run(
+                  ["gh", "api",
+                   f"repos/{owner}/{repo}/compare/{base_sha}...{head_sha}",
+                   "--jq", ".commits[].commit.message"],
+                  capture_output=True, text=True
+              )
+              if result.returncode != 0:
+                  return []
+              return [line.strip() for line in result.stdout.strip().splitlines() if line.strip()]
+
+          blocked: list[str] = []
+          for repo, tested_sha in staging_commits.items():
+              if repo.startswith("_") or not tested_sha:
+                  continue
+              if repo not in staging_versions:
+                  continue
+
+              current_sha = get_staging_head(repo)
+              if not current_sha:
+                  print(f"  WARN {repo}: staging branch not found — skipping SHA check")
+                  continue
+
+              if current_sha == tested_sha:
+                  print(f"  OK   {repo}: SHA matches ({current_sha[:8]})")
+                  continue
+
+              msgs = get_commit_messages_between(repo, tested_sha, current_sha)
+              non_skip = [m for m in msgs if "[skip ci]" not in m]
+              if not non_skip:
+                  print(f"  SAFE {repo}: {len(msgs)} [skip ci]-only commit(s) since tested SHA — safe to promote")
+              else:
+                  print(f"  FAIL {repo}: {len(non_skip)} UNTESTED non-[skip ci] commit(s):")
+                  for m in non_skip[:3]:
+                      print(f"       {m[:80]}")
+                  blocked.append(repo)
+
+          if blocked:
+              print(f"\nSHA PINNING VIOLATION: repos with untested commits: {blocked}")
+              print("Exiting 1 — will re-trigger SIT in next step.")
+              sys.exit(1)
+
+          print("\nSHA pinning: all staging HEADs are within tested set or [skip ci]-only descendants.")
+          PYEOF
+
+      - name: Re-trigger SIT if SHA verification failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          OWNER="${{ github.repository_owner }}"
+          echo "SHA pinning violation — re-triggering SIT for untested staging commits."
+          curl -s -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/system-integration-tests/dispatches" \
+            -d '{"event_type": "staging-changed", "client_payload": {"reason": "sha-pinning-retest"}}' \
+            || true
+
       - name: Merge staging → main for all repos with staging changes
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
