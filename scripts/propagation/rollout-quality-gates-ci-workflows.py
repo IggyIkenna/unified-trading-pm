@@ -195,7 +195,10 @@ def _extract_on_block(content: str) -> str:
 
 
 def _transitive_dep_names(repo_name: str, repos: dict[str, dict[str, object]]) -> set[str]:
-    """Return transitive dependency names for a repo. CI clone needs all transitive path deps (e.g. unified-api-contracts via unified-internal-contracts)."""
+    """Return transitive dependency names for a repo.
+
+    CI clone needs all transitive path deps (e.g. unified-api-contracts via unified-internal-contracts).
+    """
     seen: set[str] = set()
 
     def walk(name: str) -> None:
