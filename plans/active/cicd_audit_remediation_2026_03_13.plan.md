@@ -674,7 +674,7 @@ todos:
           sit-unlock.yml (clears staging_commits).
       (4) Update validate-manifest-json.sh to validate new structure. Acceptance: git log of workspace-manifest.json is
       human-readable without SHA cross-referencing.
-    status: pending
+    status: done
 
   - id: enrich-telegram-with-versions
     content: >
@@ -727,7 +727,7 @@ todos:
       (3) In deployment-ui BuildSelector: show deployed_versions per env with visual badges (see
           deployment-ui-multi-env-selector).
       Acceptance: manifest always reflects what is deployed where, with semver tags (not SHAs).
-    status: pending
+    status: done
 
   - id: deployment-ui-multi-env-selector
     content: >
@@ -782,7 +782,7 @@ todos:
       (3) In cloud-build-router.yml, apply the same slugification to IMAGE_TAG construction
           (defensive — even if branch name is long, tag stays readable).
       Acceptance: all Docker image tags are human-readable and under 50 chars total.
-    status: pending
+    status: done
 
   # ── Testing ──────────────────────────────────────────────────────────────
   # Split into fast path (scripted, deterministic, no external deps) and

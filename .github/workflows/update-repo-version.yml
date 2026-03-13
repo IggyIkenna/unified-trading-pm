@@ -98,11 +98,17 @@ jobs:
               if "staging_versions" not in manifest:
                   manifest["staging_versions"] = {}
               manifest["staging_versions"][repo] = version
-              # Record the commit SHA that produced this staging version
-              if commit_sha:
+              # Record enriched commit info (version+sha+branch) for human-readable manifest (enrich-staging-commits-with-semver)
+              if commit_sha or version:
                   if "staging_commits" not in manifest:
                       manifest["staging_commits"] = {}
-                  manifest["staging_commits"][repo] = commit_sha
+                  import os as _os2
+                  branch_val = branch
+                  manifest["staging_commits"][repo] = {
+                      "version": version,
+                      "sha": commit_sha or "",
+                      "branch": branch_val,
+                  }
               # If major bump on staging, set staging_status.locked
               if bump_type == "major":
                   import datetime

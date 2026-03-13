@@ -38,7 +38,8 @@ jobs:
           echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
 
           # Determine GCP project + image tag from branch
-          BRANCH_SLUG=$(echo "$BRANCH" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]')
+          # Slugify branch: lowercase alphanumeric+hyphen, max 30 chars (enforce-branch-slug-convention)
+          BRANCH_SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's|[^a-z0-9-]|-|g' | cut -c1-30)
 
           if [ "$BRANCH" = "main" ]; then
             GCP_PROJECT="uts-prod-ikenna"
@@ -168,6 +169,28 @@ jobs:
                 -d parse_mode="Markdown" > /dev/null 2>&1 || true
             fi
             exit 1
+          fi
+
+          # Write deployed_versions back to manifest (populate-deployed-versions)
+          cd "${GITHUB_WORKSPACE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq --arg env "${ENV}" \
+             --arg repo "${REPO}" \
+             --arg version "${VERSION}" \
+             --arg tag "${IMAGE_TAG}" \
+             --arg ts "${DEPLOYED_AT}" \
+             --arg build_id "${BUILD_ID}" \
+             '(.deployed_versions[$env] //= {}) | .deployed_versions[$env][$repo] = {version: $version, image_tag: $tag, deployed_at: $ts, build_id: $build_id}' \
+             workspace-manifest.json > workspace-manifest.json.tmp \
+            && mv workspace-manifest.json.tmp workspace-manifest.json \
+            && echo "deployed_versions[${ENV}][${REPO}] = ${VERSION}" \
+            || echo "WARNING: failed to update deployed_versions (non-fatal)"
+          if ! git diff --quiet workspace-manifest.json; then
+            git add workspace-manifest.json
+            git commit -m "chore: update deployed_versions[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
+            git push origin main || true
           fi
 
       - name: Trigger Cloud Build (Python wheel — library)

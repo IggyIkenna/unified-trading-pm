@@ -199,8 +199,19 @@ if [ "$TO_STAGING" = true ] && [ -n "$DEP_BRANCH" ]; then
   exit 1
 fi
 
-# Auto-derive dep-branch from current git branch when --to-staging
+# Branch slug validation (enforce-branch-slug-convention): warn if branch name will produce unreadable image tags
 CURRENT_BRANCH_PRE=$(git branch --show-current 2>/dev/null || echo "")
+if [ -n "$CURRENT_BRANCH_PRE" ] && [[ "$CURRENT_BRANCH_PRE" != "main" ]] && [[ "$CURRENT_BRANCH_PRE" != "staging" ]]; then
+  _BRANCH_SUFFIX="${CURRENT_BRANCH_PRE##*/}"
+  _EXPECTED_SLUG=$(echo "$_BRANCH_SUFFIX" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | cut -c1-30)
+  if [ "${#_BRANCH_SUFFIX}" -gt 30 ]; then
+    echo "⚠ Branch name too long (${#_BRANCH_SUFFIX} chars): $CURRENT_BRANCH_PRE"
+    echo "  Image tag will use slugified suffix: $_EXPECTED_SLUG"
+    echo "  Consider renaming branch to ≤30 chars for readable Docker tags."
+  fi
+fi
+
+# Auto-derive dep-branch from current git branch when --to-staging
 if [ "$TO_STAGING" = true ] && [ -n "$CURRENT_BRANCH_PRE" ] && [ "$CURRENT_BRANCH_PRE" != "main" ] && [ "$CURRENT_BRANCH_PRE" != "staging" ]; then
   DEP_BRANCH="$CURRENT_BRANCH_PRE"
   echo "[$REPO_NAME] --to-staging: auto-derived dep-branch from current branch: $DEP_BRANCH"
