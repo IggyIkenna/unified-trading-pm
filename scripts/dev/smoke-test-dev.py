@@ -9,7 +9,7 @@ Checks (each prints PASS/FAIL):
   2. All T0-T3 libraries importable (UTL, UCI, UEI, UAC, UIC, UMI)
   3. CLOUD_MOCK_MODE=true → mock GCS read/write completes without real credentials
   4. VCR_MODE=playback → top 3 venue cassette dirs present (or graceful skip)
-  5. Dev GCP project configured (project = central-element-323112 or env override)
+  5. Dev GCP project configured (GCP_PROJECT_ID env var)
   6. setup_events() from UEI works without real Pub/Sub
   7. ruff check unified-trading-library/ exits 0
   8. basedpyright unified-trading-library/ exits 0 (with run_timeout 120)
@@ -173,25 +173,28 @@ else:
 # ── Check 5: Dev GCP project configured ──────────────────────────────────────
 _section("Check 5: Dev GCP project")
 
-expected_project = os.environ.get("GCP_PROJECT_ID", "central-element-323112")
-gcloud_result = subprocess.run(
-    ["gcloud", "config", "get-value", "project"],
-    capture_output=True,
-    text=True,
-    timeout=10,
-)
-if gcloud_result.returncode == 0:
-    active_project = gcloud_result.stdout.strip()
-    if active_project == expected_project:
-        _pass("GCP project", active_project)
-    else:
-        record_warn(
-            "GCP project mismatch",
-            f"active={active_project!r}, expected={expected_project!r} "
-            f"— run: gcloud config set project {expected_project}",
-        )
+expected_project = os.environ.get("GCP_PROJECT_ID")
+if not expected_project:
+    _skip("GCP project check", "GCP_PROJECT_ID not set — set it for dev environment validation")
 else:
-    _skip("GCP project check", "gcloud not available or not configured")
+    gcloud_result = subprocess.run(
+        ["gcloud", "config", "get-value", "project"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    if gcloud_result.returncode == 0:
+        active_project = gcloud_result.stdout.strip()
+        if active_project == expected_project:
+            _pass("GCP project", active_project)
+        else:
+            record_warn(
+                "GCP project mismatch",
+                f"active={active_project!r}, expected={expected_project!r} "
+                f"— run: gcloud config set project {expected_project}",
+            )
+    else:
+        _skip("GCP project check", "gcloud not available or not configured")
 
 # ── Check 6: setup_events() works without real Pub/Sub ───────────────────────
 _section("Check 6: setup_events() from UEI")

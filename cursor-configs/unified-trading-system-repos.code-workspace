@@ -248,7 +248,10 @@
     "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": ["tests", "-v"],
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
     "files.autoSave": "onFocusChange",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -265,12 +268,20 @@
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lint.select": [
+      "E",
+      "F",
+      "W",
+      "I"
+    ],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": ["--line-length", "120"],
+    "ruff.format.args": [
+      "--line-length",
+      "120"
+    ],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -311,7 +322,6 @@
       "**/.venv": true,
       "**/uv.lock": false,
     },
-    "editor.rulers": [100],
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,

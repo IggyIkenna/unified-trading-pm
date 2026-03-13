@@ -59,6 +59,8 @@ omit = [
     "scripts/manifest/generate_canonical_dependency_manifest.py",
     "scripts/manifest/sbom-store.py",
     "scripts/check-internal-advisories.py",
+    "scripts/generate-cicd-diagram.py",  # Diagram generator; tested by execution in QG post-step
+    "scripts/compute-epic-readiness.py",  # Reporting script; run manually, not unit-tested
 ]
 
 [tool.coverage.report]

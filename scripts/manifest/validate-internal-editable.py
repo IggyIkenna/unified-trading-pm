@@ -124,7 +124,12 @@ def main() -> int:
     for repo_name, repo_path in repos:
         pyproject = repo_path / "pyproject.toml"
         internal_deps = parse_internal_deps(pyproject, workspace_repos)
+        repo_norm = normalize(repo_name)
         for dep in internal_deps:
+            # Skip self-reference: parse_internal_deps regex can match name = "repo-name"
+            # in [project]; repos like PM/codex/SIT have no installable self-package.
+            if dep == repo_norm:
+                continue
             loc = pip_show_editable_location(repo_path, dep)
             if loc is None:
                 errors.append(f"  {repo_name}: {dep} — not installed (run: cd {repo_name} && bash scripts/setup.sh)")

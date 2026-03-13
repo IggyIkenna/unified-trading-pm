@@ -23,23 +23,38 @@ import os
 import sys
 import urllib.parse
 import urllib.request
+from typing import cast
 
 
-def load_manifest(path: str) -> dict:
+def load_manifest(path: str) -> dict[str, object]:
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        return cast(dict[str, object], json.load(f))
 
 
-def build_adj(manifest: dict) -> dict[str, list[str]]:
+def _get_dep_name(dep: object) -> str | None:
+    """Extract dependency name from dep (dict with 'name' key or plain str)."""
+    if isinstance(dep, dict):
+        name = dep.get("name")
+        return str(name) if name is not None else None
+    if isinstance(dep, str):
+        return dep
+    return None
+
+
+def build_adj(manifest: dict[str, object]) -> dict[str, list[str]]:
     """Build adjacency list: repo -> list of direct dependents."""
     adj: dict[str, list[str]] = {}
-    repos = manifest.get("repositories", {})
+    raw_repos = manifest.get("repositories")
+    repos = cast(dict[str, object], raw_repos) if isinstance(raw_repos, dict) else {}
     for repo_name in repos:
         adj[repo_name] = []
 
     for repo_name, data in repos.items():
-        for dep in data.get("dependencies", []):
-            dep_name = dep.get("name") if isinstance(dep, dict) else dep
+        repo_data = cast(dict[str, object], data)
+        raw_deps = repo_data.get("dependencies")
+        deps = cast(list[object], raw_deps) if isinstance(raw_deps, list) else []
+        for dep in deps:
+            dep_name = _get_dep_name(dep)
             if dep_name and dep_name in adj:
                 # dep_name → repo_name (repo_name depends ON dep_name)
                 # Forward edge: dep_name is a dependency of repo_name
@@ -80,8 +95,8 @@ def find_cycles(adj: dict[str, list[str]], start_nodes: list[str] | None = None)
 
 
 def send_telegram_alert(message: str) -> None:
-    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         return
     try:
@@ -97,23 +112,28 @@ def send_telegram_alert(message: str) -> None:
             data=data,
             method="POST",
         )
-        urllib.request.urlopen(req, timeout=10)
+        urllib.request.urlopen(req, timeout=10)  # nosec B310 — intentional: Telegram API over HTTPS
     except Exception:
-        pass  # TG failure must never block the script
+        pass  # TG failure must never block; documented in QUALITY_GATE_BYPASS_AUDIT §2.9
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate manifest DAG for cycles")
-    parser.add_argument("--manifest", default="workspace-manifest.json")
-    parser.add_argument("--triggering-repo", default=None, help="Only validate subgraph reachable from this repo")
+    parser.add_argument("--manifest", default="workspace-manifest.json", type=str)
+    parser.add_argument(
+        "--triggering-repo", default=None, type=str, help="Only validate subgraph reachable from this repo"
+    )
     args = parser.parse_args()
 
-    if not os.path.exists(args.manifest):
-        print(f"ERROR: Manifest not found: {args.manifest}", file=sys.stderr)
+    manifest_path: str = cast(str, args.manifest)
+    triggering_repo: str | None = cast(str | None, args.triggering_repo)
+
+    if not os.path.exists(manifest_path):
+        print(f"ERROR: Manifest not found: {manifest_path}", file=sys.stderr)
         return 2
 
     try:
-        manifest = load_manifest(args.manifest)
+        manifest = load_manifest(manifest_path)
     except json.JSONDecodeError as e:
         print(f"ERROR: Manifest JSON parse error: {e}", file=sys.stderr)
         return 2
@@ -122,12 +142,12 @@ def main() -> int:
     print(f"DAG: {len(adj)} repos loaded", file=sys.stderr)
 
     start_nodes: list[str] | None = None
-    if args.triggering_repo:
-        if args.triggering_repo not in adj:
-            print(f"WARNING: {args.triggering_repo} not in manifest — skipping cycle check", file=sys.stderr)
+    if triggering_repo:
+        if triggering_repo not in adj:
+            print(f"WARNING: {triggering_repo} not in manifest — skipping cycle check", file=sys.stderr)
             return 0
         # Check subgraph: the triggering repo and everything downstream
-        start_nodes = [args.triggering_repo]
+        start_nodes = [triggering_repo]
 
     cycles = find_cycles(adj, start_nodes)
 
@@ -146,8 +166,8 @@ def main() -> int:
         "Cascade aborted. Check `workspace-manifest.json`.\n"
         "Cycles found:\n" + "\n".join(f"• `{c}`" for c in cycle_strs)
     )
-    if args.triggering_repo:
-        tg_msg = f"Triggering repo: `{args.triggering_repo}`\n" + tg_msg
+    if triggering_repo:
+        tg_msg = f"Triggering repo: `{triggering_repo}`\n" + tg_msg
 
     send_telegram_alert(tg_msg)
     return 1

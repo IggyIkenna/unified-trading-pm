@@ -46,6 +46,7 @@ BE_EXCLUDE_GLOBS=(
     "**/validate-buildspec.py"
     "**/validate-cloudbuild.py"
     "**/validate-internal-editable.py"
+    "**/validate-manifest-dag.py"
     "**/rollout-quality-gates-ci-workflows.py"
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=("!**/check_data_completeness.py")

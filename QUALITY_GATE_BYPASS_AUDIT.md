@@ -76,8 +76,9 @@ None.
 | `scripts/manifest/generate_workspace_dag.py:394`                       | B314 | `# nosec B314` | Same as above — SVG is generated internally and validated before disk write.                                                                                                                        |
 | `scripts/repo-management/create-github-repos-and-collaborators.py:103` | B310 | `# nosec B310` | `urllib.request.urlopen` is called with a hardcoded `https://api.github.com/` URL via a `Request` object. No user-controlled URL schemes possible.                                                  |
 | `scripts/repo-management/ensure-repo-collaborators.py:104`             | B310 | `# nosec B310` | Same as above — hardcoded GitHub API https endpoint only.                                                                                                                                           |
+| `scripts/validate-manifest-dag.py:112`                                 | B310 | `# nosec B310` | `urllib.request.urlopen` to hardcoded `https://api.telegram.org/` — Telegram alert on cycle detection. No user-controlled URL.                                                                      |
 
-**Audit trail:** Added 2026-03-04.
+**Audit trail:** Added 2026-03-04. validate-manifest-dag.py B310 added 2026-03-13.
 
 ## 2.3 Basedpyright Exceptions
 
@@ -156,7 +157,10 @@ with many different exception types (syntax errors, encoding errors, malformed T
 production services with SLAs. The "specific exception" rule applies to production services where silent failures are
 dangerous.
 
-**Audit trail:** Added 2026-03-04.
+**Additional:** `scripts/validate-manifest-dag.py` — `send_telegram_alert()` catches `Exception` so Telegram API
+failures (network, timeout, HTTP errors) never block the DAG validation script. Alert delivery is best-effort.
+
+**Audit trail:** Added 2026-03-04. validate-manifest-dag.py added 2026-03-13.
 
 ---
 

@@ -8,11 +8,13 @@ Writes docs/repo-management/CI-CD-PIPELINE.svg
 
 Regenerate: python3 scripts/generate-cicd-diagram.py
 """
+
 from __future__ import annotations
 
 import math
 import sys
 from pathlib import Path
+from typing import cast
 
 try:
     import yaml
@@ -21,49 +23,50 @@ except ImportError:
     sys.exit(1)
 
 # ─── Layout constants ─────────────────────────────────────────────────────────
-LANE_HEADER_W: int = 110      # left-side swimlane label strip width (px)
-LANE_H: int        = 210      # height of each swimlane row (px)
-COL_W: int         = 400      # width per column unit (px)
-NODE_W: int        = 240      # process / notification node width (px)
-NODE_H: int        = 88       # process / notification node height (px)
-DIAMOND_W: int     = 130      # half-width of decision diamond (px)
-DIAMOND_H: int     = 68       # half-height of decision diamond (px)
-START_R: int       = 44       # radius of start/trigger circle (px)
-END_W: int         = 200      # terminal box width
-END_H: int         = 72       # terminal box height
-FONT_MAIN: int     = 12       # node body font size (px)
-FONT_LANE: int     = 10       # swimlane label font size (px)
-FONT_EDGE: int     = 10       # edge label font size (px)
-FONT_ANN: int      = 9        # annotation font size (px)
-LINE_H: int        = 15       # line height inside nodes (px)
-TITLE_H: int       = 56       # title bar height (px)
-LEGEND_H: int      = 44       # legend bar height (px)
-ARROW_HEAD: int    = 8        # arrowhead size (px)
+LANE_HEADER_W: int = 110  # left-side swimlane label strip width (px)
+LANE_H: int = 210  # height of each swimlane row (px)
+COL_W: int = 400  # width per column unit (px)
+NODE_W: int = 240  # process / notification node width (px)
+NODE_H: int = 88  # process / notification node height (px)
+DIAMOND_W: int = 130  # half-width of decision diamond (px)
+DIAMOND_H: int = 68  # half-height of decision diamond (px)
+START_R: int = 44  # radius of start/trigger circle (px)
+END_W: int = 200  # terminal box width
+END_H: int = 72  # terminal box height
+FONT_MAIN: int = 12  # node body font size (px)
+FONT_LANE: int = 10  # swimlane label font size (px)
+FONT_EDGE: int = 10  # edge label font size (px)
+FONT_ANN: int = 9  # annotation font size (px)
+LINE_H: int = 15  # line height inside nodes (px)
+TITLE_H: int = 56  # title bar height (px)
+LEGEND_H: int = 44  # legend bar height (px)
+ARROW_HEAD: int = 8  # arrowhead size (px)
 
 BRANCH_COLORS: dict[str, str] = {
     "feat_star": "#5882c8",
-    "staging":   "#d48c1a",
-    "main":      "#2e8f45",
-    "agent":     "#8040b0",
-    "both":      "#777777",
+    "staging": "#d48c1a",
+    "main": "#2e8f45",
+    "agent": "#8040b0",
+    "both": "#777777",
 }
 BRANCH_FILL: dict[str, str] = {
     "feat_star": "#dde8f8",
-    "staging":   "#fdf0d0",
-    "main":      "#d8f4e0",
-    "agent":     "#ede0f8",
-    "both":      "#f0f0f0",
+    "staging": "#fdf0d0",
+    "main": "#d8f4e0",
+    "agent": "#ede0f8",
+    "both": "#f0f0f0",
 }
 DARK_FILL: dict[str, str] = {
     "feat_star": "#3a5fa8",
-    "staging":   "#a86800",
-    "main":      "#1e6030",
-    "agent":     "#5c2090",
-    "both":      "#444444",
+    "staging": "#a86800",
+    "main": "#1e6030",
+    "agent": "#5c2090",
+    "both": "#444444",
 }
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
 
 def x(col: float) -> float:
     """Convert column index to canvas x-center (accounts for lane header)."""
@@ -84,30 +87,28 @@ def cy(node: dict, lm: dict[str, int]) -> float:
 
 
 def esc(text: str) -> str:
-    return (text.replace("&", "&amp;").replace("<", "&lt;")
-                .replace(">", "&gt;").replace('"', "&quot;"))
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
-def text_block(px: float, py: float, lines: list[str],
-               font_size: int, fill: str,
-               anchor: str = "middle", weight: str = "normal") -> str:
+def text_block(
+    px: float, py: float, lines: list[str], font_size: int, fill: str, anchor: str = "middle", weight: str = "normal"
+) -> str:
     """Multi-line text centered at (px, py). Uses absolute tspan y coords."""
     n = len(lines)
     start_y = py - (n - 1) * LINE_H / 2
     spans = "".join(
-        f'<tspan x="{px:.1f}" y="{start_y + i * LINE_H:.1f}">{esc(ln)}</tspan>'
-        for i, ln in enumerate(lines)
+        f'<tspan x="{px:.1f}" y="{start_y + i * LINE_H:.1f}">{esc(ln)}</tspan>' for i, ln in enumerate(lines)
     )
     return (
         f'<text text-anchor="{anchor}" font-size="{font_size}" '
-        f'font-family="Inter,\'Segoe UI\',Arial,sans-serif" '
+        f"font-family=\"Inter,'Segoe UI',Arial,sans-serif\" "
         f'font-weight="{weight}" fill="{fill}">{spans}</text>'
     )
 
 
-def rect_node(cx_: float, cy_: float, w: float, h: float,
-              label: str, fill: str, stroke: str,
-              rx: float = 8, tooltip: str = "") -> str:
+def rect_node(
+    cx_: float, cy_: float, w: float, h: float, label: str, fill: str, stroke: str, rx: float = 8, tooltip: str = ""
+) -> str:
     lines = label.split("\n")
     x0, y0 = cx_ - w / 2, cy_ - h / 2
     title = f"<title>{esc(tooltip)}</title>" if tooltip else ""
@@ -119,24 +120,18 @@ def rect_node(cx_: float, cy_: float, w: float, h: float,
     return f'<g class="node">{title}{rect}{txt}</g>'
 
 
-def diamond_node(cx_: float, cy_: float, hw: float, hh: float,
-                 label: str, fill: str, stroke: str, tooltip: str = "") -> str:
-    pts = (f"{cx_:.1f},{cy_ - hh:.1f} "
-           f"{cx_ + hw:.1f},{cy_:.1f} "
-           f"{cx_:.1f},{cy_ + hh:.1f} "
-           f"{cx_ - hw:.1f},{cy_:.1f}")
+def diamond_node(
+    cx_: float, cy_: float, hw: float, hh: float, label: str, fill: str, stroke: str, tooltip: str = ""
+) -> str:
+    pts = f"{cx_:.1f},{cy_ - hh:.1f} {cx_ + hw:.1f},{cy_:.1f} {cx_:.1f},{cy_ + hh:.1f} {cx_ - hw:.1f},{cy_:.1f}"
     lines = label.split("\n")
     title = f"<title>{esc(tooltip)}</title>" if tooltip else ""
-    poly = (
-        f'<polygon points="{pts}" fill="{fill}" '
-        f'stroke="{stroke}" stroke-width="2"/>'
-    )
+    poly = f'<polygon points="{pts}" fill="{fill}" stroke="{stroke}" stroke-width="2"/>'
     txt = text_block(cx_, cy_, lines, FONT_MAIN - 1, "#111111")
     return f'<g class="node">{title}{poly}{txt}</g>'
 
 
-def circle_node(cx_: float, cy_: float, r: float,
-                label: str, fill: str, stroke: str, tooltip: str = "") -> str:
+def circle_node(cx_: float, cy_: float, r: float, label: str, fill: str, stroke: str, tooltip: str = "") -> str:
     lines = label.split("\n")
     title = f"<title>{esc(tooltip)}</title>" if tooltip else ""
     circ = f'<circle cx="{cx_:.1f}" cy="{cy_:.1f}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="2"/>'
@@ -144,21 +139,19 @@ def circle_node(cx_: float, cy_: float, r: float,
     return f'<g class="node">{title}{circ}{txt}</g>'
 
 
-def end_node(cx_: float, cy_: float, label: str,
-             fill: str, stroke: str, tooltip: str = "") -> str:
+def end_node(cx_: float, cy_: float, label: str, fill: str, stroke: str, tooltip: str = "") -> str:
     return rect_node(cx_, cy_, END_W, END_H, label, fill, stroke, rx=8, tooltip=tooltip)
 
 
-def notification_node(cx_: float, cy_: float, label: str,
-                      fill: str, stroke: str, tooltip: str = "") -> str:
+def notification_node(cx_: float, cy_: float, label: str, fill: str, stroke: str, tooltip: str = "") -> str:
     """Notification: pill-shaped rectangle."""
     return rect_node(cx_, cy_, NODE_W, NODE_H, label, fill, stroke, rx=20, tooltip=tooltip)
 
 
 # ─── Arrow routing ────────────────────────────────────────────────────────────
 
-def boundary_point(node: dict, lm: dict[str, int],
-                   toward_x: float, toward_y: float) -> tuple[float, float]:
+
+def boundary_point(node: dict, lm: dict[str, int], toward_x: float, toward_y: float) -> tuple[float, float]:
     """Return point on node boundary pointing toward (toward_x, toward_y)."""
     ncx, ncy = cx(node, lm), cy(node, lm)
     dx = toward_x - ncx
@@ -192,9 +185,9 @@ def boundary_point(node: dict, lm: dict[str, int],
     return ncx, ncy
 
 
-def draw_arrow(sx: float, sy: float, tx: float, ty: float,
-               color: str, label: str = "", style: str = "solid",
-               outcome: str = "") -> str:
+def draw_arrow(
+    sx: float, sy: float, tx: float, ty: float, color: str, label: str = "", style: str = "solid", outcome: str = ""
+) -> str:
     """Cubic bezier arrow from (sx,sy) to (tx,ty).
 
     outcome: "yes" | "no" | "" — renders a colored YES/NO badge near source.
@@ -219,10 +212,7 @@ def draw_arrow(sx: float, sy: float, tx: float, ty: float,
         c1x, c1y = sx + dx * 0.4, sy
         c2x, c2y = tx - dx * 0.4, ty
 
-    path_d = (
-        f"M {sx:.1f},{sy:.1f} "
-        f"C {c1x:.1f},{c1y:.1f} {c2x:.1f},{c2y:.1f} {tx:.1f},{ty:.1f}"
-    )
+    path_d = f"M {sx:.1f},{sy:.1f} C {c1x:.1f},{c1y:.1f} {c2x:.1f},{c2y:.1f} {tx:.1f},{ty:.1f}"
 
     # Arrowhead polygon
     angle = math.atan2(ty - c2y, tx - c2x)
@@ -233,10 +223,7 @@ def draw_arrow(sx: float, sy: float, tx: float, ty: float,
     ay2 = ty - ah * math.sin(angle + 0.45)
     head = f'<polygon points="{tx:.1f},{ty:.1f} {ax1:.1f},{ay1:.1f} {ax2:.1f},{ay2:.1f}" fill="{color}"/>'
 
-    path_el = (
-        f'<path d="{path_d}" fill="none" stroke="{color}" '
-        f'stroke-width="1.8" {dash}/>'
-    )
+    path_el = f'<path d="{path_d}" fill="none" stroke="{color}" stroke-width="1.8" {dash}/>'
 
     # Edge label — placed at 20% from source so it stays near the decision diamond
     label_t = 0.20 if outcome else 0.50
@@ -245,10 +232,7 @@ def draw_arrow(sx: float, sy: float, tx: float, ty: float,
     label_el = ""
     if label.strip():
         lines = label.strip().split("\n")
-        spans = "".join(
-            f'<tspan x="{lx:.1f}" y="{ly + i * 11:.1f}">{esc(ln)}</tspan>'
-            for i, ln in enumerate(lines)
-        )
+        spans = "".join(f'<tspan x="{lx:.1f}" y="{ly + i * 11:.1f}">{esc(ln)}</tspan>' for i, ln in enumerate(lines))
         label_el = (
             f'<text text-anchor="start" font-size="{FONT_EDGE}" '
             f'font-family="Inter,Arial,sans-serif" font-weight="600" '
@@ -259,9 +243,9 @@ def draw_arrow(sx: float, sy: float, tx: float, ty: float,
 
     # YES / NO badge — rendered as a pill right at the source exit point
     if outcome in ("yes", "no"):
-        badge_fill  = "#1a7a38" if outcome == "yes" else "#b03030"
-        badge_text  = "YES"     if outcome == "yes" else "NO"
-        bw          = 28        if outcome == "yes" else 22
+        badge_fill = "#1a7a38" if outcome == "yes" else "#b03030"
+        badge_text = "YES" if outcome == "yes" else "NO"
+        bw = 28 if outcome == "yes" else 22
         # 15% along the edge from source boundary
         bx = sx + (tx - sx) * 0.08
         by = sy + (ty - sy) * 0.08
@@ -279,13 +263,14 @@ def draw_arrow(sx: float, sy: float, tx: float, ty: float,
 
 # ─── Main generator ───────────────────────────────────────────────────────────
 
+
 def generate_svg(defn: dict) -> str:
-    lanes: list[dict]  = defn.get("swimlanes", [])
-    nodes: list[dict]  = defn.get("nodes", [])
-    conns: list[dict]  = defn.get("connections", [])
-    anns: list[dict]   = defn.get("annotations", [])
-    meta: dict         = defn.get("meta", {})
-    legend_def: dict   = defn.get("legend", {})
+    lanes: list[dict] = defn.get("swimlanes", [])
+    nodes: list[dict] = defn.get("nodes", [])
+    conns: list[dict] = defn.get("connections", [])
+    anns: list[dict] = defn.get("annotations", [])
+    meta: dict = defn.get("meta", {})
+    legend_def: dict = defn.get("legend", {})
 
     lm = {lane["id"]: idx for idx, lane in enumerate(lanes)}
     nm = {n["id"]: n for n in nodes}
@@ -298,10 +283,7 @@ def generate_svg(defn: dict) -> str:
     parts: list[str] = []
 
     # ── SVG root ──
-    parts.append(
-        f'<svg xmlns="http://www.w3.org/2000/svg" '
-        f'viewBox="0 0 {cw} {ch}" width="{cw}" height="{ch}">'
-    )
+    parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {cw} {ch}" width="{cw}" height="{ch}">')
 
     # ── Defs ──
     all_colors = {BRANCH_COLORS.get(n.get("branch", "both"), "#777") for n in nodes}
@@ -318,7 +300,7 @@ def generate_svg(defn: dict) -> str:
     parts.append(
         '<filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">'
         '<feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.12"/>'
-        '</filter>'
+        "</filter>"
     )
     parts.append("</defs>")
 
@@ -326,24 +308,24 @@ def generate_svg(defn: dict) -> str:
     parts.append(f'<rect width="{cw}" height="{ch}" fill="#f4f6fa"/>')
 
     # ── Title bar ──
-    title  = esc(meta.get("title", "CI/CD Pipeline"))
-    sub    = esc(meta.get("subtitle", ""))
-    ver    = esc(meta.get("version", ""))
-    regen  = esc(meta.get("regenerate", ""))
+    title = esc(meta.get("title", "CI/CD Pipeline"))
+    sub = esc(meta.get("subtitle", ""))
+    ver = esc(meta.get("version", ""))
+    regen = esc(meta.get("regenerate", ""))
     parts.append(
         f'<rect x="0" y="0" width="{cw}" height="{TITLE_H}" fill="#0f1729"/>'
         f'<text x="{LANE_HEADER_W + 12}" y="26" font-size="17" font-weight="700" '
         f'fill="#ffffff" font-family="Inter,Arial,sans-serif">{title}</text>'
         f'<text x="{LANE_HEADER_W + 12}" y="46" font-size="10.5" fill="#8899bb" '
         f'font-family="Inter,Arial,sans-serif">{sub}  —  {ver}  |  '
-        f'Regenerate: {regen}</text>'
+        f"Regenerate: {regen}</text>"
     )
 
     # ── Swimlane bands + labels ──
     for idx, lane in enumerate(lanes):
         yt = TITLE_H + idx * LANE_H
-        bg    = lane.get("color",  "#f8f8f8")
-        bdr   = lane.get("border", "#cccccc")
+        bg = lane.get("color", "#f8f8f8")
+        bdr = lane.get("border", "#cccccc")
         # Band
         parts.append(
             f'<rect x="{LANE_HEADER_W}" y="{yt}" '
@@ -351,10 +333,7 @@ def generate_svg(defn: dict) -> str:
             f'fill="{bg}" stroke="{bdr}" stroke-width="0.6"/>'
         )
         # Label strip
-        parts.append(
-            f'<rect x="0" y="{yt}" width="{LANE_HEADER_W}" height="{LANE_H}" '
-            f'fill="{bdr}" opacity="0.28"/>'
-        )
+        parts.append(f'<rect x="0" y="{yt}" width="{LANE_HEADER_W}" height="{LANE_H}" fill="{bdr}" opacity="0.28"/>')
         label_text = lane.get("label", "").replace("\n", " · ")
         lx = LANE_HEADER_W / 2
         ly = yt + LANE_H / 2
@@ -376,35 +355,33 @@ def generate_svg(defn: dict) -> str:
         # Boundary exit/entry
         sp = boundary_point(src, lm, tcx, tcy)
         ep = boundary_point(dst, lm, scx, scy)
-        color   = BRANCH_COLORS.get(conn.get("branch", "both"), "#777")
-        lbl     = conn.get("label", "")
-        style   = conn.get("style", "solid")
+        color = BRANCH_COLORS.get(conn.get("branch", "both"), "#777")
+        lbl = conn.get("label", "")
+        style = conn.get("style", "solid")
         outcome = conn.get("outcome", "")
         parts.append(draw_arrow(sp[0], sp[1], ep[0], ep[1], color, lbl, style, outcome))
 
     # ── Nodes (drawn above connections) ──
     for node in nodes:
         ncx, ncy = cx(node, lm), cy(node, lm)
-        ntype   = node.get("type",    "process")
-        branch  = node.get("branch",  "both")
-        label   = node.get("label",   "")
+        ntype = node.get("type", "process")
+        branch = node.get("branch", "both")
+        label = node.get("label", "")
         tooltip = node.get("tooltip", "")
-        fill    = BRANCH_FILL.get(branch, "#f0f0f0")
-        stroke  = BRANCH_COLORS.get(branch, "#777")
-        dark    = DARK_FILL.get(branch, "#444")
+        fill = BRANCH_FILL.get(branch, "#f0f0f0")
+        stroke = BRANCH_COLORS.get(branch, "#777")
+        dark = DARK_FILL.get(branch, "#444")
 
         if ntype == "start":
             parts.append(circle_node(ncx, ncy, START_R, label, dark, stroke, tooltip))
         elif ntype == "decision":
-            parts.append(diamond_node(ncx, ncy, DIAMOND_W, DIAMOND_H,
-                                      label, fill, stroke, tooltip))
+            parts.append(diamond_node(ncx, ncy, DIAMOND_W, DIAMOND_H, label, fill, stroke, tooltip))
         elif ntype == "notification":
             parts.append(notification_node(ncx, ncy, label, fill, stroke, tooltip))
         elif ntype == "end":
             parts.append(end_node(ncx, ncy, label, "#ffe8e8", "#c04040", tooltip))
         else:
-            parts.append(rect_node(ncx, ncy, NODE_W, NODE_H, label,
-                                   fill, stroke, tooltip=tooltip))
+            parts.append(rect_node(ncx, ncy, NODE_W, NODE_H, label, fill, stroke, tooltip=tooltip))
 
         # Actor attribution — small italic text above decision nodes showing WHO decides
         actor = node.get("actor", "")
@@ -430,11 +407,11 @@ def generate_svg(defn: dict) -> str:
         nid = ann.get("node", "")
         if nid not in nm:
             continue
-        node  = nm[nid]
+        node = nm[nid]
         ncx_a = cx(node, lm)
         ncy_a = cy(node, lm)
-        pos   = ann.get("position", "below")
-        ay    = (ncy_a + NODE_H / 2 + 16) if pos == "below" else (ncy_a - NODE_H / 2 - 16)
+        pos = ann.get("position", "below")
+        ay = (ncy_a + NODE_H / 2 + 16) if pos == "below" else (ncy_a - NODE_H / 2 - 16)
         lines = ann.get("text", "").split("\n")
         for i, ln in enumerate(lines):
             parts.append(
@@ -446,15 +423,13 @@ def generate_svg(defn: dict) -> str:
 
     # ── Legend bar ──
     ly_bar = TITLE_H + len(lanes) * LANE_H
-    parts.append(
-        f'<rect x="0" y="{ly_bar}" width="{cw}" height="{LEGEND_H}" fill="#0f1729"/>'
-    )
+    parts.append(f'<rect x="0" y="{ly_bar}" width="{cw}" height="{LEGEND_H}" fill="#0f1729"/>')
     legend_branches = legend_def.get("branches", [])
     lx_cur = LANE_HEADER_W + 16
     parts.append(
         f'<text x="{lx_cur}" y="{ly_bar + 22}" font-size="10" '
         f'fill="#7788aa" font-family="Inter,Arial,sans-serif" font-weight="700">'
-        f'LEGEND:</text>'
+        f"LEGEND:</text>"
     )
     lx_cur += 72
     for br in legend_branches:
@@ -484,7 +459,7 @@ def generate_svg(defn: dict) -> str:
         parts.append(
             f'<text x="{lx_cur}" y="{ly_bar + 22}" font-size="10.5" '
             f'fill="#ccccee" font-family="Inter,Arial,sans-serif">'
-            f'{esc(shape_hint)} {esc(ntype_label)}</text>'
+            f"{esc(shape_hint)} {esc(ntype_label)}</text>"
         )
         lx_cur += 150
 
@@ -493,11 +468,11 @@ def generate_svg(defn: dict) -> str:
 
 
 def generate_html(svg: str, meta: dict) -> str:
-    title   = esc(meta.get("title",   "CI/CD Pipeline"))
-    sub     = esc(meta.get("subtitle",""))
-    ver     = esc(meta.get("version", ""))
-    source  = esc(meta.get("source",  ""))
-    regen   = esc(meta.get("regenerate",""))
+    title = esc(meta.get("title", "CI/CD Pipeline"))
+    sub = esc(meta.get("subtitle", ""))
+    ver = esc(meta.get("version", ""))
+    source = esc(meta.get("source", ""))
+    regen = esc(meta.get("regenerate", ""))
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -567,17 +542,17 @@ def generate_html(svg: str, meta: dict) -> str:
 
 def main() -> None:
     script_dir = Path(__file__).parent
-    repo_root  = script_dir.parent
-    yaml_path  = repo_root / "docs" / "repo-management" / "cicd-pipeline-definition.yaml"
-    svg_path   = repo_root / "docs" / "repo-management" / "CI-CD-PIPELINE.svg"
-    html_path  = repo_root / "docs" / "repo-management" / "CI-CD-PIPELINE.html"
+    repo_root = script_dir.parent
+    yaml_path = repo_root / "docs" / "repo-management" / "cicd-pipeline-definition.yaml"
+    svg_path = repo_root / "docs" / "repo-management" / "CI-CD-PIPELINE.svg"
+    html_path = repo_root / "docs" / "repo-management" / "CI-CD-PIPELINE.html"
 
     if not yaml_path.exists():
         print(f"ERROR: {yaml_path} not found", file=sys.stderr)
         sys.exit(1)
 
     print(f"Reading {yaml_path.name}...")
-    defn = yaml.safe_load(yaml_path.read_text())
+    defn: dict[str, object] = cast(dict[str, object], yaml.safe_load(yaml_path.read_text()) or {})
 
     print("Generating SVG...")
     svg = generate_svg(defn)
@@ -585,13 +560,14 @@ def main() -> None:
     print(f"Written → {svg_path}")
 
     print("Generating HTML...")
-    html = generate_html(svg, defn.get("meta", {}))
+    meta = cast(dict[str, object], defn.get("meta", {}))
+    html = generate_html(svg, meta)
     html_path.write_text(html)
     print(f"Written → {html_path}")
 
-    n_nodes = len(defn.get("nodes", []))
-    n_conns = len(defn.get("connections", []))
-    n_lanes = len(defn.get("swimlanes", []))
+    n_nodes = len(cast(list[object], defn.get("nodes", [])))
+    n_conns = len(cast(list[object], defn.get("connections", [])))
+    n_lanes = len(cast(list[object], defn.get("swimlanes", [])))
     print(f"Diagram: {n_lanes} lanes · {n_nodes} nodes · {n_conns} connections")
     print(f"SVG size: {svg_path.stat().st_size // 1024}KB")
 

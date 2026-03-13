@@ -25,12 +25,11 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 # Matches $(... && ...) substitution that has NO || anywhere inside the parens.
 # $(A && B || C) is fine (always exits 0).  $(A && B) alone will exit 1 when A fails.
-_CMD_SUBST_AND_NO_OR = re.compile(
-    r'\$\((?![^)]*\|\|)[^)]*&&[^)]*\)'
-)
+_CMD_SUBST_AND_NO_OR = re.compile(r"\$\((?![^)]*\|\|)[^)]*&&[^)]*\)")
 
 
 def _check_file(path: Path) -> list[str]:
@@ -79,18 +78,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--dir",
+        type=str,
         default=".github/workflows",
         help="Workflows directory to check (default: .github/workflows)",
     )
     args = parser.parse_args()
 
-    wf_dir = Path(args.dir)
+    wf_dir = Path(cast(str, args.dir))
     total = check_dir(wf_dir)
     if total:
-        print(
-            f"\n{total} workflow bash-guard violation(s) found."
-            " See messages above for fixes."
-        )
+        print(f"\n{total} workflow bash-guard violation(s) found. See messages above for fixes.")
         return 1
     return 0
 
