@@ -1,0 +1,88 @@
+name: Send Telegram Alert (Rate-Limited)
+description: >
+  Send a Telegram message with rate-limit guard. Max 1 message per group per 60 seconds. Deduplication key stored in
+  workspace-manifest.json under telegram_rate_limits.
+
+inputs:
+  message:
+    description: Message text to send
+    required: true
+  rate-limit-key:
+    description: Unique key for rate-limiting (e.g. "cloud-build-failure", "sit-starvation")
+    required: true
+  token:
+    description: Telegram bot token
+    required: true
+  chat-id:
+    description: Telegram chat ID
+    required: true
+  cooldown-seconds:
+    description: Minimum seconds between alerts for this key
+    required: false
+    default: "60"
+
+runs:
+  using: composite
+  steps:
+    - name: Check rate limit and send
+      shell: bash
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ inputs.token }}
+        TELEGRAM_CHAT_ID: ${{ inputs.chat-id }}
+        ALERT_MESSAGE: ${{ inputs.message }}
+        RATE_LIMIT_KEY: ${{ inputs.rate-limit-key }}
+        COOLDOWN_SECONDS: ${{ inputs.cooldown-seconds }}
+      run: |
+        if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+          echo "No Telegram token configured, skipping alert"
+          exit 0
+        fi
+
+        MANIFEST="workspace-manifest.json"
+        NOW=$(date -u +%s)
+
+        # Check last alert timestamp for this key
+        LAST_ALERT=$(python3 -c "
+        import json, sys
+        try:
+            with open('$MANIFEST') as f:
+                m = json.load(f)
+            ts = m.get('telegram_rate_limits', {}).get('$RATE_LIMIT_KEY', 0)
+            print(ts)
+        except:
+            print(0)
+        " 2>/dev/null || echo 0)
+
+        AGE=$((NOW - LAST_ALERT))
+
+        if [ $AGE -lt $COOLDOWN_SECONDS ]; then
+          echo "Rate limit active for '$RATE_LIMIT_KEY': last alert ${AGE}s ago (cooldown: ${COOLDOWN_SECONDS}s). Skipping."
+          exit 0
+        fi
+
+        # Send alert
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+          --data-urlencode "text=${ALERT_MESSAGE}" \
+          --data-urlencode "parse_mode=HTML")
+
+        if [ "$HTTP_CODE" = "200" ]; then
+          echo "Telegram alert sent (key: $RATE_LIMIT_KEY)"
+          # Update last-alert timestamp in manifest (atomic write: tmp + rename)
+          python3 -c "
+        import json, os
+        with open('$MANIFEST') as f:
+            m = json.load(f)
+        if 'telegram_rate_limits' not in m:
+            m['telegram_rate_limits'] = {}
+        m['telegram_rate_limits']['$RATE_LIMIT_KEY'] = $NOW
+        tmp_path = '$MANIFEST.tmp'
+        with open(tmp_path, 'w') as f:
+            json.dump(m, f, indent=2)
+            f.write('\n')
+        os.replace(tmp_path, '$MANIFEST')
+        " || echo "Warning: could not update rate-limit timestamp in manifest"
+        else
+          echo "Warning: Telegram API returned HTTP $HTTP_CODE"
+        fi

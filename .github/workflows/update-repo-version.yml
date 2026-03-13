@@ -147,15 +147,17 @@ jobs:
           NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
           sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_PM_VERSION}\"/" pyproject.toml
 
-          # Also update PM's own version entry in the manifest
+          # Also update PM's own version entry in the manifest (atomic write: tmp + rename)
           python3 -c "
-          import json
+          import json, os
           with open('workspace-manifest.json') as f:
               m = json.load(f)
           m['versions']['unified-trading-pm'] = '${NEW_PM_VERSION}'
-          with open('workspace-manifest.json', 'w') as f:
+          tmp_path = 'workspace-manifest.json.tmp'
+          with open(tmp_path, 'w') as f:
               json.dump(m, f, indent=2, ensure_ascii=False)
               f.write('\n')
+          os.replace(tmp_path, 'workspace-manifest.json')
           "
 
           echo "PM version: $CURRENT → $NEW_PM_VERSION"
