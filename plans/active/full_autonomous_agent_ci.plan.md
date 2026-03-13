@@ -360,8 +360,11 @@ todos:
       manifest-schema.json if it exists. Also add semver_policy field (values: agent | always_patch) — PM and Codex get
       always_patch; everything else gets agent. This encodes the PM/Codex carve-out cleanly in the manifest rather than
       hardcoding repo names in workflow logic.
-    status: pending
-    notes: "Added 2026-03-13 — encodes PM/Codex abbreviated-SIT and always-patch carve-out in manifest schema."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: workspace-manifest.json updated — sit_level and semver_policy fields added to all 67
+      repo entries. PM and unified-trading-codex: sit_level=abbreviated, semver_policy=always_patch. All other 65
+      repos: sit_level=standard, semver_policy=agent. Commit 9715bf4 in unified-trading-pm.
 
   - id: convert-workflows-to-reusable-workflow-call
     content: >-
@@ -414,10 +417,13 @@ todos:
       dispatches version-bump to PM. chore: commits: quality gates still run, no version bump (skip). Update template at
       unified-trading-pm/scripts/propagation/templates/semver-agent.yml and
       unified-trading-pm/scripts/templates/semver-agent.yml.
-    status: pending
-    notes:
-      "Added 2026-03-13 — corrects design error where agent fired on main (immutable). Supersedes
-      cicd_versioning_cloud_build phase-2 implementation."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: Both template files updated — trigger changed from branches: [main] to branches: [staging].
+      Added semver_policy=always_patch shortcut (skips label check, always patch bump). Added label mismatch detection
+      block that posts state=failure commit status via gh api POST /repos/.../statuses/$SHA when agent detects
+      bump type disagreement with commit message prefix. BRANCH updated to "staging" in dispatch step.
+      Commits 8a739fd in unified-trading-pm.
 
   - id: redesign-quickmerge-staging-first
     content: >-
@@ -430,11 +436,11 @@ todos:
       model; (6) Update CLAUDE.md, quickmerge.sh header comments, and codex docs/repo-management/CI-CD-FLOW.md to
       document the new staging-first invariant: "Only [skip ci] automation commits (version bumps, manifest updates, dep
       pins) go directly to main. Everything else goes through staging."
-    status: pending
-    notes: >-
-      Added 2026-03-13 — resolves circular label routing problem. Supersedes three-tier model where fix:/chore: bypassed
-      staging. PM and Codex carve-out handled via sit_level/semver_policy manifest fields (see
-      add-manifest-sit-level-field todo) — quickmerge reads these from manifest rather than hardcoding repo names.
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: quickmerge.sh redesigned — TO_STAGING=true as default; --to-staging is a no-op kept for
+      backwards compat; [skip ci] commits set SKIP_CI=true + TO_STAGING=false (direct to main); Stage 0.3 message
+      updated to reflect staging-first invariant; breaking-change warning block removed. Commit 7b3e794 in PM.
 
   - id: implement-hotfix-path-abbreviated-sit
     content: >-
@@ -447,10 +453,13 @@ todos:
       promotes immediately without waiting for full SIT lock cycle. Document in quickmerge.sh --help and CI-CD-FLOW.md:
       "Hotfix: still goes through staging but abbreviated SIT (<2 min) instead of full SIT. Use for production incidents
       only — agent still validates semver label."
-    status: pending
-    notes:
-      "Added 2026-03-13 — hotfix path that preserves staging-first invariant while reducing latency for production
-      incidents."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: --hotfix flag added to quickmerge.sh; after PR creation dispatches set-hotfix-mode
+      repository_dispatch to PM via curl; PM hotfix-mode.yml sets staging_status.hotfix_mode=true in manifest;
+      smoke-test-gate.yml reads hotfix_mode from manifest and runs abbreviated tests only; dispatch job clears
+      hotfix_mode via clear-hotfix-mode dispatch after abbreviated SIT passes. Commits: quickmerge (PM),
+      hotfix-mode.yml (PM), smoke-test-gate.yml (system-integration-tests e9bd8b4).
 
   - id: implement-abbreviated-sit-contract-checks
     content: >-
@@ -465,10 +474,15 @@ todos:
       Mark tests with @pytest.mark.abbreviated_sit. Register marker in pyproject.toml. Wire into smoke-test-gate.yml
       --hotfix mode (pytest tests/abbreviated/ -m abbreviated_sit) and also run abbreviated/ as a pre-step before full
       SIT so schema regressions surface fast.
-    status: pending
-    notes:
-      "Added 2026-03-13 — fast contract normalization check for runtime/pilot/pipeline boundary schemas. Enables hotfix
-      path and speeds up full SIT failure diagnosis."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: tests/abbreviated/ added to system-integration-tests with:
+      - test_contract_normalization.py: 14 round-trip tests (UEI, UIC, UAC, pubsub, ML schemas)
+        covering runtime/pilot/pipeline boundaries — pure in-process, no network/emulators.
+      - test_workflow_sanity.py: YAML syntax validation + workflow_run trigger consistency +
+        jobs structure checks across all local repos.
+      - pyproject.toml: abbreviated_sit marker registered.
+      Commit c7a6760 in system-integration-tests.
 
   - id: rollout-semver-agent-yml-replacing-version-bump
     content: >-
