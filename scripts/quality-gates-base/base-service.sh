@@ -161,6 +161,11 @@ ACTUAL_PY=$($PYTHON_CMD --version 2>&1 | awk '{print $2}' | cut -d'.' -f1,2)
 [[ "$ACTUAL_PY" != "3.13" ]] && { log_fail "Python 3.13 required, found $ACTUAL_PY"; exit 1; }; log_success "Python $ACTUAL_PY"
 command -v rg &>/dev/null || { log_fail "ripgrep required: brew install ripgrep"; exit 1; }; log_success "ripgrep OK"
 [ -f "pyproject.toml" ] && grep -q '>=3.13,<3.14' pyproject.toml || { log_fail "pyproject.toml: requires-python = '>=3.13,<3.14'"; exit 1; }; log_success "pyproject.toml OK"
+# Flat deps violation check (fix-quickmerge-dev-extras): optional-dependencies are banned (CLAUDE.md)
+if grep -q 'optional-dependencies' pyproject.toml 2>/dev/null; then
+    log_fail "FLAT DEPS VIOLATION: [project.optional-dependencies] found in pyproject.toml — use [project.dependencies] only (see CLAUDE.md)"
+    exit 1
+fi
 [[ ! -f "uv.lock" ]] && log_warn "uv.lock missing" || log_success "uv.lock present"
 RUFF_CMD=".venv/bin/ruff"; command -v "$RUFF_CMD" &>/dev/null || RUFF_CMD="ruff"
 RUFF_VER=$($RUFF_CMD --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "0")
@@ -211,6 +216,19 @@ if [ "$RUN_TESTS" = true ]; then
             || { echo "$_pytest_out"; exit 1; }
     fi
     log_ok "Tests PASSED"
+
+    # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed
+    _TESTS_RAN=$(echo "$_pytest_out" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | head -1 || echo "0")
+    _SKIPPED=$(echo "$_pytest_out" | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' | head -1 || echo "0")
+    if [ "${_TESTS_RAN:-0}" -eq 0 ]; then
+        log_fail "ZERO TESTS RAN — QG cannot pass with no test execution (zero-test-silent-pass guard)"
+        exit 1
+    fi
+    if [ "${_TESTS_RAN:-0}" -gt 0 ] && [ "${_SKIPPED:-0}" -gt 0 ]; then
+        _SKIP_RATE=$(( _SKIPPED * 100 / (_TESTS_RAN + _SKIPPED) ))
+        [ "$_SKIP_RATE" -ge 90 ] && { log_warn "High skip rate: ${_SKIP_RATE}% of tests skipped (${_SKIPPED} skipped, ${_TESTS_RAN} ran)"; }
+    fi
+
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
     [ ! -f "tests/unit/test_config.py" ] && { log_fail "Missing tests/unit/test_config.py"; exit 1; }
     log_ok "Required test files present"

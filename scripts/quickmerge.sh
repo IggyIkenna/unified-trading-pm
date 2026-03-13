@@ -362,7 +362,7 @@ fi
 if [ -f "pyproject.toml" ]; then
   echo "[$REPO_NAME] Installing project dependencies..."
   command -v uv >/dev/null 2>&1 || pip install uv --quiet
-  uv pip install -e ".[dev]" --quiet 2>/dev/null || uv pip install -e . --quiet 2>/dev/null || true
+  uv pip install -e . --quiet 2>/dev/null || true  # flat deps only — never .[dev] (fix-quickmerge-dev-extras)
 fi
 
 # ── EARLY EXIT: nothing to commit (skip when --no-pr) ─────────────────────────────────────────────

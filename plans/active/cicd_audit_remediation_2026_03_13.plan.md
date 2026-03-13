@@ -269,7 +269,7 @@ todos:
             If missing: log and optionally add via gh api PUT.
       (2) Add to quality-gates.sh as a manifest validation step. (3) Run in overnight orchestrator as a pre-check.
       Acceptance: 100% of repos with staging branch have staging-lock-gate as required check.
-    status: pending
+    status: done
 
   - id: add-dispatch-retry-with-alerting
     content: >
@@ -869,7 +869,7 @@ todos:
             exit 1
           fi
       Acceptance: no repo can pass QG with zero executed tests.
-    status: pending
+    status: done
 
   - id: fix-quickmerge-dev-extras
     content: >
@@ -882,7 +882,7 @@ todos:
             exit 1
           fi
       Acceptance: `.[dev]` never used; optional-dependencies blocked by QG.
-    status: pending
+    status: done
 
   - id: enforce-files-in-agent-mode
     content: >
