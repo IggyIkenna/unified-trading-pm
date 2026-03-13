@@ -1,5 +1,13 @@
 ---
 name: Version Cascade Rollout — Automated Cross-Repo Version Pinning
+superseded_by: |
+  PARTIALLY SUPERSEDED 2026-03-13 by full_autonomous_agent_ci plan (staging-first routing redesign).
+  The cascade mechanism (update-repo-version.yml → downstream dispatch, >=X.Y.0,<X+1.0.0 constraints)
+  is still correct and in use. What is superseded: the assumption that fix:/feat: commits route directly
+  to main and trigger the cascade from main. New design: ALL human commits go through staging first;
+  semver-agent fires on staging and validates the label before promotion; direct-to-main is only for
+  [skip ci] automation commits. See full_autonomous_agent_ci todos: fix-semver-agent-template-staging-trigger,
+  redesign-quickmerge-staging-first.
 overview: |
   Roll out the full automated version cascade system to all 59 workspace repos.
   When any repo merges feat:/fix: to main, the cascade automatically:

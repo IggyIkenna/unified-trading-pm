@@ -177,3 +177,54 @@ BODY
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d text="${TEXT}" \
             -d parse_mode="Markdown" || true
+
+      # ── CONFLICT DETECTION ────────────────────────────────────────────────────
+      - name: Detect merge conflict and dispatch resolution agent
+        # Runs always so it fires even when auto-merge was skipped (staging locked).
+        # GitHub computes mergeable asynchronously — poll up to 3× before giving up.
+        if: always() && steps.pr.outputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+        run: |
+          REPO="${GH_ORG}/${SERVICE_NAME}"
+
+          # Poll for mergeable state (GitHub computes asynchronously)
+          MERGEABLE=""
+          for _i in 1 2 3; do
+            MERGEABLE=$(gh pr view "$PR_NUMBER" \
+              --repo "$REPO" \
+              --json mergeable \
+              --jq '.mergeable' 2>/dev/null || echo "")
+            [ "$MERGEABLE" != "null" ] && [ "$MERGEABLE" != "" ] && break
+            sleep 5
+          done
+
+          echo "PR #$PR_NUMBER mergeable=$MERGEABLE"
+
+          if [ "$MERGEABLE" = "CONFLICTING" ]; then
+            echo "Merge conflict detected on PR #$PR_NUMBER — dispatching conflict-resolution-agent"
+
+            # Telegram: immediate notification
+            if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+              TEXT="⚠️ *Merge Conflict Detected*%0ARepo: \`${SERVICE_NAME}\`%0A\`${FEATURE_BRANCH}\` → \`staging\`%0APR: ${PR_URL}%0AAgent dispatched to resolve..."
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d text="$TEXT" \
+                -d parse_mode="Markdown" || true
+            fi
+
+            # Dispatch conflict-resolution-agent to PM
+            curl -s -X POST \
+              "https://api.github.com/repos/${GH_ORG}/unified-trading-pm/dispatches" \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${SERVICE_NAME}\",\"source_branch\":\"${FEATURE_BRANCH}\",\"target_branch\":\"staging\",\"original_pr_url\":\"${PR_URL}\"}}" \
+              && echo "Dispatched conflict-resolution-agent" \
+              || echo "WARNING: Failed to dispatch conflict-resolution-agent"
+          else
+            echo "No merge conflict (mergeable=$MERGEABLE) — nothing to dispatch"
+          fi

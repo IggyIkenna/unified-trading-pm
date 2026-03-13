@@ -1,5 +1,12 @@
 ---
 name: pre-commit-to-gha-version-bump
+superseded_note: |
+  PARTIALLY SUPERSEDED 2026-03-13. The hook removal (rollout-remove-bump-library-version-hook) is complete
+  and correct — stays done. The staging-to-main cascade fix (pm-changes-staging-to-main-cascade) is also
+  still valid. What is superseded: the assumption that version-bump.yml on main is the fallback for direct
+  fix:/feat: commits. New design: there are no direct fix:/feat: commits to main — everything goes through
+  staging. version-bump.yml remains disabled (if: false). semver-agent.yml is the sole bumper and fires
+  on staging. See full_autonomous_agent_ci todo: fix-semver-agent-template-staging-trigger.
 overview:
   Remove the local bump-library-version pre-commit hook from all 65 repos (it caused PATCH double-bumps before the GHA
   MINOR/MAJOR bump fired) and fix staging-to-main.yml to dispatch the dependency-update cascade after staging→main

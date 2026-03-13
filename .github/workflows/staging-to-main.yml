@@ -123,6 +123,8 @@ jobs:
       - name: Merge staging → main for all repos with staging changes
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           set -euo pipefail
 
@@ -200,8 +202,56 @@ jobs:
               gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || \
                 echo "  WARNING: auto-merge not available for $REPO — merge PR manually: $PR_URL"
             else
-              echo "  PR already exists or merge conflict — skipping $REPO"
+              echo "  PR already exists or merge conflict — checking mergeable state..."
               FAILED="$FAILED $REPO"
+
+              # Check if an existing staging→main PR is blocked by a content conflict
+              EXISTING_PR_NUM=$(gh pr list \
+                --repo "$OWNER/$REPO" \
+                --base main \
+                --head staging \
+                --state open \
+                --json number \
+                --jq '.[0].number' 2>/dev/null || echo "")
+
+              if [ -n "$EXISTING_PR_NUM" ] && [ "$EXISTING_PR_NUM" != "null" ]; then
+                # Poll for mergeable_state (GitHub computes it asynchronously — may be null briefly)
+                MERGEABLE_STATE=""
+                for _i in 1 2 3; do
+                  MERGEABLE_STATE=$(gh api "repos/$OWNER/$REPO/pulls/$EXISTING_PR_NUM" \
+                    --jq '.mergeable_state' 2>/dev/null || echo "")
+                  [ "$MERGEABLE_STATE" != "null" ] && [ -n "$MERGEABLE_STATE" ] && break
+                  sleep 5
+                done
+
+                if [ "$MERGEABLE_STATE" = "dirty" ]; then
+                  # "dirty" = content conflict in GitHub REST API
+                  PR_URL_CONFLICT="https://github.com/$OWNER/$REPO/pull/$EXISTING_PR_NUM"
+                  echo "  CONFLICT detected on PR #$EXISTING_PR_NUM ($PR_URL_CONFLICT)"
+
+                  # Telegram: immediate notification
+                  if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+                    TEXT="⚠️ *Merge Conflict Detected*%0ARepo: \`${REPO}\`%0A\`staging\` → \`main\`%0APR: ${PR_URL_CONFLICT}%0AAgent dispatched to resolve..."
+                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                      -d chat_id="${TELEGRAM_CHAT_ID}" \
+                      -d text="$TEXT" \
+                      -d parse_mode="Markdown" || true
+                  fi
+
+                  # Dispatch conflict-resolution-agent
+                  curl -s -X POST \
+                    "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                    -H "Authorization: Bearer $GH_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL_CONFLICT}\"}}" \
+                    && echo "  Dispatched conflict-resolution-agent for $REPO" \
+                    || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
+                else
+                  echo "  PR #$EXISTING_PR_NUM mergeable_state=$MERGEABLE_STATE (not a conflict)"
+                fi
+              else
+                echo "  No open staging→main PR found for $REPO (PR creation may have failed for another reason)"
+              fi
             fi
 
           done <<< "$REPOS"

@@ -54,6 +54,11 @@ todos:
       sole authoritative bumper until semver-agent.yml rollout replaces it.
       Rollout of semver-agent.yml MUST remove version-bump.yml simultaneously (see
       rollout-semver-agent-yml-replacing-version-bump todo below).
+
+      DESIGN CORRECTION 2026-03-13: The template as written fires on main (workflow_run: branches: [main])
+      which is wrong — the commit is immutable by then. Correct trigger is staging. Template must be
+      updated before rollout. See fix-semver-agent-template-staging-trigger todo. The template file at
+      scripts/propagation/templates/semver-agent.yml and scripts/templates/semver-agent.yml needs this fix.
   - id: write-tier-orchestrator
     content:
       "Create unified-trading-pm/.github/workflows/overnight-agent-orchestrator.yml: schedule cron 0 1 * * *, read
@@ -344,16 +349,157 @@ todos:
     status: pending
     note: "Added 2026-03-10 — not yet audited. Blind spot that allowed 25-30K lines of duplicated QG logic to persist."
 
+  - id: add-manifest-sit-level-field
+    content: >-
+      Add sit_level field to workspace-manifest.json per repo (values: standard | abbreviated | none). PM and
+      unified-trading-codex get sit_level: abbreviated — they are tooling/docs repos with no runtime contracts; full SIT
+      never makes sense for them. All library/service/API/UI repos default to standard. smoke-test-gate.yml reads
+      sit_level from PM manifest for the repo being promoted and routes accordingly: abbreviated → tests/abbreviated/
+      only; standard → full smoke + e2e. semver-agent also reads sit_level: repos with abbreviated always get patch bump
+      (no API surface to validate — skip label mismatch check). Update workspace-manifest.json schema docs and
+      manifest-schema.json if it exists. Also add semver_policy field (values: agent | always_patch) — PM and Codex get
+      always_patch; everything else gets agent. This encodes the PM/Codex carve-out cleanly in the manifest rather than
+      hardcoding repo names in workflow logic.
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: workspace-manifest.json updated — sit_level and semver_policy fields added to all 67
+      repo entries. PM and unified-trading-codex: sit_level=abbreviated, semver_policy=always_patch. All other 65
+      repos: sit_level=standard, semver_policy=agent. Commit 9715bf4 in unified-trading-pm.
+
+  - id: convert-workflows-to-reusable-workflow-call
+    content: >-
+      Convert the key shared workflow templates to reusable workflows (workflow_call) defined in PM, so repos call them
+      with a PM ref rather than receiving a flat file copy. This enables workflow branching: test changes on a PM
+      feature branch by having repos call uses:
+      IggyIkenna/unified-trading-pm/.github/workflows/semver-agent.yml@<feature-branch> before rolling out to main.
+      Workflows to convert: semver-agent.yml, feature-branch-to-staging.yml, update-dependency-version.yml,
+      quality-gates base logic (caller pattern). Implementation: (1) Add workflow_call: trigger to each template
+      (alongside existing workflow_run/push triggers); (2) Move shared logic into the PM-owned reusable workflow; (3)
+      Each repo gets a thin caller workflow that does: uses:
+      IggyIkenna/unified-trading-pm/.github/workflows/<name>.yml@<ref> with: SERVICE_NAME: <repo-name>; (4)
+      rollout-action-ref.yml already re-pins composite action refs when active_feature_branch changes — extend it to
+      also update the PM ref in caller workflows across all repos; (5) On PM staging → main promotion,
+      rollout-action-ref.yml updates all repos to pin @main. This means workflow changes can be developed on PM feature
+      branch, tested via repos that are already on that feature branch, then promoted atomically with the branch merge.
+    status: pending
+    notes:
+      "Added 2026-03-13 — replaces flat-file propagation with reusable workflow_call + PM ref pinning. Enables safe
+      workflow iteration without affecting repos on other branches."
+
+  - id: add-workflow-sanity-checks-to-sit
+    content: >-
+      Add workflow validation to tests/abbreviated/ in system-integration-tests. Two layers: (1) Static YAML validation
+      — for each repo in the manifest, fetch .github/workflows/*.yml via gh api and validate: trigger shapes are correct
+      (workflow_run workflows names match actual workflow names in that repo), required secrets referenced (GH_PAT,
+      ANTHROPIC_API_KEY) exist as repo secrets via gh api, dispatch event_types match receiver workflow types. Flag
+      mismatches as FAIL. (2) ACT dry-run — for key shared workflows (semver-agent.yml, feature-branch-to-staging.yml,
+      update-dependency-version.yml), run act --dry-run --workflows .github/workflows/<name>.yml in a temp clone of a
+      representative repo to verify the workflow parses, jobs resolve, and steps are syntactically valid. Use nektos/act
+      installed in SIT venv or Docker. Mark tests @pytest.mark.abbreviated_sit so they run in the hotfix path and as a
+      SIT pre-check. This catches: workflow YAML syntax errors, broken trigger refs, mismatched dispatch payloads — all
+      without needing live GHA runners.
+    status: pending
+    notes:
+      "Added 2026-03-13 — workflow sanity checks in abbreviated SIT. Catches broken workflow propagations before they
+      reach production."
+
+  - id: fix-semver-agent-template-staging-trigger
+    content: >-
+      Redesign semver-agent.yml template so it fires on staging (not main). Current template has workflow_run: branches:
+      [main] — this is wrong because by the time it runs the commit is immutable. New design: (1) trigger on
+      workflow_run: workflows: [Quality Gates], branches: [staging]; (2) agent reads commit messages + API surface diff
+      (removed __init__.py exports, removed HTTP routes) since last staging_versions baseline; (3) if agent's computed
+      bump type disagrees with the commit message prefix (e.g. commit says feat: but agent detects removed export →
+      should be feat!:), agent posts a failing commit status on the staging HEAD SHA via gh api POST
+      /repos/{owner}/{repo}/statuses with state=failure and description explaining the mismatch — this blocks
+      staging-to-main.yml from promoting; (4) developer fixes the commit message on their feature branch and re-pushes
+      to staging; (5) if they agree — agent bumps pyproject.toml on staging, writes staging_versions to PM manifest,
+      dispatches version-bump to PM. chore: commits: quality gates still run, no version bump (skip). Update template at
+      unified-trading-pm/scripts/propagation/templates/semver-agent.yml and
+      unified-trading-pm/scripts/templates/semver-agent.yml.
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: Both template files updated — trigger changed from branches: [main] to branches: [staging].
+      Added semver_policy=always_patch shortcut (skips label check, always patch bump). Added label mismatch detection
+      block that posts state=failure commit status via gh api POST /repos/.../statuses/$SHA when agent detects
+      bump type disagreement with commit message prefix. BRANCH updated to "staging" in dispatch step.
+      Commits 8a739fd in unified-trading-pm.
+
+  - id: redesign-quickmerge-staging-first
+    content: >-
+      Update quickmerge.sh so staging is the default route for all human commits. Removes the circular logic where the
+      developer's own label determines whether the label gets validated. New routing: (1) All human commits (feat:,
+      fix:, feat!:, chore:, docs:, etc.) default to --to-staging unless the commit message contains [skip ci]
+      (automation-only bypass); (2) Remove the current label-based routing that sends fix:/chore: directly to main; (3)
+      --to-staging becomes the implicit default — remove it as a named flag or make it a no-op (always on); (4) Add
+      --hotfix flag (see implement-hotfix-path-abbreviated-sit); (5) Update Stage 0.3 semver advisory to reflect new
+      model; (6) Update CLAUDE.md, quickmerge.sh header comments, and codex docs/repo-management/CI-CD-FLOW.md to
+      document the new staging-first invariant: "Only [skip ci] automation commits (version bumps, manifest updates, dep
+      pins) go directly to main. Everything else goes through staging."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: quickmerge.sh redesigned — TO_STAGING=true as default; --to-staging is a no-op kept for
+      backwards compat; [skip ci] commits set SKIP_CI=true + TO_STAGING=false (direct to main); Stage 0.3 message
+      updated to reflect staging-first invariant; breaking-change warning block removed. Commit 7b3e794 in PM.
+
+  - id: implement-hotfix-path-abbreviated-sit
+    content: >-
+      Add --hotfix flag to quickmerge.sh for urgent production fixes. Hotfix still goes through staging (never directly
+      to main — keeps the staging-first invariant) but triggers abbreviated SIT instead of full SIT. Implementation: (1)
+      quickmerge.sh --hotfix routes PR to staging as normal but adds hotfix=true to the staging commit metadata (git
+      note or PR label); (2) smoke-test-gate.yml detects the hotfix label on the staging push and runs abbreviated tests
+      only (pytest tests/abbreviated/ -m abbreviated_sit --timeout=120) instead of full smoke + e2e suite; (3) on
+      abbreviated SIT pass, dispatches staging-validated with hotfix=true payload to PM; (4) staging-to-main.yml
+      promotes immediately without waiting for full SIT lock cycle. Document in quickmerge.sh --help and CI-CD-FLOW.md:
+      "Hotfix: still goes through staging but abbreviated SIT (<2 min) instead of full SIT. Use for production incidents
+      only — agent still validates semver label."
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: --hotfix flag added to quickmerge.sh; after PR creation dispatches set-hotfix-mode
+      repository_dispatch to PM via curl; PM hotfix-mode.yml sets staging_status.hotfix_mode=true in manifest;
+      smoke-test-gate.yml reads hotfix_mode from manifest and runs abbreviated tests only; dispatch job clears
+      hotfix_mode via clear-hotfix-mode dispatch after abbreviated SIT passes. Commits: quickmerge (PM),
+      hotfix-mode.yml (PM), smoke-test-gate.yml (system-integration-tests e9bd8b4).
+
+  - id: implement-abbreviated-sit-contract-checks
+    content: >-
+      Add tests/abbreviated/ to system-integration-tests for the abbreviated SIT suite used by hotfix and as a fast
+      pre-check before full SIT. Scope: verify that domain data schemas normalize correctly across the three main
+      communication paths — runtime (execution↔alerting↔risk), pilot (strategy↔ml-inference), pipeline
+      (instruments↔market-data-processing↔features-*). Each check: (1) import both sides of the boundary using the
+      installed package versions; (2) instantiate the shared TypedDict / Pydantic model / dataclass on both sides with a
+      canonical fixture payload; (3) assert that serialise→deserialise round-trip produces an identical object (no field
+      drops, no type coercions). No network, no emulators, no cloud credentials — pure in-process schema compatibility.
+      Target runtime: <2 minutes total. Do NOT delete existing tests/smoke/ or tests/e2e/ — abbreviated/ is additive.
+      Mark tests with @pytest.mark.abbreviated_sit. Register marker in pyproject.toml. Wire into smoke-test-gate.yml
+      --hotfix mode (pytest tests/abbreviated/ -m abbreviated_sit) and also run abbreviated/ as a pre-step before full
+      SIT so schema regressions surface fast.
+    status: completed
+    notes: |
+      RESOLVED 2026-03-13: tests/abbreviated/ added to system-integration-tests with:
+      - test_contract_normalization.py: 14 round-trip tests (UEI, UIC, UAC, pubsub, ML schemas)
+        covering runtime/pilot/pipeline boundaries — pure in-process, no network/emulators.
+      - test_workflow_sanity.py: YAML syntax validation + workflow_run trigger consistency +
+        jobs structure checks across all local repos.
+      - pyproject.toml: abbreviated_sit marker registered.
+      Commit c7a6760 in system-integration-tests.
+
   - id: rollout-semver-agent-yml-replacing-version-bump
     content: >-
-      Roll out semver-agent.yml to all repos while simultaneously removing version-bump.yml. semver-agent.yml
-      (Claude-based, reads API surface diffs + commit messages) must REPLACE version-bump.yml (simple regex bumper) —
-      they must not coexist as both bump pyproject.toml on push to main/staging. Rollout script:
-      unified-trading-pm/scripts/rollout-semver-agent.sh (copy semver-agent.yml template, delete version-bump.yml,
-      commit per repo as "chore(ci): replace version-bump.yml with semver-agent.yml [skip ci]"). Prereq:
-      bump-library-version hook removal complete (pre_commit_to_gha_version_bump plan, done 2026-03-11).
+      Roll out the redesigned semver-agent.yml to all repos while simultaneously removing version-bump.yml.
+      semver-agent.yml (Claude-based, fires on staging, validates label vs API diff, blocks promotion on mismatch) must
+      REPLACE version-bump.yml (simple regex bumper that fires on main, cannot validate). They must not coexist. Rollout
+      script: unified-trading-pm/scripts/rollout-semver-agent.sh (copy redesigned semver-agent.yml template, delete
+      version-bump.yml, commit per repo as "chore(ci): replace version-bump.yml with semver-agent.yml [skip ci]").
+      Prereq: (1) fix-semver-agent-template-staging-trigger complete (template fires on staging, blocks on mismatch);
+      (2) redesign-quickmerge-staging-first complete (all human commits go through staging); (3) bump-library-version
+      hook removal complete (pre_commit_to_gha_version_bump plan, done 2026-03-11). Validation: push a feat: commit with
+      a removed __init__.py export to a test repo staging branch, confirm semver-agent fires, detects mismatch, posts
+      failing commit status, blocks staging-to-main.yml. Then fix commit to feat!:, confirm agent posts passing status
+      and bumps version correctly.
     status: pending
-    notes: "Added 2026-03-11 — prerequisite for clean GHA-only version bump chain."
+    notes:
+      "Updated 2026-03-13 — prereqs expanded to include staging-first redesign. Template must be fixed before rollout."
 isProject: false
 ---
 
@@ -385,9 +531,31 @@ Any repo PR opened/updated
   └── plan-alignment-agent.yml
         └── Claude reads diff + active plans → advisory PR comment (never blocks)
 
-Any repo merge to staging/main
-  └── semver-agent.yml
-        └── Claude reads API diff + commits → bumps pyproject.toml + CHANGELOG → dispatches version-updated
+Any human commit (feat:, fix:, feat!:, chore:, hotfix) → staging (ALWAYS — no direct-to-main)
+  └── Quality Gates on staging
+        └── semver-agent.yml (fires on staging)
+              ├── Claude reads API diff + commit messages since last staging_versions baseline
+              ├── if label disagrees with diff → posts FAILING commit status → blocks staging-to-main
+              │     └── developer fixes label on feature branch → re-pushes to staging → loop
+              └── if label agrees → bumps pyproject.toml on staging, updates PM staging_versions
+                    └── smoke-test-gate.yml
+                          ├── [normal] full SIT (tests/smoke/ + tests/e2e/)
+                          ├── [--hotfix] abbreviated SIT only (tests/abbreviated/ — <2 min schema checks)
+                          └── on pass → dispatches staging-validated to PM
+                                └── staging-to-main.yml promotes all staging repos → main [skip ci]
+                                      └── update-repo-version.yml bumps PM manifest + dispatches
+                                            dependency-update cascade to all downstream dependents
+
+[skip ci] automation commits only → direct to main (version bumps, manifest updates, dep pins)
+
+PM/Codex commits (sit_level: abbreviated, semver_policy: always_patch):
+  → staging → abbreviated SIT only → main → patch bump → zero downstream dispatch
+  → manifest-sync.yml triggers Codex sync agent on same feature branch
+
+Workflow changes (PM feature branch):
+  → repos call uses: unified-trading-pm/.github/workflows/<name>.yml@<feature-branch>
+  → test workflow changes on feature branch repos before rollout
+  → rollout-action-ref.yml re-pins all repos to @main on PM staging→main promotion
 
 Cron 01:00 UTC nightly
   └── overnight-agent-orchestrator.yml (PM)
@@ -437,12 +605,18 @@ Blocked repos: unified-internal-contracts (ruff E501 x3 after 3 attempts)
 
 | Commit pattern | API change     | Pre-1.0 bump | Post-1.0 bump |
 | -------------- | -------------- | ------------ | ------------- |
-| `feat!:`       | Breaking       | minor        | major         |
+| `feat!:`       | Breaking       | minor        | major (gated) |
 | `feat:`        | New export     | minor        | minor         |
 | `fix:`         | None           | patch        | patch         |
-| Any            | Removed export | minor        | major         |
+| `chore:`       | None           | no bump      | no bump       |
+| Any            | Removed export | minor        | major (gated) |
 
-Agent reads both commit messages AND actual API surface diff. Commit message takes precedence if it signals `feat!:`.
+Agent fires on **staging** (not main). Reads both commit messages AND actual API surface diff (removed **init**.py
+exports, removed HTTP routes) since last staging_versions baseline. If label disagrees with diff → posts failing commit
+status on staging HEAD → blocks staging-to-main promotion. Developer must fix the commit message on the feature branch
+and re-push to staging. Agent never amends commits itself.
+
+Post-1.0.0 major bumps open a GitHub Issue for human approval before dispatching (no auto-bump to 2.0.0).
 
 ## Auth Requirements
 

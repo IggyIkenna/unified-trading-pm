@@ -1,5 +1,13 @@
 ---
 name: cicd-versioning-cloud-build-2026-03-11
+superseded_note: |
+  PARTIALLY SUPERSEDED 2026-03-13. phase-2-semver-at-staging had the correct intent (semver-agent fires on
+  staging) but the implemented semver-agent.yml template fires on main (workflow_run: branches: [main]).
+  This is a design error: by the time the agent runs on main the commit is immutable — it cannot block
+  promotion or force a label fix. Correct design: agent fires on staging, validates label vs API diff,
+  blocks staging→main promotion if they disagree. Developer fixes label on the feature branch and
+  re-pushes to staging. See full_autonomous_agent_ci todo: fix-semver-agent-template-staging-trigger.
+  Also superseded: the routing model where fix:/chore: bypass staging. New: everything goes through staging.
 overview:
   Fix 6 CI/CD pipeline gaps + 3 new phases: per-repo ≥1.0.0 staging gate, SIT code/deployment test split, and
   deployment UI build selector. Staging lock lifecycle, dep reconciliation, multi-project GCP Cloud Build isolation,
