@@ -33,9 +33,12 @@ in the manifest schema. `unified-trading-ui-auth` is a UI auth library — `ui-c
 
 #### A1.3 — 1.6 WARN: Topological inversion (merge_level chain must reflect dependency order)
 
-**What:** The full dependency chain is UAC → UIC → URDI (and other T1 repos). merge_level must reflect this: UAC must be
-lowest, then UIC, then T1 repos. Currently UIC is at merge_level=3 (higher than URDI at merge_level=2), which is
-inverted. **Correct merge_level ordering:**
+**SUPERSEDED (2026-03):** `merge_level` removed. `topologicalOrder.levels` is now the sole SSOT for tier ordering. DAG
+and stagger-dispatches derive level from topo.
+
+**What (historical):** The full dependency chain is UAC → UIC → URDI (and other T1 repos). merge_level must reflect
+this: UAC must be lowest, then UIC, then T1 repos. Currently UIC is at merge_level=3 (higher than URDI at
+merge_level=2), which is inverted. **Correct merge_level ordering:**
 
 - `unified-api-contracts` → merge_level=1 (T0-base, no deps)
 - `unified-internal-contracts` → merge_level=2 (T0-consumer, depends on UAC)

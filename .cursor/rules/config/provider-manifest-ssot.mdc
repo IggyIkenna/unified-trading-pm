@@ -1,0 +1,37 @@
+---
+description: Provider manifest is SSOT for API keys, testnet, data_type. When adding provider/key, update provider_api_versions.yaml first.
+globs: 
+alwaysApply: false
+---
+
+# Provider Manifest SSOT
+
+## Rule
+
+The **provider manifest** (`unified-api-contracts/unified_api_contracts/config/provider_api_versions.yaml`) is the single source of truth for:
+
+- API keys and secret names
+- Testnet availability and keys
+- Data type (central | private | both)
+- API spec URL (`spec_url`) and UI/dashboard docs URL (`ui_docs_url`)
+
+## When Adding a Provider or API Key
+
+1. **Update `provider_api_versions.yaml` first** — add or extend the provider entry with:
+   - `spec_url` (API spec / endpoint docs), `ui_docs_url` (dashboard, user docs)
+   - `has_testnet`, `testnet_keys_we_have`, `testnet_network`
+   - `data_type`: `central` | `private` | `both`
+   - `keys_public_we_have`, `keys_private_we_have`
+   - `secret_names`: `{ public: [], private: [] }`
+
+2. Then update adapters, config, or Secret Manager references to align with the manifest.
+
+## Never
+
+- Add a provider or key to code/config without a corresponding manifest entry
+- Maintain a separate API key inventory that diverges from the manifest
+
+## Related
+
+- `unified-trading-pm/.cursor/rules/core/provider-api-version-manifest.mdc` — schema version SSOT
+- Codex: `07-security/secrets-management.md`, `10-audit/ssot-reference-mapping.md`

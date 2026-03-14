@@ -286,7 +286,6 @@ todos:
       (f) GCS bucket has lifecycle rule: move to Coldline after 90 days, Archive after 1 year.
       Requires compliance-gcp-project to be set up first (separate GCP project for custody).
     status: pending
-    depends_on: [compliance-gcp-project]
   - id: harden-disaster-recovery-rto-rpo
     content: |
       - [x] [AGENT] P1. Define and document RTO/RPO targets for all environments. No task currently defines recovery time.
@@ -446,7 +445,6 @@ todos:
       NEXT STEP: enhance agent-audit.yml to invoke run-agent.sh (Claude Code audit) per repo, following
       market-tick-data-service as prototype. Requires ANTHROPIC_API_KEY repo secret on each T0-T3 repo.
     status: done
-
   - id: broad-except-exception-fix
     content: |
       - [x] [AGENT per repo] P2. Fix broad except Exception in prod code — QG warns but does not fail. Applied 2026-03-13.
@@ -459,7 +457,6 @@ todos:
       Skipped: unified-cloud-interface/typings/google/ — vendored type stubs, not our code.
       COMPLETED 2026-03-13: All prod code narrowed. Legitimate broad catches documented in codex 10-audit/QUALITY_GATE_BYPASS_AUDIT.md (already in SSOT index).
     status: done
-
   - id: harden-agent-mandatory-rules-injection
     content: |
       - [x] [AGENT] P0. Audit and fix ALL autonomous agent entrypoints to inject SUB_AGENT_MANDATORY_RULES.md into prompt.
@@ -497,7 +494,6 @@ todos:
       **Verification:** For each agent workflow, grep the prompt construction for either
       `MANDATORY_RULES` (GHA) or `inject-mandatory-rules.sh` (local). If neither present, it's broken.
     status: done
-
   - id: harden-system-first-architecture-enforcement
     content: |
       - [x] [AGENT] P1. Enforce system-first architecture rule across all agent entrypoints.
@@ -518,7 +514,6 @@ todos:
       agents actually receive and follow it by checking agent output for ad-hoc solutions.
       COMPLETED 2026-03-13: SUB_AGENT_MANDATORY_RULES.md §0 decision tree + CLAUDE.md + agents-follow-cursor-rules.mdc all reference system-first architecture. SSOT indexed.
     status: done
-
   - id: stability-production-audit
     content: |
       - [ ] [AGENT] P0. Full 28-section production readiness audit using `unified-trading-pm/plans/audit/trading_system_audit_prompt.md`. Target: grade A (0 FAILs, max 3 WARNs). Must resolve all 6 FAILs from 2026-03-11 audit: §2 execution-service QG expanded, §5 float isolation verified, §7 T0 at 1.0.0, §9 all plans registered + ci_status promoted, §10 VCR cassettes in 3 interfaces, §16 vitest in 3 UIs.
@@ -529,7 +524,6 @@ todos:
     content: |
       - [ ] [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests against all services on main branch.
     status: pending
-
   - id: ops-change-freeze-calendar
     content: |
       - [x] [SCRIPT] P1. Create `plans/ops/change-freeze-calendar.csv` in unified-trading-pm with columns:
@@ -562,7 +556,6 @@ todos:
       that regenerates the CSV for a given year using the recurrence rules above.
       COMPLETED 2026-03-13: plans/ops/change-freeze-calendar.csv with NFP/FOMC/ECB/BOE + session windows. SSOT indexed. Audit prompt §7/§15 updated.
     status: done
-
   - id: ops-change-freeze-enforcement
     content: |
       - [x] [AGENT] P1. Create `change-freeze-check` reusable workflow (`.github/workflows/change-freeze-check.yml`)
@@ -615,3 +608,9 @@ isProject: false
 4. **Fast path / slow path** — Phase 0-1 (fixes) can complete in days; Phase 3-4 (hardening) is the slow path respecting
    tier invariants
 5. **Milestone-gated** — each phase has exit criteria; no dates, no shortcuts
+
+## Coordination: ui-api-alerting-observability plan
+
+The ui-api-alerting-observability-2026-03-14 plan modifies batch-audit-api extensively (adds log + event query routes).
+batch-audit-api is currently BASELINE_PENDING in this plan — resolve BASELINE_PENDING before observability plan P3.2
+starts.

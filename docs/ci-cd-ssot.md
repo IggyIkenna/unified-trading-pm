@@ -1,7 +1,8 @@
 # CI/CD Single Source of Truth
 
 > **Canonical owner**: `unified-trading-pm` (PM repo) **Referenced by**: `.cursor/rules/ci-cd/ci-rollout-ownership.mdc`,
-> `unified-trading-codex/05-infrastructure/`
+> `unified-trading-codex/05-infrastructure/` **Full flow**: `docs/repo-management/CI-CD-FLOW.md` — staging lock, SIT
+> debounce, deployment-tests build source, version cascade
 
 This document is the definitive reference for how CI/CD works in this workspace. Before touching any CI workflow,
 quality gate, or dependency install, read this.
@@ -59,13 +60,31 @@ automatically by `.github/workflows/rollout-action-ref.yml` on every push to `ma
 | `scripts/propagation/rollout-quality-gates-unified.py`                      | Per-repo `scripts/quality-gates.sh` stubs                      | Only when base script adds a new required stub variable          |
 | `scripts/propagation/rollout-action-ref.yml` (GHA)                          | `@<ref>` in all thin callers                                   | Auto-fires on `workspace-manifest.json` push to `main`/`staging` |
 
+### GitHub Secrets Propagation
+
+`scripts/workspace/propagate-github-secrets.sh` sets GitHub Actions secrets and variables across all 66 repos:
+
+| Secret/Variable    | Source                | Purpose                                                      |
+| ------------------ | --------------------- | ------------------------------------------------------------ |
+| TELEGRAM_BOT_TOKEN | env or prompt         | Telegram notifications (masked)                              |
+| TELEGRAM_CHAT_ID   | env or prompt         | Telegram chat/group ID (variable, non-sensitive)             |
+| GCP_PROJECT_ID     | `.act-secrets` or env | GCP project for CI; fallback: `test-project` when unset      |
+| AWS_ACCOUNT_ID     | `.act-secrets` or env | AWS account for ECR, CodeBuild, S3; same availability as GCP |
+
+Run: `bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh` (or `--dry-run` first).
+
+**AWS credentials**: Bootstrap (`deployment-service/scripts/bootstrap/bootstrap_aws.sh`) uses `aws configure` or env
+vars. For GitHub Actions: set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION` as repo secrets (or use
+OIDC). Optional for `.act-secrets` if running `act` with AWS-backed workflows.
+
 ### Other PM-Owned Propagation Scripts
 
-| Script                                                                                   | What it owns                                                          |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `scripts/repo-management/run-version-alignment.sh`                                       | Version cascade: workspace-manifest, pyproject.toml, imports, uv.lock |
-| `scripts/validation/check-workflow-tokens.py`                                            | Validates GH_PAT usage across all repo workflows                      |
-| `scripts/propagation/rollout-quickmerge.py` + `.github/workflows/rollout-quickmerge.yml` | Quickmerge-based batch commits across all repos                       |
+| Script                                                                                   | What it owns                                                               |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `scripts/repo-management/run-version-alignment.sh`                                       | Version cascade: workspace-manifest, pyproject.toml, imports, uv.lock      |
+| `scripts/validation/check-workflow-tokens.py`                                            | Validates GH_PAT usage across all repo workflows                           |
+| `scripts/propagation/rollout-quickmerge.py` + `.github/workflows/rollout-quickmerge.yml` | Quickmerge-based batch commits across all repos                            |
+| `scripts/workspace/propagate-github-secrets.sh`                                          | Propagates TELEGRAM_BOT_TOKEN, GCP_PROJECT_ID, AWS_ACCOUNT_ID to all repos |
 
 ---
 
@@ -188,13 +207,34 @@ This prevents a stuck SIT run from permanently blocking the `staging → main` p
 
 ## 5. Adding a New Repo
 
-1. Add the repo to `workspace-manifest.json` with correct `type`, `dependencies`, `arch_tier`
+1. Add the repo to `workspace-manifest.json` with correct `type`, `dependencies`, `arch_tier`, and add it to
+   `topologicalOrder.levels` in the appropriate level (SSOT for tier ordering)
 2. Run `scripts/propagation/rollout-quality-gates-unified.py --repo <name>` to write the QG stub
 3. Run `scripts/propagation/rollout-quality-gates-ci-workflows.py --workflow-call --repo <name>` to write the thin CI
    caller
 4. Add `uv.lock`, `pyproject.toml` with `[project.dependencies]` and `[project.optional-dependencies.dev]`
 5. Add Dockerfile using the shared base image pattern (see `.cursor/rules/ci-cd/cicd-setup.mdc`)
 6. First commit via quickmerge creates the branch and PR
+
+---
+
+## 5b. CI Status — Automatic Updates
+
+`ci_status` in `workspace-manifest.json` is the **single source of truth** for quality gate state. It is updated
+**automatically** when quality gates run — no agent or manual step required.
+
+| When                     | What happens                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| QG passes (python or UI) | Reusable workflow dispatches `ci-status-update` to PM → PM updates `repositories[repo].ci_status = "PASSING"` |
+| QG fails                 | Same dispatch with `status = "FAILING"`                                                                       |
+| PM receives dispatch     | `ci-status-update.yml` updates manifest, regenerates `WORKSPACE_MANIFEST_DAG.svg`, commits with `[skip ci]`   |
+
+The DAG SVG shows each repo's status as a colored dot (green=PASSING, red=FAILING, gray=other). `quality_gate_status` is
+deprecated and removed — use `ci_status` only.
+
+**If DAG stays gray / Status 400:** The dispatch requires `GH_PAT` with `workflow` scope. Run
+`bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh` to push GH_PAT from `.act-secrets` to all repos.
+For local act runs, ensure `.act-secrets` has `GH_PAT=`. Status 400 = token lacks `workflow` scope or is missing.
 
 ---
 
@@ -207,3 +247,176 @@ This prevents a stuck SIT run from permanently blocking the `staging → main` p
 | Add `pip install ruff` to a CI step                | Update `setup-python-tools/action.yml` composite action |
 | Fix prettier ignore in one repo                    | `scripts/quality-gates-base/.prettierignore-base`       |
 | Hardcode a version in one repo's workflow          | `workspace-manifest.json` + version alignment           |
+
+---
+
+## 7. Cloud Build and CodeBuild — SSOT
+
+### Ownership
+
+| Per-repo file        | Template in PM                       | Rollout script          |
+| -------------------- | ------------------------------------ | ----------------------- |
+| `cloudbuild.yaml`    | `configs/cloudbuild-*-template.yaml` | `rollout-cloudbuild.py` |
+| `buildspec.aws.yaml` | `configs/buildspec-*-template.yaml`  | `rollout-buildspec.py`  |
+
+### Service Account (GCP Cloud Build)
+
+Cloud Build uses the **project default service account** — you do not configure it in cloudbuild.yaml:
+
+| Project type         | Service account                                        |
+| -------------------- | ------------------------------------------------------ |
+| New projects (2024+) | `PROJECT_NUMBER-compute@developer.gserviceaccount.com` |
+| Legacy               | `PROJECT_NUMBER@cloudbuild.gserviceaccount.com`        |
+
+**Best practice:** Ensure the default SA has:
+
+- `roles/artifactregistry.reader` (pull wheels, base image)
+- `roles/artifactregistry.writer` (push images, publish wheels)
+
+Or create a dedicated SA and set it on the build trigger (least privilege).
+
+### Rollout Commands
+
+```bash
+# Cloud Build (services, APIs, UIs)
+python3 scripts/propagation/rollout-cloudbuild.py [--dry-run] [--repo NAME]
+
+# Cloud Build + wheel-only libraries (skips LIBRARY_CUSTOM_CLOUDBUILD)
+python3 scripts/propagation/rollout-cloudbuild.py --include-library [--dry-run]
+
+# CodeBuild (AWS)
+python3 scripts/propagation/rollout-buildspec.py [--dry-run] [--repo NAME]
+```
+
+### Exceptions — Why They Exist
+
+**SKIP_REPOS** (never apply any template):
+
+| Repo                     | Reason                                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| unified-trading-pm       | No deployable artifact; PM is scripts/configs only                                            |
+| unified-trading-codex    | Docs only; no cloudbuild                                                                      |
+| unified-trading-library  | Wheel + base Docker image; different flow than service/api/library                            |
+| ibkr-gateway-infra       | Python + Terraform; no Docker image; infra-specific                                           |
+| system-integration-tests | Lint + smoke tests only; uses `cloudbuild-sit-template.yaml` now; test harness, no prod image |
+
+**LIBRARY_CUSTOM_CLOUDBUILD** (skip when --include-library): UAC, URDI, and execution-algo-library have flows that
+differ from the standard library template (clone-pm-scripts, monorepo-aware lint, version checks). The generic
+`cloudbuild-library-template.yaml` does not yet support these.
+
+| Repo                             | Reason                                                                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| unified-api-contracts            | Full flow: clone-pm-scripts, quality-gates, cloud-sdk-isolation, store-metadata, version check, notify-deployment |
+| unified-reference-data-interface | Same as UAC; monorepo-aware lint                                                                                  |
+| execution-algo-library           | Simpler: cloud-sdk-isolation, run-tests, store-metadata; no clone-pm-scripts                                      |
+
+**Can exceptions be removed?** Yes, if we:
+
+1. Add `cloudbuild-utl-template.yaml` for unified-trading-library (wheel + base image)
+2. Add `cloudbuild-infra-template.yaml` for ibkr-gateway-infra (Python + Terraform)
+3. Add `cloudbuild-sit-template.yaml` for system-integration-tests (lint + smoke + no-op push/scan)
+4. Enhance `cloudbuild-library-template.yaml` to include clone-pm-scripts, quality-gates, cloud-sdk-isolation,
+   store-metadata, notify-deployment — then remove LIBRARY_CUSTOM_CLOUDBUILD
+
+Until then, custom cloudbuilds are manually maintained
+
+### Build Smoke (All Repos in GHA)
+
+`build-smoke-all-repos.yml` verifies every repo builds (Docker image or wheel) in GitHub Actions — no Cloud Build
+needed.
+
+- **Trigger**: `workflow_dispatch` (manual) or weekly schedule
+- **Quick mode**: `inputs.quick=true` — test 1 repo per type (~5 min)
+- **Full mode**: matrix over all ~64 repos, max 20 parallel (~10–15 min wall clock)
+- **Per repo**: `docker build` for services/APIs/UIs; `python -m build --wheel` for libraries
+
+Run: Actions → Build Smoke (All Repos) → Run workflow.
+
+All custom cloudbuilds (SKIP_REPOS + LIBRARY_CUSTOM_CLOUDBUILD) should include `auth-precheck` as the first step (fail
+fast on missing AR access).
+
+### SIT Build Source (Option A — Build from Source)
+
+SIT gets images via **build-from-source**: clone v1 repos from the **staging** branch before compose, then build
+locally. SIT does **not** pull pre-built images from Artifact Registry.
+
+- **Flow**: SIT workflow clones the `staging` branch of each service repo (from `staging_status.pending_repos` or
+  manifest), builds Docker images locally, then runs `docker compose` against the staged stack.
+- **Rationale**: Ensures SIT tests exactly what will be promoted to main — no drift between staged code and tested
+  artifacts.
+
+### build-smoke vs SIT Deployment Tests
+
+| Workflow                    | Purpose                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `build-smoke-all-repos.yml` | Per-repo build verification — each repo builds (Docker or wheel) in isolation. No integration.                |
+| SIT deployment-tests        | Integration tests against the **staged stack** — services talk to each other, contracts validated, E2E flows. |
+
+### Staging Flow and Gate Sequence
+
+```
+merge to staging → sit-gate → debounce (5 min quiet) → smoke-test-gate → staging-validated → staging-to-main
+```
+
+- **sit-gate**: Records `pending_repos`, sets `staging_status.locked = true`, triggers debounce timer.
+- **debounce**: 5-minute quiet window; timer resets on every new merge to staging. Prevents queue storms.
+- **smoke-test-gate**: After debounce, SIT runs build-from-source + deployment tests.
+- **staging-validated**: SIT passes → `staging-to-main.yml` merges staging to main.
+
+### Race-Condition Protection
+
+- **Debounce**: Prevents back-to-back merges from each launching its own SIT run (starvation, queue storms).
+- **sit-staging concurrency group**: All SIT-related workflows use
+  `concurrency: { group: sit-staging, cancel-in-progress: false }` so only one SIT run executes at a time. No parallel
+  SIT runs racing to update manifest.
+
+### When Cloud Build Fires
+
+| Trigger                | When images are built                                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------- |
+| Merge to `main`        | `qg-passed` dispatch → cloud-build-router → Cloud Build trigger. Images built and pushed to AR. |
+| QG passed on `staging` | Same `qg-passed` path; router routes to staging project. Images built for staging environment.  |
+
+Cloud Build does **not** run on every PR or push to `feat/*` — only on `qg-passed` (which fires after merge to `main` or
+after QG success on `staging`).
+
+---
+
+## Pre-Build Auth Validation
+
+Before Cloud Build or CodeBuild runs, validate that credentials have the right permissions. This avoids mid-build
+failures when pulling wheels or pushing images.
+
+### Standalone script (run locally or in CI)
+
+```bash
+# Validate GCP + AWS auth (uses gcloud/aws from env)
+python3 unified-trading-pm/scripts/validation/validate-build-auth.py
+
+# GCP only
+python3 unified-trading-pm/scripts/validation/validate-build-auth.py --gcp-only
+
+# Also check .act-secrets has expected keys
+python3 unified-trading-pm/scripts/validation/validate-build-auth.py --check-secrets
+```
+
+### In Cloud Build (auth-precheck step)
+
+All cloudbuild templates (service, api, ui) include an `auth-precheck` step that runs first:
+
+- Verifies GCP token
+- Verifies Python AR (unified-libraries) read — fails fast if SA lacks roles/artifactregistry.reader
+- Verifies Docker AR (unified-trading-library or unified-trading-system) read
+
+If auth-precheck fails, the build stops before expensive steps (Docker build, quality gates).
+
+Custom cloudbuilds (SKIP_REPOS + LIBRARY_CUSTOM_CLOUDBUILD) also include auth-precheck as the first step.
+
+### Secrets alignment
+
+- **GCP**: Cloud Build uses the project's Cloud Build service account. Ensure it has:
+  - `roles/artifactregistry.reader` (pull wheels, pull base image)
+  - `roles/artifactregistry.writer` (push images, publish wheels)
+- **AWS**: CodeBuild uses the CodeBuild service role. Ensure it has ECR push, CodeArtifact (if used).
+- **.act-secrets**: GCP_PROJECT_ID, AWS_ACCOUNT_ID — used by act and local scripts. Align with GitHub secrets via
+  `propagate-github-secrets.sh`.

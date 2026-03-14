@@ -81,14 +81,14 @@ test files.
 
 **Repos and files to consolidate:**
 
-| Repo                             | Coverage-boost files                                            | Target (merge into)                                                                  | Status  |
-| -------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------- |
-| instruments-service              | (if any remain: test*coverage_boost*_.py, test\__\_coverage.py) | test_instrument_processing_service.py, test_batch_processor.py, test_config.py, etc. | Pending |
-| market-data-processing-service   | (merged)                                                        | —                                                                                    | Done    |
-| features-multi-timeframe-service | (merged)                                                        | —                                                                                    | Done    |
-| unified-trading-library          | (merged)                                                        | —                                                                                    | Done    |
-| features-onchain-service         | (merged)                                                        | —                                                                                    | Done    |
-| features-calendar-service        | (merged)                                                        | —                                                                                    | Done    |
+| Repo                             | Coverage-boost files                                      | Target (merge into)                                                                  | Status  |
+| -------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------- |
+| instruments-service              | (if any remain: test*coverage_boost*.py, testcoverage.py) | test_instrument_processing_service.py, test_batch_processor.py, test_config.py, etc. | Pending |
+| market-data-processing-service   | (merged)                                                  | —                                                                                    | Done    |
+| features-multi-timeframe-service | (merged)                                                  | —                                                                                    | Done    |
+| unified-trading-library          | (merged)                                                  | —                                                                                    | Done    |
+| features-onchain-service         | (merged)                                                  | —                                                                                    | Done    |
+| features-calendar-service        | (merged)                                                  | —                                                                                    | Done    |
 
 **Process per repo:**
 
@@ -221,7 +221,7 @@ flowchart TD
 **Suggested agent split:**
 
 - Agent 1: UI template + rollout
-- Agent 2: Merge redundant tests (instruments, market-data-processing, features-\*)
+- Agent 2: Merge redundant tests (instruments, market-data-processing, features-)
 - Agent 3: Fix Codex violations (features-sports, instruments, market-data-processing)
 - Agent 4: Service-to-library + library-to-library integration test requirements + quality gate enforcement
 - Agent 5: PM integration test script
@@ -239,3 +239,9 @@ flowchart TD
 | Base library (integration check) | `unified-trading-pm/scripts/quality-gates-base/base-library.sh`                    |
 | PM integration test              | `unified-trading-pm/scripts/pm-integration-test.sh` or `system-integration-tests/` |
 | Manifest                         | `unified-trading-pm/workspace-manifest.json`                                       |
+
+## Coordination: ui-api-alerting-observability plan
+
+The ui-api-alerting-observability-2026-03-14 plan extends UI integration tests to cover all mapped API endpoints (not
+just /health). The ui-integration-test.template.ts and rollout script from this plan are reused. No conflicts — the
+observability plan builds on top of this plan's work.

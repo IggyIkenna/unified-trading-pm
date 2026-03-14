@@ -23,7 +23,13 @@
 #   bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --secrets-only
 #
 # Secrets set  : TELEGRAM_BOT_TOKEN   (masked in logs)
+#              : GH_PAT               (required for ci-status-update dispatch; from .act-secrets or env)
+#              : GCP_PROJECT_ID       (optional; from .act-secrets or env)
+#              : AWS_ACCOUNT_ID       (optional; from .act-secrets or env)
 # Variables set: TELEGRAM_CHAT_ID     (visible in logs, non-sensitive)
+#
+# GCP_PROJECT_ID / AWS_ACCOUNT_ID: Read from WORKSPACE_ROOT/.act-secrets or env.
+# If unset, skipped (CI falls back to test-project / empty).
 #
 # Prerequisites:
 #   gh CLI authenticated: gh auth login
@@ -92,6 +98,16 @@ if [[ ! -f "$MANIFEST" ]]; then
   exit 1
 fi
 
+# ── Load optional values from .act-secrets ─────────────────────────────────────
+ACT_SECRETS="${WORKSPACE_ROOT}/.act-secrets"
+if [[ -f "$ACT_SECRETS" ]]; then
+  while IFS= read -r line; do
+    [[ "$line" =~ ^GH_PAT= ]] && [[ -z "${GH_PAT:-}" ]] && export GH_PAT="${line#GH_PAT=}"
+    [[ "$line" =~ ^GCP_PROJECT_ID= ]] && [[ -z "${GCP_PROJECT_ID:-}" ]] && export GCP_PROJECT_ID="${line#GCP_PROJECT_ID=}"
+    [[ "$line" =~ ^AWS_ACCOUNT_ID= ]] && [[ -z "${AWS_ACCOUNT_ID:-}" ]] && export AWS_ACCOUNT_ID="${line#AWS_ACCOUNT_ID=}"
+  done < <(grep -E '^(GH_PAT|GCP_PROJECT_ID|AWS_ACCOUNT_ID)=' "$ACT_SECRETS" 2>/dev/null || true)
+fi
+
 # ── Collect credentials ───────────────────────────────────────────────────────
 # TELEGRAM_BOT_TOKEN → GitHub Actions SECRET (masked)
 # TELEGRAM_CHAT_ID   → GitHub Actions VARIABLE (visible, not sensitive)
@@ -146,6 +162,9 @@ echo "  Repos     : ${#REPO_SLUGS[@]} (from workspace-manifest.json)"
 echo "  Dry-run   : $DRY_RUN"
 [[ -n "$FILTER_REPO" ]] && echo "  Filter    : $FILTER_REPO"
 echo "  Secrets   : TELEGRAM_BOT_TOKEN"
+[[ -n "${GH_PAT:-}" ]] && echo "  Secrets   : + GH_PAT (for ci-status-update)"
+[[ -n "${GCP_PROJECT_ID:-}" ]] && echo "  Secrets   : + GCP_PROJECT_ID"
+[[ -n "${AWS_ACCOUNT_ID:-}" ]] && echo "  Secrets   : + AWS_ACCOUNT_ID"
 [[ "$SECRETS_ONLY" == false ]] && echo "  Variables : TELEGRAM_CHAT_ID"
 echo "================================================="
 echo ""
@@ -166,7 +185,7 @@ for slug in "${REPO_SLUGS[@]}"; do
   echo -n "  [$slug] "
 
   if [[ "$DRY_RUN" == true ]]; then
-    log_dry "would set secret TELEGRAM_BOT_TOKEN + variable TELEGRAM_CHAT_ID"
+    log_dry "would set TELEGRAM_BOT_TOKEN + GH_PAT (if set) + GCP_PROJECT_ID + AWS_ACCOUNT_ID (if set) + TELEGRAM_CHAT_ID"
     ((PASS++))
     continue
   fi

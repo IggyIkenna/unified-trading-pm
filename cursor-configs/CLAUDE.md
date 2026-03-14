@@ -75,6 +75,55 @@ replace live cloud services (see `unified-trading-pm/plans/archive/cicd_mock_har
 
 **Cassette parity**: `cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py` — runs on every commit.
 
+## Local Development
+
+Start the full stack locally with mock mode (no credentials needed):
+
+```bash
+bash unified-trading-pm/scripts/dev/dev-start.sh --all --mode mock    # start all UIs + APIs
+bash unified-trading-pm/scripts/dev/dev-stop.sh                       # stop all
+bash unified-trading-pm/scripts/dev/dev-status.sh                     # check status
+```
+
+### 5 Mode Axes
+
+| Axis       | Env Var           | Mock value    | Real value      | Controls                           |
+| ---------- | ----------------- | ------------- | --------------- | ---------------------------------- |
+| UI data    | `VITE_MOCK_API`   | `true`        | `false`         | Client-side mock data vs API calls |
+| UI auth    | `VITE_SKIP_AUTH`  | `true`        | `false`         | OAuth login requirement            |
+| API data   | `CLOUD_MOCK_MODE` | `true`        | `false`         | Sample data vs real cloud          |
+| API auth   | `DISABLE_AUTH`    | `true`        | unset           | Token validation                   |
+| Mock state | `MOCK_STATE_MODE` | `interactive` | `deterministic` | Stateful vs stateless              |
+
+### Presets
+
+| Preset       | Flag              | Use case                                                                   |
+| ------------ | ----------------- | -------------------------------------------------------------------------- |
+| **ci**       | `--mode ci`       | CI smoke tests, deterministic (no cache persistence)                       |
+| **mock**     | `--mode mock`     | Local dev/UAT (default), interactive state persists in `.local-dev-cache/` |
+| **api-real** | `--mode api-real` | Test APIs against real cloud data                                          |
+| **real**     | `--mode real`     | Staging-like, needs credentials + OAuth                                    |
+
+### Cache Cleanup
+
+```bash
+bash unified-trading-pm/scripts/dev/dev-stop.sh --clean     # stop + wipe .local-dev-cache/
+bash unified-trading-pm/scripts/dev/dev-start.sh --reset     # wipe cache + start fresh
+```
+
+### Quick Test Reference
+
+| What                 | Command                                             |
+| -------------------- | --------------------------------------------------- |
+| Python quality gates | `cd <repo> && bash scripts/quality-gates.sh`        |
+| UI tests (headless)  | `cd <ui-repo> && CI=true npm test -- --run`         |
+| UI smoke build       | `cd <ui-repo> && VITE_MOCK_API=true npx vite build` |
+
+UIs on ports 5173-5183, APIs on 8004-8016. Port registry SSOT: `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
+Vitest must use `pool: "forks"` (not threads) to prevent zombie node processes.
+
+Full guide: `unified-trading-codex/08-workflows/local-dev.md`
+
 ## This is a Multi-Repo Workspace (NOT a monorepo)
 
 Each subdirectory is an independent git repo. When editing, only commit to the target repo. Never run `basedpyright .`

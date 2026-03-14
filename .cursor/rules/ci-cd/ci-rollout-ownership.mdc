@@ -12,7 +12,7 @@ tags:
 
 # CI/CD Rollout Ownership — Fix in PM, Not in the Repo
 
-SSOT: `unified-trading-pm/docs/ci-cd-ssot.md`
+SSOT: `unified-trading-pm/docs/ci-cd-ssot.md` (Cloud Build/CodeBuild: §7). Full flow: `docs/repo-management/CI-CD-FLOW.md`
 
 ## The Core Rule
 
@@ -30,6 +30,8 @@ and the fix will be overwritten the next time a rollout runs.
 | `scripts/quality-gates.sh` (logic) | `scripts/quality-gates-base/base-service.sh` or `base-library.sh` or `base-ui.sh` | Instant — sourced live at runtime |
 | `.prettierignore` (shared rules) | `scripts/quality-gates-base/.prettierignore-base` | Instant — inherited via base script |
 | CI env vars (CLOUD_MOCK_MODE, CLOUD_PROVIDER, GCP_PROJECT_ID) | `python-quality-gates.yml` job-level env | Rollout |
+| `cloudbuild.yaml` | `configs/cloudbuild-*-template.yaml` | `rollout-cloudbuild.py` |
+| `buildspec.aws.yaml` | `configs/buildspec-*-template.yaml` | `rollout-buildspec.py` |
 
 ## What IS Per-Repo (Edit in the Repo)
 
@@ -52,6 +54,18 @@ python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflow
 
 # Dry run first:
 python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflows.py --dry-run
+
+# Cloud Build (services, APIs, UIs):
+python3 unified-trading-pm/scripts/propagation/rollout-cloudbuild.py [--dry-run] [--repo <name>]
+
+# Cloud Build + wheel-only libraries:
+python3 unified-trading-pm/scripts/propagation/rollout-cloudbuild.py --include-library [--dry-run]
+
+# CodeBuild (AWS):
+python3 unified-trading-pm/scripts/propagation/rollout-buildspec.py [--dry-run] [--repo <name>]
+
+# Pre-build auth validation (run before builds to fail fast on missing credentials):
+python3 unified-trading-pm/scripts/validation/validate-build-auth.py [--gcp-only] [--aws-only] [--check-secrets]
 ```
 
 ## Anti-Patterns — NEVER Do These

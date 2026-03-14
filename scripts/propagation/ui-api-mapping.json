@@ -4,14 +4,31 @@
     "env_var": "INTEGRATION_TEST_BATCH_AUDIT_URL",
     "default_port": "8013",
     "api_path": "",
-    "endpoints": ["/health", "/api/jobs", "/api/audit-trail"]
+    "endpoints": [
+      "/health",
+      "/batch/jobs",
+      "/batch/jobs/{job_id}",
+      "/batch/jobs/services/{service_name}/history",
+      "/audit/trail",
+      "/audit/trail/services",
+      "/audit/trail/summary",
+      "/audit/compliance",
+      "/audit/compliance/orphans",
+      "/audit/compliance/tts",
+      "/audit/compliance/errors",
+      "/audit/data-health",
+      "/audit/data-health/retention",
+      "/audit/data-health/services/{service_name}",
+      "/api/v1/logs",
+      "/api/v1/services"
+    ]
   },
   "client-reporting-ui": {
     "api_name": "client-reporting-api",
     "env_var": "INTEGRATION_TEST_CLIENT_REPORTING_URL",
     "default_port": "8007",
     "api_path": "",
-    "endpoints": ["/health", "/api/reports"]
+    "endpoints": ["/health", "/readiness", "/api/reports/generate", "/api/v1/stream/reports", "/pnl", "/alerts"]
   },
   "deployment-ui": {
     "api_name": "deployment-api",
@@ -21,13 +38,41 @@
     "endpoints": [
       "/health",
       "/services",
+      "/services/{service_name}",
+      "/services/{service_name}/dimensions",
+      "/services/{service_name}/discover-configs",
+      "/services/{service_name}/list-directories",
+      "/services/{service_name}/config-buckets",
+      "/config/region",
+      "/config/validate-region",
       "/config/venues",
+      "/config/venues/{category}",
+      "/config/expected-start-dates",
       "/deployments",
       "/service-status/overview",
+      "/service-status/{service}/status",
+      "/service-status/execution-service/data-status",
+      "/data-status",
+      "/data-status/last-updated",
+      "/data-status/turbo",
+      "/data-status/turbo/stats",
+      "/data-status/venue-filters",
+      "/data-status/list-files",
+      "/data-status/instruments",
+      "/data-status/instrument-availability",
       "/capabilities",
       "/checklists",
+      "/checklists/{service_name}/checklist",
+      "/checklists/{service_name}/checklist/validate",
       "/epics",
-      "/cloud-builds/triggers"
+      "/cloud-builds/triggers",
+      "/api/builds/{service}",
+      "/api/deployments/{service}/deploy",
+      "/users",
+      "/users/{user_id}",
+      "/roles",
+      "/permissions",
+      "/commentary/pipeline-uat"
     ]
   },
   "execution-analytics-ui": {
@@ -35,21 +80,82 @@
     "env_var": "INTEGRATION_TEST_EXECUTION_RESULTS_URL",
     "default_port": "8005",
     "api_path": "/api/v1",
-    "endpoints": ["/health", "/results", "/validation"]
+    "endpoints": [
+      "/health",
+      "/results",
+      "/results/buckets",
+      "/results/prefixes",
+      "/results/files",
+      "/results/local-default-directory",
+      "/results/execution_alpha",
+      "/results/{result_id}",
+      "/validate/config",
+      "/validate/dependencies",
+      "/analysis/aggregate",
+      "/analysis/distribution",
+      "/analysis/timeseries",
+      "/analysis/heatmap",
+      "/analysis/best-configs",
+      "/backtest/run",
+      "/backtest/batch",
+      "/backtest/run-local",
+      "/backtest/batch-local",
+      "/backtest/run-exact-cli",
+      "/backtest/status/{job_id}",
+      "/backtest/mass-deploy",
+      "/config/algorithms",
+      "/config/strategies",
+      "/config/generate",
+      "/config/generate-all",
+      "/config/system/cores",
+      "/config/users",
+      "/config/sources",
+      "/config/users/{username}/configs",
+      "/data/strategies",
+      "/data/instructions",
+      "/data/configs",
+      "/data/configs/content",
+      "/data/configs/validate",
+      "/data/instruments",
+      "/data/instruments/data",
+      "/data/tick-data",
+      "/data/tick-data/instruments",
+      "/data/tick-data/ticks",
+      "/fills",
+      "/stream/fills",
+      "/stream/reports"
+    ]
   },
   "live-health-monitor-ui": {
     "api_name": "execution-service",
     "env_var": "INTEGRATION_TEST_EXECUTION_URL",
     "default_port": "8002",
     "api_path": "",
-    "endpoints": ["/health", "/readiness"]
+    "endpoints": [
+      "/health",
+      "/ready",
+      "/readiness",
+      "/kill-switch/activate",
+      "/kill-switch/deactivate",
+      "/kill-switch/status",
+      "/admin/drain",
+      "/admin/resume",
+      "/admin/drain/status",
+      "/admin/positions/snapshot",
+      "/manual/instruction",
+      "/manual/cancel",
+      "/manual/amend",
+      "/manual/instructions/{instruction_id}"
+    ],
+    "note": "Manual trading + kill-switch + admin drain. Position/risk views currently use mock data -- will need separate API clients (e.g. risk-and-exposure-service) when wired to real backends."
   },
   "logs-dashboard-ui": {
-    "api_name": "logs-api",
+    "api_name": "batch-audit-api",
     "env_var": "INTEGRATION_TEST_LOGS_URL",
-    "default_port": "8001",
+    "default_port": "8013",
     "api_path": "/api/v1",
-    "endpoints": ["/health", "/logs", "/services"]
+    "endpoints": ["/health", "/logs", "/services"],
+    "note": "logs-api does not exist as a separate repo. Logs routes are served by batch-audit-api at /api/v1/logs and /api/v1/services."
   },
   "ml-training-ui": {
     "api_name": "ml-training-api",
@@ -59,42 +165,91 @@
     "dual_base": true,
     "env_var_inference": "INTEGRATION_TEST_ML_INFERENCE_URL",
     "default_port_inference": "8003",
-    "endpoints": ["/health", "/experiments"],
-    "endpoints_inference": ["/models"]
+    "endpoints": [
+      "/health",
+      "/readiness",
+      "/experiments",
+      "/experiments/{run_id}",
+      "/experiments/{run_id}/phase/{phase_num}",
+      "/features"
+    ],
+    "endpoints_inference": [
+      "/health",
+      "/readiness",
+      "/models",
+      "/models/{model_id}",
+      "/models/deploy",
+      "/models/{model_id}/undeploy",
+      "/predictions/recent"
+    ]
   },
   "onboarding-ui": {
     "api_name": "config-api",
     "env_var": "INTEGRATION_TEST_CONFIG_URL",
     "default_port": "8000",
     "api_path": "/api",
-    "endpoints": ["/health", "/venues", "/config"]
+    "endpoints": ["/health", "/venues", "/config"],
+    "note": "config-api does not exist as a separate repo. Verify which service serves the onboarding config endpoints."
   },
   "settlement-ui": {
-    "api_name": "settlement-api",
+    "api_name": "trading-analytics-api",
     "env_var": "INTEGRATION_TEST_SETTLEMENT_URL",
-    "default_port": "8010",
+    "default_port": "8006",
     "api_path": "",
-    "endpoints": ["/health"]
+    "endpoints": [
+      "/health",
+      "/settlements/submit",
+      "/settlements/pending",
+      "/settlements/{settlement_id}/confirm",
+      "/settlements/residuals",
+      "/settlement/positions",
+      "/settlement/invoices",
+      "/settlement/reports"
+    ],
+    "note": "settlement-api does not exist as a separate repo. Settlement routes are served by trading-analytics-api."
   },
   "strategy-ui": {
     "api_name": "strategy-service",
     "env_var": "INTEGRATION_TEST_STRATEGY_URL",
     "default_port": "8011",
     "api_path": "",
-    "endpoints": ["/health"]
+    "endpoints": ["/health"],
+    "note": "strategy-service is a CLI-only service (no HTTP API). strategy-ui currently only tests /health. If strategy-ui needs real API endpoints, a strategy-api should be created or endpoints should be added to strategy-service."
   },
   "trading-analytics-ui": {
     "api_name": "trading-analytics-api",
     "env_var": "INTEGRATION_TEST_TRADING_ANALYTICS_URL",
     "default_port": "8006",
     "api_path": "",
-    "endpoints": ["/health", "/analytics", "/instruments"]
+    "endpoints": [
+      "/health",
+      "/analytics/trades",
+      "/analytics/slippage",
+      "/analytics/strategy/{strategy_id}/performance",
+      "/analytics/predictions/quality",
+      "/analytics/risk",
+      "/instruments",
+      "/instruments/corporate-actions",
+      "/market-data/candles",
+      "/settlements/pending",
+      "/settlements/residuals",
+      "/recon/runs",
+      "/recon/runs/{date}",
+      "/recon/runs/{date}/stages/{stage}",
+      "/recon/deviations",
+      "/recon/runs/{date}/agent-report",
+      "/stream/signals",
+      "/stream/predictions",
+      "/prime-brokers",
+      "/clients/{client_id}/fee-schedule"
+    ]
   },
   "unified-admin-ui": {
-    "api_name": "admin-api",
+    "api_name": "none",
     "env_var": "INTEGRATION_TEST_ADMIN_URL",
     "default_port": "8012",
     "api_path": "",
-    "endpoints": ["/health"]
+    "endpoints": ["/health"],
+    "note": "Component library monorepo (packages/core, packages/deployment, packages/batch-audit). No dedicated backend -- each package's components are consumed by the corresponding standalone UI repo. The admin-api entry is a placeholder; remove when confirmed unnecessary."
   }
 }

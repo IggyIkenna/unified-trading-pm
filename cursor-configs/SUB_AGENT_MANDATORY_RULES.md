@@ -217,7 +217,45 @@ isProject: false
 
 ---
 
-## §10 Readiness Checklist & Semver Rules
+## §10 Local Dev & Zombie Process Prevention
+
+- **Vitest config:** Always use `pool: "forks"` in `vitest.config.ts`. The default `threads` pool leaves orphan node
+  processes when tests crash. All UI repos must include `pool: "forks"` and `teardownTimeout: 5000`.
+- **Non-interactive test runs:** Use `CI=true npm test -- --run` for headless/CI test execution. The `--run` flag
+  prevents watch mode. `CI=true` ensures non-interactive behavior.
+- **Zombie detection:** If node/python processes are stuck after tests:
+  ```bash
+  ps aux | grep "node.*vitest" | grep -v grep
+  ps aux | grep "python.*-m.*_api" | grep -v grep
+  ```
+- **Mock mode for APIs:** `CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local DISABLE_AUTH=true` — every API returns realistic
+  mock data, no cloud credentials needed.
+- **MockStateStore:** In mock mode, use `get_store().list/create/update/delete` from `unified-trading-library` — NOT
+  static dicts. Mutations persist across API restarts in `.local-dev-cache/`.
+- **MOCK_STATE_MODE:**
+  - `deterministic` — CI mode. Pure seed data, no persistence, no `.local-dev-cache/` writes.
+  - `interactive` — UAT/dev mode. Mutations persist to `.local-dev-cache/{service}/{collection}.jsonl`.
+- **Cache cleanup:** `dev-stop.sh --clean` (stop + wipe cache) or `dev-start.sh --reset` (wipe cache + start fresh).
+- **Local dev stack:** `bash unified-trading-pm/scripts/dev/dev-start.sh --stack <name> --mode mock` — never start
+  UIs/APIs manually with ad-hoc commands.
+- **Port registry SSOT:** `unified-trading-pm/scripts/dev/ui-api-mapping.json` — UIs on 5173-5183, APIs on 8004-8016.
+  All UIs use `strictPort: true`.
+- **Test command reference:**
+
+  | What                   | Command                                                              | Notes                                 |
+  | ---------------------- | -------------------------------------------------------------------- | ------------------------------------- |
+  | Python quality gates   | `cd <repo> && bash scripts/quality-gates.sh`                         | Per-repo .venv, never pytest directly |
+  | UI tests (headless)    | `cd <ui-repo> && CI=true npm test -- --run`                          | `--run` prevents watch mode           |
+  | UI smoke build         | `cd <ui-repo> && VITE_MOCK_API=true npx vite build`                  | Catches TS/import errors              |
+  | Start local stack      | `bash unified-trading-pm/scripts/dev/dev-start.sh --all --mode mock` | No credentials needed                 |
+  | Stop + clean cache     | `bash unified-trading-pm/scripts/dev/dev-stop.sh --clean`            | Wipes `.local-dev-cache/`             |
+  | Check running services | `bash unified-trading-pm/scripts/dev/dev-status.sh`                  | Shows all 5 mode axes                 |
+
+- **Full docs:** `unified-trading-codex/08-workflows/local-dev.md`
+
+---
+
+## §11 Readiness Checklist & Semver Rules
 
 ### MANDATORY RULE: Check Readiness Before Claiming Stage Complete
 
@@ -301,7 +339,7 @@ must always be in the loop for MAJOR version promotions.
 
 ---
 
-## §11 Autonomous Agent Prompt Injection (MANDATORY for agent orchestrators)
+## §12 Autonomous Agent Prompt Injection (MANDATORY for agent orchestrators)
 
 If you are an orchestrator, script, or workflow that LAUNCHES other agents (Claude Code `--print`, Cursor agent, etc.):
 

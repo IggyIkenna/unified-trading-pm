@@ -1,0 +1,177 @@
+name: Persist CI/CD Event
+
+# Reusable workflow — called by any repo to persist a CI/CD event as JSONL.
+# Cloud-mode aware: writes to GCS (GCP), S3 (AWS), or logs-only (local/none).
+# Event schema matches GitHubWorkflowEvent from unified-internal-contracts.
+
+on:
+  workflow_call:
+    inputs:
+      repo_name:
+        description: Repository name (e.g. unified-trading-library)
+        required: true
+        type: string
+      workflow_name:
+        description: Name of the workflow that produced this event
+        required: true
+        type: string
+      run_id:
+        description: GitHub Actions run ID
+        required: true
+        type: string
+      conclusion:
+        description: "Workflow conclusion: success, failure, cancelled, skipped"
+        required: true
+        type: string
+      branch:
+        description: Git branch name
+        required: false
+        type: string
+        default: ""
+      commit_sha:
+        description: Git commit SHA
+        required: false
+        type: string
+        default: ""
+      duration_seconds:
+        description: Workflow duration in seconds
+        required: false
+        type: string
+        default: "0"
+      details_json:
+        description: Arbitrary JSON payload for extra context
+        required: false
+        type: string
+        default: "{}"
+    secrets:
+      GCP_SA_KEY:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  persist-event:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CLOUD_PROVIDER: ${{ vars.CLOUD_PROVIDER || 'local' }}
+      CICD_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET || 'unified-trading-cicd-events' }}
+
+    steps:
+      - name: Build JSON event
+        id: build-event
+        env:
+          INPUT_REPO_NAME: ${{ inputs.repo_name }}
+          INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
+          INPUT_CONCLUSION: ${{ inputs.conclusion }}
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_COMMIT_SHA: ${{ inputs.commit_sha }}
+          INPUT_DURATION_SECONDS: ${{ inputs.duration_seconds }}
+          INPUT_DETAILS_JSON: ${{ inputs.details_json }}
+        run: |
+          set -euo pipefail
+
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          DATE_PARTITION=$(date -u +"%Y-%m-%d")
+
+          EVENT_JSON=$(jq -n -c \
+            --arg event_type "github_workflow_event" \
+            --arg timestamp "$TIMESTAMP" \
+            --arg repo_name "$INPUT_REPO_NAME" \
+            --arg workflow_name "$INPUT_WORKFLOW_NAME" \
+            --arg run_id "$INPUT_RUN_ID" \
+            --arg conclusion "$INPUT_CONCLUSION" \
+            --arg branch "$INPUT_BRANCH" \
+            --arg commit_sha "$INPUT_COMMIT_SHA" \
+            --arg duration_seconds "$INPUT_DURATION_SECONDS" \
+            --argjson details "$INPUT_DETAILS_JSON" \
+            '{
+              event_type: $event_type,
+              timestamp: $timestamp,
+              repo_name: $repo_name,
+              workflow_name: $workflow_name,
+              run_id: $run_id,
+              conclusion: $conclusion,
+              branch: $branch,
+              commit_sha: $commit_sha,
+              duration_seconds: ($duration_seconds | tonumber),
+              details: $details
+            }')
+
+          echo "Event JSON:"
+          echo "$EVENT_JSON" | jq .
+
+          echo "event_json=$EVENT_JSON" >> "$GITHUB_OUTPUT"
+          echo "date_partition=$DATE_PARTITION" >> "$GITHUB_OUTPUT"
+
+      # ── GCP: authenticate and write to GCS ──────────────────────────────────
+      - name: Authenticate to GCP
+        if: env.CLOUD_PROVIDER == 'gcp'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Persist event to GCS
+        if: env.CLOUD_PROVIDER == 'gcp'
+        env:
+          EVENT_JSON: ${{ steps.build-event.outputs.event_json }}
+          DATE_PARTITION: ${{ steps.build-event.outputs.date_partition }}
+          REPO_NAME: ${{ inputs.repo_name }}
+        run: |
+          set -euo pipefail
+
+          OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/events.jsonl"
+          GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
+          LOCAL_FILE="/tmp/events.jsonl"
+
+          # Download existing file (if any), append, re-upload
+          gsutil cp "$GCS_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
+          echo "$EVENT_JSON" >> "$LOCAL_FILE"
+          gsutil cp "$LOCAL_FILE" "$GCS_URI" || true
+
+          echo "Persisted event to $GCS_URI"
+
+      # ── AWS: authenticate and write to S3 ───────────────────────────────────
+      - name: Configure AWS credentials
+        if: env.CLOUD_PROVIDER == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+
+      - name: Persist event to S3
+        if: env.CLOUD_PROVIDER == 'aws'
+        env:
+          EVENT_JSON: ${{ steps.build-event.outputs.event_json }}
+          DATE_PARTITION: ${{ steps.build-event.outputs.date_partition }}
+          REPO_NAME: ${{ inputs.repo_name }}
+        run: |
+          set -euo pipefail
+
+          OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/events.jsonl"
+          S3_URI="s3://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
+          LOCAL_FILE="/tmp/events.jsonl"
+
+          # Download existing file (if any), append, re-upload
+          aws s3 cp "$S3_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
+          echo "$EVENT_JSON" >> "$LOCAL_FILE"
+          aws s3 cp "$LOCAL_FILE" "$S3_URI" || true
+
+          echo "Persisted event to $S3_URI"
+
+      # ── Local/none: log only ────────────────────────────────────────────────
+      - name: Log event (no cloud persistence)
+        if: env.CLOUD_PROVIDER != 'gcp' && env.CLOUD_PROVIDER != 'aws'
+        env:
+          EVENT_JSON: ${{ steps.build-event.outputs.event_json }}
+        run: |
+          echo "CLOUD_PROVIDER=${CLOUD_PROVIDER} — skipping cloud persistence"
+          echo "Event payload (logged to GitHub Actions output only):"
+          echo "$EVENT_JSON" | jq .

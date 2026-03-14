@@ -1,0 +1,94 @@
+# Cloud Build Template — Unified Trading System Python Libraries (Wheel-Only)
+#
+# Wheel-only build: no Docker image. Auth pre-check, ensure-repo, quality-gates, build, publish.
+# Use for libraries that publish to unified-libraries Artifact Registry.
+#
+# Placeholders: {{LIBRARY_NAME}}, {{PKG_NAME}}.
+# {{PKG_NAME}} = Python package name (underscores, e.g. unified_api_contracts).
+#
+# Generated from PM template. Rollout: rollout-cloudbuild.py --include-library
+#
+# Required steps:
+#   - auth-precheck   (fail fast if SA lacks Python AR access)
+#   - ensure-repo     (unified-libraries)
+#   - quality-gates   (lint, tests, typecheck)
+#   - build-wheel     (python -m build --wheel)
+#   - publish-python  (twine upload to unified-libraries)
+
+substitutions:
+  _LIBRARY_NAME: "{{LIBRARY_NAME}}"
+  _PKG_NAME: "{{PKG_NAME}}"
+
+steps:
+  # ── Auth pre-check: fail fast if SA lacks Python AR access ─
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:alpine"
+    id: "auth-precheck"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        echo "=== Auth pre-check ==="
+        TOKEN=$$(gcloud auth print-access-token) || { echo "FAIL: No GCP token"; exit 1; }
+        echo "GCP token OK"
+        STATUS=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$TOKEN" "https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/" || echo "000")
+        if [ "$$STATUS" != "200" ] && [ "$$STATUS" != "404" ]; then
+          echo "FAIL: Python AR HTTP $$STATUS"; exit 1
+        fi
+        echo "Python AR OK"
+        echo "=== Auth pre-check passed ==="
+    waitFor: ["-"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "ensure-repo"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud artifacts repositories describe unified-libraries --location=asia-northeast1 &>/dev/null || \
+          gcloud artifacts repositories create unified-libraries --repository-format=python --location=asia-northeast1 --description="Unified Python libraries"
+    waitFor: ["auth-precheck"]
+
+  - name: "python:3.13-slim"
+    id: "lint"
+    waitFor: ["ensure-repo"]
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        pip install uv && uv pip install --system ruff
+        ruff check .
+        ruff format --check .
+
+  - name: "python:3.13-slim"
+    id: "build-wheel"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        pip install uv && uv pip install --system build
+        python -m build --wheel --outdir dist/
+        ls -lh dist/
+    waitFor: ["lint"]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:alpine"
+    id: "publish-python"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        apk add --no-cache python3 py3-pip
+        pip3 install --break-system-packages twine keyrings.google-artifactregistry-auth
+        python3 -m twine upload \
+          --repository-url https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/ \
+          --non-interactive dist/*.whl
+        echo "✓ Published wheel to unified-libraries"
+    waitFor: ["build-wheel"]
+
+options:
+  machineType: "E2_HIGHCPU_8"
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: "600s"

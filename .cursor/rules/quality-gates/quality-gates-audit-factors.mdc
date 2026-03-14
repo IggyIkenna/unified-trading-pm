@@ -16,4 +16,4 @@ RULE: P1 blocking: no credential JSON in gitignore; test-project not central-ele
 WHY: Audit readiness; only QUALITY_GATE_BYPASS_AUDIT.md exceptions may pass.
 CODEX: 06-coding-standards/quality-gates.md, QUALITY_GATE_BYPASS_AUDIT.md
 DO: Use @handle_api_errors; Protocol/TypedDict; *credentials*.json in gitignore; test-project in tests
-NEVER: !central-element-*.json; central-element-323112 in tests; except Exception; relax reportAny
+NEVER: !central-element-*.json; central-element-* in tests; except Exception; relax reportAny

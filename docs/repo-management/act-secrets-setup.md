@@ -23,6 +23,8 @@ complete.
 
    ```
    GH_PAT=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   # Optional: GCP project for workspace scripts (act, dev, agents). Source before running scripts that need it.
+   # GCP_PROJECT_ID=your-project-id
    ```
 
    Create a token at https://github.com/settings/tokens with `repo` scope.

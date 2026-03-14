@@ -252,6 +252,7 @@ def generate_workflow_call_yaml(
         f"{with_block}\n"
         f"    secrets:\n"
         f"      GH_PAT: ${{{{ secrets.GH_PAT }}}}\n"
+        f"      GCP_PROJECT_ID: ${{{{ secrets.GCP_PROJECT_ID }}}}\n"
     )
 
 

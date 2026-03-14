@@ -71,7 +71,7 @@ else
 fi
 
 # Hardcoded project IDs (not 'test-project')
-hardcoded_proj=$(rg 'central-element-323112|[a-z]+-[a-z]+-[0-9]{9}' \
+hardcoded_proj=$(rg 'central-element-[0-9]+|[a-z]+-[a-z]+-[0-9]{9}' \
   --type py \
   --glob '!.venv*' --glob '!**/.venv*/**' \
   --glob '!**/tests/**' \

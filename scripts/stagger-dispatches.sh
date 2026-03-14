@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # stagger-dispatches.sh — Dispatches repository_dispatch events to repos
-# in merge_level (tier) order with configurable delay between tiers.
+# in topologicalOrder (tier) order with configurable delay between tiers.
 #
 # Prevents GHA API rate-limit bursts by staggering dispatches across tiers.
-# Reads tier info from workspace-manifest.json merge_level field.
-# T0 (merge_level 0-2) dispatched first, then sleep, T1 (3-5), sleep, etc.
+# Reads tier order from workspace-manifest.json topologicalOrder (SSOT).
+# L0 dispatched first, then sleep, L1, sleep, etc.
 #
 # Usage:
 #   bash scripts/stagger-dispatches.sh <event_type> [payload_json]
@@ -41,8 +41,8 @@ if [ ! -f "$MANIFEST_PATH" ]; then
   exit 1
 fi
 
-# Extract repos grouped by merge_level from manifest
-# Output: JSON array of {repo, merge_level, github_url} sorted by merge_level
+# Extract repos grouped by level from topologicalOrder (SSOT)
+# Output: JSON array of {level, repos} in topological order
 TIER_GROUPS=$(python3 -c "
 import json, sys
 
@@ -53,19 +53,17 @@ repo_filter = set(repo_filter_raw.split(',')) if repo_filter_raw else None
 with open(manifest_path) as f:
     m = json.load(f)
 
-repos = m.get('repositories', {})
-groups: dict[int, list[str]] = {}
-
-for name, data in repos.items():
-    if repo_filter and name not in repo_filter:
-        continue
-    merge_level = data.get('merge_level', 99)
-    groups.setdefault(merge_level, []).append(name)
-
-# Output as JSON: sorted list of {level, repos}
+topo = m.get('topologicalOrder', {}).get('levels', [])
 result = []
-for level in sorted(groups.keys()):
-    result.append({'level': level, 'repos': sorted(groups[level])})
+for entry in sorted(topo, key=lambda x: x.get('level', 999)):
+    level = entry.get('level')
+    if level is None or level < 0:
+        continue
+    repos_in_level = entry.get('repos', [])
+    if repo_filter:
+        repos_in_level = [r for r in repos_in_level if r in repo_filter]
+    if repos_in_level:
+        result.append({'level': level, 'repos': sorted(repos_in_level)})
 
 json.dump(result, sys.stdout)
 ")
@@ -115,12 +113,12 @@ for g in groups:
   REPOS_CSV="${LEVEL#*:}"
 
   if [ "$FIRST_TIER" = "false" ] && [ "$DRY_RUN" != "true" ]; then
-    echo "--- Sleeping ${TIER_DELAY}s before merge_level $LEVEL_NUM ---"
+    echo "--- Sleeping ${TIER_DELAY}s before level $LEVEL_NUM ---"
     sleep "$TIER_DELAY"
   fi
   FIRST_TIER=false
 
-  echo ">> merge_level $LEVEL_NUM:"
+  echo ">> level $LEVEL_NUM:"
 
   IFS=',' read -ra REPOS <<< "$REPOS_CSV"
   for REPO in "${REPOS[@]}"; do

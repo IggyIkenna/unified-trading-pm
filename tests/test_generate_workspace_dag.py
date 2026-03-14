@@ -19,6 +19,7 @@ from generate_workspace_dag import (  # noqa: E402, I001
     JsonDict,
     LayoutEntry,
     RepoEntry,
+    build_repo_level_from_topo,
     parse_level_descriptions,
     parse_repos,
     band_height,
@@ -37,25 +38,22 @@ def _minimal_manifest() -> JsonDict:
     return {
         "topologicalOrder": {
             "levels": [
-                {"level": 0, "description": "Root"},
-                {"level": 1, "description": "Libraries"},
+                {"level": 0, "description": "Root", "repos": ["repo-a"]},
+                {"level": 1, "description": "Libraries", "repos": ["repo-b", "repo-c"]},
             ],
         },
         "repositories": {
             "repo-a": {
-                "merge_level": 0,
                 "type": "infrastructure",
                 "version": "0.1.0",
                 "status": "active",
             },
             "repo-b": {
-                "merge_level": 1,
                 "type": "library",
                 "version": "0.2.0",
                 "status": "active",
             },
             "repo-c": {
-                "merge_level": 1,
                 "type": "service",
                 "version": "0.3.0",
                 "status": "planned",
@@ -69,12 +67,11 @@ def _manifest_with_ampersand() -> JsonDict:
     return {
         "topologicalOrder": {
             "levels": [
-                {"level": 0, "description": "Standards & codex"},
+                {"level": 0, "description": "Standards & codex", "repos": ["test-repo"]},
             ],
         },
         "repositories": {
             "test-repo": {
-                "merge_level": 0,
                 "type": "library",
                 "version": "0.1.0",
                 "status": "active",
@@ -84,28 +81,25 @@ def _manifest_with_ampersand() -> JsonDict:
 
 
 def _manifest_with_deprecated() -> JsonDict:
-    """Manifest with deprecated repos (null and negative merge_level)."""
+    """Manifest with deprecated repos (excluded from topologicalOrder)."""
     return {
         "topologicalOrder": {
             "levels": [
-                {"level": 0, "description": "Active"},
+                {"level": 0, "description": "Active", "repos": ["active-repo"]},
             ],
         },
         "repositories": {
             "active-repo": {
-                "merge_level": 0,
                 "type": "service",
                 "version": "0.1.0",
                 "status": "active",
             },
             "deprecated-null": {
-                "merge_level": None,
                 "type": "service",
                 "version": "0.1.0",
                 "status": "deprecated",
             },
             "deprecated-neg": {
-                "merge_level": -1,
                 "type": "service",
                 "version": "0.1.0",
                 "status": "deprecated",
@@ -242,20 +236,22 @@ class TestParseRepos:
     """Tests for parse_repos()."""
 
     def test_groups_by_level(self) -> None:
-        """Should group repos by merge_level."""
+        """Should group repos by topologicalOrder level."""
         data = _minimal_manifest()
         repos_raw = data["repositories"]
         assert isinstance(repos_raw, dict)
-        levels, _ = parse_repos(repos_raw)
+        repo_level = build_repo_level_from_topo(data)
+        levels, _ = parse_repos(repos_raw, repo_level=repo_level)
         assert len(levels[0]) == 1  # repo-a
         assert len(levels[1]) == 2  # repo-b, repo-c
 
     def test_skips_deprecated(self) -> None:
-        """Should skip repos with null or negative merge_level."""
+        """Should skip repos not in topologicalOrder."""
         data = _manifest_with_deprecated()
         repos_raw = data["repositories"]
         assert isinstance(repos_raw, dict)
-        levels, type_counts = parse_repos(repos_raw)
+        repo_level = build_repo_level_from_topo(data)
+        levels, type_counts = parse_repos(repos_raw, repo_level=repo_level)
         assert len(levels) == 1
         assert len(levels[0]) == 1
         assert levels[0][0].name == "active-repo"
@@ -267,7 +263,8 @@ class TestParseRepos:
         data = _minimal_manifest()
         repos_raw = data["repositories"]
         assert isinstance(repos_raw, dict)
-        levels, _ = parse_repos(repos_raw)
+        repo_level = build_repo_level_from_topo(data)
+        levels, _ = parse_repos(repos_raw, repo_level=repo_level)
         planned = [r for r in levels[1] if r.name == "repo-c"]
         assert len(planned) == 1
         assert planned[0].css_class == "future"
@@ -277,7 +274,8 @@ class TestParseRepos:
         data = _minimal_manifest()
         repos_raw = data["repositories"]
         assert isinstance(repos_raw, dict)
-        levels, _ = parse_repos(repos_raw)
+        repo_level = build_repo_level_from_topo(data)
+        levels, _ = parse_repos(repos_raw, repo_level=repo_level)
         names = [r.name for r in levels[1]]
         assert names == sorted(names)
 

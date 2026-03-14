@@ -660,6 +660,12 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
     python "$SVG_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Workspace DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  SVG generation failed (non-blocking)"
     cd "$REPO_DIR"
   fi
+  DATA_FLOW_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/generate_data_flow_dag.py"
+  if [ -f "$DATA_FLOW_SCRIPT" ]; then
+    cd "$WORKSPACE_ROOT"
+    python "$DATA_FLOW_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Data Flow DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  Data Flow SVG generation failed (non-blocking)"
+    cd "$REPO_DIR"
+  fi
 
   echo ""
 fi
@@ -769,13 +775,13 @@ else
   QG_STATUS=""
   if [ -f "${MANIFEST_PATH:-}" ]; then
     REPO_TYPE=$(jq -r '.repositories["'"$REPO_NAME"'"] | .type // empty' "$MANIFEST_PATH" 2>/dev/null)
-    QG_STATUS=$(jq -r '.repositories["'"$REPO_NAME"'"] | .quality_gate_status // empty' "$MANIFEST_PATH" 2>/dev/null)
+    QG_STATUS=$(jq -r '.repositories["'"$REPO_NAME"'"] | .ci_status // empty' "$MANIFEST_PATH" 2>/dev/null)
   fi
   QG_REQUIRED_TYPES="library service api-service infrastructure devops test-harness"
   if [ -n "$REPO_TYPE" ] && [ -n "$QG_STATUS" ] && \
      echo "$QG_REQUIRED_TYPES" | grep -qw "$REPO_TYPE" && \
      [ "$QG_STATUS" != "NO_QG" ]; then
-    echo "[$REPO_NAME] ❌ quality-gates.sh required: type=$REPO_TYPE, quality_gate_status=$QG_STATUS (add scripts/quality-gates.sh or set quality_gate_status=NO_QG in manifest)" >&2
+    echo "[$REPO_NAME] ❌ quality-gates.sh required: type=$REPO_TYPE, ci_status=$QG_STATUS (add scripts/quality-gates.sh or set ci_status=NO_QG in manifest)" >&2
     exit 1
   fi
   echo "[$REPO_NAME] ⚠️  No quality-gates.sh found (skipping quality gate check)"

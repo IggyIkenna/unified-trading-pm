@@ -1,0 +1,128 @@
+name: ci-status-update
+
+# Receives repository_dispatch from quality-gates workflows (python-quality-gates.yml,
+# ui-quality-gates.yml) when QG completes. Updates workspace-manifest.json ci_status
+# for the repo, regenerates the DAG SVG, and commits. ci_status is the single source
+# of truth for QG state — quality_gate_status is deprecated/removed.
+#
+# Trigger: repository_dispatch event_type=ci-status-update
+# Payload: { repo, status, sha } — status is PASSING or FAILING
+
+on:
+  repository_dispatch:
+    types: [ci-status-update]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: manifest-update
+  cancel-in-progress: false
+
+jobs:
+  update-ci-status:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.update.outputs.skip }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Update manifest ci_status and regenerate DAG
+        id: update
+        env:
+          REPO: ${{ github.event.client_payload.repo }}
+          STATUS: ${{ github.event.client_payload.status }}
+          SHA: ${{ github.event.client_payload.sha || '' }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$REPO" ] || [ -z "$STATUS" ]; then
+            echo "Missing repo or status in client_payload. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$STATUS" != "PASSING" ] && [ "$STATUS" != "FAILING" ]; then
+            echo "Invalid status '$STATUS'. Must be PASSING or FAILING. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Updating ci_status: $REPO → $STATUS"
+
+          python3 - <<PYEOF
+          import json
+          import os
+          from pathlib import Path
+
+          repo = os.environ["REPO"]
+          status = os.environ["STATUS"]
+
+          manifest_path = Path("workspace-manifest.json")
+          with open(manifest_path) as f:
+              manifest = json.load(f)
+
+          repos = manifest.get("repositories", {})
+          if repo not in repos:
+              print(f"Repo {repo} not in manifest — skipping.")
+              exit(0)
+
+          repos[repo]["ci_status"] = status
+          # Remove deprecated quality_gate_status from all repos (ci_status is SSOT)
+          for r in repos.values():
+              r.pop("quality_gate_status", None)
+
+          with open(manifest_path, "w") as f:
+              json.dump(manifest, f, indent=2)
+          print(f"Updated {repo} ci_status={status}")
+          PYEOF
+
+          python3 scripts/manifest/generate_workspace_dag.py
+
+      - name: Commit and push
+        if: steps.update.outputs.skip != 'true'
+        run: |
+          if git diff --quiet workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg 2>/dev/null; then
+            echo "No manifest/DAG changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg
+          git commit -m "ci: update ci_status for ${{ github.event.client_payload.repo }} (${{ github.event.client_payload.status }}) [skip ci]"
+          git push origin HEAD
+
+  # ── NOTIFICATION (reusable workflow) ─────────────────────────────────────────
+  notify:
+    name: Telegram — CI Status Update
+    needs: [update-ci-status]
+    if: always() && needs.update-ci-status.outputs.skip != 'true'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "CI status update: ${{ github.event.client_payload.repo }} is now ${{ github.event.client_payload.status }}"
+      severity: "INFO"
+      conclusion: ${{ needs.update-ci-status.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — CI Status Event
+    needs: [update-ci-status, notify]
+    if: always() && needs.update-ci-status.outputs.skip != 'true'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: ${{ github.event.client_payload.repo }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.update-ci-status.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.event.client_payload.sha }}
+      details_json: '{"status": "${{ github.event.client_payload.status }}"}'

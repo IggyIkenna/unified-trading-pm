@@ -44,8 +44,8 @@ unified-trading-system-repos/
 ├── unified-events-interface/    # T0 — events
 ├── unified-trading-library/     # T1 — shared library
 ├── unified-domain-client/       # T2/T3 — domain client
-├── market-tick-data-service/    # T3 service (merge_level 8)
-├── strategy-ui/                 # UI repo (merge_level 11)
+├── market-tick-data-service/    # T3 service (level 8)
+├── strategy-ui/                 # UI repo (level 11)
 └── ...                          # ~55 more repos
 ```
 
@@ -66,10 +66,11 @@ Every repo entry in `workspace-manifest.json`:
 {
   "type": "service | library | ui | infrastructure | api",
   "arch_tier": "0 | 1 | 2 | 3 | service | ui | api | infrastructure",
-  "merge_level": 8,
   "dependencies": [{ "name": "unified-trading-library", "version": ">=0.1.0,<1.0.0", "required": true }]
 }
 ```
+
+Tier/level order: `topologicalOrder.levels` (SSOT). Repo level = which level lists it.
 
 **Tier invariant:** T0 → T1 → T2 → T3 — never import from a higher tier. T0 must be fully green before T1.
 

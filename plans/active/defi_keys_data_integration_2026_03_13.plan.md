@@ -221,3 +221,9 @@ todos:
 - **This plan Phase 1 (secrets) blocks Plan 1 Phase 5** — production backfill needs API keys
 - **Plan 1 Phase 3 (interfaces hardened) blocks this plan Phase 2** — cassette recording needs working interfaces
 - **This plan Phase 2 (cassettes) blocks Plan 1 Phase 6 audit** — audit §10 FAIL requires VCR cassettes in 3 repos
+
+## Coordination: ui-api-alerting-observability plan
+
+The ui-api-alerting-observability-2026-03-14 plan adds a Telegram notifier to alerting-service and deprecates Slack as
+the default operational channel. FreshnessMonitor Phase 2 (DATA_STALE events → alerting-service) should route via
+Telegram, not Slack.

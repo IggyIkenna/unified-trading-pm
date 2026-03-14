@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: manifest-update
@@ -112,3 +113,32 @@ jobs:
             echo "WARNING: Failed to dispatch to:$FAILED (repos may not exist or be archived)"
           fi
           echo "Dispatched staging-locked to all repos"
+
+  # ── NOTIFICATION (reusable workflow) ─────────────────────────────────────────
+  notify:
+    name: Telegram — SIT Gate
+    needs: [lock-staging]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "SIT gate: staging locked. Commit SHAs recorded. Dispatched staging-locked to all repos."
+      severity: "INFO"
+      conclusion: ${{ needs.lock-staging.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — SIT Gate Event
+    needs: [lock-staging, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.lock-staging.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "sit-lock"}'

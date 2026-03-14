@@ -1,6 +1,7 @@
 # Full CI/CD Flow — SSOT
 
 **SSOT:** This document. Single entry point for dependency alignment, setup, sync-to-main, and conflict resolution.
+**Related:** `docs/ci-cd-ssot.md` §7 — Cloud Build/CodeBuild templates, rollout scripts, SIT build source.
 
 **Run from workspace root:** All scripts assume you run from the workspace root (parent of unified-trading-pm). cd there
 first, then run any script.
@@ -775,7 +776,8 @@ SIT START:
   → reads staging_commits from PM manifest (exact SHA set)
   → dispatches sit-lock to PM (payload: { commit_shas: {...} })
   → PM's sit-gate.yml: sets locked=true, locked_since=utcnow(), locked_reason="SIT running"
-  → SIT clones each repo at its staging_commits[repo] SHA — not latest HEAD
+  → deployment-tests: clones v1 service repos (market-data-service, execution-service, trading-analytics-api)
+    from **staging** branch before docker compose up — build-from-source (Option A). See § SIT Deployment-Tests Build Source.
 
 SIT PASS:
   → dispatches staging-validated to PM
@@ -824,6 +826,28 @@ Multiple `feat/*` PRs merging to staging within 10 minutes form a **batch** — 
 - SIT reads `staging_commits` from the PM manifest to get the exact SHA set to test.
 
 **Result:** Two repos pushed to staging 3 min apart → one SIT run covering both. No partial-set testing.
+
+---
+
+## SIT Deployment-Tests Build Source
+
+**SSOT:** `docs/ci-cd-ssot.md` §7. This section summarizes the design.
+
+**Option A (current):** Build-from-source in GHA. Before `docker compose up`, `smoke-test-gate.yml` clones the v1
+service repos (market-data-service, execution-service, trading-analytics-api) from the **staging** branch as siblings of
+PM. Compose uses `build.context: ../../<repo>`. We validate the staged stack — cloning staging ensures we test exactly
+what will be promoted.
+
+**Race-condition protection:** Debounce (5–10 min quiet) + `concurrency: sit-staging` with `cancel-in-progress: true`
+prevents testing a mixed state. A new push cancels the current run; only one run proceeds. Cloning after debounce yields
+a stable snapshot of staging.
+
+**build-smoke vs SIT deployment-tests:**
+
+| Workflow                         | Purpose                                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `build-smoke-all-repos.yml` (PM) | Per-repo build verification — each repo builds (Docker or wheel) in isolation. No integration.        |
+| SIT deployment-tests             | Integration tests against the **staged stack** — services talk to each other via docker-compose mock. |
 
 ---
 

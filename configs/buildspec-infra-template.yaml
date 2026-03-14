@@ -1,0 +1,51 @@
+# CodeBuild buildspec template — Unified Trading System Infrastructure
+#
+# Infrastructure variant: Python lint, tests, Terraform validate.
+# Wheel publish and Terraform image push are GCP Cloud Build only.
+# AWS parity: same validation steps.
+#
+# Placeholders: {{PKG_NAME}}, {{TERRAFORM_DIR}}.
+
+version: 0.2
+
+env:
+  variables:
+    PKG_NAME: "{{PKG_NAME}}"
+    TERRAFORM_DIR: "{{TERRAFORM_DIR}}"
+    CLOUD_PROVIDER: aws
+
+phases:
+  install:
+    runtime-versions:
+      python: "3.13"
+    commands:
+      - pip install uv
+      - uv pip install -e ".[dev]" --system
+      - echo "Installing Terraform..."
+      - curl -fsSL -o /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.6.7/terraform_1.6.7_linux_amd64.zip
+      - unzip -o /tmp/terraform.zip -d /usr/local/bin
+      - terraform version
+
+  pre_build:
+    commands:
+      - echo "Linting ${PKG_NAME}..."
+      - ruff check ${PKG_NAME}/
+      - ruff format --check ${PKG_NAME}/
+      - echo "Validating Terraform..."
+      - cd ${TERRAFORM_DIR} && terraform init -backend=false && terraform validate && cd ..
+
+  build:
+    commands:
+      - echo "Running tests..."
+      - python -m pytest tests/ -v --tb=short --cov=${PKG_NAME} --cov-fail-under=51 --cov-report=xml
+        --cov-report=term-missing
+      - echo "Infra build complete"
+
+artifacts:
+  files:
+    - "**/*"
+  base-directory: "."
+
+cache:
+  paths:
+    - "/root/.cache/pip/**/*"

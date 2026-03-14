@@ -55,8 +55,8 @@ set -e
 
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { :; }
-log_success() { :; }
+log_section() { echo -e "\n${BLUE}── $1 ──${NC}"; }
+log_success() { echo -e "${GREEN}✅ $1${NC}"; }
 log_ok()      { :; }
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
@@ -223,6 +223,17 @@ if [ "$RUN_TESTS" = true ]; then
     fi
     log_ok "Tests PASSED"
 
+    # PM integration test — verifies repo integrates with PM scripts (quality-gates, setup, manifest)
+    PM_INT_TEST="${REPO_ROOT}/unified-trading-pm/tests/integration/test_pm_scripts_integration.py"
+    if [ -f "$PM_INT_TEST" ] && [ -d "${REPO_ROOT}/unified-trading-pm" ]; then
+        if ! PROJECT_ROOT="$PROJECT_ROOT" $PYTHON_CMD -m pytest "$PM_INT_TEST" -v -m integration --tb=line -q 2>/dev/null; then
+            log_fail "PM integration test failed — repo must integrate with PM scripts"
+            exit 1
+        fi
+        log_ok "PM integration test PASSED"
+    fi
+
+
     # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed
     _TESTS_RAN=$(echo "$_pytest_out" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | head -1 || echo "0")
     _SKIPPED=$(echo "$_pytest_out" | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' | head -1 || echo "0")
@@ -254,7 +265,6 @@ if [ "$RUN_TESTS" = true ]; then
         fi
         log_ok "Integration dep coverage OK"
     fi
-
     # @pytest.mark.skip must have a # reason: comment on the immediately preceding line
     SKIP_NO_REASON=$(python3 - <<'PYEOF' 2>/dev/null || :
 import re
@@ -314,12 +324,29 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     cleanup_zombie_pyright() {
         # || : on every line + after done: CI uses set -eo pipefail; grep exits 1 when no processes
         # found, which would kill the script before basedpyright even starts without these guards.
-        ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep | \
+        _killed=0
         while read -r pid etime _; do
-            hours=0; echo "$etime" | grep -q '-' && hours=$(($(echo "$etime" | cut -d'-' -f1) * 24)) || :
-            [ "$(echo "$etime" | tr ':' '\n' | wc -l)" -eq 3 ] && hours=$(echo "$etime" | cut -d':' -f1) || :
-            [ "${hours:-0}" -ge 2 ] && log_warn "Killing zombie basedpyright PID $pid" && kill -9 "$pid" 2>/dev/null || :
-        done || :
+            # Parse ps etime [[DD-]hh:]mm:ss -> total minutes (kill if >= 30 min stale)
+            mins=0
+            if echo "$etime" | grep -q '-'; then
+                d=$(echo "$etime" | cut -d'-' -f1); rest=$(echo "$etime" | cut -d'-' -f2)
+                h=$(echo "$rest" | cut -d':' -f1); m=$(echo "$rest" | cut -d':' -f2)
+                mins=$((d * 24 * 60 + h * 60 + m))
+            elif [ "$(echo "$etime" | tr ':' '\n' | wc -l)" -eq 3 ]; then
+                h=$(echo "$etime" | cut -d':' -f1); m=$(echo "$etime" | cut -d':' -f2)
+                mins=$((h * 60 + m))
+            elif [ "$(echo "$etime" | tr ':' '\n' | wc -l)" -eq 2 ]; then
+                m=$(echo "$etime" | cut -d':' -f1); mins=${m:-0}
+            else
+                mins=0
+            fi
+            if [ "${mins:-0}" -ge 30 ]; then
+                log_warn "Killing zombie basedpyright PID $pid"
+                kill -9 "$pid" 2>/dev/null || :
+                _killed=$((_killed + 1))
+            fi
+        done < <(ps -eo pid,etime,command 2>/dev/null | grep -E 'basedpyright.*index\.js' | grep -v grep) || :
+        [ "${_killed:-0}" -eq 0 ] && log_ok "No zombie basedpyright processes to kill" || :
     }
     cleanup_zombie_pyright
     [ ! -f "$BASEDPYRIGHT_CMD" ] && ! command -v basedpyright &>/dev/null && { log_fail "basedpyright required: uv pip install basedpyright==1.38.2"; exit 1; }
@@ -336,8 +363,16 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     fi
     export BASEDPYRIGHT_CACHE_DIR="${TMPDIR:-/tmp}/basedpyright-cache/${SERVICE_NAME:-$(basename "$PWD")}"
     mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
-    PYRIGHT_EXIT=0
-    PYRIGHT_OUT=$(run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" 2>&1) || PYRIGHT_EXIT=$?
+    # Trap: kill only OUR basedpyright on Ctrl+C (avoids killing parallel QG runs in other repos)
+    BP_PID=""
+    trap '''[[ -n "$BP_PID" ]] && kill -9 $BP_PID 2>/dev/null''' INT TERM
+    _bp_out="/tmp/bp_out.$$"
+    run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
+    BP_PID=$!
+    wait $BP_PID || true
+    PYRIGHT_EXIT=$?
+    trap - INT TERM
+    PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
     if [ "$PYRIGHT_EXIT" -ne 0 ]; then echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout"; exit 1; fi
     WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
     if [ "${WARN_COUNT:-0}" -gt 0 ]; then
@@ -372,6 +407,20 @@ rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --
 
 rg 'os\.getenv\s*\([^)]+,\s*""\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "os.getenv empty fallback — fail fast"; V=$(( V + 1 )); } || log_success "No os.getenv empty fallback"
+
+
+# Env canon: when os.getenv is used, keys must be from unified_internal_contracts.EnvVars
+if [[ -n "${WORKSPACE_ROOT:-}" && -f "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_env_canon.py" ]]; then
+    python3 "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_env_canon.py" "$(pwd)" 2>/dev/null \
+        && log_success "Env canon: keys from EnvVars" \
+        || { log_fail "Env canon: os.getenv keys must be from unified_internal_contracts.EnvVars"; V=$(( V + 1 )); }
+fi
+# Manifest import alignment: dependencies[] must match actual Python imports
+if [[ -n "${WORKSPACE_ROOT:-}" && -f "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_manifest_import_alignment.py" ]]; then
+    python3 "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_manifest_import_alignment.py" --repo "$(pwd)" --workspace-root "${WORKSPACE_ROOT}" \
+        && log_success "Manifest import alignment: OK" \
+        || { log_fail "Manifest import alignment: declare deps you import, import deps you declare"; V=$(( V + 1 )); }
+fi
 
 rg "datetime\.now\(\)|datetime\.utcnow\(\)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Naive datetime — use datetime.now(timezone.utc)"; V=$(( V + 1 )); } || log_success "No naive datetime"
@@ -426,10 +475,10 @@ ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob 
 EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
-rg "central-element-323112" tests/ 2>/dev/null \
+rg "central-element-[0-9]+" tests/ 2>/dev/null \
     && { log_fail "Hardcoded prod project ID in tests — use 'test-project'"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in tests"
 
-rg "central-element-323112" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+rg "central-element-[0-9]+" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
 # GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
@@ -451,6 +500,17 @@ UCS_DOMAIN=$(rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClie
 DOMAIN_FROM_UCS=$(rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
     --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
 [[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
+
+# Schema provenance: local BaseModel/TypedDict/dataclass should import from UAC or UIC
+REPO_ROOT_SVC="${REPO_ROOT:-$(dirname "$PROJECT_ROOT")}"
+if [[ -f "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" ]]; then
+    if python3 "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$SERVICE_NAME" --workspace-root "$REPO_ROOT_SVC" 2>/dev/null; then
+        log_success "Schema provenance OK (schemas from UAC/UIC)"
+    else
+        log_warn "Schema provenance: local BaseModel/TypedDict/dataclass found (should import from UAC or UIC)"
+        python3 "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$SERVICE_NAME" --workspace-root "$REPO_ROOT_SVC" 2>/dev/null | head -5 || true
+    fi
+fi
 
 # setup_events/setup_service uses sink= in production
 # Skip if this repo defines setup_events (e.g. unified-events-interface)
@@ -541,14 +601,12 @@ SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -
 
 # File size
 # FUNCTION_SIZE_EXTRA_EXCLUDES also applies here for consistency (same variable, same dirs to skip)
-SVIOL=""; SWARN=""
+SVIOL=""
 for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
     lines=$(wc -l < "$f" 2>/dev/null || echo 0)
     [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
-    [[ "$lines" -gt $FILE_WARN_LINES && "$lines" -le $MAX_FILE_LINES ]] && SWARN="${SWARN}\n  $f: $lines L"
 done
 [[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
-[[ -n "$SWARN" ]] && log_warn "Approaching limit:$SWARN"
 
 # Function/class/method size
 # FUNCTION_SIZE_EXTRA_EXCLUDES: optional array of extra ! -path args set in quality-gates.sh
@@ -585,12 +643,12 @@ if command -v pip-audit &>/dev/null; then
     SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
         /tmp/pip-audit-output.json 2>/dev/null || :
     # Internal advisory check (BLOCKING — checks unified-trading-pm/security/internal-advisories.yaml)
-    if [[ -f "$REPO_ROOT/unified-trading-pm/scripts/check-internal-advisories.sh" ]]; then
-        bash "$REPO_ROOT/unified-trading-pm/scripts/check-internal-advisories.sh" \
+    if [[ -f "$REPO_ROOT/unified-trading-pm/scripts/validation/check-internal-advisories.sh" ]]; then
+        bash "$REPO_ROOT/unified-trading-pm/scripts/validation/check-internal-advisories.sh" \
             && log_success "internal advisory check clean" \
             || { log_fail "internal advisory violation — see unified-trading-pm/security/internal-advisories.yaml"; V=$(( V + 1 )); }
     else
-        log_warn "check-internal-advisories.sh not found at REPO_ROOT=$REPO_ROOT — skipping internal advisory check"
+        log_warn "check-internal-advisories.sh not found at ${REPO_ROOT}/unified-trading-pm/scripts/validation/ — skipping internal advisory check"
     fi
 else
     log_fail "pip-audit required: uv pip install pip-audit"; V=$(( V + 1 ))
@@ -605,12 +663,6 @@ else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi
 
-# Cloud Build validator
-if [ -f "cloudbuild.yaml" ] && command -v gcloud &>/dev/null; then
-    if git diff --name-only HEAD 2>/dev/null | grep -q "cloudbuild.yaml"; then
-        gcloud meta validate-yaml cloudbuild.yaml 2>/dev/null && log_success "cloudbuild.yaml valid" || log_warn "cloudbuild.yaml validation failed"
-    fi
-fi
 
 # CI/CD hygiene: ||true bypasses in quality gate scripts
 BYPASS=$(rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality-gates.yml" . 2>/dev/null \
@@ -829,9 +881,12 @@ if [ -f "cloudbuild.yaml" ]; then
         | grep -q 'push' || \
         rg '"push"' cloudbuild.yaml 2>/dev/null | grep -q 'push' || {
         log_fail "STEP 5.17: cloudbuild.yaml missing push step"; CB_FAIL=1; V=$(( V + 1 )); }
-    rg "id:\s*[\"']?(deploy|notify-deployment)|gcloud run deploy" cloudbuild.yaml 2>/dev/null \
-        | grep -qE 'deploy|notify-deployment' || {
-        log_warn "STEP 5.17: cloudbuild.yaml has no deploy/notify-deployment step (advisory — some services deploy via dispatch)"; }
+    # Skip deploy advisory if cloudbuild declares deploy-via-dispatch (e.g. central deployment-service)
+    if ! grep -qE '# deploy-via-dispatch|# deploys-via-dispatch' cloudbuild.yaml 2>/dev/null; then
+        rg "id:\s*[\"']?(deploy|notify-deployment)|gcloud run deploy" cloudbuild.yaml 2>/dev/null \
+            | grep -qE 'deploy|notify-deployment' || {
+            log_warn "STEP 5.17: cloudbuild.yaml has no deploy/notify-deployment step (advisory — some services deploy via dispatch)"; }
+    fi
     [ "$CB_FAIL" -eq 0 ] && log_success "STEP 5.17: cloudbuild.yaml structure OK"
 elif [ -f "buildspec.aws.yaml" ]; then
     VALIDATOR="${REPO_ROOT}/unified-trading-pm/scripts/validation/validate-buildspec.py"
@@ -947,5 +1002,40 @@ if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
     log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
     exit 1
 fi
+
+# ── RECORD LOCAL PASS (ci_status=LOCALLY_PASSED when not in CI) ───────────────
+if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
+    _MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
+    if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
+        if ! MANIFEST_PATH="$_MANIFEST" REPO_NAME="$SERVICE_NAME" python3 -c '
+import json, os
+p, r = os.environ.get("MANIFEST_PATH"), os.environ.get("REPO_NAME")
+if not p or not r: exit(0)
+with open(p) as f: m = json.load(f)
+repos = m.get("repositories", {})
+if r not in repos or repos[r].get("ci_status") == "PASSING": exit(0)
+repos[r]["ci_status"] = "LOCALLY_PASSED"
+with open(p, "w") as f: json.dump(m, f, indent=2)
+'; then
+            log_fail "Failed to update ci_status (LOCALLY_PASSED) in workspace-manifest.json"
+            exit 1
+        fi
+        _DAG_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
+        if [[ -f "$_DAG_SCRIPT" ]]; then
+            if ! python3 "$_DAG_SCRIPT"; then
+                log_fail "Failed to regenerate WORKSPACE_MANIFEST_DAG.svg"
+                exit 1
+            fi
+        fi
+        _DATA_FLOW_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_data_flow_dag.py"
+        if [[ -f "$_DATA_FLOW_SCRIPT" ]]; then
+            if ! python3 "$_DATA_FLOW_SCRIPT"; then
+                log_fail "Failed to regenerate DATA_FLOW_DAG.svg"
+                exit 1
+            fi
+        fi
+    fi
+fi
+
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"

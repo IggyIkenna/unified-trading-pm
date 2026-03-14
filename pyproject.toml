@@ -55,6 +55,7 @@ ignore = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: PM integration tests (verify repo sync with PM scripts)"]
 
 [tool.coverage.run]
 parallel = true

@@ -34,6 +34,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 concurrency:
   group:
@@ -49,6 +50,17 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GH_PAT }}
       GH_ORG: IggyIkenna
+    outputs:
+      repo_name: ${{ steps.inputs.outputs.repo_name }}
+      source_branch: ${{ steps.inputs.outputs.source_branch }}
+      target_branch: ${{ steps.inputs.outputs.target_branch }}
+      original_pr_url: ${{ steps.inputs.outputs.original_pr_url }}
+      conflict_count: ${{ steps.conflicts.outputs.conflict_count }}
+      conflicted_files: ${{ steps.conflicts.outputs.conflicted_files }}
+      pr_url: ${{ steps.pr.outputs.pr_url }}
+      qg_result: ${{ steps.qg.outputs.qg_result }}
+      qg_emoji: ${{ steps.qg.outputs.qg_emoji }}
+      apply_outcome: ${{ steps.apply.outcome }}
 
     steps:
       - name: Checkout PM for health check script
@@ -90,24 +102,7 @@ jobs:
           echo "  Target:        $TARGET_BRANCH"
           echo "  Original PR:   $ORIGINAL_PR_URL"
 
-      - name: Notify Telegram — agent working
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
-          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
-          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
-          ORIGINAL_PR_URL: ${{ steps.inputs.outputs.original_pr_url }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "TELEGRAM_BOT_TOKEN not set — skipping Telegram notification"
-            exit 0
-          fi
-          TEXT="⚠️ *Merge Conflict — Agent Working*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0ABlocked PR: ${ORIGINAL_PR_URL:-N/A}%0AResolving now..."
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" || true
+      # NOTE: "agent working" Telegram notification moved to notify-working job (reusable workflow)
 
       - name: Classify Claude API error on failure
         if: failure()
@@ -511,20 +506,7 @@ jobs:
           echo "resolution_branch=$RESOLUTION_BRANCH" >> "$GITHUB_OUTPUT"
           echo "Resolution branch pushed: $RESOLUTION_BRANCH"
 
-      - name: Notify Telegram — validation failure
-        if: always() && steps.apply.outcome == 'failure'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
-          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
-          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
-          CONFLICTED_FILES: ${{ steps.conflicts.outputs.conflicted_files }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token"; exit 0; fi
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "text=⚠️ conflict-resolution incomplete — manual intervention required. Repo: ${REPO_NAME} (${SOURCE_BRANCH} → ${TARGET_BRANCH}). Failing files: ${CONFLICTED_FILES}" || true
+      # NOTE: "validation failure" Telegram notification moved to notify-validation-failure job (reusable workflow)
 
       - name: Run quality gates
         if: steps.conflicts.outputs.conflict_count != '0'
@@ -625,36 +607,113 @@ jobs:
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Resolution PR: $PR_URL"
 
-      - name: Notify Telegram — resolution ready
-        if: always()
+      # NOTE: "resolution ready" Telegram notification moved to notify-result job (reusable workflow)
+
+  # ── NOTIFICATION JOBS (reusable workflow) ──────────────────────────────────────
+
+  # Stage 1: Notify that the agent is working on the conflict
+  notify-working:
+    name: Telegram — Agent Working
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Merge Conflict — Agent Working. Repo: ${{ github.event.client_payload.repo_name || inputs.repo_name }}. ${{
+        github.event.client_payload.source_branch || inputs.source_branch }} -> ${{
+        github.event.client_payload.target_branch || inputs.target_branch }}. Blocked PR: ${{
+        github.event.client_payload.original_pr_url || inputs.original_pr_url || 'N/A' }}. Resolving now..."
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  # Stage 2: Notify validation failure (apply step failed)
+  notify-validation-failure:
+    name: Telegram — Validation Failure
+    needs: [resolve-conflict]
+    if: always() && needs.resolve-conflict.outputs.apply_outcome == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "conflict-resolution incomplete — manual intervention required. Repo: ${{
+        needs.resolve-conflict.outputs.repo_name }} (${{ needs.resolve-conflict.outputs.source_branch }} -> ${{
+        needs.resolve-conflict.outputs.target_branch }}). Failing files: ${{
+        needs.resolve-conflict.outputs.conflicted_files }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  # Stage 3: Build the final result message and notify
+  notify-result-build:
+    name: Build Result Message
+    runs-on: ubuntu-latest
+    needs: [resolve-conflict]
+    if: always()
+    outputs:
+      message: ${{ steps.build.outputs.message }}
+      conclusion: ${{ steps.build.outputs.conclusion }}
+    steps:
+      - name: Build notification message
+        id: build
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          REPO_NAME: ${{ steps.inputs.outputs.repo_name }}
-          SOURCE_BRANCH: ${{ steps.inputs.outputs.source_branch }}
-          TARGET_BRANCH: ${{ steps.inputs.outputs.target_branch }}
-          ORIGINAL_PR_URL: ${{ steps.inputs.outputs.original_pr_url }}
-          PR_URL: ${{ steps.pr.outputs.pr_url }}
-          QG_EMOJI: ${{ steps.qg.outputs.qg_emoji }}
-          QG_RESULT: ${{ steps.qg.outputs.qg_result }}
-          CONFLICTED_FILES: ${{ steps.conflicts.outputs.conflicted_files }}
-          CONFLICT_COUNT: ${{ steps.conflicts.outputs.conflict_count }}
-          JOB_STATUS: ${{ job.status }}
+          REPO_NAME: ${{ needs.resolve-conflict.outputs.repo_name }}
+          SOURCE_BRANCH: ${{ needs.resolve-conflict.outputs.source_branch }}
+          TARGET_BRANCH: ${{ needs.resolve-conflict.outputs.target_branch }}
+          ORIGINAL_PR_URL: ${{ needs.resolve-conflict.outputs.original_pr_url }}
+          PR_URL: ${{ needs.resolve-conflict.outputs.pr_url }}
+          QG_EMOJI: ${{ needs.resolve-conflict.outputs.qg_emoji }}
+          QG_RESULT: ${{ needs.resolve-conflict.outputs.qg_result }}
+          CONFLICTED_FILES: ${{ needs.resolve-conflict.outputs.conflicted_files }}
+          CONFLICT_COUNT: ${{ needs.resolve-conflict.outputs.conflict_count }}
+          JOB_RESULT: ${{ needs.resolve-conflict.result }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "TELEGRAM_BOT_TOKEN not set — skipping"
-            exit 0
-          fi
-
           if [ "${CONFLICT_COUNT:-0}" = "0" ]; then
-            TEXT="ℹ️ *No Conflicts Found*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0ABranches merge cleanly — no resolution needed.%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}"
-          elif [ "$JOB_STATUS" = "success" ] && [ -n "$PR_URL" ]; then
-            TEXT="✅ *Conflict Resolution Ready*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0AFiles resolved: ${CONFLICT_COUNT} (${CONFLICTED_FILES})%0AQG: ${QG_EMOJI} ${QG_RESULT}%0AResolution PR: ${PR_URL}%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}%0AReview and merge when ready."
+            MSG="No Conflicts Found. Repo: ${REPO_NAME}. ${SOURCE_BRANCH} -> ${TARGET_BRANCH}. Branches merge cleanly — no resolution needed. Original blocked PR: ${ORIGINAL_PR_URL:-N/A}"
+            CONCLUSION="skipped"
+          elif [ "$JOB_RESULT" = "success" ] && [ -n "$PR_URL" ]; then
+            MSG="Conflict Resolution Ready. Repo: ${REPO_NAME}. ${SOURCE_BRANCH} -> ${TARGET_BRANCH}. Files resolved: ${CONFLICT_COUNT} (${CONFLICTED_FILES}). QG: ${QG_EMOJI} ${QG_RESULT}. Resolution PR: ${PR_URL}. Original blocked PR: ${ORIGINAL_PR_URL:-N/A}. Review and merge when ready."
+            CONCLUSION="success"
           else
-            TEXT="❌ *Conflict Resolution Failed*%0ARepo: \`${REPO_NAME}\`%0A\`${SOURCE_BRANCH}\` → \`${TARGET_BRANCH}\`%0AJob status: ${JOB_STATUS}%0AOriginal blocked PR: ${ORIGINAL_PR_URL:-N/A}%0AManual resolution required."
+            MSG="Conflict Resolution Failed. Repo: ${REPO_NAME}. ${SOURCE_BRANCH} -> ${TARGET_BRANCH}. Job result: ${JOB_RESULT}. Original blocked PR: ${ORIGINAL_PR_URL:-N/A}. Manual resolution required."
+            CONCLUSION="failure"
           fi
 
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" || true
+          echo "message=$MSG" >> "$GITHUB_OUTPUT"
+          echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
+
+  notify-result:
+    name: Telegram — Resolution Result
+    needs: [resolve-conflict, notify-result-build]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: ${{ needs.notify-result-build.outputs.message }}
+      conclusion: ${{ needs.notify-result-build.outputs.conclusion }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  notify-result-persist:
+    name: Persist — Resolution Event
+    needs: [resolve-conflict, notify-result-build, notify-result]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name:
+        ${{ needs.resolve-conflict.outputs.repo_name || github.event.client_payload.repo_name || inputs.repo_name }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.notify-result-build.outputs.conclusion }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json:
+        '{"source_branch": "${{ needs.resolve-conflict.outputs.source_branch }}", "target_branch": "${{
+        needs.resolve-conflict.outputs.target_branch }}", "conflict_count": "${{
+        needs.resolve-conflict.outputs.conflict_count }}", "pr_url": "${{ needs.resolve-conflict.outputs.pr_url }}"}'

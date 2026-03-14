@@ -1,0 +1,105 @@
+# Build Smoke — verify all repos build (image or wheel) in GHA
+#
+# Runs docker build for services/APIs/UIs, python -m build for libraries.
+# Parallel matrix: one job per repo. Wall clock ~slowest batch (~10–15 min).
+#
+# Trigger: workflow_dispatch (manual) or schedule (e.g. weekly).
+# Use for: smoke-testing that every repo builds without full Cloud Build.
+
+name: Build Smoke (All Repos)
+
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Quick mode — test 1 repo per type only (~5 min)"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Weekly Sunday 6am UTC
+    - cron: "0 6 * * 0"
+
+concurrency:
+  group: build-smoke
+  cancel-in-progress: true
+
+jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.json }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate repo matrix
+        id: matrix
+        run: |
+          set -euo pipefail
+          QUICK="${{ github.event.inputs.quick || 'false' }}"
+
+          python3 << 'PYEOF'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest = json.loads(Path("workspace-manifest.json").read_text())
+          repos = manifest.get("repositories", manifest.get("repos", {}))
+          skip = {"unified-trading-pm", "unified-trading-codex"}
+          quick = os.environ.get("QUICK", "false").lower() == "true"
+
+          buildable = []
+          seen_types = set()
+          for name, info in sorted(repos.items()):
+            if name in skip or not isinstance(info, dict):
+              continue
+            rtype = info.get("type", "")
+            if quick and rtype in seen_types:
+              continue
+            if quick:
+              seen_types.add(rtype)
+            buildable.append({"repo": name, "type": rtype})
+
+          out = json.dumps({"include": buildable})
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"json<<EOF\n{out}\nEOF\n")
+          PYEOF
+
+  build:
+    needs: generate-matrix
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ matrix.repo }}
+          token: ${{ secrets.GH_PAT }}
+          path: repo
+
+      - name: Build (image or wheel)
+        run: |
+          set -e
+          cd repo
+          REPO="${{ matrix.repo }}"
+          TYPE="${{ matrix.type }}"
+
+          if [[ "$TYPE" == "library" ]]; then
+            echo "=== Building wheel for $REPO ==="
+            pip install uv build -q
+            uv run python -m build --wheel --outdir dist/ 2>/dev/null || python -m build --wheel --outdir dist/
+            ls -la dist/*.whl
+          elif [[ "$TYPE" == "ui" ]]; then
+            echo "=== Building Docker image for UI $REPO ==="
+            docker build -t "$REPO:smoke" .
+          else
+            echo "=== Building Docker image for $REPO ==="
+            docker build -t "$REPO:smoke" .
+          fi
+          echo "✓ $REPO built successfully"

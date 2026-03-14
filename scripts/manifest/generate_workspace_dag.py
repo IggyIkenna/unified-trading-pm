@@ -68,6 +68,19 @@ LEVEL_COLORS: dict[int, str] = {
     12: "#64748b",  # IaC + post-deploy — slate
 }
 
+CI_STATUS_COLORS: dict[str, str] = {
+    "PASSING": "#22c55e",  # green — CI passed
+    "FAILING": "#ef4444",  # red — CI failed
+    "LOCALLY_PASSED": "#f97316",  # orange — local QG passed, CI not yet run
+    "BASELINE_RECORDED": "#eab308",
+    "BASELINE_PENDING": "#eab308",
+    "HAS_QG": "#94a3b8",
+    "NO_QG": "#94a3b8",
+    "EXEMPT": "#94a3b8",
+    "PARTIAL": "#f97316",
+    "NOT_CONFIGURED": "#94a3b8",
+}
+
 TYPE_CSS: dict[str, str] = {
     "library": "lib",
     "service": "svc",
@@ -117,11 +130,12 @@ BOX_MIN_W = 130
 
 
 class RepoEntry(NamedTuple):
-    """A repo's display info: name, version, CSS class."""
+    """A repo's display info: name, version, CSS class, ci_status."""
 
     name: str
     version: str
     css_class: str
+    ci_status: str
 
 
 class LayoutEntry(NamedTuple):
@@ -130,6 +144,7 @@ class LayoutEntry(NamedTuple):
     name: str
     version: str
     css_class: str
+    ci_status: str
     x: int
     width: int
 
@@ -158,6 +173,7 @@ def layout_rows(repos: list[RepoEntry]) -> list[list[LayoutEntry]]:
                 name=item.name,
                 version=item.version,
                 css_class=item.css_class,
+                ci_status=item.ci_status,
                 x=x,
                 width=w,
             )
@@ -206,13 +222,42 @@ def parse_level_descriptions(data: JsonDict) -> dict[int, str]:
     return level_desc
 
 
+def build_repo_level_from_topo(data: JsonDict) -> dict[str, int]:
+    """Build repo name -> level map from topologicalOrder (SSOT for tier ordering)."""
+    repo_level: dict[str, int] = {}
+    topo_order = _jdict(data.get("topologicalOrder"))
+    if topo_order is None:
+        return repo_level
+    topo_levels = _jlist(topo_order.get("levels"))
+    if topo_levels is None:
+        return repo_level
+    for entry_raw in topo_levels:
+        entry = _jdict(entry_raw)
+        if entry is None:
+            continue
+        lvl_val = _jint(entry.get("level"))
+        if lvl_val is None or lvl_val < 0:
+            continue
+        repos_in_level = entry.get("repos") or []
+        for r in repos_in_level:
+            if isinstance(r, str):
+                repo_level[r] = lvl_val
+    return repo_level
+
+
 def parse_repos(
     repos_raw: JsonDict,
     versions: JsonDict | None = None,
+    repo_level: dict[str, int] | None = None,
 ) -> tuple[dict[int, list[RepoEntry]], dict[str, int]]:
-    """Extract level->repos map and type counts from repositories dict."""
+    """Extract level->repos map and type counts from repositories dict.
+
+    Level for each repo comes from topologicalOrder (SSOT). Repos not in
+    topologicalOrder are skipped.
+    """
     levels: dict[int, list[RepoEntry]] = {}
     type_counts: dict[str, int] = {}
+    repo_level = repo_level or {}
 
     for name, info_raw in repos_raw.items():
         info = _jdict(info_raw)
@@ -223,17 +268,18 @@ def parse_repos(
         repo_type = _jstr(info.get("type"), "unknown")
         type_counts[repo_type] = type_counts.get(repo_type, 0) + 1
 
-        # Skip repos without valid merge_level
-        lvl = _jint(info.get("merge_level"))
-        if lvl is None or lvl < 0:
+        # Skip repos not in topologicalOrder (no level = no display)
+        lvl = repo_level.get(name)
+        if lvl is None:
             continue
 
         status = _jstr(info.get("status"))
         css = "future" if status == "planned" else TYPE_CSS.get(repo_type, "infra")
+        ci_status = _jstr(info.get("ci_status") or info.get("quality_gate_status"), "")
         # Use top-level versions map (GHA-maintained SSOT) over per-repo version field
         ver = _jstr((versions or {}).get(name) or info.get("version"), "0.1.0")
         levels.setdefault(lvl, []).append(
-            RepoEntry(name=name, version=ver, css_class=css),
+            RepoEntry(name=name, version=ver, css_class=css, ci_status=ci_status),
         )
 
     for lvl in levels:
@@ -254,13 +300,14 @@ def generate_svg(data: JsonDict) -> str:
 
     versions_raw = _jdict(data.get("versions")) or {}
     level_desc = parse_level_descriptions(data)
-    levels, type_counts = parse_repos(repos_raw, versions_raw)
+    repo_level = build_repo_level_from_topo(data)
+    levels, type_counts = parse_repos(repos_raw, versions_raw, repo_level)
 
     level_rows = {lvl: layout_rows(levels[lvl]) for lvl in levels}
     level_heights = {lvl: band_height(level_rows[lvl]) for lvl in levels}
 
     header_h = 90
-    legend_h = 90
+    legend_h = 110
     footer_h = 100
     content_h = sum(level_heights.values()) + LVL_GAP * max(len(levels) - 1, 0)
     svg_h = header_h + legend_h + content_h + footer_h + 40
@@ -289,7 +336,7 @@ def generate_svg(data: JsonDict) -> str:
     )
 
     # Legend
-    ln('  <rect x="1700" y="15" width="670" height="74" class="legend-box" />')
+    ln('  <rect x="1700" y="15" width="670" height="95" class="legend-box" />')
     ln('  <text x="1720" y="36" class="section">Legend</text>')
     legend_items: list[tuple[int, int, str, str]] = [
         (1720, 46, "lib", "library"),
@@ -301,6 +348,14 @@ def generate_svg(data: JsonDict) -> str:
         (2020, 66, "test", "test-harness"),
         (2160, 66, "future", "future"),
     ]
+    # ci_status legend (colored dots)
+    ln('  <text x="1720" y="88" class="small">CI status:</text>')
+    for i, (status, color) in enumerate(
+        [("PASSING", "#22c55e"), ("LOCALLY_PASSED", "#f97316"), ("FAILING", "#ef4444"), ("other", "#94a3b8")]
+    ):
+        lx = 1720 + i * 80
+        ln(f'  <circle cx="{lx + 6}" cy="95" r="4" fill="{color}" stroke="#e2e8f0" stroke-width="1" />')
+        ln(f'  <text x="{lx + 14}" y="98" class="small">{status}</text>')
     for lx, ly, cls, lbl in legend_items:
         ln(
             f'  <rect x="{lx}" y="{ly}" width="50" height="16" class="{cls}" />'
@@ -326,15 +381,25 @@ def generate_svg(data: JsonDict) -> str:
         for row in rows:
             for entry in row:
                 cx = entry.x + entry.width // 2
+                status_color = CI_STATUS_COLORS.get(entry.ci_status, "#94a3b8") if entry.ci_status else "#94a3b8"
                 ln(
                     f'  <rect x="{entry.x}" y="{row_y}"'
                     f' width="{entry.width}" height="{BOX_H}"'
                     f' class="{entry.css_class}" />'
                 )
+                # Colored left edge for PASSING/FAILING/LOCALLY_PASSED (drawn on top so visible)
+                if entry.ci_status in ("PASSING", "FAILING", "LOCALLY_PASSED"):
+                    ln(f'  <rect x="{entry.x}" y="{row_y}" width="4" height="{BOX_H}" fill="{status_color}" rx="2" />')
                 ln(
                     f'  <text x="{cx}" y="{row_y + 18}"'
                     f' text-anchor="middle" class="label">'
                     f"{html_escape(entry.name)}</text>"
+                )
+                # Add ci_status badge (colored dot at top-right)
+                badge_x = entry.x + entry.width - 10
+                ln(
+                    f'  <circle cx="{badge_x}" cy="{row_y + 8}" r="6"'
+                    f' fill="{status_color}" stroke="#fff" stroke-width="1" />'
                 )
                 ln(
                     f'  <text x="{cx}" y="{row_y + 30}"'

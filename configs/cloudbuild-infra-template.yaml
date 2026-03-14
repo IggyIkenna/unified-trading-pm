@@ -1,0 +1,170 @@
+# Cloud Build Template — Unified Trading System Infrastructure (Wheel + Terraform Image)
+#
+# For infrastructure repos with Python client package + Terraform (e.g. ibkr-gateway-infra).
+# Builds: wheel to unified-libraries, Terraform runner image to unified-trading-system.
+#
+# Placeholders: {{PKG_NAME}}, {{TERRAFORM_DIR}}, {{TERRAFORM_IMAGE_NAME}}.
+# {{PKG_NAME}} = Python package (underscores, e.g. ibkr_gateway_client).
+# {{TERRAFORM_DIR}} = Terraform module directory (e.g. ibkr-gateway).
+# {{TERRAFORM_IMAGE_NAME}} = Docker image name for Terraform runner (e.g. ibkr-gateway-terraform).
+#
+# Generated from PM template. Rollout: rollout-cloudbuild.py
+#
+# Required steps:
+#   - auth-precheck   (GCP token, Python AR, Docker AR)
+#   - ensure-repo     (unified-libraries, unified-trading-system)
+#   - lint            (ruff)
+#   - run-tests       (pytest)
+#   - terraform-validate
+#   - build-wheel     (python -m build --wheel)
+#   - publish-python  (twine upload)
+#   - build-terraform-image (Docker build)
+#   - push-terraform-image
+#   - scan-check      (CVE scan on deps)
+
+substitutions:
+  _PKG_NAME: "{{PKG_NAME}}"
+  _TERRAFORM_DIR: "{{TERRAFORM_DIR}}"
+  _TERRAFORM_IMAGE_NAME: "{{TERRAFORM_IMAGE_NAME}}"
+
+steps:
+  # ── Auth pre-check ─
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:alpine"
+    id: "auth-precheck"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        echo "=== Auth pre-check ==="
+        TOKEN=$$(gcloud auth print-access-token) || { echo "FAIL: No GCP token"; exit 1; }
+        echo "GCP token OK"
+        STATUS=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$TOKEN" "https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/" || echo "000")
+        if [ "$$STATUS" != "200" ] && [ "$$STATUS" != "404" ]; then
+          echo "FAIL: Python AR HTTP $$STATUS"; exit 1
+        fi
+        echo "Python AR OK"
+        gcloud artifacts repositories describe unified-trading-system --location=asia-northeast1 --quiet || { echo "FAIL: Docker AR"; exit 1; }
+        echo "Docker AR OK"
+        echo "=== Auth pre-check passed ==="
+    waitFor: ["-"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "ensure-repo"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        gcloud artifacts repositories describe unified-libraries --location=asia-northeast1 &>/dev/null || \
+          gcloud artifacts repositories create unified-libraries --repository-format=python --location=asia-northeast1 --description="Unified Python libraries"
+    waitFor: ["auth-precheck"]
+
+  - name: "python:3.13-slim"
+    id: "lint"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        pip install uv && uv pip install --system ruff
+        ruff check ${_PKG_NAME}/
+        ruff format --check ${_PKG_NAME}/
+    waitFor: ["ensure-repo"]
+
+  - name: "python:3.13-slim"
+    id: "run-tests"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        pip install uv
+        uv pip install --system -e ".[dev]"
+        python -m pytest tests/ -v --tb=short \
+          --cov=${_PKG_NAME} \
+          --cov-fail-under=51 \
+          --cov-report=xml \
+          --cov-report=term-missing
+    waitFor: ["lint"]
+
+  - name: "hashicorp/terraform:1.6"
+    id: "terraform-validate"
+    entrypoint: "sh"
+    args:
+      - "-c"
+      - |
+        cd ${_TERRAFORM_DIR}
+        terraform init -backend=false
+        terraform validate
+    waitFor: ["-"]
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "configure-docker"
+    args: ["auth", "configure-docker", "asia-northeast1-docker.pkg.dev", "--quiet"]
+    waitFor: ["auth-precheck"]
+
+  - name: "python:3.13-slim"
+    id: "build-wheel"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        pip install uv && uv pip install --system build
+        python -m build --wheel --outdir dist/
+        ls -lh dist/
+    waitFor: ["run-tests"]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:alpine"
+    id: "publish-python"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        apk add --no-cache python3 py3-pip
+        pip3 install --break-system-packages twine keyrings.google-artifactregistry-auth
+        python3 -m twine upload \
+          --repository-url https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/ \
+          --non-interactive dist/*.whl
+        echo "Published wheel to unified-libraries"
+    waitFor: ["build-wheel"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-terraform-image"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        docker build -f Dockerfile.terraform \
+          -t asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-system/${_TERRAFORM_IMAGE_NAME}:$SHORT_SHA \
+          -t asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-system/${_TERRAFORM_IMAGE_NAME}:latest \
+          .
+    waitFor: ["configure-docker", "terraform-validate"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-terraform-image"
+    args:
+      [
+        "push",
+        "--all-tags",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-system/${_TERRAFORM_IMAGE_NAME}",
+      ]
+    waitFor: ["build-terraform-image"]
+
+  - name: "python:3.13-slim"
+    id: "scan-check"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        pip install uv --quiet
+        uv pip install --system safety --quiet || { echo "WARNING: safety not available"; exit 0; }
+        safety check --full-report 2>/dev/null || exit 0
+        echo "Scan complete"
+    waitFor: ["run-tests"]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_MEDIUM"
+
+timeout: "900s"

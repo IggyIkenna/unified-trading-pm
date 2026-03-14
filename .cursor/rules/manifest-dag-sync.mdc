@@ -27,15 +27,15 @@ This produces `WORKSPACE_MANIFEST_DAG.svg` — validates XML output automaticall
 
 - New repo added or removed
 - Repo renamed (update `name`, `github_url`, `artifact_registry_url`, `package_name`)
-- `merge_level` changed (topology restructure)
+- `topologicalOrder.levels` changed (tier/level restructure)
 - `arch_tier` changed
 - Version bumped (usually automated by CI)
-- `ci_status` or `quality_gate_status` changed
+- `ci_status` changed
 
 ## Validation
 
 The generator validates:
 - All level descriptions present in `topologicalOrder`
-- All repos have valid `merge_level` (null/negative = skipped)
+- Repos in `topologicalOrder` are displayed (repos not in topo = skipped)
 - Output is well-formed XML (ET.fromstring validation)
 - Tests: `python3 -m pytest tests/test_generate_workspace_dag.py`

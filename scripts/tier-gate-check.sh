@@ -67,7 +67,7 @@ for r, info in repos.items():
         continue
     if info.get("arch_tier") != prerequisite_tier:
         continue
-    status = info.get("ci_status") or info.get("quality_gate_status") or "UNKNOWN"
+    status = info.get("ci_status") or "UNKNOWN"
     if status not in ("PASSING", "passing"):
         blocked.append(f"  {r} ({prerequisite_tier}): ci_status={status}")
 

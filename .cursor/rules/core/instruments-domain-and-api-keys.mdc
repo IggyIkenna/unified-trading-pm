@@ -56,7 +56,6 @@ api_key = get_secret_client().get_secret(secret_name="<secret-name>")
 Key API key secret names (from `07-security/secrets-management.md`):
 - `tardis-api-key` — Tardis.dev historical tick data
 - `databento-api-key` — Databento market data
-- `coinglass-api-key` — Coinglass liquidation heatmap / open interest
 - `thegraph-api-key` — The Graph subgraph queries
 - `alchemy-api-key` — Alchemy node RPC (Ethereum, DeFi)
 

@@ -170,32 +170,51 @@ jobs:
           echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T0 FAILED: $RESULTS"; exit 1; } || echo "T0 PASSED"
 
   # ── T0 ESCALATION: Fire immediately if T0 fails ────────────────────────────
-  t0-escalation:
-    name: T0 Failure Escalation Alert
+  t0-escalation-notify:
+    name: T0 Failure Escalation — Telegram
+    needs: [t0]
+    if: always() && needs.t0.result == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "T0 FAILURE — Overnight Audit. Core libraries failing: ${{ needs.t0.outputs.results }}. T1-T3 results are
+        unreliable. Immediate action required."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  t0-escalation-persist:
+    name: T0 Failure Escalation — Persist
+    needs: [t0, t0-escalation-notify]
+    if: always() && needs.t0.result == 'failure'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: "failure"
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "t0_escalation", "t0_results": "${{ needs.t0.outputs.results }}"}'
+
+  t0-escalation-issue:
+    name: T0 Failure Escalation — GH Issue
     runs-on: ubuntu-latest
     needs: [t0]
     if: always() && needs.t0.result == 'failure'
 
     steps:
-      - name: Send T0 failure priority Telegram alert + open GH Issue
+      - name: Open GH Issue for tracking
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           T0_DETAILS: ${{ needs.t0.outputs.results }}
         run: |
           DATE=$(date +"%Y-%m-%d %H:%M UTC")
 
-          # Priority Telegram — separate from morning summary
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            TEXT="🚨 *T0 FAILURE — Overnight Audit*%0ADate: ${DATE}%0ACore libraries failing: ${T0_DETAILS}%0AT1-T3 results are unreliable.%0A*Immediate action required.*%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="$TEXT" \
-              -d parse_mode="Markdown" > /dev/null 2>&1 || true
-          fi
-
-          # Open GH Issue for tracking
           ISSUE_URL=$(gh issue create \
             --repo IggyIkenna/unified-trading-pm \
             --title "Overnight T0 failure: ${DATE}" \
@@ -481,43 +500,62 @@ jobs:
           echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T3 FAILED: $RESULTS"; exit 1; } || echo "T3 PASSED"
 
   # ── TELEGRAM MORNING SUMMARY ──────────────────────────────────────────────────
-  notify:
-    name: Telegram Morning Summary
+  notify-summary:
+    name: Telegram Morning Summary — Determine conclusion
     runs-on: ubuntu-latest
     needs: [t0, t1, t2, t3]
     if: always()
-
+    outputs:
+      overall_conclusion: ${{ steps.conclusion.outputs.conclusion }}
+      summary_message: ${{ steps.conclusion.outputs.message }}
     steps:
-      - name: Build and send Telegram summary
+      - name: Compute summary
+        id: conclusion
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           T0_RESULT: ${{ needs.t0.result }}
           T1_RESULT: ${{ needs.t1.result }}
           T2_RESULT: ${{ needs.t2.result }}
           T3_RESULT: ${{ needs.t3.result }}
-          T0_DETAILS: ${{ needs.t0.outputs.results }}
-          T1_DETAILS: ${{ needs.t1.outputs.results }}
-          T2_DETAILS: ${{ needs.t2.outputs.results }}
-          T3_DETAILS: ${{ needs.t3.outputs.results }}
         run: |
-          DATE=$(date +"%Y-%m-%d")
-          status_icon() { [ "$1" = "success" ] && echo "✅" || echo "❌"; }
-
-          TEXT="*Overnight QG Report ${DATE}*
-          $(status_icon $T0_RESULT) T0 (libraries): ${T0_RESULT}
-          $(status_icon $T1_RESULT) T1 (contracts): ${T1_RESULT}
-          $(status_icon $T2_RESULT) T2 (interfaces): ${T2_RESULT}
-          $(status_icon $T3_RESULT) T3 (domain): ${T3_RESULT}
-
-          Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="${TEXT}" \
-              -d parse_mode="Markdown" || true
+          # Determine overall conclusion
+          if [ "$T0_RESULT" = "success" ] && [ "$T1_RESULT" = "success" ] && [ "$T2_RESULT" = "success" ] && [ "$T3_RESULT" = "success" ]; then
+            CONCLUSION="success"
           else
-            echo "Telegram not configured — skipping notification"
-            echo "Summary: $TEXT"
+            CONCLUSION="failure"
           fi
+
+          MESSAGE="Overnight QG Report — T0 (libraries): ${T0_RESULT}, T1 (contracts): ${T1_RESULT}, T2 (interfaces): ${T2_RESULT}, T3 (domain): ${T3_RESULT}"
+
+          echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
+          echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+
+  notify-telegram:
+    name: Telegram Morning Summary — Send
+    needs: [t0, t1, t2, t3, notify-summary]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: ${{ needs.notify-summary.outputs.summary_message }}
+      severity: "INFO"
+      conclusion: ${{ needs.notify-summary.outputs.overall_conclusion }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+
+  notify-persist:
+    name: Telegram Morning Summary — Persist
+    needs: [t0, t1, t2, t3, notify-summary, notify-telegram]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.notify-summary.outputs.overall_conclusion }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json:
+        '{"t0": "${{ needs.t0.result }}", "t1": "${{ needs.t1.result }}", "t2": "${{ needs.t2.result }}", "t3": "${{
+        needs.t3.result }}"}'

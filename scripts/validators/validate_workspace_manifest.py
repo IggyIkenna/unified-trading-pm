@@ -37,7 +37,6 @@ def _jlist(val: object) -> list[JsonDict] | None:
 
 REQUIRED_REPO_FIELDS = [
     "ci_status",
-    "quality_gate_status",
     "coverage_pct",
     "bypass_audit_path",
     "testing_level",

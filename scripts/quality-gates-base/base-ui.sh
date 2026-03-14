@@ -29,10 +29,10 @@ set -euo pipefail
 QG_START=$(date +%s)
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-log_success() { :; }
+log_success() { echo -e "${GREEN}✅ $1${NC}"; }
 log_fail()    { echo -e "${RED}  ❌ $*${NC}" >&2; }
 log_warn()    { echo -e "${YELLOW}  ⚠️  $*${NC}"; }
-log_section() { :; }
+log_section() { echo -e "\n${BLUE}── $1 ──${NC}"; }
 
 # ── MODE ───────────────────────────────────────────────────────────────────
 SKIP_LINT=false
@@ -90,7 +90,7 @@ MIN_UI_COVERAGE=${MIN_UI_COVERAGE:-70}
 if [ "$SKIP_TESTS" = false ]; then
   log_section "[3/4] UNIT TESTS + COVERAGE"
   if node -e "const s=require('./package.json').scripts||{}; process.exit(('test' in s && !s.test.includes('playwright')) ? 0 : 1)" 2>/dev/null; then
-    if _out=$(npm test -- --coverage 2>&1); then
+    if _out=$(CI=true npm test -- --run --coverage 2>&1); then
       # ── Coverage floor check ────────────────────────────────────────────
       SUMMARY="coverage/coverage-summary.json"
       if [ -f "$SUMMARY" ]; then
@@ -164,6 +164,42 @@ QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
     log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
     exit 1
+fi
+
+
+# ── RECORD LOCAL PASS (ci_status=LOCALLY_PASSED when not in CI) ───────────────
+if [[ "${GITHUB_ACTIONS:-}" != "true" ]] && [[ -n "${WORKSPACE_ROOT:-}" ]]; then
+    _MANIFEST="${WORKSPACE_ROOT}/unified-trading-pm/workspace-manifest.json"
+    _REPO_NAME=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null)
+    if [[ -f "$_MANIFEST" ]] && [[ -n "$_REPO_NAME" ]] && command -v python3 &>/dev/null; then
+        if ! MANIFEST_PATH="$_MANIFEST" REPO_NAME="$_REPO_NAME" python3 -c '
+import json, os
+p, r = os.environ.get("MANIFEST_PATH"), os.environ.get("REPO_NAME")
+if not p or not r: exit(0)
+with open(p) as f: m = json.load(f)
+repos = m.get("repositories", {})
+if r not in repos or repos[r].get("ci_status") == "PASSING": exit(0)
+repos[r]["ci_status"] = "LOCALLY_PASSED"
+with open(p, "w") as f: json.dump(m, f, indent=2)
+'; then
+            log_fail "Failed to update ci_status (LOCALLY_PASSED) in workspace-manifest.json"
+            exit 1
+        fi
+        _DAG_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
+        if [[ -f "$_DAG_SCRIPT" ]]; then
+            if ! python3 "$_DAG_SCRIPT"; then
+                log_fail "Failed to regenerate WORKSPACE_MANIFEST_DAG.svg"
+                exit 1
+            fi
+        fi
+        _DATA_FLOW_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/manifest/generate_data_flow_dag.py"
+        if [[ -f "$_DATA_FLOW_SCRIPT" ]]; then
+            if ! python3 "$_DATA_FLOW_SCRIPT"; then
+                log_fail "Failed to regenerate DATA_FLOW_DAG.svg"
+                exit 1
+            fi
+        fi
+    fi
 fi
 
 echo -e "\n${GREEN}======================================================================"

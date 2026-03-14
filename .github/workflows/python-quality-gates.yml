@@ -22,6 +22,8 @@ on:
     secrets:
       GH_PAT:
         required: true
+      GCP_PROJECT_ID:
+        required: false
 
 jobs:
   quality-gates:
@@ -29,7 +31,7 @@ jobs:
     env:
       CLOUD_MOCK_MODE: "true"
       CLOUD_PROVIDER: "local"
-      GCP_PROJECT_ID: "test-project"
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'test-project' }}
 
     steps:
       - name: Checkout
@@ -123,7 +125,7 @@ jobs:
           bash scripts/quality-gates.sh --no-fix
 
       - name: Record CI status
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: always()
         shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}

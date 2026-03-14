@@ -1,0 +1,96 @@
+{
+  "$comment": "SSOT for UI/API port assignments and stack pairings. Used by dev-start.sh.",
+  "stacks": {
+    "deployment": {
+      "ui": "deployment-ui",
+      "ui_port": 5183,
+      "api": "deployment-api",
+      "api_port": 8004,
+      "api_module": "deployment_api"
+    },
+    "onboarding": {
+      "ui": "onboarding-ui",
+      "ui_port": 5173,
+      "api": "config-api",
+      "api_port": 8005,
+      "api_module": "config_api"
+    },
+    "execution-analytics": {
+      "ui": "execution-analytics-ui",
+      "ui_port": 5174,
+      "api": "execution-results-api",
+      "api_port": 8006,
+      "api_module": "execution_results_api"
+    },
+    "strategy": {
+      "ui": "strategy-ui",
+      "ui_port": 5175,
+      "api": null,
+      "api_port": 8007,
+      "api_module": null
+    },
+    "settlement": {
+      "ui": "settlement-ui",
+      "ui_port": 5176,
+      "api": null,
+      "api_port": 8008,
+      "api_module": null
+    },
+    "live-health-monitor": {
+      "ui": "live-health-monitor-ui",
+      "ui_port": 5177,
+      "api": null,
+      "api_port": 8009,
+      "api_module": null
+    },
+    "logs-dashboard": {
+      "ui": "logs-dashboard-ui",
+      "ui_port": 5178,
+      "api": null,
+      "api_port": 8010,
+      "api_module": null
+    },
+    "ml-training": {
+      "ui": "ml-training-ui",
+      "ui_port": 5179,
+      "api": "ml-training-api",
+      "api_port": 8011,
+      "api_module": "ml_training_api"
+    },
+    "trading-analytics": {
+      "ui": "trading-analytics-ui",
+      "ui_port": 5180,
+      "api": "trading-analytics-api",
+      "api_port": 8012,
+      "api_module": "trading_analytics_api"
+    },
+    "batch-audit": {
+      "ui": "batch-audit-ui",
+      "ui_port": 5181,
+      "api": "batch-audit-api",
+      "api_port": 8013,
+      "api_module": "batch_audit_api"
+    },
+    "client-reporting": {
+      "ui": "client-reporting-ui",
+      "ui_port": 5182,
+      "api": "client-reporting-api",
+      "api_port": 8014,
+      "api_module": "client_reporting_api"
+    },
+    "ml-inference": {
+      "ui": null,
+      "ui_port": null,
+      "api": "ml-inference-api",
+      "api_port": 8015,
+      "api_module": "ml_inference_api"
+    },
+    "market-data": {
+      "ui": null,
+      "ui_port": null,
+      "api": "market-data-api",
+      "api_port": 8016,
+      "api_module": "market_data_api"
+    }
+  }
+}

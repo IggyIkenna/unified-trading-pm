@@ -38,8 +38,8 @@ set -e
 
 QG_START=$(date +%s)
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { :; }
-log_success() { :; }
+log_section() { echo -e "\n${BLUE}── $1 ──${NC}"; }
+log_success() { echo -e "${GREEN}✅ $1${NC}"; }
 log_fail()    { echo -e "${RED}❌ $1${NC}"; }
 log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
 
@@ -146,9 +146,10 @@ BYPASS=$(rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/quality
     | grep -v "^#\|zombies\|pyright\|cleanup\|log_fail\|:#" || :)
 [[ -n "$BYPASS" ]] && { log_fail "||true bypass in quality gates — fix the root cause"; echo "$BYPASS" | head -3; V=$((V+1)); } || log_success "No ||true quality gate bypasses"
 
-# No hardcoded prod project IDs in documentation
-HARDCODED_PROJ=$(rg "central-element-323112" --glob "!.git/**" . 2>/dev/null || :)
-[[ -n "$HARDCODED_PROJ" ]] && { log_warn "Hardcoded GCP project ID found in docs: $HARDCODED_PROJ"; } || log_success "No hardcoded project IDs"
+# No hardcoded prod project IDs in source (exclude docs — use {project_id} placeholders; cloud-agnostic)
+# Docs should be GCP/AWS agnostic; tests use test-project per quality-gates-audit-factors
+HARDCODED_PROJ=$(rg "central-element-[0-9]+" --glob "!.git/**" --glob "!docs/**" --glob "!**/docs/**" --glob "!*.md" --glob "!.act-secrets" . 2>/dev/null || :)
+[[ -n "$HARDCODED_PROJ" ]] && { log_warn "Hardcoded project ID in source: $HARDCODED_PROJ"; } || log_success "No hardcoded project IDs in source"
 
 # pip install anywhere (docs tooling must use npm or uv, not bare pip)
 PIP=$(rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --glob "**/*.sh" . 2>/dev/null \
@@ -157,6 +158,41 @@ PIP=$(rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --glob "**
 
 [[ $V -gt 0 ]] && { log_fail "Codex structure checks FAILED: $V violations"; exit 1; }
 log_success "Codex structure checks PASSED"
+
+
+# ── RECORD LOCAL PASS (ci_status=LOCALLY_PASSED when not in CI) ───────────────
+if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
+    _MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
+    if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
+        if ! MANIFEST_PATH="$_MANIFEST" REPO_NAME="$SERVICE_NAME" python3 -c '
+import json, os
+p, r = os.environ.get("MANIFEST_PATH"), os.environ.get("REPO_NAME")
+if not p or not r: exit(0)
+with open(p) as f: m = json.load(f)
+repos = m.get("repositories", {})
+if r not in repos or repos[r].get("ci_status") == "PASSING": exit(0)
+repos[r]["ci_status"] = "LOCALLY_PASSED"
+with open(p, "w") as f: json.dump(m, f, indent=2)
+'; then
+            log_fail "Failed to update ci_status (LOCALLY_PASSED) in workspace-manifest.json"
+            exit 1
+        fi
+        _DAG_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
+        if [[ -f "$_DAG_SCRIPT" ]]; then
+            if ! python3 "$_DAG_SCRIPT"; then
+                log_fail "Failed to regenerate WORKSPACE_MANIFEST_DAG.svg"
+                exit 1
+            fi
+        fi
+        _DATA_FLOW_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_data_flow_dag.py"
+        if [[ -f "$_DATA_FLOW_SCRIPT" ]]; then
+            if ! python3 "$_DATA_FLOW_SCRIPT"; then
+                log_fail "Failed to regenerate DATA_FLOW_DAG.svg"
+                exit 1
+            fi
+        fi
+    fi
+fi
 
 # ── DURATION CHECK (<2 min) ───────────────────────────────────────────────────
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))

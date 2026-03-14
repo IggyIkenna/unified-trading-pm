@@ -18,6 +18,9 @@
 #   - notify-deployment    (dispatch to deployment-service stable_versions.yaml)
 #   - publish-wheel        (Python wheel to Artifact Registry)
 #
+# Services deployed via central deployment-service (not inline): add "# deploy-via-dispatch"
+# after the title to suppress STEP 5.17 advisory. Rollout: add-cloudbuild-deploy-via-dispatch.py --all
+#
 # Variable conventions:
 #   _SERVICE_NAME          — substitution: e.g. my-service
 #   _REGISTRY_REPO         — substitution: e.g. unified-trading-system
@@ -39,7 +42,29 @@ substitutions:
   _PKG_NAME: "REPLACE_ME"
 
 steps:
+  # ── Auth pre-check: fail fast if SA lacks AR access (before expensive build) ─
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:alpine"
+    id: "auth-precheck"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        echo "=== Auth pre-check ==="
+        TOKEN=$$(gcloud auth print-access-token) || { echo "FAIL: No GCP token"; exit 1; }
+        echo "GCP token OK"
+        STATUS=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$TOKEN" "https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/" || echo "000")
+        if [ "$$STATUS" != "200" ] && [ "$$STATUS" != "404" ]; then
+          echo "FAIL: Python AR HTTP $$STATUS"; exit 1
+        fi
+        echo "Python AR OK"
+        gcloud artifacts repositories describe unified-trading-library --location=asia-northeast1 --quiet || { echo "FAIL: Docker AR"; exit 1; }
+        echo "Docker AR OK"
+        echo "=== Auth pre-check passed ==="
+    waitFor: ["-"]
+
   # ── OPTIONAL: Extract version from pyproject.toml for semver tagging ──────
+
   # Include this step if you want $VERSION tags in addition to $SHORT_SHA.
   - name: "gcr.io/cloud-builders/git"
     id: "extract-version"
@@ -55,8 +80,7 @@ steps:
   # ── STEP 1: Configure Docker authentication ───────────────────────────────
   - name: "gcr.io/cloud-builders/gcloud"
     id: "configure-docker"
-    args:
-      ["auth", "configure-docker", "asia-northeast1-docker.pkg.dev", "--quiet"]
+    args: ["auth", "configure-docker", "asia-northeast1-docker.pkg.dev", "--quiet"]
     waitFor: ["-"]
 
   # ── STEP 2: Ensure Artifact Registry repository exists ───────────────────
@@ -80,11 +104,7 @@ steps:
   # ── STEP 3: Pull UTL base image (required for authenticated access) ───────
   - name: "gcr.io/cloud-builders/docker"
     id: "pull-base-image"
-    args:
-      [
-        "pull",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library:latest",
-      ]
+    args: ["pull", "asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library:latest"]
     waitFor: ["configure-docker"]
 
   # ── STEP 4: Build Docker image ────────────────────────────────────────────
@@ -127,12 +147,7 @@ steps:
   # ── STEP 6: REQUIRED — Push image ONLY if quality gates passed ────────────
   - name: "gcr.io/cloud-builders/docker"
     id: "push"
-    args:
-      [
-        "push",
-        "--all-tags",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}",
-      ]
+    args: ["push", "--all-tags", "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}"]
     waitFor: ["quality-gates"]
 
   # ── STEP 7: REQUIRED — Vulnerability scan (CRITICAL CVE gate) ────────────
@@ -150,14 +165,7 @@ steps:
           RESULT=$(gcloud artifacts docker images describe "$$IMAGE" \
             --show-package-vulnerability --format="json" 2>/dev/null)
           if [ -n "$$RESULT" ]; then
-            CRITICAL=$(echo "$$RESULT" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-summary = d.get('package_vulnerability_summary', {})
-vulns = summary.get('vulnerabilities', {})
-crits = vulns.get('CRITICAL', [])
-print(len(crits))
-" 2>/dev/null || echo "0")
+            CRITICAL=$(echo "$$RESULT" | python3 -c "import json,sys;d=json.load(sys.stdin);summary=d.get('package_vulnerability_summary',{});vulns=summary.get('vulnerabilities',{});crits=vulns.get('CRITICAL',[]);print(len(crits))" 2>/dev/null || echo "0")
             if [ "$$CRITICAL" != "0" ]; then
               echo "SCAN FAILED: $$CRITICAL CRITICAL CVEs found in $$IMAGE"
               gcloud artifacts docker images describe "$$IMAGE" \

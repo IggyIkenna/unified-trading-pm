@@ -133,7 +133,7 @@ else
     fi
 
     # Check 2: Hardcoded project IDs in tests
-    if grep -r "central-element-323112" tests/ 2>/dev/null | grep -v "# test-project acceptable" > /dev/null; then
+    if grep -rE "central-element-[0-9]+" tests/ 2>/dev/null | grep -v "# test-project acceptable" > /dev/null; then
         echo -e "    ${YELLOW}⚠️  Hardcoded GCP project ID found in tests${NC}"
         echo "       Use 'test-project' in tests instead"
     else

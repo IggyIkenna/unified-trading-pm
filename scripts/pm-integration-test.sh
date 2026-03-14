@@ -1,80 +1,73 @@
 #!/usr/bin/env bash
-# PM Integration Test — verify setup scripts and quality gates work for all repos.
+# PM Integration Test — verify all repos integrate with unified-trading-pm scripts.
 #
-# For each repo in workspace-manifest.json:
-#   1. cd $repo && bash scripts/setup.sh (or setup-workspace-from-manifest.sh for workspace-level)
-#   2. Verify expected files exist: scripts/quality-gates.sh, scripts/setup.sh
-#   3. Run bash scripts/quality-gates.sh --lint (fast path) — must pass
+# Uses the canonical integration test in PM: tests/integration/test_pm_scripts_integration.py
+# For each repo: runs pytest with PROJECT_ROOT set. When PM scripts change, update the test
+# in PM only — repos inherit the check via quality-gates (base-service runs it).
 #
-# Usage: bash scripts/pm-integration-test.sh [--repo NAME] [--skip-setup]
+# Usage: bash scripts/pm-integration-test.sh [--repo NAME] [--full]
 #   --repo NAME   Run for single repo only
-#   --skip-setup  Skip setup.sh (assume already run)
+#   --full        Also run quality-gates.sh --lint per repo (slower)
 #
-# Exit 0 if all pass; 1 on first failure (reports which repo/step failed).
+# Exit 0 if all pass; 1 on first failure.
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PM_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WORKSPACE_ROOT="$(dirname "$PM_ROOT")"
+MANIFEST="${PM_ROOT}/workspace-manifest.json"
+PM_INT_TEST="${PM_ROOT}/tests/integration/test_pm_scripts_integration.py"
 SKIP_SETUP=false
 SINGLE_REPO=""
+FULL=false
 
 for arg in "$@"; do
     case "$arg" in
-        --skip-setup) SKIP_SETUP=true ;;
+        --full) FULL=true ;;
         --repo) SINGLE_REPO="NEXT" ;;
         *)
-            if [ "$SINGLE_REPO" = "NEXT" ]; then
-                SINGLE_REPO="$arg"
-            fi
+            [ "$SINGLE_REPO" = "NEXT" ] && SINGLE_REPO="$arg"
             ;;
     esac
 done
 
 get_repos() {
-    python3 -c "
+    python3 << PYINNER
 import json
-with open('$MANIFEST') as f:
+with open("$MANIFEST") as f:
     m = json.load(f)
-for name in m.get('repositories', {}):
+for name in m.get("repositories", {}):
     print(name)
-"
+PYINNER
 }
 
+PYTHON_CMD="${PYTHON_CMD:-python3}"
 FAILED=0
 for repo in $(get_repos); do
     [ -n "$SINGLE_REPO" ] && [ "$repo" != "$SINGLE_REPO" ] && continue
-    REPO_PATH="${REPO_ROOT}/${repo}"
+    REPO_PATH="${WORKSPACE_ROOT}/${repo}"
     [ ! -d "$REPO_PATH" ] && echo "⚠️  Skip $repo (not found)" && continue
 
-    echo "▶ $repo"
+    echo -n "▶ $repo "
     cd "$REPO_PATH"
 
-    # Step 1: Verify required files
-    if [ ! -f "scripts/quality-gates.sh" ]; then
-        echo "❌ $repo: missing scripts/quality-gates.sh"
+    if ! PROJECT_ROOT="$REPO_PATH" $PYTHON_CMD -m pytest "$PM_INT_TEST" -v -m integration --tb=line -q 2>/dev/null; then
+        echo "❌ PM integration failed"
         FAILED=1
         continue
     fi
-    [ ! -f "scripts/setup.sh" ] && [ "$SKIP_SETUP" = false ] && echo "⚠️  $repo: missing scripts/setup.sh"
 
-    # Step 2: Run setup (optional)
-    if [ "$SKIP_SETUP" = false ] && [ -f "scripts/setup.sh" ]; then
-        if ! bash scripts/setup.sh > /tmp/setup_out.txt 2>&1; then
-            tail -5 /tmp/setup_out.txt
-            echo "❌ $repo: setup.sh failed"
+    if [ "$FULL" = true ]; then
+        if ! bash scripts/quality-gates.sh --lint > /tmp/qg_out.txt 2>&1; then
+            tail -5 /tmp/qg_out.txt
+            echo "❌ $repo: quality-gates.sh --lint failed"
             FAILED=1
-            continue
+        else
+            echo "✅ OK (lint)"
         fi
-    fi
-
-    # Step 3: Run quality gates --lint (fast path)
-    if ! bash scripts/quality-gates.sh --lint > /tmp/qg_out.txt 2>&1; then
-        tail -5 /tmp/qg_out.txt
-        echo "❌ $repo: quality-gates.sh --lint failed"
-        FAILED=1
     else
-        echo "✅ $repo OK"
+        echo "✅ OK"
     fi
 done
 

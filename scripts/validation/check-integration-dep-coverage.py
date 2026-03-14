@@ -32,11 +32,6 @@ def main() -> int:
     args = parser.parse_args()
 
     project_root = Path(args.project_root).resolve()
-    integration_dir = project_root / "tests" / "integration"
-    if not integration_dir.exists():
-        print("⚠️  No tests/integration/ — skipping integration dep coverage check")
-        return 0
-
     if args.manifest:
         manifest_path = Path(args.manifest)
     else:
@@ -67,6 +62,14 @@ def main() -> int:
             lib_deps.append(name)
 
     if not lib_deps:
+        return 0
+
+    integration_dir = project_root / "tests" / "integration"
+    if not integration_dir.exists():
+        print(
+            "⚠️  No tests/integration/ — add tests that import each library dep, "
+            "or PM integration test covers repo-PM integration only"
+        )
         return 0
 
     missing = []

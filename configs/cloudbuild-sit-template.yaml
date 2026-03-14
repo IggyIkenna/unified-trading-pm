@@ -1,0 +1,71 @@
+# Cloud Build Template — System Integration Tests (Lint + Smoke)
+#
+# Test-harness repo: lint + smoke tests only. No Docker image, no push.
+# Satisfies STEP 5.17 with no-op push and scan steps.
+#
+# Placeholders: {{REPO_NAME}} (e.g. system-integration-tests).
+#
+# Generated from PM template. Rollout: rollout-cloudbuild.py
+#
+# Required steps:
+#   - auth-precheck   (GCP token)
+#   - lint            (ruff)
+#   - run-tests       (pytest -m smoke)
+#   - push            (no-op)
+#   - vulnerability-scan (no-op)
+
+substitutions:
+  _REPO_NAME: "{{REPO_NAME}}"
+
+steps:
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:alpine"
+    id: "auth-precheck"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        gcloud auth print-access-token >/dev/null || { echo "FAIL: No GCP token"; exit 1; }
+        echo "Auth pre-check passed"
+    waitFor: ["-"]
+
+  - name: "python:3.13-slim"
+    id: "lint"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        pip install uv
+        uv pip install --system ruff
+        ruff check .
+        ruff format --check .
+    waitFor: ["auth-precheck"]
+
+  - name: "python:3.13-slim"
+    id: "run-tests"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -e
+        pip install uv
+        uv pip install --system -e ".[dev]"
+        pytest -m smoke -v --timeout=300
+    waitFor: ["lint"]
+
+  - name: "bash"
+    id: "push"
+    args: ["-c", "echo '${_REPO_NAME} has no image to push — no-op'"]
+    waitFor: ["run-tests"]
+
+  - name: "bash"
+    id: "vulnerability-scan"
+    args: ["-c", "echo '${_REPO_NAME} has no image to scan — no-op'"]
+    waitFor: ["push"]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_MEDIUM"
+
+timeout: "600s"

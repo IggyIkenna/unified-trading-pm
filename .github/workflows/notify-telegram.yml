@@ -1,0 +1,131 @@
+name: Notify Telegram
+
+# Reusable workflow — called by any repo that needs Telegram notifications.
+# Centralises notification logic so callers don't duplicate curl/fallback code.
+# Pattern: telegram-helpers.sh send_telegram + notify_critical, but as a workflow.
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: The message body to send (HTML allowed)
+        required: true
+        type: string
+      severity:
+        description: "Severity level: INFO, WARNING, CRITICAL"
+        required: false
+        type: string
+        default: "INFO"
+      workflow_name:
+        description: Name of the calling workflow (for context in the message)
+        required: false
+        type: string
+        default: ""
+      run_url:
+        description: URL to the workflow run (for linking in the message)
+        required: false
+        type: string
+        default: ""
+      conclusion:
+        description: "Workflow conclusion: success, failure, cancelled, skipped"
+        required: false
+        type: string
+        default: ""
+    secrets:
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      GH_PAT:
+        required: false
+
+permissions:
+  issues: write
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Build and send Telegram message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          INPUT_MESSAGE: ${{ inputs.message }}
+          INPUT_SEVERITY: ${{ inputs.severity }}
+          INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+          INPUT_RUN_URL: ${{ inputs.run_url }}
+          INPUT_CONCLUSION: ${{ inputs.conclusion }}
+        run: |
+          set -euo pipefail
+
+          # ── Pick emoji based on conclusion, then severity ──
+          EMOJI=""
+          if [ -n "$INPUT_CONCLUSION" ]; then
+            case "$INPUT_CONCLUSION" in
+              success)   EMOJI="✅" ;;
+              failure)   EMOJI="❌" ;;
+              cancelled) EMOJI="🚫" ;;
+              *)         EMOJI="ℹ️" ;;
+            esac
+          else
+            case "$INPUT_SEVERITY" in
+              CRITICAL) EMOJI="🚨" ;;
+              WARNING)  EMOJI="⚠️" ;;
+              INFO)     EMOJI="ℹ️" ;;
+              *)        EMOJI="ℹ️" ;;
+            esac
+          fi
+
+          # ── Build HTML message ──
+          TEXT="${EMOJI} <b>${INPUT_SEVERITY}</b>"
+
+          if [ -n "$INPUT_WORKFLOW_NAME" ]; then
+            TEXT="${TEXT} — ${INPUT_WORKFLOW_NAME}"
+          fi
+
+          TEXT="${TEXT}%0A%0A${INPUT_MESSAGE}"
+
+          if [ -n "$INPUT_CONCLUSION" ]; then
+            TEXT="${TEXT}%0A%0AConclusion: <b>${INPUT_CONCLUSION}</b>"
+          fi
+
+          if [ -n "$INPUT_RUN_URL" ]; then
+            TEXT="${TEXT}%0A<a href=\"${INPUT_RUN_URL}\">View run</a>"
+          fi
+
+          # ── Send to Telegram ──
+          TELEGRAM_OK="false"
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${TEXT}" \
+              -d parse_mode="HTML" || echo "000")
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              TELEGRAM_OK="true"
+              echo "Telegram notification sent (HTTP $HTTP_CODE)"
+            else
+              echo "Telegram send failed (HTTP $HTTP_CODE)" >&2
+            fi
+          else
+            echo "Telegram not configured (TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set)" >&2
+          fi
+
+          # ── Fallback: create GitHub Issue on Telegram failure for CRITICAL/WARNING ──
+          if [ "$TELEGRAM_OK" = "false" ] && [ -n "${GH_PAT:-}" ]; then
+            if [ "$INPUT_SEVERITY" = "CRITICAL" ] || [ "$INPUT_SEVERITY" = "WARNING" ]; then
+              ISSUE_TITLE="ALERT: ${INPUT_SEVERITY} — ${INPUT_WORKFLOW_NAME:-CI/CD notification}"
+              ISSUE_BODY="Telegram delivery failed. Original message:%0A%0A${INPUT_MESSAGE}"
+              if [ -n "$INPUT_RUN_URL" ]; then
+                ISSUE_BODY="${ISSUE_BODY}%0A%0ARun: ${INPUT_RUN_URL}"
+              fi
+
+              curl -s -X POST \
+                -H "Authorization: token ${GH_PAT}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository_owner }}/unified-trading-pm/issues" \
+                -d "{\"title\": \"${ISSUE_TITLE}\", \"body\": \"${ISSUE_BODY}\", \"labels\": [\"critical-alert\"]}" \
+                > /dev/null 2>&1 || echo "GH Issue fallback also failed" >&2
+            fi
+          fi

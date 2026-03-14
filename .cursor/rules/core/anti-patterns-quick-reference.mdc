@@ -29,7 +29,7 @@ tags:
 | Create `test_*_extended.py` files | **Expand existing test files** (see `.cursor/rules/test-quality-standards.mdc`) |
 | Duplicate fixtures across test files | **Use singleton fixtures from conftest.py** |
 | `!central-element-*.json` in .gitignore | **Never allow credential JSON**; use `*credentials*.json` (see quality-gates-audit-factors.mdc) |
-| `central-element-323112` in tests | **Use `test-project`** placeholder (see quality-gates-audit-factors.mdc) |
+| `central-element-*` in tests | **Use `test-project`** placeholder (see quality-gates-audit-factors.mdc) |
 | `except Exception:` in production | **Use `@handle_api_errors` or specific exceptions** (see quality-gates-audit-factors.mdc) |
 | Relax reportAny/reportUnknown*, add baselines | **Only audited exceptions pass** — document in QUALITY_GATE_BYPASS_AUDIT.md; fix all other type errors |
 | `basedpyright .` or `basedpyright` (no args) | **`timeout 120 basedpyright <source_dir>/`** (see `.cursor/rules/basedpyright-safety.mdc`) |

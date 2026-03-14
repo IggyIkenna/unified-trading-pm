@@ -23,7 +23,7 @@ import json
 with open('$MANIFEST') as f: m=json.load(f)
 if '$name' in m.get('repositories',{}):
   m['repositories']['$name']['ci_status']='PASSING'
-  m['repositories']['$name']['quality_gate_status']='PASSING'
+  m['repositories']['$name']['ci_status']='PASSING'
 with open('$MANIFEST','w') as f: json.dump(m,f,indent=2)
 " 2>/dev/null || true
   else
@@ -33,7 +33,7 @@ import json
 with open('$MANIFEST') as f: m=json.load(f)
 if '$name' in m.get('repositories',{}):
   m['repositories']['$name']['ci_status']='FAILING'
-  m['repositories']['$name']['quality_gate_status']='FAILING'
+  m['repositories']['$name']['ci_status']='FAILING'
 with open('$MANIFEST','w') as f: json.dump(m,f,indent=2)
 " 2>/dev/null || true
   fi
