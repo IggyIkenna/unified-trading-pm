@@ -1308,7 +1308,7 @@ initial_state_bootstrap:
 
 t_plus_1_reconciliation:
   strategy_t1:
-    service: strategy-validation-service
+    service: batch-live-reconciliation-service
     validates: [signals, strategy_instructions, positions_at_snapshots]
     compares: live signals vs batch-replayed signals (same inputs)
     output: strategy PnL (benchmark fills)
@@ -1317,7 +1317,7 @@ t_plus_1_reconciliation:
       ml_signals: identical (deterministic)
       strategy_instructions: close (time-triggered)
   execution_t1:
-    service: execution-service or strategy-validation-service
+    service: execution-service or batch-live-reconciliation-service
     validates: [order_timing, fill_quality, slippage]
     compares: live fills vs benchmark (TWAP/VWAP/arrival)
     output: execution alpha PnL (actual vs benchmark)
@@ -1409,7 +1409,6 @@ deployment_modes:
       - features-onchain-service
       - pnl-attribution-service
       - client-reporting-api
-      - strategy-validation-service
     note: Infrequent or batch-oriented. Cloud Run scale-to-zero saves cost.
 
   vm_heavy_compute:
@@ -1508,8 +1507,6 @@ deployment_targets:
       features-onchain-service:
         reason: Batch only; periodic on-chain data fetch
       # pnl-attribution-service moved to cloud_run_service_always_on (continuous subscriber)
-      strategy-validation-service:
-        reason: Daily T+1 reconciliation run
       batch-live-reconciliation-service:
         reason: Triggered T+1 reconciliation run; compares live positions to exchange records
 

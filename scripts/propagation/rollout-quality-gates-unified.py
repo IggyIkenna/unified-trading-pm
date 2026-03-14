@@ -59,6 +59,8 @@ CURSORIGNORE_PYTHON = TEMPLATES_DIR / "cursorignore-python.txt"
 CURSORIGNORE_NODE = TEMPLATES_DIR / "cursorignore-node.txt"
 GITIGNORE_PYTHON = TEMPLATES_DIR / "gitignore-python.txt"
 GITIGNORE_NODE = TEMPLATES_DIR / "gitignore-node.txt"
+UI_API_MAPPING_PATH = SCRIPT_DIR / "ui-api-mapping.json"
+UI_INTEGRATION_TEMPLATE = PM_ROOT / "scripts" / "quality-gates-base" / "ui-integration-test.template.ts"
 
 # Doc standards that require QUALITY_GATE_BYPASS_AUDIT.md
 BYPASS_AUDIT_DOC_STANDARDS = frozenset(
@@ -359,6 +361,93 @@ def ensure_bypass_audit(repo_path: Path, doc_standard: typing.Optional[str], dry
     return True
 
 
+def copy_ui_integration_test(repo_path: Path, repo_name: str, dry_run: bool) -> bool:
+    """Copy UI integration test from template. Returns True if created/updated."""
+    if not UI_API_MAPPING_PATH.exists() or not UI_INTEGRATION_TEMPLATE.exists():
+        return False
+    with open(UI_API_MAPPING_PATH) as f:
+        mapping = json.load(f)
+    config = mapping.get(repo_name)
+    if not config:
+        return False
+    api_name = config.get("api_name", "api")
+    env_var = config.get("env_var", "INTEGRATION_TEST_API_URL")
+    default_port = config.get("default_port", "8000")
+    api_path = config.get("api_path", "")
+    endpoints = config.get("endpoints", ["/health"])
+    dual_base = config.get("dual_base", False)
+    endpoint_lines = []
+    for ep in endpoints:
+        endpoint_lines.append(
+            '  it("GET ' + ep + ' returns ok or 401", async () => {\n'
+            "    if (!apiAvailable) return;\n"
+            '    const { ok, status } = await fetchApi("' + ep + '");\n'
+            "    expect(ok || status === 401).toBe(true);\n"
+            "  });"
+        )
+    if dual_base:
+        env_var_inf = config.get("env_var_inference", "INTEGRATION_TEST_ML_INFERENCE_URL")
+        default_port_inf = config.get("default_port_inference", "8003")
+        for ep in config.get("endpoints_inference", ["/models"]):
+            endpoint_lines.append(
+                '  it("GET (inference) ' + ep + ' returns ok or 401", async () => {\n'
+                "    if (!apiAvailable) return;\n"
+                '    const base = (typeof process !== "undefined" && process.env.'
+                + env_var_inf
+                + ') || "http://localhost:'
+                + default_port_inf
+                + '";\n'
+                '    const res = await fetch(base + "' + ep + '", { signal: AbortSignal.timeout(2000) });\n'
+                "    expect(res.ok || res.status === 401).toBe(true);\n"
+                "  });"
+            )
+    endpoint_tests = "\n\n".join(endpoint_lines)
+    template = UI_INTEGRATION_TEMPLATE.read_text()
+    content_out = template.replace("{{UI_NAME}}", repo_name)
+    content_out = content_out.replace("{{API_NAME}}", api_name)
+    content_out = content_out.replace("{{ENV_VAR}}", env_var)
+    content_out = content_out.replace("{{DEFAULT_PORT}}", default_port)
+    content_out = content_out.replace("{{API_PATH}}", api_path)
+    content_out = content_out.replace("{{ENDPOINT_TESTS}}", endpoint_tests)
+    dest = repo_path / "tests" / "integration" / "api.integration.test.ts"
+    if dry_run:
+        print("  [dry-run] Would write " + str(dest))
+        return True
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    existed = dest.exists()
+    if existed and dest.read_text() == content_out:
+        return False
+    dest.write_text(content_out)
+    print("  ✅ " + ("Created" if not existed else "Updated") + " tests/integration/api.integration.test.ts")
+    pkg_path = repo_path / "package.json"
+    if pkg_path.exists():
+        pkg = json.loads(pkg_path.read_text())
+        scripts = pkg.get("scripts", {})
+        if "test:integration" not in scripts:
+            scripts["test:integration"] = "vitest run tests/integration"
+            pkg["scripts"] = scripts
+            pkg_path.write_text(json.dumps(pkg, indent=2))
+            print("  ✅ Added test:integration script to package.json")
+    for vf in ["vitest.config.ts", "vite.config.ts"]:
+        vitest_path = repo_path / vf
+        if vitest_path.exists():
+            vc = vitest_path.read_text()
+            if "tests/integration" not in vc and "include" in vc:
+                vc = vc.replace(
+                    '"tests/unit/**/*.test.{ts,tsx}"',
+                    '"tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.integration.test.{ts,tsx}"',
+                )
+                vc = vc.replace(
+                    '"src/**/*.test.{ts,tsx}"',
+                    '"src/**/*.test.{ts,tsx}", "tests/integration/**/*.integration.test.{ts,tsx}"',
+                )
+                if "tests/integration" in vc:
+                    vitest_path.write_text(vc)
+                    print("  ✅ Updated vitest include for integration tests")
+            break
+    return True
+
+
 def process_repo(
     repo_name: str,
     repo_info: JsonDict,
@@ -409,6 +498,8 @@ def process_repo(
     changed |= copy_setup_sh(repo_path, dry_run)
     changed |= ensure_ignore_files(repo_path, template_type, dry_run)
     changed |= ensure_bypass_audit(repo_path, doc_standard, dry_run)
+    if template_type == "typescript":
+        changed |= copy_ui_integration_test(repo_path, repo_name, dry_run)
 
     if not changed:
         print(f"  ✅ {repo_name} already has all quality gate files")

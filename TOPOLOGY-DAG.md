@@ -107,7 +107,6 @@ flowchart TB
         subgraph L6["Layer 6 · Strategy & Execution"]
             STR["strategy-service\nUMI + UML + UDC\nadapters/live_data_source + broadcast_sink  ✅"]
             EXEC["execution-service\nUTEI + EAL + UMI + UDC\nGoogleOIDCAuth (service-local auth.py)\nKILL_SWITCH + OAuth client_id → SM\n⚠️ service→service deps violation\n(market-tick + risk svc)"]
-            SVS["strategy-validation-service\nT+1 backtest vs live recon  ⟪future⟫"]
         end
         subgraph L7["Layer 7 · Risk · PnL · Ops"]
             PNL["pnl-attribution-service\ndelta · basis · funding · Greeks dims\nUDC"]

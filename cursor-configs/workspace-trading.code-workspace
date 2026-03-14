@@ -39,9 +39,6 @@
       "path": "../../strategy-ui",
     },
     {
-      "path": "../../strategy-validation-service",
-    },
-    {
       "path": "../../position-balance-monitor-service",
     },
     {

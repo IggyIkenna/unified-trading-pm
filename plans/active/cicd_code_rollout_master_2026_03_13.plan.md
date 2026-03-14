@@ -373,7 +373,7 @@ todos:
     status: pending
   - id: service-l9-harden
     content: |
-      [AGENT per repo] P1. L9 (10 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, strategy-validation-service, trading-analytics-api.
+      [AGENT per repo] P1. L9 (9 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, trading-analytics-api.
     status: pending
   - id: service-l10-harden
     content: |

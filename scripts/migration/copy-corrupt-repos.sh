@@ -13,16 +13,16 @@ GITHUB_BASE="${GITHUB_BASE:-https://github.com/IggyIkenna}"
 # Git-corrupt: need fresh clone
 GIT_CORRUPT=(
   features-cross-instrument-service features-delta-one-service features-volatility-service
-  strategy-validation-service system-integration-tests unified-trading-library
+  system-integration-tests unified-trading-library
 )
 
-# All 18 corrupt repos
+# All 17 corrupt repos
 CORRUPT_REPOS=(
   archive execution-algo-library execution-analytics-ui execution-service
   features-cross-instrument-service features-delta-one-service features-volatility-service
   instruments-service live-health-monitor-ui market-data-processing-service
   market-tick-data-service matching-engine-library strategy-service
-  strategy-validation-service system-integration-tests trading-analytics-ui
+  system-integration-tests trading-analytics-ui
   unified-sports-execution-interface unified-trading-library
 )
 

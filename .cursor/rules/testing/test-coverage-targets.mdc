@@ -48,7 +48,6 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 
 | Repo | Actual | MIN_COVERAGE |
 |------|--------|-------------|
-| strategy-validation-service | 98% | 97 |
 | features-sports-service | 88% | 87 |
 | client-reporting-api | 86% | 85 |
 | alerting-service | 83% | 82 |

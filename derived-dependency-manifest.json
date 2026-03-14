@@ -1513,27 +1513,6 @@
       "internal_count": 4,
       "external_count": 25
     },
-    "strategy-validation-service": {
-      "internal_deps": {
-        "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
-        "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
-        "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
-      },
-      "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.1"],
-        "ruff": ["ruff==0.15.0"]
-      },
-      "internal_count": 3,
-      "external_count": 10
-    },
     "trading-analytics-api": {
       "internal_deps": {
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",

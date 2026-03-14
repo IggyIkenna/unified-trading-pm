@@ -64,6 +64,11 @@ exceptions.
 - **quickmerge not git push** — `bash scripts/quickmerge.sh "message"` — never `git push`, never standalone
   `scripts/quality-gates.sh`
 - **Tests:** `bash scripts/quality-gates.sh` — never `pytest` or `python -m pytest` directly (uses wrong venv)
+- **Parallel QG sweep:** When asked to run quality gates across many repos, use **max 20 concurrent** to avoid CPU
+  thrash and timeouts. Split into 2 batches of 20: run batch 1, report results, then batch 2, report. Or use 4–5
+  parallel sub-agents with 4–5 repos each per batch. Exclude `-api` and `-ui` if user says "excluding frontend."
+  Command: `cd <repo> && bash scripts/quality-gates.sh 2>&1 | tail -5`. Return PASS/FAIL per repo. Fewer concurrent runs
+  reduce timeouts from CPU contention.
 - **Config:** `UnifiedCloudConfig` / `config.key_name` — never `os.getenv('KEY', '')`
 - **Storage:** `get_storage_client()` — never `from google.cloud import storage`
 - **Logging:** `logger.info()` — never `print()`

@@ -1,0 +1,100 @@
+{
+  "batch-audit-ui": {
+    "api_name": "batch-audit-api",
+    "env_var": "INTEGRATION_TEST_BATCH_AUDIT_URL",
+    "default_port": "8013",
+    "api_path": "",
+    "endpoints": ["/health", "/api/jobs", "/api/audit-trail"]
+  },
+  "client-reporting-ui": {
+    "api_name": "client-reporting-api",
+    "env_var": "INTEGRATION_TEST_CLIENT_REPORTING_URL",
+    "default_port": "8007",
+    "api_path": "",
+    "endpoints": ["/health", "/api/reports"]
+  },
+  "deployment-ui": {
+    "api_name": "deployment-api",
+    "env_var": "INTEGRATION_TEST_API_URL",
+    "default_port": "8004",
+    "api_path": "/api",
+    "endpoints": [
+      "/health",
+      "/services",
+      "/config/venues",
+      "/deployments",
+      "/service-status/overview",
+      "/capabilities",
+      "/checklists",
+      "/epics",
+      "/cloud-builds/triggers"
+    ]
+  },
+  "execution-analytics-ui": {
+    "api_name": "execution-results-api",
+    "env_var": "INTEGRATION_TEST_EXECUTION_RESULTS_URL",
+    "default_port": "8005",
+    "api_path": "/api/v1",
+    "endpoints": ["/health", "/results", "/validation"]
+  },
+  "live-health-monitor-ui": {
+    "api_name": "execution-service",
+    "env_var": "INTEGRATION_TEST_EXECUTION_URL",
+    "default_port": "8002",
+    "api_path": "",
+    "endpoints": ["/health", "/readiness"]
+  },
+  "logs-dashboard-ui": {
+    "api_name": "logs-api",
+    "env_var": "INTEGRATION_TEST_LOGS_URL",
+    "default_port": "8001",
+    "api_path": "/api/v1",
+    "endpoints": ["/health", "/logs", "/services"]
+  },
+  "ml-training-ui": {
+    "api_name": "ml-training-api",
+    "env_var": "INTEGRATION_TEST_ML_TRAINING_URL",
+    "default_port": "8002",
+    "api_path": "",
+    "dual_base": true,
+    "env_var_inference": "INTEGRATION_TEST_ML_INFERENCE_URL",
+    "default_port_inference": "8003",
+    "endpoints": ["/health", "/experiments"],
+    "endpoints_inference": ["/models"]
+  },
+  "onboarding-ui": {
+    "api_name": "config-api",
+    "env_var": "INTEGRATION_TEST_CONFIG_URL",
+    "default_port": "8000",
+    "api_path": "/api",
+    "endpoints": ["/health", "/venues", "/config"]
+  },
+  "settlement-ui": {
+    "api_name": "settlement-api",
+    "env_var": "INTEGRATION_TEST_SETTLEMENT_URL",
+    "default_port": "8010",
+    "api_path": "",
+    "endpoints": ["/health"]
+  },
+  "strategy-ui": {
+    "api_name": "strategy-service",
+    "env_var": "INTEGRATION_TEST_STRATEGY_URL",
+    "default_port": "8011",
+    "api_path": "",
+    "endpoints": ["/health"]
+  },
+  "trading-analytics-ui": {
+    "api_name": "trading-analytics-api",
+    "env_var": "INTEGRATION_TEST_TRADING_ANALYTICS_URL",
+    "default_port": "8006",
+    "api_path": "",
+    "endpoints": ["/health", "/analytics", "/instruments"]
+  },
+  "unified-admin-ui": {
+    "api_name": "admin-api",
+    "env_var": "INTEGRATION_TEST_ADMIN_URL",
+    "default_port": "8012",
+    "api_path": "",
+    "endpoints": ["/health"]
+  }
+}

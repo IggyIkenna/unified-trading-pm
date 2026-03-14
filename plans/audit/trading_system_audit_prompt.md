@@ -186,7 +186,8 @@ full-body QG script (>50L); any `os.getenv` in non-bootstrap prod source; any re
 ## Section 3 — Security
 
 **Goal:** Zero hardcoded secrets. All secrets via `get_secret_client()`. All API services authenticated with proper
-failure logging. No `verify=False` in HTTP clients. No mock auth in production paths.
+failure logging and full auth event coverage. No `verify=False` in HTTP clients. No mock auth in production paths. No
+broad `except Exception` in production code.
 
 **Audit commands:**
 
@@ -203,22 +204,40 @@ rg 'verify\s*=\s*False' --type py --glob '!.venv*' --glob '!**/tests/**' -n
 
 # Check SECRET_ACCESSED and CONFIG_CHANGED events
 rg 'SECRET_ACCESSED|CONFIG_CHANGED' --type py --glob '!.venv*' -l
+
+# Check full auth event set (beyond AUTH_FAILURE)
+# execution-service auth.py must emit: AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED
+# execution-service auth_s2s.py must emit: S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE
+for event in AUTH_SUCCESS AUTH_FAILURE AUTH_DENIED S2S_AUTH_SUCCESS S2S_AUTH_FAILURE; do
+  hits=$(rg "$event" execution-service/ --type py --glob '!**/tests/**' -l 2>/dev/null | wc -l)
+  [ "$hits" -eq 0 ] && echo "MISSING auth event: $event in execution-service"
+done
+
+# Check broad except Exception in production code
+rg 'except Exception' --type py \
+  --glob '!.venv*' --glob '!**/tests/**' --glob '!**/scripts/**' -n | \
+  grep -v '# broad-except-ok' | head -20
+# Each hit must be in QUALITY_GATE_BYPASS_AUDIT.md or narrowed to specific exceptions
 ```
 
 **Required state:**
 
-| Criterion               | Requirement                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| Hardcoded secrets       | Zero in production source (excluding test fixtures)                                   |
-| Secret access           | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback |
-| HTTP verify             | No `verify=False` outside test code                                                   |
-| API authentication      | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event             |
-| `SECRET_ACCESSED` event | Logged on every secret retrieval                                                      |
-| `CONFIG_CHANGED` event  | Logged on every config mutation                                                       |
-| Mock auth               | `DISABLE_AUTH` env flag does NOT affect production deployments                        |
+| Criterion                | Requirement                                                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                         |
+| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                       |
+| HTTP verify              | No `verify=False` outside test code                                                                         |
+| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                   |
+| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                            |
+| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                             |
+| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted |
+| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                              |
+| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                            |
 
-**Scoring:** `PASS` — all criteria met. `WARN` — minor documentation gap. `FAIL` — any hardcoded secret; any 401 path
-missing `AUTH_FAILURE`; any `verify=False`; OR `get_secret_client` bypassed with env var fallback.
+**Scoring:** `PASS` — all criteria met. `WARN` — minor documentation gap; OR ≤3 broad `except Exception` all documented
+in BYPASS_AUDIT.md. `FAIL` — any hardcoded secret; any 401 path missing `AUTH_FAILURE`; any `verify=False`; OR
+`get_secret_client` bypassed with env var fallback; OR any auth event missing from execution-service auth paths; OR
+undocumented broad `except Exception` in production code.
 
 ---
 
@@ -276,21 +295,43 @@ rg 'float' unified-internal-contracts/unified_internal_contracts/ \
 
 # Run Layer 0 contract alignment tests
 cd unified-api-contracts && bash scripts/quality-gates.sh
+
+# Check BestExecutionRecord has version trail fields (MiFID II / SEC Rule 17a-4)
+rg 'execution_service_version|strategy_service_version' \
+  unified-api-contracts/ --type py -n
+# Expected: both fields present on BestExecutionRecord in regulatory/schemas.py
+
+# Check EXECUTION_AUDIT schema is actually consumed (not just defined)
+rg 'persist_audit_log' execution-service/ --type py --glob '!**/tests/**' -n
+# Expected: calls for ORDER_CREATED, ORDER_FILLED, ORDER_REJECTED, ORDER_CANCELLED, ORDER_UPDATED
+
+# Check STRATEGY_AUDIT is consumed
+rg 'persist_audit_log\|STRATEGY_AUDIT' strategy-service/ --type py --glob '!**/tests/**' -n
+# Expected: calls for STRATEGY_INSTRUCTION, SIGNAL_GENERATED
+
+# Check audit payload validation exists
+rg '_validate_audit_payload\|validate_audit' execution-service/ strategy-service/ \
+  --type py --glob '!**/tests/**' -n
 ```
 
 **Required state:**
 
-| Criterion               | Requirement                                                                                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| AC scope                | External venue schemas only (exchange responses, raw data formats)                                 |
-| UIC scope               | Internal domain schemas only (canonical processed forms)                                           |
-| No float price fields   | All price/monetary fields use `Decimal`; ratio/pct/time fields annotated with `# float-ok` comment |
-| No AC/UIC duplication   | No schema class defined in both repos                                                              |
-| Layer 0 tests           | `test_contract_alignment.py` + `test_ac_uic_alignment.py` pass                                     |
-| Schema robustness tests | `test_schema_robustness.py` passes per-service                                                     |
+| Criterion                 | Requirement                                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| AC scope                  | External venue schemas only (exchange responses, raw data formats)                                    |
+| UIC scope                 | Internal domain schemas only (canonical processed forms)                                              |
+| No float price fields     | All price/monetary fields use `Decimal`; ratio/pct/time fields annotated with `# float-ok` comment    |
+| No AC/UIC duplication     | No schema class defined in both repos                                                                 |
+| Layer 0 tests             | `test_contract_alignment.py` + `test_ac_uic_alignment.py` pass                                        |
+| Schema robustness tests   | `test_schema_robustness.py` passes per-service                                                        |
+| BestExecutionRecord trail | `execution_service_version` + `strategy_service_version` fields present on `BestExecutionRecord`      |
+| EXECUTION_AUDIT consumed  | `persist_audit_log()` called for ORDER_CREATED/FILLED/REJECTED/CANCELLED/UPDATED in execution-service |
+| STRATEGY_AUDIT consumed   | `persist_audit_log()` called for STRATEGY_INSTRUCTION/SIGNAL_GENERATED in strategy-service            |
+| Audit payload validation  | `_validate_audit_payload()` validates against `EXECUTION_AUDIT.required_fields`; raises on missing    |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–2 float fields with `# float-ok` comment. `FAIL` — any price/monetary
-field using `float`; any AC/UIC duplication; Layer 0 tests failing.
+field using `float`; any AC/UIC duplication; Layer 0 tests failing; OR `BestExecutionRecord` missing version fields; OR
+`persist_audit_log()` not called for all order lifecycle events; OR audit payload validation absent.
 
 ---
 
@@ -356,6 +397,22 @@ missing = [k for k in required if k not in t]
 print('MISSING:', missing) if missing else print('PASS: all keys present')
 "
 
+# Check order-flow guard script exists and is wired
+ls unified-trading-pm/scripts/deployment/check-order-flow.sh 2>/dev/null
+grep -l 'check-order-flow' unified-trading-pm/.github/workflows/cloud-build-router.yml
+
+# Check canary deployment script exists with traffic splitting
+ls unified-trading-pm/scripts/deployment/canary-deploy.sh 2>/dev/null
+grep -l 'canary' unified-trading-pm/.github/workflows/cloud-build-router.yml
+
+# Check Cloud Build regional fallback (not hard-coded single region)
+rg 'fallback\|FALLBACK_REGION\|us-central1' \
+  unified-trading-pm/.github/workflows/cloud-build-router.yml -n
+
+# Check partial staging promotion recovery (start_from_repo resume)
+rg 'start_from_repo\|promoted.*failed\|resume' \
+  unified-trading-pm/.github/workflows/staging-to-main.yml -n
+
 # Verify v1.0.0 tag readiness per repo (check pyproject.toml version field)
 python3 -c "
 import toml, pathlib
@@ -370,26 +427,32 @@ for p in pathlib.Path('.').glob('*/pyproject.toml'):
 
 **Required state:**
 
-| Criterion                 | Requirement                                                                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Checklist phases 1–7      | Present in `deployment-service/configs/checklist.*.yaml` per service                                                                     |
-| `runtime-topology.yaml`   | Has `version`, `deployment_profiles`, `clusters`, `service_flows` keys                                                                   |
-| Layer 2 infra verify      | `/infra/health` passes post-deploy                                                                                                       |
-| Layer 3a smoke            | Passes in <5 min                                                                                                                         |
-| Layer 3b full E2E         | Passes in 15–30 min                                                                                                                      |
-| Pytest markers registered | `unit`, `integration`, `smoke`, `e2e` in all `pyproject.toml`                                                                            |
-| Kill switch wiring        | `cloud-build-router.yml` calls `trading-kill-switch.sh halt` pre-deploy and `resume` post-deploy for execution/strategy services         |
-| Position reconciliation   | `cloud-build-router.yml` runs `position-reconciliation-check.sh` snapshot pre-deploy and compare post-deploy for execution/risk services |
-| Tier-ordered deploy       | `cloud-build-router.yml` validates T0→T1→T2→service deployment ordering via manifest `topologicalOrder.levels`                           |
-| Post-deploy health check  | `cloud-build-router.yml` runs `post-deploy-smoke.sh` polling `/health` + `/readiness` after Cloud Build success                          |
-| Change freeze enforcement | `cloud-build-router.yml` prod path calls `change-freeze-check.yml` as first job; blocked during macro/session windows                    |
-| Disaster recovery targets | `plans/ops/disaster-recovery-rto-rpo.md` exists with RTO/RPO per environment                                                             |
-| Secret rotation plan      | `plans/ops/secret-rotation-plan.md` exists with rotation schedule for all secrets                                                        |
+| Criterion                  | Requirement                                                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Checklist phases 1–7       | Present in `deployment-service/configs/checklist.*.yaml` per service                                                                       |
+| `runtime-topology.yaml`    | Has `version`, `deployment_profiles`, `clusters`, `service_flows` keys                                                                     |
+| Layer 2 infra verify       | `/infra/health` passes post-deploy                                                                                                         |
+| Layer 3a smoke             | Passes in <5 min                                                                                                                           |
+| Layer 3b full E2E          | Passes in 15–30 min                                                                                                                        |
+| Pytest markers registered  | `unit`, `integration`, `smoke`, `e2e` in all `pyproject.toml`                                                                              |
+| Kill switch wiring         | `cloud-build-router.yml` calls `trading-kill-switch.sh halt` pre-deploy and `resume` post-deploy for execution/strategy services           |
+| Position reconciliation    | `cloud-build-router.yml` runs `position-reconciliation-check.sh` snapshot pre-deploy and compare post-deploy for execution/risk services   |
+| Tier-ordered deploy        | `cloud-build-router.yml` validates T0→T1→T2→service deployment ordering via manifest `topologicalOrder.levels`                             |
+| Post-deploy health check   | `cloud-build-router.yml` runs `post-deploy-smoke.sh` polling `/health` + `/readiness` after Cloud Build success                            |
+| Change freeze enforcement  | `cloud-build-router.yml` prod path calls `change-freeze-check.yml` as first job; blocked during macro/session windows                      |
+| Disaster recovery targets  | `plans/ops/disaster-recovery-rto-rpo.md` exists with RTO/RPO per environment                                                               |
+| Secret rotation plan       | `plans/ops/secret-rotation-plan.md` exists with rotation schedule for all secrets                                                          |
+| Order-flow guard           | `cloud-build-router.yml` calls `check-order-flow.sh` as pre-deploy step for trading-critical services; bypassable via `force_deploy`       |
+| Canary deployment          | `canary-deploy.sh` exists with Cloud Run traffic splitting (5%/95%), health monitor, auto-promote/rollback                                 |
+| Regional fallback          | `cloud-build-router.yml` has fallback region alert on build failure (not hard-coded single region)                                         |
+| Partial promotion recovery | `staging-to-main.yml` has `start_from_repo` resume param; tracks promoted/failed repos in manifest; Telegram escalation on partial failure |
 
 **Scoring:** `PASS` — all services have deployment checklist; topology YAML valid; kill switch + position
-reconciliation + health check wired. `WARN` — 1–2 services pre-1.0.0 with documented reasons; OR kill switch in
-soft-gate mode. `FAIL` — any service without a checklist; OR topology YAML missing required keys; OR no kill switch
-wiring for trading-critical services.
+reconciliation + health check + order-flow guard + canary deploy wired. `WARN` — 1–2 services pre-1.0.0 with documented
+reasons; OR kill switch in soft-gate mode; OR canary deploy not yet wired for non-critical services. `FAIL` — any
+service without a checklist; OR topology YAML missing required keys; OR no kill switch wiring for trading-critical
+services; OR no order-flow guard for execution/risk/strategy services; OR staging-to-main has no partial failure
+recovery.
 
 ---
 
@@ -416,20 +479,28 @@ rg 'except ImportError' --type py --glob '!.venv*' --glob '!**/tests/**' -n
 # Find noqa suppressions
 rg '# noqa' --type py --glob '!.venv*' -n | wc -l
 # Target: 0 in production source (use ruff config instead)
+
+# Find broad except Exception (see also §3)
+rg 'except Exception' --type py \
+  --glob '!.venv*' --glob '!**/tests/**' -n | \
+  grep -v '# broad-except-ok'
+# Each hit must be narrowed to specific exceptions OR in QUALITY_GATE_BYPASS_AUDIT.md
 ```
 
 **Required state:**
 
-| Criterion                          | Requirement                                                                               |
-| ---------------------------------- | ----------------------------------------------------------------------------------------- |
-| `# type: ignore` count             | <10 total; every occurrence in `QUALITY_GATE_BYPASS_AUDIT.md`                             |
-| `.basedpyright-baseline.json`      | Zero target; each present file requires BYPASS_AUDIT.md entry (WARN); undocumented = FAIL |
-| `try/except ImportError` fallbacks | Zero in production source (fail loud on missing imports)                                  |
-| `QUALITY_GATE_BYPASS_AUDIT.md`     | Present in every repo that has any suppression                                            |
-| `# noqa` suppressions              | Zero in production source                                                                 |
+| Criterion                          | Requirement                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| `# type: ignore` count             | <10 total; every occurrence in `QUALITY_GATE_BYPASS_AUDIT.md`                               |
+| `.basedpyright-baseline.json`      | Zero target; each present file requires BYPASS_AUDIT.md entry (WARN); undocumented = FAIL   |
+| `try/except ImportError` fallbacks | Zero in production source (fail loud on missing imports)                                    |
+| `QUALITY_GATE_BYPASS_AUDIT.md`     | Present in every repo that has any suppression                                              |
+| `# noqa` suppressions              | Zero in production source                                                                   |
+| Broad `except Exception`           | Zero undocumented; each legitimate use annotated `# broad-except-ok` AND in BYPASS_AUDIT.md |
 
-**Scoring:** `PASS` — zero suppressions. `WARN` — ≤10 `type: ignore` all documented; baseline files documented. `FAIL` —
-any undocumented suppression; any `try/except ImportError`; any `# noqa` in production code.
+**Scoring:** `PASS` — zero suppressions. `WARN` — ≤10 `type: ignore` all documented; baseline files documented; ≤5 broad
+`except Exception` all in BYPASS_AUDIT.md. `FAIL` — any undocumented suppression; any `try/except ImportError`; any
+`# noqa` in production code; OR undocumented broad `except Exception`.
 
 ---
 
@@ -454,27 +525,52 @@ python3 unified-trading-pm/scripts/validate-alignment.py
 ls unified-trading-pm/cursor-rules/**/*.mdc 2>/dev/null | wc -l
 ls .cursor/rules/*.mdc 2>/dev/null | wc -l
 # Both counts should match (symlinks)
+
+# Check manifest version ↔ pyproject.toml version drift
+python3 -c "
+import json, pathlib
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+m = json.load(open('unified-trading-pm/workspace-manifest.json'))
+for r in m['repos']:
+    pp = pathlib.Path(r['name'] + '/pyproject.toml')
+    if pp.exists():
+        with open(pp, 'rb') as f:
+            pv = tomllib.load(f).get('project', {}).get('version', '?')
+        mv = r.get('version', '?')
+        if pv != mv and mv != '?':
+            print(f'DRIFT: {r[\"name\"]} manifest={mv} pyproject={pv}')
+"
 ```
 
 **Required state:**
 
-| Criterion                 | Requirement                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------ |
-| All plans in SSOT-INDEX   | Every `.plan.md` in `plans/active/` registered in `00-SSOT-INDEX.md`           |
-| No phantom SSOT entries   | Every SSOT entry has a corresponding live file                                 |
-| Manifest ↔ topology sync | All repos in manifest present in `runtime-topology.yaml`                       |
-| Cursor rules in sync      | `unified-trading-pm/cursor-rules/` and `.cursor/rules/` have equal rule counts |
-| No orphan repos           | Every repo with a `pyproject.toml` is in `workspace-manifest.json`             |
+| Criterion                   | Requirement                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| All plans in SSOT-INDEX     | Every `.plan.md` in `plans/active/` registered in `00-SSOT-INDEX.md`                    |
+| No phantom SSOT entries     | Every SSOT entry has a corresponding live file                                          |
+| Manifest ↔ topology sync   | All repos in manifest present in `runtime-topology.yaml`                                |
+| Cursor rules in sync        | `unified-trading-pm/cursor-rules/` and `.cursor/rules/` have equal rule counts          |
+| No orphan repos             | Every repo with a `pyproject.toml` is in `workspace-manifest.json`                      |
+| Manifest↔pyproject version | `workspace-manifest.json` version matches `pyproject.toml` version per repo; zero drift |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–3 new plans not yet registered (grace period 24h). `FAIL` — any plan
-unregistered for >24h; OR phantom SSOT entries; OR manifest/topology mismatch.
+unregistered for >24h; OR phantom SSOT entries; OR manifest/topology mismatch; OR manifest↔pyproject version drift on
+any repo (causes incorrect cascade dispatch).
 
 ---
 
 ## Section 10 — Integration Test Coverage
 
 **Goal:** Every repo with private deps (L2+) has `tests/integration/` with Layer 1.5 mock integration tests. All
-interface repos have VCR cassettes validating external API schemas.
+interface repos have VCR cassettes validating external API schemas. Services/libraries have integration tests that
+import and exercise each direct library dependency. All UIs with backing APIs have
+`tests/integration/api.integration.test.ts`. No standalone coverage-boost files (`test_coverage_boost_*.py`,
+`test_*_coverage.py`).
+
+**SSOT:** `unified-trading-pm/docs/testing/testing-requirements.md`
 
 **Audit commands:**
 
@@ -489,6 +585,17 @@ for r in m['repos']:
             print('MISSING integration:', r['name'])
 "
 
+# Check library-dep integration coverage (run per service)
+# python3 unified-trading-pm/scripts/validation/check-integration-dep-coverage.py --repo <repo> --project-root .
+
+# Check UI integration tests (all 12 UIs)
+for ui in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-admin-ui; do
+  [ -f "$ui/tests/integration/api.integration.test.ts" ] || echo "MISSING UI integration: $ui"
+done
+
+# Check for coverage-boost files (should be merged per testing-requirements.md)
+rg -l 'test_coverage_boost|test_.*_coverage\.py|test_boost_coverage' --glob '*.py' */tests/unit/ 2>/dev/null | head -20
+
 # Check VCR cassettes in interface repos
 for repo in unified-market-interface unified-trade-execution-interface \
             unified-reference-data-interface unified-position-interface \
@@ -501,16 +608,20 @@ done
 
 **Required state:**
 
-| Criterion                             | Requirement                                                                             |
-| ------------------------------------- | --------------------------------------------------------------------------------------- |
-| `tests/integration/` presence         | All T3+ repos (services, APIs) have at least 1 integration test                         |
-| VCR cassettes in interface repos      | All 7 interface repos have cassettes in `unified_api_contracts_external/<venue>/mocks/` |
-| Integration tests are credential-free | `CLOUD_MOCK_MODE=true`, no live API calls in quickmerge                                 |
-| Layer 1.5 per dep boundary            | At least 1 integration test per private dependency boundary                             |
+| Criterion                             | Requirement                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `tests/integration/` presence         | All T3+ repos (services, APIs) have at least 1 integration test                                                    |
+| Library-dep integration coverage      | Each service/library has ≥1 integration test that imports each direct library dep                                  |
+| UI integration tests                  | All 12 UI repos have `tests/integration/api.integration.test.ts` (real HTTP, skip when API unreachable)            |
+| Coverage consolidation                | No standalone `test_coverage_boost_*.py`, `test_*_coverage.py`, `test_boost_*.py` — merged into primary test files |
+| VCR cassettes in interface repos      | All 7 interface repos have cassettes in `unified_api_contracts_external/<venue>/mocks/`                            |
+| Integration tests are credential-free | `CLOUD_MOCK_MODE=true`, no live API calls in quickmerge                                                            |
+| Layer 1.5 per dep boundary            | At least 1 integration test per private dependency boundary                                                        |
 
-**Scoring:** `PASS` — all T3+ repos have integration tests; all interface repos have cassettes. `WARN` — 1–2 repos
-missing but tracked in active plan. `FAIL` — any interface repo with zero cassettes; OR integration tests make live API
-calls.
+**Scoring:** `PASS` — all T3+ repos have integration tests; all interface repos have cassettes; library-dep coverage OK;
+UI integration tests present; no coverage-boost files. `WARN` — 1–2 repos missing but tracked in active plan. `FAIL` —
+any interface repo with zero cassettes; OR integration tests make live API calls; OR services with library deps missing
+integration test imports.
 
 ---
 
@@ -692,6 +803,50 @@ grep -B2 "quality-gates.sh" */.github/workflows/quality-gates.yml | grep -L "PAT
 
 # Check CLOUD_MOCK_MODE is set
 grep -L "CLOUD_MOCK_MODE" */.github/workflows/quality-gates.yml
+
+# Check Telegram if: guard antipattern (env.* unavailable in GHA if: expressions)
+rg 'if:.*env\.(TELEGRAM_BOT_TOKEN|TELEGRAM_CHAT_ID)' \
+  unified-trading-pm/.github/workflows/*.yml -n
+# Expected: zero results — early-exit should be inside run: block instead
+
+# Check secrets.TELEGRAM_CHAT_ID (should be vars.TELEGRAM_CHAT_ID)
+rg 'secrets\.TELEGRAM_CHAT_ID' \
+  unified-trading-pm/.github/workflows/*.yml -n
+# Expected: zero results — CHAT_ID is a repository variable, not a secret
+
+# Check overnight-orchestrator has its own concurrency guard
+rg 'concurrency:' unified-trading-pm/.github/workflows/overnight-agent-orchestrator.yml -A2
+# Expected: group: overnight-orchestrator, cancel-in-progress: true
+
+# Check SHA pinning TOCTOU in staging-to-main.yml
+rg 'rev-parse\|staging_commits\|sha.*mismatch\|skip ci' \
+  unified-trading-pm/.github/workflows/staging-to-main.yml -n
+# Expected: SHA verification before promoting each repo
+
+# Check conflict-resolution-agent output validation
+rg 'py_compile\|yaml\.safe_load\|<<<<<<<\|merge.*marker' \
+  unified-trading-pm/.github/workflows/conflict-resolution-agent.yml -n
+# Expected: validation checks for merge markers, py_compile, yaml.safe_load
+
+# Check SIT debounce reads pending_repos from manifest
+rg 'pending_repos\|sit_retry_count' \
+  unified-trading-pm/.github/workflows/sit-debounce-trigger.yml -n
+# Expected: reads staging_status.pending_repos, enforces max retries
+
+# Check starvation detector workflow
+ls unified-trading-pm/.github/workflows/sit-starvation-detector.yml 2>/dev/null
+rg 'locked_alert_sent\|locked_at\|locked_since' \
+  unified-trading-pm/.github/workflows/sit-starvation-detector.yml -n 2>/dev/null
+
+# Check Telegram rate-limit guard exists
+ls unified-trading-pm/scripts/telegram-rate-limit.sh 2>/dev/null
+rg 'telegram_last_alert_ts' \
+  unified-trading-pm/scripts/telegram-rate-limit.sh -n 2>/dev/null
+
+# Check manifest writes use atomic tmp+rename pattern
+rg '\.json\.tmp\|os\.replace\|mv.*workspace-manifest' \
+  unified-trading-pm/.github/workflows/*.yml -n
+# Expected: all manifest-mutating workflows write to tmp then rename
 ```
 
 **Required pattern (Python repos):**
@@ -714,24 +869,35 @@ grep -L "CLOUD_MOCK_MODE" */.github/workflows/quality-gates.yml
 
 **CI/CD infrastructure hardening checks:**
 
-| Criterion                     | Requirement                                                                                                |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Manifest concurrency          | All manifest-mutating workflows share `concurrency: { group: manifest-update, cancel-in-progress: false }` |
-| Dead man switch               | `overnight-dead-man-switch.yml` runs at 03:00 UTC, alerts if overnight orchestrator didn't complete        |
-| Version bump loop breaker     | `update-repo-version.yml` has `CASCADE_DEPTH` counter with `MAX_CASCADE_DEPTH=3`; halts + alerts on exceed |
-| GHA burst throttling          | `overnight-agent-orchestrator.yml` staggers dispatches with delay between repos per tier                   |
-| Claude API health precheck    | All agent workflows (conflict-resolution, semver, overnight) source `claude-api-health-precheck.sh`        |
-| SIT runbook                   | `plans/ops/sit-runbook.md` documents force-unlock, failure modes, escalation path                          |
-| Manifest mutation audit trail | `log-manifest-mutation.sh` appends to `plans/audit/manifest-mutations.jsonl` on every manifest write       |
-| Change freeze calendar        | `plans/ops/change-freeze-calendar.csv` covers NFP/FOMC/ECB/BOE + session open/close windows                |
+| Criterion                     | Requirement                                                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Manifest concurrency          | All manifest-mutating workflows share `concurrency: { group: manifest-update, cancel-in-progress: false }`           |
+| Dead man switch               | `overnight-dead-man-switch.yml` runs at 03:00 UTC, alerts if overnight orchestrator didn't complete                  |
+| Version bump loop breaker     | `update-repo-version.yml` has `CASCADE_DEPTH` counter with `MAX_CASCADE_DEPTH=3`; halts + alerts on exceed           |
+| GHA burst throttling          | `overnight-agent-orchestrator.yml` staggers dispatches with delay between repos per tier                             |
+| Claude API health precheck    | All agent workflows (conflict-resolution, semver, overnight) source `claude-api-health-precheck.sh`                  |
+| SIT runbook                   | `plans/ops/sit-runbook.md` documents force-unlock, failure modes, escalation path                                    |
+| Manifest mutation audit trail | `log-manifest-mutation.sh` appends to `plans/audit/manifest-mutations.jsonl` on every manifest write                 |
+| Change freeze calendar        | `plans/ops/change-freeze-calendar.csv` covers NFP/FOMC/ECB/BOE + session open/close windows                          |
+| Telegram `if:` guard          | Zero `if: ... env.TELEGRAM_*` in GHA workflows; early-exit inside `run:` block instead                               |
+| Telegram `vars` vs `secrets`  | `TELEGRAM_CHAT_ID` accessed via `vars.` (repository variable), never `secrets.`                                      |
+| Orchestrator concurrency      | `overnight-agent-orchestrator.yml` has `concurrency: { group: overnight-orchestrator, cancel-in-progress: true }`    |
+| SHA pinning in staging→main   | `staging-to-main.yml` verifies `git rev-parse HEAD` matches `staging_commits[repo]` before promoting                 |
+| Conflict agent validation     | `conflict-resolution-agent.yml` validates output: no merge markers, all files present, `py_compile`/`yaml.safe_load` |
+| SIT debounce wiring           | `sit-debounce-trigger.yml` reads `staging_status.pending_repos`; `sit_retry_count` max 3                             |
+| Starvation detector           | Scheduled workflow alerts if `staging_status.locked` age >1hr; dedup via `locked_alert_sent`                         |
+| Telegram rate limiting        | `scripts/telegram-rate-limit.sh` guards max 1 alert per workflow per 60s via `telegram_last_alert_ts`                |
+| Manifest write atomicity      | All manifest-mutating workflows write to `.json.tmp` then rename; no direct writes to `workspace-manifest.json`      |
 
 **Scoring:**
 
 - `PASS` — all Python repos use `uv venv .venv` + `--python .venv/bin/python` + `PATH` export + `CLOUD_MOCK_MODE`; all
   infrastructure hardening checks pass
-- `WARN` — any UI repo missing a CI quality gate step; OR any infrastructure check in soft-gate mode
+- `WARN` — any UI repo missing a CI quality gate step; OR any infrastructure check in soft-gate mode; OR starvation
+  detector/rate-limiter present but not yet battle-tested
 - `FAIL` — any Python repo uses `--system`, bare `pip install`, or missing `PATH` export; OR manifest concurrency groups
-  missing; OR no dead-man switch
+  missing; OR no dead-man switch; OR Telegram `if:` guard antipattern present; OR staging-to-main SHA verification
+  absent; OR manifest writes not atomic (tmp+rename); OR `secrets.TELEGRAM_CHAT_ID` used instead of `vars.`
 
 ---
 
@@ -1096,25 +1262,49 @@ missing = [str(p.parent) for p in pathlib.Path('.').glob('*/.github')
            if not (p.parent / '.claude/CLAUDE.md').exists()]
 print('MISSING CLAUDE.md:', missing[:10]) if missing else print('PASS')
 "
+
+# Check inject-mandatory-rules.sh exists
+ls unified-trading-pm/scripts/agents/inject-mandatory-rules.sh 2>/dev/null
+
+# Verify all Claude-invoking agent workflows inject mandatory rules into prompts
+# Each must use MANDATORY_RULES (GHA GITHUB_ENV heredoc) or inject-mandatory-rules.sh (local)
+for wf in conflict-resolution-agent.yml plan-health-agent.yml \
+          rules-alignment-agent.yml; do
+  hits=$(rg 'MANDATORY_RULES\|inject-mandatory-rules' \
+    "unified-trading-pm/.github/workflows/$wf" 2>/dev/null | wc -l)
+  [ "$hits" -eq 0 ] && echo "MISSING rules injection: $wf"
+done
+# Also check codex-sync-agent in codex repo
+rg 'MANDATORY_RULES\|inject-mandatory-rules' \
+  unified-trading-codex/.github/workflows/codex-sync-agent.yml 2>/dev/null | wc -l
+
+# Check SUB_AGENT_MANDATORY_RULES.md has system-first architecture §0
+rg 'System-First Architecture\|system-first' \
+  unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md -n | head -5
 ```
 
 **Required state:**
 
-| Criterion                          | Requirement                                                                 |
-| ---------------------------------- | --------------------------------------------------------------------------- |
-| `semver-agent.yml`                 | Present in PM; triggers on staging push                                     |
-| `rules-alignment-agent.yml`        | Present in PM; verifies rules/AGENTS.md/CLAUDE.md consistency               |
-| `codex-sync-agent.yml`             | Present in codex; triggers on manifest-updated dispatch                     |
-| `plan-alignment-agent.yml`         | Present in PM; validates INDEX.md ↔ active plans ↔ SSOT-INDEX alignment   |
-| `overnight-agent-orchestrator.yml` | Present; cron 01:00 UTC; tier-ordered (T0→T4); 3x retry on failure          |
-| `AGENTS.md` in all repos           | Workspace-generic, not PM-specific; includes full rules + mandatory cleanup |
-| `.claude/CLAUDE.md` in all repos   | Symlink to canonical `unified-trading-pm/cursor-configs/CLAUDE.md`          |
-| `ANTHROPIC_API_KEY` secret         | Set on all repos for agent execution                                        |
-| Telegram secrets                   | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` on all repos                      |
+| Criterion                          | Requirement                                                                                                       |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `semver-agent.yml`                 | Present in PM; triggers on staging push                                                                           |
+| `rules-alignment-agent.yml`        | Present in PM; verifies rules/AGENTS.md/CLAUDE.md consistency                                                     |
+| `codex-sync-agent.yml`             | Present in codex; triggers on manifest-updated dispatch                                                           |
+| `plan-alignment-agent.yml`         | Present in PM; validates INDEX.md ↔ active plans ↔ SSOT-INDEX alignment                                         |
+| `overnight-agent-orchestrator.yml` | Present; cron 01:00 UTC; tier-ordered (T0→T4); 3x retry on failure                                                |
+| `AGENTS.md` in all repos           | Workspace-generic, not PM-specific; includes full rules + mandatory cleanup                                       |
+| `.claude/CLAUDE.md` in all repos   | Symlink to canonical `unified-trading-pm/cursor-configs/CLAUDE.md`                                                |
+| `ANTHROPIC_API_KEY` secret         | Set on all repos for agent execution                                                                              |
+| Telegram secrets                   | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` on all repos                                                            |
+| Rules injection in prompts         | All Claude-invoking workflows use `MANDATORY_RULES` env var or `inject-mandatory-rules.sh`; verified per-workflow |
+| `inject-mandatory-rules.sh`        | Present in `scripts/agents/`; used by local scripts (run-parallel-agents.sh, llm-agent-wrapper.sh)                |
+| System-first architecture §0       | `SUB_AGENT_MANDATORY_RULES.md` §0 contains decision tree (events→UEI, schemas→UIC/UAC, cloud→UCI, etc.)           |
 
-**Scoring:** `PASS` — all 4 workflows present; overnight orchestrator wired; all repos have AGENTS.md + CLAUDE.md.
-`WARN` — 1–5 repos missing AGENTS.md (rollout in progress). `FAIL` — overnight orchestrator absent; OR semver-agent
-missing; OR `ANTHROPIC_API_KEY` not propagated.
+**Scoring:** `PASS` — all 4 workflows present; overnight orchestrator wired; all repos have AGENTS.md + CLAUDE.md; all
+Claude-invoking workflows inject mandatory rules. `WARN` — 1–5 repos missing AGENTS.md (rollout in progress). `FAIL` —
+overnight orchestrator absent; OR semver-agent missing; OR `ANTHROPIC_API_KEY` not propagated; OR any Claude-invoking
+workflow missing `MANDATORY_RULES`/`inject-mandatory-rules.sh` in prompt construction; OR `SUB_AGENT_MANDATORY_RULES.md`
+missing system-first architecture §0.
 
 ---
 

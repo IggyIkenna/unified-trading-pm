@@ -147,9 +147,6 @@
       "path": "strategy-ui",
     },
     {
-      "path": "strategy-validation-service",
-    },
-    {
       "path": "system-integration-tests",
     },
     {

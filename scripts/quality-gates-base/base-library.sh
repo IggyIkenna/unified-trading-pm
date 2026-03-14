@@ -172,6 +172,16 @@ if [ "$RUN_TESTS" = true ]; then
     [[ -n "$DUP" ]] && { log_fail "Duplicate test files — expand existing files instead:"; echo "$DUP"; exit 1; }
     log_success "No duplicate test files"
 
+
+    # Integration test coverage for library deps (plan: integration_tests_codex_compliance)
+    _INT_DEP_CHECK="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-integration-dep-coverage.py"
+    if [ -f "$_INT_DEP_CHECK" ]; then
+        if ! $PYTHON_CMD "$_INT_DEP_CHECK" --repo "$PACKAGE_NAME" --project-root "$PROJECT_ROOT" --manifest "${REPO_ROOT}/unified-trading-pm/workspace-manifest.json" 2>/dev/null; then
+            log_fail "Integration test coverage missing for library deps — add tests in tests/integration/ that import each library. Bypass: QUALITY_GATE_BYPASS_AUDIT.md"
+            exit 1
+        fi
+        log_success "Integration dep coverage OK"
+    fi
     # @pytest.mark.skip (bare skip, not skipif) must have a reason comment on the preceding line
     # skipif always carries reason= inline so is excluded from this check
     SKIP_NO_REASON=$(rg "@pytest\.mark\.skip" --type py tests/ -B 1 2>/dev/null \

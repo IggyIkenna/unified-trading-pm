@@ -93,7 +93,6 @@ If any check fails: STOP. Complete Phase 1/2 first.
 | MLIN   | ml-inference-service              | D     |
 | STR    | strategy-service                  | E     |
 | EXEC   | execution-service                 | E     |
-| SVS    | strategy-validation-service       | E     |
 | PBS    | position-balance-monitor-service  | F     |
 | PNL    | pnl-attribution-service           | F     |
 | RES    | risk-and-exposure-service         | F     |
@@ -247,9 +246,8 @@ Every service (T4/T5) and UI (T6) follows this pattern:
 - Remove `ml-training-service` from `ml-inference-service` `pyproject.toml` — share via UML only
 - ML inference: PubSub subscription for live features (not BigQuery polling)
 
-**Batch E — strategy-service + execution-service + strategy-validation-service:**
+**Batch E — strategy-service + execution-service:**
 
-- SVS: communicates with strategy-service via HTTP/PubSub only — no direct Python import
 - execution-service: split `engine.py` (2826L) by SRP; fix 201 bare excepts; remove service→service Python deps
 - Fix `central-element-323112` → `test-project` in all test files
 
