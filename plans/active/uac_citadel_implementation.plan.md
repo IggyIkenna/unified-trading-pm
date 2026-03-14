@@ -45,10 +45,10 @@ UIC, SIT, all] note: "Primary path. ~50 most-used canonical types re-exported fr
       pattern: "from unified_api_contracts.testing import X"
       consumers: [test files only]
 
-blocked_patterns: - pattern: "from unified_api_contracts.canonical._ import X" exception: "UIC production code
-(canonical neighbor), SIT tests" - pattern: "from unified_api_contracts.normalize_utils._ import X" exception: none -
-pattern: "from unified_api_contracts.config._ import X" reason: "config/ deleted; types moved to UTL/UCI" - pattern:
-"from unified_api_contracts.shared._ import X" reason: "shared/ deleted" - pattern: "from
+blocked*patterns: - pattern: "from unified_api_contracts.canonical.* import X" exception: "UIC production code
+(canonical neighbor), SIT tests" - pattern: "from unified*api_contracts.normalize_utils.* import X" exception: none -
+pattern: "from unified*api_contracts.config.* import X" reason: "config/ deleted; types moved to UTL/UCI" - pattern:
+"from unified*api_contracts.shared.* import X" reason: "shared/ deleted" - pattern: "from
 unified_api_contracts.schemas.\* import X" reason: "schemas/ deleted (was facade-only)" - pattern: "from
 unified_api_contracts.external.{source}.schemas import X" reason: "use external.{source} import X instead (**init**
 re-exports)"
@@ -297,12 +297,12 @@ external/pinnacle/ — merge"
 
 # ── 2c. External **init**.py re-export pattern ─────────────────────
 
-external_init_pattern: description: | Every external/{source}/**init**.py MUST re-export all public symbols from
+external*init_pattern: description: | Every external/{source}/**init**.py MUST re-export all public symbols from
 schemas.py (and normalize.py if present). This ensures consumers use 3-level imports max. example: | #
-external/binance/**init**.py from unified_api_contracts.external.binance.market_schemas import _ from
-unified_api_contracts.external.binance.order_schemas import _ from
-unified_api_contracts.external.binance.account_schemas import _ from unified_api_contracts.external.binance.ws_schemas
-import _
+external/binance/**init**.py from unified_api_contracts.external.binance.market_schemas import * from
+unified*api_contracts.external.binance.order_schemas import * from
+unified*api_contracts.external.binance.account_schemas import * from unified*api_contracts.external.binance.ws_schemas
+import *
 
     binance_special_case: |
       Binance has 4 sub-modules (market_schemas.py, order_schemas.py,
@@ -882,8 +882,8 @@ workspace-manifest.json" - "Add workspace_infrastructure, runtime_clients fields
 (remove T2 interface deps)" - "Remove explicit T0 deps from services (transitive via UTL)" - "Add new repo entries (UFI,
 UFOL, USRI)" - "Regenerate topological order and DAG SVG" - "Update tier-gate-check.sh" blocks: [phase_1]
 
-phase_1_uac_foundations: repos: [unified-api-contracts] tasks: - "Create directory structure: canonical/domain/_,
-crosscutting/_, normalize_utils/, registry/" - "Move venue_manifest → registry/" - "Move venue_rate_limits,
+phase*1_uac_foundations: repos: [unified-api-contracts] tasks: - "Create directory structure: canonical/domain/*,
+crosscutting/\_, normalize_utils/, registry/" - "Move venue_manifest → registry/" - "Move venue_rate_limits,
 provider_modes → registry/" - "Move canonical/errors/ → canonical/crosscutting/errors/" - "Move canonical/normalize/ →
 normalize_utils/" - "Move canonical_mappings.py → normalize_utils/common_mappings.py" - "Update all UAC-internal
 imports" blocks: [phase_2, phase_3]

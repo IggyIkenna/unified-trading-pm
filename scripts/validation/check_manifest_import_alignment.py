@@ -147,9 +147,7 @@ def check_repo(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Validate manifest dependencies match actual Python imports"
-    )
+    parser = argparse.ArgumentParser(description="Validate manifest dependencies match actual Python imports")
     parser.add_argument(
         "--repo",
         type=Path,

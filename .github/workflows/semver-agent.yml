@@ -243,17 +243,24 @@ jobs:
 
           # File-level diff analysis for public API changes
           if [ "$BASELINE" = "0.0.0" ]; then
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+            if git rev-parse HEAD~1 >/dev/null 2>&1; then
+              DIFF_BASE="HEAD~1"
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            else
+              DIFF_BASE="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+              CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+            fi
           else
             BASELINE_SHA_FOR_DIFF=$(git log --oneline --all | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "HEAD~1")
+            DIFF_BASE="${BASELINE_SHA_FOR_DIFF}"
             CHANGED_FILES=$(git diff --name-only "${BASELINE_SHA_FOR_DIFF}..HEAD" 2>/dev/null || echo "")
           fi
 
           # Check public __init__.py exports
           INIT_PY=$(find . -name "__init__.py" -path "*{{SOURCE_DIR}}/__init__.py" | head -1 || echo "")
           if [ -n "$INIT_PY" ] && echo "$CHANGED_FILES" | grep -q "__init__.py"; then
-            REMOVED_EXPORTS=$(git diff HEAD~1 HEAD -- "$INIT_PY" 2>/dev/null | grep "^-" | grep -E "^-[^-]" | grep -v "^---" || echo "")
-            ADDED_EXPORTS=$(git diff HEAD~1 HEAD -- "$INIT_PY" 2>/dev/null | grep "^+" | grep -E "^\+[^+]" | grep -v "^+++" || echo "")
+            REMOVED_EXPORTS=$(git diff "$DIFF_BASE" HEAD -- "$INIT_PY" 2>/dev/null | grep "^-" | grep -E "^-[^-]" | grep -v "^---" || echo "")
+            ADDED_EXPORTS=$(git diff "$DIFF_BASE" HEAD -- "$INIT_PY" 2>/dev/null | grep "^+" | grep -E "^\+[^+]" | grep -v "^+++" || echo "")
             if [ -n "$REMOVED_EXPORTS" ] && [ "$BUMP" != "breaking" ]; then
               echo "WARNING: Removed lines in public __init__.py — MAJOR signal (removed/renamed export)"
               BUMP="breaking"
@@ -264,7 +271,7 @@ jobs:
 
           # Check HTTP route removals
           if echo "$CHANGED_FILES" | grep -qE "\.(py)$"; then
-            ROUTE_REMOVALS=$(git diff HEAD~1 HEAD 2>/dev/null | grep "^-" | grep -E "@(app|router)\.(get|post|put|delete|patch)\(" | grep -v "^---" || echo "")
+            ROUTE_REMOVALS=$(git diff "$DIFF_BASE" HEAD 2>/dev/null | grep "^-" | grep -E "@(app|router)\.(get|post|put|delete|patch)\(" | grep -v "^---" || echo "")
             if [ -n "$ROUTE_REMOVALS" ] && [ "$BUMP" != "breaking" ]; then
               echo "WARNING: Detected removed HTTP routes — MAJOR signal"
               BUMP="breaking"

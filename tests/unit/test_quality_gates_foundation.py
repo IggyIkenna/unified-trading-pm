@@ -87,32 +87,22 @@ class TestWorkspaceManifest:
         """repositories is a dict: {repo_name: {arch_tier: ..., type: ...}}"""
         with open(WORKSPACE_MANIFEST) as f:
             data = json.load(f)
-        required_keys = {"arch_tier"}
+        required_keys = {"tier"}
         for name, repo in data["repositories"].items():
             assert isinstance(repo, dict), f"Repo {name} entry must be a dict"
             missing = required_keys - set(repo.keys())
             assert not missing, f"Repo {name} missing keys: {missing}"
 
-    def test_arch_tiers_are_valid(self):
-        valid_tiers = {
-            "0",
-            "1",
-            "2",
-            "3",
-            "service",
-            "api",
-            "ui",
-            "pm",
-            "deprecated",
-            "devops",
-            "infrastructure",
-            "integration",
-        }
+    def test_tiers_are_valid(self):
+        """Validate that every repo has an integer tier (0-9) or null."""
         with open(WORKSPACE_MANIFEST) as f:
             data = json.load(f)
         for name, repo in data["repositories"].items():
-            tier = repo.get("arch_tier", "")
-            assert tier in valid_tiers, f"Repo {name} has invalid arch_tier: {tier!r}"
+            tier = repo.get("tier")
+            if tier is None:
+                continue  # null tier allowed for infrastructure, test repos
+            assert isinstance(tier, int), f"Repo {name} has non-integer tier: {tier!r}"
+            assert 0 <= tier <= 9, f"Repo {name} has out-of-range tier: {tier}"
 
 
 # ── generate_canonical_dependency_manifest.py ─────────────────────────────────

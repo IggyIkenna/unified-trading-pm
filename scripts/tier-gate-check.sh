@@ -45,37 +45,64 @@ repo_info = repos[repo]
 if not isinstance(repo_info, dict):
     sys.exit(0)
 
-tier_str = repo_info.get("arch_tier", "")
-if not tier_str or not tier_str.startswith("T"):
-    print(f"INFO: {repo} has no arch_tier — skipping tier gate check")
+# Read integer tier field (new SSOT); fall back to arch_tier for migration period
+tier_n = repo_info.get("tier")
+if tier_n is None:
+    print(f"INFO: {repo} has no tier — skipping tier gate check")
     sys.exit(0)
 
-try:
-    tier_n = int(tier_str[1:])
-except ValueError:
+if not isinstance(tier_n, int):
+    print(f"INFO: {repo} tier={tier_n} is not an integer — skipping tier gate check")
     sys.exit(0)
 
+# --- Check 1: All T(N-1) repos must be passing before working on T(N) ---
 if tier_n == 0:
-    print(f"✓ {repo} is T0 — no lower tier to check")
-    sys.exit(0)
+    print(f"OK: {repo} is T0 — no lower tier to check")
+else:
+    prerequisite_tier = tier_n - 1
+    blocked = []
 
-prerequisite_tier = f"T{tier_n - 1}"
-blocked = []
+    for r, info in repos.items():
+        if not isinstance(info, dict):
+            continue
+        r_tier = info.get("tier")
+        if r_tier != prerequisite_tier:
+            continue
+        status = info.get("ci_status") or "UNKNOWN"
+        if status not in ("PASSING", "passing"):
+            blocked.append(f"  {r} (T{prerequisite_tier}): ci_status={status}")
 
-for r, info in repos.items():
-    if not isinstance(info, dict):
+    if blocked:
+        print(f"TIER GATE BLOCKED: Cannot work on {repo} (T{tier_n}) — {len(blocked)} T{prerequisite_tier} repos not green:")
+        for b in blocked:
+            print(b)
+        sys.exit(1)
+
+    print(f"OK: Tier gate open: all T{prerequisite_tier} prerequisites passing for {repo} (T{tier_n})")
+
+# --- Check 2: Every dependency D must have tier <= N ---
+dep_violations = []
+deps = repo_info.get("dependencies", [])
+for dep in deps:
+    dep_name = dep.get("name") if isinstance(dep, dict) else dep
+    if not dep_name or dep_name not in repos:
         continue
-    if info.get("arch_tier") != prerequisite_tier:
+    dep_info = repos[dep_name]
+    if not isinstance(dep_info, dict):
         continue
-    status = info.get("ci_status") or "UNKNOWN"
-    if status not in ("PASSING", "passing"):
-        blocked.append(f"  {r} ({prerequisite_tier}): ci_status={status}")
+    dep_tier = dep_info.get("tier")
+    if dep_tier is None:
+        continue  # skip repos with no tier (infrastructure, test)
+    if not isinstance(dep_tier, int):
+        continue
+    if dep_tier > tier_n:
+        dep_violations.append(f"  {dep_name} (T{dep_tier}) > {repo} (T{tier_n})")
 
-if blocked:
-    print(f"❌ TIER GATE BLOCKED: Cannot work on {repo} ({tier_str}) — {len(blocked)} {prerequisite_tier} repos not green:")
-    for b in blocked:
-        print(b)
+if dep_violations:
+    print(f"TIER DEP VIOLATION: {repo} (T{tier_n}) depends on higher-tier repos:")
+    for v in dep_violations:
+        print(v)
     sys.exit(1)
 
-print(f"✓ Tier gate open: all {prerequisite_tier} prerequisites passing for {repo} ({tier_str})")
+print(f"OK: All dependencies of {repo} (T{tier_n}) have tier <= {tier_n}")
 PYEOF

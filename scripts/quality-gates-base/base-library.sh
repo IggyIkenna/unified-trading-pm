@@ -493,11 +493,15 @@ if [[ "$PACKAGE_NAME" = "unified-config-interface" ]]; then
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' --glob '!**/cloud_config.py' -l . 2>/dev/null || :)
 elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
     # UTL defines/deprecates these symbols — skip the origin and compat-layer files
+    # domain_client/ was merged from unified-domain-client and uses these symbols legitimately
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
         --glob '!**/domain/standardized_service.py' --glob '!**/__init__.py' \
         --glob '!**/core/cloud_config.py' --glob '!**/core/cloud_data_provider.py' \
         --glob '!**/domain/data_completion.py' \
+        --glob '!**/domain_client/cloud_target.py' --glob '!**/domain_client/factories.py' \
+        --glob '!**/domain_client/cloud_data_provider.py' --glob '!**/domain_client/clients/**' \
+        --glob '!**/domain_client/sports/**' --glob '!**/domain_client/standardized_service.py' \
         -l . 2>/dev/null \
         | grep -v "# noqa:.*qg-protocol-symbol\|# noqa: qg-protocol-symbol" || :)
 elif [[ "$PACKAGE_NAME" = "unified-domain-client" ]]; then

@@ -145,7 +145,9 @@
       "semver_rules_ref": "service",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "QG exit 1 (from batch 6 agent)"
+      "ci_failure_reason": "QG exit 1 (from batch 6 agent)",
+      "tier": 3,
+      "role": "service"
     },
     "batch-audit-api": {
       "type": "api-service",
@@ -175,11 +177,6 @@
           "name": "unified-cloud-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "BASELINE_PENDING",
@@ -193,7 +190,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "batch-audit-ui": {
       "type": "ui",
@@ -215,7 +214,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -262,7 +263,9 @@
       },
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -318,7 +321,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "client-reporting-ui": {
       "type": "ui",
@@ -340,7 +345,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "deployment-api": {
       "type": "api-service",
@@ -391,7 +398,9 @@
       "github_url": "https://github.com/IggyIkenna/deployment-api",
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -442,7 +451,9 @@
       "codex_sections": ["05-infrastructure"],
       "semver_rules_ref": "infra",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "deployment-ui": {
       "type": "ui",
@@ -466,7 +477,9 @@
       "github_url": "https://github.com/IggyIkenna/deployment-ui",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "elysium-defi-system": {
       "type": "service",
@@ -493,7 +506,9 @@
       "completion_path": "defi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "execution-algo-library": {
       "type": "library",
@@ -515,7 +530,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "library"
     },
     "execution-analytics-ui": {
       "type": "ui",
@@ -537,7 +554,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "execution-results-api": {
       "type": "api-service",
@@ -588,7 +607,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "execution-service": {
       "type": "service",
@@ -674,7 +695,9 @@
       "semver_rules_ref": "service",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "Codex compliance FAILED: 7 violations"
+      "ci_failure_reason": "Codex compliance FAILED: 7 violations",
+      "tier": 3,
+      "role": "service"
     },
     "features-calendar-service": {
       "type": "service",
@@ -731,7 +754,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-commodity-service": {
       "type": "service",
@@ -789,7 +814,9 @@
       },
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-cross-instrument-service": {
       "type": "service",
@@ -847,7 +874,9 @@
       },
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-delta-one-service": {
       "type": "service",
@@ -899,7 +928,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-multi-timeframe-service": {
       "type": "service",
@@ -957,7 +988,9 @@
       },
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-onchain-service": {
       "type": "service",
@@ -1014,7 +1047,9 @@
       "completion_path": "defi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-sports-service": {
       "type": "service",
@@ -1072,7 +1107,9 @@
       },
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "features-volatility-service": {
       "type": "service",
@@ -1129,7 +1166,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "ibkr-gateway-infra": {
       "type": "infrastructure",
@@ -1151,7 +1190,14 @@
       "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "infrastructure",
+      "runtime_clients": [
+        "unified-market-interface",
+        "unified-reference-data-interface",
+        "unified-trade-execution-interface"
+      ]
     },
     "instruments-service": {
       "type": "service",
@@ -1219,7 +1265,9 @@
       "completion_path": "core",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "live-health-monitor-ui": {
       "type": "ui",
@@ -1242,7 +1290,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "logs-dashboard-ui": {
       "type": "ui",
@@ -1264,7 +1314,9 @@
       "completion_path": "infrastructure",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "market-data-api": {
       "type": "api-service",
@@ -1310,7 +1362,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "market-data-processing-service": {
       "type": "service",
@@ -1353,7 +1407,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -1415,7 +1471,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "matching-engine-library": {
       "type": "library",
@@ -1438,7 +1496,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "library"
     },
     "ml-inference-api": {
       "type": "api-service",
@@ -1469,11 +1529,6 @@
           "name": "unified-events-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "BASELINE_PENDING",
@@ -1487,7 +1542,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "ml-inference-service": {
       "type": "service",
@@ -1544,7 +1601,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "ml-training-api": {
       "type": "api-service",
@@ -1570,11 +1629,6 @@
           "name": "unified-config-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "BASELINE_PENDING",
@@ -1588,7 +1642,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "ml-training-service": {
       "type": "service",
@@ -1635,7 +1691,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "ml-training-ui": {
       "type": "ui",
@@ -1657,7 +1715,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "onboarding-ui": {
       "type": "ui",
@@ -1680,7 +1740,9 @@
       "semver_rules_ref": "ui",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "Function coverage 60.46% < 70% threshold"
+      "ci_failure_reason": "Function coverage 60.46% < 70% threshold",
+      "tier": 3,
+      "role": "ui"
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1732,7 +1794,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "position-balance-monitor-service": {
       "type": "service",
@@ -1790,7 +1854,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "risk-and-exposure-service": {
       "type": "service",
@@ -1838,7 +1904,9 @@
       "semver_rules_ref": "service",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "Codex compliance FAILED: 2 violations"
+      "ci_failure_reason": "Codex compliance FAILED: 2 violations",
+      "tier": 3,
+      "role": "service"
     },
     "settlement-ui": {
       "type": "ui",
@@ -1861,7 +1929,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "strategy-service": {
       "type": "service",
@@ -1920,7 +1990,9 @@
       "completion_path": "cefi",
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "strategy-ui": {
       "type": "ui",
@@ -1944,7 +2016,9 @@
       "quality_gate_status": "PASSING",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -1993,7 +2067,9 @@
       "github_url": "https://github.com/IggyIkenna/system-integration-tests",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "test"
     },
     "trading-agent-service": {
       "type": "service",
@@ -2046,7 +2122,9 @@
       },
       "semver_rules_ref": "service",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service"
     },
     "trading-analytics-api": {
       "type": "api-service",
@@ -2074,11 +2152,6 @@
           "required": true
         },
         {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -2095,7 +2168,9 @@
       },
       "semver_rules_ref": "api",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api"
     },
     "trading-analytics-ui": {
       "type": "ui",
@@ -2118,7 +2193,9 @@
       "semver_rules_ref": "ui",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "Statement coverage 68.37% < 70% threshold"
+      "ci_failure_reason": "Statement coverage 68.37% < 70% threshold",
+      "tier": 3,
+      "role": "ui"
     },
     "unified-admin-ui": {
       "type": "ui",
@@ -2142,7 +2219,9 @@
       "github_url": "https://github.com/IggyIkenna/unified-admin-ui",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui"
     },
     "unified-api-contracts": {
       "type": "library",
@@ -2167,7 +2246,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 0,
+      "role": "contracts"
     },
     "unified-cloud-interface": {
       "type": "library",
@@ -2216,7 +2297,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 0,
+      "role": "primitive"
     },
     "unified-config-interface": {
       "type": "library",
@@ -2250,7 +2333,9 @@
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "11 import errors (UCI gcp_compute dependency chain, stale venv)"
+      "ci_failure_reason": "11 import errors (UCI gcp_compute dependency chain, stale venv)",
+      "tier": 0,
+      "role": "primitive"
     },
     "unified-defi-execution-interface": {
       "type": "library",
@@ -2283,7 +2368,9 @@
       "completion_path": "defi",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-domain-client": {
       "type": "library",
@@ -2339,7 +2426,9 @@
       "semver_rules_ref": "library-t3",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "278 test errors"
+      "ci_failure_reason": "278 test errors",
+      "tier": 3,
+      "role": "domain-client"
     },
     "unified-events-interface": {
       "type": "library",
@@ -2361,7 +2450,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 0,
+      "role": "primitive"
     },
     "unified-feature-calculator-library": {
       "type": "library",
@@ -2400,7 +2491,9 @@
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1"
+      "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
+      "tier": 2,
+      "role": "library"
     },
     "unified-internal-contracts": {
       "type": "library",
@@ -2430,7 +2523,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 0,
+      "role": "contracts"
     },
     "unified-market-interface": {
       "type": "library",
@@ -2479,7 +2574,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-ml-interface": {
       "type": "library",
@@ -2503,11 +2600,6 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "VALIDATED",
@@ -2523,7 +2615,9 @@
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1"
+      "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-position-interface": {
       "type": "library",
@@ -2557,7 +2651,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-reference-data-interface": {
       "type": "library",
@@ -2575,11 +2671,6 @@
         {
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.0,<1.0.0",
           "required": true
         },
         {
@@ -2603,7 +2694,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-sports-execution-interface": {
       "type": "library",
@@ -2642,7 +2735,9 @@
       "infra_primitives": ["venue adapters", "domain ABCs"],
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-trade-execution-interface": {
       "type": "library",
@@ -2659,11 +2754,6 @@
         },
         {
           "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -2691,7 +2781,9 @@
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "ci_failure_reason": "93 test failures"
+      "ci_failure_reason": "93 test failures",
+      "tier": 2,
+      "role": "interface"
     },
     "unified-trading-codex": {
       "type": "infrastructure",
@@ -2713,7 +2805,9 @@
       "completion_path": "infrastructure",
       "semver_rules_ref": "infra",
       "sit_level": "abbreviated",
-      "semver_policy": "always_patch"
+      "semver_policy": "always_patch",
+      "tier": null,
+      "role": "infrastructure"
     },
     "unified-trading-library": {
       "type": "library",
@@ -2746,16 +2840,6 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-market-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trade-execution-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
@@ -2769,7 +2853,9 @@
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 1,
+      "role": "library"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -2792,7 +2878,9 @@
       "github_url": "https://github.com/IggyIkenna/unified-trading-pm",
       "semver_rules_ref": "infra",
       "sit_level": "abbreviated",
-      "semver_policy": "always_patch"
+      "semver_policy": "always_patch",
+      "tier": null,
+      "role": "infrastructure"
     },
     "unified-trading-ui-auth": {
       "type": "library",
@@ -2815,7 +2903,9 @@
       "completion_path": "core",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "library"
     },
     "unified-trading-ui-kit": {
       "type": "library",
@@ -2836,7 +2926,45 @@
       "completion_path": "core",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "library"
+    },
+    "unified-features-interface": {
+      "type": "interface",
+      "tier": 5,
+      "role": "interface",
+      "status": "planned",
+      "arch_tier": "interface",
+      "doc_standard": "library-canonical",
+      "version": "0.0.0",
+      "version_source": "pyproject.toml",
+      "dependencies": [],
+      "notes": "Planned \u2014 unified feature serving interface (UAC Citadel Architecture Phase 1)"
+    },
+    "unified-feature-orchestration-library": {
+      "type": "library",
+      "tier": 6,
+      "role": "library",
+      "status": "planned",
+      "arch_tier": "library",
+      "doc_standard": "library-canonical",
+      "version": "0.0.0",
+      "version_source": "pyproject.toml",
+      "dependencies": [],
+      "notes": "Planned \u2014 unified feature orchestration library (UAC Citadel Architecture Phase 1)"
+    },
+    "unified-sports-reference-interface": {
+      "type": "interface",
+      "tier": 5,
+      "role": "interface",
+      "status": "planned",
+      "arch_tier": "interface",
+      "doc_standard": "library-canonical",
+      "version": "0.0.0",
+      "version_source": "pyproject.toml",
+      "dependencies": [],
+      "notes": "Planned \u2014 unified sports reference data interface (UAC Citadel Architecture Phase 1)"
     }
   },
   "topologicalOrder": {
@@ -3296,5 +3424,8 @@
     "dev": {},
     "staging": {},
     "prod": {}
+  },
+  "workspace_infrastructure": {
+    "setup_repos": ["unified-trading-pm", "unified-trading-codex"]
   }
 }

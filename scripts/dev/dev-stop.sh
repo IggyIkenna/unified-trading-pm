@@ -51,11 +51,28 @@ stop_service() {
     fi
     info "Stopped ${BOLD}${name}${NC} (PID $pid)"
   else
-    warn "$name (PID $pid) was not running"
+    # PID not running — try killing by port as fallback (handles orphaned child processes)
+    local port_file="${PID_DIR}/${name}.port"
+    local killed_by_port=false
+    if [ -f "$port_file" ]; then
+      local port
+      port=$(cat "$port_file")
+      local port_pid
+      port_pid=$(lsof -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true)
+      if [ -n "$port_pid" ]; then
+        kill "$port_pid" 2>/dev/null || true
+        info "Stopped ${BOLD}${name}${NC} (orphan PID $port_pid on port $port)"
+        killed_by_port=true
+      fi
+    fi
+    if [ "$killed_by_port" = false ]; then
+      warn "$name (PID $pid) was not running"
+    fi
   fi
 
   rm -f "$pid_file"
-  rm -f "/tmp/unified-dev-pids/${name}.log"
+  rm -f "${PID_DIR}/${name}.port"
+  rm -f "${PID_DIR}/${name}.log"
 }
 
 # ── Argument parsing ────────────────────────────────────────────────────────

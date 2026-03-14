@@ -128,6 +128,7 @@ UI_AUTH=$([ "$DEV_UI_SKIP_AUTH" = "true" ] && echo "skip" || echo "real")
 API_DATA=$([ "$DEV_CLOUD_MOCK_MODE" = "true" ] && echo "mock" || echo "real")
 API_AUTH=$([ "$DEV_DISABLE_AUTH" = "true" ] && echo "disabled" || echo "enabled")
 MOCK_STATE=$([ -n "$DEV_MOCK_STATE_MODE" ] && echo "$DEV_MOCK_STATE_MODE" || echo "n/a")
+COMPONENT_FILTER=$COMPONENT_FILTER
 MEOF
 }
 
@@ -158,9 +159,13 @@ start_ui() {
   local ui_env=()
   [ "$DEV_UI_MOCK" = "true" ] && ui_env+=(VITE_MOCK_API=true)
   [ "$DEV_UI_SKIP_AUTH" = "true" ] && ui_env+=(VITE_SKIP_AUTH=true)
-  env "${ui_env[@]}" npm run dev > "/tmp/unified-dev-pids/${ui_repo}.log" 2>&1 &
+  # Use npx vite directly (not npm run dev) so the PID we capture is the
+  # actual vite/node process, not an npm wrapper that exits immediately.
+  env "${ui_env[@]}" npx vite --port "$ui_port" > "/tmp/unified-dev-pids/${ui_repo}.log" 2>&1 &
   local pid=$!
   echo "$pid" > "${PID_DIR}/${ui_repo}.pid"
+  # Also persist the port so dev-stop.sh can kill by port as a fallback
+  echo "$ui_port" > "${PID_DIR}/${ui_repo}.port"
   info "  ${ui_repo} started (PID $pid, port $ui_port)"
 }
 
@@ -206,6 +211,7 @@ start_api() {
 
   local pid=$!
   echo "$pid" > "${PID_DIR}/${api_repo}.pid"
+  echo "$api_port" > "${PID_DIR}/${api_repo}.port"
   info "  ${api_repo} started (PID $pid, port $api_port)"
 }
 
@@ -400,6 +406,15 @@ fi
 resolve_env_vars
 ensure_pid_dir
 
+# ── Auto-stop existing services (prevents port-in-use errors) ────────────
+STOP_SCRIPT="${SCRIPT_DIR}/dev-stop.sh"
+if [ -f "$STOP_SCRIPT" ] && [ -d "$PID_DIR" ] && ls "$PID_DIR"/*.pid >/dev/null 2>&1; then
+  info "Stopping previously running services..."
+  bash "$STOP_SCRIPT" 2>/dev/null || true
+  sleep 1
+fi
+ensure_pid_dir
+
 # Clear mock state cache if --reset
 if [ "$RESET_CACHE" = true ]; then
   CACHE_DIR="${WORKSPACE_ROOT}/.local-dev-cache"
@@ -411,9 +426,7 @@ if [ "$RESET_CACHE" = true ]; then
   fi
 fi
 
-# Persist mode for dev-status.sh
-echo "$ENV_MODE" > "$MODE_FILE"
-echo "$COMPONENT_FILTER" >> "$MODE_FILE"
+# Mode already persisted by resolve_env_vars() above
 
 echo ""
 echo "${BOLD}=== Unified Trading System — Dev Mode ===${NC}"
