@@ -45,7 +45,7 @@ todos:
     status: pending
   - id: static-baseline-pending-coverage
     content: |
-      - [ ] [SCRIPT] P1. Verify rollout-promote-ci-status handles BASELINE_PENDING repos (5 repos: batch-audit-api, batch-live-reconciliation-service, ml-inference-api, ml-training-api, trading-analytics-api). These would be silently skipped if only BASELINE_RECORDED is checked.
+      - [ ] [SCRIPT] P1. Verify ci-status-update.yml handles all 8 lifecycle states (NOT_CONFIGURED, EXEMPT, FAILING, LOCAL_PASS, FEATURE_GREEN, STAGING_PENDING, STAGING_GREEN, SIT_VALIDATED). Test: dispatch each valid status and verify manifest update. Dispatch an invalid status and verify rejection. Test regression: repo at FEATURE_GREEN receives FAILING dispatch — must regress to FAILING.
     status: pending
   - id: flow-local-qg
     content: |
@@ -74,6 +74,48 @@ todos:
   - id: cascade-instruments-receives-update
     content: |
       - [ ] [AGENT] P1. After cascade-library-bump, verify instruments-service received `dependency-update` dispatch. `update-dependency-version.yml` in instruments-service fires. pyproject.toml constraint updated with `[skip ci]` commit.
+    status: pending
+  - id: cascade-breaking-minor-invalidation
+    content: |
+      - [ ] [HUMAN+AGENT] P0. Test breaking MINOR cascade invalidates downstream ci_status. Setup:
+      unified-events-interface on staging with `feat!:` commit (pre-1.0.0 → MINOR bump). Verify:
+      (a) semver-agent fires with `is_breaking=true` in version-bump dispatch payload,
+      (b) PM update-repo-version.yml locks staging (`staging_status.locked=true`, reason includes "breaking"),
+      (c) dependency-update dispatched to all UEI dependents with `is_breaking=true`,
+      (d) each downstream repo's ci_status set to STAGING_PENDING in manifest (not left at stale LOCAL_PASS),
+      (e) downstream repos' update-dependency-version.yml creates PR (NOT direct commit with [skip ci]),
+      (f) QG fires on the PR for each downstream repo,
+      (g) SVG DAG shows affected repos as yellow (STAGING_PENDING) not stale green.
+      Command: `gh run list --repo IggyIkenna/unified-trading-pm --workflow update-repo-version.yml --limit 1`
+      then check manifest: `jq '.repositories["instruments-service"].ci_status' workspace-manifest.json`
+      should return "STAGING_PENDING".
+    status: pending
+  - id: cascade-breaking-constraint-cap
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Test constraint capping escape hatch. Setup: add `dependency_caps` entry
+      for instruments-service: `{"unified-events-interface": "<0.2.48"}` in manifest. Trigger breaking
+      UEI bump to 0.2.48. Verify: (a) instruments-service's update-dependency-version.yml detects the cap,
+      (b) pyproject.toml constraint is NOT updated to >=0.2.48 (stays at old constraint),
+      (c) ci_status still set to STAGING_PENDING (needs re-validation even with old version),
+      (d) run-version-alignment.sh flags instruments-service as "pinned to old version",
+      (e) after removing the cap and re-running QG: constraint updates normally.
+    status: pending
+  - id: cascade-breaking-version-aware-clone
+    content: |
+      - [ ] [HUMAN+AGENT] P2. Test version-aware sibling cloning. Setup: instruments-service pinned to
+      `unified-events-interface<0.2.48` but UEI HEAD is 0.2.48. Run instruments-service QG on staging.
+      Verify: (a) GHA setup-python-tools clones UEI at tag matching <0.2.48 (e.g., v0.2.47),
+      (b) QG passes if code is compatible with 0.2.47,
+      (c) if code uses 0.2.48 API → QG fails with import/attribute error (correct — code needs updating).
+      Falls back to HEAD if no matching tag exists.
+    status: pending
+  - id: cascade-breaking-parallel-race-safety
+    content: |
+      - [ ] [SCRIPT] P1. Test local manifest write lock under parallel QG. Run 6+ QG agents in parallel
+      (same machine, same manifest). Verify: (a) no lost ci_status writes (all 6 repos reflected in
+      final manifest), (b) SVG reflects all results (no stale renders from intermediate state),
+      (c) lock timeout fires if a QG process is killed mid-write (simulate with kill -9 during write).
+      File: base-service.sh fcntl.flock + 5min signal.alarm timeout.
     status: pending
   - id: staging-breaking-change
     content: |
@@ -223,14 +265,44 @@ what will be promoted to main.
 
 **Staging, debounce, Cloud Build interaction:**
 
-- Flow: merge to staging → sit-gate → debounce (5 min quiet) → smoke-test-gate → staging-validated → staging-to-main.
+- Flow: merge to staging → ci_status reset to STAGING_PENDING → GHA QG re-runs on staging → STAGING_GREEN → debounce (5
+  min quiet) → SIT gate checks ALL pending repos are STAGING_GREEN → SIT runs → SIT_VALIDATED → staging-to-main →
+  ci_status resets to FEATURE_GREEN (main is the new baseline).
 - Cloud Build fires on `qg-passed` (merge to main or QG success on staging), not on every PR or feat/ push.
+- **Staging resets ci_status** because the staging environment has different sibling repo versions than the feature
+  branch. A repo passing QG in isolation may fail when its deps are at staging HEAD. The reset forces re-validation of
+  all integration edges before SIT runs.
+- **SIT gate rule:** SIT only fires when ALL repos in `staging_status.pending_repos` have ci_status=STAGING_GREEN. If
+  any repo is STAGING_PENDING or FAILING, SIT is blocked.
+
+**ci_status lifecycle (SSOT in rollout plan):** NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING →
+STAGING_GREEN → SIT_VALIDATED See cicd_code_rollout_master_2026_03_13.plan.md § ci_status Lifecycle State Machine for
+full spec.
 
 **Race-condition protection:**
 
 - Debounce: 5-minute quiet window; timer resets on every new merge to staging. Prevents queue storms and SIT starvation.
 - sit-staging concurrency group: All SIT-related workflows use
   `concurrency: { group: sit-staging, cancel-in-progress: false }` so only one SIT run executes at a time.
+
+### Breaking Change Cascade (Pre-1.0.0 Problem)
+
+All repos are <1.0.0. Per semver-agent rules, `feat!:` on 0.x.x = MINOR bump (not MAJOR). This means:
+
+- A breaking change dispatch carries `bump_type=minor` — indistinguishable from a non-breaking feature
+- update-dependency-version.yml routes MINOR as direct commit with `[skip ci]` — QG never re-runs downstream
+- Staging doesn't lock on MINOR bumps — concurrent non-breaking merges can interleave with the cascade
+- Downstream ci_status is NOT invalidated — stale LOCAL_PASS/FEATURE_GREEN hides broken compatibility
+
+**Solution (3 phases, see rollout plan):**
+
+1. **is_breaking flag** — semver-agent adds `is_breaking: true` to dispatch. PM forwards it. Downstream repos treat
+   breaking MINOR like MAJOR: create PR (not direct commit), force QG re-run, invalidate ci_status
+2. **Constraint capping** — `dependency_caps` in manifest lets repos pin to old stable version while fixing code
+3. **Version-aware cloning** — GHA clones sibling repos at the version matching pyproject.toml constraint, not HEAD
+
+**Test strategy:** Use unified-events-interface as cascade source (T0, many dependents) and instruments-service as
+downstream target (leaf service, safe). Push `feat!:` to UEI staging → verify full cascade with is_breaking.
 
 ### Guinea Pig Selection Rationale
 

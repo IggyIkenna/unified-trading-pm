@@ -59,9 +59,9 @@ def _jdict(val: object) -> dict[str, Any] | None:
     return None
 
 
-def _jlist(val: object) -> list[Any] | None:
+def _jlist(val: object) -> list[object] | None:
     if isinstance(val, list):
-        return cast(list[Any], val)
+        return cast(list[object], val)
     return None
 
 

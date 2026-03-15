@@ -126,7 +126,7 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
-              -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"{{SERVICE_NAME}}\", \"version\": \"${NEW_VERSION}\", \"branch\": \"staging\", \"commit_sha\": \"${SHA}\"}}")
+              -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"{{SERVICE_NAME}}\", \"version\": \"${NEW_VERSION}\", \"branch\": \"staging\", \"commit_sha\": \"${SHA}\", \"is_breaking\": \"false\"}}")
             if [ "$HTTP_STATUS" = "204" ]; then
               echo "Dispatched successfully to unified-trading-pm (always_patch)"
             else
@@ -328,11 +328,18 @@ jobs:
 
           echo "Version: $CURRENT → $NEW_VERSION (bump=$BUMP, reason=$BUMP_REASON)"
 
+          # Track whether this is a breaking change (feat!, removed exports, removed routes)
+          IS_BREAKING="false"
+          if [ "$BUMP" = "breaking" ]; then
+            IS_BREAKING="true"
+          fi
+
           echo "skip=false" >> "$GITHUB_OUTPUT"
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "current_version=$CURRENT" >> "$GITHUB_OUTPUT"
           echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
           echo "bump_reason=$BUMP_REASON" >> "$GITHUB_OUTPUT"
+          echo "is_breaking=$IS_BREAKING" >> "$GITHUB_OUTPUT"
 
       - name: Open GitHub Issue for MAJOR bump approval (post-1.0.0)
         if: steps.compute.outputs.bump == 'major_blocked'
@@ -414,13 +421,14 @@ jobs:
           COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
           OWNER="${{ github.repository_owner }}"
 
-          echo "Dispatching version-bump: repo=$REPO version=$VERSION branch=$BRANCH commit_sha=$COMMIT_SHA"
+          IS_BREAKING="${{ steps.compute.outputs.is_breaking }}"
+          echo "Dispatching version-bump: repo=$REPO version=$VERSION branch=$BRANCH commit_sha=$COMMIT_SHA is_breaking=$IS_BREAKING"
 
           HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
             -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
-            -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"${REPO}\", \"version\": \"${VERSION}\", \"branch\": \"${BRANCH}\", \"commit_sha\": \"${COMMIT_SHA}\"}}")
+            -d "{\"event_type\": \"version-bump\", \"client_payload\": {\"repo\": \"${REPO}\", \"version\": \"${VERSION}\", \"branch\": \"${BRANCH}\", \"commit_sha\": \"${COMMIT_SHA}\", \"is_breaking\": \"${IS_BREAKING}\"}}")
 
           if [ "$HTTP_STATUS" = "204" ]; then
             echo "Dispatched successfully to unified-trading-pm"

@@ -4,48 +4,6 @@ overview: |
   Comprehensive sports execution coverage plan for all venues the Odds API covers. Adds venue
   execution profiles to UAC, browser automation infrastructure to USEI, and execution adapters
   for ~70 bookmakers. Designed for world-class sports arbitrage.
-type: mixed
-epic: epic-code-completion
-status: draft
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-sports-execution-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-config-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-cross-instrument-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: matching-engine-library
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - uac-citadel-implementation-execution
 todos:
   - id: p0-venue-execution-schema
     content: |
@@ -57,100 +15,84 @@ todos:
       [AGENT] P0. Populate VenueExecutionProfile data for all Tier 1 (API) venues.
       See section 4.1 for the 5 venues.
     status: pending
-    blocked_by: p0-venue-execution-schema
   - id: p0-venue-profiles-browser-tier
     content: |
       [AGENT] P1. Populate VenueExecutionProfile data for all Tier 2 (browser automation)
       venues. See section 4.2 for the full list (~65 venues).
     status: pending
-    blocked_by: p0-venue-execution-schema
   - id: p1-browser-adapter-base
     content: |
       [AGENT] P0. Create BrowserAutomationAdapter base class in USEI with Playwright
       integration, CAPTCHA handling hooks, session management, and anti-detection patterns.
     status: pending
-    blocked_by: p0-venue-execution-schema
   - id: p1-usei-router-expansion
     content: |
       [AGENT] P1. Expand SportsExecutionRouter to support browser-based venue routing
       alongside existing API routing. Add venue capability resolution.
     status: pending
-    blocked_by: p1-browser-adapter-base
   - id: p2-exchange-adapter-hardening
     content: |
       [AGENT] P0. Harden existing exchange adapters (Betfair, Smarkets, Matchbook, Betdaq)
       with full order lifecycle, position tracking, commission calc. Wire into router.
     status: pending
-    blocked_by: p1-usei-router-expansion
   - id: p2-us-sportsbook-adapters
     content: |
       [HUMAN+AGENT] P1. Build browser adapters for US sportsbooks: DraftKings, FanDuel,
       BetMGM, Caesars, BetRivers. Requires live account testing.
     status: pending
-    blocked_by: p1-browser-adapter-base
   - id: p2-uk-bookmaker-adapters
     content: |
       [HUMAN+AGENT] P1. Build browser adapters for UK bookmakers: Bet365, William Hill,
       Ladbrokes, Coral, Paddy Power, Sky Bet, Betway.
     status: pending
-    blocked_by: p1-browser-adapter-base
   - id: p2-eu-bookmaker-adapters
     content: |
       [HUMAN+AGENT] P1. Build browser adapters for EU bookmakers: 1xBet, Unibet, Betsson,
       Marathon Bet, Winamax, Betclic, Tipico.
     status: pending
-    blocked_by: p1-browser-adapter-base
   - id: p2-au-bookmaker-adapters
     content: |
       [HUMAN+AGENT] P1. Build browser adapters for AU bookmakers: Sportsbet, TAB, Neds,
       PointsBet AU, Ladbrokes AU.
     status: pending
-    blocked_by: p1-browser-adapter-base
   - id: p2-offshore-adapters
     content: |
       [HUMAN+AGENT] P2. Build browser adapters for offshore books: Bovada, BetOnline,
       MyBookie, BetUS.
     status: pending
-    blocked_by: p1-browser-adapter-base
   - id: p3-arb-detection-integration
     content: |
       [AGENT] P1. Wire venue execution profiles into arbitrage detection pipeline.
       Cross-reference Odds API bookmaker keys with execution profiles for instant
       can-we-execute-on-both-legs resolution.
     status: pending
-    blocked_by: p0-venue-profiles-api-tier, p0-venue-profiles-browser-tier
   - id: p3-config-credentials-schema
     content: |
       [AGENT] P0. Add sports venue credential schemas to UCfgI. Supports API keys,
       OAuth tokens, and username/password (for browser venues). Secret Manager integration.
     status: pending
-    blocked_by: p0-venue-execution-schema
   - id: p4-venue-health-monitoring
     content: |
       [AGENT] P2. Build venue health monitoring: session validity, login state, CAPTCHA
       detection, rate limit tracking, withdrawal queue status.
     status: pending
-    blocked_by: p2-exchange-adapter-hardening, p2-us-sportsbook-adapters
   - id: p4-concurrent-execution-engine
     content: |
       [AGENT] P1. Build concurrent multi-venue execution engine for arbitrage. Must place
       orders on N venues within <2s window. Handles partial fills and rollback.
     status: pending
-    blocked_by: p2-exchange-adapter-hardening, p1-usei-router-expansion
   - id: p5-clv-tracking
     content: |
       [AGENT] P0. Add CLV tracking fields to BetExecution in UAC (odds_at_placement, closing_odds,
       clv_edge_pct). Add CLVRecord schema for historical CLV analysis. Every bet records placement
       odds vs closing line — the fundamental metric for whether models work.
     status: pending
-    blocked_by: p0-venue-execution-schema
   - id: p5-exchange-market-making
     content: |
       [AGENT] P1. Create SportsMarketMakingStrategy in strategy-service. Wire matching-engine-library
       spread management concepts to Betfair Stream API via USEI. Post back+lay at spread, capture
       difference. Exchanges do not limit market makers — sustainable edge.
     status: pending
-    blocked_by: p2-exchange-adapter-hardening
   - id: p5-cross-asset-bridge
     content: |
       [AGENT] P1. Create sports-financial feature bridge in features-cross-instrument-service.
@@ -163,14 +105,12 @@ todos:
       credential storage. Add account lifecycle tracking (warmup, active, restricted, recycled).
       Support 50-100+ accounts across books with independent identities.
     status: pending
-    blocked_by: p3-config-credentials-schema
   - id: p5-enhanced-kelly-sizing
     content: |
       [AGENT] P1. Enhance KellyCriterionStrategy with portfolio Kelly (correlated bets),
       simultaneous Kelly (bankroll sharing across open bets), and venue-specific max bet
       limits from VenueExecutionProfile. Add half-Kelly safety default.
     status: pending
-    blocked_by: p0-venue-execution-schema
   - id: p6-steam-move-detection
     content: |
       [AGENT] P1. Add steam move detection calculator to features-sports-service. Detect when
@@ -182,15 +122,12 @@ todos:
       [AGENT] P2. Add middle betting strategy to strategy-service. Bet both sides at different
       lines to create a middle zone where both bets win. Calculate middle probability and EV.
     status: pending
-    blocked_by: p5-enhanced-kelly-sizing
   - id: p6-in-play-trading
     content: |
       [HUMAN+AGENT] P1. Build in-play trading infrastructure. Real-time feature calculation
       during matches, sub-second inference, Betfair Stream API execution. Highest alpha,
       highest difficulty. Requires proprietary live data feeds.
     status: pending
-    blocked_by: p5-exchange-market-making
-
 isProject: false
 ---
 
@@ -341,8 +278,8 @@ BaseSportsAdapter (existing)
 
 - Odds API keys: betfair_ex_uk, betfair_ex_eu, betfair_ex_au
 - Execution: REST API + Stream API
-- API base: https://api.betfair.com/exchange/betting/rest/v1.0/
-- Docs: https://docs.developer.betfair.com/
+- API base: [https://api.betfair.com/exchange/betting/rest/v1.0/](https://api.betfair.com/exchange/betting/rest/v1.0/)
+- Docs: [https://docs.developer.betfair.com/](https://docs.developer.betfair.com/)
 - Stream: stream-api.betfair.com:443 (lowest latency)
 - Fee: Live App Key GBP 299 one-off; Delayed key free
 - Rate limits: 200 weighted data points/cycle; 20 req/s betting; Historical 100 req/10s
@@ -360,8 +297,8 @@ BaseSportsAdapter (existing)
 
 - Odds API key: pinnacle (may have 30s delay on free Odds API tier)
 - Execution: REST API (Betting API)
-- API base: https://api.pinnacle.com/
-- Docs: https://pinnacleapi.github.io/
+- API base: [https://api.pinnacle.com/](https://api.pinnacle.com/)
+- Docs: [https://pinnacleapi.github.io/](https://pinnacleapi.github.io/)
 - Rate limits: Lines API 6 req/min per sport
 - Credentials: Username + password (HTTP Basic Auth)
 - Commission: Built into odds (low vig ~2-3%)
@@ -378,8 +315,8 @@ BaseSportsAdapter (existing)
 
 - Odds API key: smarkets
 - Execution: REST API (Trading API)
-- API base: https://api.smarkets.com/v3/
-- Docs: https://docs.smarkets.com/
+- API base: [https://api.smarkets.com/v3/](https://api.smarkets.com/v3/)
+- Docs: [https://docs.smarkets.com/](https://docs.smarkets.com/)
 - Credentials: OAuth2 (API token)
 - Commission: 2% flat; 0% on Premium (GBP 1500+/month)
 - Min bet: GBP 1.00
@@ -392,8 +329,8 @@ BaseSportsAdapter (existing)
 
 - Odds API key: matchbook
 - Execution: REST API
-- API base: https://api.matchbook.com/edge/rest/
-- Docs: https://www.matchbook.com/edge/rest
+- API base: [https://api.matchbook.com/edge/rest/](https://api.matchbook.com/edge/rest/)
+- Docs: [https://www.matchbook.com/edge/rest](https://www.matchbook.com/edge/rest)
 - Rate limits: Free < 1M GET req/month
 - Credentials: Username + password (session token)
 - Commission: 2% net profit (often 1.5% promo)
@@ -419,16 +356,16 @@ BaseSportsAdapter (existing)
 All require: state licensing, GeoComply/XPoint geolocation (physical presence), SSN, no public API, Cloudflare +
 behavioral anti-bot.
 
-| Venue      | Odds API Key          | Login URL                                      | Anti-Detection                                 | States | Min Bet | Withdrawal Delay | Limits Winners? | Parent         |
-| ---------- | --------------------- | ---------------------------------------------- | ---------------------------------------------- | ------ | ------- | ---------------- | --------------- | -------------- |
-| DraftKings | draftkings            | https://sportsbook.draftkings.com/             | Aggressive (Cloudflare, device FP, GeoComply)  | ~25+   | $0.10   | 1-5 days         | Moderate        | DraftKings Inc |
-| FanDuel    | fanduel               | https://sportsbook.fanduel.com/                | Aggressive (Cloudflare, behavioral, GeoComply) | ~25+   | $1.00   | 1-5 days         | Moderate        | Flutter        |
-| BetMGM     | betmgm                | https://sports.betmgm.com/                     | Aggressive (Cloudflare, GeoComply)             | ~20+   | $0.10   | 2-5 days         | Moderate        | Entain/MGM     |
-| Caesars    | williamhill_us (paid) | https://www.caesars.com/sportsbook-and-casino/ | Aggressive (GeoComply)                         | ~20+   | $0.50   | 2-5 days         | Moderate        | Caesars        |
-| BetRivers  | betrivers             | https://www.betrivers.com/                     | Moderate (GeoComply)                           | ~15    | $0.50   | 2-5 days         | Mild            | Rush Street    |
-| ESPN Bet   | espnbet               | https://www.espnbet.com/                       | Aggressive (GeoComply)                         | ~18    | $1.00   | 2-5 days         | Unknown         | Penn           |
-| Hard Rock  | hardrockbet           | https://www.hardrock.bet/                      | Moderate (GeoComply)                           | ~10    | $1.00   | 2-5 days         | Unknown         | Seminole       |
-| Fanatics   | fanatics (paid)       | https://sportsbook.fanatics.com/               | Moderate (GeoComply)                           | ~20    | $0.50   | 2-5 days         | Unknown         | Fanatics       |
+| Venue      | Odds API Key          | Login URL                                                                                        | Anti-Detection                                 | States | Min Bet | Withdrawal Delay | Limits Winners? | Parent         |
+| ---------- | --------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------- | ------ | ------- | ---------------- | --------------- | -------------- |
+| DraftKings | draftkings            | [https://sportsbook.draftkings.com/](https://sportsbook.draftkings.com/)                         | Aggressive (Cloudflare, device FP, GeoComply)  | ~25+   | $0.10   | 1-5 days         | Moderate        | DraftKings Inc |
+| FanDuel    | fanduel               | [https://sportsbook.fanduel.com/](https://sportsbook.fanduel.com/)                               | Aggressive (Cloudflare, behavioral, GeoComply) | ~25+   | $1.00   | 1-5 days         | Moderate        | Flutter        |
+| BetMGM     | betmgm                | [https://sports.betmgm.com/](https://sports.betmgm.com/)                                         | Aggressive (Cloudflare, GeoComply)             | ~20+   | $0.10   | 2-5 days         | Moderate        | Entain/MGM     |
+| Caesars    | williamhill_us (paid) | [https://www.caesars.com/sportsbook-and-casino/](https://www.caesars.com/sportsbook-and-casino/) | Aggressive (GeoComply)                         | ~20+   | $0.50   | 2-5 days         | Moderate        | Caesars        |
+| BetRivers  | betrivers             | [https://www.betrivers.com/](https://www.betrivers.com/)                                         | Moderate (GeoComply)                           | ~15    | $0.50   | 2-5 days         | Mild            | Rush Street    |
+| ESPN Bet   | espnbet               | [https://www.espnbet.com/](https://www.espnbet.com/)                                             | Aggressive (GeoComply)                         | ~18    | $1.00   | 2-5 days         | Unknown         | Penn           |
+| Hard Rock  | hardrockbet           | [https://www.hardrock.bet/](https://www.hardrock.bet/)                                           | Moderate (GeoComply)                           | ~10    | $1.00   | 2-5 days         | Unknown         | Seminole       |
+| Fanatics   | fanatics (paid)       | [https://sportsbook.fanatics.com/](https://sportsbook.fanatics.com/)                             | Moderate (GeoComply)                           | ~20    | $0.50   | 2-5 days         | Unknown         | Fanatics       |
 
 Deposit: Debit card, ACH, PayPal, Venmo, Play+, Apple Pay. No crypto. Limits $10-$25K/tx. Residency: Must be physically
 in authorized state (GeoComply real-time). Cannot VPN.
@@ -437,21 +374,21 @@ in authorized state (GeoComply real-time). Cannot VPN.
 
 All require: UK GC license, full KYC, no public API, Cloudflare standard.
 
-| Venue         | Odds API Key        | Login URL                     | Anti-Detection                                                     | Min Bet  | Max Payout | Withdrawal Delay | Limits Winners? | Parent       |
-| ------------- | ------------------- | ----------------------------- | ------------------------------------------------------------------ | -------- | ---------- | ---------------- | --------------- | ------------ |
-| Bet365        | bet365_au (AU paid) | https://www.bet365.com/       | EXTREME (Enterprise CF, CAPTCHA, device FP, IP rep, behavioral ML) | GBP 0.10 | GBP 2M     | 1-5 days         | Aggressive      | bet365 Group |
-| William Hill  | williamhill         | https://www.williamhill.com/  | Moderate-Aggressive                                                | GBP 0.10 | GBP 2M     | 1-5 days         | Aggressive      | 888 Holdings |
-| Ladbrokes     | ladbrokes_uk        | https://sports.ladbrokes.com/ | Moderate                                                           | GBP 0.10 | GBP 1M     | 1-3 days         | Moderate        | Entain       |
-| Coral         | coral               | https://sports.coral.co.uk/   | Moderate                                                           | GBP 0.10 | GBP 1M     | 1-3 days         | Moderate        | Entain       |
-| Paddy Power   | paddypower          | https://www.paddypower.com/   | Moderate                                                           | GBP 0.10 | EUR 500K   | 1-3 days         | Moderate        | Flutter      |
-| Sky Bet       | skybet              | https://www.skybet.com/       | Aggressive (device FP)                                             | GBP 0.10 | GBP 1M     | 1-3 days         | Moderate        | Flutter      |
-| Betway        | betway              | https://www.betway.com/       | Moderate                                                           | GBP 0.10 | GBP 250K   | 1-3 days         | Moderate        | Super Group  |
-| 888sport      | sport888            | https://www.888sport.com/     | Moderate                                                           | GBP 0.10 | GBP 500K   | 1-5 days         | Moderate        | 888 Holdings |
-| Bet Victor    | betvictor           | https://www.betvictor.com/    | Basic-Moderate                                                     | GBP 0.10 | GBP 500K   | 1-3 days         | Mild            | BV Gaming    |
-| BoyleSports   | boylesports         | https://www.boylesports.com/  | Basic                                                              | GBP 0.10 | GBP 500K   | 1-3 days         | Mild            | BoyleSports  |
-| Betfred       | N/A                 | https://www.betfred.com/      | Basic-Moderate                                                     | GBP 0.10 | GBP 500K   | 1-3 days         | Mild            | Betfred      |
-| Virgin Bet    | virginbet           | https://www.virginbet.com/    | Basic                                                              | GBP 0.10 | GBP 250K   | 1-3 days         | Unknown         | Gamesys      |
-| LiveScore Bet | livescorebet        | https://www.livescorebet.com/ | Basic                                                              | GBP 0.10 | GBP 250K   | 1-3 days         | Unknown         | LiveScore    |
+| Venue         | Odds API Key        | Login URL                                                      | Anti-Detection                                                     | Min Bet  | Max Payout | Withdrawal Delay | Limits Winners? | Parent       |
+| ------------- | ------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ | -------- | ---------- | ---------------- | --------------- | ------------ |
+| Bet365        | bet365_au (AU paid) | [https://www.bet365.com/](https://www.bet365.com/)             | EXTREME (Enterprise CF, CAPTCHA, device FP, IP rep, behavioral ML) | GBP 0.10 | GBP 2M     | 1-5 days         | Aggressive      | bet365 Group |
+| William Hill  | williamhill         | [https://www.williamhill.com/](https://www.williamhill.com/)   | Moderate-Aggressive                                                | GBP 0.10 | GBP 2M     | 1-5 days         | Aggressive      | 888 Holdings |
+| Ladbrokes     | ladbrokes_uk        | [https://sports.ladbrokes.com/](https://sports.ladbrokes.com/) | Moderate                                                           | GBP 0.10 | GBP 1M     | 1-3 days         | Moderate        | Entain       |
+| Coral         | coral               | [https://sports.coral.co.uk/](https://sports.coral.co.uk/)     | Moderate                                                           | GBP 0.10 | GBP 1M     | 1-3 days         | Moderate        | Entain       |
+| Paddy Power   | paddypower          | [https://www.paddypower.com/](https://www.paddypower.com/)     | Moderate                                                           | GBP 0.10 | EUR 500K   | 1-3 days         | Moderate        | Flutter      |
+| Sky Bet       | skybet              | [https://www.skybet.com/](https://www.skybet.com/)             | Aggressive (device FP)                                             | GBP 0.10 | GBP 1M     | 1-3 days         | Moderate        | Flutter      |
+| Betway        | betway              | [https://www.betway.com/](https://www.betway.com/)             | Moderate                                                           | GBP 0.10 | GBP 250K   | 1-3 days         | Moderate        | Super Group  |
+| 888sport      | sport888            | [https://www.888sport.com/](https://www.888sport.com/)         | Moderate                                                           | GBP 0.10 | GBP 500K   | 1-5 days         | Moderate        | 888 Holdings |
+| Bet Victor    | betvictor           | [https://www.betvictor.com/](https://www.betvictor.com/)       | Basic-Moderate                                                     | GBP 0.10 | GBP 500K   | 1-3 days         | Mild            | BV Gaming    |
+| BoyleSports   | boylesports         | [https://www.boylesports.com/](https://www.boylesports.com/)   | Basic                                                              | GBP 0.10 | GBP 500K   | 1-3 days         | Mild            | BoyleSports  |
+| Betfred       | N/A                 | [https://www.betfred.com/](https://www.betfred.com/)           | Basic-Moderate                                                     | GBP 0.10 | GBP 500K   | 1-3 days         | Mild            | Betfred      |
+| Virgin Bet    | virginbet           | [https://www.virginbet.com/](https://www.virginbet.com/)       | Basic                                                              | GBP 0.10 | GBP 250K   | 1-3 days         | Unknown         | Gamesys      |
+| LiveScore Bet | livescorebet        | [https://www.livescorebet.com/](https://www.livescorebet.com/) | Basic                                                              | GBP 0.10 | GBP 250K   | 1-3 days         | Unknown         | LiveScore    |
 
 Deposit: Debit card, bank transfer, PayPal, Skrill, Neteller, Apple Pay, Paysafecard. No credit cards (UK regulation
 since April 2020). No crypto generally. Account limiting reality: UK books actively monitor for arb. Bet365/William Hill
@@ -459,24 +396,24 @@ fastest to limit (1-2 winning sharp bets).
 
 #### 4.2.3 EU Bookmakers
 
-| Venue         | Odds API Key          | Login URL                                | Anti-Detection | Jurisdictions                | Min Bet  | Withdrawal Delay           | Limits Winners? | Parent     |
-| ------------- | --------------------- | ---------------------------------------- | -------------- | ---------------------------- | -------- | -------------------------- | --------------- | ---------- |
-| 1xBet         | onexbet               | https://1xbet.com/                       | Moderate       | Curacao; blocked UK/US/FR/AU | EUR 0.20 | 1-5 days; crypto 15min-24h | Moderate        | 1X Corp    |
-| Unibet        | unibet_uk/fr/it/nl/se | https://www.unibet.com/                  | Moderate (CF)  | UK GC, MGA, regional         | EUR 0.10 | 1-3 days                   | Moderate        | Kindred    |
-| Betsson       | betsson               | https://www.betsson.com/                 | Basic-Moderate | MGA, Sweden                  | EUR 0.10 | 1-3 days                   | Mild            | Betsson AB |
-| Marathon      | marathonbet           | https://www.marathonbet.com/             | Basic          | Curacao, UK GC               | EUR 0.10 | 1-3 days                   | Mild            | Marathon   |
-| Winamax       | winamax_fr/de         | https://www.winamax.fr/                  | Moderate       | ANJ (France)                 | EUR 0.10 | 1-3 days                   | Mild            | Winamax    |
-| Betclic       | betclic_fr            | https://www.betclic.fr/                  | Basic          | ANJ, Portugal                | EUR 0.10 | 1-3 days                   | Mild            | Betclic    |
-| Tipico        | tipico_de             | https://www.tipico.de/                   | Moderate       | Germany (GGL)                | EUR 0.10 | 1-3 days                   | Mild            | Tipico     |
-| Coolbet       | coolbet               | https://www.coolbet.com/                 | Basic          | MGA, Estonia                 | EUR 0.10 | 1-3 days                   | Mild            | GAN        |
-| NordicBet     | nordicbet             | https://www.nordicbet.com/               | Basic          | MGA, Denmark                 | EUR 0.10 | 1-3 days                   | Mild            | Betsson AB |
-| Suprabets     | suprabets             | https://www.suprabets.com/               | Basic          | Curacao                      | EUR 0.10 | 1-5 days                   | Unknown         | N/A        |
-| Everygame     | everygame             | https://www.everygame.eu/                | Basic          | Antigua                      | USD 1.00 | 2-7 days                   | Mild            | Everygame  |
-| GTbets        | gtbets                | https://www.gtbets.eu/                   | Basic          | Curacao                      | USD 1.00 | 3-7 days                   | Unknown         | N/A        |
-| Parions Sport | parionssport_fr       | https://www.enligne.parionssport.fdj.fr/ | Moderate       | ANJ (France only)            | EUR 1.00 | 1-3 days                   | Mild            | FDJ        |
-| PMU           | pmu_fr                | https://paris-sportifs.pmu.fr/           | Moderate       | ANJ (France only)            | EUR 1.00 | 1-3 days                   | Mild            | PMU        |
-| LeoVegas      | leovegas/leovegas_se  | https://www.leovegas.com/                | Basic          | MGA, UK GC, Sweden           | EUR 0.10 | 1-3 days                   | Mild            | MGM        |
-| bwin          | N/A                   | https://sports.bwin.com/                 | Moderate (CF)  | GRA, MGA                     | EUR 0.10 | 1-3 days                   | Moderate        | Entain     |
+| Venue         | Odds API Key          | Login URL                                                                            | Anti-Detection | Jurisdictions                | Min Bet  | Withdrawal Delay           | Limits Winners? | Parent     |
+| ------------- | --------------------- | ------------------------------------------------------------------------------------ | -------------- | ---------------------------- | -------- | -------------------------- | --------------- | ---------- |
+| 1xBet         | onexbet               | [https://1xbet.com/](https://1xbet.com/)                                             | Moderate       | Curacao; blocked UK/US/FR/AU | EUR 0.20 | 1-5 days; crypto 15min-24h | Moderate        | 1X Corp    |
+| Unibet        | unibet_uk/fr/it/nl/se | [https://www.unibet.com/](https://www.unibet.com/)                                   | Moderate (CF)  | UK GC, MGA, regional         | EUR 0.10 | 1-3 days                   | Moderate        | Kindred    |
+| Betsson       | betsson               | [https://www.betsson.com/](https://www.betsson.com/)                                 | Basic-Moderate | MGA, Sweden                  | EUR 0.10 | 1-3 days                   | Mild            | Betsson AB |
+| Marathon      | marathonbet           | [https://www.marathonbet.com/](https://www.marathonbet.com/)                         | Basic          | Curacao, UK GC               | EUR 0.10 | 1-3 days                   | Mild            | Marathon   |
+| Winamax       | winamax_fr/de         | [https://www.winamax.fr/](https://www.winamax.fr/)                                   | Moderate       | ANJ (France)                 | EUR 0.10 | 1-3 days                   | Mild            | Winamax    |
+| Betclic       | betclic_fr            | [https://www.betclic.fr/](https://www.betclic.fr/)                                   | Basic          | ANJ, Portugal                | EUR 0.10 | 1-3 days                   | Mild            | Betclic    |
+| Tipico        | tipico_de             | [https://www.tipico.de/](https://www.tipico.de/)                                     | Moderate       | Germany (GGL)                | EUR 0.10 | 1-3 days                   | Mild            | Tipico     |
+| Coolbet       | coolbet               | [https://www.coolbet.com/](https://www.coolbet.com/)                                 | Basic          | MGA, Estonia                 | EUR 0.10 | 1-3 days                   | Mild            | GAN        |
+| NordicBet     | nordicbet             | [https://www.nordicbet.com/](https://www.nordicbet.com/)                             | Basic          | MGA, Denmark                 | EUR 0.10 | 1-3 days                   | Mild            | Betsson AB |
+| Suprabets     | suprabets             | [https://www.suprabets.com/](https://www.suprabets.com/)                             | Basic          | Curacao                      | EUR 0.10 | 1-5 days                   | Unknown         | N/A        |
+| Everygame     | everygame             | [https://www.everygame.eu/](https://www.everygame.eu/)                               | Basic          | Antigua                      | USD 1.00 | 2-7 days                   | Mild            | Everygame  |
+| GTbets        | gtbets                | [https://www.gtbets.eu/](https://www.gtbets.eu/)                                     | Basic          | Curacao                      | USD 1.00 | 3-7 days                   | Unknown         | N/A        |
+| Parions Sport | parionssport_fr       | [https://www.enligne.parionssport.fdj.fr/](https://www.enligne.parionssport.fdj.fr/) | Moderate       | ANJ (France only)            | EUR 1.00 | 1-3 days                   | Mild            | FDJ        |
+| PMU           | pmu_fr                | [https://paris-sportifs.pmu.fr/](https://paris-sportifs.pmu.fr/)                     | Moderate       | ANJ (France only)            | EUR 1.00 | 1-3 days                   | Mild            | PMU        |
+| LeoVegas      | leovegas/leovegas_se  | [https://www.leovegas.com/](https://www.leovegas.com/)                               | Basic          | MGA, UK GC, Sweden           | EUR 0.10 | 1-3 days                   | Mild            | MGM        |
+| bwin          | N/A                   | [https://sports.bwin.com/](https://sports.bwin.com/)                                 | Moderate (CF)  | GRA, MGA                     | EUR 0.10 | 1-3 days                   | Moderate        | Entain     |
 
 1xBet: Accepts 50+ cryptos. Fast crypto withdrawals. No residency. Good for arb (high limits, crypto speed). French ANJ:
 Betclic, Parions Sport, PMU, Winamax, Unibet FR require French residency + bank. Swedish: LeoVegas SE, Betsson SE,
@@ -486,33 +423,33 @@ NordicBet SE require Swedish residency.
 
 All require: AU residency, no in-play online betting (phone only), no credit cards, state-licensed.
 
-| Venue        | Odds API Key     | Login URL                     | Min Bet | Withdrawal Delay | Limits Winners? | Parent         |
-| ------------ | ---------------- | ----------------------------- | ------- | ---------------- | --------------- | -------------- |
-| Sportsbet    | sportsbet        | https://www.sportsbet.com.au/ | AUD 1   | 1-3 days         | Moderate        | Flutter        |
-| TAB          | tab              | https://www.tab.com.au/       | AUD 1   | 1-3 days         | Mild            | Tabcorp/Entain |
-| TABtouch     | tabtouch         | https://www.tabtouch.com.au/  | AUD 1   | 1-3 days         | Mild            | RWWA           |
-| Neds         | neds             | https://www.neds.com.au/      | AUD 1   | 1-3 days         | Moderate        | Entain         |
-| PointsBet AU | pointsbetau      | https://www.pointsbet.com.au/ | AUD 1   | 1-3 days         | Moderate        | PointsBet      |
-| Ladbrokes AU | ladbrokes_au     | https://www.ladbrokes.com.au/ | AUD 1   | 1-3 days         | Moderate        | Entain         |
-| Bet365 AU    | bet365_au (paid) | https://www.bet365.com.au/    | AUD 1   | 1-3 days         | Aggressive      | bet365         |
-| PlayUp       | playup           | https://www.playup.com.au/    | AUD 1   | 1-3 days         | Unknown         | PlayUp         |
-| Betfair AU   | betfair_ex_au    | https://www.betfair.com.au/   | AUD 5   | 1-3 days         | None            | Flutter        |
-| Betr AU      | betr_au          | https://www.betr.com.au/      | AUD 1   | 1-3 days         | Unknown         | News Corp      |
-| Bet Right    | betright         | https://www.betright.com.au/  | AUD 1   | 1-3 days         | Unknown         | BlueBet        |
-| Dabble       | dabble_au (paid) | https://www.dabble.com.au/    | AUD 1   | 1-3 days         | Unknown         | Dabble         |
+| Venue        | Odds API Key     | Login URL                                                      | Min Bet | Withdrawal Delay | Limits Winners? | Parent         |
+| ------------ | ---------------- | -------------------------------------------------------------- | ------- | ---------------- | --------------- | -------------- |
+| Sportsbet    | sportsbet        | [https://www.sportsbet.com.au/](https://www.sportsbet.com.au/) | AUD 1   | 1-3 days         | Moderate        | Flutter        |
+| TAB          | tab              | [https://www.tab.com.au/](https://www.tab.com.au/)             | AUD 1   | 1-3 days         | Mild            | Tabcorp/Entain |
+| TABtouch     | tabtouch         | [https://www.tabtouch.com.au/](https://www.tabtouch.com.au/)   | AUD 1   | 1-3 days         | Mild            | RWWA           |
+| Neds         | neds             | [https://www.neds.com.au/](https://www.neds.com.au/)           | AUD 1   | 1-3 days         | Moderate        | Entain         |
+| PointsBet AU | pointsbetau      | [https://www.pointsbet.com.au/](https://www.pointsbet.com.au/) | AUD 1   | 1-3 days         | Moderate        | PointsBet      |
+| Ladbrokes AU | ladbrokes_au     | [https://www.ladbrokes.com.au/](https://www.ladbrokes.com.au/) | AUD 1   | 1-3 days         | Moderate        | Entain         |
+| Bet365 AU    | bet365_au (paid) | [https://www.bet365.com.au/](https://www.bet365.com.au/)       | AUD 1   | 1-3 days         | Aggressive      | bet365         |
+| PlayUp       | playup           | [https://www.playup.com.au/](https://www.playup.com.au/)       | AUD 1   | 1-3 days         | Unknown         | PlayUp         |
+| Betfair AU   | betfair_ex_au    | [https://www.betfair.com.au/](https://www.betfair.com.au/)     | AUD 5   | 1-3 days         | None            | Flutter        |
+| Betr AU      | betr_au          | [https://www.betr.com.au/](https://www.betr.com.au/)           | AUD 1   | 1-3 days         | Unknown         | News Corp      |
+| Bet Right    | betright         | [https://www.betright.com.au/](https://www.betright.com.au/)   | AUD 1   | 1-3 days         | Unknown         | BlueBet        |
+| Dabble       | dabble_au (paid) | [https://www.dabble.com.au/](https://www.dabble.com.au/)       | AUD 1   | 1-3 days         | Unknown         | Dabble         |
 
 AU arb constraint: In-play betting restricted to phone. Pre-match arb only.
 
 #### 4.2.5 Offshore / Caribbean Books
 
-| Venue        | Odds API Key | Login URL                    | Anti-Detection | Crypto                   | Withdrawal Delay           | Limits Winners?  |
-| ------------ | ------------ | ---------------------------- | -------------- | ------------------------ | -------------------------- | ---------------- |
-| Bovada       | bovada       | https://www.bovada.lv/       | Moderate       | BTC, BCH, ETH, USDT, LTC | Crypto 24-48h; Wire 10-15d | Mild; max ~$100K |
-| BetOnline    | betonlineag  | https://www.betonline.ag/    | Moderate       | BTC, ETH, LTC, USDT+     | Crypto 24-48h; Wire 5-10d  | Mild             |
-| MyBookie     | mybookieag   | https://www.mybookie.ag/     | Moderate       | BTC, ETH, LTC, USDT      | Crypto 48-72h; Wire 5-10d  | Moderate         |
-| BetUS        | betus        | https://www.betus.com.pa/    | Basic          | BTC, ETH, LTC            | Crypto 48-72h; Wire 7-14d  | Moderate         |
-| LowVig       | lowvig       | https://www.lowvig.ag/       | Basic          | BTC, ETH                 | Crypto 24-48h              | Unknown          |
-| BetAnySports | betanysports | https://www.betanysports.eu/ | Basic          | BTC                      | Crypto 24-72h              | Mild             |
+| Venue        | Odds API Key | Login URL                                                    | Anti-Detection | Crypto                   | Withdrawal Delay           | Limits Winners?  |
+| ------------ | ------------ | ------------------------------------------------------------ | -------------- | ------------------------ | -------------------------- | ---------------- |
+| Bovada       | bovada       | [https://www.bovada.lv/](https://www.bovada.lv/)             | Moderate       | BTC, BCH, ETH, USDT, LTC | Crypto 24-48h; Wire 10-15d | Mild; max ~$100K |
+| BetOnline    | betonlineag  | [https://www.betonline.ag/](https://www.betonline.ag/)       | Moderate       | BTC, ETH, LTC, USDT+     | Crypto 24-48h; Wire 5-10d  | Mild             |
+| MyBookie     | mybookieag   | [https://www.mybookie.ag/](https://www.mybookie.ag/)         | Moderate       | BTC, ETH, LTC, USDT      | Crypto 48-72h; Wire 5-10d  | Moderate         |
+| BetUS        | betus        | [https://www.betus.com.pa/](https://www.betus.com.pa/)       | Basic          | BTC, ETH, LTC            | Crypto 48-72h; Wire 7-14d  | Moderate         |
+| LowVig       | lowvig       | [https://www.lowvig.ag/](https://www.lowvig.ag/)             | Basic          | BTC, ETH                 | Crypto 24-48h              | Unknown          |
+| BetAnySports | betanysports | [https://www.betanysports.eu/](https://www.betanysports.eu/) | Basic          | BTC                      | Crypto 24-72h              | Mild             |
 
 Offshore notes: No US state licensing (regulatory grey zone). Crypto best method. Bovada ~$3K/wk limit; BetOnline
 $5-25K. Avoid bonuses for arb (rollover requirements).
@@ -544,7 +481,7 @@ $5-25K. Avoid bonuses for arb (rollover requirements).
 | skybet              | Browser          | SCRAPER (odds only) | P2 UK                  |
 | sport888            | Browser          | SCRAPER (odds only) | P2 UK/EU               |
 | betway              | Browser          | SCRAPER (odds only) | P2 UK                  |
-| unibet\_\*          | Browser          | SCRAPER (odds only) | P2 multi-region        |
+| unibet              | Browser          | SCRAPER (odds only) | P2 multi-region        |
 | onexbet             | Browser/API      | ADAPTER (odds only) | P2 has unofficial API  |
 | betvictor           | Browser          | SCRAPER (odds only) | P3 UK                  |
 | boylesports         | Browser          | SCRAPER (odds only) | P3 UK/IE               |

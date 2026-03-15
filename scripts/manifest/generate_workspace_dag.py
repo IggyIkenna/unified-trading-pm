@@ -69,16 +69,15 @@ LEVEL_COLORS: dict[int, str] = {
 }
 
 CI_STATUS_COLORS: dict[str, str] = {
-    "PASSING": "#22c55e",  # green — CI passed
-    "FAILING": "#ef4444",  # red — CI failed
-    "LOCALLY_PASSED": "#f97316",  # orange — local QG passed, CI not yet run
-    "BASELINE_RECORDED": "#eab308",
-    "BASELINE_PENDING": "#eab308",
-    "HAS_QG": "#94a3b8",
-    "NO_QG": "#94a3b8",
-    "EXEMPT": "#94a3b8",
-    "PARTIAL": "#f97316",
-    "NOT_CONFIGURED": "#94a3b8",
+    # ci_status lifecycle (8 states — see rollout plan § ci_status Lifecycle State Machine)
+    "NOT_CONFIGURED": "#94a3b8",  # grey — no QG script
+    "EXEMPT": "#94a3b8",  # grey — intentionally no QG (PM, IaC)
+    "FAILING": "#ef4444",  # red — last QG run failed
+    "LOCAL_PASS": "#facc15",  # yellow — QG passed locally, not CI-confirmed
+    "FEATURE_GREEN": "#84cc16",  # lime — GHA QG passed on feature/main
+    "STAGING_PENDING": "#eab308",  # yellow — promoted to staging, QG must re-run
+    "STAGING_GREEN": "#22c55e",  # green — GHA QG passed on staging
+    "SIT_VALIDATED": "#10b981",  # emerald — SIT e2e passed, ready for main
 }
 
 TYPE_CSS: dict[str, str] = {
@@ -275,7 +274,7 @@ def parse_repos(
 
         status = _jstr(info.get("status"))
         css = "future" if status == "planned" else TYPE_CSS.get(repo_type, "infra")
-        ci_status = _jstr(info.get("ci_status") or info.get("quality_gate_status"), "")
+        ci_status = _jstr(info.get("ci_status"), "")
         # Use top-level versions map (GHA-maintained SSOT) over per-repo version field
         ver = _jstr((versions or {}).get(name) or info.get("version"), "0.1.0")
         levels.setdefault(lvl, []).append(
@@ -336,7 +335,7 @@ def generate_svg(data: JsonDict) -> str:
     )
 
     # Legend
-    ln('  <rect x="1700" y="15" width="670" height="95" class="legend-box" />')
+    ln('  <rect x="1700" y="15" width="670" height="105" class="legend-box" />')
     ln('  <text x="1720" y="36" class="section">Legend</text>')
     legend_items: list[tuple[int, int, str, str]] = [
         (1720, 46, "lib", "library"),
@@ -348,12 +347,19 @@ def generate_svg(data: JsonDict) -> str:
         (2020, 66, "test", "test-harness"),
         (2160, 66, "future", "future"),
     ]
-    # ci_status legend (colored dots)
+    # ci_status legend (colored dots) — 8-state lifecycle
     ln('  <text x="1720" y="88" class="small">CI status:</text>')
-    for i, (status, color) in enumerate(
-        [("PASSING", "#22c55e"), ("LOCALLY_PASSED", "#f97316"), ("FAILING", "#ef4444"), ("other", "#94a3b8")]
-    ):
-        lx = 1720 + i * 80
+    ci_legend: list[tuple[str, str]] = [
+        ("LOCAL_PASS", "#facc15"),
+        ("FEATURE_GREEN", "#84cc16"),
+        ("STAGING_PENDING", "#eab308"),
+        ("STAGING_GREEN", "#22c55e"),
+        ("SIT_VALIDATED", "#10b981"),
+        ("FAILING", "#ef4444"),
+        ("EXEMPT", "#94a3b8"),
+    ]
+    for i, (status, color) in enumerate(ci_legend):
+        lx = 1720 + i * 95
         ln(f'  <circle cx="{lx + 6}" cy="95" r="4" fill="{color}" stroke="#e2e8f0" stroke-width="1" />')
         ln(f'  <text x="{lx + 14}" y="98" class="small">{status}</text>')
     for lx, ly, cls, lbl in legend_items:
@@ -387,8 +393,15 @@ def generate_svg(data: JsonDict) -> str:
                     f' width="{entry.width}" height="{BOX_H}"'
                     f' class="{entry.css_class}" />'
                 )
-                # Colored left edge for PASSING/FAILING/LOCALLY_PASSED (drawn on top so visible)
-                if entry.ci_status in ("PASSING", "FAILING", "LOCALLY_PASSED"):
+                # Colored left edge for non-grey statuses (drawn on top so visible)
+                if entry.ci_status in (
+                    "LOCAL_PASS",
+                    "FEATURE_GREEN",
+                    "STAGING_PENDING",
+                    "STAGING_GREEN",
+                    "SIT_VALIDATED",
+                    "FAILING",
+                ):
                     ln(f'  <rect x="{entry.x}" y="{row_y}" width="4" height="{BOX_H}" fill="{status_color}" rx="2" />')
                 ln(
                     f'  <text x="{cx}" y="{row_y + 18}"'

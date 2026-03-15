@@ -45,6 +45,8 @@ jobs:
           BRANCH="${{ github.event.client_payload.branch }}"
           BRANCH="${BRANCH:-main}"  # default to main if not provided
           COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          IS_BREAKING="${{ github.event.client_payload.is_breaking }}"
+          IS_BREAKING="${IS_BREAKING:-false}"
 
           if [ -z "$REPO" ] || [ -z "$VERSION" ]; then
             echo "Missing repo or version in client_payload. Skipping."
@@ -72,6 +74,7 @@ jobs:
           version = "${VERSION}"
           branch = "${BRANCH}"
           commit_sha = "${COMMIT_SHA}"
+          is_breaking = "${IS_BREAKING}" == "true"
           version_parts = version.split(".")
           major = int(version_parts[0])
           bump_type = "major" if major > 0 else "patch"  # simplified; will be overridden below
@@ -109,22 +112,27 @@ jobs:
                       "sha": commit_sha or "",
                       "branch": branch_val,
                   }
-              # If major bump on staging, set staging_status.locked
-              if bump_type == "major":
+              # Lock staging on major bump OR breaking change (pre-1.0.0 breaking = MINOR bump)
+              if bump_type == "major" or is_breaking:
                   import datetime
                   if "staging_status" not in manifest:
                       manifest["staging_status"] = {"locked": False, "locked_since": None, "locked_reason": None, "lock_version": None}
                   manifest["staging_status"]["locked"] = True
                   manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
-                  manifest["staging_status"]["locked_reason"] = f"Major bump cascade: {repo}={version}"
+                  if is_breaking and bump_type != "major":
+                      manifest["staging_status"]["locked_reason"] = f"Breaking MINOR bump cascade: {repo}={version} (pre-1.0.0)"
+                  else:
+                      manifest["staging_status"]["locked_reason"] = f"Major bump cascade: {repo}={version}"
                   manifest["staging_status"]["lock_version"] = version
-                  print(f"STAGING LOCKED: major bump {repo}={version}")
+                  print(f"STAGING LOCKED: {'breaking ' if is_breaking else ''}{bump_type} bump {repo}={version}")
           else:
               manifest["versions"][repo] = version
 
-          # Always write bump_type to a temp file for the shell to read
+          # Always write bump_type and is_breaking to temp files for the shell to read
           with open("/tmp/bump_type.txt", "w") as f:
               f.write(bump_type)
+          with open("/tmp/is_breaking.txt", "w") as f:
+              f.write("true" if is_breaking else "false")
 
           tmp_path = "workspace-manifest.json.tmp"
           with open(tmp_path, "w") as f:
@@ -139,6 +147,7 @@ jobs:
             || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
           BUMP_TYPE=$(cat /tmp/bump_type.txt)
+          IS_BREAKING=$(cat /tmp/is_breaking.txt 2>/dev/null || echo "false")
 
           # (b) Bump PM's own patch version in pyproject.toml
           CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml)
@@ -192,6 +201,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
           echo "bump_type=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
+          echo "is_breaking=$IS_BREAKING" >> "$GITHUB_OUTPUT"
           echo "pm_version=$NEW_PM_VERSION" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
@@ -278,6 +288,9 @@ jobs:
             exit 0
           fi
 
+          IS_BREAKING="${{ steps.update.outputs.is_breaking }}"
+          IS_BREAKING="${IS_BREAKING:-false}"
+
           while IFS= read -r line; do
             [ -z "$line" ] && continue
 
@@ -287,17 +300,39 @@ jobs:
             CONSTRAINT=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['constraint'])")
             BUMP_TYPE=$(echo "$line" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('bump_type', 'patch'))")
 
-            echo "Dispatching dependency-update to $DEPENDENT_REPO: $DEP_NAME=$DEP_VERSION (constraint: $CONSTRAINT, chain_depth: $NEXT_DEPTH)"
+            echo "Dispatching dependency-update to $DEPENDENT_REPO: $DEP_NAME=$DEP_VERSION (constraint: $CONSTRAINT, is_breaking: $IS_BREAKING, chain_depth: $NEXT_DEPTH)"
 
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
               -H "Authorization: Bearer $TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$OWNER/$DEPENDENT_REPO/dispatches" \
-              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\", \"bump_type\": \"$BUMP_TYPE\", \"chain_depth\": $NEXT_DEPTH, \"cascade_depth\": $NEXT_DEPTH}}")
+              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\", \"bump_type\": \"$BUMP_TYPE\", \"is_breaking\": \"$IS_BREAKING\", \"chain_depth\": $NEXT_DEPTH, \"cascade_depth\": $NEXT_DEPTH}}")
 
             if [ "$HTTP_STATUS" = "204" ]; then
               echo "  ✅ Dispatched to $DEPENDENT_REPO (chain_depth=$NEXT_DEPTH)"
             else
               echo "  ⚠️  HTTP $HTTP_STATUS for $DEPENDENT_REPO (repo may not have receiver workflow yet)"
+            fi
+
+            # On breaking change: invalidate downstream ci_status → STAGING_PENDING
+            if [ "$IS_BREAKING" = "true" ]; then
+              echo "  Breaking cascade: setting $DEPENDENT_REPO ci_status → STAGING_PENDING"
+              python3 -c "
+import json
+with open('workspace-manifest.json') as f:
+    m = json.load(f)
+repos = m.get('repositories', {})
+repo_name = '${DEPENDENT_REPO}'
+if repo_name in repos:
+    old = repos[repo_name].get('ci_status', 'NOT_CONFIGURED')
+    repos[repo_name]['ci_status'] = 'STAGING_PENDING'
+    repos[repo_name]['breaking_cascade_source'] = '${DEP_NAME}=${DEP_VERSION}'
+    print(f'  ci_status: {repo_name} {old} → STAGING_PENDING (breaking cascade from ${DEP_NAME}=${DEP_VERSION})')
+tmp = 'workspace-manifest.json.tmp'
+with open(tmp, 'w') as f:
+    json.dump(m, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+import os; os.replace(tmp, 'workspace-manifest.json')
+" || echo "  ⚠️  Failed to update ci_status for $DEPENDENT_REPO"
             fi
           done < /tmp/dependents.txt

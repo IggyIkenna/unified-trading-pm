@@ -181,7 +181,7 @@ external/
 | -------------------- | ----------------------------------------------- |
 | derived/defi/        | Glassnode, Arkham, DeFiLlama (TVL, MVRV, flows) |
 | derived/derivatives/ | VolSurface, VolSmilePoint, VolTermStructure     |
-| derived/sports/      | Footystats, Understat, \*features\*\*           |
+| derived/sports/      | Footystats, Understat, features                 |
 
 ### Infrastructure
 
@@ -204,10 +204,10 @@ provider -> raw SDK module in `external/cloud_sdks/gcp/` or `external/cloud_sdks
 | --------------------------------------------------------------------------------------------------------------------- | --------------------------- | --------- |
 | external/sports/canonical/odds.py, live.py, bookmaker.py, arbitrage.py, processed_odds.py, progressive.py             | canonical/market/sports/    | market    |
 | external/sports/canonical/mappings.py, fixture.py, events.py, injury.py, lineup.py, player_stats.py, fixture_stats.py | canonical/reference/sports/ | reference |
-| external/sports/canonical/\*features\*\*.py, features.py                                                              | canonical/derived/sports/   | derived   |
+| external/sports/canonical/features.py, features.py                                                                    | canonical/derived/sports/   | derived   |
 | external/sports/canonical/betting.py                                                                                  | canonical/execution/sports/ | execution |
 | external/sports/errors.py                                                                                             | canonical/errors/sports/    | errors    |
-| schemas/\_venue_errors_defi.py                                                                                        | canonical/errors/defi/      | errors    |
+| schemas/venue_errors_defi.py                                                                                          | canonical/errors/defi/      | errors    |
 
 ---
 

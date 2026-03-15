@@ -223,14 +223,24 @@ This prevents a stuck SIT run from permanently blocking the `staging → main` p
 `ci_status` in `workspace-manifest.json` is the **single source of truth** for quality gate state. It is updated
 **automatically** when quality gates run — no agent or manual step required.
 
-| When                     | What happens                                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| QG passes (python or UI) | Reusable workflow dispatches `ci-status-update` to PM → PM updates `repositories[repo].ci_status = "PASSING"` |
-| QG fails                 | Same dispatch with `status = "FAILING"`                                                                       |
-| PM receives dispatch     | `ci-status-update.yml` updates manifest, regenerates `WORKSPACE_MANIFEST_DAG.svg`, commits with `[skip ci]`   |
+| When                    | What happens                                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Local QG passes         | Base script updates `repositories[repo].ci_status = "LOCAL_PASS"` in manifest (won't downgrade FEATURE_GREEN+) |
+| Local QG fails          | EXIT trap sets `repositories[repo].ci_status = "FAILING"` (regression allowed from any state)                  |
+| GHA QG passes (feature) | Reusable workflow dispatches `ci-status-update` to PM → `ci_status = "FEATURE_GREEN"`                          |
+| GHA QG passes (staging) | Same dispatch → `ci_status = "STAGING_GREEN"`                                                                  |
+| GHA QG fails            | Same dispatch with `status = "FAILING"`                                                                        |
+| Merge to staging        | `feature-branch-to-staging.yml` dispatches `ci_status = "STAGING_PENDING"` (reset — fresh QG required)         |
+| SIT passes              | `sit-gate.yml` sets all pending repos to `SIT_VALIDATED`                                                       |
+| Promotion to main       | `staging-to-main.yml` resets promoted repos to `FEATURE_GREEN`                                                 |
+| PM receives dispatch    | `ci-status-update.yml` updates manifest, regenerates `WORKSPACE_MANIFEST_DAG.svg`, commits with `[skip ci]`    |
 
-The DAG SVG shows each repo's status as a colored dot (green=PASSING, red=FAILING, gray=other). `quality_gate_status` is
-deprecated and removed — use `ci_status` only.
+**ci_status lifecycle (8 states):** `NOT_CONFIGURED` → `LOCAL_PASS` → `FEATURE_GREEN` → `STAGING_PENDING` →
+`STAGING_GREEN` → `SIT_VALIDATED` Any state can regress to `FAILING`. `EXEMPT` is terminal (PM, IaC repos).
+
+The DAG SVG shows each repo's status as a colored dot/left-edge: orange=LOCAL_PASS, lime=FEATURE_GREEN,
+yellow=STAGING_PENDING, green=STAGING_GREEN, emerald=SIT_VALIDATED, red=FAILING, grey=EXEMPT/NOT_CONFIGURED.
+`quality_gate_status` is removed — `ci_status` is the single SSOT.
 
 **If DAG stays gray / Status 400:** The dispatch requires `GH_PAT` with `workflow` scope. Run
 `bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh` to push GH_PAT from `.act-secrets` to all repos.

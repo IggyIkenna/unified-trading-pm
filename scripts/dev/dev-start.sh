@@ -30,6 +30,15 @@ MAPPING_FILE="${SCRIPT_DIR}/ui-api-mapping.json"
 PID_DIR="/tmp/unified-dev-pids"
 MODE_FILE="/tmp/unified-dev-pids/.dev-mode"
 
+# ── Signal handling ──────────────────────────────────────────────────────────
+cleanup() {
+  echo ""
+  echo "Caught signal — stopping all dev servers..."
+  bash "${SCRIPT_DIR}/dev-stop.sh" 2>/dev/null || true
+  exit 130
+}
+trap cleanup INT TERM
+
 # ── Colors ──────────────────────────────────────────────────────────────────
 if command -v tput >/dev/null 2>&1 && [ -t 1 ]; then
   RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
@@ -277,6 +286,7 @@ TARGET_MODE=""
 TARGETS=()
 COMPONENT_FILTER="both"  # both | frontend-only | backend-only
 RESET_CACHE=false
+OPEN_BROWSER=false  # use --open to open UI URLs in browser after startup
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -327,6 +337,14 @@ while [[ $# -gt 0 ]]; do
       RESET_CACHE=true
       shift
       ;;
+    --open)
+      OPEN_BROWSER=true
+      shift
+      ;;
+    --no-open)
+      OPEN_BROWSER=false
+      shift
+      ;;
     --list)
       TARGET_MODE="list"
       shift
@@ -355,6 +373,9 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Cache options:"
       echo "  --reset         Clear .local-dev-cache/ (mock state) before starting"
+      echo ""
+      echo "Browser options:"
+      echo "  --no-open       Don't open UI URLs in browser (default: opens automatically)"
       echo ""
       echo "Component options:"
       echo "  --frontend-only Only start UI dev server(s), skip API"
@@ -440,40 +461,60 @@ fi
 echo "  Components:     ${CYAN}${COMPONENT_FILTER}${NC}"
 echo ""
 
+spawn_n=0
+spawn_total=0
+
 case "$TARGET_MODE" in
   stack)
+    spawn_total=${#TARGETS[@]}
     for target in "${TARGETS[@]}"; do
+      spawn_n=$((spawn_n + 1))
+      info "[$spawn_n/$spawn_total] Starting stack: $target"
       start_stack "$target"
       collect_urls_for_stack "$target"
+      [ "$spawn_n" -lt "$spawn_total" ] && sleep 1
     done
     ;;
   ui)
+    spawn_total=${#TARGETS[@]}
     for target in "${TARGETS[@]}"; do
+      spawn_n=$((spawn_n + 1))
       stack=$(find_stack_for_repo "$target")
       if [ -z "$stack" ]; then
         die "No stack found for UI: $target"
       fi
       ui_port=$(get_stack_field "$stack" "ui_port")
+      info "[$spawn_n/$spawn_total] Starting UI: $target"
       start_ui "$target" "$ui_port"
       STARTED_URLS+=("$(printf "  %-28s http://localhost:%s" "${target}:" "$ui_port")")
+      [ "$spawn_n" -lt "$spawn_total" ] && sleep 1
     done
     ;;
   api)
+    spawn_total=${#TARGETS[@]}
     for target in "${TARGETS[@]}"; do
+      spawn_n=$((spawn_n + 1))
       stack=$(find_stack_for_repo "$target")
       if [ -z "$stack" ]; then
         die "No stack found for API: $target"
       fi
       api_port=$(get_stack_field "$stack" "api_port")
       api_module=$(get_stack_field "$stack" "api_module")
+      info "[$spawn_n/$spawn_total] Starting API: $target"
       start_api "$target" "$api_port" "$api_module"
       STARTED_URLS+=("$(printf "  %-28s http://localhost:%s" "${target}:" "$api_port")")
+      [ "$spawn_n" -lt "$spawn_total" ] && sleep 1
     done
     ;;
   all)
-    for stack in $(list_stacks); do
+    all_stacks=($(list_stacks))
+    spawn_total=${#all_stacks[@]}
+    for stack in "${all_stacks[@]}"; do
+      spawn_n=$((spawn_n + 1))
+      info "[$spawn_n/$spawn_total] Starting stack: $stack"
       start_stack "$stack"
       collect_urls_for_stack "$stack"
+      [ "$spawn_n" -lt "$spawn_total" ] && sleep 1
     done
     ;;
 esac
@@ -487,6 +528,62 @@ if [ ${#STARTED_URLS[@]} -gt 0 ]; then
     echo "$url_line"
   done
   echo ""
+fi
+
+# Open UI URLs in browser
+if [ "$OPEN_BROWSER" = true ] && [ ${#STARTED_URLS[@]} -gt 0 ]; then
+  # Collect UI ports (skip API ports)
+  UI_URLS=()
+  if [[ "$COMPONENT_FILTER" != "backend-only" ]]; then
+    case "$TARGET_MODE" in
+      all)
+        for stack in $(list_stacks); do
+          local_ui_port=$(get_stack_field "$stack" "ui_port")
+          local_ui_repo=$(get_stack_field "$stack" "ui")
+          if [ -n "$local_ui_repo" ] && [ "$local_ui_repo" != "null" ] && [ -n "$local_ui_port" ]; then
+            UI_URLS+=("http://localhost:${local_ui_port}")
+          fi
+        done
+        ;;
+      stack)
+        for target in "${TARGETS[@]}"; do
+          local_ui_port=$(get_stack_field "$target" "ui_port")
+          local_ui_repo=$(get_stack_field "$target" "ui")
+          if [ -n "$local_ui_repo" ] && [ "$local_ui_repo" != "null" ] && [ -n "$local_ui_port" ]; then
+            UI_URLS+=("http://localhost:${local_ui_port}")
+          fi
+        done
+        ;;
+      ui)
+        for target in "${TARGETS[@]}"; do
+          local_stack=$(find_stack_for_repo "$target")
+          if [ -n "$local_stack" ]; then
+            local_ui_port=$(get_stack_field "$local_stack" "ui_port")
+            UI_URLS+=("http://localhost:${local_ui_port}")
+          fi
+        done
+        ;;
+    esac
+  fi
+
+  if [ ${#UI_URLS[@]} -gt 0 ]; then
+    # Wait briefly for vite to bind ports
+    sleep 2
+    info "Opening ${#UI_URLS[@]} UI(s) in browser..."
+    open_cmd=""
+    case "$(uname -s)" in
+      Darwin) open_cmd="open" ;;
+      Linux)  open_cmd="xdg-open" ;;
+    esac
+    if [ -n "$open_cmd" ]; then
+      for url in "${UI_URLS[@]}"; do
+        "$open_cmd" "$url" 2>/dev/null || true
+        sleep 0.5  # stagger browser tabs to avoid memory spike
+      done
+    else
+      warn "Could not detect browser open command — open URLs manually"
+    fi
+  fi
 fi
 
 info "Dev servers started. Logs in /tmp/unified-dev-pids/*.log"

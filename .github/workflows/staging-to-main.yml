@@ -583,6 +583,17 @@ jobs:
           staging_commits_note = staging_commits.get("_note", "")
           manifest["staging_commits"] = {"_note": staging_commits_note} if staging_commits_note else {}
 
+          # Reset ci_status for promoted repos: SIT_VALIDATED → FEATURE_GREEN
+          # (main is the new baseline; staging status no longer applies)
+          repos_data = manifest.get("repositories", {})
+          for repo in promoted:
+              repo_name = repo.strip().split("=")[0]  # promoted list has "repo=version" format
+              if repo_name in repos_data:
+                  old_ci = repos_data[repo_name].get("ci_status", "")
+                  if old_ci in ("SIT_VALIDATED", "STAGING_GREEN"):
+                      repos_data[repo_name]["ci_status"] = "FEATURE_GREEN"
+                      print(f"  ci_status reset: {repo_name} {old_ci} → FEATURE_GREEN")
+
           # Clear staging lock (guard against missing field)
           if "staging_status" not in manifest:
               manifest["staging_status"] = {"locked": False, "locked_since": None, "locked_reason": None, "lock_version": None}

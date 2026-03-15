@@ -43,6 +43,11 @@ todos:
     content: |
       - [x] [SCRIPT] P1. Correct all plan references from "65 repos" to "67 repos" and "23 workflows" to "25 workflows". Two new workflows (sit-debounce-trigger.yml, sit-starvation-detector.yml) were added but plan counts not updated. Manifest has 67 repos, not 65.
     status: done
+  - id: cleanup-ci-status-state-machine
+    content: |
+      - [x] [AGENT] P0. Implement ci_status lifecycle state machine. Drop legacy `quality_gate_status` field from manifest (never wired into GHA, drifted from reality). Unify on `ci_status` as single SSOT with 8 states: NOT_CONFIGURED, EXEMPT, FAILING, LOCAL_PASS, FEATURE_GREEN, STAGING_PENDING, STAGING_GREEN, SIT_VALIDATED. Update SVG DAG generator colors/legend. Migrate all 70 repos to new state values. See Notes § ci_status Lifecycle State Machine for full spec.
+      COMPLETED 2026-03-15: quality_gate_status removed from all 70 repos. ci_status migrated to new lifecycle states. SVG generator updated with 8-state color map + legend. DAG regenerated.
+    status: done
   - id: cleanup-remediate-failing-repo
     content: |
       - [ ] [AGENT] P0. unified-api-contracts has ci_status=FAILING. This is a T0 repo — if it stays FAILING, it blocks the entire T0→T1→T2→T3 tier cascade in Phase 3. Identify the failure cause, fix it, and get QG passing before Phase 3.
@@ -51,6 +56,88 @@ todos:
     content: |
       - [ ] [SCRIPT] P1. 5 repos stuck at ci_status=BASELINE_PENDING: batch-audit-api, batch-live-reconciliation-service, ml-inference-api, ml-training-api, trading-analytics-api. Determine what BASELINE_PENDING means (likely: QG never ran or never completed). Run QG on each and update ci_status accordingly.
     status: pending
+  - id: cascade-breaking-change-is-breaking-flag
+    content: |
+      - [ ] [AGENT] P0. Add `is_breaking: true/false` field to version-bump dispatch payload. Currently
+      semver-agent detects `feat!:` / `BREAKING CHANGE:` but the downstream dispatch only carries `bump_type`
+      (major/minor/patch). Pre-1.0.0, a breaking change is a MINOR bump — indistinguishable from a non-breaking
+      feature. Fix: semver-agent.yml template sets `is_breaking=true` when it detects breaking commit conventions.
+      version-bump dispatch payload becomes `{repo, version, branch, commit_sha, bump_type, is_breaking}`.
+      update-repo-version.yml reads `is_breaking` and forwards it in the dependency-update dispatch to all
+      downstream repos. Files: `scripts/propagation/templates/semver-agent.yml` (add is_breaking to dispatch),
+      `update-repo-version.yml` (read + forward is_breaking), `scripts/propagation/templates/update-dependency-version.yml`
+      (read is_breaking). Roll out semver-agent.yml template to all 67 repos after change.
+    status: pending
+  - id: cascade-breaking-change-ci-status-invalidation
+    content: |
+      - [ ] [AGENT] P0. When a breaking dependency update cascades, immediately invalidate downstream ci_status.
+      In update-repo-version.yml: when dispatching dependency-update with `is_breaking=true`, ALSO dispatch
+      `ci-status-update` to each downstream repo setting `ci_status=STAGING_PENDING`. This signals: "your
+      dependency changed in a breaking way — you must re-run QG before SIT will accept you." The SVG DAG
+      will show affected repos as yellow (STAGING_PENDING) instead of stale green/yellow. Without this,
+      downstream repos show LOCAL_PASS even though their dependency is now incompatible — nobody knows they're
+      stale until SIT eventually fails. Add `breaking_cascade_source` field to the ci-status-update payload
+      so the manifest records WHY the status was reset (e.g., "unified-market-interface 0.3.0 breaking change").
+      File: `update-repo-version.yml` (add ci-status-update dispatch in the downstream loop when is_breaking).
+    status: pending
+  - id: cascade-breaking-change-skip-ci-removal
+    content: |
+      - [ ] [AGENT] P0. Remove `[skip ci]` for breaking MINOR bumps in update-dependency-version.yml.
+      Currently: MINOR/PATCH → direct commit with `[skip ci]` (line 92). But pre-1.0.0, a MINOR bump IS
+      a breaking change — `[skip ci]` means downstream QG never re-runs, so broken code isn't caught until
+      SIT. Fix: when `is_breaking=true`, route through the PR path (same as MAJOR) instead of direct commit.
+      This forces QG to run on the downstream repo's staging branch with the new dependency constraint.
+      The condition on line 81 changes from `bump_type != 'major'` to
+      `bump_type != 'major' && is_breaking != 'true'`. The PR path on line 96 changes from
+      `bump_type == 'major'` to `bump_type == 'major' || is_breaking == 'true'`.
+      File: `scripts/propagation/templates/update-dependency-version.yml`.
+    status: pending
+  - id: cascade-breaking-change-constraint-capping
+    content: |
+      - [ ] [AGENT] P1. Add version constraint capping escape hatch. When a downstream repo receives a
+      breaking dependency update, it currently MUST accept the new version (`>=0.3.0,<1.0.0`). There is no
+      way to say "keep me on the old stable version while I fix my code." Fix: add `dependency_caps` map
+      to manifest repo entries: `{"unified-market-interface": "<0.3.0"}`. When update-dependency-version.yml
+      receives a breaking update, it checks if the repo has a cap for that dependency. If capped: skip the
+      constraint update, add a comment to pyproject.toml noting the cap reason, and set ci_status to
+      `STAGING_PENDING` (still needs re-validation against the capped version). Cap is cleared manually
+      when the repo is updated to work with the new version. run-version-alignment.sh flags capped repos
+      as "pinned to old version — update needed." This mirrors how external deps work (pandas>=1.5,<2.0).
+      Files: workspace-manifest.json (add dependency_caps schema), update-dependency-version.yml (read caps),
+      run-version-alignment.sh (flag capped repos).
+    status: pending
+  - id: cascade-breaking-change-version-aware-cloning
+    content: |
+      - [ ] [AGENT] P2. Version-aware sibling repo cloning in GHA quality-gates.yml. Currently:
+      python-quality-gates.yml clones sibling repos at HEAD of the branch. If a downstream repo is capped
+      at `<0.3.0` but the sibling repo's HEAD is 0.3.0, QG clones the wrong version. Fix: read the
+      pyproject.toml constraint for each sibling dep, find the latest git tag matching the constraint
+      (e.g., `git tag --list 'v0.2.*' --sort=-v:refname | head -1`), and checkout at that tag instead of
+      HEAD. This ensures QG tests against the version the repo actually declares compatibility with.
+      Falls back to HEAD if no matching tag exists (pre-tagging era). File:
+      `.github/actions/setup-python-tools/action.yml` (sibling checkout logic).
+    status: pending
+  - id: cascade-breaking-change-staging-lock-on-breaking-minor
+    content: |
+      - [ ] [AGENT] P1. Lock staging on breaking MINOR bumps (pre-1.0.0). Currently update-repo-version.yml
+      only locks staging when `bump_type == "major"` (line 113). But pre-1.0.0, breaking changes are MINOR
+      bumps — staging doesn't lock, so new non-breaking merges can land on staging while the breaking cascade
+      is still propagating. Fix: also lock when `is_breaking=true`, regardless of bump_type. The lock reason
+      should say "Breaking MINOR bump cascade: {repo}={version} (pre-1.0.0)". SIT gate and starvation
+      detector already handle the lock correctly — no changes needed there.
+      File: `update-repo-version.yml` (add is_breaking to lock condition).
+    status: pending
+  - id: cascade-breaking-change-manifest-lock-file
+    content: |
+      - [x] [AGENT] P1. Add fcntl.flock file locking to local manifest writes in base-service.sh.
+      When multiple agents run QG in parallel on the same machine, they race to read-modify-write
+      workspace-manifest.json. This causes stale SVG renders and lost ci_status updates. Fix: both
+      the regression handler (_qg_record_failure) and success handler (LOCAL_PASS writer) now use
+      fcntl.flock(LOCK_EX) on `.workspace-manifest.lock` before reading/writing the manifest.
+      Lock auto-releases on process exit/crash. 5-minute timeout via signal.alarm prevents deadlock
+      from stale locks. GHA is unaffected (one repo per runner). Local parallel runs are now safe.
+      COMPLETED 2026-03-15: Both write paths in base-service.sh wrapped with fcntl.flock + 5min timeout.
+    status: done
   - id: harden-fix-sha-pinning-toctou
     content: |
       - [x] [AGENT] P0. Fix BUG-3: SHA pinning TOCTOU in `staging-to-main.yml`. Between SIT completing and the merge PR being created, a concurrent push could land on staging that bypasses SIT validation. Fix: after checkout of each repo's staging branch, verify `git rev-parse HEAD` matches the SHA recorded in `staging_commits[repo]`. If mismatch and the new commits are NOT `[skip ci]`-only, abort the promotion and re-trigger SIT. Current code allows `[skip ci]` descendants — preserve that.
@@ -598,6 +685,82 @@ isProject: false
   fixed.
 - **This plan's Phase 3 blocks Plan 3 (DeFi Keys) Phase 2** — VCR cassette recording needs interfaces hardened.
 - **This plan's Phase 4 blocks Plan 4 (Presentations)** — demo data needs services deployed.
+
+### ci_status Lifecycle State Machine (SSOT)
+
+`ci_status` is the **single field** tracking a repo's quality gate progression through the pipeline. The legacy
+`quality_gate_status` field is **removed** — it was never wired into GHA and drifted from reality.
+
+**States (ordered by pipeline progression):**
+
+| State             | Color   | Hex     | Set By                                     | Meaning                                                          |
+| ----------------- | ------- | ------- | ------------------------------------------ | ---------------------------------------------------------------- |
+| `NOT_CONFIGURED`  | grey    | #94a3b8 | manifest audit                             | No quality-gates.sh script in repo                               |
+| `EXEMPT`          | grey    | #94a3b8 | manual                                     | Intentionally no QG (PM, codex with no tests)                    |
+| `FAILING`         | red     | #ef4444 | any QG run (local or GHA)                  | Last QG run failed at any stage                                  |
+| `LOCAL_PASS`      | yellow  | #facc15 | local `bash scripts/quality-gates.sh`      | QG passed locally; not yet confirmed by GHA CI                   |
+| `FEATURE_GREEN`   | lime    | #84cc16 | GHA `quality-gates.yml` on feature/main    | GHA CI confirmed QG pass on feature or main branch               |
+| `STAGING_PENDING` | yellow  | #eab308 | merge-to-staging / quickmerge --to-staging | Promoted to staging; QG must re-run against staging siblings     |
+| `STAGING_GREEN`   | green   | #22c55e | GHA `quality-gates.yml` on staging         | GHA CI confirmed QG pass on staging branch with staging siblings |
+| `SIT_VALIDATED`   | emerald | #10b981 | `sit-gate.yml` after SIT passes            | System integration tests passed; ready for main promotion        |
+
+**Transition rules:**
+
+```
+NOT_CONFIGURED ──[add QG script]──> FAILING or LOCAL_PASS
+EXEMPT ── (no transitions, terminal for non-code repos)
+FAILING ──[local QG pass]──> LOCAL_PASS
+FAILING ──[GHA QG pass on feature]──> FEATURE_GREEN
+LOCAL_PASS ──[GHA QG pass on feature]──> FEATURE_GREEN
+FEATURE_GREEN ──[merge to staging]──> STAGING_PENDING  ← RESET (fresh environment)
+STAGING_PENDING ──[GHA QG pass on staging]──> STAGING_GREEN
+STAGING_GREEN ──[all staged repos green + SIT pass]──> SIT_VALIDATED
+SIT_VALIDATED ──[staging-to-main promotion]──> FEATURE_GREEN  ← resets to feature-level (main is the new baseline)
+Any state ──[QG fails]──> FAILING
+```
+
+**Why staging resets status:** Staging has different sibling repos at different versions than the feature branch. A repo
+that passes QG in isolation on its feature branch may fail when its deps are at staging HEAD. The reset forces
+re-validation of integration edges before SIT runs.
+
+**SIT gate rule:** SIT (`system-integration-tests`) only fires when ALL repos in `staging_status.pending_repos` are
+`STAGING_GREEN`. If any repo is `STAGING_PENDING` or `FAILING`, SIT is blocked and Telegram reports which repos are
+holding up the pipeline.
+
+**GHA workflow responsibilities:**
+
+- `quality-gates.yml` (per-repo): On success, dispatches `ci-status-update` to PM with
+  `{repo, branch, status: "FEATURE_GREEN"|"STAGING_GREEN"}` based on trigger branch.
+- `sit-gate.yml` (PM): Reads `staging_status.pending_repos`, checks all are `STAGING_GREEN`, then runs SIT. On SIT pass,
+  sets all pending repos to `SIT_VALIDATED`.
+- `staging-to-main.yml` (PM): On promotion, resets promoted repos to `FEATURE_GREEN`.
+- `update-repo-version.yml` (PM): On merge-to-staging events, sets repo to `STAGING_PENDING`.
+
+### Breaking Change Cascade Design (Pre-1.0.0)
+
+All repos are <1.0.0. Per semver rules, `feat!:` bumps MINOR (not MAJOR). This creates a blind spot: `bump_type=minor`
+is indistinguishable from a non-breaking feature addition. Three gaps result:
+
+**Gap 1: No downstream ci_status invalidation.** When library X bumps 0.2→0.3 with `feat!:`, downstream repos still show
+LOCAL_PASS. Nobody knows they're stale until SIT eventually catches it.
+
+**Gap 2: MINOR uses `[skip ci]`.** update-dependency-version.yml commits MINOR updates with `[skip ci]` — QG never
+re-runs on downstream repos, so broken code isn't caught until SIT or manual run.
+
+**Gap 3: No version pinning escape hatch.** Downstream repos can't say "keep me on `<0.3.0` while I fix my code." The
+constraint gets force-updated to `>=0.3.0`.
+
+**Solution — 3 phases:**
+
+| Phase  | What                                                                                                                                                                                                 | Files Modified                                                                   |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1 (P0) | Add `is_breaking` flag to dispatch chain. semver-agent → PM → downstream. When true: (a) lock staging, (b) route through PR path (not `[skip ci]`), (c) set downstream ci_status to STAGING_PENDING. | semver-agent.yml, update-repo-version.yml, update-dependency-version.yml         |
+| 2 (P1) | Add `dependency_caps` to manifest. Downstream can pin to old stable version. run-version-alignment.sh flags capped repos.                                                                            | workspace-manifest.json, update-dependency-version.yml, run-version-alignment.sh |
+| 3 (P2) | Version-aware sibling cloning. GHA reads pyproject.toml constraint, clones matching tag instead of HEAD.                                                                                             | setup-python-tools/action.yml                                                    |
+
+**Why not just use bump_type=major for pre-1.0.0 breaking?** Because the semver spec says pre-1.0.0 MAJOR bumps cross to
+1.0.0 — which we explicitly block until stability gate. The `is_breaking` flag preserves correct semver while adding the
+missing signal.
 
 ### Citadel-Grade Design Principles
 

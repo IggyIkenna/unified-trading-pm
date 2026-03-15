@@ -14,6 +14,10 @@ PM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WORKSPACE_ROOT="$(cd "$PM_ROOT/.." && pwd)"
 CLEAN_CACHE=false
 
+# Known dev ports for final sweep
+UI_PORTS=(5173 5174 5175 5176 5177 5178 5179 5180 5181 5182 5183)
+API_PORTS=(8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015 8016)
+
 # ── Colors ──────────────────────────────────────────────────────────────────
 if command -v tput >/dev/null 2>&1 && [ -t 1 ]; then
   RED=$(tput setaf 1); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3)
@@ -24,6 +28,16 @@ fi
 
 info() { echo "${GREEN}>>>${NC} $*"; }
 warn() { echo "${YELLOW}WARN:${NC} $*"; }
+
+# Kill a process and all its children
+kill_tree() {
+  local pid="$1"
+  local sig="${2:-TERM}"
+  # Kill children first
+  pkill "-${sig}" -P "$pid" 2>/dev/null || true
+  # Then kill the parent
+  kill "-${sig}" "$pid" 2>/dev/null || true
+}
 
 stop_service() {
   local pid_file="$1"
@@ -38,7 +52,8 @@ stop_service() {
   pid=$(cat "$pid_file")
 
   if kill -0 "$pid" 2>/dev/null; then
-    kill "$pid" 2>/dev/null || true
+    # Graceful: kill process tree with SIGTERM
+    kill_tree "$pid" "TERM"
     # Wait briefly for graceful shutdown
     local i=0
     while kill -0 "$pid" 2>/dev/null && [ $i -lt 10 ]; do
@@ -47,7 +62,7 @@ stop_service() {
     done
     # Force kill if still running
     if kill -0 "$pid" 2>/dev/null; then
-      kill -9 "$pid" 2>/dev/null || true
+      kill_tree "$pid" "9"
     fi
     info "Stopped ${BOLD}${name}${NC} (PID $pid)"
   else
@@ -60,7 +75,7 @@ stop_service() {
       local port_pid
       port_pid=$(lsof -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true)
       if [ -n "$port_pid" ]; then
-        kill "$port_pid" 2>/dev/null || true
+        kill_tree "$port_pid" "TERM"
         info "Stopped ${BOLD}${name}${NC} (orphan PID $port_pid on port $port)"
         killed_by_port=true
       fi
@@ -73,6 +88,22 @@ stop_service() {
   rm -f "$pid_file"
   rm -f "${PID_DIR}/${name}.port"
   rm -f "${PID_DIR}/${name}.log"
+}
+
+# Final sweep: kill anything still listening on known dev ports
+sweep_ports() {
+  local swept=0
+  for port in "${UI_PORTS[@]}" "${API_PORTS[@]}"; do
+    local remaining
+    remaining=$(lsof -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true)
+    if [ -n "$remaining" ]; then
+      kill "$remaining" 2>/dev/null || true
+      swept=$((swept + 1))
+    fi
+  done
+  if [ "$swept" -gt 0 ]; then
+    info "Swept $swept orphaned process(es) from dev ports"
+  fi
 }
 
 # ── Argument parsing ────────────────────────────────────────────────────────
@@ -119,6 +150,9 @@ else
   if [ "$found" = false ]; then
     info "No dev servers are running."
   fi
+
+  # Final sweep: catch any orphan processes on known dev ports
+  sweep_ports
 
   # Clean up empty directory
   rmdir "$PID_DIR" 2>/dev/null || true

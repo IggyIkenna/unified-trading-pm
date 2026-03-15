@@ -100,8 +100,73 @@ jobs:
         run: |
           BRANCH="${DEP_BRANCH:-main}"
           OWNER="${GITHUB_REPOSITORY_OWNER}"
+
+          # Version-aware clone: read pyproject.toml constraint for each dep,
+          # find the latest git tag matching the constraint, and clone at that tag.
+          # Falls back to branch clone if no matching tag exists (pre-tagging era).
+          get_version_tag() {
+            local name="$1"
+            # Read constraint from pyproject.toml (e.g., ">=0.2.0,<0.3.0" → extract upper bound <0.3.0)
+            local constraint
+            constraint=$(python3 -c "
+          import re, sys
+          try:
+              with open('pyproject.toml') as f:
+                  content = f.read()
+              m = re.search(r'\"${name}([^\"]+)\"', content.replace('$name', '${name}'))
+              if m:
+                  spec = m.group(1)
+                  # Extract upper bound: <X.Y.Z
+                  ub = re.search(r'<(\d+\.\d+\.\d+)', spec)
+                  if ub:
+                      print(ub.group(1))
+          except Exception:
+              pass
+          " 2>/dev/null || echo "")
+
+            if [ -n "$constraint" ]; then
+              # Find latest tag less than the upper bound
+              local tag
+              tag=$(git ls-remote --tags "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" 2>/dev/null \
+                | grep -oE 'refs/tags/v?[0-9]+\.[0-9]+\.[0-9]+$' \
+                | sed 's|refs/tags/||' \
+                | sort -V \
+                | python3 -c "
+          import sys
+          from packaging.version import Version
+          upper = Version('${constraint}')
+          tags = []
+          for line in sys.stdin:
+              t = line.strip()
+              try:
+                  v = Version(t.lstrip('v'))
+                  if v < upper:
+                      tags.append((v, t))
+              except Exception:
+                  pass
+          if tags:
+              tags.sort(key=lambda x: x[0])
+              print(tags[-1][1])
+          " 2>/dev/null || echo "")
+              if [ -n "$tag" ]; then
+                echo "$tag"
+                return
+              fi
+            fi
+            echo ""
+          }
+
           clone_repo() {
             local name="$1"
+            # Try version-aware clone first (Phase 3: version-aware cloning)
+            local tag
+            tag=$(get_version_tag "$name")
+            if [ -n "$tag" ]; then
+              echo "Cloning $name at tag $tag (version-aware)"
+              git clone -b "$tag" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null && return
+              echo "Tag clone failed for $name@$tag — falling back to branch clone"
+            fi
+            # Fallback: clone at triggering branch or main
             (git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null \
               || git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null) || true
           }
@@ -124,16 +189,27 @@ jobs:
           export PATH="$(pwd)/.venv/bin:$PATH"
           bash scripts/quality-gates.sh --no-fix
 
-      - name: Record CI status
+      - name: Record CI status (branch-aware lifecycle)
         if: always()
         shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+          TRIGGER_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
-          STATUS="${{ job.status == 'success' && 'PASSING' || 'FAILING' }}"
+
+          # Determine ci_status based on job result AND which branch triggered
+          if [ "${{ job.status }}" != "success" ]; then
+            STATUS="FAILING"
+          elif [ "$TRIGGER_BRANCH" = "staging" ]; then
+            STATUS="STAGING_GREEN"
+          else
+            STATUS="FEATURE_GREEN"
+          fi
+
+          echo "Recording ci_status=${STATUS} for ${GITHUB_REPOSITORY#*/} (branch=${TRIGGER_BRANCH})"
           curl -s -X POST \
             -H "Authorization: token ${GH_PAT}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
-            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"sha\": \"${GITHUB_SHA}\"}}"
+            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\"}}"

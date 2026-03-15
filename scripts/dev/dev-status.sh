@@ -192,7 +192,7 @@ for service in "${all_services[@]}"; do
     fi
   else
     # No PID file — check if something is listening on the port anyway (started outside dev-start.sh)
-    local actual_pid=""
+    actual_pid=""
     if [ -n "$port" ]; then
       actual_pid=$(lsof -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true)
     fi

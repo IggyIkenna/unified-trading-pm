@@ -17,6 +17,16 @@ import sys
 from pathlib import Path
 from typing import cast
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
+try:
+    import jsonschema  # type: ignore[import-untyped]
+except ImportError:
+    jsonschema = None
+
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
 
 # Minimal AWS CodeBuild buildspec schema (no official SchemaStore schema)
@@ -68,14 +78,16 @@ class _ParsedArgs(argparse.Namespace):
 
 
 def load_yaml(path: Path) -> object:
-    import yaml
+    if yaml is None:
+        raise ImportError("yaml module not available")
 
     with open(path) as f:
         return cast(object, yaml.safe_load(f))
 
 
 def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | None]:
-    import jsonschema
+    if jsonschema is None:
+        raise ImportError("jsonschema module not available")
 
     try:
         data = load_yaml(path)

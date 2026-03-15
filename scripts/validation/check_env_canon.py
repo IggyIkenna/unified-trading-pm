@@ -19,6 +19,12 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    from unified_internal_contracts import EnvVars
+except ImportError:
+    # Fallback if UIC not available (e.g. running outside workspace)
+    EnvVars = None
+
 # Bootstrap allowlist: these files may use env before config exists; skip validation
 BOOTSTRAP_BASENAMES = {"_env_bootstrap.py", "factory.py", "constants.py", "config.py", "__main__.py", "kill_switch.py"}
 
@@ -34,11 +40,9 @@ OS_ENVIRON_INDEX_RE = re.compile(r"os\.environ\s*\[\s*[\"']([^\"']+)[\"']\s*\]")
 
 def _get_canonical_keys() -> set[str]:
     """Return set of canonical env var keys from UIC EnvVars."""
-    try:
-        from unified_internal_contracts.env_canon import EnvVars
-
+    if EnvVars is not None:
         return EnvVars.all_canonical()
-    except ImportError:
+    else:
         # Fallback if UIC not available (e.g. running outside workspace)
         return {
             "RUNTIME_MODE",

@@ -615,6 +615,7 @@
     },
     "alerting-service": {
       "internal_deps": {
+        "unified-cloud-interface": "unified-cloud-interface>=0.11.39,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
@@ -643,7 +644,7 @@
         "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 5,
       "external_count": 21
     },
     "execution-service": {
@@ -651,11 +652,12 @@
         "execution-algo-library": "execution-algo-library>=0.1.0",
         "matching-engine-library": "matching-engine-library>=0.1.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.11.39,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-defi-execution-interface": "unified-defi-execution-interface>=0.1.0,<1.0.0",
+        "unified-domain-client": "unified-domain-client>=0.1.76,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
-        "unified-market-interface": "unified-market-interface>=0.1.0,<1.0.0",
         "unified-sports-execution-interface": "unified-sports-execution-interface>=0.1.0,<1.0.0",
         "unified-trade-execution-interface": "unified-trade-execution-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
@@ -706,7 +708,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"],
         "websockets": ["websockets>=14.0,<15.0.0"]
       },
-      "internal_count": 11,
+      "internal_count": 12,
       "external_count": 44
     },
     "features-calendar-service": {
@@ -795,7 +797,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.3,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0",
-        "unified-feature-calculator-library": "unified-feature-calculator-library>=0.2.0,<1.0.0",
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.95,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
@@ -906,10 +908,12 @@
     },
     "features-sports-service": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-feature-calculator-library": "unified-feature-calculator-library>=0.2.0,<1.0.0",
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-market-interface": "unified-market-interface>=0.3.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -930,7 +934,7 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 6,
+      "internal_count": 8,
       "external_count": 15
     },
     "features-volatility-service": {
@@ -970,6 +974,10 @@
     },
     "market-data-processing-service": {
       "internal_deps": {
+        "market-tick-data-service": "market-tick-data-service>=0.1.0,<1.0.0",
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
+        "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.2,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
@@ -1005,13 +1013,15 @@
         "ruff": ["ruff==0.15.0"],
         "types-aiobotocore-full": ["types-aiobotocore-full>=2.26.0,<3.0.0"]
       },
-      "internal_count": 3,
+      "internal_count": 7,
       "external_count": 29
     },
     "market-tick-data-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.11.39,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
+        "unified-domain-client": "unified-domain-client>=0.1.76,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-market-interface": "unified-market-interface>=0.4.0,<1.0.0",
@@ -1041,6 +1051,8 @@
         "pandas-gbq": ["pandas-gbq>=0.19.0,<1.0.0"],
         "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
+        "plotly-resampler": ["plotly-resampler>=0.9.0,<1.0.0"],
+        "plotly<7.0.0,": ["plotly<7.0.0,>=6.4.0"],
         "polars": ["polars>=1.37.0,<2.0.0"],
         "prek": ["prek>=0.3.0,<1.0.0"],
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
@@ -1075,8 +1087,8 @@
         "yfinance": ["yfinance>=0.2.66,<1.0.0"],
         "zstandard": ["zstandard>=0.22.0,<1.0.0"]
       },
-      "internal_count": 7,
-      "external_count": 55
+      "internal_count": 9,
+      "external_count": 57
     },
     "ml-inference-service": {
       "internal_deps": {
@@ -1122,8 +1134,12 @@
     },
     "ml-training-service": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.2.38,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.11.39,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-feature-calculator-library": "unified-feature-calculator-library>=0.2.0,<1.0.0",
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.95,<1.0.0",
         "unified-ml-interface": "unified-ml-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
@@ -1161,7 +1177,7 @@
         "ta-lib": ["ta-lib>=0.6.8,<1.0.0"],
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 8,
       "external_count": 32
     },
     "pnl-attribution-service": {
@@ -1244,11 +1260,9 @@
     },
     "features-commodity-service": {
       "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.3,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0",
-        "unified-feature-calculator-library": "unified-feature-calculator-library>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
@@ -1278,7 +1292,7 @@
         "ruff": ["ruff==0.15.0"],
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
       },
-      "internal_count": 7,
+      "internal_count": 5,
       "external_count": 24
     },
     "trading-agent-service": {
@@ -1407,8 +1421,10 @@
     },
     "market-data-api": {
       "internal_deps": {
+        "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -1428,7 +1444,7 @@
         "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 3,
+      "internal_count": 5,
       "external_count": 15
     },
     "ml-inference-api": {
@@ -1445,6 +1461,7 @@
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1456,7 +1473,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 3,
-      "external_count": 16
+      "external_count": 17
     },
     "ml-training-api": {
       "internal_deps": {
@@ -1483,11 +1500,11 @@
     },
     "position-balance-monitor-service": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.2.38,<1.0.0",
         "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
-        "unified-position-interface": "unified-position-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -1526,6 +1543,8 @@
     },
     "risk-and-exposure-service": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.2.38,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.11.39,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.3.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
@@ -1558,11 +1577,13 @@
         "ruff": ["ruff==0.15.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 6,
       "external_count": 25
     },
     "trading-analytics-api": {
       "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
@@ -1585,7 +1606,7 @@
         "ruff": ["ruff==0.15.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 3,
+      "internal_count": 5,
       "external_count": 16
     },
     "config-api": {
@@ -1668,7 +1689,6 @@
     },
     "deployment-service": {
       "internal_deps": {
-        "deployment-api": "deployment-api>=0.1.0,<1.0.0",
         "unified-cloud-interface": "unified-cloud-interface>=0.11.6,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "path",
@@ -1696,7 +1716,7 @@
         "ruff": ["ruff==0.15.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 5,
+      "internal_count": 4,
       "external_count": 20
     },
     "unified-trading-ui-kit": {

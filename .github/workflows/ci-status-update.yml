@@ -3,10 +3,17 @@ name: ci-status-update
 # Receives repository_dispatch from quality-gates workflows (python-quality-gates.yml,
 # ui-quality-gates.yml) when QG completes. Updates workspace-manifest.json ci_status
 # for the repo, regenerates the DAG SVG, and commits. ci_status is the single source
-# of truth for QG state — quality_gate_status is deprecated/removed.
+# of truth for QG state — quality_gate_status is removed.
 #
 # Trigger: repository_dispatch event_type=ci-status-update
-# Payload: { repo, status, sha } — status is PASSING or FAILING
+# Payload: { repo, status, branch, sha }
+#   status: FEATURE_GREEN | STAGING_GREEN | FAILING
+#   branch: the branch that triggered the QG run (used to determine status)
+#
+# ci_status lifecycle (8 states):
+#   NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING → STAGING_GREEN → SIT_VALIDATED
+#   Any state can regress to FAILING on QG failure.
+# See rollout plan § ci_status Lifecycle State Machine for full spec.
 
 on:
   repository_dispatch:
@@ -47,8 +54,9 @@ jobs:
             exit 0
           fi
 
-          if [ "$STATUS" != "PASSING" ] && [ "$STATUS" != "FAILING" ]; then
-            echo "Invalid status '$STATUS'. Must be PASSING or FAILING. Skipping."
+          VALID_STATUSES="FEATURE_GREEN STAGING_GREEN FAILING LOCAL_PASS SIT_VALIDATED"
+          if ! echo "$VALID_STATUSES" | tr ' ' '\n' | grep -qx "$STATUS"; then
+            echo "Invalid status '$STATUS'. Must be one of: $VALID_STATUSES. Skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi

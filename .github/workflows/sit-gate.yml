@@ -26,6 +26,41 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
+      - name: Verify all pending repos are STAGING_GREEN
+        id: ci_check
+        run: |
+          set -euo pipefail
+          python3 - <<PYEOF
+          import json, sys
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          repos = manifest.get("repositories", {})
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+
+          # Repos that have staging changes
+          pending = [r for r, sv in staging_versions.items()
+                     if not r.startswith("_") and sv != stable_versions.get(r)]
+
+          # Check ci_status for each pending repo
+          not_green = []
+          for repo in pending:
+              ci = repos.get(repo, {}).get("ci_status", "NOT_CONFIGURED")
+              if ci != "STAGING_GREEN":
+                  not_green.append(f"  {repo}: ci_status={ci} (need STAGING_GREEN)")
+
+          if not_green:
+              print("BLOCKED: SIT cannot run — not all pending repos are STAGING_GREEN:")
+              for line in not_green:
+                  print(line)
+              print(f"\n{len(not_green)}/{len(pending)} repos not ready. SIT blocked.")
+              sys.exit(1)
+
+          print(f"All {len(pending)} pending repos are STAGING_GREEN. SIT can proceed.")
+          PYEOF
+
       - name: Lock staging and record commit SHAs
         run: |
           set -euo pipefail
