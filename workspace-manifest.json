@@ -3051,8 +3051,14 @@
       "doc_standard": "library-canonical",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [],
-      "ci_status": "FAILING",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
