@@ -28,7 +28,7 @@ name: Semver Agent
 #   fix: / internal change         → PATCH bump
 #
 # Dispatch payload to unified-trading-pm:
-#   { repo, version, branch, commit_sha }
+#   { repo, version, branch, commit_sha, is_breaking }
 #
 # Secrets required:
 #   GH_PAT  — cross-repo dispatch and issue creation
