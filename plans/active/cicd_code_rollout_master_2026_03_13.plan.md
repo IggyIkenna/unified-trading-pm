@@ -50,15 +50,15 @@ todos:
     status: done
   - id: cleanup-remediate-failing-repo
     content: |
-      - [ ] [AGENT] P0. unified-api-contracts has ci_status=FAILING. This is a T0 repo — if it stays FAILING, it blocks the entire T0→T1→T2→T3 tier cascade in Phase 3. Identify the failure cause, fix it, and get QG passing before Phase 3.
-    status: pending
+      - [x] [AGENT] P0. unified-api-contracts has ci_status=FAILING. This is a T0 repo — if it stays FAILING, it blocks the entire T0→T1→T2→T3 tier cascade in Phase 3. Identify the failure cause, fix it, and get QG passing before Phase 3.
+    status: done
   - id: cleanup-handle-baseline-pending
     content: |
-      - [ ] [SCRIPT] P1. 5 repos stuck at ci_status=BASELINE_PENDING: batch-audit-api, batch-live-reconciliation-service, ml-inference-api, ml-training-api, trading-analytics-api. Determine what BASELINE_PENDING means (likely: QG never ran or never completed). Run QG on each and update ci_status accordingly.
-    status: pending
+      - [x] [SCRIPT] P1. 5 repos stuck at ci_status=BASELINE_PENDING: batch-audit-api, batch-live-reconciliation-service, ml-inference-api, ml-training-api, trading-analytics-api. Determine what BASELINE_PENDING means (likely: QG never ran or never completed). Run QG on each and update ci_status accordingly.
+    status: done
   - id: cascade-breaking-change-is-breaking-flag
     content: |
-      - [ ] [AGENT] P0. Add `is_breaking: true/false` field to version-bump dispatch payload. Currently
+      - [x] [AGENT] P0. Add `is_breaking: true/false` field to version-bump dispatch payload. Currently
       semver-agent detects `feat!:` / `BREAKING CHANGE:` but the downstream dispatch only carries `bump_type`
       (major/minor/patch). Pre-1.0.0, a breaking change is a MINOR bump — indistinguishable from a non-breaking
       feature. Fix: semver-agent.yml template sets `is_breaking=true` when it detects breaking commit conventions.
@@ -67,10 +67,11 @@ todos:
       downstream repos. Files: `scripts/propagation/templates/semver-agent.yml` (add is_breaking to dispatch),
       `update-repo-version.yml` (read + forward is_breaking), `scripts/propagation/templates/update-dependency-version.yml`
       (read is_breaking). Roll out semver-agent.yml template to all 67 repos after change.
-    status: pending
+      COMPLETED 2026-03-15: Template already had is_breaking detection (lines 332-342) and dispatch (line 431). PM deployed semver-agent.yml synced with template: added is_breaking tracking in compute step, included in both always_patch and normal dispatch payloads. update-repo-version.yml reads is_breaking (line 48) and forwards to downstream (line 309). update-dependency-version.yml reads is_breaking (line 48).
+    status: done
   - id: cascade-breaking-change-ci-status-invalidation
     content: |
-      - [ ] [AGENT] P0. When a breaking dependency update cascades, immediately invalidate downstream ci_status.
+      - [x] [AGENT] P0. When a breaking dependency update cascades, immediately invalidate downstream ci_status.
       In update-repo-version.yml: when dispatching dependency-update with `is_breaking=true`, ALSO dispatch
       `ci-status-update` to each downstream repo setting `ci_status=STAGING_PENDING`. This signals: "your
       dependency changed in a breaking way — you must re-run QG before SIT will accept you." The SVG DAG
@@ -79,10 +80,11 @@ todos:
       stale until SIT eventually fails. Add `breaking_cascade_source` field to the ci-status-update payload
       so the manifest records WHY the status was reset (e.g., "unified-market-interface 0.3.0 breaking change").
       File: `update-repo-version.yml` (add ci-status-update dispatch in the downstream loop when is_breaking).
-    status: pending
+      COMPLETED 2026-03-15: update-repo-version.yml (lines 317-337) already implements this: when is_breaking=true, sets ci_status=STAGING_PENDING and records breaking_cascade_source for each downstream repo directly in manifest JSON (more direct than separate dispatch).
+    status: done
   - id: cascade-breaking-change-skip-ci-removal
     content: |
-      - [ ] [AGENT] P0. Remove `[skip ci]` for breaking MINOR bumps in update-dependency-version.yml.
+      - [x] [AGENT] P0. Remove `[skip ci]` for breaking MINOR bumps in update-dependency-version.yml.
       Currently: MINOR/PATCH → direct commit with `[skip ci]` (line 92). But pre-1.0.0, a MINOR bump IS
       a breaking change — `[skip ci]` means downstream QG never re-runs, so broken code isn't caught until
       SIT. Fix: when `is_breaking=true`, route through the PR path (same as MAJOR) instead of direct commit.
@@ -91,10 +93,11 @@ todos:
       `bump_type != 'major' && is_breaking != 'true'`. The PR path on line 96 changes from
       `bump_type == 'major'` to `bump_type == 'major' || is_breaking == 'true'`.
       File: `scripts/propagation/templates/update-dependency-version.yml`.
-    status: pending
+      COMPLETED 2026-03-15: update-dependency-version.yml already implements dual routing: direct commit step (line 114-117) conditioned on `bump_type != 'major' && is_breaking != 'true'`; PR step (lines 131-134) conditioned on `bump_type == 'major' || is_breaking == 'true'`. Breaking MINOR bumps correctly route through PR path.
+    status: done
   - id: cascade-breaking-change-constraint-capping
     content: |
-      - [ ] [AGENT] P1. Add version constraint capping escape hatch. When a downstream repo receives a
+      - [x] [AGENT] P1. Add version constraint capping escape hatch. When a downstream repo receives a
       breaking dependency update, it currently MUST accept the new version (`>=0.3.0,<1.0.0`). There is no
       way to say "keep me on the old stable version while I fix my code." Fix: add `dependency_caps` map
       to manifest repo entries: `{"unified-market-interface": "<0.3.0"}`. When update-dependency-version.yml
@@ -105,10 +108,11 @@ todos:
       as "pinned to old version — update needed." This mirrors how external deps work (pandas>=1.5,<2.0).
       Files: workspace-manifest.json (add dependency_caps schema), update-dependency-version.yml (read caps),
       run-version-alignment.sh (flag capped repos).
-    status: pending
+      COMPLETED 2026-03-15: update-dependency-version.yml (lines 63-86) reads dependency_caps from PM manifest; if capped, skips constraint update and sets skip=true + capped=true. run-version-alignment.sh step [0.9/4] added to scan manifest for repos with active dependency_caps and report them as "pinned to old version, update needed."
+    status: done
   - id: cascade-breaking-change-version-aware-cloning
     content: |
-      - [ ] [AGENT] P2. Version-aware sibling repo cloning in GHA quality-gates.yml. Currently:
+      - [x] [AGENT] P2. Version-aware sibling repo cloning in GHA quality-gates.yml. Currently:
       python-quality-gates.yml clones sibling repos at HEAD of the branch. If a downstream repo is capped
       at `<0.3.0` but the sibling repo's HEAD is 0.3.0, QG clones the wrong version. Fix: read the
       pyproject.toml constraint for each sibling dep, find the latest git tag matching the constraint
@@ -116,17 +120,19 @@ todos:
       HEAD. This ensures QG tests against the version the repo actually declares compatibility with.
       Falls back to HEAD if no matching tag exists (pre-tagging era). File:
       `.github/actions/setup-python-tools/action.yml` (sibling checkout logic).
-    status: pending
+      COMPLETED 2026-03-15: python-quality-gates.yml (lines 107-172) implements get_version_tag() that reads pyproject.toml constraint, extracts upper bound, queries git tags via ls-remote, and finds the latest tag below the upper bound using packaging.Version. clone_repo() tries version-aware clone first, falls back to branch clone if no matching tag exists.
+    status: done
   - id: cascade-breaking-change-staging-lock-on-breaking-minor
     content: |
-      - [ ] [AGENT] P1. Lock staging on breaking MINOR bumps (pre-1.0.0). Currently update-repo-version.yml
+      - [x] [AGENT] P1. Lock staging on breaking MINOR bumps (pre-1.0.0). Currently update-repo-version.yml
       only locks staging when `bump_type == "major"` (line 113). But pre-1.0.0, breaking changes are MINOR
       bumps — staging doesn't lock, so new non-breaking merges can land on staging while the breaking cascade
       is still propagating. Fix: also lock when `is_breaking=true`, regardless of bump_type. The lock reason
       should say "Breaking MINOR bump cascade: {repo}={version} (pre-1.0.0)". SIT gate and starvation
       detector already handle the lock correctly — no changes needed there.
       File: `update-repo-version.yml` (add is_breaking to lock condition).
-    status: pending
+      COMPLETED 2026-03-15: update-repo-version.yml line 116 already has `if bump_type == "major" or is_breaking:` which covers breaking MINOR. Lock reason on line 123 says "Breaking MINOR bump cascade: {repo}={version} (pre-1.0.0)" when is_breaking and bump_type != major.
+    status: done
   - id: cascade-breaking-change-manifest-lock-file
     content: |
       - [x] [AGENT] P1. Add fcntl.flock file locking to local manifest writes in base-service.sh.
