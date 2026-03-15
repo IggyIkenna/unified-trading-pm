@@ -52,6 +52,32 @@ REPO_ROOT="${REPO_ROOT:-$(dirname "$PROJECT_ROOT")}"
 cd "$PROJECT_ROOT"
 unset _BASE_CALLER
 
+# ── CI_STATUS REGRESSION HANDLER ─────────────────────────────────────────────
+# On QG failure (non-zero exit), set ci_status=FAILING in the manifest.
+# Regression is essential: a repo that was LOCAL_PASS but now fails MUST go red.
+_qg_record_failure() {
+    local exit_code=$?
+    [[ $exit_code -eq 0 ]] && return 0
+    [[ "${GITHUB_ACTIONS:-}" == "true" ]] && return $exit_code  # GHA handles via dispatch
+    local _m="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
+    local _name="${SERVICE_NAME:-${PACKAGE_NAME:-}}"
+    if [[ -f "$_m" ]] && [[ -n "$_name" ]] && command -v python3 &>/dev/null; then
+        MANIFEST_PATH="$_m" REPO_NAME="$_name" python3 -c '
+import json, os
+p, r = os.environ.get("MANIFEST_PATH"), os.environ.get("REPO_NAME")
+if not p or not r: exit(0)
+with open(p) as f: m = json.load(f)
+repos = m.get("repositories", {})
+if r not in repos: exit(0)
+repos[r]["ci_status"] = "FAILING"
+with open(p, "w") as f: json.dump(m, f, indent=2); f.write("\n")
+print(f"ci_status: {r} → FAILING (QG failed)")
+' 2>/dev/null || true
+    fi
+    return $exit_code
+}
+trap _qg_record_failure EXIT
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 MAX_FILE_LINES=900; FILE_WARN_LINES=700
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
@@ -721,21 +747,28 @@ if [ "$ACT_MODE" = true ]; then
 fi
 
 
-# ── RECORD LOCAL PASS (ci_status=LOCALLY_PASSED when not in CI) ───────────────
+# ── RECORD LOCAL PASS (ci_status=LOCAL_PASS when not in CI) ──────────────────
+# Regression is allowed: if a repo was FEATURE_GREEN but now passes locally,
+# it stays at its current level (LOCAL_PASS won't downgrade FEATURE_GREEN+).
+# If a repo was FAILING, LOCAL_PASS promotes it. Any state can regress to FAILING.
 if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
     _MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
     if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
-        if ! MANIFEST_PATH="$_MANIFEST" REPO_NAME="$SERVICE_NAME" python3 -c '
+        if ! MANIFEST_PATH="$_MANIFEST" REPO_NAME="${SERVICE_NAME:-${PACKAGE_NAME:-}}" python3 -c '
 import json, os
 p, r = os.environ.get("MANIFEST_PATH"), os.environ.get("REPO_NAME")
 if not p or not r: exit(0)
 with open(p) as f: m = json.load(f)
 repos = m.get("repositories", {})
-if r not in repos or repos[r].get("ci_status") == "PASSING": exit(0)
-repos[r]["ci_status"] = "LOCALLY_PASSED"
-with open(p, "w") as f: json.dump(m, f, indent=2)
+if r not in repos: exit(0)
+current = repos[r].get("ci_status", "NOT_CONFIGURED")
+# LOCAL_PASS only promotes from lower states; higher states (FEATURE_GREEN+) stay
+PROMOTABLE = {"NOT_CONFIGURED", "FAILING", "LOCAL_PASS", "EXEMPT"}
+if current in PROMOTABLE:
+    repos[r]["ci_status"] = "LOCAL_PASS"
+with open(p, "w") as f: json.dump(m, f, indent=2); f.write("\n")
 '; then
-            log_fail "Failed to update ci_status (LOCALLY_PASSED) in workspace-manifest.json"
+            log_fail "Failed to update ci_status (LOCAL_PASS) in workspace-manifest.json"
             exit 1
         fi
         _DAG_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
