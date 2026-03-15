@@ -459,10 +459,7 @@
       "external_count": 18
     },
     "unified-features-interface": {
-      "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.2.0,<1.0.0",
-        "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
-      },
+      "internal_deps": {},
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
@@ -476,14 +473,11 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 2,
+      "internal_count": 0,
       "external_count": 11
     },
     "unified-sports-reference-interface": {
-      "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.2.0,<1.0.0",
-        "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
-      },
+      "internal_deps": {},
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
@@ -497,7 +491,7 @@
         "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
         "ruff": ["ruff==0.15.0"]
       },
-      "internal_count": 2,
+      "internal_count": 0,
       "external_count": 11
     },
     "unified-defi-execution-interface": {

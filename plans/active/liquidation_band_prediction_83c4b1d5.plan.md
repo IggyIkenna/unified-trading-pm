@@ -38,7 +38,7 @@ todos:
     content:
       Run quality gates for all 4 modified repos via bash scripts/quality-gates.sh. Verify all tests pass, lint clean,
       type-check clean.
-    status: in_progress
+    status: completed
 isProject: false
 ---
 
@@ -53,17 +53,17 @@ TARDIS liquidation data. Live/batch use aggregated features. No lookahead bias.
 
 ## Existing Infrastructure (already built)
 
-- `**CanonicalLiquidationCluster`\*\* (UAC) -- `source` field already says "internal (own liquidation prediction model)"
-  -- designed for this
-- `**CanonicalLiquidation`\*\* + 9-venue normalizers (TARDIS, Binance, Bybit, etc.) -- training targets
-- `**CanonicalDerivativeTicker`\*\* with `open_interest` -- input feature
+- `**CanonicalLiquidationCluster` (UAC) -- `source` field already says "internal (own liquidation prediction model)" --
+  designed for this
+- `**CanonicalLiquidation` + 9-venue normalizers (TARDIS, Binance, Bybit, etc.) -- training targets
+- `**CanonicalDerivativeTicker` with `open_interest` -- input feature
 - **CCXT `leverage_tiers`** in instruments-service -- real maintenance margin rates per venue/tier
-- `**Liquidations` calculator\*\* (delta-one) -- reactive liq features (volume, imbalance, cascades)
-- `**FundingOI` calculator\*\* (delta-one) -- funding rate + OI features
-- `**LiquidationClusterCalculator`\*\* (cross-instrument) -- consumes external clusters (CoinGlass/Hyblock)
-- `**LiquidationLevels` calculator\*\* (delta-one) -- built but NOT registered, uses proxy data
+- `**Liquidations` calculator (delta-one) -- reactive liq features (volume, imbalance, cascades)
+- `**FundingOI` calculator (delta-one) -- funding rate + OI features
+- `**LiquidationClusterCalculator` (cross-instrument) -- consumes external clusters (CoinGlass/Hyblock)
+- `**LiquidationLevels` calculator (delta-one) -- built but NOT registered, uses proxy data
 - **TARDIS historical pipeline** (market-tick-data-service) -- years of liquidation + derivative_ticker data
-- `**CefiLiquidationsAdapter`\*\* (market-data-processing) -- tick-to-candle for liquidation events
+- `**CefiLiquidationsAdapter` (market-data-processing) -- tick-to-candle for liquidation events
 
 ## Architecture
 
@@ -182,11 +182,11 @@ New file: `features_cross_instrument_service/app/calculators/liquidation_band_pr
 - **required_columns**: `close`, `open_interest`, `funding_rate`, `volume`, `taker_buy_volume` (or fallback to
   volume-based proxy)
 - **max_lookback_periods**: 96 (24h at 15-min)
-- `**_calculate_features(df, symbol)`\*\*:
+- `**_calculate_features(df, symbol)`:
   1. Compute input features: normalized_oi, funding_acceleration, taker_ratio, price_momentum, oi_velocity, realized_vol
   2. Run `LeverageDistributionEstimator.estimate_distribution(features)`
   3. Run `LiquidationBandMath.compute_bands_for_tiers(current_price, tiers, margins)`
-  4. Combine: probability \* OI = estimated size per band
+  4. Combine: probability OI = estimated size per band
   5. Output flat features: `liq_band_{tier}x_long_price`, `liq_band_{tier}x_short_price`, `liq_band_{tier}x_prob`,
      `liq_band_{tier}x_long_usd`, `liq_band_{tier}x_short_usd` for each tier
   6. Aggregate features: `nearest_predicted_liq_long_bps`, `nearest_predicted_liq_short_bps`, `predicted_liq_asymmetry`,
@@ -205,7 +205,7 @@ streaming derivative_ticker + OHLCV.
 
 New file: `ml_training_service/app/training/leverage_distribution_trainer.py`
 
-`**LeverageDistributionTrainer`\*\*:
+`**LeverageDistributionTrainer`:
 
 - **Data pipeline**:
   1. Load TARDIS historical liquidations (CanonicalLiquidation) -- the ground truth
@@ -213,8 +213,8 @@ New file: `ml_training_service/app/training/leverage_distribution_trainer.py`
   3. Load OHLCV candles -- price/volume features
   4. Match liquidation events to leverage tiers (fuzzy match accounting for 1-2% exchange markup, as discussed in brain
      dump)
-- `**match_liquidation_to_leverage(liq_price, mark_price, maintenance_margins)`\*\* -- determines which leverage tier
-  caused the liquidation, with tolerance for exchange markup
+- `**match_liquidation_to_leverage(liq_price, mark_price, maintenance_margins)` -- determines which leverage tier caused
+  the liquidation, with tolerance for exchange markup
 - **Walk-forward training**:
   1. Split timeline into train/validation windows (e.g., 3-month train, 1-month validate, rolling)
   2. For each window: compute features from train period, calibrate `LeverageDistributionEstimator`
