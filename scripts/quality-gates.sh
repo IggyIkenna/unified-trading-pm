@@ -75,6 +75,17 @@ if [ -f "$MANIFEST" ]; then
         || { echo "❌ workspace-manifest.json validation failed — fix before committing" >&2; exit 1; }
 fi
 
+# ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
+FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
+if [ -f "$FLOW_CHECKER" ]; then
+    echo "Running UI/API flow coverage checker (warning-only)..."
+    if python3 "$FLOW_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warning-only; then
+        log_success "UI/API flow coverage check completed"
+    else
+        log_warn "UI/API flow coverage checker failed (non-blocking)"
+    fi
+fi
+
 # ── Post-gates: regenerate CI/CD pipeline diagram (SSOT: cicd-pipeline-definition.yaml) ──
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 DIAGRAM_YAML="${REPO_ROOT}/docs/repo-management/cicd-pipeline-definition.yaml"
