@@ -84,39 +84,17 @@ jobs:
           cat readiness-report.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Telegram daily readiness summary
-        if: always()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          TIER_LABEL="${{ github.event.inputs.tier || 'all' }}"
-          EXIT_CODE="${{ steps.verify.outputs.exit_code }}"
-          MISMATCHES=$(grep -c "MISMATCH" readiness-report.txt 2>/dev/null || echo 0)
-          FAILS=$(grep -c "FAIL" readiness-report.txt 2>/dev/null || echo 0)
-          WARNS=$(grep -c "WARN" readiness-report.txt 2>/dev/null || echo 0)
-          PASSES=$(grep -c "PASS" readiness-report.txt 2>/dev/null || echo 0)
-
-          if [ "${EXIT_CODE}" = "1" ] || [ "${MISMATCHES}" -gt "0" ]; then
-            STATUS_ICON="⚠️"
-            STATUS_LABEL="MISMATCHES FOUND"
-          else
-            STATUS_ICON="✅"
-            STATUS_LABEL="ALL CLEAN"
-          fi
-
-          # Build compact summary from report (first 20 lines of key results)
-          SUMMARY=$(grep -E "MISMATCH|FAIL|PASS|WARN|CR[0-9]|DR[0-9]" readiness-report.txt 2>/dev/null | head -20 | tr '\n' '\n' || true)
-
-          MESSAGE=$(printf '%b' \
-            "${STATUS_ICON} *Readiness Verifier — ${STATUS_LABEL}*\n" \
-            "Tier: ${TIER_LABEL} | $(date -u '+%Y-%m-%d %H:%M UTC')\n" \
-            "PASS: ${PASSES} | FAIL: ${FAILS} | WARN: ${WARNS} | MISMATCH: ${MISMATCHES}\n\n" \
-            "\`\`\`\n${SUMMARY}\n\`\`\`\n\n" \
-            "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}")
-
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MESSAGE}" \
-            -d "parse_mode=Markdown" \
-            -d "disable_web_page_preview=true" || true
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Readiness Verifier
+    needs: [verify-readiness]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "Readiness Verifier | Tier: ${{ github.event.inputs.tier || 'all' }}"
+      severity: "INFO"
+      conclusion: ${{ needs.verify-readiness.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

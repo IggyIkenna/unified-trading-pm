@@ -53,6 +53,26 @@ env:
 jobs:
   route-build:
     runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.route.outputs.repo }}
+      repo_type: ${{ steps.route.outputs.repo_type }}
+      version: ${{ steps.route.outputs.version }}
+      branch: ${{ steps.route.outputs.branch }}
+      commit_sha: ${{ steps.route.outputs.commit_sha }}
+      env: ${{ steps.route.outputs.env }}
+      gcp_project: ${{ steps.route.outputs.gcp_project }}
+      is_trading_critical: ${{ steps.route.outputs.is_trading_critical }}
+      tier_check_passed: ${{ steps.tier-check.outputs.tier_check_passed }}
+      blocking_repos: ${{ steps.tier-check.outputs.blocking_repos }}
+      build_triggered: ${{ steps.docker-build.outputs.build_triggered }}
+      build_exit_code: ${{ steps.docker-build.outputs.build_exit_code }}
+      build_failure_reason: ${{ steps.docker-build.outputs.build_failure_reason }}
+      build_region: ${{ steps.docker-build.outputs.build_region }}
+      build_log_url: ${{ steps.docker-build.outputs.build_log_url }}
+      health_check_passed: ${{ steps.health-check.outputs.health_check_passed }}
+      health_check_service_url: ${{ steps.health-check.outputs.service_url }}
+      smoke_test_passed: ${{ steps.smoke-test.outputs.smoke_test_passed }}
+      kill_switch_halted: ${{ steps.kill-switch-halt.outputs.kill_switch_halted }}
     steps:
       - name: Checkout PM repo (for scripts and manifest)
         uses: actions/checkout@v4
@@ -194,25 +214,7 @@ jobs:
             echo "tier_check_passed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Task 2 (hardening): Telegram alert when tier check blocks/warns
-      - name: "Pre-deploy: Telegram alert — tier check warning"
-        if: steps.tier-check.outputs.tier_check_passed == 'false'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          VERSION="${{ steps.route.outputs.version }}"
-          BLOCKING="${{ steps.tier-check.outputs.blocking_repos }}"
-
-          TEXT="⚠️ *Tier-Ordered Deploy Warning*%0ARepo: \`${REPO}\` v${VERSION}%0AEnv: \`${ENV}\`%0A%0ALower-tier deps not yet deployed:%0A\`${BLOCKING}\`%0A%0ADeploy those repos first to ensure correct dependency ordering."
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
+      # Task 2 (hardening): Telegram alert when tier check blocks/warns — migrated to notify-tier-check job
 
       # ──────────────────────────────────────────────────────────────
       # Task 4: Trading-active deployment guard (prod only)
@@ -613,49 +615,7 @@ jobs:
             echo "smoke_test_passed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Task 3 (hardening): Telegram alert if health check fails
-      - name: "Post-deploy: Telegram alert — health check FAILED"
-        if: steps.health-check.outputs.health_check_passed == 'false'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          VERSION="${{ steps.route.outputs.version }}"
-          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
-          SERVICE_URL="${{ steps.health-check.outputs.service_url }}"
-          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
-
-          TEXT="🔴 *Post-Deploy Health Check FAILED*%0ARepo: \`${REPO}\`%0AVersion: \`${VERSION}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0AEnv: \`${ENV}\`%0AURL: ${SERVICE_URL}%0AHealth check timed out after 5 min of polling /health.%0Adeployed_versions NOT updated.%0A%0A*Rollback:*%0A\`gcloud run services update-traffic ${REPO} --to-revisions=LATEST=0 --project=${GCP_PROJECT}\`"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
-
-      # Task 4 (hardening): Telegram alert if smoke test fails
-      - name: "Post-deploy: Telegram alert — smoke test FAILED"
-        if: steps.smoke-test.outputs.smoke_test_passed == 'false'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          VERSION="${{ steps.route.outputs.version }}"
-          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
-          SERVICE_URL="${{ steps.health-check.outputs.service_url }}"
-          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
-
-          TEXT="🟡 *Post-Deploy Smoke Test FAILED*%0ARepo: \`${REPO}\`%0AVersion: \`${VERSION}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0AEnv: \`${ENV}\`%0AURL: ${SERVICE_URL}%0A/health passed but /readiness or response shape failed.%0Adeployed_versions NOT updated.%0A%0A*Rollback:*%0A\`gcloud run services update-traffic ${REPO} --to-revisions=LATEST=0 --project=${GCP_PROJECT}\`"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
+      # Task 3+4 (hardening): Telegram alerts for health check / smoke test failures — migrated to notify-* jobs
 
       # ──────────────────────────────────────────────────────────────
       # Task 5: Position reconciliation — post-deploy comparison
@@ -709,8 +669,6 @@ jobs:
           steps.docker-build.outputs.build_exit_code != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           set -euo pipefail
 
@@ -719,15 +677,7 @@ jobs:
           echo "Repo: $REPO"
 
           bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
-
-          # Alert via Telegram
-          if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-            TEXT="⚠️ *EMERGENCY: Order flow resumed after failed deploy*%0ARepo: \`${REPO}\`%0ABuild failed but order flow was halted pre-deploy.%0AOrder flow has been automatically resumed.%0AInvestigate build failure immediately."
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="$TEXT" \
-              -d parse_mode="Markdown" > /dev/null 2>&1 || true
-          fi
+          # Telegram alert migrated to notify-emergency-resume job
 
       - name: Update manifest on build success (gated on health + smoke)
         if: |
@@ -767,95 +717,7 @@ jobs:
             git push origin main || true
           fi
 
-      # Task 5 (hardening): Telegram alert when regional fallback was used
-      - name: "Telegram alert — regional fallback used"
-        if: |
-          steps.docker-build.outputs.build_triggered == 'true' &&
-          steps.docker-build.outputs.build_region != env.CLOUD_BUILD_REGION
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          PRIMARY="${CLOUD_BUILD_REGION}"
-          FALLBACK="${{ steps.docker-build.outputs.build_region }}"
-
-          TEXT="🟠 *Cloud Build Regional Fallback*%0ARepo: \`${REPO}\`%0AEnv: \`${ENV}\`%0APrimary region \`${PRIMARY}\` failed (quota/capacity/outage).%0ABuild ran in fallback region: \`${FALLBACK}\`%0A%0A*Action required:*%0A1. Check GCP status page for ${PRIMARY} outages%0A2. Verify AR replication if images need to be in ${PRIMARY}%0A3. Consider updating CLOUD_BUILD_REGION if persistent"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
-
-      - name: Telegram alert — build FAILED/TIMED OUT/CANCELLED
-        if: steps.route.outputs.repo_type != 'library' && steps.docker-build.outputs.build_exit_code == '1'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          BRANCH="${{ steps.route.outputs.branch }}"
-          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
-          ENV="${{ steps.route.outputs.env }}"
-          REASON="${{ steps.docker-build.outputs.build_failure_reason }}"
-          BUILD_LOG_URL="${{ steps.docker-build.outputs.build_log_url }}"
-          BUILD_REGION="${{ steps.docker-build.outputs.build_region }}"
-          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
-
-          FALLBACK_NOTE=""
-          if [ "$BUILD_REGION" != "${CLOUD_BUILD_REGION}" ]; then
-            FALLBACK_NOTE="%0A%0A*Note:* Build was using fallback region \`${BUILD_REGION}\` (primary: \`${CLOUD_BUILD_REGION}\`).%0AManual retry: \`gcloud builds triggers run ${REPO}-${ENV} --project=${GCP_PROJECT} --region=${CLOUD_BUILD_FALLBACK_REGION}\`"
-          fi
-
-          TEXT="🔴 *Cloud Build ${REASON}*%0ARepo: \`${REPO}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0AEnv: \`${ENV}\`%0ABranch: \`${BRANCH}\`%0ARegion: \`${BUILD_REGION}\`%0ALog: ${BUILD_LOG_URL}${FALLBACK_NOTE}"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
-
-      - name: Telegram alert — build poll exhausted
-        if: steps.route.outputs.repo_type != 'library' && steps.docker-build.outputs.build_exit_code == '2'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
-          BUILD_LOG_URL="${{ steps.docker-build.outputs.build_log_url }}"
-
-          TEXT="⏰ *Cloud Build poll exhausted after 60 attempts*%0ARepo: \`${REPO}\`%0ASHA: \`${COMMIT_SHA:0:8}\`%0ABuild still running or unresponsive.%0ALog: ${BUILD_LOG_URL}"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
-
-      # Task 5 (hardening): Alert when build trigger not found (both regions tried)
-      - name: "Telegram alert — build trigger not configured"
-        if: |
-          steps.route.outputs.repo_type != 'library' &&
-          steps.docker-build.outputs.build_triggered == 'false' &&
-          steps.docker-build.outputs.build_failure_reason == 'not-configured'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No token — skipping Telegram alert"; exit 0; fi
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          GCP_PROJECT="${{ steps.route.outputs.gcp_project }}"
-
-          TEXT="🟡 *Cloud Build Trigger Not Configured*%0ARepo: \`${REPO}\`%0AEnv: \`${ENV}\`%0AProject: \`${GCP_PROJECT}\`%0APrimary (\`${CLOUD_BUILD_REGION}\`) and fallback (\`${CLOUD_BUILD_FALLBACK_REGION}\`) regions tried.%0A%0A*Setup:*%0A\`bash scripts/create-cloud-build-feature-triggers.sh ${REPO}\`"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
+      # Telegram alerts migrated to separate notification jobs below
 
       - name: Trigger Cloud Build (Python wheel — library)
         if: steps.route.outputs.repo_type == 'library'
@@ -888,3 +750,154 @@ jobs:
           echo "  market_hours:     ${{ steps.market-hours-guard.outputs.market_hours_passed }}"
           echo "  health_check:     ${{ steps.health-check.outputs.health_check_passed }}"
           echo "  smoke_test:       ${{ steps.smoke-test.outputs.smoke_test_passed }}"
+
+  # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
+
+  notify-tier-check:
+    name: Telegram — Tier Check Warning
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.tier_check_passed == 'false'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Tier-Ordered Deploy Warning | Repo: ${{ needs.route-build.outputs.repo }} v${{
+        needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | Blocking: ${{
+        needs.route-build.outputs.blocking_repos }}"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-health-check-failed:
+    name: Telegram — Health Check FAILED
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.health_check_passed == 'false'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Post-Deploy Health Check FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
+        needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | URL: ${{
+        needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min. deployed_versions
+        NOT updated."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-smoke-test-failed:
+    name: Telegram — Smoke Test FAILED
+    needs: [route-build]
+    if: always() && needs.route-build.outputs.smoke_test_passed == 'false'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
+        needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | /health passed but /readiness
+        or response shape failed. deployed_versions NOT updated."
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-emergency-resume:
+    name: Telegram — Emergency Order Flow Resume
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.kill_switch_halted == 'true' &&
+      needs.route-build.outputs.build_exit_code != '0'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "EMERGENCY: Order flow resumed after failed deploy | Repo: ${{ needs.route-build.outputs.repo }} | Build failed
+        but order flow was halted pre-deploy. Order flow has been automatically resumed. Investigate build failure
+        immediately."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-regional-fallback:
+    name: Telegram — Regional Fallback Used
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.build_triggered == 'true' &&
+      needs.route-build.outputs.build_region != 'asia-northeast1'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cloud Build Regional Fallback | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | Primary region asia-northeast1 failed. Build ran in fallback region: ${{
+        needs.route-build.outputs.build_region }}"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-build-failed:
+    name: Telegram — Build FAILED
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '1'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cloud Build ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo }}
+        | Env: ${{ needs.route-build.outputs.env }} | Branch: ${{ needs.route-build.outputs.branch }} | Region: ${{
+        needs.route-build.outputs.build_region }} | Log: ${{ needs.route-build.outputs.build_log_url }}"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-build-poll-exhausted:
+    name: Telegram — Build Poll Exhausted
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '2'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cloud Build poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
+        running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-build-not-configured:
+    name: Telegram — Build Trigger Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cloud Build Trigger Not Configured | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | Project: ${{ needs.route-build.outputs.gcp_project }} | Setup: bash
+        scripts/create-cloud-build-feature-triggers.sh ${{ needs.route-build.outputs.repo }}"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

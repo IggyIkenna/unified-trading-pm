@@ -13,6 +13,8 @@ concurrency:
 jobs:
   check-stale-lock:
     runs-on: ubuntu-latest
+    outputs:
+      stale: ${{ steps.stale-check.outputs.stale }}
     steps:
       - name: Checkout PM repo
         uses: actions/checkout@v4
@@ -20,18 +22,13 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Check for stale SIT lock
+        id: stale-check
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "No Telegram token, skipping"
-            exit 0
-          fi
-
           MANIFEST="workspace-manifest.json"
 
+          set +e
           python3 << 'PYEOF'
           import json, sys
           from datetime import datetime, timezone, timedelta
@@ -72,15 +69,31 @@ jobs:
           PYEOF
 
           EXIT_CODE=$?
+          set -e
 
           if [ $EXIT_CODE -eq 2 ]; then
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d "chat_id=${TELEGRAM_CHAT_ID}" \
-              -d "text=SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock: gh workflow run sit-unlock.yml"
-
+            echo "stale=true" >> "$GITHUB_OUTPUT"
             git config user.email "ci@unified-trading.com"
             git config user.name "CI Bot"
             git add workspace-manifest.json
             git commit -m "chore: mark SIT starvation alert sent [skip ci]"
             git push
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
+
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — SIT Starvation Detector
+    needs: [check-stale-lock]
+    if: always() && needs.check-stale-lock.outputs.stale == 'true'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock: gh workflow run
+        sit-unlock.yml"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

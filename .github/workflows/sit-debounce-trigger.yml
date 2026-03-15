@@ -195,8 +195,6 @@ jobs:
         if: steps.check.outputs.trigger == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           set -euo pipefail
 
@@ -218,28 +216,19 @@ jobs:
 
           echo "SIT triggered after quiet period (${COUNT} pending repos, retry #${RETRY})"
 
-          # Telegram notification
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            TEXT="🔄 *SIT Debounce Triggered*%0APending repos: ${COUNT}%0ARepos: \`${PENDING}\`%0ARetry: ${RETRY}%0AQuiet period elapsed — starting SIT run."
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="$TEXT" \
-              -d parse_mode="Markdown" > /dev/null 2>&1 || true
-          fi
+          echo "SIT dispatch complete"
 
-      - name: Alert on retry halt
-        if: steps.check.outputs.halted == 'true'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          RETRY="${{ steps.check.outputs.retry_count }}"
-          echo "WARNING: SIT auto-retrigger halted after $RETRY retries"
-
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            TEXT="⚠️ *SIT Debounce Halted*%0ARetry count: ${RETRY} (max reached)%0AManual intervention required.%0AUse workflow_dispatch with drain_pending=true to force-trigger."
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="$TEXT" \
-              -d parse_mode="Markdown" > /dev/null 2>&1 || true
-          fi
+  # ── TELEGRAM NOTIFY — SIT triggered (reusable workflow) ──────────────────
+  notify-sit-triggered:
+    name: Telegram — SIT Debounce Triggered
+    needs: [check-and-trigger]
+    if: always() && needs.check-and-trigger.result == 'success'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "SIT Debounce Triggered — quiet period elapsed, starting SIT run."
+      severity: "INFO"
+      conclusion: ${{ needs.check-and-trigger.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

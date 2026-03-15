@@ -100,8 +100,6 @@ jobs:
         if: startsWith(github.event.comment.body, '/approve')
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           BUMP_REPO: ${{ steps.metadata.outputs.bump_repo }}
           PROPOSED_VERSION: ${{ steps.metadata.outputs.proposed_version }}
           CURRENT_VERSION: ${{ steps.metadata.outputs.current_version }}
@@ -164,14 +162,7 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --remove-label "major-bump-pending" --add-label "major-bump-approved"
           gh issue close "$ISSUE_NUMBER"
 
-          # 5. Telegram
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            TEXT="✅ *MAJOR Bump Approved*%0ARepo: \`${BUMP_REPO}\`%0A${CURRENT_VERSION} → \`${PROPOSED_VERSION}\`%0AApproved by: @${COMMENTER}"
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="$TEXT" \
-              -d parse_mode="Markdown" > /dev/null 2>&1 || true
-          fi
+          # Telegram alert migrated to notify job
 
           echo "MAJOR bump approved and dispatched: $BUMP_REPO $PROPOSED_VERSION"
 
@@ -179,8 +170,6 @@ jobs:
         if: startsWith(github.event.comment.body, '/reject')
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           BUMP_REPO: ${{ steps.metadata.outputs.bump_repo }}
           PROPOSED_VERSION: ${{ steps.metadata.outputs.proposed_version }}
           CURRENT_VERSION: ${{ steps.metadata.outputs.current_version }}
@@ -199,12 +188,19 @@ jobs:
 
           gh issue edit "$ISSUE_NUMBER" --remove-label "major-bump-pending" --add-label "major-bump-rejected"
           gh issue close "$ISSUE_NUMBER"
+          # Telegram alert migrated to notify job
 
-          # Telegram
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            TEXT="❌ *MAJOR Bump Rejected*%0ARepo: \`${BUMP_REPO}\`%0AProposed: \`${PROPOSED_VERSION}\` — staying at \`${CURRENT_VERSION}\`%0ARejected by: @${COMMENTER}"
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="$TEXT" \
-              -d parse_mode="Markdown" > /dev/null 2>&1 || true
-          fi
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Major Bump Approval
+    needs: [handle-approval]
+    if: always() && needs.handle-approval.result == 'success'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "Major Bump Approval handled | Issue #${{ github.event.issue.number }}"
+      severity: "INFO"
+      conclusion: ${{ needs.handle-approval.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

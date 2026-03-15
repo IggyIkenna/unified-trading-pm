@@ -22,8 +22,6 @@ jobs:
       - name: Check overnight orchestrator completion status
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           set -euo pipefail
 
@@ -110,17 +108,24 @@ jobs:
           if [ "$ALERT" = "true" ]; then
             echo ""
             echo "ALERT: $REASON"
-
-            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              TEXT="⚠️ *Overnight Dead Man Switch*%0A%0AOvernigh orchestrator did not complete — check GHA status.%0A%0AReason: ${REASON}%0A%0ACheck: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/overnight-agent-orchestrator.yml"
-              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                -d chat_id="${TELEGRAM_CHAT_ID}" \
-                -d text="$TEXT" \
-                -d parse_mode="Markdown" || true
-            else
-              echo "Telegram not configured — alert printed to logs only"
-            fi
-
+            # Telegram alert migrated to notify job
             # Exit non-zero so the workflow shows as failed in GHA UI
             exit 1
           fi
+
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Overnight Dead Man Switch
+    needs: [check-orchestrator]
+    if: always() && needs.check-orchestrator.result == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Overnight Dead Man Switch — orchestrator did not complete. Check GHA status: ${{ github.server_url }}/${{
+        github.repository }}/actions/workflows/overnight-agent-orchestrator.yml"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

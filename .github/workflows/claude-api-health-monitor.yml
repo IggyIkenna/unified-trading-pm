@@ -19,6 +19,10 @@ jobs:
     name: Claude API health ping
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    outputs:
+      should_alert: ${{ steps.health-ping.outputs.should_alert }}
+      health_state: ${{ steps.health-ping.outputs.health_state }}
+      error_class: ${{ steps.health-ping.outputs.error_class }}
 
     steps:
       - name: Install Claude CLI
@@ -27,10 +31,9 @@ jobs:
           which claude || echo "Claude CLI install failed"
 
       - name: Ping Claude API and detect state change
+        id: health-ping
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
           set +e  # Don't fail the job — health monitor should always complete
 
@@ -61,29 +64,12 @@ jobs:
 
           echo "Previous state: $PREV_STATE → New state: $NEW_STATE ($ERROR_CLASS)"
 
-          # Only send Telegram on state transition
+          # Determine if we should send an alert (state transition only)
+          SHOULD_ALERT="false"
           if [ "$NEW_STATE" != "$PREV_STATE" ] && [ "$PREV_STATE" != "unknown" ]; then
-            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              if [ "$NEW_STATE" = "degraded" ]; then
-                TEXT="⚠️ *Claude API Degraded* at ${TIMESTAMP}%0AError class: \`${ERROR_CLASS}\`%0AUsing: ANTHROPIC_API_KEY_SYSHEALTH%0ACheck: status.anthropic.com"
-              else
-                TEXT="✅ *Claude API Recovered* at ${TIMESTAMP}%0APrevious state: degraded → now healthy"
-              fi
-              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                -d chat_id="${TELEGRAM_CHAT_ID}" \
-                -d text="$TEXT" \
-                -d parse_mode="Markdown" > /dev/null 2>&1 || true
-              echo "Telegram state-transition alert sent: $PREV_STATE → $NEW_STATE"
-            fi
+            SHOULD_ALERT="true"
           elif [ "$PREV_STATE" = "unknown" ] && [ "$NEW_STATE" = "degraded" ]; then
-            # First run and already degraded — alert
-            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              TEXT="⚠️ *Claude API Degraded* at ${TIMESTAMP} (first health check)%0AError: \`${ERROR_CLASS}\`"
-              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                -d chat_id="${TELEGRAM_CHAT_ID}" \
-                -d text="$TEXT" \
-                -d parse_mode="Markdown" > /dev/null 2>&1 || true
-            fi
+            SHOULD_ALERT="true"
           else
             echo "State unchanged ($NEW_STATE) — no Telegram alert"
           fi
@@ -93,3 +79,19 @@ jobs:
           echo "$NEW_STATE" > /tmp/claude_health_current
           echo "health_state=$NEW_STATE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
           echo "error_class=$ERROR_CLASS" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+          echo "should_alert=$SHOULD_ALERT" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+          echo "prev_state=$PREV_STATE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Claude API Health
+    needs: [health-check]
+    if: always() && needs.health-check.outputs.should_alert == 'true'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "Claude API Health Monitor — state transition detected"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

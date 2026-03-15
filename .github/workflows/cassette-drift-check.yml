@@ -128,42 +128,17 @@ jobs:
               labels: ['cassette-drift', 'automated'],
             });
 
-      - name: Telegram alert on drift
-        if: steps.drift_check.outputs.drift_detected == 'true' && !inputs.dry_run
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          DATE=$(date +"%Y-%m-%d")
-          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          MESSAGE="*[Cassette Drift] Schema changes detected ${DATE}*
-          VCR cassettes in unified-api-contracts have drifted from live APIs.
-          Review and update Pydantic models before next release.
-
-          Run: ${RUN_URL}"
-          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="${MESSAGE}" \
-              -d parse_mode="Markdown" || true
-          else
-            echo "Telegram not configured — skipping alert"
-          fi
-
-      - name: Telegram success notification
-        if: steps.drift_check.outputs.drift_detected == 'false'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          DATE=$(date +"%Y-%m-%d")
-          MESSAGE="*[Cassette Drift] No drift detected ${DATE}*
-          All VCR cassettes match live API schemas."
-          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="${MESSAGE}" \
-              -d parse_mode="Markdown" || true
-          else
-            echo "Telegram not configured — skipping notification"
-          fi
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Cassette Drift Check
+    needs: [detect-cassette-drift]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "[Cassette Drift] Check complete"
+      severity: "INFO"
+      conclusion: ${{ needs.detect-cassette-drift.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

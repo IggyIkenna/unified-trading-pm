@@ -40,6 +40,11 @@ concurrency:
 jobs:
   promote-staging-to-main:
     runs-on: ubuntu-latest
+    outputs:
+      promoted: ${{ steps.promote.outputs.promoted }}
+      failed: ${{ steps.promote.outputs.failed }}
+      promoted_count: ${{ steps.promote.outputs.promoted_count }}
+      failed_count: ${{ steps.promote.outputs.failed_count }}
     steps:
       - name: Checkout PM
         uses: actions/checkout@v4
@@ -240,14 +245,8 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "No TELEGRAM_BOT_TOKEN — skipping alert"; else
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d "chat_id=${TELEGRAM_CHAT_ID}" \
-              -d "text=⚠️ staging-to-main ABORTED: staging has new non-[skip ci] commits since SIT ran. Re-triggering SIT." || true
-          fi
+          # Telegram alert migrated to notify-sha-failure job
           OWNER="${{ github.repository_owner }}"
           echo "SHA pinning violation — re-triggering SIT for untested staging commits."
           curl -s -X POST \
@@ -493,34 +492,7 @@ jobs:
           print(f"Recorded promotion progress: {len(promoted_list)} promoted, {len(failed_list)} failed")
           PYEOF
 
-      - name: Notify Telegram — partial promotion failure
-        if: always() && steps.promote.outputs.failed_count != '0' && steps.promote.outputs.failed_count != ''
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          PROMOTED: ${{ steps.promote.outputs.promoted }}
-          FAILED: ${{ steps.promote.outputs.failed }}
-          PROMOTED_COUNT: ${{ steps.promote.outputs.promoted_count }}
-          FAILED_COUNT: ${{ steps.promote.outputs.failed_count }}
-        run: |
-          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-            echo "Telegram not configured — skipping notification"
-            exit 0
-          fi
-
-          # Build a clear summary of what succeeded and what failed
-          PROMOTED_LIST=$(echo "$PROMOTED" | tr ' ' '\n' | sed '/^$/d' | sed 's/^/  /' || echo "  none")
-          FAILED_LIST=$(echo "$FAILED" | tr ' ' '\n' | sed '/^$/d' | sed 's/^/  /' || echo "  none")
-
-          # Find the first failed repo for the resume command
-          FIRST_FAILED=$(echo "$FAILED" | tr ' ' '\n' | sed '/^$/d' | head -1)
-
-          TEXT="🚨 *Partial Staging Promotion Failure*%0A%0A✅ *Promoted (${PROMOTED_COUNT}):*%0A${PROMOTED_LIST}%0A%0A❌ *Failed (${FAILED_COUNT}):*%0A${FAILED_LIST}%0A%0A*To resume:* re-run with \`resume_from_repo=${FIRST_FAILED}\`%0A%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" || true
+      # Partial promotion failure Telegram alert migrated to notify-partial-failure job
 
       - name: Promote staging_versions → versions, clear staging lock
         run: |
@@ -763,3 +735,40 @@ jobs:
             echo "WARNING: Failed to dispatch to:$FAILED (repos may not exist or be archived)"
           fi
           echo "Dispatched staging-unlocked to all repos"
+
+  # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
+
+  notify-partial-failure:
+    name: Telegram — Partial Promotion Failure
+    needs: [promote-staging-to-main]
+    if:
+      always() && needs.promote-staging-to-main.outputs.failed_count != '0' &&
+      needs.promote-staging-to-main.outputs.failed_count != ''
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Partial Staging Promotion Failure | Promoted: ${{ needs.promote-staging-to-main.outputs.promoted_count }} |
+        Failed: ${{ needs.promote-staging-to-main.outputs.failed_count }} | Failed repos: ${{
+        needs.promote-staging-to-main.outputs.failed }}"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-promotion-complete:
+    name: Telegram — Staging Promotion
+    needs: [promote-staging-to-main]
+    if:
+      always() && (needs.promote-staging-to-main.outputs.failed_count == '0' ||
+      needs.promote-staging-to-main.outputs.failed_count == '')
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "Staging → main promotion complete"
+      severity: "INFO"
+      conclusion: ${{ needs.promote-staging-to-main.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

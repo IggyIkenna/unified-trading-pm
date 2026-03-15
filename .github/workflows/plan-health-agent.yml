@@ -121,20 +121,17 @@ jobs:
         if: env.ANTHROPIC_API_KEY == ''
         run: echo "ANTHROPIC_API_KEY not set — skipping plan health agent"
 
-      - name: Notify Telegram
-        if: always()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          STATUS: ${{ job.status }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "No Telegram token, skipping notification"
-            exit 0
-          fi
-          ICON=$([[ "$STATUS" == "success" ]] && echo "✅" || echo "⚠️")
-          TEXT="${ICON} *plan-health-agent* | ${STATUS} | PM plans checked"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="${TEXT}" \
-            -d parse_mode="Markdown" || true
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Plan Health Agent
+    needs: [plan-health]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "plan-health-agent | PM plans checked"
+      severity: "INFO"
+      conclusion: ${{ needs.plan-health.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

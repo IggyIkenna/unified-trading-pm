@@ -159,28 +159,19 @@ jobs:
             git push origin main
           fi
 
-      - name: Telegram notification
-        if: always()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then exit 0; fi
-
-          REPO="${{ steps.payload.outputs.repo }}"
-          VERSION="${{ steps.payload.outputs.version }}"
-          STATUS="${{ job.status }}"
-
-          if [ "$STATUS" = "success" ]; then
-            ICON="📦"
-            MSG="published to AR"
-          else
-            ICON="🔴"
-            MSG="publish FAILED"
-          fi
-
-          TEXT="${ICON} *Package ${MSG}*%0ARepo: \`${REPO}\`%0AVersion: \`${VERSION}\`%0ARegistry: \`${AR_REGION}-python.pkg.dev/${AR_PROJECT}/${AR_REPOSITORY}\`"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d parse_mode="Markdown" > /dev/null 2>&1 || true
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Publish Package
+    needs: [publish]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |
+        Registry: asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries"
+      severity: "INFO"
+      conclusion: ${{ needs.publish.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

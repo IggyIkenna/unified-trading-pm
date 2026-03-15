@@ -61,17 +61,19 @@ jobs:
             && echo "✓ staging-validated dispatched" \
             || echo "⚠ dispatch failed (non-fatal — human can manually re-trigger staging-to-main)"
 
-      - name: Telegram notification
-        if: steps.check-marker.outputs.retry == 'true'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: |
-          [ -z "${TELEGRAM_BOT_TOKEN:-}" ] && exit 0
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="✅ Conflict resolved — retrying staging→main promotion%0APR #${PR_NUMBER}: ${PR_TITLE}%0A${PR_URL}" \
-            > /dev/null 2>&1 || true
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Conflict Resolution Merged
+    needs: [retry-promotion]
+    if: always() && needs.retry-promotion.result == 'success'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Conflict resolved — retrying staging→main promotion | PR #${{ github.event.pull_request.number }}: ${{
+        github.event.pull_request.title }} | ${{ github.event.pull_request.html_url }}"
+      severity: "INFO"
+      conclusion: ${{ needs.retry-promotion.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

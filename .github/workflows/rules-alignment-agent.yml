@@ -228,20 +228,17 @@ jobs:
         run: |
           echo "Skipping: changed_plans='${{ steps.changed-plans.outputs.changed_plans }}' ANTHROPIC_API_KEY_set=$([ -n "$ANTHROPIC_API_KEY" ] && echo yes || echo no)"
 
-      # ── TELEGRAM NOTIFY ───────────────────────────────────────────────────────
-      - name: Notify Telegram
-        if: always()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
-          STATUS: ${{ job.status }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-            echo "No Telegram token, skipping notification"
-            exit 0
-          fi
-          TEXT="*rules-alignment-agent* (PM) | ${STATUS} | plans: ${{ steps.changed-plans.outputs.changed_plans }}"
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="${TEXT}" \
-            -d parse_mode="Markdown" || true
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify:
+    name: Telegram — Rules Alignment Agent
+    needs: [align-rules]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "rules-alignment-agent (PM) | plans checked"
+      severity: "INFO"
+      conclusion: ${{ needs.align-rules.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

@@ -150,23 +150,17 @@ jobs:
           echo "reason=" >> "$GITHUB_OUTPUT"
           echo "::notice::No active freeze window — $CHECK_TYPE operations allowed"
 
-      - name: Send Telegram alert on block
-        if: failure()
-        shell: bash
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          CHECK_TYPE: ${{ inputs.check_type }}
-        run: |
-          REASON="${FREEZE_REASON:-unknown window}"
-          MSG="CHANGE FREEZE BLOCK [$CHECK_TYPE]: ${REASON}"
-
-          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="${MSG}" \
-              -d parse_mode="HTML" \
-              > /dev/null 2>&1 || echo "Telegram send failed (non-fatal)" >&2
-          else
-            echo "Telegram not configured — skipping alert"
-          fi
+  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  notify-freeze-block:
+    name: Telegram — Change Freeze Block
+    needs: [check]
+    if: always() && needs.check.outputs.blocked == 'true'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message: "CHANGE FREEZE BLOCK [${{ inputs.check_type }}]: ${{ needs.check.outputs.reason }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: "Change Freeze Check"
+      run_url: ""
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
