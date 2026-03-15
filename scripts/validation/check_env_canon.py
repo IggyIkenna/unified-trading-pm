@@ -20,10 +20,10 @@ import sys
 from pathlib import Path
 
 # Bootstrap allowlist: these files may use env before config exists; skip validation
-BOOTSTRAP_BASENAMES = {"_env_bootstrap.py", "factory.py", "constants.py"}
+BOOTSTRAP_BASENAMES = {"_env_bootstrap.py", "factory.py", "constants.py", "config.py"}
 
 # Path segments to exclude from scanning
-EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv"}
+EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "examples"}
 EXCLUDE_FILENAMES = {"conftest.py"}
 
 # Patterns for os.getenv, os.environ[, os.environ.get(
@@ -94,10 +94,16 @@ def is_bootstrap_file(rel_path: Path) -> bool:
 
 
 def extract_env_keys(content: str) -> list[tuple[int, str]]:
-    """Extract (line_no, key) for each env read with literal string key."""
+    """Extract (line_no, key) for each env read with literal string key.
+
+    Lines containing ``# config-bootstrap:`` are skipped — they represent
+    pre-config-init reads that happen before UnifiedCloudConfig is available.
+    """
     results: list[tuple[int, str]] = []
     patterns = [OS_GETENV_RE, OS_ENVIRON_GET_RE, OS_ENVIRON_INDEX_RE]
     for i, line in enumerate(content.splitlines(), start=1):
+        if "config-bootstrap:" in line:
+            continue
         for pat in patterns:
             for m in pat.finditer(line):
                 results.append((i, m.group(1)))

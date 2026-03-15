@@ -184,17 +184,18 @@
   <text x="95" y="1176" text-anchor="middle" class="level-label">L8</text>
   <text x="150" y="1176" class="desc">Services with data-flow dependencies (17 repos)</text>
   <rect x="70" y="1199" width="132" height="38" class="svc" />
-  <rect x="70" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="136" y="1217" text-anchor="middle" class="label">alerting-service</text>
-  <circle cx="192" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="192" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="136" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="212" y="1199" width="139" height="38" class="svc" />
   <text x="281" y="1217" text-anchor="middle" class="label">execution-service</text>
   <circle cx="341" cy="1207" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="281" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="361" y="1199" width="195" height="38" class="svc" />
+  <rect x="361" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="458" y="1217" text-anchor="middle" class="label">features-calendar-service</text>
-  <circle cx="546" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="546" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="458" y="1229" text-anchor="middle" class="ver">0.2.1</text>
   <rect x="566" y="1199" width="202" height="38" class="svc" />
   <text x="667" y="1217" text-anchor="middle" class="label">features-commodity-service</text>
@@ -205,8 +206,9 @@
   <circle cx="1019" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="903" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1039" y="1199" width="202" height="38" class="svc" />
+  <rect x="1039" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1140" y="1217" text-anchor="middle" class="label">features-delta-one-service</text>
-  <circle cx="1231" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1231" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1140" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1251" y="1199" width="244" height="38" class="svc" />
   <rect x="1251" y="1199" width="4" height="38" fill="#f97316" rx="2" />
@@ -214,12 +216,14 @@
   <circle cx="1485" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1373" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1505" y="1199" width="188" height="38" class="svc" />
+  <rect x="1505" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1599" y="1217" text-anchor="middle" class="label">features-onchain-service</text>
-  <circle cx="1683" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1683" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1599" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1703" y="1199" width="181" height="38" class="svc" />
+  <rect x="1703" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1793" y="1217" text-anchor="middle" class="label">features-sports-service</text>
-  <circle cx="1874" cy="1207" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="1874" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1793" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1894" y="1199" width="209" height="38" class="svc" />
   <text x="1998" y="1217" text-anchor="middle" class="label">features-volatility-service</text>
@@ -234,8 +238,9 @@
   <circle cx="248" cy="1255" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="164" y="1277" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="268" y="1247" width="160" height="38" class="svc" />
+  <rect x="268" y="1247" width="4" height="38" fill="#f97316" rx="2" />
   <text x="348" y="1265" text-anchor="middle" class="label">ml-inference-service</text>
-  <circle cx="418" cy="1255" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="418" cy="1255" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="348" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="438" y="1247" width="153" height="38" class="svc" />
   <text x="514" y="1265" text-anchor="middle" class="label">ml-training-service</text>
@@ -250,8 +255,9 @@
   <circle cx="914" cy="1255" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="858" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="934" y="1247" width="167" height="38" class="svc" />
+  <rect x="934" y="1247" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1017" y="1265" text-anchor="middle" class="label">trading-agent-service</text>
-  <circle cx="1091" cy="1255" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="1091" cy="1255" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1017" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L9: Operational services + API gateways (10 repos) -->
   <rect x="40" y="1319" width="2320" height="107" class="level-bg" />
@@ -291,9 +297,9 @@
   <circle cx="1353" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="1241" y="1396" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1373" y="1366" width="195" height="38" class="svc" />
-  <rect x="1373" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1373" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1470" y="1384" text-anchor="middle" class="label">risk-and-exposure-service</text>
-  <circle cx="1558" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1558" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1470" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1578" y="1366" width="167" height="38" class="api" />
   <text x="1661" y="1384" text-anchor="middle" class="label">trading-analytics-api</text>
@@ -305,16 +311,18 @@
   <text x="95" y="1462" text-anchor="middle" class="level-label">L10</text>
   <text x="150" y="1462" class="desc">Deployment infrastructure (deployment-api, deployment-service; deploys all services) (4 repos)</text>
   <rect x="70" y="1485" width="251" height="38" class="infra" />
+  <rect x="70" y="1485" width="4" height="38" fill="#f97316" rx="2" />
   <text x="195" y="1503" text-anchor="middle" class="label">batch-live-reconciliation-service</text>
-  <circle cx="311" cy="1493" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="311" cy="1493" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="195" y="1515" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="331" y="1485" width="130" height="38" class="api" />
   <text x="396" y="1503" text-anchor="middle" class="label">deployment-api</text>
   <circle cx="451" cy="1493" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="396" y="1515" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="471" y="1485" width="146" height="38" class="infra" />
+  <rect x="471" y="1485" width="4" height="38" fill="#f97316" rx="2" />
   <text x="544" y="1503" text-anchor="middle" class="label">deployment-service</text>
-  <circle cx="607" cy="1493" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="607" cy="1493" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="544" y="1515" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="627" y="1485" width="174" height="38" class="lib" />
   <text x="714" y="1503" text-anchor="middle" class="label">unified-trading-ui-kit</text>
