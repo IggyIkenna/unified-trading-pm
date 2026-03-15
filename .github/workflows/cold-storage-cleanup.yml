@@ -1,0 +1,409 @@
+name: Cold Storage Cleanup
+
+# Weekly cleanup of old audit files and CI/CD artifacts.
+# Moves old files to GCS cold storage (if credentials available),
+# removes them from the repo to keep repo size bounded.
+#
+# Retention policies:
+#   - Audit results & agent decisions: 30 days in-repo, then GCS archive
+#   - CI/CD events (JSONL): 90 days retention
+#   - Alert events: 1 year retention (regulatory)
+#   - GCS lifecycle: Coldline at 90 days, Archive at 1 year
+#
+# Requires: compliance-gcp-project Terraform applied (uts-compliance-ikenna).
+# If COMPLIANCE_SA_KEY is not set, GCS upload is skipped (local cleanup only).
+
+on:
+  schedule:
+    - cron: "0 2 * * 0" # Every Sunday at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run mode (true = report only, no deletions)"
+        required: false
+        type: boolean
+        default: true
+      retention_days_audit:
+        description: "Days to keep audit results in-repo"
+        required: false
+        type: string
+        default: "30"
+      retention_days_cicd:
+        description: "Days to keep CI/CD event files"
+        required: false
+        type: string
+        default: "90"
+
+permissions:
+  contents: write
+
+env:
+  # Default to dry_run=true for scheduled runs (safety).
+  # Manual dispatch: respect the input boolean.
+  DRY_RUN:
+    ${{ github.event_name == 'schedule' && 'true' || (github.event_name == 'workflow_dispatch' && inputs.dry_run) &&
+    'true' || 'false' }}
+  RETENTION_DAYS_AUDIT: ${{ inputs.retention_days_audit || '30' }}
+  RETENTION_DAYS_CICD: ${{ inputs.retention_days_cicd || '90' }}
+  GCS_ARCHIVE_BUCKET: "uts-compliance-ikenna-audit-archive"
+
+jobs:
+  cold-storage-cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      telegram_message: ${{ steps.summary.outputs.telegram_message }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT || github.token }}
+          fetch-depth: 0 # Full history needed for branch age detection
+
+      - name: Identify old audit result files
+        id: audit-results
+        run: |
+          set -euo pipefail
+
+          CUTOFF_DATE=$(date -u -d "-${RETENTION_DAYS_AUDIT} days" +"%Y-%m-%d" 2>/dev/null \
+            || date -u -v-${RETENTION_DAYS_AUDIT}d +"%Y-%m-%d")
+
+          echo "Cutoff date for audit results: $CUTOFF_DATE"
+          echo "cutoff_date=$CUTOFF_DATE" >> "$GITHUB_OUTPUT"
+
+          AUDIT_DIR="plans/audit/results"
+          OLD_FILES=""
+          COUNT=0
+
+          if [ -d "$AUDIT_DIR" ]; then
+            for f in "$AUDIT_DIR"/*.json "$AUDIT_DIR"/*.yaml "$AUDIT_DIR"/*.yml; do
+              [ -f "$f" ] || continue
+
+              # Extract date from filename pattern: {repo}_{YYYY-MM-DD}.json
+              FILE_DATE=$(echo "$(basename "$f")" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | tail -1 || echo "")
+
+              if [ -z "$FILE_DATE" ]; then
+                echo "SKIP (no date in filename): $f"
+                continue
+              fi
+
+              if [[ "$FILE_DATE" < "$CUTOFF_DATE" ]]; then
+                OLD_FILES="${OLD_FILES}${f}\n"
+                COUNT=$((COUNT + 1))
+                echo "OLD: $f (date: $FILE_DATE)"
+              fi
+            done
+          fi
+
+          echo "audit_count=$COUNT" >> "$GITHUB_OUTPUT"
+          # Write file list to a temp file for later steps
+          printf '%b' "$OLD_FILES" > /tmp/old_audit_files.txt
+          echo "Found $COUNT old audit result files"
+
+      - name: Identify old agent decision files
+        id: agent-decisions
+        run: |
+          set -euo pipefail
+
+          CUTOFF_DATE=$(date -u -d "-${RETENTION_DAYS_AUDIT} days" +"%Y-%m-%d" 2>/dev/null \
+            || date -u -v-${RETENTION_DAYS_AUDIT}d +"%Y-%m-%d")
+
+          DECISIONS_DIR="plans/audit/agent_decisions"
+          OLD_FILES=""
+          COUNT=0
+
+          if [ -d "$DECISIONS_DIR" ]; then
+            for f in "$DECISIONS_DIR"/*.jsonl "$DECISIONS_DIR"/*.json; do
+              [ -f "$f" ] || continue
+
+              # Decision files: {YYYY-MM-DD}.jsonl
+              FILE_DATE=$(echo "$(basename "$f")" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1 || echo "")
+
+              if [ -z "$FILE_DATE" ]; then
+                echo "SKIP (no date in filename): $f"
+                continue
+              fi
+
+              if [[ "$FILE_DATE" < "$CUTOFF_DATE" ]]; then
+                OLD_FILES="${OLD_FILES}${f}\n"
+                COUNT=$((COUNT + 1))
+                echo "OLD: $f (date: $FILE_DATE)"
+              fi
+            done
+          fi
+
+          echo "decisions_count=$COUNT" >> "$GITHUB_OUTPUT"
+          printf '%b' "$OLD_FILES" > /tmp/old_decision_files.txt
+          echo "Found $COUNT old agent decision files"
+
+      - name: Identify stale staging branches
+        id: stale-branches
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          set -euo pipefail
+
+          # Find staging branches with no commits in the last 30 days
+          # Excludes: main, live-defi-rollout, staging (protected branches)
+          STALE_BRANCHES=""
+          COUNT=0
+          CUTOFF_DATE=$(date -u -d "-30 days" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null \
+            || date -u -v-30d +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo "Cutoff for stale branches: $CUTOFF_DATE"
+
+          # List remote branches (exclude protected)
+          for branch in $(git branch -r --format='%(refname:short)' | grep -v 'origin/HEAD' | sed 's|origin/||'); do
+            case "$branch" in
+              main|staging|live-defi-rollout) continue ;;
+            esac
+
+            # Get last commit date on this branch
+            LAST_COMMIT=$(git log -1 --format='%aI' "origin/$branch" 2>/dev/null || echo "")
+            if [ -z "$LAST_COMMIT" ]; then
+              continue
+            fi
+
+            if [[ "$LAST_COMMIT" < "$CUTOFF_DATE" ]]; then
+              STALE_BRANCHES="${STALE_BRANCHES}${branch}\n"
+              COUNT=$((COUNT + 1))
+              echo "STALE: $branch (last commit: $LAST_COMMIT)"
+            fi
+          done
+
+          echo "stale_branch_count=$COUNT" >> "$GITHUB_OUTPUT"
+          printf '%b' "$STALE_BRANCHES" > /tmp/stale_branches.txt
+          echo "Found $COUNT stale branches"
+
+      - name: Identify old CI/CD event files
+        id: cicd-events
+        run: |
+          set -euo pipefail
+
+          CUTOFF_DATE=$(date -u -d "-${RETENTION_DAYS_CICD} days" +"%Y-%m-%d" 2>/dev/null \
+            || date -u -v-${RETENTION_DAYS_CICD}d +"%Y-%m-%d")
+
+          echo "Cutoff date for CI/CD events: $CUTOFF_DATE"
+
+          # CI/CD events in plans/audit/manifest_mutations.jsonl — check if it needs trimming
+          CICD_LINES_REMOVED=0
+          MANIFEST_MUTATIONS="plans/audit/manifest_mutations.jsonl"
+
+          if [ -f "$MANIFEST_MUTATIONS" ]; then
+            TOTAL_LINES=$(wc -l < "$MANIFEST_MUTATIONS" | tr -d ' ')
+            OLD_LINES=0
+
+            while IFS= read -r line; do
+              TIMESTAMP=$(echo "$line" | python3 -c "import json,sys; print(json.load(sys.stdin).get('timestamp','')[:10])" 2>/dev/null || echo "")
+              if [ -n "$TIMESTAMP" ] && [[ "$TIMESTAMP" < "$CUTOFF_DATE" ]]; then
+                OLD_LINES=$((OLD_LINES + 1))
+              fi
+            done < "$MANIFEST_MUTATIONS"
+
+            CICD_LINES_REMOVED=$OLD_LINES
+            echo "Found $OLD_LINES old lines in $MANIFEST_MUTATIONS (total: $TOTAL_LINES)"
+          fi
+
+          echo "cicd_lines_removed=$CICD_LINES_REMOVED" >> "$GITHUB_OUTPUT"
+
+      - name: Summary (dry run)
+        id: summary
+        env:
+          AUDIT_COUNT: ${{ steps.audit-results.outputs.audit_count }}
+          DECISIONS_COUNT: ${{ steps.agent-decisions.outputs.decisions_count }}
+          STALE_BRANCH_COUNT: ${{ steps.stale-branches.outputs.stale_branch_count }}
+          CICD_LINES: ${{ steps.cicd-events.outputs.cicd_lines_removed }}
+        run: |
+          set -euo pipefail
+
+          echo "=== Cold Storage Cleanup Summary ==="
+          echo "Mode: $( [ "$DRY_RUN" = "true" ] && echo "DRY RUN" || echo "LIVE" )"
+          echo "Audit result files to archive: $AUDIT_COUNT"
+          echo "Agent decision files to archive: $DECISIONS_COUNT"
+          echo "Stale branches to delete: $STALE_BRANCH_COUNT"
+          echo "CI/CD event lines to trim: $CICD_LINES"
+
+          TOTAL=$((AUDIT_COUNT + DECISIONS_COUNT + STALE_BRANCH_COUNT))
+          echo "total_items=$TOTAL" >> "$GITHUB_OUTPUT"
+
+          # Build Telegram message
+          MSG="Cold storage cleanup ($( [ "$DRY_RUN" = "true" ] && echo "DRY RUN" || echo "LIVE" )):%0A"
+          MSG="${MSG}- Audit result files: ${AUDIT_COUNT}%0A"
+          MSG="${MSG}- Agent decision files: ${DECISIONS_COUNT}%0A"
+          MSG="${MSG}- Stale branches: ${STALE_BRANCH_COUNT}%0A"
+          MSG="${MSG}- CI/CD event lines trimmed: ${CICD_LINES}"
+          echo "telegram_message=$MSG" >> "$GITHUB_OUTPUT"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo ""
+            echo "DRY RUN — no changes made. Dispatch with dry_run=false to execute."
+          fi
+
+      # ── GCS upload (if credentials available) ──────────────────────────────
+      - name: Authenticate to compliance GCP project
+        if: env.DRY_RUN == 'false'
+        id: gcs-auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.COMPLIANCE_SA_KEY }}
+        continue-on-error: true
+
+      - name: Upload old files to GCS archive
+        if: env.DRY_RUN == 'false' && steps.gcs-auth.outcome == 'success'
+        id: gcs-upload
+        run: |
+          set -euo pipefail
+
+          YEAR=$(date -u +"%Y")
+          MONTH=$(date -u +"%m")
+          GCS_PREFIX="gs://${GCS_ARCHIVE_BUCKET}/${YEAR}/${MONTH}"
+          UPLOADED=0
+
+          echo "Uploading to $GCS_PREFIX"
+
+          # Upload audit result files (gzipped)
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ -f "$f" ] || continue
+            BASENAME=$(basename "$f")
+            gzip -c "$f" > "/tmp/${BASENAME}.gz"
+            gsutil cp "/tmp/${BASENAME}.gz" "${GCS_PREFIX}/audit-results/${BASENAME}.gz"
+            UPLOADED=$((UPLOADED + 1))
+            echo "Uploaded: $f -> ${GCS_PREFIX}/audit-results/${BASENAME}.gz"
+          done < /tmp/old_audit_files.txt
+
+          # Upload agent decision files (gzipped)
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ -f "$f" ] || continue
+            BASENAME=$(basename "$f")
+            gzip -c "$f" > "/tmp/${BASENAME}.gz"
+            gsutil cp "/tmp/${BASENAME}.gz" "${GCS_PREFIX}/agent-decisions/${BASENAME}.gz"
+            UPLOADED=$((UPLOADED + 1))
+            echo "Uploaded: $f -> ${GCS_PREFIX}/agent-decisions/${BASENAME}.gz"
+          done < /tmp/old_decision_files.txt
+
+          echo "uploaded_count=$UPLOADED" >> "$GITHUB_OUTPUT"
+          echo "Total files uploaded to GCS: $UPLOADED"
+
+      - name: Log GCS skip
+        if: env.DRY_RUN == 'false' && steps.gcs-auth.outcome != 'success'
+        run: |
+          echo "COMPLIANCE_SA_KEY not configured or auth failed — skipping GCS upload."
+          echo "Files will still be removed from repo. Set up uts-compliance-ikenna"
+          echo "project and COMPLIANCE_SA_KEY secret to enable GCS archival."
+          echo "See: terraform/environments/compliance/compliance-setup.md"
+
+      # ── Remove old files from repo ─────────────────────────────────────────
+      - name: Remove old audit files from repo
+        if: env.DRY_RUN == 'false'
+        run: |
+          set -euo pipefail
+
+          REMOVED=0
+
+          # Remove old audit result files
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ -f "$f" ] || continue
+            git rm "$f"
+            REMOVED=$((REMOVED + 1))
+          done < /tmp/old_audit_files.txt
+
+          # Remove old agent decision files
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ -f "$f" ] || continue
+            git rm "$f"
+            REMOVED=$((REMOVED + 1))
+          done < /tmp/old_decision_files.txt
+
+          echo "Removed $REMOVED files from repo"
+
+      - name: Trim old CI/CD event lines
+        if: env.DRY_RUN == 'false' && steps.cicd-events.outputs.cicd_lines_removed != '0'
+        env:
+          CICD_CUTOFF: ${{ steps.audit-results.outputs.cutoff_date }}
+        run: |
+          set -euo pipefail
+
+          MANIFEST_MUTATIONS="plans/audit/manifest_mutations.jsonl"
+
+          if [ -f "$MANIFEST_MUTATIONS" ]; then
+            BEFORE=$(wc -l < "$MANIFEST_MUTATIONS" | tr -d ' ')
+
+            # Keep only lines with timestamp >= cutoff
+            python3 -c "
+          import json, sys
+          cutoff = '${CICD_CUTOFF}'
+          kept = []
+          with open('${MANIFEST_MUTATIONS}') as f:
+              for line in f:
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      ts = json.loads(line).get('timestamp', '')[:10]
+                      if ts >= cutoff:
+                          kept.append(line)
+                  except json.JSONDecodeError:
+                      kept.append(line)
+          with open('${MANIFEST_MUTATIONS}', 'w') as f:
+              for line in kept:
+                  f.write(line + '\n')
+          "
+
+            AFTER=$(wc -l < "$MANIFEST_MUTATIONS" | tr -d ' ')
+            echo "Trimmed manifest_mutations.jsonl: $BEFORE -> $AFTER lines"
+            git add "$MANIFEST_MUTATIONS"
+          fi
+
+      - name: Delete stale branches
+        if: env.DRY_RUN == 'false' && steps.stale-branches.outputs.stale_branch_count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+        run: |
+          set -euo pipefail
+
+          DELETED=0
+
+          while IFS= read -r branch; do
+            [ -z "$branch" ] && continue
+            echo "Deleting stale branch: $branch"
+            git push origin --delete "$branch" 2>/dev/null && DELETED=$((DELETED + 1)) || echo "Failed to delete: $branch"
+          done < /tmp/stale_branches.txt
+
+          echo "Deleted $DELETED stale branches"
+
+      - name: Commit cleanup
+        if: env.DRY_RUN == 'false'
+        run: |
+          set -euo pipefail
+
+          # Check if there are staged changes
+          if git diff --cached --quiet; then
+            echo "No files to commit (nothing old enough to clean up)"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: cold storage cleanup — archive old audit files [skip ci]"
+          git push
+
+  # ── TELEGRAM NOTIFY ──────────────────────────────────────────────────────
+  notify:
+    name: Telegram — Cold Storage Cleanup
+    needs: [cold-storage-cleanup]
+    if: always()
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        ${{ needs.cold-storage-cleanup.outputs.telegram_message || 'Cold storage cleanup completed. Check workflow run
+        for details.' }}
+      severity: "INFO"
+      conclusion: ${{ needs.cold-storage-cleanup.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

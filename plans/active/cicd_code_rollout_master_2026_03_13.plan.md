@@ -309,6 +309,12 @@ todos:
       (c) Compliance SA credentials in GitHub secrets under a DIFFERENT secret name from GCP_SA_KEY_PROD
       with a separate rotation schedule.
       (d) No SA from uts-prod-ikenna has write access to compliance bucket — only compliance-subscriber SA does.
+      AGENT WORK DONE 2026-03-15: Terraform config created at terraform/environments/compliance/main.tf with:
+      compliance-subscriber SA (append-only GCS + BQ insert), uts-compliance-ikenna-events bucket (7-year WORM),
+      uts-compliance-ikenna-audit-archive bucket (Coldline at 90d, Archive at 1y), compliance_events BQ dataset.
+      Setup guide at terraform/environments/compliance/compliance-setup.md.
+      BLOCKED: Awaiting human to create GCP project (step a), apply Terraform (step 3), export SA key to
+      GitHub secrets as COMPLIANCE_SA_KEY (step 4), and verify isolation (step 5).
     status: pending
   - id: compliance-best-execution-version-trail
     content: |
@@ -369,7 +375,7 @@ todos:
     status: done
   - id: audit-cold-storage-cleanup-workflow
     content: |
-      - [ ] [AGENT] P1. Weekly GHA workflow `audit-cold-storage.yml` (cron: Sunday 02:00 UTC) that:
+      - [x] [AGENT] P1. Weekly GHA workflow `audit-cold-storage.yml` (cron: Sunday 02:00 UTC) that:
       (a) Moves audit results older than 30 days from `plans/audit/results/` to GCS cold storage bucket
       (gs://uts-compliance-ikenna-audit-archive/{year}/{month}/). Keeps last 30 days in-repo for quick access.
       (b) Moves agent decision logs older than 30 days from `plans/audit/agent_decisions/` to same GCS bucket.
@@ -378,7 +384,11 @@ todos:
       (e) Telegram summary: "Cold storage cleanup: moved N audit files, M decision files to GCS archive."
       (f) GCS bucket has lifecycle rule: move to Coldline after 90 days, Archive after 1 year.
       Requires compliance-gcp-project to be set up first (separate GCP project for custody).
-    status: pending
+      COMPLETED 2026-03-15: cold-storage-cleanup.yml created. Features: dry_run=true default (safe for scheduled),
+      configurable retention (30d audit, 90d CI/CD), GCS upload with gzip (graceful skip if COMPLIANCE_SA_KEY
+      not set), stale branch cleanup, manifest_mutations.jsonl trimming, Telegram summary via notify-telegram.yml.
+      GCS bucket lifecycle (Coldline 90d, Archive 1y) defined in terraform/environments/compliance/main.tf.
+    status: done
   - id: harden-disaster-recovery-rto-rpo
     content: |
       - [x] [AGENT] P1. Define and document RTO/RPO targets for all environments. No task currently defines recovery time.

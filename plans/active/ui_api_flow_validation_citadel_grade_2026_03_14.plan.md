@@ -91,10 +91,10 @@ todos:
 
   - id: ph3-fixture-drift
     content: >
-      - [ ] [AGENT] P1. Fixture drift prevention: UI mock fixtures must be generated from API mock-mode responses (one
+      - [x] [AGENT] P1. Fixture drift prevention: UI mock fixtures must be generated from API mock-mode responses (one
       source of truth). Build-time validation that mock fixture schemas match UIC/UAC contract models. Fail on schema
       mismatch.
-    status: todo
+    status: done
 
   - id: ph3-critical-gap-blocking
     content: >
