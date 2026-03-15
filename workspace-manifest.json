@@ -1911,7 +1911,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
