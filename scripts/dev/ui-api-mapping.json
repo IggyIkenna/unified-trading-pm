@@ -25,30 +25,34 @@
     "strategy": {
       "ui": "strategy-ui",
       "ui_port": 5175,
-      "api": null,
-      "api_port": 8007,
-      "api_module": null
+      "api": "execution-results-api",
+      "api_port": 8006,
+      "api_module": "execution_results_api",
+      "$note": "Strategy UI fetches /api/strategies/* from execution-results-api. Backtest runs use a separate local Python process (port 5001), not an API service."
     },
     "settlement": {
       "ui": "settlement-ui",
       "ui_port": 5176,
-      "api": null,
-      "api_port": 8008,
-      "api_module": null
+      "api": "trading-analytics-api",
+      "api_port": 8012,
+      "api_module": "trading_analytics_api",
+      "$note": "Settlement routes live in trading-analytics-api (/settlement/* and /settlements/*). No separate settlement-api needed."
     },
     "live-health-monitor": {
       "ui": "live-health-monitor-ui",
       "ui_port": 5177,
-      "api": null,
-      "api_port": 8009,
-      "api_module": null
+      "api": "execution-results-api",
+      "api_port": 8006,
+      "api_module": "execution_results_api",
+      "$note": "Live health monitor calls /api/positions, /api/risk, /api/health from execution-results-api. Manual trade instructions route to execution-service directly (VITE_EXECUTION_API_URL)."
     },
     "logs-dashboard": {
       "ui": "logs-dashboard-ui",
       "ui_port": 5178,
-      "api": null,
-      "api_port": 8010,
-      "api_module": null
+      "api": "batch-audit-api",
+      "api_port": 8013,
+      "api_module": "batch_audit_api",
+      "$note": "Logs dashboard calls /api/v1/audit/trail and /audit/trail/services from batch-audit-api. Manifest confirms batch-audit-api serves_ui includes logs-dashboard-ui."
     },
     "ml-training": {
       "ui": "ml-training-ui",
