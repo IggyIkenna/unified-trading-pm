@@ -21,6 +21,47 @@
 #   high     = nightly SIT
 #   medium   = weekly SIT
 
+# ---------------------------------------------------------------------------
+# Severity Taxonomy — defines what each criticality level means and when
+# real-flow tests for that level must run.
+# ---------------------------------------------------------------------------
+severity_definitions:
+  critical:
+    description: "Blocks trading or deployment. Failure means money at risk or services unreachable."
+    examples:
+      - "Order execution (submit, fill, cancel)"
+      - "Kill switch toggle"
+      - "Service deployment trigger"
+      - "Position/balance queries"
+    real_flow_cadence: "every staging deploy"
+    sit_schedule: "on_staging_deploy"
+    coverage_rule: "COV-001 — all 3 layers required (ui_mock + api_mock + real_flow)"
+    failure_action: "BLOCK — prevents promotion to staging"
+
+  high:
+    description: "Degrades UX or causes data staleness. Not immediately dangerous but impacts user confidence."
+    examples:
+      - "Log filtering and search"
+      - "Alert routing configuration"
+      - "Config save (start dates, regions)"
+      - "Report download"
+    real_flow_cadence: "nightly SIT"
+    sit_schedule: "nightly"
+    coverage_rule: "COV-002 — ui_mock + api_mock required; real_flow recommended"
+    failure_action: "WARNING — logged and reported, does not block promotion"
+
+  medium:
+    description: "Cosmetic or non-blocking. Navigation, branding, tooltips, non-critical table rendering."
+    examples:
+      - "Branding and theme"
+      - "Tooltip text"
+      - "Non-critical table sorting"
+      - "Navigation breadcrumbs"
+    real_flow_cadence: "weekly SIT"
+    sit_schedule: "weekly"
+    coverage_rule: "COV-003 — at least one test in any layer"
+    failure_action: "INFO — reported only, no point deduction"
+
 journeys:
   # ── deployment-ui ──────────────────────────────────────────────────────────
 

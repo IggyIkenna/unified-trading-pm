@@ -35,32 +35,32 @@ todos:
 
   - id: ph1-manifest-template
     content: >
-      - [ ] [AGENT] P0. Create ui-api-flow-test-manifest.yaml template in PM root. Columns: repo, journey_id,
+      - [x] [AGENT] P0. Create ui-api-flow-test-manifest.yaml template in PM root. Columns: repo, journey_id,
       page_or_route, control_id, interaction_type, expected_request, expected_response_contract, expected_ui_update,
       required_layers, criticality. Pre-populate deployment-ui + logs-dashboard-ui.
-    status: in_progress
+    status: done
 
   - id: ph1-critical-journey-mapping
     content: >
-      - [ ] [AGENT] P0. Map critical journeys for all 12 UIs. Source from ui-api-mapping.json + Playwright test files.
+      - [x] [AGENT] P0. Map critical journeys for all 12 UIs. Source from ui-api-mapping.json + Playwright test files.
       Manual override for criticality only. Output: populated manifest rows per UI repo.
-    status: todo
+    status: done
 
   - id: ph1-severity-taxonomy
     content: >
-      - [ ] [AGENT] P1. Define severity taxonomy: critical (blocks trading/deploy), high (degrades UX, data staleness),
+      - [x] [AGENT] P1. Define severity taxonomy: critical (blocks trading/deploy), high (degrades UX, data staleness),
       medium (cosmetic, non-blocking). Tie to real-flow cadence: critical = every staging deploy, high = nightly, medium
       = weekly.
-    status: todo
+    status: done
 
   # ── Phase 2: CHECKER MVP ───────────────────────────────────────────────────
 
   - id: ph2-checker-script
     content: >
-      - [ ] [AGENT] P0. Create check_ui_api_flow_coverage.py in PM scripts/checkers/. Reads manifest, scans repos for
+      - [x] [AGENT] P0. Create check_ui_api_flow_coverage.py in PM scripts/checkers/. Reads manifest, scans repos for
       Playwright/vitest/pytest files, scores against COV-001 through COV-003, BEH-001 through BEH-004, SEP-001 through
       SEP-003. Outputs JSON + markdown report.
-    status: todo
+    status: done
 
   - id: ph2-ci-warning
     content: >
@@ -70,9 +70,9 @@ todos:
 
   - id: ph2-auto-discovery
     content: >
-      - [ ] [AGENT] P1. Auto-discovery mode: checker scans ui-api-mapping.json + Playwright test directories. No manual
+      - [x] [AGENT] P1. Auto-discovery mode: checker scans ui-api-mapping.json + Playwright test directories. No manual
       manifest entry required for discovered journeys. Manual override only for criticality escalation.
-    status: todo
+    status: done
 
   # ── Phase 3: BEHAVIOR-PROOF HARDENING ──────────────────────────────────────
 
@@ -126,10 +126,10 @@ todos:
 
   - id: ph1-5-mock-state-store
     content: >
-      - [ ] [AGENT] P0. MockStateStore in UTL: seed data + mutations + JSONL persistence. deterministic mode (CI, no
+      - [x] [AGENT] P0. MockStateStore in UTL: seed data + mutations + JSONL persistence. deterministic mode (CI, no
       persistence) vs interactive mode (UAT, persists to .local-dev-cache/). MOCK_STATE_MODE env var. Thread-safe. Reset
       on dev-stop --clean.
-    status: in_progress
+    status: done
 
   - id: ph1-5-wire-apis
     content: >
@@ -137,20 +137,20 @@ todos:
       Per-UI stateful scenarios: deployment-api (deploy→status→logs), alerting (trigger→route→deliver),
       trading-analytics (trade→settle→report), execution-results (submit→fill→reconcile), batch-audit
       (event→log→summary), ml-training (train→evaluate→deploy model).
-    status: todo
+    status: partial
 
   - id: ph1-5-mode-axis
     content: >
       - [ ] [AGENT] P1. Add 5th mode axis (MOCK_STATE_MODE=deterministic|interactive) to dev-start.sh presets. CI preset
       uses deterministic. Mock preset uses interactive. Update dev-status.sh to show 5th axis. Update codex
       local-dev.md.
-    status: todo
+    status: partial
 
   - id: ph1-5-gitignore
     content: >
-      - [ ] [AGENT] P0. Add .local-dev-cache/ to workspace .gitignore and all repo .gitignores. Add --clean flag to
+      - [x] [AGENT] P0. Add .local-dev-cache/ to workspace .gitignore and all repo .gitignores. Add --clean flag to
       dev-stop.sh. Add --reset flag to dev-start.sh.
-    status: todo
+    status: done
 
 isProject: false
 ---
