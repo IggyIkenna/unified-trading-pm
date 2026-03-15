@@ -78,9 +78,9 @@ todos:
 
   - id: ph3-network-evidence
     content: >
-      - [ ] [AGENT] P0. Network evidence parser: extract request/response pairs from Playwright HAR or page.route()
+      - [x] [AGENT] P0. Network evidence parser: extract request/response pairs from Playwright HAR or page.route()
       intercepts. Validate against UAC/UIC contract models. Flag mock fixtures that drift from API mock-mode responses.
-    status: todo
+    status: done
 
   - id: ph3-triad-assertions
     content: >

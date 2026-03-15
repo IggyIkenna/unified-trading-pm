@@ -260,8 +260,6 @@ jobs:
         id: promote
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           START_FROM_REPO: ${{ inputs.resume_from_repo || inputs.start_from_repo || '' }}
         run: |
           set -euo pipefail
@@ -399,14 +397,8 @@ jobs:
                   PR_URL_CONFLICT="https://github.com/$OWNER/$REPO/pull/$EXISTING_PR_NUM"
                   echo "  CONFLICT detected on PR #$EXISTING_PR_NUM ($PR_URL_CONFLICT)"
 
-                  # Telegram: immediate notification
-                  if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-                    TEXT="⚠️ *Merge Conflict Detected*%0ARepo: \`${REPO}\`%0A\`staging\` → \`main\`%0APR: ${PR_URL_CONFLICT}%0AAgent dispatched to resolve..."
-                    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                      -d chat_id="${TELEGRAM_CHAT_ID}" \
-                      -d text="$TEXT" \
-                      -d parse_mode="Markdown" || true
-                  fi
+                  # NOTE: Telegram notification handled by conflict-resolution-agent's
+                  # notify-working job (reusable workflow). No inline curl needed here.
 
                   # Dispatch conflict-resolution-agent
                   curl -s -X POST \
@@ -423,14 +415,8 @@ jobs:
                 echo "  No open staging→main PR found for $REPO (PR creation may have failed for another reason)"
               fi
 
-              # On failure: send Telegram alert with partial promotion state and bail
-              if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-                ALERT_TEXT="🚨 *Partial Staging Promotion Failure*%0A%0ARepo \`${REPO}\` failed during promotion.%0A%0A✅ *Promoted:*${PROMOTED:- none}%0A❌ *Failed:* ${REPO}%0A⏸ *Remaining:* check workflow logs%0A%0AResume with: start_from_repo=${REPO}%0ARun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                  -d chat_id="${TELEGRAM_CHAT_ID}" \
-                  -d text="$ALERT_TEXT" \
-                  -d parse_mode="Markdown" || true
-              fi
+              # NOTE: Partial failure Telegram notification handled by
+              # notify-partial-failure job (reusable workflow). No inline curl needed here.
             fi
 
           done <<< "$REPOS"
@@ -772,3 +758,19 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Staging Promotion Event
+    needs: [promote-staging-to-main, notify-partial-failure, notify-promotion-complete]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.promote-staging-to-main.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json:
+        '{"promoted": "${{ needs.promote-staging-to-main.outputs.promoted_count }}", "failed": "${{
+        needs.promote-staging-to-main.outputs.failed_count }}"}'

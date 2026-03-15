@@ -60,8 +60,6 @@ jobs:
     steps:
       - name: Claude API health precheck
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
           CALLING_WORKFLOW: "semver-agent/{{SERVICE_NAME}}"
         run: |
           # Inline health check (semver-agent runs in individual repos, not PM)
@@ -77,13 +75,8 @@ jobs:
 
           if [ "$LAST_CONCLUSION" != "success" ] && [ "$LAST_CONCLUSION" != "unknown" ] && [ "$LAST_CONCLUSION" != "null" ]; then
             echo "Claude API unhealthy (conclusion=$LAST_CONCLUSION) — skipping semver agent"
-            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              TEXT="⚠️ *Claude API Unhealthy — Semver Agent Skipped*%0ARepo: \`{{SERVICE_NAME}}\`%0ALast health check: \`${LAST_CONCLUSION}\`"
-              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                -d chat_id="${TELEGRAM_CHAT_ID}" \
-                -d text="$TEXT" \
-                -d parse_mode="Markdown" > /dev/null 2>&1 || true
-            fi
+            # NOTE: Telegram notification handled by the notify job (reusable workflow)
+            # which fires on job failure. No inline curl needed here.
             exit 1
           fi
 
@@ -488,3 +481,17 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Semver Agent Event
+    needs: [semver, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: "{{SERVICE_NAME}}"
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.semver.result }}
+      branch: staging
+      commit_sha: ${{ github.event.workflow_run.head_sha }}
+      details_json: '{"event": "semver-agent"}'
