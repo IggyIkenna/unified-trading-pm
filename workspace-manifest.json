@@ -550,7 +550,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "VALIDATED",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1167,7 +1167,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": 35,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1594,7 +1594,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_PENDING",
+      "ci_status": "LOCALLY_PASSED",
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_PENDING",
@@ -2253,9 +2253,19 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
-      "ci_status": "BASELINE_PENDING",
+      "ci_status": "LOCALLY_PASSED",
       "testing_level": "unit",
       "skipped_gates": [],
       "quality_gate_status": "BASELINE_PENDING",
@@ -2305,7 +2315,7 @@
       "cluster": "admin-ui",
       "completion_path": "core",
       "notes": "Created 2026-03-10. npm workspaces (Node 22 LTS). TypeScript strict mode, ESLint zero-warnings, Vitest >80% coverage, Playwright smoke. No Python tooling (no uv, no basedpyright, no pytest). Repo count: 59 -> 60.",
-      "ci_status": "HAS_QG",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": 100,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2454,7 +2464,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 88,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2733,7 +2743,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 90,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2823,7 +2833,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 76,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2995,7 +3005,7 @@
       "status": "active",
       "description": "Shared Google OAuth auth library for all Unified Trading UIs. Provides GoogleAuth, RequireAuth, authFetch, useAuthToken.",
       "dependencies": [],
-      "ci_status": "NO_QG",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -3018,7 +3028,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -3043,7 +3053,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
-      "ci_status": "LOCALLY_PASSED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -3082,7 +3092,7 @@
           "required": true
         }
       ],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3105,7 +3115,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
-      "ci_status": "LOCALLY_PASSED",
+      "ci_status": "VALIDATED",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -3122,6 +3132,7 @@
       "github_url": "https://github.com/IggyIkenna/config-api",
       "type": "api",
       "arch_tier": "api",
+      "tier": 3,
       "dependencies": [
         {
           "name": "unified-trading-library",
