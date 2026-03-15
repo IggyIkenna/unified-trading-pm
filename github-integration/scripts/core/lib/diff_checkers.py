@@ -1,4 +1,5 @@
 """Diff checkers: find gaps between codex and codebase."""
+# SCHEMA_PROVENANCE_EXEMPT — PM-internal tooling model, not a domain schema
 
 from __future__ import annotations
 

@@ -3,6 +3,7 @@
 Provides FaultConfig, FaultInjectionTransport and preset scenario objects for
 simulating network faults (timeouts, errors, rate-limits, latency) in tests.
 """
+# SCHEMA_PROVENANCE_EXEMPT — PM-internal tooling model, not a domain schema
 
 from __future__ import annotations
 

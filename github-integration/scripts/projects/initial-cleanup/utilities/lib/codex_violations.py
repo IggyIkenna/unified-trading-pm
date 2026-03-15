@@ -1,4 +1,5 @@
 """Codex violation checkers and GitHub issue helpers for check-codex-violations."""
+# SCHEMA_PROVENANCE_EXEMPT — PM-internal tooling model, not a domain schema
 
 from __future__ import annotations
 

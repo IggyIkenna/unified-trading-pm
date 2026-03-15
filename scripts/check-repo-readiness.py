@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.13
+# SCHEMA_PROVENANCE_EXEMPT — PM-internal tooling models, not domain schemas
 """
 Repo Readiness Verifier
 

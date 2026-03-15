@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SCHEMA_PROVENANCE_EXEMPT — PM-internal tooling model, not a domain schema
 """
 Track workflow success metrics.
 
