@@ -65,7 +65,7 @@ steps:
     args:
       - "-c"
       - |
-        pip install uv && uv pip install --system ruff
+        pip install uv && uv pip install --system ruff==0.15.0
         ruff check ${_PKG_NAME}/
         ruff format --check ${_PKG_NAME}/
     waitFor: ["ensure-repo"]
@@ -77,7 +77,7 @@ steps:
       - "-c"
       - |
         pip install uv
-        uv pip install --system -e ".[dev]"
+        uv pip install --system -e .
         python -m pytest tests/ -v --tb=short \
           --cov=${_PKG_NAME} \
           --cov-fail-under=51 \

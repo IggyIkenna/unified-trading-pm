@@ -67,6 +67,7 @@ echo ""
 echo "Checks performed (dry run = report only; --fix = apply auto-fixes):"
 echo "  [0]     Tracked-but-gitignored audit          — informational only"
 echo "  [0.5]   Broken symlinks                       — manual: rm <path> && ln -sf <target> <path>"
+echo "  [0.55]  Agent symlinks (check-import-patterns) — auto-fix with --fix"
 echo "  [0.6]   UI npm dep drift (pkg.json vs lock)   — manual: cd <repo> && npm install"
 echo "  [0.7]   Canonical npm version alignment       — auto-fix with --fix"
 echo "  [0.8]   uv.lock drift (pyproject newer / uncommitted changes) — warn or --strict fatal"
@@ -155,9 +156,14 @@ if [ "${#MISSING_SYMLINKS[@]}" -gt 0 ] || [ "${#STALE_COPIES[@]}" -gt 0 ]; then
         for s in "${MISSING_SYMLINKS[@]}"; do echo "$s"; done
     [ "${#STALE_COPIES[@]}" -gt 0 ] && echo "  [WARN] Stale local copies (should be symlinks) (${#STALE_COPIES[@]}):" && \
         for s in "${STALE_COPIES[@]}"; do echo "$s"; done
-    echo "  Fix: bash unified-trading-pm/scripts/rollout-agent-symlinks.sh"
-    if [ "${STRICT:-false}" = true ]; then
-        exit 1
+    if [ "$APPLY_FIXES" = true ]; then
+        echo "  Applying fix: running rollout-agent-symlinks.sh..."
+        bash "$PM_ROOT/scripts/rollout-agent-symlinks.sh" 2>&1 || true
+    else
+        echo "  Fix: bash unified-trading-pm/scripts/rollout-agent-symlinks.sh"
+        if [ "${STRICT:-false}" = true ]; then
+            exit 1
+        fi
     fi
 else
     echo "  [OK] All Python repos have check-import-patterns.py symlinks"

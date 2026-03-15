@@ -183,6 +183,12 @@
       "path": "unified-feature-calculator-library",
     },
     {
+      "path": "unified-feature-orchestration-library",
+    },
+    {
+      "path": "unified-features-interface",
+    },
+    {
       "path": "unified-internal-contracts",
     },
     {
@@ -199,6 +205,9 @@
     },
     {
       "path": "unified-sports-execution-interface",
+    },
+    {
+      "path": "unified-sports-reference-interface",
     },
     {
       "path": "unified-trade-execution-interface",

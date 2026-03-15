@@ -89,6 +89,13 @@ SKIP_STATUSES = frozenset({"deprecated", "archived", "deleted"})
 # PM and Codex have their own quality-gates; do not overwrite with templates
 ROLLOUT_SKIP_REPOS = frozenset({"unified-trading-pm", "unified-trading-codex"})
 
+# Known repo-specific config patterns to preserve between LOCAL_DEPS=() and WORKSPACE_ROOT=...
+# when regenerating quality-gates.sh.  These are variable assignments or array declarations
+# that repos add manually and must not be wiped by rollout.
+_PRESERVED_VAR_PATTERNS = re.compile(
+    r"^(?:UAC_CANONICAL_EXEMPT|BROAD_EXCEPT_EXTRA_EXCLUDES|MAX_DURATION|RUN_INTEGRATION|EXTRA_RUFF_ARGS|EXTRA_PYTEST_ARGS)\b"
+)
+
 # Repos where discover_source_dir() picks the wrong dir — override explicitly.
 # Key: repo name, Value: SOURCE_DIR value to use in quality-gates.sh
 SOURCE_DIR_OVERRIDES: dict[str, str] = {
@@ -229,6 +236,43 @@ def measure_coverage(repo_path: Path, source_dir: str) -> int | None:
     return None
 
 
+def _extract_preserved_lines(existing_content: str) -> list[str]:
+    """Extract repo-specific config lines from an existing quality-gates.sh.
+
+    Custom config lives between LOCAL_DEPS=() and WORKSPACE_ROOT=... .
+    Lines matching _PRESERVED_VAR_PATTERNS are preserved across rollout regenerations.
+    """
+    preserved: list[str] = []
+    in_custom_zone = False
+    for line in existing_content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("LOCAL_DEPS="):
+            in_custom_zone = True
+            continue
+        if stripped.startswith("WORKSPACE_ROOT="):
+            break
+        if in_custom_zone and _PRESERVED_VAR_PATTERNS.match(stripped):
+            preserved.append(line)
+    return preserved
+
+
+def _inject_preserved_lines(content: str, preserved: list[str]) -> str:
+    """Re-inject preserved repo-specific config lines into regenerated content.
+
+    Inserts them after the LOCAL_DEPS=() line and before the WORKSPACE_ROOT=... line.
+    """
+    if not preserved:
+        return content
+    lines = content.splitlines(keepends=True)
+    result: list[str] = []
+    for line in lines:
+        result.append(line)
+        if line.strip().startswith("LOCAL_DEPS="):
+            for p in preserved:
+                result.append(p + "\n")
+    return "".join(result)
+
+
 def copy_quality_gates(
     repo_path: Path,
     repo_name: str,
@@ -239,6 +283,10 @@ def copy_quality_gates(
     """Copy and customize quality-gates.sh. Returns True if created/updated."""
     scripts_dir = repo_path / "scripts"
     dest = scripts_dir / "quality-gates.sh"
+
+    # Extract repo-specific config lines from existing file BEFORE overwriting
+    existing_content = dest.read_text() if dest.exists() else ""
+    preserved_lines = _extract_preserved_lines(existing_content)
 
     if template_type == "typescript":
         content = get_typescript_quality_gates_script()
@@ -259,6 +307,11 @@ def copy_quality_gates(
         content = content.replace('SERVICE_NAME="REPLACE_ME"', f'SERVICE_NAME="{package_name}"')
         content = content.replace('SOURCE_DIR="REPLACE_ME"', f'SOURCE_DIR="{source_dir}"')
 
+    # Re-inject preserved repo-specific config lines
+    content = _inject_preserved_lines(content, preserved_lines)
+    if preserved_lines:
+        print(f"  🔒 Preserved {len(preserved_lines)} repo-specific config line(s)")
+
     # Compute MIN_COVERAGE = max(floor, actual-1) when recalibrating,
     # or max(floor, existing) to enforce floor without running tests.
     # Floor: library=80, service=70. Per-repo overrides in MIN_COVERAGE_OVERRIDES take precedence.
@@ -266,8 +319,8 @@ def copy_quality_gates(
         repo_name, LIBRARY_COVERAGE_FLOOR if template_type == "library" else SERVICE_COVERAGE_FLOOR
     )
     existing_int: int | None = None
-    if dest.exists():
-        m = re.search(r"^MIN_COVERAGE=(\d+)", dest.read_text(), re.MULTILINE)
+    if existing_content:
+        m = re.search(r"^MIN_COVERAGE=(\d+)", existing_content, re.MULTILINE)
         if m:
             existing_int = int(m.group(1))
 

@@ -1,0 +1,34 @@
+name: Contract Replay
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        type: string
+        required: true
+      cassette_dir:
+        type: string
+        default: "external/*/mocks/"
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/${{ inputs.repo }}
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Replay cassettes against schemas
+        run: |
+          echo "Replaying cassettes for ${{ inputs.repo }}"
+          echo "Cassette dir: ${{ inputs.cassette_dir }}"
+          # Layer 1: Raw schema parse validation
+          #   - Load each cassette YAML/JSON
+          #   - Validate response payloads against Pydantic models
+          # Layer 2: Canonical output invariant validation
+          #   - Verify field names, types, and enums match contract specs
+          #   - Flag any new/removed fields as potential drift

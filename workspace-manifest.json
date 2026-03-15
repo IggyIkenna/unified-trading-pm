@@ -85,18 +85,22 @@
     "unified-domain-client": "0.1.76",
     "unified-events-interface": "0.2.48",
     "unified-feature-calculator-library": "0.2.0",
+    "unified-feature-orchestration-library": "0.1.0",
+    "unified-features-interface": "0.1.0",
     "unified-internal-contracts": "0.1.95",
     "unified-market-interface": "0.3.101",
     "unified-ml-interface": "0.1.21",
     "unified-position-interface": "0.1.27",
     "unified-reference-data-interface": "0.1.102",
     "unified-sports-execution-interface": "0.1.19",
+    "unified-sports-reference-interface": "0.1.0",
     "unified-trade-execution-interface": "0.1.42",
     "unified-trading-codex": "0.1.0",
     "unified-trading-library": "0.3.191",
     "unified-trading-pm": "1.2.0",
     "unified-trading-ui-auth": "0.2.1",
-    "unified-trading-ui-kit": "0.1.0"
+    "unified-trading-ui-kit": "0.1.0",
+    "config-api": "0.1.0"
   },
   "repositories": {
     "alerting-service": {
@@ -356,8 +360,6 @@
       "version": "0.1.1",
       "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
-        "unified-cloud-interface",
-        "unified-events-interface",
         {
           "name": "unified-events-interface",
           "version": ">=0.2.0,<1.0.0",
@@ -376,6 +378,11 @@
         {
           "name": "unified-config-interface",
           "version": ">=0.1.3,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
@@ -795,6 +802,11 @@
         },
         {
           "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1482,7 +1494,13 @@
       "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.57",
       "version_source": "pyproject.toml",
-      "dependencies": [],
+      "dependencies": [
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
       "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
       "ci_status": "VALIDATED",
       "coverage_pct": 89,
@@ -2105,6 +2123,11 @@
           "name": "unified-trading-library",
           "version": ">=0.3.42,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "github_url": "https://github.com/IggyIkenna/trading-agent-service",
@@ -2471,11 +2494,6 @@
           "name": "unified-events-interface",
           "version": ">=0.2.2,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.3.42,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "VALIDATED",
@@ -2677,6 +2695,11 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
         }
       ],
       "github_url": "https://github.com/IggyIkenna/unified-reference-data-interface",
@@ -2840,6 +2863,16 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
@@ -2932,39 +2965,137 @@
     },
     "unified-features-interface": {
       "type": "interface",
-      "tier": 5,
+      "tier": 2,
       "role": "interface",
-      "status": "planned",
-      "arch_tier": "interface",
+      "status": "active",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [],
-      "notes": "Planned \u2014 unified feature serving interface (UAC Citadel Architecture Phase 1)"
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 80,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "github_url": "https://github.com/IggyIkenna/unified-features-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "notes": "Unified feature serving interface (UAC Citadel Architecture Phase 8)"
     },
     "unified-feature-orchestration-library": {
       "type": "library",
-      "tier": 6,
+      "tier": 2,
       "role": "library",
-      "status": "planned",
-      "arch_tier": "library",
+      "status": "active",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [],
-      "notes": "Planned \u2014 unified feature orchestration library (UAC Citadel Architecture Phase 1)"
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-features-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 80,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "github_url": "https://github.com/IggyIkenna/unified-feature-orchestration-library",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "notes": "Unified feature orchestration library (UAC Citadel Architecture Phase 8)"
     },
     "unified-sports-reference-interface": {
       "type": "interface",
-      "tier": 5,
+      "tier": 2,
       "role": "interface",
-      "status": "planned",
-      "arch_tier": "interface",
+      "status": "active",
+      "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [],
-      "notes": "Planned \u2014 unified sports reference data interface (UAC Citadel Architecture Phase 1)"
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 80,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "quality_gate_status": "PASSING",
+      "github_url": "https://github.com/IggyIkenna/unified-sports-reference-interface",
+      "completion_path": "core",
+      "semver_rules_ref": "library-t2",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "notes": "Unified sports reference data interface (UAC Citadel Architecture Phase 8)"
+    },
+    "config-api": {
+      "github_url": "https://github.com/IggyIkenna/config-api",
+      "type": "api",
+      "arch_tier": "api",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.39,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.48,<1.0.0",
+          "required": true
+        }
+      ]
     }
   },
   "topologicalOrder": {
@@ -3008,13 +3139,19 @@
           "unified-market-interface",
           "unified-ml-interface",
           "unified-position-interface",
-          "unified-trade-execution-interface"
+          "unified-trade-execution-interface",
+          "unified-features-interface",
+          "unified-sports-reference-interface"
         ]
       },
       {
         "level": 6,
         "description": "Execution interfaces \u2014 DeFi + sports",
-        "repos": ["unified-defi-execution-interface", "unified-sports-execution-interface"]
+        "repos": [
+          "unified-defi-execution-interface",
+          "unified-sports-execution-interface",
+          "unified-feature-orchestration-library"
+        ]
       },
       {
         "level": 7,
@@ -3056,7 +3193,8 @@
           "ml-training-api",
           "position-balance-monitor-service",
           "risk-and-exposure-service",
-          "trading-analytics-api"
+          "trading-analytics-api",
+          "config-api"
         ]
       },
       {
@@ -3135,24 +3273,6 @@
   "futureRepos": {
     "description": "Repos planned but not yet production-ready (v0.1.0 scaffolds exist in workspace)",
     "repos": [
-      {
-        "name": "unified-position-interface",
-        "status": "scaffolded",
-        "notes": "Scaffolded. CanonicalPosition protocol exists. CCXT/OKX/IBKR adapters planned v1.0.0. Required for: execution-service live, position-balance-monitor-service.",
-        "completion_path": "cefi"
-      },
-      {
-        "name": "features-sports-service",
-        "status": "scaffolded",
-        "notes": "Scaffolded 2026-02-28. Sports feature computation service.",
-        "completion_path": "sports"
-      },
-      {
-        "name": "unified-sports-execution-interface",
-        "status": "scaffolded",
-        "notes": "Scaffolded 2026-02-28. BaseSportsAdapter protocol exists.",
-        "completion_path": "sports"
-      },
       {
         "name": "sports-reference-data-service",
         "status": "merged-into-instruments-service",

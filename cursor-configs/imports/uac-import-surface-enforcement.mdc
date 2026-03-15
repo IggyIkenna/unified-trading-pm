@@ -1,0 +1,51 @@
+---
+description: UAC import surface enforcement — only facade imports allowed
+globs: ["**/*.py"]
+alwaysApply: true
+---
+
+# UAC Import Surface Enforcement
+
+## Rule
+
+All consumer repos MUST import from UAC facade modules only:
+
+```python
+# ALLOWED — facade imports (domain-level)
+from unified_api_contracts.execution import CanonicalOrder, CanonicalFill
+from unified_api_contracts.instruments import CanonicalInstrument
+from unified_api_contracts.market_data import CanonicalCandle, CanonicalTick
+from unified_api_contracts.portfolio import CanonicalPosition, CanonicalBalance
+from unified_api_contracts.risk import CanonicalRiskMetrics
+from unified_api_contracts.features import CanonicalFeatureRow
+from unified_api_contracts.normalize import normalize_order, normalize_fill
+```
+
+## Blocked Patterns
+
+```python
+# BLOCKED — deep/internal imports
+from unified_api_contracts.canonical.execution import ...     # deep canonical
+from unified_api_contracts.normalize_utils.order import ...   # deep normalize
+from unified_api_contracts.config.venues import ...           # internal config
+from unified_api_contracts.shared.enums import ...            # internal shared
+from unified_api_contracts.schemas.v2 import ...              # internal schemas
+```
+
+## Exempt Repos
+
+These repos set `UAC_CANONICAL_EXEMPT=true` in their `quality-gates.sh`:
+
+- `unified-api-contracts` — UAC itself (defines the internals)
+- `unified-internal-contracts` — UIC (sibling schema repo)
+- `system-integration-tests` — SIT (tests internal structure)
+
+## QG Enforcement
+
+STEP 5.23 in `base-service.sh` and `base-library.sh` blocks deep UAC imports.
+Bypass: set `UAC_CANONICAL_EXEMPT=true` before sourcing the base script.
+
+## Why
+
+The facade pattern ensures UAC can refactor internal module layout (canonical/, shared/, config/)
+without breaking consumers. All public symbols are re-exported through domain facade modules.

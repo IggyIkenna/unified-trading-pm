@@ -178,7 +178,7 @@ for service in "${all_services[@]}"; do
       counts_running=$((counts_running + 1))
     else
       # PID is dead — check if something is actually listening on the port (orphan child process)
-      local actual_pid=""
+      actual_pid=""
       if [ -n "$port" ]; then
         actual_pid=$(lsof -iTCP:"$port" -sTCP:LISTEN -t 2>/dev/null || true)
       fi

@@ -582,7 +582,7 @@ PIP_SH=$(rg " pip install " --glob "**/*.sh" --glob "!unified-trading-pm/**" . 2
 _be_extra_globs=()
 for _excl in "${BROAD_EXCEPT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _be_extra_globs+=("--glob" "!${_excl}"); done
 BE=$(rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
-[[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; V=$(( V + 1 )); } || log_success "No broad except Exception"
+[[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
 SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" -A 2 2>/dev/null \
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
@@ -649,6 +649,33 @@ if $PYTHON_CMD -c "import bandit" 2>/dev/null; then
         || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
+fi
+
+# ============================================================
+# STEP 5.23 — UAC import surface enforcement
+# Only facade imports allowed: from unified_api_contracts.{domain} import X
+# Deep imports into canonical/, normalize_utils/, config/, shared/, schemas/ are blocked.
+# Exempt repos: UAC itself, UIC, SIT (auto-detected by PACKAGE_NAME or UAC_CANONICAL_EXEMPT=true).
+# ============================================================
+_UAC_EXEMPT="${UAC_CANONICAL_EXEMPT:-false}"
+[[ "${PACKAGE_NAME:-}" == "unified-api-contracts" ]] && _UAC_EXEMPT=true
+[[ "${PACKAGE_NAME:-}" == "unified-internal-contracts" ]] && _UAC_EXEMPT=true
+if [[ "$_UAC_EXEMPT" != "true" ]]; then
+  DEEP_UAC_IMPORTS=0
+  rg 'from unified_api_contracts\.canonical\.' "$SOURCE_DIR/" --glob '!**/test_*' --glob '!**/conftest*' --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.normalize_utils\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.config\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.shared\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.schemas\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  if [[ $DEEP_UAC_IMPORTS -eq 1 ]]; then
+    log_fail "STEP 5.23: Deep UAC import detected. Use facade: from unified_api_contracts.{domain} import X"
+    rg 'from unified_api_contracts\.(canonical|normalize_utils|config|shared|schemas)\.' "$SOURCE_DIR/" --type py 2>/dev/null | head -10
+    V=$(( V + 1 ))
+  else
+    log_success "STEP 5.23: UAC import surface clean"
+  fi
+else
+  log_success "STEP 5.23: UAC import surface (exempt repo)"
 fi
 
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }

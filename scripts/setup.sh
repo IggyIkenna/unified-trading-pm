@@ -634,6 +634,7 @@ log_step "Import smoke test"
 if [ -n "$PACKAGE_NAME" ]; then
     SMOKE_PYTHON="${PYTHON_CMD:-python3}"
     [ -f ".venv/bin/python" ] && SMOKE_PYTHON=".venv/bin/python"
+    SMOKE_OUT=$($SMOKE_PYTHON -c "import $PACKAGE_NAME" 2>&1 || true)
     if $SMOKE_PYTHON -c "import $PACKAGE_NAME" 2>/dev/null; then
         log_ok "import $PACKAGE_NAME"
     else
@@ -642,6 +643,11 @@ if [ -n "$PACKAGE_NAME" ]; then
         else
             log_fail "import $PACKAGE_NAME FAILED"
             ISSUES=$((ISSUES + 1))
+        fi
+        if [ -n "$SMOKE_OUT" ]; then
+            echo "      --- traceback ---"
+            echo "$SMOKE_OUT" | sed 's/^/      /'
+            echo "      ---"
         fi
     fi
 else

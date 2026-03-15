@@ -592,7 +592,7 @@ for g in "${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}"; do
 done
 BE=$(rg "except Exception:" --type py --glob "!tests/**" "${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"}" "$SOURCE_DIR/" 2>/dev/null || :)
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
-[[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; V=$(( V + 1 )); } || log_success "No broad except Exception"
+[[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
 # Swallowed errors — except that silently passes/returns None
 SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \
@@ -916,6 +916,32 @@ if [ -d ".github/workflows" ]; then
     fi
 else
     log_success "STEP 5.18: no .github/workflows dir (skipped)"
+fi
+
+# ============================================================
+# STEP 5.23 — UAC import surface enforcement
+# Only facade imports allowed: from unified_api_contracts.{domain} import X
+# Deep imports into canonical/, normalize_utils/, config/, shared/, schemas/ are blocked.
+# Exempt repos: UAC itself, UIC, SIT (auto-detected by SERVICE_NAME or UAC_CANONICAL_EXEMPT=true).
+# ============================================================
+_UAC_EXEMPT="${UAC_CANONICAL_EXEMPT:-false}"
+[[ "${SERVICE_NAME:-}" == "system-integration-tests" ]] && _UAC_EXEMPT=true
+if [[ "$_UAC_EXEMPT" != "true" ]]; then
+  DEEP_UAC_IMPORTS=0
+  rg 'from unified_api_contracts\.canonical\.' "$SOURCE_DIR/" --glob '!**/test_*' --glob '!**/conftest*' --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.normalize_utils\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.config\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.shared\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  rg 'from unified_api_contracts\.schemas\.' "$SOURCE_DIR/" --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
+  if [[ $DEEP_UAC_IMPORTS -eq 1 ]]; then
+    log_fail "STEP 5.23: Deep UAC import detected. Use facade: from unified_api_contracts.{domain} import X"
+    rg 'from unified_api_contracts\.(canonical|normalize_utils|config|shared|schemas)\.' "$SOURCE_DIR/" --type py 2>/dev/null | head -10
+    V=$(( V + 1 ))
+  else
+    log_success "STEP 5.23: UAC import surface clean"
+  fi
+else
+  log_success "STEP 5.23: UAC import surface (exempt repo)"
 fi
 
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
