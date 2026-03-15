@@ -1889,7 +1889,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2029,9 +2029,14 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.1,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
