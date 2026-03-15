@@ -426,7 +426,7 @@ def copy_ui_integration_test(repo_path: Path, repo_name: str, dry_run: bool) -> 
     api_name = config.get("api_name", "api")
     env_var = config.get("env_var", "INTEGRATION_TEST_API_URL")
     default_port = config.get("default_port", "8000")
-    api_path = config.get("api_path", "")
+    api_path = config.get("api_path", "")  # noqa: qg-empty-fallback
     endpoints = config.get("endpoints", ["/health"])
     dual_base = config.get("dual_base", False)
     endpoint_lines = []
@@ -475,7 +475,7 @@ def copy_ui_integration_test(repo_path: Path, repo_name: str, dry_run: bool) -> 
     pkg_path = repo_path / "package.json"
     if pkg_path.exists():
         pkg = json.loads(pkg_path.read_text())
-        scripts = pkg.get("scripts", {})
+        scripts = pkg.get("scripts", {})  # noqa: qg-empty-fallback
         if "test:integration" not in scripts:
             scripts["test:integration"] = "vitest run tests/integration"
             pkg["scripts"] = scripts

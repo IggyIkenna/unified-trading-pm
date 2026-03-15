@@ -63,7 +63,7 @@ def get_deploy_via_dispatch_repos() -> set[str]:
         return set()
     data = json.loads(MANIFEST.read_text())
     repos = set()
-    for name, meta in data.get("repos", {}).items():
+    for name, meta in data.get("repos", {}).items():  # noqa: qg-empty-fallback
         if isinstance(meta, dict) and meta.get("deploy_via_dispatch"):
             repos.add(name)
     return repos

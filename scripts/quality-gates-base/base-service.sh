@@ -428,7 +428,10 @@ if [[ -n "${WORKSPACE_ROOT:-}" && -f "${WORKSPACE_ROOT}/unified-trading-pm/scrip
         || { log_fail "Env canon: os.getenv keys must be from unified_internal_contracts.EnvVars"; V=$(( V + 1 )); }
 fi
 # Manifest import alignment: dependencies[] must match actual Python imports
-if [[ -n "${WORKSPACE_ROOT:-}" && -f "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_manifest_import_alignment.py" ]]; then
+# MANIFEST_ALIGNMENT_SKIP: set true in test-harness repos where SOURCE_DIR=tests (alignment scanner excludes tests/)
+if [[ "${MANIFEST_ALIGNMENT_SKIP:-false}" == "true" ]]; then
+    log_success "Manifest import alignment: skipped (MANIFEST_ALIGNMENT_SKIP=true)"
+elif [[ -n "${WORKSPACE_ROOT:-}" && -f "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_manifest_import_alignment.py" ]]; then
     python3 "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_manifest_import_alignment.py" --repo "$(pwd)" --workspace-root "${WORKSPACE_ROOT}" \
         && log_success "Manifest import alignment: OK" \
         || { log_fail "Manifest import alignment: declare deps you import, import deps you declare"; V=$(( V + 1 )); }

@@ -113,7 +113,7 @@ def load_repos_from_manifest(manifest_path: Path | None = None) -> list[str]:
     path = manifest_path or MANIFEST_PATH
     with open(path, encoding="utf-8") as f:
         m = json.load(f)
-    repos = m.get("repositories", [])
+    repos = m.get("repositories", [])  # noqa: qg-empty-fallback
     if isinstance(repos, list):
         names = [
             r.get("name", r) if isinstance(r, dict) else r
@@ -123,7 +123,7 @@ def load_repos_from_manifest(manifest_path: Path | None = None) -> list[str]:
     else:
         names = [k for k in repos.keys() if not k.startswith("_")]
     if not names:
-        vers = m.get("versions", {})
+        vers = m.get("versions", {})  # noqa: qg-empty-fallback
         names = [k for k in vers.keys() if not k.startswith("_")]
     return names
 

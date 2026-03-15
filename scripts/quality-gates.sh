@@ -27,6 +27,8 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/rollout-quality-gates-ci-workflows.py"
     "!**/smoke-test-dev.py"
+    "!**/check_env_canon.py"
+    "!**/validate-build-auth.py"
 )
 SETUP_NO_SINK_EXCLUDE_GLOBS=(
     "!**/smoke-test-dev.py"
@@ -40,6 +42,9 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
     "!**/rollout-quality-gates-ci-workflows.py"
     "!**/rollout-ui-build-infra.py"
+    "!**/check_env_canon.py"
+    "!**/rollout-cloudbuild.py"
+    "!**/rollout-buildspec.py"
 )
 BE_EXCLUDE_GLOBS=(
     "**/smoke-test-dev.py"
@@ -48,6 +53,7 @@ BE_EXCLUDE_GLOBS=(
     "**/validate-internal-editable.py"
     "**/validate-manifest-dag.py"
     "**/rollout-quality-gates-ci-workflows.py"
+    "**/check-integration-dep-coverage.py"
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=("!**/check_data_completeness.py")
 

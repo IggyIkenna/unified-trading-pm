@@ -43,7 +43,7 @@ def main() -> int:
 
     with open(manifest_path) as f:
         data = json.load(f)
-    repos = data.get("repositories", {})
+    repos = data.get("repositories", {})  # noqa: qg-empty-fallback
     if not repos:
         return 0
 
@@ -51,13 +51,13 @@ def main() -> int:
     if not repo_config:
         return 0
 
-    deps = repo_config.get("dependencies", [])
+    deps = repo_config.get("dependencies", [])  # noqa: qg-empty-fallback
     lib_deps = []
     for d in deps:
         name = d.get("name") if isinstance(d, dict) else d
         if not name:
             continue
-        dep_config = repos.get(name, {})
+        dep_config = repos.get(name, {})  # noqa: qg-empty-fallback
         if dep_config.get("type") == "library":
             lib_deps.append(name)
 

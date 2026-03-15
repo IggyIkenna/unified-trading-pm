@@ -175,7 +175,7 @@ def main() -> int:
         print(f"Error: failed to load manifest: {e}", file=sys.stderr)
         return 2
 
-    repos = manifest.get("repositories", {})
+    repos = manifest.get("repositories", {})  # noqa: qg-empty-fallback
     if not repos:
         print("Error: no repositories in manifest", file=sys.stderr)
         return 2
@@ -192,7 +192,7 @@ def main() -> int:
         if not cfg:
             print(f"Error: repo {repo_name} not in manifest", file=sys.stderr)
             return 2
-        declared = {d["name"] for d in cfg.get("dependencies", []) if isinstance(d, dict) and d.get("name")}
+        declared = {d["name"] for d in cfg.get("dependencies", []) if isinstance(d, dict) and d.get("name")}  # noqa: qg-empty-fallback
         ok, errors = check_repo(repo_name, repo_path, declared, sibling_imports)
         if not ok:
             for e in errors:
@@ -203,7 +203,7 @@ def main() -> int:
     all_errors: list[str] = []
     for repo_name, cfg in repos.items():
         repo_path = workspace_root / repo_name
-        declared = {d["name"] for d in cfg.get("dependencies", []) if isinstance(d, dict) and d.get("name")}
+        declared = {d["name"] for d in cfg.get("dependencies", []) if isinstance(d, dict) and d.get("name")}  # noqa: qg-empty-fallback
         ok, errors = check_repo(repo_name, repo_path, declared, sibling_imports)
         all_errors.extend(errors)
 

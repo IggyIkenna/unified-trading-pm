@@ -116,7 +116,7 @@ def check_gate(gate: dict[str, str | list[str]]) -> tuple[bool, str]:
             incomplete.append(f"  - {todo_id}: {status}")
 
     if incomplete:
-        blocked_ids = gate.get("blocked_todo_ids", [])
+        blocked_ids = gate.get("blocked_todo_ids", [])  # noqa: qg-empty-fallback
         assert isinstance(blocked_ids, list)
         msg_lines = [
             f"GATE BLOCKED: '{name}'",

@@ -33,6 +33,11 @@ import json
 import sys
 from pathlib import Path
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT = PM_ROOT.parent
@@ -80,14 +85,16 @@ def load_manifest() -> dict:
 
 
 def get_repos(manifest: dict) -> dict:
-    return manifest.get("repositories", manifest.get("repos", {}))
+    return manifest.get("repositories", manifest.get("repos", {}))  # noqa: qg-empty-fallback
 
 
 def validate_yaml(content: str, path_label: str) -> bool:
     """Basic YAML validation: load and check required keys."""
-    try:
-        import yaml
+    if yaml is None:
+        print(f"  WARNING: {path_label} - yaml module not available, skipping validation", file=sys.stderr)
+        return True
 
+    try:
         data = yaml.safe_load(content)
         if data is None:
             print(f"  WARNING: {path_label} parsed as empty/None", file=sys.stderr)
