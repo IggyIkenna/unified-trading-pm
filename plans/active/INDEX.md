@@ -125,6 +125,14 @@ Plan 12 (Citadel Execution)
 profiles (credentials, URLs, anti-bot, residency, financial limits), concurrent multi-venue arbitrage execution engine.
 **Depends on:** Plan 12 (Citadel Execution)
 
+### 15. Sports Hub — Residual Actions
+
+**File:** [sports_hub_residual_actions_2026_03_15.plan.md](sports_hub_residual_actions_2026_03_15.plan.md) **Type:**
+mixed | **Status:** active | **Gates:** C5/D3/B3 **Scope:** Human-required residual actions for Sports Hub: Secret
+Manager credential creation for 78 venues, Playwright CSS selector implementation for 69 browser adapters, CAPTCHA
+solver and GeoComply integration, Polymarket/Kalshi REST adapters, E2E arb pipeline smoke test. **Depends on:** Plan 14
+(Sports Venue Coverage)
+
 ---
 
 ## Inter-Plan Blocker Diagram
@@ -140,6 +148,8 @@ Plan 1 (Rollout)         ──blocks──> Plan 7 (UI/API/Alerting) P3.2 (batc
 Plan 7 (UI/API/Alerting) ──blocks──> Plan 9 (Flow Validation) Phase 1 (createApiClient + smoke tests)
 Plan 12 (Citadel Exec)   ──blocks──> Plan 14 (Sports Venue Coverage) Phase 0
 Plan 14 (Sports Venue)   ──blocks──> Plan 1 (Rollout) Phase 6 (features & stability)
+Plan 14 (Sports Venue)   ──blocks──> Plan 15 (Residual Actions) All Phases
+Plan 15 (Residual)       ──blocks──> Plan 1 (Rollout) Phase 6 (features & stability)
 ```
 
 ---
