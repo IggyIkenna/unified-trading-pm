@@ -528,7 +528,10 @@ elif [ "$CHECK_ONLY" = true ]; then
 elif [ ! -f "pyproject.toml" ]; then
     log_skip "No pyproject.toml"
 else
-    uv pip install -e . --quiet 2>/dev/null
+    if ! uv pip install -e . --quiet 2>/dev/null; then
+        log_fail "Project editable install failed — check pyproject.toml and uv.lock"
+        exit 1
+    fi
     log_ok "Dependencies installed"
 fi
 

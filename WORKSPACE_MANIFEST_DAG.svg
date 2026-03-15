@@ -209,8 +209,9 @@
   <circle cx="1231" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="1140" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1251" y="1199" width="244" height="38" class="svc" />
+  <rect x="1251" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1373" y="1217" text-anchor="middle" class="label">features-multi-timeframe-service</text>
-  <circle cx="1485" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1485" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1373" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1505" y="1199" width="188" height="38" class="svc" />
   <text x="1599" y="1217" text-anchor="middle" class="label">features-onchain-service</text>
