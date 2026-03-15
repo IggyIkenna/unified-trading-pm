@@ -125,6 +125,38 @@ jobs:
           export PATH="$(pwd)/.venv/bin:$PATH"
           bash scripts/quality-gates.sh --no-fix
 
+      - name: UI/API flow coverage check (WARNING — non-blocking)
+        if: always() && steps.*.outcome != 'failure'
+        working-directory: unified-trading-pm
+        continue-on-error: true
+        run: |
+          export PATH="$(pwd)/.venv/bin:$PATH"
+          echo "Running UI/API flow coverage checker (warning-only mode)..."
+          python scripts/checkers/check_ui_api_flow_coverage.py \
+            --warning-only \
+            --discover \
+            --workspace-root "$GITHUB_WORKSPACE" \
+            2>&1 | tee flow-coverage-report.txt || true
+
+          # Also run scorecard for trend tracking
+          python scripts/checkers/flow_coverage_scorecard.py \
+            --workspace-root "$GITHUB_WORKSPACE" \
+            2>&1 | tee flow-coverage-scorecard.txt || true
+
+          echo ""
+          echo "--- Flow coverage check complete (non-blocking) ---"
+
+      - name: Upload flow coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-coverage-report
+          path: |
+            unified-trading-pm/flow-coverage-report.txt
+            unified-trading-pm/flow-coverage-scorecard.txt
+          retention-days: 30
+        continue-on-error: true
+
       - name: Record CI status
         if: always()
         shell: bash

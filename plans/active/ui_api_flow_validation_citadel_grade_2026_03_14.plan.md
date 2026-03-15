@@ -64,9 +64,9 @@ todos:
 
   - id: ph2-ci-warning
     content: >
-      - [ ] [AGENT] P1. Wire checker into PM quality flow as WARNING (non-blocking). Run in SIT validation. Output
+      - [x] [AGENT] P1. Wire checker into PM quality flow as WARNING (non-blocking). Run in SIT validation. Output
       scorecard to GCS artifacts.
-    status: todo
+    status: done
 
   - id: ph2-auto-discovery
     content: >
