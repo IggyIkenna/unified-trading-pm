@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 # Bootstrap allowlist: these files may use env before config exists; skip validation
-BOOTSTRAP_BASENAMES = {"_env_bootstrap.py", "factory.py", "constants.py", "config.py"}
+BOOTSTRAP_BASENAMES = {"_env_bootstrap.py", "factory.py", "constants.py", "config.py", "__main__.py"}
 
 # Path segments to exclude from scanning
 EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "examples"}
