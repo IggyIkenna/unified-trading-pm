@@ -29,6 +29,8 @@ if missing:
 
 semver = re.compile(r"^\d+\.\d+\.\d+$")
 for repo, ver in d.get("versions", {}).items():
+    if repo.startswith("_"):
+        continue
     if not semver.match(str(ver)):
         print(f"FATAL: versions['{repo}'] = {ver!r} is not valid semver", file=sys.stderr)
         sys.exit(1)
