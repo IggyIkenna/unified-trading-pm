@@ -70,6 +70,18 @@ REPO_ROOT="${REPO_ROOT:-$(dirname "$PROJECT_ROOT")}"
 cd "$PROJECT_ROOT"
 unset _BASE_CALLER
 
+# ── CI_STATUS HANDLER (shared, locked) ───────────────────────────────────────
+# SSOT: _ci-status-updater.sh — unified name resolution + fcntl locking for all base scripts.
+source "$(dirname "${BASH_SOURCE[0]}")/_ci-status-updater.sh"
+_qg_record_failure() {
+    local exit_code=$?
+    [[ $exit_code -eq 0 ]] && return 0
+    [[ "${GITHUB_ACTIONS:-}" == "true" ]] && return $exit_code
+    _qg_update_ci_status_failing
+    return $exit_code
+}
+trap _qg_record_failure EXIT
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 # Per-repo overrides: set MAX_FILE_LINES / MAX_FUNCTION_LINES / MAX_METHOD_LINES
 # BEFORE sourcing this script (${VAR:-default} preserves pre-set values).
@@ -1029,23 +1041,14 @@ if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
     exit 1
 fi
 
-# ── RECORD LOCAL PASS (ci_status=LOCALLY_PASSED when not in CI) ───────────────
+# ── RECORD LOCAL PASS (ci_status=LOCAL_PASS when not in CI) ──────────────────
+if ! _qg_update_ci_status_pass; then
+    log_fail "Failed to update ci_status (LOCAL_PASS) in workspace-manifest.json"
+    exit 1
+fi
 if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
     _MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
     if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
-        if ! MANIFEST_PATH="$_MANIFEST" REPO_NAME="$SERVICE_NAME" python3 -c '
-import json, os
-p, r = os.environ.get("MANIFEST_PATH"), os.environ.get("REPO_NAME")
-if not p or not r: exit(0)
-with open(p) as f: m = json.load(f)
-repos = m.get("repositories", {})
-if r not in repos or repos[r].get("ci_status") == "PASSING": exit(0)
-repos[r]["ci_status"] = "LOCALLY_PASSED"
-with open(p, "w") as f: json.dump(m, f, indent=2)
-'; then
-            log_fail "Failed to update ci_status (LOCALLY_PASSED) in workspace-manifest.json"
-            exit 1
-        fi
         _DAG_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
         if [[ -f "$_DAG_SCRIPT" ]]; then
             if ! python3 "$_DAG_SCRIPT"; then
