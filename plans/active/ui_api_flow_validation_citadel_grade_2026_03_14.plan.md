@@ -84,10 +84,10 @@ todos:
 
   - id: ph3-triad-assertions
     content: >
-      - [ ] [AGENT] P0. Request/response/ui-update triad assertions. Every critical journey must prove: (1) correct
+      - [x] [AGENT] P0. Request/response/ui-update triad assertions. Every critical journey must prove: (1) correct
       request sent, (2) contract-valid response received, (3) UI state updated. No-op controls (click with no effect)
       flagged as BEH-004.
-    status: todo
+    status: done
 
   - id: ph3-fixture-drift
     content: >
