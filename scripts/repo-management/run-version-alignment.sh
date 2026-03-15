@@ -71,6 +71,7 @@ echo "  [0.55]  Agent symlinks (check-import-patterns) — auto-fix with --fix"
 echo "  [0.6]   UI npm dep drift (pkg.json vs lock)   — manual: cd <repo> && npm install"
 echo "  [0.7]   Canonical npm version alignment       — auto-fix with --fix"
 echo "  [0.8]   uv.lock drift (pyproject newer / uncommitted changes) — warn or --strict fatal"
+echo "  [0.9]   Dependency caps (repos pinned to old dep versions) — informational"
 echo "  [1–2]   Derived + canonical manifests         — generated (prerequisite)"
 echo "  [3]     Dependency alignment (internal+external)— auto-fix with --fix"
 echo "  [3.5]   [tool.uv.sources] editable entries   — auto-fix with --fix"
@@ -279,6 +280,27 @@ if [ "$UI_ONLY" = true ]; then
   echo "  Next: bash unified-trading-pm/scripts/repo-management/run-all-setup.sh  (to reinstall stale UI deps)"
   exit 0
 fi
+
+# 0.9. Dependency cap check — repos with dependency_caps entries are pinned to old versions
+echo "[0.9/4] Checking for repos with active dependency version caps..."
+CAPPED_REPOS=$("$PYTHON" - "$PM_ROOT/workspace-manifest.json" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    manifest = json.load(f)
+repos = manifest.get("repositories", {})
+found = False
+for name, data in sorted(repos.items()):
+    caps = data.get("dependency_caps", {})
+    if caps:
+        for dep, cap in caps.items():
+            print(f"  {name}: {dep} capped at {cap} — pinned to old version, update needed")
+        found = True
+if not found:
+    print("  [OK] No dependency caps active")
+PYEOF
+)
+echo "$CAPPED_REPOS"
+echo ""
 
 # 1 & 2. Generate derived + canonical manifests (parallel)
 echo "[1/4] Generating derived + canonical manifests (parallel)..."
