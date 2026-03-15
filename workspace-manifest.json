@@ -3030,7 +3030,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
-      "ci_status": "BASELINE_RECORDED",
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",

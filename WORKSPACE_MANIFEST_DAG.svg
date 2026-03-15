@@ -144,8 +144,9 @@
   <circle cx="1019" cy="850" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="928" y="872" text-anchor="middle" class="ver">0.1.27</text>
   <rect x="1039" y="842" width="258" height="38" class="infra" />
+  <rect x="1039" y="842" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1168" y="860" text-anchor="middle" class="label">unified-sports-reference-interface</text>
-  <circle cx="1287" cy="850" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1287" cy="850" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1168" y="872" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1307" y="842" width="251" height="38" class="lib" />
   <text x="1432" y="860" text-anchor="middle" class="label">unified-trade-execution-interface</text>
