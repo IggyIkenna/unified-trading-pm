@@ -35,5 +35,6 @@ tags:
 | `basedpyright .` or `basedpyright` (no args) | **`timeout 120 basedpyright <source_dir>/`** (see `.cursor/rules/basedpyright-safety.mdc`) |
 | Run standalone basedpyright for codebase audits | **Run quality gates per repo** (`bash scripts/quality-gates.sh --no-fix`) — same lint + type check, no zombies |
 | Keep parallel code paths after refactor (old + new schema/import) | **Single code path; delete old; tests under new structure only** — see delete-deprecated.mdc |
+| `from unified_api_contracts.canonical.execution import ...` | **Use facade: `from unified_api_contracts.execution import ...`** — canonical/ is UAC-internal; see uac-import-surface-enforcement.mdc |
 
 Full detail: unified-trading-codex/06-coding-standards/README.md

@@ -122,6 +122,18 @@ These rules are BLOCKING — always active, never override without audit:
 See `.cursor/rules/anti-patterns-quick-reference.mdc` for the full table.
 
 ---
+
+## Citadel Import Rules (UAC Facade Pattern)
+
+All consumer repos MUST import from UAC domain facades only:
+- `from unified_api_contracts.execution import CanonicalOrder, CanonicalFill`
+- `from unified_api_contracts.instruments import CanonicalInstrument`
+- `from unified_api_contracts.normalize import normalize_order`
+
+NEVER import from internal modules: `unified_api_contracts.canonical.*`, `unified_api_contracts.normalize_utils.*`,
+`unified_api_contracts.shared.*`, `unified_api_contracts.config.*`. See `.cursor/rules/imports/uac-import-surface-enforcement.mdc`.
+
+---
 ## Dockerfile Standards
 
 - Always use `asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest` as FROM base for Python services (never `python:3.13-slim`, never `ghcr.io/astral-sh/uv`, never bare `pip install uv` in Dockerfile)

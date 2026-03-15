@@ -138,8 +138,13 @@ approach is wrong, FIX it. Never work around it.
 
 Key repo mapping: events → `unified-events-interface`, schemas → `unified-internal-contracts` / `unified-api-contracts`,
 cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data → `unified-market-interface`,
-execution → `unified-trade-execution-interface`, domain utils → `unified-domain-client` / `unified-trading-library`, UI
-→ check existing 13 UIs first.
+execution → `unified-trade-execution-interface`, domain utils → `unified-domain-client` / `unified-trading-library`,
+features → `unified-features-interface` / `unified-feature-orchestration-library`, sports reference →
+`unified-sports-reference-interface`, UI → check existing 13 UIs first.
+
+**Citadel Import Rules (UAC):** All consumer repos import from UAC domain facades only
+(`from unified_api_contracts.{domain} import ...`). Never import from `unified_api_contracts.canonical.*` or
+`unified_api_contracts.normalize_utils.*` — those are UAC-internal. See `imports/uac-import-surface-enforcement.mdc`.
 
 Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.
 
@@ -215,3 +220,17 @@ grep -r "pattern" --include="*.py" --exclude-dir=".venv*" --exclude-dir="tests"
 
 All paths use `${workspaceFolder}` — portable across users. Strict basedpyright (reportAny, reportUnknownMemberType,
 reportUnknownVariableType = error).
+
+## UAC Citadel Architecture
+
+This repo uses a facade pattern with per-source co-location.
+
+**Current layout**: `canonical/domain/` (sub-packages), `canonical/crosscutting/`, `external/{source}/` (flat, 80+
+dirs), `normalize_utils/` (internal), `registry/`, root facades (market.py, execution.py, etc.)
+
+**Deleted dirs** (do NOT reference): `canonical/normalize/`, `external/sports/`, `external/cloud_sdks/`,
+`external/onchain/`, `external/macro/`, `schemas/`, `shared/`
+
+**Import rules**: Services use `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`.
+Deep paths (`canonical.*`, `normalize_utils.*`) are UAC-internal only. SSOT:
+`unified-trading-codex/02-data/contracts-scope-and-layout.md`

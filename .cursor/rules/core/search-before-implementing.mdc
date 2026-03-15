@@ -20,6 +20,9 @@ Before writing ANY new function, class, adapter, or connector, search these libr
   7. `unified-cloud-interface` — cloud primitives, storage client, Tier 0 abstractions
   8. `unified-domain-client` — instruments, domain clients
   9. `unified-api-contracts` — external API schemas, VCR mocks
+  10. `unified-features-interface` — feature definitions, feature store client
+  11. `unified-feature-orchestration-library` — feature pipeline orchestration
+  12. `unified-sports-reference-interface` — sports reference data adapters
 
 If it EXISTS in a library: USE the library. Do NOT reimplement.
 If the library version is WRONG: FIX the library. Do NOT add a workaround in the service.

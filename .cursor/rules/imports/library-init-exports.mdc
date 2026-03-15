@@ -55,3 +55,14 @@ to the WHEEL's `__init__.py`, not the local source. The wheel may contain export
 never added to the local `__init__.py`. Tests pass locally but fail in CI (which uses the
 editable per-repo `.venv`). The fix is always: update `__init__.py` + `__all__` when adding
 a new public symbol — don't rely on the wheel to bridge the gap.
+
+## UAC Facade Modules Must Re-Export via __all__
+
+UAC domain facade modules (e.g. `unified_api_contracts/execution.py`, `unified_api_contracts/instruments.py`)
+MUST define `__all__` listing every public symbol they re-export. This ensures:
+- Consumers using `from unified_api_contracts.execution import *` get a predictable set
+- Static analysis tools can verify import validity
+- The facade boundary is explicit — only symbols in `__all__` are part of the public API
+
+When adding a new canonical type or normalizer to a UAC facade module, always append it to
+that module's `__all__` list. If the facade module lacks `__all__`, add it.

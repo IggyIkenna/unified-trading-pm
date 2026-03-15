@@ -2868,11 +2868,6 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-ml-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
@@ -2972,19 +2967,8 @@
       "doc_standard": "library-canonical",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.3.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "BASELINE_RECORDED",
+      "dependencies": [],
+      "ci_status": "LOCALLY_PASSED",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -3045,18 +3029,7 @@
       "doc_standard": "library-canonical",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [
-        {
-          "name": "unified-api-contracts",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-trading-library",
-          "version": ">=0.3.0,<1.0.0",
-          "required": true
-        }
-      ],
+      "dependencies": [],
       "ci_status": "BASELINE_RECORDED",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",

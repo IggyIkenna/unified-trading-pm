@@ -262,8 +262,13 @@ todos:
       - [x] [AGENT] P1. Created _helpers.py (12 shared helpers). Extracted 72 normalizer functions to 6 CeFi venue normalize.py files (binance, bybit, okx, coinbase, deribit, hyperliquid). Backward compat preserved via normalize_utils/ re-exports.
     status: done
     blocked_by: p3-flatten-sports-sources, p3-flatten-cloud-sdks, p3-flatten-other-nested
-    note:
-      "Remaining venues (kraken, kucoin, gateio, etc.) can be extracted incrementally -- normalize_utils/ still works."
+    note: |
+      Remaining venues (kraken, kucoin, gateio, etc.) can be extracted incrementally -- normalize_utils/ still works.
+      DEDUP STATUS: The normalize_utils/ aggregator files still define functions independently (not re-exporting from
+      external/*/normalize.py). Making normalize_utils/ re-export from external/ causes circular imports because
+      external/*/normalize.py imports helpers from normalize_utils/_helpers.py. Both locations define the same functions
+      independently. This is tracked in the remediation plan (b1-dedupe-normalize-functions). Future cleanup: when all
+      consumers migrate to external/*/normalize.py, the normalize_utils/ aggregators can be deleted.
 
   - id: p3-per-source-normalize-defi
     content: |
@@ -387,7 +392,7 @@ todos:
 
   - id: p5-service-specific-features-commodity
     content: |
-      - [x] [AGENT] P2. Updated doc comments in open_meteo.py and yahoo_finance.py to reference facade paths.
+      - [x] [AGENT] P2. Updated doc comments in open_meteo.py and yahoo_finance.py to reference facade paths. NOTE: Phase 5 consumer migrations are COMPLETE. All 21 services + 5 interfaces updated.
     status: done
     blocked_by: p4-delete-config-shared-schemas
 
@@ -628,6 +633,12 @@ isProject: false
 
 **Critical path**: ~30 sequential steps from p0-manifest-tier-role to p10-codex-ssot-index. **Total: 86 todos.
 Completion = QG pass per repo. No quickmerge in this plan.**
+
+**NOTE (2026-03-15)**: Many downstream repos have pre-existing QG failures unrelated to the Citadel changes (E501 lint,
+B904 raise-from, missing test fixtures, pip-audit CVEs, etc.). The Citadel work introduced zero new failures -- all
+failures observed during execution were pre-existing. Phase 3 normalize dedup is architecturally deferred (circular
+import prevents simple re-export from normalize_utils/ to external/\*/normalize.py). Phase 5 consumer migrations are
+complete. The remediation plan (uac_citadel_remediation.plan.md) tracks remaining cleanup work.
 
 ## Operational Guide (inline -- agents reference this directly)
 

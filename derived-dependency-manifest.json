@@ -197,8 +197,7 @@
         "unified-cloud-interface": "unified-cloud-interface>=0.11.0,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
-        "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
-        "unified-ml-interface": "unified-ml-interface>=0.1.0,<1.0.0"
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
         "bandit<2.0.0,": ["bandit<2.0.0,>=1.7.0"],
@@ -236,7 +235,7 @@
         "starlette": ["starlette>=0.40.0,<1.0.0"],
         "web3": ["web3>=6.0.0,<7.0.0"]
       },
-      "internal_count": 6,
+      "internal_count": 5,
       "external_count": 34
     },
     "matching-engine-library": {

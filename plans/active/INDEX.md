@@ -104,6 +104,29 @@ integration_tests, sit_build_source, uac_canonical, defi_keys, ui_api_alerting)
 
 ---
 
+### 12. UAC Citadel Architecture (Execution Plan)
+
+**File:** [uac_citadel_implementation_execution.plan.md](uac_citadel_implementation_execution.plan.md) **Type:** code |
+**Status:** active | **Gates:** C5 **Scope:** Execute the UAC Citadel Architecture redesign -- facade pattern, canonical
+domain reorganization, per-source normalization co-location, tier model fix, downstream migration, capability registry.
+**Depends on:** uac_citadel_architecture_0ccb5b9b
+
+### 13. UAC Citadel Remediation
+
+**File:** [uac_citadel_remediation.plan.md](uac_citadel_remediation.plan.md) **Type:** code | **Status:** active |
+**Gates:** C5 **Scope:** Post-Citadel cleanup: normalize dedup, remaining provider extraction, QG fixes. **Depends on:**
+Plan 12 (Citadel Execution)
+
+### 14. Sports Execution Venue Coverage
+
+**File:** [sports_execution_venue_coverage_2026_03_15.plan.md](sports_execution_venue_coverage_2026_03_15.plan.md)
+**Type:** mixed | **Status:** active | **Gates:** C5/D3/B3 **Scope:** Comprehensive sports execution coverage for all
+~70 Odds API venues. VenueExecutionProfile schema in UAC, browser automation infrastructure in USEI, per-venue execution
+profiles (credentials, URLs, anti-bot, residency, financial limits), concurrent multi-venue arbitrage execution engine.
+**Depends on:** Plan 12 (Citadel Execution)
+
+---
+
 ## Inter-Plan Blocker Diagram
 
 ```
@@ -115,6 +138,8 @@ Plan 4 (Presentations)   ──blocks──> Plan 5 (Website) hosting
 Plan 6 (UAC Residual)    ──blocks──> Plan 7 (UI/API/Alerting) P0.1 (LogLevel in UAC)
 Plan 1 (Rollout)         ──blocks──> Plan 7 (UI/API/Alerting) P3.2 (batch-audit-api BASELINE_PENDING)
 Plan 7 (UI/API/Alerting) ──blocks──> Plan 9 (Flow Validation) Phase 1 (createApiClient + smoke tests)
+Plan 12 (Citadel Exec)   ──blocks──> Plan 14 (Sports Venue Coverage) Phase 0
+Plan 14 (Sports Venue)   ──blocks──> Plan 1 (Rollout) Phase 6 (features & stability)
 ```
 
 ---

@@ -90,12 +90,12 @@ import from external.
 
 ### 3.5 INFRA / META (lower priority, may need new canonical types)
 
-| Provider      | Schema Classes            | Target Canonical                                   | Notes                        |
-| ------------- | ------------------------- | -------------------------------------------------- | ---------------------------- |
-| **aws**       | BQ quota, storage schemas | `CanonicalCloudStorage`, infra types               | GCP examples in external/gcp |
-| **gcp**       | Storage, compute schemas  | `CanonicalCloudStorage`, `CanonicalComputeJob`     | Infrastructure               |
-| **github**    | Repo, workflow schemas    | Custom or skip                                     | CI/CD meta                   |
-| **sentiment** | Sentiment score schemas   | `CanonicalOnChainMetric` (metric_type="sentiment") | Sentiment index              |
+| Provider      | Schema Classes                                             | Target Canonical                                                                                        | Notes                                               |
+| ------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **aws**       | S3 list_objects_v2, EC2 describe_instances, ECR, CodeBuild | `CanonicalCloudStorage`, `CanonicalVirtualMachine`, `CanonicalContainerRegistry`, `CanonicalComputeJob` | DONE — external/aws/normalize.py                    |
+| **gcp**       | GCS, Compute Engine, Artifact Registry, Cloud Build        | `CanonicalCloudStorage`, `CanonicalVirtualMachine`, `CanonicalContainerRegistry`, `CanonicalComputeJob` | DONE — external/gcp/normalize.py                    |
+| **github**    | Repository, PullRequest, WorkflowRun                       | `CanonicalRepository`, `CanonicalPullRequest`, `CanonicalWorkflowRun`                                   | DONE — external/github/normalize.py (routing layer) |
+| **sentiment** | Sentiment score schemas                                    | `CanonicalOnChainMetric` (metric_type="sentiment")                                                      | Sentiment index                                     |
 
 ---
 
@@ -159,6 +159,14 @@ def normalize_{{provider}}_market(raw: SomeSchema, venue: str = "{{provider}}") 
 
 - **Alchemy:** `/alchemyplatform/docs` — asset transfers, token balances, blocks
 - **The Graph:** Subgraph GraphQL — pools, swaps, tokens (no direct Context7 match; use schema inspection)
+- **AWS (boto3):** `/boto/boto3` — S3 list_objects_v2 response, EC2 describe_instances, ECR describe_repositories,
+  CodeBuild batch_get_builds. Use for external/aws/normalize.py → CanonicalCloudStorage, CanonicalVirtualMachine,
+  CanonicalContainerRegistry, CanonicalComputeJob, CloudProvider
+- **GCP (google-cloud-\*):** `/googleapis/python-storage` — GCS buckets/blobs; Compute Engine, Artifact Registry, Cloud
+  Build use google-cloud-compute, artifact-registry, cloudbuild SDKs. Use for external/gcp/normalize.py → same
+  canonicals.
+- **GitHub:** REST API v3 — repos, PRs, workflow runs. Use for external/github/normalize.py → CanonicalRepository,
+  CanonicalPullRequest, CanonicalWorkflowRun. PyGithub / gh CLI both use same API.
 
 ---
 

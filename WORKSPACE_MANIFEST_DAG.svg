@@ -127,8 +127,9 @@
   <circle cx="227" cy="850" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="153" y="872" text-anchor="middle" class="ver">0.1.76</text>
   <rect x="247" y="842" width="202" height="38" class="infra" />
+  <rect x="247" y="842" width="4" height="38" fill="#f97316" rx="2" />
   <text x="348" y="860" text-anchor="middle" class="label">unified-features-interface</text>
-  <circle cx="439" cy="850" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="439" cy="850" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="348" y="872" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="459" y="842" width="188" height="38" class="lib" />
   <text x="553" y="860" text-anchor="middle" class="label">unified-market-interface</text>

@@ -111,6 +111,32 @@ exceptions.
 
 ---
 
+## 3b. UAC Citadel Architecture
+
+### Import Rules
+
+- **Facade imports only:** `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`
+- **NEVER import from internals:** `unified_api_contracts.canonical.*`, `.normalize_utils.*`, `.config.*`, `.shared.*`,
+  `.schemas.*` — these are implementation details
+- **External source modules:** Only interface adapters (UMI, UTEI, URDI) may import from
+  `unified_api_contracts.external.{source}` — services NEVER import external modules directly
+
+### Schema Placement
+
+- External API response/request schemas → UAC `external/{source}/schemas.py`
+- Internal service domain schemas → UIC `domain/{service}/`
+- **NEVER define schemas inline in services or interface adapters** — they belong in contract repos (UAC or UIC)
+
+### Normalization Placement
+
+- Raw→canonical normalizers → UAC `external/{source}/normalize.py`
+- **NEVER put normalizers in interface adapters or services** — normalization lives in UAC, co-located with the external
+  source it normalizes
+
+**Reference:** `unified-trading-codex/02-data/contracts-scope-and-layout.md`
+
+---
+
 ## 4. Documentation
 
 - **Never create** `*_SUMMARY.md`, `*_STATUS.md`, `READY_TO_*`, `COMPLETION_*` — unless user explicitly asks
@@ -162,7 +188,7 @@ exceptions.
 - **DeFi/Hyperliquid tests**: Use `responses` library with `passthrough=False` — proven zero live HTTP calls
 - **Network blocking**: When writing new integration tests, add `@pytest.mark.allow_network` ONLY for tests that connect
   to local emulators (not live APIs) — emit a comment explaining why
-- **Cassette tests**: VCR cassettes live in `unified-api-contracts/unified_api_contracts_external/*/mocks/`; parity
+- **Cassette tests**: VCR cassettes live in `unified-api-contracts/unified_api_contracts/external/*/mocks/`; parity
   tested on every commit via `test_cassette_schema_parity.py`
 - **Fault injection**: Use `FaultInjectionTransport` from `unified-trading-pm/scripts/dev/fixtures/fault_injection.py`
   for circuit breaker tests
