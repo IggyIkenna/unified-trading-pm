@@ -175,8 +175,9 @@
   <text x="95" y="1057" text-anchor="middle" class="level-label">L7</text>
   <text x="150" y="1057" class="desc">Foundational service (instruments only; no service-domain-data dependency) (1 repos)</text>
   <rect x="70" y="1080" width="153" height="38" class="svc" />
+  <rect x="70" y="1080" width="4" height="38" fill="#f97316" rx="2" />
   <text x="146" y="1098" text-anchor="middle" class="label">instruments-service</text>
-  <circle cx="213" cy="1088" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="1088" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="146" y="1110" text-anchor="middle" class="ver">0.1.117</text>
   <!-- L8: Services with data-flow dependencies (17 repos) -->
   <rect x="40" y="1152" width="2320" height="155" class="level-bg" />
@@ -198,12 +199,14 @@
   <circle cx="546" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="458" y="1229" text-anchor="middle" class="ver">0.2.1</text>
   <rect x="566" y="1199" width="202" height="38" class="svc" />
+  <rect x="566" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="667" y="1217" text-anchor="middle" class="label">features-commodity-service</text>
-  <circle cx="758" cy="1207" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="758" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="667" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="778" y="1199" width="251" height="38" class="svc" />
+  <rect x="778" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="903" y="1217" text-anchor="middle" class="label">features-cross-instrument-service</text>
-  <circle cx="1019" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1019" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="903" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1039" y="1199" width="202" height="38" class="svc" />
   <rect x="1039" y="1199" width="4" height="38" fill="#f97316" rx="2" />
@@ -230,12 +233,14 @@
   <circle cx="2093" cy="1207" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="1998" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="2113" y="1199" width="230" height="38" class="svc" />
+  <rect x="2113" y="1199" width="4" height="38" fill="#f97316" rx="2" />
   <text x="2228" y="1217" text-anchor="middle" class="label">market-data-processing-service</text>
-  <circle cx="2333" cy="1207" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="2333" cy="1207" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="2228" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="70" y="1247" width="188" height="38" class="svc" />
+  <rect x="70" y="1247" width="4" height="38" fill="#f97316" rx="2" />
   <text x="164" y="1265" text-anchor="middle" class="label">market-tick-data-service</text>
-  <circle cx="248" cy="1255" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="248" cy="1255" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="164" y="1277" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="268" y="1247" width="160" height="38" class="svc" />
   <rect x="268" y="1247" width="4" height="38" fill="#f97316" rx="2" />
@@ -243,12 +248,14 @@
   <circle cx="418" cy="1255" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="348" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="438" y="1247" width="153" height="38" class="svc" />
+  <rect x="438" y="1247" width="4" height="38" fill="#f97316" rx="2" />
   <text x="514" y="1265" text-anchor="middle" class="label">ml-training-service</text>
-  <circle cx="581" cy="1255" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="581" cy="1255" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="514" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="601" y="1247" width="181" height="38" class="svc" />
+  <rect x="601" y="1247" width="4" height="38" fill="#f97316" rx="2" />
   <text x="691" y="1265" text-anchor="middle" class="label">pnl-attribution-service</text>
-  <circle cx="772" cy="1255" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="772" cy="1255" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="691" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="792" y="1247" width="132" height="38" class="svc" />
   <text x="858" y="1265" text-anchor="middle" class="label">strategy-service</text>
@@ -265,24 +272,29 @@
   <text x="95" y="1343" text-anchor="middle" class="level-label">L9</text>
   <text x="150" y="1343" class="desc">Operational services + API gateways (10 repos)</text>
   <rect x="70" y="1366" width="130" height="38" class="api" />
+  <rect x="70" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="135" y="1384" text-anchor="middle" class="label">batch-audit-api</text>
-  <circle cx="190" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="135" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1366" width="160" height="38" class="api" />
+  <rect x="210" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="290" y="1384" text-anchor="middle" class="label">client-reporting-api</text>
-  <circle cx="360" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="360" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="290" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="380" y="1366" width="130" height="38" class="infra" />
+  <rect x="380" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="445" y="1384" text-anchor="middle" class="label">config-api</text>
-  <circle cx="500" cy="1374" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="500" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="445" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="520" y="1366" width="167" height="38" class="api" />
+  <rect x="520" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="603" y="1384" text-anchor="middle" class="label">execution-results-api</text>
-  <circle cx="677" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="677" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="603" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="697" y="1366" width="130" height="38" class="api" />
+  <rect x="697" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="762" y="1384" text-anchor="middle" class="label">market-data-api</text>
-  <circle cx="817" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="817" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="762" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="837" y="1366" width="132" height="38" class="api" />
   <text x="903" y="1384" text-anchor="middle" class="label">ml-inference-api</text>
@@ -293,8 +305,9 @@
   <circle cx="1099" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
   <text x="1044" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1119" y="1366" width="244" height="38" class="svc" />
+  <rect x="1119" y="1366" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1241" y="1384" text-anchor="middle" class="label">position-balance-monitor-service</text>
-  <circle cx="1353" cy="1374" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1353" cy="1374" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1241" y="1396" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1373" y="1366" width="195" height="38" class="svc" />
   <rect x="1373" y="1366" width="4" height="38" fill="#f97316" rx="2" />
@@ -334,50 +347,58 @@
   <text x="95" y="1581" text-anchor="middle" class="level-label">L11</text>
   <text x="150" y="1581" class="desc">UI applications (13 repos)</text>
   <rect x="70" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="70" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="135" y="1622" text-anchor="middle" class="label">batch-audit-ui</text>
-  <circle cx="190" cy="1612" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="135" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1604" width="153" height="38" class="ui-box" />
+  <rect x="210" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="286" y="1622" text-anchor="middle" class="label">client-reporting-ui</text>
-  <circle cx="353" cy="1612" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="353" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="286" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="373" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="373" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="438" y="1622" text-anchor="middle" class="label">deployment-ui</text>
-  <circle cx="493" cy="1612" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="493" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="438" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="513" y="1604" width="174" height="38" class="ui-box" />
   <text x="600" y="1622" text-anchor="middle" class="label">execution-analytics-ui</text>
   <circle cx="677" cy="1612" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="600" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="697" y="1604" width="174" height="38" class="ui-box" />
+  <rect x="697" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="784" y="1622" text-anchor="middle" class="label">live-health-monitor-ui</text>
-  <circle cx="861" cy="1612" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="861" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="784" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="881" y="1604" width="139" height="38" class="ui-box" />
+  <rect x="881" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="950" y="1622" text-anchor="middle" class="label">logs-dashboard-ui</text>
-  <circle cx="1010" cy="1612" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1010" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="950" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1030" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1030" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1095" y="1622" text-anchor="middle" class="label">ml-training-ui</text>
-  <circle cx="1150" cy="1612" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1150" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1095" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1170" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1170" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1170" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1235" y="1622" text-anchor="middle" class="label">onboarding-ui</text>
-  <circle cx="1290" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1290" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1235" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1310" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1310" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1375" y="1622" text-anchor="middle" class="label">settlement-ui</text>
-  <circle cx="1430" cy="1612" r="6" fill="#eab308" stroke="#fff" stroke-width="1" />
+  <circle cx="1430" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1375" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1450" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1450" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1515" y="1622" text-anchor="middle" class="label">strategy-ui</text>
-  <circle cx="1570" cy="1612" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="1570" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1515" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1590" y="1604" width="160" height="38" class="ui-box" />
-  <rect x="1590" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1590" y="1604" width="4" height="38" fill="#f97316" rx="2" />
   <text x="1670" y="1622" text-anchor="middle" class="label">trading-analytics-ui</text>
-  <circle cx="1740" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1740" cy="1612" r="6" fill="#f97316" stroke="#fff" stroke-width="1" />
   <text x="1670" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1760" y="1604" width="132" height="38" class="ui-box" />
   <text x="1826" y="1622" text-anchor="middle" class="label">unified-admin-ui</text>
