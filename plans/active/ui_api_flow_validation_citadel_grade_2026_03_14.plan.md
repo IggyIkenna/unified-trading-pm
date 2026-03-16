@@ -98,9 +98,9 @@ todos:
 
   - id: ph3-critical-gap-blocking
     content: >
-      - [ ] [AGENT] P1. Critical-gap blocking: if a critical journey has zero real-flow tests, checker emits BLOCK (not
+      - [x] [AGENT] P1. Critical-gap blocking: if a critical journey has zero real-flow tests, checker emits BLOCK (not
       just WARNING). Prevents promotion to staging.
-    status: todo
+    status: done
 
   # ── Phase 4: CITADEL-GRADE ENFORCEMENT ─────────────────────────────────────
 
