@@ -1,0 +1,123 @@
+# Emergency Exit Playbooks — per-strategy position unwinding definitions.
+# SSOT: This file. Deployed to GCS: gs://config/emergency/exit_playbooks.yaml
+# Schema: unified-internal-contracts EmergencyExitPlaybook
+
+playbooks:
+  MOM:
+    exit_type: market_close
+    description: "Close all momentum positions at market"
+    steps:
+      - order: 1
+        action: close_all_positions
+        urgency: immediate
+        max_slippage_bps: 100
+        timeout_seconds: 300
+
+  BASIS:
+    exit_type: atomic_unwind
+    description: "Unwind both legs simultaneously to avoid naked exposure"
+    steps:
+      - order: 1
+        action: close_perp_leg
+        urgency: immediate
+        max_slippage_bps: 50
+        timeout_seconds: 300
+      - order: 1
+        action: close_spot_leg
+        urgency: immediate
+        max_slippage_bps: 50
+        timeout_seconds: 300
+
+  RECURSIVE_STAKED_BASIS:
+    exit_type: deleverage_sequence
+    description: "Deleverage: repay debt -> withdraw collateral -> swap to stable"
+    steps:
+      - order: 1
+        action: repay_variable_debt
+        instrument_filter: WETH_DEBT
+        urgency: immediate
+        max_slippage_bps: 50
+        timeout_seconds: 600
+      - order: 2
+        action: withdraw_collateral
+        instrument_filter: aweETH
+        urgency: immediate
+        max_slippage_bps: 50
+        timeout_seconds: 300
+      - order: 3
+        action: swap_to_stable
+        urgency: best_effort
+        max_slippage_bps: 200
+        timeout_seconds: 600
+
+  OPTIONS:
+    exit_type: delta_hedge
+    description: "Hedge to delta-neutral, then optionally close positions"
+    steps:
+      - order: 1
+        action: delta_hedge_portfolio
+        urgency: immediate
+        max_slippage_bps: 100
+        timeout_seconds: 300
+      - order: 2
+        action: close_remaining_positions
+        urgency: best_effort
+        max_slippage_bps: 200
+        timeout_seconds: 600
+
+  SPORTS:
+    exit_type: hedge_cross_venue
+    description: "Lay off existing bets on best-liquidity venue to flatten book"
+    steps:
+      - order: 1
+        action: find_hedge_venue
+        urgency: best_effort
+        timeout_seconds: 60
+      - order: 2
+        action: place_lay_bets
+        max_slippage_bps: 100
+        urgency: immediate
+        timeout_seconds: 300
+
+  YIELD_STAKING_FAST:
+    exit_type: fast_unwind
+    description: "Trade out of staking token directly on DEX — expensive but fast"
+    steps:
+      - order: 1
+        action: trade_out_staking_token
+        urgency: immediate
+        max_slippage_bps: 300
+        timeout_seconds: 600
+
+  YIELD_STAKING_SLOW:
+    exit_type: slow_unwind
+    description: "Initiate proper unbonding — cheap but takes days/weeks"
+    steps:
+      - order: 1
+        action: initiate_unbonding
+        urgency: queued
+        timeout_seconds: 86400
+
+  YIELD_STAKING_HYBRID:
+    exit_type: hybrid_unwind
+    description: "Trade what you can at reasonable slippage, queue the rest"
+    steps:
+      - order: 1
+        action: trade_out_liquid_portion
+        urgency: immediate
+        max_slippage_bps: 100
+        timeout_seconds: 600
+      - order: 2
+        action: initiate_unbonding_remainder
+        urgency: queued
+        timeout_seconds: 86400
+
+  ARB:
+    exit_type: atomic_unwind
+    description: "Close all arb legs simultaneously"
+    steps:
+      - order: 1
+        action: close_all_legs
+        urgency: immediate
+        max_slippage_bps: 50
+        timeout_seconds: 300

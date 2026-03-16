@@ -141,6 +141,58 @@ COMPONENT_FILTER=$COMPONENT_FILTER
 MEOF
 }
 
+# ── Shared library watch processes ──────────────────────────────────────────
+# Starts `npm run dev` (vite build --watch) in each shared UI library so that
+# any source change is immediately rebuilt and picked up by consumer Vite HMR.
+start_shared_lib_watchers() {
+  local libs=(
+    "unified-trading-ui-kit"
+    "unified-trading-ui-auth"
+  )
+
+  for lib in "${libs[@]}"; do
+    local lib_dir="${WORKSPACE_ROOT}/${lib}"
+
+    if [ ! -d "$lib_dir" ]; then
+      warn "Shared lib not found: $lib — skipping watcher"
+      continue
+    fi
+
+    if [ ! -f "$lib_dir/package.json" ]; then
+      warn "No package.json in $lib — skipping watcher"
+      continue
+    fi
+
+    # Check if a watcher is already running for this lib
+    local pid_file="${PID_DIR}/${lib}-watcher.pid"
+    if [ -f "$pid_file" ]; then
+      local existing_pid
+      existing_pid=$(cat "$pid_file")
+      if kill -0 "$existing_pid" 2>/dev/null; then
+        info "  ${lib} watcher already running (PID $existing_pid) — skipping"
+        continue
+      fi
+    fi
+
+    info "Starting ${BOLD}${lib}${NC} watcher (hot-reload for consumer UIs)..."
+    cd "$lib_dir"
+
+    if [ ! -d "node_modules" ]; then
+      warn "node_modules missing in $lib — running npm install"
+      npm install --silent
+    fi
+
+    npm run dev > "/tmp/unified-dev-pids/${lib}-watcher.log" 2>&1 &
+    local pid=$!
+    echo "$pid" > "$pid_file"
+    info "  ${lib} watcher started (PID $pid)"
+  done
+
+  # Give watchers time to complete their first build before UIs start
+  # importing from their dist/ directories (ui-kit build ~3s)
+  sleep 4
+}
+
 # ── Start functions ─────────────────────────────────────────────────────────
 start_ui() {
   local ui_repo="$1" ui_port="$2"
@@ -428,9 +480,11 @@ resolve_env_vars
 ensure_pid_dir
 
 # ── Auto-stop existing services (prevents port-in-use errors) ────────────
+# Always run dev-stop before starting: stops PID-tracked services and sweeps
+# orphaned processes on known dev ports (e.g. from manual npm run dev).
 STOP_SCRIPT="${SCRIPT_DIR}/dev-stop.sh"
-if [ -f "$STOP_SCRIPT" ] && [ -d "$PID_DIR" ] && ls "$PID_DIR"/*.pid >/dev/null 2>&1; then
-  info "Stopping previously running services..."
+if [ -f "$STOP_SCRIPT" ]; then
+  info "Stopping any existing dev servers..."
   bash "$STOP_SCRIPT" 2>/dev/null || true
   sleep 1
 fi
@@ -460,6 +514,12 @@ else
 fi
 echo "  Components:     ${CYAN}${COMPONENT_FILTER}${NC}"
 echo ""
+
+# Start shared library watchers before any consumer UI so their dist/ is
+# ready and future saves hot-reload into all running Vite dev servers.
+if [[ "$COMPONENT_FILTER" != "backend-only" ]]; then
+  start_shared_lib_watchers
+fi
 
 spawn_n=0
 spawn_total=0
@@ -584,6 +644,19 @@ if [ "$OPEN_BROWSER" = true ] && [ ${#STARTED_URLS[@]} -gt 0 ]; then
       warn "Could not detect browser open command — open URLs manually"
     fi
   fi
+fi
+
+if [[ "$COMPONENT_FILTER" != "backend-only" ]]; then
+  echo "${BOLD}Shared lib watchers (hot-reload):${NC}"
+  for lib in "unified-trading-ui-kit" "unified-trading-ui-auth"; do
+    pid_file="${PID_DIR}/${lib}-watcher.pid"
+    if [ -f "$pid_file" ]; then
+      watcher_pid=$(cat "$pid_file")
+      printf "  %-28s PID %s  (log: /tmp/unified-dev-pids/%s-watcher.log)\n" \
+        "${lib}:" "$watcher_pid" "$lib"
+    fi
+  done
+  echo ""
 fi
 
 info "Dev servers started. Logs in /tmp/unified-dev-pids/*.log"

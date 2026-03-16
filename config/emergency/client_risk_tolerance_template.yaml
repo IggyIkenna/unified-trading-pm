@@ -1,0 +1,14 @@
+# Client Risk Tolerance Template — per-client thresholds for kill switch auto-activation.
+# Deploy per client to GCS: gs://config/clients/{client_id}/risk_tolerance.yaml
+# Schema: unified-internal-contracts ClientRiskTolerance
+
+# Example: Conservative client
+client_id: "TEMPLATE"
+max_drawdown_pct: 10.0 # Kill switch triggers at -10% drawdown
+max_var_breach_pct: 150.0 # Kill switch triggers at 1.5x VaR limit
+auto_kill_switch_timeout_minutes: 30 # Auto-deactivate after 30 minutes
+emergency_exit_override:
+  null # null = use strategy-default playbook
+  # "close_all" = override to market_close regardless of strategy
+  # "hedge_only" = delta-hedge but don't close
+  # "stop_new_only" = block new orders, don't close existing

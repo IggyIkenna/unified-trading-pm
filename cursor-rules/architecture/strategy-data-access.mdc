@@ -1,0 +1,98 @@
+---
+description: Strategy-service data access, event-driven triggers, execution boundary, and config rules
+globs:
+  - "strategy-service/**/*.py"
+  - "strategy_service/**/*.py"
+alwaysApply: false
+---
+
+# Strategy Architecture Rules
+
+SSOT: `unified-trading-codex/09-strategy/cross-cutting/config-architecture.md`
+
+## Rule 1: Strategies NEVER access raw data
+
+Strategies MUST NOT:
+- Import from `unified_cloud_interface` or `unified_market_interface` directly
+- Stream from market-tick-data-service or market-data-processing-service
+- Access GCS, BigQuery, Pub/Sub, or any cloud storage directly
+- Make HTTP calls to venue APIs, WebSocket connections, or market data endpoints
+- Import raw market data adapters or normalizers
+
+Strategies MUST:
+- Receive data through the orchestrator/engine layer (injected, not fetched)
+- Get features from features-* services (via pub/sub events)
+- Get ML signals from ml-inference-api (via pub/sub events)
+- Use `unified_internal_contracts` schemas for all data types
+- Access config through `unified_config_interface` (UnifiedCloudConfig)
+- Emit events through `unified_events_interface` (log_event)
+
+The strategy layer is a pure computation layer. It receives normalised data,
+computes signals, and emits instructions. It never reaches out to fetch data.
+
+## Rule 2: All strategies are event-driven
+
+There are no timer-based strategies. What appears time-based is event-driven
+from upstream feature updates that run on a schedule.
+
+Three trigger types (all event-driven):
+1. Feature update (features-* services via pub/sub)
+2. ML signal (ml-inference-api via pub/sub)
+3. Exposure/risk threshold breach (RiskMonitor/ExposureMonitor internal)
+
+Market-making: triggers on underlying move > threshold (sub-second)
+DeFi/momentum: triggers on new candle features (hourly)
+Sports: triggers on odds update (event-dependent)
+
+## Rule 3: Strategy receives, never calculates
+
+Strategy receives pre-computed:
+- Positions (from ExposureMonitor)
+- Exposures (from ExposureMonitor)
+- Risk assessments (from RiskMonitor: health factor, margin, delta drift)
+- PnL (from PnLCalculator: attribution, equity, settlements)
+- Features (from pub/sub: funding_rate, apy, ml_signal)
+
+Strategy does NOT calculate any of these. Its only job: decide what to do
+and emit StrategyInstruction.
+
+## Rule 4: Strategy decides WHAT, execution decides HOW
+
+Strategy sends StrategyInstruction with:
+- What to do (operation, direction, target_position)
+- Risk limits (max_slippage_bps, stop_loss, take_profit)
+- Venue hints (allowed_venues for SOR)
+- Benchmark (benchmark_price, benchmark_type)
+- Execution preference hints (order_type: MARKET/LIMIT/TWAP/VWAP)
+
+Execution-service decides:
+- Which venue to use (SOR across allowed_venues)
+- Which execution algorithm (TWAP, VWAP, POV, AdaptiveTWAP, AlmgrenChriss)
+- Order management (post_only, reduce_only, partial fills)
+- Gas parameters (for on-chain)
+- Alpha measurement vs benchmark
+
+Strategy NEVER picks the execution venue or algorithm directly.
+
+## Rule 5: Execution config is separate from strategy config
+
+- Rebalancing thresholds, trigger subscriptions, risk limits → strategy config
+- Execution algorithms, post_only, order splitting, rate limits → execution config
+- This separation enables independent backtesting:
+  - Strategy backtest: same strategy config, different time windows
+  - Execution backtest: same strategy instructions, different execution configs
+
+## Rule 6: Config-driven, mode-independent
+
+Same StrategyConfig works for live and batch. The unit of execution is
+`(strategy_id, client_id, config)`. Same EventDrivenStrategyEngine, same
+PnLCalculator, same SettlementService for both modes.
+
+Data flow:
+```
+Features/ML → pub/sub → EventDrivenStrategyEngine → Strategy → StrategyInstruction
+                         ↑ (receives)                           ↓ (emits)
+                    ExposureMonitor                      Execution-Service
+                    RiskMonitor
+                    PnLCalculator
+```

@@ -1,0 +1,69 @@
+# Alert Rules — loaded by monitoring UI and Cloud Monitoring.
+# Each rule defines: condition, severity, action.
+
+rules:
+  - id: restart_count_high
+    condition: "restart_count > 3 in 1 hour"
+    severity: critical
+    action: page_oncall
+    description: "Service restarting too frequently"
+
+  - id: latency_p99_high
+    condition: "latency_p99_us > 500000 sustained 5 minutes"
+    severity: warning
+    action: alert_slack
+    description: "P99 latency exceeds 500ms for 5 minutes"
+
+  - id: batch_deadline_miss
+    condition: "batch shard not completed by expected_completion_time + 15 minutes"
+    severity: warning
+    action: alert_slack
+    description: "Batch shard missed deadline"
+
+  - id: memory_high
+    condition: "memory_rss_pct > 80 sustained 5 minutes"
+    severity: warning
+    action: alert_slack
+    description: "Memory usage above 80% for 5 minutes"
+
+  - id: var_limit_warning
+    condition: "var_1d > var_limit * 0.9"
+    severity: warning
+    action: alert_slack
+    description: "VaR within 10% of limit"
+
+  - id: var_limit_breach
+    condition: "var_1d > var_limit"
+    severity: critical
+    action: page_oncall_and_kill_switch
+    description: "VaR exceeds limit — auto-activate kill switch"
+
+  - id: circuit_breaker_open
+    condition: "circuit_breaker_state == OPEN for any venue"
+    severity: critical
+    action: page_oncall
+    description: "Circuit breaker OPEN for venue"
+
+  - id: kill_switch_active
+    condition: "kill_switch_is_active == true"
+    severity: critical
+    action: page_oncall
+    description: "Kill switch activated"
+
+  - id: lifecycle_failed
+    condition: "lifecycle_event_type == FAILED"
+    severity: critical
+    action: page_oncall
+    description: "Service FAILED lifecycle event"
+
+  - id: health_factor_low
+    condition: "health_factor < 1.2"
+    severity: warning
+    action: alert_slack
+    description: "DeFi health factor approaching liquidation"
+
+  - id: health_factor_critical
+    condition: "health_factor < 1.05"
+    severity: critical
+    action: page_oncall_and_kill_switch
+    description: "DeFi health factor critical — auto-activate kill switch"

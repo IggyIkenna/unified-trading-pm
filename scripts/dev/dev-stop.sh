@@ -88,6 +88,8 @@ stop_service() {
   rm -f "$pid_file"
   rm -f "${PID_DIR}/${name}.port"
   rm -f "${PID_DIR}/${name}.log"
+  # Watcher processes use a -watcher suffix on their log files
+  rm -f "${PID_DIR}/${name%-watcher}.log" 2>/dev/null || true
 }
 
 # Final sweep: kill anything still listening on known dev ports
@@ -122,43 +124,41 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Main ────────────────────────────────────────────────────────────────────
-if [ ! -d "$PID_DIR" ]; then
-  info "No dev servers are running (PID directory does not exist)."
-else
-
 echo "${BOLD}=== Stopping dev servers ===${NC}"
 
-if [ ${#SERVICES[@]} -gt 0 ]; then
-  # Stop specific services
-  for name in "${SERVICES[@]}"; do
-    pid_file="${PID_DIR}/${name}.pid"
-    if [ -f "$pid_file" ]; then
-      stop_service "$pid_file"
-    else
-      warn "No PID file found for: $name"
-    fi
-  done
+if [ ! -d "$PID_DIR" ]; then
+  info "No PID-tracked dev servers."
 else
-  # Stop all
-  found=false
-  for pid_file in "$PID_DIR"/*.pid; do
-    [ -f "$pid_file" ] || continue
-    found=true
-    stop_service "$pid_file"
-  done
+  if [ ${#SERVICES[@]} -gt 0 ]; then
+    # Stop specific services
+    for name in "${SERVICES[@]}"; do
+      pid_file="${PID_DIR}/${name}.pid"
+      if [ -f "$pid_file" ]; then
+        stop_service "$pid_file"
+      else
+        warn "No PID file found for: $name"
+      fi
+    done
+  else
+    # Stop all
+    found=false
+    for pid_file in "$PID_DIR"/*.pid; do
+      [ -f "$pid_file" ] || continue
+      found=true
+      stop_service "$pid_file"
+    done
 
-  if [ "$found" = false ]; then
-    info "No dev servers are running."
+    if [ "$found" = false ]; then
+      info "No PID-tracked dev servers."
+    fi
+
+    # Clean up empty directory
+    rmdir "$PID_DIR" 2>/dev/null || true
   fi
-
-  # Final sweep: catch any orphan processes on known dev ports
-  sweep_ports
-
-  # Clean up empty directory
-  rmdir "$PID_DIR" 2>/dev/null || true
 fi
 
-fi  # end of "PID_DIR exists" block
+# Always sweep: kill orphan processes on known dev ports (e.g. from manual npm run dev)
+sweep_ports
 
 # ── Clean mock state cache ────────────────────────────────────────────────
 if [ "$CLEAN_CACHE" = true ]; then
