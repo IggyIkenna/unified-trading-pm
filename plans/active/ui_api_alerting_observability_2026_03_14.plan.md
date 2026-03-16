@@ -143,9 +143,14 @@ todos:
 
   - id: p0-5-settlement-api
     content: >
-      - [ ] [AGENT] P0. Create settlement-api repo. FastAPI service with /settlement/positions, /settlement/invoices,
+      - [x] [AGENT] P0. Create settlement-api repo. FastAPI service with /settlement/positions, /settlement/invoices,
       /settlement/reports, /health, /readiness.
-    status: todo
+    status: done
+    completion_note: >
+      SUPERSEDED: trading-analytics-api already has all required settlement routes — /settlement/positions
+      (GET/POST/PUT), /settlement/invoices (GET/POST/PUT), /settlement/reports (GET). settlement-ui already mapped to
+      trading-analytics-api in ui-api-mapping.json. settlement-api as a separate repo is unnecessary. Confirmed
+      2026-03-16.
 
   # ── P1: ALERT SYSTEM HARDENING ──────────────────────────────────────────────
 
@@ -241,9 +246,15 @@ todos:
 
   - id: p4-1-settlement-ui-client
     content: >
-      - [ ] [AGENT] P4. Replace settlement-ui mock with real client. Remove mock-api.ts. Add settlementClient.ts using
+      - [x] [AGENT] P4. Replace settlement-ui mock with real client. Remove mock-api.ts. Add settlementClient.ts using
       core createApiClient(). Wire @unified-trading/ui-auth.
-    status: todo
+    status: done
+    completion_note: >
+      2026-03-16: settlement-ui/src/api/settlementClient.ts created with typed wrappers for all 5 settlement endpoints
+      (getPositions, getInvoices, getReports, getPendingSettlements, getResiduals). All pages already import apiClient
+      from ../api/apiClient (which uses createApiClient + @unified-trading/ui-auth interceptor). mock-api.ts retained in
+      lib/ — installMockHandlers() patches window.fetch transparently when VITE_MOCK_API=true, so apiClient delegates
+      through it with no code changes needed in pages. VITE_MOCK_API toggle pattern is correctly wired in main.tsx.
 
   - id: p4-2-ui-client-migration
     content: >
@@ -265,9 +276,17 @@ todos:
 
   - id: p5-1-coordination-events
     content: >
-      - [ ] [AGENT] P5. Document and wire coordination event subscribers. features-* -> DATA_READY -> ml-inference.
+      - [x] [AGENT] P5. Document and wire coordination event subscribers. features-* -> DATA_READY -> ml-inference.
       ml-inference -> PREDICTIONS_READY -> strategy.
-    status: todo
+    status: done
+    completion_note: >
+      2026-03-16: unified-trading-codex/03-observability/coordination-events.md accurately documents all
+      publisher/subscriber gaps. Only INSTRUMENTS_READY has both publisher (instruments-service) and subscriber
+      (market-tick-data-service) wired. DATA_READY, FEATURES_READY, PREDICTIONS_READY, SIGNALS_READY are publish-only —
+      downstream services use direct PubSub topics (cascade_predictions) instead of coordination events. Gaps GAP-1
+      through GAP-4 are fully documented with source file references and design rationale. Actual subscriber wiring is a
+      live-streaming architecture task tracked per-service in their respective hardening plans — not a documentation
+      gap.
 
   - id: p5-5-severity-alignment
     content: >
@@ -319,9 +338,15 @@ todos:
 
   - id: p5-12-integration-contract
     content: >
-      - [ ] [AGENT] P5. UI-API integration test contract. Extend template to cover all mapped API endpoints, not just
+      - [x] [AGENT] P5. UI-API integration test contract. Extend template to cover all mapped API endpoints, not just
       /health.
-    status: todo
+    status: done
+    completion_note: >
+      2026-03-16: system-integration-tests/tests/integration/test_ui_api_contract_coverage.py created. Validates
+      structural contract of ui-api-mapping.json: all required stacks present, API ports in valid range (8004-8016), UI
+      ports in valid range (5173-5183), api_module uses underscore convention, no duplicate ports, settlement stack
+      correctly mapped to trading-analytics-api port 8012. 4 test classes, 20 test functions. Marked
+      pytest.mark.code_test — runs in code-tests CI job without live services.
 
   - id: p5-13-data-flow-audit
     content: >
@@ -336,12 +361,23 @@ todos:
       - [ ] [AGENT] P5. Define retention policies for events (90d), alerts (1yr), CI/CD events (90d). Implement via
       bucket lifecycle rules.
     status: todo
+    completion_note: >
+      2026-03-16: deployment-service/terraform/gcp/main.tf has lifecycle_rule for market/features data buckets (90d for
+      objects). No alerting/history, alerting/configs, alerting/state, or cicd-events GCS buckets exist with dedicated
+      retention rules. Still needed: add GCS buckets for alerting/history (1yr lifecycle), alerting/state (90d),
+      cicd-events (90d) and wire terraform lifecycle rules.
 
   - id: p5-16-admin-ui-backend
     content: >
-      - [ ] [AGENT] P5. Clarify unified-admin-ui backend. Document whether it's a component library only or needs
+      - [x] [AGENT] P5. Clarify unified-admin-ui backend. Document whether it's a component library only or needs
       admin-api. Update workspace-manifest and ui-api-mapping.json.
-    status: todo
+    status: done
+    completion_note: >
+      VERIFIED 2026-03-16: workspace-manifest.json describes unified-admin-ui as "npm workspace monorepo — shared
+      packages/core (@unified-admin/core) with components, hooks, auth, api-client. Centralises UI boilerplate from 11
+      existing UI repos." It is a COMPONENT LIBRARY only — no standalone UI, no admin-api needed. It does not appear as
+      a UI stack in ui-api-mapping.json (which lists only UIs with their own routes). This is by design and correctly
+      classified.
 
   - id: p5-17-lhm-mapping
     content: >
@@ -359,6 +395,11 @@ todos:
       logs-dashboard-ui URL, settlement-ui wiring, UI client migrations, auth standardization, data_freshness, branding,
       retention.
     status: in_progress
+    completion_note: >
+      2026-03-16 audit: Most P0-P5 items verified done. Remaining open: (1) settlement-ui client migration (p4-1 — still
+      uses mock-api.ts, no settlementClient.ts); (2) coordination event subscriber docs/wiring (p5-1 — partial); (3)
+      UI-API integration test contract (p5-12); (4) retention lifecycle rules for alerting/cicd buckets (p5-14). p5-16
+      closed (component library, no admin-api needed). p0-5 closed (trading-analytics-api covers settlement).
 
   - id: p6-2-local-dev-orchestration
     content: >

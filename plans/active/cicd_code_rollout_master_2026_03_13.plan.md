@@ -468,11 +468,20 @@ todos:
   - id: library-t2-harden
     content: |
       - [ ] [AGENT per repo] P1. T2 (7 repos): fix basedpyright errors (UMI 67, UDEI 78), coverage 70%, quickmerge. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-defi-execution-interface, unified-position-interface, unified-sports-execution-interface. T1 invariant: all T1 repos must be at CR5 before starting T2.
-    status: pending
+    status: in_progress
+    completion_note:
+      "PARTIAL (2026-03-16): 5/7 T2 repos are LOCAL_PASS: unified-trade-execution-interface=0.1.42,
+      unified-ml-interface=0.1.21, unified-feature-calculator-library=0.2.0, unified-defi-execution-interface=0.1.13,
+      unified-position-interface=0.1.27. STILL FAILING: unified-market-interface=0.3.101 (FAILING),
+      unified-sports-execution-interface=0.1.19 (FAILING). These 2 must be fixed before T2 is complete and T3 can start."
   - id: library-t3-harden
     content: |
       - [ ] [AGENT] P1. T3 (1 repo): coverage 70%, basedpyright, quickmerge. Repo: unified-domain-client. T2 invariant: all T2 repos must be at CR5 before starting T3.
     status: pending
+    completion_note:
+      "unified-domain-client=LOCAL_PASS 0.1.76 in manifest (2026-03-16). However T2 invariant not satisfied (UMI and
+      unified-sports-execution-interface still FAILING). Once T2 is clean, this can be marked done — the repo itself is
+      passing."
   - id: library-publish-ar
     content: |
       - [x] [SCRIPT] P1. Publish all T0-T3 libraries to GCP Artifact Registry as versioned wheels. Each library gets a wheel published on every main merge via `publish-package.yml` workflow update.
@@ -493,7 +502,11 @@ todos:
   - id: service-l11-ui-harden
     content: |
       - [ ] [AGENT per repo] P1. L11 (13 UIs): TypeScript strict, vitest (add to 3 missing: trading-analytics-ui, execution-analytics-ui, batch-audit-ui — audit §16 FAIL), Playwright smoke tests where applicable. All 13 UI repos.
-    status: in_progress
+    status: done
+    completion_note:
+      "All 3 previously missing UIs now have vitest (2026-03-16): trading-analytics-ui (8 test files, LOCAL_PASS),
+      execution-analytics-ui (8 test files, LOCAL_PASS), batch-audit-ui (6 test files, LOCAL_PASS). Audit §16 FAIL is
+      resolved."
   - id: service-full-sit
     content: |
       - [ ] [SCRIPT] P0. Full SIT validation with all services on staging. Run system-integration-tests against the full service stack. All tests must pass.
@@ -529,7 +542,12 @@ todos:
   - id: feature-grafana
     content: |
       - [ ] [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
-    status: pending
+    status: in_progress
+    completion_note:
+      "PARTIAL (2026-03-16): Grafana infrastructure exists in deployment-service/grafana/ with provisioning/
+      (datasources) and dashboards/ but only 2 of 5 required dashboards present: system-health.json and
+      trading-overview.json. Missing: strategy, execution, PnL, signals, risk dashboards. Cloud Run deployment,
+      Prometheus metrics wiring, and unified-admin-ui panel embedding not confirmed."
   - id: feature-elysium-fork
     content: |
       - [x] [AGENT] P2. Elysium DeFi system fork — standalone repo with DeFi strategy/execution components. Replace 8 stub handlers with implementations. Docker build produces working image.
@@ -632,6 +650,11 @@ todos:
       NOTE: per-repo audit report format established by ComsicTrader 2026-03-13 (see execution_algo_library_audit_2026_03_13.md).
       Full rollout uses overnight-agent-orchestrator.yml + agent-audit.yml (now restored on all T0-T3 repos).
     status: pending
+    completion_note:
+      "Pre-audit state (2026-03-16): §16 vitest-in-3-UIs RESOLVED. §9 ci_status lifecycle state machine IMPLEMENTED
+      (cleanup-ci-status-state-machine done). §7 still FAIL (all repos at 0.x.x except unified-trading-pm=1.2.0). §2
+      still needs execution-service QG expansion. §10 VCR cassettes still missing. §5 float isolation still unverified.
+      Run full audit after §7 stability-1-0-0-promotion."
   - id: stability-final-sit
     content: |
       - [ ] [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests against all services on main branch.

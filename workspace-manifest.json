@@ -30,21 +30,11 @@
       "optional_dir": "specs/"
     },
     "ui-canonical": {
-      "required": [
-        "README.md",
-        "docs/ARCHITECTURE.md",
-        "docs/DEPLOYMENT_GUIDE.md",
-        "docs/TESTING.md"
-      ],
+      "required": ["README.md", "docs/ARCHITECTURE.md", "docs/DEPLOYMENT_GUIDE.md", "docs/TESTING.md"],
       "optional_dir": "specs/"
     },
     "infrastructure-canonical": {
-      "required": [
-        "README.md",
-        "docs/ARCHITECTURE.md",
-        "docs/DEPLOYMENT_GUIDE.md",
-        "QUALITY_GATE_BYPASS_AUDIT.md"
-      ],
+      "required": ["README.md", "docs/ARCHITECTURE.md", "docs/DEPLOYMENT_GUIDE.md", "QUALITY_GATE_BYPASS_AUDIT.md"],
       "optional_dir": "specs/"
     },
     "api-canonical": {
@@ -118,9 +108,7 @@
       "arch_tier": "service",
       "doc_standard": "service-canonical",
       "github_url": "https://github.com/IggyIkenna/alerting-service",
-      "codex_sections": [
-        "03-observability"
-      ],
+      "codex_sections": ["03-observability"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -158,12 +146,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "infrastructure",
@@ -173,28 +156,18 @@
       "ci_failure_reason": "QG exit 1 (from batch 6 agent)",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "alerting",
-        "cross-domain",
-        "standard"
-      ]
+      "tags": ["alerting", "cross-domain", "standard"]
     },
     "batch-audit-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "batch-audit-ui",
-        "logs-dashboard-ui"
-      ],
+      "serves_ui": ["batch-audit-ui", "logs-dashboard-ui"],
       "notes": "Audit trail, data health, compliance, and batch job monitoring API for batch-audit-ui. Also serves logs-dashboard-ui for audit log queries.",
       "github_url": "https://github.com/IggyIkenna/batch-audit-api",
       "completion_path": "cefi",
@@ -220,10 +193,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "event_bus"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -231,22 +201,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "analytics",
-        "cefi",
-        "monitoring",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "monitoring", "standard"]
     },
     "batch-audit-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "monitoring",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "03-observability",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["03-observability", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -263,21 +225,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "analytics",
-        "cefi",
-        "monitoring",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "monitoring", "standard"]
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
@@ -312,11 +266,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "semver_rules_ref": "service",
@@ -324,27 +274,18 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "standard"]
     },
     "client-reporting-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "client-reporting-ui"
-      ],
+      "serves_ui": ["client-reporting-ui"],
       "proxies_service": "pnl-attribution-service",
       "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients.",
       "github_url": "https://github.com/IggyIkenna/client-reporting-api",
@@ -383,11 +324,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -395,21 +332,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "standard"]
     },
     "client-reporting-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "01-domain",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -426,11 +356,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "standard"]
     },
     "deployment-api": {
       "type": "api-service",
@@ -474,15 +400,10 @@
       "skipped_gates": [],
       "doc_standard": "api-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/deployment-api",
@@ -491,14 +412,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "serves_ui": [
-        "deployment-ui"
-      ],
-      "tags": [
-        "cefi",
-        "deployment",
-        "standard"
-      ]
+      "serves_ui": ["deployment-ui"],
+      "tags": ["cefi", "deployment", "standard"]
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -543,19 +458,13 @@
       "skipped_gates": [],
       "doc_standard": "infrastructure-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "semver_rules_ref": "infra",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "deployment",
-        "standard"
-      ]
+      "tags": ["cefi", "deployment", "standard"]
     },
     "deployment-ui": {
       "type": "ui",
@@ -563,9 +472,7 @@
       "status": "scaffolded",
       "version": "0.1.0",
       "description": "Deployment management UI \u2014 orchestrator status, shard progress, Cloud Build logs, IBKR Gateway config UI",
-      "dependencies": [
-        "deployment-api"
-      ],
+      "dependencies": ["deployment-api"],
       "cluster": "devops-ui",
       "completion_path": "cefi",
       "notes": "UI split from unified-trading-deployment-v3 per ui-service-separation rule. React/TypeScript. Scaffolded 2026-02-28. After four-way split: depends on deployment-api.",
@@ -576,30 +483,20 @@
       "skipped_gates": [],
       "doc_standard": "ui-canonical",
       "version_source": "package.json",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "github_url": "https://github.com/IggyIkenna/deployment-ui",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cefi",
-        "deployment",
-        "standard"
-      ]
+      "tags": ["cefi", "deployment", "standard"]
     },
     "elysium-defi-system": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["01-domain", "04-architecture", "05-infrastructure"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -622,19 +519,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "defi",
-        "standard"
-      ]
+      "tags": ["defi", "standard"]
     },
     "execution-algo-library": {
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.6",
       "version_source": "pyproject.toml",
       "dependencies": [],
@@ -644,10 +535,7 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "github_url": "https://github.com/IggyIkenna/execution-algo-library",
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
@@ -655,21 +543,14 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "library",
-      "tags": [
-        "cross-domain",
-        "execution",
-        "important"
-      ]
+      "tags": ["cross-domain", "execution", "important"]
     },
     "execution-analytics-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "01-domain",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -686,30 +567,18 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "analytics",
-        "cefi",
-        "execution",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "execution", "standard"]
     },
     "execution-results-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "trading-analytics-ui",
-        "live-health-monitor-ui",
-        "execution-analytics-ui"
-      ],
+      "serves_ui": ["trading-analytics-ui", "live-health-monitor-ui", "execution-analytics-ui"],
       "proxies_service": "execution-service",
       "notes": "FastAPI + OAuth middleware. HTTP boundary between execution-service and UIs. P0: replace dict[str, Any] at all API boundaries with TypedDict/Pydantic (p0-exec-results-api-types).",
       "github_url": "https://github.com/IggyIkenna/execution-results-api",
@@ -743,11 +612,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -755,11 +620,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ]
+      "tags": ["cefi", "execution", "standard"]
     },
     "execution-service": {
       "type": "service",
@@ -767,11 +628,7 @@
       "folder_name": "execution-service",
       "github_url": "https://github.com/IggyIkenna/execution-service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
@@ -846,11 +703,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "cache",
-          "config_store"
-        ],
+        "capabilities_needed": ["event_bus", "cache", "config_store"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "cefi",
@@ -860,21 +713,13 @@
       "ci_failure_reason": "Codex compliance FAILED: 7 violations",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ]
+      "tags": ["cefi", "execution", "standard"]
     },
     "features-calendar-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.2.1",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -917,11 +762,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/features-calendar-service",
@@ -931,21 +772,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "feature-computation",
-        "standard"
-      ]
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-commodity-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "completion_path": "tradfi",
@@ -986,11 +819,7 @@
       "status": "scaffolded",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "semver_rules_ref": "service",
@@ -998,21 +827,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "feature-computation",
-        "standard",
-        "tradfi"
-      ]
+      "tags": ["feature-computation", "standard", "tradfi"]
     },
     "features-cross-instrument-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "status": "active",
@@ -1058,11 +879,7 @@
       "github_url": "https://github.com/IggyIkenna/features-cross-instrument-service",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "semver_rules_ref": "service",
@@ -1070,21 +887,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "feature-computation",
-        "standard"
-      ]
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-delta-one-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -1122,11 +931,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/features-delta-one-service",
@@ -1136,21 +941,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "feature-computation",
-        "standard"
-      ]
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-multi-timeframe-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "completion_path": "cefi",
@@ -1196,11 +993,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "semver_rules_ref": "service",
@@ -1208,21 +1001,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "feature-computation",
-        "standard"
-      ]
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-onchain-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -1265,11 +1050,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/features-onchain-service",
@@ -1279,20 +1060,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "defi",
-        "feature-computation",
-        "standard"
-      ]
+      "tags": ["defi", "feature-computation", "standard"]
     },
     "features-sports-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability"
-      ],
+      "codex_sections": ["02-data", "03-observability"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "scaffolded",
@@ -1348,11 +1122,7 @@
       "github_url": "https://github.com/IggyIkenna/features-sports-service",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "semver_rules_ref": "service",
@@ -1360,21 +1130,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "feature-computation",
-        "sports",
-        "standard"
-      ]
+      "tags": ["feature-computation", "sports", "standard"]
     },
     "features-volatility-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -1417,11 +1179,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/features-volatility-service",
@@ -1431,19 +1189,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "feature-computation",
-        "standard"
-      ]
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "ibkr-gateway-infra": {
       "type": "infrastructure",
       "arch_tier": "infrastructure",
       "doc_standard": "infrastructure-canonical",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "version": "0.1.0",
       "version_source": "version-file",
       "dependencies": [],
@@ -1454,9 +1206,7 @@
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
-      "skipped_gates": [
-        "terraform-validate"
-      ],
+      "skipped_gates": ["terraform-validate"],
       "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
@@ -1468,21 +1218,13 @@
         "unified-reference-data-interface",
         "unified-trade-execution-interface"
       ],
-      "tags": [
-        "standard",
-        "tradfi"
-      ]
+      "tags": ["standard", "tradfi"]
     },
     "instruments-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
       "version": "0.1.117",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -1536,11 +1278,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/instruments-service",
@@ -1550,21 +1288,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cross-domain",
-        "data-ingestion",
-        "standard"
-      ]
+      "tags": ["cross-domain", "data-ingestion", "standard"]
     },
     "live-health-monitor-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "hybrid",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "03-observability",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["03-observability", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "notes": "Hybrid: monitoring dashboard + manual trading control (calls execution-service /manual/instruction)",
@@ -1582,21 +1313,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cefi",
-        "monitoring",
-        "standard"
-      ]
+      "tags": ["cefi", "monitoring", "standard"]
     },
     "logs-dashboard-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "monitoring",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "03-observability",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["03-observability", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -1613,28 +1337,18 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cross-domain",
-        "monitoring",
-        "standard"
-      ]
+      "tags": ["cross-domain", "monitoring", "standard"]
     },
     "market-data-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "trading-analytics-ui",
-        "batch-audit-ui"
-      ],
+      "serves_ui": ["trading-analytics-ui", "batch-audit-ui"],
       "proxies_service": "market-data-processing-service",
       "notes": "FastAPI + OAuth middleware. Exposes processed market data to UIs. SSE endpoint for live price streaming.",
       "github_url": "https://github.com/IggyIkenna/market-data-api",
@@ -1678,11 +1392,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -1690,21 +1400,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "cefi",
-        "data-ingestion",
-        "standard"
-      ]
+      "tags": ["cefi", "data-ingestion", "standard"]
     },
     "market-data-processing-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -1753,12 +1455,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/market-data-processing-service",
@@ -1768,21 +1465,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "data-ingestion",
-        "standard"
-      ]
+      "tags": ["cefi", "data-ingestion", "standard"]
     },
     "market-tick-data-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.3.1",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
@@ -1841,12 +1530,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "cefi",
@@ -1855,20 +1539,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "data-ingestion",
-        "standard"
-      ]
+      "tags": ["cefi", "data-ingestion", "standard"]
     },
     "matching-engine-library": {
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.57",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -1885,10 +1562,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "github_url": "https://github.com/IggyIkenna/matching-engine-library",
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
@@ -1896,27 +1570,18 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "library",
-      "tags": [
-        "cross-domain",
-        "execution",
-        "important"
-      ]
+      "tags": ["cross-domain", "execution", "important"]
     },
     "ml-inference-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "ml-training-ui"
-      ],
+      "serves_ui": ["ml-training-ui"],
       "proxies_service": "ml-inference-service",
       "notes": "FastAPI service fronting ml-inference-service \u2014 model registry and prediction reads.",
       "github_url": "https://github.com/IggyIkenna/ml-inference-api",
@@ -1943,11 +1608,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -1955,21 +1616,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "cross-domain",
-        "ml-inference",
-        "standard"
-      ]
+      "tags": ["cross-domain", "ml-inference", "standard"]
     },
     "ml-inference-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -2012,12 +1665,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/ml-inference-service",
@@ -2027,27 +1675,18 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "ml-inference",
-        "standard"
-      ]
+      "tags": ["cefi", "ml-inference", "standard"]
     },
     "ml-training-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "ml-training-ui"
-      ],
+      "serves_ui": ["ml-training-ui"],
       "proxies_service": "ml-training-service",
       "notes": "REST API fronting the ml-training-service 3-phase batch pipeline.",
       "github_url": "https://github.com/IggyIkenna/ml-training-api",
@@ -2069,10 +1708,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "event_bus"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -2080,21 +1716,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "cross-domain",
-        "ml-training",
-        "standard"
-      ]
+      "tags": ["cross-domain", "ml-training", "standard"]
     },
     "ml-training-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -2147,11 +1775,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/ml-training-service",
@@ -2161,20 +1785,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "ml-training",
-        "standard"
-      ]
+      "tags": ["cefi", "ml-training", "standard"]
     },
     "ml-training-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "06-coding-standards"
-      ],
+      "codex_sections": ["06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -2191,21 +1809,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cefi",
-        "ml-training",
-        "standard"
-      ]
+      "tags": ["cefi", "ml-training", "standard"]
     },
     "onboarding-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "01-domain",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -2223,21 +1834,13 @@
       "ci_failure_reason": "Function coverage 60.46% < 70% threshold",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cefi",
-        "onboarding",
-        "standard"
-      ]
+      "tags": ["cefi", "onboarding", "standard"]
     },
     "pnl-attribution-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -2275,11 +1878,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/pnl-attribution-service",
@@ -2289,20 +1888,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "pnl",
-        "standard"
-      ]
+      "tags": ["cefi", "pnl", "standard"]
     },
     "position-balance-monitor-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "03-observability"
-      ],
+      "codex_sections": ["01-domain", "03-observability"],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
       "deployment_note": "Shared service \u2014 serves many clients. One instance per workspace.",
@@ -2346,12 +1938,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/position-balance-monitor-service",
@@ -2361,21 +1948,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "monitoring",
-        "risk",
-        "standard"
-      ]
+      "tags": ["cefi", "monitoring", "risk", "standard"]
     },
     "risk-and-exposure-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "03-observability"
-      ],
+      "codex_sections": ["01-domain", "03-observability"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -2418,11 +1997,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/risk-and-exposure-service",
@@ -2433,21 +2008,14 @@
       "ci_failure_reason": "Codex compliance FAILED: 2 violations",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "risk",
-        "standard"
-      ]
+      "tags": ["cefi", "risk", "standard"]
     },
     "settlement-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "01-domain",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "notes": "Settlement UI \u2014 empty directory, not yet implemented.",
@@ -2465,22 +2033,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ]
+      "tags": ["cefi", "execution", "standard"]
     },
     "strategy-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "deployment_note": "One instance per client (separately managed accounts)",
@@ -2530,12 +2089,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/strategy-service",
@@ -2545,21 +2099,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ]
+      "tags": ["cefi", "execution", "standard"]
     },
     "strategy-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "control",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "01-domain",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "status": "active",
@@ -2578,11 +2125,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ]
+      "tags": ["cefi", "execution", "standard"]
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -2626,32 +2169,20 @@
       "skipped_gates": [],
       "doc_standard": "test-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "github_url": "https://github.com/IggyIkenna/system-integration-tests",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": null,
       "role": "test",
-      "tags": [
-        "cefi",
-        "monitoring",
-        "standard"
-      ]
+      "tags": ["cefi", "monitoring", "standard"]
     },
     "trading-agent-service": {
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "completion_path": "tradfi",
@@ -2697,12 +2228,7 @@
       "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "data_source",
-          "data_sink",
-          "cache"
-        ],
+        "capabilities_needed": ["event_bus", "data_source", "data_sink", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "service",
@@ -2710,27 +2236,18 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "execution",
-        "standard",
-        "tradfi"
-      ]
+      "tags": ["execution", "standard", "tradfi"]
     },
     "trading-analytics-api": {
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "trading-analytics-ui"
-      ],
+      "serves_ui": ["trading-analytics-ui"],
       "proxies_service": "execution-service",
       "notes": "Aggregated analytics API for trading-analytics-ui \u2014 trades, slippage, signals, predictions, risk.",
       "github_url": "https://github.com/IggyIkenna/trading-analytics-api",
@@ -2767,10 +2284,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "event_bus"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -2778,21 +2292,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "standard"]
     },
     "trading-analytics-ui": {
       "type": "ui",
       "arch_tier": "ui",
       "ui_type": "analytics",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "01-domain",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["01-domain", "06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -2810,11 +2317,7 @@
       "ci_failure_reason": "Statement coverage 68.37% < 70% threshold",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ]
+      "tags": ["analytics", "cefi", "standard"]
     },
     "unified-admin-ui": {
       "type": "ui",
@@ -2822,9 +2325,7 @@
       "status": "active",
       "version": "0.1.0",
       "description": "npm workspace monorepo \u2014 shared packages/core (@unified-admin/core) with components, hooks, auth, api-client. Centralises UI boilerplate from 11 existing UI repos.",
-      "dependencies": [
-        "unified-trading-ui-kit"
-      ],
+      "dependencies": ["unified-trading-ui-kit"],
       "cluster": "admin-ui",
       "completion_path": "core",
       "notes": "Created 2026-03-10. npm workspaces (Node 22 LTS). TypeScript strict mode, ESLint zero-warnings, Vitest >80% coverage, Playwright smoke. No Python tooling (no uv, no basedpyright, no pytest). Repo count: 59 -> 60.",
@@ -2835,30 +2336,21 @@
       "skipped_gates": [],
       "doc_standard": "ui-canonical",
       "version_source": "package.json",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "github_url": "https://github.com/IggyIkenna/unified-admin-ui",
       "semver_rules_ref": "ui",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": [
-        "config",
-        "cross-domain",
-        "standard"
-      ]
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-api-contracts": {
       "type": "library",
       "arch_tier": "0",
       "arch_tier_sub": "L2a",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.2.38",
       "version_source": "pyproject.toml",
       "dependencies": [],
@@ -2871,32 +2363,20 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "infra_primitives": [
-        "normalization functions",
-        "CanonicalTrade",
-        "CanonicalOrderBook",
-        "CanonicalFill"
-      ],
+      "infra_primitives": ["normalization functions", "CanonicalTrade", "CanonicalOrderBook", "CanonicalFill"],
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
       "role": "contracts",
-      "tags": [
-        "contracts",
-        "critical",
-        "cross-domain"
-      ]
+      "tags": ["contracts", "critical", "cross-domain"]
     },
     "unified-cloud-interface": {
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.11.39",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -2941,20 +2421,13 @@
       "semver_policy": "agent",
       "tier": 0,
       "role": "primitive",
-      "tags": [
-        "config",
-        "critical",
-        "cross-domain"
-      ]
+      "tags": ["config", "critical", "cross-domain"]
     },
     "unified-config-interface": {
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.2.1",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -2975,9 +2448,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "UnifiedCloudConfig"
-      ],
+      "infra_primitives": ["UnifiedCloudConfig"],
       "github_url": "https://github.com/IggyIkenna/unified-config-interface",
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
@@ -2986,20 +2457,13 @@
       "ci_failure_reason": "11 import errors (UCI gcp_compute dependency chain, stale venv)",
       "tier": 0,
       "role": "primitive",
-      "tags": [
-        "config",
-        "critical",
-        "cross-domain"
-      ]
+      "tags": ["config", "critical", "cross-domain"]
     },
     "unified-defi-execution-interface": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.13",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3021,31 +2485,20 @@
       "skipped_gates": [],
       "status": "active",
       "github_url": "https://github.com/IggyIkenna/unified-defi-execution-interface",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "completion_path": "defi",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "defi",
-        "execution",
-        "important"
-      ]
+      "tags": ["defi", "execution", "important"]
     },
     "unified-domain-client": {
       "type": "library",
       "arch_tier": "3",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["01-domain", "02-data", "05-infrastructure"],
       "version": "0.1.76",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3089,10 +2542,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "completion_path": "core",
       "semver_rules_ref": "library-t3",
       "sit_level": "standard",
@@ -3100,20 +2550,13 @@
       "ci_failure_reason": "278 test errors",
       "tier": 3,
       "role": "domain-client",
-      "tags": [
-        "config",
-        "cross-domain",
-        "standard"
-      ]
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-events-interface": {
       "type": "library",
       "arch_tier": "0",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "03-observability",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["03-observability", "05-infrastructure"],
       "version": "0.2.48",
       "version_source": "pyproject.toml",
       "dependencies": [],
@@ -3123,10 +2566,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "setup_events",
-        "log_event"
-      ],
+      "infra_primitives": ["setup_events", "log_event"],
       "github_url": "https://github.com/IggyIkenna/unified-events-interface",
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
@@ -3134,20 +2574,13 @@
       "semver_policy": "agent",
       "tier": 0,
       "role": "primitive",
-      "tags": [
-        "critical",
-        "cross-domain",
-        "events"
-      ]
+      "tags": ["critical", "cross-domain", "events"]
     },
     "unified-feature-calculator-library": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.2.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3169,10 +2602,7 @@
       "skipped_gates": [],
       "status": "active",
       "github_url": "https://github.com/IggyIkenna/unified-feature-calculator-library",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
@@ -3180,21 +2610,14 @@
       "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
       "tier": 2,
       "role": "library",
-      "tags": [
-        "cross-domain",
-        "feature-computation",
-        "important"
-      ]
+      "tags": ["cross-domain", "feature-computation", "important"]
     },
     "unified-internal-contracts": {
       "type": "library",
       "arch_tier": "0",
       "arch_tier_sub": "L2b",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.1.95",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3212,30 +2635,20 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "infra_primitives": [
-        "internal message schemas",
-        "topic names"
-      ],
+      "infra_primitives": ["internal message schemas", "topic names"],
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
       "role": "contracts",
-      "tags": [
-        "contracts",
-        "critical",
-        "cross-domain"
-      ]
+      "tags": ["contracts", "critical", "cross-domain"]
     },
     "unified-market-interface": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "02-data",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["02-data", "05-infrastructure"],
       "version": "0.3.101",
       "version_source": "pyproject.toml",
       "known_violations": [],
@@ -3272,10 +2685,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "github_url": "https://github.com/IggyIkenna/unified-market-interface",
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
@@ -3283,18 +2693,13 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "cross-domain",
-        "important"
-      ]
+      "tags": ["cross-domain", "important"]
     },
     "unified-ml-interface": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "version": "0.1.21",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3320,10 +2725,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "github_url": "https://github.com/IggyIkenna/unified-ml-interface",
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
@@ -3332,21 +2734,13 @@
       "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "cross-domain",
-        "important",
-        "ml-inference",
-        "ml-training"
-      ]
+      "tags": ["cross-domain", "important", "ml-inference", "ml-training"]
     },
     "unified-position-interface": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.27",
       "version_source": "pyproject.toml",
       "status": "future",
@@ -3369,30 +2763,20 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "github_url": "https://github.com/IggyIkenna/unified-position-interface",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "cross-domain",
-        "important",
-        "risk"
-      ]
+      "tags": ["cross-domain", "important", "risk"]
     },
     "unified-reference-data-interface": {
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "02-data"
-      ],
+      "codex_sections": ["05-infrastructure", "02-data"],
       "version": "0.1.102",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3427,30 +2811,20 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "cross-domain",
-        "data-ingestion",
-        "important"
-      ]
+      "tags": ["cross-domain", "data-ingestion", "important"]
     },
     "unified-sports-execution-interface": {
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.19",
       "version_source": "pyproject.toml",
       "status": "scaffolded",
@@ -3479,29 +2853,19 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "github_url": "https://github.com/IggyIkenna/unified-sports-execution-interface",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "execution",
-        "important",
-        "sports"
-      ]
+      "tags": ["execution", "important", "sports"]
     },
     "unified-trade-execution-interface": {
       "type": "library",
       "arch_tier": "2",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "05-infrastructure"
-      ],
+      "codex_sections": ["04-architecture", "05-infrastructure"],
       "version": "0.1.42",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -3532,10 +2896,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "status": "active",
-      "infra_primitives": [
-        "venue adapters",
-        "domain ABCs"
-      ],
+      "infra_primitives": ["venue adapters", "domain ABCs"],
       "github_url": "https://github.com/IggyIkenna/unified-trade-execution-interface",
       "completion_path": "core",
       "semver_rules_ref": "library-t2",
@@ -3544,11 +2905,7 @@
       "ci_failure_reason": "93 test failures",
       "tier": 2,
       "role": "interface",
-      "tags": [
-        "cross-domain",
-        "execution",
-        "important"
-      ]
+      "tags": ["cross-domain", "execution", "important"]
     },
     "unified-trading-codex": {
       "type": "infrastructure",
@@ -3557,9 +2914,7 @@
       "codex_sections": [],
       "version": "0.1.0",
       "version_source": "manual",
-      "dependencies": [
-        "unified-trading-pm"
-      ],
+      "dependencies": ["unified-trading-pm"],
       "notes": "Standards & codex repo. Coding standards, architecture docs, quality gate templates. Depends on PM for workspace-manifest.json, setup.sh template, cursor rules. CI infrastructure dep for ALL repos.",
       "ci_status": "LOCAL_PASS",
       "coverage_pct": 0,
@@ -3574,20 +2929,13 @@
       "semver_policy": "always_patch",
       "tier": null,
       "role": "infrastructure",
-      "tags": [
-        "config",
-        "cross-domain",
-        "standard"
-      ]
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-trading-library": {
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.3.191",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
@@ -3627,22 +2975,14 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "infra_primitives": [
-        "UnifiedCloudService",
-        "CloudStorageService",
-        "CloudPubSubService"
-      ],
+      "infra_primitives": ["UnifiedCloudService", "CloudStorageService", "CloudPubSubService"],
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 1,
       "role": "library",
-      "tags": [
-        "contracts",
-        "critical",
-        "cross-domain"
-      ]
+      "tags": ["contracts", "critical", "cross-domain"]
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -3667,19 +3007,13 @@
       "semver_policy": "always_patch",
       "tier": null,
       "role": "infrastructure",
-      "tags": [
-        "config",
-        "cross-domain",
-        "standard"
-      ]
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-trading-ui-auth": {
       "type": "library",
       "arch_tier": "ui",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "06-coding-standards"
-      ],
+      "codex_sections": ["06-coding-standards"],
       "version": "0.2.1",
       "version_source": "package.json",
       "status": "active",
@@ -3690,12 +3024,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "infra_primitives": [
-        "GoogleAuth",
-        "RequireAuth",
-        "authFetch",
-        "useAuthToken"
-      ],
+      "infra_primitives": ["GoogleAuth", "RequireAuth", "authFetch", "useAuthToken"],
       "github_url": "https://github.com/IggyIkenna/unified-trading-ui-auth",
       "completion_path": "core",
       "semver_rules_ref": "ui",
@@ -3703,19 +3032,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "library",
-      "tags": [
-        "cross-domain",
-        "onboarding",
-        "standard"
-      ]
+      "tags": ["cross-domain", "onboarding", "standard"]
     },
     "unified-trading-ui-kit": {
       "type": "library",
       "arch_tier": "ui",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "06-coding-standards"
-      ],
+      "codex_sections": ["06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -3732,11 +3055,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "library",
-      "tags": [
-        "cross-domain",
-        "onboarding",
-        "standard"
-      ]
+      "tags": ["cross-domain", "onboarding", "standard"]
     },
     "unified-features-interface": {
       "type": "interface",
@@ -3759,11 +3078,7 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "notes": "Unified feature serving interface (UAC Citadel Architecture Phase 8)",
-      "tags": [
-        "cross-domain",
-        "feature-computation",
-        "important"
-      ]
+      "tags": ["cross-domain", "feature-computation", "important"]
     },
     "unified-feature-orchestration-library": {
       "type": "library",
@@ -3802,11 +3117,7 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "notes": "Unified feature orchestration library (UAC Citadel Architecture Phase 8)",
-      "tags": [
-        "cross-domain",
-        "feature-computation",
-        "important"
-      ]
+      "tags": ["cross-domain", "feature-computation", "important"]
     },
     "unified-sports-reference-interface": {
       "type": "interface",
@@ -3835,11 +3146,7 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "notes": "Unified sports reference data interface (UAC Citadel Architecture Phase 8)",
-      "tags": [
-        "cross-domain",
-        "important",
-        "sports"
-      ]
+      "tags": ["cross-domain", "important", "sports"]
     },
     "config-api": {
       "github_url": "https://github.com/IggyIkenna/config-api",
@@ -3869,16 +3176,8 @@
         }
       ],
       "ci_status": "FAILING",
-      "serves_ui": [
-        "onboarding-ui",
-        "settlement-ui",
-        "strategy-ui",
-        "unified-admin-ui"
-      ],
-      "tags": [
-        "config",
-        "standard"
-      ]
+      "serves_ui": ["onboarding-ui", "settlement-ui", "strategy-ui", "unified-admin-ui"],
+      "tags": ["config", "standard"]
     }
   },
   "topologicalOrder": {
@@ -3887,16 +3186,12 @@
       {
         "level": 0,
         "description": "Project management \u2014 pure root (manifest, templates, scripts, cursor rules). No dependencies.",
-        "repos": [
-          "unified-trading-pm"
-        ]
+        "repos": ["unified-trading-pm"]
       },
       {
         "level": 1,
         "description": "Standards & codex \u2014 coding standards, architecture docs, quality gate templates. Depends on PM.",
-        "repos": [
-          "unified-trading-codex"
-        ]
+        "repos": ["unified-trading-codex"]
       },
       {
         "level": 2,
@@ -3911,20 +3206,12 @@
       {
         "level": 3,
         "description": "Services runtime (Tier 1)",
-        "repos": [
-          "unified-config-interface",
-          "unified-reference-data-interface",
-          "unified-trading-library"
-        ]
+        "repos": ["unified-config-interface", "unified-reference-data-interface", "unified-trading-library"]
       },
       {
         "level": 4,
         "description": "T1c + T2 libraries (reference-data, algo, feature-calculator)",
-        "repos": [
-          "matching-engine-library",
-          "execution-algo-library",
-          "unified-feature-calculator-library"
-        ]
+        "repos": ["matching-engine-library", "execution-algo-library", "unified-feature-calculator-library"]
       },
       {
         "level": 5,
@@ -3951,9 +3238,7 @@
       {
         "level": 7,
         "description": "Foundational service (instruments only; no service-domain-data dependency)",
-        "repos": [
-          "instruments-service"
-        ]
+        "repos": ["instruments-service"]
       },
       {
         "level": 8,
@@ -3997,12 +3282,7 @@
       {
         "level": 10,
         "description": "Deployment infrastructure (deployment-api, deployment-service; deploys all services)",
-        "repos": [
-          "batch-live-reconciliation-service",
-          "deployment-api",
-          "deployment-service",
-          "unified-trading-ui-kit"
-        ]
+        "repos": ["batch-live-reconciliation-service", "deployment-api", "deployment-service", "unified-trading-ui-kit"]
       },
       {
         "level": 11,
@@ -4026,11 +3306,7 @@
       {
         "level": 12,
         "description": "IaC + post-deploy validation (deploy last; references all service images)",
-        "repos": [
-          "elysium-defi-system",
-          "ibkr-gateway-infra",
-          "system-integration-tests"
-        ]
+        "repos": ["elysium-defi-system", "ibkr-gateway-infra", "system-integration-tests"]
       }
     ]
   },
@@ -4040,39 +3316,23 @@
       "description": "Pure leaf \u2014 zero inter-library deps. Uses doc dependencies (PM, codex) for CI standards. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library"
     },
     "1": {
-      "allowed_from": [
-        "0"
-      ],
+      "allowed_from": ["0"],
       "description": "Services runtime (library) \u2014 imports Tier 0 only. Services use UTL for L2. Repos: unified-trading-library (UTL), unified-reference-data-interface, unified-config-interface (UCI)"
     },
     "2": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "Domain/market interfaces \u2014 imports Tier 0+1, NOT Tier 3. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface"
     },
     "3": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "Domain data client \u2014 cloud storage I/O, imports Tier 0+1. Repos: unified-domain-client (UDC)"
     },
     "service": {
-      "allowed_from": [
-        "0",
-        "1",
-        "2",
-        "3"
-      ],
+      "allowed_from": ["0", "1", "2", "3"],
       "description": "Services \u2014 import from all library tiers. Never import from another service repo."
     },
     "api": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "API gateway services (FastAPI+OAuth) \u2014 HTTP boundary between services and UIs. Deps: UTL+UCI+UEI only."
     },
     "ui": {
@@ -4084,10 +3344,7 @@
       "description": "Infrastructure repos \u2014 codex, IaC (Terraform), scripts. No Python package deps. Repos: unified-trading-codex, ibkr-gateway-infra."
     },
     "devops": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "DevOps/deployment \u2014 deployment-service, deployment-api. Imports UTL, UCI, UEI."
     },
     "integration": {
@@ -4149,20 +3406,12 @@
       },
       {
         "step": 2,
-        "packages": [
-          "unified-config-interface",
-          "unified-reference-data-interface",
-          "unified-trading-library"
-        ],
+        "packages": ["unified-config-interface", "unified-reference-data-interface", "unified-trading-library"],
         "reason": "Tier 1 packages. UCI depends on UEI. UTL depends on T0 libs."
       },
       {
         "step": 3,
-        "packages": [
-          "unified-domain-client",
-          "execution-algo-library",
-          "unified-feature-calculator-library"
-        ],
+        "packages": ["unified-domain-client", "execution-algo-library", "unified-feature-calculator-library"],
         "reason": "Depend on cloud services"
       },
       {
@@ -4177,17 +3426,12 @@
       },
       {
         "step": 5,
-        "packages": [
-          "unified-defi-execution-interface",
-          "unified-position-interface"
-        ],
+        "packages": ["unified-defi-execution-interface", "unified-position-interface"],
         "reason": "Depend on market/execution interfaces"
       },
       {
         "step": 6,
-        "packages": [
-          "All services"
-        ],
+        "packages": ["All services"],
         "reason": "Can be published once all libraries are available"
       }
     ]
@@ -4252,31 +3496,21 @@
     },
     "messaging_topology": {
       "default": "pubsub",
-      "alternatives": [
-        "redis",
-        "sqs"
-      ],
+      "alternatives": ["redis", "sqs"],
       "colocation_transport": "shared_memory",
       "note": "pubsub/sqs for async fan-out across service boundaries; redis for low-latency point-to-point; shared_memory for zero-copy within a colocated group"
     },
     "colocation_groups": [
       {
         "group_id": "execution-core",
-        "services": [
-          "execution-service",
-          "risk-and-exposure-service"
-        ],
+        "services": ["execution-service", "risk-and-exposure-service"],
         "transport": "shared_memory",
         "note": "Latency-critical path; must deploy together on same host; no network hop between them"
       }
     ],
     "infra_authority": {
       "decision_owner": "libraries",
-      "enforcement": [
-        "quality-gates STEP 5.10",
-        "quality-gates STEP 5.11",
-        "quality-gates STEP 5.12"
-      ],
+      "enforcement": ["quality-gates STEP 5.10", "quality-gates STEP 5.11", "quality-gates STEP 5.12"],
       "note": "Libraries (UCI T0, UTL T1, protocol router) own all infra decisions. Service source files must NEVER contain: gcs, s3, bigquery, pubsub, sqs, redis, bucket, dataset, topic, cloudtarget, upload_to_gcs, StandardizedDomainCloudService. Those belong only in UCI providers and deployment config."
     }
   },
@@ -4318,17 +3552,8 @@
         "position-balance-monitor-service",
         "alerting-service"
       ],
-      "required_api_services": [
-        "execution-results-api",
-        "market-data-api",
-        "client-reporting-api"
-      ],
-      "required_uis": [
-        "trading-analytics-ui",
-        "live-health-monitor-ui",
-        "onboarding-ui",
-        "client-reporting-ui"
-      ],
+      "required_api_services": ["execution-results-api", "market-data-api", "client-reporting-api"],
+      "required_uis": ["trading-analytics-ui", "live-health-monitor-ui", "onboarding-ui", "client-reporting-ui"],
       "not_required": [
         "features-sports-service",
         "unified-sports-execution-interface",
@@ -4348,9 +3573,7 @@
         "unified-defi-execution-interface",
         "unified-api-contracts (DeFi: Uniswap v3/v4, Aave v3, Curve, TheGraph, DeFiLlama)"
       ],
-      "additional_services": [
-        "features-onchain-service"
-      ],
+      "additional_services": ["features-onchain-service"],
       "requires_cefi_path": true
     },
     "sports": {
@@ -4405,9 +3628,6 @@
     "prod": {}
   },
   "workspace_infrastructure": {
-    "setup_repos": [
-      "unified-trading-pm",
-      "unified-trading-codex"
-    ]
+    "setup_repos": ["unified-trading-pm", "unified-trading-codex"]
   }
 }
