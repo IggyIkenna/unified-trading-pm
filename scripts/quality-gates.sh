@@ -102,13 +102,13 @@ fi
 
 # ── Locked plan deletion check ──────────────────────────────────────────
 # Prevent agents from deleting locked plans without [unlock-plan] tag
-DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.plan.md' 2>/dev/null || true)
+DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.plan.md' 2>/dev/null || :)
 if [ -n "$DELETED_PLANS" ]; then
-    COMMIT_MSG=$(git log -1 --format=%B 2>/dev/null || true)
+    COMMIT_MSG=$(git log -1 --format=%B 2>/dev/null || :)
     for plan_file in $DELETED_PLANS; do
         # Check if the deleted plan had locked_by in its frontmatter
         # Read from the old version (before deletion)
-        LOCKED_BY=$(git show "HEAD:$plan_file" 2>/dev/null | grep -oP '^\s*locked_by:\s*\K.*' | head -1 || true)
+        LOCKED_BY=$(git show "HEAD:$plan_file" 2>/dev/null | grep -oP '^\s*locked_by:\s*\K.*' | head -1 || :)
         if [ -n "$LOCKED_BY" ] && ! echo "$COMMIT_MSG" | grep -q '\[unlock-plan\]'; then
             echo "❌ BLOCKED: $plan_file is locked by '$LOCKED_BY'."
             echo "   To delete a locked plan, include [unlock-plan] in your commit message."
