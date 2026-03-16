@@ -1,0 +1,79 @@
+{
+  "scenario": "zero_liquidity",
+  "description": "Orderbook snapshots with zero bids, zero asks, or both empty. Tests handling of illiquid markets where no counterparty is available. Includes transitions between normal, one-sided, and completely empty books.",
+  "data": [
+    {
+      "timestamp_ms": 1710000000000,
+      "state": "normal",
+      "bids": [
+        { "price": 49990.0, "quantity": 1.0 },
+        { "price": 49980.0, "quantity": 2.0 },
+        { "price": 49970.0, "quantity": 3.0 }
+      ],
+      "asks": [
+        { "price": 50010.0, "quantity": 1.0 },
+        { "price": 50020.0, "quantity": 2.0 },
+        { "price": 50030.0, "quantity": 3.0 }
+      ]
+    },
+    {
+      "timestamp_ms": 1710000001000,
+      "state": "asks_depleted",
+      "bids": [
+        { "price": 49990.0, "quantity": 0.5 },
+        { "price": 49980.0, "quantity": 1.0 }
+      ],
+      "asks": []
+    },
+    {
+      "timestamp_ms": 1710000002000,
+      "state": "bids_depleted",
+      "bids": [],
+      "asks": [
+        { "price": 50100.0, "quantity": 0.5 },
+        { "price": 50200.0, "quantity": 1.0 }
+      ]
+    },
+    {
+      "timestamp_ms": 1710000003000,
+      "state": "both_empty",
+      "bids": [],
+      "asks": []
+    },
+    {
+      "timestamp_ms": 1710000004000,
+      "state": "thin_liquidity",
+      "bids": [{ "price": 49500.0, "quantity": 0.01 }],
+      "asks": [{ "price": 50500.0, "quantity": 0.01 }]
+    },
+    {
+      "timestamp_ms": 1710000005000,
+      "state": "recovery",
+      "bids": [
+        { "price": 49990.0, "quantity": 1.0 },
+        { "price": 49980.0, "quantity": 2.0 },
+        { "price": 49970.0, "quantity": 3.0 },
+        { "price": 49960.0, "quantity": 4.0 },
+        { "price": 49950.0, "quantity": 5.0 }
+      ],
+      "asks": [
+        { "price": 50010.0, "quantity": 1.0 },
+        { "price": 50020.0, "quantity": 2.0 },
+        { "price": 50030.0, "quantity": 3.0 },
+        { "price": 50040.0, "quantity": 4.0 },
+        { "price": 50050.0, "quantity": 5.0 }
+      ]
+    }
+  ],
+  "expected_behavior": {
+    "execution": "must NOT submit market orders when asks (for buy) or bids (for sell) are empty; must cancel pending orders",
+    "risk_system": "should refuse to price positions when both sides are empty; use last valid mid-price with STALE flag",
+    "spread_monitoring": "thin_liquidity state has 2% spread (49500-50500) which exceeds normal threshold; should flag as WIDE_SPREAD",
+    "alerting": "should fire ZERO_LIQUIDITY alert within 500ms of detecting empty book side",
+    "position_sizing": "should reduce max order size proportionally to available liquidity depth",
+    "recovery_detection": "should detect recovery state and resume normal execution within 1 second",
+    "states_tested": ["normal", "asks_depleted", "bids_depleted", "both_empty", "thin_liquidity", "recovery"],
+    "thin_spread_pct": 2.0,
+    "normal_spread_pct": 0.04
+  }
+}

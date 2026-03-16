@@ -34,10 +34,14 @@ EXTERNAL_PACKAGES = {
 }
 
 # Patterns for detecting deep imports
-DEEP_IMPORT_PATTERN = re.compile(r"^from\s+(" + "|".join(EXTERNAL_PACKAGES) + r")\.(\w+(?:\.\w+)*)\s+import")
+DEEP_IMPORT_PATTERN = re.compile(
+    r"^from\s+(" + "|".join(EXTERNAL_PACKAGES) + r")\.(\w+(?:\.\w+)*)\s+import"
+)
 
 # Pattern for from imports
-FROM_IMPORT_PATTERN = re.compile(r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import\s+(.+)$")
+FROM_IMPORT_PATTERN = re.compile(
+    r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import\s+(.+)$"
+)
 
 
 class ImportViolation:
@@ -76,7 +80,7 @@ class ImportChecker:
         violations: list[ImportViolation] = []
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 lines = f.readlines()
 
             for line_no, line in enumerate(lines, 1):
@@ -122,7 +126,7 @@ class ImportChecker:
     def fix_file(self, file_path: str, violations: list[ImportViolation]) -> bool:
         """Fix violations in a file."""
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 lines = f.readlines()
 
             # Sort violations by line number in reverse to avoid offset issues

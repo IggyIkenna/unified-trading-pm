@@ -1,0 +1,189 @@
+{
+  "scenario": "missing_data",
+  "description": "Time series with random missing candles simulating data feed gaps. Contains 30 candles spanning 30 minutes at 1-minute intervals, but with 10 candles missing (indices 3, 7, 8, 12, 15, 16, 17, 22, 25, 28). Tests gap detection, interpolation logic, and data quality alerting.",
+  "data": [
+    {
+      "timestamp_ms": 1710000000000,
+      "open": 50000.0,
+      "high": 50050.0,
+      "low": 49980.0,
+      "close": 50020.0,
+      "volume": 100.0
+    },
+    {
+      "timestamp_ms": 1710000060000,
+      "open": 50020.0,
+      "high": 50080.0,
+      "low": 49990.0,
+      "close": 50060.0,
+      "volume": 110.0
+    },
+    {
+      "timestamp_ms": 1710000120000,
+      "open": 50060.0,
+      "high": 50100.0,
+      "low": 50010.0,
+      "close": 50070.0,
+      "volume": 95.0
+    },
+    null,
+    {
+      "timestamp_ms": 1710000240000,
+      "open": 50090.0,
+      "high": 50150.0,
+      "low": 50040.0,
+      "close": 50110.0,
+      "volume": 120.0
+    },
+    {
+      "timestamp_ms": 1710000300000,
+      "open": 50110.0,
+      "high": 50170.0,
+      "low": 50060.0,
+      "close": 50130.0,
+      "volume": 105.0
+    },
+    {
+      "timestamp_ms": 1710000360000,
+      "open": 50130.0,
+      "high": 50200.0,
+      "low": 50080.0,
+      "close": 50150.0,
+      "volume": 115.0
+    },
+    null,
+    null,
+    {
+      "timestamp_ms": 1710000540000,
+      "open": 50180.0,
+      "high": 50250.0,
+      "low": 50120.0,
+      "close": 50200.0,
+      "volume": 130.0
+    },
+    {
+      "timestamp_ms": 1710000600000,
+      "open": 50200.0,
+      "high": 50260.0,
+      "low": 50150.0,
+      "close": 50220.0,
+      "volume": 98.0
+    },
+    {
+      "timestamp_ms": 1710000660000,
+      "open": 50220.0,
+      "high": 50290.0,
+      "low": 50170.0,
+      "close": 50250.0,
+      "volume": 112.0
+    },
+    null,
+    {
+      "timestamp_ms": 1710000780000,
+      "open": 50270.0,
+      "high": 50340.0,
+      "low": 50220.0,
+      "close": 50300.0,
+      "volume": 125.0
+    },
+    {
+      "timestamp_ms": 1710000840000,
+      "open": 50300.0,
+      "high": 50360.0,
+      "low": 50250.0,
+      "close": 50320.0,
+      "volume": 108.0
+    },
+    null,
+    null,
+    null,
+    {
+      "timestamp_ms": 1710001080000,
+      "open": 50380.0,
+      "high": 50450.0,
+      "low": 50330.0,
+      "close": 50400.0,
+      "volume": 140.0
+    },
+    {
+      "timestamp_ms": 1710001140000,
+      "open": 50400.0,
+      "high": 50460.0,
+      "low": 50350.0,
+      "close": 50420.0,
+      "volume": 102.0
+    },
+    {
+      "timestamp_ms": 1710001200000,
+      "open": 50420.0,
+      "high": 50480.0,
+      "low": 50370.0,
+      "close": 50450.0,
+      "volume": 118.0
+    },
+    {
+      "timestamp_ms": 1710001260000,
+      "open": 50450.0,
+      "high": 50510.0,
+      "low": 50400.0,
+      "close": 50470.0,
+      "volume": 96.0
+    },
+    null,
+    {
+      "timestamp_ms": 1710001380000,
+      "open": 50490.0,
+      "high": 50560.0,
+      "low": 50440.0,
+      "close": 50520.0,
+      "volume": 135.0
+    },
+    {
+      "timestamp_ms": 1710001440000,
+      "open": 50520.0,
+      "high": 50580.0,
+      "low": 50470.0,
+      "close": 50540.0,
+      "volume": 109.0
+    },
+    null,
+    {
+      "timestamp_ms": 1710001560000,
+      "open": 50560.0,
+      "high": 50620.0,
+      "low": 50510.0,
+      "close": 50580.0,
+      "volume": 122.0
+    },
+    {
+      "timestamp_ms": 1710001620000,
+      "open": 50580.0,
+      "high": 50640.0,
+      "low": 50530.0,
+      "close": 50600.0,
+      "volume": 100.0
+    },
+    null,
+    {
+      "timestamp_ms": 1710001740000,
+      "open": 50620.0,
+      "high": 50680.0,
+      "low": 50570.0,
+      "close": 50650.0,
+      "volume": 128.0
+    }
+  ],
+  "expected_behavior": {
+    "gap_detection": "system must detect 10 missing candles out of 30 expected (33.3% gap rate)",
+    "data_quality": "data completeness score should be 66.7%; should flag as DEGRADED quality",
+    "interpolation": "for single gaps, forward-fill close price; for consecutive gaps (3 in a row at indices 15-17), mark as UNAVAILABLE",
+    "alerting": "should fire DATA_QUALITY_DEGRADED alert when gap rate exceeds 10%",
+    "strategy_impact": "features depending on contiguous candles (e.g. RSI, MACD) should return NaN for affected windows",
+    "total_expected_candles": 30,
+    "present_candles": 20,
+    "missing_candles": 10,
+    "gap_rate_pct": 33.3,
+    "max_consecutive_gap": 3,
+    "missing_indices": [3, 7, 8, 12, 15, 16, 17, 22, 25, 28]
+  }
+}

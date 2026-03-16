@@ -1,0 +1,217 @@
+{
+  "scenario": "high_volume",
+  "description": "10000 orders in 1 minute. Represents an extreme order-flow surge where the system must handle 166+ orders per second. Tests queue depth, rate limiting, and order matching engine throughput.",
+  "data": [
+    {
+      "timestamp_ms": 1710000000000,
+      "order_id": "ORD-HV-0001",
+      "side": "buy",
+      "price": 50000.0,
+      "quantity": 0.1,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000006,
+      "order_id": "ORD-HV-0002",
+      "side": "sell",
+      "price": 50001.0,
+      "quantity": 0.2,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000012,
+      "order_id": "ORD-HV-0003",
+      "side": "buy",
+      "price": 49999.0,
+      "quantity": 0.15,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000018,
+      "order_id": "ORD-HV-0004",
+      "side": "sell",
+      "price": 50002.0,
+      "quantity": 0.3,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000000024,
+      "order_id": "ORD-HV-0005",
+      "side": "buy",
+      "price": 49998.0,
+      "quantity": 0.05,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000030,
+      "order_id": "ORD-HV-0006",
+      "side": "sell",
+      "price": 50003.0,
+      "quantity": 0.25,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000036,
+      "order_id": "ORD-HV-0007",
+      "side": "buy",
+      "price": 49997.0,
+      "quantity": 0.4,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000000042,
+      "order_id": "ORD-HV-0008",
+      "side": "sell",
+      "price": 50004.0,
+      "quantity": 0.12,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000048,
+      "order_id": "ORD-HV-0009",
+      "side": "buy",
+      "price": 49996.0,
+      "quantity": 0.08,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000054,
+      "order_id": "ORD-HV-0010",
+      "side": "sell",
+      "price": 50005.0,
+      "quantity": 0.35,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000000120,
+      "order_id": "ORD-HV-0020",
+      "side": "buy",
+      "price": 49990.0,
+      "quantity": 0.5,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000240,
+      "order_id": "ORD-HV-0040",
+      "side": "sell",
+      "price": 50010.0,
+      "quantity": 0.6,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000000600,
+      "order_id": "ORD-HV-0100",
+      "side": "buy",
+      "price": 49980.0,
+      "quantity": 0.7,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000003000,
+      "order_id": "ORD-HV-0500",
+      "side": "sell",
+      "price": 50050.0,
+      "quantity": 0.45,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000006000,
+      "order_id": "ORD-HV-1000",
+      "side": "buy",
+      "price": 49950.0,
+      "quantity": 0.55,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000012000,
+      "order_id": "ORD-HV-2000",
+      "side": "sell",
+      "price": 50100.0,
+      "quantity": 0.65,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000018000,
+      "order_id": "ORD-HV-3000",
+      "side": "buy",
+      "price": 49900.0,
+      "quantity": 0.75,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000024000,
+      "order_id": "ORD-HV-4000",
+      "side": "sell",
+      "price": 50150.0,
+      "quantity": 0.85,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000030000,
+      "order_id": "ORD-HV-5000",
+      "side": "buy",
+      "price": 49850.0,
+      "quantity": 0.95,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000036000,
+      "order_id": "ORD-HV-6000",
+      "side": "sell",
+      "price": 50200.0,
+      "quantity": 0.42,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000042000,
+      "order_id": "ORD-HV-7000",
+      "side": "buy",
+      "price": 49800.0,
+      "quantity": 0.53,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000048000,
+      "order_id": "ORD-HV-8000",
+      "side": "sell",
+      "price": 50250.0,
+      "quantity": 0.61,
+      "type": "market"
+    },
+    {
+      "timestamp_ms": 1710000054000,
+      "order_id": "ORD-HV-9000",
+      "side": "buy",
+      "price": 49750.0,
+      "quantity": 0.72,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000059994,
+      "order_id": "ORD-HV-9999",
+      "side": "sell",
+      "price": 50300.0,
+      "quantity": 0.83,
+      "type": "limit"
+    },
+    {
+      "timestamp_ms": 1710000060000,
+      "order_id": "ORD-HV-10000",
+      "side": "buy",
+      "price": 49700.0,
+      "quantity": 0.91,
+      "type": "market"
+    }
+  ],
+  "expected_behavior": {
+    "queue_management": "order queue must not exceed 1000 pending items; back-pressure applied beyond threshold",
+    "rate_limiting": "per-client rate limit (100 orders/sec) must reject excess orders with 429 status",
+    "matching_engine": "latency p99 must remain below 10ms even at peak throughput",
+    "execution": "all valid orders must be acknowledged within 50ms of receipt",
+    "monitoring": "should emit ORDER_SURGE alert when rate exceeds 5x normal baseline",
+    "total_orders": 10000,
+    "duration_seconds": 60,
+    "avg_orders_per_second": 166.67,
+    "note": "fixture contains 25 representative orders; test generators should interpolate to 10000 for full stress"
+  }
+}

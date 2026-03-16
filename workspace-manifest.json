@@ -3327,7 +3327,8 @@
           "strategy-ui",
           "trading-analytics-ui",
           "unified-admin-ui",
-          "unified-trading-ui-auth"
+          "unified-trading-ui-auth",
+          "odum-research-website"
         ]
       },
       {
