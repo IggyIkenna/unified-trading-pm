@@ -450,15 +450,15 @@ todos:
     status: done
   - id: library-t0-d4d5
     content: |
-      [AGENT per repo] P0. T0 (6 repos): D4/D5 — QG pass + quickmerge to main. D1-D3 already PASS. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library. For each: run `bash scripts/quality-gates.sh` (Pass 1), then quickmerge (Pass 2). All 6 must reach CR5 before T1 starts.
+      - [ ] [AGENT per repo] P0. T0 (6 repos): D4/D5 — QG pass + quickmerge to main. D1-D3 already PASS. Repos: unified-api-contracts, unified-internal-contracts, unified-events-interface, unified-cloud-interface, execution-algo-library, matching-engine-library. For each: run `bash scripts/quality-gates.sh` (Pass 1), then quickmerge (Pass 2). All 6 must reach CR5 before T1 starts.
     status: pending
   - id: library-t1-harden
     content: |
-      [AGENT per repo] P0. T1 (3 repos): coverage 70%, basedpyright strict, integration tests for dep edges (UTL->UEI, URDI->UCI, UCI->UEI), quickmerge. Repos: unified-trading-library, unified-reference-data-interface, unified-config-interface. T0 invariant: all T0 repos must be at CR5 before starting T1.
+      - [ ] [AGENT per repo] P0. T1 (3 repos): coverage 70%, basedpyright strict, integration tests for dep edges (UTL->UEI, URDI->UCI, UCI->UEI), quickmerge. Repos: unified-trading-library, unified-reference-data-interface, unified-config-interface. T0 invariant: all T0 repos must be at CR5 before starting T1.
     status: pending
   - id: library-t2-harden
     content: |
-      [AGENT per repo] P1. T2 (7 repos): fix basedpyright errors (UMI 67, UDEI 78), coverage 70%, quickmerge. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-defi-execution-interface, unified-position-interface, unified-sports-execution-interface. T1 invariant: all T1 repos must be at CR5 before starting T2.
+      - [ ] [AGENT per repo] P1. T2 (7 repos): fix basedpyright errors (UMI 67, UDEI 78), coverage 70%, quickmerge. Repos: unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-feature-calculator-library, unified-defi-execution-interface, unified-position-interface, unified-sports-execution-interface. T1 invariant: all T1 repos must be at CR5 before starting T2.
     status: pending
   - id: library-t3-harden
     content: |
@@ -471,27 +471,27 @@ todos:
     status: done
   - id: service-l7l8-harden
     content: |
-      [AGENT per repo] P0. L7-L8 (19 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service, execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service, elysium-defi-system (L8).
+      - [ ] [AGENT per repo] P0. L7-L8 (19 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service, execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service, elysium-defi-system (L8).
     status: pending
   - id: service-l9-harden
     content: |
-      [AGENT per repo] P1. L9 (9 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, trading-analytics-api.
+      - [ ] [AGENT per repo] P1. L9 (9 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, trading-analytics-api.
     status: pending
   - id: service-l10-harden
     content: |
-      [AGENT per repo] P1. L10 (4 deployment infra): deployment-api, deployment-service, batch-live-reconciliation-service, unified-trading-ui-kit.
+      - [ ] [AGENT per repo] P1. L10 (4 deployment infra): deployment-api, deployment-service, batch-live-reconciliation-service, unified-trading-ui-kit.
     status: pending
   - id: service-l11-ui-harden
     content: |
-      [AGENT per repo] P1. L11 (13 UIs): TypeScript strict, vitest (add to 3 missing: trading-analytics-ui, execution-analytics-ui, batch-audit-ui — audit §16 FAIL), Playwright smoke tests where applicable. All 13 UI repos.
-    status: pending
+      - [ ] [AGENT per repo] P1. L11 (13 UIs): TypeScript strict, vitest (add to 3 missing: trading-analytics-ui, execution-analytics-ui, batch-audit-ui — audit §16 FAIL), Playwright smoke tests where applicable. All 13 UI repos.
+    status: in_progress
   - id: service-full-sit
     content: |
       - [ ] [SCRIPT] P0. Full SIT validation with all services on staging. Run system-integration-tests against the full service stack. All tests must pass.
     status: pending
   - id: deploy-aws-account
     content: |
-      [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work. From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service roles, quota review).
+      - [ ] [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work. From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service roles, quota review).
     status: pending
   - id: deploy-aws-codebuild-canary
     content: |
@@ -519,7 +519,7 @@ todos:
     status: done
   - id: feature-grafana
     content: |
-      [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
+      - [ ] [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
     status: pending
   - id: feature-elysium-fork
     content: |
@@ -533,7 +533,7 @@ todos:
     status: done
   - id: stability-1-0-0-promotion
     content: |
-      [SCRIPT+HUMAN] P0. 1.0.0 promotion for all repos. Order: T0 first via `feat!:` commit (triggers MINOR bump on 0.x.x per pre-1.0.0 rule — so this needs a manual version set or policy override to cross to 1.0.0). Then T1->T2->T3 respecting tier invariant. Verify version cascade propagates cleanly at each tier. Human approves each tier promotion.
+      - [ ] [SCRIPT+HUMAN] P0. 1.0.0 promotion for all repos. Order: T0 first via `feat!:` commit (triggers MINOR bump on 0.x.x per pre-1.0.0 rule — so this needs a manual version set or policy override to cross to 1.0.0). Then T1->T2->T3 respecting tier invariant. Verify version cascade propagates cleanly at each tier. Human approves each tier promotion.
     status: pending
   - id: overnight-agent-audit-restore
     content: |

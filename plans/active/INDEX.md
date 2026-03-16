@@ -51,33 +51,13 @@ system N10, events canonicalization, UI/API completeness, testing framework, dep
 mixed | **Status:** active (~28/41 done after Wave 1-3) | **Scope:** LogLevel (done), alerting hardening (done), CI/CD
 alerting (done), observability (done), UI/API mapping, auth standardization (done), cross-cutting.
 
-### 8. Citadel-Grade UI/API Flow Validation
-
-**File:**
-[ui_api_flow_validation_citadel_grade_2026_03_14.plan.md](ui_api_flow_validation_citadel_grade_2026_03_14.plan.md)
-**Type:** mixed | **Status:** active (~11/17 done after Wave 1-3) | **Scope:** Flow manifest (done), checker script
-(done), CI wiring (done), MockStateStore (done). Remaining: enforcement gates.
-
-### 9. Interfaces Capability Contract Unification
-
-**File:**
-[interfaces_capability_contract_unification_2026_03_14.plan.md](interfaces_capability_contract_unification_2026_03_14.plan.md)
-**Type:** mixed | **Status:** active (~6/21 done after Wave 3) | **Scope:** Registry (done), error classes (done),
-adapter guardrails (done in Wave 3). Remaining: mapping unification, service adoption, test matrix.
-
-### 10. Sports Execution Venue Coverage
-
-**File:** [sports_execution_venue_coverage_2026_03_15.plan.md](sports_execution_venue_coverage_2026_03_15.plan.md)
-**Type:** mixed | **Status:** active (~15/23 done) | **Scope:** Venue profiles (done), browser base (done), health
-monitor (done), concurrent executor (done). Remaining: adapter hardening (human), arb detection, advanced features.
-
-### 11. Sports Hub — Residual Actions
+### 8. Sports Hub — Residual Actions
 
 **File:** [sports_hub_residual_actions_2026_03_15.plan.md](sports_hub_residual_actions_2026_03_15.plan.md) **Type:**
 human | **Status:** active (2/12) | **Scope:** All human work: Secret Manager credentials, Playwright CSS selectors,
-CAPTCHA, GeoComply. **Depends on:** Plan 10.
+CAPTCHA, GeoComply.
 
-### 12. UI Trader Acceptance Testing
+### 9. UI Trader Acceptance Testing
 
 **File:** [ui_trader_acceptance_testing_2026_03_15.plan.md](ui_trader_acceptance_testing_2026_03_15.plan.md) **Type:**
 human+agent | **Status:** active (0/36) | **Scope:** Smoke tests, visual audit, layout fixes, API mock validation,
@@ -108,6 +88,9 @@ stress scenarios, trader sign-off.
 | mode_config_env_architecture                | Deferred — UDC stays separate; Phase 1 env_canon done              |
 | uac_citadel_remediation                     | 21/24 done; remainder deferred or tracked in interfaces_capability |
 | internal_contract_replay_and_drift_infra    | Deferred — all stubs, blocked by 7 plans                           |
+| ui_api_flow_validation_citadel_grade        | Phases 1-2 done; enforcement gates deferred                        |
+| interfaces_capability_contract_unification  | Core items done (registry, errors, guardrails); mapping deferred   |
+| sports_execution_venue_coverage             | ~15/23 done; remaining human work tracked in sports_hub            |
 
 ### Architectural Decisions (codified)
 
