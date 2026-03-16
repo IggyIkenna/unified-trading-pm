@@ -32,7 +32,7 @@ repo_gates:
     deployment: none
     business: none
   - repo: execution-service
-    code: C0
+    code: C3
     deployment: none
     business: none
   - repo: trading-analytics-api
@@ -282,27 +282,11 @@ todos:
     status: todo
     note: "PARALLEL. UIs currently have zero typed risk/analytics interfaces."
 
-  - id: p4e-trading-analytics-ui-views
-    content: |
-      - [ ] [HUMAN+AGENT] P1. Add risk monitor + P&L attribution views to
-        trading-analytics-ui (or the new monitoring UI — decide which is home):
-        RISK MONITOR VIEW:
-        - VaR/CVaR gauges with limit proximity
-        - Greeks exposure table (delta/gamma/vega/theta/rho per position/strategy/venue)
-        - Basis risk, funding rate exposure
-        - Correlation regime indicator + heatmap
-        - Circuit breaker state per venue
-        P&L ATTRIBUTION VIEW:
-        - Waterfall chart: delta P&L → gamma P&L → vega P&L → theta P&L → funding →
-          basis → FX → carry → fees → residual = total P&L
-        - Drill by: venue, strategy, instrument, time period
-        - Over-time line charts for each risk factor's P&L contribution
-        These are two views of the SAME decomposition (risk = exposure, P&L = realized exposure).
-        Data: risk-service /risk/var, /risk/metrics APIs; PBMS position history.
-    status: todo
-    note: "PARALLEL. Core analytics views — not Grafana, own UI for custom grouping."
+  # NOTE: p4e (UI views) MOVED to Phase 5 Stream D as p5-risk-matrix-visualization.
+  # It depends on Phase 5 APIs (/risk/matrix, P&L attribution engine) which don't exist until
+  # Stream D items are built. Cannot be in Phase 4.
 
-  - id: p4c-add-venues-to-registry
+  - id: p4f-add-venues-to-registry
     content: |
       - [ ] [AGENT] P1. Add to UMI VENUE_REGISTRY (factory.py):
         - polymarket, betfair, kalshi, smarkets, betdaq (prediction markets/sports)
@@ -311,8 +295,12 @@ todos:
         - alchemy (Ethereum RPC), thegraph (subgraph indexer), bloxroute (MEV relay)
         Key semantic: venues = trade on them. infra = pipes to reach venues.
         Instadapp IS a venue (DSA contracts) but USES thegraph as pipe.
+        ALSO: Add SourceCapability declarations in UAC
+        registry/capability_declarations/_sports.py and _defi.py for each new venue
+        (supports_testnet, auth_scope, auth_environments). Without these, preflight
+        validation in get_adapter() will reject the new venues.
     status: todo
-    note: "PARALLEL with p4a,p4b."
+    note: "PARALLEL with p4a-p4d."
 
   - id: p4-qg-downstream
     content: |
@@ -321,12 +309,17 @@ todos:
         `cd market-data-processing-service && bash scripts/quality-gates.sh`
         `cd unified-market-interface && bash scripts/quality-gates.sh`
     status: todo
-    note: "SEQUENTIAL — runs after p4a-p4c complete."
+    note: "SEQUENTIAL — runs after p4a-p4f complete."
 
   # =========================================================================
-  # PHASE 5: OBSERVABILITY + CIRCUIT BREAKER + VaR (parallel streams)
+  # PHASE 5: OBSERVABILITY + CIRCUIT BREAKER + VaR + RISK MATRIX (4 streams)
   # =========================================================================
-  # These are independent feature additions. Three parallel streams.
+  # Streams A (observability) and B (circuit breaker): independent of P1-P4.
+  # Streams C (VaR Phase 2) and D (risk matrix): GATE ON p2-qg-uic.
+  #   Stream C needs VaRResult from p2a. Stream D needs RiskType in UAC +
+  #   UIC schemas from p2a/p2b. Stream D also adds to UAC (risk_taxonomy.py)
+  #   so must wait until Phase 3 UAC cleanup is complete to avoid conflicts.
+  #   Therefore: Stream D gates on BOTH p2-qg-uic AND p3-qg-uac-final.
 
   # --- Stream A: Observability ---
 
@@ -505,7 +498,9 @@ todos:
         DOMAIN-SPECIFIC: edge_decay (sports), market_suspension (sports),
         protocol_risk (DeFi smart contract), impermanent_loss (DeFi LP)
         Each RiskType maps to a P&L attribution dimension.
-        Repos: unified-internal-contracts (schema), unified-api-contracts (re-export if external).
+        Repos: unified-api-contracts (RiskType enum in canonical/crosscutting/risk_taxonomy.py).
+        GreeksExposure migration from UIC to UAC handled separately (see stream_d spec).
+        GATES ON: p3-qg-uac-final (UAC cleanup must be done before adding new UAC files).
     status: todo
     note: "PARALLEL stream D. Foundation for everything else in this stream."
 
@@ -688,14 +683,20 @@ PHASE 1 (parallel)          PHASE 2 (parallel)       PHASE 3 (parallel)
 └─ p1f recategorize venues         │       │           PHASE 4 (parallel)
       │                            │       │           ┌─ p4a fix trading-analytics-api
 p1-QG-UAC ─────────────────────────┘       │           ├─ p4b fix market-data-proc
-                                           │           └─ p4c add venues to registry
+                                           │           ├─ p4c risk-service adopt UIC
+                                           │           ├─ p4d trading-analytics-ui types
+                                           │           └─ p4f add venues to registry
                                            │                 │
                                            │           p4-QG-downstream ──┐
                                            │                              │
-PHASE 5 (3 parallel streams, independent of P1-P4 for obs/CB/VaR)       │
-Stream A: Observability (7 items)                                        │
-Stream B: Circuit Breaker Citadel (5 items)                              │
-Stream C: VaR Phase 2 (6 items)                                          │
+PHASE 5 (4 streams)                        │                              │
+Stream A: Observability (7 items) ─────────┤── independent of P1-P4      │
+Stream B: Circuit Breaker (5 items) ───────┤── independent of P1-P4      │
+Stream C: VaR Phase 2 (6 items) ───────────┤── gates on p2-QG-UIC       │
+Stream D: Risk Matrix (10 items) ──────────┘── gates on p2-QG + p3-QG   │
+  (includes risk-matrix-visualization,                                    │
+   which was p4e — moved here because                                    │
+   it depends on Phase 5 APIs)                                           │
       │                                                                  │
 PHASE 6: Final workspace-wide QG ◄───────────────────────────────────────┘
 ```
