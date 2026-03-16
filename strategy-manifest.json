@@ -264,7 +264,7 @@
       "subcategory": "BASIS",
       "domain": "defi",
       "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
-      "venues": ["HYPERLIQUID", "UNISWAPV3-ETH", "CURVE-ETH", "BALANCER-ETH"],
+      "venues": ["WALLET", "HYPERLIQUID", "UNISWAPV3-ETH", "CURVE-ETH", "BALANCER-ETH"],
       "instruments": ["WALLET:SPOT_ASSET:ETH", "HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID"],
       "data_sources": {
         "features": ["features-onchain-service"],
@@ -1186,7 +1186,7 @@
       "subcategory": "MEAN_REVERSION",
       "domain": "tradfi",
       "asset_classes": ["COMMODITY"],
-      "venues": ["CME"],
+      "venues": ["CME", "NYMEX"],
       "instruments": ["NYMEX:FUTURES:CL"],
       "data_sources": {
         "features": ["features-delta-one-service"],
@@ -1339,7 +1339,7 @@
       "subcategory": "ML_SWING",
       "domain": "tradfi",
       "asset_classes": ["COMMODITY"],
-      "venues": ["CME"],
+      "venues": ["CME", "NYMEX"],
       "instruments": ["NYMEX:FUTURES:CL"],
       "data_sources": {
         "features": ["features-delta-one-service"],

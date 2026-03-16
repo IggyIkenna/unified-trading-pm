@@ -109,7 +109,7 @@ logs/
 *.odp
 
 # --- Optional: Terraform (uncomment if repo has Terraform) ---
-# **/.terraform/
+**/.terraform/
 # *.tfstate
 # *.tfstate.*
 # *.tfplan

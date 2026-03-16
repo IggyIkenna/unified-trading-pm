@@ -148,6 +148,7 @@ jobs:
     needs: [detect-cassette-drift, notify]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-api-contracts
       workflow_name: ${{ github.workflow }}

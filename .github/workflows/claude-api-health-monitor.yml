@@ -101,6 +101,7 @@ jobs:
     needs: [health-check, notify]
     if: always() && needs.health-check.outputs.should_alert == 'true'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}

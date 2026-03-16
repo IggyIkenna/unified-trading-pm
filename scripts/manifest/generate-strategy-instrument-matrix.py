@@ -33,7 +33,7 @@ PM_ROOT = Path(__file__).resolve().parent.parent.parent
 MANIFEST_PATH = PM_ROOT / "strategy-manifest.json"
 
 # Canonical instrument ID pattern: VENUE:TYPE:PAYLOAD (with optional @CHAIN suffix)
-_INSTRUMENT_ID_PATTERN = re.compile(r"^[A-Z0-9_-]+:[A-Z0-9_]+:[A-Za-z0-9_@.-]+$")
+_INSTRUMENT_ID_PATTERN = re.compile(r"^[A-Z0-9_-]+:[A-Z0-9_]+:[A-Za-z0-9_@.*-]+$")
 
 
 def load_manifest(manifest_path: Path) -> dict[str, list[dict[str, object]]]:
@@ -90,8 +90,7 @@ def validate_instruments_vs_venues(
         venue = extract_instrument_venue(iid)
         if venue and venue not in venues_set:
             errors.append(
-                f"{sid}: instrument '{iid}' references venue '{venue}' "
-                f"not in declared venues {sorted(venues_set)}"
+                f"{sid}: instrument '{iid}' references venue '{venue}' not in declared venues {sorted(venues_set)}"
             )
     return errors
 
@@ -116,8 +115,7 @@ def validate_instruments_vs_asset_classes(
         inst_type = extract_instrument_type(iid)
         if inst_type and inst_type not in ac_set:
             errors.append(
-                f"{sid}: instrument '{iid}' has type '{inst_type}' "
-                f"not in declared asset_classes {sorted(ac_set)}"
+                f"{sid}: instrument '{iid}' has type '{inst_type}' not in declared asset_classes {sorted(ac_set)}"
             )
     return errors
 
@@ -136,10 +134,7 @@ def validate_instrument_id_formats(
     for instrument_id in instruments_raw:
         iid = str(instrument_id)
         if not validate_instrument_format(iid):
-            errors.append(
-                f"{sid}: instrument '{iid}' does not match canonical format "
-                "VENUE:TYPE:PAYLOAD[@CHAIN]"
-            )
+            errors.append(f"{sid}: instrument '{iid}' does not match canonical format VENUE:TYPE:PAYLOAD[@CHAIN]")
     return errors
 
 
@@ -171,29 +166,27 @@ def build_matrix(
     for strategy in strategies:
         sid = str(strategy.get("strategy_id", "UNKNOWN"))
         category = str(strategy.get("category", "UNKNOWN"))
-        venues_raw = strategy.get("venues", [])
-        asset_classes_raw = strategy.get("asset_classes", [])
-        instruments_raw = strategy.get("instruments", [])
+        venues_raw = strategy.get("venues")
+        asset_classes_raw = strategy.get("asset_classes")
+        instruments_raw = strategy.get("instruments")
         live_capable = str(strategy.get("live_capable", False))
         batch_capable = str(strategy.get("batch_capable", False))
 
         venues: list[str] = venues_raw if isinstance(venues_raw, list) else []
-        asset_classes: list[str] = (
-            asset_classes_raw if isinstance(asset_classes_raw, list) else []
-        )
-        instruments: list[str] = (
-            [str(i) for i in instruments_raw] if isinstance(instruments_raw, list) else []
-        )
+        asset_classes: list[str] = asset_classes_raw if isinstance(asset_classes_raw, list) else []
+        instruments: list[str] = [str(i) for i in instruments_raw] if isinstance(instruments_raw, list) else []
 
-        rows.append({
-            "strategy_id": sid,
-            "category": category,
-            "venues": venues,
-            "asset_classes": asset_classes,
-            "instruments": instruments,
-            "live_capable": live_capable,
-            "batch_capable": batch_capable,
-        })
+        rows.append(
+            {
+                "strategy_id": sid,
+                "category": category,
+                "venues": venues,
+                "asset_classes": asset_classes,
+                "instruments": instruments,
+                "live_capable": live_capable,
+                "batch_capable": batch_capable,
+            }
+        )
     return rows
 
 
@@ -263,11 +256,14 @@ def main() -> int:
 
     manifest_path = Path(args.manifest) if args.manifest else MANIFEST_PATH
     data = load_manifest(manifest_path)
-    strategies: list[dict[str, object]] = data.get("strategies", [])
+    strategies_raw = data.get("strategies")
+    strategies: list[dict[str, object]] = strategies_raw if isinstance(strategies_raw, list) else []
 
     if args.category:
         strategies = [
-            s for s in strategies if str(s.get("category", "")).upper() == args.category.upper()
+            s
+            for s in strategies
+            if (cat := s.get("category")) is not None and str(cat).upper() == args.category.upper()
         ]
 
     if not strategies:
@@ -291,7 +287,7 @@ def main() -> int:
 
     # ── Build instrument map and detect conflicts ────────────────────────────
     instrument_map = build_instrument_to_strategies_map(strategies)
-    strategies_by_id = {str(s.get("strategy_id", "")): s for s in strategies}
+    strategies_by_id = {str(s.get("strategy_id", "UNKNOWN")): s for s in strategies}
     all_warnings.extend(detect_instrument_conflicts(instrument_map, strategies_by_id))
 
     # ── Build and output matrix ──────────────────────────────────────────────
@@ -317,9 +313,9 @@ def main() -> int:
         print_matrix_table(matrix_rows)
 
         # ── Instrument coverage summary ──────────────────────────────────────
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print("INSTRUMENT COVERAGE")
-        print(f"{'='*80}")
+        print(f"{'=' * 80}")
         for instrument_id, sids in sorted(instrument_map.items()):
             count_str = f"({len(sids)} strategies)"
             print(f"  {instrument_id:<55} {count_str}")

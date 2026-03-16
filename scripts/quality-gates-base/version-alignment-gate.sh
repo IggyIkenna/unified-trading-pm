@@ -49,9 +49,9 @@ _run_version_alignment_gate() {
         if [ "$_behind" -gt 0 ] 2>/dev/null; then
             echo ""
             echo -e "${RED}━━━ VERSION ALIGNMENT: Branch Commit Drift ━━━${NC}"
-            echo "  You are $_behind commit(s) behind origin/$_branch on $SERVICE_NAME"
+            echo "  You are $_behind commit(s) behind origin/$_branch on ${SERVICE_NAME:-${PACKAGE_NAME:-unknown}}"
             echo "  Someone pushed to your branch. Pull first:"
-            echo "    cd $SERVICE_NAME && git pull origin $_branch"
+            echo "    cd ${SERVICE_NAME:-${PACKAGE_NAME:-unknown}} && git pull origin $_branch"
             echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
             _va_block=true
         fi
@@ -64,7 +64,7 @@ _run_version_alignment_gate() {
 import json, sys, subprocess
 from pathlib import Path
 pm_dir = Path('$_pm_dir')
-repo = '$SERVICE_NAME'
+repo = '${SERVICE_NAME:-${PACKAGE_NAME:-}}'
 with open('$_pm_manifest') as f:
     local = json.load(f)
 local_versions = local.get('versions', {})

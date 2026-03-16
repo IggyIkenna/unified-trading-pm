@@ -181,9 +181,9 @@
   <text x="95" y="938" text-anchor="middle" class="level-label">L6</text>
   <text x="150" y="938" class="desc">Execution interfaces — DeFi + sports (3 repos)</text>
   <rect x="70" y="961" width="244" height="38" class="lib" />
-  <rect x="70" y="961" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="961" width="4" height="38" fill="#facc15" rx="2" />
   <text x="192" y="979" text-anchor="middle" class="label">unified-defi-execution-interface</text>
-  <circle cx="304" cy="969" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="304" cy="969" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="192" y="991" text-anchor="middle" class="ver">0.1.13</text>
   <rect x="324" y="961" width="279" height="38" class="lib" />
   <rect x="324" y="961" width="4" height="38" fill="#facc15" rx="2" />
@@ -371,9 +371,9 @@
   <circle cx="607" cy="1493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="544" y="1515" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="627" y="1485" width="174" height="38" class="lib" />
-  <rect x="627" y="1485" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="627" y="1485" width="4" height="38" fill="#facc15" rx="2" />
   <text x="714" y="1503" text-anchor="middle" class="label">unified-trading-ui-kit</text>
-  <circle cx="791" cy="1493" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="791" cy="1493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="714" y="1515" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L11: UI applications (13 repos) -->
   <rect x="40" y="1557" width="2320" height="107" class="level-bg" />
@@ -431,9 +431,9 @@
   <circle cx="1570" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1515" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1590" y="1604" width="160" height="38" class="ui-box" />
-  <rect x="1590" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1590" y="1604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1670" y="1622" text-anchor="middle" class="label">trading-analytics-ui</text>
-  <circle cx="1740" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1740" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1670" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1760" y="1604" width="132" height="38" class="ui-box" />
   <rect x="1760" y="1604" width="4" height="38" fill="#facc15" rx="2" />

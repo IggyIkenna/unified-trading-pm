@@ -446,6 +446,54 @@ jobs:
             exit 1
           fi
 
+      - name: Dispatch schema-changed to PM (T0 libraries only)
+        if: steps.compute.outputs.skip != 'true' && steps.compute.outputs.bump != 'major_blocked'
+        run: |
+          set -euo pipefail
+
+          # Only dispatch for T0 library repos whose schema changes affect downstream consumers
+          T0_REPOS="unified-api-contracts unified-internal-contracts unified-events-interface unified-cloud-interface unified-trading-library unified-reference-data-interface"
+          if ! echo "$T0_REPOS" | grep -qw "__REPO_NAME__"; then
+            echo "Not a T0 library repo — skipping schema-changed dispatch"
+            exit 0
+          fi
+
+          # Check if schema-relevant files changed (exports, models, schemas, types)
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            SCHEMA_FILES=$(git diff HEAD~1 --name-only | grep -E '(__init__|models|schemas|types)\.py$' || true)
+          else
+            SCHEMA_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -E '(__init__|models|schemas|types)\.py$' || true)
+          fi
+
+          if [ -z "$SCHEMA_FILES" ]; then
+            echo "No schema-relevant files changed — skipping schema-changed dispatch"
+            exit 0
+          fi
+
+          OWNER="${{ github.repository_owner }}"
+          VERSION="${{ steps.compute.outputs.new_version }}"
+          DIFF_SUMMARY=$(git diff HEAD~1 --stat -- $SCHEMA_FILES | tail -1)
+
+          # Comma-separate changed file list
+          CHANGED_LIST=$(echo "$SCHEMA_FILES" | tr '\n' ',' | sed 's/,$//')
+
+          echo "Dispatching schema-changed to PM: __REPO_NAME__ v${VERSION}"
+          echo "  Changed schema files: $CHANGED_LIST"
+          echo "  Diff summary: $DIFF_SUMMARY"
+
+          HTTP_STATUS=$(curl -s -o /tmp/schema_dispatch_response.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"schema-changed\", \"client_payload\": {\"repo\": \"__REPO_NAME__\", \"version\": \"${VERSION}\", \"changed_files\": \"${CHANGED_LIST}\", \"diff_summary\": \"${DIFF_SUMMARY}\"}}")
+
+          if [ "$HTTP_STATUS" = "204" ]; then
+            echo "Dispatched schema-changed to unified-trading-pm"
+          else
+            echo "WARNING: HTTP $HTTP_STATUS dispatching schema-changed (non-fatal)"
+            cat /tmp/schema_dispatch_response.json 2>/dev/null || true
+          fi
+
       # ── TELEGRAM NOTIFY ─────────────────────────────────────────────────────
       - name: Notify Telegram
         if: always()

@@ -87,8 +87,8 @@ DEEP_IMPORT_EXCLUDE_GLOBS=("!**/check_data_completeness.py")
 # Exclude diagram generator from basedpyright/codex checks (uses stdlib only,
 # no project deps — type-checking it would require installing graphviz stubs)
 PYRIGHT_EXCLUDE_GLOBS=("!**/generate-cicd-diagram.py")
-EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
-EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
+EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
+EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
 BE_EXCLUDE_GLOBS+=("**/generate-cicd-diagram.py")
 

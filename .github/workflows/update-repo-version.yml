@@ -374,6 +374,7 @@ jobs:
     needs: [update-manifest, notify]
     if: always() && needs.update-manifest.outputs.skip != 'true'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: ${{ needs.update-manifest.outputs.repo || 'unified-trading-pm' }}
       workflow_name: ${{ github.workflow }}

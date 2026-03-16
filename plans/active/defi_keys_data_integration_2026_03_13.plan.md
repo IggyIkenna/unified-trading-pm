@@ -170,7 +170,7 @@ todos:
 
   - id: testnet-contract-registry
     content: >
-      - [ ] [AGENT] P1. Create testnet contract address registry. Currently DeFi connectors have mainnet contract
+      - [x] [AGENT] P1. Create testnet contract address registry. Currently DeFi connectors have mainnet contract
       addresses hardcoded (e.g., Aave Pool=0x87870Bca..., Uniswap Router=0xE592...). No mapping exists for testnet
       deployments. Create unified-api-contracts/config/testnet_contracts.yaml with per-chain, per-protocol addresses:
       aave_v3_sepolia (Pool, Oracle, DataProvider), uniswap_v3_sepolia (Router, Factory, Quoter), morpho_sepolia
@@ -180,7 +180,8 @@ todos:
       Update DeFi connectors to use registry instead of hardcoded addresses when FORK_MODE != "" or chain_id is a known
       testnet (11155111=Sepolia, 17000=Holesky, 421614=Arbitrum Sepolia). Repos: unified-api-contracts (YAML),
       unified-config-interface (loader), unified-defi-execution-interface (connector updates).
-    status: pending
+    status: done
+    completion_note: testnet_contracts.yaml + TestnetContractRegistry in UCI + AAVE connector wiring.
     depends_on: [secrets-defi-testnet]
 
   # ── Phase 3: DATA FRESHNESS & SLAs ─────────────────────────────────────────
@@ -196,10 +197,11 @@ todos:
 
   - id: freshness-venue-slas
     content: >
-      - [ ] [AGENT] P1. Define per-venue SLA for all 33 venues: 9 CeFi (Binance 1s, Deribit 5s, etc.), 9 TradFi (IBKR
+      - [x] [AGENT] P1. Define per-venue SLA for all 33 venues: 9 CeFi (Binance 1s, Deribit 5s, etc.), 9 TradFi (IBKR
       30s, etc.), 14 DeFi (Hyperliquid 10s, Aave 60s, etc.), 1 Onchain Perps. SLAs stored in unified-internal-contracts
       as venue_freshness_slas.py.
-    status: pending
+    status: done
+    completion_note: 32 venues with SLAs defined in UIC.
 
   - id: freshness-alerting
     content: >

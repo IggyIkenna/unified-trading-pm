@@ -103,6 +103,7 @@ jobs:
     needs: [check-stale-lock, notify]
     if: always() && needs.check-stale-lock.outputs.stale == 'true'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}

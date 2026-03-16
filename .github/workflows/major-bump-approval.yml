@@ -210,6 +210,7 @@ jobs:
     needs: [handle-approval, notify]
     if: always() && needs.handle-approval.result == 'success'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}

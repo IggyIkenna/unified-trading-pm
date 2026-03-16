@@ -715,6 +715,7 @@ jobs:
     needs: [resolve-conflict, notify-result-build, notify-result]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name:
         ${{ needs.resolve-conflict.outputs.repo_name || github.event.client_payload.repo_name || inputs.repo_name }}

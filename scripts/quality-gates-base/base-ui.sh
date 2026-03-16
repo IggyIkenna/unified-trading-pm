@@ -114,6 +114,10 @@ for arg in "$@"; do
   esac
 done
 
+# ── SERVICE_NAME (required by version-alignment-gate.sh) ─────────────────────
+# UI repos don't have PACKAGE_NAME — derive from the git directory name.
+SERVICE_NAME="${SERVICE_NAME:-$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$PROJECT_ROOT")}"
+
 # ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
 _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
 [[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"

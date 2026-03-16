@@ -73,8 +73,9 @@ todos:
     status: done
   - id: p1-vcr-cassettes
     content: |
-      - [ ] [AGENT] P1. Record 4 pending VCR cassettes (polymarket gamma_events, gamma_tags, prices_history; coinbase products). Update cassette_status from PENDING to RECORDED.
-    status: pending
+      - [x] [AGENT] P1. Record 4 pending VCR cassettes (polymarket gamma_events, gamma_tags, prices_history; coinbase products). Update cassette_status from PENDING to RECORDED.
+    status: done
+    completion_note: Coinbase Exchange cassette created; Polymarket cassettes pre-existing and RECORDED.
   - id: p1-btts-cassette
     content: |
       - [x] [AGENT] P2. Add BTTS mock cassette for odds_api: external/odds_api/mocks/btts_soccer_epl_cassette.json with realistic Yes/No outcomes.
@@ -87,8 +88,11 @@ todos:
     completion_note: test_registry_completeness.py + test_registry_completeness_p1.py created (55+ tests).
   - id: p1-btts-field-mapping
     content: |
-      - [ ] [AGENT] P2. Add dedicated BTTS field mapping in market-tick-data-service (replace H2H fallback). Add btts_yes_odds, btts_no_odds fields.
-    status: pending
+      - [x] [AGENT] P2. Add dedicated BTTS field mapping in market-tick-data-service (replace H2H fallback). Add btts_yes_odds, btts_no_odds fields.
+    status: done
+    completion_note:
+      odds_compat bridge for BTTS added in unified-sports-execution-interface; market-tick-data-service already had
+      _BTTS_FIELDS.
   - id: p2-enum-consolidation-uac
     content: |
       - [x] [AGENT] P0. Ensure UAC InstrumentType is superset of UCI InstrumentType (instrument.py lines 67-94). Add PERP as deprecated alias. Add alignment CI test.
@@ -121,8 +125,11 @@ todos:
     completion_note: Already adopted INSTRUMENT_TYPES_BY_VENUE from UAC.
   - id: p3-market-data-api-adopt
     content: |
-      - [ ] [AGENT] P2. Add unified-api-contracts to market-data-api pyproject.toml. Add venue name validation in API routes against VENUE_CATEGORY_MAP.
-    status: pending
+      - [x] [AGENT] P2. Add unified-api-contracts to market-data-api pyproject.toml. Add venue name validation in API routes against VENUE_CATEGORY_MAP.
+    status: done
+    completion_note:
+      UAC already in pyproject.toml. orderbook.py imports VENUE_CATEGORY_MAP, validates venue names via
+      is_known_venue(). /venues and /venues/{venue}/validate endpoints added. Unit + integration tests exist.
   - id: p3-umi-adopt-registry
     content: |
       - [x] [AGENT] P1. UMI sports/registry.py: keep _ADAPTER_PATHS but validate keys against UAC BETTING_SPORTS_VENUES at import time.
@@ -140,16 +147,31 @@ todos:
     completion_note: normalize_sports_order already uses BetSide enum.
   - id: p4-usri-scope
     content: |
-      - [ ] [AGENT] P2. Clarify USRI scope: add UAC sports type re-exports in USRI __init__.py.
-    status: pending
+      - [x] [AGENT] P2. Clarify USRI scope: add UAC sports type re-exports in USRI __init__.py.
+    status: done
+    completion_note:
+      USRI __init__.py already re-exports 35 UAC sports types including OddsType, BetSide, CommissionModel,
+      BetExecution, BetOrder, BettingSignal, CanonicalBookmakerMarket, CLVRecord, LiveMatchState, LiveOddsUpdate, etc.
+      Unit tests verify importability; integration tests verify identity with UAC originals.
   - id: p4-provider-versions-cleanup
     content: |
-      - [ ] [AGENT] P2. Audit 53 yellow providers in provider_api_versions.yaml. If schemas+cassettes exist -> green. If schemas but no cassette -> pending_cassette. If no schemas -> dormant.
-    status: pending
+      - [x] [AGENT] P2. Audit 53 yellow providers in provider_api_versions.yaml. If schemas+cassettes exist -> green. If schemas but no cassette -> pending_cassette. If no schemas -> dormant.
+    status: done
+    completion_note:
+      28 yellow providers remain (others already promoted to green by earlier work). All 28 have schemas.py but no VCR
+      cassettes -- correctly classified as yellow with cassette_status=pending. 3 dormant providers (macro, onchain,
+      sentiment) have no schemas.py -- correctly dormant. No providers qualify for promotion to green (none have
+      recorded cassettes). Test suite in test_registry_completeness_p2.py validates YAML structure, status values, and
+      consistency rules.
   - id: p4-sports-aggregator-classification
     content: |
-      - [ ] [AGENT] P2. Add SportsAggregatorType StrEnum and VENUE_AGGREGATOR_TYPE mapping in venue_constants.py: DIRECT_EXECUTION, ODDS_AGGREGATOR, EXECUTION_AGGREGATOR, POSITION_AGGREGATOR.
-    status: pending
+      - [x] [AGENT] P2. Add SportsAggregatorType StrEnum and VENUE_AGGREGATOR_TYPE mapping in venue_constants.py: DIRECT_EXECUTION, ODDS_AGGREGATOR, EXECUTION_AGGREGATOR, POSITION_AGGREGATOR.
+    status: done
+    completion_note:
+      SportsAggregatorType StrEnum exists in _sports_venue_constants.py with all 4 members. VENUE_AGGREGATOR_TYPE maps
+      odds aggregators (odds_api, opticodds, oddsjam, sharpapi, metabet, odds_engine) and direct execution venues
+      (exchanges, bookmaker APIs, prediction markets). Exported from registry/__init__.py. Tests in
+      test_registry_completeness_p2.py verify enum membership, values, and mapping coverage.
 isProject: false
 ---
 

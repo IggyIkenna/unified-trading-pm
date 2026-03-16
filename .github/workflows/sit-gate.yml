@@ -169,6 +169,7 @@ jobs:
     needs: [lock-staging, notify]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}

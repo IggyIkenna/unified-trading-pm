@@ -915,6 +915,7 @@ jobs:
     needs: [route-build]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: ${{ needs.route-build.outputs.repo || 'unknown' }}
       workflow_name: ${{ github.workflow }}

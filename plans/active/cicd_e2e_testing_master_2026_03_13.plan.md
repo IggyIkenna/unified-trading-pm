@@ -252,18 +252,21 @@ todos:
     status: pending
   - id: audit-implement-agent-core
     content: |
-      - [ ] [AGENT] P1. Create system_integration_tests/audit/agent.py with AuditResolutionAgent class. Typed AuditResult/AuditReport dataclasses. Runs 28-section audit prompt against each repo, collects typed results. Entry point for programmatic audit.
-    status: pending
+      - [x] [AGENT] P1. Create system_integration_tests/audit/agent.py with AuditResolutionAgent class. Typed AuditResult/AuditReport dataclasses. Runs 28-section audit prompt against each repo, collects typed results. Entry point for programmatic audit.
+    status: done
+    completion_note: AuditResolutionAgent class implemented in system-integration-tests.
   - id: audit-implement-repo-discovery
     content: |
-      - [ ] [AGENT] P1. Create system_integration_tests/audit/repo_manager.py with RepoContext TypedDict and shallow-clone logic. Reads workspace-manifest.json, clones repos on demand, caches locally.
-    status: pending
+      - [x] [AGENT] P1. Create system_integration_tests/audit/repo_manager.py with RepoContext TypedDict and shallow-clone logic. Reads workspace-manifest.json, clones repos on demand, caches locally.
+    status: done
+    completion_note: RepoContext + discover_repos() implemented in system-integration-tests.
     depends_on:
       - audit-implement-agent-core
   - id: audit-implement-section-checks
     content: |
-      - [ ] [AGENT] P1. Create system_integration_tests/audit/checks/ directory with typed check functions: check_code_quality.py, check_security.py, check_testing.py, check_observability.py, etc. Each returns AuditResult with pass/fail/warn and evidence.
-    status: pending
+      - [x] [AGENT] P1. Create system_integration_tests/audit/checks/ directory with typed check functions: check_code_quality.py, check_security.py, check_testing.py, check_observability.py, etc. Each returns AuditResult with pass/fail/warn and evidence.
+    status: done
+    completion_note: 4 check modules created in system-integration-tests/audit/checks/.
     depends_on:
       - audit-implement-agent-core
   - id: audit-implement-pytest-entry

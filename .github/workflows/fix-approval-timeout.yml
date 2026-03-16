@@ -1,0 +1,265 @@
+name: Fix Approval Timeout
+
+# Checks for stale downstream-fix PRs/Issues with label 'breaking-fix-pending'
+# and sends Telegram escalation alerts at 4h (WARNING) and 24h (CRITICAL).
+
+on:
+  schedule:
+    - cron: "0 */2 * * *" # Every 2 hours
+  workflow_dispatch: {}
+
+concurrency:
+  group: fix-approval-timeout
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check-stale-fixes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      has_alerts: ${{ steps.scan.outputs.has_alerts }}
+    steps:
+      - name: Scan for stale breaking-fix-pending issues
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set -euo pipefail
+
+          echo "=== Fix Approval Timeout Check ==="
+
+          # ── Counters for summary ──
+          TOTAL=0
+          WARNED_4H=0
+          CRITICAL_24H=0
+
+          # ── Helper: send Telegram message ──
+          send_telegram() {
+            local MSG="$1"
+            local SEVERITY="$2"
+
+            if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+              echo "Telegram not configured — skipping notification" >&2
+              return 0
+            fi
+
+            local EMOJI=""
+            case "$SEVERITY" in
+              CRITICAL) EMOJI="🚨" ;;
+              WARNING)  EMOJI="⚠️" ;;
+              *)        EMOJI="ℹ️" ;;
+            esac
+
+            local TEXT="${EMOJI} <b>${SEVERITY}</b> — Fix Approval Timeout%0A%0A${MSG}"
+
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${TEXT}" \
+              -d parse_mode="HTML" || echo "000")
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "  Telegram sent (HTTP $HTTP_CODE)"
+            else
+              echo "  Telegram send failed (HTTP $HTTP_CODE)" >&2
+            fi
+          }
+
+          # ── Helper: check if issue already has a dedup comment ──
+          has_escalation_comment() {
+            local REPO="$1"
+            local ISSUE_NUMBER="$2"
+            local MARKER="$3"
+
+            COMMENTS=$(gh api "repos/${REPO}/issues/${ISSUE_NUMBER}/comments" \
+              --jq ".[].body" 2>/dev/null || echo "")
+
+            if echo "$COMMENTS" | grep -qF "$MARKER"; then
+              return 0  # already has the comment
+            else
+              return 1  # no matching comment
+            fi
+          }
+
+          # ── Helper: add escalation comment to issue ──
+          add_escalation_comment() {
+            local REPO="$1"
+            local ISSUE_NUMBER="$2"
+            local BODY="$3"
+
+            gh api "repos/${REPO}/issues/${ISSUE_NUMBER}/comments" \
+              -f body="$BODY" \
+              --silent 2>/dev/null || echo "  Failed to add comment to ${REPO}#${ISSUE_NUMBER}" >&2
+          }
+
+          # ── Helper: check if issue has a /approve comment ──
+          has_approve_comment() {
+            local REPO="$1"
+            local ISSUE_NUMBER="$2"
+
+            COMMENTS=$(gh api "repos/${REPO}/issues/${ISSUE_NUMBER}/comments" \
+              --jq ".[].body" 2>/dev/null || echo "")
+
+            if echo "$COMMENTS" | grep -qE "^/approve"; then
+              return 0
+            else
+              return 1
+            fi
+          }
+
+          # ── Search for all open issues with breaking-fix-pending label ──
+          echo "Searching for open issues with label 'breaking-fix-pending'..."
+
+          ISSUES_JSON=$(gh search issues \
+            --label "breaking-fix-pending" \
+            --state open \
+            --owner "${{ github.repository_owner }}" \
+            --json repository,number,title,createdAt,url \
+            --limit 100 2>/dev/null || echo "[]")
+
+          ISSUE_COUNT=$(echo "$ISSUES_JSON" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          print(len(data))
+          " 2>/dev/null || echo "0")
+
+          echo "Found $ISSUE_COUNT open breaking-fix-pending issues"
+
+          if [ "$ISSUE_COUNT" = "0" ]; then
+            echo "No pending issues — exiting silently"
+            echo "has_alerts=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # ── Process each issue ──
+          echo "$ISSUES_JSON" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for item in data:
+              repo_name = item['repository']['nameWithOwner']
+              number = item['number']
+              title = item['title']
+              created = item['createdAt']
+              url = item['url']
+              print(f'{repo_name}|{number}|{title}|{created}|{url}')
+          " | while IFS='|' read -r REPO ISSUE_NUM TITLE CREATED_AT ISSUE_URL; do
+            TOTAL=$((TOTAL + 1))
+            echo ""
+            echo "--- Issue: ${REPO}#${ISSUE_NUM} ---"
+            echo "  Title: ${TITLE}"
+            echo "  Created: ${CREATED_AT}"
+            echo "  URL: ${ISSUE_URL}"
+
+            # Calculate age in hours
+            CREATED_EPOCH=$(date -d "$CREATED_AT" +%s 2>/dev/null || \
+              date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CREATED_AT" +%s 2>/dev/null || echo "0")
+            NOW_EPOCH=$(date +%s)
+            AGE_SECONDS=$((NOW_EPOCH - CREATED_EPOCH))
+            AGE_HOURS=$((AGE_SECONDS / 3600))
+            echo "  Age: ${AGE_HOURS}h"
+
+            # Check if /approve has been posted
+            if has_approve_comment "$REPO" "$ISSUE_NUM"; then
+              echo "  /approve comment found — skipping"
+              continue
+            fi
+
+            # ── CRITICAL: 24h threshold ──
+            if [ "$AGE_HOURS" -ge 24 ]; then
+              CRITICAL_MARKER="CRITICAL: 24h timeout reached"
+
+              if has_escalation_comment "$REPO" "$ISSUE_NUM" "$CRITICAL_MARKER"; then
+                echo "  CRITICAL escalation already sent — skipping"
+              else
+                echo "  CRITICAL: 24h timeout — escalating"
+                CRITICAL_24H=$((CRITICAL_24H + 1))
+
+                # Extract short repo name for message
+                SHORT_REPO=$(echo "$REPO" | cut -d'/' -f2)
+
+                send_telegram "CRITICAL 24h timeout: ${SHORT_REPO} breaking fix awaits human intervention. Issue: ${ISSUE_URL}" "CRITICAL"
+                add_escalation_comment "$REPO" "$ISSUE_NUM" "$CRITICAL_MARKER"
+              fi
+
+            # ── WARNING: 4h threshold ──
+            elif [ "$AGE_HOURS" -ge 4 ]; then
+              WARNING_MARKER="Escalation: 4h timeout reached"
+
+              if has_escalation_comment "$REPO" "$ISSUE_NUM" "$WARNING_MARKER"; then
+                echo "  4h escalation already sent — skipping"
+              else
+                echo "  WARNING: 4h timeout — escalating"
+                WARNED_4H=$((WARNED_4H + 1))
+
+                SHORT_REPO=$(echo "$REPO" | cut -d'/' -f2)
+
+                send_telegram "4h timeout: ${SHORT_REPO} breaking fix PR awaits approval. Issue: ${ISSUE_URL}" "WARNING"
+                add_escalation_comment "$REPO" "$ISSUE_NUM" "$WARNING_MARKER"
+              fi
+
+            else
+              echo "  Age ${AGE_HOURS}h < 4h — no action needed"
+            fi
+          done
+
+          # ── Subshell counter workaround ──
+          # The while loop runs in a subshell (piped from python3), so counter
+          # variables don't propagate. Re-count from the issues JSON + comments.
+          TOTAL="$ISSUE_COUNT"
+
+          # Re-scan to get accurate warned/critical counts for the summary
+          WARNED_4H=0
+          CRITICAL_24H=0
+
+          echo "$ISSUES_JSON" | python3 -c "
+          import json, sys
+          from datetime import datetime, timezone, timedelta
+
+          data = json.load(sys.stdin)
+          now = datetime.now(timezone.utc)
+          warned = 0
+          critical = 0
+
+          for item in data:
+              created = datetime.fromisoformat(item['createdAt'].replace('Z', '+00:00'))
+              age = now - created
+              age_hours = age.total_seconds() / 3600
+
+              if age_hours >= 24:
+                  critical += 1
+              elif age_hours >= 4:
+                  warned += 1
+
+          print(f'{warned}|{critical}')
+          " | IFS='|' read -r WARNED_4H CRITICAL_24H
+
+          echo ""
+          echo "=== Summary: total=${TOTAL}, warned_4h=${WARNED_4H}, critical_24h=${CRITICAL_24H} ==="
+
+          # ── Summary Telegram (only if there are pending issues) ──
+          if [ "$TOTAL" -gt 0 ]; then
+            send_telegram "Fix approval check: ${TOTAL} pending, ${WARNED_4H} at 4h, ${CRITICAL_24H} at 24h" "INFO"
+            echo "has_alerts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_alerts=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  persist:
+    name: Persist — Fix Approval Timeout Event
+    needs: [check-stale-fixes]
+    if: always() && needs.check-stale-fixes.outputs.has_alerts == 'true'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: "failure"
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "fix-approval-timeout-detected"}'

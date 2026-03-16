@@ -135,6 +135,7 @@ jobs:
     needs: [check-orchestrator, notify]
     if: always() && needs.check-orchestrator.result == 'failure'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}

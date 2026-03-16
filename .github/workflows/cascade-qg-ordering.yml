@@ -1,0 +1,426 @@
+name: Cascade QG Ordering
+
+# Orchestrates topological quality-gate cascade when a breaking change hits staging.
+# Runs QG on all transitively-affected repos in topological level order (parallel within
+# each level, sequential across levels). Fails fast: if any repo in a level fails,
+# all subsequent levels are invalidated and the cascade is aborted.
+#
+# Trigger sources:
+#   - repository_dispatch (cascade-qg-trigger) from update-repo-version on breaking changes
+#   - workflow_dispatch for manual testing / dry-run
+
+on:
+  repository_dispatch:
+    types: [cascade-qg-trigger]
+  workflow_dispatch:
+    inputs:
+      source_repo:
+        description: "Repo that triggered the breaking change"
+        required: true
+      source_version:
+        description: "New version of the source repo"
+        required: true
+      dry_run:
+        description: "Log actions without dispatching"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Only one cascade at a time — serialise, never cancel a running cascade.
+concurrency:
+  group: cascade-qg-ordering
+  cancel-in-progress: false
+
+jobs:
+  cascade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    outputs:
+      total_affected: ${{ steps.run.outputs.total_affected }}
+      levels_processed: ${{ steps.run.outputs.levels_processed }}
+      result: ${{ steps.run.outputs.result }}
+      failed_repos: ${{ steps.run.outputs.failed_repos }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Run topological cascade
+        id: run
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json, os, subprocess, sys, time
+
+          # ── Load inputs ──────────────────────────────────────────────────────
+          # repository_dispatch payload takes priority, fall back to workflow_dispatch inputs
+          dispatch_payload = os.environ.get("DISPATCH_PAYLOAD", "")
+          try:
+              payload = json.loads(dispatch_payload) if dispatch_payload else {}
+          except json.JSONDecodeError:
+              payload = {}
+
+          source_repo = payload.get("source_repo") or "${{ github.event.client_payload.source_repo }}" or "${{ inputs.source_repo }}"
+          source_version = payload.get("source_version") or "${{ github.event.client_payload.source_version }}" or "${{ inputs.source_version }}"
+          dry_run_str = payload.get("dry_run") or "${{ github.event.client_payload.dry_run }}" or "${{ inputs.dry_run }}"
+          dry_run = dry_run_str in ("true", "True", "1")
+
+          OWNER = os.environ["OWNER"]
+          GH_TOKEN = os.environ.get("GH_TOKEN", "")
+
+          if not source_repo or source_repo == "":
+              print("FATAL: source_repo not provided")
+              sys.exit(1)
+          if not source_version or source_version == "":
+              print("FATAL: source_version not provided")
+              sys.exit(1)
+
+          print(f"Cascade QG triggered: source_repo={source_repo} version={source_version} dry_run={dry_run}")
+
+          # ── Load manifest ────────────────────────────────────────────────────
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          repositories = manifest.get("repositories", {})
+          topo_levels = manifest.get("topologicalOrder", {}).get("levels", [])
+
+          # ── Build dependency graph (repo -> list of deps) ────────────────────
+          dep_graph: dict[str, list[str]] = {}
+          for repo_name, repo_data in repositories.items():
+              deps: list[str] = []
+              for dep in repo_data.get("dependencies", []):
+                  dep_name = dep.get("name") if isinstance(dep, dict) else dep
+                  if dep_name:
+                      deps.append(dep_name)
+              dep_graph[repo_name] = deps
+
+          # ── Build reverse graph (repo -> list of dependents) ─────────────────
+          reverse_graph: dict[str, list[str]] = {}
+          for repo_name, deps in dep_graph.items():
+              for dep_name in deps:
+                  reverse_graph.setdefault(dep_name, []).append(repo_name)
+
+          # ── Find all transitively affected repos (forward walk) ──────────────
+          # Special case: PM or codex affect ALL repos (cascade-pm-all-tiers)
+          pm_all_tiers = source_repo in ("unified-trading-pm", "unified-trading-codex")
+
+          if pm_all_tiers:
+              # All repos except the source itself are affected
+              affected = set(repositories.keys()) - {source_repo}
+              print(f"PM/Codex cascade: ALL {len(affected)} repos affected")
+          else:
+              affected: set[str] = set()
+              frontier = [source_repo]
+              while frontier:
+                  current = frontier.pop()
+                  for dependent in reverse_graph.get(current, []):
+                      if dependent not in affected:
+                          affected.add(dependent)
+                          frontier.append(dependent)
+              print(f"Transitive dependents of {source_repo}: {len(affected)} repos")
+
+          if not affected:
+              print("No affected repos found. Nothing to cascade.")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
+                  gh.write("total_affected=0\n")
+                  gh.write("levels_processed=0\n")
+                  gh.write("result=success\n")
+                  gh.write("failed_repos=\n")
+              sys.exit(0)
+
+          # ── Build repo -> level mapping ──────────────────────────────────────
+          repo_to_level: dict[str, int] = {}
+          for level_entry in topo_levels:
+              level_num = level_entry["level"]
+              for repo_name in level_entry.get("repos", []):
+                  repo_to_level[repo_name] = level_num
+
+          # ── Group affected repos by topological level ────────────────────────
+          levels_affected: dict[int, list[str]] = {}
+          for repo_name in affected:
+              level = repo_to_level.get(repo_name)
+              if level is not None:
+                  levels_affected.setdefault(level, []).append(repo_name)
+              else:
+                  print(f"  WARNING: {repo_name} not found in topologicalOrder — skipping")
+
+          sorted_levels = sorted(levels_affected.keys())
+          total_affected = sum(len(repos) for repos in levels_affected.values())
+
+          print(f"\nCascade plan: {total_affected} repos across {len(sorted_levels)} levels")
+          for lvl in sorted_levels:
+              repos = levels_affected[lvl]
+              print(f"  Level {lvl}: {repos}")
+
+          # ── Helper: dispatch quality-gate-run to a repo ──────────────────────
+          def dispatch_qg(repo_name: str) -> bool:
+              """Dispatch quality-gate-run event. Returns True on success."""
+              if dry_run:
+                  print(f"  [DRY RUN] Would dispatch quality-gate-run to {repo_name}")
+                  return True
+
+              cmd = [
+                  "gh", "api",
+                  f"repos/{OWNER}/{repo_name}/dispatches",
+                  "-X", "POST",
+                  "-f", "event_type=quality-gate-run",
+                  "-f", f"client_payload[source_repo]={source_repo}",
+                  "-f", f"client_payload[source_version]={source_version}",
+                  "-f", "client_payload[triggered_by]=cascade-qg-ordering",
+              ]
+              result = subprocess.run(cmd, capture_output=True, text=True)
+              if result.returncode == 0:
+                  print(f"  Dispatched quality-gate-run to {repo_name}")
+                  return True
+              else:
+                  print(f"  WARNING: Failed to dispatch to {repo_name}: {result.stderr.strip()}")
+                  return False
+
+          # ── Helper: poll ci_status for a set of repos ────────────────────────
+          POLL_INTERVAL = 30  # seconds
+          LEVEL_TIMEOUT = 15 * 60  # 15 minutes per level
+
+          PASSING_STATUSES = {"FEATURE_GREEN", "STAGING_GREEN", "LOCAL_PASS", "VALIDATED"}
+          FAILING_STATUSES = {"FAILING", "BROKEN"}
+
+          def poll_level(repos: list[str]) -> tuple[bool, list[str]]:
+              """
+              Poll ci_status for all repos in a level until all pass, any fail, or timeout.
+              Returns (success, list_of_failed_repos).
+              """
+              if dry_run:
+                  print(f"  [DRY RUN] Would poll {len(repos)} repos for up to {LEVEL_TIMEOUT}s")
+                  return True, []
+
+              start = time.time()
+              while time.time() - start < LEVEL_TIMEOUT:
+                  # Re-read manifest from disk (QG workflows update it via update-repo-version)
+                  # Use git pull to get latest manifest changes from remote
+                  subprocess.run(
+                      ["git", "pull", "--ff-only", "origin", "main"],
+                      capture_output=True, text=True,
+                  )
+
+                  with open("workspace-manifest.json") as f:
+                      current_manifest = json.load(f)
+
+                  current_repos = current_manifest.get("repositories", {})
+
+                  passed: list[str] = []
+                  failed: list[str] = []
+                  pending: list[str] = []
+
+                  for repo_name in repos:
+                      ci_status = current_repos.get(repo_name, {}).get("ci_status", "NOT_CONFIGURED")
+                      if ci_status in PASSING_STATUSES:
+                          passed.append(repo_name)
+                      elif ci_status in FAILING_STATUSES:
+                          failed.append(repo_name)
+                      else:
+                          pending.append(repo_name)
+
+                  elapsed = int(time.time() - start)
+                  print(f"  [{elapsed}s] passed={len(passed)} failed={len(failed)} pending={len(pending)}")
+
+                  if failed:
+                      return False, failed
+
+                  if len(passed) == len(repos):
+                      return True, []
+
+                  time.sleep(POLL_INTERVAL)
+
+              # Timeout: treat all non-passed repos as failed
+              timed_out = [r for r in repos if r not in passed]
+              print(f"  TIMEOUT: {len(timed_out)} repos did not reach green: {timed_out}")
+              return False, timed_out
+
+          # ── Helper: invalidate downstream repos ──────────────────────────────
+          def invalidate_downstream(remaining_levels: list[int]) -> int:
+              """
+              Set ci_status=STAGING_PENDING for all repos in remaining levels.
+              Returns count of invalidated repos.
+              """
+              if dry_run:
+                  count = sum(len(levels_affected[lvl]) for lvl in remaining_levels)
+                  print(f"  [DRY RUN] Would invalidate {count} repos in levels {remaining_levels}")
+                  return count
+
+              with open("workspace-manifest.json") as f:
+                  m = json.load(f)
+
+              count = 0
+              repos_section = m.get("repositories", {})
+              for lvl in remaining_levels:
+                  for repo_name in levels_affected[lvl]:
+                      if repo_name in repos_section:
+                          repos_section[repo_name]["ci_status"] = "STAGING_PENDING"
+                          repos_section[repo_name]["cascade_invalidated_by"] = f"{source_repo}={source_version}"
+                          count += 1
+
+              tmp_path = "workspace-manifest.json.tmp"
+              with open(tmp_path, "w") as f:
+                  json.dump(m, f, indent=2, ensure_ascii=False)
+                  f.write("\n")
+              os.replace(tmp_path, "workspace-manifest.json")
+
+              return count
+
+          # ── Main cascade loop ────────────────────────────────────────────────
+          levels_processed = 0
+          cascade_result = "success"
+          cascade_failed_repos: list[str] = []
+
+          for idx, level_num in enumerate(sorted_levels):
+              repos = levels_affected[level_num]
+              print(f"\n{'='*60}")
+              print(f"Level {level_num}: dispatching QG to {len(repos)} repos: {repos}")
+              print(f"{'='*60}")
+
+              # Dispatch to all repos in this level (parallel execution)
+              dispatch_failures: list[str] = []
+              for repo_name in repos:
+                  if not dispatch_qg(repo_name):
+                      dispatch_failures.append(repo_name)
+
+              if dispatch_failures:
+                  print(f"  WARNING: Failed to dispatch to {len(dispatch_failures)} repos: {dispatch_failures}")
+                  # Treat dispatch failures as level failures
+                  remaining = sorted_levels[idx + 1:]
+                  invalidated = invalidate_downstream(remaining)
+                  cascade_result = "failure"
+                  cascade_failed_repos = dispatch_failures
+                  print(f"  Cascade ABORTED at level {level_num}. {invalidated} downstream repos invalidated.")
+                  break
+
+              # Poll for completion
+              print(f"  Polling for level {level_num} completion (timeout: {LEVEL_TIMEOUT}s)...")
+              success, failed_repos = poll_level(repos)
+              levels_processed += 1
+
+              if not success:
+                  remaining = sorted_levels[idx + 1:]
+                  invalidated = invalidate_downstream(remaining)
+                  cascade_result = "failure"
+                  cascade_failed_repos = failed_repos
+                  print(f"\n  Cascade FAILED at level {level_num}: {failed_repos}")
+                  print(f"  {invalidated} repos in levels {remaining} invalidated (ci_status=STAGING_PENDING)")
+
+                  # Commit invalidation changes
+                  if not dry_run:
+                      subprocess.run(["git", "add", "workspace-manifest.json"], check=False)
+                      subprocess.run(
+                          ["git", "commit", "-m",
+                           f"chore(manifest): cascade QG failed at level {level_num} — "
+                           f"{invalidated} downstream repos invalidated [skip ci]"],
+                          check=False,
+                      )
+                      subprocess.run(["git", "push"], check=False)
+                  break
+              else:
+                  print(f"  Level {level_num}: ALL {len(repos)} repos passed QG")
+          else:
+              # All levels passed (loop completed without break)
+              cascade_result = "success"
+              print(f"\nCascade COMPLETE: all {total_affected} repos across {len(sorted_levels)} levels passed QG")
+
+          # ── Write outputs ────────────────────────────────────────────────────
+          with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
+              gh.write(f"total_affected={total_affected}\n")
+              gh.write(f"levels_processed={levels_processed}\n")
+              gh.write(f"result={cascade_result}\n")
+              gh.write(f"failed_repos={','.join(cascade_failed_repos)}\n")
+
+          if cascade_result == "failure":
+              sys.exit(1)
+
+          PYEOF
+
+      - name: Log manifest mutation (audit trail)
+        if: always()
+        run: |
+          bash scripts/agents/log-manifest-mutation.sh \
+            "cascade-qg-ordering" \
+            "source=${{ steps.run.outputs.result || 'unknown' }} affected=${{ steps.run.outputs.total_affected || '0' }} levels=${{ steps.run.outputs.levels_processed || '0' }}"
+
+  # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
+
+  notify-success:
+    name: Telegram — Cascade QG Success
+    needs: [cascade]
+    if: needs.cascade.result == 'success' && needs.cascade.outputs.total_affected != '0'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cascade QG PASSED | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }} v${{
+        github.event.client_payload.source_version || inputs.source_version }} | ${{
+        needs.cascade.outputs.total_affected }} repos across ${{ needs.cascade.outputs.levels_processed }} levels — all
+        green."
+      severity: "INFO"
+      conclusion: "success"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-failure:
+    name: Telegram — Cascade QG Failure
+    needs: [cascade]
+    if: always() && needs.cascade.result == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cascade QG FAILED | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }} v${{
+        github.event.client_payload.source_version || inputs.source_version }} | Failed repos: ${{
+        needs.cascade.outputs.failed_repos }} | Processed ${{ needs.cascade.outputs.levels_processed }} of planned
+        levels. Downstream repos invalidated (ci_status=STAGING_PENDING)."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-no-affected:
+    name: Telegram — No Affected Repos
+    needs: [cascade]
+    if: needs.cascade.result == 'success' && needs.cascade.outputs.total_affected == '0'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Cascade QG — no affected repos | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }}
+        v${{ github.event.client_payload.source_version || inputs.source_version }} | No downstream dependents found.
+        Nothing to cascade."
+      severity: "INFO"
+      conclusion: "success"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Cascade QG Event
+    needs: [cascade, notify-success, notify-failure, notify-no-affected]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.cascade.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json:
+        '{"source_repo": "${{ github.event.client_payload.source_repo || inputs.source_repo }}", "source_version": "${{
+        github.event.client_payload.source_version || inputs.source_version }}", "total_affected": "${{
+        needs.cascade.outputs.total_affected }}", "levels_processed": "${{ needs.cascade.outputs.levels_processed }}",
+        "failed_repos": "${{ needs.cascade.outputs.failed_repos }}"}'

@@ -283,7 +283,8 @@ class TestRealManifest:
         strategies = data["strategies"]
         # At least some strategies should have instruments
         with_instruments = [
-            s for s in strategies
+            s
+            for s in strategies
             if s.get("instruments") and isinstance(s["instruments"], list) and len(s["instruments"]) > 0
         ]
         assert len(with_instruments) > 0, "At least one strategy must have instruments"

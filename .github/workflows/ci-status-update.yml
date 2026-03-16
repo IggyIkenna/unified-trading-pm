@@ -126,6 +126,7 @@ jobs:
     needs: [update-ci-status, notify]
     if: always() && needs.update-ci-status.outputs.skip != 'true'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: ${{ github.event.client_payload.repo }}
       workflow_name: ${{ github.workflow }}

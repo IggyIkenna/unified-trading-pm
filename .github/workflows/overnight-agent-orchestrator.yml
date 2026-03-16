@@ -202,6 +202,7 @@ jobs:
     needs: [t0, t0-escalation-notify]
     if: always() && needs.t0.result == 'failure'
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}
@@ -559,6 +560,7 @@ jobs:
     needs: [t0, t1, t2, t3, notify-summary, notify-telegram]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
     with:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}

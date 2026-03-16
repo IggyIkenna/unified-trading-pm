@@ -587,7 +587,7 @@ todos:
 
   - id: p2h-reference-pricing-underlying-tracker
     content: |
-      - [ ] [AGENT] P1. Implement reference pricing / UnderlyingTracker in execution-service.
+      - [x] [AGENT] P1. Implement reference pricing / UnderlyingTracker in execution-service.
         When a strategy sends ref_underlying on an instruction, execution-service monitors that
         underlying's price and updates the order price on move > threshold.
         Key distinction: benchmark_price = measure slippage AFTER fill. ref_underlying = track
@@ -597,12 +597,13 @@ todos:
         instrument, recalculates order price using edge_offset on each move.
         For options: delta-adjusted pricing (new_price ≈ old_price + delta * underlying_change).
         Repos: execution-service (UnderlyingTracker component, order manager integration).
-    status: todo
+    status: done
+    completion_note: UnderlyingTracker implemented in execution-service with 31 tests.
     note: "PARALLEL. Critical for MM and arb strategies."
 
   - id: p2h-leader-follower-execution
     content: |
-      - [ ] [AGENT] P1. Implement leader/follower multi-leg execution in execution-service.
+      - [x] [AGENT] P1. Implement leader/follower multi-leg execution in execution-service.
         For non-atomic multi-leg trades (cross-exchange arb, spot-perp basis, calendar spreads):
         Follower = less liquid leg, execute first (passive). Leader = more liquid leg, hedge
         aggressively once follower fills.
@@ -612,12 +613,13 @@ todos:
         Strategy sends leg_group_id + leg_role on StrategyInstruction (from p2h-execution-preferences).
         Config: leader_follower_config with max_leader_slippage_bps, follower_staleness_timeout_seconds.
         Repos: execution-service (MultiLegOrchestrator, models).
-    status: todo
+    status: done
+    completion_note: MultiLegOrchestrator + MultiLegInstruction implemented in execution-service/UIC with 19 tests.
     note: "PARALLEL. Required for arb and basis strategies."
 
   - id: p2h-trigger-subscriptions
     content: |
-      - [ ] [AGENT] P1. Implement TriggerSubscription model and engine filtering.
+      - [x] [AGENT] P1. Implement TriggerSubscription model and engine filtering.
         Currently strategies get ALL features on every candle — no filtering.
         Create TriggerSubscription Pydantic model in unified-internal-contracts:
         source (str), filter (str), threshold (Decimal | None), granularity (str | None).
@@ -626,7 +628,8 @@ todos:
         invoking generate_signal(). This enables: same pub/sub topic, different strategies
         filtering differently (MM triggers on 5bp move, DeFi triggers on hourly features only).
         Repos: unified-internal-contracts (model), strategy-service (config + engine filtering).
-    status: todo
+    status: done
+    completion_note: TriggerSubscription in UIC + TriggerRouter in strategy-service with 29 tests.
     note: "PARALLEL. Enables efficient multi-strategy per instance."
 
   - id: p2h-strategy-default-templates
@@ -662,19 +665,20 @@ todos:
 
   - id: p2h-algo-venue-compatibility
     content: |
-      - [ ] [AGENT] P2. Create algo × venue compatibility registry.
+      - [x] [AGENT] P2. Create algo × venue compatibility registry.
         No machine-readable mapping of which execution algos work on which venues.
         Create algo_venue_compatibility.yaml in execution-service/config/:
         TWAP: [BINANCE, DERIBIT, HYPERLIQUID], VWAP: [BINANCE, DERIBIT], etc.
         SOR: [UNISWAPV3-ETH, CURVE-ETH, BALANCER-ETH].
         Router validates algo+venue before dispatching.
         Repos: execution-service (config YAML + router validation).
-    status: todo
+    status: done
+    completion_note: algo_venue_compatibility.yaml + instruction_constraints validation covers algo-venue compatibility.
     note: "PARALLEL. Codifies Layer 4 from execution constraint hierarchy."
 
   - id: p2h-prediction-market-venue-wiring
     content: |
-      - [ ] [AGENT] P1. Wire Polymarket and Kalshi into production VENUE_REGISTRY.
+      - [x] [AGENT] P1. Wire Polymarket and Kalshi into production VENUE_REGISTRY.
         Currently in PLANNED_VENUES, not VENUE_REGISTRY — get_adapter() can't instantiate.
         Move to VENUE_REGISTRY with adapter class references.
         Add SourceCapability declarations in UAC capability_declarations/.
@@ -685,18 +689,20 @@ todos:
         publishes classified registry to GCS.
         Repos: unified-market-interface (VENUE_REGISTRY), unified-api-contracts (capabilities),
         unified-internal-contracts (PredictionMarketUseCase), features-cross-instrument-service.
-    status: todo
+    status: done
+    completion_note: Polymarket/Kalshi moved to active VENUE_REGISTRY + PredictionMarketUseCase enum added.
     note: "PARALLEL. Activates prediction market infrastructure that's already built."
 
   - id: p2h-betfair-suspension-handling
     content: |
-      - [ ] [AGENT] P1. Add Betfair marketVersion safety and suspension event handling.
+      - [x] [AGENT] P1. Add Betfair marketVersion safety and suspension event handling.
         BetfairAdapter must: (a) pass marketVersion on all placeOrders calls,
         (b) subscribe to suspension events from Betfair Stream API,
         (c) emit MARKET_SUSPENDED / MARKET_RESUMED events via UEI,
         (d) strategy-service must handle these events (halt quoting on suspend, recalculate on resume).
         Repos: unified-sports-execution-interface (BetfairAdapter), unified-events-interface (events).
-    status: todo
+    status: done
+    completion_note: marketVersion tracking + suspension events in BetfairAdapter with 12 tests.
     note: "PARALLEL. Critical for sports market-making safety."
 
   - id: p2f-legacy-core-cleanup
@@ -778,7 +784,7 @@ todos:
 
   - id: p3-strategy-instrument-matrix
     content: |
-      - [ ] [AGENT] P1. Generate strategy-instrument validation matrix from strategy-manifest.json.
+      - [x] [AGENT] P1. Generate strategy-instrument validation matrix from strategy-manifest.json.
       Add validation to `check-strategy-maturity.py`:
       - For each strategy: verify every `venues[]` entry maps to an adapter in UMI VENUE_REGISTRY
       - For each strategy: verify every `asset_classes[]` entry maps to an InstrumentType in UAC
@@ -787,7 +793,8 @@ todos:
       - WARN if a strategy uses venues/instruments not yet in VENUE_REGISTRY or instrument definitions
       Output: matrix table showing strategy × capability coverage
       Acceptance: script runs, produces matrix, identifies gaps.
-    status: pending
+    status: done
+    completion_note: generate-strategy-instrument-matrix.py created in PM with 22 tests.
 
   # ============================================================
   # PHASE 4: CONFIG SYSTEM N10 (P1)
@@ -839,7 +846,7 @@ todos:
 
   - id: p4-config-reloader-expansion
     content: |
-      - [ ] [AGENT] P1. Add config_reloaders.py to remaining 24 services (currently only 3/27 have it):
+      - [x] [AGENT] P1. Add config_reloaders.py to remaining 24 services (currently only 3/27 have it):
       Template from `instruments-service/instruments_service/config_reloaders.py`.
       For each service: create `{service_package}/config_reloaders.py` with:
       - `start_domain_config_reloaders()` and `stop_domain_config_reloaders()`
@@ -848,7 +855,8 @@ todos:
       Priority order: risk-and-exposure-service, pnl-attribution-service, alerting-service,
       all 7 features services, then remaining services.
       Acceptance: each service QG passes after adding reloader.
-    status: pending
+    status: done
+    completion_note: 24 services now have config_reloaders.py (27/27 total).
 
   # ============================================================
   # PHASE 5: EVENTS CANONICALIZATION (P1)
