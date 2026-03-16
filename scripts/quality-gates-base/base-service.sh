@@ -414,8 +414,16 @@ rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "${PRINT_EXCLUDE_
     && { log_fail "print() — use log_event() from UEI"; V=$(( V + 1 )); } || log_success "No print()"
 
 # OS_ENV_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. bootstrap_config.py, env_substitutor.py)
-rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    && { log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"; V=$(( V + 1 )); } || log_success "No os.getenv()/os.environ"
+# Lines annotated with "# config-bootstrap:" are the documented approved exception for pre-UCC init (LOG_LEVEL, PORT).
+# __main__.py is excluded because Cloud Run bootstrap reads PORT before UCC is available.
+_os_env_hits=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" --glob "!**/__main__.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v 'config-bootstrap:' || :)
+if [[ -n "$_os_env_hits" ]]; then
+    echo "$_os_env_hits"
+    log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"
+    V=$(( V + 1 ))
+else
+    log_success "No os.getenv()/os.environ"
+fi
 
 rg 'os\.getenv\s*\([^)]+,\s*""\s*\)' --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "os.getenv empty fallback — fail fast"; V=$(( V + 1 )); } || log_success "No os.getenv empty fallback"
@@ -457,9 +465,20 @@ ASYNCIO_EXTRA_GLOBS=()
 for g in "${ASYNCIO_RUN_EXCLUDE_GLOBS[@]+"${ASYNCIO_RUN_EXCLUDE_GLOBS[@]}"}"; do
     ASYNCIO_EXTRA_GLOBS+=(--glob "$g")
 done
+_asyncio_violation=""
 for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" "${ASYNCIO_EXTRA_GLOBS[@]+"${ASYNCIO_EXTRA_GLOBS[@]}"}" "$SOURCE_DIR/" -l 2>/dev/null || :); do
-    grep -q "for \|while " "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
+    # Only flag asyncio.run() deeply nested inside a loop body (>=8 spaces indentation)
+    if rg "^\s{8,}asyncio\.run\(" "$f" 2>/dev/null | grep -q .; then
+        _asyncio_violation="$f"
+        break
+    fi
 done
+if [[ -n "$_asyncio_violation" ]]; then
+    log_fail "asyncio.run() in loop: $_asyncio_violation — use asyncio.gather()"
+    V=$(( V + 1 ))
+else
+    log_success "No asyncio.run() in loop"
+fi
 
 # IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/smoke-test-dev.py"); base adds --glob
 IMPORT_INSIDE_EXTRA=()

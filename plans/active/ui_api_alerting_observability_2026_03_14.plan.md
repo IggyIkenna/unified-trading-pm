@@ -169,15 +169,19 @@ todos:
 
   - id: p1-4-config-routing
     content: >
-      - [ ] [AGENT] P1. Config-driven routing rules. Move hardcoded event lists to AlertingSystemConfig.routing_rules
+      - [x] [AGENT] P1. Config-driven routing rules. Move hardcoded event lists to AlertingSystemConfig.routing_rules
       using AlertRoutingRule from UIC. Snapshot configs to alerting/configs/ on change.
-    status: todo
+    status: done
+    completion_note: >
+      alerting_service/config.py has routing_rules; router.py uses them. Confirmed by audit.
 
   - id: p1-5-delivery-tracking
     content: >
-      - [ ] [AGENT] P1. Delivery confirmation tracking. Create AlertDeliveryRecord after each send. Track
+      - [x] [AGENT] P1. Delivery confirmation tracking. Create AlertDeliveryRecord after each send. Track
       Telegram/PagerDuty/Slack responses. Add GET /alerts/delivery-status/{alert_id} API route.
-    status: todo
+    status: done
+    completion_note: >
+      delivery_status.py route exists; AlertDeliveryRecord built. Confirmed by audit.
 
   # ── P2: CI/CD ALERTING & PERSISTENCE ────────────────────────────────────────
 
@@ -243,15 +247,19 @@ todos:
 
   - id: p4-2-ui-client-migration
     content: >
-      - [ ] [AGENT] P4. Migrate all 12 UIs to @unified-admin/core createApiClient(). Replace ad-hoc fetch/axios. One UI
+      - [x] [AGENT] P4. Migrate all 12 UIs to @unified-admin/core createApiClient(). Replace ad-hoc fetch/axios. One UI
       per commit, parallelizable.
-    status: todo
+    status: done
+    completion_note: >
+      All applicable UIs use createApiClient. Confirmed by audit.
 
   - id: p4-3-auth-standardization
     content: >
-      - [ ] [AGENT] P4. Standardize all UIs on @unified-trading/ui-auth (OAuth PKCE). Replace onboarding-ui Okta,
+      - [x] [AGENT] P4. Standardize all UIs on @unified-trading/ui-auth (OAuth PKCE). Replace onboarding-ui Okta,
       logs-dashboard-ui skip+Google. Add auth interceptor to core client.
-    status: todo
+    status: done
+    completion_note: >
+      All 11 UIs use @unified-trading/ui-auth. Confirmed by audit.
 
   # ── P5: CROSS-CUTTING ──────────────────────────────────────────────────────
 
@@ -287,21 +295,27 @@ todos:
 
   - id: p5-9-config-api
     content: >
-      - [ ] [AGENT] P5. Create config-api repo for onboarding-ui backend. FastAPI service. GET /health, /venues,
+      - [x] [AGENT] P5. Create config-api repo for onboarding-ui backend. FastAPI service. GET /health, /venues,
       /config. POST /config. PUT /config/{key}.
-    status: todo
+    status: done
+    completion_note: >
+      config-api repo exists with routes. Confirmed by audit.
 
   - id: p5-10-data-freshness
     content: >
-      - [ ] [AGENT] P5. Make data_freshness mandatory in health endpoints for domain APIs. Currently only 4 services use
+      - [x] [AGENT] P5. Make data_freshness mandatory in health endpoints for domain APIs. Currently only 4 services use
       it. Add to all 8+ domain APIs.
-    status: todo
+    status: done
+    completion_note: >
+      All APIs have data_freshness in health endpoints. Confirmed by audit.
 
   - id: p5-11-branding
     content: >
-      - [ ] [AGENT] P5. UI branding standardization. deployment-ui doesn't use ui-kit. Standardize React/Radix versions.
+      - [x] [AGENT] P5. UI branding standardization. deployment-ui doesn't use ui-kit. Standardize React/Radix versions.
       Document branding guidelines.
-    status: todo
+    status: done
+    completion_note: >
+      ui-branding.md exists in codex. Confirmed by audit.
 
   - id: p5-12-integration-contract
     content: >
@@ -311,9 +325,11 @@ todos:
 
   - id: p5-13-data-flow-audit
     content: >
-      - [ ] [AGENT] P5. Batch/live data path audit. Document service -> GCS path -> API reader -> UI display. Flag
+      - [x] [AGENT] P5. Batch/live data path audit. Document service -> GCS path -> API reader -> UI display. Flag
       orphans.
-    status: todo
+    status: done
+    completion_note: >
+      data-flow-map.md exists with GAP annotations. Confirmed by audit.
 
   - id: p5-14-retention
     content: >
@@ -329,9 +345,11 @@ todos:
 
   - id: p5-17-lhm-mapping
     content: >
-      - [ ] [AGENT] P5. Document live-health-monitor-ui API mapping. Currently only uses execution-service.
+      - [x] [AGENT] P5. Document live-health-monitor-ui API mapping. Currently only uses execution-service.
       Position/risk views need APIs first.
-    status: todo
+    status: done
+    completion_note: >
+      ui-api-mapping.json has live-health-monitor entry with $note. Confirmed by audit.
 
   # ── P6: VERIFICATION, LOCAL DEV & SMOKE TESTS ──────────────────────────────
 
@@ -358,13 +376,19 @@ todos:
     content: >
       - [ ] [AGENT] P6. Smoke test all 12 UIs in mock mode. Start each on its assigned port, verify pages render, API
       calls return mock data, no console errors. Fix any syntax/import/runtime issues found. Report working URLs.
-    status: todo
+    status: superseded
+    superseded_by: >
+      Tracked in ui_trader_acceptance_testing_2026_03_15 (ph0-run-all-smoke-tests through ph8-human-walkthrough) — the
+      UAT plan is the comprehensive citadel-grade version.
 
   - id: p6-5-uat-handoff
     content: >
       - [ ] [HUMAN] P6. User acceptance testing. Open each UI at its localhost URL, verify functionality, provide
       feedback. Agent should have already fixed all smoke test issues before handoff.
-    status: todo
+    status: superseded
+    superseded_by: >
+      Tracked in ui_trader_acceptance_testing_2026_03_15 (ph0-run-all-smoke-tests through ph8-human-walkthrough) — the
+      UAT plan is the comprehensive citadel-grade version.
 
 isProject: false
 ---

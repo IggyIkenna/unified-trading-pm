@@ -245,6 +245,42 @@ todos:
     content: |
       - [ ] [HUMAN+AGENT] P0. Full instruments-service golden path: (1) `fix: golden path test` commit, (2) push + PR to main, (3) QG fires, (4) merge PR, (5) QG fires on push, (6) `qg-passed` dispatched to PM, (7) Cloud Build routes to `uts-prod-ikenna`, (8) `ci-status-update` dispatched, manifest updated, (9) `manifest-sync.yml` fires, codex dispatch, (10) total wall-clock < 30 min. Every Telegram alert at each stage verified.
     status: pending
+  - id: audit-implement-agent-core
+    content: |
+      - [ ] [AGENT] P1. Create system_integration_tests/audit/agent.py with AuditResolutionAgent class. Typed AuditResult/AuditReport dataclasses. Runs 28-section audit prompt against each repo, collects typed results. Entry point for programmatic audit.
+    status: pending
+  - id: audit-implement-repo-discovery
+    content: |
+      - [ ] [AGENT] P1. Create system_integration_tests/audit/repo_manager.py with RepoContext TypedDict and shallow-clone logic. Reads workspace-manifest.json, clones repos on demand, caches locally.
+    status: pending
+    depends_on:
+      - audit-implement-agent-core
+  - id: audit-implement-section-checks
+    content: |
+      - [ ] [AGENT] P1. Create system_integration_tests/audit/checks/ directory with typed check functions: check_code_quality.py, check_security.py, check_testing.py, check_observability.py, etc. Each returns AuditResult with pass/fail/warn and evidence.
+    status: pending
+    depends_on:
+      - audit-implement-agent-core
+  - id: audit-implement-pytest-entry
+    content: |
+      - [ ] [AGENT] P2. Create tests/audit/test_audit_agent.py entry point. Register audit pytest marker in pyproject.toml. pytest -m audit runs full 28-section audit across all manifest repos.
+    status: pending
+    depends_on:
+      - audit-implement-section-checks
+  - id: audit-wire-into-ci
+    content: |
+      - [ ] [AGENT] P2. Add audit pre-step to cloudbuild.yaml and buildspec.aws.yaml in SIT repo: shallow-clone → audit agent → smoke → e2e. Audit failures block deployment.
+    status: pending
+    depends_on:
+      - audit-implement-pytest-entry
+  - id: audit-workflow-sanity-checks
+    content: |
+      - [ ] [AGENT] P1. Verify tests/abbreviated/test_workflow_sanity.py exists with YAML validation, trigger checks, workflow_run reference verification. Add act --dry-run layer if nektos/act available.
+    status: pending
+  - id: audit-convert-reusable-workflows
+    content: |
+      - [ ] [AGENT] P2. Convert semver-agent.yml, feature-branch-to-staging.yml, update-dependency-version.yml to reusable workflow_call pattern with PM ref. Reduce flat-file copies across 65+ repos.
+    status: pending
 isProject: false
 ---
 

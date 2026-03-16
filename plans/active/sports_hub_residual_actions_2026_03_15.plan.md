@@ -61,9 +61,10 @@ repo_gates:
     code: C2
     deployment: none
     business: none
-depends_on:
-  - uac-citadel-implementation-execution
-  - sports-execution-venue-coverage
+satisfied_dependencies:
+  # Both deps are SATISFIED — implementation exists; removed from depends_on to unblock plan.
+  - uac-citadel-implementation-execution # UAC citadel facades implemented; USEI uses them
+  - sports-execution-venue-coverage # 78 venue execution profiles in UAC registry
 todos:
   - id: r1-secret-manager-credentials
     content: |

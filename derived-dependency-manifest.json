@@ -232,7 +232,7 @@
         "python-dotenv<2.0.0,": ["python-dotenv<2.0.0,>=1.0.0"],
         "pyyaml<7.0.0,": ["pyyaml<7.0.0,>=6.0.1"],
         "ruff": ["ruff==0.15.0"],
-        "starlette": ["starlette>=0.40.0,<1.0.0"],
+        "starlette": ["starlette>=0.46.3,<1.0.0"],
         "web3": ["web3>=6.0.0,<7.0.0"]
       },
       "internal_count": 5,
@@ -635,6 +635,7 @@
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
         "psutil": ["psutil>=6.0.0,<7.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -647,7 +648,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 5,
-      "external_count": 21
+      "external_count": 22
     },
     "execution-service": {
       "internal_deps": {
@@ -737,6 +738,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -750,7 +752,7 @@
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
       "internal_count": 6,
-      "external_count": 25
+      "external_count": 26
     },
     "features-cross-instrument-service": {
       "internal_deps": {
@@ -777,6 +779,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -792,7 +795,7 @@
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
       "internal_count": 6,
-      "external_count": 28
+      "external_count": 29
     },
     "features-delta-one-service": {
       "internal_deps": {
@@ -816,6 +819,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -830,7 +834,7 @@
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
       "internal_count": 5,
-      "external_count": 25
+      "external_count": 26
     },
     "features-multi-timeframe-service": {
       "internal_deps": {
@@ -855,6 +859,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -868,7 +873,7 @@
         "tqdm": ["tqdm>=4.66.0,<5.0.0"]
       },
       "internal_count": 6,
-      "external_count": 24
+      "external_count": 25
     },
     "features-onchain-service": {
       "internal_deps": {
@@ -893,6 +898,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -906,7 +912,7 @@
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
       "internal_count": 6,
-      "external_count": 24
+      "external_count": 25
     },
     "features-sports-service": {
       "internal_deps": {
@@ -958,6 +964,7 @@
         "polars": ["polars>=1.37.0,<2.0.0"],
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -972,7 +979,7 @@
         "types-requests": ["types-requests>=2.32.0,<3.0.0"]
       },
       "internal_count": 6,
-      "external_count": 21
+      "external_count": 22
     },
     "market-data-processing-service": {
       "internal_deps": {
@@ -1201,6 +1208,7 @@
         "pre-commit": ["pre-commit>=3.0,<4.0.0"],
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
         "psutil": ["psutil>=6.0.0,<7.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1212,7 +1220,7 @@
         "uvicorn": ["uvicorn[standard]>=0.29.0,<1.0.0"]
       },
       "internal_count": 5,
-      "external_count": 19
+      "external_count": 20
     },
     "strategy-service": {
       "internal_deps": {
@@ -1285,6 +1293,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1297,7 +1306,7 @@
         "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
       },
       "internal_count": 5,
-      "external_count": 24
+      "external_count": 25
     },
     "trading-agent-service": {
       "internal_deps": {
@@ -1372,6 +1381,7 @@
         "matplotlib": ["matplotlib>=3.9.0,<4.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1384,7 +1394,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 5,
-      "external_count": 19
+      "external_count": 20
     },
     "execution-results-api": {
       "internal_deps": {
@@ -1407,6 +1417,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1421,7 +1432,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 4,
-      "external_count": 25
+      "external_count": 26
     },
     "market-data-api": {
       "internal_deps": {
@@ -1439,6 +1450,7 @@
         "google-auth": ["google-auth>=2.40.0,<3.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1450,7 +1462,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 6,
-      "external_count": 15
+      "external_count": 16
     },
     "ml-inference-api": {
       "internal_deps": {
@@ -1491,6 +1503,7 @@
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1501,7 +1514,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 2,
-      "external_count": 13
+      "external_count": 14
     },
     "position-balance-monitor-service": {
       "internal_deps": {
@@ -1528,6 +1541,7 @@
         "psycopg2-binary": ["psycopg2-binary>=2.9.9,<3.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1545,7 +1559,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 6,
-      "external_count": 30
+      "external_count": 31
     },
     "risk-and-exposure-service": {
       "internal_deps": {
@@ -1574,6 +1588,7 @@
         "psutil": ["psutil>=6.0.0,<7.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1584,7 +1599,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 6,
-      "external_count": 25
+      "external_count": 26
     },
     "trading-analytics-api": {
       "internal_deps": {
@@ -1695,6 +1710,7 @@
     },
     "deployment-service": {
       "internal_deps": {
+        "deployment-api": "deployment-api>=0.1.0,<1.0.0",
         "unified-cloud-interface": "unified-cloud-interface>=0.11.6,<1.0.0",
         "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-events-interface": "path",
@@ -1722,7 +1738,7 @@
         "ruff": ["ruff==0.15.0"],
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
-      "internal_count": 4,
+      "internal_count": 5,
       "external_count": 20
     },
     "unified-trading-ui-kit": {

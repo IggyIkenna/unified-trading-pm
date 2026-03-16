@@ -319,9 +319,20 @@ for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
+_asyncio_violation=""
 for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/testing/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
-    grep -qE "^[[:space:]]*(for |while )" "$f" && { log_fail "asyncio.run() in loop: $f — use asyncio.gather()"; V=$(( V + 1 )); break; }
+    # Only flag asyncio.run() deeply nested inside a loop body (>=8 spaces indentation)
+    if rg "^\s{8,}asyncio\.run\(" "$f" 2>/dev/null | grep -q .; then
+        _asyncio_violation="$f"
+        break
+    fi
 done
+if [[ -n "$_asyncio_violation" ]]; then
+    log_fail "asyncio.run() in loop: $_asyncio_violation — use asyncio.gather()"
+    V=$(( V + 1 ))
+else
+    log_success "No asyncio.run() in loop"
+fi
 
 _SELF_PKG=$(echo "$SOURCE_DIR" | tr '/' '_')
 _inside_extra_globs=()

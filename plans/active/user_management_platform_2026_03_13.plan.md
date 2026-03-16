@@ -6,9 +6,10 @@ overview: >-
   role. Matches deployment-ui visual style.
 type: code
 epic: epic-auth-onboarding
-status: superseded
-superseded_by: cicd_code_rollout_master_2026_03_13
-superseded_date: 2026-03-13
+status: active
+note:
+  "cicd_code_rollout_master delivered internal RBAC layer (feature-user-management: done). This plan covers the external
+  provisioning layer (Microsoft Graph, Slack, GCP IAM, GitHub org) which is NOT in any other plan."
 
 completion_gates:
   code: C5

@@ -212,6 +212,39 @@ todos:
       reviews PnL curves, drawdown, and risk metrics. Gate: no anomalous results, metrics within historical bounds.
     status: pending
     depends_on: [backfill-ml-training]
+
+  - id: freshness-wire-services
+    content: >
+      - [ ] [AGENT] P2. Wire FreshnessMonitor into all 10 data-producing services (currently only wired in
+      market-tick-data-service). Services: features-delta-one, features-volatility, features-onchain, features-calendar,
+      features-commodity, features-cross-instrument, features-multi-timeframe, features-sports, market-data-processing,
+      ml-inference-api.
+    status: pending
+    depends_on: [freshness-monitor-class]
+
+  - id: freshness-consuming-gates
+    content: >
+      - [ ] [AGENT] P2. Add assert_feature_fresh() to strategy-service and assert_market_data_fresh() to
+      execution-service. Raise DataStalenessError (from unified-internal-contracts) when data exceeds venue SLA. Wire
+      into pre-trade validation paths.
+    status: pending
+    depends_on: [freshness-wire-services]
+
+  - id: freshness-uei-events
+    content: >
+      - [ ] [AGENT] P2. Verify DATA_STALE, DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY,
+      DATA_COMPLETENESS_CHECK events exist in unified-events-interface/schemas.py (added 2026-03-10). Wire event
+      emission into FreshnessMonitor.log_if_stale() calls across all 10 services.
+    status: pending
+    depends_on: [freshness-wire-services]
+
+  - id: freshness-completeness-check
+    content: >
+      - [ ] [AGENT] P3. Verify scripts/ops/check-data-completeness.sh and
+      system-integration-tests/tests/integration/test_data_freshness.py exist and pass. Run completeness check against
+      mock data to validate end-to-end freshness pipeline.
+    status: pending
+    depends_on: [freshness-uei-events]
 ---
 
 ## Notes
