@@ -129,3 +129,17 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Dead Man Switch Event
+    needs: [check-orchestrator, notify]
+    if: always() && needs.check-orchestrator.result == 'failure'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: "failure"
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "dead-man-switch-fired"}'

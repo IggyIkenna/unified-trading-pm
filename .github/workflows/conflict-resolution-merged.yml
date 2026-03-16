@@ -77,3 +77,17 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Conflict Resolution Merged Event
+    needs: [retry-promotion, notify]
+    if: always() && needs.retry-promotion.result == 'success'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.retry-promotion.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"pr_number": "${{ github.event.pull_request.number }}"}'
