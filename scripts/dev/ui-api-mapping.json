@@ -95,6 +95,14 @@
       "api": "market-data-api",
       "api_port": 8016,
       "api_module": "market_data_api"
+    },
+    "odum-website": {
+      "ui": "odum-research-website",
+      "ui_port": 3000,
+      "api": null,
+      "api_port": null,
+      "api_module": null,
+      "$note": "Self-contained Next.js app with built-in API routes (Firebase Auth + Firestore). No separate API service. Uses port 3000 (Next.js default) instead of 5184 to match Next.js convention."
     }
   }
 }

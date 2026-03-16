@@ -34,6 +34,63 @@ log_fail()    { echo -e "${RED}  ❌ $*${NC}" >&2; }
 log_warn()    { echo -e "${YELLOW}  ⚠️  $*${NC}"; }
 log_section() { echo -e "\n${BLUE}── $1 ──${NC}"; }
 
+# ── PORTABLE TIMEOUT (same as base-service.sh, enhanced for macOS) ───────────
+# Wraps a command with a wall-clock timeout. On timeout: SIGTERM, then SIGKILL.
+# GNU coreutils timeout (Linux): preferred. macOS: falls back to perl or bash.
+run_timeout() {
+    local secs=$1; shift
+    if command -v timeout &>/dev/null; then
+        timeout --signal=KILL "$((secs + 5))" timeout "$secs" "$@"
+    elif command -v gtimeout &>/dev/null; then
+        gtimeout --signal=KILL "$((secs + 5))" gtimeout "$secs" "$@"
+    elif command -v perl &>/dev/null; then
+        # perl alarm sends SIGALRM which terminates the child
+        perl -e 'alarm shift; exec @ARGV' -- "$secs" "$@"
+    else
+        # Last resort: background the command, wait with timeout, kill if needed
+        "$@" &
+        local pid=$!
+        ( sleep "$secs"; kill -TERM "$pid" 2>/dev/null; sleep 3; kill -KILL "$pid" 2>/dev/null ) &
+        local watchdog=$!
+        wait "$pid" 2>/dev/null
+        local rc=$?
+        kill "$watchdog" 2>/dev/null; wait "$watchdog" 2>/dev/null
+        return $rc
+    fi
+}
+
+# Per-step timeouts (seconds). Override in caller stub if needed.
+STEP_TIMEOUT_TYPECHECK=${STEP_TIMEOUT_TYPECHECK:-60}
+STEP_TIMEOUT_LINT=${STEP_TIMEOUT_LINT:-60}
+STEP_TIMEOUT_TEST=${STEP_TIMEOUT_TEST:-120}
+STEP_TIMEOUT_BUILD=${STEP_TIMEOUT_BUILD:-90}
+
+# ── PROCESS CLEANUP (prevent zombie node processes) ──────────────────────────
+# When 14 UIs run in parallel and the parent (Cursor/shell) dies, orphaned
+# node/tsc/vitest/esbuild processes accumulate. This kills the entire process
+# tree rooted at this script on any exit — normal, error, or signal.
+# pkill -P only kills direct children. Node spawns npm→node→vitest→workers,
+# so we recurse to catch the full tree.
+_qg_kill_tree() {
+    local pid=$1
+    local children
+    children=$(pgrep -P "$pid" 2>/dev/null) || true
+    for child in $children; do
+        _qg_kill_tree "$child"
+    done
+    kill -TERM "$pid" 2>/dev/null || true
+}
+_qg_kill_children() {
+    _qg_kill_tree $$
+    sleep 0.3
+    # Force-kill any survivors (node can ignore SIGTERM during I/O)
+    local stragglers
+    stragglers=$(pgrep -P $$ 2>/dev/null) || true
+    for pid in $stragglers; do
+        kill -KILL "$pid" 2>/dev/null || true
+    done
+}
+
 # ── CI_STATUS HANDLER (shared, locked) ───────────────────────────────────────
 # SSOT: _ci-status-updater.sh — unified name resolution + fcntl locking for all base scripts.
 source "$(dirname "${BASH_SOURCE[0]}")/_ci-status-updater.sh"
@@ -44,7 +101,10 @@ _qg_record_failure() {
     _qg_update_ci_status_failing
     return $exit_code
 }
-trap _qg_record_failure EXIT
+# EXIT: record failure status + kill all child processes
+trap '_qg_record_failure; _qg_kill_children' EXIT
+# INT/TERM/HUP: kill children immediately, then exit (triggers EXIT trap too)
+trap '_qg_kill_children; exit 130' INT TERM HUP
 
 # ── MODE ───────────────────────────────────────────────────────────────────
 SKIP_LINT=false
@@ -70,24 +130,35 @@ log_section "[1/4] TYPE CHECK"
 if [ ! -f "package.json" ]; then
   log_fail "No package.json found"; exit 1
 fi
-if _out=$(npm run typecheck 2>&1); then
+if _out=$(run_timeout "$STEP_TIMEOUT_TYPECHECK" npm run typecheck 2>&1); then
   log_success "TypeScript type check passed"
 else
   echo "$_out"
-  log_fail "TypeScript type check FAILED"; exit 1
+  log_fail "TypeScript type check FAILED (timeout=${STEP_TIMEOUT_TYPECHECK}s)"; exit 1
 fi
 
 # ── [2] LINT ───────────────────────────────────────────────────────────────
 if [ "$SKIP_LINT" = false ]; then
   log_section "[2/4] LINT"
   if [ "$FIX_MODE" = true ]; then
-    npm run lint -- --fix >/dev/null 2>&1 || true  # best-effort auto-fix; verify pass follows
+    run_timeout "$STEP_TIMEOUT_LINT" npm run lint -- --fix >/dev/null 2>&1 || true
   fi
-  if _out=$(npm run lint 2>&1); then
-    log_success "ESLint passed"
+  # Target src/ directly — avoids traversing node_modules, dist, coverage, etc.
+  # Falls back to npm run lint if src/ doesn't exist (non-standard layout).
+  if [ -d "src" ]; then
+    if _out=$(run_timeout "$STEP_TIMEOUT_LINT" npx eslint src/ --ext .ts,.tsx 2>&1); then
+      log_success "ESLint passed"
+    else
+      echo "$_out"
+      log_fail "ESLint FAILED (timeout=${STEP_TIMEOUT_LINT}s)"; exit 1
+    fi
   else
-    echo "$_out"
-    log_fail "ESLint FAILED"; exit 1
+    if _out=$(run_timeout "$STEP_TIMEOUT_LINT" npm run lint 2>&1); then
+      log_success "ESLint passed"
+    else
+      echo "$_out"
+      log_fail "ESLint FAILED (timeout=${STEP_TIMEOUT_LINT}s)"; exit 1
+    fi
   fi
 else
   log_section "[2/4] LINT — skipped (--test)"
@@ -102,7 +173,7 @@ MIN_UI_COVERAGE=${MIN_UI_COVERAGE:-70}
 if [ "$SKIP_TESTS" = false ]; then
   log_section "[3/4] UNIT TESTS + COVERAGE"
   if node -e "const s=require('./package.json').scripts||{}; process.exit(('test' in s && !s.test.includes('playwright')) ? 0 : 1)" 2>/dev/null; then
-    if _out=$(CI=true npm test -- --run --coverage 2>&1); then
+    if _out=$(run_timeout "$STEP_TIMEOUT_TEST" env CI=true npm test -- --run --coverage 2>&1); then
       # ── Coverage floor check ────────────────────────────────────────────
       SUMMARY="coverage/coverage-summary.json"
       if [ -f "$SUMMARY" ]; then
@@ -133,11 +204,11 @@ fi
 # ── [4] BUILD ──────────────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" = false ]; then
   log_section "[4/4] BUILD"
-  if _out=$(npm run build 2>&1); then
+  if _out=$(run_timeout "$STEP_TIMEOUT_BUILD" npm run build 2>&1); then
     log_success "Build passed"
   else
     echo "$_out"
-    log_fail "Build FAILED"; exit 1
+    log_fail "Build FAILED (timeout=${STEP_TIMEOUT_BUILD}s)"; exit 1
   fi
 else
   log_section "[4/4] BUILD — skipped (--lint / --test / --quick)"
@@ -146,7 +217,6 @@ fi
 # ── [5] BUILD CONFIG VALIDATION ─────────────────────────────────────────────
 # Validate cloudbuild.yaml and buildspec.aws.yaml when present (same as base-service STEP 5.17)
 PM_ROOT="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null && cd .. && pwd)}/unified-trading-pm"
-run_timeout() { timeout "${1:-30}" "${@:2}" 2>/dev/null || true; }
 if [ -f "cloudbuild.yaml" ]; then
   VALIDATOR="${PM_ROOT}/scripts/validation/validate-cloudbuild.py"
   if [ -f "$VALIDATOR" ]; then
