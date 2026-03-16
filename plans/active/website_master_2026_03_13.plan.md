@@ -126,12 +126,12 @@ todos:
 
   - id: website-code-hardening
     content: >
-      - [x] [AGENT] P1. Code hardening: (1) Removed debug code (agent log blocks, test-admin route, debugLog.ts).
-      (2) Stripped all console.log/error from lib/ and API routes. (3) Archived 16 redundant markdown docs.
-      (4) Deleted 5 competing deployment configs — consolidated to standard cloudbuild.yaml + buildspec.aws.yaml.
-      (5) Removed hardcoded Firebase API key and GCP project IDs. Git history wiped via orphan branch + force-push.
-      (6) Extracted shared utilities (chunk, session cookie name). (7) Added zod runtime validation for Firestore data.
-      (8) Added vitest infrastructure (17 tests, utils + schemas). Coverage floor at 0% during ramp-up (bypass documented).
+      - [x] [AGENT] P1. Code hardening: (1) Removed debug code (agent log blocks, test-admin route, debugLog.ts). (2)
+      Stripped all console.log/error from lib/ and API routes. (3) Archived 16 redundant markdown docs. (4) Deleted 5
+      competing deployment configs — consolidated to standard cloudbuild.yaml + buildspec.aws.yaml. (5) Removed
+      hardcoded Firebase API key and GCP project IDs. Git history wiped via orphan branch + force-push. (6) Extracted
+      shared utilities (chunk, session cookie name). (7) Added zod runtime validation for Firestore data. (8) Added
+      vitest infrastructure (17 tests, utils + schemas). Coverage floor at 0% during ramp-up (bypass documented).
     status: done
     depends_on: [website-repo-integration]
 
@@ -141,28 +141,28 @@ todos:
       mock Firestore + mock GCS with static presentations, mock Firebase Auth (auto-login as test user). Full UI works
       on localhost:3000 with zero credentials. (2) Real mode: hits real Firebase/GCS, caches responses in
       .local-dev-cache/. Test full flows (onboarding client, uploading files, assigning access). (3) Wire into PM
-      dev-start.sh/dev-stop.sh. Add port to ui-api-mapping.json. (4) Create .env.mock and .env.real presets.
-      (5) Add to dev-status.sh output.
+      dev-start.sh/dev-stop.sh. Add port to ui-api-mapping.json. (4) Create .env.mock and .env.real presets. (5) Add to
+      dev-status.sh output.
     status: pending
     depends_on: [website-code-hardening]
 
   - id: website-deployment-service-integration
     content: >
       - [ ] [AGENT] P2. Move deployment to deployment-service topology. (1) Register odum-research-website in
-      deployment-service as a Cloud Run service (mode: live, not batch). (2) Add to deployment-ui service list.
-      (3) Set up staging URL with internal OAuth gate (Google/Cognito) — staging must require internal auth, not
-      accessible via public URL. (4) Production URL: odum-research.com (after domain migration). (5) Add Firebase
-      credentials to GCP Secret Manager, reference from Cloud Run env. (6) Update cloudbuild.yaml to inject secrets
-      from Secret Manager at deploy time. (7) Wire into version cascade (merge_level in manifest).
+      deployment-service as a Cloud Run service (mode: live, not batch). (2) Add to deployment-ui service list. (3) Set
+      up staging URL with internal OAuth gate (Google/Cognito) — staging must require internal auth, not accessible via
+      public URL. (4) Production URL: odum-research.com (after domain migration). (5) Add Firebase credentials to GCP
+      Secret Manager, reference from Cloud Run env. (6) Update cloudbuild.yaml to inject secrets from Secret Manager at
+      deploy time. (7) Wire into version cascade (merge_level in manifest).
     status: pending
     depends_on: [website-code-hardening]
 
   - id: website-coverage-ramp
     content: >
-      - [ ] [AGENT] P3. Ramp test coverage to 70% floor. (1) Mock Firebase Auth/Firestore for API route tests.
-      (2) Add component tests for NavBar, Footer, ContactForm using @testing-library/react. (3) Add API route tests
-      for auth/session, presentations, admin endpoints. (4) Remove MIN_UI_COVERAGE=0 bypass once floor met.
-      (5) Update QUALITY_GATE_BYPASS_AUDIT.md.
+      - [ ] [AGENT] P3. Ramp test coverage to 70% floor. (1) Mock Firebase Auth/Firestore for API route tests. (2) Add
+      component tests for NavBar, Footer, ContactForm using @testing-library/react. (3) Add API route tests for
+      auth/session, presentations, admin endpoints. (4) Remove MIN_UI_COVERAGE=0 bypass once floor met. (5) Update
+      QUALITY_GATE_BYPASS_AUDIT.md.
     status: pending
     depends_on: [website-local-dev-setup]
 ---
