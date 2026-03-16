@@ -237,7 +237,8 @@ def build_repo_level_from_topo(data: JsonDict) -> dict[str, int]:
         lvl_val = _jint(entry.get("level"))
         if lvl_val is None or lvl_val < 0:
             continue
-        repos_in_level = entry.get("repos") or []
+        repos_raw_val = entry.get("repos")
+        repos_in_level = repos_raw_val if isinstance(repos_raw_val, list) else []
         for r in repos_in_level:
             if isinstance(r, str):
                 repo_level[r] = lvl_val

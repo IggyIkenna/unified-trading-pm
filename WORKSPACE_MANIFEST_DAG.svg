@@ -56,9 +56,9 @@
   <text x="95" y="224" text-anchor="middle" class="level-label">L0</text>
   <text x="150" y="224" class="desc">Project management — pure root (manifest, templates, scripts, cursor rules). No dependencies. (1 repos)</text>
   <rect x="70" y="247" width="146" height="38" class="devops" />
-  <rect x="70" y="247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="143" y="265" text-anchor="middle" class="label">unified-trading-pm</text>
-  <circle cx="206" cy="255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="206" cy="255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="143" y="277" text-anchor="middle" class="ver">1.2.0</text>
   <!-- L1: Standards &amp; codex — coding standards, architecture docs, quality gate templates. Depends on PM. (1 repos) -->
   <rect x="40" y="319" width="2320" height="107" class="level-bg" />
@@ -111,9 +111,9 @@
   <circle cx="502" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="390" y="634" text-anchor="middle" class="ver">0.1.102</text>
   <rect x="522" y="604" width="181" height="38" class="lib" />
-  <rect x="522" y="604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="522" y="604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="612" y="622" text-anchor="middle" class="label">unified-trading-library</text>
-  <circle cx="693" cy="612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="693" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="612" y="634" text-anchor="middle" class="ver">0.3.191</text>
   <!-- L4: T1c + T2 libraries (reference-data, algo, feature-calculator) (3 repos) -->
   <rect x="40" y="676" width="2320" height="107" class="level-bg" />
@@ -346,9 +346,9 @@
   <circle cx="1558" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1470" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1578" y="1366" width="167" height="38" class="api" />
-  <rect x="1578" y="1366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1578" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1661" y="1384" text-anchor="middle" class="label">trading-analytics-api</text>
-  <circle cx="1735" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1735" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1661" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L10: Deployment infrastructure (deployment-api, deployment-service; deploys all services) (4 repos) -->
   <rect x="40" y="1438" width="2320" height="107" class="level-bg" />
@@ -461,9 +461,9 @@
   <circle cx="369" cy="1731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="306" y="1753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="389" y="1723" width="188" height="38" class="test" />
-  <rect x="389" y="1723" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="389" y="1723" width="4" height="38" fill="#facc15" rx="2" />
   <text x="483" y="1741" text-anchor="middle" class="label">system-integration-tests</text>
-  <circle cx="567" cy="1731" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="567" cy="1731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="483" y="1753" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="40" y="1815" width="2320" height="90" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="8" />
   <text x="60" y="1840" class="section">Versioning + Summary</text>

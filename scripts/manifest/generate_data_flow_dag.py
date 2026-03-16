@@ -90,7 +90,7 @@ def parse_flows(data: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[s
     return batch, live
 
 
-def flow_nodes(flow: dict[str, Any]) -> list[tuple[str, str]]:
+def flow_nodes(flow: dict[str, object]) -> list[tuple[str, str]]:
     """Return list of (name, css_class) for Service, API, UI. API may be omitted."""
     nodes: list[tuple[str, str]] = []
     svc = _jstr(flow.get("service")).strip()
@@ -103,7 +103,7 @@ def flow_nodes(flow: dict[str, Any]) -> list[tuple[str, str]]:
         nodes.append((_jstr(api), "api"))
     if ui_raw is not None:
         uis = _jlist(ui_raw) if isinstance(ui_raw, list) else [_jstr(ui_raw)]
-        for u in uis:
+        for u in uis or []:
             if _jstr(u):
                 nodes.append((_jstr(u), "ui-box"))
 

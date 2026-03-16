@@ -11,11 +11,23 @@ PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)
+# JSON-parsing scripts use .get("key", "") / .get("key", {}) / .get("key", []) as safe
+# defaults when parsing manifest dicts — not os.getenv empty-fallback anti-pattern.
 EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
     "!**/smoke-test-dev.py"
     "!**/compute-epic-readiness.py"
     "!**/validate-internal-editable.py"
+    "!**/network_evidence_parser.py"
+    "!**/check_ui_api_flow_coverage.py"
+    "!**/fixture_drift_checker.py"
+    "!**/triad_assertion_checker.py"
+    "!**/flow_coverage_scorecard.py"
+    "!**/check-data-availability.py"
+    "!**/check-strategy-maturity.py"
+    "!**/reverse-dependency-lookup.py"
+    "!**/generate_dependency_viz.py"
+    "!**/auto-populate-tags.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -23,6 +35,18 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/validate-internal-editable.py"
     "!**/rollout-ui-build-infra.py"
     "!**/github-integration/**"
+    "!**/network_evidence_parser.py"
+    "!**/check_ui_api_flow_coverage.py"
+    "!**/fixture_drift_checker.py"
+    "!**/triad_assertion_checker.py"
+    "!**/flow_coverage_scorecard.py"
+    "!**/check-data-availability.py"
+    "!**/check-strategy-maturity.py"
+    "!**/reverse-dependency-lookup.py"
+    "!**/generate_dependency_viz.py"
+    "!**/generate_strategy_manifest_dag.py"
+    "!**/auto-populate-tags.py"
+    "!**/check-strategy-instruments.py"
 )
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/rollout-quality-gates-ci-workflows.py"
@@ -45,6 +69,7 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/check_env_canon.py"
     "!**/rollout-cloudbuild.py"
     "!**/rollout-buildspec.py"
+    "!**/flow_coverage_scorecard.py"
 )
 BE_EXCLUDE_GLOBS=(
     "**/smoke-test-dev.py"

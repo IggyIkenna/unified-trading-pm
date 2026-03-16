@@ -55,47 +55,69 @@ depends_on: []
 
 todos:
   - id: phase1-vcr-consolidate
-    content:
-      Consolidate VCR cassettes into UAC; migrate unified-defi-execution-interface and execution-service cassettes
+    content: >
+      - [ ] Consolidate VCR cassettes into UAC; migrate unified-defi-execution-interface and execution-service cassettes
     status: pending
+    notes: >
+      CHECKED 2026-03-16: unified-defi-execution-interface still has per-repo cassettes at
+      tests/cassettes/hyperliquid/clearinghouse_state.yaml and meta_and_asset_ctxs.yaml — not yet migrated to UAC.
+      execution-service cassettes: not checked but likely similar. Migration not started.
   - id: phase1-orphan-check
-    content: Add cassette orphan check to quality gates or codex (no orphan cassettes, no orphan tests)
+    content: >
+      - [ ] Add cassette orphan check to quality gates or codex (no orphan cassettes, no orphan tests)
     status: pending
+    notes: >
+      CHECKED 2026-03-16: No orphan check exists in base-service.sh, base-library.sh, or any QG/codex script. The UAC
+      tests/test_cassette_schema_parity.py validates schema parity but does NOT check for orphan cassettes. Still fully
+      pending.
   - id: phase1-interface-vcr
-    content: Ensure all 7 external interfaces have VCR tests and cassettes in UAC
+    content: >
+      - [ ] Ensure all 7 external interfaces have VCR tests and cassettes in UAC
     status: pending
   - id: phase2-service-mock-replay
-    content: Add mock data replay E2E/integration tests for all services (live + batch)
+    content: >
+      - [ ] Add mock data replay E2E/integration tests for all services (live + batch)
     status: pending
     notes:
       "CI gate: deployment-smoke.yml on staging PRs runs these tests automatically. See
       staging_deployment_mock_gate_2026_03_11.plan.md for the gate implementation."
   - id: phase2-error-events
-    content: Add error handling and event propagation tests per service
+    content: >
+      - [ ] Add error handling and event propagation tests per service
     status: pending
     notes:
       "CI gate: deployment-smoke.yml on staging PRs runs these tests automatically. See
       staging_deployment_mock_gate_2026_03_11.plan.md for the gate implementation."
   - id: phase2-load-memory
-    content: Add load and memory behavior tests where applicable
+    content: >
+      - [ ] Add load and memory behavior tests where applicable
     status: pending
   - id: phase3-api-integration
-    content: Add tests/integration/ and domain data mocking for all API repos
+    content: >
+      - [ ] Add tests/integration/ and domain data mocking for all API repos
     status: pending
   - id: phase4-ui-smoke
-    content: Add smoke tests for every major UI route and feature with VITE_MOCK_API
+    content: >
+      - [ ] Add smoke tests for every major UI route and feature with VITE_MOCK_API
     status: pending
   - id: phase4-ui-websocket
-    content: Add WebSocket mock and edge-case scenarios for UIs
+    content: >
+      - [ ] Add WebSocket mock and edge-case scenarios for UIs
     status: pending
   - id: phase5-sandbox-mode
-    content: Define CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE; optional CI job when secrets present
+    content: >
+      - [ ] Define CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE; optional CI job when secrets present
     status: pending
+    notes: >
+      CHECKED 2026-03-16: CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE not found anywhere in workspace except in this plan
+      file itself. No env var definitions, no CI job, no documentation. Fully pending.
   - id: phase5-extreme-fixtures
-    content: Create extreme load and market move fixtures; wire into services and UIs
+    content: >
+      - [ ] Create extreme load and market move fixtures; wire into services and UIs
     status: pending
   - id: phase6-rollout
-    content: Rollout across all 60+ repos; create per-repo checklist from manifest
+    content: >
+      - [ ] Rollout across all 60+ repos; create per-repo checklist from manifest
     status: pending
   - id: h5-2-cassette-parity
     content:
@@ -166,10 +188,15 @@ todos:
     status: done
     notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
   - id: h1-3-bigquery-emulator
-    content:
-      "P3: Wire ghcr.io/goccy/bigquery-emulator (port 9050) into trading-analytics-api and client-reporting-api test
-      suites via BIGQUERY_EMULATOR_HOST"
+    content: >
+      - [ ] P3: Wire ghcr.io/goccy/bigquery-emulator (port 9050) into trading-analytics-api and client-reporting-api
+      test suites via BIGQUERY_EMULATOR_HOST
     status: pending
+    notes: >
+      CHECKED 2026-03-16: trading-analytics-api has bigquery_emulator_url fixture in tests/conftest.py (with auto-skip
+      when BIGQUERY_EMULATOR_HOST not set), but NO integration test actually uses this fixture yet. client-reporting-api
+      has NO BigQuery emulator support at all (only the SDK's own detection in .venv). Fixture infrastructure is present
+      for trading-analytics-api; actual test coverage + client-reporting-api wiring remain.
   - id: h5-1-cassette-drift
     content:
       "P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly re-record cassettes vs real
