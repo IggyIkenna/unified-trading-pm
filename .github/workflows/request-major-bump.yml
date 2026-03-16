@@ -167,7 +167,7 @@ jobs:
           ISSUE_URL: ${{ steps.create-issue.outputs.issue_url }}
           REQUESTER: ${{ steps.validate.outputs.requester }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID || secrets.TELEGRAM_CHAT_ID }}
         run: |
           # Validate Telegram secrets are present — FAIL if missing
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
