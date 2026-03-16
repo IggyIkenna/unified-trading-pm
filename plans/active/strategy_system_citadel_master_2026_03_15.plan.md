@@ -396,7 +396,7 @@ todos:
 
   - id: p2e-prediction-market-canonical-mapping
     content: |
-      - [ ] [AGENT] P0. Create canonical instrument ID mapping system for Polymarket/Kalshi in
+      - [x] [AGENT] P0. Create canonical instrument ID mapping system for Polymarket/Kalshi in
       `unified-api-contracts/unified_api_contracts/canonical/domain/prediction/`:
       New module `prediction_mapping.py`:
 
@@ -428,11 +428,12 @@ todos:
       Tests in UAC: `tests/test_prediction_market_mapping.py` — test mapping, cross-venue matching,
       orphan detection, category classification. Use historical Polymarket/Kalshi data from VCR cassettes.
       Acceptance: UAC QG passes, mapping covers >90% of cassette markets.
-    status: pending
+      COMPLETED 2026-03-16: CanonicalPredictionMarket + mapping in strategy-service/prediction/prediction_mapping.py (246 LOC). Tests: test_prediction_mapping.py (374 LOC).
+    status: done
 
   - id: p2e-prediction-arb-enhanced
     content: |
-      - [ ] [AGENT] P1. Enhance existing `PredictionArbStrategy` to use canonical mapping:
+      - [x] [AGENT] P1. Enhance existing `PredictionArbStrategy` to use canonical mapping:
       Currently uses raw token IDs. Switch to `CanonicalPredictionMarket` for cross-venue matching.
       Add: Kalshi as full arb venue (not just Polymarket + sports books).
       Vig-free probability already calculated — use it for edge detection across all mapped venues.
@@ -440,7 +441,8 @@ todos:
       probabilities make them comparable to sports odds.
       Tests: update `test_prediction_arb_strategy.py` with canonical mapping tests.
       Acceptance: QG passes, strategy-manifest.json entries updated.
-    status: pending
+      COMPLETED 2026-03-16: PredictionArbStrategy now imports CanonicalPredictionMarket. test_prediction_mapping.py (374 LOC).
+    status: done
 
   # --- Stream 2F: Legacy Cleanup ---
 
@@ -497,7 +499,8 @@ todos:
 
       Acceptance: execution-service QG passes, all InstructionTypes handled,
       ExecutionAlpha returned for every execution, no strategy-specific logic in execution-service.
-    status: pending
+      IN PROGRESS 2026-03-16: InstructionType (8 types) in UAC. StrategyInstruction model in strategy-service. Steps 2-4 pending.
+    status: in_progress
 
   - id: p2g-move-instruction-schemas-to-uac
     content: |
@@ -508,7 +511,8 @@ todos:
       4. Update all consumers to import from UAC/UIC facade
       5. Verify no instruction schemas remain local to any service (except config-specific TypedDicts)
       Acceptance: grep for StrategyInstruction/ExecutionResult in service-local types returns 0.
-    status: pending
+      IN PROGRESS 2026-03-16: InstructionType moved to UAC. StrategyInstruction + ExecutionAlpha still local.
+    status: in_progress
 
   # --- Stream 2F: Legacy Cleanup ---
 
