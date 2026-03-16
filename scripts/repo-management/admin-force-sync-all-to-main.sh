@@ -103,9 +103,12 @@ while [[ $# -gt 0 ]]; do
     --max-workers)     MAX_WORKERS="$2"; shift 2 ;;
     --feat-branch)     TARGET_BRANCH="__feat__"; shift ;;
     --stag-branch)     TARGET_BRANCH="staging"; shift ;;
+    --force-version-override) FORCE_VERSION_OVERRIDE=true; shift ;;
     *) echo "Unknown flag: $1"; shift ;;
   esac
 done
+
+FORCE_VERSION_OVERRIDE="${FORCE_VERSION_OVERRIDE:-false}"
 
 # ---------------------------------------------------------------------------
 # Resolve --feat-branch to actual branch name from manifest
