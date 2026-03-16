@@ -15,7 +15,7 @@ jobs:
       GCP_PROJECT_ID: "unified-trading-ci"
     steps:
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: unified-trading-pm
 
@@ -82,7 +82,7 @@ jobs:
           uv sync
 
       - name: Checkout Codex (sibling)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ github.repository_owner }}/unified-trading-codex
           path: unified-trading-codex

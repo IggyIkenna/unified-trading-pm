@@ -26,12 +26,12 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_PAT }}
 
       - name: Checkout unified-trading-codex (readiness checklists)
-        # actions/checkout@v4 rejects paths outside $GITHUB_WORKSPACE, so use
+        # actions/checkout@v6 rejects paths outside $GITHUB_WORKSPACE, so use
         # git clone directly to preserve the sibling layout WORKSPACE_ROOT expects.
         run: |
           git clone --depth 1 \

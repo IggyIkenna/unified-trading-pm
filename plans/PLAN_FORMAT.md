@@ -133,7 +133,7 @@ shows filled vs hollow circles correctly.
 **Why:** Cursor reads the checkbox from the content; `status:` in YAML alone does not render filled circles. Without
 this prefix, done tasks still appear hollow in the UI.
 
-```
+````
 
 ---
 
@@ -244,6 +244,47 @@ Plans that are infra/deployment type always enforce their D-gates regardless of 
 
 ---
 
+## Structural Order (MANDATORY)
+
+Plans MUST follow this section order:
+
+1. **Frontmatter** (name, overview, type, status, completion_gates, depends_on, todos with checkboxes)
+2. **Notes / Context** (architecture, mermaid diagrams, references)
+
+**Why:** The conflict-resolution-agent reads `head -250` per plan. If todos are buried after
+250 lines of notes, the agent cannot see them during conflict resolution. Keep actionable
+content at the top.
+
+**Rule:** ALL todos and completion gates MUST appear in the frontmatter YAML block. Notes,
+architecture context, Mermaid diagrams, and references go AFTER the closing `---` of frontmatter.
+
+---
+
+## Plan Locking
+
+Plans that are actively being implemented can be locked to prevent premature archival.
+
+### Frontmatter fields:
+```yaml
+locked_by: live-defi-rollout   # Branch actively implementing this plan
+locked_since: 2026-03-16       # ISO date when lock was set
+````
+
+### Rules:
+
+- **Agents MUST NOT archive locked plans** even if all todos are done. The plan-health-agent checks `locked_by` and
+  skips archival for locked plans.
+- **Only a human with `[unlock-plan]` in the commit message** can delete or archive a locked plan. PM's quality-gates.sh
+  blocks deletion of locked plans without this tag.
+- **Plan-level `depends_on`:** If plan A lists `depends_on: [plan-B-name]`, plan B cannot be archived while plan A is
+  active. The plan-health-agent checks this.
+- When your implementation is complete, remove `locked_by` and `locked_since` from frontmatter to allow normal archival.
+- **Agent unlock protocol:** Agents MAY ask a human to unlock a plan when all todos are genuinely complete: "Plan X is
+  locked but all todos are done. Should I unlock it?" If approved, the agent removes `locked_by`/`locked_since` and
+  includes `[unlock-plan]` in the commit message. Agents MUST NEVER unlock plans autonomously — always ask first.
+
+---
+
 ## SSOT References
 
 - This file: `unified-trading-pm/plans/PLAN_FORMAT.md`
@@ -252,4 +293,7 @@ Plans that are infra/deployment type always enforce their D-gates regardless of 
 - Workflow: `unified-trading-pm/cursor-rules/workflow/plans-to-deployable-workflow.mdc`
 - Sub-agent rules: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` §9
 - INDEX: `unified-trading-pm/plans/active/INDEX.md`
+
+```
+
 ```

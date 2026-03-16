@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout PM for health check script
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: IggyIkenna/unified-trading-pm
           token: ${{ secrets.GH_PAT }}
@@ -250,16 +250,21 @@ jobs:
           # Read ALL active plans — these are the canonical context for agent decisions
           # Plans define WHAT should be implemented and WHY.
           # When resolving a conflict, the relevant active plan is the tie-breaker.
+          # Smart loading: plans mentioning REPO_NAME get full content; others get head -250.
           ACTIVE_PLANS=""
           PLAN_NAMES=""
           if ls unified-trading-pm/plans/active/*.plan.md 2>/dev/null | grep -q .; then
             PLAN_NAMES=$(ls unified-trading-pm/plans/active/*.plan.md 2>/dev/null | xargs -I{} basename {} | tr '\n' ' ')
-            # Read up to 800 lines of plan context (prioritize name, overview, todos)
             ACTIVE_PLANS=$(for f in unified-trading-pm/plans/active/*.plan.md; do
               echo "=== $(basename "$f") ==="
-              head -80 "$f"
+              if grep -qi "$REPO_NAME" "$f" 2>/dev/null; then
+                cat "$f"  # Full content for relevant plans
+              else
+                head -250 "$f"  # Summary for non-relevant plans
+                echo "... (truncated — plan does not reference $REPO_NAME)"
+              fi
               echo ""
-            done 2>/dev/null | head -800 || true)
+            done 2>/dev/null | head -5000 || true)
           fi
 
           {
@@ -316,7 +321,7 @@ jobs:
 
           ---
           You are a conflict resolution agent in the unified-trading-system workspace.
-          Active plans context (truncated):
+          Active plans context (smart-loaded — plans mentioning ${REPO_NAME} are full, others summarized):
           ${ACTIVE_PLANS}
 
           Active plan filenames in this workspace:
@@ -326,6 +331,11 @@ jobs:
           be consistent with the active plans' intent. If the conflict touches a planned feature,
           preserve the plan's design. Reference the relevant plan in your output using the format:
           "Resolution guided by plan: [plan-name] §[relevant-todo-id]"
+
+          When resolving conflicts, first check which active plans are relevant to the conflicted repo.
+          Plans that mention the repo name are loaded in full. Plans that don't are summarized (first 250 lines).
+          If you need more context from a summarized plan, state which plan and why — but note that in --print
+          mode you cannot read files from disk, so work with what's provided.
 
           ---
           TASK: Resolve the git merge conflicts below.

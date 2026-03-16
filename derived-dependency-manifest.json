@@ -532,6 +532,7 @@
         "basedpyright": ["basedpyright==1.38.2"],
         "beautifulsoup4": ["beautifulsoup4>=4.12,<5.0"],
         "betfairlightweight": ["betfairlightweight>=2.20,<3.0"],
+        "cryptography": ["cryptography>=44.0.0,<45.0.0"],
         "lxml": ["lxml>=5.0,<6.0"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "playwright": ["playwright>=1.40,<2.0"],
@@ -546,7 +547,7 @@
         "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
       },
       "internal_count": 3,
-      "external_count": 18
+      "external_count": 19
     },
     "unified-feature-orchestration-library": {
       "internal_deps": {
@@ -599,6 +600,7 @@
         "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -613,7 +615,7 @@
         "yfinance": ["yfinance>=0.2.66,<1.0.0"]
       },
       "internal_count": 8,
-      "external_count": 29
+      "external_count": 30
     },
     "alerting-service": {
       "internal_deps": {
@@ -672,6 +674,7 @@
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "binance-futures-connector": ["binance-futures-connector>=2.0.0,<3.0.0"],
+        "cryptography": ["cryptography>=46.0.5"],
         "eth-abi<6.0.0,": ["eth-abi<6.0.0,>=5.0.1"],
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
         "fsspec": ["fsspec>=2025.2.0,<2026.0.0"],
@@ -712,7 +715,7 @@
         "websockets": ["websockets>=14.0,<15.0.0"]
       },
       "internal_count": 12,
-      "external_count": 44
+      "external_count": 45
     },
     "features-calendar-service": {
       "internal_deps": {
@@ -997,6 +1000,7 @@
         "basedpyright": ["basedpyright==1.38.2"],
         "boto3": ["boto3>=1.40.70,<2.0.0"],
         "boto3-stubs": ["boto3-stubs[s3,sqs,sns]>=1.40.0,<2.0.0"],
+        "cryptography": ["cryptography>=46.0.5"],
         "exchange-calendars<5.0.0,": ["exchange-calendars<5.0.0,>=4.5.0"],
         "mypy": ["mypy>=1.13.0,<2.0.0"],
         "numba": ["numba>=0.62.1,<1.0.0"],
@@ -1010,6 +1014,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1023,7 +1028,7 @@
         "types-aiobotocore-full": ["types-aiobotocore-full>=2.26.0,<3.0.0"]
       },
       "internal_count": 7,
-      "external_count": 29
+      "external_count": 31
     },
     "market-tick-data-service": {
       "internal_deps": {
@@ -1046,6 +1051,7 @@
         "basedpyright": ["basedpyright==1.38.2"],
         "ccxt": ["ccxt>=4.5.24,<5.0.0"],
         "click": ["click>=8.3.1,<9.0.0"],
+        "cryptography": ["cryptography>=46.0.5"],
         "databento": ["databento>=0.32.0,<1.0.0"],
         "db-dtypes": ["db-dtypes>=1.5.0,<2.0.0"],
         "docker": ["docker>=7.1.0,<8.0.0"],
@@ -1069,6 +1075,7 @@
         "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-benchmark": ["pytest-benchmark>=4.0.0,<5.0.0"],
@@ -1097,7 +1104,7 @@
         "zstandard": ["zstandard>=0.22.0,<1.0.0"]
       },
       "internal_count": 9,
-      "external_count": 57
+      "external_count": 59
     },
     "ml-inference-service": {
       "internal_deps": {
@@ -1348,10 +1355,12 @@
         "anyio": ["anyio[trio]>=4.0.0,<5.0.0"],
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
+        "cryptography": ["cryptography>=46.0.5"],
         "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.110.0"],
         "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "pydantic<3.0.0,": ["pydantic<3.0.0,>=2.12.5"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
         "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
@@ -1361,7 +1370,7 @@
         "uvicorn<1.0.0,": ["uvicorn[standard]<1.0.0,>=0.27.0"]
       },
       "internal_count": 3,
-      "external_count": 14
+      "external_count": 16
     },
     "client-reporting-api": {
       "internal_deps": {
@@ -1612,11 +1621,13 @@
       "external_deps": {
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
+        "cryptography": ["cryptography>=46.0.5"],
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
         "google-auth": ["google-auth>=2.40.0,<3.0.0"],
         "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
         "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1628,7 +1639,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 5,
-      "external_count": 16
+      "external_count": 18
     },
     "config-api": {
       "internal_deps": {
@@ -1685,6 +1696,7 @@
         "bandit": ["bandit>=1.7.0,<2.0.0"],
         "basedpyright": ["basedpyright==1.38.2"],
         "cachetools": ["cachetools>=5.0.0,<6.0.0"],
+        "cryptography": ["cryptography>=46.0.5"],
         "fastapi": ["fastapi>=0.110.0,<1.0.0"],
         "google-auth": ["google-auth>=2.40.0,<3.0.0"],
         "gunicorn": ["gunicorn>=22.0.0,<23.0.0"],
@@ -1694,6 +1706,7 @@
         "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
         "pydantic": ["pydantic>=2.12.5,<3.0.0"],
         "pygithub": ["PyGithub>=2.0.0,<3.0.0"],
+        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
         "pytest": ["pytest>=9.0.1,<10.0.0"],
         "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
         "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
@@ -1706,7 +1719,7 @@
         "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
       },
       "internal_count": 5,
-      "external_count": 24
+      "external_count": 26
     },
     "deployment-service": {
       "internal_deps": {

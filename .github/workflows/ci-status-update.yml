@@ -34,7 +34,7 @@ jobs:
       skip: ${{ steps.update.outputs.skip }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0

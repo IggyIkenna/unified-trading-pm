@@ -939,6 +939,19 @@ ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
+elif [ "$REPO_NAME" = "unified-trading-pm" ] || [ "$REPO_NAME" = "unified-trading-codex" ]; then
+  # PM/codex fast-path: doc/plan-only changes skip staging, go direct to main.
+  # Script/workflow changes still route through staging for proper SIT validation.
+  STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
+  NON_DOC_CHANGES=$(echo "$STAGED_FILES" | grep -vE '^(plans/|docs/|cursor-configs/|cursor-rules/|\.cursorrules$|.*\.md$|.*\.mdc$)' | head -1 || true)
+  if [ -z "$NON_DOC_CHANGES" ]; then
+    PR_BASE="main"
+    echo "[$REPO_NAME] Doc/plan-only change: PR targets main directly (fast-path — triggers plan agents immediately)"
+  else
+    PR_BASE="staging"
+    echo "[$REPO_NAME] Infrastructure change detected: PR targets staging (scripts/workflows need SIT validation)"
+    echo "[$REPO_NAME] Non-doc files: $(echo "$STAGED_FILES" | grep -vE '^(plans/|docs/|cursor-configs/|cursor-rules/)' | head -5 | tr '\n' ' ')"
+  fi
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"

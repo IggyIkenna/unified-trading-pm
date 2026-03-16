@@ -52,6 +52,61 @@ Read these before making ANY code changes:
 - No `# type: ignore` to hide architectural violations — fix the root cause
 - No `try/except ImportError` around library imports — fail loud
 
+## Version Graduation (1.0.0 Process)
+
+All repos start at 0.x.x. The semver-agent pre-1.0.0 override prevents automatic crossing to 1.0.0 (feat! on 0.x.x =
+MINOR bump, not MAJOR). 1.0.0 is a deliberate human decision.
+
+**How to graduate a repo to 1.0.0:**
+
+1. GitHub UI: Actions → `request-major-bump` → Run workflow → proposed_version=1.0.0, reason="..."
+2. CLI: `gh workflow run request-major-bump.yml --repo IggyIkenna/<repo> -f proposed_version="1.0.0" -f reason="..."`
+3. Telegram sends you the approval issue link
+4. Comment `/approve` on the GitHub Issue to execute the bump
+5. Bump goes to staging → SIT validates → promotes to main
+
+**Post-1.0.0 semver rules change:** feat! = MAJOR bump (opens approval issue), not MINOR.
+
+## PM/Codex Doc-Only Fast-Path
+
+When quickmerging PM or codex repos:
+
+- **Plans, docs, cursor rules** (plans/, docs/, cursor-configs/, cursor-rules/, _.md, _.mdc) → PR targets **main**
+  directly. Plan agents fire immediately.
+- **Scripts, workflows** (scripts/, .github/workflows/) → PR targets **staging**. Goes through SIT validation.
+
+This ensures plan changes propagate instantly to agents (plan-health, rules-alignment, codex-sync) without waiting for
+the full SIT cycle.
+
+## Plan Locking
+
+Plans with `locked_by: <branch>` in frontmatter cannot be archived by agents or deleted without `[unlock-plan]` in the
+commit message. This prevents premature removal of plans that are actively being implemented.
+
+- To lock: add `locked_by: live-defi-rollout` and `locked_since: 2026-03-16` to plan frontmatter
+- To unlock: remove those fields from frontmatter
+- PM quality-gates.sh blocks deletion of locked plans without `[unlock-plan]` tag
+- **Agent unlock protocol:** Agents may ASK the human to unlock a plan when all todos are done, but must NEVER unlock
+  autonomously. If approved, agent removes `locked_by`/`locked_since` and includes `[unlock-plan]` in commit.
+
+## Workflow Templates (Canonical in PM)
+
+Per-repo GitHub Actions workflows are managed as **canonical templates** in PM, not flat copies:
+
+- **Templates SSOT:** `unified-trading-pm/scripts/workflow-templates/`
+- **Rollout (generic):** `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`
+- **Rollout (semver-agent):** `bash unified-trading-pm/scripts/propagation/rollout-semver-agent.sh`
+
+| Workflow                        | Pattern                                                     | Why                                     |
+| ------------------------------- | ----------------------------------------------------------- | --------------------------------------- |
+| `request-major-bump.yml`        | Reusable (`workflow_call`)                                  | `workflow_dispatch` supports forwarding |
+| `major-bump-issue-handler.yml`  | Canonical template (flat copy)                              | `issue_comment` can't forward           |
+| `staging-lock-check.yml`        | Canonical template (flat copy)                              | `pull_request` can't forward            |
+| `update-dependency-version.yml` | Canonical template (flat copy)                              | `repository_dispatch` can't forward     |
+| `semver-agent.yml`              | Template + substitution (`__REPO_NAME__`, `__SOURCE_DIR__`) | Repo-specific env vars                  |
+
+**Never edit per-repo workflow copies directly.** Edit the PM template, then run the rollout script.
+
 ## Testing Infrastructure (Emulators & Mocks)
 
 All tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mocks

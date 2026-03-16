@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: Checkout PM for health check script
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_PAT }}
           sparse-checkout: scripts/agents/
@@ -82,7 +82,7 @@ jobs:
           check_claude_api_health
 
       - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
@@ -262,7 +262,7 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
@@ -349,7 +349,7 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}
@@ -437,7 +437,7 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-codex (readiness checklists)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: IggyIkenna/unified-trading-codex
           token: ${{ secrets.GH_PAT }}

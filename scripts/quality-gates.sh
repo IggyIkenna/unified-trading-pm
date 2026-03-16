@@ -100,6 +100,24 @@ if [ -f "$MANIFEST" ]; then
         || { echo "❌ workspace-manifest.json validation failed — fix before committing" >&2; exit 1; }
 fi
 
+# ── Locked plan deletion check ──────────────────────────────────────────
+# Prevent agents from deleting locked plans without [unlock-plan] tag
+DELETED_PLANS=$(git diff --cached --diff-filter=D --name-only -- 'plans/active/*.plan.md' 2>/dev/null || true)
+if [ -n "$DELETED_PLANS" ]; then
+    COMMIT_MSG=$(git log -1 --format=%B 2>/dev/null || true)
+    for plan_file in $DELETED_PLANS; do
+        # Check if the deleted plan had locked_by in its frontmatter
+        # Read from the old version (before deletion)
+        LOCKED_BY=$(git show "HEAD:$plan_file" 2>/dev/null | grep -oP '^\s*locked_by:\s*\K.*' | head -1 || true)
+        if [ -n "$LOCKED_BY" ] && ! echo "$COMMIT_MSG" | grep -q '\[unlock-plan\]'; then
+            echo "❌ BLOCKED: $plan_file is locked by '$LOCKED_BY'."
+            echo "   To delete a locked plan, include [unlock-plan] in your commit message."
+            echo "   This prevents agents from accidentally removing plans that are actively being implemented."
+            exit 1
+        fi
+    done
+fi
+
 # ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then

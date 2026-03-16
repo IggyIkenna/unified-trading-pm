@@ -283,6 +283,45 @@ promotion — requires the same issue flow.
 
 ---
 
+## Plan Locking (Agent Safety)
+
+Plans with `locked_by` in frontmatter are actively being implemented. Agents MUST NOT:
+
+- Archive locked plans (even if all todos show as done)
+- Delete or move locked plans
+- Remove the `locked_by` field programmatically
+
+The plan-health-agent checks this automatically. If you encounter a locked plan during conflict resolution, treat its
+contents as authoritative for the locked branch's changes.
+
+**Agent unlock protocol:** If all todos in a locked plan are genuinely complete, agents MAY ask the human: "Plan X is
+locked but all todos are done. Should I unlock it?" If the human approves, remove `locked_by`/`locked_since` from
+frontmatter and include `[unlock-plan]` in the commit message. If denied, leave it locked. Agents MUST NEVER unlock
+autonomously.
+
+## PM/Codex Routing
+
+PM and codex have a doc-only fast-path in quickmerge:
+
+- plans/, docs/, cursor-configs/, cursor-rules/ changes → direct to main (agents fire immediately)
+- scripts/, .github/workflows/ changes → staging (SIT validates before main)
+
+This means plan changes are available to agents (plan-health, rules-alignment, codex-sync, conflict-resolution) within
+minutes, not hours.
+
+## Workflow Templates (SSOT in PM)
+
+Per-repo GHA workflows are canonical templates in PM — never edit the per-repo copies directly.
+
+- **Templates:** `unified-trading-pm/scripts/workflow-templates/`
+- **Rollout (generic):** `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`
+- **Rollout (semver-agent):** `bash unified-trading-pm/scripts/propagation/rollout-semver-agent.sh`
+- **Semver agent** uses `__REPO_NAME__`/`__SOURCE_DIR__` placeholders — rollout script substitutes per repo.
+- **Hardcoded org names banned** — use `${{ github.repository_owner }}`.
+- **Workflows must fail hard** — no silent `|| true` on critical ops (issue creation, Telegram, version bumps).
+
+---
+
 ## Plans & Tracking
 
 - Active plans: `unified-trading-pm/plans/active/` (`.plan.md` files)

@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
@@ -99,6 +99,11 @@ jobs:
           - Check if they assign contradictory statuses (e.g. one marks a todo completed, another marks it pending with different implementation)
           - Check if they mandate contradictory architectural decisions
           Output: JSON array of contradictions: [{plan_a, plan_b, description}] or [] if none.
+
+          TASK 1.5 — PLAN LOCK CHECK:
+          Before archiving ANY plan, check its YAML frontmatter for 'locked_by' field.
+          If 'locked_by' is present and non-empty: DO NOT archive. Report: \"LOCKED: {plan} locked by {branch} since {date} — skipping archival.\"
+          Also check for plan-level 'depends_on' in frontmatter: if plan X has depends_on listing plan Y's name, and plan Y is being considered for archival, BLOCK the archive. Report: \"BLOCKED: {Y} cannot be archived — plan {X} depends on it.\"
 
           TASK 2 — ARCHIVE FULLY-COMPLETED PLANS:
           A plan is fully completed if ALL of its todos have status: completed (or it has no todos and is marked completed).

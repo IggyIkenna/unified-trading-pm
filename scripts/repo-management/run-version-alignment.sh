@@ -302,6 +302,120 @@ PYEOF
 echo "$CAPPED_REPOS"
 echo ""
 
+# 0.95. Self-version parity — pyproject.toml version must match manifest versions[repo]
+echo "[0.95/4] Checking pyproject.toml vs manifest version parity..."
+SELF_VERSION_DRIFT=$("$PYTHON" - "$PM_ROOT/workspace-manifest.json" "$WORKSPACE_ROOT" <<'PYEOF'
+import json, sys, re
+from pathlib import Path
+
+manifest_path = sys.argv[1]
+workspace = Path(sys.argv[2])
+
+with open(manifest_path) as f:
+    manifest = json.load(f)
+
+versions = manifest.get("versions", {})
+repos = manifest.get("repositories", {})
+drifted = []
+
+for repo_name in sorted(repos):
+    if repo_name.startswith("_"):
+        continue
+    manifest_ver = versions.get(repo_name, "")
+    if not manifest_ver or manifest_ver.startswith("_"):
+        continue
+
+    # Find pyproject.toml version
+    pyproject = workspace / repo_name / "pyproject.toml"
+    if not pyproject.is_file():
+        # Try package.json for UI repos
+        pkg_json = workspace / repo_name / "package.json"
+        if pkg_json.is_file():
+            try:
+                pkg = json.loads(pkg_json.read_text())
+                local_ver = pkg.get("version", "")
+            except Exception:
+                continue
+        else:
+            continue
+    else:
+        content = pyproject.read_text()
+        m = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
+        local_ver = m.group(1) if m else ""
+
+    if local_ver and local_ver != manifest_ver:
+        drifted.append(f"  {repo_name}: pyproject={local_ver} manifest={manifest_ver}")
+
+if drifted:
+    print(f"  [WARN] Self-version drift ({len(drifted)} repo(s)):")
+    for d in drifted:
+        print(d)
+    print()
+    print("  Fix: update versions[repo] in workspace-manifest.json to match pyproject.toml")
+    print("  Or:  bash run-version-alignment.sh --fix  (auto-syncs manifest from pyproject.toml)")
+else:
+    print("  [OK] All repo versions match manifest")
+PYEOF
+)
+echo "$SELF_VERSION_DRIFT"
+if echo "$SELF_VERSION_DRIFT" | grep -q "\[WARN\]"; then
+  SELF_VERSION_HAS_DRIFT=true
+  if [ "$FIX" = true ]; then
+    echo "  Applying --fix: syncing manifest versions from pyproject.toml..."
+    "$PYTHON" - "$PM_ROOT/workspace-manifest.json" "$WORKSPACE_ROOT" <<'PYEOF'
+import json, sys, re
+from pathlib import Path
+
+manifest_path = sys.argv[1]
+workspace = Path(sys.argv[2])
+
+with open(manifest_path) as f:
+    manifest = json.load(f)
+
+versions = manifest.get("versions", {})
+repos = manifest.get("repositories", {})
+fixed = 0
+
+for repo_name in sorted(repos):
+    if repo_name.startswith("_"):
+        continue
+    manifest_ver = versions.get(repo_name, "")
+    if not manifest_ver or manifest_ver.startswith("_"):
+        continue
+
+    pyproject = workspace / repo_name / "pyproject.toml"
+    if pyproject.is_file():
+        content = pyproject.read_text()
+        m = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
+        local_ver = m.group(1) if m else ""
+    else:
+        pkg_json = workspace / repo_name / "package.json"
+        if pkg_json.is_file():
+            try:
+                local_ver = json.loads(pkg_json.read_text()).get("version", "")
+            except Exception:
+                continue
+        else:
+            continue
+
+    if local_ver and local_ver != manifest_ver:
+        versions[repo_name] = local_ver
+        if "version" in repos[repo_name]:
+            repos[repo_name]["version"] = local_ver
+        print(f"  Fixed: {repo_name} {manifest_ver} → {local_ver}")
+        fixed += 1
+
+with open(manifest_path, "w") as f:
+    json.dump(manifest, f, indent=2)
+    f.write("\n")
+print(f"  {fixed} version(s) synced to manifest")
+PYEOF
+  fi
+else
+  SELF_VERSION_HAS_DRIFT=false
+fi
+echo ""
+
 # 1 & 2. Generate derived + canonical manifests (parallel)
 echo "[1/4] Generating derived + canonical manifests (parallel)..."
 "$PYTHON" scripts/manifest/generate-derived-manifest.py &

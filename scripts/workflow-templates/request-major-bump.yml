@@ -1,0 +1,37 @@
+name: request-major-bump
+
+# Thin caller -- forwards to the reusable workflow in unified-trading-pm.
+# SSOT: unified-trading-pm/.github/workflows/request-major-bump-reusable.yml
+#
+# Human-initiated request for a MAJOR version bump (including 0.x.x -> 1.0.0).
+# This workflow ONLY creates a GitHub Issue + sends Telegram alert.
+# The actual version bump happens when a human comments /approve on the issue
+# (handled by major-bump-issue-handler.yml).
+#
+# DO NOT use this to immediately bump versions -- the bump requires /approve on the issue.
+# NO AGENT may trigger this on behalf of a user without explicit human instruction.
+
+on:
+  workflow_dispatch:
+    inputs:
+      proposed_version:
+        description: "New MAJOR version (e.g. 1.0.0 or 2.0.0)"
+        required: true
+        type: string
+      reason:
+        description: "Why this is a MAJOR bump (e.g. removed /v1/orders endpoint)"
+        required: true
+        type: string
+      approver:
+        description: "GitHub handle of requester (defaults to actor)"
+        required: false
+        type: string
+
+jobs:
+  request:
+    uses: IggyIkenna/unified-trading-pm/.github/workflows/request-major-bump-reusable.yml@main
+    with:
+      proposed_version: ${{ inputs.proposed_version }}
+      reason: ${{ inputs.reason }}
+      approver: ${{ inputs.approver }}
+    secrets: inherit

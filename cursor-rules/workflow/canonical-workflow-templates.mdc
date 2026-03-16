@@ -1,0 +1,26 @@
+---
+description: "Per-repo GHA workflows are canonical templates in PM — never edit per-repo copies directly"
+alwaysApply: true
+priority: 90
+tags: [workflows, github-actions, templates, ssot]
+---
+# Canonical Workflow Templates
+
+RULE: Per-repo GitHub Actions workflows (semver-agent, request-major-bump, staging-lock-check, update-dependency-version, major-bump-issue-handler) are managed as canonical templates in `unified-trading-pm/scripts/workflow-templates/`. Never edit the per-repo copies directly.
+
+WHY: 70 repos share these workflows. Editing one copy creates drift. The rollout scripts ensure all repos stay in sync with PM's canonical version.
+
+DO: Edit the template in PM → run the rollout script → force-sync to remote.
+DO: Use `${{ github.repository_owner }}` instead of hardcoded org names.
+DO: Use `exit 1` with `::error::` annotations on critical operations (issue creation, Telegram, version bumps).
+DO: For semver-agent, use `__REPO_NAME__` and `__SOURCE_DIR__` placeholders in the template.
+
+NEVER: Edit `.github/workflows/semver-agent.yml` or other templated workflows in a per-repo directory.
+NEVER: Use `|| true` or `|| echo ""` to silence critical workflow failures.
+NEVER: Hardcode `IggyIkenna` or any org name — always use `github.repository_owner`.
+
+## Rollout Commands
+- Generic workflows: `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`
+- Semver agent: `bash unified-trading-pm/scripts/propagation/rollout-semver-agent.sh`
+- Single repo: add `--repo <name>` flag
+- Dry run: add `--dry-run` flag

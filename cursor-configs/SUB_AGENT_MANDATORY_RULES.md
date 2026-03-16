@@ -243,6 +243,33 @@ isProject: false
 
 ---
 
+## §9a Plan Safety Rules
+
+- **Locked plans:** Plans with `locked_by` in frontmatter MUST NOT be archived, deleted, or moved. Only a human with
+  `[unlock-plan]` in the commit message can remove a locked plan.
+- **Agent unlock protocol:** If all todos in a locked plan are complete, agents MAY ask the human: "Plan X is locked but
+  all todos are done. Should I unlock it?" If approved, remove `locked_by`/`locked_since` and include `[unlock-plan]` in
+  the commit message. If denied, leave it locked. NEVER unlock autonomously.
+- **Plan dependencies:** If plan A has `depends_on: [plan-B-name]`, plan B cannot be archived while plan A is active.
+- **Plan structure:** ALL todos must appear in the frontmatter YAML block (before closing `---`). Notes, context,
+  architecture, Mermaid diagrams go AFTER frontmatter. Why: conflict-resolution-agent reads head -250 per plan; todos
+  after line 250 are invisible.
+
+## §9b Workflow Template Rules
+
+- **Never edit per-repo workflow copies directly.** All per-repo GHA workflows (semver-agent, request-major-bump,
+  staging-lock-check, update-dependency-version, major-bump-issue-handler) are managed as canonical templates in
+  `unified-trading-pm/scripts/workflow-templates/`.
+- **To modify a workflow:** Edit the PM template → run the rollout script → force-sync to remote.
+  - Generic workflows: `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`
+  - Semver agent: `bash unified-trading-pm/scripts/propagation/rollout-semver-agent.sh`
+- **Semver agent** uses `__REPO_NAME__` and `__SOURCE_DIR__` placeholders — the rollout script substitutes them.
+- **Hardcoded org names are banned.** Use `${{ github.repository_owner }}` instead of `IggyIkenna`.
+- **GHA workflows must fail hard.** No `|| true` or `|| echo ""` on critical operations (issue creation, Telegram
+  alerts, version bumps). Use `exit 1` with `::error::` annotations.
+
+---
+
 ## §9b Citadel-Grade Planning Standards
 
 Every plan MUST follow these standards. Agents creating plans that don't meet these standards MUST be corrected.
