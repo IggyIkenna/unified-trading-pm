@@ -33,10 +33,10 @@ supersedes:
 todos:
   - id: website-repo-integration
     content: >
-      - [ ] [AGENT] P1. Clone odum-research-website repo into workspace. Add to workspace-manifest.json with type:
-      infrastructure, arch_tier: infrastructure. Set up quality-gates.sh (UI type), GitHub Actions workflows. Verify:
-      repo appears in manifest, QG passes.
-    status: pending
+      - [x] [AGENT] P1. Clone odum-research-website repo into workspace. Add to workspace-manifest.json with type: ui,
+      arch_tier: ui. Set up quality-gates.sh (UI type), GitHub Actions workflows, cloudbuild.yaml, buildspec.aws.yaml.
+      Repo created at IggyIkenna/odum-research-website (private). QG stub + CI + CLAUDE.md + quickmerge symlink added.
+    status: done
 
   - id: website-content-refresh
     content: >
@@ -70,20 +70,19 @@ todos:
 
   - id: website-stack-audit
     content: >
-      - [ ] [AGENT] P1. Inspect datadodo/odum_website repo: detect tech stack (Next.js, static HTML, CMS), package
-      manager, build system, existing CI. Document findings in odum-research-website/docs/stack.md. Create
-      eggyakana/odum-research-website GitHub repo (private). Clone datadodo/odum_website preserving git history.
-      Re-point remote to eggyakana org.
-    status: pending
+      - [x] [AGENT] P1. Inspected datadodo/odum_website: Next.js 15 + React 19 + TypeScript + Tailwind CSS 4 + Firebase
+      (Auth, Firestore, Hosting) + GCS proxy. Created IggyIkenna/odum-research-website (private). Remote re-pointed from
+      datadodo to IggyIkenna. Old upstream remote deleted.
+    status: done
     depends_on: []
 
   - id: website-workspace-config-files
     content: >
-      - [ ] [AGENT] P1. Add odum-research-website to workspace configs: (1) workspace-manifest.json entry with type=ui,
+      - [x] [AGENT] P1. Add odum-research-website to workspace configs: (1) workspace-manifest.json entry with type=ui,
       arch_tier=ui, cluster=website, org=eggyakana, merge_level=11, status=active. (2) Add to
       workspace-uis.code-workspace and workspace-complete.code-workspace. (3) Create
       unified-trading-codex/10-audit/repos/odum-research-website.yaml. (4) Add .github/workflows/quality-gates.yml.
-    status: pending
+    status: done
     depends_on: [website-stack-audit]
 
   - id: website-content-refresh-detail

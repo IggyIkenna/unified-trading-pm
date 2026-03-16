@@ -505,6 +505,37 @@ todos:
       execution-service (7 violations, QG exit 1), no_reason on most others. QG script size: execution-service=54L (was
       59L — audit §2 threshold was 50L stub limit, now at 54L still needs expansion for integration tests). All other
       L7-L8 repos have QG scripts (25-36L). All 17 failing repos have tests/ directories (11-103 test files each)."
+  - id: defi-aave-connector-live-execution
+    content: |
+      - [ ] [AGENT] P0. AAVEConnector live execution wiring. Currently `is_live: pass` does nothing
+        (unified-defi-execution-interface/protocols/aave.py). The connector is simulation-only.
+        BLOCKS ALL LIVE DEFI TRADING. Fix:
+        1. Initialize Web3 provider from DEFI_RPC_URL / FORK_MODE config in __init__
+        2. Wire supply() → pool.functions.supply().build_transaction() → sign → send
+        3. Wire borrow() → pool.functions.borrow().build_transaction() → sign → send
+        4. Wire withdraw(), repay(), flash_loan() same pattern
+        5. Add gas estimation, nonce management, receipt waiting with timeout
+        6. Add transaction revert detection and error mapping to CanonicalError
+        7. Integration test against Anvil fork (FORK_MODE=anvil)
+        All other connectors (Uniswap, Lido, EtherFi, Morpho) need same audit — check if
+        their is_live paths are also stubs.
+        Repos: unified-defi-execution-interface, execution-service.
+    status: todo
+    note: "P0 BLOCKER for live DeFi. Phase 4 execution-service hardening."
+  - id: defi-flash-loan-settlement-wiring
+    content: |
+      - [ ] [AGENT] P1. Wire flash loan fees into settlement_service. Currently FLASH_BORROW and
+        FLASH_REPAY operations are defined in the instruction model but fees are not tracked in
+        settlement events. Fix:
+        1. Add SettlementType.FLASH_LOAN_FEE to settlement enum (UIC)
+        2. In settlement_service: when processing atomic bundles with FLASH_BORROW, calculate
+           fee = amount * fee_rate (Aave=0.05%, Morpho=0%, Balancer=0%)
+        3. Record as transaction_costs in PnLAttribution
+        4. Fee rates should come from a config (not hardcoded) since protocols change fees
+        5. Add to yield_recon_engine: reconcile expected flash fee vs actual gas+fee on-chain
+        Repos: strategy-service (settlement_service.py), unified-internal-contracts (SettlementType).
+    status: todo
+    note: "P1. Phase 4 execution-service hardening."
   - id: service-l9-harden
     content: |
       - [ ] [AGENT per repo] P1. L9 (9 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, trading-analytics-api.
@@ -590,6 +621,44 @@ todos:
       - [x] [AGENT] P2. Elysium DeFi system fork — standalone repo with DeFi strategy/execution components. Replace 8 stub handlers with implementations. Docker build produces working image.
       COMPLETED 2026-03-13: 5 DeFi handlers implemented (borrow, lend, stake, swap, flash_loan) via unified-defi-execution-interface connectors. FORK_MODE routing with Anvil auto-resolution. Targeted unit tests to 70% coverage. Commits: 1db86f5, 72ee782.
     status: done
+  - id: defi-eigenlayer-restaking-connector
+    content: |
+      - [ ] [AGENT] P1. EigenLayer restaking connector. Listed in UMI registry but no connector
+        exists in unified-defi-execution-interface. Blocks E4Fi (EigenLayer-for-Finance) strategies.
+        Implement EigenLayerConnector with:
+        1. deposit() → DelegationManager.delegateTo() (delegate to operator)
+        2. queue_withdrawal() → DelegationManager.queueWithdrawals()
+        3. complete_withdrawal() → DelegationManager.completeQueuedWithdrawals()
+        4. get_shares() → query shares per strategy
+        5. get_withdrawal_delay() → query minWithdrawalDelayBlocks
+        6. get_rewards() → RewardsCoordinator.processClaim() for EIGEN token distribution
+        Contract addresses: DelegationManager, StrategyManager, RewardsCoordinator (mainnet).
+        Testnet: Holesky deployment exists.
+        Integration test against Anvil fork.
+        Repos: unified-defi-execution-interface (connector), unified-market-interface (adapter).
+    status: todo
+    note: "P1. Phase 6 — extends Elysium DeFi capabilities for E4Fi strategies."
+  - id: feature-testing-stage-progression
+    content: |
+      - [ ] [AGENT] P2. Codify 7-stage testing progression as first-class system concept.
+        Add TestingStage enum to UIC:
+        MOCK → HISTORICAL → LIVE_MOCK → LIVE_TESTNET → BATCH_REAL → STAGING → LIVE_REAL
+        Per-venue capability in UAC SourceCapability: supported_testing_stages list.
+        Per-strategy tracking in manifest: current_testing_stage per strategy_id.
+        Gate enforcement: strategy cannot advance to next stage without passing current stage.
+        Stage definitions:
+        - MOCK: All fake, simulates live event schema. CLOUD_MOCK_MODE=true.
+        - HISTORICAL: Real static data, minimum sample. CSV/GCS replay.
+        - LIVE_MOCK: Live market data feed, paper execution. DATA_MODE=real, is_live=False.
+        - LIVE_TESTNET: Live market data, testnet execution. FORK_MODE=anvil/tenderly.
+        - BATCH_REAL: Real historical data, optimize strategy params. RUNTIME_MODE=batch.
+        - STAGING: Near-prod. Tenderly fork + real secrets + full auth.
+        - LIVE_REAL: Production. Real mainnet, real capital.
+        Stage transitions require: QG pass + minimum data sample + human approval (for STAGING→LIVE_REAL).
+        Repos: unified-internal-contracts (TestingStage enum), unified-api-contracts (SourceCapability extension),
+        unified-config-interface (stage-aware config loader), strategy-service (stage gate enforcement).
+    status: todo
+    note: "P2. Phase 6 — foundation for controlled DeFi rollout."
   - id: feature-user-management
     content: |
       - [x] [AGENT] P2. User management platform — role-based access, authentication, admin portal.

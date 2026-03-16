@@ -115,6 +115,20 @@ todos:
     content: >
       - [ ] Create extreme load and market move fixtures; wire into services and UIs
     status: pending
+  - id: phase5-mock-feature-dynamics
+    content: >
+      - [ ] [AGENT] P2. Mock feature dynamics for DeFi. Currently mock mode returns static seed data — APYs, funding
+      rates, health factors are fixed values. For realistic mock testing, mock data should simulate time-varying market
+      dynamics: (a) APY oscillation: Aave supply APY varies 2-8% with utilization-driven spikes, (b) Funding rate
+      cycles: Hyperliquid funding flips positive/negative on 8h cycle, (c) Health factor degradation: simulate
+      collateral price drop → HF approaches 1.0, (d) weETH rate appreciation: ~0.01% per day steady growth with
+      occasional jumps, (e) Liquidation cascade scenario: rapid HF drop below 1.0 with penalty, (f) Gas spike scenario:
+      gas jumps from 30 to 500 gwei blocking flash loans. Implement as MockDeFiDynamics class in
+      unified-trading-library/core/mock_state_store.py that generates realistic time-series when
+      MOCK_STATE_MODE=interactive. Deterministic mode (CI) uses fixed values. Interactive mode (dev) uses dynamic
+      simulation. This enables "mock covers what live would deliver" — same event schemas, realistic values. Repos:
+      unified-trading-library (MockDeFiDynamics), strategy-service (wire into mock provider).
+    status: pending
   - id: phase6-rollout
     content: >
       - [ ] Rollout across all 60+ repos; create per-repo checklist from manifest

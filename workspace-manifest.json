@@ -74,6 +74,7 @@
     "matching-engine-library": "0.1.57",
     "ml-inference-api": "0.1.0",
     "ml-training-api": "0.1.0",
+    "odum-research-website": "0.1.0",
     "pnl-attribution-service": "0.1.0",
     "system-integration-tests": "0.2.0",
     "trading-analytics-api": "0.1.0",
@@ -694,7 +695,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1836,6 +1837,32 @@
       "role": "ui",
       "tags": ["cefi", "onboarding", "standard"]
     },
+    "odum-research-website": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "control",
+      "doc_standard": "ui-canonical",
+      "codex_sections": ["01-domain"],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "dependencies": ["unified-trading-pm"],
+      "ci_status": "LOCAL_PASS",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/odum-research-website",
+      "cluster": "website",
+      "completion_path": "infrastructure",
+      "semver_rules_ref": "ui",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui",
+      "tags": ["website", "infrastructure", "standard"],
+      "notes": "Odum Research corporate website \u2014 presentations portal with Firebase Auth, Firestore, GCS proxy. Migrated from datadodo/odum_website. PM dependency for presentation content."
+    },
     "pnl-attribution-service": {
       "type": "service",
       "arch_tier": "service",
@@ -2970,7 +2997,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",

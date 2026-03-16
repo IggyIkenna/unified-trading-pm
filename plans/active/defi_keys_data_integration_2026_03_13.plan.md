@@ -94,7 +94,10 @@ todos:
   - id: secrets-defi-testnet
     content: >
       - [ ] [HUMAN] P1. Load DeFi testnet secrets: alchemy-api-key-testnet (Sepolia), tenderly-fork-rpc-url,
-      hyperliquid-testnet-api-credentials, wallet-dev-private-key (test wallet only, never production).
+      hyperliquid-testnet-api-credentials, wallet-dev-private-key (test wallet only, never production). NOTE: Lido
+      Goerli testnet is DEPRECATED (decommissioned). Use Holesky for Lido/stETH testing. EtherFi also deploys on
+      Holesky. Add alchemy-api-key-holesky to secret list if Holesky RPC needed separately from Sepolia. Testnet
+      contract addresses differ from mainnet — see testnet-contract-registry item in Phase 2.5.
     status: pending
 
   - id: secrets-bootstrap
@@ -103,6 +106,19 @@ todos:
       trading-analytics-api), ANTHROPIC_API_KEY for SIT (system-integration-tests), GCP_SA_KEY for CI service account
       authentication.
     status: pending
+
+  - id: secrets-credential-audit-script
+    content: >
+      - [ ] [AGENT] P1. Build credential audit script. CredentialsRegistry in unified-cloud-interface has venue/service
+      → secret name mappings but no audit() method. Create scripts/credential-audit.py that: (1) reads
+      CredentialsRegistry.VENUE_SECRET_MAP + SERVICE_ACCOUNT_MAP + sports_venue_credentials (73 venues), (2) for each
+      secret name, checks if it exists in GCP Secret Manager via `gcloud secrets describe`, (3) outputs table: venue |
+      secret_name | exists_in_sm | has_version | environment. Add --environment flag (dev/staging/prod) to check
+      environment-specific secrets. Add --fail-missing flag for CI gate (exit 1 if any required secret missing). Wire
+      into quality-gates as optional check (skip if no GCP credentials available in CI). Repos: unified-cloud-interface
+      (audit method on CredentialsRegistry), unified-trading-pm (scripts/credential-audit.py wrapper).
+    status: pending
+    depends_on: [secrets-bootstrap]
 
   # ── Phase 2: VCR CASSETTE RECORDING ────────────────────────────────────────
   # Exit criteria: All venues have cassettes, cassette schema parity test passes
@@ -148,6 +164,25 @@ todos:
     status: pending
     depends_on: [secrets-ws-vendors]
 
+  # ── Phase 2.5: TESTNET CONTRACT REGISTRY ───────────────────────────────────
+  # Exit criteria: All DeFi connectors can resolve testnet contract addresses from registry
+  # Blocker: Phase 1 (testnet secrets loaded)
+
+  - id: testnet-contract-registry
+    content: >
+      - [ ] [AGENT] P1. Create testnet contract address registry. Currently DeFi connectors have mainnet contract
+      addresses hardcoded (e.g., Aave Pool=0x87870Bca..., Uniswap Router=0xE592...). No mapping exists for testnet
+      deployments. Create unified-api-contracts/config/testnet_contracts.yaml with per-chain, per-protocol addresses:
+      aave_v3_sepolia (Pool, Oracle, DataProvider), uniswap_v3_sepolia (Router, Factory, Quoter), morpho_sepolia
+      (Morpho, IRM), lido_holesky (stETH, wstETH, WithdrawalQueue), etherfi_holesky (LiquidityPool, eETH, weETH),
+      eigenlayer_holesky (DelegationManager, StrategyManager, RewardsCoordinator). Add TestnetContractRegistry class in
+      unified-config-interface that loads from YAML and resolves by (protocol, chain_id) → contract addresses dict.
+      Update DeFi connectors to use registry instead of hardcoded addresses when FORK_MODE != "" or chain_id is a known
+      testnet (11155111=Sepolia, 17000=Holesky, 421614=Arbitrum Sepolia). Repos: unified-api-contracts (YAML),
+      unified-config-interface (loader), unified-defi-execution-interface (connector updates).
+    status: pending
+    depends_on: [secrets-defi-testnet]
+
   # ── Phase 3: DATA FRESHNESS & SLAs ─────────────────────────────────────────
   # Exit criteria: FreshnessMonitor deployed, per-venue SLAs, stale data alerts fire within 60s
   # Blocker: Plan 1 Phase 3 (library tiers green)
@@ -174,9 +209,43 @@ todos:
     status: pending
     depends_on: [freshness-monitor-class, freshness-venue-slas]
 
+  - id: defi-feature-computation-implementation
+    content: >
+      - [ ] [AGENT] P0. Implement DeFi feature calculators in features-onchain-service. Currently the service has output
+      schemas defined but NO code computing the 10+ DeFi metrics that the 4 DeFi strategies require. THIS IS A P0
+      BLOCKER — without these features, strategies generate signals from default/stale values. IMPLEMENT calculators
+      for: (a) lst_staking_apy — fetch weETH/ETH exchange rate from EtherFi adapter, compute annualized rate change (b)
+      weeth_eth_rate — current weETH/ETH rate from EtherFi LiquidityPool contract (c) aave_supply_apy — from Aave V3
+      getReserveData().currentLiquidityRate / RAY * seconds_per_year (d) aave_borrow_apy_eth — from
+      getReserveData().currentVariableBorrowRate for WETH (e) aave_utilization — from getReserveData()
+      totalStableDebt+totalVariableDebt / totalAToken (f) aave_liquidity_index — direct from
+      getReserveData().liquidityIndex / RAY (g) aave_ltv — from getReserveConfigurationData() for weETH (or per-asset)
+      (h) morpho_flash_loan_liquidity — available liquidity in Morpho Blue markets (i) health_factor — from Aave
+      getUserAccountData().healthFactor / 1e18 (j) weekly_rewards — from EtherFi/EigenLayer reward distribution events
+      Each calculator: fetch from RPC/Graph → validate → emit as feature with timestamp. Wire into
+      features-onchain-service feature_pipeline.py. Test: mock RPC responses in tests, verify output schema matches
+      strategy expectations. Repos: features-onchain-service.
+    status: pending
+    depends_on: [freshness-monitor-class]
+
   # ── Phase 4: PRODUCTION BACKFILL ───────────────────────────────────────────
   # Exit criteria: 1yr tick data per venue, features computed, ML models trained, backtests validated
   # Blocker: Phase 1-2 (secrets + cassettes); Plan 1 Phase 4 (services deployed)
+
+  - id: backfill-historical-apy-storage
+    content: >
+      - [ ] [AGENT] P0. Historical APY persistent storage. DeFiYieldMonitor only fetches current APY — can't backtest
+      lending/staking strategies without historical rates. THIS IS A P0 BLOCKER for D5. Create APYTimeSeries table in
+      BigQuery: (protocol, asset, chain, timestamp, apy_pct, liquidity_index, borrow_index, exchange_rate, tvl_usd,
+      utilization_pct, source). Backfill sources: (a) Aave: AaveScan API + The Graph for liquidityIndex/borrowIndex
+      history (hourly, since V3 launch), (b) Curve: The Graph for pool virtual_price + fee APY (15-min, since pool
+      creation), (c) Morpho/Euler/Fluid: Alchemy RPC block-level state snapshots (daily, 90 days), (d)
+      Lido/EtherFi/Ethena: DefiLlama yield API for historical APY (daily, best available), (e) Hyperliquid: Tardis.dev
+      for funding rate history. Minimum backfill: 90 days for lending, 180 days for basis, 365 days for recursive. Wire
+      into BacktestService: accept historical_yields dict in BacktestConfig, replace current-only DeFiYieldMonitor
+      fetches with time-series lookups from BigQuery. Repos: features-onchain-service (backfill jobs), strategy-service
+      (BacktestService integration).
+    status: pending
 
   - id: backfill-instruments-metadata
     content: >
@@ -212,6 +281,20 @@ todos:
       reviews PnL curves, drawdown, and risk metrics. Gate: no anomalous results, metrics within historical bounds.
     status: pending
     depends_on: [backfill-ml-training]
+
+  - id: backfill-minimum-data-certification
+    content: >
+      - [ ] [AGENT] P2. Minimum data sample certification gate. Before a strategy can advance from HISTORICAL to
+      LIVE_MOCK (or from BATCH_REAL to STAGING), require minimum historical data coverage. Create DataCertification
+      check in strategy-service: (a) Per strategy type: LENDING requires 90 days APY history, BASIS requires 180 days
+      funding + basis history, STAKED_BASIS requires 180 days LST rate + funding, RECURSIVE requires 365 days (need to
+      see liquidation events in history). (b) Per feature: check BigQuery APYTimeSeries table for coverage — gap
+      detection (no gaps > 4 hours for CeFi, > 24 hours for DeFi). (c) Per venue: check tick data completeness from
+      market-tick-data-service. Output: DataCertificationReport with pass/fail per strategy, per feature, per venue.
+      Wire as gate in strategy deployment pipeline: strategy cannot go live without certification. Repos:
+      strategy-service (certification check), unified-config-interface (minimum sample config).
+    status: pending
+    depends_on: [backfill-validation]
 
   - id: freshness-wire-services
     content: >

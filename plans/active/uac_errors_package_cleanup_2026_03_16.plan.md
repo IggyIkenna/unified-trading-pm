@@ -468,6 +468,27 @@ todos:
     status: todo
     note: "PARALLEL stream C."
 
+  - id: p5-rva-index-cross-protocol
+    content: |
+      - [ ] [AGENT] P2. Implement RVA (Realized Value Appreciation) index for non-Aave protocols.
+        Aave uses liquidity_index (correct — tracks compounding on-chain). All other protocols
+        (Morpho, Euler, Fluid, Curve, Lido, EtherFi, Ethena) use snapshot APYs — less accurate
+        for cross-protocol PnL comparison across different APY volatility profiles.
+        Create cumulative yield index per vault/position:
+        rva_index(t) = rva_index(t-1) * (1 + apy(t) * dt / 365)
+        This converts point-in-time APY snapshots into a monotonically increasing index
+        analogous to Aave's liquidity_index. Then PnL = amount * (rva_current / rva_entry - 1).
+        Schema in UIC: RVAIndex(protocol, asset, chain, timestamp, index_value, source_apy).
+        Storage: BigQuery table alongside APYTimeSeries (from defi_keys plan).
+        Computation: features-onchain-service computes per-candle from APY snapshots.
+        Wire into PnLCalculator: use RVA index for non-Aave lending/staking PnL attribution
+        instead of raw APY * time approximation.
+        This makes PnL attribution consistent across ALL DeFi protocols.
+        Repos: unified-internal-contracts (RVAIndex schema), features-onchain-service (computation),
+        strategy-service (PnLCalculator integration).
+    status: todo
+    note: "PARALLEL stream C. Enables accurate cross-protocol PnL comparison."
+
   # --- Stream D: Risk Matrix & P&L Attribution Framework ---
   # IMPLEMENTATION SPEC: plans/active/stream_d_risk_matrix_implementation.md
   # That file has exact schemas, file paths, line numbers, DRY analysis, and
@@ -687,6 +708,49 @@ todos:
         Repos: strategy-service (settlement_service.py), execution-service (yield_recon_engine.py).
     status: todo
     note: "PARALLEL stream D. Catches double-counting bugs in composite DeFi positions."
+
+  - id: p5-emergency-exit-playbooks
+    content: |
+      - [ ] [AGENT] P0. Emergency exit playbook system — per-strategy position unwinding
+        on kill switch activation. Currently kill switch blocks new orders but does NOT
+        unwind existing positions. "Close all positions" means different things per strategy.
+        THREE-LAYER ARCHITECTURE:
+        LAYER 1 — SCHEMA (UIC, restart to add new exit types):
+        - EmergencyExitType StrEnum: MARKET_CLOSE, ATOMIC_UNWIND, DELEVERAGE_SEQUENCE,
+          DELTA_HEDGE, STOP_NEW_ONLY, UNSTAKE_QUEUE
+        - EmergencyExitStep: order (sequence), action, instrument_filter, urgency
+          (immediate/best_effort/queued), max_slippage_bps, timeout_seconds
+        - EmergencyExitPlaybook: strategy_type, exit_type, steps[], description
+        - ClientRiskTolerance: client_id, max_drawdown_pct, max_var_breach_pct,
+          auto_kill_switch_timeout_minutes, emergency_exit_override
+        FILE: UIC domain/risk_service/risk.py (add after ExtendedPnLAttribution)
+        LAYER 2 — CONFIG (GCS via UCI, hot-reloadable):
+        - gs://config/emergency/exit_playbooks.yaml — per-strategy exit steps
+        - gs://config/clients/{client_id}/risk_tolerance.yaml — per-client thresholds
+        - UCI validates YAML structure, hot-reloads on change
+        STRATEGY-SPECIFIC EXIT DEFINITIONS:
+        - MOM: market_close (sell to flat)
+        - BASIS: atomic_unwind (close BOTH legs simultaneously — naked exposure if one-sided)
+        - RECURSIVE_STAKED_BASIS: deleverage_sequence (repay debt→withdraw collateral→swap)
+        - OPTIONS: delta_hedge (hedge to delta-neutral) or market_close
+        - SPORTS: stop_new_only (can't close settled bets)
+        - LENDING/STAKING: unstake_queue (may have 7-28 day unbonding period!)
+        LAYER 3 — EXECUTION:
+        - risk-and-exposure-service: monitors client thresholds → triggers kill switch
+        - execution-service: kill switch → loads playbook → orchestrates exit steps
+        - strategy-service: domain knowledge of HOW to execute each step
+        CLIENT-SPECIFIC:
+        - Different clients can have different drawdown limits (10% vs 20%)
+        - Client risk tolerance overrides strategy defaults
+        - Per-client kill switch timeout (aggressive vs conservative)
+        VISUALIZATION:
+        - Monitoring UI: client risk tolerance dashboard, exit playbook viewer,
+          active exit progress tracker (which step are we on?)
+        Repos: unified-internal-contracts (schemas), unified-config-interface (config loader),
+        execution-service (kill switch + orchestration), strategy-service (exit logic),
+        risk-and-exposure-service (threshold monitoring).
+    status: todo
+    note: "PARALLEL stream D. Critical for 24/7 ops — kill switch without exit playbook is incomplete."
 
   - id: p5-unified-margin-endpoint
     content: |

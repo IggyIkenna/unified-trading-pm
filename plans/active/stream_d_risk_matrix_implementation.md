@@ -597,3 +597,86 @@ fields on the RiskPnLNode (which already has level_id for client/strategy) rathe
 
 If proceeding with Option B: add GreeksExposure removal to p2c (UIC cleanup). Update consumers to use
 PortfolioGreeksSnapshot from UAC + RiskPnLNode context fields.
+
+---
+
+## p5-emergency-exit-playbooks: Emergency Exit Playbook System
+
+### Problem
+
+Kill switch blocks new orders but does NOT unwind existing positions. "Close all positions" means completely different
+things per strategy type.
+
+### Per-Strategy Exit Definitions
+
+| Strategy               | Exit Type                   | Steps                                                      | Order Matters?                              |
+| ---------------------- | --------------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| MOM (spot/perp)        | MARKET_CLOSE                | sell to flat                                               | No                                          |
+| BASIS                  | ATOMIC_UNWIND               | close perp + close spot simultaneously                     | YES — naked exposure if one-sided           |
+| RECURSIVE_STAKED_BASIS | DELEVERAGE_SEQUENCE         | 1. repay debt → 2. withdraw collateral → 3. swap to stable | YES — wrong order = liquidation             |
+| OPTIONS                | DELTA_HEDGE or MARKET_CLOSE | hedge to delta-neutral, then optionally close              | YES — close one leg of spread = naked gamma |
+| SPORTS                 | STOP_NEW_ONLY               | block new bets (existing settle by event)                  | N/A                                         |
+| LENDING/STAKING        | UNSTAKE_QUEUE               | initiate unbonding (7-28 day wait!)                        | Time-dependent                              |
+
+### Schema (UIC domain/risk_service/risk.py)
+
+```python
+class EmergencyExitType(StrEnum):
+    MARKET_CLOSE = "market_close"
+    ATOMIC_UNWIND = "atomic_unwind"
+    DELEVERAGE_SEQUENCE = "deleverage_sequence"
+    DELTA_HEDGE = "delta_hedge"
+    STOP_NEW_ONLY = "stop_new_only"
+    UNSTAKE_QUEUE = "unstake_queue"
+
+class EmergencyExitStep(BaseModel):
+    order: int = Field(description="execution sequence — same order = simultaneous")
+    action: str = Field(description="close_perp, sell_spot, repay_debt, withdraw_collateral, etc.")
+    instrument_filter: str | None = None
+    urgency: str = Field(default="immediate", description="immediate | best_effort | queued")
+    max_slippage_bps: int = Field(default=50)
+    timeout_seconds: int = Field(default=300)
+
+class EmergencyExitPlaybook(BaseModel):
+    strategy_type: str
+    exit_type: EmergencyExitType
+    steps: list[EmergencyExitStep]
+    description: str
+
+class ClientRiskTolerance(BaseModel):
+    client_id: str
+    max_drawdown_pct: Decimal = Field(description="kill switch trigger: e.g. 10.0 = -10%")
+    max_var_breach_pct: Decimal = Field(default=Decimal("150"), description="e.g. 150 = 1.5x VaR limit")
+    auto_kill_switch_timeout_minutes: int = Field(default=30)
+    emergency_exit_override: str | None = Field(default=None, description="close_all | hedge_only | stop_new_only")
+```
+
+### Config (GCS via UCI)
+
+Path: `gs://config/emergency/exit_playbooks.yaml` Path: `gs://config/clients/{client_id}/risk_tolerance.yaml`
+
+UCI config class:
+
+```python
+class EmergencyExitConfig(BaseModel):
+    playbooks: dict[str, EmergencyExitPlaybook]
+    model_config = {"extra": "forbid"}
+```
+
+### Execution Flow
+
+1. risk-and-exposure-service monitors client drawdown/VaR thresholds
+2. Threshold breached → activates kill switch with auto_deactivate_after_minutes from client config
+3. Kill switch activation → loads exit playbook for each active strategy
+4. Per-strategy: execution-service sends orders per playbook step sequence
+5. Steps with same `order` value execute simultaneously (ATOMIC_UNWIND)
+6. Steps with ascending `order` values execute sequentially (DELEVERAGE_SEQUENCE)
+7. Progress tracked: which step are we on, what's filled, what's pending
+8. Monitoring UI shows: active exit tracker, per-step status, fill progress
+
+### DRY Compliance
+
+- Reuses existing kill switch infrastructure (execution-service/engine/kill_switch.py)
+- Reuses existing auto_deactivate_after_minutes (just added in p5-cb-kill-switch-auto-deactivate)
+- Reuses ClientRiskTolerance.auto_kill_switch_timeout_minutes for the timeout
+- Strategy-service already has domain knowledge per strategy type — exit logic lives there
