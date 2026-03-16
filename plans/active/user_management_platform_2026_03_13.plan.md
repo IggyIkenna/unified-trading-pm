@@ -127,8 +127,8 @@ Okta was explicitly dropped (archived plan `ui_auth_oauth_pkce_2026_03_09`, done
 2.0 + AWS Cognito PKCE in `unified-admin-ui/packages/core`.
 
 However, there is no self-service platform to provision and manage user access across the Odum Research toolset (GitHub,
-Slack, Microsoft 365, GCP, website portal). This plan creates `user-management-ui` — a new dedicated repo that does what
-Okta's admin console did, but as Odum's own managed service.
+Slack, Microsoft 365, GCP, website portal, AWS). This plan creates `user-management-ui` — a new dedicated repo that does
+what Okta's admin console did, but as Odum's own managed service.
 
 Visual style matches `deployment-ui` — same sidebar nav, same `@unified-admin/core` components, same
 `@unified-trading/ui-kit` design tokens. Consistent brand experience.

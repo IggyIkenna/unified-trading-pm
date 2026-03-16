@@ -75,28 +75,21 @@ tests and coverage gaps across all repos; no bypasses; T0–T3 libs ≥80%, serv
 instrument types, sports market granularity (BTTS end-to-end), BetSide/CommissionModel enums, and consumer adoption
 across 11 repos; enum consolidation with UCI re-exports from UAC.
 
-### 11. Feature Enrichment — Reversal Dynamics
-
-**File:** [feature_enrichment_reversal_dynamics.plan.md](feature_enrichment_reversal_dynamics.plan.md) **Type:** code |
-**Status:** active — resumed from archive (incomplete todos) (all 10 todos in_progress) | **Scope:** Enrich the feature
-engineering pipeline with ~4,000–5,000 new derived features (streak reversals, cross-candle morphology, N-bar
-confirmation, multi-signal confluence, volatility regimes, and more); 70% unit test coverage target.
-
-### 12. Production Mock E2E
+### 11. Production Mock E2E
 
 **File:** [production_mock_e2e_plan_d90c8f20.plan.md](production_mock_e2e_plan_d90c8f20.plan.md) **Type:** infra |
 **Status:** active — resumed from archive (incomplete todos) (~13/26 done) | **Scope:** Bring all 60+ repos to
 production-standard mock E2E testability — libraries via UAC/UIC validation and VCR cassettes; services/APIs via mock
 data replay and load checks; UIs via mock API and smoke tests.
 
-### 13. User Management Platform
+### 12. User Management Platform
 
 **File:** [user_management_platform_2026_03_13.plan.md](user_management_platform_2026_03_13.plan.md) **Type:** code |
 **Status:** active — resumed from archive (incomplete todos); unique scope not covered by other active plans |
 **Scope:** New `user-management-ui` repo — full lifecycle user management (onboard/modify/off-board) with provisioning
 for GitHub, Slack, M365, GCP IAM, and website portal per role.
 
-### 14. Quality Gates Systemic Remediation (2026-03-16)
+### 13. Quality Gates Systemic Remediation (2026-03-16)
 
 **File:** [quality_gates_systemic_remediation_2026_03_16.plan.md](quality_gates_systemic_remediation_2026_03_16.plan.md)
 **Type:** infra | **Status:** active (new) | **Scope:** Systemic remediation of all quality gate failures identified in
@@ -106,10 +99,11 @@ the 2026-03-16 audit — covers type errors, coverage gaps, lint violations, and
 
 ## Archived Plans (2026-03-16 cleanup)
 
-25 plans archived across all sessions. See `plans/archive/` for full files.
+26 plans archived across all sessions. See `plans/archive/` for full files.
 
 | Plan                                           | Reason                                                                                  |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| feature_enrichment_reversal_dynamics           | Completed 2026-03-16 — 65 new features, 290 tests across 4 services                     |
 | live_batch_protocol_completeness_2026_03_10    | Complete (100% done)                                                                    |
 | strategy_visibility_grafana_2026_03_10         | Design doc; superseded by cicd_code_rollout_master feature-grafana                      |
 | stub_completion_interfaces_and_infra           | Self-archived; todos extracted to other active plans                                    |

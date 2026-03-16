@@ -11,15 +11,15 @@ overview: |
   statistical anomaly detection, cross-instrument enrichment, and cross-timeframe
   propagation. 70% unit test coverage target. All bidirectional, multi-parameter.
 
-  STATUS (2026-03-16): Near-complete. All core Tier 1 feature categories implemented:
+  STATUS (2026-03-16): DONE. All todos complete. All core Tier 1 feature categories implemented:
   tier0-auto-diff (done), cat-a-streak-reversal (done, 12 features, 45 tests),
   cat-b-cross-candle (done, 22 features, 80 tests), cat-c-nbar-confirmation (done),
   cat-e-o-confluence-anomaly (done), cat-g-l-volume-orderflow (done, 12 features, 27 tests),
   cat-i-n-sr-memory (done, 11 features, 33 tests). cat-d-f-indicator-transitions superseded
-  by ML analysis (auto-diff + lags already capture these signals). cat-h-vol-dynamics
-  in_progress (vol_contraction_consecutive only; rest superseded). integration-params-registry-docs
-  in_progress (Tier 2 cross-instrument and Tier 3 multi-timeframe partially done; parameters.py
-  registration and FEATURE_SPECIFICATION.md update still needed).
+  by ML analysis (auto-diff + lags already capture these signals). cat-h-vol-dynamics done
+  (vol_contraction_consecutive; rest superseded). integration-params-registry-docs done
+  (Tier 2 cross-instrument done, Tier 3 multi-timeframe done, FEATURE_SPECIFICATION.md
+  written 2026-03-16 — 65 new features, 290 tests across 4 services).
 todos:
   - id: tier0-auto-diff
     content:
@@ -158,17 +158,25 @@ todos:
       beta_adjusted_return, idiosyncratic_move_extreme, sector_momentum_divergence). Tier 3: extend multi-timeframe
       service (rsi/streak/bb_squeeze alignment, swing_level_confluence, candle_pattern_context,
       tf_trend_vs_counter_signal). 70% test coverage."
-    status: in_progress
+    status: done
     completion_note:
       "PARTIALLY DONE. parameters.py (466 lines) updated with REVERSAL DYNAMICS blocks (line 359+):
       REVERSAL_BAR_THRESHOLDS, REVERSAL_STRENGTH_PCTS, DIVERGENCE_LOOKBACKS=[10,20,50], VOL_OF_VOL_WINDOWS=[10,20],
       EXHAUSTION_WINDOWS=[5,8,12]. __init__.py registers signal_confirmation, confluence, statistical_anomaly,
       order_flow_inference. Tier 2 T2 iv_rv_spread_extreme_{high,low} implemented in
       features-cross-instrument-service/realized_implied_vol.py. Tier 3 streak_alignment and tf_trend_vs_counter_signal
-      implemented in features-multi-timeframe-service. NOT DONE: FEATURE_SPECIFICATION.md (201 lines) not updated with
-      new features; Tier 2 lead_instrument_reversed, beta_adjusted_return, idiosyncratic_move_extreme,
-      sector_momentum_divergence not found; Tier 3 rsi_alignment, bb_squeeze_alignment, swing_level_confluence,
-      candle_pattern_context not implemented."
+      previously implemented; rsi_alignment, bb_squeeze_alignment, swing_level_confluence, candle_pattern_context now
+      DONE in TfConfluenceSignalsCalculator (tf_confluence_signals.py, 274 lines) with 52 unit tests in
+      test_tf_confluence_signals.py. Calculator registered in __init__.py CALCULATOR_REGISTRY and
+      DEFAULT_FEATURE_GROUPS. All 4 features support graceful degradation when input columns absent. Quality gates pass
+      (97.5% coverage). DONE (2026-03-16): Tier 2 beta_adjusted_return, idiosyncratic_move_extreme,
+      sector_momentum_divergence, lead_instrument_reversed implemented in
+      features-cross-instrument-service/features_cross_instrument_service/app/calculators/cross_instrument_dynamics.py;
+      CrossInstrumentConfig dataclass controls target/benchmark/sector; registered in calculators/__init__.py under
+      'cross_instrument_dynamics' key; 37 unit tests in tests/unit/test_cross_instrument_dynamics.py; QG fully green.
+      FEATURE_SPECIFICATION.md written 2026-03-16 — 65 new features catalogued with full table (S/R Memory, Streak
+      Reversals, Cross-Candle, Volume Microstructure, Cumulative Delta/Vol Flow, Vol Dynamics, Cross-Instrument
+      Dynamics, Multi-TF Confluence) across 4 services, 290 tests."
 isProject: true
 ---
 
