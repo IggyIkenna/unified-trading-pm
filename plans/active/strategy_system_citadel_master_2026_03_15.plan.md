@@ -97,7 +97,7 @@ todos:
 
   - id: p1-strategy-manifest-schema
     content: |
-      - [ ] [AGENT] P0. Create `unified-trading-pm/strategy-manifest.json` — SSOT for all strategies.
+      - [x] [AGENT] P0. Create `unified-trading-pm/strategy-manifest.json` — SSOT for all strategies.
       Schema per strategy entry:
       ```json
       {
@@ -143,7 +143,7 @@ todos:
       Examples: `CEFI_MOMENTUM_BTC_1H`, `DEFI_BASIS_ETH_USDT`, `SPORTS_ARB_FOOTBALL_EPL`, `TRADFI_MOMENTUM_SPY_1D`,
       `OPTIONS_VOL_ML_BTC_DERIBIT`, `PREDICTION_ARB_POLYMARKET_CROSS`.
       Acceptance: JSON validates, every existing strategy has an entry, `jq` parses cleanly.
-    status: pending
+    status: done
 
   - id: p1-strategy-manifest-qg-tests
     content: |
@@ -163,7 +163,7 @@ todos:
 
   - id: p1-strategy-maturity-checklist
     content: |
-      - [ ] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/check-strategy-maturity.py`:
+      - [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/check-strategy-maturity.py`:
       Reads strategy-manifest.json and for each strategy prints a maturity report card:
       ```
       CEFI_MOMENTUM_BTC_1H:
@@ -175,11 +175,11 @@ todos:
       Exit 1 if any strategy with `maturity.code.status >= C2` has `unit_tests=false`.
       Exit 1 if any strategy with `maturity.deployment.status >= D2` has `mock_smoke=false`.
       Acceptance: script runs, produces table for all strategies, exits 0 on current state.
-    status: pending
+    status: done
 
   - id: p1-strategy-manifest-svg
     content: |
-      - [ ] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/generate_strategy_manifest_dag.py`:
+      - [x] [AGENT] P1. Create `unified-trading-pm/scripts/manifest/generate_strategy_manifest_dag.py`:
       Reads strategy-manifest.json and generates STRATEGY_MANIFEST_DAG.svg showing:
       - Strategies grouped by domain (CeFi/TradFi/DeFi/Sports/Options/Prediction)
       - Color-coded by maturity.code.status (red=C0, yellow=C2, green=C4, blue=C5)
@@ -188,7 +188,7 @@ todos:
       Follow pattern from `generate_workspace_dag.py`.
       Symlink output to `unified-trading-codex/04-architecture/STRATEGY_MANIFEST_DAG.svg`.
       Acceptance: SVG renders, shows all strategies with correct colors and edges.
-    status: pending
+    status: done
 
   # ============================================================
   # PHASE 2: STRATEGY UNIVERSE EXPANSION (P0)
@@ -199,7 +199,7 @@ todos:
 
   - id: p2a-mean-reversion-base
     content: |
-      - [ ] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/mean_reversion/mean_reversion_strategy.py`:
+      - [x] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/mean_reversion/mean_reversion_strategy.py`:
       `MeanReversionStrategy(BaseStrategy)` — ML-bypass strategy that subscribes to features via config.
       Config-driven: reads feature names from strategy YAML config (same pattern as momentum).
       Signal logic: entry when price deviates > N sigma from rolling mean, exit on reversion to mean.
@@ -221,7 +221,7 @@ todos:
       Add factory: `create_mean_reversion_strategy(config: MeanReversionConfig) -> MeanReversionStrategy`.
       Export from `strategies/__init__.py`.
       Acceptance: class importable, factory works, `ruff check` + `basedpyright` clean.
-    status: pending
+    status: done
 
   - id: p2a-mean-reversion-tradfi-configs
     content: |
@@ -247,12 +247,12 @@ todos:
 
   - id: p2a-mean-reversion-tests
     content: |
-      - [ ] [AGENT] P0. Create `tests/unit/test_mean_reversion_strategy.py`:
+      - [x] [AGENT] P0. Create `tests/unit/test_mean_reversion_strategy.py`:
       Tests: signal generation on deviation, no signal within band, exit on reversion,
       ML mode (mock ML prediction as mean level), config loading, factory function.
       Min 10 test cases. Pattern: follow `test_stat_arb_strategy.py`.
       Acceptance: all tests pass, `bash scripts/quality-gates.sh` passes.
-    status: pending
+    status: done
 
   # --- Stream 2B: TradFi ML Strategies ---
 
@@ -377,7 +377,7 @@ todos:
 
   - id: p2d-sports-market-making-vol
     content: |
-      - [ ] [AGENT] P1. Enhance `strategy-service/strategy_service/engine/strategies/sports/market_making.py`:
+      - [x] [AGENT] P1. Enhance `strategy-service/strategy_service/engine/strategies/sports/market_making.py`:
       Add volatility-around-theo market making mode. Current `SportsMarketMakingStrategy` exists but
       needs: theo price calculation (vig-free probability from bookmaker registry),
       spread around theo (configurable ticks), inventory risk management,
@@ -390,7 +390,7 @@ todos:
       - `skew_per_unit`: float (spread adjustment per unit of inventory)
       Tests: extend `tests/unit/test_sports_strategies.py` with market making vol tests.
       Acceptance: QG passes.
-    status: pending
+    status: done
 
   # --- Stream 2E: Prediction Market Arbitrage ---
 
@@ -545,37 +545,37 @@ todos:
 
   - id: p3-prediction-market-instrument-type
     content: |
-      - [ ] [AGENT] P0. Add `PREDICTION_MARKET` to InstrumentType enum in
+      - [x] [AGENT] P0. Add `PREDICTION_MARKET` to InstrumentType enum in
       `unified-api-contracts/unified_api_contracts/canonical/domain/reference/__init__.py`.
       Position: after CURRENCY, before any aliases. Value: "prediction_market".
       Acceptance: UAC QG passes, no broken imports.
-    status: pending
+    status: done
 
   - id: p3-sport-str-enum
     content: |
-      - [ ] [AGENT] P0. Add `Sport` StrEnum to `unified-api-contracts/unified_api_contracts/canonical/domain/sports/`:
+      - [x] [AGENT] P0. Add `Sport` StrEnum to `unified-api-contracts/unified_api_contracts/canonical/domain/sports/`:
       Values: FOOTBALL, BASKETBALL, BASEBALL, HOCKEY, TENNIS, CRICKET, RUGBY, GOLF, MMA, BOXING,
       MOTORSPORT, AMERICAN_FOOTBALL, HANDBALL, VOLLEYBALL, TABLE_TENNIS, DARTS, SNOOKER, ESPORTS.
       Export from UAC sports facade. Wire into `SportsStrategyManagerConfig.sport` type annotation.
       Acceptance: UAC QG passes.
-    status: pending
+    status: done
 
   - id: p3-venue-enum-prediction-markets
     content: |
-      - [ ] [AGENT] P1. Add POLYMARKET and KALSHI to Venue enum in
+      - [x] [AGENT] P1. Add POLYMARKET and KALSHI to Venue enum in
       `unified-config-interface/unified_config_interface/instrument.py`.
       Category: prediction_markets (new section after onchain_perps).
       Acceptance: UCI QG passes.
-    status: pending
+    status: done
 
   - id: p3-aster-venue-registry
     content: |
-      - [ ] [AGENT] P1. Register Aster adapter in VENUE_REGISTRY in
+      - [x] [AGENT] P1. Register Aster adapter in VENUE_REGISTRY in
       `unified-market-interface/unified_market_interface/factory.py`.
       Aster adapter exists at `aster_adapter.py` — just needs registration line.
       Update comment from "Onchain Perps (1 venue - Aster incomplete)" to "(2 venues)".
       Acceptance: UMI QG passes.
-    status: pending
+    status: done
 
   - id: p3-livestock-vx-instruments
     content: |
@@ -608,7 +608,7 @@ todos:
 
   - id: p4-config-audit-trail
     content: |
-      - [ ] [AGENT] P1. Create config audit trail in unified-config-interface:
+      - [x] [AGENT] P1. Create config audit trail in unified-config-interface:
       1. New models in `unified_config_interface/persistence.py`:
          - `ConfigAuditEntry(BaseModel)`: timestamp, domain, author, diff_summary, previous_hash, new_hash
          - `ConfigAuditLog`: append-only JSONL reader/writer at `{bucket}/{service}/audit/config_audit.jsonl`
@@ -618,18 +618,18 @@ todos:
       4. Tests: `tests/test_config_audit.py` — save config, verify audit entry written,
          verify diff content, verify get_audit_trail returns entries in order
       Acceptance: UCI QG passes.
-    status: pending
+    status: done
 
   - id: p4-config-diff-library
     content: |
-      - [ ] [AGENT] P1. Move config diff from deployment-api to unified-config-interface:
+      - [x] [AGENT] P1. Move config diff from deployment-api to unified-config-interface:
       1. New `config_diff()` method on ConfigStore — accepts two version timestamps,
          returns `ConfigDiff` model (list of `ConfigFieldChange` with field_path, old_value, new_value)
       2. New models: `ConfigDiff`, `ConfigFieldChange` in persistence.py
       3. Include diff in ConfigAuditEntry and CONFIG_CHANGED event details
       4. deployment-api: refactor to call `ConfigStore.config_diff()` instead of local difflib
       Acceptance: UCI + deployment-api QG pass.
-    status: pending
+    status: done
 
   - id: p4-slice-subscriptions
     content: |
@@ -668,7 +668,7 @@ todos:
 
   - id: p5-adhoc-events-canonicalize
     content: |
-      - [ ] [AGENT] P1. Canonicalize 17 ad-hoc event strings across services:
+      - [x] [AGENT] P1. Canonicalize 17 ad-hoc event strings across services:
       **Add to STANDARD_LIFECYCLE_EVENTS in unified-events-interface/schemas.py:**
       - SLACK_MESSAGE_SENT, ALERT_ROUTED, DATA_FRESHNESS_ALERT_ROUTED, DATA_FRESHNESS_ALERT_FAILED
       - MODE_INITIALIZED, STAGE_INITIALIZED, FEATURE_LOADING_STARTED, FEATURE_LOADING_COMPLETED
@@ -683,7 +683,7 @@ todos:
       - deployment-api/deployment_api/ (PIPELINE_UAT_ERROR)
       - position-balance-monitor-service/ (RECONCILIATION_STARTED)
       Acceptance: grep for string literal events in services returns 0 matches.
-    status: pending
+    status: done
 
   - id: p5-cicd-events
     content: |
@@ -764,7 +764,7 @@ todos:
 
   - id: p7-scenario-testing-framework
     content: |
-      - [ ] [AGENT] P0. Create scenario testing framework in system-integration-tests:
+      - [x] [AGENT] P0. Create scenario testing framework in system-integration-tests:
       New directory: `system-integration-tests/tests/scenarios/`
       Core class: `ScenarioPlaybook` extending `MockWebSocketFeed`:
       ```python
@@ -781,11 +781,11 @@ todos:
       Each scenario: setup → event sequence → expected state transitions → assertions.
       Tests: `test_scenario_framework.py` — verify playback, assertions, result reporting.
       Acceptance: SIT QG passes, at least 5 scenarios per domain defined.
-    status: pending
+    status: done
 
   - id: p7-strategy-readiness-qg-tests
     content: |
-      - [ ] [AGENT] P0. Add strategy readiness tests to system-integration-tests:
+      - [x] [AGENT] P0. Add strategy readiness tests to system-integration-tests:
       New: `tests/integration/test_strategy_readiness.py`
       For each strategy in strategy-manifest.json:
       1. Verify class is importable (code readiness)
@@ -797,11 +797,11 @@ todos:
       7. Verify venue adapters are registered for all strategy venues (execution readiness)
       Run as part of SIT quality gates.
       Acceptance: SIT QG passes, all currently-implemented strategies pass all checks.
-    status: pending
+    status: done
 
   - id: p7-data-availability-tests
     content: |
-      - [ ] [AGENT] P1. Add data availability validation to strategy readiness:
+      - [x] [AGENT] P1. Add data availability validation to strategy readiness:
       For each strategy in strategy-manifest.json:
       1. `batch_capable=true`: verify historical data exists (VCR cassettes or GCS mock data)
       2. `live_capable=true`: verify WebSocket/REST feed adapter exists for each venue
@@ -810,7 +810,7 @@ todos:
          (mock mode: verify CLOUD_MOCK_MODE handles missing keys gracefully)
       Script: `unified-trading-pm/scripts/manifest/check-strategy-data-availability.py`
       Acceptance: script runs, reports per-strategy data availability matrix.
-    status: pending
+    status: done
 
   # ============================================================
   # PHASE 8: DEPENDENCY CHAIN TRACKING (P2)
@@ -819,13 +819,13 @@ todos:
 
   - id: p8-reverse-dependency-lookup
     content: |
-      - [ ] [AGENT] P2. Create `unified-trading-pm/scripts/manifest/reverse-dependency-lookup.py`:
+      - [x] [AGENT] P2. Create `unified-trading-pm/scripts/manifest/reverse-dependency-lookup.py`:
       Input: repo name → Output: direct dependents, transitive dependents, impact count.
       Parse workspace-manifest.json, build reverse adjacency graph, BFS traversal.
       Support: `--repo unified-market-interface` shows all repos that depend on UMI (direct + transitive).
       Support: `--tag cefi` filters by tag (requires usage tags — can degrade gracefully without).
       Acceptance: script runs, produces correct output for known dependency chains.
-    status: pending
+    status: done
 
   - id: p8-usage-tags
     content: |

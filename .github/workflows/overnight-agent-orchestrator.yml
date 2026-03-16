@@ -46,12 +46,22 @@ env:
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SYSHEALTH || secrets.ANTHROPIC_API_KEY }}
 
 jobs:
+  # ── CHANGE FREEZE CHECK ──────────────────────────────────────────────────────
+  freeze-check:
+    uses: ./.github/workflows/change-freeze-check.yml
+    with:
+      check_type: AUTONOMOUS
+    secrets: inherit
+
   # ── TIER 0: Core Libraries ────────────────────────────────────────────────────
   t0:
     name: Tier 0 — Core Libraries
+    needs: freeze-check
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    if: inputs.tiers == 'all' || contains(inputs.tiers, '0') || github.event_name == 'schedule'
+    if: |
+      needs.freeze-check.outputs.blocked != 'true' &&
+      (inputs.tiers == 'all' || contains(inputs.tiers, '0') || github.event_name == 'schedule')
     outputs:
       results: ${{ steps.poll.outputs.results }}
 

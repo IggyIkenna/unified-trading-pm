@@ -182,7 +182,7 @@ todos:
       RSA-PSS auth, place/cancel/list orders, get balance/positions.
       Wired into SportsExecutionRouter as kalshi_direct data source.
       27 unit tests passing (aioresponses mocks for all endpoints).
-    status: completed
+    status: done
   - id: r12-e2e-arb-smoke-test
     content: |
       [AGENT] E2E smoke test created: system-integration-tests/tests/smoke/test_sports_arb_pipeline.py
@@ -191,7 +191,7 @@ todos:
       CRA sports endpoints, browser adapter coverage, paper trading round-trip,
       credential config coverage. Tests use mock/paper mode only.
       [HUMAN] Live execution test with testnet/paper accounts remains.
-    status: completed
+    status: done
 isProject: false
 ---
 

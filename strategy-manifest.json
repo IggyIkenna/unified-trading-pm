@@ -1,231 +1,730 @@
 {
-  "$schema": "Strategy manifest — tracks all strategies, their maturity, and capabilities",
-  "lastUpdated": "2026-03-15",
+  "$schema_version": "1.0.0",
+  "$description": "Strategy manifest — SSOT for all strategy implementations, maturity tracking, and deployment readiness.",
   "strategies": [
     {
-      "name": "btc_basis",
-      "class_name": "BTCBasisStrategyManager",
-      "class_path": "strategy_service.engine.core.strategies.btc_basis_strategy.BTCBasisStrategyManager",
-      "base_class": "BaseStrategyManager",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["SPOT_PAIR", "PERPETUAL"],
-      "venues": ["binance", "bybit", "okx"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": ["unified-internal-contracts"],
-      "description": "Multi-venue weighted funding rate collection. Buy BTC spot, short BTC perp on multiple venues to collect funding rates."
+      "strategy_id": "CEFI_MOMENTUM_BTC_5M",
+      "display_name": "CeFi BTC Momentum (5M)",
+      "category": "CEFI",
+      "subcategory": "MOMENTUM",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE_FUTURES", "BYBIT"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_breakout_btc_5m",
+        "ml_required": true
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
+      "factory_function": "create_btc_momentum_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "eth_basis",
-      "class_name": "ETHBasisStrategyManager",
-      "class_path": "strategy_service.engine.core.strategies.eth_basis_strategy.ETHBasisStrategyManager",
-      "base_class": "BaseStrategyManager",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["SPOT_PAIR", "PERPETUAL"],
-      "venues": ["binance", "bybit", "okx"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": ["unified-internal-contracts"],
-      "description": "Multi-venue ETH funding rate arbitrage. Enter basis trade when weighted funding rate exceeds threshold."
+      "strategy_id": "CEFI_MOMENTUM_ETH_5M",
+      "display_name": "CeFi ETH Momentum (5M)",
+      "category": "CEFI",
+      "subcategory": "MOMENTUM",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE_FUTURES", "BYBIT"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:ETH-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_breakout_eth_5m",
+        "ml_required": true
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
+      "factory_function": "create_eth_momentum_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "pure_lending_usdt",
-      "class_name": "PureLendingStrategyManager",
-      "class_path": "strategy_service.engine.core.strategies.pure_lending_strategy.PureLendingStrategyManager",
-      "base_class": "BaseStrategyManager",
-      "asset_classes": ["DEFI"],
-      "instrument_types": ["LENDING"],
-      "venues": ["aave_v3"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": ["unified-internal-contracts"],
-      "description": "Simple USDT lending strategy on AAVE v3. Supplies USDT to AAVE for yield."
+      "strategy_id": "CEFI_MOMENTUM_SOL_5M",
+      "display_name": "CeFi SOL Momentum (5M)",
+      "category": "CEFI",
+      "subcategory": "MOMENTUM",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE_FUTURES", "BYBIT"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:SOL-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_breakout_sol_5m",
+        "ml_required": true
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
+      "factory_function": "create_sol_momentum_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "pure_lending_eth",
-      "class_name": "PureLendingETHStrategyManager",
-      "class_path": "strategy_service.engine.core.strategies.pure_lending_eth_strategy.PureLendingETHStrategyManager",
-      "base_class": "BaseStrategyManager",
-      "asset_classes": ["DEFI"],
-      "instrument_types": ["LENDING"],
-      "venues": ["aave_v3"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": ["unified-internal-contracts"],
-      "description": "ETH lending strategy on AAVE v3. Supplies ETH/WETH to AAVE for yield."
+      "strategy_id": "TRADFI_MOMENTUM_SPY_5M",
+      "display_name": "TradFi SPY Momentum (5M)",
+      "category": "TRADFI",
+      "subcategory": "MOMENTUM",
+      "domain": "tradfi",
+      "asset_classes": ["EQUITY"],
+      "venues": ["NASDAQ"],
+      "instruments": ["NASDAQ:EQUITY:SPY"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_breakout_spy_5m",
+        "ml_required": true
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.tradfi_momentum.TradFiMomentumStrategy",
+      "factory_function": "create_spy_momentum_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "5m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "ml_btc_directional",
-      "class_name": "MLBTCDirectionalStrategyManager",
-      "class_path": "strategy_service.engine.core.strategies.ml_btc_directional_strategy.MLBTCDirectionalStrategyManager",
-      "base_class": "BaseStrategyManager",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["PERPETUAL"],
-      "venues": ["binance"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": ["unified-internal-contracts"],
-      "description": "ML-driven directional BTC trading. Uses ML predictions (signal + confidence) to open long/short perp positions."
+      "strategy_id": "DEFI_LENDING_AAVE_1H",
+      "display_name": "DeFi AAVE Lending (1H)",
+      "category": "DEFI",
+      "subcategory": "LENDING",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN"],
+      "venues": ["AAVE_V3_ETH"],
+      "instruments": ["AAVE_V3_ETH:A_TOKEN:AUSDT@ETHEREUM"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.defi_lending.AAVELendingStrategy",
+      "factory_function": "create_aave_lending_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "cross_exchange",
-      "class_name": "CrossExchangeStrategy",
-      "class_path": "strategy_service.engine.strategies.cross_exchange.cross_exchange_strategy.CrossExchangeStrategy",
-      "base_class": "standalone",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["SPOT_PAIR"],
-      "venues": ["binance", "kraken"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": true,
-      "config_yaml_path": "strategy_service/configs/cross_exchange_btc.yaml",
-      "dependencies": [],
-      "description": "ML-driven cross-exchange spread trading. Predicts spread direction, takes position, unwinds on reversion. Not pure instant arb."
+      "strategy_id": "DEFI_BASIS_ETH_1H",
+      "display_name": "DeFi ETH Basis Trade (1H)",
+      "category": "DEFI",
+      "subcategory": "BASIS",
+      "domain": "defi",
+      "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
+      "venues": ["HYPERLIQUID", "UNISWAPV3_ETH", "CURVE_ETH", "BALANCER_ETH"],
+      "instruments": ["WALLET:SPOT_ASSET:ETH", "HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.defi_basis.BasisTradeStrategy",
+      "factory_function": "create_basis_trade_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "stat_arb",
-      "class_name": "StatArbStrategy",
-      "class_path": "strategy_service.engine.strategies.stat_arb.stat_arb_strategy.StatArbStrategy",
-      "base_class": "standalone",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["SPOT_PAIR", "PERPETUAL"],
-      "venues": ["binance", "bybit"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": true,
-      "config_yaml_path": "strategy_service/configs/stat_arb_btc_eth.yaml",
-      "dependencies": ["unified-internal-contracts"],
-      "description": "Statistical arbitrage on cointegrated pairs. Enters when spread z-score exceeds threshold and OU half-life is short enough."
+      "strategy_id": "DEFI_STAKED_BASIS_ETH_1H",
+      "display_name": "DeFi Staked Basis ETH (1H)",
+      "category": "DEFI",
+      "subcategory": "STAKED_BASIS",
+      "domain": "defi",
+      "asset_classes": ["LST", "PERPETUAL"],
+      "venues": ["ETHERFI", "HYPERLIQUID", "UNISWAPV3_ETH", "CURVE_ETH", "BALANCER_ETH"],
+      "instruments": ["ETHERFI:LST:WEETH@ETHEREUM", "HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID"],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.defi_staked_basis.StakedBasisStrategy",
+      "factory_function": "create_staked_basis_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "rel_vol",
-      "class_name": "RelVolStrategy",
-      "class_path": "strategy_service.engine.strategies.rel_vol.rel_vol_strategy.RelVolStrategy",
-      "base_class": "standalone",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["SPOT_PAIR", "PERPETUAL"],
-      "venues": ["binance", "bybit"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": true,
-      "config_yaml_path": "strategy_service/configs/rel_vol_btc_eth.yaml",
-      "dependencies": [],
-      "description": "Relative volatility strategy. Long vol on cheap leg, short vol on rich leg based on relative vol z-score."
+      "strategy_id": "DEFI_RECURSIVE_BASIS_ETH_1H",
+      "display_name": "DeFi Recursive Staked Basis ETH (1H)",
+      "category": "DEFI",
+      "subcategory": "RECURSIVE_STAKED_BASIS",
+      "domain": "defi",
+      "asset_classes": ["A_TOKEN", "DEBT_TOKEN", "PERPETUAL"],
+      "venues": ["AAVE_V3_ETH", "HYPERLIQUID", "MORPHO"],
+      "instruments": [
+        "AAVE_V3_ETH:A_TOKEN:AWEETH@ETHEREUM",
+        "AAVE_V3_ETH:DEBT_TOKEN:DEBTWETH@ETHEREUM",
+        "HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID"
+      ],
+      "data_sources": {
+        "features": ["features-onchain-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.defi_recursive_basis.RecursiveStakedBasisStrategy",
+      "factory_function": "create_recursive_staked_basis_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["onchain"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "vol_surface",
-      "class_name": "VolSurfaceStrategy",
-      "class_path": "strategy_service.engine.strategies.volatility.vol_surface_strategy.VolSurfaceStrategy",
-      "base_class": "standalone",
-      "asset_classes": ["CRYPTO"],
-      "instrument_types": ["OPTION"],
-      "venues": ["deribit"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": true,
-      "config_yaml_path": "strategy_service/configs/vol_surface_btc.yaml",
-      "dependencies": ["unified-api-contracts", "unified-internal-contracts"],
-      "description": "Volatility surface strategy using normalized strike coordinates. Buy straddle when IV percentile is low, sell when high."
-    },
-    {
-      "name": "prediction_arb",
-      "class_name": "PredictionArbStrategy",
-      "class_path": "strategy_service.engine.strategies.prediction_arb.prediction_arb_strategy.PredictionArbStrategy",
-      "base_class": "standalone",
-      "asset_classes": ["PREDICTION_MARKET"],
-      "instrument_types": ["BINARY_OUTCOME"],
-      "venues": ["polymarket", "kalshi", "betfair"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": true,
-      "config_yaml_path": "strategy_service/configs/prediction_arb_btc.yaml",
-      "dependencies": [],
-      "description": "Prediction market arbitrage across Polymarket, Kalshi, and Betfair. Identifies cross-venue price discrepancies on binary outcomes."
-    },
-    {
-      "name": "ml_sports",
-      "class_name": "MLSportsStrategy",
-      "class_path": "strategy_service.engine.strategies.sports.ml_sports_strategy.MLSportsStrategy",
-      "base_class": "SportsBaseStrategy",
-      "asset_classes": ["SPORTS"],
-      "instrument_types": ["SPORTS_BET"],
-      "venues": ["betfair", "bet365", "pinnacle"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": [],
-      "description": "ML-driven sports betting. Combines ML model probability predictions with Kelly criterion sizing to identify value bets."
-    },
-    {
-      "name": "kelly_criterion",
-      "class_name": "KellyCriterionStrategy",
-      "class_path": "strategy_service.engine.strategies.sports.kelly.KellyCriterionStrategy",
-      "base_class": "SportsBaseStrategy",
-      "asset_classes": ["SPORTS"],
-      "instrument_types": ["SPORTS_BET"],
-      "venues": ["betfair", "bet365", "pinnacle"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": [],
-      "description": "Kelly criterion position sizing for sports betting. Supports fractional Kelly, portfolio Kelly, and venue-constrained sizing."
-    },
-    {
-      "name": "sports_arbitrage",
-      "class_name": "ArbitrageStrategy",
+      "strategy_id": "SPORTS_ARBITRAGE_CROSS_BOOK",
+      "display_name": "Sports Arbitrage (Cross-Bookmaker)",
+      "category": "SPORTS",
+      "subcategory": "ARBITRAGE",
+      "domain": "sports",
+      "asset_classes": ["SPORTS_BET"],
+      "venues": ["BETFAIR", "PINNACLE", "BET365"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-sports-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
       "class_path": "strategy_service.engine.strategies.sports.arbitrage.ArbitrageStrategy",
-      "base_class": "SportsBaseStrategy",
-      "asset_classes": ["SPORTS"],
-      "instrument_types": ["SPORTS_BET"],
-      "venues": ["betfair", "bet365", "pinnacle", "smarkets"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": [],
-      "description": "Cross-bookmaker arbitrage detection. Scans odds across bookmakers for guaranteed-profit opportunities where combined implied probs < 1.0. Supports half-time arb with bucket classification."
+      "factory_function": "create_arbitrage_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["sports"],
+        "allowed_ml_targets": [],
+        "min_timeframe": null,
+        "max_timeframe": null
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "sports_value_betting",
-      "class_name": "ValueBettingStrategy",
+      "strategy_id": "SPORTS_VALUE_BETTING",
+      "display_name": "Sports Value Betting",
+      "category": "SPORTS",
+      "subcategory": "VALUE",
+      "domain": "sports",
+      "asset_classes": ["SPORTS_BET"],
+      "venues": ["BETFAIR", "PINNACLE", "BET365"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-sports-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
       "class_path": "strategy_service.engine.strategies.sports.value_betting.ValueBettingStrategy",
-      "base_class": "SportsBaseStrategy",
-      "asset_classes": ["SPORTS"],
-      "instrument_types": ["SPORTS_BET"],
-      "venues": ["betfair", "bet365", "pinnacle"],
-      "maturity": "experimental",
-      "has_unit_tests": false,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": [],
-      "description": "Value betting strategy. Identifies bets where model probability exceeds bookmaker implied probability by a configurable threshold."
+      "factory_function": "create_value_betting_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["sports"],
+        "allowed_ml_targets": [],
+        "min_timeframe": null,
+        "max_timeframe": null
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
     },
     {
-      "name": "sports_market_making",
-      "class_name": "SportsMarketMakingStrategy",
+      "strategy_id": "SPORTS_KELLY_CRITERION",
+      "display_name": "Sports Kelly Criterion",
+      "category": "SPORTS",
+      "subcategory": "KELLY",
+      "domain": "sports",
+      "asset_classes": ["SPORTS_BET"],
+      "venues": ["BETFAIR", "PINNACLE", "BET365"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-sports-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.sports.kelly.KellyCriterionStrategy",
+      "factory_function": "create_kelly_criterion_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["sports"],
+        "allowed_ml_targets": [],
+        "min_timeframe": null,
+        "max_timeframe": null
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "SPORTS_ML_PREDICTION",
+      "display_name": "Sports ML Prediction",
+      "category": "SPORTS",
+      "subcategory": "ML_SPORTS",
+      "domain": "sports",
+      "asset_classes": ["SPORTS_BET"],
+      "venues": ["BETFAIR", "PINNACLE", "BET365"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-sports-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": "sports_prediction_model",
+        "ml_required": true
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.sports.ml_sports_strategy.MLSportsStrategy",
+      "factory_function": "create_ml_sports_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["sports"],
+        "allowed_ml_targets": ["MATCH_OUTCOME", "SCORE_PREDICTION"],
+        "min_timeframe": null,
+        "max_timeframe": null
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "SPORTS_MARKET_MAKING",
+      "display_name": "Sports Exchange Market Making",
+      "category": "SPORTS",
+      "subcategory": "MARKET_MAKING",
+      "domain": "sports",
+      "asset_classes": ["SPORTS_BET"],
+      "venues": ["BETFAIR", "SMARKETS", "MATCHBOOK"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-sports-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": null,
       "class_path": "strategy_service.engine.strategies.sports.market_making.SportsMarketMakingStrategy",
-      "base_class": "SportsBaseStrategy",
-      "asset_classes": ["SPORTS"],
-      "instrument_types": ["EXCHANGE_QUOTE"],
-      "venues": ["betfair", "smarkets", "matchbook"],
-      "maturity": "beta",
-      "has_unit_tests": true,
-      "has_config_yaml": false,
-      "config_yaml_path": null,
-      "dependencies": [],
-      "description": "Exchange market making for sports betting. Posts back and lay orders at a spread, manages inventory risk with position limits and quote skewing."
+      "factory_function": "create_market_making_strategy",
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["sports"],
+        "allowed_ml_targets": [],
+        "min_timeframe": null,
+        "max_timeframe": null
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "QUANT_STAT_ARB_BTC_ETH",
+      "display_name": "Quant Stat Arb BTC/ETH",
+      "category": "QUANT",
+      "subcategory": "STAT_ARB",
+      "domain": "cefi",
+      "asset_classes": ["SPOT_PAIR"],
+      "venues": ["BINANCE"],
+      "instruments": ["BINANCE:SPOT_PAIR:BTCUSDT", "BINANCE:SPOT_PAIR:ETHUSDT"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/stat_arb_btc_eth.yaml",
+      "class_path": "strategy_service.engine.strategies.stat_arb.stat_arb_strategy.StatArbStrategy",
+      "factory_function": null,
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one", "pair_spread"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "QUANT_REL_VOL_BTC_ETH",
+      "display_name": "Quant Relative Volatility BTC/ETH",
+      "category": "QUANT",
+      "subcategory": "REL_VOL",
+      "domain": "cefi",
+      "asset_classes": ["SPOT_PAIR"],
+      "venues": ["BINANCE"],
+      "instruments": ["BINANCE:SPOT_PAIR:BTCUSDT", "BINANCE:SPOT_PAIR:ETHUSDT"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/rel_vol_btc_eth.yaml",
+      "class_path": "strategy_service.engine.strategies.rel_vol.rel_vol_strategy.RelVolStrategy",
+      "factory_function": null,
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one", "cross_instrument"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "QUANT_CROSS_EXCHANGE_BTC",
+      "display_name": "Quant Cross-Exchange BTC (Binance/Kraken)",
+      "category": "QUANT",
+      "subcategory": "CROSS_EXCHANGE",
+      "domain": "cefi",
+      "asset_classes": ["SPOT_PAIR"],
+      "venues": ["BINANCE", "KRAKEN"],
+      "instruments": ["BINANCE:SPOT_PAIR:BTCUSDT", "KRAKEN:SPOT_PAIR:BTCUSD"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": true,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/cross_exchange_btc.yaml",
+      "class_path": "strategy_service.engine.strategies.cross_exchange.cross_exchange_strategy.CrossExchangeStrategy",
+      "factory_function": null,
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one", "cross_instrument"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1h"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "QUANT_PREDICTION_ARB_BTC",
+      "display_name": "Quant Prediction Market Arb",
+      "category": "QUANT",
+      "subcategory": "PREDICTION_ARB",
+      "domain": "prediction",
+      "asset_classes": ["PREDICTION_MARKET"],
+      "venues": ["POLYMARKET", "KALSHI"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/prediction_arb_btc.yaml",
+      "class_path": "strategy_service.engine.strategies.prediction_arb.prediction_arb_strategy.PredictionArbStrategy",
+      "factory_function": null,
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["cross_instrument", "crowd_sentiment"],
+        "allowed_ml_targets": [],
+        "min_timeframe": null,
+        "max_timeframe": null
+      },
+      "batch_capable": false,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "QUANT_VOL_SURFACE_BTC",
+      "display_name": "Quant Vol Surface BTC (Deribit)",
+      "category": "QUANT",
+      "subcategory": "VOL_SURFACE",
+      "domain": "cefi",
+      "asset_classes": ["OPTION", "PERPETUAL"],
+      "venues": ["DERIBIT"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/vol_surface_btc.yaml",
+      "class_path": "strategy_service.engine.strategies.volatility.vol_surface_strategy.VolSurfaceStrategy",
+      "factory_function": null,
+      "maturity": {
+        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
+        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["vol_surface", "term_structure"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1h",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
     }
   ]
 }

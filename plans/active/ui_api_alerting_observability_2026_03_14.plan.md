@@ -211,15 +211,15 @@ todos:
 
   - id: p3-2-event-reader
     content: >
-      - [ ] [AGENT] P3. Implement event reader in batch-audit-api. Fill audit_trail.py stubs. Read GCS JSONL + query
+      - [x] [AGENT] P3. Implement event reader in batch-audit-api. Fill audit_trail.py stubs. Read GCS JSONL + query
       external tables. Filter by service/date/event_type/severity. Paginate.
-    status: in_progress
+    status: done
 
   - id: p3-3-log-routes
     content: >
-      - [ ] [AGENT] P3. Add log query routes to batch-audit-api. GET /api/v1/logs, GET /api/v1/services. Filters:
+      - [x] [AGENT] P3. Add log query routes to batch-audit-api. GET /api/v1/logs, GET /api/v1/services. Filters:
       service, level, start_time, end_time, query, limit.
-    status: in_progress
+    status: done
 
   - id: p3-4-logs-ui-backend
     content: >
@@ -263,9 +263,9 @@ todos:
 
   - id: p5-5-severity-alignment
     content: >
-      - [ ] [AGENT] P5. Align UIC severity enums with canonical LogLevel from UAC. EventSeverity -> re-export from
+      - [x] [AGENT] P5. Align UIC severity enums with canonical LogLevel from UAC. EventSeverity -> re-export from
       LogLevel. AlertEvent.severity -> use LogLevel.
-    status: todo
+    status: done
 
   - id: p5-6-otel-strategy
     content: >
@@ -344,9 +344,9 @@ todos:
 
   - id: p6-2-local-dev-orchestration
     content: >
-      - [ ] [AGENT] P6. Local dev orchestration: strictPort on all UIs, dev mode (--reload) for all APIs,
+      - [x] [AGENT] P6. Local dev orchestration: strictPort on all UIs, dev mode (--reload) for all APIs,
       dev-start/stop/status scripts in PM. PID tracking, mock mode by default, port registry from ui-api-mapping.json.
-    status: in_progress
+    status: done
 
   - id: p6-3-remaining-workflow-migration
     content: >

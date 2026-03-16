@@ -51,7 +51,15 @@ env:
   TRADING_CRITICAL_REPOS: "execution-service,risk-and-exposure-service,strategy-service,trading-agent-service"
 
 jobs:
+  freeze-check:
+    uses: ./.github/workflows/change-freeze-check.yml
+    with:
+      check_type: PROD_DEPLOY
+    secrets: inherit
+
   route-build:
+    needs: freeze-check
+    if: needs.freeze-check.outputs.blocked != 'true'
     runs-on: ubuntu-latest
     outputs:
       repo: ${{ steps.route.outputs.repo }}

@@ -1,0 +1,69 @@
+---
+description: "UCI (unified-config-interface) must not own or re-export domain schemas — InstrumentType, Venue, etc. belong in UAC. Consumers import domain types from UAC directly."
+alwaysApply: true
+globs:
+  - "**/*.py"
+priority: 90
+tags:
+  - contracts
+  - imports
+  - uci
+  - uac
+  - architecture
+---
+# UCI Must Not Own Domain Schemas
+
+## Rule
+
+**unified-config-interface (UCI) is a config library.** It provides config loading (`BaseConfig`, `ConfigStore`),
+runtime config schemas, and venue connectivity config. It must NOT own, define, or re-export domain schemas.
+
+Domain schemas — `InstrumentType`, `Venue`, `InstructionType`, `OddsType`, `BetSide`, etc. — belong in
+**unified-api-contracts (UAC)** as the single source of truth.
+
+## What This Means
+
+| Action | Allowed? | Why |
+|--------|----------|-----|
+| UCI defines its own `InstrumentType` enum | NO | Creates a second SSOT. Consumers end up importing from two places. |
+| UCI re-exports `InstrumentType` from UAC | NO | Creates a UAC→UCI dep edge that shouldn't exist. Config doesn't need contracts. |
+| UCI holds `Venue` enum with config-specific values | TEMPORARY | `Venue` is being migrated to UAC. UCI keeps it for now with deprecation notice. |
+| Consumer imports `InstrumentType` from UCI | NO | Must import from UAC: `from unified_api_contracts import InstrumentType` |
+| UCI depends on `unified-api-contracts` in pyproject.toml | NO | Config library must not depend on contracts library. |
+
+## Correct Import Patterns
+
+```python
+# CORRECT — domain types from UAC (SSOT)
+from unified_api_contracts import InstrumentType, OddsType, BetSide
+
+# CORRECT — config types from UCI
+from unified_config_interface import BaseConfig, ConfigStore, UnifiedCloudConfig
+
+# WRONG — domain type from UCI
+from unified_config_interface import InstrumentType  # DEPRECATED, use UAC
+
+# WRONG — UCI re-exporting from UAC
+# In unified_config_interface/instrument.py:
+from unified_api_contracts import InstrumentType  # creates unnecessary dep edge
+```
+
+## Rationale
+
+- UCI is T0 config. UAC is T0 contracts. Same tier does NOT mean they should depend on each other.
+- If UCI re-exports UAC types, every UCI consumer transitively depends on UAC through UCI — hiding the real dependency.
+- Config changes should never be blocked by contract changes, and vice versa.
+- Two definitions of the same enum (one in UAC, one in UCI) guarantees they drift apart.
+
+## Migration Path
+
+UCI currently has a deprecated local `InstrumentType` for backward compatibility. Consumers should migrate to
+`from unified_api_contracts import InstrumentType`. The local definition will be removed once all consumers are migrated.
+
+## QG Enforcement
+
+The SIT alignment test (`test_registry_alignment.py`) asserts UAC InstrumentType values are a superset of UCI's local
+definition. If UCI's local enum drifts, the test fails.
+
+CODEX: 02-data/contracts-scope-and-layout.md
+SSOT: unified-api-contracts owns all domain enums (InstrumentType, Venue, OddsType, BetSide, CommissionModel, etc.)
