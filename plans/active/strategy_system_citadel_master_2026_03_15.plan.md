@@ -516,6 +516,175 @@ todos:
 
   # --- Stream 2F: Legacy Cleanup ---
 
+  # --- Stream 2H: Execution Infrastructure (from 09-strategy TODO-CODIFYs) ---
+
+  - id: p2h-instruction-validation-matrix
+    content: |
+      - [ ] [AGENT] P0. Codify instruction type × order feature validation matrix as machine-readable
+        registry. Currently documentation-only in 09-strategy/cross-cutting/config-architecture.md.
+        Create YAML or Python dict in unified-api-contracts/registry/instruction_constraints.py:
+        Map each OperationType to allowed order features (post_only, limit, market, TWAP, atomic).
+        Example: SWAP → no post_only, no limit, yes market (SOR), no TWAP, yes atomic (DeFi).
+        TRADE (CeFi CLOB) → yes post_only, yes limit, yes market, yes TWAP, no atomic.
+        Execution router MUST validate incoming instructions against this matrix and REJECT invalid
+        combinations before attempting execution. Also codify algo × instruction compatibility:
+        each ExecAlgorithm declares supported_operation_types in its registry entry.
+        Repos: unified-api-contracts (constraint registry), execution-service (router validation).
+    status: todo
+    note: "PARALLEL with p2g. Codifies Layer 1+3 from execution constraint hierarchy."
+
+  - id: p2h-venue-sub-capabilities
+    content: |
+      - [ ] [AGENT] P0. Extend VENUE_CAPABILITIES with order-type-level sub-capabilities:
+        - POST_ONLY — can send maker-only orders (Binance, Deribit, Hyperliquid: YES; Uniswap: NO)
+        - REDUCE_ONLY — can restrict to position-reducing orders
+        - CANCEL_REPLACE — atomic cancel+replace in one call
+        - BATCH_PLACE — submit multiple orders in one API call (Betfair, Kalshi: YES)
+        - BATCH_CANCEL — cancel multiple/all orders in one call
+        - MASS_QUOTE — submit quotes for multiple instruments simultaneously (Deribit, CME FIX: YES)
+        - MASS_PULL — cancel all by underlying/account/market (Deribit, Betfair: YES)
+        - CANCEL_ALL_MARKET — cancel all orders on a market (Betfair: YES)
+        - MARKET_VERSION_SAFETY — stale-quote protection (Betfair: YES)
+        Populate for ALL 33+ venues in VENUE_CAPABILITIES dict.
+        Execution-service router validates: if strategy requests post_only on a venue without
+        POST_ONLY capability, reject with clear error.
+        Repos: unified-api-contracts (venue_constants.py), execution-service (router validation).
+    status: todo
+    note: "PARALLEL. Codifies Layer 2+4 from execution constraint hierarchy."
+
+  - id: p2h-execution-preferences-config
+    content: |
+      - [ ] [AGENT] P1. Create ExecutionPreferencesConfig schema and typed StrategyInstruction fields.
+        Currently execution preferences are stuffed into StrategyInstruction.metadata dict (untyped).
+        Add first-class typed fields to StrategyInstruction:
+        - execution_style: Literal["passive", "aggressive", "urgent"]
+        - ref_underlying: str | None (instrument key for underlying tracking)
+        - edge_offset: Decimal | None (price offset from ref underlying)
+        - leg_group_id: str | None (multi-leg group identifier)
+        - leg_role: Literal["leader", "follower"] | None
+        - execution_mode: ExecutionMode StrEnum (same_candle_exit, hold_until_flip, passive_limit, aggressive_fill)
+        Create ExecutionMode StrEnum in unified-internal-contracts.
+        Create ExecutionPreferencesConfig TypedDict in execution-service for per-strategy execution
+        tuning: max_leader_slippage_bps, allow_cross_spread, urgency_escalation_minutes,
+        ref_update_threshold_bps, ref_update_rate_limit_per_second.
+        Repos: unified-internal-contracts (ExecutionMode), strategy-service (StrategyInstruction fields),
+        execution-service (ExecutionPreferencesConfig).
+    status: todo
+    note: "PARALLEL. Enables typed execution hints instead of stringly-typed metadata."
+
+  - id: p2h-reference-pricing-underlying-tracker
+    content: |
+      - [ ] [AGENT] P1. Implement reference pricing / UnderlyingTracker in execution-service.
+        When a strategy sends ref_underlying on an instruction, execution-service monitors that
+        underlying's price and updates the order price on move > threshold.
+        Key distinction: benchmark_price = measure slippage AFTER fill. ref_underlying = track
+        and adjust BEFORE fill. Strategy sets the EDGE; execution maintains it.
+        Applies to: market-making (all asset classes), options, arbitrage (leader/follower legs).
+        Implementation: UnderlyingTracker component subscribes to fast market data feed for ref
+        instrument, recalculates order price using edge_offset on each move.
+        For options: delta-adjusted pricing (new_price ≈ old_price + delta * underlying_change).
+        Repos: execution-service (UnderlyingTracker component, order manager integration).
+    status: todo
+    note: "PARALLEL. Critical for MM and arb strategies."
+
+  - id: p2h-leader-follower-execution
+    content: |
+      - [ ] [AGENT] P1. Implement leader/follower multi-leg execution in execution-service.
+        For non-atomic multi-leg trades (cross-exchange arb, spot-perp basis, calendar spreads):
+        Follower = less liquid leg, execute first (passive). Leader = more liquid leg, hedge
+        aggressively once follower fills.
+        Create MultiLegInstruction model with legs: list[LegInstruction], each leg having
+        role (leader/follower), ref_underlying, edge_offset.
+        Create MultiLegOrchestrator that watches follower fills and auto-triggers leader legs.
+        Strategy sends leg_group_id + leg_role on StrategyInstruction (from p2h-execution-preferences).
+        Config: leader_follower_config with max_leader_slippage_bps, follower_staleness_timeout_seconds.
+        Repos: execution-service (MultiLegOrchestrator, models).
+    status: todo
+    note: "PARALLEL. Required for arb and basis strategies."
+
+  - id: p2h-trigger-subscriptions
+    content: |
+      - [ ] [AGENT] P1. Implement TriggerSubscription model and engine filtering.
+        Currently strategies get ALL features on every candle — no filtering.
+        Create TriggerSubscription Pydantic model in unified-internal-contracts:
+        source (str), filter (str), threshold (Decimal | None), granularity (str | None).
+        Add trigger_subscriptions: list[TriggerSubscription] to strategy config TypedDict.
+        EventDrivenStrategyEngine must filter incoming events against subscriptions before
+        invoking generate_signal(). This enables: same pub/sub topic, different strategies
+        filtering differently (MM triggers on 5bp move, DeFi triggers on hourly features only).
+        Repos: unified-internal-contracts (model), strategy-service (config + engine filtering).
+    status: todo
+    note: "PARALLEL. Enables efficient multi-strategy per instance."
+
+  - id: p2h-strategy-default-templates
+    content: |
+      - [ ] [AGENT] P2. Create default config templates per strategy type.
+        Each strategy type gets a YAML template in strategy-service/configs/defaults/ with the
+        "usual" execution preferences pre-filled. New client configs start from template and
+        override only what they need. Prevents building configs from scratch.
+        Templates: defi_basis_default.yaml, defi_staked_basis_default.yaml,
+        defi_lending_default.yaml, defi_recursive_default.yaml, cefi_momentum_default.yaml,
+        cefi_mm_default.yaml, tradfi_ml_default.yaml, options_mm_default.yaml,
+        sports_arb_default.yaml, sports_mm_default.yaml, prediction_arb_default.yaml.
+        Each template references strategy doc in 09-strategy/ for rationale.
+        Repos: strategy-service (configs/defaults/).
+    status: todo
+    note: "PARALLEL. Config DRY rule — defaults are the path of least resistance."
+
+  - id: p2h-lp-operation-types
+    content: |
+      - [ ] [AGENT] P1. Add AMM liquidity provision operation types.
+        New OperationType values in both UAC and UDEI:
+        ADD_LIQUIDITY, REMOVE_LIQUIDITY, COLLECT_FEES.
+        New SettlementType: LP_FEE_ACCRUAL (in UIC).
+        Update INSTRUCTION_VALID_DOMAINS: ADD_LIQUIDITY → defi domain, LP_POSITION instrument type.
+        VenueCapability.PROVIDE_LIQUIDITY already exists — just needs instruction path.
+        Add instruction factory functions in UDEI: create_uniswap_v3_lp_instruction(),
+        create_curve_lp_instruction(), create_balancer_lp_instruction().
+        Repos: unified-api-contracts (OperationType), unified-defi-execution-interface (factories),
+        unified-internal-contracts (SettlementType).
+    status: todo
+    note: "PARALLEL. Enables DeFi AMM LP market-making strategy."
+
+  - id: p2h-algo-venue-compatibility
+    content: |
+      - [ ] [AGENT] P2. Create algo × venue compatibility registry.
+        No machine-readable mapping of which execution algos work on which venues.
+        Create algo_venue_compatibility.yaml in execution-service/config/:
+        TWAP: [BINANCE, DERIBIT, HYPERLIQUID], VWAP: [BINANCE, DERIBIT], etc.
+        SOR: [UNISWAPV3-ETH, CURVE-ETH, BALANCER-ETH].
+        Router validates algo+venue before dispatching.
+        Repos: execution-service (config YAML + router validation).
+    status: todo
+    note: "PARALLEL. Codifies Layer 4 from execution constraint hierarchy."
+
+  - id: p2h-prediction-market-venue-wiring
+    content: |
+      - [ ] [AGENT] P1. Wire Polymarket and Kalshi into production VENUE_REGISTRY.
+        Currently in PLANNED_VENUES, not VENUE_REGISTRY — get_adapter() can't instantiate.
+        Move to VENUE_REGISTRY with adapter class references.
+        Add SourceCapability declarations in UAC capability_declarations/.
+        Add Kalshi demo-api.kalshi.com as testnet equivalent in testnet registry.
+        Add PredictionMarketUseCase enum to UIC: FEATURE, TRADABLE, ARB_SURFACE, BOTH.
+        Build prediction_market_classifier.py in features-cross-instrument-service that
+        periodically pulls all markets, classifies them, identifies cross-platform matches,
+        publishes classified registry to GCS.
+        Repos: unified-market-interface (VENUE_REGISTRY), unified-api-contracts (capabilities),
+        unified-internal-contracts (PredictionMarketUseCase), features-cross-instrument-service.
+    status: todo
+    note: "PARALLEL. Activates prediction market infrastructure that's already built."
+
+  - id: p2h-betfair-suspension-handling
+    content: |
+      - [ ] [AGENT] P1. Add Betfair marketVersion safety and suspension event handling.
+        BetfairAdapter must: (a) pass marketVersion on all placeOrders calls,
+        (b) subscribe to suspension events from Betfair Stream API,
+        (c) emit MARKET_SUSPENDED / MARKET_RESUMED events via UEI,
+        (d) strategy-service must handle these events (halt quoting on suspend, recalculate on resume).
+        Repos: unified-sports-execution-interface (BetfairAdapter), unified-events-interface (events).
+    status: todo
+    note: "PARALLEL. Critical for sports market-making safety."
+
   - id: p2f-legacy-core-cleanup
     content: |
       - [ ] [AGENT] P0. Remove legacy `strategy_service/engine/core/strategies/` duplicates:

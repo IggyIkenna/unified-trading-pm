@@ -411,8 +411,9 @@ todos:
     status: done
   - id: rollout-corrected-semver-agent
     content: |
-      - [x] [SCRIPT] P0. Roll out corrected `semver-agent.yml` to all repos using `scripts/propagation/rollout-agent-workflows.sh`. Simultaneously REMOVE old `version-bump.yml` from each repo (semver-agent replaces it). Verify all 65 have `branches: [staging]`.
-    status: done
+      - [ ] [SCRIPT] P0. Roll out corrected `semver-agent.yml` to all repos using `scripts/propagation/rollout-agent-workflows.sh`. Simultaneously REMOVE old `version-bump.yml` from each repo (semver-agent replaces it). Verify all 67 have `branches: [staging]` AND `{{SERVICE_NAME}}`/`{{SOURCE_DIR}}` placeholders are substituted with actual repo values.
+      STATUS CORRECTION 2026-03-16: Reverted from done→in_progress. Audit of local copies (execution-service, unified-trading-library, unified-api-contracts) confirmed ALL repos still have unsubstituted `{{SERVICE_NAME}}` and `{{SOURCE_DIR}}` placeholders. Even the rollout commit (9730d37b in execution-service) contains raw placeholders — the sed substitution in rollout-agent-workflows.sh either never executed or a later "admin force sync" (7be6c02d) overwrote substituted files with the raw template. Re-executing rollout with verified substitution.
+    status: in_progress
   - id: rollout-conflict-resolution-agent
     content: |
       - [x] [AGENT] P1. Deploy conflict-resolution-agent.yml to PM (already exists as of audit). Wire dispatch: (a) `staging-to-main.yml` dispatches `merge-conflict-detected` when `mergeable_state=dirty`, (b) `feature-branch-to-staging.yml` template dispatches on merge conflicts. Include BUG-4 output validation from Phase 1. Test with deliberate conflict on instruments-service.

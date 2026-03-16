@@ -381,9 +381,9 @@
   <text x="95" y="1581" text-anchor="middle" class="level-label">L11</text>
   <text x="150" y="1581" class="desc">UI applications (13 repos)</text>
   <rect x="70" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="70" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="1604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="135" y="1622" text-anchor="middle" class="label">batch-audit-ui</text>
-  <circle cx="190" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="135" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1604" width="153" height="38" class="ui-box" />
   <rect x="210" y="1604" width="4" height="38" fill="#facc15" rx="2" />
@@ -401,9 +401,9 @@
   <circle cx="677" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="600" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="697" y="1604" width="174" height="38" class="ui-box" />
-  <rect x="697" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="697" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="784" y="1622" text-anchor="middle" class="label">live-health-monitor-ui</text>
-  <circle cx="861" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="861" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="784" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="881" y="1604" width="139" height="38" class="ui-box" />
   <rect x="881" y="1604" width="4" height="38" fill="#facc15" rx="2" />
@@ -421,14 +421,14 @@
   <circle cx="1290" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1235" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1310" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1310" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1310" y="1604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1375" y="1622" text-anchor="middle" class="label">settlement-ui</text>
-  <circle cx="1430" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1430" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1375" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1450" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1450" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1450" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1515" y="1622" text-anchor="middle" class="label">strategy-ui</text>
-  <circle cx="1570" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1570" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1515" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1590" y="1604" width="160" height="38" class="ui-box" />
   <rect x="1590" y="1604" width="4" height="38" fill="#facc15" rx="2" />
