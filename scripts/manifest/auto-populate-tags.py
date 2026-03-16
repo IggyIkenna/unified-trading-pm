@@ -278,7 +278,7 @@ def print_summary(all_tags: dict[str, list[str]]) -> None:
 
     print("\nTag distribution:")
     print(f"  {'Tag':<24} {'Count':>5}")
-    print(f"  {'-'*24} {'-'*5}")
+    print(f"  {'-' * 24} {'-' * 5}")
     for tag, count in sorted(tag_counts.items(), key=lambda x: (-x[1], x[0])):
         print(f"  {tag:<24} {count:>5}")
 

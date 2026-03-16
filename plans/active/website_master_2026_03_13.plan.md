@@ -67,4 +67,61 @@ todos:
       analytics dashboard.
     status: pending
     depends_on: [website-host-presentations]
+
+  - id: website-stack-audit
+    content: >
+      - [ ] [AGENT] P1. Inspect datadodo/odum_website repo: detect tech stack (Next.js, static HTML, CMS), package
+      manager, build system, existing CI. Document findings in odum-research-website/docs/stack.md. Create
+      eggyakana/odum-research-website GitHub repo (private). Clone datadodo/odum_website preserving git history.
+      Re-point remote to eggyakana org.
+    status: pending
+    depends_on: []
+
+  - id: website-workspace-config-files
+    content: >
+      - [ ] [AGENT] P1. Add odum-research-website to workspace configs: (1) workspace-manifest.json entry with type=ui,
+      arch_tier=ui, cluster=website, org=eggyakana, merge_level=11, status=active. (2) Add to
+      workspace-uis.code-workspace and workspace-complete.code-workspace. (3) Create
+      unified-trading-codex/10-audit/repos/odum-research-website.yaml. (4) Add .github/workflows/quality-gates.yml.
+    status: pending
+    depends_on: [website-stack-audit]
+
+  - id: website-content-refresh-detail
+    content: >
+      - [ ] [HUMAN+AGENT] P2. Content refresh detail: About/Team page with 6 member slots (Shaun Lim, Julian John, Femi
+      Amoo, Harsh, Robert Osborne, Ikenna Igboaka) with grey initials placeholder. Services section sourced from
+      presentations 05 and 06. Preserve hero tagline: "Odum carries two meanings: the lion for strength and the tree for
+      rooted innovation." Traction bar: "8 active strategy clients, Edge Capital fund-to-fund, Indian options mandate,
+      live March 2026, 33 venues, 60+ repos." Create docs/website-photo-requirements.md (400x400px JPEG) and
+      docs/brand-tokens.md. Deploy to staging only.
+    status: pending
+    depends_on: [website-repo-integration]
+
+  - id: website-domain-migration-detail
+    content: >
+      - [ ] [HUMAN] P2. Domain migration detail: (1) Audit Yell DNS records for odum-research.co.uk and
+      odum-research.com, save to docs/dns-snapshot-pre-migration.md. (2) Choose hosting (Vercel recommended for
+      static/Next.js), log in docs/hosting-decision.md. (3) Configure hosting with auto-deploy on push to main and PR
+      preview deployments. (4) Staging deploy to verify. (5) DNS cutover: set TTL to 300, update A/CNAME, restore to
+      3600 after 24-48h propagation. Verify: curl -I (200+SSL), www redirect (301), dig +short. (6) odum-research.co.uk:
+      StagingGate with "We've moved" message, team access via HTTP Basic Auth. (7) Verify odum-group.io forwarding. (8)
+      Cancel Yell only after 2-week clean operation, retain domain registrar access. (9) Update manifest with
+      deployment_url. (10) SSL provisioning, verify grade A on ssllabs.com.
+    status: pending
+    depends_on: [website-content-refresh]
+
+  - id: website-admin-portal-detail
+    content: >
+      - [ ] [AGENT] P3. Admin portal detail: (1) Add 7 role definitions to unified-admin-ui/packages/core/auth/roles.ts
+      (admin, board, client:{slug}, shareholder, accounting, operations, investor). (2) Create
+      odum-research-website/src/data/presentations.json with schema {id, title, file, description, roles[]} covering all
+      14 presentations. (3) Create scripts/sync-presentations.sh (copies presentations/*.html to public/presentations/).
+      (4) Build PortalPage.tsx (auth-gated, role-filtered cards in 4 sections). (5) Build PresentationViewer.tsx
+      (iframe, breadcrumb, full-screen). (6) Wire auth from @unified-admin/core (matching deployment-ui pattern).
+      Routes: /portal, /portal/:id, /portal/admin/users, /portal/admin/docs, /portal/investor/upload. (7) Company docs
+      section with GCS bucket. (8) Investor doc upload with KYC/AML status tracking. (9) Admin client registry page.
+      (10) Create shareholder-report-2026.html stub. (11) 5 Playwright smoke tests
+      (admin/client:elysium/shareholder/investor/unauthenticated).
+    status: pending
+    depends_on: [website-host-presentations]
 ---

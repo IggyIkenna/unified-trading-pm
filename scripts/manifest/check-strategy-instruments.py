@@ -67,7 +67,11 @@ def main() -> int:
             for ac in asset_classes:
                 ac_str = str(ac)
                 ac_status = "OK" if ac_str in valid_instrument_types else "INVALID_TYPE"
-                combined = "OK" if status == "OK" and ac_status == "OK" else f"{status},{ac_status}".replace("OK,", "").replace(",OK", "")
+                combined = (
+                    "OK"
+                    if status == "OK" and ac_status == "OK"
+                    else f"{status},{ac_status}".replace("OK,", "").replace(",OK", "")
+                )
                 matrix_rows.append((sid, venue_str, ac_str, combined))
 
         # Validate asset_classes independently (in case venues is empty)

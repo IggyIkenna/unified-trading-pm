@@ -219,36 +219,20 @@ def format_table(dependents: list[Dependent], show_distance: bool = False) -> st
     lines: list[str] = []
 
     # Header
-    header = (
-        f"  {'Repo':<{COL_NAME}}"
-        f"{'Type':<{COL_TYPE}}"
-        f"{'Relation':<{COL_DEP}}"
-    )
+    header = f"  {'Repo':<{COL_NAME}}{'Type':<{COL_TYPE}}{'Relation':<{COL_DEP}}"
     if show_distance:
         header += f"{'Dist':<{COL_DIST}}"
-    header += (
-        f"{'Tier':<{COL_TIER}}"
-        f"{'Path':<{COL_PATH}}"
-        f"{'Tags':<{COL_TAGS}}"
-    )
+    header += f"{'Tier':<{COL_TIER}}{'Path':<{COL_PATH}}{'Tags':<{COL_TAGS}}"
     lines.append(header)
     lines.append("  " + "-" * (len(header) - 2))
 
     for dep in dependents:
         tier_str = f"T{dep.tier}" if dep.tier is not None else "---"
         tags_str = ", ".join(dep.tags) if dep.tags else "(none)"
-        row = (
-            f"  {dep.name:<{COL_NAME}}"
-            f"{dep.repo_type:<{COL_TYPE}}"
-            f"{dep.dep_type:<{COL_DEP}}"
-        )
+        row = f"  {dep.name:<{COL_NAME}}{dep.repo_type:<{COL_TYPE}}{dep.dep_type:<{COL_DEP}}"
         if show_distance:
             row += f"{dep.distance:<{COL_DIST}}"
-        row += (
-            f"{tier_str:<{COL_TIER}}"
-            f"{dep.completion_path:<{COL_PATH}}"
-            f"{tags_str}"
-        )
+        row += f"{tier_str:<{COL_TIER}}{dep.completion_path:<{COL_PATH}}{tags_str}"
         lines.append(row)
 
     return "\n".join(lines) + "\n"
