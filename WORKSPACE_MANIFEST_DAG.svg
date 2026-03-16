@@ -69,7 +69,7 @@
   <rect x="70" y="366" width="4" height="38" fill="#facc15" rx="2" />
   <text x="153" y="384" text-anchor="middle" class="label">unified-trading-codex</text>
   <circle cx="227" cy="374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="153" y="396" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="153" y="396" text-anchor="middle" class="ver">1.0.0</text>
   <!-- L2: Foundation — zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards. (4 repos) -->
   <rect x="40" y="438" width="2320" height="107" class="level-bg" />
   <rect x="55" y="446" width="80" height="22" fill="#3b82f6" class="level-badge" />
@@ -411,9 +411,9 @@
   <circle cx="1010" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="950" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1030" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1030" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1030" y="1604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1095" y="1622" text-anchor="middle" class="label">ml-training-ui</text>
-  <circle cx="1150" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1150" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1095" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1170" y="1604" width="130" height="38" class="ui-box" />
   <rect x="1170" y="1604" width="4" height="38" fill="#facc15" rx="2" />
@@ -431,14 +431,14 @@
   <circle cx="1570" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1515" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1590" y="1604" width="160" height="38" class="ui-box" />
-  <rect x="1590" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1590" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1670" y="1622" text-anchor="middle" class="label">trading-analytics-ui</text>
-  <circle cx="1740" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1740" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1670" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1760" y="1604" width="132" height="38" class="ui-box" />
-  <rect x="1760" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1760" y="1604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1826" y="1622" text-anchor="middle" class="label">unified-admin-ui</text>
-  <circle cx="1882" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1882" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1826" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1902" y="1604" width="181" height="38" class="lib" />
   <rect x="1902" y="1604" width="4" height="38" fill="#facc15" rx="2" />

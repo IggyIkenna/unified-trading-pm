@@ -1,172 +1,21 @@
-name: quality-gates
+name: Quality Gates
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch: {}
 
 jobs:
   quality-gates:
-    runs-on: ubuntu-latest
-    env:
-      CLOUD_MOCK_MODE: "true"
-      CLOUD_PROVIDER: "local"
-      GCP_PROJECT_ID: "unified-trading-ci"
-    steps:
-      - name: Checkout unified-trading-pm
-        uses: actions/checkout@v6
-        with:
-          path: unified-trading-pm
-
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13.9"
-
-      - name: Install uv
-        run: pip install uv
-
-      - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
-        id: tools-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/act-tools
-          key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
-
-      - name: Install ripgrep
-        if: steps.tools-cache.outputs.cache-hit != 'true'
-        run: |
-          RG_VER="14.1.1"
-          mkdir -p ~/.local/act-tools/bin
-          curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RG_VER}/ripgrep-${RG_VER}-x86_64-unknown-linux-musl.tar.gz" \
-            | tar -xz --strip-components=1 -C ~/.local/act-tools/bin "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
-
-      - name: Install shellcheck
-        if: steps.tools-cache.outputs.cache-hit != 'true'
-        run: |
-          SC_VER="v0.10.0"
-          mkdir -p ~/.local/act-tools/bin
-          curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${SC_VER}/shellcheck-${SC_VER}.linux.x86_64.tar.xz" \
-            | tar -xJ --strip-components=1 -C ~/.local/act-tools/bin "shellcheck-${SC_VER}/shellcheck"
-
-      - name: Install bats-core
-        if: steps.tools-cache.outputs.cache-hit != 'true'
-        run: |
-          git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
-          /tmp/bats-core/install.sh ~/.local/act-tools
-
-      - name: Install actionlint
-        if: steps.tools-cache.outputs.cache-hit != 'true'
-        run: |
-          AL_VER="1.7.4"
-          mkdir -p ~/.local/act-tools/bin
-          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz" \
-            | tar -xz -C ~/.local/act-tools/bin actionlint
-
-      - name: Add tools to PATH
-        run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
-
-      - name: Cache uv download cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('unified-trading-pm/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-
-
-      - name: Install PM dev deps (ruff, basedpyright, pytest)
-        working-directory: unified-trading-pm
-        run: |
-          uv venv --clear .venv
-          uv sync
-
-      - name: Checkout Codex (sibling)
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ github.repository_owner }}/unified-trading-codex
-          path: unified-trading-codex
-          token: ${{ secrets.GH_PAT }}
-          fetch-depth: 1
-        continue-on-error: true
-
-      - name: Clone basedpyright sibling deps
-        # basedpyright extraPaths references ../unified-events-interface and
-        # ../unified-internal-contracts — clone them so type checking resolves imports.
-        # Clones to $GITHUB_WORKSPACE/{repo} which is "../{repo}" relative to unified-trading-pm.
-        shell: bash
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
-        run: |
-          BRANCH="${DEP_BRANCH:-main}"
-          OWNER="${GITHUB_REPOSITORY_OWNER}"
-          clone_dep() {
-            local name="$1"
-            git clone --depth=1 -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "$name" 2>/dev/null \
-              || git clone --depth=1 -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "$name" 2>/dev/null \
-              || echo "Warning: could not clone $name (skipping)"
-          }
-          clone_dep unified-events-interface
-          clone_dep unified-internal-contracts
-
-      - name: Simulate sibling workspace layout
-        # Scripts infer workspace root as parent of unified-trading-pm/.
-        # In CI the checkout lands at $GITHUB_WORKSPACE/unified-trading-pm,
-        # so $GITHUB_WORKSPACE is the workspace root — perfect sibling layout.
-        # We just need to create .cursor/rules/ and one sibling so validation passes.
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/.cursor/rules"
-          touch "$GITHUB_WORKSPACE/.cursorrules"
-
-      - name: Run quality gates
-        working-directory: unified-trading-pm
-        run: |
-          export PATH="$(pwd)/.venv/bin:$PATH"
-          bash scripts/quality-gates.sh --no-fix
-
-      - name: UI/API flow coverage check (WARNING — non-blocking)
-        if: always() && steps.*.outcome != 'failure'
-        working-directory: unified-trading-pm
-        continue-on-error: true
-        run: |
-          export PATH="$(pwd)/.venv/bin:$PATH"
-          echo "Running UI/API flow coverage checker (warning-only mode)..."
-          python scripts/checkers/check_ui_api_flow_coverage.py \
-            --warning-only \
-            --discover \
-            --workspace-root "$GITHUB_WORKSPACE" \
-            2>&1 | tee flow-coverage-report.txt || true
-
-          # Also run scorecard for trend tracking
-          python scripts/checkers/flow_coverage_scorecard.py \
-            --workspace-root "$GITHUB_WORKSPACE" \
-            2>&1 | tee flow-coverage-scorecard.txt || true
-
-          echo ""
-          echo "--- Flow coverage check complete (non-blocking) ---"
-
-      - name: Upload flow coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flow-coverage-report
-          path: |
-            unified-trading-pm/flow-coverage-report.txt
-            unified-trading-pm/flow-coverage-scorecard.txt
-          retention-days: 30
-        continue-on-error: true
-
-      - name: Record CI status
-        if: always()
-        shell: bash
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
-          STATUS="${{ job.status == 'success' && 'PASSING' || 'FAILING' }}"
-          curl -s -X POST \
-            -H "Authorization: token ${GH_PAT}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
-            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"unified-trading-pm\", \"status\": \"${STATUS}\", \"sha\": \"${GITHUB_SHA}\"}}"
+    uses: IggyIkenna/unified-trading-pm/.github/workflows/infra-quality-gates.yml@live-defi-rollout
+    with:
+      repo_name: unified-trading-pm
+      run_quality_gates_sh: true
+      run_basedpyright: true
+      run_actionlint: true
+      run_flow_coverage: true
+      sibling_deps: "unified-events-interface unified-internal-contracts"
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
