@@ -135,6 +135,14 @@ clusters:
       - client-reporting-api
       - deployment-api
     layer: "API"
+  website:
+    services:
+      - odum-research-website
+    layer: "Web"
+    note: >
+      External-facing website. Self-contained Next.js app with built-in API routes (Firebase Auth + Firestore + GCS
+      proxy). No inter-service data flows. Deployment: Cloud Run (live only, not batch). Staging requires internal OAuth
+      gate.
 
 # ---------------------------------------------------------------------------
 # Complete service data flows (producer → consumer)

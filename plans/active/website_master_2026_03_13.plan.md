@@ -161,5 +161,5 @@ todos:
       component tests (Footer, ContactForm). MIN_UI_COVERAGE=0 bypass removed — standard 70% floor active.
       QUALITY_GATE_BYPASS_AUDIT.md updated. ESLint config fixed for typescript-eslint.
     status: done
-    depends_on: [website-local-dev-setup]
+    depends_on: [website-code-hardening]
 ---
