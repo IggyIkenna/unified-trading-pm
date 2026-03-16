@@ -175,3 +175,17 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Publish Package Event
+    needs: [publish, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: ${{ github.event.client_payload.repo }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.publish.result }}
+      branch: main
+      commit_sha: ${{ github.event.client_payload.commit_sha }}
+      details_json: '{"version": "${{ github.event.client_payload.version }}"}'
