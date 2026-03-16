@@ -63,10 +63,10 @@ todos:
 
   - id: website-domain-migration
     content: >
-      - [ ] [HUMAN] P2. Switch DNS from Yell to self-managed hosting. (1) Audit Yell DNS records for odum-research.co.uk
-      and odum-research.com. (2) Choose hosting (Cloud Run or Vercel). (3) Configure hosting with auto-deploy on push to
-      main. (4) DNS cutover: set TTL to 300, update A/CNAME, restore after propagation. (5) odum-research.co.uk
-      redirects to .com. (6) SSL provisioning. (7) Cancel Yell after 2-week clean operation. See full detail in
-      docs/archive/ (was website-domain-migration-detail).
+      - [ ] [HUMAN] P2. Switch DNS from Yell to self-managed hosting. Migrate from odum-research.co.uk to
+      odum-research.com (primary domain: odum-research.com). (1) Audit Yell DNS records. (2) Choose hosting (Cloud Run
+      or Vercel). (3) Configure hosting with auto-deploy on push to main. (4) DNS cutover: set TTL to 300, update
+      A/CNAME, restore after propagation. (5) odum-research.co.uk redirects to odum-research.com. (6) SSL provisioning.
+      (7) Cancel Yell after 2-week clean operation.
     status: pending
 ---
