@@ -40,7 +40,7 @@ def infer_tags(name: str, info: dict[str, object]) -> list[str]:
     repo_type = str(info.get("type", ""))
     tier = info.get("tier")
     completion_path = str(info.get("completion_path", ""))
-    cluster = str(info.get("cluster", ""))
+    _cluster = str(info.get("cluster", ""))
     name_lower = name.lower()
 
     # --- Criticality ---

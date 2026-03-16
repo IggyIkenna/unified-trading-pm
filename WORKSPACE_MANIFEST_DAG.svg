@@ -76,9 +76,9 @@
   <text x="95" y="462" text-anchor="middle" class="level-label">L2</text>
   <text x="150" y="462" class="desc">Foundation — zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards. (4 repos)</text>
   <rect x="70" y="485" width="167" height="38" class="lib" />
-  <rect x="70" y="485" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="485" width="4" height="38" fill="#facc15" rx="2" />
   <text x="153" y="503" text-anchor="middle" class="label">unified-api-contracts</text>
-  <circle cx="227" cy="493" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="227" cy="493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="153" y="515" text-anchor="middle" class="ver">0.2.38</text>
   <rect x="247" y="485" width="181" height="38" class="lib" />
   <rect x="247" y="485" width="4" height="38" fill="#facc15" rx="2" />
@@ -316,9 +316,9 @@
   <circle cx="500" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="445" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="520" y="1366" width="167" height="38" class="api" />
-  <rect x="520" y="1366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="520" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="603" y="1384" text-anchor="middle" class="label">execution-results-api</text>
-  <circle cx="677" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="677" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="603" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="697" y="1366" width="130" height="38" class="api" />
   <rect x="697" y="1366" width="4" height="38" fill="#facc15" rx="2" />
@@ -326,14 +326,14 @@
   <circle cx="817" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="762" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="837" y="1366" width="132" height="38" class="api" />
-  <rect x="837" y="1366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="837" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="903" y="1384" text-anchor="middle" class="label">ml-inference-api</text>
-  <circle cx="959" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="959" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="903" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="979" y="1366" width="130" height="38" class="api" />
-  <rect x="979" y="1366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="979" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1044" y="1384" text-anchor="middle" class="label">ml-training-api</text>
-  <circle cx="1099" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1099" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1044" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1119" y="1366" width="244" height="38" class="svc" />
   <rect x="1119" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
@@ -425,9 +425,9 @@
   <circle cx="1430" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1375" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1450" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1450" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1450" y="1604" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1515" y="1622" text-anchor="middle" class="label">strategy-ui</text>
-  <circle cx="1570" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1570" cy="1612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1515" y="1634" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1590" y="1604" width="160" height="38" class="ui-box" />
   <rect x="1590" y="1604" width="4" height="38" fill="#facc15" rx="2" />
