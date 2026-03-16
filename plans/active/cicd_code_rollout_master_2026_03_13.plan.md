@@ -479,9 +479,11 @@ todos:
       - [ ] [AGENT] P1. T3 (1 repo): coverage 70%, basedpyright, quickmerge. Repo: unified-domain-client. T2 invariant: all T2 repos must be at CR5 before starting T3.
     status: pending
     completion_note:
-      "unified-domain-client=LOCAL_PASS 0.1.76 in manifest (2026-03-16). However T2 invariant not satisfied (UMI and
-      unified-sports-execution-interface still FAILING). Once T2 is clean, this can be marked done — the repo itself is
-      passing."
+      "AUDIT 2026-03-16: unified-domain-client=LOCAL_PASS v0.1.76, coverage_pct=84%, 278 test errors noted in
+      ci_failure_reason but ci_status=LOCAL_PASS (errors are pre-existing/non-fatal). T3 repo itself is passing.
+      BLOCKER: T2 invariant not satisfied — unified-market-interface (FAILING, cov=40%, MIN_COVERAGE=83) and
+      unified-sports-execution-interface (FAILING, cov=76%, MIN_COVERAGE=80) are still failing. Both have QG scripts and
+      test suites but QG exits 1. Must fix T2 before marking this done."
   - id: library-publish-ar
     content: |
       - [x] [SCRIPT] P1. Publish all T0-T3 libraries to GCP Artifact Registry as versioned wheels. Each library gets a wheel published on every main merge via `publish-package.yml` workflow update.
@@ -490,15 +492,42 @@ todos:
   - id: service-l7l8-harden
     content: |
       - [ ] [AGENT per repo] P0. L7-L8 (19 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service, execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service, elysium-defi-system (L8).
-    status: pending
+    status: in_progress
+    completion_note:
+      "AUDIT 2026-03-16: 2/19 repos passing (ml-training-service=LOCAL_PASS, elysium-defi-system=LOCAL_PASS). 17/19
+      FAILING. Breakdown by primary failure mode: COVERAGE BELOW FLOOR: instruments-service(53%/70%),
+      features-cross-instrument-service(65%/70%), features-multi-timeframe-service(57%/70%),
+      features-onchain-service(39%/70%), features-volatility-service(35%/70%), features-commodity-service(3%/70%),
+      market-data-processing-service(39%/70%), pnl-attribution-service(46%/70%), trading-agent-service(50%/70%),
+      execution-service(26%/70%). COVERAGE AT/NEAR FLOOR (may have other issues): features-calendar-service(72%/70%),
+      features-delta-one-service(71%/70%), strategy-service(72%/70%), market-tick-data-service(73%/70%),
+      ml-inference-service(75%/70%), features-sports-service(87%/70%), alerting-service(87%/70%). CODEX VIOLATIONS:
+      execution-service (7 violations, QG exit 1), no_reason on most others. QG script size: execution-service=54L (was
+      59L — audit §2 threshold was 50L stub limit, now at 54L still needs expansion for integration tests). All other
+      L7-L8 repos have QG scripts (25-36L). All 17 failing repos have tests/ directories (11-103 test files each)."
   - id: service-l9-harden
     content: |
       - [ ] [AGENT per repo] P1. L9 (9 T5 API+operational): coverage, basedpyright, quickmerge. Repos: batch-audit-api, client-reporting-api, execution-results-api, market-data-api, ml-inference-api, ml-training-api, position-balance-monitor-service, risk-and-exposure-service, trading-analytics-api.
-    status: pending
+    status: in_progress
+    completion_note:
+      "AUDIT 2026-03-16: 3/9 repos passing (client-reporting-api=LOCAL_PASS, market-data-api=LOCAL_PASS,
+      ml-inference-api=LOCAL_PASS). 6/9 FAILING. Breakdown: FAILING: batch-audit-api (no coverage_pct in manifest, no
+      fail_under in pyproject.toml — likely no coverage config), execution-results-api (cov=66%, fail_under=79),
+      ml-training-api (no coverage_pct, fail_under=85), position-balance-monitor-service (cov=77%, fail_under=77 —
+      borderline), trading-analytics-api (no coverage_pct, fail_under=51 — low floor, likely test failures or other QG
+      issues). CODEX VIOLATIONS: risk-and-exposure-service (2 violations, cov=77%, fail_under=74 — coverage ok, codex is
+      the blocker). batch-audit-api and batch-live-reconciliation-service: no fail_under in pyproject.toml —
+      pyproject.toml likely missing coverage section entirely, will cause QG to fail on config validation."
   - id: service-l10-harden
     content: |
       - [ ] [AGENT per repo] P1. L10 (4 deployment infra): deployment-api, deployment-service, batch-live-reconciliation-service, unified-trading-ui-kit.
-    status: pending
+    status: in_progress
+    completion_note:
+      "AUDIT 2026-03-16: 2/4 repos passing (deployment-service=LOCAL_PASS, unified-trading-ui-kit=LOCAL_PASS). 2/4
+      FAILING: deployment-api (FAILING, cov=71%, fail_under=70 — coverage is above floor, likely QG failures on other
+      checks such as codex or basedpyright; no ci_failure_reason recorded). batch-live-reconciliation-service (FAILING,
+      no coverage_pct, no fail_under in pyproject.toml — pyproject.toml likely missing coverage section, will fail QG
+      config validation; no ci_failure_reason recorded)."
   - id: service-l11-ui-harden
     content: |
       - [ ] [AGENT per repo] P1. L11 (13 UIs): TypeScript strict, vitest (add to 3 missing: trading-analytics-ui, execution-analytics-ui, batch-audit-ui — audit §16 FAIL), Playwright smoke tests where applicable. All 13 UI repos.
@@ -511,6 +540,10 @@ todos:
     content: |
       - [ ] [SCRIPT] P0. Full SIT validation with all services on staging. Run system-integration-tests against the full service stack. All tests must pass.
     status: pending
+    completion_note:
+      "AUDIT 2026-03-16: system-integration-tests=LOCAL_PASS (no tier assigned, sits outside T0-T3). Cannot run full SIT
+      until all T3 service repos pass their individual QGs. Currently 27/47 T3 repos are FAILING. Gated on
+      service-l7l8-harden, service-l9-harden, service-l10-harden all completing first."
   - id: deploy-aws-account
     content: |
       - [ ] [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work. From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service roles, quota review).
@@ -544,10 +577,14 @@ todos:
       - [ ] [AGENT+HUMAN] P2. Grafana deployment on Cloud Run + 5 dashboards (strategy, execution, PnL, signals, risk). Add Prometheus metrics to strategy/execution/PnL services. Embed panels in unified-admin-ui.
     status: in_progress
     completion_note:
-      "PARTIAL (2026-03-16): Grafana infrastructure exists in deployment-service/grafana/ with provisioning/
-      (datasources) and dashboards/ but only 2 of 5 required dashboards present: system-health.json and
-      trading-overview.json. Missing: strategy, execution, PnL, signals, risk dashboards. Cloud Run deployment,
-      Prometheus metrics wiring, and unified-admin-ui panel embedding not confirmed."
+      "AUDIT 2026-03-16 (confirmed from disk): deployment-service/grafana/ structure verified: dashboards/:
+      system-health.json, trading-overview.json (2 of 5 required) provisioning/datasources/prometheus.yaml (Prometheus
+      datasource with ${PROMETHEUS_URL} env var — not hardcoded) provisioning/dashboards/: directory exists but EMPTY —
+      no dashboard provisioning config present. MISSING (3 of 5 dashboards): strategy.json, execution.json, pnl.json
+      (signals and risk also absent). MISSING: Cloud Run deployment config (no cloudbuild.yaml grafana target, no Cloud
+      Run service definition found). MISSING: Prometheus metrics wiring in strategy-service, execution-service,
+      pnl-attribution-service. MISSING: unified-admin-ui Grafana panel embedding (not confirmed from disk). NEXT: Create
+      3 remaining dashboards, add dashboard provisioning YAML, configure Cloud Run, wire Prometheus."
   - id: feature-elysium-fork
     content: |
       - [x] [AGENT] P2. Elysium DeFi system fork — standalone repo with DeFi strategy/execution components. Replace 8 stub handlers with implementations. Docker build produces working image.

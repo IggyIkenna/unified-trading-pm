@@ -332,8 +332,8 @@ todos:
     status: done
     blocked_by: p2-risk-subscribe-aggregated
     note:
-      "tests/integration/test_cross_venue_aggregation_e2e.py written — net qty, VWAP, multi-instrument,
-      float->Decimal boundary, UAC imports smoke, PBMS importable — confirmed 2026-03-16"
+      "tests/integration/test_cross_venue_aggregation_e2e.py written — net qty, VWAP, multi-instrument, float->Decimal
+      boundary, UAC imports smoke, PBMS importable — confirmed 2026-03-16"
 isProject: false
 ---
 
