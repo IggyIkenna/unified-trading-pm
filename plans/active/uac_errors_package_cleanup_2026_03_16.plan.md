@@ -1,14 +1,14 @@
 ---
 name: contracts-observability-risk-cleanup
 overview: |
-  Comprehensive cleanup, observability, and risk expansion plan covering:
-  (A) UAC crosscutting cleanup — delete duplicate errors package, deduplicate types, re-categorize
-      venues, prune dead symbols, resolve UAC↔UIC duplication, enforce external-vs-internal split.
-  (B) Observability & monitoring — live health monitoring UI, Prometheus→Cloud bridge, restart
-      detection, latency profiling activation, resource utilization dashboards, shard-aware monitoring.
-  (C) VaR/risk Phase 2 — historical returns ingestion, Monte Carlo VaR, Greeks-based risk,
-      copula multi-asset correlation, VaR attribution, dynamic regime detection.
-  Cloud monitoring as independent backup for when own systems are down.
+  Comprehensive cleanup, observability, circuit breaker hardening, and risk expansion.
+  Phased execution DAG with pre-audit manifest — agents execute from manifest, no re-scanning.
+  Phase 1: UAC internal cleanup (no downstream impact, parallel).
+  Phase 2: UIC receives schemas + QG UIC.
+  Phase 3: UAC removes moved schemas + QG UAC + cassette parity.
+  Phase 4: Downstream fixes (2 repos, parallel) + QG per repo.
+  Phase 5: Observability, circuit breaker citadel-grade, VaR Phase 2.
+  Phase 6: Final workspace-wide QG.
 type: mixed
 epic: epic-code-completion
 status: active
@@ -31,7 +31,23 @@ repo_gates:
     code: C0
     deployment: none
     business: none
+  - repo: execution-service
+    code: C0
+    deployment: none
+    business: none
+  - repo: trading-analytics-api
+    code: C0
+    deployment: none
+    business: none
+  - repo: market-data-processing-service
+    code: C0
+    deployment: none
+    business: none
   - repo: unified-trading-library
+    code: C0
+    deployment: none
+    business: none
+  - repo: unified-market-interface
     code: C0
     deployment: none
     business: none
@@ -44,463 +60,484 @@ depends_on: []
 
 todos:
   # =========================================================================
-  # SECTION A: UAC CROSSCUTTING CLEANUP (Layers 1–10)
+  # PHASE 1: UAC INTERNAL CLEANUP (no downstream impact — all parallel)
   # =========================================================================
+  # These items touch ONLY UAC internals. No downstream repo breaks.
+  # Run ALL Phase 1 items in parallel via separate agents.
 
-  - id: a1-delete-duplicate-errors-package
+  - id: p1a-delete-duplicate-errors-package
     content: |
-      - [ ] [AGENT] P0. Delete `canonical/errors/` — byte-for-byte identical to
-        `canonical/crosscutting/errors/` (all 7 files). Redirect 2 stale imports first:
-        1. `canonical/__init__.py:147` — `from .errors import` → `from .crosscutting.errors import`
-        2. `external/open_meteo/schemas.py` — same redirect
-        58 imports already use correct `crosscutting.errors` path; only these 2 use stale path.
+      - [ ] [AGENT] P0. Delete `canonical/errors/` (byte-for-byte duplicate of crosscutting).
+        PRE-AUDIT: 2 stale imports to redirect first:
+        1. `canonical/__init__.py:147` → `from .crosscutting.errors import`
+        2. `external/open_meteo/schemas.py:15` → same
+        Then delete entire `canonical/errors/` directory.
     status: todo
-    note: "Confirmed via diff + workspace-wide grep. crosscutting/ is documented home."
+    note: "PARALLEL with p1b-p1f. No downstream impact."
 
-  - id: a2-deduplicate-erroraction-venue-error
+  - id: p1b-deduplicate-erroraction
     content: |
-      - [ ] [AGENT] P0. In `canonical/crosscutting/errors/_canonical.py`, remove duplicate
-        definitions of `ErrorAction` (StrEnum) and `VenueErrorClassification` (dataclass).
-        Import from `._types` instead. No circular dep risk — _types.py doesn't import _canonical.py.
+      - [ ] [AGENT] P0. In `crosscutting/errors/_canonical.py`, delete duplicate ErrorAction
+        and VenueErrorClassification definitions. Import from `._types` instead.
     status: todo
-    note: ""
+    note: "PARALLEL. Internal only."
 
-  - id: a3a-create-tradfi-errors-file
+  - id: p1c-remove-coinglass-hyblock-versifi
     content: |
-      - [ ] [AGENT] P1. Create `errors/tradfi.py` with VENUE_ERRORS_TRADFI. Move:
-        From cefi.py: tardis, yahoo_finance, ibkr, databento
-        From altdata.py: barchart, fred, ecb, ofr, openbb
-        (9 TradFi venues per VENUE_REGISTRY, currently scattered)
+      - [ ] [AGENT] P0. Delete from UAC entirely:
+        - `crosscutting/errors/altdata.py`: remove coinglass, hyblock, versifi entries
+        - `docs/VERSIFI_INTEGRATION.md`: delete file
+        - `COVERAGE_AUDIT.md`: remove coinglass reference
+        - `docs/UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY.md`: remove versifi refs
+        No downstream service imports these.
     status: todo
-    note: ""
+    note: "PARALLEL. Decision: own liquidation prediction system."
 
-  - id: a3b-create-onchain-perps-errors-file
+  - id: p1d-delete-sports-generic
     content: |
-      - [ ] [AGENT] P1. Create `errors/onchain_perps.py`. Move from altdata.py: hyperliquid, aster.
+      - [ ] [AGENT] P0. Delete `sports_generic` from `crosscutting/errors/sports.py`.
+        Fallback template — each venue should have proper venue-specific error codes.
+        No downstream service imports this.
     status: todo
-    note: ""
+    note: "PARALLEL."
 
-  - id: a3c-fix-defi-misplacements
+  - id: p1e-prune-dead-connectivity-symbols
     content: |
-      - [ ] [AGENT] P1. Move to defi.py:
-        From altdata.py: aave_v3. From sports.py: instadapp, defillama.
-        From cefi.py: alchemy, thegraph. From altdata.py: bloxroute.
-        (alchemy/thegraph/bloxroute are DeFi infra, not in VENUE_REGISTRY — comment as ancillary)
-    status: todo
-    note: ""
-
-  - id: a3d-fix-altdata-to-only-altdata
-    content: |
-      - [ ] [AGENT] P1. After moves, altdata.py keeps: coinglass, hyblock (true altdata, not in
-        VENUE_REGISTRY). Move glassnode, arkham from sports.py → altdata.py. Remove versifi
-        (not altdata). Decide: add coinglass/hyblock/glassnode/arkham to VENUE_REGISTRY or
-        document as ancillary.
-    status: todo
-    note: ""
-
-  - id: a3e-fix-sports-to-only-sports
-    content: |
-      - [ ] [AGENT] P1. After moves, sports.py keeps: polymarket, betfair, kalshi, smarkets,
-        betdaq, sports_generic. Move onchain_revert to own crosscutting file or defi.py.
-    status: todo
-    note: ""
-
-  - id: a3f-update-init-exports
-    content: |
-      - [ ] [AGENT] P1. Update errors/__init__.py: import tradfi.py, onchain_perps.py.
-        Add VENUE_ERRORS_TRADFI, VENUE_ERRORS_ONCHAIN_PERPS to VENUE_ERROR_MAP and __all__.
-    status: todo
-    note: ""
-
-  - id: a4-registry-parity-audit
-    content: |
-      - [ ] [AGENT] P2. Audit parity: 15 error-map venues NOT in UMI VENUE_REGISTRY
-        (polymarket, betfair, kalshi, smarkets, betdaq, glassnode, arkham, coinglass, hyblock,
-        versifi, bloxroute, alchemy, thegraph, onchain_revert, sports_generic).
-        Decide per venue: (a) add to VENUE_REGISTRY, (b) keep with comment, (c) remove.
-    status: todo
-    note: ""
-
-  - id: a5-move-risk-schemas-to-uic
-    content: |
-      - [ ] [AGENT] P0. Delete UAC `canonical/crosscutting/risk.py` — all 10 symbols are INTERNAL.
-        Dispositions:
-        - SpanMarginLeg, MultiAssetMarginCalculation: delete (already in UIC risk.py)
-        - PnLAttributionRecord, RealTimePnLRecord: move to UIC
-        - RiskLimitBreach: consolidate with UIC AlertMessage
-        - VaRMethod, VaRRequest, VaRResult, StressScenario, StressTestResult: move to UIC
-          (VaR already implemented in risk-service var_calculator.py — align schemas)
-        Remove from crosscutting __init__.py and facades.
-    status: todo
-    note: ""
-
-  - id: a6-fix-analytics-external-internal-split
-    content: |
-      - [ ] [AGENT] P1. Split analytics.py by external vs internal:
-        KEEP IN UAC (external normalization): AlternativeDataType, AlternativeDataSignal,
-        SentimentScore, SatelliteObservation, OptionsFlowRecord, DarkPoolPrintRecord
-        MOVE TO UIC (internal): CorrelationRegime, CrossAssetCorrelationMatrix,
-        CorrelationRegimeChange
-        REMOVE FROM UAC (UIC is SSOT): FactorType, FactorExposure, FactorAttributionRecord,
-        FactorAttributionModel — UAC should import+re-export from UIC, not redefine.
-    status: todo
-    note: ""
-
-  - id: a7-prune-dead-connectivity-symbols
-    content: |
-      - [ ] [AGENT] P1. Remove 7 dead symbols from connectivity.py:
-        DELETE: WebSocketPingFrame, WebSocketPongFrame (library handles), UnsubscribeRequest,
-        SubscribeRequest (adapters use raw JSON), HeartbeatMessage (redundant with
-        CanonicalWebSocketLifecycle+PING), WebSocketConnectionState (local adapter state),
-        CanonicalWsMessage (zero consumers — reserve or delete).
+      - [ ] [AGENT] P1. Remove 7 dead symbols from `crosscutting/connectivity.py`:
+        DELETE: WebSocketPingFrame, WebSocketPongFrame, UnsubscribeRequest, SubscribeRequest,
+        HeartbeatMessage, WebSocketConnectionState, CanonicalWsMessage.
+        PRE-AUDIT: No service imports these. Update:
+        - `tests/test_contract_alignment.py:71,77,79,92,94-95` — delete test cases
+        - `scripts/check_uac_adoption.py:106,108` — remove symbol names
+        - Root `__init__.py` lines 166,233,254,256-257 — remove re-exports
+        - `canonical/__init__.py` lines 113,128,262,277 — remove re-exports
+        - `canonical/domain/__init__.py` lines 23,27,461,482 — remove imports
         KEEP: WebSocketEvent, CanonicalWebSocketLifecycle, HealthPingResponse,
         WebSocketConnectionOpened, WebSocketConnectionClosed.
     status: todo
-    note: ""
+    note: "PARALLEL. No downstream impact — all dead symbols."
 
-  - id: a8-resolve-uac-uic-factor-duplicates
+  - id: p1f-recategorize-venue-errors
     content: |
-      - [ ] [AGENT] P2. Factor* types in BOTH UAC+UIC. UIC is SSOT. Verify dep direction.
-        Preferred: UAC imports from UIC and re-exports. Remove UAC's own definitions.
+      - [ ] [AGENT] P1. Re-categorize venue error files:
+        CREATE `errors/tradfi.py`: move tardis,yahoo_finance,ibkr,databento from cefi.py;
+        barchart,fred,ecb,ofr,openbb from altdata.py.
+        CREATE `errors/onchain_perps.py`: move hyperliquid,aster from altdata.py.
+        CREATE `errors/infra.py`: move alchemy,thegraph from cefi.py; bloxroute from altdata.py.
+        MOVE to defi.py: aave_v3 from altdata.py; instadapp,defillama from sports.py.
+        MOVE to altdata.py: glassnode,arkham from sports.py.
+        MOVE onchain_revert from sports.py to own crosscutting section.
+        UPDATE `errors/__init__.py`: import new files, update VENUE_ERROR_MAP.
     status: todo
-    note: ""
+    note: "PARALLEL. Internal reorganization only."
 
-  - id: a9-resolve-uac-uic-ws-duplicates
+  - id: p1-qg-uac-internal
     content: |
-      - [ ] [AGENT] P2. WS lifecycle types in BOTH UAC (Pydantic) + UIC (dataclass).
-        Decide single owner. Delete dead duplicates (PingFrame/PongFrame) from both.
-        Reconcile HealthPingResponse, ConnectionOpened, ConnectionClosed type systems.
+      - [ ] [AGENT] P0. GATE: `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+        Must pass before Phase 2. Validates all Phase 1 changes are clean.
     status: todo
-    note: ""
-
-  - id: a10-quality-gates-uac
-    content: |
-      - [ ] [AGENT] P0. Run `cd unified-api-contracts && bash scripts/quality-gates.sh`.
-        Also run `cd unified-internal-contracts && bash scripts/quality-gates.sh` after moves.
-    status: todo
-    note: ""
+    note: "SEQUENTIAL — runs after ALL p1a-p1f complete."
 
   # =========================================================================
-  # SECTION B: OBSERVABILITY & MONITORING (Layers 11–18)
+  # PHASE 2: UIC RECEIVES SCHEMAS (sequential — must complete before Phase 3)
   # =========================================================================
+  # Add new schemas to UIC. No deletions from UAC yet — both copies exist temporarily.
 
-  - id: b11-prometheus-cloud-monitoring-bridge
+  - id: p2a-uic-add-risk-schemas
     content: |
-      - [ ] [AGENT] P1. Wire Prometheus metrics to Cloud Monitoring as independent backup.
-        Options: (a) OTEL Collector sidecar with remote_write to GCP Cloud Monitoring,
-        (b) Prometheus server with GMP (Google Managed Prometheus).
-        Extend existing UTL setup_tracing() to cover metrics (not just traces).
-        This ensures monitoring works even if own UI/services are down.
-        Repos: unified-trading-library (OTEL setup), deployment-service (sidecar config).
+      - [ ] [AGENT] P0. Add to UIC `domain/risk_service/risk.py`:
+        - VaRMethod (StrEnum), VaRRequest, VaRResult (align with existing var_calculator.py)
+        - StressScenario, StressTestResult
+        - PnLAttributionRecord (complement existing PnLBreakdown)
+        - RealTimePnLRecord
+        - RiskLimitBreach → consolidate with existing AlertMessage (add breach_pct,
+          recommended_action, auto_halt_triggered fields to AlertMessage or subclass)
+        SpanMarginLeg and MultiAssetMarginCalculation already in UIC — no action.
+        Export all new types from `risk.py`, `domain/risk_service/__init__.py`, root `__init__.py`.
     status: todo
-    note: "UTL already has setup_tracing() in utils/tracing.py. Extend to setup_metrics()."
+    note: "PARALLEL with p2b-p2c."
 
-  - id: b12-restart-detection-lifecycle-event
+  - id: p2b-uic-add-correlation-schemas
     content: |
-      - [ ] [AGENT] P1. Add RESTART_DETECTED lifecycle event. On STARTED, check for missing
-        STOPPED event in recent GCS logs (unclean shutdown). Emit RESTART_DETECTED with
-        restart_count, last_known_state, shutdown_reason (OOM, SIGKILL, unknown).
-        Add restart_count to /health endpoint response.
-        Repos: unified-internal-contracts (schema), unified-trading-library (detection logic),
-        all services (wire into startup).
+      - [ ] [AGENT] P0. Add to UIC `domain/analytics/`:
+        - CorrelationRegime (StrEnum: LOW, NORMAL, HIGH, CRISIS)
+        - CrossAssetCorrelationMatrix
+        - CorrelationRegimeChange
+        Export from `domain/analytics/__init__.py` and root `__init__.py`.
     status: todo
-    note:
-      "Currently no way to tell 'this service restarted 3 times today'. Infra handles restarts but app doesn't track."
+    note: "PARALLEL with p2a,p2c."
 
-  - id: b13-activate-latency-profiling
+  - id: p2c-uic-cleanup-dead-ws-types
     content: |
-      - [ ] [AGENT] P1. Wire UAC latency schemas (TickToTradeMetric, OrderLatencyRecord,
-        LatencyPercentile, LatencyBenchmarkReport) into actual measurement code.
-        Schemas exist and are imported but NOTHING MEASURES in production.
-        Target: execution-service order path (tick→signal→risk→encode→send→ack→fill).
-        Record timestamps at each LatencyComponent stage, populate OrderLatencyRecord,
-        write to GCS for analysis. Publish LatencyBenchmarkReport per session.
-        Repos: execution-service (measurement), market-tick-data-service (market data decode).
+      - [ ] [AGENT] P1. In UIC `domain/websocket/lifecycle.py`:
+        Delete WebSocketPingFrame, WebSocketPongFrame (dead in both UAC and UIC).
+        Keep HealthPingResponse, WebSocketConnectionOpened, WebSocketConnectionClosed.
+        Update `domain/websocket/__init__.py` exports.
     status: todo
-    note: "Rich latency schemas defined but zero production measurement code."
+    note: "PARALLEL with p2a,p2b."
 
-  - id: b14-resource-utilization-metrics
+  - id: p2-qg-uic
     content: |
-      - [ ] [AGENT] P1. Add resource utilization metrics beyond memory watchdog:
-        - CPU usage per service (gauge, sampled every 30s)
-        - Memory RSS vs threshold proximity (gauge)
-        - GCS write latency (histogram)
-        - Pub/Sub publish latency (histogram)
-        - Active WebSocket connections (gauge, per venue)
-        - Queue depth / backpressure (gauge)
-        Expose on /metrics for Prometheus scraping. Include shard_id label for batch services.
-        Repos: unified-trading-library (shared metrics helpers), all services (wire in).
+      - [ ] [AGENT] P0. GATE: `cd unified-internal-contracts && bash scripts/quality-gates.sh`.
+        Must pass before Phase 3. Validates new schemas are correct.
     status: todo
-    note: "Currently only Prometheus counters/histograms for request-level. No system-level resource gauges."
-
-  - id: b15-shard-aware-live-monitoring
-    content: |
-      - [ ] [AGENT] P2. Extend lifecycle events for live services with shard-like partitioning.
-        Live services handle multiple venues/strategies — add venue_id and strategy_id labels
-        to lifecycle events and Prometheus metrics. Enables per-venue latency tracking,
-        per-strategy P&L monitoring in the monitoring UI.
-        Repos: unified-internal-contracts (schema update), execution-service, strategy-service.
-    status: todo
-    note: "Batch has shard IDs; live services have no equivalent partitioning in events."
-
-  - id: b16-live-health-monitoring-ui
-    content: |
-      - [ ] [HUMAN+AGENT] P1. Build live health monitoring UI (new repo or extend existing
-        ops dashboard). Features:
-        - Service lifecycle timeline (STARTED/STOPPED/FAILED per service, color-coded)
-        - Restart count badges per service (batch + live)
-        - Latency percentile charts (p50/p95/p99 per venue, tick-to-trade)
-        - Resource utilization gauges (CPU, memory, connections per service/shard)
-        - Batch completion tracker (shard progress, expected vs actual completion time)
-        - VaR dashboard (current VaR, CVaR, stress scenario results, limit proximity)
-        - Risk alerts feed (RiskLimitBreach, CircuitBreaker state, kill switch status)
-        - P&L attribution waterfall (delta/gamma/vega/theta/carry/fees breakdown)
-        - Correlation regime indicator (current regime, regime change history)
-        Data sources: GCS lifecycle JSONL, Prometheus /metrics, risk-service API, PBMS API.
-        Group by: service, venue, strategy, shard, category — user-configurable.
-        Stack: React + Vite (consistent with other 13 UIs), vitest, pool: "forks".
-    status: todo
-    note: "Own UI for day-to-day ops. Custom views, grouping, alerts — not possible with third-party dashboards."
-
-  - id: b17-cloud-monitoring-backup-alerts
-    content: |
-      - [ ] [HUMAN+AGENT] P1. Configure Cloud Monitoring as independent backup:
-        - GCP Cloud Run / GKE built-in metrics (container restarts, OOM kills, CPU/memory)
-        - Uptime checks hitting /health endpoints from external network path
-        - Log-based alerts for FAILED lifecycle events, AUTH_FAILURE, CIRCUIT_BREAKER_OPEN
-        - Alert routing to PagerDuty/Opsgenie/Telegram
-        This is the safety net — pages you when your own monitoring UI/services are down.
-        Repos: deployment-service (terraform/config), unified-trading-pm (alert rules docs).
-    status: todo
-    note: "Independent observer. If our own systems break, Cloud Monitoring still pages us."
-
-  - id: b18-alert-rules-definition
-    content: |
-      - [ ] [AGENT] P2. Define alert rules for both own UI and Cloud Monitoring:
-        - Restart count > 3 in 1 hour → CRITICAL
-        - Latency p99 > 500ms sustained 5min → WARNING
-        - Batch shard not completed by deadline → WARNING
-        - Memory > 80% sustained 5min → WARNING
-        - VaR > 90% of limit → WARNING; > 100% → CRITICAL
-        - Circuit breaker OPEN for any venue → CRITICAL
-        - Kill switch activated → CRITICAL
-        - Lifecycle FAILED event → CRITICAL
-        - No STARTED event for scheduled batch within 15min of schedule → WARNING
-        Store as config (YAML or Python) loadable by both monitoring UI and Cloud alerts.
-    status: todo
-    note: ""
+    note: "SEQUENTIAL — runs after ALL p2a-p2c complete."
 
   # =========================================================================
-  # SECTION C: VaR / RISK PHASE 2 (Layers 19–25)
+  # PHASE 3: UAC REMOVES MOVED SCHEMAS (sequential — must complete before Phase 4)
   # =========================================================================
+  # Now that UIC has the schemas, remove UAC copies and update facades.
 
-  - id: c19-var-historical-returns-ingestion
+  - id: p3a-delete-uac-risk-module
     content: |
-      - [ ] [AGENT] P1. Currently /risk/var requires caller to supply returns[] array.
-        Add automated historical returns ingestion from position-balance-monitor-service
-        history. Store daily returns per instrument in GCS. Risk service fetches on demand.
-        Repos: risk-and-exposure-service (ingestion), position-balance-monitor-service (source).
+      - [ ] [AGENT] P0. Delete `canonical/crosscutting/risk.py` entirely.
+        PRE-AUDIT — remove from these re-export chains:
+        - Root `__init__.py:182,204-215,222,229-230,241-243` — remove 10 risk symbols
+        - Root `__init__.py __all__` — remove same
+        - `canonical/__init__.py:46,113-128,262-277` — remove risk re-exports
+        - `canonical/domain/__init__.py:3,46,461,482` — remove crosscutting.risk imports
+        - `crosscutting/__init__.py` — remove risk import if present
     status: todo
-    note: "Phase 1 design: caller provides returns. Phase 2: automated from PBMS position history."
+    note: "PARALLEL with p3b."
 
-  - id: c20-monte-carlo-var
+  - id: p3b-fix-uac-analytics-split
     content: |
-      - [ ] [AGENT] P2. Add Monte Carlo VaR simulation to var_calculator.py.
-        Current: historical, parametric, Cornish-Fisher, stress VaR. Missing: MC simulation.
-        Pure stdlib approach (consistent with existing design): random number generation
-        via stdlib random module, Cholesky decomposition for correlated asset simulation.
-        Add VaRMethod.MONTE_CARLO to UIC schema. Wire into /risk/var endpoint.
-        Repos: risk-and-exposure-service.
+      - [ ] [AGENT] P0. In `crosscutting/analytics.py`:
+        DELETE: FactorType, FactorExposure, FactorAttributionRecord, FactorAttributionModel
+        (UIC is SSOT — UAC had duplicate definitions)
+        DELETE: CorrelationRegime, CrossAssetCorrelationMatrix, CorrelationRegimeChange
+        (moved to UIC in Phase 2)
+        KEEP: AlternativeDataType, AlternativeDataSignal, SentimentScore,
+        SatelliteObservation, OptionsFlowRecord, DarkPoolPrintRecord (external normalization)
+        Update re-export chains:
+        - Root `__init__.py:157-160` — remove Factor*/Correlation* from domain imports
+        - `canonical/__init__.py:137-139` — remove same
+        - `canonical/domain/__init__.py:3-6` — remove crosscutting.analytics Factor*/Corr imports
     status: todo
-    note: "Existing var_calculator.py is pure stdlib with Winitzki erfinv. Keep same philosophy."
+    note: "PARALLEL with p3a."
 
-  - id: c21-copula-multi-asset-correlation
+  - id: p3-qg-uac-final
     content: |
-      - [ ] [AGENT] P2. Add copula-based multi-asset correlation for portfolio VaR.
-        CrossAssetCorrelationMatrix schema exists (moving to UIC in layer a6).
-        Implement rolling correlation matrix computation from returns data.
-        Feed into Monte Carlo simulation for correlated multi-asset VaR.
-        Repos: risk-and-exposure-service (computation), unified-internal-contracts (schemas).
+      - [ ] [AGENT] P0. GATE: `cd unified-api-contracts && bash scripts/quality-gates.sh`.
+        Run cassette parity: `pytest tests/test_cassette_schema_parity.py`.
+        Must pass before Phase 4.
     status: todo
-    note: ""
+    note: "SEQUENTIAL — runs after p3a+p3b complete."
 
-  - id: c22-greeks-based-risk
+  # =========================================================================
+  # PHASE 4: DOWNSTREAM ADOPTION (parallel agents — 2 repos only)
+  # =========================================================================
+  # PRE-AUDIT confirmed: only 2 service repos have breaking changes.
+  # ml-training-service, strategy-service, risk-and-exposure-service: NO CHANGE.
+
+  - id: p4a-fix-trading-analytics-api
     content: |
-      - [ ] [AGENT] P2. Implement Greeks-based risk computation.
-        UIC already has GreeksExposure schema (delta, gamma, theta, vega, rho).
-        Compute portfolio-level Greeks aggregation. Feed delta/gamma into VaR (delta-gamma
-        VaR approximation). Wire into risk dashboard in monitoring UI.
+      - [ ] [AGENT] P0. Fix `trading-analytics-api/trading_analytics_api/contracts.py:8-22`:
+        CHANGE: Remove `from unified_api_contracts import (CorrelationRegime,
+        CrossAssetCorrelationMatrix, CorrelationRegimeChange, ...)`
+        ADD: `from unified_internal_contracts import (CorrelationRegime,
+        CrossAssetCorrelationMatrix, CorrelationRegimeChange)`
+        Factor* imports already correct (from UIC). Update `__all__:24-36`.
+        Run: `cd trading-analytics-api && bash scripts/quality-gates.sh`
+    status: todo
+    note: "PARALLEL with p4b."
+
+  - id: p4b-fix-market-data-processing-service
+    content: |
+      - [ ] [AGENT] P0. Fix `market-data-processing-service/market_data_processing_service/types.py:19`:
+        CHANGE: Remove Correlation*/FactorType from UAC import.
+        ADD: `from unified_internal_contracts import (CorrelationRegime,
+        CrossAssetCorrelationMatrix, FactorType)` (if needed, or remove if unused).
+        Update `__all__:31`.
+        Run: `cd market-data-processing-service && bash scripts/quality-gates.sh`
+    status: todo
+    note: "PARALLEL with p4a."
+
+  - id: p4c-add-venues-to-registry
+    content: |
+      - [ ] [AGENT] P1. Add to UMI VENUE_REGISTRY (factory.py):
+        - polymarket, betfair, kalshi, smarkets, betdaq (prediction markets/sports)
+        - glassnode, arkham (onchain analytics)
+        Create INFRA_PROVIDER_REGISTRY alongside VENUE_REGISTRY:
+        - alchemy (Ethereum RPC), thegraph (subgraph indexer), bloxroute (MEV relay)
+        Key semantic: venues = trade on them. infra = pipes to reach venues.
+        Instadapp IS a venue (DSA contracts) but USES thegraph as pipe.
+    status: todo
+    note: "PARALLEL with p4a,p4b."
+
+  - id: p4-qg-downstream
+    content: |
+      - [ ] [AGENT] P0. GATE: Quality gates on all Phase 4 repos.
+        `cd trading-analytics-api && bash scripts/quality-gates.sh`
+        `cd market-data-processing-service && bash scripts/quality-gates.sh`
+        `cd unified-market-interface && bash scripts/quality-gates.sh`
+    status: todo
+    note: "SEQUENTIAL — runs after p4a-p4c complete."
+
+  # =========================================================================
+  # PHASE 5: OBSERVABILITY + CIRCUIT BREAKER + VaR (parallel streams)
+  # =========================================================================
+  # These are independent feature additions. Three parallel streams.
+
+  # --- Stream A: Observability ---
+
+  - id: p5-obs-prometheus-bridge
+    content: |
+      - [ ] [AGENT] P1. Wire Prometheus → Cloud Monitoring. Extend UTL setup_tracing()
+        to setup_metrics(). OTEL Collector sidecar with remote_write to GCP.
+        Repos: unified-trading-library, deployment-service.
+    status: todo
+    note: "PARALLEL stream A."
+
+  - id: p5-obs-restart-detection
+    content: |
+      - [ ] [AGENT] P1. Add RESTART_DETECTED lifecycle event to UIC. On STARTED, check for
+        missing STOPPED event (unclean shutdown). Emit with restart_count.
+        Add restart_count to /health response. Wire into all services.
+    status: todo
+    note: "PARALLEL stream A."
+
+  - id: p5-obs-latency-profiling
+    content: |
+      - [ ] [AGENT] P1. Wire UAC latency schemas into production measurement code.
+        execution-service order path: tick→signal→risk→encode→send→ack→fill.
+        Populate OrderLatencyRecord, write to GCS, publish LatencyBenchmarkReport.
+    status: todo
+    note: "PARALLEL stream A."
+
+  - id: p5-obs-resource-metrics
+    content: |
+      - [ ] [AGENT] P1. Add CPU/memory/connections/queue gauges to all services.
+        Include shard_id label for batch, venue_id for live.
+    status: todo
+    note: "PARALLEL stream A."
+
+  - id: p5-obs-monitoring-ui
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Build live health monitoring UI. Lifecycle timeline, latency
+        charts, VaR dashboard, P&L waterfall, resource gauges, risk alerts, batch tracker.
+        React+Vite. Data: GCS JSONL, Prometheus, risk-service API, PBMS API.
+    status: todo
+    note: "PARALLEL stream A."
+
+  - id: p5-obs-cloud-backup
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Cloud Monitoring backup: uptime checks, log-based alerts,
+        container restart detection. Independent safety net.
+    status: todo
+    note: "PARALLEL stream A."
+
+  - id: p5-obs-alert-rules
+    content: |
+      - [ ] [AGENT] P2. Define alert rules: restart>3/hr, p99>500ms, VaR>90%, breaker OPEN,
+        kill switch, FAILED events, batch deadline miss. YAML config for both UI and cloud.
+    status: todo
+    note: "PARALLEL stream A."
+
+  # --- Stream B: Circuit Breaker Citadel Grade ---
+
+  - id: p5-cb-degraded-throttling
+    content: |
+      - [ ] [AGENT] P1. Activate DEGRADED throughput throttling. Config field
+        `degraded_rate_limit_pct: 0.5` exists but is NOT IMPLEMENTED. When DEGRADED:
+        probabilistic drop ~50% of orders to reduce venue pressure. Token bucket.
+        Repo: execution-service (circuit_breaker.py).
+    status: todo
+    note: "PARALLEL stream B."
+
+  - id: p5-cb-order-queuing
+    content: |
+      - [ ] [AGENT] P1. Add order queue for OPEN state. Currently orders rejected immediately.
+        Queue with: max depth (100), max age (5min), priority ordering (hedge>spec),
+        overflow reject. Drain on HALF_OPEN→CLOSED, respecting rate limits.
+        Repo: execution-service.
+    status: todo
+    note: "PARALLEL stream B."
+
+  - id: p5-cb-kill-switch-auto-deactivate
+    content: |
+      - [ ] [AGENT] P1. Add timed auto-deactivation for kill switch. Optional
+        `auto_deactivate_after_minutes` on activation. After timeout: deactivates,
+        emits KILL_SWITCH_AUTO_DEACTIVATED. Also: activation via alert rules
+        (VaR>150% → kill switch with 30min auto-deactivate).
+        Repo: execution-service (kill_switch.py).
+    status: todo
+    note: "PARALLEL stream B. 3am Sunday recovery."
+
+  - id: p5-cb-venue-failover
+    content: |
+      - [ ] [AGENT] P2. Venue failover routing when breaker OPEN. Failover pairs
+        (Binance→Bybit for BTC spot). Per-instrument, price tolerance check.
+        Repo: execution-service (orchestrator.py), unified-config-interface.
+    status: todo
+    note: "PARALLEL stream B."
+
+  - id: p5-cb-strategy-priority
+    content: |
+      - [ ] [AGENT] P2. Strategy-level priority in DEGRADED/queued states.
+        P0=hedge, P1=rebalance, P2=new positions. P0 always passes throttle.
+        Queue: P0 front, P2 back, oldest P2 cancelled first on overflow.
+        Repo: execution-service.
+    status: todo
+    note: "PARALLEL stream B."
+
+  # --- Stream C: VaR / Risk Phase 2 ---
+
+  - id: p5-var-returns-ingestion
+    content: |
+      - [ ] [AGENT] P1. Automated historical returns ingestion from PBMS. Store daily
+        returns per instrument in GCS. Risk service fetches on demand.
         Repos: risk-and-exposure-service, position-balance-monitor-service.
     status: todo
-    note: "Schema exists in UIC. Computation not implemented."
+    note: "PARALLEL stream C."
 
-  - id: c23-var-attribution
+  - id: p5-var-monte-carlo
     content: |
-      - [ ] [AGENT] P2. Add VaR attribution — decompose portfolio VaR into per-position,
-        per-venue, per-strategy contributions. Component VaR and marginal VaR.
-        VaRResult already has component_var field (dict[str, Decimal]) — populate it.
-        Repos: risk-and-exposure-service.
+      - [ ] [AGENT] P2. Monte Carlo VaR simulation. Pure stdlib. Random gen + Cholesky
+        decomposition. Add VaRMethod.MONTE_CARLO. Wire into /risk/var endpoint.
     status: todo
-    note: ""
+    note: "PARALLEL stream C."
 
-  - id: c24-dynamic-regime-detection
+  - id: p5-var-copula-correlation
     content: |
-      - [ ] [AGENT] P2. Automate regime detection. Currently operator manually calls
-        set_regime_multiplier(). Add automated detection from:
-        - VIX / crypto volatility index thresholds
-        - Correlation regime changes (from layer c21)
-        - Drawdown velocity (rate of portfolio loss)
-        Auto-set regime multiplier when regime shifts detected.
-        Repos: risk-and-exposure-service, strategy-service (signal source).
+      - [ ] [AGENT] P2. Copula-based multi-asset correlation. Rolling correlation matrix
+        from returns. Feed into MC simulation.
     status: todo
-    note: "Currently manual: operator calls set_regime_multiplier(). Phase 2: automated."
+    note: "PARALLEL stream C."
 
-  - id: c25-quality-gates-risk
+  - id: p5-var-greeks
     content: |
-      - [ ] [AGENT] P0. Run quality gates on all modified repos after risk Phase 2 work:
-        `cd risk-and-exposure-service && bash scripts/quality-gates.sh`
-        `cd unified-internal-contracts && bash scripts/quality-gates.sh`
+      - [ ] [AGENT] P2. Greeks-based risk. Portfolio-level Greeks aggregation.
+        Delta-gamma VaR approximation. Wire into monitoring UI.
     status: todo
-    note: ""
+    note: "PARALLEL stream C."
+
+  - id: p5-var-attribution
+    content: |
+      - [ ] [AGENT] P2. VaR attribution — per-position, per-venue, per-strategy.
+        Populate VaRResult.component_var field.
+    status: todo
+    note: "PARALLEL stream C."
+
+  - id: p5-var-regime-detection
+    content: |
+      - [ ] [AGENT] P2. Automated regime detection from VIX, correlation regime changes,
+        drawdown velocity. Auto-set regime multiplier.
+    status: todo
+    note: "PARALLEL stream C."
+
+  # =========================================================================
+  # PHASE 6: FINAL VALIDATION (sequential — everything must pass)
+  # =========================================================================
+
+  - id: p6-workspace-wide-qg
+    content: |
+      - [ ] [AGENT] P0. Final quality gates on ALL modified repos:
+        unified-api-contracts, unified-internal-contracts, risk-and-exposure-service,
+        execution-service, trading-analytics-api, market-data-processing-service,
+        unified-market-interface, unified-trading-library.
+        Each: `cd <repo> && bash scripts/quality-gates.sh`
+        Only mark plan complete when ALL pass.
+    status: todo
+    note: "SEQUENTIAL — final gate."
 
 isProject: false
 ---
 
 # Contracts, Observability & Risk Cleanup Plan
 
-## Context
+## Execution Model
 
-Discovered 2026-03-16 during comprehensive UAC duplication scan and architectural review. Expanded to cover
-observability gaps and VaR Phase 2 based on session analysis.
+```
+PHASE 1 (parallel)          PHASE 2 (parallel)       PHASE 3 (parallel)
+┌─ p1a delete dup pkg       ┌─ p2a UIC risk schemas   ┌─ p3a delete UAC risk.py
+├─ p1b dedup ErrorAction     ├─ p2b UIC correlation    └─ p3b fix analytics split
+├─ p1c rm coinglass/hyblock  └─ p2c cleanup UIC WS          │
+├─ p1d rm sports_generic          │                    p3-QG-UAC ──────┐
+├─ p1e prune WS symbols      p2-QG-UIC ───┐                          │
+└─ p1f recategorize venues         │       │           PHASE 4 (parallel)
+      │                            │       │           ┌─ p4a fix trading-analytics-api
+p1-QG-UAC ─────────────────────────┘       │           ├─ p4b fix market-data-proc
+                                           │           └─ p4c add venues to registry
+                                           │                 │
+                                           │           p4-QG-downstream ──┐
+                                           │                              │
+PHASE 5 (3 parallel streams, independent of P1-P4 for obs/CB/VaR)       │
+Stream A: Observability (7 items)                                        │
+Stream B: Circuit Breaker Citadel (5 items)                              │
+Stream C: VaR Phase 2 (6 items)                                          │
+      │                                                                  │
+PHASE 6: Final workspace-wide QG ◄───────────────────────────────────────┘
+```
 
-## Section A: UAC Crosscutting Cleanup
+## Pre-Audit Manifest (2026-03-16)
 
-### Issue 1: Full package duplication
+### Downstream Blast Radius
 
-`canonical/errors/` and `canonical/crosscutting/errors/` are byte-for-byte identical (7 files). 2 stale imports
-(`canonical/__init__.py:147`, `external/open_meteo/schemas.py`) vs 58 correct.
+| Repo                               | Files Breaking      | Changes Needed                      |
+| ---------------------------------- | ------------------- | ----------------------------------- |
+| **trading-analytics-api**          | `contracts.py:8-22` | Correlation\* imports: UAC → UIC    |
+| **market-data-processing-service** | `types.py:19`       | Correlation\*/FactorType: UAC → UIC |
+| **ml-training-service**            | NONE                | Already imports from UIC            |
+| **strategy-service**               | NONE                | Already imports from UIC            |
+| **risk-and-exposure-service**      | NONE                | Uses local var_calculator types     |
+| **execution-service**              | NONE                | Imports from UIC correctly          |
+| **All other services**             | NONE                | No imports of moved symbols         |
 
-### Issue 2: Within-package type duplication
+### UAC Internal Edits (by file)
 
-`_types.py` and `_canonical.py` both define `ErrorAction` and `VenueErrorClassification`.
+| File                               | Symbols to Remove                                         | Plan Item          |
+| ---------------------------------- | --------------------------------------------------------- | ------------------ |
+| `__init__.py` (root)               | 10 risk + 7 analytics + 7 WS = 24 symbols from re-exports | p3a, p3b, p1e      |
+| `canonical/__init__.py`            | Same 24 symbols from re-exports; fix line 147 import path | p3a, p3b, p1e, p1a |
+| `canonical/domain/__init__.py`     | Remove crosscutting.risk/analytics/connectivity imports   | p3a, p3b, p1e      |
+| `crosscutting/risk.py`             | DELETE entire file                                        | p3a                |
+| `crosscutting/analytics.py`        | Remove 7 of 13 symbols (keep 6 external)                  | p3b                |
+| `crosscutting/connectivity.py`     | Remove 7 of 12 symbols (keep 5 active)                    | p1e                |
+| `crosscutting/errors/altdata.py`   | Remove coinglass, hyblock, versifi                        | p1c                |
+| `crosscutting/errors/sports.py`    | Remove sports_generic                                     | p1d                |
+| `tests/test_contract_alignment.py` | Remove deleted WS symbol test cases                       | p1e                |
+| `scripts/check_uac_adoption.py`    | Remove symbol names from checker                          | p1e                |
+| `external/open_meteo/schemas.py`   | Fix import path                                           | p1a                |
 
-### Issue 3: Venue mis-categorization
+### UIC Additions (by file)
 
-No tradfi.py or onchain_perps.py exists. DeFi venues in sports.py. TradFi in cefi.py/altdata.py.
+| File                            | Schemas to Add                                                                                                                      | Plan Item |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `domain/risk_service/risk.py`   | VaRMethod, VaRRequest, VaRResult, StressScenario, StressTestResult, PnLAttributionRecord, RealTimePnLRecord, RiskLimitBreach fields | p2a       |
+| `domain/analytics/`             | CorrelationRegime, CrossAssetCorrelationMatrix, CorrelationRegimeChange                                                             | p2b       |
+| `domain/websocket/lifecycle.py` | Remove WebSocketPingFrame, WebSocketPongFrame                                                                                       | p2c       |
 
-### Issue 4: Dead/orphaned schemas
+### Venue Disposition Table
 
-risk.py: 10/10 dead (all internal, should be UIC). analytics.py: 8/13 dead or misplaced. connectivity.py: 7/12 dead
-(library handles, or replaced by event model).
-
-### Issue 5: UAC↔UIC duplication
-
-Factor\* types identical in both. WS lifecycle types in both with Pydantic vs dataclass mismatch.
+| Venue                                     | Current File | Action | Target                                   |
+| ----------------------------------------- | ------------ | ------ | ---------------------------------------- |
+| tardis,yahoo_finance,ibkr,databento       | cefi.py      | MOVE   | tradfi.py                                |
+| barchart,fred,ecb,ofr,openbb              | altdata.py   | MOVE   | tradfi.py                                |
+| hyperliquid,aster                         | altdata.py   | MOVE   | onchain_perps.py                         |
+| aave_v3                                   | altdata.py   | MOVE   | defi.py                                  |
+| instadapp,defillama                       | sports.py    | MOVE   | defi.py                                  |
+| glassnode,arkham                          | sports.py    | MOVE   | altdata.py; ADD to VENUE_REGISTRY        |
+| alchemy,thegraph,bloxroute                | cefi/altdata | MOVE   | infra.py; ADD to INFRA_PROVIDER_REGISTRY |
+| polymarket,betfair,kalshi,smarkets,betdaq | sports.py    | KEEP   | sports.py; ADD to VENUE_REGISTRY         |
+| coinglass,hyblock,versifi                 | altdata.py   | DELETE | Own liquidation prediction               |
+| sports_generic                            | sports.py    | DELETE | Fallback template, not a venue           |
+| onchain_revert                            | sports.py    | MOVE   | crosscutting (generic EVM handler)       |
+| balancer–uniswap_v4 (11)                  | defi.py      | KEEP   | defi.py (correct)                        |
+| binance–upbit (7 CeFi)                    | cefi.py      | KEEP   | cefi.py (correct)                        |
 
 ### External vs Internal Rule
 
-UAC = normalizing external data (venue APIs, feeds). UIC = internal computations/state. analytics.py violated this by
-mixing external altdata schemas with internal factor models. risk.py violated this entirely — all internal computations,
-none normalizing external data.
+UAC = normalizing external API data (venue feeds, alt data providers). UIC = internal computations and inter-service
+contracts.
 
-## Section B: Observability & Monitoring
-
-### Current State
-
-- Lifecycle events: FULLY IMPLEMENTED (UIC lifecycle.py, log_event(), GCS JSONL)
-- Prometheus: all services expose /metrics (counters, histograms, gauges)
-- Latency schemas: DEFINED but NOT MEASURED in production
-- OpenTelemetry: setup helper exists (UTL tracing.py), adoption optional/limited
-- Memory watchdog: reactive (85% threshold → shutdown), no restart tracking
-- Shard awareness: batch YES (shard_id injected), live NO
-
-### Architecture Decision
-
-- **Own monitoring UI (primary)**: custom grouping by service/venue/strategy/shard, custom plots, integrated alerts, VaR
-  dashboard, P&L waterfall — not possible with third-party dashboards. Built on same React+Vite stack as existing 13
-  UIs.
-- **Cloud Monitoring (backup)**: independent observer at infrastructure level. Pages us when our own systems are down.
-  GCP Cloud Run metrics, uptime checks, log-based alerts. Essential safety net.
-
-### Gaps to Fill
-
-1. No Prometheus→Cloud bridge (metrics don't reach GCP/AWS)
-2. No restart counter (app doesn't know it restarted)
-3. No production latency measurement (schemas exist, code doesn't)
-4. No system-level resource gauges (CPU, memory proximity, queue depth)
-5. No monitoring UI
-6. No alert rules defined
-7. Live services lack shard-equivalent partitioning in metrics
-
-## Section C: VaR / Risk Phase 2
-
-### Current State (Phase 1 — COMPLETE, archived)
-
-- 4 VaR methods: historical, parametric, Cornish-Fisher (fat-tail), CVaR
-- Stress VaR with crisis multipliers (GFC 3.5x, COVID 2.5x, Crypto 5.0x)
-- Multi-horizon (1d/5d/10d via sqrt-of-time)
-- Pre-trade VaR limit enforcement
-- Regime multiplier (operator-set)
-- /risk/var API endpoint
-- 100% test coverage, pure stdlib (no numpy/scipy)
-
-### Phase 2 Gaps
-
-1. Historical returns ingestion (caller supplies returns[]; need automated from PBMS)
-2. Monte Carlo simulation (not in current design)
-3. Copula-based multi-asset correlation (schema exists, not computed)
-4. Greeks-based risk (schema exists, not computed)
-5. VaR attribution (component_var field exists, not populated)
-6. Dynamic regime detection (currently manual)
-
-## Crosscutting Modules Audit (2026-03-16)
-
-| Module          | Symbols | Used | Dead | Status                         |
-| --------------- | ------- | ---- | ---- | ------------------------------ |
-| rate_limits.py  | 2       | 2    | 0    | Clean — no action              |
-| latency.py      | 8       | 8    | 0    | Clean — wire measurement (B13) |
-| connectivity.py | 12      | 5    | 7    | Prune dead (A7)                |
-| analytics.py    | 13      | 6    | 7    | Split external/internal (A6)   |
-| risk.py         | 10      | 0    | 10   | Delete, move to UIC (A5)       |
-
-## Venue Placement Summary (current → target)
-
-| Venue                    | Current File | VENUE_REGISTRY Category | Target File          |
-| ------------------------ | ------------ | ----------------------- | -------------------- |
-| binance                  | cefi.py      | cefi                    | cefi.py              |
-| bybit                    | cefi.py      | cefi                    | cefi.py              |
-| okx                      | cefi.py      | cefi                    | cefi.py              |
-| deribit                  | cefi.py      | cefi                    | cefi.py              |
-| coinbase                 | cefi.py      | cefi                    | cefi.py              |
-| ccxt                     | cefi.py      | cefi                    | cefi.py              |
-| upbit                    | cefi.py      | cefi                    | cefi.py              |
-| tardis                   | cefi.py      | tradfi                  | **tradfi.py**        |
-| yahoo_finance            | cefi.py      | tradfi                  | **tradfi.py**        |
-| ibkr                     | cefi.py      | tradfi                  | **tradfi.py**        |
-| databento                | cefi.py      | tradfi                  | **tradfi.py**        |
-| alchemy                  | cefi.py      | NOT IN REGISTRY         | **defi (ancillary)** |
-| thegraph                 | cefi.py      | NOT IN REGISTRY         | **defi (ancillary)** |
-| barchart                 | altdata.py   | tradfi                  | **tradfi.py**        |
-| fred                     | altdata.py   | tradfi                  | **tradfi.py**        |
-| ecb                      | altdata.py   | tradfi                  | **tradfi.py**        |
-| ofr                      | altdata.py   | tradfi                  | **tradfi.py**        |
-| openbb                   | altdata.py   | tradfi                  | **tradfi.py**        |
-| hyperliquid              | altdata.py   | onchain_perps           | **onchain_perps.py** |
-| aster                    | altdata.py   | onchain_perps           | **onchain_perps.py** |
-| aave_v3                  | altdata.py   | defi                    | **defi.py**          |
-| bloxroute                | altdata.py   | NOT IN REGISTRY         | **defi (ancillary)** |
-| coinglass                | altdata.py   | NOT IN REGISTRY         | altdata.py           |
-| hyblock                  | altdata.py   | NOT IN REGISTRY         | altdata.py           |
-| versifi                  | altdata.py   | NOT IN REGISTRY         | TBD                  |
-| instadapp                | sports.py    | defi                    | **defi.py**          |
-| defillama                | sports.py    | defi                    | **defi.py**          |
-| glassnode                | sports.py    | NOT IN REGISTRY         | **altdata.py**       |
-| arkham                   | sports.py    | NOT IN REGISTRY         | **altdata.py**       |
-| onchain_revert           | sports.py    | NOT IN REGISTRY         | **crosscutting**     |
-| polymarket               | sports.py    | NOT IN REGISTRY         | sports.py            |
-| betfair                  | sports.py    | NOT IN REGISTRY         | sports.py            |
-| kalshi                   | sports.py    | NOT IN REGISTRY         | sports.py            |
-| smarkets                 | sports.py    | NOT IN REGISTRY         | sports.py            |
-| betdaq                   | sports.py    | NOT IN REGISTRY         | sports.py            |
-| sports_generic           | sports.py    | NOT IN REGISTRY         | sports.py            |
-| balancer–uniswap_v4 (11) | defi.py      | defi                    | defi.py (correct)    |
+| Schema Category                                                              | Belongs In | Reason                             |
+| ---------------------------------------------------------------------------- | ---------- | ---------------------------------- |
+| SentimentScore, SatelliteObservation, OptionsFlowRecord, DarkPoolPrintRecord | UAC        | External data normalization        |
+| FactorType, FactorExposure, FactorAttribution\*                              | UIC (SSOT) | Internal factor models             |
+| CorrelationRegime, CrossAssetCorrelationMatrix                               | UIC        | Internal computation               |
+| VaR*, StressScenario, PnLAttribution*                                        | UIC        | Internal risk computation          |
+| ErrorAction, VenueErrorClassification, CanonicalError\*                      | UAC        | External venue error normalization |
+| HttpRateLimitHeaders, VenueRateLimitSpec                                     | UAC        | External rate limit headers        |
+| LatencyPercentile, TickToTradeMetric, OrderLatencyRecord                     | UAC        | External venue latency measurement |
+| WebSocketEvent, CanonicalWebSocketLifecycle                                  | UAC        | External WS event normalization    |

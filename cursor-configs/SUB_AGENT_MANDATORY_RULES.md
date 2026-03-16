@@ -243,6 +243,71 @@ isProject: false
 
 ---
 
+## §9b Citadel-Grade Planning Standards
+
+Every plan MUST follow these standards. Agents creating plans that don't meet these standards MUST be corrected.
+
+### 1. Pre-Audit Before Execution
+
+Before writing any code, audit the blast radius:
+
+- Search the entire workspace for every import/reference to symbols being moved, deleted, or renamed
+- Build a **pre-audit manifest**: repo, file, line number, import statement, action needed
+- Embed the manifest in the plan so executing agents don't need to re-scan
+- If working with a subset of repos (background agent), document what you CAN'T verify
+
+### 2. Phased Execution DAG
+
+Plans MUST define execution phases with clear dependencies:
+
+- **Phase N** items run in parallel within the phase
+- **QG gates** between phases — next phase cannot start until prior phase QG passes
+- Mark items as PARALLEL or SEQUENTIAL explicitly
+- Draw the dependency graph (ASCII or Mermaid) in the plan context section
+
+### 3. No Technical Debt
+
+- No backwards compatibility shims, re-exports of old paths, or deprecation wrappers
+- Clean breaks: old implementation deleted, new implementation in place, consumers updated
+- **Exception**: When working on a single repo without all downstream siblings available, backwards compatibility IS
+  allowed temporarily. Document it as a follow-up todo.
+- When all 60+ repos are available (full workspace): zero technical debt, update everything
+
+### 4. Parallelization
+
+- Maximize parallel execution. If items have no dependency, they MUST be marked PARALLEL
+- Group independent items into parallel batches
+- Use separate agents for parallel work where possible
+- Document the parallelization strategy in the plan
+
+### 5. Success Criteria
+
+Every plan MUST declare explicit success criteria per phase:
+
+- **Code gates**: quality-gates.sh pass, basedpyright clean, ruff clean
+- **Test gates**: unit tests pass, integration tests pass (specify which)
+- **Deployment gates**: D1-D5 (if applicable)
+- **Business gates**: B1-B6 (if applicable)
+- The final phase MUST include workspace-wide QG validation of all affected repos
+
+### 6. Downstream Consumer Updates
+
+When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
+
+- Pre-audit identifies EVERY downstream consumer
+- Plan includes explicit fix items for each affected repo
+- No "fix later" — all consumers updated in the same plan
+- Quality gates run on each affected downstream repo
+
+### 7. Single Source of Truth
+
+- Types/schemas belong in ONE place. UAC for external data normalization, UIC for internal.
+- No service should self-declare types that exist in contracts libraries
+- No re-definition of enums, dataclasses, or Pydantic models that already exist upstream
+- Pre-audit should catch self-declared duplicates and include them in the fix manifest
+
+---
+
 ## §10 Local Dev & Zombie Process Prevention
 
 - **Vitest config:** Always use `pool: "forks"` in `vitest.config.ts`. The default `threads` pool leaves orphan node
