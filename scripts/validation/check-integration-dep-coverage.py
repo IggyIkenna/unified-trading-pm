@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Check that services/libraries have integration tests for each direct library dependency.
+Check that services/libraries have import-smoke tests for each direct library dependency.
 
 For each manifest dependency with type=library, verifies at least one file in
-tests/integration/ imports from that library (from unified_<name> or import unified_<name>).
+tests/unit/ or tests/integration/ imports from that library
+(from unified_<name> or import unified_<name>).
 
 Usage:
   python3 check-integration-dep-coverage.py --repo <repo-name> [--project-root <path>]
 
-Exit 0 if all library deps have integration test coverage; 1 otherwise.
+Exit 0 if all library deps have test coverage; 1 otherwise.
 """
 
 from __future__ import annotations
@@ -64,10 +65,17 @@ def main() -> int:
     if not lib_deps:
         return 0
 
-    integration_dir = project_root / "tests" / "integration"
-    if not integration_dir.exists():
+    # Import-smoke tests may live in tests/integration/ or tests/unit/ (preferred).
+    # Scan both directories so repos that moved lightweight import checks to unit/ still pass.
+    search_dirs: list[Path] = []
+    for subdir in ("integration", "unit"):
+        candidate = project_root / "tests" / subdir
+        if candidate.exists():
+            search_dirs.append(candidate)
+
+    if not search_dirs:
         print(
-            "⚠️  No tests/integration/ — add tests that import each library dep, "
+            "⚠️  No tests/integration/ or tests/unit/ — add tests that import each library dep, "
             "or PM integration test covers repo-PM integration only"
         )
         return 0
@@ -77,13 +85,16 @@ def main() -> int:
         import_name = dep.replace("-", "_")
         patterns = [f"from {import_name}", f"import {import_name}"]
         found = False
-        for py_file in integration_dir.rglob("*.py"):
-            try:
-                if any(p in py_file.read_text() for p in patterns):
-                    found = True
-                    break
-            except Exception:
-                continue
+        for search_dir in search_dirs:
+            for py_file in search_dir.rglob("*.py"):
+                try:
+                    if any(p in py_file.read_text() for p in patterns):
+                        found = True
+                        break
+                except Exception:
+                    continue
+            if found:
+                break
         if not found:
             missing.append(dep)
 
