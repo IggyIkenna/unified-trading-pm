@@ -91,44 +91,53 @@ todos:
     status: pending
   - id: p2-enum-consolidation-uac
     content: |
-      - [ ] [AGENT] P0. Ensure UAC InstrumentType is superset of UCI InstrumentType (instrument.py lines 67-94). Add PERP as deprecated alias. Add alignment CI test.
-    status: pending
+      - [x] [AGENT] P0. Ensure UAC InstrumentType is superset of UCI InstrumentType (instrument.py lines 67-94). Add PERP as deprecated alias. Add alignment CI test.
+    status: done
+    completion_note: UAC already superset. PERP alias exists.
   - id: p2-uci-reexport
     content: |
-      - [ ] [AGENT] P0. Replace UCI InstrumentType class (instrument.py lines 67-94) with re-export from UAC. Verify unified-api-contracts is in UCI pyproject.toml. Search for InstrumentType.PERP usage first.
-    status: pending
+      - [x] [AGENT] P0. Replace UCI InstrumentType class (instrument.py lines 67-94) with re-export from UAC. Verify unified-api-contracts is in UCI pyproject.toml. Search for InstrumentType.PERP usage first.
+    status: done
+    completion_note: UCI InstrumentType replaced with re-export from UAC.
   - id: p2-uic-tardis-consolidation
     content: |
-      - [ ] [AGENT] P1. Replace hardcoded _VENUE_TO_TARDIS in UIC instrument_key.py (lines 17-26) with inverted UCI VenueMapping.tardis_to_venue.
-    status: pending
+      - [x] [AGENT] P1. Replace hardcoded _VENUE_TO_TARDIS in UIC instrument_key.py (lines 17-26) with inverted UCI VenueMapping.tardis_to_venue.
+    status: done
+    completion_note: _VENUE_TO_TARDIS replaced with computed version from VenueMapping.
   - id: p2-alignment-tests
     content: |
-      - [ ] [AGENT] P1. Create system-integration-tests/tests/test_registry_alignment.py. Tests: UCI.InstrumentType subset of UAC; UIC._VENUE_TO_TARDIS keys subset of UCI.Venue; exec-service venue sets subset of UAC.
-    status: pending
+      - [x] [AGENT] P1. Create system-integration-tests/tests/test_registry_alignment.py. Tests: UCI.InstrumentType subset of UAC; UIC._VENUE_TO_TARDIS keys subset of UCI.Venue; exec-service venue sets subset of UAC.
+    status: done
+    completion_note: test_registry_alignment.py created in SIT (4 tests).
   - id: p3-exec-service-adopt
     content: |
-      - [ ] [AGENT] P0. Replace execution-service local CLOB_VENUES/DEX_VENUES/ZERO_ALPHA_VENUES (instruction_type.py lines 47-108) with UAC imports + local alias unions. Keep exec-specific aliases (BINANCE, WALLET, etc.) as union sets.
-    status: pending
+      - [x] [AGENT] P0. Replace execution-service local CLOB_VENUES/DEX_VENUES/ZERO_ALPHA_VENUES (instruction_type.py lines 47-108) with UAC imports + local alias unions. Keep exec-specific aliases (BINANCE, WALLET, etc.) as union sets.
+    status: done
+    completion_note: Local CLOB/DEX/ZERO_ALPHA venues replaced with UAC imports.
   - id: p3-instruments-service-adopt
     content: |
-      - [ ] [AGENT] P1. instruments-service adopts INSTRUMENT_TYPES_BY_VENUE from UAC for venue-to-instrument-type logic.
-    status: pending
+      - [x] [AGENT] P1. instruments-service adopts INSTRUMENT_TYPES_BY_VENUE from UAC for venue-to-instrument-type logic.
+    status: done
+    completion_note: Already adopted INSTRUMENT_TYPES_BY_VENUE from UAC.
   - id: p3-market-data-api-adopt
     content: |
       - [ ] [AGENT] P2. Add unified-api-contracts to market-data-api pyproject.toml. Add venue name validation in API routes against VENUE_CATEGORY_MAP.
     status: pending
   - id: p3-umi-adopt-registry
     content: |
-      - [ ] [AGENT] P1. UMI sports/registry.py: keep _ADAPTER_PATHS but validate keys against UAC BETTING_SPORTS_VENUES at import time.
-    status: pending
+      - [x] [AGENT] P1. UMI sports/registry.py: keep _ADAPTER_PATHS but validate keys against UAC BETTING_SPORTS_VENUES at import time.
+    status: done
+    completion_note: Upgraded validation from warning to ValueError.
   - id: p3-utei-venue-validation
     content: |
-      - [ ] [AGENT] P2. UTEI: add venue validation in adapter factory using CLOB_VENUES|DEX_VENUES from UAC.
-    status: pending
+      - [x] [AGENT] P2. UTEI: add venue validation in adapter factory using CLOB_VENUES|DEX_VENUES from UAC.
+    status: done
+    completion_note: Added venue validation in factory using UAC imports.
   - id: p3-fix-hardcoded-back
     content: |
-      - [ ] [AGENT] P1. Fix normalize_sports_order in normalize_utils/sports.py (line 59): replace side="back" with BetSide enum. Derive side from venue type (EXCHANGE->configurable, BOOKMAKER->always BACK).
-    status: pending
+      - [x] [AGENT] P1. Fix normalize_sports_order in normalize_utils/sports.py (line 59): replace side="back" with BetSide enum. Derive side from venue type (EXCHANGE->configurable, BOOKMAKER->always BACK).
+    status: done
+    completion_note: normalize_sports_order already uses BetSide enum.
   - id: p4-usri-scope
     content: |
       - [ ] [AGENT] P2. Clarify USRI scope: add UAC sports type re-exports in USRI __init__.py.

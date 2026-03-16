@@ -147,7 +147,7 @@ todos:
 
   - id: p1-strategy-manifest-qg-tests
     content: |
-      - [ ] [AGENT] P0. Add strategy manifest validation to `unified-trading-pm/scripts/quality-gates.sh`:
+      - [x] [AGENT] P0. Add strategy manifest validation to `unified-trading-pm/scripts/quality-gates.sh`:
       1. Parse strategy-manifest.json — valid JSON, no duplicate strategy_ids
       2. For each entry where `maturity.code.class_exists=true`: verify class_path importable
          (`python -c "from {class_path} import {class_name}"`)
@@ -159,7 +159,8 @@ todos:
       8. For each entry: verify `ui_rendered_in[]` exist in workspace-manifest.json
       9. Generate `STRATEGY_MANIFEST_DAG.svg` visualization (strategy → venue → instrument → features)
       Test: `cd unified-trading-pm && bash scripts/quality-gates.sh` passes with new checks.
-    status: pending
+    status: done
+    completion_note: validate-strategy-manifest.py created, wired into QG, 44 tests.
 
   - id: p1-strategy-maturity-checklist
     content: |
@@ -225,7 +226,7 @@ todos:
 
   - id: p2a-mean-reversion-tradfi-configs
     content: |
-      - [ ] [AGENT] P0. Create YAML configs for TradFi mean reversion (same asset classes as momentum):
+      - [x] [AGENT] P0. Create YAML configs for TradFi mean reversion (same asset classes as momentum):
       1. `configs/mean_reversion_spy.yaml` — S&P 500 (ES/SPY), entry_sigma=2.0, lookback=20d
       2. `configs/mean_reversion_fx.yaml` — FX pairs (6E, 6J, 6B, 6C, 6A, 6S), multi-instrument
       3. `configs/mean_reversion_oil.yaml` — Crude Oil (CL.FUT), lookback=10d
@@ -233,17 +234,19 @@ todos:
       Each config follows existing YAML pattern from `stat_arb_btc_eth.yaml`.
       Add strategy-manifest.json entries for each (maturity.code.class_exists=true, rest=false).
       Acceptance: YAML parses, `load_strategy_config()` loads each without error.
-    status: pending
+    status: done
+    completion_note: 4 YAML configs created/enhanced.
 
   - id: p2a-mean-reversion-cefi-configs
     content: |
-      - [ ] [AGENT] P0. Create YAML configs for CeFi mean reversion:
+      - [x] [AGENT] P0. Create YAML configs for CeFi mean reversion:
       1. `configs/mean_reversion_btc.yaml` — BTC mean reversion
       2. `configs/mean_reversion_eth.yaml` — ETH mean reversion
       3. `configs/mean_reversion_sol.yaml` — SOL mean reversion
       Same instruments as CeFi momentum but with mean reversion parameters.
       Acceptance: YAML parses, strategy-manifest.json entries added.
-    status: pending
+    status: done
+    completion_note: 3 YAML configs created/enhanced.
 
   - id: p2a-mean-reversion-tests
     content: |
@@ -258,7 +261,7 @@ todos:
 
   - id: p2b-tradfi-ml-directional
     content: |
-      - [ ] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/tradfi_ml_directional.py`:
+      - [x] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/tradfi_ml_directional.py`:
       `TradFiMLDirectionalStrategy(BaseStrategy)` — ML-driven directional for TradFi assets.
       Same pattern as `CeFiMomentumStrategy` but for TradFi instruments.
       Consumes ML predictions (swing_high_pred, swing_low_pred) for SPY, FX, Oil, Stocks.
@@ -269,13 +272,14 @@ todos:
       YAML configs: `tradfi_ml_spy.yaml`, `tradfi_ml_fx.yaml`, `tradfi_ml_oil.yaml`.
       Tests: `tests/unit/test_tradfi_ml_directional.py` — min 8 tests.
       Acceptance: QG passes, strategy-manifest.json entries added.
-    status: pending
+    status: done
+    completion_note: TradFiMLDirectionalStrategy enhanced with validation, SL/TP, venue, 22 unit + 11 integration tests.
 
   # --- Stream 2C: Options ML (3 Prediction Types) ---
 
   - id: p2c-options-ml-types-enum
     content: |
-      - [ ] [AGENT] P0. Add `OptionMLPredictionType` StrEnum to `strategy-service/strategy_service/types.py`:
+      - [x] [AGENT] P0. Add `OptionMLPredictionType` StrEnum to `strategy-service/strategy_service/types.py`:
       ```python
       class OptionMLPredictionType(StrEnum):
           STRIKE_SELECTION = "strike_selection"    # ML picks optimal normalized strike + expiry
@@ -302,11 +306,12 @@ todos:
           target_zero_delta: bool  # True = closest to zero delta straddle
       ```
       Acceptance: types importable, basedpyright clean.
-    status: pending
+    status: done
+    completion_note: OptionMLPredictionType already existed.
 
   - id: p2c-options-ml-strategy-class
     content: |
-      - [ ] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/options_ml/options_ml_strategy.py`:
+      - [x] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/options_ml/options_ml_strategy.py`:
       `OptionsMLStrategy(BaseStrategy)` with 3 internal signal paths based on `prediction_type`:
 
       **Type 1 — Strike Selection ML:**
@@ -330,11 +335,12 @@ todos:
 
       All 3 types share: feature subscription from config, risk limits, position sizing from base.
       Acceptance: class importable, 3 code paths testable independently.
-    status: pending
+    status: done
+    completion_note: OptionsMLStrategy already existed. Fixed OptionsMLConfig TypedDict.
 
   - id: p2c-options-ml-tests
     content: |
-      - [ ] [AGENT] P0. Create `tests/unit/test_options_ml_strategy.py`:
+      - [x] [AGENT] P0. Create `tests/unit/test_options_ml_strategy.py`:
       Test each prediction type separately:
       - Type 1: mock ML output with normalized strikes, verify scoring selects best, verify StrikeMapper called
       - Type 2: mock ML direction prediction, verify delta→strike conversion, verify correct put/call selection
@@ -344,24 +350,26 @@ todos:
       - Edge cases: no valid strikes, expired options, zero liquidity
       Min 15 test cases.
       Acceptance: all tests pass, QG passes.
-    status: pending
+    status: done
+    completion_note: 32 tests already existed.
 
   - id: p2c-options-ml-configs
     content: |
-      - [ ] [AGENT] P1. Create YAML configs for options ML strategies:
+      - [x] [AGENT] P1. Create YAML configs for options ML strategies:
       1. `configs/options_ml_strike_btc_deribit.yaml` — Type 1 for BTC options on Deribit
       2. `configs/options_ml_delta_spy_cboe.yaml` — Type 2 for SPY options on CBOE
       3. `configs/options_ml_vol_eth_deribit.yaml` — Type 3 for ETH vol on Deribit
       4. `configs/options_ml_delta_btc_deribit.yaml` — Type 2 for BTC on Deribit (CeFi delta-options ML)
       Add strategy-manifest.json entries for each.
       Acceptance: YAML parses, manifest entries valid.
-    status: pending
+    status: done
+    completion_note: 4 YAML configs already existed.
 
   # --- Stream 2D: Sports Extensions ---
 
   - id: p2d-sports-halftime-ml
     content: |
-      - [ ] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/sports/halftime_ml.py`:
+      - [x] [AGENT] P0. Create `strategy-service/strategy_service/engine/strategies/sports/halftime_ml.py`:
       `HalftimeMLStrategy(SportsBaseStrategy)` — ML prediction at pre-game and halftime.
       Uses existing HT types: `SportsMarketHTDict`, `OddsHTSnapshotDict` from types.py.
       Two prediction windows: pre_game (before kickoff) and halftime (at HT whistle).
@@ -373,7 +381,9 @@ todos:
       Tests: `tests/unit/test_halftime_ml_strategy.py` — min 8 tests (pre-game signal, HT signal,
       no signal below threshold, Kelly sizing, config loading).
       Acceptance: QG passes, strategy-manifest.json entries added.
-    status: pending
+    status: done
+    completion_note:
+      HalftimeMLStrategy enhanced with venue routing, BetSide, validate_config. 24 unit + 7 integration tests.
 
   - id: p2d-sports-market-making-vol
     content: |
@@ -520,7 +530,7 @@ todos:
 
   - id: p2h-instruction-validation-matrix
     content: |
-      - [ ] [AGENT] P0. Codify instruction type × order feature validation matrix as machine-readable
+      - [x] [AGENT] P0. Codify instruction type × order feature validation matrix as machine-readable
         registry. Currently documentation-only in 09-strategy/cross-cutting/config-architecture.md.
         Create YAML or Python dict in unified-api-contracts/registry/instruction_constraints.py:
         Map each OperationType to allowed order features (post_only, limit, market, TWAP, atomic).
@@ -530,12 +540,13 @@ todos:
         combinations before attempting execution. Also codify algo × instruction compatibility:
         each ExecAlgorithm declares supported_operation_types in its registry entry.
         Repos: unified-api-contracts (constraint registry), execution-service (router validation).
-    status: todo
+    status: done
+    completion_note: instruction_constraints.py with validate_instruction(). 11 instruction types.
     note: "PARALLEL with p2g. Codifies Layer 1+3 from execution constraint hierarchy."
 
   - id: p2h-venue-sub-capabilities
     content: |
-      - [ ] [AGENT] P0. Extend VENUE_CAPABILITIES with order-type-level sub-capabilities:
+      - [x] [AGENT] P0. Extend VENUE_CAPABILITIES with order-type-level sub-capabilities:
         - POST_ONLY — can send maker-only orders (Binance, Deribit, Hyperliquid: YES; Uniswap: NO)
         - REDUCE_ONLY — can restrict to position-reducing orders
         - CANCEL_REPLACE — atomic cancel+replace in one call
@@ -549,12 +560,13 @@ todos:
         Execution-service router validates: if strategy requests post_only on a venue without
         POST_ONLY capability, reject with clear error.
         Repos: unified-api-contracts (venue_constants.py), execution-service (router validation).
-    status: todo
+    status: done
+    completion_note: VenueOrderCapability StrEnum + VENUE_ORDER_CAPABILITIES for 122 venues.
     note: "PARALLEL. Codifies Layer 2+4 from execution constraint hierarchy."
 
   - id: p2h-execution-preferences-config
     content: |
-      - [ ] [AGENT] P1. Create ExecutionPreferencesConfig schema and typed StrategyInstruction fields.
+      - [x] [AGENT] P1. Create ExecutionPreferencesConfig schema and typed StrategyInstruction fields.
         Currently execution preferences are stuffed into StrategyInstruction.metadata dict (untyped).
         Add first-class typed fields to StrategyInstruction:
         - execution_style: Literal["passive", "aggressive", "urgent"]
@@ -569,7 +581,8 @@ todos:
         ref_update_threshold_bps, ref_update_rate_limit_per_second.
         Repos: unified-internal-contracts (ExecutionMode), strategy-service (StrategyInstruction fields),
         execution-service (ExecutionPreferencesConfig).
-    status: todo
+    status: done
+    completion_note: ExecutionMode + UrgencyLevel StrEnums + ExecutionPreferencesConfig TypedDict in UIC.
     note: "PARALLEL. Enables typed execution hints instead of stringly-typed metadata."
 
   - id: p2h-reference-pricing-underlying-tracker
@@ -633,7 +646,7 @@ todos:
 
   - id: p2h-lp-operation-types
     content: |
-      - [ ] [AGENT] P1. Add AMM liquidity provision operation types.
+      - [x] [AGENT] P1. Add AMM liquidity provision operation types.
         New OperationType values in both UAC and UDEI:
         ADD_LIQUIDITY, REMOVE_LIQUIDITY, COLLECT_FEES.
         New SettlementType: LP_FEE_ACCRUAL (in UIC).
@@ -643,7 +656,8 @@ todos:
         create_curve_lp_instruction(), create_balancer_lp_instruction().
         Repos: unified-api-contracts (OperationType), unified-defi-execution-interface (factories),
         unified-internal-contracts (SettlementType).
-    status: todo
+    status: done
+    completion_note: ADD_LIQUIDITY, REMOVE_LIQUIDITY, COLLECT_FEES added to UAC + UDEI factory functions.
     note: "PARALLEL. Enables DeFi AMM LP market-making strategy."
 
   - id: p2h-algo-venue-compatibility
@@ -687,7 +701,7 @@ todos:
 
   - id: p2f-legacy-core-cleanup
     content: |
-      - [ ] [AGENT] P0. Remove legacy `strategy_service/engine/core/strategies/` duplicates:
+      - [x] [AGENT] P0. Remove legacy `strategy_service/engine/core/strategies/` duplicates:
       1. `eth_basis_strategy.py` (210 LOC) — superseded by `defi_basis.py` (396 LOC)
       2. `btc_basis_strategy.py` (185 LOC) — superseded by `defi_basis.py` (trivial BTC variant)
       3. `pure_lending_strategy.py` (162 LOC) — superseded by `defi_lending.py` (289 LOC)
@@ -698,18 +712,20 @@ todos:
       If not referenced: delete file, remove from __init__.py exports, remove tests.
       Update `base_strategy_manager.py` (159 LOC) — if only used by deleted strategies, delete too.
       Acceptance: no broken imports across workspace, QG passes, ~1100 LOC removed.
-    status: pending
+    status: done
+    completion_note: 5 files deleted (~969 LOC), 8 legacy test files deleted.
 
   - id: p2f-config-mode-cleanup
     content: |
-      - [ ] [AGENT] P1. Update `StrategyServiceConfig.default_mode` description to include all new modes:
+      - [x] [AGENT] P1. Update `StrategyServiceConfig.default_mode` description to include all new modes:
       Current: "pure_lending, basis, momentum, sports_arb, sports_value, sports_kelly, rel_vol, stat_arb,
       vol_surface, prediction_arb, cross_exchange"
       Add: "mean_reversion, tradfi_ml, options_strike_ml, options_delta_ml, options_vol_ml,
       sports_halftime_ml, sports_market_making"
       Update `get_sports_strategy_config()` strategy_id_map with new sports modes.
       Acceptance: all modes loadable, config.py basedpyright clean.
-    status: pending
+    status: done
+    completion_note: default_mode already includes all modes. get_sports_strategy_config updated.
 
   # ============================================================
   # PHASE 3: INSTRUMENT & VENUE COMPLETENESS (P0)
@@ -860,34 +876,37 @@ todos:
 
   - id: p5-cicd-events
     content: |
-      - [ ] [AGENT] P1. Add CI/CD event taxonomy to unified-internal-contracts/events.py:
+      - [x] [AGENT] P1. Add CI/CD event taxonomy to unified-internal-contracts/events.py:
       New members in LifecycleEventType (or new CICDEventType StrEnum):
       QG_PASSED, QG_FAILED, DEPLOYMENT_STARTED, DEPLOYMENT_COMPLETED, DEPLOYMENT_FAILED,
       WORKFLOW_TRIGGERED, VERSION_BUMPED, CASCADE_DISPATCHED, SIT_STARTED, SIT_PASSED, SIT_FAILED.
       Detail models in UIC: `QualityGateDetails`, `DeploymentDetails`, `VersionBumpDetails`.
       Add to STANDARD_LIFECYCLE_EVENTS in UEI.
       Acceptance: UIC + UEI QG pass.
-    status: pending
+    status: done
+    completion_note: CI/CD event types added to LifecycleEventType + detail models.
 
   - id: p5-agent-events
     content: |
-      - [ ] [AGENT] P2. Add autonomous agent event types:
+      - [x] [AGENT] P2. Add autonomous agent event types:
       AGENT_INVESTIGATION_TRIGGERED, AGENT_INVESTIGATION_COMPLETED,
       AGENT_FIX_APPLIED, AGENT_FIX_FAILED.
       Detail model: `AgentEventDetails(event_type, repo, trigger_reason, resolution)`.
       EventActionMapping registry concept: declarative mapping from event → automated action
       (e.g., QG_FAILED → AGENT_INVESTIGATION_TRIGGERED).
       Acceptance: UIC + UEI QG pass.
-    status: pending
+    status: done
+    completion_note: Agent event types added + AgentEventDetails extended.
 
   - id: p5-error-event-hierarchy
     content: |
-      - [ ] [AGENT] P2. Formalize error event hierarchy in UIC:
+      - [x] [AGENT] P2. Formalize error event hierarchy in UIC:
       New `ErrorCategory` StrEnum: INFRASTRUCTURE, APPLICATION, DATA, EXECUTION, COMPLIANCE.
       Extend existing `FailedDetails` model with: `error_category: ErrorCategory`,
       `is_retryable: bool`, `escalation_level: str` (INFO/WARN/PAGE).
       Acceptance: UIC QG passes, no breaking changes to existing FailedDetails consumers.
-    status: pending
+    status: done
+    completion_note: ErrorCategory StrEnum created + FailedDetails extended.
 
   # ============================================================
   # PHASE 6: UI/API COMPLETENESS (P1)
@@ -896,7 +915,7 @@ todos:
 
   - id: p6-fix-orphaned-ui-api-mappings
     content: |
-      - [ ] [AGENT] P1. Fix 6 orphaned UI-API mappings in workspace-manifest.json:
+      - [x] [AGENT] P1. Fix 6 orphaned UI-API mappings in workspace-manifest.json:
       "Orphaned" means a UI exists but no API declares `serves_ui` for it.
       1. deployment-ui → deployment-api: add `"serves_ui": ["deployment-ui"]`
       2. execution-analytics-ui → execution-results-api or new: add serves_ui
@@ -907,7 +926,8 @@ todos:
       Also fix 3 APIs missing serves_ui: config-api, deployment-api, unified-api-contracts.
       Note: one API can serve multiple UIs, one UI can consume multiple APIs — that's fine.
       Acceptance: `check-strategy-maturity.py` shows no orphaned UI-API mappings.
-    status: pending
+    status: done
+    completion_note: 6 orphaned UI-API mappings fixed in workspace-manifest.json.
 
   - id: p6-strategy-onboarding-ui
     content: |

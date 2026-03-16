@@ -107,6 +107,20 @@ Per-repo GitHub Actions workflows are managed as **canonical templates** in PM, 
 
 **Never edit per-repo workflow copies directly.** Edit the PM template, then run the rollout script.
 
+## Force-Sync Warning (CRITICAL)
+
+`admin-force-sync-all-to-main.sh` overwrites remote main with local HEAD. **This can revert remote-only changes** —
+especially version bumps made by GitHub Actions workflows (semver-agent, major-bump-approval).
+
+**Before any force-sync:**
+
+1. Run `bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh` — step [0.96] checks for remote
+   staging/feature branch version drift
+2. If drift is found: `git fetch origin staging && git checkout origin/staging -- pyproject.toml` per repo
+3. Only force-sync after resolving all drift
+
+**After a force-sync:** re-run version alignment to confirm no remote bumps were reverted.
+
 ## Testing Infrastructure (Emulators & Mocks)
 
 All tests run credential-free (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`). Protocol-faithful emulators and mocks
