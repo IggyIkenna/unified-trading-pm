@@ -103,3 +103,19 @@ jobs:
             docker build -t "$REPO:smoke" .
           fi
           echo "✓ $REPO built successfully"
+
+  notify-failure:
+    name: Telegram — Build Smoke Failure
+    needs: [build]
+    if: always() && needs.build.result == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Build Smoke FAILED — one or more repos failed to build. View: ${{ github.server_url }}/${{ github.repository
+        }}/actions/runs/${{ github.run_id }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

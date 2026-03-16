@@ -7,52 +7,66 @@ overview:
 todos:
   - id: p0-add-instrument-types
     content: |
-      - [ ] [AGENT] P0. Add BOND, EQUITY, ETF, COMMODITY, CURRENCY, CDS, SPOT_ASSET, YIELD_BEARING, DEBT_TOKEN, POOL, LENDING, STAKING to UAC InstrumentType in canonical/domain/reference/__init__.py. Update INSTRUMENT_TYPES_BY_VENUE, INSTRUCTION_VALID_INSTRUMENT_TYPES, INSTRUMENT_TYPE_FOLDER_MAP in venue_constants.py.
-    status: pending
+      - [x] [AGENT] P0. Add BOND, EQUITY, ETF, COMMODITY, CURRENCY, CDS, SPOT_ASSET, YIELD_BEARING, DEBT_TOKEN, POOL, LENDING, STAKING to UAC InstrumentType in canonical/domain/reference/__init__.py. Update INSTRUMENT_TYPES_BY_VENUE, INSTRUCTION_VALID_INSTRUMENT_TYPES, INSTRUMENT_TYPE_FOLDER_MAP in venue_constants.py.
+    status: done
+    completion_note:
+      All 12 InstrumentType values already existed. INSTRUMENT_TYPE_FOLDER_MAP updated for 7 missing types.
+      INSTRUCTION_VALID_INSTRUMENT_TYPES updated.
   - id: p0-fix-databento-normalizer
     content: |
-      - [ ] [AGENT] P0. Fix _instrument_class_to_type in external/databento/normalize.py: add B->BOND, E->EQUITY, N->ETF, X->INDEX, C->COMMODITY. Current mapping only has F/O/S.
-    status: pending
+      - [x] [AGENT] P0. Fix _instrument_class_to_type in external/databento/normalize.py: add B->BOND, E->EQUITY, N->ETF, X->INDEX, C->COMMODITY. Current mapping only has F/O/S.
+    status: done
+    completion_note: Already had all correct mappings.
   - id: p0-fix-ibkr-normalizer
     content: |
-      - [ ] [AGENT] P0. Fix _ibkr_instrument_type in external/ibkr/normalize.py (lines 111-125): STK->EQUITY, CASH->CURRENCY, IND->INDEX, FUND->ETF, CMDTY->COMMODITY, BOND->BOND. Also fix type_map in normalize_ibkr_market_state (line 353).
-    status: pending
+      - [x] [AGENT] P0. Fix _ibkr_instrument_type in external/ibkr/normalize.py (lines 111-125): STK->EQUITY, CASH->CURRENCY, IND->INDEX, FUND->ETF, CMDTY->COMMODITY, BOND->BOND. Also fix type_map in normalize_ibkr_market_state (line 353).
+    status: done
+    completion_note: Already correct; fixed FUND->ETF in normalize_ibkr_market_state type_map.
   - id: p0-add-odds-types
     content: |
-      - [ ] [AGENT] P1. Add 8 new OddsType values to canonical/domain/sports/odds.py: HALF_TIME_RESULT, FIRST_HALF_OVER_UNDER, CORNERS, CARDS, PLAYER_PROPS, DRAW_NO_BET, DOUBLE_CHANCE, GOAL_SCORER. Remove duplicate OddsType class from sports/__init__.py (line 347).
-    status: pending
+      - [x] [AGENT] P1. Add 8 new OddsType values to canonical/domain/sports/odds.py: HALF_TIME_RESULT, FIRST_HALF_OVER_UNDER, CORNERS, CARDS, PLAYER_PROPS, DRAW_NO_BET, DOUBLE_CHANCE, GOAL_SCORER. Remove duplicate OddsType class from sports/__init__.py (line 347).
+    status: done
+    completion_note: All 8 already existed. No duplicate class found.
   - id: p0-create-betside-enum
     content: |
-      - [ ] [AGENT] P1. Create BetSide StrEnum (BACK, LAY) and CommissionModel StrEnum (NET_WINNINGS_PCT, BUILT_INTO_ODDS, NOTIONAL_PCT, FLAT_FEE) in betting.py. Export from sports/__init__.py and sports.py facade.
-    status: pending
+      - [x] [AGENT] P1. Create BetSide StrEnum (BACK, LAY) and CommissionModel StrEnum (NET_WINNINGS_PCT, BUILT_INTO_ODDS, NOTIONAL_PCT, FLAT_FEE) in betting.py. Export from sports/__init__.py and sports.py facade.
+    status: done
+    completion_note: BetSide + CommissionModel already existed in betting.py.
   - id: p0-type-commission-model
     content: |
-      - [ ] [AGENT] P1. Change VenueExecutionProfile.commission_model from str|None to CommissionModel|None in venue_execution.py (line 163). Verify all venue_execution_registry.py entries auto-coerce.
-    status: pending
+      - [x] [AGENT] P1. Change VenueExecutionProfile.commission_model from str|None to CommissionModel|None in venue_execution.py (line 163). Verify all venue_execution_registry.py entries auto-coerce.
+    status: done
+    completion_note: Already used CommissionModel type.
   - id: p0-extend-odds-api-markets
     content: |
-      - [ ] [AGENT] P1. Create external/odds_api/_market_keys.py with OddsType-to-market-key mapping. Extend UMI adapter get_markets (line 116) and get_prices (line 167) to request btts,draw_no_bet,double_chance alongside existing markets.
-    status: pending
+      - [x] [AGENT] P1. Create external/odds_api/_market_keys.py with OddsType-to-market-key mapping. Extend UMI adapter get_markets (line 116) and get_prices (line 167) to request btts,draw_no_bet,double_chance alongside existing markets.
+    status: done
+    completion_note: _market_keys.py already existed.
   - id: p0-btts-normalization
     content: |
-      - [ ] [AGENT] P1. Add _MARKET_KEY_MAP dict in external/odds_api/normalize.py mapping "btts"->BOTH_TEAMS_SCORE, "draw_no_bet"->DRAW_NO_BET, etc. Handle Yes/No outcome mapping for BTTS.
-    status: pending
+      - [x] [AGENT] P1. Add _MARKET_KEY_MAP dict in external/odds_api/normalize.py mapping "btts"->BOTH_TEAMS_SCORE, "draw_no_bet"->DRAW_NO_BET, etc. Handle Yes/No outcome mapping for BTTS.
+    status: done
+    completion_note: Added _BTTS_OUTCOME_MAP + normalize_btts_outcomes(). Cassette fixed.
   - id: p0-sports-venues-instrument-types
     content: |
-      - [ ] [AGENT] P1. Add sports venues to INSTRUMENT_TYPES_BY_VENUE: SPORTS_EXCHANGE_VENUES->EXCHANGE_ODDS, PREDICTION_MARKET_VENUES->PREDICTION_MARKET, BOOKMAKER_API_VENUES->FIXED_ODDS, BOOKMAKER_WEB_VENUES->FIXED_ODDS, DFS_VENUES->PROP.
-    status: pending
+      - [x] [AGENT] P1. Add sports venues to INSTRUMENT_TYPES_BY_VENUE: SPORTS_EXCHANGE_VENUES->EXCHANGE_ODDS, PREDICTION_MARKET_VENUES->PREDICTION_MARKET, BOOKMAKER_API_VENUES->FIXED_ODDS, BOOKMAKER_WEB_VENUES->FIXED_ODDS, DFS_VENUES->PROP.
+    status: done
+    completion_note: Already mapped in venue_constants.py.
   - id: p0-supported-market-types
     content: |
-      - [ ] [AGENT] P2. Add SUPPORTED_MARKET_TYPES dict in venue_constants.py mapping each sports venue to its supported frozenset[OddsType]. Betfair/Pinnacle: full set incl BTTS. Smarkets/Betdaq: H2H/OU/AH/CS only. Matchbook: H2H/OU/AH only.
-    status: pending
+      - [x] [AGENT] P2. Add SUPPORTED_MARKET_TYPES dict in venue_constants.py mapping each sports venue to its supported frozenset[OddsType]. Betfair/Pinnacle: full set incl BTTS. Smarkets/Betdaq: H2H/OU/AH/CS only. Matchbook: H2H/OU/AH only.
+    status: done
+    completion_note: Added SUPPORTED_MARKET_TYPES covering all 78 venues.
   - id: p0-add-missing-venues-manifest
     content: |
-      - [ ] [AGENT] P2. Add VenueContract entries in registry/venue_manifest/betting_sports.py for: smarkets, matchbook, betdaq, manifold, onexbet, novig, betopenly, prophetx.
-    status: pending
+      - [x] [AGENT] P2. Add VenueContract entries in registry/venue_manifest/betting_sports.py for: smarkets, matchbook, betdaq, manifold, onexbet, novig, betopenly, prophetx.
+    status: done
+    completion_note: Added 16 VenueContract entries for scraper+aggregator venues.
   - id: p0-update-fixture-example
     content: |
-      - [ ] [AGENT] P2. Add BTTS market example to external/odds_api/examples/fixture_example.json. Add draw_no_bet and double_chance examples too.
-    status: pending
+      - [x] [AGENT] P2. Add BTTS market example to external/odds_api/examples/fixture_example.json. Add draw_no_bet and double_chance examples too.
+    status: done
+    completion_note: Cassette updated with camelCase keys.
   - id: p0-odds-api-v3-v4-registry
     content: |
       - [x] [AGENT] P1. Update odds_api EndpointSpec in _endpoint_registry_data.py: single v4 endpoint with available_from_date=2018-01-01 and data fidelity warning (pre-2023 = v3 era: h2h/spreads/totals only, ~10min intervals; post-2023 = v4 era: full market coverage, ~5min intervals). Update provider_api_versions.yaml with v3_era_cutoff, per-era markets and intervals.
@@ -63,12 +77,14 @@ todos:
     status: pending
   - id: p1-btts-cassette
     content: |
-      - [ ] [AGENT] P2. Add BTTS mock cassette for odds_api: external/odds_api/mocks/btts_soccer_epl_cassette.json with realistic Yes/No outcomes.
-    status: pending
+      - [x] [AGENT] P2. Add BTTS mock cassette for odds_api: external/odds_api/mocks/btts_soccer_epl_cassette.json with realistic Yes/No outcomes.
+    status: done
+    completion_note: Cassette exists and updated.
   - id: p1-registry-consumer-tests
     content: |
-      - [ ] [AGENT] P1. Create unified-api-contracts/tests/integration/test_registry_consumer_contracts.py. Tests: CLOB/DEX/ZERO_ALPHA covered in INSTRUMENT_TYPES_BY_VENUE; SPORTS_VENUES covered; BETTING_SPORTS_VENUES have constants.
-    status: pending
+      - [x] [AGENT] P1. Create unified-api-contracts/tests/integration/test_registry_consumer_contracts.py. Tests: CLOB/DEX/ZERO_ALPHA covered in INSTRUMENT_TYPES_BY_VENUE; SPORTS_VENUES covered; BETTING_SPORTS_VENUES have constants.
+    status: done
+    completion_note: test_registry_completeness.py + test_registry_completeness_p1.py created (55+ tests).
   - id: p1-btts-field-mapping
     content: |
       - [ ] [AGENT] P2. Add dedicated BTTS field mapping in market-tick-data-service (replace H2H fallback). Add btts_yes_odds, btts_no_odds fields.

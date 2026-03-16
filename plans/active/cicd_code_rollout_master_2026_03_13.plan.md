@@ -559,7 +559,10 @@ todos:
     status: pending
     completion_note:
       "UPDATED 2026-03-16: system-integration-tests=LOCAL_PASS. All service hardening phases now complete (L7-L8, L9,
-      L10 all LOCAL_PASS). SIT can proceed once services are quickmerged to staging."
+      L10 all LOCAL_PASS). SIT can proceed once services are quickmerged to staging. INFRA READY 2026-03-16: SIT
+      deployment-test filter lowered from v1.0.0 to v0.1.0 (all repos now qualify). Quickmerge integration smoke test
+      added to SIT (test_pm_infrastructure.py, 10 tests passing). Self-version parity check added to
+      run-version-alignment.sh (step 0.95)."
   - id: deploy-aws-account
     content: |
       - [ ] [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work. From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service roles, quota review).
@@ -653,6 +656,15 @@ todos:
     content: |
       - [ ] [SCRIPT+HUMAN] P0. 1.0.0 promotion for all repos. Order: T0 first via `feat!:` commit (triggers MINOR bump on 0.x.x per pre-1.0.0 rule — so this needs a manual version set or policy override to cross to 1.0.0). Then T1->T2->T3 respecting tier invariant. Verify version cascade propagates cleanly at each tier. Human approves each tier promotion.
     status: pending
+    completion_note:
+      "INFRA READY 2026-03-16: Version graduation process tested end-to-end — codex promoted 1.0.0 -> 2.0.0 on staging
+      via /approve. Canonical workflow templates created: request-major-bump, major-bump-issue-handler,
+      staging-lock-check, update-dependency-version, semver-agent.yml.tmpl. Rollout scripts created:
+      rollout-workflow-templates.sh, rollout-semver-agent.sh. major-bump-pending label created on all repos. PM
+      semver_policy changed from always_patch to agent. GH_ORG hardcoded IggyIkenna replaced with
+      github.repository_owner in request-major-bump. gh issue create --json --jq bug fixed (invalid flags removed).
+      request-major-bump hardened (hard-fail on errors, validate secrets, validate issue URL). REMAINING: Execute
+      T0->T1->T2->T3 tier promotion with human approval at each tier."
   - id: overnight-agent-audit-restore
     content: |
       - [x] [AGENT] P1. Restore overnight audit bot — agent-audit.yml was missing from all 16 T0-T3 repos causing
@@ -743,9 +755,10 @@ todos:
     status: pending
     completion_note:
       "Pre-audit state (2026-03-16): §16 vitest-in-3-UIs RESOLVED. §9 ci_status lifecycle state machine IMPLEMENTED
-      (cleanup-ci-status-state-machine done). §7 still FAIL (all repos at 0.x.x except unified-trading-pm=1.2.0). §2
-      still needs execution-service QG expansion. §10 VCR cassettes still missing. §5 float isolation still unverified.
-      Run full audit after §7 stability-1-0-0-promotion."
+      (cleanup-ci-status-state-machine done). PASSING -> FEATURE_GREEN bug fixed in PM and codex QG ci-status dispatch.
+      §7 still FAIL (all repos at 0.x.x except unified-trading-pm=1.2.0, unified-trading-codex=2.0.0). §2 still needs
+      execution-service QG expansion. §10 VCR cassettes still missing. §5 float isolation still unverified. Run full
+      audit after §7 stability-1-0-0-promotion."
   - id: stability-final-sit
     content: |
       - [ ] [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests against all services on main branch.

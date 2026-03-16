@@ -28,6 +28,7 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/reverse-dependency-lookup.py"
     "!**/generate_dependency_viz.py"
     "!**/auto-populate-tags.py"
+    "!**/validate-strategy-manifest.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -47,6 +48,7 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/generate_strategy_manifest_dag.py"
     "!**/auto-populate-tags.py"
     "!**/check-strategy-instruments.py"
+    "!**/validate-strategy-manifest.py"
 )
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/rollout-quality-gates-ci-workflows.py"
@@ -98,6 +100,19 @@ MANIFEST="${REPO_ROOT}/workspace-manifest.json"
 if [ -f "$MANIFEST" ]; then
     bash "${REPO_ROOT}/scripts/validate-manifest-json.sh" "$MANIFEST" \
         || { echo "❌ workspace-manifest.json validation failed — fix before committing" >&2; exit 1; }
+fi
+
+# ── Pre-commit gate: validate strategy-manifest.json ──────────────────────
+STRATEGY_MANIFEST="${REPO_ROOT}/strategy-manifest.json"
+STRATEGY_VALIDATOR="${REPO_ROOT}/scripts/validation/validate-strategy-manifest.py"
+if [ -f "$STRATEGY_MANIFEST" ] && [ -f "$STRATEGY_VALIDATOR" ]; then
+    echo "Validating strategy-manifest.json..."
+    if python3 "$STRATEGY_VALIDATOR"; then
+        log_success "Strategy manifest validation passed"
+    else
+        echo "❌ strategy-manifest.json validation failed — fix before committing" >&2
+        exit 1
+    fi
 fi
 
 # ── Locked plan deletion check ──────────────────────────────────────────

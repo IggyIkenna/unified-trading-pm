@@ -9,6 +9,11 @@ on:
       cassette_dir:
         type: string
         default: "external/*/mocks/"
+    secrets:
+      GH_PAT:
+        required: false
+      TELEGRAM_BOT_TOKEN:
+        required: false
 
 jobs:
   replay:
@@ -32,3 +37,19 @@ jobs:
           # Layer 2: Canonical output invariant validation
           #   - Verify field names, types, and enums match contract specs
           #   - Flag any new/removed fields as potential drift
+
+  notify-failure:
+    name: Telegram — Contract Replay Failure
+    needs: [replay]
+    if: always() && needs.replay.result == 'failure'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Contract replay FAILED — ${{ inputs.repo }}. View: ${{ github.server_url }}/${{ github.repository
+        }}/actions/runs/${{ github.run_id }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

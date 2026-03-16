@@ -17,5 +17,4 @@ jobs:
       run_actionlint: true
       run_flow_coverage: true
       sibling_deps: "unified-events-interface unified-internal-contracts"
-    secrets:
-      GH_PAT: ${{ secrets.GH_PAT }}
+    secrets: inherit
