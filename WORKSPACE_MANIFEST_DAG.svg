@@ -211,19 +211,19 @@
   <text x="95" y="1176" text-anchor="middle" class="level-label">L8</text>
   <text x="150" y="1176" class="desc">Services with data-flow dependencies (17 repos)</text>
   <rect x="70" y="1199" width="132" height="38" class="svc" />
-  <rect x="70" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="1199" width="4" height="38" fill="#facc15" rx="2" />
   <text x="136" y="1217" text-anchor="middle" class="label">alerting-service</text>
-  <circle cx="192" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="192" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="136" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="212" y="1199" width="139" height="38" class="svc" />
-  <rect x="212" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="212" y="1199" width="4" height="38" fill="#facc15" rx="2" />
   <text x="281" y="1217" text-anchor="middle" class="label">execution-service</text>
-  <circle cx="341" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="341" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="281" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="361" y="1199" width="195" height="38" class="svc" />
-  <rect x="361" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="361" y="1199" width="4" height="38" fill="#facc15" rx="2" />
   <text x="458" y="1217" text-anchor="middle" class="label">features-calendar-service</text>
-  <circle cx="546" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="546" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="458" y="1229" text-anchor="middle" class="ver">0.2.1</text>
   <rect x="566" y="1199" width="202" height="38" class="svc" />
   <rect x="566" y="1199" width="4" height="38" fill="#facc15" rx="2" />
@@ -236,9 +236,9 @@
   <circle cx="1019" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="903" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1039" y="1199" width="202" height="38" class="svc" />
-  <rect x="1039" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1039" y="1199" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1140" y="1217" text-anchor="middle" class="label">features-delta-one-service</text>
-  <circle cx="1231" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1231" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1140" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1251" y="1199" width="244" height="38" class="svc" />
   <rect x="1251" y="1199" width="4" height="38" fill="#facc15" rx="2" />
@@ -251,9 +251,9 @@
   <circle cx="1683" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1599" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1703" y="1199" width="181" height="38" class="svc" />
-  <rect x="1703" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1703" y="1199" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1793" y="1217" text-anchor="middle" class="label">features-sports-service</text>
-  <circle cx="1874" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1874" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1793" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1894" y="1199" width="209" height="38" class="svc" />
   <rect x="1894" y="1199" width="4" height="38" fill="#facc15" rx="2" />
@@ -261,9 +261,9 @@
   <circle cx="2093" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1998" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="2113" y="1199" width="230" height="38" class="svc" />
-  <rect x="2113" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="2113" y="1199" width="4" height="38" fill="#facc15" rx="2" />
   <text x="2228" y="1217" text-anchor="middle" class="label">market-data-processing-service</text>
-  <circle cx="2333" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="2333" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="2228" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="70" y="1247" width="188" height="38" class="svc" />
   <rect x="70" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
@@ -276,14 +276,14 @@
   <circle cx="418" cy="1255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="348" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="438" y="1247" width="153" height="38" class="svc" />
-  <rect x="438" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="438" y="1247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="514" y="1265" text-anchor="middle" class="label">ml-training-service</text>
-  <circle cx="581" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="581" cy="1255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="514" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="601" y="1247" width="181" height="38" class="svc" />
-  <rect x="601" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="601" y="1247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="691" y="1265" text-anchor="middle" class="label">pnl-attribution-service</text>
-  <circle cx="772" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="772" cy="1255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="691" y="1277" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="792" y="1247" width="132" height="38" class="svc" />
   <rect x="792" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
@@ -336,14 +336,14 @@
   <circle cx="1099" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1044" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1119" y="1366" width="244" height="38" class="svc" />
-  <rect x="1119" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1119" y="1366" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1241" y="1384" text-anchor="middle" class="label">position-balance-monitor-service</text>
-  <circle cx="1353" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1353" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1241" y="1396" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1373" y="1366" width="195" height="38" class="svc" />
-  <rect x="1373" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="1373" y="1366" width="4" height="38" fill="#facc15" rx="2" />
   <text x="1470" y="1384" text-anchor="middle" class="label">risk-and-exposure-service</text>
-  <circle cx="1558" cy="1374" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="1558" cy="1374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1470" y="1396" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1578" y="1366" width="167" height="38" class="api" />
   <rect x="1578" y="1366" width="4" height="38" fill="#ef4444" rx="2" />
@@ -451,9 +451,9 @@
   <text x="95" y="1700" text-anchor="middle" class="level-label">L12</text>
   <text x="150" y="1700" class="desc">IaC + post-deploy validation (deploy last; references all service images) (3 repos)</text>
   <rect x="70" y="1723" width="153" height="38" class="svc" />
-  <rect x="70" y="1723" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="1723" width="4" height="38" fill="#facc15" rx="2" />
   <text x="146" y="1741" text-anchor="middle" class="label">elysium-defi-system</text>
-  <circle cx="213" cy="1731" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="1731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="146" y="1753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="233" y="1723" width="146" height="38" class="infra" />
   <rect x="233" y="1723" width="4" height="38" fill="#facc15" rx="2" />
