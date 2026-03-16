@@ -476,12 +476,28 @@ todos:
     note: "PARALLEL stream C."
 
   # --- Stream D: Risk Matrix & P&L Attribution Framework ---
-  # Full multi-dimensional risk decomposition with strategy-risk subscription.
-  # Every risk has a corresponding P&L — same decomposition, different lens.
+  # IMPLEMENTATION SPEC: plans/active/stream_d_risk_matrix_implementation.md
+  # That file has exact schemas, file paths, line numbers, DRY analysis, and
+  # code examples for every item below. Agents MUST read it before executing.
+  #
+  # UAC vs UIC RULE: If external source provides data → schema in UAC.
+  # Deribit/TARDIS give delta,gamma,vega,theta,IV directly → RiskType enum in UAC.
+  # Confirmed: UAC CanonicalOptionsChainEntry (derivatives/:78-95) already has these.
+  # GreeksExposure (UIC risk.py:214-235) is DUPLICATE — UAC already has per-underlying
+  # via UnderlyingGreeksBreakdown (position/:127-136). UIC version should be deleted.
 
   - id: p5-risk-taxonomy-schema
     content: |
-      - [ ] [AGENT] P0. Define comprehensive RiskType enum in UIC with ALL risk dimensions:
+      - [ ] [AGENT] P0. Add RiskType StrEnum. LOCATION DECISION:
+        RiskType goes in UAC (canonical/crosscutting/risk_taxonomy.py — NEW file) because
+        risk types like delta, vega, funding are dimensions that external venues report on
+        (Deribit gives Greeks, exchanges give funding rates, TARDIS gives Greeks history).
+        Even for internally-computed risks, the schema should be in UAC for centrality.
+        Services import from UAC. Internal computation modules produce values typed by
+        the same enum. One schema, multiple sources (external feed OR internal calculation).
+        GreeksExposure (currently UIC risk.py:214-235) should ALSO move to UAC for same
+        reason — Deribit/TARDIS provide Greeks directly as external data.
+        ADD to pre-audit: GreeksExposure consumers (risk-and-exposure-service, PBMS).
         FIRST ORDER: delta, vega, theta, rho, funding, basis, carry, fx, liquidity
         SECOND ORDER: gamma, volga (vol-of-vol), vanna (delta-vol cross), slide (vol time decay)
         STRUCTURAL: duration, convexity, spread (bid-ask / credit), concentration
@@ -699,19 +715,27 @@ PHASE 6: Final workspace-wide QG ◄──────────────�
 | **execution-service**              | NONE                                  | Imports from UIC correctly                                           |
 | **All other services**             | NONE                                  | No imports of moved symbols                                          |
 
-### File Size Compliance (pre-checked)
+### File Size Compliance (cumulative across ALL phases)
 
-| File                                      | Current | After | Limit | Safe? | Note                                      |
-| ----------------------------------------- | ------- | ----- | ----- | ----- | ----------------------------------------- |
-| UAC `__init__.py`                         | **896** | ~846  | 900   | YES   | Was 4 lines from limit — removal fixes it |
-| UIC `risk.py` (re-export)                 | 291     | ~391  | 900   | YES   | 509 line buffer                           |
-| UIC `domain/risk_service/risk.py`         | 308     | ~408  | 900   | YES   | 492 line buffer                           |
-| UIC `domain/analytics/factor_exposure.py` | 68      | ~118  | 900   | YES   | 782 line buffer                           |
-| UIC `__init__.py`                         | 717     | ~767  | 900   | YES   | 133 line buffer                           |
-| UAC `analytics.py`                        | 202     | ~102  | 900   | YES   | Shrinking                                 |
-| UAC `connectivity.py`                     | 116     | ~66   | 900   | YES   | Shrinking                                 |
+| File                               | Now     |  Net Δ | Final    |  Margin | Risk                               |
+| ---------------------------------- | ------- | -----: | -------- | ------: | ---------------------------------- |
+| UAC `__init__.py`                  | **896** |    -45 | **~851** |  **49** | **TIGHT** — massive re-export file |
+| UAC `canonical/__init__.py`        | 283     |    -23 | ~260     |     640 | Safe                               |
+| UAC `canonical/domain/__init__.py` | 487     |    -18 | ~469     |     431 | Safe                               |
+| UAC `analytics.py`                 | 202     |   -100 | ~102     |     798 | Shrinking                          |
+| UAC `connectivity.py`              | 116     |    -50 | ~66      |     834 | Shrinking                          |
+| UAC `risk.py`                      | 160     | DELETE | 0        |       — | Gone                               |
+| UAC `risk_taxonomy.py` (NEW)       | 0       |    +60 | ~60      |     840 | New file                           |
+| UAC errors/`defi.py`               | 414     |    +80 | ~494     |     406 | Safe                               |
+| UAC errors/`tradfi.py` (NEW)       | 0       |   +250 | ~250     |     650 | New file                           |
+| UAC errors/`altdata.py`            | 451     |    -75 | ~376     |     524 | Safe                               |
+| UAC errors/`sports.py`             | 496     |   -170 | ~326     |     574 | Safe                               |
+| UIC `__init__.py`                  | **717** |    +25 | **~742** | **158** | Watch                              |
+| UIC domain `risk.py`               | 308     |   +205 | **~513** | **387** | Biggest addition                   |
+| UIC `factor_exposure.py`           | 68      |    +50 | ~118     |     782 | Safe                               |
+| UIC `lifecycle.py`                 | 64      |    -20 | ~44      |     856 | Shrinking                          |
 
-No basedpyright baselines exist (zero-baseline policy). UIC coverage floor: 98% — new schemas need tests.
+Zero basedpyright baselines. UIC coverage floor: 98%. Full analysis: `stream_d_risk_matrix_implementation.md`
 
 ### UAC Internal Edits (by file)
 
