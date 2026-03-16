@@ -29,7 +29,7 @@ PM_ROOT = SCRIPT_DIR.parent.parent
 WORKSPACE_ROOT = Path(os.environ.get("WORKSPACE_ROOT", str(PM_ROOT.parent)))
 DERIVED_PATH = PM_ROOT / "derived-dependency-manifest.json"
 MANIFEST_PATH = PM_ROOT / "workspace-manifest.json"
-EXCLUDE = {".venv", "venv", ".venv-workspace", "__pycache__", ".git", "tests", "examples", "docs", "scripts", ".github"}
+EXCLUDE = {".venv", "venv", ".venv-workspace", "__pycache__", ".git", "examples", "docs", "scripts", ".github"}
 
 
 def pkg_to_import(pkg: str) -> str:

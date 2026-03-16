@@ -1,6 +1,6 @@
 {
   "$schema_version": "1.0.0",
-  "$description": "Strategy manifest — SSOT for all strategy implementations, maturity tracking, and deployment readiness.",
+  "$description": "Strategy manifest \u2014 SSOT for all strategy implementations, maturity tracking, and deployment readiness.",
   "strategies": [
     {
       "strategy_id": "CEFI_MOMENTUM_BTC_5M",
@@ -9,7 +9,7 @@
       "subcategory": "MOMENTUM",
       "domain": "cefi",
       "asset_classes": ["PERPETUAL"],
-      "venues": ["BINANCE_FUTURES", "BYBIT"],
+      "venues": ["BINANCE-FUTURES", "BYBIT"],
       "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
       "data_sources": {
         "features": ["features-delta-one-service"],
@@ -22,8 +22,19 @@
       "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
       "factory_function": "create_btc_momentum_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -49,7 +60,7 @@
       "subcategory": "MOMENTUM",
       "domain": "cefi",
       "asset_classes": ["PERPETUAL"],
-      "venues": ["BINANCE_FUTURES", "BYBIT"],
+      "venues": ["BINANCE-FUTURES", "BYBIT"],
       "instruments": ["BINANCE-FUTURES:PERPETUAL:ETH-USDT@LIN"],
       "data_sources": {
         "features": ["features-delta-one-service"],
@@ -62,8 +73,19 @@
       "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
       "factory_function": "create_eth_momentum_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -89,7 +111,7 @@
       "subcategory": "MOMENTUM",
       "domain": "cefi",
       "asset_classes": ["PERPETUAL"],
-      "venues": ["BINANCE_FUTURES", "BYBIT"],
+      "venues": ["BINANCE-FUTURES", "BYBIT"],
       "instruments": ["BINANCE-FUTURES:PERPETUAL:SOL-USDT@LIN"],
       "data_sources": {
         "features": ["features-delta-one-service"],
@@ -102,8 +124,19 @@
       "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
       "factory_function": "create_sol_momentum_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -142,8 +175,19 @@
       "class_path": "strategy_service.engine.strategies.tradfi_momentum.TradFiMomentumStrategy",
       "factory_function": "create_spy_momentum_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -182,8 +226,19 @@
       "class_path": "strategy_service.engine.strategies.defi_lending.AAVELendingStrategy",
       "factory_function": "create_aave_lending_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -209,7 +264,7 @@
       "subcategory": "BASIS",
       "domain": "defi",
       "asset_classes": ["SPOT_ASSET", "PERPETUAL"],
-      "venues": ["HYPERLIQUID", "UNISWAPV3_ETH", "CURVE_ETH", "BALANCER_ETH"],
+      "venues": ["HYPERLIQUID", "UNISWAPV3-ETH", "CURVE-ETH", "BALANCER-ETH"],
       "instruments": ["WALLET:SPOT_ASSET:ETH", "HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID"],
       "data_sources": {
         "features": ["features-onchain-service"],
@@ -222,8 +277,19 @@
       "class_path": "strategy_service.engine.strategies.defi_basis.BasisTradeStrategy",
       "factory_function": "create_basis_trade_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -249,7 +315,7 @@
       "subcategory": "STAKED_BASIS",
       "domain": "defi",
       "asset_classes": ["LST", "PERPETUAL"],
-      "venues": ["ETHERFI", "HYPERLIQUID", "UNISWAPV3_ETH", "CURVE_ETH", "BALANCER_ETH"],
+      "venues": ["ETHERFI", "HYPERLIQUID", "UNISWAPV3-ETH", "CURVE-ETH", "BALANCER-ETH"],
       "instruments": ["ETHERFI:LST:WEETH@ETHEREUM", "HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID"],
       "data_sources": {
         "features": ["features-onchain-service"],
@@ -262,8 +328,19 @@
       "class_path": "strategy_service.engine.strategies.defi_staked_basis.StakedBasisStrategy",
       "factory_function": "create_staked_basis_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -289,7 +366,7 @@
       "subcategory": "RECURSIVE_STAKED_BASIS",
       "domain": "defi",
       "asset_classes": ["A_TOKEN", "DEBT_TOKEN", "PERPETUAL"],
-      "venues": ["AAVE_V3_ETH", "HYPERLIQUID", "MORPHO"],
+      "venues": ["AAVE_V3_ETH", "HYPERLIQUID", "MORPHO-ETHEREUM"],
       "instruments": [
         "AAVE_V3_ETH:A_TOKEN:AWEETH@ETHEREUM",
         "AAVE_V3_ETH:DEBT_TOKEN:DEBTWETH@ETHEREUM",
@@ -306,8 +383,19 @@
       "class_path": "strategy_service.engine.strategies.defi_recursive_basis.RecursiveStakedBasisStrategy",
       "factory_function": "create_recursive_staked_basis_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -332,7 +420,7 @@
       "category": "SPORTS",
       "subcategory": "ARBITRAGE",
       "domain": "sports",
-      "asset_classes": ["SPORTS_BET"],
+      "asset_classes": ["FIXED_ODDS"],
       "venues": ["BETFAIR", "PINNACLE", "BET365"],
       "instruments": [],
       "data_sources": {
@@ -346,8 +434,19 @@
       "class_path": "strategy_service.engine.strategies.sports.arbitrage.ArbitrageStrategy",
       "factory_function": "create_arbitrage_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -372,7 +471,7 @@
       "category": "SPORTS",
       "subcategory": "VALUE",
       "domain": "sports",
-      "asset_classes": ["SPORTS_BET"],
+      "asset_classes": ["FIXED_ODDS"],
       "venues": ["BETFAIR", "PINNACLE", "BET365"],
       "instruments": [],
       "data_sources": {
@@ -386,8 +485,19 @@
       "class_path": "strategy_service.engine.strategies.sports.value_betting.ValueBettingStrategy",
       "factory_function": "create_value_betting_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -412,7 +522,7 @@
       "category": "SPORTS",
       "subcategory": "KELLY",
       "domain": "sports",
-      "asset_classes": ["SPORTS_BET"],
+      "asset_classes": ["FIXED_ODDS"],
       "venues": ["BETFAIR", "PINNACLE", "BET365"],
       "instruments": [],
       "data_sources": {
@@ -426,8 +536,19 @@
       "class_path": "strategy_service.engine.strategies.sports.kelly.KellyCriterionStrategy",
       "factory_function": "create_kelly_criterion_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -452,7 +573,7 @@
       "category": "SPORTS",
       "subcategory": "ML_SPORTS",
       "domain": "sports",
-      "asset_classes": ["SPORTS_BET"],
+      "asset_classes": ["FIXED_ODDS"],
       "venues": ["BETFAIR", "PINNACLE", "BET365"],
       "instruments": [],
       "data_sources": {
@@ -466,8 +587,19 @@
       "class_path": "strategy_service.engine.strategies.sports.ml_sports_strategy.MLSportsStrategy",
       "factory_function": "create_ml_sports_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -492,7 +624,7 @@
       "category": "SPORTS",
       "subcategory": "MARKET_MAKING",
       "domain": "sports",
-      "asset_classes": ["SPORTS_BET"],
+      "asset_classes": ["FIXED_ODDS"],
       "venues": ["BETFAIR", "SMARKETS", "MATCHBOOK"],
       "instruments": [],
       "data_sources": {
@@ -506,8 +638,19 @@
       "class_path": "strategy_service.engine.strategies.sports.market_making.SportsMarketMakingStrategy",
       "factory_function": "create_market_making_strategy",
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -546,8 +689,19 @@
       "class_path": "strategy_service.engine.strategies.stat_arb.stat_arb_strategy.StatArbStrategy",
       "factory_function": null,
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -586,8 +740,19 @@
       "class_path": "strategy_service.engine.strategies.rel_vol.rel_vol_strategy.RelVolStrategy",
       "factory_function": null,
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -626,8 +791,19 @@
       "class_path": "strategy_service.engine.strategies.cross_exchange.cross_exchange_strategy.CrossExchangeStrategy",
       "factory_function": null,
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -666,8 +842,19 @@
       "class_path": "strategy_service.engine.strategies.prediction_arb.prediction_arb_strategy.PredictionArbStrategy",
       "factory_function": null,
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -706,8 +893,19 @@
       "class_path": "strategy_service.engine.strategies.volatility.vol_surface_strategy.VolSurfaceStrategy",
       "factory_function": null,
       "maturity": {
-        "code": { "status": "C4", "class_exists": true, "unit_tests": true, "qg_pass": true, "merged": false },
-        "deployment": { "status": "D0", "batch_analytics": false, "mock_smoke": false, "batch_live_recon": false },
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
         "business": {
           "status": "B0",
           "backtest_profitable": false,
@@ -721,6 +919,720 @@
         "allowed_ml_targets": [],
         "min_timeframe": "1h",
         "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_MEAN_REV_SPY_1D",
+      "display_name": "TradFi SPY Mean Reversion",
+      "category": "TRADFI",
+      "subcategory": "MEAN_REVERSION",
+      "domain": "tradfi",
+      "asset_classes": ["EQUITY"],
+      "venues": ["NASDAQ"],
+      "instruments": ["NASDAQ:EQUITY:SPY"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/mean_reversion_spy.yaml",
+      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "factory_function": "create_spy_mean_reversion",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "CEFI_MEAN_REV_BTC_1D",
+      "display_name": "CeFi BTC Mean Reversion",
+      "category": "CEFI",
+      "subcategory": "MEAN_REVERSION",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE-FUTURES"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/mean_reversion_btc.yaml",
+      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "factory_function": "create_btc_mean_reversion",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "CEFI_MEAN_REV_ETH_1D",
+      "display_name": "CeFi ETH Mean Reversion",
+      "category": "CEFI",
+      "subcategory": "MEAN_REVERSION",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE-FUTURES"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:ETH-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/mean_reversion_eth.yaml",
+      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "factory_function": "create_eth_mean_reversion",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "CEFI_MEAN_REV_SOL_1D",
+      "display_name": "CeFi SOL Mean Reversion",
+      "category": "CEFI",
+      "subcategory": "MEAN_REVERSION",
+      "domain": "cefi",
+      "asset_classes": ["PERPETUAL"],
+      "venues": ["BINANCE-FUTURES"],
+      "instruments": ["BINANCE-FUTURES:PERPETUAL:SOL-USDT@LIN"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/mean_reversion_sol.yaml",
+      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "factory_function": "create_sol_mean_reversion",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_MEAN_REV_FX_1D",
+      "display_name": "TradFi FX Mean Reversion",
+      "category": "TRADFI",
+      "subcategory": "MEAN_REVERSION",
+      "domain": "tradfi",
+      "asset_classes": ["CURRENCY"],
+      "venues": ["CME"],
+      "instruments": ["CME:FUTURES:6E"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/mean_reversion_fx.yaml",
+      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "factory_function": "create_fx_mean_reversion",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_MEAN_REV_OIL_1D",
+      "display_name": "TradFi Oil Mean Reversion",
+      "category": "TRADFI",
+      "subcategory": "MEAN_REVERSION",
+      "domain": "tradfi",
+      "asset_classes": ["COMMODITY"],
+      "venues": ["CME"],
+      "instruments": ["NYMEX:FUTURES:CL"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": null,
+        "ml_required": false
+      },
+      "config_file": "strategy-service/strategy_service/configs/mean_reversion_oil.yaml",
+      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "factory_function": "create_oil_mean_reversion",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": [],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_ML_SPY_5M",
+      "display_name": "TradFi SPY ML Swing",
+      "category": "TRADFI",
+      "subcategory": "ML_SWING",
+      "domain": "tradfi",
+      "asset_classes": ["EQUITY"],
+      "venues": ["NASDAQ"],
+      "instruments": ["NASDAQ:EQUITY:SPY"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_spy_5m",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/tradfi_ml_spy.yaml",
+      "class_path": "strategy_service.engine.strategies.tradfi_ml_directional.TradFiMLSwingStrategy",
+      "factory_function": "create_spy_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_ML_FX_5M",
+      "display_name": "TradFi FX ML Swing",
+      "category": "TRADFI",
+      "subcategory": "ML_SWING",
+      "domain": "tradfi",
+      "asset_classes": ["CURRENCY"],
+      "venues": ["CME"],
+      "instruments": ["CME:FUTURES:6E"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_fx_5m",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/tradfi_ml_fx.yaml",
+      "class_path": "strategy_service.engine.strategies.tradfi_ml_directional.TradFiMLSwingStrategy",
+      "factory_function": "create_fx_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "TRADFI_ML_OIL_5M",
+      "display_name": "TradFi Oil ML Swing",
+      "category": "TRADFI",
+      "subcategory": "ML_SWING",
+      "domain": "tradfi",
+      "asset_classes": ["COMMODITY"],
+      "venues": ["CME"],
+      "instruments": ["NYMEX:FUTURES:CL"],
+      "data_sources": {
+        "features": ["features-delta-one-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "swing_oil_5m",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/tradfi_ml_oil.yaml",
+      "class_path": "strategy_service.engine.strategies.tradfi_ml_directional.TradFiMLSwingStrategy",
+      "factory_function": "create_oil_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["delta_one"],
+        "allowed_ml_targets": ["SWING_HIGH", "SWING_LOW"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "OPTIONS_STRIKE_ML_BTC_DERIBIT",
+      "display_name": "Options Strike Selection ML BTC",
+      "category": "OPTIONS",
+      "subcategory": "STRIKE_SELECTION",
+      "domain": "cefi",
+      "asset_classes": ["OPTION"],
+      "venues": ["DERIBIT"],
+      "instruments": ["DERIBIT:OPTION:BTC-*"],
+      "data_sources": {
+        "features": ["features-volatility-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "strike_selection_btc",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/options_ml_strike_btc_deribit.yaml",
+      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "factory_function": "create_btc_strike_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["volatility"],
+        "allowed_ml_targets": ["STRIKE_SELECTION"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "OPTIONS_DELTA_ML_SPY_CBOE",
+      "display_name": "Options Delta Conversion ML SPY",
+      "category": "OPTIONS",
+      "subcategory": "DELTA_CONVERSION",
+      "domain": "tradfi",
+      "asset_classes": ["OPTION"],
+      "venues": ["CBOE"],
+      "instruments": ["CBOE:OPTION:SPY-*"],
+      "data_sources": {
+        "features": ["features-volatility-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "delta_conv_spy",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/options_ml_delta_spy_cboe.yaml",
+      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "factory_function": "create_spy_delta_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["volatility"],
+        "allowed_ml_targets": ["DELTA_CONVERSION"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "OPTIONS_VOL_ML_ETH_DERIBIT",
+      "display_name": "Options Vol Combo ML ETH",
+      "category": "OPTIONS",
+      "subcategory": "VOLATILITY_COMBO",
+      "domain": "cefi",
+      "asset_classes": ["OPTION"],
+      "venues": ["DERIBIT"],
+      "instruments": ["DERIBIT:OPTION:ETH-*"],
+      "data_sources": {
+        "features": ["features-volatility-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "vol_combo_eth",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/options_ml_vol_eth_deribit.yaml",
+      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "factory_function": "create_eth_vol_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["volatility"],
+        "allowed_ml_targets": ["VOLATILITY_COMBO"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "OPTIONS_DELTA_ML_BTC_DERIBIT",
+      "display_name": "Options Delta Conversion ML BTC",
+      "category": "OPTIONS",
+      "subcategory": "DELTA_CONVERSION",
+      "domain": "cefi",
+      "asset_classes": ["OPTION"],
+      "venues": ["DERIBIT"],
+      "instruments": ["DERIBIT:OPTION:BTC-*"],
+      "data_sources": {
+        "features": ["features-volatility-service"],
+        "market_data_processed": true,
+        "market_data_tick": false,
+        "ml_model_id": "delta_conv_btc",
+        "ml_required": true
+      },
+      "config_file": "strategy-service/strategy_service/configs/options_ml_delta_btc_deribit.yaml",
+      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "factory_function": "create_btc_delta_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["volatility"],
+        "allowed_ml_targets": ["DELTA_CONVERSION"],
+        "min_timeframe": "1m",
+        "max_timeframe": "1d"
+      },
+      "batch_capable": true,
+      "live_capable": true,
+      "testnet_capable": false
+    },
+    {
+      "strategy_id": "SPORTS_HALFTIME_ML_FOOTBALL",
+      "display_name": "Sports Halftime ML Football",
+      "category": "SPORTS",
+      "subcategory": "HALFTIME_ML",
+      "domain": "sports",
+      "asset_classes": ["FIXED_ODDS"],
+      "venues": ["BETFAIR", "PINNACLE"],
+      "instruments": [],
+      "data_sources": {
+        "features": ["features-sports-service"],
+        "market_data_processed": false,
+        "market_data_tick": false,
+        "ml_model_id": "halftime_football",
+        "ml_required": true
+      },
+      "config_file": null,
+      "class_path": "strategy_service.engine.strategies.sports.halftime_ml.HalftimeMLStrategy",
+      "factory_function": "create_halftime_ml_strategy",
+      "maturity": {
+        "code": {
+          "status": "C4",
+          "class_exists": true,
+          "unit_tests": true,
+          "qg_pass": true,
+          "merged": false
+        },
+        "deployment": {
+          "status": "D0",
+          "batch_analytics": false,
+          "mock_smoke": false,
+          "batch_live_recon": false
+        },
+        "business": {
+          "status": "B0",
+          "backtest_profitable": false,
+          "live_1d_match": false,
+          "live_1w_match": false,
+          "strategy_deck": false
+        }
+      },
+      "restrictions": {
+        "allowed_features": ["sports"],
+        "allowed_ml_targets": ["MATCH_RESULT"],
+        "min_timeframe": null,
+        "max_timeframe": null
       },
       "batch_capable": true,
       "live_capable": true,

@@ -155,7 +155,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "QG exit 1 (from batch 6 agent)",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["alerting", "cross-domain", "standard"]
     },
     "batch-audit-api": {
       "type": "api-service",
@@ -199,7 +200,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["analytics", "cefi", "monitoring", "standard"]
     },
     "batch-audit-ui": {
       "type": "ui",
@@ -222,7 +224,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["analytics", "cefi", "monitoring", "standard"]
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -258,7 +261,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -270,7 +273,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["analytics", "cefi", "standard"]
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -327,7 +331,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["analytics", "cefi", "standard"]
     },
     "client-reporting-ui": {
       "type": "ui",
@@ -350,7 +355,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["analytics", "cefi", "standard"]
     },
     "deployment-api": {
       "type": "api-service",
@@ -405,7 +411,9 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "serves_ui": ["deployment-ui"],
+      "tags": ["cefi", "deployment", "standard"]
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -452,7 +460,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "deployment", "standard"]
     },
     "deployment-ui": {
       "type": "ui",
@@ -477,7 +486,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cefi", "deployment", "standard"]
     },
     "elysium-defi-system": {
       "type": "service",
@@ -505,7 +515,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["defi", "standard"]
     },
     "execution-algo-library": {
       "type": "library",
@@ -528,7 +539,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "library"
+      "role": "library",
+      "tags": ["cross-domain", "execution", "important"]
     },
     "execution-analytics-ui": {
       "type": "ui",
@@ -551,7 +563,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["analytics", "cefi", "execution", "standard"]
     },
     "execution-results-api": {
       "type": "api-service",
@@ -562,7 +575,7 @@
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": ["trading-analytics-ui", "live-health-monitor-ui"],
+      "serves_ui": ["trading-analytics-ui", "live-health-monitor-ui", "execution-analytics-ui"],
       "proxies_service": "execution-service",
       "notes": "FastAPI + OAuth middleware. HTTP boundary between execution-service and UIs. P0: replace dict[str, Any] at all API boundaries with TypedDict/Pydantic (p0-exec-results-api-types).",
       "github_url": "https://github.com/IggyIkenna/execution-results-api",
@@ -603,7 +616,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["cefi", "execution", "standard"]
     },
     "execution-service": {
       "type": "service",
@@ -677,7 +691,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -695,7 +709,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "Codex compliance FAILED: 7 violations",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "execution", "standard"]
     },
     "features-calendar-service": {
       "type": "service",
@@ -753,7 +768,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-commodity-service": {
       "type": "service",
@@ -807,7 +823,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["feature-computation", "standard", "tradfi"]
     },
     "features-cross-instrument-service": {
       "type": "service",
@@ -866,7 +883,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-delta-one-service": {
       "type": "service",
@@ -902,7 +920,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -919,7 +937,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-multi-timeframe-service": {
       "type": "service",
@@ -963,7 +982,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/features-multi-timeframe-service",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 57,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -978,7 +997,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "features-onchain-service": {
       "type": "service",
@@ -1019,7 +1039,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1036,7 +1056,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["defi", "feature-computation", "standard"]
     },
     "features-sports-service": {
       "type": "service",
@@ -1105,7 +1126,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["feature-computation", "sports", "standard"]
     },
     "features-volatility-service": {
       "type": "service",
@@ -1163,7 +1185,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "feature-computation", "standard"]
     },
     "ibkr-gateway-infra": {
       "type": "infrastructure",
@@ -1191,7 +1214,8 @@
         "unified-market-interface",
         "unified-reference-data-interface",
         "unified-trade-execution-interface"
-      ]
+      ],
+      "tags": ["standard", "tradfi"]
     },
     "instruments-service": {
       "type": "service",
@@ -1242,7 +1266,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1260,7 +1284,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cross-domain", "data-ingestion", "standard"]
     },
     "live-health-monitor-ui": {
       "type": "ui",
@@ -1284,7 +1309,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cefi", "monitoring", "standard"]
     },
     "logs-dashboard-ui": {
       "type": "ui",
@@ -1307,7 +1333,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cross-domain", "monitoring", "standard"]
     },
     "market-data-api": {
       "type": "api-service",
@@ -1369,7 +1396,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["cefi", "data-ingestion", "standard"]
     },
     "market-data-processing-service": {
       "type": "service",
@@ -1415,7 +1443,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1433,7 +1461,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "data-ingestion", "standard"]
     },
     "market-tick-data-service": {
       "type": "service",
@@ -1506,7 +1535,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "data-ingestion", "standard"]
     },
     "matching-engine-library": {
       "type": "library",
@@ -1536,7 +1566,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "library"
+      "role": "library",
+      "tags": ["cross-domain", "execution", "important"]
     },
     "ml-inference-api": {
       "type": "api-service",
@@ -1581,7 +1612,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["cross-domain", "ml-inference", "standard"]
     },
     "ml-inference-service": {
       "type": "service",
@@ -1622,7 +1654,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 75,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1639,7 +1671,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "ml-inference", "standard"]
     },
     "ml-training-api": {
       "type": "api-service",
@@ -1679,7 +1712,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["cross-domain", "ml-training", "standard"]
     },
     "ml-training-service": {
       "type": "service",
@@ -1747,7 +1781,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "ml-training", "standard"]
     },
     "ml-training-ui": {
       "type": "ui",
@@ -1770,7 +1805,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cefi", "ml-training", "standard"]
     },
     "onboarding-ui": {
       "type": "ui",
@@ -1794,7 +1830,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "Function coverage 60.46% < 70% threshold",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cefi", "onboarding", "standard"]
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1847,7 +1884,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "pnl", "standard"]
     },
     "position-balance-monitor-service": {
       "type": "service",
@@ -1906,7 +1944,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "monitoring", "risk", "standard"]
     },
     "risk-and-exposure-service": {
       "type": "service",
@@ -1965,7 +2004,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "Codex compliance FAILED: 2 violations",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "risk", "standard"]
     },
     "settlement-ui": {
       "type": "ui",
@@ -1989,7 +2029,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cefi", "execution", "standard"]
     },
     "strategy-service": {
       "type": "service",
@@ -2036,7 +2077,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2054,7 +2095,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["cefi", "execution", "standard"]
     },
     "strategy-ui": {
       "type": "ui",
@@ -2079,7 +2121,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["cefi", "execution", "standard"]
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -2116,7 +2159,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2129,7 +2172,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": null,
-      "role": "test"
+      "role": "test",
+      "tags": ["cefi", "monitoring", "standard"]
     },
     "trading-agent-service": {
       "type": "service",
@@ -2173,7 +2217,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/trading-agent-service",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 50,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2188,7 +2232,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "service"
+      "role": "service",
+      "tags": ["execution", "standard", "tradfi"]
     },
     "trading-analytics-api": {
       "type": "api-service",
@@ -2243,7 +2288,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "api"
+      "role": "api",
+      "tags": ["analytics", "cefi", "standard"]
     },
     "trading-analytics-ui": {
       "type": "ui",
@@ -2267,7 +2313,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "Statement coverage 68.37% < 70% threshold",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["analytics", "cefi", "standard"]
     },
     "unified-admin-ui": {
       "type": "ui",
@@ -2292,7 +2339,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "ui"
+      "role": "ui",
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-api-contracts": {
       "type": "library",
@@ -2307,7 +2355,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2318,7 +2366,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
-      "role": "contracts"
+      "role": "contracts",
+      "tags": ["contracts", "critical", "cross-domain"]
     },
     "unified-cloud-interface": {
       "type": "library",
@@ -2368,7 +2417,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
-      "role": "primitive"
+      "role": "primitive",
+      "tags": ["config", "critical", "cross-domain"]
     },
     "unified-config-interface": {
       "type": "library",
@@ -2403,7 +2453,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "11 import errors (UCI gcp_compute dependency chain, stale venv)",
       "tier": 0,
-      "role": "primitive"
+      "role": "primitive",
+      "tags": ["config", "critical", "cross-domain"]
     },
     "unified-defi-execution-interface": {
       "type": "library",
@@ -2437,7 +2488,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["defi", "execution", "important"]
     },
     "unified-domain-client": {
       "type": "library",
@@ -2494,7 +2546,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "278 test errors",
       "tier": 3,
-      "role": "domain-client"
+      "role": "domain-client",
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-events-interface": {
       "type": "library",
@@ -2517,7 +2570,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
-      "role": "primitive"
+      "role": "primitive",
+      "tags": ["critical", "cross-domain", "events"]
     },
     "unified-feature-calculator-library": {
       "type": "library",
@@ -2552,7 +2606,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
       "tier": 2,
-      "role": "library"
+      "role": "library",
+      "tags": ["cross-domain", "feature-computation", "important"]
     },
     "unified-internal-contracts": {
       "type": "library",
@@ -2583,7 +2638,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
-      "role": "contracts"
+      "role": "contracts",
+      "tags": ["contracts", "critical", "cross-domain"]
     },
     "unified-market-interface": {
       "type": "library",
@@ -2633,7 +2689,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["cross-domain", "important"]
     },
     "unified-ml-interface": {
       "type": "library",
@@ -2673,7 +2730,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["cross-domain", "important", "ml-inference", "ml-training"]
     },
     "unified-position-interface": {
       "type": "library",
@@ -2708,7 +2766,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["cross-domain", "important", "risk"]
     },
     "unified-reference-data-interface": {
       "type": "library",
@@ -2755,7 +2814,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["cross-domain", "data-ingestion", "important"]
     },
     "unified-sports-execution-interface": {
       "type": "library",
@@ -2795,7 +2855,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["execution", "important", "sports"]
     },
     "unified-trade-execution-interface": {
       "type": "library",
@@ -2840,7 +2901,8 @@
       "semver_policy": "agent",
       "ci_failure_reason": "93 test failures",
       "tier": 2,
-      "role": "interface"
+      "role": "interface",
+      "tags": ["cross-domain", "execution", "important"]
     },
     "unified-trading-codex": {
       "type": "infrastructure",
@@ -2863,7 +2925,8 @@
       "sit_level": "abbreviated",
       "semver_policy": "always_patch",
       "tier": null,
-      "role": "infrastructure"
+      "role": "infrastructure",
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-trading-library": {
       "type": "library",
@@ -2904,7 +2967,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2915,7 +2978,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 1,
-      "role": "library"
+      "role": "library",
+      "tags": ["contracts", "critical", "cross-domain"]
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -2939,7 +3003,8 @@
       "sit_level": "abbreviated",
       "semver_policy": "always_patch",
       "tier": null,
-      "role": "infrastructure"
+      "role": "infrastructure",
+      "tags": ["config", "cross-domain", "standard"]
     },
     "unified-trading-ui-auth": {
       "type": "library",
@@ -2963,7 +3028,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "library"
+      "role": "library",
+      "tags": ["cross-domain", "onboarding", "standard"]
     },
     "unified-trading-ui-kit": {
       "type": "library",
@@ -2973,7 +3039,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -2985,7 +3051,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
-      "role": "library"
+      "role": "library",
+      "tags": ["cross-domain", "onboarding", "standard"]
     },
     "unified-features-interface": {
       "type": "interface",
@@ -3007,7 +3074,8 @@
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "notes": "Unified feature serving interface (UAC Citadel Architecture Phase 8)"
+      "notes": "Unified feature serving interface (UAC Citadel Architecture Phase 8)",
+      "tags": ["cross-domain", "feature-computation", "important"]
     },
     "unified-feature-orchestration-library": {
       "type": "library",
@@ -3045,7 +3113,8 @@
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "notes": "Unified feature orchestration library (UAC Citadel Architecture Phase 8)"
+      "notes": "Unified feature orchestration library (UAC Citadel Architecture Phase 8)",
+      "tags": ["cross-domain", "feature-computation", "important"]
     },
     "unified-sports-reference-interface": {
       "type": "interface",
@@ -3073,7 +3142,8 @@
       "semver_rules_ref": "library-t2",
       "sit_level": "standard",
       "semver_policy": "agent",
-      "notes": "Unified sports reference data interface (UAC Citadel Architecture Phase 8)"
+      "notes": "Unified sports reference data interface (UAC Citadel Architecture Phase 8)",
+      "tags": ["cross-domain", "important", "sports"]
     },
     "config-api": {
       "github_url": "https://github.com/IggyIkenna/config-api",
@@ -3102,7 +3172,9 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS"
+      "ci_status": "LOCAL_PASS",
+      "serves_ui": ["onboarding-ui", "settlement-ui", "strategy-ui", "unified-admin-ui"],
+      "tags": ["config", "standard"]
     }
   },
   "topologicalOrder": {
