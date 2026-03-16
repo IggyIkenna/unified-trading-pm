@@ -195,9 +195,11 @@ todos:
 
   - id: p2-3-migrate-pm-workflows
     content: >
-      - [ ] [AGENT] P2. Migrate 21 PM workflows from inline curl to notify-telegram.yml + persist-cicd-event.yml.
-      Priority: overnight-orchestrator, ci-status-update, sit-gate, conflict-resolution first.
-    status: todo
+      - [x] [AGENT] P2. Migrate 21 PM workflows from inline curl to notify-telegram.yml + persist-cicd-event.yml.
+      Priority: overnight-orchestrator, ci-status-update, sit-gate, conflict-resolution first. All 21 workflows now use
+      reusable notify-telegram.yml. 20 workflows have persist-cicd-event.yml (change-freeze-check excluded as it is a
+      reusable workflow_call). Only secret-health-check retains getMe validation curl (health check, not notification).
+    status: done
 
   # ── P3: OBSERVABILITY & LOGGING ─────────────────────────────────────────────
 
@@ -348,9 +350,9 @@ todos:
 
   - id: p6-3-remaining-workflow-migration
     content: >
-      - [ ] [AGENT] P6. Migrate remaining 17 PM workflows to notify-telegram.yml + persist-cicd-event.yml (4 done, 17
-      remaining out of 21 total).
-    status: todo
+      - [x] [AGENT] P6. Migrate remaining 17 PM workflows to notify-telegram.yml + persist-cicd-event.yml (4 done, 17
+      remaining out of 21 total). All 21 now complete (done as part of p2-3).
+    status: done
 
   - id: p6-4-smoke-test-uis
     content: >
