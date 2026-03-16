@@ -629,6 +629,81 @@ todos:
     status: todo
     note: "PARALLEL stream D. Risk types fixed (restart). Parameters dynamic (hot-reload)."
 
+  - id: p5-margin-health-timeseries
+    content: |
+      - [ ] [AGENT] P0. Add margin health time-series storage. Per-candle snapshots written
+        alongside PnL snapshots by settlement service. Schema in UIC:
+        MarginHealthSnapshot:
+          strategy_id, timestamp, venue, position_type (A_TOKEN/DEBT_TOKEN/PERP/SPOT),
+          health_factor (DeFi: Aave HF), ltv_ratio (debt/collateral),
+          collateral_usd, debt_usd, margin_usage_pct (CeFi: used/total margin),
+          liquidation_price, distance_to_liquidation_pct,
+          venue_type (cefi/defi/tradfi)
+        Storage: GCS JSONL per strategy_id, partitioned by date. BigQuery external table.
+        Write path: settlement_service processes positions → computes margin metrics →
+        writes snapshot to GCS alongside PnLAttribution.
+        Query: by strategy_id + time range. Same data for live (last N candles) and
+        historical (any date range).
+        UNIFIED across CeFi (exchange margin_level, liquidation_price),
+        DeFi (Aave health_factor = collateral * liq_threshold / debt),
+        TradFi (IBKR margin requirement, buying power).
+        Repos: unified-internal-contracts (schema), strategy-service (write path),
+        position-balance-monitor-service (aggregation), risk-and-exposure-service (query API).
+    status: todo
+    note: "PARALLEL stream D. Foundation for margin health monitoring."
+
+  - id: p5-backtest-liquidation-enforcement
+    content: |
+      - [ ] [AGENT] P0. Enforce liquidation in backtest when health factor < 1.0.
+        Currently if HF drops below 1.0 in a backtest, the strategy keeps running —
+        unrealistic and dangerous for strategy evaluation.
+        DeFi: When health_factor < 1.0, trigger forced exit (full deleverage sequence).
+        Apply liquidation penalty (Aave: 5-10% of collateral depending on asset).
+        CeFi: When margin_usage > maintenance_margin, trigger forced close at market.
+        Apply liquidation fee per venue.
+        TradFi: When margin_usage > maintenance, forced liquidation at market.
+        Record LIQUIDATION settlement event with: trigger_hf, penalty_amount, positions_closed.
+        This makes backtest results realistic — without it, recursive basis backtests
+        overstate PnL by ignoring liquidation risk.
+        Repos: strategy-service (backtest_engine.py, settlement_service.py),
+        unified-internal-contracts (SettlementType.LIQUIDATION already exists, wire it).
+    status: todo
+    note: "PARALLEL stream D. Critical for realistic DeFi backtesting."
+
+  - id: p5-defi-pnl-index-reconciliation
+    content: |
+      - [ ] [AGENT] P1. Add composite index reconciliation for DeFi positions.
+        For recursive basis: aweETH has TWO yield sources:
+        1. weETH/ETH rate appreciation (staking yield)
+        2. Aave liquidity_index growth (tiny supply interest)
+        The system tracks these separately (LST_YIELD + AAVE_INDEX settlements), which
+        is correct. But no reconciliation verifies:
+          expected_value = weeth_amount * weeth_rate * eth_price * (current_liq_index / entry_liq_index)
+          actual_value = position_balance * current_price
+          discrepancy = abs(expected - actual) / expected
+        Add per-candle reconciliation check in settlement_service. Alert if discrepancy > 0.1%.
+        Also reconcile debtTokens: debt_value = scaled_balance * variableBorrowIndex / RAY.
+        This catches bugs where index updates are missed or applied twice (double-counting).
+        Repos: strategy-service (settlement_service.py), execution-service (yield_recon_engine.py).
+    status: todo
+    note: "PARALLEL stream D. Catches double-counting bugs in composite DeFi positions."
+
+  - id: p5-unified-margin-endpoint
+    content: |
+      - [ ] [AGENT] P1. Add unified margin health API endpoint:
+        GET /margin-health/{strategy_id}?start=<iso>&end=<iso>&granularity=<1m|5m|1h|1d>
+        Returns: MarginHealthSnapshot[] time series.
+        Same endpoint for live (omit start/end → last 24h) and historical (any range).
+        Aggregate view: GET /margin-health/{strategy_id}/summary
+        Returns: current HF, min HF in period, time at HF<1.5, time at HF<1.2,
+        max LTV, avg margin usage, liquidation events count.
+        Cross-venue: combines CeFi margin + DeFi health factor + TradFi margin into
+        one response with per-venue breakdown.
+        Wire into existing PBMS /defi-health/{client_id} endpoint (currently returns 404).
+        Repos: position-balance-monitor-service (API), risk-and-exposure-service (computation).
+    status: todo
+    note: "PARALLEL stream D. Config-driven: same endpoint for intraday or multi-year analysis."
+
   - id: p5-risk-matrix-visualization
     content: |
       - [ ] [HUMAN+AGENT] P1. Build risk matrix + P&L attribution views in monitoring UI:
@@ -646,6 +721,10 @@ todos:
         - Aggregation toggle: company / client / account / strategy / instrument
         SPORTS RISK VIEW: edge decay curves, market suspension risk, settlement exposure
         OPTIONS RISK VIEW: Greeks surface, vol smile, term structure, volga/vanna
+        MARGIN HEALTH VIEW: HF/LTV time series per strategy, liquidation threshold lines,
+        distance-to-liquidation gauge, CeFi margin usage %, DeFi health factor, TradFi margin.
+        Unified view: all venue types on one chart with colour-coded zones (safe/warning/critical).
+        Config-driven: same view works for 1-day intraday or 2-year historical.
         DeFi RISK VIEW: protocol risk scores, TVL exposure, impermanent loss tracking
         Data: risk-service APIs, PBMS, strategy-service.
     status: todo

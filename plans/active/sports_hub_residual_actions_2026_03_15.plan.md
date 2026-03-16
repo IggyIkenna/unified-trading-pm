@@ -5,66 +5,6 @@ overview: |
   All code scaffolding, registries, adapters, configs, and GCS-wired endpoints
   are implemented. These items require live site access, real credentials, and
   browser testing that cannot be automated by an agent.
-type: mixed
-epic: epic-code-completion
-status: active
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-repo_gates:
-  - repo: unified-sports-execution-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-config-interface
-    code: C5
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C5
-    deployment: none
-    business: none
-  - repo: client-reporting-api
-    code: C4
-    deployment: none
-    business: none
-  - repo: deployment-api
-    code: C4
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C4
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: pnl-attribution-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C2
-    deployment: none
-    business: none
-satisfied_dependencies:
-  # Both deps are SATISFIED — implementation exists; removed from depends_on to unblock plan.
-  - uac-citadel-implementation-execution # UAC citadel facades implemented; USEI uses them
-  - sports-execution-venue-coverage # 78 venue execution profiles in UAC registry
 todos:
   - id: r1-secret-manager-credentials
     content: |
@@ -91,7 +31,6 @@ todos:
       4. Test with Playwright in headed mode first, then headless
       5. Handle GeoComply verification for geo-fenced states
     status: pending
-    blocked_by: r1-secret-manager-credentials
   - id: r3-playwright-selectors-us-dfs
     content: |
       [HUMAN] Fill Playwright CSS selectors for US DFS platforms.
@@ -100,7 +39,6 @@ todos:
       DFS platforms use pick'em format — different DOM than traditional books.
       Selectors needed: player prop selection, over/under toggle, entry amount.
     status: pending
-    blocked_by: r1-secret-manager-credentials
   - id: r4-playwright-selectors-us-exchanges
     content: |
       [HUMAN] Fill Playwright CSS selectors for US exchange adapters.
@@ -109,7 +47,6 @@ todos:
       Exchange UI has back/lay columns — different from bookmaker bet slips.
       NJ residency required for ProphetX.
     status: pending
-    blocked_by: r1-secret-manager-credentials
   - id: r5-playwright-selectors-uk-books
     content: |
       [HUMAN] Fill Playwright CSS selectors for UK sportsbooks.
@@ -120,7 +57,6 @@ todos:
       Note: Betfair SB is fixed-odds (NOT exchange) — different from betfair_ex_uk.
       UKGC-licensed venues may require GamStop verification.
     status: pending
-    blocked_by: r1-secret-manager-credentials
   - id: r6-playwright-selectors-eu-books
     content: |
       [HUMAN] Fill Playwright CSS selectors for EU sportsbooks.
@@ -134,7 +70,6 @@ todos:
       - DE venues (GGL-licensed): 5.3% turnover tax affects bet sizing
       - IT venues (ADM-licensed): Italian residency required
     status: pending
-    blocked_by: r1-secret-manager-credentials
   - id: r7-playwright-selectors-au-books
     content: |
       [HUMAN] Fill Playwright CSS selectors for Australian sportsbooks.
@@ -144,7 +79,6 @@ todos:
       Note: bet365 AU has AGGRESSIVE anti-bot (Cloudflare + hCaptcha).
       Australian residency required for all AU-licensed venues.
     status: pending
-    blocked_by: r1-secret-manager-credentials
   - id: r8-run-quality-gates
     content: |
       [HUMAN/AGENT] Run quality gates across all 12 touched repos:
@@ -165,7 +99,6 @@ todos:
       Wire into BrowserBettingAdapter._solve_captcha() override.
       Add solver API key to Secret Manager as sports-captcha-solver-credentials.
     status: pending
-    blocked_by: r7-playwright-selectors-au-books
   - id: r10-geocomply-integration
     content: |
       [HUMAN] Set up GeoComply or equivalent geolocation verification
