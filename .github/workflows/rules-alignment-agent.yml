@@ -32,6 +32,8 @@ jobs:
     name: Check and Align Cursor Rules with Plans
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      violations_found: ${{ steps.major-bump-audit.outputs.violations_found }}
 
     steps:
       # ── CHECKOUT ─────────────────────────────────────────────────────────────
@@ -155,6 +157,7 @@ jobs:
           echo "Readiness criteria alignment check: verify new plan criteria appear in codex YAML template"
 
       - name: Audit major-bump policy compliance
+        id: major-bump-audit
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           GH_ORG: IggyIkenna
@@ -204,20 +207,11 @@ jobs:
           if [ -n "$VIOLATIONS" ]; then
             echo "WARNING: MAJOR BUMP POLICY VIOLATIONS DETECTED:"
             printf "$VIOLATIONS\n"
-
-            # Send Telegram alert
-            BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
-            CHAT_ID="${{ vars.TELEGRAM_CHAT_ID }}"
-            if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
-              MSG="Warning: Major bump policy violation detected on ${TODAY}%0AViolations:$(echo "$VIOLATIONS" | tr '\n' '%0A')"
-              curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-                -d "chat_id=${CHAT_ID}&text=${MSG}" || true
-            fi
-
-            echo "violations_found=true" >> "$GITHUB_OUTPUT" || true
+            # NOTE: Telegram notification handled by notify-violations job (reusable workflow).
+            echo "violations_found=true" >> "$GITHUB_OUTPUT"
           else
             echo "No unauthorized MAJOR version bumps detected"
-            echo "violations_found=false" >> "$GITHUB_OUTPUT" || true
+            echo "violations_found=false" >> "$GITHUB_OUTPUT"
           fi
 
           # Advisory only — never fail the workflow
@@ -242,3 +236,32 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  notify-violations:
+    name: Telegram — Major Bump Policy Violations
+    needs: [align-rules]
+    if: always() && needs.align-rules.outputs.violations_found == 'true'
+    uses: ./.github/workflows/notify-telegram.yml
+    with:
+      message:
+        "Major bump policy violation detected — unauthorized MAJOR version bumps found in recent commits. Check
+        rules-alignment-agent logs."
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+  persist:
+    name: Persist — Rules Alignment Event
+    needs: [align-rules, notify]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.align-rules.result }}
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "rules-alignment-agent"}'
