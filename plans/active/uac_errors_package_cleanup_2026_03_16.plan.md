@@ -225,10 +225,10 @@ todos:
     note: "SEQUENTIAL — runs after p3a+p3b complete."
 
   # =========================================================================
-  # PHASE 4: DOWNSTREAM ADOPTION (parallel agents — 2 repos only)
+  # PHASE 4: DOWNSTREAM ADOPTION (parallel agents — 4 repos + 1 UI)
   # =========================================================================
-  # PRE-AUDIT confirmed: only 2 service repos have breaking changes.
-  # ml-training-service, strategy-service, risk-and-exposure-service: NO CHANGE.
+  # PRE-AUDIT: 2 repos break (import path), 1 repo should adopt (local types),
+  # 1 UI needs TypeScript types. ml-training-service, strategy-service: NO CHANGE.
 
   - id: p4a-fix-trading-analytics-api
     content: |
@@ -240,7 +240,7 @@ todos:
         Factor* imports already correct (from UIC). Update `__all__:24-36`.
         Run: `cd trading-analytics-api && bash scripts/quality-gates.sh`
     status: todo
-    note: "PARALLEL with p4b."
+    note: "PARALLEL with p4b-p4e."
 
   - id: p4b-fix-market-data-processing-service
     content: |
@@ -251,7 +251,56 @@ todos:
         Update `__all__:31`.
         Run: `cd market-data-processing-service && bash scripts/quality-gates.sh`
     status: todo
-    note: "PARALLEL with p4a."
+    note: "PARALLEL with p4a,p4c-p4e."
+
+  - id: p4c-risk-service-adopt-uic-schemas
+    content: |
+      - [ ] [AGENT] P0. Adopt UIC schemas in risk-and-exposure-service (doesn't break but
+        has local type duplication that SHOULD import from UIC):
+        1. `var_calculator.py:34` — replace `StressScenario = Literal["GFC_2008", ...]`
+           with import from UIC: `from unified_internal_contracts import StressScenario`
+           (after p2a adds it as a StrEnum to UIC)
+        2. `api/main.py` — VaRResponse DTO: align field types with UIC VaRResult
+           (float→Decimal for var/cvar, add portfolio_id, computed_at).
+           VaRResponse as HTTP DTO can differ from domain schema but must document mapping.
+        Run: `cd risk-and-exposure-service && bash scripts/quality-gates.sh`
+    status: todo
+    note: "PARALLEL. Adoption — doesn't break, but eliminates self-declared types."
+
+  - id: p4d-trading-analytics-ui-types
+    content: |
+      - [ ] [AGENT] P1. Add TypeScript type mirrors in trading-analytics-ui for schemas
+        exposed by trading-analytics-api. Currently TradingDeskPage.tsx has mock Position
+        with flat unrealizedPnl — no Greeks, no factor attribution, no correlation types.
+        ADD `src/types/risk.ts`: VaRResult, StressTestResult, RiskLimitBreach interfaces
+        ADD `src/types/analytics.ts`: CorrelationRegime enum, CrossAssetCorrelationMatrix,
+        FactorType enum, FactorExposure, FactorAttributionRecord interfaces
+        ADD `src/types/pnl.ts`: PnLAttributionRecord (delta/gamma/vega/theta/rho/basis/
+        funding/carry/fees breakdown), RealTimePnLRecord
+        Source: mirror UIC Python schemas → TypeScript interfaces.
+        Run: `cd trading-analytics-ui && CI=true npm test -- --run`
+    status: todo
+    note: "PARALLEL. UIs currently have zero typed risk/analytics interfaces."
+
+  - id: p4e-trading-analytics-ui-views
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Add risk monitor + P&L attribution views to
+        trading-analytics-ui (or the new monitoring UI — decide which is home):
+        RISK MONITOR VIEW:
+        - VaR/CVaR gauges with limit proximity
+        - Greeks exposure table (delta/gamma/vega/theta/rho per position/strategy/venue)
+        - Basis risk, funding rate exposure
+        - Correlation regime indicator + heatmap
+        - Circuit breaker state per venue
+        P&L ATTRIBUTION VIEW:
+        - Waterfall chart: delta P&L → gamma P&L → vega P&L → theta P&L → funding →
+          basis → FX → carry → fees → residual = total P&L
+        - Drill by: venue, strategy, instrument, time period
+        - Over-time line charts for each risk factor's P&L contribution
+        These are two views of the SAME decomposition (risk = exposure, P&L = realized exposure).
+        Data: risk-service /risk/var, /risk/metrics APIs; PBMS position history.
+    status: todo
+    note: "PARALLEL. Core analytics views — not Grafana, own UI for custom grouping."
 
   - id: p4c-add-venues-to-registry
     content: |
@@ -426,6 +475,171 @@ todos:
     status: todo
     note: "PARALLEL stream C."
 
+  # --- Stream D: Risk Matrix & P&L Attribution Framework ---
+  # Full multi-dimensional risk decomposition with strategy-risk subscription.
+  # Every risk has a corresponding P&L — same decomposition, different lens.
+
+  - id: p5-risk-taxonomy-schema
+    content: |
+      - [ ] [AGENT] P0. Define comprehensive RiskType enum in UIC with ALL risk dimensions:
+        FIRST ORDER: delta, vega, theta, rho, funding, basis, carry, fx, liquidity
+        SECOND ORDER: gamma, volga (vol-of-vol), vanna (delta-vol cross), slide (vol time decay)
+        STRUCTURAL: duration, convexity, spread (bid-ask / credit), concentration
+        OPERATIONAL: venue_protocol (exchange/protocol downtime), correlation
+        DOMAIN-SPECIFIC: edge_decay (sports), market_suspension (sports),
+        protocol_risk (DeFi smart contract), impermanent_loss (DeFi LP)
+        Each RiskType maps to a P&L attribution dimension.
+        Repos: unified-internal-contracts (schema), unified-api-contracts (re-export if external).
+    status: todo
+    note: "PARALLEL stream D. Foundation for everything else in this stream."
+
+  - id: p5-risk-strategy-subscription
+    content: |
+      - [ ] [AGENT] P0. Create StrategyRiskSubscription model in UIC — strategies subscribe
+        to relevant risk types, irrelevant ones are zero in the risk matrix.
+        Strategy type → subscribed RiskTypes:
+        - MOM (momentum spot/perp): delta, funding, liquidity, venue, concentration, fx
+        - BASIS (basis trade): basis, funding, duration, venue, liquidity, carry
+        - YIELD (DeFi lending/staking): delta, protocol_risk, liquidity, concentration, fx
+        - OPTIONS: delta, gamma, vega, theta, rho, volga, vanna, slide, duration, venue
+        - SPORTS: edge_decay, market_suspension, concentration, liquidity
+        - ARB: delta (hedged→~0), venue, liquidity, spread, correlation
+        Config-driven: YAML/JSON per strategy, loadable at runtime. Not hardcoded.
+        Repos: unified-internal-contracts (schema), unified-config-interface (config loader).
+    status: todo
+    note: "PARALLEL stream D. Strategies declare which risks apply to them."
+
+  - id: p5-risk-aggregation-hierarchy
+    content: |
+      - [ ] [AGENT] P0. Define aggregation hierarchy for risk and P&L in UIC:
+        Company → Client → Account → Strategy → Underlying → Instrument
+        Each level aggregates from the level below. Fields per level:
+        - risk_by_type: dict[RiskType, Decimal] (exposure per risk dimension)
+        - pnl_by_type: dict[RiskType, Decimal] (P&L attributed to each risk)
+        - var_by_type: dict[RiskType, Decimal] (marginal VaR per risk dimension)
+        Term structure bucketing: overnight, 1w, 1m, 3m, 6m, 1y, 2y+ (for duration)
+        Delta bucketing: by strike/moneyness (for options)
+        Client ≠ account — a client can have multiple accounts across venues.
+        Repos: unified-internal-contracts (schemas), position-balance-monitor-service (aggregation).
+    status: todo
+    note: "PARALLEL stream D."
+
+  - id: p5-risk-venue-protocol-risk
+    content: |
+      - [ ] [AGENT] P1. Add venue/protocol risk dimension. Per venue:
+        - Circuit breaker state (CLOSED/DEGRADED/OPEN) → risk score
+        - Historical downtime frequency/duration
+        - Concentration in that venue (% of total exposure)
+        - DeFi: smart contract audit status, TVL trend, oracle dependency
+        Risk metric: "if this venue goes down for N hours, what's our max loss?"
+        Feeds into VaR scenarios: venue-down stress test.
+        Repos: risk-and-exposure-service, execution-service (circuit breaker state).
+    status: todo
+    note: "PARALLEL stream D."
+
+  - id: p5-risk-duration-convexity
+    content: |
+      - [ ] [AGENT] P1. Add duration and convexity risk for term-structure instruments:
+        - Spot: duration = 0 (no term structure sensitivity)
+        - Perpetuals: duration ≈ 0 (swap-like, funding rate resets)
+        - Expiry futures: duration = days to expiry (basis point sensitivity)
+        - Options: duration from delta × underlying duration + rho exposure
+        - DeFi lending: duration = lock period / unbonding period
+        Term structure risk: what if rates at the back of the curve change?
+        Separate from rho (parallel shift) — duration measures curve shape sensitivity.
+        Repos: risk-and-exposure-service, unified-internal-contracts.
+    status: todo
+    note: "PARALLEL stream D."
+
+  - id: p5-risk-volga-slide
+    content: |
+      - [ ] [AGENT] P1. Add second-order vol risks for options strategies:
+        - Volga (vol-of-vol): d²V/d²σ — P&L from volatility convexity
+        - Vanna (delta-vol cross): d²V/(dS·dσ) — delta sensitivity to vol changes
+        - Slide: vol surface decay — what happens to our P&L as vol surface ages
+          (front vol decays faster than back vol)
+        These are zero for non-options strategies (subscription model handles this).
+        Repos: risk-and-exposure-service (computation), unified-internal-contracts (schema).
+    status: todo
+    note: "PARALLEL stream D."
+
+  - id: p5-risk-spread-risk
+    content: |
+      - [ ] [AGENT] P1. Add spread risk for arb and relative-value strategies:
+        - Bid-ask spread widening risk (liquidity crisis → spreads blow out)
+        - Cross-venue spread risk (price divergence between venues)
+        - Term structure spread risk (contango/backwardation changes)
+        - DeFi: oracle spread risk (price oracle vs market price divergence)
+        Repos: risk-and-exposure-service, unified-internal-contracts.
+    status: todo
+    note: "PARALLEL stream D."
+
+  - id: p5-risk-pnl-attribution-engine
+    content: |
+      - [ ] [AGENT] P1. Build P&L attribution engine that decomposes total P&L into
+        contributions from each RiskType the strategy is subscribed to:
+        total_pnl = delta_pnl + gamma_pnl + vega_pnl + theta_pnl + rho_pnl
+                   + volga_pnl + vanna_pnl + funding_pnl + basis_pnl + carry_pnl
+                   + fx_pnl + spread_pnl + fees + residual
+        Aggregates up the hierarchy: instrument → strategy → account → client → company.
+        Residual = unexplained P&L (should be small; large residual = missing risk factor).
+        Time series: store daily snapshots for over-time analysis.
+        Repos: risk-and-exposure-service (or new pnl-attribution-service), PBMS (position data).
+    status: todo
+    note: "PARALLEL stream D."
+
+  - id: p5-risk-custom-risk-types
+    content: |
+      - [ ] [AGENT] P1. Add custom/strategy-specific risk types with hot-reloadable parameters.
+        TWO-LAYER ARCHITECTURE:
+        FIXED (schema in UIC, needs restart to add new risk_type):
+        - CustomRiskType schema: name, risk_type (StrEnum), evaluation_method,
+          applicable_strategy_types, description
+        - Evaluation methods: rate_sensitivity (what if rate X changes by Y?),
+          scenario_pnl (what's daily P&L under scenario?), threshold_breach
+          (at what rate does P&L turn negative?)
+        - New risk_type = new evaluation logic = code change + restart. That's fine.
+        DYNAMIC (parameters in GCS, hot-reloadable via UCI):
+        - CustomRiskScenarioConfig in UCI config.py: validates YAML structure
+        - GCS path: gs://config/{strategy_id}/custom_risks.yaml
+        - Contains: shock values, thresholds, underlying instruments, metric to compute
+        - UCI hot-reloads on change — no restart needed to change "1% shock" to "2% shock"
+        EXAMPLES:
+        - Recursive basis: "ETH borrow rate +100bp → daily P&L change?" (rate_sensitivity)
+        - Basis trade: "BTC funding rate inverts → daily carry P&L?" (rate_sensitivity)
+        - DeFi yield: "AAVE utilization hits 95% → borrow rate spike?" (threshold_breach)
+        - Sports: "edge decays to 0.5% → break-even volume?" (threshold_breach)
+        UI: dropdown per strategy shows subscribed standard risks + custom risks with
+        user-friendly names (not "custom_risk_1" but "ETH Borrow Rate Sensitivity").
+        Repos: unified-internal-contracts (CustomRiskType schema),
+        unified-config-interface (CustomRiskScenarioConfig, GCS loader),
+        risk-and-exposure-service (evaluation engine),
+        strategy-service (strategy-specific evaluation hooks).
+    status: todo
+    note: "PARALLEL stream D. Risk types fixed (restart). Parameters dynamic (hot-reload)."
+
+  - id: p5-risk-matrix-visualization
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Build risk matrix + P&L attribution views in monitoring UI:
+        RISK MATRIX VIEW:
+        - Heatmap: rows=instruments/strategies, cols=risk types, cells=exposure magnitude
+        - Filterable by: company/client/account/strategy/instrument/underlying
+        - Term structure view: duration buckets (O/N, 1w, 1m, 3m, 6m, 1y, 2y+)
+        - Delta bucket view: by moneyness for options
+        - Venue risk panel: circuit breaker states, concentration, downtime history
+        - Zero cells where strategy doesn't subscribe to that risk type (greyed out)
+        P&L ATTRIBUTION VIEW:
+        - Waterfall: delta→gamma→vega→theta→volga→funding→basis→carry→fx→spread→fees→residual
+        - Over-time: stacked area chart of P&L contributions by risk type
+        - Drill: click any bar to see instrument-level breakdown
+        - Aggregation toggle: company / client / account / strategy / instrument
+        SPORTS RISK VIEW: edge decay curves, market suspension risk, settlement exposure
+        OPTIONS RISK VIEW: Greeks surface, vol smile, term structure, volga/vanna
+        DeFi RISK VIEW: protocol risk scores, TVL exposure, impermanent loss tracking
+        Data: risk-service APIs, PBMS, strategy-service.
+    status: todo
+    note: "PARALLEL stream D. The crown jewel — full risk visibility."
+
   # =========================================================================
   # PHASE 6: FINAL VALIDATION (sequential — everything must pass)
   # =========================================================================
@@ -474,15 +688,30 @@ PHASE 6: Final workspace-wide QG ◄──────────────�
 
 ### Downstream Blast Radius
 
-| Repo                               | Files Breaking      | Changes Needed                      |
-| ---------------------------------- | ------------------- | ----------------------------------- |
-| **trading-analytics-api**          | `contracts.py:8-22` | Correlation\* imports: UAC → UIC    |
-| **market-data-processing-service** | `types.py:19`       | Correlation\*/FactorType: UAC → UIC |
-| **ml-training-service**            | NONE                | Already imports from UIC            |
-| **strategy-service**               | NONE                | Already imports from UIC            |
-| **risk-and-exposure-service**      | NONE                | Uses local var_calculator types     |
-| **execution-service**              | NONE                | Imports from UIC correctly          |
-| **All other services**             | NONE                | No imports of moved symbols         |
+| Repo                               | Files Breaking                        | Changes Needed                                                       |
+| ---------------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| **trading-analytics-api**          | `contracts.py:8-22`                   | Correlation\* imports: UAC → UIC                                     |
+| **market-data-processing-service** | `types.py:19`                         | Correlation\*/FactorType: UAC → UIC                                  |
+| **ml-training-service**            | NONE                                  | Already imports from UIC                                             |
+| **strategy-service**               | NONE                                  | Already imports from UIC                                             |
+| **risk-and-exposure-service**      | `var_calculator.py:34`, `api/main.py` | ADOPT — replace local StressScenario Literal + align VaRResponse DTO |
+| **trading-analytics-ui**           | `src/types/` (new)                    | ADD — TypeScript interfaces for risk/analytics/P&L schemas           |
+| **execution-service**              | NONE                                  | Imports from UIC correctly                                           |
+| **All other services**             | NONE                                  | No imports of moved symbols                                          |
+
+### File Size Compliance (pre-checked)
+
+| File                                      | Current | After | Limit | Safe? | Note                                      |
+| ----------------------------------------- | ------- | ----- | ----- | ----- | ----------------------------------------- |
+| UAC `__init__.py`                         | **896** | ~846  | 900   | YES   | Was 4 lines from limit — removal fixes it |
+| UIC `risk.py` (re-export)                 | 291     | ~391  | 900   | YES   | 509 line buffer                           |
+| UIC `domain/risk_service/risk.py`         | 308     | ~408  | 900   | YES   | 492 line buffer                           |
+| UIC `domain/analytics/factor_exposure.py` | 68      | ~118  | 900   | YES   | 782 line buffer                           |
+| UIC `__init__.py`                         | 717     | ~767  | 900   | YES   | 133 line buffer                           |
+| UAC `analytics.py`                        | 202     | ~102  | 900   | YES   | Shrinking                                 |
+| UAC `connectivity.py`                     | 116     | ~66   | 900   | YES   | Shrinking                                 |
+
+No basedpyright baselines exist (zero-baseline policy). UIC coverage floor: 98% — new schemas need tests.
 
 ### UAC Internal Edits (by file)
 
