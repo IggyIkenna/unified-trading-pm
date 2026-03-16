@@ -1184,6 +1184,141 @@ ephemeral copies in GHA cover the runtime agent use case.
 
 ---
 
+## Version Alignment Gate (3 Layers of Drift Protection)
+
+Version alignment prevents force-pushing or quickmerging with stale versions that could revert remote bumps or create
+integration conflicts. Three layers catch drift at different pipeline stages:
+
+**Layer 1 — Pre-commit (`check-branch-drift.sh`):** Blocks commit if local branch is behind origin. Instant, no network
+call for version check. Override: `SKIP_BRANCH_DRIFT=1` (human-only, agents banned).
+
+**Layer 2 — Quality gates (`version-alignment-gate.sh`):** Checks self version + dependency versions vs remote PM
+manifest on staging/main. One `git fetch` call, ~3s overhead. Blocks QG if drift detected. Override:
+`--skip-version-alignment` (human-only, agents banned).
+
+**Layer 3 — Admin force-sync (safety gate 3 in `admin-force-sync-all-to-main.sh`):** Reads all repos' versions from
+remote PM manifest. Blocks if remote has bumps your local manifest doesn't have (would revert them). Override:
+`--force-version-override` (human-only, agents banned).
+
+**Quickmerge stage 1.6 — Dependency version canary:** Warning only (does not block). Reads manifest, checks if any of
+your dependencies have been bumped on staging/main since your last pull. Alerts before PR creation so you can pull
+first.
+
+---
+
+## Workflow Template System
+
+Per-repo GHA workflows are managed as canonical templates in PM. Never edit per-repo copies directly.
+
+**Templates SSOT:** `unified-trading-pm/scripts/workflow-templates/`
+
+**Rollout scripts:**
+
+- Generic workflows: `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`
+- Semver agent (has repo-specific substitutions): `bash unified-trading-pm/scripts/propagation/rollout-semver-agent.sh`
+- Pre-commit configs: `bash unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh`
+
+**Pattern:** Webhook-triggered workflows (`issue_comment`, `pull_request`, `repository_dispatch`) cannot use
+`workflow_call` across repos in private repos. These are distributed as flat template copies. Only `workflow_dispatch`
+supports reusable forwarding (used by `request-major-bump.yml`).
+
+**Semver agent** uses `__REPO_NAME__` and `__SOURCE_DIR__` placeholders — the rollout script substitutes per-repo values
+from `workspace-manifest.json`.
+
+---
+
+## Pre-Commit Standardization
+
+4 canonical pre-commit templates in PM, rolled out to all 71 repos:
+
+| Template         | Repos             | Hooks                                               |
+| ---------------- | ----------------- | --------------------------------------------------- |
+| `python-service` | T4+ services/APIs | branch-drift, ruff check, ruff format, basedpyright |
+| `python-library` | T0-T3 libraries   | branch-drift, ruff check, ruff format, basedpyright |
+| `ui`             | UI repos          | branch-drift, eslint, prettier                      |
+| `docs`           | PM, codex         | branch-drift, prettier                              |
+
+All templates include `check-branch-drift.sh` which blocks commits if local branch is behind origin.
+
+Rollout: `bash unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh`
+
+---
+
+## qg-common.sh Shared Foundation
+
+74-line shared foundation file (`unified-trading-pm/scripts/quality-gates-base/qg-common.sh`) sourced by all 4 base QG
+scripts (base-service.sh, base-library.sh, base-ui.sh, base-codex.sh). Provides:
+
+- Color constants for terminal output
+- `log_info`, `log_warn`, `log_error`, `log_pass`, `log_fail` functions
+- `run_timeout` function (wraps `timeout` with logging)
+- ci-status update function (writes to manifest with fcntl.flock)
+- Version alignment gate sourcing
+
+No per-repo setup needed — base scripts source it automatically.
+
+---
+
+## PM/Codex Doc-Only Fast-Path
+
+PM and codex have a routing split in quickmerge:
+
+- **Doc-only changes** (plans/, docs/, cursor-configs/, cursor-rules/, \*.md, \*.mdc) → PR targets **main** directly.
+  Agent workflows (plan-health, rules-alignment, codex-sync, conflict-resolution) fire immediately.
+- **Infrastructure changes** (scripts/, .github/workflows/) → PR targets **staging**. SIT validates before main
+  promotion.
+
+This means plan and rule updates are available to all agents within minutes, not hours.
+
+---
+
+## Force-Sync Safety Gates
+
+`admin-force-sync-all-to-main.sh` overwrites remote main with local HEAD. Three safety gates prevent accidental reverts:
+
+1. **Manifest-based drift check** (~3s, one PM fetch): Reads remote manifest versions. Blocks if remote has bumps your
+   local doesn't have.
+2. **Per-repo pyproject.toml check:** Compares local vs remote `version` field. Blocks if remote is ahead.
+3. **Staging branch check:** Warns if staging has unmerged changes that would be lost.
+
+Override: `--force-version-override` (human-only, agents banned). After any force-sync, re-run
+`run-version-alignment.sh` to confirm no remote bumps were reverted.
+
+---
+
+## Downstream Cascade Design
+
+When a breaking change (`is_breaking=true`) cascades via `dependency-update`:
+
+1. **Topological QG ordering** (fail-fast): Run QG on direct dependents first (1st degree) in manifest topological
+   order. If a 1st-degree dependent fails, invalidate all repos downstream of that failure without running their QG.
+2. **ci_status invalidation**: When repo X fails after a breaking dependency update, set `ci_status=STAGING_PENDING` for
+   all repos that transitively depend on X. Prevents stale FEATURE_GREEN on untested repos.
+3. **Autonomous fix agent** (planned): `downstream-fix-agent.yml` in PM fires on QG failure after breaking update. Uses
+   Claude to fix code, creates PR for human approval. Agent NEVER self-merges.
+4. **Approval timeout**: 4hr Telegram escalation, 24hr CRITICAL alert for unreviewed fix PRs.
+
+See: `plans/active/cicd_code_rollout_master_2026_03_13.plan.md` cascade todos for implementation status.
+
+---
+
+## Reverse Dependency Sync (Schema Changes to Docs/Rules)
+
+When schema changes land in T0 libraries (UAC, UIC, UEI, UCI):
+
+1. `semver-agent.yml` detects changes to `__init__.py` exports or Pydantic model fields
+2. Dispatches `schema-changed` event to PM (payload: repo, changed_symbols, diff_url)
+3. PM's `rules-alignment-agent` clones the changed repo (shallow), reads the diff
+4. Updates cursor-rules and codex docs that reference the changed symbols
+5. Forwards to codex via `manifest-sync` dispatch for codex-sync-agent processing
+
+This ensures documentation stays in sync with code without requiring PM/codex to be listed as formal dependents of T0
+libraries.
+
+See: `plans/active/cicd_code_rollout_master_2026_03_13.plan.md` reverse-dep todos for implementation status.
+
+---
+
 ## References
 
 | Doc                                                                         | Purpose                                                                          |

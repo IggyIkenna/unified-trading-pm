@@ -216,3 +216,23 @@ ESLint override isProject: true readiness: code: C0 deployment: D1 business: B1 
         (GCP_PROJECT_ID_EXCLUDE_GLOBS for config validation aliases, BANDIT_EXTRA_ARGS="-c pyproject.toml" for B608
         skips). starlette CVE resolved (>=0.46.3). 4 pre-existing violations remain (imports inside functions, file
         size, function size — separate effort). status: done (scoped items)
+
+# ═══════════════════════════════════════════════════════════════
+
+# QG BASE SCRIPT INFRASTRUCTURE (2026-03-16)
+
+# ═══════════════════════════════════════════════════════════════
+
+NOTE 2026-03-16: The base scripts (base-service.sh, base-library.sh, base-ui.sh, base-codex.sh) that the systemic fixes
+above modified have been further enhanced with shared infrastructure:
+
+1. qg-common.sh (74 lines) extracted as shared foundation — colors, logging, timeout, ci-status functions. All 4 base
+   scripts now source it instead of duplicating.
+2. version-alignment-gate.sh sourced by all 4 base scripts — blocks QG if behind on branch commits, self version drift
+   vs staging/main, or dependency version drift vs staging/main.
+3. Canonical pre-commit templates (4 templates: python-service, python-library, ui, docs) rolled out to all 71 repos
+   with branch drift hook (check-branch-drift.sh).
+4. infra-quality-gates.yml reusable workflow created for PM + codex (both are thin callers, dispatches FEATURE_GREEN).
+
+These changes are additive to the systemic fixes above and do not alter the os.environ, asyncio.run(), or pip-audit
+fixes already applied.

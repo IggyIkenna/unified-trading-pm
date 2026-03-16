@@ -671,6 +671,69 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
 fi
 
 # ============================================================================
+# STAGE 1.6: DEPENDENCY VERSION DRIFT CHECK (staging canary)
+# Compares local PM manifest against remote PM manifest (one fetch, not 70).
+# If your dependencies have been bumped on staging, warns you to pull latest.
+# ============================================================================
+if [ -f "$MANIFEST_PATH" ]; then
+  PM_DIR="$WORKSPACE_ROOT/unified-trading-pm"
+  REMOTE_MANIFEST=""
+  if [ -d "$PM_DIR/.git" ]; then
+    # One fetch — get remote PM manifest from main (staging_versions are recorded there)
+    (cd "$PM_DIR" && git fetch origin main --quiet 2>/dev/null) || :
+    REMOTE_MANIFEST=$(cd "$PM_DIR" && git show origin/main:workspace-manifest.json 2>/dev/null || :)
+  fi
+
+  if [ -n "$REMOTE_MANIFEST" ]; then
+    DEP_DRIFT=$(python3 -c "
+import json, sys
+
+local_manifest = json.load(open('${MANIFEST_PATH}'))
+remote_manifest = json.loads('''${REMOTE_MANIFEST}''') if '''${REMOTE_MANIFEST}''' else {}
+
+repo = '${REPO_NAME}'
+repos_data = local_manifest.get('repositories', {})
+repo_deps = [d.get('name', d) if isinstance(d, dict) else d for d in repos_data.get(repo, {}).get('dependencies', [])]
+
+local_versions = local_manifest.get('versions', {})
+remote_versions = remote_manifest.get('versions', {})
+remote_staging = remote_manifest.get('staging_versions', {})
+
+drifted = []
+for dep in repo_deps:
+    local_v = local_versions.get(dep, '')
+    # Check both remote main versions and staging_versions
+    remote_main_v = remote_versions.get(dep, '')
+    remote_stag_v = remote_staging.get(dep, '')
+    if remote_stag_v and not remote_stag_v.startswith('_') and remote_stag_v != local_v:
+        drifted.append(f'  {dep}: local={local_v} staging={remote_stag_v}')
+    elif remote_main_v and remote_main_v != local_v:
+        drifted.append(f'  {dep}: local={local_v} main={remote_main_v}')
+
+if drifted:
+    for d in drifted:
+        print(d)
+" 2>/dev/null || :)
+
+    if [ -n "$DEP_DRIFT" ]; then
+      echo "=========================================="
+      echo "STAGE 1.6: Dependency Version Drift"
+      echo "=========================================="
+      echo ""
+      echo "[$REPO_NAME] Dependencies bumped on remote that your local doesn't have:"
+      echo "$DEP_DRIFT"
+      echo ""
+      echo "Someone (or a workflow) upgraded your dependencies on staging/main."
+      echo "Consider pulling latest: cd <dep> && git pull origin staging"
+      echo "Or sync PM manifest: cd unified-trading-pm && git pull origin main"
+      echo ""
+      echo "Continuing (warning only — QG catches constraint mismatches)."
+      echo ""
+    fi
+  fi
+fi
+
+# ============================================================================
 # STAGE 2: PRE-FLIGHT AUDIT (skippable with --skip-preflight for multi-agent use)
 # ============================================================================
 echo "=========================================="

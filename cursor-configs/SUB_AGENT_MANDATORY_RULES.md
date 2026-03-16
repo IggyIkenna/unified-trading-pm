@@ -267,6 +267,9 @@ isProject: false
 - **Hardcoded org names are banned.** Use `${{ github.repository_owner }}` instead of `IggyIkenna`.
 - **GHA workflows must fail hard.** No `|| true` or `|| echo ""` on critical operations (issue creation, Telegram
   alerts, version bumps). Use `exit 1` with `::error::` annotations.
+- **`--skip-version-alignment` is HUMAN-ONLY.** Agents MUST NOT pass this flag to quality-gates.sh. If QG blocks on
+  version drift, the agent must fix the drift (pull latest), not skip the check.
+- **`--force-version-override` is HUMAN-ONLY.** Agents MUST NOT pass this flag to admin-force-sync.
 
 ---
 
@@ -454,6 +457,18 @@ must always be in the loop for MAJOR version promotions.
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 
 **CODEX:** unified-trading-codex/06-coding-standards/README.md
+
+---
+
+## §13 Downstream Cascade (Planned)
+
+When a breaking change cascades via dependency-update, QG runs on direct dependents in topological order (fail-fast). If
+a dependent fails, an autonomous fix agent attempts code repair and creates a PR for human approval. Agents MUST NOT
+self-merge fix PRs — always require human /approve. See: cicd_code_rollout_master_2026_03_13.plan.md § Downstream
+Cascade Intelligence.
+
+Schema changes in T0 libraries (UAC, UIC, UEI) trigger reverse-dependency sync to update PM cursor-rules and codex docs
+automatically.
 
 ---
 

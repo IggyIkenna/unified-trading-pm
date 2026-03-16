@@ -488,3 +488,16 @@ The `-1` tolerance allows one-point natural churn between runs without requiring
 
 See todos: `audit-dual-coverage-sources`, `fix-ssot-rollout-to-sync-toml`, `fix-race-condition-recalibrate`,
 `check-propagation-does-not-break-coverage`, `check-alignment-scripts-help-hinder`, `verify-ui-coverage-floor`.
+
+### QG Base Script Infrastructure Changes (2026-03-16)
+
+The base scripts that enforce MIN_COVERAGE were enhanced on 2026-03-16:
+
+- **qg-common.sh** (74 lines) extracted as shared foundation sourced by all 4 base scripts. No change to coverage
+  enforcement logic — only logging/colors/timeout/ci-status utilities moved to shared file.
+- **version-alignment-gate.sh** sourced by all 4 base scripts. Adds a pre-coverage check that blocks QG if
+  branch/version drift detected. Does not affect coverage values. `--skip-version-alignment` bypasses.
+- **infra-quality-gates.yml** reusable workflow for PM + codex. PM and codex are testing_level=none repos, so coverage
+  changes are irrelevant to them.
+
+These changes do not alter coverage enforcement. The pending coverage SSOT alignment items above remain valid.

@@ -169,6 +169,126 @@ if [[ "$SWITCH_ONLY" != "true" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Safety gate 3: Version drift check (skipped for --switch-only and --feat-branch)
+# Blocks force-push to main/staging if remote has version bumps your local doesn't have.
+# Override with --force-version-override (loud warning, requires explicit intent).
+# ---------------------------------------------------------------------------
+if [[ "$SWITCH_ONLY" != "true" && "$DRY_RUN" != "true" && "$TARGET_BRANCH" != "__feat__" ]]; then
+  # Only check for main and staging targets — feature branches are free-form
+  RESOLVED_TARGET="$TARGET_BRANCH"
+  [[ "$RESOLVED_TARGET" == "__feat__" ]] && RESOLVED_TARGET=""
+
+  if [[ "$RESOLVED_TARGET" == "main" || "$RESOLVED_TARGET" == "staging" ]]; then
+    echo ""
+    echo "━━━ Safety gate 3: Version drift check (target: $RESOLVED_TARGET) ━━━"
+    DRIFT_FOUND=false
+    DRIFT_REPOS=""
+
+    PYTHON_CHECK="${WORKSPACE_ROOT}/.venv-workspace/bin/python3"
+    [ -x "$PYTHON_CHECK" ] || PYTHON_CHECK="python3"
+
+    # Fast manifest-based check: one fetch of PM remote, compare manifests.
+    # PM manifest is the SSOT — if someone bumped a version, it's in remote PM's
+    # staging_versions or versions. No need to fetch 70 individual repos.
+    PM_DIR="$WORKSPACE_ROOT/unified-trading-pm"
+    (cd "$PM_DIR" && git fetch origin main --quiet 2>/dev/null) || true
+    (cd "$PM_DIR" && git fetch origin staging --quiet 2>/dev/null) || true
+
+    DRIFT_OUTPUT=$("$PYTHON_CHECK" - "$MANIFEST" "$PM_DIR" "$RESOLVED_TARGET" <<'PYEOF'
+import json, sys, subprocess
+from pathlib import Path
+
+local_manifest_path = sys.argv[1]
+pm_dir = Path(sys.argv[2])
+target_branch = sys.argv[3]
+
+with open(local_manifest_path) as f:
+    local_manifest = json.load(f)
+
+local_versions = local_manifest.get("versions", {})
+drifted = []
+
+# Fetch remote PM manifest from main (staging_versions are recorded here by update-repo-version.yml)
+for branch in ["main", "staging"]:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(pm_dir), "show", f"origin/{branch}:workspace-manifest.json"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode != 0:
+            continue
+        remote_manifest = json.loads(result.stdout)
+
+        # Check versions map (remote main may have promoted versions we don't have locally)
+        remote_versions = remote_manifest.get("versions", {})
+        for repo, remote_ver in sorted(remote_versions.items()):
+            if repo.startswith("_"):
+                continue
+            local_ver = local_versions.get(repo, "")
+            if remote_ver and local_ver and remote_ver != local_ver:
+                drifted.append(f"{repo}|local={local_ver}|origin/{branch} versions={remote_ver}")
+
+        # Check staging_versions (bumped on staging, not yet promoted to main)
+        remote_staging_versions = remote_manifest.get("staging_versions", {})
+        for repo, staging_ver in sorted(remote_staging_versions.items()):
+            if repo.startswith("_") or not staging_ver:
+                continue
+            local_ver = local_versions.get(repo, "")
+            if staging_ver and local_ver and staging_ver != local_ver:
+                key = f"{repo}|local={local_ver}|origin/{branch} staging_versions={staging_ver}"
+                if key not in drifted:
+                    drifted.append(key)
+    except Exception:
+        pass
+
+# Deduplicate (same repo may appear from both branches)
+seen = set()
+unique = []
+for d in drifted:
+    repo = d.split("|")[0]
+    if repo not in seen:
+        seen.add(repo)
+        unique.append(d)
+
+if unique:
+    print("DRIFT")
+    for d in unique:
+        print(d)
+else:
+    print("OK")
+PYEOF
+    ) || true
+
+    if echo "$DRIFT_OUTPUT" | head -1 | grep -q "DRIFT"; then
+      DRIFT_FOUND=true
+      echo ""
+      echo "  ⚠️  VERSION DRIFT DETECTED — remote has version bumps your local doesn't have!"
+      echo "  Force-pushing will REVERT these remote bumps."
+      echo ""
+      echo "$DRIFT_OUTPUT" | tail -n +2 | while IFS='|' read -r repo local_ver remote_ver; do
+        echo "  ❌ $repo: $local_ver → $remote_ver (WOULD BE REVERTED)"
+      done
+      echo ""
+      echo "  Fix options:"
+      echo "    1. Pull remote versions: git fetch origin staging && git checkout origin/staging -- pyproject.toml"
+      echo "    2. Run version alignment: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh"
+      echo "    3. Override: re-run with --force-version-override (explicitly accept reversion)"
+      echo ""
+
+      if [[ "$FORCE_VERSION_OVERRIDE" != "true" ]]; then
+        echo "  BLOCKED. Pass --force-version-override to proceed anyway."
+        exit 1
+      else
+        echo "  ⚠️  --force-version-override: proceeding despite version drift (you accepted the risk)"
+      fi
+    else
+      echo "  [OK] No version drift — safe to force-push"
+    fi
+    echo ""
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # Prerequisite checks
 # ---------------------------------------------------------------------------
 if ! command -v jq &>/dev/null; then

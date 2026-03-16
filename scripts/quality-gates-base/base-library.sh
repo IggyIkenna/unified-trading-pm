@@ -36,49 +36,16 @@ unset _qg_missing
 
 set -e
 
-QG_START=$(date +%s)
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_section() { echo -e "\n${BLUE}── $1 ──${NC}"; }
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
-log_fail()    { echo -e "${RED}❌ $1${NC}"; }
-log_warn()    { echo -e "${YELLOW}⚠️  $1${NC}"; }
-
-# When sourced, BASH_SOURCE[0] is this base script (in PM); BASH_SOURCE[1] is the caller stub.
-# We derive PROJECT_ROOT from the stub's location (the repo that sourced us).
-_BASE_CALLER="${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
-SCRIPT_DIR="$(cd "$(dirname "$_BASE_CALLER")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-REPO_ROOT="${REPO_ROOT:-$(dirname "$PROJECT_ROOT")}"
+# ── SHARED FOUNDATION (colors, logging, run_timeout, REPO_ROOT, CI_STATUS) ──
+source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
-unset _BASE_CALLER
-
-# ── CI_STATUS HANDLER (shared, locked) ───────────────────────────────────────
-# SSOT: _ci-status-updater.sh — unified name resolution + fcntl locking for all base scripts.
-source "$(dirname "${BASH_SOURCE[0]}")/_ci-status-updater.sh"
-_qg_record_failure() {
-    local exit_code=$?
-    [[ $exit_code -eq 0 ]] && return 0
-    [[ "${GITHUB_ACTIONS:-}" == "true" ]] && return $exit_code
-    _qg_update_ci_status_failing
-    return $exit_code
-}
-trap _qg_record_failure EXIT
 
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 MAX_FILE_LINES=900; FILE_WARN_LINES=700
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
 
-# ── PORTABLE TIMEOUT ──────────────────────────────────────────────────────────
-run_timeout() {
-    local secs=$1; shift
-    if command -v timeout &>/dev/null; then timeout "$secs" "$@"
-    elif command -v gtimeout &>/dev/null; then gtimeout "$secs" "$@"
-    elif command -v perl &>/dev/null; then perl -e 'alarm shift; exec @ARGV' -- "$secs" "$@"
-    else "$@"; fi
-}
-
 # ── MODE ──────────────────────────────────────────────────────────────────────
-FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false
+FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
@@ -86,8 +53,13 @@ for arg in "$@"; do
         --skip-tests) RUN_TESTS=false ;;
         --fix) FIX_MODE=true ;;       --skip-typecheck) SKIP_TYPECHECK=true ;;
         --act) ACT_MODE=true ;;
+        --skip-version-alignment) SKIP_VERSION_ALIGNMENT=true ;;
     esac
 done
+
+# ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
+_VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
+[[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
 
 # ── BOOTSTRAP (local only; CI has its own setup) ─────────────────────────────
 # Prefer .venv-workspace when available (single Python for all repos)

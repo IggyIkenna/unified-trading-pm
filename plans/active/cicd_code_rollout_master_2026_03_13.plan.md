@@ -562,7 +562,15 @@ todos:
       L10 all LOCAL_PASS). SIT can proceed once services are quickmerged to staging. INFRA READY 2026-03-16: SIT
       deployment-test filter lowered from v1.0.0 to v0.1.0 (all repos now qualify). Quickmerge integration smoke test
       added to SIT (test_pm_infrastructure.py, 10 tests passing). Self-version parity check added to
-      run-version-alignment.sh (step 0.95)."
+      run-version-alignment.sh (step 0.95). ADDITIONAL INFRA 2026-03-16: (a) qg-common.sh (74 lines) extracted — shared
+      foundation with colors, logging, timeout, ci-status; all 4 base scripts now source it. (b) Version alignment gate
+      (version-alignment-gate.sh) sourced by all 4 base scripts — blocks QG if behind on branch commits, self version
+      drift, or dependency version drift vs staging/main; --skip-version-alignment human-only override. (c) All 61
+      missing repos now have staging branches (git push origin main:staging). (d) Force-sync version drift blocker:
+      manifest-based check (~3s, one PM fetch), blocks unless --force-version-override. (e) Quickmerge stage 1.6:
+      dependency version drift canary (manifest-based warning before PR creation). (f) run-version-alignment.sh steps
+      0.95 (self-version parity) and 0.96 (remote manifest drift) added. (g) E2E tested: version alignment gate
+      correctly blocks when local manifest diverges from remote (both dependency and self drift detected)."
   - id: deploy-aws-account
     content: |
       - [ ] [HUMAN] P1. AWS account creation + IAM roles + Terraform validate. This is the gating blocker for all AWS work. From aws_migration plan: Phase 0a-0f (account setup, team access, GitHub credentials, region selection, service roles, quota review).
@@ -755,10 +763,16 @@ todos:
     status: pending
     completion_note:
       "Pre-audit state (2026-03-16): §16 vitest-in-3-UIs RESOLVED. §9 ci_status lifecycle state machine IMPLEMENTED
-      (cleanup-ci-status-state-machine done). PASSING -> FEATURE_GREEN bug fixed in PM and codex QG ci-status dispatch.
-      §7 still FAIL (all repos at 0.x.x except unified-trading-pm=1.2.0, unified-trading-codex=2.0.0). §2 still needs
-      execution-service QG expansion. §10 VCR cassettes still missing. §5 float isolation still unverified. Run full
-      audit after §7 stability-1-0-0-promotion."
+      (cleanup-ci-status-state-machine done). PASSING -> FEATURE_GREEN bug fixed in PM and codex QG ci-status dispatch
+      (both now use infra-quality-gates.yml reusable workflow with correct FEATURE_GREEN status). §7 still FAIL (all
+      repos at 0.x.x except unified-trading-pm=1.2.0, unified-trading-codex=2.0.0). §2 still needs execution-service QG
+      expansion. §10 VCR cassettes still missing. §5 float isolation still unverified. Run full audit after §7
+      stability-1-0-0-promotion. QG INFRASTRUCTURE 2026-03-16: qg-common.sh extracted (74 lines,
+      colors/logging/timeout/ci-status), canonical pre-commit templates (4 templates: python-service, python-library,
+      ui, docs) rolled out to all 71 repos with branch drift hook (check-branch-drift.sh blocks commits if behind
+      origin). Telegram failure alerts added to 8 PM workflows (reusable notify-telegram) + 4 workflow templates (inline
+      curl). All QG reusable workflows accept TELEGRAM_BOT_TOKEN, all 66 callers use secrets: inherit.
+      infra-quality-gates.yml reusable workflow created for PM + codex (both repos are thin callers now)."
   - id: stability-final-sit
     content: |
       - [ ] [SCRIPT] P0. Final SIT validation on main — all-green gate before live trading. Run system-integration-tests against all services on main branch.
@@ -824,6 +838,70 @@ todos:
       Also mock time outside all windows and verify blocked=false.
       COMPLETED 2026-03-13: change-freeze-check.yml reusable workflow reads calendar CSV, outputs blocked+reason. SSOT indexed. Audit prompt §7 updated.
     status: done
+  - id: cascade-smart-qg-ordering
+    content: |
+      - [ ] [AGENT] P0. Implement topological QG cascade in PM. When a breaking change (is_breaking=true) dispatches dependency-update, run QG on direct dependents FIRST (1st degree) in manifest topological order. If a 1st-degree dependent fails QG, automatically invalidate (set ci_status=STAGING_PENDING) ALL repos downstream of that failure — don't run their QG, just mark them pending. Only run QG on 2nd-degree dependents if their 1st-degree parent passed. This avoids running 70 QGs when only the first failure matters. Implementation: new workflow cascade-qg-ordering.yml in PM that reads topologicalOrder from manifest, dispatches QG runs tier-by-tier, and short-circuits on first failure per subtree.
+    status: pending
+  - id: cascade-pm-all-tiers
+    content: |
+      - [ ] [AGENT] P0. For PM/codex breaking changes (everything is 1st degree), run QG on all repos but in parallel batches per tier. T0 libraries first (4 repos), then T1 (3 repos), then T2, etc. Stop at the first tier with any failure — don't run QG on subsequent tiers. This is the "PM is special" case where everything is a direct dependency. Use run-all-quality-gates.sh as the base (it already does tier-parallel execution).
+    status: pending
+  - id: cascade-ci-status-invalidation
+    content: |
+      - [ ] [AGENT] P1. Add ci_status invalidation cascade. When repo X fails QG after a breaking dependency update, set ci_status=STAGING_PENDING for all repos that transitively depend on X (not just direct dependents). Walk the manifest DAG downward from X. This prevents stale FEATURE_GREEN/LOCAL_PASS on repos that haven't been tested against the breaking change. Implementation: Python script in PM that reads manifest DAG, computes transitive closure, dispatches ci-status-update for each affected repo.
+    status: pending
+  - id: autonomous-downstream-fix-agent
+    content: |
+      - [ ] [AGENT] P1. Create downstream-fix-agent.yml in PM. Triggers on dependency-update with is_breaking=true AND when the downstream repo's QG fails. The agent: (a) clones the failing repo + new dependency version + PM + codex, (b) reads active plans for context, (c) uses Claude to fix code (renamed imports, removed APIs, changed signatures), (d) runs QG (advisory), (e) if QG passes: creates PR + GitHub Issue for human approval, (f) if QG fails: creates Issue only ("needs human intervention"), (g) sends Telegram with PR/issue link. Agent NEVER self-merges. Human comments /approve on the issue to merge.
+    status: pending
+  - id: autonomous-fix-approval-timeout
+    content: |
+      - [ ] [AGENT] P1. Add approval timeout escalation. If human doesn't approve/reject the downstream fix PR within 4 hours, send Telegram escalation. If 24 hours pass, send CRITICAL Telegram. For crypto 24/7 context: this prevents fixes from sitting unreviewed while markets are live.
+    status: pending
+  - id: autonomous-fix-auto-merge
+    content: |
+      - [ ] [AGENT] P2. Add auto-merge path for MINOR fixes (future — not for initial release). When is_breaking=false AND QG passes AND SIT passes, the downstream fix PR auto-merges without human approval. Only MAJOR/breaking fixes require human /approve. This enables continuous integration for non-breaking dependency updates. Gate: repo must be at 1.0.0+ to qualify for auto-merge (pre-1.0.0 repos always require approval).
+    status: pending
+  - id: cascade-documentation
+    content: |
+      - [ ] [AGENT] P1. Document cascade design patterns in codex (08-workflows/dependency-cascade.md): (a) topological QG ordering with fail-fast, (b) ci_status invalidation cascade, (c) autonomous fix agent flow, (d) approval timeout escalation, (e) auto-merge criteria. Include Mermaid diagram of the full cascade flow from breaking change to downstream fix to SIT to promotion.
+    status: pending
+  - id: cascade-integration-test
+    content: |
+      - [ ] [AGENT] P1. Add cascade integration smoke test to system-integration-tests: simulate a breaking change dispatch, verify QG runs in topological order, verify ci_status invalidation cascades transitively, verify downstream-fix-agent fires. Uses mock dispatches (no real code changes). Marker: code_test.
+    status: pending
+  - id: cascade-propagation-pattern
+    content: |
+      - [ ] [AGENT] P1. Ensure all cascade workflows use PM sibling pattern (clone PM + codex as siblings, read manifest, inject mandatory rules). No per-repo customization needed — cascade logic is entirely in PM workflows. Downstream repos only need update-dependency-version.yml (already rolled out as canonical template). New workflows: cascade-qg-ordering.yml, downstream-fix-agent.yml — both in PM only, no per-repo rollout needed.
+    status: pending
+  - id: e2e-local-sit-dry-run
+    content: |
+      - [ ] [HUMAN+AGENT] P0. Run SIT locally as a dry run. Start mock stack (docker-compose.mock.yml), run all SIT test suites (abbreviated, code_test, deployment_test). If all pass locally, we have confidence the remote pipeline will work. Command: cd system-integration-tests && docker compose -f ../unified-trading-pm/docker/docker-compose.mock.yml up -d && pytest tests/ -m code_test && pytest tests/ -m deployment_test. This validates the full stack before pushing to remote.
+    status: pending
+  - id: e2e-first-real-pipeline-run
+    content: |
+      - [ ] [HUMAN+AGENT] P0. Execute first real pipeline run across all repos. Strategy: (a) force-sync everything to main + staging (version-aligned), (b) make one trivial fix: commit per repo (e.g. add newline to README), (c) quickmerge each repo — PR to staging, QG fires, semver-agent bumps PATCH, (d) wait for debounce + SIT, (e) SIT passes → staging-to-main promotes all. This validates the full quickmerge → staging → SIT → main flow for every repo. Use run-all-quality-gates.sh for batch local QG, then a script to quickmerge all repos in topological order.
+    status: pending
+  - id: e2e-breaking-change-test
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Test breaking change cascade end-to-end. Strategy: (a) rename a minor symbol in unified-api-contracts (e.g. rename a test-only constant), (b) quickmerge UAC — feat!: commit, MINOR bump (pre-1.0.0), (c) verify: dependency-update dispatches to all UAC dependents, (d) verify: downstream QG fires, some may fail on the renamed symbol, (e) verify: downstream-fix-agent fires for failures (once implemented), (f) verify: SIT runs after all fixes land, (g) verify: staging-to-main promotes everything. This is the full cascade test.
+    status: pending
+  - id: e2e-autonomous-agent-test
+    content: |
+      - [ ] [HUMAN+AGENT] P1. Test autonomous downstream fix agent end-to-end. After e2e-breaking-change-test, verify: (a) downstream-fix-agent.yml created PR with Claude's fix, (b) GitHub Issue created with approval request, (c) Telegram alert sent with PR link, (d) /approve on issue → fix merges → QG re-runs → passes, (e) if fix fails QG → Issue-only created, Telegram CRITICAL sent. This validates the full autonomous remediation flow.
+    status: pending
+  - id: reverse-dep-docs-sync
+    content: |
+      - [ ] [AGENT] P1. Implement reverse dependency sync for docs/rules. When a schema change lands in UAC/UIC/UEI (detected by semver-agent bump), dispatch a `schema-changed` event to PM. PM's rules-alignment-agent reads the diff from the changed repo (clone it, git diff HEAD~1), checks if cursor-rules or codex docs reference the changed symbols (renamed types, removed exports, changed field names), and updates them. The agent doesn't need to be a dependency of UAC — it just clones the repo on-demand to read the diff. Implementation: add `schema-changed` dispatch to semver-agent.yml template for T0 library repos only. PM receives it and runs rules-alignment-agent with the schema diff as context.
+    status: pending
+  - id: reverse-dep-codex-sync
+    content: |
+      - [ ] [AGENT] P1. Extend codex-sync-agent to handle schema changes. When PM receives schema-changed dispatch, forward to codex via manifest-sync. Codex-sync-agent reads the schema diff and updates: (a) 02-data/ contract docs if type names changed, (b) 06-coding-standards/ if import patterns changed, (c) 10-audit/ readiness YAML if new fields added. The agent clones the changed repo (shallow, depth=1) to read the diff — no permanent dependency needed.
+    status: pending
+  - id: reverse-dep-propagation
+    content: |
+      - [ ] [AGENT] P2. Add schema-changed dispatch to semver-agent.yml.tmpl. After version-bump dispatch, if the repo is in T0 (UAC, UIC, UEI, UCI) and the bump includes changes to __init__.py exports or Pydantic model fields, also dispatch schema-changed to PM with payload: {repo, changed_symbols: [...], diff_url: "..."}. This triggers the reverse dependency chain without requiring PM/codex to be listed as dependents.
+    status: pending
 isProject: false
 ---
 
@@ -924,8 +1002,93 @@ missing signal.
    tier invariants
 5. **Milestone-gated** — each phase has exit criteria; no dates, no shortcuts
 
+### QG Infrastructure Hardening (2026-03-16)
+
+The following infrastructure improvements were completed on 2026-03-16, strengthening the QG pipeline across all repos:
+
+1. **qg-common.sh extracted** — 74-line shared foundation file with colors, logging, timeout, ci-status. All 4 base
+   scripts (base-service.sh, base-library.sh, base-ui.sh, base-codex.sh) now source it instead of duplicating these
+   utilities.
+
+2. **Canonical pre-commit templates** — 4 templates (python-service, python-library, ui, docs) in PM with rollout
+   script. All 71 repos standardized. Branch drift hook (`check-branch-drift.sh`) included in all templates — blocks
+   commits if local branch is behind origin.
+
+3. **Version alignment gate** — Shared `version-alignment-gate.sh` sourced by all 4 base scripts. Blocks QG if: (a)
+   behind on branch commits, (b) self version drift vs staging/main, (c) dependency version drift vs staging/main.
+   `--skip-version-alignment` is a human-only override.
+
+4. **Staging branches created** — All 61 previously missing repos now have staging branches
+   (`git push origin main:staging`). Prerequisite for version alignment gate and staging promotion pipeline.
+
+5. **Telegram failure alerts** — Added to 8 PM workflows (reusable `notify-telegram`) + 4 workflow templates (inline
+   curl). All QG reusable workflows accept `TELEGRAM_BOT_TOKEN`. All 66 callers use `secrets: inherit`.
+
+6. **infra-quality-gates.yml** — Reusable workflow for PM + codex. Both repos are now thin callers. Fixes the PASSING ->
+   FEATURE_GREEN ci-status dispatch bug.
+
+7. **Force-sync version drift blocker** — Manifest-based check (one PM fetch, ~3s). Blocks unless
+   `--force-version-override`.
+
+8. **Quickmerge stage 1.6** — Dependency version drift canary (manifest-based warning before PR creation).
+
+9. **run-version-alignment.sh** — Steps 0.95 (self-version parity) and 0.96 (remote manifest drift) added.
+
+10. **E2E validated** — Version alignment gate blocks correctly when local manifest diverges from remote (both
+    dependency and self drift detected).
+
 ## Coordination: ui-api-alerting-observability plan
 
 The ui-api-alerting-observability-2026-03-14 plan modifies batch-audit-api extensively (adds log + event query routes).
 batch-audit-api is currently BASELINE_PENDING in this plan — resolve BASELINE_PENDING before observability plan P3.2
 starts.
+
+## Downstream Cascade Intelligence (Design Notes)
+
+### Topological Fail-Fast Algorithm
+
+When a breaking change hits staging:
+
+1. Read manifest topologicalOrder
+2. Find all direct dependents of the changed repo (1st degree)
+3. Run QG on 1st-degree dependents (parallel within same tier)
+4. For each 1st-degree FAILURE: invalidate all transitive descendants (set STAGING_PENDING)
+5. For each 1st-degree PASS: proceed to that repo's dependents (2nd degree)
+6. Repeat until all reachable repos validated or invalidated
+
+PM special case: everything is 1st degree (all repos depend on PM). Run tier-by-tier: T0 → T1 → T2 → T3. Stop at first
+tier failure.
+
+### Autonomous Fix Agent Flow
+
+```
+Breaking dep-update received by downstream repo
+  → update-dependency-version.yml updates pyproject.toml constraint
+  → QG fires on the downstream repo
+    → PASS: no fix needed, ci_status=STAGING_GREEN
+    → FAIL: downstream-fix-agent.yml fires
+      → Claude fixes code (imports, APIs, signatures)
+        → Fix QG PASS: PR + Issue created, Telegram sent, await /approve
+        → Fix QG FAIL: Issue only, Telegram CRITICAL, needs human
+      → Human /approve: PR merges, QG re-runs, proceeds to SIT
+      → Human doesn't respond (4h): Telegram escalation
+      → Human doesn't respond (24h): CRITICAL Telegram
+```
+
+### Key Principle: No Per-Repo Rollout
+
+All cascade logic lives in PM workflows. Downstream repos only need:
+
+- update-dependency-version.yml (canonical template, already rolled out)
+- quality-gates.yml (thin caller to PM reusable, already in place)
+
+No new per-repo files needed. PM is the orchestrator.
+
+### Lessons from 2026-03-16 Session
+
+- Force-syncing can revert remote version bumps — version alignment gate now blocks this
+- Workflow templates must be canonical in PM (flat copies for webhook triggers, reusable for workflow_dispatch)
+- Telegram alerts on EVERY workflow that can fail — no silent failures
+- Pre-commit hooks + QG version alignment + force-sync blocker = 3 layers of drift protection
+- secrets: inherit on all callers (don't list individual secrets)
+- Private repos can't use cross-repo workflow_call — use flat templates + rollout scripts

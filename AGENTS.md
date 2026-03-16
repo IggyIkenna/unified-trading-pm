@@ -322,6 +322,18 @@ Per-repo GHA workflows are canonical templates in PM — never edit the per-repo
 
 ---
 
+## Downstream Cascade (Planned)
+
+When a breaking change cascades via dependency-update, QG runs on direct dependents in topological order (fail-fast). If
+a dependent fails, an autonomous fix agent attempts code repair and creates a PR for human approval. Agents MUST NOT
+self-merge fix PRs — always require human /approve. See: cicd_code_rollout_master_2026_03_13.plan.md § Downstream
+Cascade Intelligence.
+
+Schema changes in T0 libraries (UAC, UIC, UEI) trigger reverse-dependency sync to update PM cursor-rules and codex docs
+automatically.
+
+---
+
 ## Plans & Tracking
 
 - Active plans: `unified-trading-pm/plans/active/` (`.plan.md` files)

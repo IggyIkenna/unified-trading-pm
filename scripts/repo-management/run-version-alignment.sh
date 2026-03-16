@@ -416,78 +416,71 @@ else
 fi
 echo ""
 
-# 0.96. Remote version drift — check staging + feature branch for version bumps we don't have locally
-echo "[0.96/4] Checking remote staging/feature branch for version drift..."
-REMOTE_DRIFT=$("$PYTHON" - "$PM_ROOT/workspace-manifest.json" "$WORKSPACE_ROOT" <<'PYEOF'
-import json, sys, re, subprocess
+# 0.96. Remote version drift — compare local PM manifest against remote PM manifest (fast, one fetch)
+echo "[0.96/4] Checking remote PM manifest for version drift..."
+(cd "$PM_ROOT" && git fetch origin main --quiet 2>/dev/null) || :
+(cd "$PM_ROOT" && git fetch origin staging --quiet 2>/dev/null) || :
+REMOTE_DRIFT=$("$PYTHON" - "$PM_ROOT" "$MANIFEST" <<'PYEOF'
+import json, sys, subprocess
 from pathlib import Path
 
-manifest_path = sys.argv[1]
-workspace = Path(sys.argv[2])
+pm_dir = Path(sys.argv[1])
+local_manifest_path = sys.argv[2]
 
-with open(manifest_path) as f:
-    manifest = json.load(f)
+with open(local_manifest_path) as f:
+    local_manifest = json.load(f)
 
-repos = manifest.get("repositories", {})
-active_branch = manifest.get("active_feature_branch", "")
+local_versions = local_manifest.get("versions", {})
 drifted = []
 
-for repo_name in sorted(repos):
-    if repo_name.startswith("_"):
-        continue
-    repo_dir = workspace / repo_name
-    if not repo_dir.is_dir() or not (repo_dir / ".git").is_dir():
-        continue
-
-    # Read local version
-    pyproject = repo_dir / "pyproject.toml"
-    pkg_json = repo_dir / "package.json"
-    if pyproject.is_file():
-        content = pyproject.read_text()
-        m = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
-        local_ver = m.group(1) if m else ""
-    elif pkg_json.is_file():
-        try:
-            local_ver = json.loads(pkg_json.read_text()).get("version", "")
-        except Exception:
+for branch in ["main", "staging"]:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(pm_dir), "show", f"origin/{branch}:workspace-manifest.json"],
+            capture_output=True, text=True, timeout=10
+        )
+        if result.returncode != 0:
             continue
-    else:
-        continue
+        remote_manifest = json.loads(result.stdout)
 
-    if not local_ver:
-        continue
+        # Check versions map
+        for repo, remote_ver in sorted(remote_manifest.get("versions", {}).items()):
+            if repo.startswith("_"):
+                continue
+            local_ver = local_versions.get(repo, "")
+            if remote_ver and local_ver and remote_ver != local_ver:
+                drifted.append(f"  {repo}: local={local_ver} origin/{branch}={remote_ver}")
 
-    # Check staging branch version on remote
-    for branch in ["staging", active_branch]:
-        if not branch:
-            continue
-        try:
-            result = subprocess.run(
-                ["git", "-C", str(repo_dir), "show", f"origin/{branch}:pyproject.toml"],
-                capture_output=True, text=True, timeout=5
-            )
-            if result.returncode == 0:
-                rm = re.search(r'^version\s*=\s*"([^"]+)"', result.stdout, re.MULTILINE)
-                remote_ver = rm.group(1) if rm else ""
-                if remote_ver and remote_ver != local_ver:
-                    drifted.append(
-                        f"  {repo_name}: local={local_ver} origin/{branch}={remote_ver}"
-                        f" — run: cd {repo_name} && git fetch origin {branch} && git show origin/{branch}:pyproject.toml | grep version"
-                    )
-        except Exception:
-            pass
+        # Check staging_versions
+        for repo, staging_ver in sorted(remote_manifest.get("staging_versions", {}).items()):
+            if repo.startswith("_") or not staging_ver:
+                continue
+            local_ver = local_versions.get(repo, "")
+            if staging_ver and local_ver and staging_ver != local_ver:
+                entry = f"  {repo}: local={local_ver} origin/{branch} staging_versions={staging_ver}"
+                if entry not in drifted:
+                    drifted.append(entry)
+    except Exception:
+        pass
 
-if drifted:
-    print(f"  [WARN] Remote version drift ({len(drifted)} repo(s)):")
+# Deduplicate by repo name
+seen = set()
+unique = []
+for d in drifted:
+    repo = d.strip().split(":")[0]
+    if repo not in seen:
+        seen.add(repo)
+        unique.append(d)
+
+if unique:
+    print(f"  [WARN] Remote version drift ({len(unique)} repo(s)):")
     print("  Someone (or a workflow) bumped versions on remote that your local doesn't have.")
-    print("  This can happen after version-bump workflows fire, or if another developer committed.")
-    print("  If you force-push to main, you will REVERT these remote bumps.")
     print()
-    for d in drifted:
+    for d in unique:
         print(d)
     print()
-    print("  Fix: git fetch origin staging && git checkout origin/staging -- pyproject.toml")
-    print("  Or:  pull the latest staging/feature branch before force-syncing")
+    print("  Fix: cd unified-trading-pm && git pull origin main  (sync manifest)")
+    print("  Then: bash run-version-alignment.sh --fix  (align local pyproject.toml versions)")
 else:
     print("  [OK] No remote version drift detected")
 PYEOF

@@ -48,10 +48,12 @@ todos:
   - id: static-baseline-pending-coverage
     content: |
       - [ ] [SCRIPT] P1. Verify ci-status-update.yml handles all 8 lifecycle states (NOT_CONFIGURED, EXEMPT, FAILING, LOCAL_PASS, FEATURE_GREEN, STAGING_PENDING, STAGING_GREEN, SIT_VALIDATED). Test: dispatch each valid status and verify manifest update. Dispatch an invalid status and verify rejection. Test regression: repo at FEATURE_GREEN receives FAILING dispatch — must regress to FAILING.
+      NOTE 2026-03-16: PASSING -> FEATURE_GREEN bug fixed in PM and codex QG ci-status dispatch. Both now use infra-quality-gates.yml reusable workflow which dispatches FEATURE_GREEN (not the old PASSING value). Verify no remaining workflow dispatches the legacy "PASSING" status.
     status: pending
   - id: flow-local-qg
     content: |
       - [ ] [SCRIPT] P0. Run local QG: `cd instruments-service && bash scripts/quality-gates.sh`. Verify: exit 0, coverage >= 70% (MIN_COVERAGE in script). Verify base-service.sh sources correctly from `WORKSPACE_ROOT/unified-trading-pm/scripts/quality-gates-base/`.
+      NOTE 2026-03-16: QG base scripts now source qg-common.sh (shared colors/logging/timeout/ci-status) and version-alignment-gate.sh (blocks if behind on branch commits, self/dep version drift). Also verify these new sources resolve correctly. Use --skip-version-alignment if testing in isolation without staging branch parity.
     status: pending
   - id: flow-feature-commit
     content: |
@@ -170,6 +172,7 @@ todos:
   - id: failure-telegram-inventory
     content: |
       - [ ] [HUMAN+AGENT] P0. Enumerate and verify all 19 Telegram alert types across all workflows: (1) Overnight summary, (2) T0 failure escalation, (3) Conflict detected+working, (4) Conflict resolved/failed, (5) Conflict merged retry, (6) Codex sync, (7) Rules alignment, (8) Plan health, (9) Plan notification, (10) Plan approval, (11) SIT locked (gap? verify), (12) SIT failed, (13) MAJOR bump pending (opens issue, check Telegram), (14) MAJOR bump approved, (15) Cloud Build failure, (16) Claude API state change, (17) Cassette drift, (18) Readiness verifier, (19) Semver agent result. For each: verify fires with correct content.
+      INFRA NOTE 2026-03-16: Telegram failure alerts now wired into 8 PM workflows (via reusable notify-telegram.yml) + 4 workflow templates (inline curl). All QG reusable workflows accept TELEGRAM_BOT_TOKEN. All 66 callers use secrets: inherit. This significantly expands the Telegram coverage — inventory count may exceed 19. Re-enumerate when testing.
     status: pending
   - id: failure-market-hours-guard
     content: |
@@ -362,6 +365,25 @@ downstream target (leaf service, safe). Push `feat!:` to UEI staging → verify 
 
 Manifest says `0.1.22`, pyproject.toml says `0.1.117`. This is BUG-7 in the Rollout plan and itself a test case for the
 static validation phase.
+
+### QG Infrastructure Changes Affecting E2E Tests (2026-03-16)
+
+The following infrastructure changes were completed on 2026-03-16. E2E tests in this plan should account for them:
+
+1. **qg-common.sh** — New shared foundation (74 lines) sourced by all 4 base scripts. E2E local QG tests should verify
+   this file resolves correctly at `WORKSPACE_ROOT/unified-trading-pm/scripts/quality-gates-base/qg-common.sh`.
+2. **Version alignment gate** — `version-alignment-gate.sh` sourced by all base scripts. Blocks QG if branch/version
+   drift detected. Use `--skip-version-alignment` in E2E tests that don't need staging branch parity.
+3. **Pre-commit branch drift hook** — `check-branch-drift.sh` blocks commits if behind origin. E2E commit tests must
+   account for this (pull before commit, or work on up-to-date branches).
+4. **Staging branches** — All 61 previously missing repos now have staging branches. Prerequisite for staging flow
+   tests.
+5. **Telegram failure alerts** — 8 PM workflows + 4 templates now have Telegram alerts. Inventory in
+   `failure-telegram-inventory` may exceed original 19 alert types.
+6. **infra-quality-gates.yml** — PM + codex use this reusable workflow. Dispatches FEATURE_GREEN (not PASSING).
+7. **Quickmerge 1.6** — Dependency version drift canary warns before PR creation. E2E quickmerge tests should verify
+   this warning fires when manifest dep versions diverge.
+8. **run-version-alignment.sh steps 0.95/0.96** — Self-version parity and remote manifest drift checks.
 
 ## Coordination: ui-api-alerting-observability plan
 

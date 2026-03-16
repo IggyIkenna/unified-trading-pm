@@ -26,17 +26,15 @@ fi
 
 set -euo pipefail
 
-QG_START=$(date +%s)
+# ── SHARED FOUNDATION (colors, logging, run_timeout, REPO_ROOT, CI_STATUS) ──
+source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 
-RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
-log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+# ── UI-SPECIFIC LOG OVERRIDES (stderr for failures, extra indentation) ───────
 log_fail()    { echo -e "${RED}  ❌ $*${NC}" >&2; }
 log_warn()    { echo -e "${YELLOW}  ⚠️  $*${NC}"; }
-log_section() { echo -e "\n${BLUE}── $1 ──${NC}"; }
 
-# ── PORTABLE TIMEOUT (same as base-service.sh, enhanced for macOS) ───────────
-# Wraps a command with a wall-clock timeout. On timeout: SIGTERM, then SIGKILL.
-# GNU coreutils timeout (Linux): preferred. macOS: falls back to perl or bash.
+# ── PORTABLE TIMEOUT (enhanced for UI — SIGKILL escalation + bash fallback) ──
+# Overrides qg-common.sh run_timeout with harder kill semantics for node processes.
 run_timeout() {
     local secs=$1; shift
     if command -v timeout &>/dev/null; then
@@ -91,19 +89,9 @@ _qg_kill_children() {
     done
 }
 
-# ── CI_STATUS HANDLER (shared, locked) ───────────────────────────────────────
-# SSOT: _ci-status-updater.sh — unified name resolution + fcntl locking for all base scripts.
-source "$(dirname "${BASH_SOURCE[0]}")/_ci-status-updater.sh"
-_qg_record_failure() {
-    local exit_code=$?
-    [[ $exit_code -eq 0 ]] && return 0
-    [[ "${GITHUB_ACTIONS:-}" == "true" ]] && return $exit_code
-    _qg_update_ci_status_failing
-    return $exit_code
-}
-# EXIT: record failure status + kill all child processes
+# ── UI TRAP OVERRIDES (add _qg_kill_children to EXIT, handle INT/TERM/HUP) ──
+# Overrides the default _qg_record_failure-only trap from qg-common.sh
 trap '_qg_record_failure; _qg_kill_children' EXIT
-# INT/TERM/HUP: kill children immediately, then exit (triggers EXIT trap too)
 trap '_qg_kill_children; exit 130' INT TERM HUP
 
 # ── MODE ───────────────────────────────────────────────────────────────────
@@ -112,6 +100,7 @@ SKIP_TESTS=false
 SKIP_BUILD=false
 FIX_MODE=false
 IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}
+SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
   case "$arg" in
     --test)           SKIP_LINT=true;  SKIP_BUILD=true ;;   # tests + typecheck only
@@ -121,9 +110,13 @@ for arg in "$@"; do
     --fix)            FIX_MODE=true ;;                      # run eslint --fix before verify
     --no-fix)         FIX_MODE=false ;;                     # verify only (default)
     --ignore-timeout) IGNORE_TIMEOUT=true ;;                # skip wall-clock duration check
+    --skip-version-alignment) SKIP_VERSION_ALIGNMENT=true ;;
   esac
 done
 
+# ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
+_VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
+[[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
 
 # ── [1] TYPE CHECK ─────────────────────────────────────────────────────────
 log_section "[1/4] TYPE CHECK"

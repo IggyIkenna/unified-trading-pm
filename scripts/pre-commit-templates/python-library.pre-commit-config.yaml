@@ -1,4 +1,4 @@
-# Canonical pre-commit config for documentation repos (PM, codex).
+# Canonical pre-commit config for Python libraries and interfaces.
 # Template SSOT: unified-trading-pm/scripts/pre-commit-templates/
 # Rollout: bash unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh
 # Setup: pre-commit install --install-hooks
@@ -15,7 +15,7 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
 
-  # Ruff - Python linter/formatter for scripts
+  # Ruff - Fast Python linter AND formatter
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.0
     hooks:
