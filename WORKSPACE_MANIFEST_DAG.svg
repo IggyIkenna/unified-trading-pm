@@ -151,9 +151,9 @@
   <circle cx="439" cy="850" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="348" y="872" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="459" y="842" width="188" height="38" class="lib" />
-  <rect x="459" y="842" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="459" y="842" width="4" height="38" fill="#facc15" rx="2" />
   <text x="553" y="860" text-anchor="middle" class="label">unified-market-interface</text>
-  <circle cx="637" cy="850" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="637" cy="850" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="553" y="872" text-anchor="middle" class="ver">0.3.101</text>
   <rect x="657" y="842" width="160" height="38" class="lib" />
   <rect x="657" y="842" width="4" height="38" fill="#facc15" rx="2" />
@@ -236,9 +236,9 @@
   <circle cx="1019" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="903" y="1229" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="1039" y="1199" width="202" height="38" class="svc" />
-  <rect x="1039" y="1199" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1039" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="1140" y="1217" text-anchor="middle" class="label">features-delta-one-service</text>
-  <circle cx="1231" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1231" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="1140" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1251" y="1199" width="244" height="38" class="svc" />
   <rect x="1251" y="1199" width="4" height="38" fill="#facc15" rx="2" />
