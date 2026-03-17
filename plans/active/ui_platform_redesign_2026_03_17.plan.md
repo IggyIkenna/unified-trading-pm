@@ -51,25 +51,130 @@ creates confusion. Separating them creates clarity.
 then exposure/risk should show the CURRENT RISK in those same dimensions. They are two sides of the same coin: what
 happened (P&L) and what could happen (exposure). The command center shows both side-by-side.
 
-**5. Canonical Ownership — No Overlap, No Drift**
+**5. Temporal Universality — Snapshot + Time Series Everywhere**
+
+Every view that shows state must support two temporal modes:
+
+**Point-in-time snapshot ("time machine"):** A global `AsOfDatetime` picker lets the user set any historical datetime.
+When set, the entire surface reconstructs the state of the world at that moment — positions, P&L, risk/exposure, alerts,
+strategy status, feature freshness, venue connections. When set to "Live", it shows real-time data. This is not a
+separate "historical" mode — it is the SAME view, the SAME layout, the SAME drill-down, just at a different point in
+time. The user should be able to scrub backward and forward and see the world change.
+
+**Time series ("trajectory"):** For P&L, positions, and risk/exposure, the cross-sectional snapshot is necessary but
+insufficient. Users also need to see evolution over time: equity curves, position size changes, risk/exposure drift,
+margin utilization trends. Time series charts are embedded INLINE alongside the snapshot data — not on separate pages.
+Every KPI card that shows a number should also show a sparkline of that number over time. Every drill-down that shows a
+table should have a "show over time" toggle that replaces the table with a time series chart of the selected metric.
+
+**What this means concretely:**
+
+| Data Domain           | Snapshot (as-of T)                          | Time Series (over period)                                   |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| **Positions**         | Exact positions held at datetime T          | Position size evolution, entry/exit markers                 |
+| **P&L**               | Cumulative P&L as of T, attribution at T    | Equity curve, daily P&L bars, component evolution           |
+| **Risk / Exposure**   | Delta, funding, basis, greeks exposure at T | Exposure drift over time, margin utilization trend          |
+| **Alerts**            | Which alerts were active at T               | Alert frequency, resolution time trends                     |
+| **Strategy Status**   | Which strategies were live/paused at T      | Strategy lifecycle timeline (when promoted, paused, killed) |
+| **Feature Freshness** | Freshness SLA at T                          | Freshness degradation over time, SLA breach history         |
+| **Orders / Fills**    | Orders in flight at T                       | Order flow over time, fill rate evolution                   |
+
+**UI component:** `<AsOfDatetimePicker />` in the GlobalNavBar or breadcrumb area. Defaults to "Live". Supports:
+
+- "Live" (real-time, streaming updates)
+- Date picker (reconstructs EOD snapshot)
+- Datetime picker (reconstructs intraday snapshot)
+- Relative shortcuts: "1h ago", "start of day", "yesterday close", "last week"
+
+**URL state:** `?as_of=2026-03-14T14:32:00Z` — shareable, bookmarkable. Omitted = live.
+
+**Time series component:** `<TimeSeriesToggle />` that can be embedded in any card or table. When toggled, the
+cross-sectional data transforms into a chart. Period selector: 1d, 1w, 1m, 3m, 1y, max. The same GroupBy controls
+(client, strategy, venue) apply to the time series view.
+
+**6. Risk Limits as First-Class Citizens — Value vs Limit, Not Just Value**
+
+Every risk metric must be shown as a value _against its limit_ — with utilization percentage, headroom, and threshold
+status. A metric without its limit is meaningless. Limits cascade through the entity hierarchy:
+
+```
+Firm limits (global caps)
+  └── Client limits (per mandate — different risk appetites per SMA)
+        └── Strategy limits (per risk profile — yield has LTV, directional has delta)
+              └── Venue limits (venue-imposed margin rules)
+                    └── Instrument limits (concentration caps)
+```
+
+Each level has its own limit types:
+
+| Limit Type         | Where it matters               | Example                              |
+| ------------------ | ------------------------------ | ------------------------------------ |
+| LTV                | DeFi lending (Recursive Basis) | LTV < 0.75, health factor > 1.5      |
+| Margin utilization | CeFi venues                    | < 80% per venue, < 70% firm-wide     |
+| Delta exposure     | All directional                | < $5m net per strategy, < $15m firm  |
+| Concentration      | All                            | < 25% of portfolio in one instrument |
+| Drawdown           | All                            | < 10% from peak per strategy         |
+| Leverage           | All                            | < 3x gross per client                |
+| Funding rate risk  | Basis strategies               | < $10m notional exposed to funding   |
+
+**UI treatment:** Progress bars with threshold markers. Green < 70%, amber 70-90%, red > 90%.
+
+```
+Delta Exposure    ████████████░░░░░░░░  $2.4m / $5.0m  (48%)  ● healthy
+Margin (Binance)  █████████████████░░░  78% / 80%       (97%)  ▲ WARNING
+LTV (Aave)        ████████████████░░░░  0.72 / 0.75     (96%)  ▲ WARNING
+```
+
+**Drill-down:** Same pattern as P&L — click aggregate → per-client → per-strategy → per-venue → per-instrument. Same
+breadcrumb, same GroupBy, same FilterBar. Highest utilization floats to top (the "early insight" surface).
+
+**Where it lives:** Trading Command Center `/risk` — four tabs become:
+
+1. **Risk Summary** — all limits at a glance, highest utilization first
+2. **Exposure Attribution** — same 6D as P&L, forward-looking
+3. **Margin & LTV** — per-venue margin + per-position DeFi health
+4. **Limits Detail** — full hierarchy drill-down with thresholds, utilization %, time series
+
+**Time series:** Every limit's utilization should be viewable over time. "When did margin hit 78%? Was it drifting up
+all day or did it spike?" This combines with Principle 5 (temporal universality).
+
+**7. Grafana for Infrastructure, Not Business Analytics**
+
+The platform serves two audiences with different analytical needs:
+
+| Audience        | Tool                  | What they see                                                                    |
+| --------------- | --------------------- | -------------------------------------------------------------------------------- |
+| Trader / PM     | In-platform (our UIs) | P&L, positions, risk, limits, strategy performance. Institutional, entity-aware. |
+| Quant dev / SRE | Grafana               | Service latency p99, feature freshness, order ack latency, memory, queue depths. |
+
+The trader should never need Grafana. The quant dev should have it for debugging.
+
+**Bridge:** Operations Hub has a "Deep Dive in Grafana" link on each service detail page, pre-filtered to that service
+via URL params. Context carries over. No duplication — linking to the right tool for the right audience.
+
+**Business-side "I want new views":** Solved by DimensionalGrid + FilterBar + TimeSeriesToggle composability, not
+Grafana. Any new analysis = pick dimensions, pick metrics, pick time range, slice. No new code needed.
+
+**8. Canonical Ownership — No Overlap, No Drift**
 
 Every surface owns exactly one time horizon and one dominant verb. If a concept appears in two surfaces, the tie-breaker
 is: **which verb and time horizon does the user have when they need this?**
 
-| Surface                    | Owns                   | Time Horizon             | Dominant Verbs                     | Canonical Data                                                                                   |
-| -------------------------- | ---------------------- | ------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Trading Command Center** | Live now               | Real-time                | OBSERVE, INTERVENE                 | Live positions, live risk/exposure, margin health, LTV, feature freshness, alerts, kill switches |
-| **Strategy Analytics**     | Design & simulation    | Historical / design-time | DESIGN, SIMULATE, COMPARE, PROMOTE | Strategy catalogue, backtest results, config grids, tick data, instruments, promotion flow       |
-| **Market Intelligence**    | Post-trade explanation | T+0 to T+n retrospective | EXPLAIN, RECONCILE                 | P&L attribution (6D), recon, latency analysis, order book, trade desk, reports                   |
-| **Operations Hub**         | Infrastructure         | Deployment/ops time      | DEPLOY, DIAGNOSE                   | Services, deployments, batch jobs, logs, events, compliance, CI/CD, data health                  |
-| **Config & Onboarding**    | Controlled CRUD        | Pre-trade / setup        | DEFINE, CONFIGURE, PUBLISH         | Clients, strategies, venues, API keys, credentials, risk config, venue connections               |
-| **ML Platform**            | Model lifecycle        | Training/experiment time | TRAIN, EVALUATE, DEPLOY            | Experiments, models, hyperparameter grids                                                        |
-| **Reporting & Settlement** | Client/EOD artifacts   | EOD / periodic           | REPORT, SETTLE                     | EOD positions, invoices, settlements, performance reports, client portfolio                      |
+| Surface                    | Owns                   | Time Horizon              | Dominant Verbs                     | Canonical Data                                                                                                |
+| -------------------------- | ---------------------- | ------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Trading Command Center** | Operational state      | Live (default) or as-of-T | OBSERVE, INTERVENE                 | Positions, risk/exposure, margin health, LTV, feature freshness, alerts, kill switches — at any point in time |
+| **Strategy Analytics**     | Design & simulation    | Historical / design-time  | DESIGN, SIMULATE, COMPARE, PROMOTE | Strategy catalogue, backtest results, config grids, tick data, instruments, promotion flow                    |
+| **Market Intelligence**    | Post-trade explanation | T+0 to T+n retrospective  | EXPLAIN, RECONCILE                 | P&L attribution (6D) with time series, recon, latency analysis, order book, trade desk, reports               |
+| **Operations Hub**         | Infrastructure         | Deployment/ops time       | DEPLOY, DIAGNOSE                   | Services, deployments, batch jobs, logs, events, compliance, CI/CD, data health                               |
+| **Config & Onboarding**    | Controlled CRUD        | Pre-trade / setup         | DEFINE, CONFIGURE, PUBLISH         | Clients, strategies, venues, API keys, credentials, risk config, venue connections                            |
+| **ML Platform**            | Model lifecycle        | Training/experiment time  | TRAIN, EVALUATE, DEPLOY            | Experiments, models, hyperparameter grids                                                                     |
+| **Reporting & Settlement** | Client/EOD artifacts   | EOD / periodic            | REPORT, SETTLE                     | EOD positions, invoices, settlements, performance reports, client portfolio                                   |
 
 **Overlap resolution rules:**
 
-- **Positions**: Trading Command Center owns _live_ positions. Reporting & Settlement owns _EOD/historical_ positions.
-  They are different datasets (real-time feed vs settlement snapshot). No overlap.
+- **Positions**: Trading Command Center owns _operational_ positions (live or as-of-T via the time machine). Reporting &
+  Settlement owns _settled/confirmed_ positions (formal EOD snapshots for client reporting). Trading shows "what was the
+  state"; Reporting shows "what was signed off." No overlap.
 - **Risk/exposure**: Trading Command Center owns _current_ risk and exposure. Market Intelligence may _explain_ past
   risk events in the context of P&L attribution, but does not render a live risk matrix. No overlap.
 - **Reports**: Market Intelligence owns report _generation_ (analyst creates a report as part of post-trade
@@ -272,11 +377,15 @@ _Was: live-health-monitor-ui. Absorbs: alerts from logs-dashboard-ui, performanc
 - `/` — Fund dashboard: KPI cards + strategy table + P&L/risk attribution + alerts + health/freshness
 - `/positions` — All live positions, filterable by [Client | Strategy | Venue | Asset Class]
 - `/positions/:runId` — Position detail: orders, fills, execution timeline
-- `/risk` — Full risk view with two tabs:
-  - **Risk Matrix**: leverage, margin utilization, concentration, drawdown per client/strategy
-  - **Exposure Attribution**: delta/funding/basis/interest/greeks exposure in same dimensions as P&L
-  - **Margin Health**: per-venue margin utilization, liquidation distance, free margin
-  - **DeFi Health**: LTV per lending position, health factor, liquidation threshold, collateral composition
+- `/risk` — Full risk view with four tabs, all showing value-vs-limit with utilization %:
+  - **Risk Summary**: all limits at a glance, sorted by highest utilization first (early insight surface). Progress
+    bars: green < 70%, amber 70-90%, red > 90%. Drill-down: firm → client → strategy → venue → instrument.
+  - **Exposure Attribution**: delta/funding/basis/interest/greeks exposure in same 6D as P&L, each with its limit
+    threshold
+  - **Margin & LTV**: per-venue margin utilization vs venue limit, per-position DeFi health factor vs liquidation
+    threshold, free margin, LTV vs max LTV
+  - **Limits Detail**: full limit hierarchy drill-down with cascading thresholds (firm → client → strategy → venue →
+    instrument), utilization time series per limit
 - `/alerts` — Unified alert feed, severity-colored, dismissible, with incident creation
 - `/health` — Service health grid + dependency DAG + feature freshness SLA tracker
 - `/manual` — Manual trade entry (scoped: select client + strategy first) + kill switches
@@ -560,7 +669,8 @@ _Deploy Section:_
 - `/` — Overview: batch summary + data completeness + recent deployments
 - `/deploy` — Service deployment form (dry run + live), accepts query params for pre-fill
 - `/services` — Services overview grid
-- `/services/:name` — Service detail: Deploy, Data Status, Builds, Readiness, Config, History
+- `/services/:name` — Service detail: Deploy, Data Status, Builds, Readiness, Config, History, + "Deep Dive in Grafana"
+  link (pre-filtered)
 - `/epics` — Epic readiness view
 
 _Observe Section:_
@@ -896,6 +1006,23 @@ interface FilterBarProps {
 
 ---
 
+## Foundational Artifacts (Created — guide all phases)
+
+These cursor rules encode the design system, ownership rules, and component specs. They exist BEFORE Phase 0 so every
+agent working on any phase has the right context automatically.
+
+| Rule                        | Path                                              | Purpose                                                                                                |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Canonical Surface Ownership | `cursor-rules/ui/canonical-surface-ownership.mdc` | Ownership table, overlap resolution, time horizon tie-breaker                                          |
+| Component Patterns          | `cursor-rules/ui/component-patterns.mdc`          | Design tokens, AppShell pattern, EntityLink usage, CSS classes, performance                            |
+| Cross-Surface Navigation    | `cursor-rules/ui/cross-surface-navigation.mdc`    | Entity routing map, URL param protocol, lifecycle→surface mapping                                      |
+| UI Quality Gates            | `cursor-rules/ui/ui-quality-gates.mdc`            | 8-gate standard: lint, types, vitest, build, a11y, cross-link integrity, no orphan routes, perf budget |
+| DimensionalGrid Spec        | `cursor-rules/ui/dimensional-grid-spec.mdc`       | Props interface, UX behavior, usage contexts, promotion flow, performance requirements                 |
+
+These rules apply to both Cursor (auto-loaded from `cursor-rules/`) and Claude Code (referenced from CLAUDE.md).
+
+---
+
 ## Phased Implementation
 
 ### Phase 0: Shared Infrastructure (ui-kit only)
@@ -912,7 +1039,15 @@ Build new components in unified-trading-ui-kit. No breaking changes to existing 
 - [ ] [AGENT] P0. `FilterBar` — URL-based cascading filters with counts
 - [ ] [AGENT] P0. `SparklineCell` — inline SVG sparklines for table cells
 - [ ] [AGENT] P0. `SelectionToolbar` — floating toolbar for batch actions on selected rows
-- [ ] [AGENT] P0. `useDeepLinkParams()` hook — reads client_id, strategy_id, from params on mount
+- [ ] [AGENT] P0. `LimitBar` — value-vs-limit progress bar with threshold colors (green < 70%, amber 70-90%, red > 90%),
+      time series toggle
+- [ ] [AGENT] P0. `AsOfDatetimePicker` — global datetime picker: Live / date / datetime / relative shortcuts; writes
+      ?as_of= to URL
+- [ ] [AGENT] P0. `TimeSeriesToggle` — inline toggle that transforms cross-sectional data into a time series chart with
+      period selector
+- [ ] [AGENT] P0. `TimeSeriesChart` — reusable chart component (recharts) for equity curves, position evolution,
+      exposure drift
+- [ ] [AGENT] P0. `useDeepLinkParams()` hook — reads client_id, strategy_id, as_of, from params on mount
 - [ ] [AGENT] P0. Visual polish: updated radii, transitions, PnL tokens, card hover, section spacing in globals.css
 
 **QG gate:** `cd unified-trading-ui-kit && bash scripts/quality-gates.sh` + `CI=true npm test -- --run`

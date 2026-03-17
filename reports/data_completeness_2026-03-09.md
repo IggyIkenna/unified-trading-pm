@@ -1,6 +1,6 @@
 # Data Completeness Report — 2026-03-09
 
-**Overall:** 27/33 sources passing (95.0% average coverage) **Threshold:** 95.0%
+**Overall:** 26/33 sources passing (94.5% average coverage) **Threshold:** 95.0%
 
 | Source                            | Asset Class | Criticality   | Coverage% | Pass | Expected | Actual |
 | --------------------------------- | ----------- | ------------- | --------- | ---- | -------- | ------ |
@@ -10,9 +10,9 @@
 | ofr                               | tradfi      | informational | 87.5%     | ✗    | 8        | 7      |
 | openbb                            | tradfi      | informational | 87.5%     | ✗    | 8        | 7      |
 | yahoo_finance                     | tradfi      | important     | 87.5%     | ✗    | 8        | 7      |
+| binance                           | crypto_cefi | critical      | 80.0%     | ✗    | 86400    | 69120  |
 | aave_v3                           | crypto_defi | critical      | 97.0%     | ✓    | 7200     | 6984   |
 | balancer                          | crypto_defi | critical      | 97.0%     | ✓    | 7200     | 6984   |
-| binance                           | crypto_cefi | critical      | 97.0%     | ✓    | 86400    | 83808  |
 | bybit                             | crypto_cefi | critical      | 97.0%     | ✓    | 86400    | 83808  |
 | coinbase                          | crypto_cefi | critical      | 97.0%     | ✓    | 86400    | 83808  |
 | curve                             | crypto_defi | critical      | 97.0%     | ✓    | 7200     | 6984   |
