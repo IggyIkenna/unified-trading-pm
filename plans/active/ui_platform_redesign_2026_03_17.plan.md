@@ -51,6 +51,40 @@ creates confusion. Separating them creates clarity.
 then exposure/risk should show the CURRENT RISK in those same dimensions. They are two sides of the same coin: what
 happened (P&L) and what could happen (exposure). The command center shows both side-by-side.
 
+**5. Canonical Ownership — No Overlap, No Drift**
+
+Every surface owns exactly one time horizon and one dominant verb. If a concept appears in two surfaces, the tie-breaker
+is: **which verb and time horizon does the user have when they need this?**
+
+| Surface                    | Owns                   | Time Horizon             | Dominant Verbs                     | Canonical Data                                                                                   |
+| -------------------------- | ---------------------- | ------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Trading Command Center** | Live now               | Real-time                | OBSERVE, INTERVENE                 | Live positions, live risk/exposure, margin health, LTV, feature freshness, alerts, kill switches |
+| **Strategy Analytics**     | Design & simulation    | Historical / design-time | DESIGN, SIMULATE, COMPARE, PROMOTE | Strategy catalogue, backtest results, config grids, tick data, instruments, promotion flow       |
+| **Market Intelligence**    | Post-trade explanation | T+0 to T+n retrospective | EXPLAIN, RECONCILE                 | P&L attribution (6D), recon, latency analysis, order book, trade desk, reports                   |
+| **Operations Hub**         | Infrastructure         | Deployment/ops time      | DEPLOY, DIAGNOSE                   | Services, deployments, batch jobs, logs, events, compliance, CI/CD, data health                  |
+| **Config & Onboarding**    | Controlled CRUD        | Pre-trade / setup        | DEFINE, CONFIGURE, PUBLISH         | Clients, strategies, venues, API keys, credentials, risk config, venue connections               |
+| **ML Platform**            | Model lifecycle        | Training/experiment time | TRAIN, EVALUATE, DEPLOY            | Experiments, models, hyperparameter grids                                                        |
+| **Reporting & Settlement** | Client/EOD artifacts   | EOD / periodic           | REPORT, SETTLE                     | EOD positions, invoices, settlements, performance reports, client portfolio                      |
+
+**Overlap resolution rules:**
+
+- **Positions**: Trading Command Center owns _live_ positions. Reporting & Settlement owns _EOD/historical_ positions.
+  They are different datasets (real-time feed vs settlement snapshot). No overlap.
+- **Risk/exposure**: Trading Command Center owns _current_ risk and exposure. Market Intelligence may _explain_ past
+  risk events in the context of P&L attribution, but does not render a live risk matrix. No overlap.
+- **Reports**: Market Intelligence owns report _generation_ (analyst creates a report as part of post-trade
+  explanation). Reporting & Settlement owns the report _catalogue_ and client-facing views (client downloads their
+  report). The generation form lives in Market Intelligence; the artifact lands in Reporting.
+- **P&L**: Trading Command Center shows a _summary panel_ (top-line P&L + attribution preview). Market Intelligence owns
+  the _full drill-down_ (5-level waterfall, Group By, component decomposition). The summary links to the full view via
+  cross-link.
+- **Alerts**: Trading Command Center owns _live alert feed and incident management_. Operations Hub shows alerts only in
+  the context of _service health and batch job failures_ — operational alerts, not trading alerts.
+
+**The rule: if it's about what's happening NOW, it's Trading. If it's about what HAPPENED, it's Markets. If it's about
+what COULD happen based on historical analysis, it's Strategy Analytics. If it's about infrastructure, it's Ops. If it's
+about config CRUD, it's Config. If it's about a client artifact, it's Reporting.**
+
 ---
 
 ## Visual Design Language
