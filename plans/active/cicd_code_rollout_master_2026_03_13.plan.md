@@ -943,6 +943,22 @@ todos:
     content: |
       - [ ] [HUMAN+AGENT] P1. Test autonomous downstream fix agent end-to-end. After e2e-breaking-change-test, verify: (a) downstream-fix-agent.yml created PR with Claude's fix, (b) GitHub Issue created with approval request, (c) Telegram alert sent with PR link, (d) /approve on issue → fix merges → QG re-runs → passes, (e) if fix fails QG → Issue-only created, Telegram CRITICAL sent. This validates the full autonomous remediation flow.
     status: pending
+  - id: arch-venue-mapping-migration
+    content: |
+      - [ ] [AGENT] P1. Move VenueMapping from UCI (T1) to UAC (T0). VenueMapping defines venue
+      identity (which exchanges exist, their canonical names, tardis-to-venue mappings) — this is
+      external data normalization, not runtime config. Currently in unified-config-interface/venue_config.py.
+      IMMEDIATE FIX (2026-03-16): Removed T0→T1 backward dependency — inlined tardis_to_venue dict in
+      UIC instrument_key.py, removed unified-config-interface from UIC pyproject.toml. The import
+      `from unified_config_interface import VenueMapping` was introduced in commit 4daf309 and violated
+      the tier invariant (T0 must not depend on T1).
+      FULL MIGRATION: Move VenueMapping class from UCI venue_config.py to UAC (registry/ or canonical/).
+      Update all 20 consumer files across 5 repos (UMI, instruments-service, market-tick-data-service,
+      SIT, UCI itself re-exports). UCI keeps a re-export for backwards compat during transition.
+      Blast radius: unified-config-interface, unified-api-contracts, unified-market-interface,
+      instruments-service, market-tick-data-service, system-integration-tests.
+    status: pending
+    note: "P1. Architectural fix — VenueMapping belongs in UAC not UCI."
   - id: reverse-dep-docs-sync
     content: |
       - [x] [AGENT] P1. Reverse dependency sync for docs/rules.

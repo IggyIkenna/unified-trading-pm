@@ -420,7 +420,7 @@ echo ""
 echo "[0.96/4] Checking remote PM manifest for version drift..."
 (cd "$PM_ROOT" && git fetch origin main --quiet 2>/dev/null) || :
 (cd "$PM_ROOT" && git fetch origin staging --quiet 2>/dev/null) || :
-REMOTE_DRIFT=$("$PYTHON" - "$PM_ROOT" "$MANIFEST" <<'PYEOF'
+REMOTE_DRIFT=$("$PYTHON" - "$PM_ROOT" "$PM_ROOT/workspace-manifest.json" <<'PYEOF'
 import json, sys, subprocess
 from pathlib import Path
 

@@ -101,9 +101,9 @@
   <text x="95" y="581" text-anchor="middle" class="level-label">L3</text>
   <text x="150" y="581" class="desc">Services runtime (Tier 1) (3 repos)</text>
   <rect x="70" y="604" width="188" height="38" class="lib" />
-  <rect x="70" y="604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="604" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="164" y="622" text-anchor="middle" class="label">unified-config-interface</text>
-  <circle cx="248" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="248" cy="612" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="164" y="634" text-anchor="middle" class="ver">0.2.1</text>
   <rect x="268" y="604" width="244" height="38" class="lib" />
   <rect x="268" y="604" width="4" height="38" fill="#facc15" rx="2" />
@@ -151,9 +151,9 @@
   <circle cx="439" cy="850" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="348" y="872" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="459" y="842" width="188" height="38" class="lib" />
-  <rect x="459" y="842" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="459" y="842" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="553" y="860" text-anchor="middle" class="label">unified-market-interface</text>
-  <circle cx="637" cy="850" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="637" cy="850" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="553" y="872" text-anchor="middle" class="ver">0.3.101</text>
   <rect x="657" y="842" width="160" height="38" class="lib" />
   <rect x="657" y="842" width="4" height="38" fill="#facc15" rx="2" />
@@ -201,9 +201,9 @@
   <text x="95" y="1057" text-anchor="middle" class="level-label">L7</text>
   <text x="150" y="1057" class="desc">Foundational service (instruments only; no service-domain-data dependency) (1 repos)</text>
   <rect x="70" y="1080" width="153" height="38" class="svc" />
-  <rect x="70" y="1080" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="1080" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="146" y="1098" text-anchor="middle" class="label">instruments-service</text>
-  <circle cx="213" cy="1088" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="1088" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="146" y="1110" text-anchor="middle" class="ver">0.1.117</text>
   <!-- L8: Services with data-flow dependencies (17 repos) -->
   <rect x="40" y="1152" width="2320" height="155" class="level-bg" />
@@ -375,11 +375,11 @@
   <text x="714" y="1503" text-anchor="middle" class="label">unified-trading-ui-kit</text>
   <circle cx="791" cy="1493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="714" y="1515" text-anchor="middle" class="ver">0.1.0</text>
-  <!-- L11: UI applications (13 repos) -->
+  <!-- L11: UI applications (14 repos) -->
   <rect x="40" y="1557" width="2320" height="107" class="level-bg" />
   <rect x="55" y="1565" width="80" height="22" fill="#a855f7" class="level-badge" />
   <text x="95" y="1581" text-anchor="middle" class="level-label">L11</text>
-  <text x="150" y="1581" class="desc">UI applications (13 repos)</text>
+  <text x="150" y="1581" class="desc">UI applications (14 repos)</text>
   <rect x="70" y="1604" width="130" height="38" class="ui-box" />
   <rect x="70" y="1604" width="4" height="38" fill="#facc15" rx="2" />
   <text x="135" y="1622" text-anchor="middle" class="label">batch-audit-ui</text>
@@ -415,36 +415,41 @@
   <text x="1095" y="1622" text-anchor="middle" class="label">ml-training-ui</text>
   <circle cx="1150" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1095" y="1634" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1170" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1170" y="1604" width="167" height="38" class="ui-box" />
   <rect x="1170" y="1604" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1235" y="1622" text-anchor="middle" class="label">onboarding-ui</text>
-  <circle cx="1290" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1235" y="1634" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1310" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1310" y="1604" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1375" y="1622" text-anchor="middle" class="label">settlement-ui</text>
-  <circle cx="1430" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1375" y="1634" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1450" y="1604" width="130" height="38" class="ui-box" />
-  <rect x="1450" y="1604" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1515" y="1622" text-anchor="middle" class="label">strategy-ui</text>
-  <circle cx="1570" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1515" y="1634" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1590" y="1604" width="160" height="38" class="ui-box" />
-  <rect x="1590" y="1604" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1670" y="1622" text-anchor="middle" class="label">trading-analytics-ui</text>
-  <circle cx="1740" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1670" y="1634" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1760" y="1604" width="132" height="38" class="ui-box" />
-  <rect x="1760" y="1604" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1826" y="1622" text-anchor="middle" class="label">unified-admin-ui</text>
-  <circle cx="1882" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1826" y="1634" text-anchor="middle" class="ver">0.1.0</text>
-  <rect x="1902" y="1604" width="181" height="38" class="lib" />
-  <rect x="1902" y="1604" width="4" height="38" fill="#facc15" rx="2" />
-  <text x="1992" y="1622" text-anchor="middle" class="label">unified-trading-ui-auth</text>
-  <circle cx="2073" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
-  <text x="1992" y="1634" text-anchor="middle" class="ver">0.2.1</text>
+  <text x="1253" y="1622" text-anchor="middle" class="label">odum-research-website</text>
+  <circle cx="1327" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1253" y="1634" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="1347" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1347" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="1412" y="1622" text-anchor="middle" class="label">onboarding-ui</text>
+  <circle cx="1467" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1412" y="1634" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="1487" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1487" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="1552" y="1622" text-anchor="middle" class="label">settlement-ui</text>
+  <circle cx="1607" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1552" y="1634" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="1627" y="1604" width="130" height="38" class="ui-box" />
+  <rect x="1627" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="1692" y="1622" text-anchor="middle" class="label">strategy-ui</text>
+  <circle cx="1747" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1692" y="1634" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="1767" y="1604" width="160" height="38" class="ui-box" />
+  <rect x="1767" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="1847" y="1622" text-anchor="middle" class="label">trading-analytics-ui</text>
+  <circle cx="1917" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="1847" y="1634" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="1937" y="1604" width="132" height="38" class="ui-box" />
+  <rect x="1937" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="2003" y="1622" text-anchor="middle" class="label">unified-admin-ui</text>
+  <circle cx="2059" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="2003" y="1634" text-anchor="middle" class="ver">0.1.0</text>
+  <rect x="2079" y="1604" width="181" height="38" class="lib" />
+  <rect x="2079" y="1604" width="4" height="38" fill="#facc15" rx="2" />
+  <text x="2169" y="1622" text-anchor="middle" class="label">unified-trading-ui-auth</text>
+  <circle cx="2250" cy="1612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <text x="2169" y="1634" text-anchor="middle" class="ver">0.2.1</text>
   <!-- L12: IaC + post-deploy validation (deploy last; references all service images) (3 repos) -->
   <rect x="40" y="1676" width="2320" height="107" class="level-bg" />
   <rect x="55" y="1684" width="80" height="22" fill="#64748b" class="level-badge" />

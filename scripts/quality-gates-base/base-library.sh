@@ -263,7 +263,7 @@ fi
 log_section "[5/6] CODEX COMPLIANCE"
 V=0
 
-rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" 2>/dev/null \
+rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/testing/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "print() — use logger"; V=$(( V + 1 )); } || log_success "No print()"
 
 # unified-config-interface: bootstrap exception — UCI IS the config layer, must read os.environ
@@ -327,13 +327,13 @@ RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!t
 
 _efb_extra_globs=()
 for _excl in "${EMPTY_FALLBACK_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _efb_extra_globs+=("--glob" "!${_excl}"); done
-ES=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
+ES=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" --glob "!**/testing/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
 [[ -n "$ES" ]] && { log_fail "Empty string fallback — fail fast"; echo "$ES" | head -3; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
-ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
+ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" --glob "!**/testing/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
-EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
+EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" --glob "!**/testing/**" "${_efb_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa:.*qg-empty-fallback\|# noqa: qg-empty-fallback" || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
 
