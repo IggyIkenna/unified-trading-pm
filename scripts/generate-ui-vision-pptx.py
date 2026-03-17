@@ -1012,24 +1012,46 @@ def slide_07_markets_ops(prs):
                      font_size=8, color=TEXT_SECONDARY)
         y += 0.35
 
-    # Deploy pre-fill
-    add_card(slide, 7.2, 4.9, 5.3, 1.2, BG_CARD)
-    add_text_box(slide, 7.4, 5.0, 5, 0.2, "Deploy pre-fill from Strategy Analytics",
-                 font_size=10, bold=True, color=ACCENT_AMBER)
-    add_text_box(slide, 7.4, 5.3, 5, 0.6,
-                 "Accepts ?service=&config_folders=&env= query params.\n"
-                 "Shows banner: 'Pre-filled from Strategy Analytics — 3 configs selected'\n"
-                 "User reviews and deploys. No auto-deploy.",
-                 font_size=8, color=TEXT_SECONDARY)
+    # Event hierarchy
+    add_card(slide, 7.2, 4.8, 5.3, 0.8, BG_CARD)
+    add_text_box(slide, 7.4, 4.85, 5, 0.2, "Event -> Alert -> Incident hierarchy",
+                 font_size=9, bold=True, color=ACCENT_BLUE)
+    add_text_box(slide, 7.4, 5.1, 5, 0.45,
+                 "Raw event (log_event()) -> lands in GCS events/{svc}/{date}/events.jsonl\n"
+                 "If severity >= threshold -> Alert (Trading CC or Ops, by type)\n"
+                 "If escalated -> Incident (kill switch, manual, auto-rules)",
+                 font_size=7, font_name=FONT_MONO, color=TEXT_SECONDARY)
 
-    # Grafana bridge
-    add_card(slide, 7.2, 6.2, 5.3, 0.65, BG_CARD)
-    add_text_box(slide, 7.4, 6.25, 5, 0.2, "Grafana bridge (infrastructure deep-dive only)",
-                 font_size=9, bold=True, color=ACCENT_PURPLE)
-    add_text_box(slide, 7.4, 6.5, 5, 0.3,
-                 "Each service detail has 'Deep Dive in Grafana' link, pre-filtered.\n"
-                 "Traders/PMs never need Grafana. Quant devs/SREs use it for latency, queues, memory.",
+    # Logging & correlation
+    add_card(slide, 7.2, 5.7, 2.5, 0.7, BG_CARD)
+    add_text_box(slide, 7.35, 5.75, 2.3, 0.2, "Logs & correlation",
+                 font_size=9, bold=True, color=ACCENT_CYAN)
+    add_text_box(slide, 7.35, 6.0, 2.3, 0.35,
+                 "Filter: service, severity,\n"
+                 "time, text, correlation_id\n"
+                 "Click corr_id -> full trace",
                  font_size=7, color=TEXT_SECONDARY)
+
+    # Version alignment
+    add_card(slide, 9.85, 5.7, 2.65, 0.7, BG_CARD)
+    add_text_box(slide, 10.0, 5.75, 2.4, 0.2, "Version alignment",
+                 font_size=9, bold=True, color=ACCENT_AMBER)
+    add_text_box(slide, 10.0, 6.0, 2.4, 0.35,
+                 "/services grid shows:\n"
+                 "deployed vs expected version\n"
+                 "drift = amber badge",
+                 font_size=7, color=TEXT_SECONDARY)
+
+    # Grafana + shared services
+    add_card(slide, 7.2, 6.55, 5.3, 0.55, BG_CARD)
+    add_text_box(slide, 7.4, 6.58, 2.5, 0.18, "Grafana: SRE deep-dive only",
+                 font_size=8, bold=True, color=ACCENT_PURPLE)
+    add_text_box(slide, 10.0, 6.58, 2.3, 0.18, "All services are shared",
+                 font_size=8, bold=True, color=TEXT_SECONDARY)
+    add_text_box(slide, 7.4, 6.78, 5, 0.25,
+                 "Service detail -> 'Open in Grafana' (new tab, pre-filtered)  |  "
+                 "Sharding is logical (strategy_id, client_id), not physical",
+                 font_size=7, color=TEXT_MUTED)
 
 
 def slide_08_implementation(prs):
@@ -1089,12 +1111,12 @@ def slide_08_implementation(prs):
                  font_size=12, bold=True, color=TEXT_PRIMARY)
 
     outcomes = [
-        ("User", ["One answer to 'what is happening right now?'",
-                   "One canonical P&L home with 5-level drill-down",
-                   "One obvious next step in the lifecycle"]),
-        ("System", ["7 repos, 7 ports, zero duplicated routes",
-                     "Cross-surface context preserved by URL params",
-                     "Every entity name is a clickable portal"]),
+        ("User", ["One answer to 'what is happening right now?' — at any point in time",
+                   "One canonical P&L home with 5-level drill-down + time series",
+                   "Risk limits shown as value vs threshold, highest util first"]),
+        ("System", ["150+ endpoints, 0 orphans — every API output has a UI home",
+                     "7 repos, 7 ports, zero duplicated routes",
+                     "Sports/DeFi/CeFi/TradFi via FilterBar dimension, not separate surfaces"]),
     ]
     y = 5.7
     for category, items in outcomes:

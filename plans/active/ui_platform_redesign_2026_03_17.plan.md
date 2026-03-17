@@ -408,6 +408,172 @@ _Was: live-health-monitor-ui. Absorbs: alerts from logs-dashboard-ui, performanc
 
 ---
 
+## Service-to-Surface Data Map (No Orphans)
+
+Every backend API endpoint maps to exactly one UI surface. No data is produced without a rendering home.
+
+### Endpoints explicitly NOT rendered in UI (developer/CLI/Grafana only)
+
+These are backend plumbing or infrastructure telemetry — they have no UI surface by design (per Principle 7: Grafana for
+infrastructure). They are documented here to confirm they are NOT orphans but deliberate exclusions:
+
+- `GET /system/cores` (exec-results) — CPU info. Grafana.
+- `GET /local-default-directory` (exec-results) — Local filesystem path. CLI only.
+- `GET /buckets`, `GET /prefixes`, `GET /files` (exec-results) — GCS browsing primitives. Backend plumbing for results
+  display, not direct UI endpoints.
+- `POST /run-local`, `POST /batch-local`, `POST /run-exact-cli` (exec-results) — Local execution variants. CLI/developer
+  tools.
+- `POST /fills` (exec-results), `POST /analytics/trades` (trading-analytics) — Ingestion/write endpoints called by
+  services, not UI-initiated.
+- `POST /predictions` (ml-inference) — Service-to-service prediction requests, not UI-initiated.
+- `GET /instructions`, `POST /instructions` (exec-results) — Strategy execution instructions. Internal to
+  strategy-service, not rendered directly in UI (strategy decisions are visible through fills/orders/positions, not raw
+  instructions).
+
+### Orphans resolved — now mapped
+
+| Endpoint                                  | API               | Now mapped to                                       | Surface                | Route                                                                                                | Batch/Live |
+| ----------------------------------------- | ----------------- | --------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- | ---------- |
+| `POST /distribution`                      | exec-results      | Distribution histogram for backtest metrics         | Strategy Analytics     | `/grid` (DimensionalGrid visualization mode toggle: table / heatmap / distribution)                  | Batch      |
+| `GET /analytics/predictions/quality`      | trading-analytics | ML prediction accuracy monitoring                   | ML Platform            | `/models` (model detail: accuracy, loss, prediction quality over time)                               | Batch      |
+| `GET /predictions/recent`                 | ml-inference      | Recent ML predictions for live strategies           | Trading Command Center | `/` (strategy table — strategies using ML show prediction confidence as a column)                    | Live       |
+| `GET /stream/predictions` (SSE)           | trading-analytics | Live prediction stream                              | Trading Command Center | `/` (live feed powering ML strategy status badges and prediction confidence)                         | Live       |
+| `GET /sports/pnl`                         | client-reporting  | Sports P&L breakdown by venue/strategy              | Market Intelligence    | `/pnl` with FilterBar dimension `asset_class=Sports`                                                 | Batch      |
+| `GET /sports/clv`                         | client-reporting  | Closing Line Value analysis (sports signal quality) | Strategy Analytics     | `/strategies/:id` Results tab for sports strategies (CLV is the sports equivalent of alpha/slippage) | Batch      |
+| `GET /sports/venue-performance`           | client-reporting  | Per-venue ROI and limiting status                   | Market Intelligence    | `/pnl/venue/:id` with sports filter                                                                  | Batch      |
+| `GET /sports/positions`                   | client-reporting  | Open sports positions                               | Trading Command Center | `/positions` with FilterBar dimension `asset_class=Sports`                                           | Live       |
+| `GET /sports/risk`                        | client-reporting  | Sports risk exposure (liability, correlation)       | Trading Command Center | `/risk` with FilterBar dimension `asset_class=Sports`                                                | Live       |
+| `GET /prime-brokers`, `POST`, `PUT /fees` | trading-analytics | Prime broker management and fee schedules           | Config & Onboarding    | `/prime-brokers` (new route — PB entity CRUD + fee schedule management)                              | Batch      |
+| `GET /instruments/corporate-actions`      | trading-analytics | Corporate actions (dividends, splits, earnings)     | Strategy Analytics     | `/instruments` sub-tab "Corporate Actions"                                                           | Batch      |
+| `POST /models/{id}/undeploy`              | ml-inference      | Model undeploy action                               | ML Platform            | `/models` (paired with deploy action as a toggle)                                                    | Batch      |
+| `GET /recon/runs/{date}/agent-report`     | trading-analytics | Agent-generated recon analysis (markdown)           | Market Intelligence    | `/recon/:date` (embedded in recon detail view as "Agent Analysis" tab)                               | Batch      |
+| `GET /settlements/residuals`              | trading-analytics | Explained vs unexplained P&L residuals              | Reporting & Settlement | `/settlements` sub-view "Residuals" (or `/residuals` route)                                          | Batch      |
+| `GET /stream/reports` (SSE)               | client-reporting  | Report generation progress                          | Reporting & Settlement | `/reports` (progress indicator while report generates)                                               | Live       |
+| `GET /features`                           | ml-training       | Available features for training                     | ML Platform            | `/experiments` (feature selection in experiment setup phase 1)                                       | Batch      |
+
+### FilterBar dimensions that resolve sports + multi-asset class orphans
+
+The FilterBar across Trading Command Center, Strategy Analytics, and Market Intelligence must include an **asset class
+dimension**: `[All | DeFi | CeFi | TradFi | Sports]`. This single dimension eliminates 5 sports-specific orphans without
+creating a new surface. Sports strategies are not special — they are strategies with `asset_class=Sports`, viewable
+through the same P&L waterfall, position table, and risk matrix as any other strategy.
+
+### Config & Onboarding — new route for prime brokers
+
+Add `/prime-brokers` to Config & Onboarding:
+
+- `GET /prime-brokers` — List active prime brokers
+- `POST /prime-brokers` — Create new PB entity
+- `PUT /prime-brokers/{id}/fees` — Set default fee schedule
+- Cross-link: Client detail `/clients/:id` → fee schedule → linked PB
+
+---
+
+## Domain Data, Events & Logging Observability Map (No Orphans)
+
+Beyond API endpoints, the system produces domain events (106 event types via `log_event()`), domain data models (50+
+schemas in UIC), PubSub coordination messages, and structured logs. Every piece of observable data must have a rendering
+home. This section maps each category to its UI surface.
+
+### Event Categories → UI Surface
+
+| Event Category                                                                                                                               | Event Types | UI Surface                              | Route                                                                            | How visible                                                                                                                                                   |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Lifecycle** (STARTED, STOPPED, FAILED, PROCESSING*\*, VALIDATION*\*, etc.)                                                                 | 20+ types   | Operations Hub                          | `/events`, `/logs`                                                               | FilterBar by service + severity + event_type. Each event has timestamp, service, severity, details, correlation_id. Click correlation_id → trace.             |
+| **Data Ingestion** (DATA_INGESTION_STARTED/COMPLETED, DATA_BROADCAST)                                                                        | 3 types     | Operations Hub                          | `/data-health`, `/events`                                                        | Data completeness heatmap on landing. Per-service ingestion status. Duration_ms, rows, bytes in details.                                                      |
+| **Config Changes** (CONFIG_CHANGED, CONFIG_LOADED, CONFIG_RELOADED, CONFIG_SNAPSHOT_SAVED)                                                   | 4 types     | Operations Hub                          | `/audit`                                                                         | Audit trail: who changed what config, when. Cross-link to Config & Onboarding for the config itself.                                                          |
+| **Auth Events** (AUTH*SUCCESS, AUTH_FAILURE, LOGIN*\*, LOGOUT, SESSION_EXPIRED)                                                              | 7 types     | Operations Hub                          | `/audit`, `/compliance`                                                          | Security audit trail. AUTH_FAILURE events surface as alerts if threshold breached.                                                                            |
+| **Order & Execution** (ORDER*ORPHANED, ORDER_RECOVERY*\*, ORDER_CANCEL_UNCONFIRMED)                                                          | 6 types     | Trading Command Center                  | `/alerts` (if threshold), `/positions/:runId` (timeline)                         | Order recovery events show in position detail timeline. Orphaned orders become alerts.                                                                        |
+| **Position Events** (POSITION*AGGREGATED, PORTFOLIO_VIEW_PUBLISHED, POSITION_CRITICAL_DISCREPANCY, POSITION_CORRECTION*\*)                   | 8 types     | Trading Command Center                  | `/positions` (live), `/alerts` (discrepancies)                                   | Position corrections visible in position history. Critical discrepancy → alert → incident.                                                                    |
+| **Risk & Health** (KILL*SWITCH*_, CIRCUIT*BREAKER*_, RISK_DATA_INSUFFICIENT, STALE_POSITION_DATA)                                            | 13 types    | Trading Command Center                  | `/alerts`, `/risk`, `/health`                                                    | Kill switch events → alert + incident. Circuit breaker state visible on `/health`. Risk data issues → amber badge on strategy.                                |
+| **Compliance/MiFID** (TRADE_REPORTED_MIFID, ORDER_SUBMITTED_MIFID, BEST_EXECUTION_CHECKED, TRANSACTION_REPORTED_FCA, POSITION_LIMIT_CHECKED) | 5 types     | Operations Hub                          | `/compliance`                                                                    | MiFID/FCA compliance records in compliance view. Best execution checks visible per trade.                                                                     |
+| **Strategy Events** (STRATEGY_STARTED/STOPPED, STRATEGY_SIGNAL_GENERATED)                                                                    | 3 types     | Trading Command Center                  | `/` (strategy status column), `/positions`                                       | Strategy start/stop changes status badge. Signal generated visible in position detail timeline.                                                               |
+| **Backtest Events** (BACKTEST_STARTED/COMPLETED)                                                                                             | 2 types     | Strategy Analytics                      | `/strategies/:id` Backtest tab                                                   | Backtest progress tracking. Duration, completion status.                                                                                                      |
+| **Deployment & CI/CD** (DEPLOYMENT*STARTED/COMPLETED/FAILED/ROLLED_BACK, VERSION_BUMPED, CASCADE*_, SIT\__, QG\_\*)                          | 12 types    | Operations Hub                          | `/services/:name` History, `/cicd`                                               | Deploy history timeline. SIT pass/fail status. QG results per service. Cascade dispatch chain visible.                                                        |
+| **Agent Lifecycle** (AGENT*INVESTIGATION*_, AGENT*FIX*_)                                                                                     | 4 types     | Operations Hub                          | `/audit`, `/events`                                                              | Agent actions visible in audit trail with reasoning_summary, files_changed, commit_sha.                                                                       |
+| **ML & Feature Pipeline** (FEATURE*LOADING*_, FEATURE*GROUP_PROCESSING*_, MODEL*SAVING*_, STAGE\__)                                          | 10 types    | ML Platform + Trading Command Center    | ML: `/experiments/:id` (training phases). Trading: `/health` (feature freshness) | Feature loading completion → freshness SLA. Model saving → model registry update. Stage progression → experiment detail.                                      |
+| **Alerting** (ALERT*ROUTED, ALERT_DELIVERED, SLACK_MESSAGE_SENT, DATA_FRESHNESS_ALERT*\*)                                                    | 5 types     | Trading Command Center + Operations Hub | Trading: `/alerts` (routed alerts). Ops: `/events` (delivery confirmation)       | Alert routing visible in alert detail. Delivery status (Slack sent/failed) in Ops events.                                                                     |
+| **Data Quality** (POINT_IN_TIME_VIOLATION, LOOKAHEAD_BIAS_VIOLATION, DATA_STALE, DATA_GAP_DETECTED, FEED_UNHEALTHY)                          | 7 types     | Trading Command Center + Operations Hub | Trading: `/health` (freshness/feed status). Ops: `/data-health` (completeness)   | Data quality violations → amber/red on health grid. Point-in-time violations → critical alert (backtest integrity).                                           |
+| **DeFi Domain** (DEFI_HEALTH_AGGREGATED, DEFI_LP_AGGREGATED, DEFI_STAKING_AGGREGATED, DEFI_VAULT_REBALANCED)                                 | 4 types     | Trading Command Center                  | `/risk` → DeFi Health tab                                                        | DeFi health aggregation results feed the LTV/health factor display. Vault rebalance events visible in position timeline.                                      |
+| **Sports Domain** (SPORTS_ARB_DETECTED, MARKET_SUSPENDED)                                                                                    | 2 types     | Trading Command Center                  | `/alerts` (arb detected), `/positions` (market suspended badge)                  | Arb detection → opportunity alert. Market suspension → position status badge.                                                                                 |
+| **P&L Events** (UNEXPLAINED_PNL_RESIDUAL)                                                                                                    | 1 type      | Market Intelligence                     | `/recon`                                                                         | Unexplained residual triggers recon case creation. Visible in recon detail with break size.                                                                   |
+| **Coordination Events** (DATA_READY, PREDICTIONS_READY, INSTRUCTIONS_READY, FEATURES_READY, etc.)                                            | 8+ types    | Trading Command Center                  | `/health` (service readiness chain)                                              | Coordination events are the "heartbeat" of the live pipeline. Visible as freshness SLA on health grid — if FEATURES_READY stops arriving, freshness degrades. |
+
+### Domain Data Models (UIC/UAC Schemas) → UI Surface
+
+| Schema                                                                     | Source                           | UI Surface                                  | Route                                                                 | Snapshot            | Time Series                              |
+| -------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------- | --------------------------------------------------------------------- | ------------------- | ---------------------------------------- |
+| **RiskMetrics** (leverage, margin, concentration, drawdown, VaR, ES)       | risk-and-exposure-service        | Trading Command Center                      | `/risk` → Risk Summary                                                | Exact metrics at T  | Leverage/margin/drawdown drift over time |
+| **AlertMessage** (type, threshold, current_value, recommended_action)      | alerting-service                 | Trading Command Center                      | `/alerts`                                                             | Active alerts at T  | Alert frequency, resolution trends       |
+| **ExposureSummary** (gross/net/long/short, by_venue, by_instrument)        | risk-and-exposure-service        | Trading Command Center                      | `/risk` → Exposure Attribution                                        | Exposure at T       | Exposure drift over time                 |
+| **PnLBreakdown** (6D: delta, funding, basis, interest, greeks, MTM)        | pnl-attribution-service          | Market Intelligence                         | `/pnl` → waterfall                                                    | Attribution at T    | Component evolution over time            |
+| **GreeksExposure** (delta, gamma, theta, vega, rho)                        | risk-and-exposure-service        | Trading Command Center                      | `/risk` → Exposure Attribution                                        | Greeks at T         | Greeks drift (esp. gamma/vega)           |
+| **PreTradeCheckRequest/Response** (approved, alerts, limit checks)         | risk-and-exposure-service        | Trading Command Center                      | `/manual` (pre-trade validation)                                      | Per-order check     | N/A (per-event, not time series)         |
+| **DeltaOneFeatureRecord** (60+ fields: RSI, MACD, funding_rate, vol, etc.) | features-delta-one-service       | Strategy Analytics + Trading CC             | Strategy: `/strategies/:id` Deep Dive. Trading: `/health` (freshness) | Feature values at T | Feature evolution (deep dive charts)     |
+| **CeFi/DeFi Position types** (quantity, price, PnL, margin, LTV, health)   | position-balance-monitor-service | Trading Command Center                      | `/positions`                                                          | Positions at T      | Position size evolution                  |
+| **OrderEvent** (order_id, status, venue, fills)                            | execution-service                | Trading Command Center + Strategy Analytics | Trading: `/positions/:runId`. Strategy: Execution tab                 | Orders at T         | Order flow over time                     |
+| **StrategyDecision** (signal_type, confidence, reason)                     | strategy-service                 | Strategy Analytics                          | `/strategies/:id` Deep Dive tab                                       | Decision at T       | Signal history (confidence over time)    |
+| **QualityGateDetails** (tests, coverage, pyright clean)                    | CI/CD                            | Operations Hub                              | `/cicd`, `/services/:name`                                            | QG result at T      | Coverage/test trends                     |
+| **DeploymentDetails** (repo, env, version, trigger)                        | deployment-api                   | Operations Hub                              | `/services/:name` History                                             | Deploy at T         | Deploy frequency, rollback rate          |
+| **VersionBumpDetails** (old→new, bump_type, breaking)                      | semver-agent                     | Operations Hub                              | `/services/:name`, `/cicd`                                            | Version at T        | Version progression timeline             |
+| **CascadeDispatchDetails** (source, targets, bump_type)                    | PM workflows                     | Operations Hub                              | `/cicd`                                                               | Cascade at T        | Cascade propagation history              |
+| **Sports Features** (H2H, halftime goals, xG, referee odds)                | features-sports-service          | Strategy Analytics                          | `/strategies/:id` for sports strategies                               | Features at T       | Feature evolution (match buildup)        |
+| **Volatility Surface** (moneyness x tenor matrix)                          | features services                | Strategy Analytics                          | `/strategies/:id` Deep Dive for options strategies                    | Surface at T        | Vol surface evolution                    |
+
+### PubSub / Coordination Channels → UI Observability
+
+| Channel Pattern        | Producer                         | Consumer                         | UI Visibility                                                                      |
+| ---------------------- | -------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------- |
+| `lifecycle-events`     | All services                     | batch-audit-api                  | Ops Hub `/events`, `/logs` — the full event stream                                 |
+| `alerts-stream`        | alerting-service                 | Trading CC, client-reporting-api | Trading CC `/alerts` — live alert feed                                             |
+| `positions-stream`     | position-balance-monitor-service | Trading CC (via API)             | Trading CC `/positions` — live position updates                                    |
+| `signals-stream`       | strategy-service                 | Trading CC (via API)             | Trading CC `/` — strategy status + signal confidence                               |
+| `features-ready`       | feature services                 | strategy-service                 | Trading CC `/health` — feature freshness SLA (if not arriving, freshness degrades) |
+| `predictions-ready`    | ml-inference-service             | strategy-service                 | Trading CC `/` — ML strategy prediction confidence column                          |
+| `ml-deploy`            | ml-inference-api                 | ml-inference-service             | ML Platform `/models` — deploy/undeploy status                                     |
+| `CONFIG_CHANGED` event | config-api                       | strategy-service (hot-reload)    | Config & Onboarding audit + Ops Hub `/audit` — config change trail                 |
+
+### Structured Log Fields → UI Observability
+
+All structured log fields from `log_event()` are queryable through Operations Hub `/logs`:
+
+| Field            | Type         | Filterable in UI | How                                                                                                            |
+| ---------------- | ------------ | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `timestamp`      | datetime     | Yes              | Time range picker in FilterBar                                                                                 |
+| `service_name`   | string       | Yes              | Service dropdown in FilterBar                                                                                  |
+| `event_name`     | string       | Yes              | Event type dropdown in FilterBar                                                                               |
+| `severity`       | enum         | Yes              | Severity multi-select (DEBUG/INFO/WARN/ERROR/CRIT)                                                             |
+| `client_id`      | string (PII) | Yes              | Client filter (with PII masking for non-admin)                                                                 |
+| `correlation_id` | string       | Yes              | Clickable → full cross-service trace at `/logs?correlation_id=X`                                               |
+| `details.*`      | dict         | Partial          | Free-text search across details JSON. Key fields (duration_ms, rows, error_message) shown in log line preview. |
+
+### Library Schema Observability
+
+Libraries (UIC, UAC, UCI, UTL, UEI, UDC) don't produce events directly, but their schemas define the STRUCTURE of all
+observable data. This is visible through:
+
+- **UIC schemas** define the shape of risk metrics, positions, P&L — visible wherever those data types render (Trading
+  CC, Market Intelligence)
+- **UAC schemas** define external data normalization — visible in Strategy Analytics `/instruments`, `/tick-data`
+- **UEI event schemas** define the structure of every `log_event()` call — visible in Ops Hub `/events`, `/logs`
+- **UCI config schemas** define strategy/execution config structure — visible in Config & Onboarding, Strategy Analytics
+  `/configs`
+
+Libraries report issues via their parent service's `log_event()` calls. For example, UTL's `POINT_IN_TIME_VIOLATION` is
+emitted by whichever service uses UTL — visible in Ops Hub `/events` with the service name as the emitter.
+
+### Confirmed: Zero Domain Data Orphans
+
+Every event type (106), every domain schema (50+), every PubSub channel, and every structured log field maps to at least
+one UI surface with a specific route. The observability chain is:
+
+```
+Library schema defines structure → Service produces events/data → API exposes it →
+UI surface renders it (with snapshot at T + time series over period)
+```
+
+---
+
 ## Complete Workflow Map — "I want to X, where do I go?"
 
 ### Seeing Things
@@ -662,13 +828,50 @@ _Was: deployment-ui. Absorbs: batch-audit-ui, logs-dashboard-ui, unified-admin-u
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+**Event → Alert → Incident hierarchy:**
+
+```
+Raw event (log_event() call from any service)
+  │  lands in: GCS events/{service}/{date}/events.jsonl
+  │  viewable at: Operations Hub /events
+  │
+  ├── If severity >= threshold → becomes Alert
+  │     Trading alerts → Trading Command Center /alerts
+  │     Infra alerts → Operations Hub /events?severity=critical
+  │
+  └── If alert escalated → becomes Incident
+        Trading Command Center /alerts (incident management)
+        Created by: kill switch, manual escalation, auto-rules
+```
+
+**Service-Client-Strategy mapping (all services are shared):**
+
+Services are shared infrastructure — there are no per-client or per-strategy deployments. `strategy-service` runs ALL
+strategy instances as async tasks. `execution-service` routes ALL orders. Sharding is logical
+`(strategy_id, client_id)`, not physical (separate pods). The mapping from client to services is indirect:
+
+```
+Client (odum)
+  └── has strategy instances: (via Config & Onboarding /clients/:id)
+        ├── (DEFI_ETH_STAKED_BASIS, odum, v2.4.0)
+        └── (TRADFI_SPY_ML_DIR, odum, v1.0.0)
+              └── all flow through shared services: (EntityLinks to Ops /services/:name)
+                    strategy-service, execution-service, features-delta-one,
+                    risk-and-exposure, pnl-attribution, market-tick-data-service
+```
+
+Config & Onboarding `/clients/:id` shows which strategies are configured for that client, with a "Services involved"
+read-only list of EntityLinks to Operations Hub. Tracing a specific client's flow through shared services uses
+`correlation_id` in logs/events.
+
 **Routes (merged deployment-ui + batch-audit-ui + logs-dashboard-ui):**
 
 _Deploy Section:_
 
 - `/` — Overview: batch summary + data completeness + recent deployments
 - `/deploy` — Service deployment form (dry run + live), accepts query params for pre-fill
-- `/services` — Services overview grid
+- `/services` — Services overview grid with columns: service, deployed version, expected version (from manifest),
+  environment, region, status. Version drift = amber badge.
 - `/services/:name` — Service detail: Deploy, Data Status, Builds, Readiness, Config, History, + "Deep Dive in Grafana"
   link (pre-filtered)
 - `/epics` — Epic readiness view
@@ -676,15 +879,18 @@ _Deploy Section:_
 _Observe Section:_
 
 - `/jobs` — Batch jobs list with status/health (from batch-audit-ui)
-- `/jobs/:id` — Job detail: shard progress, logs, duration (from batch-audit-ui)
-- `/logs` — Unified log stream: filter by service, level, time, text search (from logs-dashboard-ui)
-- `/logs/:id` — Log detail with correlation_id trace
-- `/events` — Events viewer: structured event stream (from logs-dashboard-ui)
+- `/jobs/:id` — Job detail: shard progress, logs scoped to job correlation_id, duration (from batch-audit-ui)
+- `/logs` — Unified log stream: FilterBar with service, severity (DEBUG/INFO/WARN/ERROR/CRIT), time range, free-text
+  search, correlation_id filter. Each log line's correlation_id is clickable → shows full trace across services.
+- `/logs/:id` — Log detail with full correlation_id trace: all events across all services for that correlation chain
+- `/events` — Structured event stream from unified-events-interface. Filter by event_type, service, date range. Events
+  that crossed alert thresholds are marked.
 - `/data-health` — Data completeness checks per service (from batch-audit-ui)
 
 _Compliance Section:_
 
-- `/audit` — Audit trail: full event log (from batch-audit-ui)
+- `/audit` — Audit trail: every config change, deployment, kill switch action, strategy pause. Filter by actor, action
+  type, time range, entity.
 - `/compliance` — Compliance checks and status (from batch-audit-ui)
 - `/cicd` — CI/CD pipeline status (from logs-dashboard-ui)
 
@@ -723,13 +929,16 @@ _Was: onboarding-ui. Trimmed: remove /deployments, /audit._
 
 **Routes (trimmed):**
 
-- `/clients`, `/clients/:id` — Client CRUD with fee structure
+- `/clients`, `/clients/:id` — Client CRUD with fee structure. Client detail shows: strategy instances
+  `(strategy_id, client_id, config_version)` with status, plus "Services involved" read-only list (EntityLinks to
+  Operations Hub `/services/:name`).
 - `/strategies`, `/strategies/:id` — Strategy config editing + publishing to GCS
 - `/venues`, `/venues/:id` — Venue CRUD
 - `/venue-connections` — Live connectivity status
 - `/api-keys` — API key management
 - `/credentials` — Credential status
 - `/risk` — Risk configuration per client/strategy
+- `/prime-brokers` — Prime broker entity CRUD + fee schedule management (EntityLink from client fee schedule)
 - `/strategy-manifest` — Strategy manifest (read-only, from UAC registry)
 
 **Cross-links OUT:**

@@ -187,24 +187,25 @@ slide.addText('Cross-surface\nportal',
 surfaces + 3 specialist tools', 'Daily-use surfaces anchor the trading day; specialist tools support configuration,
 models, and client artifacts.'); const cards = [ [0.86,1.54,2.82,1.55,'Trading Command Center','Observe, intervene\nRun,
 monitor\nFirst screen at 7am',C.green], [3.92,1.54,2.82,1.55,'Strategy Analytics','Design, simulate, promote\nBacktests
-+ DimensionalGrid',C.blue], [6.98,1.54,2.82,1.55,'Market Intelligence','Explain, reconcile\nP&L, latency,
-recon',C.purple], [10.04,1.54,2.42,1.55,'Operations Hub','Deploy, diagnose\nServices, jobs, logs',C.amber],
-[1.42,4.22,2.35,0.98,'Config & Onboarding','Controlled CRUD\nPublish typed configs',C.cyan], [5.06,4.22,1.92,0.98,'ML
-Platform','Experiments\nModel registry',C.blue], [8.76,4.22,2.9,0.98,'Reporting & Settlement','EOD positions\nReports,
-invoices, settlements',C.muted], ];
-cards.forEach(([x,y,w,h,title,body,color])=>{slide.addShape(pptx.ShapeType.roundRect,{x,y,w,h,rectRadius:0.09,line:{color,width:1.6},fill:{color,transparency:88},shadow:safeOuterShadow('000000',0.28,45,1,1)});
-slide.addText(title,{x:x+0.18,y:y+0.22,w:w-0.36,h:0.24,fontSize:14.2,bold:true,color:C.text,margin:0,align:'center'});
-slide.addText(body,{x:x+0.2,y:y+0.62,w:w-0.4,h:0.44,fontSize:9.6,color:C.muted,margin:0,align:'center'});}); //
-lifecycle mapping band panel(slide,0.86,3.45,11.6,0.45,{fill:'0D0E10'}); slide.addText('Lifecycle ownership',
-{x:1.0,y:3.61,w:1.2,h:0.12,fontSize:8.2,color:C.muted,margin:0}); addLifecycle(slide, -1, 3.57); // emphasize ranges
-using tinted bands
-slide.addShape(pptx.ShapeType.rect,{x:1.95,y:3.53,w:2.66,h:0.12,line:{color:C.blue,transparency:100},fill:{color:C.blue,transparency:72}});
-slide.addShape(pptx.ShapeType.rect,{x:5.99,y:3.53,w:1.72,h:0.12,line:{color:C.green,transparency:100},fill:{color:C.green,transparency:70}});
-slide.addShape(pptx.ShapeType.rect,{x:7.98,y:3.53,w:3.09,h:0.12,line:{color:C.purple,transparency:100},fill:{color:C.purple,transparency:70}});
-slide.addText('Keep surfaces canonical. Do not let tools grow duplicate analytics, duplicate deployments, or duplicate
-live state.', { x: 0.92, y: 6.34, w: 6.0, h: 0.18, fontSize: 11.5, italic: true, color: C.text, margin: 0 });
-slide.addText('Outcome: 7 repos, 7 ports, zero duplication.', { x: 8.44, y: 6.34, w: 3.3, h: 0.18, fontSize: 12.5, bold:
-true, color: C.cyan, margin: 0, align: 'right' }); }
+
+- DimensionalGrid',C.blue], [6.98,1.54,2.82,1.55,'Market Intelligence','Explain, reconcile\nP&L, latency,
+  recon',C.purple], [10.04,1.54,2.42,1.55,'Operations Hub','Deploy, diagnose\nServices, jobs, logs',C.amber],
+  [1.42,4.22,2.35,0.98,'Config & Onboarding','Controlled CRUD\nPublish typed configs',C.cyan], [5.06,4.22,1.92,0.98,'ML
+  Platform','Experiments\nModel registry',C.blue], [8.76,4.22,2.9,0.98,'Reporting & Settlement','EOD positions\nReports,
+  invoices, settlements',C.muted], ];
+  cards.forEach(([x,y,w,h,title,body,color])=>{slide.addShape(pptx.ShapeType.roundRect,{x,y,w,h,rectRadius:0.09,line:{color,width:1.6},fill:{color,transparency:88},shadow:safeOuterShadow('000000',0.28,45,1,1)});
+  slide.addText(title,{x:x+0.18,y:y+0.22,w:w-0.36,h:0.24,fontSize:14.2,bold:true,color:C.text,margin:0,align:'center'});
+  slide.addText(body,{x:x+0.2,y:y+0.62,w:w-0.4,h:0.44,fontSize:9.6,color:C.muted,margin:0,align:'center'});}); //
+  lifecycle mapping band panel(slide,0.86,3.45,11.6,0.45,{fill:'0D0E10'}); slide.addText('Lifecycle ownership',
+  {x:1.0,y:3.61,w:1.2,h:0.12,fontSize:8.2,color:C.muted,margin:0}); addLifecycle(slide, -1, 3.57); // emphasize ranges
+  using tinted bands
+  slide.addShape(pptx.ShapeType.rect,{x:1.95,y:3.53,w:2.66,h:0.12,line:{color:C.blue,transparency:100},fill:{color:C.blue,transparency:72}});
+  slide.addShape(pptx.ShapeType.rect,{x:5.99,y:3.53,w:1.72,h:0.12,line:{color:C.green,transparency:100},fill:{color:C.green,transparency:70}});
+  slide.addShape(pptx.ShapeType.rect,{x:7.98,y:3.53,w:3.09,h:0.12,line:{color:C.purple,transparency:100},fill:{color:C.purple,transparency:70}});
+  slide.addText('Keep surfaces canonical. Do not let tools grow duplicate analytics, duplicate deployments, or duplicate
+  live state.', { x: 0.92, y: 6.34, w: 6.0, h: 0.18, fontSize: 11.5, italic: true, color: C.text, margin: 0 });
+  slide.addText('Outcome: 7 repos, 7 ports, zero duplication.', { x: 8.44, y: 6.34, w: 3.3, h: 0.18, fontSize: 12.5,
+  bold: true, color: C.cyan, margin: 0, align: 'right' }); }
 
 // Slide 5 Command center concept { const slide = pptx.addSlide(); addBg(slide); addNotes(slide); addTitle(slide,
 'Concept surface 01 — Trading Command Center', 'Live operating mode: what is happening right now, what is at risk, and

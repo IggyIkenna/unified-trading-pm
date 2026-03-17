@@ -33,7 +33,10 @@ WHY: 11 UIs grew in isolation with duplicate routes (P&L in 3 UIs, /deployments 
 - **Risk/exposure**: Trading = current risk matrix. Markets may explain past risk in P&L context only.
 - **Reports**: Markets = generation (analyst workflow). Reporting = catalogue (client downloads).
 - **P&L**: Trading = summary panel (links to full). Markets = full 5-level drill-down.
-- **Alerts**: Trading = live trading alerts. Ops = operational/infra alerts only.
+- **Alerts**: Trading = live trading alerts + incident management. Ops = infra/service alerts only.
+- **Logs/Events**: Operations Hub owns ALL logs and events (`/logs`, `/events`, `/audit`). Trading Command Center only shows alerts (events that crossed thresholds). The hierarchy: raw event → alert (if threshold) → incident (if escalated).
+- **Service-Client mapping**: Config & Onboarding `/clients/:id` shows which strategy instances belong to a client AND which shared services are involved (EntityLinks to Ops). All services are shared — sharding is logical `(strategy_id, client_id)`, not physical.
+- **Version tracking**: Operations Hub `/services` grid shows deployed vs expected version (from manifest). Drift = amber badge.
 
 ## Risk Limits — Value vs Limit, Not Just Value
 

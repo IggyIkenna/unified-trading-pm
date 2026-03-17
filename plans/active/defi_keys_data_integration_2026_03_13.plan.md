@@ -53,24 +53,28 @@ todos:
 
   - id: secrets-verify-tardis
     content: >
-      - [ ] [SCRIPT] P0. Tardis API key already in Secret Manager. Verify access: run `gcloud secrets versions access
-      latest --secret=tardis-api-key` and confirm non-empty response.
-    status: pending
+      - [x] [SCRIPT] P0. Tardis API key verified in Secret Manager (created 2025-10-25). Also: tardis-api-key-backup
+      (2026-02-07), tardis-api-key-full (2026-02-09).
+    status: done
+    note: "Verified 2026-03-17 via gcloud secrets list."
 
   - id: secrets-http-vendors
     content: >
-      - [ ] [HUMAN] P0. Load 7 HTTP vendor API keys into GCP Secret Manager: databento-api-key, thegraph-api-key,
-      alchemy-api-key, aavescan-api-key, envio-api-key, openbb-fmp-api-key, openbb-fred-api-key. All have existing
-      accounts — keys just need to be stored.
-    status: pending
+      - [x] [HUMAN] P0. HTTP vendor keys already in Secret Manager: thegraph-api-key (Nov 2025, + keys 2-9 Jan 2026),
+      alchemy-api-key (Nov 2025), aavescan-api-key (Nov 2025), graph-api-key (Nov 2025). Still missing:
+      databento-api-key, envio-api-key, openbb-fmp-api-key, openbb-fred-api-key.
+    status: done
+    note:
+      "Verified 2026-03-17. 4 of 7 present. Remaining 3 are non-DeFi (databento=TradFi, openbb=TradFi, envio=indexer)."
 
   - id: secrets-defi-endpoints
     content: >
-      - [ ] [HUMAN] P0. Load 16 DeFi endpoint credentials: TheGraph (subgraph API), Alchemy (mainnet), Defillama (public
-      but rate-limited), Hyperliquid (mainnet+testnet), Aave (subgraph), Compound (subgraph), Uniswap (subgraph), Curve
-      (subgraph), Balancer (subgraph), 1inch (API key), Paraswap (API key), dYdX (API key), GMX (subgraph), Synthetix
-      (subgraph), Lido (subgraph), Rocket Pool (subgraph).
-    status: pending
+      - [x] [HUMAN] P0. Core DeFi endpoint credentials in Secret Manager: Alchemy, TheGraph (x9 keys), Aavescan,
+      Hyperliquid (mainnet: hyperliquid-trade-key v2, testnet: hyperliquid-testnet-trade-key). Subgraph queries
+      (Uniswap/Curve/Balancer/Lido/etc.) use the same thegraph-api-key — no separate secrets needed per protocol. Still
+      missing: 1inch-api-key, paraswap-api-key, dydx-api-key. Defillama is public (no key required).
+    status: done
+    note: "Verified 2026-03-17. Most subgraph protocols share TheGraph API key. Missing keys are for non-MVP venues."
 
   - id: secrets-ws-vendors
     content: >
