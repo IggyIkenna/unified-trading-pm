@@ -18,7 +18,7 @@
         "ml_model_id": "swing_breakout_btc_5m",
         "ml_required": true
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
       "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
       "factory_function": "create_btc_momentum_strategy",
       "maturity": {
@@ -69,7 +69,7 @@
         "ml_model_id": "swing_breakout_eth_5m",
         "ml_required": true
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
       "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
       "factory_function": "create_eth_momentum_strategy",
       "maturity": {
@@ -120,7 +120,7 @@
         "ml_model_id": "swing_breakout_sol_5m",
         "ml_required": true
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
       "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
       "factory_function": "create_sol_momentum_strategy",
       "maturity": {
@@ -171,7 +171,7 @@
         "ml_model_id": "swing_breakout_spy_5m",
         "ml_required": true
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
       "class_path": "strategy_service.engine.strategies.tradfi_momentum.TradFiMomentumStrategy",
       "factory_function": "create_spy_momentum_strategy",
       "maturity": {
@@ -222,7 +222,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
       "class_path": "strategy_service.engine.strategies.defi_lending.AAVELendingStrategy",
       "factory_function": "create_aave_lending_strategy",
       "maturity": {
@@ -273,7 +273,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
       "class_path": "strategy_service.engine.strategies.defi_basis.BasisTradeStrategy",
       "factory_function": "create_basis_trade_strategy",
       "maturity": {
@@ -324,7 +324,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
       "class_path": "strategy_service.engine.strategies.defi_staked_basis.StakedBasisStrategy",
       "factory_function": "create_staked_basis_strategy",
       "maturity": {
@@ -379,7 +379,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
       "class_path": "strategy_service.engine.strategies.defi_recursive_basis.RecursiveStakedBasisStrategy",
       "factory_function": "create_recursive_staked_basis_strategy",
       "maturity": {
@@ -430,7 +430,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_arbitrage.yaml",
       "class_path": "strategy_service.engine.strategies.sports.arbitrage.ArbitrageStrategy",
       "factory_function": "create_arbitrage_strategy",
       "maturity": {
@@ -481,7 +481,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_value_betting.yaml",
       "class_path": "strategy_service.engine.strategies.sports.value_betting.ValueBettingStrategy",
       "factory_function": "create_value_betting_strategy",
       "maturity": {
@@ -532,7 +532,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_value_betting.yaml",
       "class_path": "strategy_service.engine.strategies.sports.kelly.KellyCriterionStrategy",
       "factory_function": "create_kelly_criterion_strategy",
       "maturity": {
@@ -583,7 +583,7 @@
         "ml_model_id": "sports_prediction_model",
         "ml_required": true
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_value_betting.yaml",
       "class_path": "strategy_service.engine.strategies.sports.ml_sports_strategy.MLSportsStrategy",
       "factory_function": "create_ml_sports_strategy",
       "maturity": {
@@ -634,7 +634,7 @@
         "ml_model_id": null,
         "ml_required": false
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_arbitrage.yaml",
       "class_path": "strategy_service.engine.strategies.sports.market_making.SportsMarketMakingStrategy",
       "factory_function": "create_market_making_strategy",
       "maturity": {
@@ -687,7 +687,7 @@
       },
       "config_file": "strategy-service/strategy_service/configs/stat_arb_btc_eth.yaml",
       "class_path": "strategy_service.engine.strategies.stat_arb.stat_arb_strategy.StatArbStrategy",
-      "factory_function": null,
+      "factory_function": "create_stat_arb_btc_eth_strategy",
       "maturity": {
         "code": {
           "status": "C4",
@@ -738,7 +738,7 @@
       },
       "config_file": "strategy-service/strategy_service/configs/rel_vol_btc_eth.yaml",
       "class_path": "strategy_service.engine.strategies.rel_vol.rel_vol_strategy.RelVolStrategy",
-      "factory_function": null,
+      "factory_function": "create_rel_vol_btc_eth_strategy",
       "maturity": {
         "code": {
           "status": "C4",
@@ -789,7 +789,7 @@
       },
       "config_file": "strategy-service/strategy_service/configs/cross_exchange_btc.yaml",
       "class_path": "strategy_service.engine.strategies.cross_exchange.cross_exchange_strategy.CrossExchangeStrategy",
-      "factory_function": null,
+      "factory_function": "create_cross_exchange_btc_strategy",
       "maturity": {
         "code": {
           "status": "C4",
@@ -840,7 +840,7 @@
       },
       "config_file": "strategy-service/strategy_service/configs/prediction_arb_btc.yaml",
       "class_path": "strategy_service.engine.strategies.prediction_arb.prediction_arb_strategy.PredictionArbStrategy",
-      "factory_function": null,
+      "factory_function": "create_prediction_arb_btc_strategy",
       "maturity": {
         "code": {
           "status": "C4",
@@ -891,7 +891,7 @@
       },
       "config_file": "strategy-service/strategy_service/configs/vol_surface_btc.yaml",
       "class_path": "strategy_service.engine.strategies.volatility.vol_surface_strategy.VolSurfaceStrategy",
-      "factory_function": null,
+      "factory_function": "create_vol_surface_btc_strategy",
       "maturity": {
         "code": {
           "status": "C4",
@@ -1603,7 +1603,7 @@
         "ml_model_id": "halftime_football",
         "ml_required": true
       },
-      "config_file": null,
+      "config_file": "strategy-service/strategy_service/configs/defaults/default_halftime_ml.yaml",
       "class_path": "strategy_service.engine.strategies.sports.halftime_ml.HalftimeMLStrategy",
       "factory_function": "create_halftime_ml_strategy",
       "maturity": {

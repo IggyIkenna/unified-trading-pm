@@ -3349,7 +3349,8 @@
           "trading-analytics-ui",
           "unified-admin-ui",
           "unified-trading-ui-auth",
-          "odum-research-website"
+          "odum-research-website",
+          "user-management-ui"
         ]
       },
       {

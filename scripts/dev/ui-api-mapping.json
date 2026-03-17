@@ -112,5 +112,64 @@
       "api_module": null,
       "$note": "Admin UI for user lifecycle management (onboard/modify/offboard). OAuth admin auth. Mock mode uses client-side fetch intercepts. Backend API TBD — currently calls external APIs (GitHub, Slack, MS Graph, GCP) via mock layer."
     }
+  },
+  "service_workers": {
+    "$comment": "Backend services that are NOT part of a UI/API stack but required for SIT and local integration tests. extra_args are appended to 'python -m <module>' by dev-start.sh.",
+    "execution-service": {
+      "repo": "execution-service",
+      "port": 8018,
+      "module": "execution_service.cli.main",
+      "extra_args": "--operation live_execution --mode live",
+      "$note": "FIX engine. Port 8005 is taken by config-api (onboarding stack), so uses 8018. Runs live execution mode in dev."
+    },
+    "risk-and-exposure-service": {
+      "repo": "risk-and-exposure-service",
+      "port": 8019,
+      "module": "risk_and_exposure_service.cli.main",
+      "extra_args": "",
+      "$note": "Reads mode from MODE env var (set to 'live' by dev-start.sh via DEV_RUNTIME_MODE mapping). No CLI args needed."
+    },
+    "position-balance-monitor-service": {
+      "repo": "position-balance-monitor-service",
+      "port": 8020,
+      "module": "position_balance_monitor_service.cli.main",
+      "extra_args": "--operation monitor --mode live --skip-startup-recon",
+      "$note": "CLI requires --operation and --mode. --skip-startup-recon avoids exchange API calls in dev."
+    },
+    "alerting-service": {
+      "repo": "alerting-service",
+      "port": 8021,
+      "module": "alerting_service",
+      "extra_args": "--mode live",
+      "$note": "Uses __main__.py entry point (python -m alerting_service). CLI requires --mode."
+    },
+    "pnl-attribution-service": {
+      "repo": "pnl-attribution-service",
+      "port": 8022,
+      "module": "pnl_attribution_service",
+      "extra_args": "--serve",
+      "$note": "Uses __main__.py entry point (python -m pnl_attribution_service). Pass --serve to start the health API server."
+    },
+    "market-tick-data-service": {
+      "repo": "market-tick-data-service",
+      "port": 8023,
+      "module": "market_tick_data_service.cli.main",
+      "extra_args": "--mode download --start-date 2026-03-17 --end-date 2026-03-17 --dry-run",
+      "$note": "Requires --mode. --dry-run prevents cloud writes in local dev."
+    },
+    "instruments-service": {
+      "repo": "instruments-service",
+      "port": 8024,
+      "module": "instruments_service.cli.main",
+      "extra_args": "--mode aggregate --run-mode batch",
+      "$note": "CLI requires --mode and --run-mode. aggregate+batch requires no dates (delta-only default)."
+    },
+    "strategy-service": {
+      "repo": "strategy-service",
+      "port": 8025,
+      "module": "strategy_service.cli.main",
+      "extra_args": "--mode batch --start-date 2026-03-10 --end-date 2026-03-17 --dry-run",
+      "$note": "CLI requires --mode, --start-date, --end-date. --dry-run prevents cloud writes."
+    }
   }
 }

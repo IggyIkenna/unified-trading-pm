@@ -141,6 +141,166 @@ COMPONENT_FILTER=$COMPONENT_FILTER
 MEOF
 }
 
+# ── Emulator env vars ─────────────────────────────────────────────────────
+# Only export emulator host vars AFTER confirming the emulator started.
+# Exporting a dead emulator host causes SDKs to hang for 600s on connection.
+# These are set inside start_gcs_emulator() / start_pubsub_emulator() on success.
+
+# ── GCP Emulator lifecycle ─────────────────────────────────────────────────
+start_gcs_emulator() {
+  if curl -sf http://localhost:4443 >/dev/null 2>&1; then
+    info "GCS emulator (fake-gcs-server) already running on :4443"
+    export STORAGE_EMULATOR_HOST="http://localhost:4443"
+    return
+  fi
+
+  if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    # Remove stale container if it exists but is stopped
+    docker rm -f fake-gcs 2>/dev/null || true
+    info "Starting ${BOLD}fake-gcs-server${NC} (GCS emulator) on :4443..."
+    if ! docker run -d --name fake-gcs -p 4443:4443 \
+      fsouza/fake-gcs-server -scheme http -port 4443 >/dev/null 2>&1; then
+      warn "docker run failed — skipping GCS emulator"
+      return
+    fi
+    echo "docker:fake-gcs" > "${PID_DIR}/fake-gcs.pid"
+    # Wait for container to be ready
+    local i=0
+    while ! curl -sf http://localhost:4443 >/dev/null 2>&1 && [ $i -lt 15 ]; do
+      sleep 1
+      i=$((i + 1))
+    done
+    if curl -sf http://localhost:4443 >/dev/null 2>&1; then
+      export STORAGE_EMULATOR_HOST="http://localhost:4443"
+      info "  fake-gcs-server ready"
+    else
+      warn "fake-gcs-server failed to start within 15s — GCS-dependent tests may skip"
+    fi
+  else
+    warn "Docker not available — skipping GCS emulator (fake-gcs-server). GCS-dependent SIT tests may skip."
+  fi
+}
+
+start_pubsub_emulator() {
+  # PubSub emulator health check: the emulator doesn't serve HTTP on /, so
+  # we check if anything is listening on port 8085.
+  if lsof -iTCP:8085 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    info "PubSub emulator already running on :8085"
+    export PUBSUB_EMULATOR_HOST="localhost:8085"
+    return
+  fi
+
+  if command -v gcloud >/dev/null 2>&1; then
+    info "Starting ${BOLD}PubSub emulator${NC} on :8085..."
+    gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 \
+      > "${PID_DIR}/pubsub-emulator.log" 2>&1 &
+    local pid=$!
+    echo "$pid" > "${PID_DIR}/pubsub-emulator.pid"
+    # Wait for emulator to bind the port
+    local i=0
+    while ! lsof -iTCP:8085 -sTCP:LISTEN -t >/dev/null 2>&1 && [ $i -lt 10 ]; do
+      sleep 1
+      i=$((i + 1))
+    done
+    if lsof -iTCP:8085 -sTCP:LISTEN -t >/dev/null 2>&1; then
+      export PUBSUB_EMULATOR_HOST="localhost:8085"
+      info "  PubSub emulator ready (PID $pid)"
+    else
+      warn "PubSub emulator failed to start within 10s — PubSub-dependent tests may skip"
+    fi
+  else
+    warn "gcloud CLI not available — skipping PubSub emulator. PubSub-dependent SIT tests may skip."
+  fi
+}
+
+# ── Backend service workers (not in UI/API stacks) ─────────────────────────
+# These are standalone services needed for integration tests. They are read
+# from the "service_workers" section of ui-api-mapping.json.
+start_service_worker() {
+  local svc_name="$1" svc_repo="$2" svc_port="$3" svc_module="$4"
+  local svc_dir="${WORKSPACE_ROOT}/${svc_repo}"
+
+  if [ ! -d "$svc_dir" ]; then
+    warn "Service worker repo not found: ${svc_repo} — skipping"
+    return
+  fi
+
+  # Use the repo's own .venv if it exists, otherwise fall back to workspace venv
+  local python_bin
+  if [ -f "$svc_dir/.venv/bin/python" ]; then
+    python_bin="$svc_dir/.venv/bin/python"
+  elif [ -f "$WORKSPACE_ROOT/.venv-workspace/bin/python" ]; then
+    python_bin="$WORKSPACE_ROOT/.venv-workspace/bin/python"
+  else
+    warn "No Python venv found for ${svc_repo} — skipping"
+    return
+  fi
+
+  info "Starting ${BOLD}${svc_name}${NC} worker on port ${svc_port}..."
+  cd "$svc_dir"
+
+  local env_args=(
+    "CLOUD_PROVIDER=${DEV_CLOUD_PROVIDER}"
+    "CLOUD_MOCK_MODE=${DEV_CLOUD_MOCK_MODE}"
+    "RUNTIME_MODE=${DEV_RUNTIME_MODE}"
+    "MODE=live"
+    "PORT=${svc_port}"
+    "HEALTH_PORT=${svc_port}"
+    "API_PORT=${svc_port}"
+    "STORAGE_EMULATOR_HOST=${STORAGE_EMULATOR_HOST:-}"
+    "PUBSUB_EMULATOR_HOST=${PUBSUB_EMULATOR_HOST:-}"
+    "BIGQUERY_EMULATOR_HOST=${BIGQUERY_EMULATOR_HOST:-}"
+    "GOOGLE_APPLICATION_CREDENTIALS="
+  )
+  if [ -n "$DEV_DISABLE_AUTH" ]; then
+    env_args+=("DISABLE_AUTH=${DEV_DISABLE_AUTH}")
+  fi
+  if [ -n "$DEV_MOCK_STATE_MODE" ]; then
+    env_args+=("MOCK_STATE_MODE=${DEV_MOCK_STATE_MODE}")
+  fi
+
+  # Read extra_args from mapping file (CLI flags the service requires)
+  local svc_extra_args
+  svc_extra_args=$(jq -r ".service_workers[\"${svc_name}\"].extra_args // empty" "$MAPPING_FILE")
+
+  # shellcheck disable=SC2086 — intentional word-splitting of extra_args
+  env "${env_args[@]}" \
+    "$python_bin" -m "$svc_module" $svc_extra_args > "${PID_DIR}/${svc_name}.log" 2>&1 &
+
+  local pid=$!
+  echo "$pid" > "${PID_DIR}/${svc_name}.pid"
+  echo "$svc_port" > "${PID_DIR}/${svc_name}.port"
+  info "  ${svc_name} started (PID $pid, port $svc_port)"
+}
+
+start_all_service_workers() {
+  local worker_count
+  worker_count=$(jq -r '[.service_workers // {} | keys[] | select(startswith("$") | not)] | length' "$MAPPING_FILE")
+
+  if [ "$worker_count" -eq 0 ]; then
+    info "No service workers defined in ui-api-mapping.json"
+    return
+  fi
+
+  echo ""
+  info "Starting ${BOLD}${worker_count} backend service workers${NC}..."
+
+  local workers
+  workers=$(jq -r '.service_workers | keys[] | select(startswith("$") | not)' "$MAPPING_FILE")
+
+  local n=0
+  for svc_name in $workers; do
+    n=$((n + 1))
+    local svc_repo svc_port svc_module
+    svc_repo=$(jq -r ".service_workers[\"${svc_name}\"].repo" "$MAPPING_FILE")
+    svc_port=$(jq -r ".service_workers[\"${svc_name}\"].port" "$MAPPING_FILE")
+    svc_module=$(jq -r ".service_workers[\"${svc_name}\"].module" "$MAPPING_FILE")
+
+    info "[$n/$worker_count] Service worker: $svc_name"
+    start_service_worker "$svc_name" "$svc_repo" "$svc_port" "$svc_module"
+  done
+}
+
 # ── Shared library watch processes ──────────────────────────────────────────
 # Starts `npm run dev` (vite build --watch) in each shared UI library so that
 # any source change is immediately rebuilt and picked up by consumer Vite HMR.
@@ -503,11 +663,24 @@ fi
 
 # Mode already persisted by resolve_env_vars() above
 
+# ── Start GCP emulators (must be ready before any service) ─────────────────
+# Emulators are started for mock/ci modes so that services and SIT tests that
+# depend on GCS/PubSub don't skip due to missing backends.
+if [[ "$ENV_MODE" == "mock" || "$ENV_MODE" == "ci" ]]; then
+  if [[ "$COMPONENT_FILTER" != "frontend-only" ]]; then
+    echo ""
+    info "Starting GCP emulators for ${ENV_MODE} mode..."
+    start_gcs_emulator
+    start_pubsub_emulator
+  fi
+fi
+
 echo ""
 echo "${BOLD}=== Unified Trading System — Dev Mode ===${NC}"
 if [[ "$ENV_MODE" == "mock" || "$ENV_MODE" == "ci" ]]; then
   echo "  Mode:           ${CYAN}${ENV_MODE}${NC}"
   echo "  CLOUD_PROVIDER=local, CLOUD_MOCK_MODE=true, DISABLE_AUTH=true, MOCK_STATE_MODE=${DEV_MOCK_STATE_MODE}"
+  echo "  Emulators:      GCS=:4443, PubSub=:8085, BQ=:9050 (env vars exported)"
 else
   echo "  Mode:           ${CYAN}${ENV_MODE}${NC}"
   echo "  CLOUD_PROVIDER=${DEV_CLOUD_PROVIDER}, CLOUD_MOCK_MODE=false, DISABLE_AUTH not set"
@@ -578,6 +751,13 @@ case "$TARGET_MODE" in
     done
     ;;
 esac
+
+# ── Start backend service workers (for --all or --backend-only) ────────────
+# Service workers are standalone services (execution, risk, alerting, etc.)
+# that don't have their own UI but are needed for SIT integration tests.
+if [[ "$TARGET_MODE" == "all" ]] && [[ "$COMPONENT_FILTER" != "frontend-only" ]]; then
+  start_all_service_workers
+fi
 
 echo ""
 
@@ -657,6 +837,41 @@ if [[ "$COMPONENT_FILTER" != "backend-only" ]]; then
     fi
   done
   echo ""
+fi
+
+# Print emulator status
+if [[ "$ENV_MODE" == "mock" || "$ENV_MODE" == "ci" ]] && [[ "$COMPONENT_FILTER" != "frontend-only" ]]; then
+  echo "${BOLD}GCP Emulators:${NC}"
+  if [ -f "${PID_DIR}/fake-gcs.pid" ]; then
+    printf "  %-28s %s\n" "fake-gcs-server (GCS):" "http://localhost:4443"
+  else
+    printf "  %-28s %s\n" "fake-gcs-server (GCS):" "NOT RUNNING (docker unavailable?)"
+  fi
+  if [ -f "${PID_DIR}/pubsub-emulator.pid" ]; then
+    printf "  %-28s %s\n" "PubSub emulator:" "localhost:8085"
+  else
+    printf "  %-28s %s\n" "PubSub emulator:" "NOT RUNNING (gcloud unavailable?)"
+  fi
+  echo ""
+fi
+
+# Print service worker status
+if [[ "$TARGET_MODE" == "all" ]] && [[ "$COMPONENT_FILTER" != "frontend-only" ]]; then
+  local_worker_count=$(jq -r '[.service_workers // {} | keys[] | select(startswith("$") | not)] | length' "$MAPPING_FILE")
+  if [ "$local_worker_count" -gt 0 ]; then
+    echo "${BOLD}Service workers:${NC}"
+    for svc_name in $(jq -r '.service_workers | keys[] | select(startswith("$") | not)' "$MAPPING_FILE"); do
+      pid_file="${PID_DIR}/${svc_name}.pid"
+      if [ -f "$pid_file" ]; then
+        local_pid=$(cat "$pid_file")
+        local_port=$(cat "${PID_DIR}/${svc_name}.port" 2>/dev/null || echo "?")
+        printf "  %-34s PID %-8s port %s\n" "${svc_name}:" "$local_pid" "$local_port"
+      else
+        printf "  %-34s %s\n" "${svc_name}:" "SKIPPED (repo not found)"
+      fi
+    done
+    echo ""
+  fi
 fi
 
 info "Dev servers started. Logs in /tmp/unified-dev-pids/*.log"

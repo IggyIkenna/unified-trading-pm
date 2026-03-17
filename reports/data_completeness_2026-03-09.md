@@ -1,6 +1,6 @@
 # Data Completeness Report — 2026-03-09
 
-**Overall:** 27/33 sources passing (95.0% average coverage) **Threshold:** 95.0%
+**Overall:** 26/33 sources passing (94.5% average coverage) **Threshold:** 95.0%
 
 | Source                            | Asset Class | Criticality   | Coverage% | Pass | Expected | Actual |
 | --------------------------------- | ----------- | ------------- | --------- | ---- | -------- | ------ |
@@ -10,6 +10,7 @@
 | ofr                               | tradfi      | informational | 87.5%     | ✗    | 8        | 7      |
 | openbb                            | tradfi      | informational | 87.5%     | ✗    | 8        | 7      |
 | yahoo_finance                     | tradfi      | important     | 87.5%     | ✗    | 8        | 7      |
+| ml-training-api                   | ml          | informational | 79.2%     | ✗    | 24       | 19     |
 | aave_v3                           | crypto_defi | critical      | 97.0%     | ✓    | 7200     | 6984   |
 | balancer                          | crypto_defi | critical      | 97.0%     | ✓    | 7200     | 6984   |
 | binance                           | crypto_cefi | critical      | 97.0%     | ✓    | 86400    | 83808  |
@@ -36,4 +37,3 @@
 | features-calendar-service         | feature     | informational | 95.8%     | ✓    | 24       | 23     |
 | features-commodity-service        | feature     | informational | 95.8%     | ✓    | 24       | 23     |
 | glassnode                         | onchain     | important     | 95.8%     | ✓    | 24       | 23     |
-| ml-training-api                   | ml          | informational | 95.8%     | ✓    | 24       | 23     |
