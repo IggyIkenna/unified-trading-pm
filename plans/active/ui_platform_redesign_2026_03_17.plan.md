@@ -562,15 +562,61 @@ observable data. This is visible through:
 Libraries report issues via their parent service's `log_event()` calls. For example, UTL's `POINT_IN_TIME_VIOLATION` is
 emitted by whichever service uses UTL — visible in Ops Hub `/events` with the service name as the emitter.
 
+### Reference Data & Config Network (Dropdown / Filter SSOT)
+
+The UI needs reference data for every dropdown, filter, enum badge, and config form. This data lives in generated
+OpenAPI artifacts in `unified-api-contracts/openapi/`:
+
+| File                                           | What it provides                                                                                                                                                                                       | UI Consumption                                                                                                                                                                                                                           |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`ui-reference-data.json`**                   | 100+ venue→category mappings, instrument types per venue, UAC/UIC enum values (OrderSide, OrderType, InstrumentType, AlertType, AssetClass, Sport, etc.), operational mode axes, service port registry | SSOT for every FilterBar dropdown, Select component, enum badge, and config form across ALL surfaces. Loaded once at app init.                                                                                                           |
+| **`system-topology.json`**                     | 65+ repos with deps, deployment config, 20 data flow pipelines, 32 strategy definitions, dependency graph with topological order, UI-API mapping                                                       | Operations Hub `/services` (dependency DAG), Config & Onboarding (strategy manifest), Trading CC `/health` (service tier hierarchy)                                                                                                      |
+| **`config-registry.json`**                     | 45 Pydantic config classes from 28 repos, all fields with types and defaults                                                                                                                           | Config & Onboarding config forms (auto-generated fields from schema), Operations Hub `/services/:name` Config tab                                                                                                                        |
+| **`orphan-report.txt`**                        | 547 UAC/UIC schemas not exposed by any API endpoint                                                                                                                                                    | Development audit only — not UI-rendered. These are internal contract schemas used service-to-service. If a schema represents user-observable data and isn't exposed by an API, that's a backend gap to fix, not a UI surface to create. |
+| **`unified-trading-system.openapi.json/yaml`** | Full OpenAPI spec for all services                                                                                                                                                                     | Developer reference. Could power auto-generated API docs in Operations Hub (future).                                                                                                                                                     |
+
+**How reference data feeds the UI:**
+
+```
+ui-reference-data.json (loaded at app init)
+  ├── venue_category_map → FilterBar "Venue" dropdown with category grouping
+  ├── instrument_types_by_venue → FilterBar "Instrument Type" cascades based on venue selection
+  ├── uac_enums (OrderSide, OrderType, etc.) → Badge variants, form selects
+  ├── uic_enums (AlertType, AssetClass, etc.) → Alert severity badges, asset class filters
+  ├── operational_modes → Config & Onboarding mode toggles (mock/live/ci/api-real)
+  └── service_port_registry → SurfaceRegistry + GlobalNavBar port resolution
+```
+
+**Config form generation from config-registry.json:**
+
+Config & Onboarding forms for strategy config, execution config, and risk config can be auto-generated from the config
+registry. Each field in the registry has a type and default — this maps directly to form inputs:
+
+- `str` → text input with default
+- `int/float` → number input with default and validation
+- `bool` → toggle switch
+- `Literal[...]` or enum → Select dropdown with allowed values from ui-reference-data.json
+- `list[...]` → multi-select or repeatable group
+
+This eliminates the "where do dropdown options come from?" problem. Every dropdown in the system traces back to either
+`ui-reference-data.json` (enums, venues, instruments) or `config-registry.json` (config field values).
+
 ### Confirmed: Zero Domain Data Orphans
 
-Every event type (106), every domain schema (50+), every PubSub channel, and every structured log field maps to at least
-one UI surface with a specific route. The observability chain is:
+Every event type (106), every domain schema (50+), every PubSub channel, every structured log field, and every reference
+data registry maps to at least one UI surface with a specific route. The observability chain is:
 
 ```
 Library schema defines structure → Service produces events/data → API exposes it →
 UI surface renders it (with snapshot at T + time series over period)
+
+Reference data (enums, venues, configs) → ui-reference-data.json / config-registry.json →
+FilterBar dropdowns, form inputs, badge variants (loaded at app init)
 ```
+
+547 UAC/UIC schemas in the orphan report are internal contract types used service-to-service. They are NOT orphans —
+they are the plumbing that services use internally. The observable outputs of those schemas flow through the API
+endpoints and events already mapped above.
 
 ---
 

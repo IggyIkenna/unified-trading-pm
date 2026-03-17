@@ -14,21 +14,27 @@ todos:
     status: blocked
   - id: scaffold-repo
     content:
-      "Create IggyIkenna/user-management-ui GitHub repo. Scaffold from deployment-ui as visual template: same React 18 +
-      Vite + Tailwind setup. Install @unified-admin/core (auth, types) + @unified-trading/ui-kit (design tokens,
-      components). Same sidebar nav pattern, same AppHeader, same auth wrapper as deployment-ui."
-    status: todo
+      "- [x] Create IggyIkenna/user-management-ui GitHub repo. Scaffold from deployment-ui as visual template: same
+      React 19 + Vite + Tailwind setup. Install @unified-admin/core (auth, types) + @unified-trading/ui-kit (design
+      tokens, components). Same sidebar nav pattern, same AppShell, same auth wrapper as deployment-ui. Port 5184.
+      Collaborators: datadodo, CosmicTrader (admin)."
+    status: done
   - id: add-to-workspace-manifest
     content:
-      "Add user-management-ui entry to workspace-manifest.json: type=ui, arch_tier=ui, cluster=admin-ui, merge_level=11,
-      github_url=https://github.com/IggyIkenna/user-management-ui, dependencies=[unified-admin-ui,
-      unified-trading-ui-kit]."
-    status: todo
+      "- [x] Add user-management-ui entry to workspace-manifest.json: type=ui, arch_tier=ui, cluster=admin-ui,
+      merge_level=11, github_url=https://github.com/IggyIkenna/user-management-ui, dependencies=[unified-admin-ui,
+      unified-trading-ui-kit]. Added to workspace-uis.code-workspace, workspace-complete.code-workspace,
+      unified-trading-system-repos.code-workspace, and ui-api-mapping.json (port 5184)."
+    status: done
   - id: setup-quality-gates
     content:
-      Add scripts/quality-gates.sh (eslint, tsc --noEmit, vitest, prettier --check). Add
-      .github/workflows/quality-gates.yml. Configure vitest.config.ts + playwright.config.ts.
-    status: todo
+      "- [x] Add scripts/quality-gates.sh (sources base-ui.sh from PM — shared with all UI repos). Add
+      .github/workflows/quality-gates.yml + 5 more workflows (semver-agent, staging-lock, request-major-bump,
+      major-bump-issue-handler, update-dependency-version). Configure vitest.config.ts (pool: forks, 70% coverage) +
+      playwright.config.ts. GH secrets: GH_PAT, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. Includes Dockerfile,
+      cloudbuild.yaml, .pre-commit-config.yaml, .cursorignore, .actrc, .npmrc, symlinks (CLAUDE.md, quickmerge.sh,
+      pre-flight-audit.sh)."
+    status: done
   - id: design-person-schema
     content: |-
       Define Person type in @unified-admin/core/types/person.ts: { id: string, name: string, email: string, role: UserRole,
@@ -39,15 +45,16 @@ todos:
     status: todo
   - id: build-users-list-page
     content:
-      "UsersPage.tsx: table of all users. Columns: name, email, role, GitHub ✓/✗, Slack ✓/✗, M365 ✓/✗, GCP ✓/✗, Portal
-      ✓/✗, actions. Actions: View, Edit, Re-provision, Offboard. Search/filter by role."
-    status: todo
+      "- [x] UsersPage.tsx: table of all users. Columns: name, email, role, status, GitHub ✓/✗, Slack ✓/✗, M365 ✓/✗, GCP
+      ✓/✗, AWS ✓/✗, Portal ✓/✗ (6 services). Click row → user detail. Search + role filter + status filter. 8 mock
+      users."
+    status: done
   - id: build-onboard-user-page
     content:
-      "OnboardUserPage.tsx: form with name, email, role selector, product slugs (multi-select for client roles), GitHub
-      handle (for admin/collaborator roles only). On submit: triggers provisioning steps sequentially; shows live status
-      per step (GitHub ✓, Slack ✓, M365 ✓, GCP ✓, Portal ✓). Sends onboarding email on completion."
-    status: todo
+      "- [x] OnboardUserPage.tsx: form with name, email, role selector, product slugs (multi-select for client roles),
+      GitHub handle (for admin/collaborator roles only). On submit: triggers provisioning for up to 6 services; shows
+      live status per step (GitHub ✓, Slack ✓, M365 ✓, GCP ✓, AWS ✓, Portal ✓). Mock mode returns instant success."
+    status: done
   - id: build-modify-user-page
     content:
       "ModifyUserPage.tsx: change role, add/remove product slugs (for client roles), re-provision individual services,
@@ -55,10 +62,10 @@ todos:
     status: todo
   - id: build-offboard-page
     content:
-      "OffboardUserPage.tsx: confirm dialog → single button triggers: revoke GitHub membership/collaboration, remove
-      from Slack, disable M365 account, remove GCP IAM binding, revoke portal access. Shows per-service revocation
-      status. Marks user status=offboarded in registry."
-    status: todo
+      "- [x] Offboard built into UserDetailPage.tsx (not separate page): confirm dialog → single button triggers
+      revocation of all 6 services (GitHub, Slack, M365, GCP, AWS, Portal). Shows per-service revocation status. Marks
+      user status=offboarded. Also includes re-provision button."
+    status: done
   - id: github-provisioning
     content:
       "Implement provisionGitHub(person): - admin role: POST /orgs/IggyIkenna/invitations (org member, role=member) -
@@ -113,9 +120,47 @@ todos:
       Onboard investor → portal access + doc upload enabled (4) Offboard admin → all 5 services revoked; user
       status=offboarded (5) Re-provision: re-run provisioning for an existing user → idempotent"
     status: todo
-  - id: quality-gate-pass
-    content: bash scripts/quality-gates.sh passes in user-management-ui; merge.
+  - id: aws-provisioning
+    content:
+      "- [ ] [AGENT] P1. Implement provisionAWS(person): Create IAM user via AWS SDK (CreateUser + CreateLoginProfile).
+      Admin/collaborator: PowerUserAccess policy. Accounting: ReadOnlyAccess. All others: skip. Revoke: DeleteUser. SA
+      needs iam:CreateUser, iam:DeleteUser, iam:AttachUserPolicy. Secret: aws-admin-access-key-id +
+      aws-admin-secret-access-key in SM. Account: 123456789012."
     status: todo
+  - id: shared-exchange-email
+    content:
+      "- [ ] [HUMAN+AGENT] P1. Shared exchange login management: Add exchangelogins@odum-research.com as a shared
+      credential entry. Build SharedCredentialsPage.tsx in user-management-ui to display shared logins (exchange name,
+      email, last rotated, who has access). Credentials stored in Secret Manager, UI reads via backend API. Use this for
+      centralised exchange logins (Binance, OKX, Bybit, etc.) so team members can access without individual accounts."
+    status: todo
+  - id: shared-2fa-tool
+    content:
+      "- [ ] [HUMAN] P2. Research and implement shared 2FA for exchange accounts. Options to evaluate: (1) 1Password
+      Teams — shared TOTP vault, browser extension auto-fills 2FA codes, audit log. (2) Bitwarden Teams — similar,
+      self-hostable. (3) Authy multi-device — shared TOTP seeds, but less audit trail. (4) AWS Secrets Manager — store
+      TOTP seeds, backend generates codes on-demand via API. Recommendation: 1Password Teams (best Cursor/CLI
+      integration, shared vaults, audit trail). Decision needed from Ikenna before implementation."
+    status: todo
+  - id: slack-workspace-setup
+    content:
+      "- [ ] [HUMAN] P0. Set up Slack workspace for Odum Research. Create channels: #engineering, #general, #board,
+      #clients, #shareholders, #finance, #ops, #investors, #ci-cd-alerts, #trading-alerts. Install Cursor Slack
+      integration for autonomous bot approvals. Enable Slack API (Bot Token Scopes: users.admin.invite,
+      users.admin.setInactive, channels:manage, chat:write). Store slack-admin-token in Secret Manager."
+    status: todo
+  - id: slack-cursor-integration
+    content:
+      "- [ ] [AGENT] P2. Once Slack workspace is live, configure Cursor/Claude Code Slack integration: (1)
+      Approve/reject commits via Slack (bot posts PR summary → human reacts with approve/reject). (2) CI/CD alerts to
+      #ci-cd-alerts channel (QG failures, deploy status, version bumps). (3) Trading alerts to #trading-alerts (position
+      limits, circuit breaker triggers). Requires slack-bot-token with chat:write + reactions:read scopes."
+    status: todo
+  - id: quality-gate-pass
+    content:
+      "- [x] bash scripts/quality-gates.sh passes in user-management-ui. All 4 gates: typecheck, lint, unit tests (21
+      passing), build. Pushed to main."
+    status: done
 isProject: false
 ---
 
@@ -162,16 +207,16 @@ for any new internal hire:
 
 ## Role → Provisioning Matrix
 
-| Role                  | GitHub                  | Slack Channels         | Microsoft 365                   | GCP IAM        | Website Portal                |
-| --------------------- | ----------------------- | ---------------------- | ------------------------------- | -------------- | ----------------------------- |
-| `admin`               | IggyIkenna org member   | #engineering, #general | Outlook + SharePoint (licensed) | Project Editor | Full                          |
-| datadodo/CosmicTrader | Collaborator (per-repo) | #engineering, #general | N/A                             | Viewer         | Full                          |
-| `board`               | N/A                     | #board                 | N/A                             | N/A            | Board decks                   |
-| `client:{slug}`       | N/A                     | #clients               | N/A                             | N/A            | Product-specific decks        |
-| `shareholder`         | N/A                     | #shareholders          | N/A                             | N/A            | Shareholder report            |
-| `accounting`          | N/A                     | #finance               | Outlook + SharePoint (licensed) | N/A            | Financials deck               |
-| `operations`          | N/A                     | #ops                   | Outlook + SharePoint (licensed) | N/A            | Company docs                  |
-| `investor`            | N/A                     | #investors             | N/A                             | N/A            | Investment decks + doc upload |
+| Role                  | GitHub                  | Slack Channels         | Microsoft 365                   | GCP IAM        | AWS IAM         | Website Portal                |
+| --------------------- | ----------------------- | ---------------------- | ------------------------------- | -------------- | --------------- | ----------------------------- |
+| `admin`               | IggyIkenna org member   | #engineering, #general | Outlook + SharePoint (licensed) | Project Editor | PowerUserAccess | Full                          |
+| datadodo/CosmicTrader | Collaborator (per-repo) | #engineering, #general | N/A                             | Viewer         | PowerUserAccess | Full                          |
+| `board`               | N/A                     | #board                 | N/A                             | N/A            | N/A             | Board decks                   |
+| `client:{slug}`       | N/A                     | #clients               | N/A                             | N/A            | N/A             | Product-specific decks        |
+| `shareholder`         | N/A                     | #shareholders          | N/A                             | N/A            | N/A             | Shareholder report            |
+| `accounting`          | N/A                     | #finance               | Outlook + SharePoint (licensed) | N/A            | ReadOnlyAccess  | Financials deck               |
+| `operations`          | N/A                     | #ops                   | Outlook + SharePoint (licensed) | N/A            | N/A             | Company docs                  |
+| `investor`            | N/A                     | #investors             | N/A                             | N/A            | N/A             | Investment decks + doc upload |
 
 ---
 
@@ -190,13 +235,15 @@ Sidebar:
 
 ## Key Secrets Needed in Secret Manager
 
-| Secret                                          | Scope                                                                             |
-| ----------------------------------------------- | --------------------------------------------------------------------------------- |
-| `github-admin-pat`                              | GH PAT: `admin:org` + `repo` (IggyIkenna org)                                     |
-| `slack-admin-token`                             | Slack: `users.admin.invite`, `users.admin.setInactive`                            |
-| `ms-graph-client-id` + `ms-graph-client-secret` | Graph API: `User.ReadWrite.All`, `Group.ReadWrite.All`, `Directory.ReadWrite.All` |
-| `sendgrid-api-key`                              | Onboarding emails                                                                 |
-| GCP SA: `resourcemanager.projectIamAdmin`       | GCP provisioning                                                                  |
+| Secret                                                    | Scope                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `github-admin-pat`                                        | GH PAT: `admin:org` + `repo` (IggyIkenna org)                                               |
+| `slack-admin-token`                                       | Slack Bot: `users.admin.invite`, `users.admin.setInactive`, `channels:manage`, `chat:write` |
+| `ms-graph-client-id` + `ms-graph-client-secret`           | Graph API: `User.ReadWrite.All`, `Group.ReadWrite.All`, `Directory.ReadWrite.All`           |
+| `aws-admin-access-key-id` + `aws-admin-secret-access-key` | AWS IAM: `iam:CreateUser`, `iam:DeleteUser`, `iam:AttachUserPolicy` (account 123456789012)  |
+| `sendgrid-api-key`                                        | Onboarding emails                                                                           |
+| GCP SA: `resourcemanager.projectIamAdmin`                 | GCP provisioning                                                                            |
+| `1password-connect-token` (future)                        | Shared vault API access for exchange credentials + 2FA seeds                                |
 
 ---
 

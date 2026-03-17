@@ -62,6 +62,9 @@
     {
       "path": "../../unified-trading-ui-auth",
     },
+    {
+      "path": "../../user-management-ui",
+    },
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",

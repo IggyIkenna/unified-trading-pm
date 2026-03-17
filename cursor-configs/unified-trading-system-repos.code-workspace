@@ -224,6 +224,9 @@
     {
       "path": "unified-trading-ui-kit",
     },
+    {
+      "path": "user-management-ui",
+    },
   ],
   "settings": {
     "terminal.integrated.env.osx": {
