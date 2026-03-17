@@ -214,9 +214,9 @@ todos:
 
   - id: p5-flag3-cassette-ssot
     content: |
-      - [ ] [AGENT] P1. FLAG 3: Consolidate cassette locations — delete local copies in UTEI/UMI tests/cassettes/, all reference AC external/<venue>/mocks/ SSOT path
-    status: todo
-    note: ""
+      - [x] [AGENT] P1. FLAG 3: Investigated — no duplicates. Local UTEI/UMI cassettes cover execution endpoints (order_submit, position_risk), UAC covers reference data (exchangeInfo, tickers). Contribute locals to UAC via PR (expected workflow).
+    status: done
+    note: "Investigated 2026-03-17. No deletion needed."
 
   - id: p5-flag4-defi-config
     content: |
@@ -232,21 +232,25 @@ todos:
 
   - id: p5-flag6-testnet-yaml
     content: |
-      - [ ] [AGENT] P2. FLAG 6: Verify testnet_contracts.yaml matches TestnetContractRegistry loader expectations — field names, chain IDs, protocol keys
-    status: todo
-    note: ""
+      - [x] [AGENT] P2. FLAG 6: Verified — YAML schema exactly matches Python loader. chain_id→protocol→contract_name→address structure. No mismatches.
+    status: done
+    note:
+      "Verified 2026-03-17. KNOWN_TESTNET_CHAIN_IDS has 4 extra chains (Goerli, Arb/Opt/Base Sepolia) not in YAML —
+      benign."
 
   - id: p5-flag7-settlement-ssot
     content: |
-      - [ ] [AGENT] P1. FLAG 7: Check if strategy-service imports UIC SettlementType or defines its own — fix if SSOT violation
+      - [ ] [AGENT] P1. FLAG 7: SSOT VIOLATION CONFIRMED — 3 SettlementType defs (UIC + pnl.py + settlement_service.py), all divergent. Fix: add LST_YIELD + GAS_REBATE to UIC, delete 2 local defs, import from UIC.
     status: todo
-    note: ""
+    note:
+      "Investigated 2026-03-17. UIC has 9 members (StrEnum), pnl.py has 8 (Enum, missing LP_FEE), settlement_service.py
+      has 6 (Enum, has unique LST_YIELD+GAS_REBATE)."
 
   - id: p5-flag8-venue-slas
     content: |
-      - [ ] [AGENT] P2. FLAG 8: Find where venue SLAs for 33 venues are defined — add to SSOT index if missing
+      - [ ] [AGENT] P2. FLAG 8: Found — UIC domain/data_quality/venue_freshness_slas.py (32 venues, not 33 — 2 CeFi missing). Fix: add 2 missing CeFi venues, add to SSOT-INDEX.
     status: todo
-    note: ""
+    note: "Investigated 2026-03-17. CeFi comment says 9 but lists 7. File not in SSOT-INDEX."
 
   # =====================================================================
   # PHASE 6: Cleanup + Docs

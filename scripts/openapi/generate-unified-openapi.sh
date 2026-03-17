@@ -67,4 +67,14 @@ echo ""
 echo "=== Generating UI Reference Data ==="
 python "$SCRIPT_DIR/generate_ui_reference_data.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+# Run the config registry generator (per-service config classes)
+echo ""
+echo "=== Generating Config Registry ==="
+python "$SCRIPT_DIR/generate_config_registry.py" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+# Run the system topology generator (repos, deployment, strategies, data flows)
+echo ""
+echo "=== Generating System Topology ==="
+python "$SCRIPT_DIR/generate_system_topology.py" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 echo "=== All Done ==="

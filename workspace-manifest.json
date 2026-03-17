@@ -3205,6 +3205,27 @@
       "ci_status": "LOCAL_PASS",
       "serves_ui": ["onboarding-ui", "settlement-ui", "strategy-ui", "unified-admin-ui"],
       "tags": ["config", "standard"]
+    },
+    "user-management-ui": {
+      "type": "ui",
+      "arch_tier": "ui",
+      "status": "active",
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "tier": 3,
+      "role": "ui",
+      "doc_standard": "ui-canonical",
+      "testing_level": "unit",
+      "ci_status": "LOCAL_PASS",
+      "coverage_pct": "N/A",
+      "github_url": "https://github.com/IggyIkenna/user-management-ui",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "merge_level": 11,
+      "cluster": "admin-ui",
+      "dependencies": ["unified-admin-ui", "unified-trading-ui-kit"],
+      "codex_sections": ["01-domain", "06-coding-standards"],
+      "tags": ["admin", "user-management", "standard"]
     }
   },
   "topologicalOrder": {
