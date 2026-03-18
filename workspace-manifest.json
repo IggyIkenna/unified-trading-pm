@@ -929,7 +929,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1043,12 +1043,17 @@
           "required": true
         },
         {
+          "name": "unified-features-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
           "name": "unified-feature-calculator-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1177,7 +1182,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 35,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1663,7 +1668,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 75,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1773,7 +1778,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 35,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
