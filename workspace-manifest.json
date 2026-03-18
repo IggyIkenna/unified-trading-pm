@@ -57,27 +57,54 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
+    "alerting-service": "0.1.0",
     "batch-audit-api": "0.1.0",
+    "batch-audit-ui": "0.1.0",
     "batch-live-reconciliation-service": "0.1.0",
+    "client-reporting-api": "0.1.0",
+    "client-reporting-ui": "0.1.0",
+    "config-api": "0.1.0",
     "deployment-api": "0.1.1",
     "deployment-service": "0.1.1",
     "deployment-ui": "0.1.0",
     "elysium-defi-system": "0.1.0",
     "execution-algo-library": "0.1.6",
+    "execution-analytics-ui": "0.1.0",
+    "execution-results-api": "0.1.0",
     "execution-service": "0.1.1",
+    "features-calendar-service": "0.2.1",
+    "features-commodity-service": "0.1.0",
     "features-cross-instrument-service": "0.1.1",
+    "features-delta-one-service": "0.2.0",
     "features-multi-timeframe-service": "0.1.1",
+    "features-onchain-service": "0.2.0",
     "features-sports-service": "0.1.0",
+    "features-volatility-service": "0.2.0",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.1.117",
+    "live-health-monitor-ui": "0.1.0",
+    "logs-dashboard-ui": "0.1.0",
+    "market-data-api": "0.1.0",
+    "market-data-processing-service": "0.2.0",
     "market-tick-data-service": "0.3.1",
     "matching-engine-library": "0.1.57",
     "ml-inference-api": "0.1.0",
+    "ml-inference-service": "0.1.0",
     "ml-training-api": "0.1.0",
+    "ml-training-service": "0.1.0",
+    "ml-training-ui": "0.1.0",
     "odum-research-website": "0.1.0",
+    "onboarding-ui": "0.1.0",
     "pnl-attribution-service": "0.1.0",
+    "position-balance-monitor-service": "0.1.1",
+    "risk-and-exposure-service": "0.1.0",
+    "settlement-ui": "0.1.0",
+    "strategy-service": "0.1.0",
+    "strategy-ui": "0.1.0",
     "system-integration-tests": "0.2.0",
+    "trading-agent-service": "0.1.0",
     "trading-analytics-api": "0.1.0",
+    "trading-analytics-ui": "0.1.0",
     "unified-admin-ui": "0.1.0",
     "unified-api-contracts": "0.2.38",
     "unified-cloud-interface": "0.11.39",
@@ -101,7 +128,7 @@
     "unified-trading-pm": "1.2.0",
     "unified-trading-ui-auth": "0.2.1",
     "unified-trading-ui-kit": "0.1.0",
-    "config-api": "0.1.0"
+    "user-management-ui": "0.1.0"
   },
   "repositories": {
     "alerting-service": {
@@ -189,7 +216,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "testing_level": "unit",
       "skipped_gates": [],
       "service_declaration": {
@@ -262,7 +289,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -318,7 +345,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 18,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -394,7 +421,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -456,7 +483,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -611,7 +638,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 66,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -700,7 +727,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -760,7 +787,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -817,7 +844,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/features-commodity-service",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -877,7 +904,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 65,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -991,7 +1018,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/features-multi-timeframe-service",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 57,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1125,7 +1152,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1396,7 +1423,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1457,7 +1484,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1533,7 +1560,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1614,7 +1641,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "testing_level": "unit",
       "skipped_gates": [],
       "service_declaration": {
@@ -1714,7 +1741,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -1907,7 +1934,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 46,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1967,7 +1994,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2026,7 +2053,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2257,7 +2284,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/trading-agent-service",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 50,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2316,7 +2343,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "testing_level": "unit",
       "skipped_gates": [],
       "service_declaration": {
@@ -2425,7 +2452,7 @@
       ],
       "status": "active",
       "notes": "Cloud abstraction layer: storage, pub/sub, logging. Tier 0 pure leaf.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 82,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3007,7 +3034,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3189,6 +3216,8 @@
       "github_url": "https://github.com/IggyIkenna/config-api",
       "type": "api",
       "arch_tier": "api",
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
       "tier": 3,
       "dependencies": [
         {
@@ -3212,7 +3241,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "serves_ui": ["onboarding-ui", "settlement-ui", "strategy-ui", "unified-admin-ui"],
       "tags": ["config", "standard"]
     },
