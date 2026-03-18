@@ -949,6 +949,156 @@ else
   log_success "STEP 5.23: UAC import surface (exempt repo)"
 fi
 
+# ============================================================
+# STEP 5.30 — No hardcoded market categories (Pattern A)
+# Services must import MarketCategory from UIC or derive from UAC VENUE_CATEGORY_MAP.
+# Catches: CATEGORIES = ["CEFI", "TRADFI", "DEFI"] and similar hardcoded lists.
+# ============================================================
+HARDCODED_CATEGORIES=$(rg '\[.*"CEFI".*"TRADFI".*\]|\[.*"TRADFI".*"CEFI".*\]|categories\s*=\s*\[.*"CEFI"|CATEGORIES\s*=\s*\[' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    | grep -v 'MarketCategory' \
+    | grep -v 'VENUE_CATEGORY_MAP' \
+    || :)
+if [ -n "$HARDCODED_CATEGORIES" ]; then
+    log_fail "STEP 5.30: Hardcoded market categories found — import MarketCategory from unified_internal_contracts:"
+    echo "$HARDCODED_CATEGORIES" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.30: No hardcoded market categories"
+fi
+
+# ============================================================
+# STEP 5.31 — No hardcoded bucket name f-string templates (Pattern B)
+# Bucket names must come from config fields, not inline f-strings.
+# Catches: f"features-*-{category}-{project}" and similar patterns.
+# ============================================================
+HARDCODED_BUCKETS=$(rg 'f"(features-|instruments-|ml-)[a-z-]+-\{' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    | grep -v '_template' \
+    | grep -v 'Field(' \
+    | grep -v 'default=' \
+    || :)
+if [ -n "$HARDCODED_BUCKETS" ]; then
+    log_fail "STEP 5.31: Hardcoded bucket name templates found — move to config fields:"
+    echo "$HARDCODED_BUCKETS" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.31: No hardcoded bucket name templates"
+fi
+
+# ============================================================
+# STEP 5.32 — No duplicate enum definitions that exist in UAC/UIC (Pattern H)
+# Services must not redefine enums that exist in shared contracts.
+# Known enums: BetSide, MarketCategory, Timeframe, RuntimeMode, CloudProvider.
+# ============================================================
+DUPLICATE_ENUMS=$(rg 'class\s+(BetSide|MarketCategory|Timeframe|RuntimeMode|CloudProvider|DataMode|PhaseMode)\s*\(' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    || :)
+if [ -n "$DUPLICATE_ENUMS" ]; then
+    log_fail "STEP 5.32: Duplicate enum definitions (already in UAC/UIC) — import instead of redefining:"
+    echo "$DUPLICATE_ENUMS" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.32: No duplicate shared enum definitions"
+fi
+
+# ============================================================
+# STEP 5.33 — No hardcoded TIMEFRAME_TO_SECONDS mappings (Pattern E)
+# Must import from unified_internal_contracts, not define locally.
+# ============================================================
+LOCAL_TIMEFRAME_MAP=$(rg 'TIMEFRAME.*(TO_SECONDS|SECONDS)\s*[:=]\s*\{' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    | grep -v 'from unified' \
+    || :)
+if [ -n "$LOCAL_TIMEFRAME_MAP" ]; then
+    log_fail "STEP 5.33: Local TIMEFRAME_TO_SECONDS mapping found — import from unified_internal_contracts:"
+    echo "$LOCAL_TIMEFRAME_MAP" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.33: No local TIMEFRAME_TO_SECONDS definitions"
+fi
+
+# ============================================================
+# STEP 5.34 — No brittle getattr for config fields (Pattern F)
+# Config access must use typed attributes, not getattr with fallback defaults.
+# NOTE: Advisory (WARN) until config_reloaders.py template is updated across all services.
+# Graduate to FAIL after full remediation.
+# ============================================================
+BRITTLE_GETATTR=$(rg 'getattr\s*\(\s*service_config\s*,' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    || :)
+if [ -n "$BRITTLE_GETATTR" ]; then
+    log_warn "STEP 5.34: Brittle getattr(service_config, ...) found — use typed config class access:"
+    echo "$BRITTLE_GETATTR" | head -5
+    # Advisory only — will graduate to FAIL after config_reloaders template remediation
+else
+    log_success "STEP 5.34: No brittle getattr config patterns"
+fi
+
+# ============================================================
+# STEP 5.35 — No duplicate API URL constants (Pattern: DeFi/macro URLs)
+# External API URLs must come from unified-features-interface, not local hardcoding.
+# ============================================================
+HARDCODED_URLS=$(rg '"https://api\.(llama\.fi|coingecko\.com|alternative\.me|stlouisfed\.org)' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '# CORRECT-LOCAL' \
+    | grep -v 'Field(' \
+    | grep -v 'default=' \
+    || :)
+if [ -n "$HARDCODED_URLS" ]; then
+    log_fail "STEP 5.35: Hardcoded external API URLs found — import from unified_features_interface:"
+    echo "$HARDCODED_URLS" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.35: No hardcoded external API URLs"
+fi
+
+# ============================================================
+# STEP 5.36 — Config singleton: no bare Settings() outside get_settings()
+# Components must use get_settings() singleton, not construct fresh Settings().
+# ============================================================
+BARE_SETTINGS=$(rg 'Settings\(\)' \
+    --type py \
+    --glob '!.venv*' --glob '!**/.venv*/**' \
+    --glob '!**/tests/**' --glob '!**/scripts/**' \
+    --glob '!**/config.py' \
+    --glob '!**/conftest.py' \
+    "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v 'get_settings' \
+    | grep -v '# CORRECT-LOCAL' \
+    | grep -v '_settings = ' \
+    || :)
+if [ -n "$BARE_SETTINGS" ]; then
+    log_fail "STEP 5.36: Bare Settings() construction found outside config.py — use get_settings() singleton:"
+    echo "$BARE_SETTINGS" | head -5
+    V=$(( V + 1 ))
+else
+    log_success "STEP 5.36: No bare Settings() outside config module"
+fi
+
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
 log_ok "Codex compliance PASSED"
 
