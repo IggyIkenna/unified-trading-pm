@@ -184,7 +184,14 @@
       "ci_failure_reason": "QG exit 1 (from batch 6 agent)",
       "tier": 3,
       "role": "service",
-      "tags": ["alerting", "cross-domain", "standard"]
+      "tags": ["alerting", "cross-domain", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "batch-audit-api": {
       "type": "api-service",
@@ -229,7 +236,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["analytics", "cefi", "monitoring", "standard"]
+      "tags": ["analytics", "cefi", "monitoring", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-trading-library"
+      ]
     },
     "batch-audit-ui": {
       "type": "ui",
@@ -253,7 +266,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["analytics", "cefi", "monitoring", "standard"]
+      "tags": ["analytics", "cefi", "monitoring", "standard"],
+      "integration_dependencies": []
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -302,7 +316,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["analytics", "cefi", "standard"]
+      "tags": ["analytics", "cefi", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -360,7 +381,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["analytics", "cefi", "standard"]
+      "tags": ["analytics", "cefi", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "client-reporting-ui": {
       "type": "ui",
@@ -384,7 +412,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["analytics", "cefi", "standard"]
+      "tags": ["analytics", "cefi", "standard"],
+      "integration_dependencies": []
     },
     "deployment-api": {
       "type": "api-service",
@@ -441,7 +470,14 @@
       "tier": 3,
       "role": "api",
       "serves_ui": ["deployment-ui"],
-      "tags": ["cefi", "deployment", "standard"]
+      "tags": ["cefi", "deployment", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -497,7 +533,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "deployment", "standard"]
+      "tags": ["cefi", "deployment", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-trading-library"
+      ]
     },
     "deployment-ui": {
       "type": "ui",
@@ -523,7 +566,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["cefi", "deployment", "standard"]
+      "tags": ["cefi", "deployment", "standard"],
+      "integration_dependencies": []
     },
     "elysium-defi-system": {
       "type": "service",
@@ -552,7 +596,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["defi", "standard"]
+      "tags": ["defi", "standard"],
+      "integration_dependencies": [
+        "unified-config-interface",
+        "unified-defi-execution-interface",
+        "unified-events-interface",
+        "unified-trading-library"
+      ]
     },
     "execution-algo-library": {
       "type": "library",
@@ -576,7 +626,8 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "library",
-      "tags": ["cross-domain", "execution", "important"]
+      "tags": ["cross-domain", "execution", "important"],
+      "integration_dependencies": []
     },
     "execution-analytics-ui": {
       "type": "ui",
@@ -600,7 +651,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["analytics", "cefi", "execution", "standard"]
+      "tags": ["analytics", "cefi", "execution", "standard"],
+      "integration_dependencies": []
     },
     "execution-results-api": {
       "type": "api-service",
@@ -653,7 +705,13 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["cefi", "execution", "standard"]
+      "tags": ["cefi", "execution", "standard"],
+      "integration_dependencies": [
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "execution-service": {
       "type": "service",
@@ -746,7 +804,19 @@
       "ci_failure_reason": "Codex compliance FAILED: 7 violations",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "execution", "standard"]
+      "tags": ["cefi", "execution", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-defi-execution-interface",
+        "unified-domain-client",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-sports-execution-interface",
+        "unified-trade-execution-interface",
+        "unified-trading-library"
+      ]
     },
     "features-calendar-service": {
       "type": "service",
@@ -805,7 +875,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "feature-computation", "standard"]
+      "tags": ["cefi", "feature-computation", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "features-commodity-service": {
       "type": "service",
@@ -860,7 +938,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["feature-computation", "standard", "tradfi"]
+      "tags": ["feature-computation", "standard", "tradfi"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "features-cross-instrument-service": {
       "type": "service",
@@ -920,7 +1005,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "feature-computation", "standard"]
+      "tags": ["cefi", "feature-computation", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "features-delta-one-service": {
       "type": "service",
@@ -974,7 +1067,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "feature-computation", "standard"]
+      "tags": ["cefi", "feature-computation", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "features-multi-timeframe-service": {
       "type": "service",
@@ -1034,7 +1135,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "feature-computation", "standard"]
+      "tags": ["cefi", "feature-computation", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "features-onchain-service": {
       "type": "service",
@@ -1098,7 +1207,16 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["defi", "feature-computation", "standard"]
+      "tags": ["defi", "feature-computation", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-features-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "features-sports-service": {
       "type": "service",
@@ -1168,7 +1286,17 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["feature-computation", "sports", "standard"]
+      "tags": ["feature-computation", "sports", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-internal-contracts",
+        "unified-market-interface",
+        "unified-trading-library"
+      ]
     },
     "features-volatility-service": {
       "type": "service",
@@ -1227,7 +1355,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "feature-computation", "standard"]
+      "tags": ["cefi", "feature-computation", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "ibkr-gateway-infra": {
       "type": "infrastructure",
@@ -1256,7 +1392,8 @@
         "unified-reference-data-interface",
         "unified-trade-execution-interface"
       ],
-      "tags": ["standard", "tradfi"]
+      "tags": ["standard", "tradfi"],
+      "integration_dependencies": []
     },
     "instruments-service": {
       "type": "service",
@@ -1326,7 +1463,17 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cross-domain", "data-ingestion", "standard"]
+      "tags": ["cross-domain", "data-ingestion", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-market-interface",
+        "unified-reference-data-interface",
+        "unified-trading-library"
+      ]
     },
     "live-health-monitor-ui": {
       "type": "ui",
@@ -1351,7 +1498,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["cefi", "monitoring", "standard"]
+      "tags": ["cefi", "monitoring", "standard"],
+      "integration_dependencies": []
     },
     "logs-dashboard-ui": {
       "type": "ui",
@@ -1375,7 +1523,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["cross-domain", "monitoring", "standard"]
+      "tags": ["cross-domain", "monitoring", "standard"],
+      "integration_dependencies": []
     },
     "market-data-api": {
       "type": "api-service",
@@ -1438,7 +1587,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["cefi", "data-ingestion", "standard"]
+      "tags": ["cefi", "data-ingestion", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "market-data-processing-service": {
       "type": "service",
@@ -1503,7 +1660,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "data-ingestion", "standard"]
+      "tags": ["cefi", "data-ingestion", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "market-tick-data-service": {
       "type": "service",
@@ -1577,7 +1742,17 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "data-ingestion", "standard"]
+      "tags": ["cefi", "data-ingestion", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-domain-client",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-market-interface",
+        "unified-trading-library"
+      ]
     },
     "matching-engine-library": {
       "type": "library",
@@ -1608,7 +1783,8 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "library",
-      "tags": ["cross-domain", "execution", "important"]
+      "tags": ["cross-domain", "execution", "important"],
+      "integration_dependencies": ["unified-api-contracts", "unified-internal-contracts"]
     },
     "ml-inference-api": {
       "type": "api-service",
@@ -1654,7 +1830,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["cross-domain", "ml-inference", "standard"]
+      "tags": ["cross-domain", "ml-inference", "standard"],
+      "integration_dependencies": ["unified-config-interface", "unified-events-interface", "unified-trading-library"]
     },
     "ml-inference-service": {
       "type": "service",
@@ -1713,7 +1890,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "ml-inference", "standard"]
+      "tags": ["cefi", "ml-inference", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-ml-interface",
+        "unified-trading-library"
+      ]
     },
     "ml-training-api": {
       "type": "api-service",
@@ -1754,7 +1939,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["cross-domain", "ml-training", "standard"]
+      "tags": ["cross-domain", "ml-training", "standard"],
+      "integration_dependencies": ["unified-config-interface", "unified-events-interface", "unified-trading-library"]
     },
     "ml-training-service": {
       "type": "service",
@@ -1823,7 +2009,17 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "ml-training", "standard"]
+      "tags": ["cefi", "ml-training", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-feature-calculator-library",
+        "unified-internal-contracts",
+        "unified-ml-interface",
+        "unified-trading-library"
+      ]
     },
     "ml-training-ui": {
       "type": "ui",
@@ -1847,7 +2043,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["cefi", "ml-training", "standard"]
+      "tags": ["cefi", "ml-training", "standard"],
+      "integration_dependencies": []
     },
     "onboarding-ui": {
       "type": "ui",
@@ -1872,7 +2069,8 @@
       "ci_failure_reason": "Function coverage 60.46% < 70% threshold",
       "tier": 3,
       "role": "ui",
-      "tags": ["cefi", "onboarding", "standard"]
+      "tags": ["cefi", "onboarding", "standard"],
+      "integration_dependencies": []
     },
     "odum-research-website": {
       "type": "ui",
@@ -1898,7 +2096,8 @@
       "tier": 3,
       "role": "ui",
       "tags": ["website", "infrastructure", "standard"],
-      "notes": "Odum Research corporate website \u2014 presentations portal with Firebase Auth, Firestore, GCS proxy. Migrated from datadodo/odum_website. PM dependency for presentation content."
+      "notes": "Odum Research corporate website \u2014 presentations portal with Firebase Auth, Firestore, GCS proxy. Migrated from datadodo/odum_website. PM dependency for presentation content.",
+      "integration_dependencies": []
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1952,7 +2151,14 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "pnl", "standard"]
+      "tags": ["cefi", "pnl", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "position-balance-monitor-service": {
       "type": "service",
@@ -2012,7 +2218,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "monitoring", "risk", "standard"]
+      "tags": ["cefi", "monitoring", "risk", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "risk-and-exposure-service": {
       "type": "service",
@@ -2072,7 +2286,15 @@
       "ci_failure_reason": "Codex compliance FAILED: 2 violations",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "risk", "standard"]
+      "tags": ["cefi", "risk", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "settlement-ui": {
       "type": "ui",
@@ -2097,7 +2319,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["cefi", "execution", "standard"]
+      "tags": ["cefi", "execution", "standard"],
+      "integration_dependencies": []
     },
     "strategy-service": {
       "type": "service",
@@ -2163,7 +2386,16 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["cefi", "execution", "standard"]
+      "tags": ["cefi", "execution", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-domain-client",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "strategy-ui": {
       "type": "ui",
@@ -2189,7 +2421,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["cefi", "execution", "standard"]
+      "tags": ["cefi", "execution", "standard"],
+      "integration_dependencies": []
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -2240,7 +2473,13 @@
       "semver_policy": "agent",
       "tier": null,
       "role": "test",
-      "tags": ["cefi", "monitoring", "standard"]
+      "tags": ["cefi", "monitoring", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "trading-agent-service": {
       "type": "service",
@@ -2300,7 +2539,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": ["execution", "standard", "tradfi"]
+      "tags": ["execution", "standard", "tradfi"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "trading-analytics-api": {
       "type": "api-service",
@@ -2356,7 +2603,15 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": ["analytics", "cefi", "standard"]
+      "tags": ["analytics", "cefi", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "trading-analytics-ui": {
       "type": "ui",
@@ -2381,7 +2636,8 @@
       "ci_failure_reason": "Statement coverage 68.37% < 70% threshold",
       "tier": 3,
       "role": "ui",
-      "tags": ["analytics", "cefi", "standard"]
+      "tags": ["analytics", "cefi", "standard"],
+      "integration_dependencies": []
     },
     "unified-admin-ui": {
       "type": "ui",
@@ -2407,7 +2663,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "ui",
-      "tags": ["config", "cross-domain", "standard"]
+      "tags": ["config", "cross-domain", "standard"],
+      "integration_dependencies": []
     },
     "unified-api-contracts": {
       "type": "library",
@@ -2434,7 +2691,8 @@
       "semver_policy": "agent",
       "tier": 0,
       "role": "contracts",
-      "tags": ["contracts", "critical", "cross-domain"]
+      "tags": ["contracts", "critical", "cross-domain"],
+      "integration_dependencies": []
     },
     "unified-cloud-interface": {
       "type": "library",
@@ -2485,7 +2743,8 @@
       "semver_policy": "agent",
       "tier": 0,
       "role": "primitive",
-      "tags": ["config", "critical", "cross-domain"]
+      "tags": ["config", "critical", "cross-domain"],
+      "integration_dependencies": ["unified-internal-contracts"]
     },
     "unified-config-interface": {
       "type": "library",
@@ -2521,7 +2780,8 @@
       "ci_failure_reason": "11 import errors (UCI gcp_compute dependency chain, stale venv)",
       "tier": 0,
       "role": "primitive",
-      "tags": ["config", "critical", "cross-domain"]
+      "tags": ["config", "critical", "cross-domain"],
+      "integration_dependencies": ["unified-api-contracts", "unified-events-interface", "unified-trading-library"]
     },
     "unified-defi-execution-interface": {
       "type": "library",
@@ -2556,7 +2816,13 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": ["defi", "execution", "important"]
+      "tags": ["defi", "execution", "important"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-internal-contracts"
+      ]
     },
     "unified-domain-client": {
       "type": "library",
@@ -2614,7 +2880,15 @@
       "ci_failure_reason": "278 test errors",
       "tier": 3,
       "role": "domain-client",
-      "tags": ["config", "cross-domain", "standard"]
+      "tags": ["config", "cross-domain", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-internal-contracts",
+        "unified-ml-interface",
+        "unified-trading-library"
+      ]
     },
     "unified-events-interface": {
       "type": "library",
@@ -2638,7 +2912,8 @@
       "semver_policy": "agent",
       "tier": 0,
       "role": "primitive",
-      "tags": ["critical", "cross-domain", "events"]
+      "tags": ["critical", "cross-domain", "events"],
+      "integration_dependencies": []
     },
     "unified-feature-calculator-library": {
       "type": "library",
@@ -2674,7 +2949,8 @@
       "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
       "tier": 2,
       "role": "library",
-      "tags": ["cross-domain", "feature-computation", "important"]
+      "tags": ["cross-domain", "feature-computation", "important"],
+      "integration_dependencies": []
     },
     "unified-internal-contracts": {
       "type": "library",
@@ -2706,7 +2982,8 @@
       "semver_policy": "agent",
       "tier": 0,
       "role": "contracts",
-      "tags": ["contracts", "critical", "cross-domain"]
+      "tags": ["contracts", "critical", "cross-domain"],
+      "integration_dependencies": ["unified-api-contracts"]
     },
     "unified-market-interface": {
       "type": "library",
@@ -2757,7 +3034,14 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": ["cross-domain", "important"]
+      "tags": ["cross-domain", "important"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts"
+      ]
     },
     "unified-ml-interface": {
       "type": "library",
@@ -2798,7 +3082,13 @@
       "ci_failure_reason": "ModuleNotFoundError: google.cloud.compute_v1",
       "tier": 2,
       "role": "interface",
-      "tags": ["cross-domain", "important", "ml-inference", "ml-training"]
+      "tags": ["cross-domain", "important", "ml-inference", "ml-training"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts"
+      ]
     },
     "unified-position-interface": {
       "type": "library",
@@ -2834,7 +3124,8 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": ["cross-domain", "important", "risk"]
+      "tags": ["cross-domain", "important", "risk"],
+      "integration_dependencies": ["unified-api-contracts", "unified-internal-contracts"]
     },
     "unified-reference-data-interface": {
       "type": "library",
@@ -2882,7 +3173,13 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": ["cross-domain", "data-ingestion", "important"]
+      "tags": ["cross-domain", "data-ingestion", "important"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-events-interface",
+        "unified-internal-contracts"
+      ]
     },
     "unified-sports-execution-interface": {
       "type": "library",
@@ -2923,7 +3220,8 @@
       "semver_policy": "agent",
       "tier": 2,
       "role": "interface",
-      "tags": ["execution", "important", "sports"]
+      "tags": ["execution", "important", "sports"],
+      "integration_dependencies": ["unified-api-contracts", "unified-events-interface", "unified-internal-contracts"]
     },
     "unified-trade-execution-interface": {
       "type": "library",
@@ -2969,7 +3267,14 @@
       "ci_failure_reason": "93 test failures",
       "tier": 2,
       "role": "interface",
-      "tags": ["cross-domain", "execution", "important"]
+      "tags": ["cross-domain", "execution", "important"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-sports-execution-interface"
+      ]
     },
     "unified-trading-codex": {
       "type": "infrastructure",
@@ -2993,7 +3298,8 @@
       "semver_policy": "always_patch",
       "tier": null,
       "role": "infrastructure",
-      "tags": ["config", "cross-domain", "standard"]
+      "tags": ["config", "cross-domain", "standard"],
+      "integration_dependencies": []
     },
     "unified-trading-library": {
       "type": "library",
@@ -3046,7 +3352,15 @@
       "semver_policy": "agent",
       "tier": 1,
       "role": "library",
-      "tags": ["contracts", "critical", "cross-domain"]
+      "tags": ["contracts", "critical", "cross-domain"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-ml-interface"
+      ]
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -3071,7 +3385,13 @@
       "semver_policy": "agent",
       "tier": null,
       "role": "infrastructure",
-      "tags": ["config", "cross-domain", "standard"]
+      "tags": ["config", "cross-domain", "standard"],
+      "integration_dependencies": [
+        "unified-api-contracts",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-trading-library"
+      ]
     },
     "unified-trading-ui-auth": {
       "type": "library",
@@ -3096,7 +3416,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "library",
-      "tags": ["cross-domain", "onboarding", "standard"]
+      "tags": ["cross-domain", "onboarding", "standard"],
+      "integration_dependencies": []
     },
     "unified-trading-ui-kit": {
       "type": "library",
@@ -3119,7 +3440,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "library",
-      "tags": ["cross-domain", "onboarding", "standard"]
+      "tags": ["cross-domain", "onboarding", "standard"],
+      "integration_dependencies": []
     },
     "unified-features-interface": {
       "type": "interface",
@@ -3142,7 +3464,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "notes": "Unified feature serving interface (UAC Citadel Architecture Phase 8)",
-      "tags": ["cross-domain", "feature-computation", "important"]
+      "tags": ["cross-domain", "feature-computation", "important"],
+      "integration_dependencies": []
     },
     "unified-feature-orchestration-library": {
       "type": "library",
@@ -3181,7 +3504,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "notes": "Unified feature orchestration library (UAC Citadel Architecture Phase 8)",
-      "tags": ["cross-domain", "feature-computation", "important"]
+      "tags": ["cross-domain", "feature-computation", "important"],
+      "integration_dependencies": []
     },
     "unified-sports-reference-interface": {
       "type": "interface",
@@ -3210,7 +3534,8 @@
       "sit_level": "standard",
       "semver_policy": "agent",
       "notes": "Unified sports reference data interface (UAC Citadel Architecture Phase 8)",
-      "tags": ["cross-domain", "important", "sports"]
+      "tags": ["cross-domain", "important", "sports"],
+      "integration_dependencies": ["unified-api-contracts"]
     },
     "config-api": {
       "github_url": "https://github.com/IggyIkenna/config-api",
@@ -3243,7 +3568,13 @@
       ],
       "ci_status": "FAILING",
       "serves_ui": ["onboarding-ui", "settlement-ui", "strategy-ui", "unified-admin-ui"],
-      "tags": ["config", "standard"]
+      "tags": ["config", "standard"],
+      "integration_dependencies": [
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-trading-library"
+      ]
     },
     "user-management-ui": {
       "type": "ui",
@@ -3264,7 +3595,8 @@
       "cluster": "admin-ui",
       "dependencies": ["unified-admin-ui", "unified-trading-ui-kit"],
       "codex_sections": ["01-domain", "06-coding-standards"],
-      "tags": ["admin", "user-management", "standard"]
+      "tags": ["admin", "user-management", "standard"],
+      "integration_dependencies": []
     }
   },
   "topologicalOrder": {
