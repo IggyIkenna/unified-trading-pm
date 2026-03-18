@@ -3568,6 +3568,7 @@
       ],
       "ci_status": "FAILING",
       "serves_ui": ["onboarding-ui", "settlement-ui", "strategy-ui", "unified-admin-ui"],
+      "semver_rules_ref": "api",
       "tags": ["config", "standard"],
       "integration_dependencies": [
         "unified-cloud-interface",
@@ -3589,6 +3590,7 @@
       "ci_status": "LOCAL_PASS",
       "coverage_pct": "N/A",
       "github_url": "https://github.com/IggyIkenna/user-management-ui",
+      "semver_rules_ref": "ui",
       "sit_level": "standard",
       "semver_policy": "agent",
       "merge_level": 11,
