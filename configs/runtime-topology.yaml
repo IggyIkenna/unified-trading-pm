@@ -2,6 +2,10 @@
 # Defines runtime interaction behavior (messaging, API edges, storage flows).
 # This file is machine-readable and consumed by deployment + quality gates.
 # SVG visualization: unified-trading-codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg
+#
+# Transport is parameterized by CLOUD_PROVIDER (gcp | aws | local).
+# At deployment time, the deployment system reads CLOUD_PROVIDER to select
+# the correct transport per edge. Services never see cloud-specific transports.
 
 version: 6
 ssot:
@@ -15,19 +19,20 @@ ssot:
 # KEY DISTINCTION: Transport vs Persistence
 # ---------------------------------------------------------------------------
 # Transport = how data moves between services at runtime
-#   - batch: GCS (producer writes parquet, consumer reads parquet)
-#   - live: PubSub (producer publishes, consumer subscribes)
+#   - batch: GCS (GCP) or S3 (AWS) — producer writes parquet, consumer reads parquet
+#   - live: PubSub (GCP) or SQS (AWS) — producer publishes, consumer subscribes
 #   - live co-located: in_memory (same VM, process-to-process; fast path when services share VM)
 #   - Redis: hot transient state (execution-service order state); not transport between pipeline services
 # Kernel bypass (e.g. DPDK, zero-copy kernel bypass): not used in this topology. in_memory is the
 #   colocated fast path; kernel bypass would be a future option only if sub-microsecond latency required.
 #
-# Persistence = durable storage sink (ALL services persist output to GCS)
-#   - In batch mode: transport and persistence are the SAME GCS write
-#   - In live mode: transport (PubSub) and persistence (GCS sink) are SEPARATE
-#   - Every service that produces data MUST persist to GCS regardless of mode
+# Persistence = durable storage sink (ALL services persist output to cloud storage)
+#   - In batch mode: transport and persistence are the SAME write (GCS or S3)
+#   - In live mode: transport (PubSub/SQS) and persistence (GCS/S3 sink) are SEPARATE
+#   - Every service that produces data MUST persist to cloud storage regardless of mode
 #   - BigQuery is for OLAP analytics (not transport)
 #   - Redis is for hot transient state (not persistence)
+#   - CLOUD_PROVIDER env var selects GCP or AWS transport/persistence at deployment time
 
 # ---------------------------------------------------------------------------
 # Deployment profiles
@@ -35,10 +40,10 @@ ssot:
 deployment_profiles:
   distributed:
     description: Each service on its own VM / Cloud Run instance (cross-VM safe)
-    allowed_transports: [gcs, pubsub]
+    allowed_transports: [gcs, pubsub, s3, sqs]
   co_located_vm:
     description: Bundled services on one VM for low-latency handoff
-    allowed_transports: [gcs, pubsub, in_memory]
+    allowed_transports: [gcs, pubsub, s3, sqs, in_memory]
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -47,34 +52,60 @@ defaults:
   deployment_profile: distributed
   transport_by_mode:
     batch:
-      transport: gcs
-      dependency_check: gcs
+      gcp:
+        transport: gcs
+        dependency_check: gcs
+      aws:
+        transport: s3
+        dependency_check: s3
     live:
-      transport: pubsub
-      dependency_check: pubsub
+      gcp:
+        transport: pubsub
+        dependency_check: pubsub
+      aws:
+        transport: sqs
+        dependency_check: sqs
   persistence:
-    sink: gcs
-    format: parquet
-    note: ALL services persist output to GCS regardless of transport mode
+    gcp:
+      sink: gcs
+      format: parquet
+    aws:
+      sink: s3
+      format: parquet
+    note: "CLOUD_PROVIDER env var determines which cloud's transport is used at deployment time"
 
 # ---------------------------------------------------------------------------
 # Messaging / storage primitives
 # ---------------------------------------------------------------------------
 message_bus:
   gcs:
-    role: batch message bus + persistence sink
+    role: batch message bus + persistence sink (GCP)
     format: parquet
     scope: cross-service
+    cloud: gcp
     note: In batch mode, GCS is BOTH transport and persistence (same write)
+  s3:
+    role: batch message bus + persistence sink (AWS)
+    format: parquet
+    scope: cross-service
+    cloud: aws
+    note: In batch mode, S3 is BOTH transport and persistence (same write)
   pubsub:
     role: live event bus (transport only, ephemeral)
     protocol: cloud_pubsub
     scope: cross-vm
-    note: Data published to PubSub must ALSO be persisted to GCS separately
+    cloud: gcp
+    note: Data published to PubSub must ALSO be persisted separately
+  sqs:
+    role: live event bus (transport only, ephemeral)
+    protocol: aws_sqs
+    scope: cross-vm
+    cloud: aws
+    note: Data published to SQS must ALSO be persisted separately
   in_memory:
     role: process-local live handoff (co-located services only)
     scope: same-vm-only
-    note: Same as PubSub — still requires separate GCS persistence
+    note: Same as PubSub/SQS — still requires separate persistence
   redis:
     role: hot transient state (NOT persistence, NOT transport)
     scope: same-vm-only
@@ -83,9 +114,15 @@ message_bus:
 storage_systems:
   gcs:
     role: canonical timeseries, features, models, execution results
-    note: The universal persistence sink — every service writes here
+    cloud: gcp
+    note: The universal persistence sink on GCP — every service writes here
+  s3:
+    role: canonical timeseries, features, models, execution results
+    cloud: aws
+    note: The universal persistence sink on AWS — every service writes here
   bigquery:
     role: OLAP analytics and reporting warehouse
+    cloud: gcp
     note: Fed by services via UDC BigQueryCatalog; not a transport
   redis:
     role: low-latency transient state
@@ -227,7 +264,9 @@ service_flows:
     modes:
       batch: { transport: gcs }
       live:
-        distributed: { transport: pubsub }
+        distributed:
+          gcp: { transport: pubsub }
+          aws: { transport: sqs }
         co_located_vm: { transport: in_memory }
 
   # === Layer 2 → Layer 3: Processing → Features ===
@@ -526,7 +565,9 @@ service_flows:
     modes:
       batch: { transport: gcs }
       live:
-        distributed: { transport: pubsub }
+        distributed:
+          gcp: { transport: pubsub }
+          aws: { transport: sqs }
         co_located_vm: { transport: in_memory }
     # note: see comment below
   # Execution needs live market feed for all allocation clients (one stream,
@@ -635,8 +676,9 @@ api_interactions:
     data_mode: batch
 
 # ---------------------------------------------------------------------------
-# Persistence flows (every service → GCS sink)
-# Separate from transport — this is durable storage
+# Persistence flows (every service → cloud storage sink: GCS on GCP, S3 on AWS)
+# Separate from transport — this is durable storage.
+# CLOUD_PROVIDER determines which sink is used. 'gcs' entries become 's3' on AWS.
 # ---------------------------------------------------------------------------
 persistence_flows:
   - actor: instruments-service
