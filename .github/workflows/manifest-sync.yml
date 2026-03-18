@@ -11,6 +11,10 @@ on:
       - workspace-manifest.json
       - "plans/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dispatch:
     runs-on: ubuntu-latest

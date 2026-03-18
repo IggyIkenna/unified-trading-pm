@@ -18,6 +18,10 @@ permissions:
   contents: write
   issues: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ── Notify on plan change ──────────────────────────────────────────────────
   notify-plan-change:

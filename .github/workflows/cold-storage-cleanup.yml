@@ -47,6 +47,10 @@ env:
   RETENTION_DAYS_CICD: ${{ inputs.retention_days_cicd || '90' }}
   GCS_ARCHIVE_BUCKET: "uts-compliance-ikenna-audit-archive"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   cold-storage-cleanup:
     runs-on: ubuntu-latest

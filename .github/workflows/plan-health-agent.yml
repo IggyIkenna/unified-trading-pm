@@ -22,6 +22,10 @@ on:
         default: "false"
         type: string
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   plan-health:
     runs-on: ubuntu-latest

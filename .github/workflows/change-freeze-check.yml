@@ -32,6 +32,10 @@ on:
         description: "Description of the blocking freeze window (empty if not blocked)"
         value: ${{ jobs.check.outputs.reason }}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest

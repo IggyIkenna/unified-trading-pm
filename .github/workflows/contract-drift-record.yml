@@ -5,6 +5,10 @@ on:
     - cron: "0 2 * * *" # nightly at 2am UTC
   workflow_dispatch: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   record:
     runs-on: ubuntu-latest
