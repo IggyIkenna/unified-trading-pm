@@ -444,6 +444,11 @@
           "required": true
         },
         {
+          "name": "unified-api-contracts",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
+        },
+        {
           "name": "deployment-api",
           "version": ">=0.1.0,<1.0.0",
           "required": true
