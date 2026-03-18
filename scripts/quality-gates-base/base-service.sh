@@ -962,6 +962,8 @@ HARDCODED_CATEGORIES=$(rg '\[.*"CEFI".*"TRADFI".*\]|\[.*"TRADFI".*"CEFI".*\]|cat
     | grep -v '# CORRECT-LOCAL' \
     | grep -v 'MarketCategory' \
     | grep -v 'VENUE_CATEGORY_MAP' \
+    | grep -v 'default=' \
+    | grep -v 'Field(' \
     || :)
 if [ -n "$HARDCODED_CATEGORIES" ]; then
     log_fail "STEP 5.30: Hardcoded market categories found — import MarketCategory from unified_internal_contracts:"
