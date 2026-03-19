@@ -54,6 +54,7 @@ SETUP_SH_SOURCE = PM_ROOT / "scripts" / "setup.sh"
 QG_LIBRARY_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-library-template.sh"
 QG_SERVICE_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-service-template.sh"
 QG_UI_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-ui-template.sh"
+ESLINT_CONFIG_BASE = PM_ROOT / "scripts" / "quality-gates-base" / "eslint.config.base.js"
 TEMPLATES_DIR = SCRIPT_DIR / "templates"
 CURSORIGNORE_PYTHON = TEMPLATES_DIR / "cursorignore-python.txt"
 CURSORIGNORE_NODE = TEMPLATES_DIR / "cursorignore-node.txt"
@@ -501,6 +502,34 @@ def copy_ui_integration_test(repo_path: Path, repo_name: str, dry_run: bool) -> 
     return True
 
 
+def propagate_eslint_config(repo_path: Path, dry_run: bool) -> bool:
+    """Propagate eslint.config.base.js from PM into a UI repo.
+
+    Strategy: if the repo has an eslint.config.base.js already and it matches the PM SSOT,
+    skip. If it differs or is absent, create/update it. Never touch a hand-crafted
+    eslint.config.js or .eslintrc.cjs — those are left as-is (per-repo overrides are valid).
+    Returns True if a file was created or updated.
+    """
+    if not ESLINT_CONFIG_BASE.exists():
+        print(f"  ⚠️ eslint.config.base.js not found at {ESLINT_CONFIG_BASE} — skipping ESLint propagation")
+        return False
+
+    source_content = ESLINT_CONFIG_BASE.read_text()
+    dest = repo_path / "eslint.config.base.js"
+
+    if dest.exists() and dest.read_text() == source_content:
+        return False
+
+    if dry_run:
+        print(f"  [dry-run] Would {'create' if not dest.exists() else 'update'} eslint.config.base.js")
+        return True
+
+    existed = dest.exists()
+    dest.write_text(source_content)
+    print(f"  ✅ {'Created' if not existed else 'Updated'} eslint.config.base.js (SSOT from PM)")
+    return True
+
+
 def process_repo(
     repo_name: str,
     repo_info: JsonDict,
@@ -553,6 +582,7 @@ def process_repo(
     changed |= ensure_bypass_audit(repo_path, doc_standard, dry_run)
     if template_type == "typescript":
         changed |= copy_ui_integration_test(repo_path, repo_name, dry_run)
+        changed |= propagate_eslint_config(repo_path, dry_run)
 
     if not changed:
         print(f"  ✅ {repo_name} already has all quality gate files")
@@ -580,6 +610,11 @@ def main() -> int:
             "Useful on partial checkouts or new-machine setups where not all repos are cloned yet."
         ),
     )
+    parser.add_argument(
+        "--ui-only",
+        action="store_true",
+        help="Process only TypeScript/UI repos (type=ui or package.json without pyproject.toml).",
+    )
     args = parser.parse_args()
 
     if not MANIFEST_PATH.exists():
@@ -594,12 +629,19 @@ def main() -> int:
     dry_run = cast(bool, args.dry_run)
     recalibrate = cast(bool, args.recalibrate)
     skip_missing = cast(bool, args.skip_missing)
+    ui_only = cast(bool, args.ui_only)
     repo_filter = cast(str | None, args.repo)
     if repo_filter is not None:
         if repo_filter not in repositories:
             print(f"❌ Repository not in manifest: {repo_filter}")
             return 1
         repositories = {repo_filter: repositories[repo_filter]}
+
+    if ui_only:
+        repositories = {
+            name: info for name, info in repositories.items() if _jstr(cast(JsonDict, info).get("type")) == "ui"
+        }
+        print(f"🎨 --ui-only: filtered to {len(repositories)} UI repos")
 
     print("🚀 Rolling out quality gates (unified)")
     print(f"📁 Workspace: {WORKSPACE_ROOT}")
