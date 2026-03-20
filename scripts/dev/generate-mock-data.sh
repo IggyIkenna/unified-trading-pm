@@ -35,6 +35,7 @@ SEED=42
 TARGET_LAYER=""
 FORCE=false
 DRY_RUN=false
+GENERATE_TICKS=false
 
 # -- Argument parsing ------------------------------------------------------
 while [[ $# -gt 0 ]]; do
@@ -71,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN=true
       shift
       ;;
+    --ticks)
+      GENERATE_TICKS=true
+      shift
+      ;;
     -h|--help)
       echo "Usage: bash scripts/dev/generate-mock-data.sh [OPTIONS]"
       echo ""
@@ -81,6 +86,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --layer N          Only run a specific layer 1-7 (for debugging)"
       echo "  --force            Continue past layer failures"
       echo "  --dry-run          Show what would run without executing"
+      echo "  --ticks            Generate tick-level data in Layer 2 (disabled by default, data is large)"
       echo "  -h, --help         Show this help"
       echo ""
       echo "Dependency layers:"
@@ -110,6 +116,7 @@ export CLOUD_PROVIDER="${CLOUD_PROVIDER:-local}"
 export DEPLOYMENT_ENV="$ENV"
 export MOCK_SCENARIO="$SCENARIO"
 export MOCK_SEED="$SEED"
+export GENERATE_TICKS
 
 # -- Dependency layers (stable order from runtime-topology.yaml) -----------
 LAYER_1=("instruments-service")
@@ -200,13 +207,19 @@ run_layer() {
     pid_to_service+=("$pid:$service")
   done
 
-  # Wait for all parallel jobs and collect exit codes
+  # Wait for all parallel jobs — status is set by run_seed itself, not here
   local layer_failed=false
   for entry in "${pid_to_service[@]}"; do
     local pid="${entry%%:*}"
     local service="${entry#*:}"
     if ! wait "$pid"; then
-      set_status "$service" "fail"
+      # Only mark fail if run_seed didn't already set a status (avoids race condition
+      # where wait returns non-zero due to signal but run_seed already wrote "success")
+      local current_status
+      current_status="$(get_status "$service")"
+      if [ "$current_status" != "success" ]; then
+        set_status "$service" "fail"
+      fi
       layer_failed=true
     fi
   done
@@ -245,6 +258,9 @@ fi
 if [ "$DRY_RUN" = true ]; then
   echo "  Dry run:      ${YELLOW}yes (no execution)${NC}"
 fi
+if [ "$GENERATE_TICKS" = true ]; then
+  echo "  Ticks:        ${CYAN}yes (tick-level data after Layer 2)${NC}"
+fi
 
 # -- Determine which layers to run ----------------------------------------
 if [ -n "$TARGET_LAYER" ]; then
@@ -260,7 +276,33 @@ fi
 for layer_num in "${LAYERS_TO_RUN[@]}"; do
   case "$layer_num" in
     1) run_layer 1 "${LAYER_1[@]}" ;;
-    2) run_layer 2 "${LAYER_2[@]}" ;;
+    2)
+      run_layer 2 "${LAYER_2[@]}"
+      # Optional: generate tick-level data after OHLCV (Layer 2 extension)
+      if [ "$GENERATE_TICKS" = true ]; then
+        echo ""
+        echo "${BOLD}=== Layer 2 Extension: Tick Data ===${NC}"
+        local_tick_script="${WORKSPACE_ROOT}/market-tick-data-service/scripts/seed_tick_data.py"
+        tick_python="${WORKSPACE_ROOT}/market-tick-data-service/.venv/bin/python"
+        if [ -f "$local_tick_script" ] && [ -f "$tick_python" ]; then
+          if [ "$DRY_RUN" = true ]; then
+            echo "  ${CYAN}DRY${NC}  Would generate tick data: ${tick_python} ${local_tick_script} --seed ${SEED} --env ${ENV}"
+          else
+            echo "  ${CYAN}RUN${NC}  Generating tick-level data for top 5 instruments..."
+            if "$tick_python" "$local_tick_script" --seed "$SEED" --env "$ENV" 2>&1; then
+              echo "  ${GREEN}OK${NC}   Tick data generated"
+            else
+              echo "  ${RED}FAIL${NC} Tick data generation failed"
+              if [ "$FORCE" = false ]; then
+                die "Tick data generation failed. Use --force to continue."
+              fi
+            fi
+          fi
+        else
+          warn "Tick data script or venv not found — skipping tick generation"
+        fi
+      fi
+      ;;
     3) run_layer 3 "${LAYER_3[@]}" ;;
     4) run_layer 4 "${LAYER_4[@]}" ;;
     5) run_layer 5 "${LAYER_5[@]}" ;;
