@@ -72,7 +72,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
         uv lock 2>/dev/null || :
         [ ! -d ".venv" ] && uv venv .venv
         [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
-        for lib in "${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}"; do
+        for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
             [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
         done
         uv pip install -e . --quiet 2>/dev/null || :
@@ -340,7 +340,10 @@ EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob 
 rg "central-element-323112" tests/ 2>/dev/null \
     && { log_fail "Hardcoded prod project ID in tests — use 'test-project'"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in tests"
 
-rg "central-element-323112" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+# GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/registry/foo.py")
+GCP_LIB_EXTRA=()
+for g in ${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}; do GCP_LIB_EXTRA+=(--glob "$g"); done
+rg "central-element-323112" --type py --glob "!tests/**" "${GCP_LIB_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Hardcoded project ID in production — use config"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
 BAD_PROJECT=$(rg "GOOGLE_CLOUD_PROJECT|GCP_PROJECT(?!_ID)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
@@ -675,6 +678,28 @@ fi
 
 [[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
 log_success "Codex compliance PASSED"
+
+# ── [5.6] DEAD CODE DETECTION (vulture — warn/fail thresholds) ───────────────
+# vulture detects unused functions, classes, and variables.
+# Repos may opt out of specific symbols by adding a .vulture-whitelist.py file
+# (list each unused-but-intentional name as an attribute access, e.g. _.my_hook).
+if command -v vulture &>/dev/null; then
+    log_section "[5.6/6] DEAD CODE DETECTION (vulture)"
+    _VULTURE_WHITELIST=""
+    [ -f ".vulture-whitelist.py" ] && _VULTURE_WHITELIST=".vulture-whitelist.py"
+    _DEAD_CODE=$(run_timeout 60 vulture "$SOURCE_DIR" ${_VULTURE_WHITELIST} \
+        --min-confidence 80 2>/dev/null | wc -l | tr -d ' ')
+    if [ "${_DEAD_CODE:-0}" -gt 100 ]; then
+        log_fail "Dead code FAILED: vulture found ${_DEAD_CODE} unused items (threshold: 100) — remove dead code or add to .vulture-whitelist.py"
+        exit 1
+    elif [ "${_DEAD_CODE:-0}" -gt 20 ]; then
+        log_warn "Dead code WARN: vulture found ${_DEAD_CODE} unused items (review recommended; threshold: 20)"
+    else
+        log_ok "Dead code check PASSED (${_DEAD_CODE} items)"
+    fi
+else
+    log_warn "vulture not found — skipping dead-code check (install: uv pip install vulture)"
+fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
