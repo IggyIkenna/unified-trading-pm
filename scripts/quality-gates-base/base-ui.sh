@@ -171,8 +171,8 @@ ESLINT_VER=$(npx eslint --version 2>/dev/null || echo "not found")
 log_success "ESLint ${ESLINT_VER}"
 
 # vitest (warn if missing — older repos may not have it yet)
-if node_modules/.bin/vitest --version >/dev/null 2>&1; then
-  VITEST_VER=$(node_modules/.bin/vitest --version 2>/dev/null || echo "?")
+if ./node_modules/.bin/vitest --version >/dev/null 2>&1; then
+  VITEST_VER=$(./node_modules/.bin/vitest --version 2>/dev/null || echo "?")
   log_success "vitest ${VITEST_VER}"
 else
   log_warn "vitest not found in node_modules — run npm install; unit tests will be skipped"
