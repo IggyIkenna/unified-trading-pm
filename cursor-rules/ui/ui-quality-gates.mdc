@@ -58,7 +58,11 @@ CI=true npm test -- --run
 ## Gate 4: Build Smoke Test
 
 ```bash
+# Satellite UIs (Vite):
 VITE_MOCK_API=true npx vite build
+
+# Unified platform (Next.js):
+NEXT_PUBLIC_MOCK_API=true pnpm build
 ```
 
 Must build without errors. Tests that the app compiles with mock data.
@@ -135,7 +139,8 @@ echo "[4/6] Tests..."
 CI=true npm test -- --run 2>/dev/null || echo "WARN: No tests found"
 
 echo "[5/6] Build..."
-VITE_MOCK_API=true npx vite build
+# Use VITE_MOCK_API for Vite UIs, NEXT_PUBLIC_MOCK_API for Next.js unified platform
+VITE_MOCK_API=true NEXT_PUBLIC_MOCK_API=true npx vite build 2>/dev/null || pnpm build
 
 echo "[6/6] Cross-link check..."
 if rg -q 'localhost:51[0-9]{2}' src/ --type ts 2>/dev/null; then

@@ -71,9 +71,7 @@ class TestExtremeFixturesSchema:
     def test_description_is_nonempty_string(self, filename: str) -> None:
         data = _load_fixture(filename)
         description = data["description"]
-        assert isinstance(description, str), (
-            f"{filename}: description must be str, got {type(description)}"
-        )
+        assert isinstance(description, str), f"{filename}: description must be str, got {type(description)}"
         assert len(description) > 0, f"{filename}: description must not be empty"
 
     @pytest.mark.parametrize("filename", EXPECTED_FIXTURES)
@@ -87,9 +85,7 @@ class TestExtremeFixturesSchema:
     def test_expected_behavior_is_nonempty_dict(self, filename: str) -> None:
         data = _load_fixture(filename)
         expected = data["expected_behavior"]
-        assert isinstance(expected, dict), (
-            f"{filename}: expected_behavior must be dict, got {type(expected)}"
-        )
+        assert isinstance(expected, dict), f"{filename}: expected_behavior must be dict, got {type(expected)}"
         assert len(expected) > 0, f"{filename}: expected_behavior must not be empty"
 
     @pytest.mark.parametrize("filename", EXPECTED_FIXTURES)

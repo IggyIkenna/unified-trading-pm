@@ -49,7 +49,11 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     ("alerting-service", "alerting_service.config", "AlertingSystemConfig"),
     ("execution-service", "execution_service.service_config", "ExecutionServicesConfig"),
     ("risk-and-exposure-service", "risk_and_exposure_service.config", "RiskAndExposureServiceConfig"),
-    ("position-balance-monitor-service", "position_balance_monitor_service.config", "PositionBalanceMonitorServiceConfig"),
+    (
+        "position-balance-monitor-service",
+        "position_balance_monitor_service.config",
+        "PositionBalanceMonitorServiceConfig",
+    ),
     ("deployment-service", "deployment_service.deployment_config", "DeploymentConfig"),
     ("pnl-attribution-service", "pnl_attribution_service.config", "PnlAttributionServiceConfig"),
     ("strategy-service", "strategy_service.config", "StrategyServiceConfig"),
@@ -78,8 +82,6 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     ("unified-market-interface", "unified_market_interface.config", "MarketDataProviderConfig"),
     ("unified-trade-execution-interface", "unified_trade_execution_interface.config", "OrderInterfaceConfig"),
     ("unified-trade-execution-interface", "unified_trade_execution_interface.config", "ExecutionDataSourceConfig"),
-    ("unified-defi-execution-interface", "unified_defi_execution_interface.config", "DeFiDataSourceConfig"),
-    ("unified-defi-execution-interface", "unified_defi_execution_interface.config", "DeFiConnectorConfig"),
     # === Strategy internals ===
     ("strategy-service", "strategy_service.engine.core.config_loader", "StrategyConfig"),
     ("strategy-service", "strategy_service.engine.core.config_loader", "MLSignalConfig"),
@@ -153,9 +155,7 @@ json.dump(result, sys.stdout, default=str)
 """
 
 
-def extract_config(
-    repo_name: str, module_path: str, class_name: str
-) -> dict[str, object] | None:
+def extract_config(repo_name: str, module_path: str, class_name: str) -> dict[str, object] | None:
     """Extract a config class's fields via subprocess."""
     script = _extract_config_script(module_path, class_name)
     try:

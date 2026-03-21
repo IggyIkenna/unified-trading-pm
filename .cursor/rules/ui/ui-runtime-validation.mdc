@@ -5,8 +5,9 @@ priority: 50
 globs:
   - "**/package.json"
   - "**/vite.config.ts"
+  - "**/next.config.mjs"
   - "**/src/**/*.tsx"
-  - "**/src/**/*.vue"
+  - "**/app/**/*.tsx"
 tags:
   - ui
   - runtime-verification
@@ -15,5 +16,5 @@ tags:
 RULE: Never claim UI works without runtime verification. Start dev server, wait 8-10s, check terminal for errors.
 WHY: Incident: claimed "npm run dev works" without checking; user found CSS/import errors.
 CODEX: .cursor/rules/runtime-verification-required.mdc, .cursor/rules/ui-runtime-validation.mdc
-DO: npm run dev; wait 8-10s; grep terminal for error/failed/exception; verify ready message
+DO: npm run dev (Vite UIs) or pnpm dev (Next.js unified platform); wait 8-10s; grep terminal for error/failed/exception; verify ready message
 NEVER: Claim "done" without running; skip terminal output check; assume success from first line

@@ -5,7 +5,8 @@ free of regressions against institutional-grade standards. Run this prompt again
 production readiness. Covers all layers: governance, code quality, security, architecture, schema governance,
 observability, deployment, technical debt, cross-repo alignment, CI/CD, UI/npm governance, tooling SSOT quality,
 integration test coverage, coverage regression prevention, cloud-agnostic compliance, semver, data freshness,
-performance, and autonomous agent infrastructure (Sections 1–28).
+performance, autonomous agent infrastructure, API domain coverage, configuration architecture, infrastructure pattern
+facilitation, and format string safety (Sections 1–32).
 
 **Scope:** 65+ repos (services, libraries, UIs, APIs, infrastructure). Usable by human auditors and AI agents.
 
@@ -213,6 +214,19 @@ for event in AUTH_SUCCESS AUTH_FAILURE AUTH_DENIED S2S_AUTH_SUCCESS S2S_AUTH_FAI
   [ "$hits" -eq 0 ] && echo "MISSING auth event: $event in execution-service"
 done
 
+# Check AUTH_FAILURE event in ALL API services (not just execution-service)
+for svc in market-data-api config-api execution-results-api alerting-service \
+           risk-and-exposure-service client-reporting-api trading-analytics-api \
+           ml-inference-api ml-training-api deployment-api batch-audit-api; do
+  hits=$(rg 'AUTH_FAILURE' "$svc/" --type py --glob '!**/tests/**' -l 2>/dev/null | wc -l)
+  [ "$hits" -eq 0 ] && echo "MISSING AUTH_FAILURE event: $svc"
+done
+
+# Check all auth logging goes through UEI (no custom auth loggers)
+rg 'logger\.(info|warning|error).*auth\|logging\..*auth' --type py \
+  --glob '!.venv*' --glob '!**/tests/**' -i -n | \
+  grep -v 'log_event\|unified_events_interface' | head -20
+
 # Check broad except Exception in production code
 rg 'except Exception' --type py \
   --glob '!.venv*' --glob '!**/tests/**' --glob '!**/scripts/**' -n | \
@@ -222,21 +236,24 @@ rg 'except Exception' --type py \
 
 **Required state:**
 
-| Criterion                | Requirement                                                                                                 |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                         |
-| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                       |
-| HTTP verify              | No `verify=False` outside test code                                                                         |
-| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                   |
-| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                            |
-| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                             |
-| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted |
-| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                              |
-| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                            |
+| Criterion                | Requirement                                                                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                                           |
+| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                                         |
+| HTTP verify              | No `verify=False` outside test code                                                                                           |
+| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                                     |
+| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                                              |
+| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                                               |
+| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted                   |
+| Auth events all services | ALL API services with auth middleware emit AUTH_FAILURE at minimum — not just execution-service                               |
+| Auth via UEI only        | All auth-related logging (login, session, permission, role) flows through `unified-events-interface` — no custom auth loggers |
+| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                                                |
+| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                                              |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — minor documentation gap; OR ≤3 broad `except Exception` all documented
 in BYPASS_AUDIT.md. `FAIL` — any hardcoded secret; any 401 path missing `AUTH_FAILURE`; any `verify=False`; OR
-`get_secret_client` bypassed with env var fallback; OR any auth event missing from execution-service auth paths; OR
+`get_secret_client` bypassed with env var fallback; OR any auth event missing from execution-service auth paths; OR any
+API service with auth middleware missing AUTH_FAILURE event; OR auth logging bypasses `unified-events-interface`; OR
 undocumented broad `except Exception` in production code.
 
 ---
@@ -266,16 +283,76 @@ rg 'gcs_bucket|gs://' --type py --glob '!.venv*' \
 
 **Required state:**
 
-| Criterion               | Requirement                                                                                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| Service→service imports | Zero cross-service Python imports in T4 repos                                                      |
-| Cloud SDK confinement   | `google.cloud.*` and `boto3` only in `unified-cloud-interface/` and `deployment-service/backends/` |
-| Cloud-agnostic I/O      | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere                    |
-| Batch-live symmetry     | Same processing engine for batch and live; transport layer switches on `--mode`                    |
-| UCI PubSub              | Services use `get_pubsub_client()` from UCI, not `google-cloud-pubsub` directly                    |
-| Deployment API boundary | No direct `deployment_service` Python imports from other services                                  |
+| Criterion                | Requirement                                                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Service→service imports  | Zero cross-service Python imports in T4 repos                                                                    |
+| Cloud SDK confinement    | `google.cloud.*` and `boto3` only in `unified-cloud-interface/` and `deployment-service/backends/`               |
+| Cloud-agnostic I/O       | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere                                  |
+| Batch-live symmetry      | Same processing engine for batch and live; transport layer switches on `--mode`                                  |
+| UCI PubSub               | Services use `get_pubsub_client()` from UCI, not `google-cloud-pubsub` directly                                  |
+| Deployment API boundary  | No direct `deployment_service` Python imports from other services                                                |
+| Separation of concerns   | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries       |
+| No library duplication   | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)     |
+| Import ↔ manifest match | Every `from unified_*` import in a service has a corresponding entry in workspace-manifest.json `dependencies[]` |
 
-**Scoring:** `PASS` — zero violations. `FAIL` — any cross-service import; any direct cloud SDK outside UCI/deployment.
+**Audit commands (separation of concerns):**
+
+```bash
+# Check services don't reimplement library functionality
+# Look for custom cloud clients, event loggers, config readers in service source
+for svc in execution-service strategy-service alerting-service risk-and-exposure-service \
+           pnl-attribution-service position-balance-monitor-service market-tick-data-service \
+           market-data-processing-service instruments-service; do
+  # Custom cloud clients (should use UCI)
+  rg 'class.*Client.*Storage|class.*Client.*PubSub|class.*Client.*BigQuery' \
+    "$svc/" --type py --glob '!**/tests/**' -n 2>/dev/null
+  # Custom event loggers (should use UEI)
+  rg 'class.*EventLogger|class.*EventPublisher' \
+    "$svc/" --type py --glob '!**/tests/**' -n 2>/dev/null
+done
+
+# Verify all unified-* imports have manifest dependency entries
+python3 -c "
+import json, pathlib, re
+m = json.load(open('unified-trading-pm/workspace-manifest.json'))
+dep_map = {r['name']: [d.get('name') if isinstance(d, dict) else d for d in r.get('dependencies', [])] for r in m['repos']}
+for repo in m['repos']:
+    src = pathlib.Path(repo['name'])
+    if not src.exists(): continue
+    declared = set(dep_map.get(repo['name'], []))
+    for py in src.rglob('*.py'):
+        if '.venv' in str(py) or 'tests' in str(py): continue
+        try:
+            for line in py.read_text().splitlines():
+                match = re.match(r'from (unified[_\w]+)', line)
+                if match:
+                    pkg = match.group(1).replace('_', '-')
+                    if pkg not in declared and pkg != repo['name'].replace('_', '-'):
+                        print(f'UNDECLARED DEP: {repo[\"name\"]} imports {pkg} (not in manifest dependencies)')
+                        break
+        except: pass
+"
+```
+
+### §4.X Interface Usage Compliance
+
+- Services MUST use URDI for reference/instrument data, not UMI directly
+- UMI is for market data (trades, orderbooks, tickers). URDI is for reference data (instrument definitions, options
+  chains, expiry calendars)
+- Check: `rg "from unified_market_interface import.*Adapter" --type py --glob '!tests/' $SOURCE_DIR/` — any adapter
+  import in a service that fetches instrument definitions is a violation
+- Services hand API keys to interfaces via config/Secret Manager; they don't manage credentials themselves
+
+### §4.Y Shard-Level Failure Isolation
+
+- A failed shard (venue × date) MUST NOT kill other shards in the same batch
+- Check: `rg "raise RuntimeError" --type py --glob '!tests/' $SOURCE_DIR/` inside per-venue/per-shard processing loops
+- Pattern: catch all exceptions per-shard, log VENUE_PROCESSING_FAILED event with details, return empty result
+- SSOT: unified-trading-codex/04-architecture/shard-level-failure-isolation.md
+
+**Scoring:** `PASS` — zero violations. `FAIL` — any cross-service import; any direct cloud SDK outside UCI/deployment;
+any service reimplements library functionality; any undeclared dependency import; any service using UMI for reference
+data instead of URDI; any unguarded raise inside per-venue/per-shard processing loops.
 
 ---
 
@@ -316,22 +393,50 @@ rg '_validate_audit_payload\|validate_audit' execution-service/ strategy-service
 
 **Required state:**
 
-| Criterion                 | Requirement                                                                                           |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| AC scope                  | External venue schemas only (exchange responses, raw data formats)                                    |
-| UIC scope                 | Internal domain schemas only (canonical processed forms)                                              |
-| No float price fields     | All price/monetary fields use `Decimal`; ratio/pct/time fields annotated with `# float-ok` comment    |
-| No AC/UIC duplication     | No schema class defined in both repos                                                                 |
-| Layer 0 tests             | `test_contract_alignment.py` + `test_ac_uic_alignment.py` pass                                        |
-| Schema robustness tests   | `test_schema_robustness.py` passes per-service                                                        |
-| BestExecutionRecord trail | `execution_service_version` + `strategy_service_version` fields present on `BestExecutionRecord`      |
-| EXECUTION_AUDIT consumed  | `persist_audit_log()` called for ORDER_CREATED/FILLED/REJECTED/CANCELLED/UPDATED in execution-service |
-| STRATEGY_AUDIT consumed   | `persist_audit_log()` called for STRATEGY_INSTRUCTION/SIGNAL_GENERATED in strategy-service            |
-| Audit payload validation  | `_validate_audit_payload()` validates against `EXECUTION_AUDIT.required_fields`; raises on missing    |
+| Criterion                 | Requirement                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| AC scope                  | External venue schemas only (exchange responses, raw data formats)                                     |
+| UIC scope                 | Internal domain schemas only (canonical processed forms)                                               |
+| No float price fields     | All price/monetary fields use `Decimal`; ratio/pct/time fields annotated with `# float-ok` comment     |
+| No AC/UIC duplication     | No schema class defined in both repos                                                                  |
+| Layer 0 tests             | `test_contract_alignment.py` + `test_ac_uic_alignment.py` pass                                         |
+| Schema robustness tests   | `test_schema_robustness.py` passes per-service                                                         |
+| BestExecutionRecord trail | `execution_service_version` + `strategy_service_version` fields present on `BestExecutionRecord`       |
+| EXECUTION_AUDIT consumed  | `persist_audit_log()` called for ORDER_CREATED/FILLED/REJECTED/CANCELLED/UPDATED in execution-service  |
+| STRATEGY_AUDIT consumed   | `persist_audit_log()` called for STRATEGY_INSTRUCTION/SIGNAL_GENERATED in strategy-service             |
+| Audit payload validation  | `_validate_audit_payload()` validates against `EXECUTION_AUDIT.required_fields`; raises on missing     |
+| No rogue service schemas  | Services do NOT define Pydantic BaseModel/TypedDict for cross-service data — those belong in UIC/UAC   |
+| Schema location rule      | Internal domain schemas → UIC; external vendor schemas → UAC; service-local models → internal-only use |
 
-**Scoring:** `PASS` — all criteria met. `WARN` — 1–2 float fields with `# float-ok` comment. `FAIL` — any price/monetary
-field using `float`; any AC/UIC duplication; Layer 0 tests failing; OR `BestExecutionRecord` missing version fields; OR
-`persist_audit_log()` not called for all order lifecycle events; OR audit payload validation absent.
+**Audit commands (schema location enforcement):**
+
+```bash
+# Find Pydantic BaseModel definitions in service source (not tests, not contracts repos)
+for svc in execution-service strategy-service alerting-service risk-and-exposure-service \
+           pnl-attribution-service position-balance-monitor-service market-tick-data-service \
+           market-data-processing-service instruments-service; do
+  hits=$(rg 'class \w+\(BaseModel\)|class \w+\(TypedDict\)' \
+    "$svc/" --type py --glob '!**/tests/**' --glob '!.venv*' -n 2>/dev/null)
+  if [ -n "$hits" ]; then
+    echo "=== $svc: LOCAL SCHEMA DEFINITIONS ==="
+    echo "$hits"
+    echo "--- Verify each is internal-only (not imported by other repos) ---"
+  fi
+done
+
+# Cross-check: are any service-defined models imported by OTHER repos?
+for svc in execution-service strategy-service alerting-service risk-and-exposure-service; do
+  pkg=$(echo "$svc" | tr '-' '_')
+  rg "from ${pkg}\." --type py --glob '!.venv*' --glob "!${svc}/**" -l 2>/dev/null | head -5
+done
+# Any hit = schema should be moved to UIC/UAC
+```
+
+**Scoring:** `PASS` — all criteria met. `WARN` — 1–2 float fields with `# float-ok` comment; OR ≤3 service-local models
+that are genuinely internal-only. `FAIL` — any price/monetary field using `float`; any AC/UIC duplication; Layer 0 tests
+failing; OR `BestExecutionRecord` missing version fields; OR `persist_audit_log()` not called for all order lifecycle
+events; OR audit payload validation absent; OR any service-defined schema imported by another repo (should be in
+UIC/UAC).
 
 ---
 
@@ -489,18 +594,44 @@ rg 'except Exception' --type py \
 
 **Required state:**
 
-| Criterion                          | Requirement                                                                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------------------- |
-| `# type: ignore` count             | <10 total; every occurrence in `QUALITY_GATE_BYPASS_AUDIT.md`                               |
-| `.basedpyright-baseline.json`      | Zero target; each present file requires BYPASS_AUDIT.md entry (WARN); undocumented = FAIL   |
-| `try/except ImportError` fallbacks | Zero in production source (fail loud on missing imports)                                    |
-| `QUALITY_GATE_BYPASS_AUDIT.md`     | Present in every repo that has any suppression                                              |
-| `# noqa` suppressions              | Zero in production source                                                                   |
-| Broad `except Exception`           | Zero undocumented; each legitimate use annotated `# broad-except-ok` AND in BYPASS_AUDIT.md |
+| Criterion                          | Requirement                                                                                    |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `# type: ignore` count             | <10 total; every occurrence in `QUALITY_GATE_BYPASS_AUDIT.md`                                  |
+| `.basedpyright-baseline.json`      | Zero target; each present file requires BYPASS_AUDIT.md entry (WARN); undocumented = FAIL      |
+| `try/except ImportError` fallbacks | Zero in production source (fail loud on missing imports)                                       |
+| `QUALITY_GATE_BYPASS_AUDIT.md`     | Present in every repo that has any suppression                                                 |
+| `# noqa` suppressions              | Zero in production source                                                                      |
+| Broad `except Exception`           | Zero undocumented; each legitimate use annotated `# broad-except-ok` AND in BYPASS_AUDIT.md    |
+| QG bypass reasons                  | Every bypass/skip in quality-gates.sh has a documented best-practice reason in BYPASS_AUDIT.md |
+| `RUN_INTEGRATION` must be `true`   | All services must have `RUN_INTEGRATION=true` in quality-gates.sh; `false` is not allowed      |
+| No bypass-to-pass pattern          | No evidence of suppressions added solely to make QG pass (review git blame for context)        |
 
-**Scoring:** `PASS` — zero suppressions. `WARN` — ≤10 `type: ignore` all documented; baseline files documented; ≤5 broad
-`except Exception` all in BYPASS_AUDIT.md. `FAIL` — any undocumented suppression; any `try/except ImportError`; any
-`# noqa` in production code; OR undocumented broad `except Exception`.
+**Audit commands (QG bypass audit):**
+
+```bash
+# Check RUN_INTEGRATION setting across all repos (MUST be true)
+rg 'RUN_INTEGRATION=' */scripts/quality-gates.sh 2>/dev/null | \
+  grep -v 'RUN_INTEGRATION=true' | \
+  awk -F: '{print "VIOLATION: " $1 " has " $2}'
+
+# Check for skip/bypass patterns in QG scripts without documented reasons
+rg 'skip|SKIP|bypass|BYPASS|disable|DISABLE' */scripts/quality-gates.sh 2>/dev/null | \
+  grep -v '#.*reason:\|#.*best-practice:' | head -20
+
+# Verify QUALITY_GATE_BYPASS_AUDIT.md covers all suppressions
+for repo in */; do
+  has_suppress=$(rg '# type: ignore|# noqa|\.basedpyright-baseline|except ImportError|RUN_INTEGRATION=false' \
+    "$repo" --type py --glob '!.venv*' -c 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+  if [ "$has_suppress" -gt 0 ] && [ ! -f "${repo}QUALITY_GATE_BYPASS_AUDIT.md" ]; then
+    echo "MISSING BYPASS_AUDIT.md: $repo (has $has_suppress suppressions)"
+  fi
+done
+```
+
+**Scoring:** `PASS` — zero suppressions; all `RUN_INTEGRATION=true`. `WARN` — ≤10 `type: ignore` all documented;
+baseline files documented; ≤5 broad `except Exception` all in BYPASS_AUDIT.md. `FAIL` — any undocumented suppression;
+any `try/except ImportError`; any `# noqa` in production code; OR undocumented broad `except Exception`; OR any repo
+with `RUN_INTEGRATION=false`; OR any QG bypass without documented best-practice reason.
 
 ---
 
@@ -617,11 +748,59 @@ done
 | VCR cassettes in interface repos      | All 7 interface repos have cassettes in `unified_api_contracts_external/<venue>/mocks/`                            |
 | Integration tests are credential-free | `CLOUD_MOCK_MODE=true`, no live API calls in quickmerge                                                            |
 | Layer 1.5 per dep boundary            | At least 1 integration test per private dependency boundary                                                        |
+| Functional depth (not import-only)    | Integration tests CALL functions/classes from each dependency — not just `import` the package                      |
+| `RUN_INTEGRATION=true` enforced       | All repos with integration tests must have `RUN_INTEGRATION=true` in quality-gates.sh; `false` is FAIL             |
+| Manifest `integration_deps` tracked   | workspace-manifest.json tracks all inter-repo import relationships in `integration_dependencies[]` field           |
+| QG runs integration tests             | quality-gates.sh actually executes `pytest tests/integration/` when `RUN_INTEGRATION=true`                         |
+
+**Audit commands (integration test depth):**
+
+```bash
+# Check that integration tests actually CALL functions (not just import)
+# For each repo, verify integration test files contain function calls, not just imports
+for repo in */; do
+  int_dir="${repo}tests/integration/"
+  [ -d "$int_dir" ] || continue
+  for tf in "$int_dir"*.py; do
+    [ -f "$tf" ] || continue
+    # Count import lines vs actual function call/assertion lines
+    imports=$(rg '^from |^import ' "$tf" 2>/dev/null | wc -l)
+    calls=$(rg '\w+\(|assert ' "$tf" 2>/dev/null | wc -l)
+    if [ "$calls" -le "$imports" ]; then
+      echo "SHALLOW TEST (import-only): $tf (imports=$imports, calls=$calls)"
+    fi
+  done
+done
+
+# Verify RUN_INTEGRATION=true in all repos that have integration tests
+for repo in */; do
+  [ -d "${repo}tests/integration/" ] || continue
+  qg="${repo}scripts/quality-gates.sh"
+  [ -f "$qg" ] || continue
+  setting=$(rg 'RUN_INTEGRATION=' "$qg" 2>/dev/null | head -1)
+  echo "$repo: $setting"
+  echo "$setting" | grep -q 'false' && echo "  FAIL: must be true"
+done
+
+# Check manifest has integration_dependencies field
+python3 -c "
+import json
+m = json.load(open('unified-trading-pm/workspace-manifest.json'))
+missing = [r['name'] for r in m['repos'] if 'integration_dependencies' not in r]
+if missing:
+    print(f'MISSING integration_dependencies field: {len(missing)} repos')
+    for name in missing[:10]: print(f'  {name}')
+else:
+    print('PASS: all repos have integration_dependencies')
+"
+```
 
 **Scoring:** `PASS` — all T3+ repos have integration tests; all interface repos have cassettes; library-dep coverage OK;
-UI integration tests present; no coverage-boost files. `WARN` — 1–2 repos missing but tracked in active plan. `FAIL` —
-any interface repo with zero cassettes; OR integration tests make live API calls; OR services with library deps missing
-integration test imports.
+integration tests call actual functions (not import-only); `RUN_INTEGRATION=true` in all repos; manifest tracks
+`integration_dependencies`; UI integration tests present; no coverage-boost files. `WARN` — 1–2 repos missing but
+tracked in active plan. `FAIL` — any interface repo with zero cassettes; OR integration tests make live API calls; OR
+services with library deps missing integration test imports; OR any repo with `RUN_INTEGRATION=false`; OR integration
+tests are import-only (no actual function calls); OR `integration_dependencies` field absent from manifest.
 
 ---
 
@@ -698,7 +877,14 @@ rg 'bigquery_dataset|BigQueryClient' --type py \
 | `os.getenv` in cloud config     | Zero (use `UnifiedCloudConfig`); bootstrap exception only             |
 | `get_pubsub_client()`           | All services use UCI PubSub abstraction                               |
 
-**Scoring:** `PASS` — zero violations. `FAIL` — any banned pattern found in non-UCI/non-deployment source.
+### §12.X Credential Placeholder Detection
+
+- .env files MUST NOT contain placeholder credential paths (e.g. `your-service-account-key.json`)
+- Check: `rg "your-service-account" .env .env.example` — any match is a violation
+- ADC (Application Default Credentials) is the default for local dev; no key file references
+
+**Scoring:** `PASS` — zero violations. `FAIL` — any banned pattern found in non-UCI/non-deployment source; any .env file
+containing placeholder credential paths.
 
 ---
 
@@ -1491,9 +1677,19 @@ cd system-integration-tests && python3 -m pytest tests/contracts/ -v --tb=short
 | SIT completeness tests     | `test_uic_completeness.py` + `test_uac_completeness.py` pass             |
 | GHA smoke-test-gate.yml    | Completeness check steps present (warn-mode, non-blocking)               |
 
-**Scoring:** `PASS` — all checkers exit 0; SIT tests pass. `WARN` — UAC curation backlog exists but tracked in
-`contract_completeness_checker_2026_03_10.plan.md`. `FAIL` — UIC has missing `__all__` entries; OR any `__all__` symbol
-has zero consumers; OR SIT completeness tests failing.
+### §27.X UAC Error Classification Coverage
+
+- Every URDI/UMI adapter that makes external API calls MUST classify errors through UAC
+- Check: adapter files should import `classify_venue_error` from `unified_api_contracts`
+- Check: adapter files should emit `log_event("ADAPTER_FETCH_FAILED", details={...})` with error_code, action,
+  retry_safe
+- Every venue in VenueMapping MUST have entries in UAC VENUE_ERROR_MAP
+- The Graph returns HTTP 200 for errors — adapters MUST parse response body for `errors` key
+
+**Scoring:** `PASS` — all checkers exit 0; SIT tests pass; all adapters classify errors through UAC. `WARN` — UAC
+curation backlog exists but tracked in `contract_completeness_checker_2026_03_10.plan.md`. `FAIL` — UIC has missing
+`__all__` entries; OR any `__all__` symbol has zero consumers; OR SIT completeness tests failing; OR any adapter makes
+external API calls without UAC error classification.
 
 ---
 
@@ -1543,6 +1739,324 @@ OR batch/live outputs differ; OR Layer 0 contract tests failing.
 
 ---
 
+## Section 29 — API Domain Data Coverage
+
+**Goal:** The combination of all API repos collectively serves every domain data type in the system. No domain data is
+"orphaned" — produced by libraries/services but inaccessible via any REST API. Since APIs serve UIs, all data must be
+queryable.
+
+**Audit commands:**
+
+```bash
+# Step 1 — Catalog all API repos and their route endpoints
+for api in market-data-api config-api execution-results-api alerting-service \
+           risk-and-exposure-service client-reporting-api trading-analytics-api \
+           ml-inference-api ml-training-api deployment-api batch-audit-api \
+           market-tick-data-service position-balance-monitor-service pnl-attribution-service; do
+  echo "=== $api ==="
+  rg '@(router|app)\.(get|post|put|delete|patch|websocket)\(' \
+    "$api/" --type py --glob '!**/tests/**' -n 2>/dev/null | head -20
+done
+
+# Step 2 — Catalog all domain data types from contracts repos
+rg 'class \w+\(BaseModel\)' \
+  unified-internal-contracts/unified_internal_contracts/ --type py -n 2>/dev/null | \
+  awk -F: '{print $1 ": " $3}'
+
+# Step 3 — Cross-reference: for each UIC domain schema, is it served by an API?
+python3 -c "
+import pathlib, re
+uic_dir = pathlib.Path('unified-internal-contracts/unified_internal_contracts')
+domains = set()
+for py in uic_dir.rglob('*.py'):
+    if '__pycache__' in str(py): continue
+    for line in py.read_text().splitlines():
+        m = re.match(r'class (\w+)\(BaseModel\)', line)
+        if m: domains.add(m.group(1))
+
+# Check which schemas are referenced in API repos
+api_dirs = ['market-data-api', 'config-api', 'execution-results-api', 'alerting-service',
+            'risk-and-exposure-service', 'client-reporting-api', 'trading-analytics-api',
+            'ml-inference-api', 'ml-training-api', 'deployment-api', 'batch-audit-api']
+served = set()
+for api in api_dirs:
+    p = pathlib.Path(api)
+    if not p.exists(): continue
+    for py in p.rglob('*.py'):
+        if '.venv' in str(py) or 'tests' in str(py): continue
+        content = py.read_text()
+        for d in domains:
+            if d in content: served.add(d)
+
+orphaned = domains - served
+if orphaned:
+    print(f'ORPHANED SCHEMAS ({len(orphaned)} not served by any API):')
+    for s in sorted(orphaned): print(f'  {s}')
+else:
+    print('PASS: all UIC schemas served by at least one API')
+" 2>/dev/null
+
+# Step 4 — Check domain coverage checklist
+# Each domain must have at least one API endpoint or documented N/A reason
+python3 -c "
+domains = {
+    'market_data': ['market-data-api', 'market-tick-data-service'],
+    'instruments': [],  # GAP: no API for instrument metadata
+    'execution': ['execution-results-api'],
+    'strategy': [],  # GAP: no API for strategy management
+    'risk': ['risk-and-exposure-service'],
+    'features': [],  # GAP: 7 feature services have no API
+    'alerts': ['alerting-service'],
+    'config': ['config-api'],
+    'reporting': ['client-reporting-api', 'trading-analytics-api'],
+    'ml': ['ml-inference-api', 'ml-training-api'],
+    'deployment': ['deployment-api'],
+    'audit': ['batch-audit-api'],
+    'positions': ['position-balance-monitor-service'],
+    'pnl': ['pnl-attribution-service'],
+    'sports': [],  # GAP: no dedicated sports data API
+    'defi': [],  # GAP: no DeFi position/wallet data API
+    'events': [],  # GAP: no event query API
+}
+for domain, apis in domains.items():
+    if not apis:
+        print(f'ORPHANED DOMAIN: {domain} — no API serves this data')
+    else:
+        print(f'COVERED: {domain} → {apis}')
+"
+```
+
+**Required state:**
+
+| Criterion                  | Requirement                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| All UIC schemas API-served | Every UIC BaseModel is referenced by at least one API repo; orphaned schemas documented  |
+| Domain coverage checklist  | Every data domain has ≥1 API endpoint or a documented N/A reason in codex                |
+| No orphaned domain data    | No domain data produced by services/libraries that is inaccessible via REST API          |
+| Config data served         | `config-api` serves all config types (venue config, system config, feature flags)        |
+| Events queryable           | Auth events, system events, audit events are queryable — not just PubSub fire-and-forget |
+| Alerts API complete        | `alerting-service` serves all alert types (trade, risk, system, DeFi, data freshness)    |
+| Instruments API exists     | Instrument metadata, properties, and definitions are queryable via REST                  |
+| Feature data API exists    | Pre-computed feature vectors are queryable (at least latest values per instrument)       |
+
+**Scoring:** `PASS` — all domains have API coverage; orphaned schema count is zero. `WARN` — 1–3 orphaned domains with
+active plan to add API endpoints. `FAIL` — any domain with data in services/libraries but no API and no documented
+reason; OR config/events/alerts data not fully queryable.
+
+---
+
+## Section 30 — Configuration Architecture & ConfigStore Compliance
+
+**Goal:** All services follow the canonical configuration pattern. Service config extends `UnifiedCloudConfig`. Config
+schemas are Pydantic models in `config.py`. Runtime-mutable config uses `ConfigStore` (UCI cloud storage). Bootstrap
+config uses `os.environ` only in declared exception files. No ad-hoc config patterns.
+
+**Audit commands:**
+
+```bash
+# Step 1 — Check every service config.py extends UnifiedCloudConfig
+for svc in execution-service strategy-service alerting-service risk-and-exposure-service \
+           pnl-attribution-service position-balance-monitor-service market-tick-data-service \
+           market-data-processing-service instruments-service deployment-service \
+           features-calendar-service features-commodity-service features-cross-instrument-service \
+           features-delta-one-service features-multi-timeframe-service features-onchain-service \
+           features-sports-service features-volatility-service; do
+  cfg=$(find "$svc/" -name 'config.py' -o -name 'service_config.py' 2>/dev/null | \
+    grep -v '.venv\|tests\|__pycache__' | head -1)
+  if [ -z "$cfg" ]; then
+    echo "MISSING config.py: $svc"
+  else
+    extends=$(rg 'UnifiedCloudConfig|UnifiedCloudConfig\)' "$cfg" 2>/dev/null | wc -l)
+    [ "$extends" -eq 0 ] && echo "NOT EXTENDING UnifiedCloudConfig: $cfg"
+  fi
+done
+
+# Step 2 — Check ConfigStore usage for runtime-mutable config
+rg 'ConfigStore|config_store|get_config_store' --type py \
+  --glob '!.venv*' --glob '!**/tests/**' -l
+
+# Step 3 — Check for ad-hoc config patterns (json.load of config files, yaml.safe_load of config)
+rg 'json\.load.*config|yaml\.safe_load.*config' --type py \
+  --glob '!.venv*' --glob '!**/tests/**' --glob '!**/scripts/**' -n | \
+  grep -v 'unified-config-interface\|deployment-service\|unified-trading-pm' | head -20
+
+# Step 4 — Check config singleton patterns
+rg '@lru_cache|_config\s*=\s*\w+Config\(\)' --type py \
+  --glob '!.venv*' --glob '!**/tests/**' -n | head -20
+
+# Step 5 — Verify no direct os.environ in service config files (except bootstrap exceptions)
+for svc in */; do
+  cfg=$(find "$svc" -name 'config.py' -o -name 'service_config.py' 2>/dev/null | \
+    grep -v '.venv\|tests\|__pycache__' | head -1)
+  [ -z "$cfg" ] && continue
+  hits=$(rg 'os\.environ|os\.getenv' "$cfg" 2>/dev/null | wc -l)
+  [ "$hits" -gt 0 ] && echo "DIRECT ENV ACCESS in config: $cfg"
+done
+```
+
+**Required state:**
+
+| Criterion                         | Requirement                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Config extends UnifiedCloudConfig | Every service's config.py/service_config.py inherits from `UnifiedCloudConfig`                    |
+| Config schema is Pydantic         | All config classes are Pydantic `BaseSettings` or extend `UnifiedCloudConfig` (also BaseSettings) |
+| No direct `os.environ` in config  | Only bootstrap exception files (factory.py, constants.py, config_loader.py) use `os.environ`      |
+| ConfigStore for mutable config    | Runtime-changeable config (feature flags, thresholds) read via `ConfigStore`, not env vars        |
+| No ad-hoc config loading          | No `json.load(open('config.json'))` or `yaml.safe_load(open('config.yaml'))` in service code      |
+| Singleton pattern consistent      | Config instantiated once per process (`@lru_cache(maxsize=1)` or module-level)                    |
+| Config documented in codex        | `unified-trading-codex/06-coding-standards/configuration-management.md` covers all patterns       |
+
+### §30.X ConfigStore Load Isolation
+
+- ConfigStore.load_config() MUST use \_env_file=None to prevent .env pollution when loading from cloud storage
+- Services loading domain config from cloud storage should not have local .env vars leak into the config model
+- Check: UCI persistence.py uses `config_class(_env_file=None, **data)` not `model_validate(data)`
+
+**Scoring:** `PASS` — all services extend UnifiedCloudConfig; zero ad-hoc config; ConfigStore used for mutable config;
+ConfigStore load uses \_env_file=None isolation. `WARN` — 1–2 services missing ConfigStore for optional config. `FAIL` —
+any service config not extending UnifiedCloudConfig; OR direct `os.environ` in non-bootstrap config; OR ad-hoc config
+file loading in service source; OR ConfigStore.load_config() allows .env pollution.
+
+---
+
+## Section 31 — Runtime Topology ↔ Library Abstraction Parity
+
+**Goal:** Every infrastructure component declared in the runtime topology has a corresponding abstraction in the library
+layer (UCI/UTL). No service should need to access an infrastructure component for which no library abstraction exists.
+If the topology says "Redis for caching," UCI must provide a Redis client abstraction. If it says "PubSub for
+messaging," UCI must provide `get_pubsub_client()`.
+
+**Audit commands:**
+
+```bash
+# Step 1 — Extract infrastructure components from runtime topology
+python3 -c "
+import yaml, json
+try:
+    t = yaml.safe_load(open('unified-trading-pm/configs/runtime-topology.yaml'))
+    print('Topology version:', t.get('version', 'unknown'))
+    # List all infrastructure components
+    for profile_name, profile in t.get('deployment_profiles', {}).items():
+        for comp in profile.get('infrastructure', []):
+            print(f'  INFRA: {comp}')
+except Exception as e:
+    print(f'Cannot parse topology: {e}')
+" 2>/dev/null
+
+# Step 2 — Check UCI factory methods cover all infra components
+rg 'def get_\w+_client|def get_\w+_sink|def get_\w+_bus' \
+  unified-cloud-interface/unified_cloud_interface/ --type py -n
+
+# Step 3 — Check for direct infra SDK imports in services (should go through UCI)
+# Redis
+rg 'import redis|from redis' --type py --glob '!.venv*' \
+  --glob '!unified-cloud-interface/**' -n
+# Firestore
+rg 'from google.cloud import firestore|import firestore' --type py \
+  --glob '!.venv*' --glob '!unified-cloud-interface/**' -n
+# Memcached
+rg 'import memcache|import pymemcache' --type py --glob '!.venv*' \
+  --glob '!unified-cloud-interface/**' -n
+# Kafka (if in topology)
+rg 'import kafka|from kafka' --type py --glob '!.venv*' \
+  --glob '!unified-cloud-interface/**' -n
+# Direct PubSub (should use get_pubsub_client)
+rg 'from google.cloud import pubsub|google.cloud.pubsub' --type py \
+  --glob '!.venv*' --glob '!unified-cloud-interface/**' -n
+
+# Step 4 — Cross-reference: infra declared in topology vs UCI abstractions available
+python3 -c "
+import pathlib, re
+# Known UCI abstractions
+uci_dir = pathlib.Path('unified-cloud-interface/unified_cloud_interface')
+abstractions = set()
+for py in uci_dir.rglob('*.py'):
+    for line in py.read_text().splitlines():
+        m = re.match(r'def (get_\w+)', line)
+        if m: abstractions.add(m.group(1))
+print('UCI abstractions:', sorted(abstractions))
+
+# Expected coverage map (update as topology evolves)
+required = {
+    'get_storage_client': 'GCS/S3 storage',
+    'get_pubsub_client': 'PubSub/SNS messaging',
+    'get_secret_client': 'Secret Manager',
+    'get_query_client': 'BigQuery/Athena',
+    'get_cloud_config': 'Cloud config',
+}
+for func, desc in required.items():
+    status = 'PASS' if func in abstractions else 'MISSING'
+    print(f'  {status}: {func} ({desc})')
+"
+
+# Step 5 — Check service_flows in topology match actual service entry points
+python3 -c "
+import yaml, pathlib
+try:
+    t = yaml.safe_load(open('unified-trading-pm/configs/runtime-topology.yaml'))
+    for flow_name, flow in t.get('service_flows', {}).items():
+        for svc in flow.get('services', []):
+            svc_dir = pathlib.Path(svc.get('name', ''))
+            if not svc_dir.exists():
+                print(f'TOPOLOGY DRIFT: {svc[\"name\"]} in flow {flow_name} but repo not found')
+except Exception as e:
+    print(f'Cannot parse topology: {e}')
+" 2>/dev/null
+```
+
+**Required state:**
+
+| Criterion                                | Requirement                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Infra ↔ UCI parity                      | Every infrastructure component in runtime-topology.yaml has a corresponding UCI abstraction |
+| No direct infra SDK in services          | Services never import redis, kafka, firestore, etc. directly — only via UCI                 |
+| Storage abstraction                      | `get_storage_client()` covers GCS + S3                                                      |
+| Messaging abstraction                    | `get_pubsub_client()` covers PubSub + SNS/SQS                                               |
+| Secrets abstraction                      | `get_secret_client()` covers GCP Secret Manager + AWS Secrets Manager                       |
+| Query abstraction                        | `get_query_client()` covers BigQuery + Athena (if in topology)                              |
+| Cache abstraction (if Redis in topology) | `get_cache_client()` or equivalent covers Redis/Memcached                                   |
+| Topology ↔ repo parity                  | All services in topology `service_flows` exist as repos in workspace                        |
+| No infrastructure orphans                | No infra component provisioned but never abstracted (dead infrastructure cost)              |
+
+**Scoring:** `PASS` — full parity; every topology component has UCI abstraction; zero direct infra SDK imports. `WARN` —
+1 infra component lacking UCI abstraction but tracked in plan. `FAIL` — any service directly imports infra SDK that UCI
+should abstract; OR ≥2 topology components have no library abstraction; OR topology references non-existent repos.
+
+---
+
+## Section 32 — Format String Safety & Logging Hygiene
+
+**Goal:** No raw error messages used as format strings in logging calls. No malformed format specifiers in production
+code. These are silent bugs that cause ValueError crashes at runtime when error messages contain `%` characters.
+
+**Audit commands:**
+
+```bash
+# Check for raw error messages used as format strings
+rg 'logger\.(warning|error|info)\(_err\.message' --type py --glob '!tests/' --glob '!.venv*' -n
+# Fix: Use logger.warning("%s", _err.message, ...) instead
+
+# Check for malformed format specifiers
+rg '%\.\.1f' --type py --glob '!.venv*' -n
+# Should be %.1f%%
+
+rg '%,d' --type py --glob '!.venv*' -n
+# Python doesn't support %,d for thousands separator — use f-strings or locale
+```
+
+**Required state:**
+
+| Criterion                        | Requirement                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------- |
+| No raw error format strings      | Zero `logger.warning(_err.message, ...)` — use `logger.warning("%s", _err.message)` instead |
+| No malformed format specifiers   | Zero `%..1f` or `%,d` patterns in production source                                         |
+| Format string safety in adapters | All adapter error logging uses `"%s"` placeholder, not raw message as format string         |
+
+**Scoring:** `PASS` — zero violations. `WARN` — 1–2 occurrences in non-critical paths. `FAIL` — any raw error message
+used as format string in production adapter/service code; OR malformed format specifiers in production source.
+
+---
+
 ## Key SSOT References for Auditors
 
 - **Repo registry & DAG:** `unified-trading-pm/workspace-manifest.json`
@@ -1558,3 +2072,8 @@ OR batch/live outputs differ; OR Layer 0 contract tests failing.
 - **Batch-live symmetry:** `unified-trading-codex/batch-live-symmetry.md`
 - **API key phases:** `unified-trading-pm/plans/active/api_keys_and_auth.plan.md`
 - **Previous audit reports:** `system-integration-tests/reports/audit_<date>.json`
+- **Config architecture:** `unified-trading-codex/06-coding-standards/configuration-management.md`
+- **Runtime topology:** `unified-trading-pm/configs/runtime-topology.yaml`
+- **UCI factory methods:** `unified-cloud-interface/unified_cloud_interface/factory.py`
+- **UIC domain schemas:** `unified-internal-contracts/unified_internal_contracts/`
+- **API domain coverage:** Verify against this audit §29 domain checklist

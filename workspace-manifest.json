@@ -67,7 +67,6 @@
     "deployment-api": "0.1.1",
     "deployment-service": "0.1.1",
     "deployment-ui": "0.1.0",
-    "elysium-defi-system": "0.1.0",
     "execution-algo-library": "0.1.6",
     "execution-analytics-ui": "0.1.0",
     "execution-results-api": "0.1.0",
@@ -568,41 +567,6 @@
       "role": "ui",
       "tags": ["cefi", "deployment", "standard"],
       "integration_dependencies": []
-    },
-    "elysium-defi-system": {
-      "type": "service",
-      "arch_tier": "service",
-      "doc_standard": "service-canonical",
-      "codex_sections": ["01-domain", "04-architecture", "05-infrastructure"],
-      "version": "0.1.0",
-      "version_source": "pyproject.toml",
-      "dependencies": [
-        {
-          "name": "unified-defi-execution-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        }
-      ],
-      "ci_status": "LOCAL_PASS",
-      "coverage_pct": 68,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "testing_level": "integration",
-      "skipped_gates": [],
-      "status": "active",
-      "github_url": "https://github.com/IggyIkenna/elysium-defi-system",
-      "completion_path": "defi",
-      "semver_rules_ref": "service",
-      "sit_level": "standard",
-      "semver_policy": "agent",
-      "tier": 3,
-      "role": "service",
-      "tags": ["defi", "standard"],
-      "integration_dependencies": [
-        "unified-config-interface",
-        "unified-defi-execution-interface",
-        "unified-events-interface",
-        "unified-trading-library"
-      ]
     },
     "execution-algo-library": {
       "type": "library",
@@ -1769,7 +1733,7 @@
         }
       ],
       "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 89,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2459,7 +2423,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -2679,7 +2643,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2970,7 +2934,7 @@
       "github_url": "https://github.com/IggyIkenna/unified-internal-contracts",
       "status": "active",
       "notes": "Internal message schemas, topic names, request/response/error contracts, domain/<service>/ output schemas. NO cloud SDKs. T0-L2b: may import UAC normalization canonicals; UAC must NOT import UIC. Build order: UAC (L2a, merge_level=2) must build before UIC (L2b, merge_level=3).",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 99,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3067,7 +3031,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 96,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3493,7 +3457,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3729,7 +3693,7 @@
       {
         "level": 12,
         "description": "IaC + post-deploy validation (deploy last; references all service images)",
-        "repos": ["elysium-defi-system", "ibkr-gateway-infra", "system-integration-tests"]
+        "repos": ["ibkr-gateway-infra", "system-integration-tests"]
       }
     ]
   },

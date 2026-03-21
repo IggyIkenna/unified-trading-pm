@@ -610,6 +610,143 @@ service_flows:
       live: { transport: pubsub }
     note: Strategy must honor halt commands from alerting system.
 
+  # === Alerting → Deployment API: operational stop/restart triggers ===
+  - producer: alerting-service
+    consumer: deployment-api
+    data: service_stop_restart_triggers
+    modes:
+      live: { transport: pubsub }
+    note: Alerting publishes stop/restart commands; deployment-api executes them against Cloud Run services.
+
+  # === Layer 1-2 → Commodity Features (L3): instruments + MDPS → features-commodity-service ===
+  - producer: instruments-service
+    consumer: features-commodity-service
+    data: instruments_universe
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+
+  - producer: market-data-processing-service
+    consumer: features-commodity-service
+    data: processed_candles_ohlcv
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+    note: Commodity features consume OHLCV candles for fundamental factor and signal computation.
+
+  # === Commodity Features → ML ===
+  - producer: features-commodity-service
+    consumer: ml-training-service
+    data: commodity_features
+    modes:
+      batch: { transport: gcs }
+
+  - producer: features-commodity-service
+    consumer: ml-inference-service
+    data: live_commodity_features
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+
+  # === On-chain Features → ML inference (batch read of on-chain feature snapshots) ===
+  - producer: features-onchain-service
+    consumer: ml-inference-service
+    data: onchain_feature_snapshots
+    modes:
+      batch: { transport: gcs }
+    note: On-chain service is batch-only; inference reads latest on-chain feature snapshots from GCS.
+
+  # === Layer 5-6 → Reconciliation: execution + position + strategy → batch-live-reconciliation-service ===
+  - producer: execution-service
+    consumer: batch-live-reconciliation-service
+    data: execution_results_for_reconciliation
+    modes:
+      batch: { transport: gcs }
+    note: T+1 reconciliation reads execution fills to compare live vs batch-replayed benchmark.
+
+  - producer: position-balance-monitor-service
+    consumer: batch-live-reconciliation-service
+    data: position_snapshots_for_reconciliation
+    modes:
+      batch: { transport: gcs }
+    note: Reconciliation validates live positions against batch-computed expected positions.
+
+  - producer: strategy-service
+    consumer: batch-live-reconciliation-service
+    data: signals_for_reconciliation
+    modes:
+      batch: { transport: gcs }
+    note: Reconciliation compares live signals to deterministic batch-replayed signals.
+
+  # === Trading Agent: ML + strategy → trading-agent-service → execution ===
+  - producer: ml-inference-service
+    consumer: trading-agent-service
+    data: predictions
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+    note: Agent supervisor consumes ML predictions to drive autonomous TradFi commodity options/futures decisions.
+
+  - producer: strategy-service
+    consumer: trading-agent-service
+    data: trade_signals
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+    note: Agent observes strategy signals for supervised micro-loop decision-making.
+
+  - producer: trading-agent-service
+    consumer: execution-service
+    data: agent_trade_orders
+    modes:
+      live: { transport: pubsub }
+    note: Agent submits orders to execution-service; same pipeline as strategy-service orders.
+
+  # === API read edges: pipeline services → API layer ===
+  - producer: execution-service
+    consumer: batch-audit-api
+    data: execution_audit_events
+    modes:
+      batch: { transport: gcs }
+    note: Audit API reads execution audit trail from GCS/BigQuery for compliance and data-health queries.
+
+  - producer: execution-service
+    consumer: trading-analytics-api
+    data: execution_results
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+    note: Trading analytics API aggregates execution results for slippage, fill quality, and trade analytics.
+
+  - producer: pnl-attribution-service
+    consumer: trading-analytics-api
+    data: pnl_reports
+    modes:
+      batch: { transport: gcs }
+      live: { transport: pubsub }
+    note: Trading analytics API serves PnL breakdowns alongside execution analytics.
+
+  - producer: ml-inference-service
+    consumer: ml-inference-api
+    data: predictions_model_registry
+    modes:
+      batch: { transport: gcs }
+    note: Inference API fronts the inference service — exposes model registry reads and prediction queries.
+
+  - producer: ml-training-service
+    consumer: ml-training-api
+    data: training_artifacts_status
+    modes:
+      batch: { transport: gcs }
+    note: Training API fronts the training service — exposes job status, artifact paths, and training metadata.
+
+  - producer: instruments-service
+    consumer: config-api
+    data: instruments_universe
+    modes:
+      batch: { transport: gcs }
+    note: Config API exposes system configuration including instrument universe; reads GCS-persisted instruments data.
+
 # ---------------------------------------------------------------------------
 # API interaction edges (network boundaries only)
 # ---------------------------------------------------------------------------
@@ -789,7 +926,6 @@ batch_and_live_services:
   - features-multi-timeframe-service
   - features-sports-service
   - features-commodity-service
-  - elysium-defi-system
   - ml-inference-service
   - strategy-service
   - execution-service
@@ -1609,18 +1745,6 @@ deployment_targets:
       - client-reporting-ui
       - settlement-ui
       - unified-admin-ui
-
-  # ---------------------------------------------------------------------------
-  # DeFi execution system — persistent WebSocket connections to DeFi protocols
-  # ---------------------------------------------------------------------------
-  vm_colocated_defi:
-    deploy_type: vm
-    scaling: always_on
-    services:
-      elysium-defi-system:
-        reason: >
-          Persistent WebSocket connections to Hyperliquid + on-chain perps; co-located with market-tick-data-service for
-          in_memory DeFi market feed. Handles order placement, position management, and liquidation monitoring.
 
   # ---------------------------------------------------------------------------
   # Trading agent — LLM-driven strategy commentary and signal generation

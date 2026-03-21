@@ -34,14 +34,10 @@ EXTERNAL_PACKAGES = {
 }
 
 # Patterns for detecting deep imports
-DEEP_IMPORT_PATTERN = re.compile(
-    r"^from\s+(" + "|".join(EXTERNAL_PACKAGES) + r")\.(\w+(?:\.\w+)*)\s+import"
-)
+DEEP_IMPORT_PATTERN = re.compile(r"^from\s+(" + "|".join(EXTERNAL_PACKAGES) + r")\.(\w+(?:\.\w+)*)\s+import")
 
 # Pattern for from imports
-FROM_IMPORT_PATTERN = re.compile(
-    r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import\s+(.+)$"
-)
+FROM_IMPORT_PATTERN = re.compile(r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import\s+(.+)$")
 
 
 class ImportViolation:

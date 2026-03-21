@@ -51,6 +51,51 @@ Read these before making ANY code changes:
 - No `os.getenv()` — use `UnifiedCloudConfig`
 - No `# type: ignore` to hide architectural violations — fix the root cause
 - No `try/except ImportError` around library imports — fail loud
+- Services use URDI for reference data, not UMI — UMI is for market data only
+- Shard-level failure isolation — no `raise` inside per-venue/per-shard loops (see
+  codex/04-architecture/shard-level-failure-isolation.md)
+- Every adapter MUST classify errors through UAC `classify_venue_error()` and emit `ADAPTER_FETCH_FAILED` events
+- `logger.warning("%s", _err.message)` not `logger.warning(_err.message)` — the message is not a format string
+- `.env` files must NEVER contain placeholder credential paths — ADC is the default
+- Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--category` (domain). See
+  `codex/06-coding-standards/cli-convention.md`.
+
+## DeFi Execution Architecture
+
+**Interface credential convention**: Interfaces are API-keyless. Services fetch credentials from Secret Manager and
+inject them at runtime via factory/constructor params. See `codex/04-architecture/interface-credential-convention.md`.
+
+- UTEI: `get_order_adapter(venue, api_key, api_secret, ...)` — keys as params
+- UDEI: `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` — from config dict
+- USEI: `adapter(credentials={"api_key": key})` — keys as params
+- URDI: `create_adapter(venue, api_key=key)` — keys as params
+- UMI/UEI/UFI: no keys needed
+
+**RPC URL templates**: `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py` — SSOT for all chain→RPC
+mappings. UDEI imports from UAC, never defines its own.
+
+**Flash loan receiver**: Deployed Solidity contract required for Aave flash loans. Source in
+`deployment-service/contracts/FlashLoanReceiver.sol`. Deploy via
+`bash deployment-service/scripts/deploy-flash-loan-receiver.sh --chain <name>`. Address in UAC
+`config/testnet_contracts.yaml`. UDEI `connect()` validates on-chain (`eth_getCode`), fails loud if missing. See
+`codex/04-architecture/flash-loan-receiver.md`.
+
+**Contract registry schema**: `unified-config-interface/testnet_contracts.py` has `PROTOCOL_SCHEMAS` declaring required
+contracts per protocol. Registry validates at load time — missing contracts raise `ValueError` with deploy command.
+
+**Uniswap live swap**: UDEI `UniswapConnector.swap_exact_input()` executes live swaps via SwapRouter02
+(`0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`). Flow: ERC20 `approve(router, amount)` then `exactInputSingle`. Returns
+`DeFiSwapResult` with tx hash, gas used, and effective price.
+
+**DeFi error classification**: 13 structured error codes in UDEI `DefiErrorCode` (aave.py). Every revert maps to a known
+code: `INSUFFICIENT_COLLATERAL`, `SLIPPAGE_EXCEEDED`, `TX_REVERTED`, etc. Execution-service routes on code prefix
+(FAIL/RETRY/SKIP).
+
+**DeFi pipeline flow**: instruments-service → market-tick-data-service → features-onchain-service → strategy-service →
+execution-service. All via service CLIs. No standalone scripts. See the pipeline map discussion in this session's
+memory.
+
+**Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Pyth, Infura — all deleted from UAC, UMI, docs.
 
 ## Version Graduation (1.0.0 Process)
 
@@ -138,7 +183,13 @@ replace live cloud services (see `unified-trading-pm/plans/archive/cicd_mock_har
 
 **WS tests**: Use `MockWebSocketFeed` from `unified-market-interface/tests/fixtures/mock_ws_server.py`.
 
-**DeFi tests**: Use `responses` library (`@responses.activate`, `passthrough=False`) for Hyperliquid REST.
+**DeFi unit tests**: Use `responses` library (`@responses.activate`, `passthrough=False`) for Hyperliquid REST. Mock
+Web3 at the signing level — never hit real RPCs in unit tests.
+
+**DeFi integration tests**: Use the shared Tenderly fork fixtures in
+`unified-defi-execution-interface/tests/integration/conftest.py`. Fixtures: `tenderly_fork` (session), `funded_wallet`,
+`flash_loan_receiver`, `aave_connector`, `uniswap_connector`. All marked `@pytest.mark.allow_network`. Skipped if SM
+credentials unavailable.
 
 **Local stack**: `bash unified-trading-pm/scripts/demo-mode.sh --seed` — no credentials required.
 

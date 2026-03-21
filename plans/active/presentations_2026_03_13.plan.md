@@ -13,6 +13,18 @@ completion_gates:
   deployment: none
   business: B6
 
+repo_gates:
+  - repo: unified-trading-pm
+    code: none
+    deployment: none
+    business: B1
+    readiness_note: "Presentations assets under unified-trading-pm/presentations/."
+  - repo: odum-research-website
+    code: none
+    deployment: none
+    business: B1
+    readiness_note: "Public site if presentation or creds work lands there."
+
 depends_on:
   - cicd_code_rollout_master_2026_03_13
   # Soft blocker: Plan 1 Phase 4 provides demo data for presentations

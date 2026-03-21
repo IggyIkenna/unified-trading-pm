@@ -65,7 +65,7 @@ venue_types:
       - CanonicalContractExpiredError
 
   data_provider:
-    # Covers: tardis, databento, glassnode, coinglass, arkham, openbb, fred,
+    # Covers: tardis, databento, glassnode, coinglass, openbb, fred,
     #         ecb, barchart, ofr, defillama, instadapp, envio, aavescan,
     #         hyblock (read-only data APIs — no order flow)
     # Higher threshold (15): data provider errors rarely block trading;

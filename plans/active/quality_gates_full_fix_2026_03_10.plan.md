@@ -17,6 +17,25 @@ overview: >
     4. market-data-processing-service (pipeline throughput service)
 
   All other repos must meet targets above. Fix tests — do not lower thresholds.
+
+  **Paused:** superseded for active execution by `quality_gates_systemic_remediation_2026_03_16.plan.md`. Coverage
+  targets here remain the normative reference for repo floors.
+type: infra
+epic: epic-infra
+status: paused
+
+completion_gates:
+  code: C4
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-trading-pm
+    code: C2
+    deployment: none
+    business: none
+    readiness_note: "Coordination; systemic remediation plan owns ongoing QG audit work."
+
 isProject: true
 todos:
   - id: baseline-run

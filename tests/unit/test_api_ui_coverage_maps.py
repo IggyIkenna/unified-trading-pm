@@ -81,19 +81,14 @@ class TestApiToUiStructure:
                 continue
             for i, ep in enumerate(api_data["endpoints"]):
                 missing = required_fields - set(ep.keys())
-                assert not missing, (
-                    f"{api_name}.endpoints[{i}] ({ep.get('endpoint', '?')}) "
-                    f"missing fields: {missing}"
-                )
+                assert not missing, f"{api_name}.endpoints[{i}] ({ep.get('endpoint', '?')}) missing fields: {missing}"
 
     def test_method_is_valid(self, api_to_ui: dict[str, object]) -> None:
         for api_name, api_data in api_to_ui.items():
             if api_name.startswith("$"):
                 continue
             for ep in api_data["endpoints"]:
-                assert ep["method"] in VALID_METHODS, (
-                    f"{api_name} {ep['endpoint']}: invalid method '{ep['method']}'"
-                )
+                assert ep["method"] in VALID_METHODS, f"{api_name} {ep['endpoint']}: invalid method '{ep['method']}'"
 
     def test_data_mode_is_valid(self, api_to_ui: dict[str, object]) -> None:
         for api_name, api_data in api_to_ui.items():
@@ -112,13 +107,9 @@ class TestApiToUiStructure:
             for ep in api_data["endpoints"]:
                 has_consumers = len(ep["consuming_uis"]) > 0
                 if ep["orphan"]:
-                    assert not has_consumers, (
-                        f"{api_name} {ep['endpoint']}: orphan=true but has consumers"
-                    )
+                    assert not has_consumers, f"{api_name} {ep['endpoint']}: orphan=true but has consumers"
                 else:
-                    assert has_consumers, (
-                        f"{api_name} {ep['endpoint']}: orphan=false but no consumers"
-                    )
+                    assert has_consumers, f"{api_name} {ep['endpoint']}: orphan=false but no consumers"
 
 
 # ── ui-to-api-coverage.json structural tests ──────────────────────────────────
@@ -154,19 +145,14 @@ class TestUiToApiStructure:
                 continue
             for i, req in enumerate(ui_data["requests"]):
                 missing = required_fields - set(req.keys())
-                assert not missing, (
-                    f"{ui_name}.requests[{i}] ({req.get('fetch_url', '?')}) "
-                    f"missing fields: {missing}"
-                )
+                assert not missing, f"{ui_name}.requests[{i}] ({req.get('fetch_url', '?')}) missing fields: {missing}"
 
     def test_method_is_valid(self, ui_to_api: dict[str, object]) -> None:
         for ui_name, ui_data in ui_to_api.items():
             if ui_name.startswith("$"):
                 continue
             for req in ui_data["requests"]:
-                assert req["method"] in VALID_METHODS, (
-                    f"{ui_name} {req['fetch_url']}: invalid method '{req['method']}'"
-                )
+                assert req["method"] in VALID_METHODS, f"{ui_name} {req['fetch_url']}: invalid method '{req['method']}'"
 
     def test_data_mode_is_valid(self, ui_to_api: dict[str, object]) -> None:
         for ui_name, ui_data in ui_to_api.items():
@@ -196,9 +182,7 @@ class TestCrossMapConsistency:
                     f"API '{api_name}' from ui-api-mapping.json missing in api-to-ui-coverage.json"
                 )
 
-    def test_all_mapping_uis_in_coverage(
-        self, ui_to_api: dict[str, object], ui_api_mapping: dict[str, object]
-    ) -> None:
+    def test_all_mapping_uis_in_coverage(self, ui_to_api: dict[str, object], ui_api_mapping: dict[str, object]) -> None:
         """Every UI in ui-api-mapping.json should appear in ui-to-api-coverage.json."""
         coverage_uis = {k for k in ui_to_api if not k.startswith("$")}
         for _stack, stack_data in ui_api_mapping["stacks"].items():
@@ -254,9 +238,7 @@ class TestOrphanSummary:
         assert total_count > 0, "No endpoints found in api-to-ui-coverage"
         # Orphan ratio should be reasonable (under 50%)
         ratio = orphan_count / total_count
-        assert ratio < 0.5, (
-            f"Orphan ratio {ratio:.1%} ({orphan_count}/{total_count}) is too high"
-        )
+        assert ratio < 0.5, f"Orphan ratio {ratio:.1%} ({orphan_count}/{total_count}) is too high"
 
     def test_ui_orphan_count_documented(self, ui_to_api: dict[str, object]) -> None:
         """Count UI orphans (fetch calls with no matching API route)."""
@@ -272,9 +254,7 @@ class TestOrphanSummary:
         assert total_count > 0, "No requests found in ui-to-api-coverage"
         # UI orphans should be very low (under 20%)
         ratio = orphan_count / total_count
-        assert ratio < 0.2, (
-            f"UI orphan ratio {ratio:.1%} ({orphan_count}/{total_count}) is too high"
-        )
+        assert ratio < 0.2, f"UI orphan ratio {ratio:.1%} ({orphan_count}/{total_count}) is too high"
 
 
 # ── Data mode coverage tests ─────────────────────────────────────────────────
@@ -288,9 +268,7 @@ class TestDataModeCoverage:
             if api_name.startswith("$"):
                 continue
             for ep in api_data["endpoints"]:
-                assert "data_mode" in ep, (
-                    f"{api_name} {ep['endpoint']} missing data_mode"
-                )
+                assert "data_mode" in ep, f"{api_name} {ep['endpoint']} missing data_mode"
                 assert ep["data_mode"] in VALID_DATA_MODES
 
     def test_all_ui_requests_have_data_mode(self, ui_to_api: dict[str, object]) -> None:
@@ -298,9 +276,7 @@ class TestDataModeCoverage:
             if ui_name.startswith("$"):
                 continue
             for req in ui_data["requests"]:
-                assert "data_mode" in req, (
-                    f"{ui_name} {req['fetch_url']} missing data_mode"
-                )
+                assert "data_mode" in req, f"{ui_name} {req['fetch_url']} missing data_mode"
                 assert req["data_mode"] in VALID_DATA_MODES
 
     def test_streaming_endpoints_are_live(self, api_to_ui: dict[str, object]) -> None:
@@ -311,8 +287,7 @@ class TestDataModeCoverage:
             for ep in api_data["endpoints"]:
                 if "/stream" in ep["endpoint"]:
                     assert ep["data_mode"] == "live", (
-                        f"{api_name} {ep['endpoint']}: streaming endpoint should be live, "
-                        f"got '{ep['data_mode']}'"
+                        f"{api_name} {ep['endpoint']}: streaming endpoint should be live, got '{ep['data_mode']}'"
                     )
 
     def test_health_endpoints_are_live(self, api_to_ui: dict[str, object]) -> None:
@@ -323,8 +298,7 @@ class TestDataModeCoverage:
             for ep in api_data["endpoints"]:
                 if ep["endpoint"].endswith("/health") or ep["endpoint"].endswith("/readiness"):
                     assert ep["data_mode"] == "live", (
-                        f"{api_name} {ep['endpoint']}: health endpoint should be live, "
-                        f"got '{ep['data_mode']}'"
+                        f"{api_name} {ep['endpoint']}: health endpoint should be live, got '{ep['data_mode']}'"
                     )
 
     def test_metrics_endpoints_are_live(self, api_to_ui: dict[str, object]) -> None:
@@ -334,6 +308,4 @@ class TestDataModeCoverage:
                 continue
             for ep in api_data["endpoints"]:
                 if ep["endpoint"] == "/metrics":
-                    assert ep["data_mode"] == "live", (
-                        f"{api_name} {ep['endpoint']}: metrics should be live"
-                    )
+                    assert ep["data_mode"] == "live", f"{api_name} {ep['endpoint']}: metrics should be live"

@@ -108,6 +108,21 @@ exceptions.
 - **No backward compat shims** — fail fast, no try/except import fallbacks
 - **Strict quality gates** — no E722 global ignore, no empty fallbacks, no hardcoded project IDs, use specific
   exceptions
+- **URDI for reference data, UMI for market data** — services use URDI for instrument definitions, options chains,
+  expiry calendars. UMI is for trades, orderbooks, tickers only. Never import UMI adapters in a service that fetches
+  instrument definitions.
+- **Shard-level failure isolation** — a failed shard (venue x date) MUST NOT kill other shards. Catch all exceptions
+  per-shard, log `VENUE_PROCESSING_FAILED` event with details, return empty result. No `raise` inside
+  per-venue/per-shard processing loops. SSOT: `unified-trading-codex/04-architecture/shard-level-failure-isolation.md`
+- **UAC error classification** — every adapter that makes external API calls MUST classify errors through UAC
+  `classify_venue_error()` and emit `log_event("ADAPTER_FETCH_FAILED", details={...})` with error_code, action,
+  retry_safe. The Graph returns HTTP 200 for errors — adapters MUST parse response body for `errors` key.
+- **Format string safety** — `logger.warning("%s", _err.message)` not `logger.warning(_err.message)`. Raw error messages
+  as format strings cause ValueError when message contains `%` characters.
+- **No placeholder credentials** — `.env` files must NEVER contain placeholder credential paths (e.g.
+  `your-service-account-key.json`). ADC (Application Default Credentials) is the default for local dev.
+- **ConfigStore load isolation** — `ConfigStore.load_config()` MUST use `_env_file=None` to prevent .env pollution when
+  loading from cloud storage.
 
 ---
 

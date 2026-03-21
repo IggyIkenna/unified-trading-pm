@@ -6,7 +6,7 @@ overview: >
   interface repos (audit §10 FAIL), FreshnessMonitor implementation with per-venue SLAs for 33 venues, and 5-step
   production data backfill pipeline. Milestone-gated.
 type: mixed
-epic: epic-data
+epic: epic-infra
 status: active
 
 completion_gates:
@@ -85,14 +85,13 @@ todos:
   - id: secrets-phase3-procurement
     content: >
       - [ ] [HUMAN] P2. Procure and load 8 Phase 3 vendor API keys (accounts needed): pinnacle-api-key, odds-api-key,
-      api-football-key, glassnode-api-key, arkham-api-key, soccer-football-info-key, footystats-api-key,
-      coinglass-api-key.
+      api-football-key, glassnode-api-key, soccer-football-info-key, footystats-api-key, coinglass-api-key.
     status: pending
 
   - id: secrets-phase4-vendors
     content: >
       - [ ] [HUMAN] P3. Procure and load 6 Phase 4 vendor credentials: betfair-api-key+session, kalshi-api-key,
-      coinbase-api-key+secret, bloxroute-auth-header, smarkets-api-key, betdaq-api-key.
+      coinbase-api-key+secret, smarkets-api-key, betdaq-api-key.
     status: pending
 
   - id: secrets-defi-testnet

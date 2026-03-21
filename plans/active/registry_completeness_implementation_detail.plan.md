@@ -1,9 +1,56 @@
 ---
 name: registry-completeness-implementation-detail
 overview:
-  Execute the UAC registry completeness refactor -- add missing instrument types, sports market granularity (BTTS
-  end-to-end), BetSide/CommissionModel enums, consumer adoption across 11 repos, enum consolidation (UCI re-exports from
-  UAC), and integration tests. Phase 0-1 purely additive (non-breaking). Phase 2-4 consolidation and consumer adoption.
+  Execute the UAC registry completeness refactor — instrument types, sports BTTS end-to-end, BetSide/CommissionModel,
+  consumer adoption across repos. Domain enums live in UAC; consumers use `from unified_api_contracts import …`; UCI
+  must not re-export UAC (uci-no-domain-schemas). USRI may expose UAC sports symbols at the sports-reference boundary.
+  Phase 0-1 additive; Phase 2-4 consolidation and consumer adoption.
+type: code
+epic: epic-code-completion
+status: active
+
+completion_gates:
+  code: C5
+  deployment: none
+  business: none
+
+repo_gates:
+  - repo: unified-api-contracts
+    code: C4
+    deployment: none
+    business: none
+    readiness_note: "Registry SSOT; strict alignment tests in SIT."
+  - repo: unified-config-interface
+    code: C3
+    deployment: none
+    business: none
+    readiness_note: "Remove any deprecated local domain enum usage; no UAC re-export."
+  - repo: unified-market-interface
+    code: C4
+    deployment: none
+    business: none
+  - repo: unified-trade-execution-interface
+    code: C4
+    deployment: none
+    business: none
+  - repo: unified-reference-data-interface
+    code: C4
+    deployment: none
+    business: none
+  - repo: unified-sports-reference-interface
+    code: C4
+    deployment: none
+    business: none
+  - repo: instruments-service
+    code: C3
+    deployment: none
+    business: none
+  - repo: system-integration-tests
+    code: C3
+    deployment: none
+    business: none
+    readiness_note: "test_registry_alignment and related guards stay strict."
+
 todos:
   - id: p0-add-instrument-types
     content: |

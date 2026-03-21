@@ -1,16 +1,18 @@
 ---
 name: production-mock-e2e-plan-d90c8f20
 overview:
-  "Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC/UIC validation and VCR cassettes;
-  services and APIs via mock data replay, error handling, events, and load/performance checks; UIs via mock API, smoke
-  tests, and demo mode. Mock-only default in CI; optional sandbox mode when secrets present."
+  "Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC (+ unified-internal-contracts
+  where applicable), VCR cassettes, and strict schema validation; services and APIs via mock data replay, error
+  handling, events, and load/performance checks; UIs via mock API, smoke tests, and demo mode. Mock-only default in CI;
+  optional sandbox mode when secrets present. Deployment closure: D2 (CI mock/E2E green) — staging integration (D3) is
+  out of scope for this plan."
 type: infra
 epic: epic-infra
 status: active
 
 completion_gates:
   code: C5
-  deployment: none
+  deployment: D2
   business: none
 
 repo_gates:
@@ -194,7 +196,7 @@ todos:
       system-integration-tests (bca6482) and unified-cloud-interface (6cfc26f)"
   - id: h7-thirdparty-fixtures
     content:
-      "P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy/Infura JSON-RPC, and
+      "P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy JSON-RPC, and
       complete VCR cassette coverage for Databento/Tardis used endpoints"
     status: done
     notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
@@ -547,9 +549,9 @@ silently diverge from real exchange APIs.
 | Provider                                  | Fix                                                                                                       |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | **TheGraph** (9-key rotation fires in CI) | `aioresponses` fixtures per query hash in `unified-market-interface/tests/fixtures/thegraph_responses.py` |
-| **Alchemy/Infura** (live RPC)             | `responses` fixtures for JSON-RPC `eth_call` patterns                                                     |
+| **Alchemy** (live RPC)                    | `responses` fixtures for JSON-RPC `eth_call` patterns                                                     |
 | **Databento, Tardis**                     | Complete VCR cassette coverage for all used endpoints                                                     |
-| **Pyth, BloxRoute**                       | Fixtures if used in any production code path                                                              |
+| **BloxRoute**                             | Fixtures if used in any production code path                                                              |
 
 ### 7.9 Fault Injection / Chaos Middleware (H6) — P3
 
@@ -595,7 +597,7 @@ silently diverge from real exchange APIs.
 | Sports execution | 1xBet + others                                             | `aioresponses` + VCR ✓       | Complete cassettes  |
 | Market data WS   | Binance WS, Deribit WS, OKX WS                             | No mock ✗                    | H3 WS simulator ✓   |
 | Market data REST | Databento, Tardis, Yahoo Finance                           | VCR partial                  | H7 complete         |
-| Market data DeFi | TheGraph, Alchemy, Pyth, BloxRoute                         | Live calls in CI ✗           | H7 `aioresponses` ✓ |
+| Market data DeFi | TheGraph, Alchemy, BloxRoute                               | Live calls in CI ✗           | H7 `aioresponses` ✓ |
 | Cloud infra GCP  | GCS, Pub/Sub, Secret Manager, BigQuery                     | LocalProvider partial        | H1 emulators ✓      |
 | Cloud infra AWS  | S3, SQS, Secrets Manager                                   | `unittest.mock.patch` only ✗ | H2 moto ✓           |
 | Reference data   | Databento, Tardis, OpenBB, FRED, ECB                       | VCR partial                  | H7 complete         |

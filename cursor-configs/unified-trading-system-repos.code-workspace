@@ -48,9 +48,6 @@
       "path": "deployment-ui",
     },
     {
-      "path": "elysium-defi-system",
-    },
-    {
       "path": "execution-algo-library",
     },
     {

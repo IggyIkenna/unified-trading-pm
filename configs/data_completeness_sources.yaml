@@ -29,7 +29,6 @@ sources:
   betfair: { source: betfair, asset_class: sports, expected_cadence_seconds: 5, criticality: important }
   glassnode: { source: glassnode, asset_class: onchain, expected_cadence_seconds: 3600, criticality: important }
   coinglass: { source: coinglass, asset_class: onchain, expected_cadence_seconds: 3600, criticality: important }
-  arkham: { source: arkham, asset_class: onchain, expected_cadence_seconds: 3600, criticality: informational }
   features-delta-one-service:
     { source: features-delta-one-service, asset_class: feature, expected_cadence_seconds: 60, criticality: critical }
   features-volatility-service:

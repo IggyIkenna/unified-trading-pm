@@ -152,9 +152,7 @@ json.dump(spec, sys.stdout)
 """
 
 
-def extract_service_spec(
-    service_name: str, module_path: str, app_attr: str
-) -> dict[str, object] | None:
+def extract_service_spec(service_name: str, module_path: str, app_attr: str) -> dict[str, object] | None:
     """Extract OpenAPI spec using subprocess isolation with timeout."""
     logger.info("Extracting: %s (%s)", service_name, module_path)
 
@@ -252,9 +250,7 @@ def merge_specs(
     for service_name, spec in service_specs:
         # Add service-level tag
         service_title = spec.get("info", {}).get("title", service_name)
-        unified_tags.append(
-            {"name": service_name, "description": str(service_title)}
-        )
+        unified_tags.append({"name": service_name, "description": str(service_title)})
 
         # Collect schemas and detect collisions
         schemas = spec.get("components", {}).get("schemas", {})
@@ -342,9 +338,7 @@ def validate_refs(spec: dict[str, object]) -> list[str]:
     return broken
 
 
-def run_orphan_audit(
-    spec: dict[str, object], workspace_root: Path
-) -> list[str]:
+def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]:
     """Audit UAC/UIC exports against the merged spec schemas."""
     schema_names = set(spec.get("components", {}).get("schemas", {}).keys())
     orphans: list[str] = []

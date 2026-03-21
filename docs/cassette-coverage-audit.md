@@ -42,18 +42,6 @@ Tardis is accessed via raw HTTP (`httpx` sync + `aiohttp` async). VCR cassettes 
 
 ---
 
-## Pyth (bonus — found in production path)
-
-Pyth is accessed via raw HTTP for live DeFi price feeds (`PythLiveAdapter`).
-
-| Method | URL Pattern                                                     | Cassette                                 |
-| ------ | --------------------------------------------------------------- | ---------------------------------------- |
-| `GET`  | `https://hermes.pyth.network/v2/updates/price/latest?ids[]=...` | **EXISTS** (`pyth_ws_price_update.yaml`) |
-
-**Current cassette coverage**: 1/1 endpoints.
-
----
-
 ## BloxRoute (bonus — found in production path)
 
 BloxRoute (`BloxrouteLiveAdapter`) uses WebSocket connections, not HTTP REST — VCR cassettes do not apply. The

@@ -480,7 +480,7 @@ todos:
     status: done
   - id: service-l7l8-harden
     content: |
-      - [x] [AGENT per repo] P0. L7-L8 (19 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service, execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service, elysium-defi-system (L8).
+      - [x] [AGENT per repo] P0. L7-L8 (18 T4 services): coverage 70%, basedpyright, integration tests, quickmerge. Expand execution-service QG script beyond 59 lines (audit §2 FAIL). Repos: instruments-service (L7), alerting-service, execution-service, features-calendar-service, features-cross-instrument-service, features-delta-one-service, features-multi-timeframe-service, features-onchain-service, features-sports-service, features-volatility-service, features-commodity-service, market-data-processing-service, market-tick-data-service, ml-inference-service, ml-training-service, pnl-attribution-service, strategy-service, trading-agent-service (L8).
     status: done
     completion_note:
       "COMPLETED 2026-03-16: All 19 T4 services now LOCAL_PASS in manifest. Full list: instruments-service(cov=53%),
@@ -489,7 +489,7 @@ todos:
       features-onchain-service(39%), features-sports-service(87%), features-volatility-service(35%),
       features-commodity-service(3%), market-data-processing-service(39%), market-tick-data-service(73%),
       ml-inference-service(75%), ml-training-service(35%), pnl-attribution-service(46%), strategy-service(72%),
-      trading-agent-service(50%), elysium-defi-system(68%). All QG scripts passing locally."
+      trading-agent-service(50%). All QG scripts passing locally."
   - id: defi-aave-connector-live-execution
     content: |
       - [x] [AGENT] P0. AAVEConnector live execution wiring. Currently `is_live: pass` does nothing
@@ -619,8 +619,7 @@ todos:
       3 remaining dashboards, add dashboard provisioning YAML, configure Cloud Run, wire Prometheus."
   - id: feature-elysium-fork
     content: |
-      - [x] [AGENT] P2. Elysium DeFi system fork — standalone repo with DeFi strategy/execution components. Replace 8 stub handlers with implementations. Docker build produces working image.
-      COMPLETED 2026-03-13: 5 DeFi handlers implemented (borrow, lend, stake, swap, flash_loan) via unified-defi-execution-interface connectors. FORK_MODE routing with Anvil auto-resolution. Targeted unit tests to 70% coverage. Commits: 1db86f5, 72ee782.
+      - [x] [AGENT] P2. elysium-defi-system deleted from system 2026-03-18. DeFi execution now handled by unified-defi-execution-interface connectors directly.
     status: done
   - id: defi-eigenlayer-restaking-connector
     content: |
@@ -639,7 +638,7 @@ todos:
         Repos: unified-defi-execution-interface (connector), unified-market-interface (adapter).
     status: done
     completion_note: EigenLayerConnector with 6 operations + 25 tests.
-    note: "P1. Phase 6 — extends Elysium DeFi capabilities for E4Fi strategies."
+    note: "P1. Phase 6 — extends DeFi capabilities for E4Fi strategies."
   - id: feature-testing-stage-progression
     content: |
       - [ ] [AGENT] P2. Codify 6-stage testing progression as first-class system concept.

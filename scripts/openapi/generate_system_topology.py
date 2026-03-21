@@ -73,10 +73,7 @@ def extract_workspace_manifest(pm_root: Path) -> dict[str, object]:
             "coverage_pct": info.get("coverage_pct"),
             "testing_level": info.get("testing_level"),
             "status": info.get("status"),
-            "dependencies": [
-                d.get("name") if isinstance(d, dict) else d
-                for d in info.get("dependencies", [])
-            ],
+            "dependencies": [d.get("name") if isinstance(d, dict) else d for d in info.get("dependencies", [])],
             "service_declaration": info.get("service_declaration"),
             "serves_ui": info.get("serves_ui"),
             "proxies_service": info.get("proxies_service"),
@@ -142,7 +139,7 @@ def extract_ui_api_flow_tests(pm_root: Path) -> dict[str, object] | list[object]
     path = pm_root / "ui-api-flow-test-manifest.yaml"
     data = load_yaml_file(path)
     if data:
-        count = len(data) if isinstance(data, list) else len(data.get("flows", data.get("tests", [])))
+        len(data) if isinstance(data, list) else len(data.get("flows", data.get("tests", [])))
         logger.info("  UI/API flow tests loaded")
     return data
 

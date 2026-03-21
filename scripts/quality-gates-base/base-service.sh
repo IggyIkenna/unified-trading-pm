@@ -433,11 +433,11 @@ done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null 
 # Document each exclusion in QUALITY_GATE_BYPASS_AUDIT.md §1.1.
 # Example: ASYNCIO_RUN_EXCLUDE_GLOBS=("!**/cli/batch_fetch.py")
 ASYNCIO_EXTRA_GLOBS=()
-for g in "${ASYNCIO_RUN_EXCLUDE_GLOBS[@]+"${ASYNCIO_RUN_EXCLUDE_GLOBS[@]}"}"; do
+for g in ${ASYNCIO_RUN_EXCLUDE_GLOBS[@]+"${ASYNCIO_RUN_EXCLUDE_GLOBS[@]}"}; do
     ASYNCIO_EXTRA_GLOBS+=(--glob "$g")
 done
 _asyncio_violation=""
-for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" "${ASYNCIO_EXTRA_GLOBS[@]+"${ASYNCIO_EXTRA_GLOBS[@]}"}" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+for f in $(rg "asyncio\.run\(" --type py --glob "!tests/**" --glob "!scripts/**" ${ASYNCIO_EXTRA_GLOBS[@]+"${ASYNCIO_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" -l 2>/dev/null || :); do
     # Only flag asyncio.run() deeply nested inside a loop body (>=8 spaces indentation)
     if rg "^\s{8,}asyncio\.run\(" "$f" 2>/dev/null | grep -q .; then
         _asyncio_violation="$f"
@@ -453,7 +453,7 @@ fi
 
 # IMPORT_INSIDE_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/smoke-test-dev.py"); base adds --glob
 IMPORT_INSIDE_EXTRA=()
-for g in "${IMPORT_INSIDE_EXCLUDE_GLOBS[@]+"${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}"}"; do
+for g in ${IMPORT_INSIDE_EXCLUDE_GLOBS[@]+"${IMPORT_INSIDE_EXCLUDE_GLOBS[@]}"}; do
     IMPORT_INSIDE_EXTRA+=(--glob "$g")
 done
 INSIDE=$(rg "^[[:space:]]+import |^[[:space:]]+from .* import" --type py --glob "!tests/**" --glob "!**/__init__.py" \
@@ -470,12 +470,12 @@ RAW_JSON=$(rg 'response\.json\(\)|await response\.json\(\)' --type py --glob "!t
 [[ -n "$RAW_JSON" ]] && { log_fail "Raw response.json() — parse through Pydantic model_validate()"; echo "$RAW_JSON" | head -3; V=$(( V + 1 )); } || log_success "No raw response.json()"
 
 EMPTY_STR_EXTRA=()
-for g in "${EMPTY_STR_EXCLUDE_GLOBS[@]+"${EMPTY_STR_EXCLUDE_GLOBS[@]}"}"; do EMPTY_STR_EXTRA+=(--glob "$g"); done
+for g in ${EMPTY_STR_EXCLUDE_GLOBS[@]+"${EMPTY_STR_EXCLUDE_GLOBS[@]}"}; do EMPTY_STR_EXTRA+=(--glob "$g"); done
 EMPTY_STR=$(rg '\.get\(["\x27][\w_]+["\x27]\s*,\s*["\x27]["\x27]\)' --type py --glob "!tests/**" "${EMPTY_STR_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 [[ -n "$EMPTY_STR" ]] && { log_fail "Empty string fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty string fallbacks"
 
 ED_EL_EXTRA=()
-for g in "${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]+"${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}"}"; do ED_EL_EXTRA+=(--glob "$g"); done
+for g in ${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]+"${EMPTY_DICT_LIST_EXCLUDE_GLOBS[@]}"}; do ED_EL_EXTRA+=(--glob "$g"); done
 ED=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\{\}\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob "!tests/**" "${ED_EL_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa: qg-empty-fallback' || :)
 [[ -n "$ED$EL" ]] && { log_fail "Empty dict/list fallback — fail fast"; V=$(( V + 1 )); } || log_success "No empty dict/list fallbacks"
@@ -489,7 +489,7 @@ rg "central-element-[0-9]+" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/n
 # GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
 # GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/rollout-*.py")
 GCP_EXTRA=()
-for g in "${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}"; do GCP_EXTRA+=(--glob "$g"); done
+for g in ${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}; do GCP_EXTRA+=(--glob "$g"); done
 rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
 
@@ -523,7 +523,7 @@ if rg 'def setup_events|def setup_service' --type py "$SOURCE_DIR/" -q 2>/dev/nu
     log_success "setup_service() check skipped (repo defines setup_events/setup_service)"
 else
     SETUP_EXTRA=()
-    for g in "${SETUP_NO_SINK_EXCLUDE_GLOBS[@]+"${SETUP_NO_SINK_EXCLUDE_GLOBS[@]}"}"; do SETUP_EXTRA+=(--glob "$g"); done
+    for g in ${SETUP_NO_SINK_EXCLUDE_GLOBS[@]+"${SETUP_NO_SINK_EXCLUDE_GLOBS[@]}"}; do SETUP_EXTRA+=(--glob "$g"); done
     SETUP_NO_SINK=$(rg 'setup_(events|service)\s*\(' --type py \
         --glob "!tests/**" "$SOURCE_DIR/" "${SETUP_EXTRA[@]}" 2>/dev/null | grep -v 'sink=' \
         | grep -v "def setup_events\|def setup_service" || :)
@@ -541,7 +541,7 @@ BAD_AUTH_SKIP=$(rg 'pytest\.skip.*[Cc]redential|pytest\.skip.*GOOGLE_APPLICATION
     && { log_fail ".env.example contains GOOGLE_APPLICATION_CREDENTIALS — remove it (use ADC, not SA key files)"; V=$(( V + 1 )); } || log_success "No GOOGLE_APPLICATION_CREDENTIALS in .env.example"
 
 DI_EXTRA=()
-for g in "${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}"; do DI_EXTRA+=(--glob "$g"); done
+for g in ${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}; do DI_EXTRA+=(--glob "$g"); done
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
     "${DI_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa" || :)
@@ -592,10 +592,10 @@ PIP=$(rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --glob "**
 [[ -n "$PIP" ]] && { log_fail "Use 'uv pip install' not 'pip install'"; echo "$PIP" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install"
 
 BE_EXTRA_GLOBS=()
-for g in "${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}"; do
+for g in ${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}; do
     BE_EXTRA_GLOBS+=(--glob "!$g")
 done
-BE=$(rg "except Exception:" --type py --glob "!tests/**" "${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"}" "$SOURCE_DIR/" 2>/dev/null || :)
+BE=$(rg "except Exception:" --type py --glob "!tests/**" ${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" 2>/dev/null || :)
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
 [[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
@@ -1137,6 +1137,28 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
         fi
         log_success "Workflow bash guards OK"
     fi
+fi
+
+# ── [5.6] DEAD CODE DETECTION (vulture — warn/fail thresholds) ───────────────
+# vulture detects unused functions, classes, and variables.
+# Repos may opt out of specific symbols by adding a .vulture-whitelist.py file
+# (list each unused-but-intentional name as an attribute access, e.g. _.my_hook).
+if command -v vulture &>/dev/null; then
+    log_section "[5.6/6] DEAD CODE DETECTION (vulture)"
+    _VULTURE_WHITELIST=""
+    [ -f ".vulture-whitelist.py" ] && _VULTURE_WHITELIST=".vulture-whitelist.py"
+    _DEAD_CODE=$(run_timeout 60 vulture "$SOURCE_DIR" ${_VULTURE_WHITELIST} \
+        --min-confidence 80 2>/dev/null | wc -l | tr -d ' ')
+    if [ "${_DEAD_CODE:-0}" -gt 100 ]; then
+        log_fail "Dead code FAILED: vulture found ${_DEAD_CODE} unused items (threshold: 100) — remove dead code or add to .vulture-whitelist.py"
+        exit 1
+    elif [ "${_DEAD_CODE:-0}" -gt 20 ]; then
+        log_warn "Dead code WARN: vulture found ${_DEAD_CODE} unused items (review recommended; threshold: 20)"
+    else
+        log_ok "Dead code check PASSED (${_DEAD_CODE} items)"
+    fi
+else
+    log_warn "vulture not found — skipping dead-code check (install: uv pip install vulture)"
 fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────

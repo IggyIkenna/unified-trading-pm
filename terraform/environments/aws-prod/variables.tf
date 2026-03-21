@@ -31,7 +31,6 @@ variable "service_repos" {
   default = [
     # --- Services (21) ---
     "alerting-service",
-    "elysium-defi-system",
     "execution-service",
     "features-calendar-service",
     "features-commodity-service",

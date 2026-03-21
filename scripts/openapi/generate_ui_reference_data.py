@@ -66,15 +66,9 @@ def extract_uac_registries() -> dict[str, object]:
             ZERO_ALPHA_VENUES,
         )
 
-        data["venue_category_map"] = {
-            str(k): str(v) for k, v in VENUE_CATEGORY_MAP.items()
-        }
-        data["instrument_types_by_venue"] = {
-            str(k): [str(t) for t in v] for k, v in INSTRUMENT_TYPES_BY_VENUE.items()
-        }
-        data["instrument_type_folder_map"] = {
-            str(k): str(v) for k, v in INSTRUMENT_TYPE_FOLDER_MAP.items()
-        }
+        data["venue_category_map"] = {str(k): str(v) for k, v in VENUE_CATEGORY_MAP.items()}
+        data["instrument_types_by_venue"] = {str(k): [str(t) for t in v] for k, v in INSTRUMENT_TYPES_BY_VENUE.items()}
+        data["instrument_type_folder_map"] = {str(k): str(v) for k, v in INSTRUMENT_TYPE_FOLDER_MAP.items()}
         data["clob_venues"] = sorted(str(v) for v in CLOB_VENUES)
         data["dex_venues"] = sorted(str(v) for v in DEX_VENUES)
         data["sports_venues"] = sorted(str(v) for v in SPORTS_VENUES)
@@ -83,9 +77,7 @@ def extract_uac_registries() -> dict[str, object]:
         # Endpoint registry — extract venue capabilities
         endpoint_data = {}
         registry_items = (
-            ENDPOINT_REGISTRY.items()
-            if isinstance(ENDPOINT_REGISTRY, dict)
-            else enumerate(ENDPOINT_REGISTRY)
+            ENDPOINT_REGISTRY.items() if isinstance(ENDPOINT_REGISTRY, dict) else enumerate(ENDPOINT_REGISTRY)
         )
         for key, spec in registry_items:
             try:
@@ -94,9 +86,7 @@ def extract_uac_registries() -> dict[str, object]:
                     "base_url": getattr(spec, "base_url", None),
                     "ws_url": getattr(spec, "ws_url", None),
                     "access_mode": str(getattr(spec, "access_mode", "")),
-                    "data_types": [
-                        str(dt) for dt in getattr(spec, "data_types", [])
-                    ],
+                    "data_types": [str(dt) for dt in getattr(spec, "data_types", [])],
                 }
             except Exception:
                 endpoint_data[str(key)] = "EXTRACTION_ERROR"
@@ -218,12 +208,22 @@ def extract_config_schema_universe() -> dict[str, object]:
         )
 
         configs["validation_constants"] = {
-            "valid_algorithms": VALID_ALGORITHMS if isinstance(VALID_ALGORITHMS, (list, dict)) else str(VALID_ALGORITHMS),
-            "valid_categories": list(VALID_CATEGORIES) if hasattr(VALID_CATEGORIES, "__iter__") else str(VALID_CATEGORIES),
+            "valid_algorithms": VALID_ALGORITHMS
+            if isinstance(VALID_ALGORITHMS, (list, dict))
+            else str(VALID_ALGORITHMS),
+            "valid_categories": list(VALID_CATEGORIES)
+            if hasattr(VALID_CATEGORIES, "__iter__")
+            else str(VALID_CATEGORIES),
             "valid_modes": list(VALID_MODES) if hasattr(VALID_MODES, "__iter__") else str(VALID_MODES),
-            "valid_timeframes": list(VALID_TIMEFRAMES) if hasattr(VALID_TIMEFRAMES, "__iter__") else str(VALID_TIMEFRAMES),
-            "valid_book_types": list(VALID_BOOK_TYPES) if hasattr(VALID_BOOK_TYPES, "__iter__") else str(VALID_BOOK_TYPES),
-            "valid_instruction_types": list(VALID_INSTRUCTION_TYPES) if hasattr(VALID_INSTRUCTION_TYPES, "__iter__") else str(VALID_INSTRUCTION_TYPES),
+            "valid_timeframes": list(VALID_TIMEFRAMES)
+            if hasattr(VALID_TIMEFRAMES, "__iter__")
+            else str(VALID_TIMEFRAMES),
+            "valid_book_types": list(VALID_BOOK_TYPES)
+            if hasattr(VALID_BOOK_TYPES, "__iter__")
+            else str(VALID_BOOK_TYPES),
+            "valid_instruction_types": list(VALID_INSTRUCTION_TYPES)
+            if hasattr(VALID_INSTRUCTION_TYPES, "__iter__")
+            else str(VALID_INSTRUCTION_TYPES),
         }
         logger.info("  Validation constants extracted")
     except Exception as e:

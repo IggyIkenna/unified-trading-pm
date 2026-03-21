@@ -102,8 +102,6 @@ types in the normalise layer).
   BloxrouteJsonRpcResponse, BloxrouteError, BloxrouteBdnBlocksParams, BloxrouteSubscribeParams,
   BloxrouteProtectEndpoints _(BloxrouteMempoolNotification used by UMI; other symbols not normalised)_
 
-- **unified_api_contracts_external/pyth/schemas.py** PythPriceFeed, PythWsNotification
-
 - **unified_api_contracts_external/cloud_sdks/gcp.py** BucketProtocol, BlobProtocol, StorageClientProtocol,
   QueryJobProtocol, BigQueryClientProtocol, SecretProtocol, SecretManagerServiceClientProtocol
 
@@ -203,8 +201,8 @@ names from import lines; list AC modules/symbols that do not appear.
   kalshi, polymarket, alchemy, defillama, bloxroute, thegraph, predictit, open_meteo, api_football, matchbook, ibkr,
   odds_api, barchart, fred, ofr, footystats, betdaq, coinbase, fear_greed, smarkets, pinnacle, betfair, transfermarkt,
   ecb, upbit, glassnode, arkham, mev, soccer_football_info, instadapp, manifold); sports: CanonicalOdds, OddsType,
-  BookmakerUnavailableError; SubgraphPool, SubgraphReserve; OpenMeteoResponse; PythPriceFeed, PythWsNotification;
-  BarchartOhlcv15m; BloxrouteMempoolNotification; and venue-specific symbols from the listed adapters.
+  BookmakerUnavailableError; SubgraphPool, SubgraphReserve; OpenMeteoResponse; BarchartOhlcv15m;
+  BloxrouteMempoolNotification; and venue-specific symbols from the listed adapters.
 - **unified-trade-execution-interface:** VENUE_ERROR_MAP, ErrorAction, VenueErrorClassification, classify_venue_error;
   CcxtOrder, CcxtPosition, CcxtTrade; DeribitOrder, BybitOrder, OKXOrder.
 - **unified-sports-execution-interface:** BetExecution, BetOrder, CanonicalOdds, OddsType, BOOKMAKER_REGISTRY,

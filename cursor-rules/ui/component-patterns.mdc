@@ -11,9 +11,18 @@ tags:
 
 # UI Component Patterns
 
-RULE: All UI components use the shared ui-kit design system. Pages use AppShell. Entity names use EntityLink. Cross-surface navigation uses CrossLink. Data tables use the shared table classes. New shared components go in unified-trading-ui-kit, never in individual UI repos.
+RULE: All UI components use the shared ui-kit design system. Pages use AppShell. Entity names use EntityLink. Cross-surface navigation uses CrossLink. Data tables use the shared table classes. New shared components go in unified-trading-ui-kit, never in individual satellite UI repos.
 
 WHY: 11 UIs sharing one design system (globals.css, AppShell, SidebarNav) is the only reason they look consistent. Breaking this pattern creates visual drift.
+
+## Two UI Architectures
+
+| Repo | Framework | Routing | Build |
+|---|---|---|---|
+| **unified-trading-system-ui** (unified platform) | Next.js 16 App Router | File-system (`app/` with route groups) | `pnpm build` (next build) |
+| **14 satellite UIs** (deployment-ui, strategy-ui, etc.) | Vite 6 + React Router 6 | Declarative (`<Routes>` + `<Route>`) | `npx vite build` |
+
+The unified platform (unified-trading-system-ui) uses **Next.js 16 App Router** with route groups for public/portal/internal tiers. Satellite UIs remain Vite + React Router until migrated. Both share the same design tokens and ui-kit components.
 
 ## Design System Tokens (globals.css)
 

@@ -14,7 +14,6 @@
 #      - Private subnet with NAT gateway for outbound RPC calls
 #
 #   2. VM / Cloud Run instances
-#      - elysium-defi-system testnet runner (paper mode + testnet RPCs)
 #      - market-tick-data-service DeFi adapter instances (testnet feeds)
 #
 #   3. Secret Manager entries

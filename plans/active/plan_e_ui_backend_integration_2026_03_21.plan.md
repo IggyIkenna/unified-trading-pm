@@ -7,8 +7,8 @@ overview:
 type: code
 epic: epic-code-completion
 status: active
-locked_by: live-defi-rollout
-locked_since: 2026-03-21
+locked_by: null
+locked_since: null
 
 completion_gates:
   code: C5
