@@ -1,8 +1,8 @@
 ---
 name: plan-b-config-hot-reload
 overview:
-  Wire config hot-reload callbacks in all 21 services (20 are log-only stubs), add missing domain config schemas to
-  UCfgI, build a config publish API for operators, add UI config CRUD, and remediate 12 config placement violations.
+  Backend-only: wire config hot-reload callbacks in all 21 services (20 are log-only stubs), add missing domain config
+  schemas to UCfgI, build a config publish API for operators, and remediate 12 config placement violations.
 type: code
 epic: epic-code-completion
 status: active
@@ -111,11 +111,6 @@ repo_gates:
     code: C0
     deployment: none
     business: none
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Config CRUD pages wired to BFF routes."
   - repo: config-api
     code: C0
     deployment: none
@@ -265,34 +260,16 @@ todos:
       - [ ] [SCRIPT] P1. QG gate: run `cd config-api && bash scripts/quality-gates.sh` — publish endpoint + CLI pass.
     status: todo
 
-  # ── Phase 3: UI Config CRUD ──
-  - id: p3-bff-config-routes
-    content: |
-      - [ ] [AGENT] P1. Add BFF routes in unified-trading-system-ui for config CRUD — GET /api/config/{domain}, PUT /api/config/{domain}, POST /api/config/{domain}/publish. Proxy to config-api.
-    status: todo
-  - id: p3-config-editor-page
-    content: |
-      - [ ] [AGENT] P1. Build config editor page in unified-trading-system-ui — domain selector, JSON/YAML editor with schema validation, diff view, publish button with confirmation dialog.
-    status: todo
-  - id: p3-config-history
-    content: |
-      - [ ] [AGENT] P2. Add config version history panel — show last N config changes per domain with timestamp, user, diff. Read from config-api GET /config/{domain}/history.
-    status: todo
-  - id: p3-qg-ui
-    content: |
-      - [ ] [SCRIPT] P1. QG gate: run `cd unified-trading-system-ui && CI=true npm test -- --run` — config pages pass vitest.
-    status: todo
-
-  # ── Phase 4: Config Placement Remediation ──
-  - id: p4-mtds-placement-fix
+  # ── Phase 3: Config Placement Remediation ──
+  - id: p3-mtds-placement-fix
     content: |
       - [ ] [AGENT] P1. Fix 8 config placement violations in market-tick-data-service — move hardcoded venue configs, rate limits, and reconnection params from source code to UCfgI domain config files. Replace inline constants with config lookups.
     status: todo
-  - id: p4-remaining-placement-fix
+  - id: p3-remaining-placement-fix
     content: |
       - [ ] [AGENT] P1. Fix remaining 4 config placement violations (from audit) across other services — move hardcoded params to UCfgI config files.
     status: todo
-  - id: p4-qg-final
+  - id: p3-qg-final
     content: |
       - [ ] [SCRIPT] P0. QG gate: run quality-gates.sh on ALL affected repos — zero config placement violations, all hot-reload paths tested.
     status: todo
@@ -325,13 +302,21 @@ Phase 1A-1E (PARALLEL — wire 20 service callbacks)
 Phase 2 (config publish API + CLI)
     |
     v  [QG gate: config-api green]
-Phase 3 (UI config CRUD)          Phase 4 (placement remediation)
-    |                                  |
-    v  [QG gate: UI tests]            v  [QG gate: all affected repos]
-                  DONE
+Phase 3 (placement remediation)
+    |
+    v  [QG gate: all affected repos]
+              DONE
 ```
 
-Phases 3 and 4 are PARALLEL (no dependency between them).
+NOTE: UI config CRUD (BFF routes, config editor page, config history panel) has been moved to Plan E (UI Backend
+Integration). This plan now covers backend-only work.
+
+## Batch replay_at() Note
+
+Fixing hot-reload callbacks fixes BOTH live AND batch config replay. The UCfgI config schemas define the shape, the
+PubSub subscription delivers changes, and the callback applies them atomically. In batch mode, replay_at() replays
+config changes at the correct timestamp by re-publishing the historical config payload through the same callback path.
+No separate batch fix is needed — the callback IS the shared code path.
 
 ## Parallelization Strategy
 
@@ -373,6 +358,5 @@ Config changes flow: Operator (CLI/UI) -> config-api -> PubSub config topic -> s
 | 0     | C4   | 5 domain config schemas in UCfgI, basedpyright clean, unit tests     |
 | 1     | C4   | All 21 services have working callbacks, each tested with mock PubSub |
 | 2     | C4   | config-api publish endpoint + CLI, dry-run mode, schema validation   |
-| 3     | C4   | UI config editor page, BFF routes, vitest passing                    |
-| 4     | C4   | Zero config placement violations across all services                 |
+| 3     | C4   | Zero config placement violations across all services                 |
 | Final | C5   | All repo_gates at C5 via quickmerge                                  |

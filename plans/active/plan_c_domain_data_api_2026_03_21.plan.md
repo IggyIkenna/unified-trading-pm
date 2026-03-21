@@ -1,8 +1,8 @@
 ---
 name: plan-c-domain-data-api
 overview:
-  Wire the unified-trading-system-ui to real backend APIs via BFF pattern, delete 7,100 lines of inline mock data, add
-  WebSocket real-time push for market data / positions / alerts, and align MSW handlers to BFF paths.
+  Backend-only: ensure all 9 API repos + 3 service APIs have complete mock mode, consistent response schemas,
+  proper health endpoints, and OpenAPI spec coverage. Prepares backend APIs for UI integration (Plan E).
 type: code
 epic: epic-code-completion
 status: active
@@ -15,16 +15,6 @@ completion_gates:
   business: none
 
 repo_gates:
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Primary target — BFF routes, hook rewire, mock deletion, WebSocket client."
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "WebSocket server utilities if shared across APIs."
   - repo: unified-api-contracts
     code: C0
     deployment: none
@@ -71,317 +61,129 @@ repo_gates:
     code: C0
     deployment: none
     business: none
-    readiness_note: "WebSocket alert push source."
+    readiness_note: "WebSocket alert push source — must expose HTTP push endpoint."
   - repo: execution-service
     code: C0
     deployment: none
     business: none
-    readiness_note: "Kill switch endpoint must be sub-second via WebSocket."
+    readiness_note: "Kill switch endpoint must be sub-second."
 
 depends_on:
   - registry-completeness-implementation-detail
 
 todos:
-  # ── Phase 0: BFF Scaffold ──
-  - id: p0-bff-scaffold
+  # ── Phase 0: API Mock Mode Audit (PARALLEL) ──
+  - id: p0-audit-mock-mode
     content: |
-      - [ ] [AGENT] P0. Scaffold BFF layer in unified-trading-system-ui — Next.js API route directory (app/api/), server-side HTTP client with retry/timeout, auth token forwarding from session, error normalization (backend errors -> standard UI error shape).
+      - [ ] [AGENT] P0. Audit all 9 API repos + 3 service HTTP APIs for mock mode completeness. For each API: verify CLOUD_MOCK_MODE=true returns valid sample data, response schemas match OpenAPI spec, error responses use standard error shape. APIs: deployment-api, config-api, execution-results-api, trading-analytics-api, batch-audit-api, client-reporting-api, ml-training-api, ml-inference-api, market-data-api. Service APIs: alerting-service, execution-service, risk-management-service. Output: gap manifest per API.
     status: todo
-  - id: p0-service-registry
+  - id: p0-audit-health-endpoints
     content: |
-      - [ ] [AGENT] P0. Create BFF service registry — map domain names to backend URLs using port registry from unified-trading-pm/scripts/dev/ui-api-mapping.json. Support env-based override (NEXT_PUBLIC_API_BASE_URL).
-    status: todo
-  - id: p0-qg-scaffold
-    content: |
-      - [ ] [SCRIPT] P0. QG gate: run `cd unified-trading-system-ui && CI=true npm test -- --run` — BFF scaffold passes.
+      - [ ] [AGENT] P0. Audit all 12 APIs/services for health endpoints. Each must expose GET /health (200 OK) and GET /ready (checks downstream deps). Verify: health endpoints work in mock mode, return correct status when dependencies are unavailable.
     status: todo
 
-  # ── Phase 1: BFF Routes (PARALLEL — 14 domain catch-all routes) ──
-  - id: p1-bff-deployment
+  # ── Phase 1: API Mock Mode Fixes (PARALLEL) ──
+  - id: p1-fix-execution-results-api
     content: |
-      - [ ] [AGENT] P1. Add BFF route /api/deployment/[...path] — proxy to deployment-api (port 8004). Handles: deploy, status, rollback, shard management.
+      - [ ] [AGENT] P0. Fix execution-results-api: add complete mock mode (CLOUD_MOCK_MODE=true returns sample backtest results, analysis data). Add OpenAPI spec coverage (currently missing entirely from spec). Ensure response schemas match Pydantic models.
     status: todo
-  - id: p1-bff-config
+    blocked_by: p0-audit-mock-mode
+  - id: p1-fix-api-mock-gaps
     content: |
-      - [ ] [AGENT] P1. Add BFF route /api/config/[...path] — proxy to config-api (port 8006). Handles: config CRUD, publish, history.
+      - [ ] [AGENT] P0. Fix mock mode gaps identified in p0-audit-mock-mode for remaining APIs. Each API must return realistic sample data shape-matching production responses when CLOUD_MOCK_MODE=true.
     status: todo
-  - id: p1-bff-execution-results
+    blocked_by: p0-audit-mock-mode
+  - id: p1-fix-health-gaps
     content: |
-      - [ ] [AGENT] P1. Add BFF route /api/execution-results/[...path] — proxy to execution-results-api (port 8008). Handles: backtest results, analysis, config generation.
+      - [ ] [AGENT] P1. Fix health endpoint gaps identified in p0-audit-health-endpoints. Add missing /health and /ready endpoints. Standardize response shape: {"status": "ok"|"degraded"|"error", "checks": {...}}.
     status: todo
-  - id: p1-bff-trading-analytics
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/trading-analytics/[...path] — proxy to trading-analytics-api (port 8010). Handles: PnL, positions, risk metrics.
-    status: todo
-  - id: p1-bff-batch-audit
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/batch-audit/[...path] — proxy to batch-audit-api (port 8012). Handles: batch run status, audit logs.
-    status: todo
-  - id: p1-bff-client-reporting
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/client-reporting/[...path] — proxy to client-reporting-api (port 8014). Handles: reports, exports.
-    status: todo
-  - id: p1-bff-ml-training
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/ml-training/[...path] — proxy to ml-training-api. Handles: experiments, training runs, model registry.
-    status: todo
-  - id: p1-bff-ml-inference
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/ml-inference/[...path] — proxy to ml-inference-api. Handles: predictions, model status.
-    status: todo
-  - id: p1-bff-market-data
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/market-data/[...path] — proxy to market-data-api. Handles: OHLCV, trades, orderbook snapshots.
-    status: todo
-  - id: p1-bff-alerting
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/alerting/[...path] — proxy to alerting-service HTTP endpoint. Handles: alert rules, alert history, acknowledge.
-    status: todo
-  - id: p1-bff-execution
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/execution/[...path] — proxy to execution-service HTTP endpoint. Handles: orders, fills, kill switch.
-    status: todo
-  - id: p1-bff-risk
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/risk/[...path] — proxy to risk-management-service HTTP endpoint. Handles: risk metrics, limits, breaches.
-    status: todo
-  - id: p1-bff-positions
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/positions/[...path] — proxy to position-balance-monitor-service HTTP endpoint. Handles: positions, balances, reconciliation.
-    status: todo
-  - id: p1-bff-instruments
-    content: |
-      - [ ] [AGENT] P1. Add BFF route /api/instruments/[...path] — proxy to instruments-service HTTP endpoint. Handles: instrument catalogue, venue mappings.
-    status: todo
+    blocked_by: p0-audit-health-endpoints
 
-  # ── Phase 2: Hook Rewire (PARALLEL with Phase 1) ──
-  - id: p2-rewire-hooks
+  # ── Phase 2: Response Schema Consistency (SEQUENTIAL after Phase 1) ──
+  - id: p2-standardize-error-shape
     content: |
-      - [ ] [AGENT] P1. Update all 14 React Query hooks in hooks/api/ to call BFF routes (/api/{domain}/...) instead of direct service URLs. Remove port-based URLs. Ensure queryKey includes domain prefix for cache isolation.
+      - [ ] [AGENT] P0. Standardize error response shape across all 12 APIs. Every error must return: {"error": {"code": str, "message": str, "details": dict|null}, "request_id": str}. Audit current error responses and fix inconsistencies.
     status: todo
-  - id: p2-add-missing-hooks
+    blocked_by: p1-fix-api-mock-gaps
+  - id: p2-standardize-pagination
     content: |
-      - [ ] [AGENT] P1. Add missing React Query hooks for domains not yet covered — instruments, risk, positions, market-data, ML inference. Follow existing hook patterns (useQuery/useMutation, error handling, loading states).
+      - [ ] [AGENT] P1. Standardize pagination response shape across all APIs that return lists. Shape: {"data": [...], "pagination": {"total": int, "page": int, "page_size": int, "has_next": bool}}. Audit and fix inconsistencies.
     status: todo
-  - id: p2-qg-hooks
+    blocked_by: p1-fix-api-mock-gaps
+  - id: p2-openapi-schema-parity
     content: |
-      - [ ] [SCRIPT] P1. QG gate: run `cd unified-trading-system-ui && CI=true npm test -- --run` — all hooks pass with MSW intercepting BFF routes.
+      - [ ] [AGENT] P0. Verify OpenAPI spec matches actual API responses. For each API: call every endpoint in mock mode, validate response against OpenAPI schema. Fix any schema mismatches. Run cassette parity tests: cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py.
     status: todo
+    blocked_by: p1-fix-execution-results-api
 
-  # ── Phase 3: Delete Inline Mocks (SEQUENTIAL — after Phases 1+2) ──
-  - id: p3-delete-inline-mocks
+  # ── Phase 3: QG Sweep (SEQUENTIAL after Phase 2) ──
+  - id: p3-qg-sweep
     content: |
-      - [ ] [AGENT] P0. Delete all inline mock data files (7,100 lines) — remove mock-data/, lib/mock/, and any inline mock objects in page components. Identify all 68 pages importing mock data.
+      - [ ] [SCRIPT] P0. QG sweep across all 12 affected repos. Run quality-gates.sh on each: unified-api-contracts, deployment-api, config-api, execution-results-api, trading-analytics-api, batch-audit-api, client-reporting-api, ml-training-api, ml-inference-api, market-data-api, alerting-service, execution-service. All must pass.
     status: todo
-  - id: p3-rewire-pages-wave1
-    content: |
-      - [ ] [AGENT] P0. Rewire Wave 1 pages (dashboard, trading, positions, risk, alerts) — replace mock imports with React Query hooks. These are the most-used pages.
-    status: todo
-  - id: p3-rewire-pages-wave2
-    content: |
-      - [ ] [AGENT] P1. Rewire Wave 2 pages (strategies, ML training/inference, reports, PnL) — replace mock imports with React Query hooks.
-    status: todo
-  - id: p3-rewire-pages-wave3
-    content: |
-      - [ ] [AGENT] P2. Rewire Wave 3 pages (backtest, portal, admin, config, deployment) — replace mock imports with React Query hooks.
-    status: todo
-  - id: p3-qg-no-mocks
-    content: |
-      - [ ] [SCRIPT] P0. QG gate: grep for mock data imports — zero remaining inline mock imports across all pages. Run `cd unified-trading-system-ui && CI=true npm test -- --run`.
-    status: todo
-
-  # ── Phase 4: WebSocket Server ──
-  - id: p4-ws-server
-    content: |
-      - [ ] [AGENT] P0. Add WebSocket server endpoint /api/ws in unified-trading-system-ui BFF — channel multiplexing (market-data, positions, alerts, execution, risk), PubSub subscription on server side, JSON message framing with channel + payload.
-    status: todo
-  - id: p4-ws-auth
-    content: |
-      - [ ] [AGENT] P0. Add WebSocket auth — validate session token on connection upgrade, reject unauthorized. Support DISABLE_AUTH=true for local dev.
-    status: todo
-  - id: p4-ws-channels
-    content: |
-      - [ ] [AGENT] P1. Implement channel handlers — market-data (subscribe to instruments, receive OHLCV/trades/orderbook), positions (balance updates), alerts (new/resolved), execution (fill confirmations, kill switch ack), risk (threshold breaches).
-    status: todo
-  - id: p4-ws-heartbeat
-    content: |
-      - [ ] [AGENT] P1. Add WebSocket heartbeat + reconnection — server sends ping every 30s, client auto-reconnects with exponential backoff, re-subscribes to channels on reconnect.
-    status: todo
-  - id: p4-qg-ws-server
-    content: |
-      - [ ] [SCRIPT] P1. QG gate: WebSocket server tests pass — connection, auth, channel subscribe/unsubscribe, heartbeat, reconnection.
-    status: todo
-
-  # ── Phase 5: WebSocket Client Hooks ──
-  - id: p5-ws-provider
-    content: |
-      - [ ] [AGENT] P0. Build WebSocketProvider React context — single connection per session, channel subscription API, auto-reconnect, connection status indicator.
-    status: todo
-  - id: p5-use-market-data
-    content: |
-      - [ ] [AGENT] P1. Build useMarketData hook — subscribe to market-data channel with instrument filter, return latest tick/OHLCV, integrate with React Query cache for seamless REST+WS.
-    status: todo
-  - id: p5-use-alerts
-    content: |
-      - [ ] [AGENT] P1. Build useAlerts hook — subscribe to alerts channel, return live alert feed, toast notifications for critical alerts.
-    status: todo
-  - id: p5-use-positions
-    content: |
-      - [ ] [AGENT] P1. Build usePositions hook — subscribe to positions channel, return live position/balance updates, merge with REST query cache.
-    status: todo
-  - id: p5-use-execution
-    content: |
-      - [ ] [AGENT] P1. Build useExecution hook — subscribe to execution channel, return fill confirmations, kill switch status. Sub-second feedback for trade actions.
-    status: todo
-  - id: p5-use-risk
-    content: |
-      - [ ] [AGENT] P1. Build useRisk hook — subscribe to risk channel, return threshold breach alerts, live VaR/drawdown updates.
-    status: todo
-  - id: p5-wire-pages
-    content: |
-      - [ ] [AGENT] P1. Wire WebSocket hooks to pages — dashboard (market data + positions + alerts), trading (execution + market data), risk (risk + positions), alerts (alerts).
-    status: todo
-  - id: p5-qg-ws-client
-    content: |
-      - [ ] [SCRIPT] P1. QG gate: run `cd unified-trading-system-ui && CI=true npm test -- --run` — all WebSocket hooks pass with mock WS server.
-    status: todo
-
-  # ── Phase 6: MSW Alignment ──
-  - id: p6-msw-bff-paths
-    content: |
-      - [ ] [AGENT] P1. Update all MSW handlers to intercept BFF paths (/api/{domain}/...) instead of direct service URLs. Remove duplicate handlers. Use generated types from OpenAPI codegen.
-    status: todo
-  - id: p6-msw-ws-mock
-    content: |
-      - [ ] [AGENT] P2. Add MSW WebSocket mock handler — mock WS server for tests, simulate channel messages (market ticks, alert push, fill confirmations).
-    status: todo
-  - id: p6-qg-msw
-    content: |
-      - [ ] [SCRIPT] P1. QG gate: run full test suite with MSW — all pages render in mock mode with BFF-path MSW handlers.
-    status: todo
-
-  # ── Phase 7: Page Migration Waves ──
-  - id: p7-wave1-dashboard-trading
-    content: |
-      - [ ] [AGENT] P0. Wave 1 migration — dashboard, trading, positions, risk, alerts pages: fully wired to BFF + WebSocket, zero inline mocks, MSW handlers aligned. These 5 page groups are the critical path.
-    status: todo
-  - id: p7-wave2-strategy-ml
-    content: |
-      - [ ] [AGENT] P1. Wave 2 migration — strategies, ML training, ML inference, reports, PnL attribution pages: fully wired to BFF, REST-only (no WebSocket needed for historical data).
-    status: todo
-  - id: p7-wave3-backtest-admin
-    content: |
-      - [ ] [AGENT] P2. Wave 3 migration — backtest, portal, admin, config, deployment pages: fully wired to BFF, config pages integrate with Plan B config CRUD.
-    status: todo
-  - id: p7-qg-final
-    content: |
-      - [ ] [SCRIPT] P0. QG gate: full suite — `cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build` succeeds, `CI=true npm test -- --run` passes, zero inline mock imports, all 151 pages render.
-    status: todo
+    blocked_by: p2-openapi-schema-parity
 
 isProject: false
 ---
 
-# Plan C: Domain Data API + BFF + Real-Time
+# Plan C: Domain Data API Backend Readiness
 
 ## Context
 
-UI research findings (2026-03-21):
+Backend API audit findings (2026-03-21):
 
-- **151 pages**, 0% real backend connectivity
-- **7,100 lines** inline mock data across 68 pages
-- **14 React Query hooks** exist but only 3 pages use them
-- Hooks hit `/api/*` but real services are at `/{service}/api/*` — URL mismatch
-- **No WebSocket/SSE** — only polling at 2-10s intervals
-- **MSW exists** but only 16 handlers, not aligned with actual API paths
+- **12 APIs/services** need mock mode verification (9 API repos + 3 service HTTP APIs)
+- **execution-results-api** entirely missing from OpenAPI spec (serves 3 UIs)
 - **541 orphan domain models** in backend not exposed via API
+- Inconsistent error response shapes across APIs
+- Missing health/ready endpoints in some services
+
+NOTE: All UI work (BFF scaffold, BFF routes, hook rewire, inline mock deletion, WebSocket server/client, MSW alignment,
+page migration waves) has been moved to Plan E (UI Backend Integration). This plan ensures the backend APIs are ready
+for that integration.
 
 ## Execution DAG
 
 ```
-Phase 0 (BFF scaffold)
+Phase 0 (PARALLEL — audit mock mode + health endpoints)
     |
-    +---> Phase 1 (14 BFF routes) ──────────┐
-    |         [PARALLEL]                     |
-    +---> Phase 2 (hook rewire) ─────────────+
-              [PARALLEL with Phase 1]        |
-                                             v  [QG gate]
-                                        Phase 3 (delete inline mocks)
-                                             |   [SEQUENTIAL]
-                                             v  [QG gate]
-                              +--------------+---------------+
-                              |                              |
-                         Phase 4                        Phase 6
-                      (WS server)                    (MSW alignment)
-                              |                        [PARALLEL]
-                              v
-                         Phase 5
-                      (WS client hooks)
-                              |
-                              v  [QG gate]
-                         Phase 7
-                    (page migration waves)
-                              |
-                              v  [QG gate]
-                            DONE
+    v
+Phase 1 (PARALLEL — fix mock mode gaps + health gaps)
+    |
+    v  [QG gate: all APIs green]
+Phase 2 (SEQUENTIAL — standardize response schemas, OpenAPI parity)
+    |
+    v  [QG gate: all 12 repos green]
+Phase 3 (QG sweep)
+    |
+    v
+  DONE
 ```
 
-## Communication Model Decision
+## API Registry (Backend Readiness Targets)
 
-| Data Type                          | Transport         | Latency Target | Rationale                                |
-| ---------------------------------- | ----------------- | -------------- | ---------------------------------------- |
-| Kill switch / trade execution      | WebSocket         | < 500ms        | Sub-second feedback critical for risk    |
-| Live market data                   | WebSocket         | 1-5s           | Continuous stream, polling too expensive |
-| Position / balance updates         | WebSocket         | 1-5s           | Must reflect fills immediately           |
-| Alert notifications                | WebSocket         | 1-5s           | Real-time push, toast notifications      |
-| Risk threshold breaches            | WebSocket         | 1-5s           | Urgent, must not wait for poll cycle     |
-| Historical data / backtest results | REST via BFF      | N/A            | Request-response, no streaming needed    |
-| Reports / exports                  | REST via BFF      | N/A            | Batch data, download pattern             |
-| Config changes                     | REST + hot-reload | N/A            | See Plan B for config lifecycle          |
+| Backend Service         | Port | Key Endpoints            | Mock Mode | Health |
+| ----------------------- | ---- | ------------------------ | --------- | ------ |
+| deployment-api          | 8004 | deploy, status, rollback | TBD       | TBD    |
+| config-api              | 8006 | CRUD, publish, history   | TBD       | TBD    |
+| execution-results-api   | 8008 | backtest, analysis       | TBD       | TBD    |
+| trading-analytics-api   | 8010 | PnL, positions, risk     | TBD       | TBD    |
+| batch-audit-api         | 8012 | batch status, audit      | TBD       | TBD    |
+| client-reporting-api    | 8014 | reports, exports         | TBD       | TBD    |
+| ml-training-api         | TBD  | experiments, models      | TBD       | TBD    |
+| ml-inference-api        | TBD  | predictions, status      | TBD       | TBD    |
+| market-data-api         | TBD  | OHLCV, trades, book      | TBD       | TBD    |
+| alerting-service        | TBD  | rules, history, ack      | TBD       | TBD    |
+| execution-service       | TBD  | orders, fills, kill      | TBD       | TBD    |
+| risk-management-service | TBD  | metrics, limits          | TBD       | TBD    |
 
-## BFF Route Registry
-
-| BFF Path                | Backend Service          | Port | Key Endpoints            |
-| ----------------------- | ------------------------ | ---- | ------------------------ |
-| /api/deployment/        | deployment-api           | 8004 | deploy, status, rollback |
-| /api/config/            | config-api               | 8006 | CRUD, publish, history   |
-| /api/execution-results/ | execution-results-api    | 8008 | backtest, analysis       |
-| /api/trading-analytics/ | trading-analytics-api    | 8010 | PnL, positions, risk     |
-| /api/batch-audit/       | batch-audit-api          | 8012 | batch status, audit      |
-| /api/client-reporting/  | client-reporting-api     | 8014 | reports, exports         |
-| /api/ml-training/       | ml-training-api          | TBD  | experiments, models      |
-| /api/ml-inference/      | ml-inference-api         | TBD  | predictions, status      |
-| /api/market-data/       | market-data-api          | TBD  | OHLCV, trades, book      |
-| /api/alerting/          | alerting-service         | TBD  | rules, history, ack      |
-| /api/execution/         | execution-service        | TBD  | orders, fills, kill      |
-| /api/risk/              | risk-management-service  | TBD  | metrics, limits          |
-| /api/positions/         | position-balance-monitor | TBD  | positions, balances      |
-| /api/instruments/       | instruments-service      | TBD  | catalogue, mappings      |
-
-Port SSOT: `unified-trading-pm/scripts/dev/ui-api-mapping.json`
-
-## Mock Mode Architecture (Post-Migration)
-
-```
-                    NEXT_PUBLIC_MOCK_API=true           NEXT_PUBLIC_MOCK_API=false
-                           |                                    |
-                    MSW intercepts                        BFF API routes
-                    /api/{domain}/*                       /api/{domain}/*
-                           |                                    |
-                    Mock handlers                     Backend services
-                    (generated types)                  (DATA_MODE=mock or real)
-```
-
-Single code path for both modes. Mock/real switch is env vars only — no conditional imports in pages.
+Port SSOT: `unified-trading-pm/scripts/dev/ui-api-mapping.json` TBD values will be populated by Phase 0 audit tasks.
 
 ## Success Criteria
 
-| Phase | Gate | Criteria                                                           |
-| ----- | ---- | ------------------------------------------------------------------ |
-| 0     | C3   | BFF scaffold, service registry, auth forwarding                    |
-| 1     | C3   | All 14 BFF routes proxy correctly, integration tests               |
-| 2     | C3   | All hooks rewired to BFF paths, React Query tests pass             |
-| 3     | C4   | Zero inline mock imports, all pages use hooks, 7,100 lines deleted |
-| 4     | C4   | WebSocket server with 5 channels, auth, heartbeat, reconnection    |
-| 5     | C4   | 5 WebSocket client hooks, wired to dashboard/trading/risk/alerts   |
-| 6     | C3   | MSW handlers match BFF paths, use generated types                  |
-| 7     | C5   | All 151 pages render, full test suite green, vite build succeeds   |
+| Phase | Gate  | Criteria                                                                                  |
+| ----- | ----- | ----------------------------------------------------------------------------------------- |
+| 0     | Audit | Gap manifest for mock mode and health endpoints across all 12 APIs                        |
+| 1     | C4    | All APIs return valid mock data, all have /health + /ready, execution-results-api in spec |
+| 2     | C4    | Standard error shape, standard pagination, OpenAPI schema parity verified                 |
+| 3     | C5    | All 12 repos pass quality-gates.sh                                                        |

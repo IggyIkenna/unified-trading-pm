@@ -1,6 +1,6 @@
 ---
 name: plan-a-registry-schema-sync
-overview: "Registry extraction, OpenAPI codegen pipeline, TS type replacement, error code hardening, CI triggers"
+overview: "Backend-only: registry extraction, OpenAPI codegen pipeline, error code hardening, CI triggers for UAC/UIC"
 type: code
 epic: epic-code-completion
 status: active
@@ -16,10 +16,6 @@ repo_gates:
     deployment: none
     business: none
   - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-system-ui
     code: C0
     deployment: none
     business: none
@@ -95,48 +91,27 @@ todos:
       - [ ] [SCRIPT] P0. QG gate: cd unified-internal-contracts && bash scripts/quality-gates.sh — must pass before Phase 3 starts.
     status: todo
     blocked_by: p2-fix-empty-schemas
-  # ── Phase 3: UI Type Replacement (SEQUENTIAL after Phases 1+2) ──
-  - id: p3-generate-ts-constants
-    content: |
-      - [ ] [AGENT] P0. Generate TypeScript constants from ui-reference-data.json. Create a codegen script (scripts/generate-ts-from-registry.ts or .py) that reads ui-reference-data.json and outputs typed TS constants to src/generated/registry-constants.ts. Each registry becomes a typed const with as const assertion. Output must include JSDoc comments with source repo and version.
-    status: todo
-    blocked_by: p1-qg-gate-uac
-  - id: p3-delete-hand-maintained-ts
-    content: |
-      - [ ] [AGENT] P0. Delete 3,561 lines of hand-maintained TS constants (taxonomy.ts, reference-data.ts, and similar files). Replace all imports across the codebase to use src/generated/registry-constants.ts and src/generated/api-types.ts. Must grep entire UI codebase for old import paths and update every consumer.
-    status: todo
-    blocked_by: p3-generate-ts-constants
-  - id: p3-verify-ui-build
-    content: |
-      - [ ] [SCRIPT] P0. Verify UI builds cleanly after type replacement: cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build — must succeed with zero type errors. Also run: CI=true npm test -- --run.
-    status: todo
-    blocked_by: p3-delete-hand-maintained-ts
-  - id: p3-qg-gate-ui
-    content: |
-      - [ ] [SCRIPT] P0. QG gate: cd unified-trading-system-ui && CI=true npm test -- --run && VITE_MOCK_API=true npx vite build — must pass before Phase 4 starts.
-    status: todo
-    blocked_by: p3-verify-ui-build
-  # ── Phase 4: CI/CD Triggers (SEQUENTIAL after Phase 3) ──
-  - id: p4-ci-trigger-uac-to-ui
+  # ── Phase 3: CI/CD Triggers + QG Enforcement (SEQUENTIAL after Phases 1+2) ──
+  - id: p3-ci-trigger-uac-to-ui
     content: |
       - [ ] [AGENT] P1. Create GitHub Actions workflow: on UAC commit to main/staging, trigger registry regeneration. Workflow runs generate_ui_reference_data.py + generate-ts-from-registry, commits updated JSON + TS to a PR branch on unified-trading-system-ui, opens PR with diff summary. Use repository_dispatch or workflow_dispatch pattern consistent with existing cascade infrastructure.
     status: todo
-    blocked_by: p3-qg-gate-ui
-  - id: p4-ci-trigger-uic-to-ui
+    blocked_by: p2-qg-gate-uic
+  - id: p3-ci-trigger-uic-to-ui
     content: |
       - [ ] [AGENT] P1. Create GitHub Actions workflow: on UIC commit to main/staging, trigger OpenAPI codegen. Workflow runs openapi-typescript against updated spec, commits generated api-types.ts to PR branch on unified-trading-system-ui, opens PR. Similar pattern to UAC trigger above.
     status: todo
-    blocked_by: p3-qg-gate-ui
-  - id: p4-qg-check-adapter-coverage
+    blocked_by: p2-qg-gate-uic
+  - id: p3-qg-check-adapter-coverage
     content: |
       - [ ] [AGENT] P1. Add QG check to execution-service quality-gates.sh: verify every adapter that calls classify_venue_error has its venue key present in VENUE_ERROR_MAP. Script should grep adapter files for classify_venue_error calls, extract venue names, and check against VENUE_ERROR_MAP keys. Fail if any venue is missing.
     status: todo
     blocked_by: p0-wire-classify-venue-error-execution
-  - id: p4-final-qg-sweep
+  - id: p3-final-qg-sweep
     content: |
-      - [ ] [SCRIPT] P0. Final QG sweep across all 6 affected repos: unified-api-contracts, unified-internal-contracts, unified-trading-system-ui, execution-service, unified-market-interface, unified-trade-execution-interface. Run quality-gates.sh on each Python repo and npm test + vite build on UI repo.
+      - [ ] [SCRIPT] P0. Final QG sweep across all 5 backend repos: unified-api-contracts, unified-internal-contracts, execution-service, unified-market-interface, unified-trade-execution-interface. Run quality-gates.sh on each.
     status: todo
-    blocked_by: p4-ci-trigger-uac-to-ui
+    blocked_by: p3-ci-trigger-uac-to-ui
 isProject: false
 ---
 
@@ -165,21 +140,13 @@ Phase 1 (SEQUENTIAL):                    Phase 2 (PARALLEL with Phase 1):
         ↓ both Phase 1 + Phase 2 QG gates pass
 
 Phase 3 (SEQUENTIAL):
-  p3-generate-ts-constants
-       ↓
-  p3-delete-hand-maintained-ts
-       ↓
-  p3-verify-ui-build
-       ↓
-  p3-qg-gate-ui
-
-        ↓ Phase 3 QG gate passes
-
-Phase 4 (SEQUENTIAL):
-  p4-ci-trigger-uac-to-ui  ─┐
-  p4-ci-trigger-uic-to-ui  ─┤──> p4-final-qg-sweep
-  p4-qg-check-adapter-coverage ─┘
+  p3-ci-trigger-uac-to-ui  ─┐
+  p3-ci-trigger-uic-to-ui  ─┤──> p3-final-qg-sweep
+  p3-qg-check-adapter-coverage ─┘
 ```
+
+NOTE: UI type replacement (generate TS constants, delete hand-maintained TS, verify UI build) has been moved to Plan E
+(UI Backend Integration). This plan now covers backend-only work.
 
 ## Pre-Audit Manifest (To Be Populated by Phase 0)
 
@@ -219,8 +186,7 @@ TBD values will be populated by `p0-validate-missing-registries` audit task.
 | 0     | Audit complete | Pre-audit manifest fully populated; aave_plasma bug fixed with test; 18 venue maps added; execution-service adapters classified |
 | 1     | C4 on UAC      | generate_ui_reference_data.py extracts all 13 registries; tests pass; quality-gates.sh green                                    |
 | 2     | C4 on UIC      | OpenAPI spec has execution-results-api; zero empty schemas; openapi-typescript generates clean types                            |
-| 3     | C4 on UI       | Hand-maintained TS deleted; generated types compile; vite build succeeds; all tests pass                                        |
-| 4     | C5 all repos   | CI triggers deployed; QG check for adapter coverage; final sweep green on all 6 repos                                           |
+| 3     | C5 all repos   | CI triggers deployed; QG check for adapter coverage; final sweep green on all 5 backend repos                                   |
 
 ## Files Expected to Be Modified
 
@@ -233,15 +199,6 @@ TBD values will be populated by `p0-validate-missing-registries` audit task.
 ### unified-internal-contracts
 
 - `openapi/` — add execution-results-api paths + schemas, fix empty schemas
-
-### unified-trading-system-ui
-
-- `scripts/` — update openapi-typescript codegen script
-- `src/generated/api-types.ts` — codegen output (replaces .bak)
-- `src/generated/registry-constants.ts` — new codegen output from registries
-- `src/*/taxonomy.ts` — DELETE (hand-maintained, replaced by generated)
-- `src/*/reference-data.ts` — DELETE (hand-maintained, replaced by generated)
-- All files importing deleted TS — update imports
 
 ### execution-service
 
@@ -261,5 +218,5 @@ TBD values will be populated by `p0-validate-missing-registries` audit task.
 Modifying UAC (T0 library) affects all downstream consumers. However, this plan only ADDS to UAC (new registry entries,
 new error maps) — no breaking changes to existing symbols. Downstream repos do not need import updates for additions.
 
-The only breaking change is in the UI repo itself (deleting hand-maintained TS and replacing with generated). This is
-self-contained within unified-trading-system-ui.
+UI-side type replacement (deleting hand-maintained TS and replacing with generated types) is handled by Plan E (UI
+Backend Integration), which depends on this plan completing first.

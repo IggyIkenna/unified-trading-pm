@@ -1,6 +1,6 @@
 ---
 name: frontend-backend-master
-overview: "Master plan for frontend-backend integration across registry, config, and domain data"
+overview: "Master plan for frontend-backend integration: backend Plans A-D, then UI Plans E-F"
 type: mixed
 epic: epic-code-completion
 status: active
@@ -12,25 +12,37 @@ completion_gates:
   business: none
 depends_on: []
 todos:
+  # ── Backend Plans (A-D) ──
   - id: master-plan-a
     content: |
-      - [ ] [AGENT] P0. Complete Plan A: Registry & Schema Sync Pipeline — extract 9 missing registries, fix OpenAPI spec, build codegen pipeline, delete 3,561 lines of hand-maintained TS, harden error codes, wire CI triggers
+      - [ ] [AGENT] P0. Complete Plan A: Registry & Schema Sync Pipeline (backend-only) — extract 9 missing registries, fix OpenAPI spec, build codegen pipeline, harden error codes, wire CI triggers
     status: todo
   - id: master-plan-b
     content: |
-      - [ ] [AGENT] P0. Complete Plan B: Config Hot-Reload & UI Wiring — unified config API surface, hot-reload via SSE/polling, UI settings panels wired to real config endpoints, env-var matrix (mock/real) propagation
+      - [ ] [AGENT] P0. Complete Plan B: Config Hot-Reload (backend-only) — domain config schemas, hot-reload callbacks in 20 services, config publish API, placement remediation
     status: todo
     blocked_by: plan-a-registry-schema-sync
   - id: master-plan-c
     content: |
-      - [ ] [AGENT] P0. Complete Plan C: Domain Data API + BFF + Real-Time — Next.js BFF layer, React Query hooks for all 151 pages, WebSocket/SSE push for live data, dual-mode mock/real routing at BFF layer
+      - [ ] [AGENT] P0. Complete Plan C: Domain Data API Readiness (backend-only) — mock mode completeness, response schema consistency, health endpoints, OpenAPI parity across 12 APIs
     status: todo
     blocked_by: plan-a-registry-schema-sync
   - id: master-plan-d
     content: |
-      - [ ] [AGENT] P1. Complete Plan D: Testnet & Stress Testing — mock-mode stress tests, edge-case scenario injection, latency simulation, full end-to-end testnet validation across all 9 APIs
+      - [ ] [AGENT] P1. Complete Plan D: Testnet & Stress Testing (backend-only) — seed hardening, scenario infrastructure, error code stress tests, performance gates, load testing
     status: todo
     blocked_by: plan-c-domain-data-api
+  # ── UI Plans (E-F) ──
+  - id: master-plan-e
+    content: |
+      - [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves
+    status: todo
+    blocked_by: plan-d-testnet-stress-testing
+  - id: master-plan-f
+    content: |
+      - [ ] [AGENT] P1. Complete Plan F: UI Quality Gate Hardening — CI/CD pipeline, quality-gates.sh, TypeScript strict mode, 4-mode startup, auth integration, OpenAPI type consumption, Playwright tests
+    status: todo
+    blocked_by: plan-e-ui-backend-integration
 isProject: false
 ---
 
@@ -91,31 +103,38 @@ across 9+ backend APIs into a single origin.
 ## Dependency DAG
 
 ```
-Plan A: Registry & Schema Sync
-    |
-    +---> Plan B: Config Hot-Reload (PARALLEL with C after A)
-    |
-    +---> Plan C: Domain Data + BFF + Real-Time (PARALLEL with B after A)
-              |
-              +---> Plan D: Testnet & Stress Testing
+             Backend Plans                          UI Plans
+             ─────────────                          ────────
+
+Plan A (Registry & Schema Sync) ──┐
+                                  ├──> Plan B (Config Hot-Reload)
+                                  │         [PARALLEL with C]
+                                  ├──> Plan C (Domain Data API Readiness)
+                                  │         [PARALLEL with B]
+                                  │              │
+                                  │              v
+                                  │         Plan D (Testnet & Stress)
+                                  │              │
+                                  └──────────────┤
+                                                 v
+                                            Plan E (UI Backend Integration)
+                                                 │
+                                                 v
+                                            Plan F (UI Quality Hardening)
 ```
 
-```
-Phase execution order:
-
-  [Plan A] ──┬──> [Plan B]
-             │              ──> [Plan D]
-             └──> [Plan C] ─┘
-```
+**Backend-first principle:** Plans A-D contain zero UI code. They prepare registries, config infrastructure, API
+readiness, and testing infrastructure. Plan E then integrates the UI with all backend work. Plan F hardens the UI
+quality to match deployment-ui standards.
 
 Plan A must complete first because:
 
-- Codegen pipeline produces the TypeScript types that Plans B and C consume
+- Codegen pipeline produces the TypeScript types that Plan E consumes
 - OpenAPI spec fixes are prerequisite for correct API client generation
-- Error code hardening ensures Plan C's BFF layer has correct error handling
+- Error code hardening ensures Plan E's BFF layer has correct error handling
 
 Plans B and C are independent of each other and run in PARALLEL after Plan A. Plan D depends on Plan C (needs working
-BFF + real-time to stress test).
+APIs to stress test). Plan E depends on ALL backend plans (A+B+C+D). Plan F depends on Plan E.
 
 ## Audit Findings Summary
 
@@ -166,9 +185,11 @@ BFF + real-time to stress test).
 
 ## Plan File References
 
-| Plan | File                                             | Slug                            |
-| ---- | ------------------------------------------------ | ------------------------------- |
-| A    | `plan_a_registry_schema_sync_2026_03_21.plan.md` | `plan-a-registry-schema-sync`   |
-| B    | (to be created)                                  | `plan-b-config-hot-reload`      |
-| C    | (to be created)                                  | `plan-c-domain-data-api`        |
-| D    | (to be created)                                  | `plan-d-testnet-stress-testing` |
+| Plan | File                                               | Slug                            | Scope        |
+| ---- | -------------------------------------------------- | ------------------------------- | ------------ |
+| A    | `plan_a_registry_schema_sync_2026_03_21.plan.md`   | `plan-a-registry-schema-sync`   | Backend-only |
+| B    | `plan_b_config_hot_reload_2026_03_21.plan.md`      | `plan-b-config-hot-reload`      | Backend-only |
+| C    | `plan_c_domain_data_api_2026_03_21.plan.md`        | `plan-c-domain-data-api`        | Backend-only |
+| D    | `plan_d_testnet_stress_testing_2026_03_21.plan.md` | `plan-d-testnet-stress-testing` | Backend-only |
+| E    | `plan_e_ui_backend_integration_2026_03_21.plan.md` | `plan-e-ui-backend-integration` | UI-only      |
+| F    | `plan_f_ui_quality_hardening_2026_03_21.plan.md`   | `plan-f-ui-quality-hardening`   | UI-only      |

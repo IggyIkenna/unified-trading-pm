@@ -1,11 +1,10 @@
 ---
 name: plan-d-testnet-stress-testing
 overview: |
-  Testnet and stress testing infrastructure. Seed determinism (seed=42), scenario expansion (BAD_SCHEMA, ERROR_STORM,
-  FLASH_CRASH), error code stress tests (all 18 canonical + 13 DeFi codes), performance regression gates
-  (PerformanceGate/MemoryGate in CI), UI scenario selector panel, synthetic load generator (45->1K->10K instruments),
-  external testnet (testnet.odum.io), and error classification re-audit (aave_plasma bug, missing venue maps, QG
-  enforcement). Goal: no meaningful difference between testing mock and live.
+  Backend-only: seed determinism (seed=42), scenario expansion (BAD_SCHEMA, ERROR_STORM, FLASH_CRASH), error code
+  stress tests (all 18 canonical + 13 DeFi codes), performance regression gates (PerformanceGate/MemoryGate in CI),
+  synthetic load generator (45->1K->10K instruments), and error classification re-audit (aave_plasma bug, missing
+  venue maps, QG enforcement). Goal: no meaningful difference between testing mock and live.
 type: mixed
 epic: epic-code-completion
 status: active
@@ -14,7 +13,7 @@ locked_since: 2026-03-21
 
 completion_gates:
   code: C5
-  deployment: D3
+  deployment: none
   business: B3
 
 repo_gates:
@@ -27,10 +26,6 @@ repo_gates:
     deployment: none
     business: none
   - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-system-ui
     code: C0
     deployment: none
     business: none
@@ -138,90 +133,40 @@ todos:
       - [ ] [AGENT] P1. Establish performance baselines for all services. Run PerformanceGate benchmarks with seed=42 data, record P50/P95/P99 latencies, store in unified-trading-pm/configs/performance-baselines.json. CI compares against baselines, fails on >20% regression.
     status: todo
     note: ""
-  - id: p3-perf-dashboard
-    content: |
-      - [ ] [AGENT] P2. Add performance trend page to unified-trading-system-ui admin section. Shows historical P99 latencies per service from CI runs. Visual regression indicator (green/yellow/red). Data source: performance-baselines.json committed to PM.
-    status: todo
-    note: "Depends on Plan C BFF for API routing"
-
-  # ── Phase 4: UI Scenario Panel ── SEQUENTIAL after Phase 1 ──────────────
-  - id: p4-scenario-selector-ui
-    content: |
-      - [ ] [AGENT] P0. Add scenario selector dropdown to admin/devops page in unified-trading-system-ui. Dropdown lists all MockScenario values (NORMAL, HEAVY, LIGHT, BIG_RANGES, BUST, NO_SYSTEM_OVERLOAD, MISSING_DATA, DELAYED_DATA, BAD_SCHEMA, ERROR_STORM, FLASH_CRASH, HIGH_LATENCY). Selection calls POST /api/v1/scenarios/activate via BFF. Only visible when VITE_MOCK_API=true.
-    status: todo
-    note: "Depends on p1-scenario-config-api and Plan C BFF"
-  - id: p4-scenario-status-indicator
-    content: |
-      - [ ] [AGENT] P0. Add current scenario indicator to UI header/status bar. Shows active scenario name + seed number. Color-coded: NORMAL=green, BUST/FLASH_CRASH=red, ERROR_STORM=orange, others=yellow. Updates via WebSocket when scenario changes (depends on Plan C WebSocket).
-    status: todo
-    note: ""
-  - id: p4-scenario-realtime-switch
-    content: |
-      - [ ] [AGENT] P1. Real-time scenario switching without page reload. When scenario changes via dropdown, WebSocket pushes new scenario to all connected clients. SyntheticDataGenerator adjusts tick patterns immediately. UI components react to scenario change event (e.g., trading page shows price crash animation during FLASH_CRASH).
-    status: todo
-    note: ""
-  - id: p4-custom-scenario-builder
-    content: |
-      - [ ] [AGENT] P2. Add custom scenario builder modal on admin page. Adjustable parameters: volatility multiplier (0.1x-10x), volume multiplier (0.1x-10x), missing data rate (0-50%), error injection rate (0-100%), instrument count (45-10000), tick frequency (0.1-100 Hz). Saves as custom ScenarioConfig YAML, selectable in dropdown.
-    status: todo
-    note: ""
-
-  # ── Phase 5: Load Testing Infrastructure ── SEQUENTIAL after Phase 3 ────
-  - id: p5-synthetic-load-generator
+  # ── Phase 4: Load Testing Infrastructure ── SEQUENTIAL after Phase 3 ────
+  - id: p4-synthetic-load-generator
     content: |
       - [ ] [AGENT] P0. Create synthetic load generator script in unified-trading-pm/scripts/load-testing/. Configurable: instrument count (45, 1000, 5000, 10000), tick rate per instrument (1/s, 10/s), concurrent users (1, 10, 50), scenario (any MockScenario). Uses SyntheticDataGenerator from UIC with seed=42. Outputs: throughput (msgs/s), P50/P95/P99 latency, error rate, memory usage.
     status: todo
     note: ""
-  - id: p5-instrument-scaling
+  - id: p4-instrument-scaling
     content: |
       - [ ] [AGENT] P0. Test instrument scaling path: 45 (current mock) -> 1000 -> 5000 -> 10000 instruments. Verify: instruments-service seed_mock_data.py can generate N instruments deterministically. market-data-processing-service can process ticks for N instruments within P99 threshold. features-delta-one-service can compute features for N instruments within P99 threshold. Document: at what N does each service exceed its PerformanceGate threshold.
     status: todo
     note: ""
-  - id: p5-response-time-baselines
+  - id: p4-response-time-baselines
     content: |
       - [ ] [AGENT] P1. Establish response time baselines for all API endpoints under load. Use load generator with 1000 instruments, 10 concurrent users. Record: GET /api/instruments (< 200ms), GET /api/positions (< 100ms), GET /api/market-data/ticks (< 50ms), POST /api/execution/orders (< 100ms). Store baselines in PM configs. CI load test runs weekly, alerts on >20% regression.
     status: todo
     note: ""
-  - id: p5-stress-test-ci
+  - id: p4-stress-test-ci
     content: |
       - [ ] [AGENT] P2. Add stress test CI job (weekly schedule, not on every push). Runs load generator with 5000 instruments, HEAVY scenario, 50 concurrent users for 5 minutes. Asserts: zero OOM kills, error rate < 1%, P99 < 2x baseline. Uses GHA scheduled workflow with emulators.
     status: todo
     note: ""
 
-  # ── Phase 6: External Testnet ── SEQUENTIAL after Phases 4+5 ────────────
-  - id: p6-testnet-deployment-config
-    content: |
-      - [ ] [HUMAN] P1. Create testnet.odum.io deployment config in deployment-service. Same infrastructure as production but with CLOUD_MOCK_MODE=true, MOCK_SCENARIO=NORMAL, seed=42. Data isolation: separate GCS bucket prefix (testnet-*), separate PubSub topic prefix (testnet-*). Cloud Run services with min-instances=0 (scale to zero when unused).
-    status: todo
-    note: ""
-  - id: p6-testnet-demo-preset
-    content: |
-      - [ ] [AGENT] P1. Create demo preset for external users. Read-only access (no POST/PUT/DELETE on execution endpoints). Rate limiting: 60 req/min per IP. No auth required (DISABLE_AUTH=true, VITE_SKIP_AUTH=true). Scenario locked to NORMAL (no scenario switching for external users). Add demo mode detection in BFF: if TESTNET_MODE=demo, enforce read-only.
-    status: todo
-    note: ""
-  - id: p6-testnet-monitoring
-    content: |
-      - [ ] [AGENT] P2. Add testnet-specific monitoring. Track: external user sessions (count, duration), API usage by endpoint, error rates, scenario health. Emit to Prometheus metrics. Add testnet health page at testnet.odum.io/health showing system status, active scenario, data freshness.
-    status: todo
-    note: ""
-  - id: p6-testnet-data-refresh
-    content: |
-      - [ ] [AGENT] P2. Scheduled daily data refresh for testnet. Cron job runs seed_mock_data.py --seed 42 for all services. Ensures testnet data stays fresh (timestamps within 24h) while maintaining determinism. GHA scheduled workflow or Cloud Scheduler.
-    status: todo
-    note: ""
-
-  # ── Phase 7: Final Validation ── SEQUENTIAL after all phases ────────────
-  - id: p7-qg-sweep
+  # ── Phase 5: Final Validation ── SEQUENTIAL after all phases ────────────
+  - id: p5-qg-sweep
     content: |
       - [ ] [SCRIPT] P0. Run quality-gates.sh on all affected repos: unified-internal-contracts, unified-api-contracts, unified-trading-library, execution-service, system-integration-tests. All must pass.
     status: todo
     note: ""
-  - id: p7-mock-live-parity-test
+  - id: p5-mock-live-parity-test
     content: |
       - [ ] [AGENT] P0. Create mock-vs-live parity test in system-integration-tests. Run full pipeline (instruments -> market-data -> features -> strategy -> execution) in mock mode with seed=42. Record outputs. Run same pipeline against staging with real data. Compare: schema shapes must match, field types must match, value ranges must be plausible. Document any delta.
     status: todo
     note: ""
-  - id: p7-end-to-end-scenario-test
+  - id: p5-end-to-end-scenario-test
     content: |
       - [ ] [AGENT] P0. End-to-end scenario test: activate BUST scenario via API, verify all downstream effects: price drops in market-data, risk alerts in alerting-service, position liquidation warnings in execution-service, UI shows circuit breaker state. All within 30 seconds of scenario activation.
     status: todo
@@ -240,16 +185,17 @@ Phase 0 (Seed Hardening)
 Phase 1 (Scenario Infra)  ←── Phase 2 (Error Codes) [PARALLEL]
     |                           |
     |                      Phase 3 (Perf Gates) [PARALLEL with Phase 1]
-    v                           |
-Phase 4 (UI Scenario)          |
-    |                           v
-    |                      Phase 5 (Load Testing)
-    v                           |
-Phase 6 (External Testnet) ←───┘
+    |                           |
+    v                           v
+Phase 4 (Load Testing) ←───────┘
     |
     v
-Phase 7 (Final Validation)
+Phase 5 (Final Validation)
 ```
+
+NOTE: UI scenario panel (selector dropdown, status indicator, real-time switching, custom scenario builder) and external
+testnet deployment (testnet.odum.io) have been moved to Plan E (UI Backend Integration). This plan now covers
+backend-only testing infrastructure.
 
 ## Phase Gate Criteria
 
@@ -258,10 +204,8 @@ Phase 7 (Final Validation)
 - **Phase 2 exit:** All 33 venues have VENUE_ERROR_MAP entries, aave_plasma fixed, execution-service routes on
   ErrorAction, QG check enforces coverage
 - **Phase 3 exit:** PerformanceGate + MemoryGate in CI for 4 critical services, baselines recorded
-- **Phase 4 exit:** UI scenario selector works, status indicator shows active scenario
-- **Phase 5 exit:** Load generator runs, instrument scaling tested to 10K, response baselines recorded
-- **Phase 6 exit:** testnet.odum.io accessible, demo preset enforces read-only, monitoring live
-- **Phase 7 exit:** All QG pass, mock-live parity verified, end-to-end scenario test passes
+- **Phase 4 exit:** Load generator runs, instrument scaling tested to 10K, response baselines recorded
+- **Phase 5 exit:** All QG pass, mock-live parity verified, end-to-end scenario test passes
 
 ## Pre-Audit Manifest
 
