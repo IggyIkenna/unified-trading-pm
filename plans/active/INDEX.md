@@ -58,6 +58,60 @@ CAPTCHA, GeoComply.
 human+agent | **Status:** active (0/36) | **Scope:** Smoke tests, visual audit, layout fixes, API mock validation,
 stress scenarios, trader sign-off.
 
+### 14. UI Lifecycle ↔ Service Tab Cross-Reference Audit (Phase 1)
+
+**File:**
+[ui_lifecycle_service_tab_cross_reference_2026_03_21.plan.md](ui_lifecycle_service_tab_cross_reference_2026_03_21.plan.md)
+**Type:** audit | **Status:** active (0/28) | **Scope:** Systematic alignment check between 7 lifecycle tabs (Row 1) and
+8 service tab sets (Row 2) — relevance, shared routes, layout wiring, orphans, entitlements.
+
+### 15. UI Phase 2a: Acquire Tab Deep Audit
+
+**File:** [ui_phase2_acquire_tab_audit_2026_03_21.plan.md](ui_phase2_acquire_tab_audit_2026_03_21.plan.md) **Type:** audit
+| **Status:** active (0/24) | **Scope:** Component inventory, navigation, data wiring, UX for DATA_TABS (6 routes).
+
+### 16. UI Phase 2b: Build Tab Deep Audit
+
+**File:** [ui_phase2_build_tab_audit_2026_03_21.plan.md](ui_phase2_build_tab_audit_2026_03_21.plan.md) **Type:** audit |
+**Status:** active (0/30) | **Scope:** Component inventory, navigation, data wiring, UX for BUILD_TABS (7 tabs + 14
+orphan sub-pages).
+
+### 17. UI Phase 2c: Promote Tab Deep Audit
+
+**File:** [ui_phase2_promote_tab_audit_2026_03_21.plan.md](ui_phase2_promote_tab_audit_2026_03_21.plan.md) **Type:** audit
+| **Status:** active (0/22) | **Scope:** Structural issues (no layout wired), component inventory, navigation for
+PROMOTE_TABS (4 routes).
+
+### 18. UI Phase 2d: Run Tab Deep Audit
+
+**File:** [ui_phase2_run_tab_audit_2026_03_21.plan.md](ui_phase2_run_tab_audit_2026_03_21.plan.md) **Type:** audit |
+**Status:** active (0/28) | **Scope:** Component inventory, navigation, data wiring for TRADING_TABS (6) +
+EXECUTION_TABS (5) + standalone pages.
+
+### 19. UI Phase 2e: Observe Tab Deep Audit
+
+**File:** [ui_phase2_observe_tab_audit_2026_03_21.plan.md](ui_phase2_observe_tab_audit_2026_03_21.plan.md) **Type:** audit
+| **Status:** active (0/22) | **Scope:** Structural issues (no layout wired), component inventory for OBSERVE_TABS (5
+routes split across trading layout and standalone).
+
+### 20. UI Phase 2f: Manage Tab Deep Audit
+
+**File:** [ui_phase2_manage_tab_audit_2026_03_21.plan.md](ui_phase2_manage_tab_audit_2026_03_21.plan.md) **Type:** audit |
+**Status:** active (0/20) | **Scope:** Route group mismatch (pages in (ops) not (platform)), component inventory for
+MANAGE_TABS (5 routes).
+
+### 21. UI Phase 2g: Report Tab Deep Audit
+
+**File:** [ui_phase2_report_tab_audit_2026_03_21.plan.md](ui_phase2_report_tab_audit_2026_03_21.plan.md) **Type:** audit |
+**Status:** active (0/20) | **Scope:** Component inventory, navigation, data wiring, entitlement consistency for
+REPORTS_TABS (5 routes).
+
+### 22. UI Phase 3: Cross-Reference & Consistency Audit
+
+**File:** [ui_phase3_cross_reference_audit_2026_03_21.plan.md](ui_phase3_cross_reference_audit_2026_03_21.plan.md)
+**Type:** audit | **Status:** active (0/20) | **Scope:** Shared route behavior, shared component verification, domain
+lane accuracy, navigation consistency, entitlement gaps across all lifecycle tabs. Depends on Phase 1 + Phase 2.
+
 ---
 
 ## Resumed Plans (active — resumed from archive, incomplete todos)
