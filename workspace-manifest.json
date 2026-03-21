@@ -123,6 +123,7 @@
     "unified-sports-reference-interface": "0.1.0",
     "unified-trade-execution-interface": "0.1.42",
     "unified-trading-codex": "1.0.0",
+    "unified-trading-api": "0.1.0",
     "unified-trading-library": "0.3.191",
     "unified-trading-pm": "1.2.0",
     "unified-trading-ui-auth": "0.2.1",
@@ -1420,6 +1421,21 @@
         "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
+      "cli_capabilities": {
+        "operations": [
+          "instruments",
+          "live",
+          "aggregate",
+          "corporate_actions",
+          "corporate_actions_backfill",
+          "generate_date_views",
+          "corporate_actions_update",
+          "corporate_actions_production"
+        ],
+        "categories": ["CEFI", "TRADFI", "DEFI", "SPORTS"],
+        "supports_live": true,
+        "extra_args": ["--venues", "--tickers", "--redo-all", "--interval"]
+      },
       "github_url": "https://github.com/IggyIkenna/instruments-service",
       "completion_path": "core",
       "semver_rules_ref": "service",
@@ -1641,6 +1657,24 @@
       "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.3.1",
       "version_source": "pyproject.toml",
+      "cli_capabilities": {
+        "operations": ["download", "live"],
+        "categories": ["CEFI", "TRADFI", "DEFI"],
+        "supports_live": true,
+        "extra_args": [
+          "--venues",
+          "--instrument-types",
+          "--data-types",
+          "--symbols",
+          "--max-results",
+          "--instrument-ids",
+          "--shard-index",
+          "--total-shards",
+          "--max-workers",
+          "--batch-size",
+          "--ignore-access-filter"
+        ]
+      },
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
         {
@@ -1733,7 +1767,7 @@
         }
       ],
       "notes": "TIER 0: Pure order matching algorithms \u2014 zero inter-library deps. arch_tier corrected 2\u21920 on 2026-02-28. Any current UTS/UCI deps in source must be removed.",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 89,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -3265,6 +3299,43 @@
       "tags": ["config", "cross-domain", "standard"],
       "integration_dependencies": []
     },
+    "unified-trading-api": {
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": ["04-architecture", "06-coding-standards"],
+      "version": "0.1.0",
+      "version_source": "pyproject.toml",
+      "status": "active",
+      "dependencies": [
+        { "name": "unified-trading-library", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-cloud-interface", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-config-interface", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-events-interface", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-internal-contracts", "version": ">=0.1.0,<1.0.0", "required": true },
+        { "name": "unified-api-contracts", "version": ">=0.1.0,<1.0.0", "required": true }
+      ],
+      "notes": "Consolidated API gateway replacing 9 domain data API repos. 61 endpoints across 16 domains with WebSocket multiplexing.",
+      "ci_status": "BASELINE_RECORDED",
+      "coverage_pct": 70,
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "completion_path": "core",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api",
+      "tags": ["api", "gateway", "consolidation"],
+      "integration_dependencies": [
+        "unified-trading-library",
+        "unified-cloud-interface",
+        "unified-config-interface",
+        "unified-events-interface",
+        "unified-internal-contracts",
+        "unified-api-contracts"
+      ]
+    },
     "unified-trading-library": {
       "type": "library",
       "arch_tier": "1",
@@ -3487,7 +3558,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",

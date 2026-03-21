@@ -111,6 +111,14 @@
       "api_port": 8017,
       "api_module": null,
       "$note": "Admin UI for user lifecycle management (onboard/modify/offboard). OAuth admin auth. Mock mode uses client-side fetch intercepts. Backend API TBD — currently calls external APIs (GitHub, Slack, MS Graph, GCP) via mock layer."
+    },
+    "unified-trading": {
+      "ui": "unified-trading-system-ui",
+      "ui_port": 5174,
+      "api": "unified-trading-api",
+      "api_port": 8030,
+      "api_module": "unified_trading_api",
+      "$note": "Consolidated API gateway replacing 9 separate domain data APIs. 61 endpoints across 16 domains. WebSocket at /ws. Will eventually replace execution-analytics, trading-analytics, batch-audit, ml-training, ml-inference, client-reporting, market-data, config stacks."
     }
   },
   "service_workers": {
