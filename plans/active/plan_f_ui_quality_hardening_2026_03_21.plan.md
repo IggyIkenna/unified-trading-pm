@@ -131,6 +131,18 @@ todos:
     status: todo
     blocked_by: p6-playwright-smoke
 
+  # ── Phase 7: Cloud Deployment (SEQUENTIAL after Phase 6) ──
+  - id: p7-aws-ui-deploy
+    content: |
+      - [ ] [AGENT] P2. Deploy UI to AWS (S3 + CloudFront). Create deployment script matching the existing Firebase deploy pattern. Ensure NEXT_PUBLIC_API_BASE_URL points to the correct cloud API.
+    status: todo
+    blocked_by: p6-qg-final
+  - id: p7-verify-cloud-api
+    content: |
+      - [ ] [AGENT] P2. Verify UI works against cloud-deployed unified-trading-api (both GCP and AWS).
+    status: todo
+    blocked_by: p7-aws-ui-deploy
+
 isProject: false
 ---
 

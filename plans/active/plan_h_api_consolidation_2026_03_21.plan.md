@@ -230,6 +230,33 @@ todos:
       - [ ] [HUMAN] P2. Archive old API repos (after verification period)
     status: todo
     blocked_by: h-p5-deprecate-manifest
+  # ── Phase 5B: Deployment Configs (PARALLEL with Phase 5) ──
+  - id: h-p5b-cloud-run-trading-api
+    content: |
+      - [ ] [AGENT] P1. Create Cloud Run deployment config for unified-trading-api (GCP). Dockerfile + cloudbuild.yaml matching existing service patterns.
+    status: todo
+    blocked_by: h-p5-verify
+  - id: h-p5b-ecs-trading-api
+    content: |
+      - [ ] [AGENT] P1. Create ECS/Fargate deployment config for unified-trading-api (AWS). buildspec.yml + task definition.
+    status: todo
+    blocked_by: h-p5-verify
+  - id: h-p5b-cloud-run-auth-api
+    content: |
+      - [ ] [AGENT] P1. Create Cloud Run deployment config for auth-api (GCP).
+    status: todo
+    blocked_by: h-p5-verify
+  - id: h-p5b-ecs-auth-api
+    content: |
+      - [ ] [AGENT] P1. Create ECS/Fargate deployment config for auth-api (AWS).
+    status: todo
+    blocked_by: h-p5-verify
+  - id: h-p5b-register-deployable
+    content: |
+      - [ ] [AGENT] P1. Add unified-trading-api and auth-api to deployment-service orchestration (register as deployable services).
+    status: todo
+    blocked_by: h-p5-verify
+
   # ── Phase 6: QG sweep (SEQUENTIAL after all phases) ──
   - id: h-p6-qg
     content: |
@@ -360,6 +387,15 @@ Phase 6: QG Sweep (SEQUENTIAL)
   h-p6-basedpyright
   h-p6-mock-verify
   h-p6-entitlement-verify
+```
+
+## Deployment Progression
+
+```
+Stage 1: Local filesystem → Local API → Local UI (localhost) — WORKS NOW
+Stage 2: Cloud storage → Local API → Local UI (dev testing against cloud data) — GCP works, AWS needs upload
+Stage 3: Cloud storage → Cloud API → Cloud UI (full cloud, co-located) — needs deployment configs
+Stage 4: Cloud storage → Cloud API → CDN UI (production) — needs CDN config
 ```
 
 ## Parallelization Strategy

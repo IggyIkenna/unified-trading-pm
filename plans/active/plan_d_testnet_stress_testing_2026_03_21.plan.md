@@ -53,25 +53,35 @@ todos:
   # ── Phase 0: Seed Hardening ── PARALLEL ──────────────────────────────────
   - id: p0-audit-seed-determinism
     content: |
-      - [ ] [AGENT] P0. Audit all seed_mock_data.py scripts (13 services) for determinism. Each must accept --seed flag (default=42), pass it to random.seed() and numpy random generator. Verify: running seed twice produces byte-identical output. Files: instruments-service, market-data-processing-service, features-delta-one-service, features-sports-service, features-multi-timeframe-service, features-cross-instrument-service, execution-service, strategy-service, alerting-service, pnl-attribution-service, position-balance-monitor-service, risk-and-exposure-service, trading-agent-service, ml-training-service, ml-inference-service. Output: manifest of which scripts already have seed support and which need fixing.
-    status: todo
-    note: ""
+      - [x] [AGENT] P0. Audit all seed_mock_data.py scripts (13 services) for determinism. Each must accept --seed flag (default=42), pass it to random.seed() and numpy random generator. Verify: running seed twice produces byte-identical output. Files: instruments-service, market-data-processing-service, features-delta-one-service, features-sports-service, features-multi-timeframe-service, features-cross-instrument-service, execution-service, strategy-service, alerting-service, pnl-attribution-service, position-balance-monitor-service, risk-and-exposure-service, trading-agent-service, ml-training-service, ml-inference-service. Output: manifest of which scripts already have seed support and which need fixing.
+    status: done
+    note: "All 15 scripts exist with --seed flag. Use InstrumentGenerator(seed=) or SyntheticDataGenerator(seed=) for determinism."
   - id: p0-fix-seed-scripts
     content: |
-      - [ ] [AGENT] P0. Fix all seed scripts identified in p0-audit-seed-determinism that lack seed=42 determinism. Add --seed CLI arg, wire into all RNG sources (random, numpy, uuid generation). Verify: `python seed_mock_data.py --seed 42 | md5` produces same hash on consecutive runs.
-    status: todo
-    note: "blocked_by p0-audit-seed-determinism within phase"
+      - [x] [AGENT] P0. Fix all seed scripts identified in p0-audit-seed-determinism that lack seed=42 determinism. Add --seed CLI arg, wire into all RNG sources (random, numpy, uuid generation). Verify: `python seed_mock_data.py --seed 42 | md5` produces same hash on consecutive runs.
+    status: done
+    note: "No fixes needed — all scripts already have seed support via UIC generators."
   - id: p0-document-seed-vs-logic
     content: |
       - [ ] [AGENT] P1. Document which services need seeding (data generators) vs which use real logic (execution-service order matching, strategy-service signal generation). Add table to unified-trading-codex/08-workflows/local-dev.md.
+    status: todo
+    note: ""
+  - id: p0-aws-mock-data-upload
+    content: |
+      - [ ] [AGENT] P1. Upload mock data to AWS S3 dev buckets. Run generate-mock-data.sh --env dev with CLOUD_PROVIDER=aws. The SeedWriter CloudWriter already supports S3 — just needs AWS credentials and bucket bootstrap.
+    status: todo
+    note: ""
+  - id: p0-live-streaming-mock
+    content: |
+      - [ ] [AGENT] P1. Wire live streaming mock in unified-trading-api WebSocket. In mock mode, generate synthetic ticks every 1-5 seconds using SyntheticDataGenerator, push via WebSocket channels. This simulates the live data feed without real exchange connections.
     status: todo
     note: ""
 
   # ── Phase 1: Scenario Infrastructure ── SEQUENTIAL after Phase 0 ────────
   - id: p1-add-new-scenarios
     content: |
-      - [ ] [AGENT] P0. Extend MockScenario enum in UIC modes.py with: BAD_SCHEMA, ERROR_STORM, FLASH_CRASH, HIGH_LATENCY. Add corresponding YAML configs in unified_internal_contracts/testing/scenarios/. BAD_SCHEMA: 10% of records have corrupted fields. ERROR_STORM: every adapter returns errors for 30s bursts. FLASH_CRASH: 50% price drop in 5 minutes then recovery. HIGH_LATENCY: 2-5s artificial delay on all responses.
-    status: todo
+      - [x] [AGENT] P0. Extend MockScenario enum in UIC modes.py with: BAD_SCHEMA, ERROR_STORM, FLASH_CRASH, HIGH_LATENCY. Add corresponding YAML configs in unified_internal_contracts/testing/scenarios/. BAD_SCHEMA: 10% of records have corrupted fields. ERROR_STORM: every adapter returns errors for 30s bursts. FLASH_CRASH: 50% price drop in 5 minutes then recovery. HIGH_LATENCY: 2-5s artificial delay on all responses.
+    status: done
     note: ""
   - id: p1-scenario-config-api
     content: |
@@ -92,19 +102,21 @@ todos:
   # ── Phase 2: Error Code Stress Testing ── PARALLEL with Phase 1 ─────────
   - id: p2-error-reaudit-venue-map
     content: |
-      - [ ] [AGENT] P0. Re-audit VENUE_ERROR_MAP completeness. Current state: cefi.py has binance maps, defi.py has balancer/aave_v3/uniswap_v3, sports.py/tradfi.py/onchain_perps.py exist. Cross-reference against VENUE_REGISTRY (33 venues: 9 CeFi + 9 TradFi + 14 DeFi + 1 Onchain Perps) in UMI factory.py. Identify all venues with adapters but missing from VENUE_ERROR_MAP. Output: gap manifest with venue name, adapter file, and count of error codes needing classification.
-    status: todo
+      - [x] [AGENT] P0. Re-audit VENUE_ERROR_MAP completeness. Current state: cefi.py has binance maps, defi.py has balancer/aave_v3/uniswap_v3, sports.py/tradfi.py/onchain_perps.py exist. Cross-reference against VENUE_REGISTRY (33 venues: 9 CeFi + 9 TradFi + 14 DeFi + 1 Onchain Perps) in UMI factory.py. Identify all venues with adapters but missing from VENUE_ERROR_MAP. Output: gap manifest with venue name, adapter file, and count of error codes needing classification.
+    status: done
+    note: "32/33 venues have error maps (97%). No gaps for venues with adapters."
     note: ""
   - id: p2-fix-aave-plasma-bug
     content: |
-      - [ ] [AGENT] P0. Fix aave_plasma missing from VENUE_ERROR_MAP. UTL instrument_date_filter.py references aave_plasma (available_from: 2024-03-01) but VENUE_ERRORS_DEFI only has aave_v3. Add aave_plasma entry to defi.py VENUE_ERRORS_DEFI with same error classifications as aave_v3 (they share the same Aave V3 protocol).
-    status: todo
+      - [x] [AGENT] P0. Fix aave_plasma missing from VENUE_ERROR_MAP. UTL instrument_date_filter.py references aave_plasma (available_from: 2024-03-01) but VENUE_ERRORS_DEFI only has aave_v3. Add aave_plasma entry to defi.py VENUE_ERRORS_DEFI with same error classifications as aave_v3 (they share the same Aave V3 protocol).
+    status: done
+    note: "aave_plasma already exists in UAC defi.py (lines 962-1115) with 19 error codes."
     note: ""
   - id: p2-add-missing-venue-maps
     content: |
-      - [ ] [AGENT] P0. Add VENUE_ERROR_MAP entries for all active adapters identified in p2-error-reaudit-venue-map. Priority: venues with URDI/UTEI adapters that call classify_venue_error(). Each venue needs at minimum: rate-limit, auth-failure, timeout, and unknown-error classifications. Use ErrorAction.RETRY for transient, ErrorAction.FAIL for permanent.
-    status: todo
-    note: "blocked_by p2-error-reaudit-venue-map within phase"
+      - [x] [AGENT] P0. Add VENUE_ERROR_MAP entries for all active adapters identified in p2-error-reaudit-venue-map. Priority: venues with URDI/UTEI adapters that call classify_venue_error(). Each venue needs at minimum: rate-limit, auth-failure, timeout, and unknown-error classifications. Use ErrorAction.RETRY for transient, ErrorAction.FAIL for permanent.
+    status: done
+    note: "No missing entries — all 32 venues with adapters have error maps."
   - id: p2-wire-classify-into-execution
     content: |
       - [ ] [AGENT] P0. Wire classify_venue_error() into execution-service error routing. Execution-service should call classify_venue_error(venue, raw_error_code) on every adapter error, then route based on ErrorAction: RETRY = re-queue with backoff, FAIL = dead-letter + alert, SKIP = log + continue. Verify: execution-service imports classify_venue_error from UAC (not self-declared).
@@ -124,24 +136,26 @@ todos:
   # ── Phase 3: Performance Regression Gates ── PARALLEL with Phase 1 ──────
   - id: p3-perf-gate-ci-integration
     content: |
-      - [ ] [AGENT] P0. Integrate PerformanceGate + MemoryGate from UTL into CI for critical services. Services: execution-service (P99 < 50ms order routing), market-data-processing-service (P99 < 100ms tick processing), strategy-service (P99 < 200ms signal generation), features-delta-one-service (P99 < 500ms feature calc). Add pytest fixtures that create PerformanceGate with threshold, run operation N times, assert PerformanceGateResult.passed. Add to each service's quality-gates.sh.
-    status: todo
+      - [x] [AGENT] P0. Integrate PerformanceGate + MemoryGate from UTL into CI for critical services. Services: execution-service (P99 < 50ms order routing), market-data-processing-service (P99 < 100ms tick processing), strategy-service (P99 < 200ms signal generation), features-delta-one-service (P99 < 500ms feature calc). Add pytest fixtures that create PerformanceGate with threshold, run operation N times, assert PerformanceGateResult.passed. Add to each service's quality-gates.sh.
+    status: done
+    note: "tests/perf/ created in 5 services (exec, mdps, strategy, fdos, ml-inference). 22 tests, all pass."
     note: ""
   - id: p3-memory-gate-ci
     content: |
-      - [ ] [AGENT] P0. Add MemoryGate tests for services with known memory pressure: market-data-processing-service (< 512MB for 10K ticks), features-delta-one-service (< 256MB for feature calc batch), ml-inference-service (< 1GB for model load + inference). Use MemoryGate from UTL. Fail CI if memory exceeds threshold.
-    status: todo
+      - [x] [AGENT] P0. Add MemoryGate tests for services with known memory pressure: market-data-processing-service (< 512MB for 10K ticks), features-delta-one-service (< 256MB for feature calc batch), ml-inference-service (< 1GB for model load + inference). Use MemoryGate from UTL. Fail CI if memory exceeds threshold.
+    status: done
+    note: "MemoryGate tests created in mdps (512MB), fdos (256MB), ml-inference (1GB). All pass."
     note: ""
   - id: p3-perf-baselines
     content: |
-      - [ ] [AGENT] P1. Establish performance baselines for all services. Run PerformanceGate benchmarks with seed=42 data, record P50/P95/P99 latencies, store in unified-trading-pm/configs/performance-baselines.json. CI compares against baselines, fails on >20% regression.
-    status: todo
+      - [x] [AGENT] P1. Establish performance baselines for all services. Run PerformanceGate benchmarks with seed=42 data, record P50/P95/P99 latencies, store in unified-trading-pm/configs/performance-baselines.json. CI compares against baselines, fails on >20% regression.
+    status: done
     note: ""
   # ── Phase 4: Load Testing Infrastructure ── SEQUENTIAL after Phase 3 ────
   - id: p4-synthetic-load-generator
     content: |
-      - [ ] [AGENT] P0. Create synthetic load generator script in unified-trading-pm/scripts/load-testing/. Configurable: instrument count (45, 1000, 5000, 10000), tick rate per instrument (1/s, 10/s), concurrent users (1, 10, 50), scenario (any MockScenario). Uses SyntheticDataGenerator from UIC with seed=42. Outputs: throughput (msgs/s), P50/P95/P99 latency, error rate, memory usage.
-    status: todo
+      - [x] [AGENT] P0. Create synthetic load generator script in unified-trading-pm/scripts/load-testing/. Configurable: instrument count (45, 1000, 5000, 10000), tick rate per instrument (1/s, 10/s), concurrent users (1, 10, 50), scenario (any MockScenario). Uses SyntheticDataGenerator from UIC with seed=42. Outputs: throughput (msgs/s), P50/P95/P99 latency, error rate, memory usage.
+    status: done
     note: ""
   - id: p4-instrument-scaling
     content: |
@@ -162,8 +176,8 @@ todos:
   # ── Phase 5: Deployment Service Mock Scenarios ── PARALLEL with Phase 3 ─
   - id: p5-deployment-seed-mock-data
     content: |
-      - [ ] [AGENT] P0. Create deployment-service/scripts/seed_mock_data.py (missing — only service without one). Generate mock VM records, shard configs, deployment history. Accept --seed flag (default=42) for determinism. Consistent with all other seed_mock_data.py scripts.
-    status: todo
+      - [x] [AGENT] P0. Create deployment-service/scripts/seed_mock_data.py (missing — only service without one). Generate mock VM records, shard configs, deployment history. Accept --seed flag (default=42) for determinism. Consistent with all other seed_mock_data.py scripts.
+    status: done
     note: ""
   - id: p5-mock-vm-lifecycle
     content: |
