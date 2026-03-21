@@ -2,231 +2,187 @@
   "folders": [
     {
       "path": ".",
-      "name": "\ud83d\udcc1 Workspace Root",
+      "name": "📁 Workspace Root"
     },
     {
       "path": ".cursor",
-      "name": "\u2699\ufe0f Cursor Config",
+      "name": "⚙️ Cursor Config"
     },
     {
       "path": ".venv-workspace",
-      "name": "\ud83d\udc0d Venv",
+      "name": "🐍 Venv"
     },
     {
       "path": "unified-trading-codex",
-      "name": "\ud83d\udcda Codex",
+      "name": "📚 Codex"
     },
     {
       "path": "unified-trading-pm",
-      "name": "\ud83d\udccb Project Management",
+      "name": "📋 Project Management"
     },
     {
-      "path": "alerting-service",
+      "path": "unified-trading-system-ui",
+      "name": "🎨 UI"
     },
     {
-      "path": "batch-audit-api",
+      "path": "alerting-service"
     },
     {
-      "path": "batch-audit-ui",
+      "path": "batch-audit-api"
     },
     {
-      "path": "batch-live-reconciliation-service",
+      "path": "batch-live-reconciliation-service"
     },
     {
-      "path": "client-reporting-api",
+      "path": "client-reporting-api"
     },
     {
-      "path": "client-reporting-ui",
+      "path": "deployment-api"
     },
     {
-      "path": "deployment-api",
+      "path": "deployment-service"
     },
     {
-      "path": "deployment-service",
+      "path": "execution-algo-library"
     },
     {
-      "path": "deployment-ui",
+      "path": "execution-results-api"
     },
     {
-      "path": "elysium-defi-system",
+      "path": "execution-service"
     },
     {
-      "path": "execution-algo-library",
+      "path": "features-calendar-service"
     },
     {
-      "path": "execution-analytics-ui",
+      "path": "features-commodity-service"
     },
     {
-      "path": "execution-results-api",
+      "path": "features-cross-instrument-service"
     },
     {
-      "path": "execution-service",
+      "path": "features-delta-one-service"
     },
     {
-      "path": "features-calendar-service",
+      "path": "features-multi-timeframe-service"
     },
     {
-      "path": "features-commodity-service",
+      "path": "features-onchain-service"
     },
     {
-      "path": "features-cross-instrument-service",
+      "path": "features-sports-service"
     },
     {
-      "path": "features-delta-one-service",
+      "path": "features-volatility-service"
     },
     {
-      "path": "features-multi-timeframe-service",
+      "path": "ibkr-gateway-infra"
     },
     {
-      "path": "features-onchain-service",
+      "path": "instruments-service"
     },
     {
-      "path": "features-sports-service",
+      "path": "market-data-api"
     },
     {
-      "path": "features-volatility-service",
+      "path": "market-data-processing-service"
     },
     {
-      "path": "ibkr-gateway-infra",
+      "path": "market-tick-data-service"
     },
     {
-      "path": "instruments-service",
+      "path": "matching-engine-library"
     },
     {
-      "path": "live-health-monitor-ui",
+      "path": "ml-inference-api"
     },
     {
-      "path": "logs-dashboard-ui",
+      "path": "ml-inference-service"
     },
     {
-      "path": "market-data-api",
+      "path": "ml-training-api"
     },
     {
-      "path": "market-data-processing-service",
+      "path": "ml-training-service"
     },
     {
-      "path": "market-tick-data-service",
+      "path": "odum-research-website"
     },
     {
-      "path": "matching-engine-library",
+      "path": "pnl-attribution-service"
     },
     {
-      "path": "ml-inference-api",
+      "path": "position-balance-monitor-service"
     },
     {
-      "path": "ml-inference-service",
+      "path": "risk-and-exposure-service"
     },
     {
-      "path": "ml-training-api",
+      "path": "strategy-service"
     },
     {
-      "path": "ml-training-service",
+      "path": "system-integration-tests"
     },
     {
-      "path": "ml-training-ui",
+      "path": "trading-agent-service"
     },
     {
-      "path": "onboarding-ui",
+      "path": "trading-analytics-api"
     },
     {
-      "path": "odum-research-website",
+      "path": "unified-api-contracts"
     },
     {
-      "path": "pnl-attribution-service",
+      "path": "unified-cloud-interface"
     },
     {
-      "path": "position-balance-monitor-service",
+      "path": "unified-config-interface"
     },
     {
-      "path": "risk-and-exposure-service",
+      "path": "unified-defi-execution-interface"
     },
     {
-      "path": "settlement-ui",
+      "path": "unified-domain-client"
     },
     {
-      "path": "strategy-service",
+      "path": "unified-events-interface"
     },
     {
-      "path": "strategy-ui",
+      "path": "unified-feature-calculator-library"
     },
     {
-      "path": "system-integration-tests",
+      "path": "unified-feature-orchestration-library"
     },
     {
-      "path": "trading-agent-service",
+      "path": "unified-features-interface"
     },
     {
-      "path": "trading-analytics-api",
+      "path": "unified-internal-contracts"
     },
     {
-      "path": "trading-analytics-ui",
+      "path": "unified-market-interface"
     },
     {
-      "path": "unified-admin-ui",
+      "path": "unified-ml-interface"
     },
     {
-      "path": "unified-api-contracts",
+      "path": "unified-position-interface"
     },
     {
-      "path": "unified-cloud-interface",
+      "path": "unified-reference-data-interface"
     },
     {
-      "path": "unified-config-interface",
+      "path": "unified-sports-execution-interface"
     },
     {
-      "path": "unified-defi-execution-interface",
+      "path": "unified-sports-reference-interface"
     },
     {
-      "path": "unified-domain-client",
+      "path": "unified-trade-execution-interface"
     },
     {
-      "path": "unified-events-interface",
-    },
-    {
-      "path": "unified-feature-calculator-library",
-    },
-    {
-      "path": "unified-feature-orchestration-library",
-    },
-    {
-      "path": "unified-features-interface",
-    },
-    {
-      "path": "unified-internal-contracts",
-    },
-    {
-      "path": "unified-market-interface",
-    },
-    {
-      "path": "unified-ml-interface",
-    },
-    {
-      "path": "unified-position-interface",
-    },
-    {
-      "path": "unified-reference-data-interface",
-    },
-    {
-      "path": "unified-sports-execution-interface",
-    },
-    {
-      "path": "unified-sports-reference-interface",
-    },
-    {
-      "path": "unified-trade-execution-interface",
-    },
-    {
-      "path": "unified-trading-library",
-    },
-    {
-      "path": "unified-trading-ui-auth",
-    },
-    {
-      "path": "unified-trading-ui-kit",
-    },
-    {
-      "path": "user-management-ui",
-    },
+      "path": "unified-trading-library"
+    }
   ],
   "settings": {
     "terminal.integrated.env.osx": {
@@ -260,7 +216,10 @@
     "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": ["tests", "-v"],
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
     "files.autoSave": "onFocusChange",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -277,12 +236,20 @@
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lint.select": [
+      "E",
+      "F",
+      "W",
+      "I"
+    ],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": ["--line-length", "120"],
+    "ruff.format.args": [
+      "--line-length",
+      "120"
+    ],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -323,7 +290,6 @@
       "**/.venv": true,
       "**/uv.lock": false,
     },
-    "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,

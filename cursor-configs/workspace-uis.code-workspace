@@ -21,49 +21,11 @@
       "name": "\ud83d\udccb PM",
     },
     {
-      "path": "../../batch-audit-ui",
+      "path": "../../unified-trading-system-ui",
+      "name": "\ud83d\udcda UI",
     },
     {
-      "path": "../../client-reporting-ui",
-    },
-    {
-      "path": "../../deployment-ui",
-    },
-    {
-      "path": "../../execution-analytics-ui",
-    },
-    {
-      "path": "../../live-health-monitor-ui",
-    },
-    {
-      "path": "../../logs-dashboard-ui",
-    },
-    {
-      "path": "../../ml-training-ui",
-    },
-    {
-      "path": "../../onboarding-ui",
-    },
-    {
-      "path": "../../odum-research-website",
-    },
-    {
-      "path": "../../settlement-ui",
-    },
-    {
-      "path": "../../strategy-ui",
-    },
-    {
-      "path": "../../trading-analytics-ui",
-    },
-    {
-      "path": "../../unified-admin-ui",
-    },
-    {
-      "path": "../../unified-trading-ui-auth",
-    },
-    {
-      "path": "../../user-management-ui",
+      "path": "../../.extra/deployment-ui",
     },
   ],
   "settings": {
@@ -83,7 +45,10 @@
     "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": ["tests", "-v"],
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
     "files.autoSave": "onFocusChange",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
@@ -100,12 +65,20 @@
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lint.select": [
+      "E",
+      "F",
+      "W",
+      "I"
+    ],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": ["--line-length", "120"],
+    "ruff.format.args": [
+      "--line-length",
+      "120"
+    ],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -146,8 +119,6 @@
       "**/.venv": true,
       "**/uv.lock": false,
     },
-    "editor.rulers": [100],
-    "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
