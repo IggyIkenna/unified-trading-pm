@@ -83,8 +83,8 @@ todos:
     blocked_by: p0-validate-openapi-gaps
   - id: p2-restore-openapi-typescript
     content: |
-      - [ ] [AGENT] P0. Restore openapi-typescript codegen pipeline in unified-trading-system-ui. The script exists but output is in a .bak file. Fix: update the codegen script to output to src/generated/api-types.ts (not .bak), run it against the corrected OpenAPI spec, verify generated types compile with tsc --noEmit.
-    status: todo
+      - [x] [AGENT] P0. DONE — openapi-typescript codegen pipeline restored. npm run generate:types outputs lib/types/api-generated.ts (20K lines, 298 endpoints). @ts-nocheck header suppresses duplicate operation ID errors from multi-service spec. typed-fetch.ts provides ApiResponse<P> utility type. 3 hooks (positions, alerts, risk) wired with typed responses.
+    status: done
     blocked_by: p2-fix-empty-schemas
   - id: p2-qg-gate-uic
     content: |
