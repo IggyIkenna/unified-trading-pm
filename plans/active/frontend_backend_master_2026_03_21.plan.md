@@ -1,6 +1,6 @@
 ---
 name: frontend-backend-master
-overview: "Master plan for frontend-backend integration: backend Plans A-D, then UI Plans E-F"
+overview: "Master plan for frontend-backend integration: backend Plans A-D+H, then UI Plans E-F"
 type: mixed
 epic: epic-code-completion
 status: active
@@ -32,6 +32,12 @@ todos:
       - [ ] [AGENT] P1. Complete Plan D: Testnet & Stress Testing (backend-only) — seed hardening, scenario infrastructure, error code stress tests, performance gates, load testing
     status: todo
     blocked_by: plan-c-domain-data-api
+  # ── API Consolidation Plan (H) — after A, PARALLEL with B-D ──
+  - id: master-plan-h
+    content: |
+      - [ ] [AGENT] P0. Complete Plan H: API Consolidation — scaffold unified-trading-api, absorb 9 domain data API repos into one, entitlement middleware, WebSocket multiplexing, unified OpenAPI spec, deprecate old API repos
+    status: todo
+    blocked_by: plan-a-registry-schema-sync
   # ── Auth Plan (G) — PARALLEL with A-D ──
   - id: master-plan-g
     content: |
@@ -42,7 +48,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves
     status: todo
-    blocked_by: plan-d-testnet-stress-testing, plan-g-auth-entitlement
+    blocked_by: plan-d-testnet-stress-testing, plan-g-auth-entitlement, plan-h-api-consolidation
   - id: master-plan-f
     content: |
       - [ ] [AGENT] P1. Complete Plan F: UI Quality Gate Hardening — CI/CD pipeline, quality-gates.sh, TypeScript strict mode, 4-mode startup, auth integration, OpenAPI type consumption, Playwright tests
@@ -113,17 +119,20 @@ across 9+ backend APIs into a single origin.
 
 Plan A (Registry & Schema Sync) ──┐
                                   ├──> Plan B (Config Hot-Reload)
-                                  │         [PARALLEL with C]
+                                  │         [PARALLEL with C, H]
                                   ├──> Plan C (Domain Data API Readiness)
-                                  │         [PARALLEL with B]
+                                  │         [PARALLEL with B, H]
                                   │              │
                                   │              v
                                   │         Plan D (Testnet & Stress)
                                   │              │
+                                  ├──> Plan H (API Consolidation)
+                                  │         [PARALLEL with B, C]
+                                  │              │
                                   └──────────────┤
                                                  v
 Plan G (Auth & Entitlement) ────────────> Plan E (UI Backend Integration)
-       [PARALLEL with A-D]                       │
+       [PARALLEL with all]                       │
                                                  v
                                             Plan F (UI Quality Hardening)
 ```
@@ -138,9 +147,10 @@ Plan A must complete first because:
 - OpenAPI spec fixes are prerequisite for correct API client generation
 - Error code hardening ensures Plan E's BFF layer has correct error handling
 
-Plans B and C are independent of each other and run in PARALLEL after Plan A. Plan D depends on Plan C (needs working
-APIs to stress test). Plan G (Auth & Entitlement) runs in PARALLEL with Plans A-D (no dependencies). Plan E depends on
-ALL backend plans (A+B+C+D) AND Plan G (needs auth integration). Plan F depends on Plan E.
+Plans B, C, and H are independent of each other and run in PARALLEL after Plan A. Plan D depends on Plan C (needs
+working APIs to stress test). Plan H consolidates 9 domain data API repos into one unified-trading-api. Plan G (Auth &
+Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan E depends on ALL backend plans (A+B+C+D+H) AND
+Plan G (needs auth integration). Plan F depends on Plan E.
 
 ## Audit Findings Summary
 
@@ -200,3 +210,4 @@ ALL backend plans (A+B+C+D) AND Plan G (needs auth integration). Plan F depends 
 | E    | `plan_e_ui_backend_integration_2026_03_21.plan.md` | `plan-e-ui-backend-integration` | UI-only      |
 | F    | `plan_f_ui_quality_hardening_2026_03_21.plan.md`   | `plan-f-ui-quality-hardening`   | UI-only      |
 | G    | `plan_g_auth_entitlement_2026_03_21.plan.md`       | `plan-g-auth-entitlement`       | Backend-only |
+| H    | `plan_h_api_consolidation_2026_03_21.plan.md`      | `plan-h-api-consolidation`      | Backend-only |
