@@ -6,8 +6,8 @@ overview:
 type: code
 epic: epic-code-completion
 status: active
-locked_by: live-defi-rollout
-locked_since: 2026-03-21
+locked_by: null
+locked_since: null
 
 completion_gates:
   code: C5
@@ -178,6 +178,12 @@ Phase 3 (QG sweep)
 | risk-management-service | TBD  | metrics, limits          | TBD       | TBD    |
 
 Port SSOT: `unified-trading-pm/scripts/dev/ui-api-mapping.json` TBD values will be populated by Phase 0 audit tasks.
+
+## Cross-Plan Note: client-reporting-api Enhancement
+
+client-reporting-api enhancement (invoicing, compliance reporting, DocuSign integration, document management) is owned
+by **Plan I** (`plan_i_client_reporting_docs_2026_03_21.plan.md`). Plan C ensures client-reporting-api has proper mock
+mode and consistent response schemas. Plan I builds the business features on top of that foundation.
 
 ## Success Criteria
 

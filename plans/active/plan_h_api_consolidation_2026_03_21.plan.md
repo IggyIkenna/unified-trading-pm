@@ -6,8 +6,8 @@ overview:
 type: mixed
 epic: epic-code-completion
 status: active
-locked_by: live-defi-rollout
-locked_since: 2026-03-21
+locked_by: null
+locked_since: null
 completion_gates:
   code: C5
   deployment: D3
@@ -113,6 +113,11 @@ todos:
       - [ ] [AGENT] P0. data/instruments domain (NEW, from instruments-service): GET /instruments/list, /instruments/catalogue (2 endpoints)
     status: todo
     blocked_by: h-p0-scaffold-repo
+  - id: h-p1-documents
+    content: |
+      - [ ] [AGENT] P0. documents domain (proxy to client-reporting-api): upload-url, download-url, list, delete (4 endpoints)
+    status: todo
+    blocked_by: h-p0-scaffold-repo
   - id: h-p1-deployment
     content: |
       - [ ] [AGENT] P0. deployment domain (proxy to deployment-api): GET /deployment/services, /deployment/deployments, /deployment/builds — reverse proxy to deployment-api backend (3 endpoints)
@@ -157,7 +162,7 @@ todos:
   # ── Phase 3: Seed data + mock mode (SEQUENTIAL after Phase 1) ──
   - id: h-p3-seed-data
     content: |
-      - [ ] [AGENT] P0. Create seed_mock_data.py that populates MockStateStore for all 14 domains with realistic data
+      - [ ] [AGENT] P0. Create seed_mock_data.py that populates MockStateStore for all 16 domains with realistic data
     status: todo
     blocked_by: h-p1-market-data
   - id: h-p3-reuse-mock
@@ -178,7 +183,7 @@ todos:
   # ── Phase 4: OpenAPI spec generation (SEQUENTIAL after Phase 1) ──
   - id: h-p4-openapi-spec
     content: |
-      - [ ] [AGENT] P0. Auto-generate unified OpenAPI spec from FastAPI (all 47+ endpoints in ONE spec, tagged by domain)
+      - [ ] [AGENT] P0. Auto-generate unified OpenAPI spec from FastAPI (all 61 endpoints in ONE spec, tagged by domain)
     status: todo
     blocked_by: h-p1-market-data
   - id: h-p4-typescript-codegen
@@ -235,7 +240,7 @@ todos:
     blocked_by: h-p6-qg
   - id: h-p6-mock-verify
     content: |
-      - [ ] [AGENT] P0. Verify all 47+ endpoints return correct mock data with correct response schemas
+      - [ ] [AGENT] P0. Verify all 61 endpoints return correct mock data with correct response schemas
     status: todo
     blocked_by: h-p6-qg
   - id: h-p6-entitlement-verify
@@ -278,7 +283,11 @@ of 9 separate services.
 - service-status (2 endpoints, health aggregation)
 - users (3 endpoints)
 
-**Total: 57 endpoints across 14 domains.**
+**New domains added (proxy to separate backend):**
+
+- documents (4 endpoints, proxy to client-reporting-api — Plan I)
+
+**Total: 61 endpoints across 16 domains.**
 
 ## Pre-Audit Manifest
 
@@ -320,6 +329,7 @@ Phase 1: Route Modules (ALL PARALLEL)
   h-p1-risk ────────────────┤
   h-p1-instruments ─────────┤
   h-p1-deployment ──────────┤
+  h-p1-documents ──────────┤
   h-p1-service-status ──────┤
   h-p1-users ───────────────┘
        │
@@ -362,8 +372,8 @@ Phase 6: QG Sweep (SEQUENTIAL)
 - **Phase 0:** unified-trading-api scaffolded, `quality-gates.sh` passes with health endpoint only
 - **Phase 1:** All 14 route modules return mock data, basedpyright clean per module
 - **Phase 2:** WebSocket connects, subscribes to channels, receives mock data in mock mode
-- **Phase 3:** `seed_mock_data.py` populates all 14 domains, mock responses match Pydantic schemas
-- **Phase 4:** Single OpenAPI spec covers all 57 endpoints, TypeScript types generated
+- **Phase 3:** `seed_mock_data.py` populates all 16 domains, mock responses match Pydantic schemas
+- **Phase 4:** Single OpenAPI spec covers all 61 endpoints, TypeScript types generated
 - **Phase 5:** dev-start.sh launches unified-trading-api, old APIs no longer started
 - **Phase 6:** Full quality-gates.sh pass, all endpoints verified, entitlement filtering tested
 

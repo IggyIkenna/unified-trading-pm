@@ -43,12 +43,19 @@ todos:
     content: |
       - [ ] [AGENT] P0. Complete Plan G: Auth & Entitlement Hardening — service access matrix, S2S auth enrollment (all 21 services), API auth standardization (9 API repos), backend entitlement enforcement (7 tiers server-side), org-level data filtering
     status: todo
+  # ── Client Reporting Plan (I) — after G, PARALLEL with H ──
+  - id: master-plan-i
+    content: |
+      - [ ] [AGENT] P0. Complete Plan I: Client Reporting & Document Management — document infrastructure in UIC/UCI, P&L/settlement/compliance reporting, invoicing with fee calculation, DocuSign integration, document upload/download API, MiFID II regulatory reporting
+    status: todo
+    blocked_by: plan-g-auth-entitlement
   # ── UI Plans (E-F) ──
   - id: master-plan-e
     content: |
-      - [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves
+      - [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves, document management components
     status: todo
-    blocked_by: plan-d-testnet-stress-testing, plan-g-auth-entitlement, plan-h-api-consolidation
+    blocked_by:
+      plan-d-testnet-stress-testing, plan-g-auth-entitlement, plan-h-api-consolidation, plan-i-client-reporting-docs
   - id: master-plan-f
     content: |
       - [ ] [AGENT] P1. Complete Plan F: UI Quality Gate Hardening — CI/CD pipeline, quality-gates.sh, TypeScript strict mode, 4-mode startup, auth integration, OpenAPI type consumption, Playwright tests
@@ -127,14 +134,19 @@ Plan A (Registry & Schema Sync) ──┐
                                   │         Plan D (Testnet & Stress)
                                   │              │
                                   ├──> Plan H (API Consolidation)
-                                  │         [PARALLEL with B, C]
+                                  │         [PARALLEL with B, C, I]
                                   │              │
                                   └──────────────┤
-                                                 v
-Plan G (Auth & Entitlement) ────────────> Plan E (UI Backend Integration)
-       [PARALLEL with all]                       │
-                                                 v
-                                            Plan F (UI Quality Hardening)
+                                                 │
+Plan G (Auth & Entitlement) ──┬──> Plan I (Client Reporting & Docs)
+       [PARALLEL with A-D]    │         [PARALLEL with H]
+                              │              │
+                              └──────────────┤
+                                             v
+                                  Plan E (UI Backend Integration)
+                                             │
+                                             v
+                                  Plan F (UI Quality Hardening)
 ```
 
 **Backend-first principle:** Plans A-D contain zero UI code. They prepare registries, config infrastructure, API
@@ -149,8 +161,9 @@ Plan A must complete first because:
 
 Plans B, C, and H are independent of each other and run in PARALLEL after Plan A. Plan D depends on Plan C (needs
 working APIs to stress test). Plan H consolidates 9 domain data API repos into one unified-trading-api. Plan G (Auth &
-Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan E depends on ALL backend plans (A+B+C+D+H) AND
-Plan G (needs auth integration). Plan F depends on Plan E.
+Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan I (Client Reporting & Docs) depends on Plan G
+(needs org-level auth for document scoping) and runs in PARALLEL with Plan H. Plan E depends on ALL backend plans
+(A+B+C+D+H+I) AND Plan G (needs auth integration + document management components). Plan F depends on Plan E.
 
 ## Audit Findings Summary
 
@@ -211,3 +224,4 @@ Plan G (needs auth integration). Plan F depends on Plan E.
 | F    | `plan_f_ui_quality_hardening_2026_03_21.plan.md`   | `plan-f-ui-quality-hardening`   | UI-only      |
 | G    | `plan_g_auth_entitlement_2026_03_21.plan.md`       | `plan-g-auth-entitlement`       | Backend-only |
 | H    | `plan_h_api_consolidation_2026_03_21.plan.md`      | `plan-h-api-consolidation`      | Backend-only |
+| I    | `plan_i_client_reporting_docs_2026_03_21.plan.md`  | `plan-i-client-reporting-docs`  | Backend-only |
