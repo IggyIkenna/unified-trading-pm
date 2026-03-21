@@ -10,42 +10,29 @@
 //   - no-console         → error  (enforced by base-ui.sh [3.5] codex check too)
 //   - react-refresh      → warn   (informational; never blocks a build)
 //
-// Per-repo overrides: add a rules{} block in eslint.config.js AFTER the spread,
+// Per-repo overrides: add a rules{} block in .eslintrc.cjs AFTER the spread/require,
 // or use inline eslint-disable comments for documented exceptions.
 // Document all exceptions in QUALITY_GATE_BYPASS_AUDIT.md.
-//
-// Format: ESLint 9 flat config (all UI repos migrated to ESLint 9 + typescript-eslint)
 
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
+module.exports = {
+  root: true,
+  env: { browser: true, es2020: true },
+  extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:react-hooks/recommended"],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+    ecmaFeatures: { jsx: true },
+  },
+  plugins: ["react-hooks", "react-refresh", "@typescript-eslint"],
+  rules: {
+    // Promoted from warn → error (parity with Python zero-warning policy)
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    "no-console": "error",
 
-export default tseslint.config(
-  { ignores: ["dist/**", "coverage/**", "node_modules/**", "*.config.*"] },
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    files: ["src/**/*.{ts,tsx}"],
-    plugins: {
-      "react-hooks": reactHooks,
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
-
-      // Promoted from warn → error (parity with Python zero-warning policy)
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
-      "no-console": "error",
-
-      // Keep as warn — informational, never blocks a build
-      "react-refresh/only-export-components": "off",
-    },
-  }
-);
+    // Keep as warn — informational, never blocks a build
+    "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+  },
+  ignorePatterns: ["dist", "coverage", "*.config.js", "*.config.ts", "*.config.cjs", "*.cjs"],
+};

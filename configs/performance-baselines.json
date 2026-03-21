@@ -1,0 +1,53 @@
+{
+  "_description": "Performance baselines for PerformanceGate CI comparison. Values in milliseconds.",
+  "_updated": "2026-03-21",
+  "_seed": 42,
+  "execution-service:order_routing": {
+    "p50": 15.0,
+    "p95": 35.0,
+    "p99": 50.0
+  },
+  "market-data-processing-service:tick_processing": {
+    "p50": 30.0,
+    "p95": 70.0,
+    "p99": 100.0
+  },
+  "strategy-service:signal_generation": {
+    "p50": 60.0,
+    "p95": 150.0,
+    "p99": 200.0
+  },
+  "features-delta-one-service:feature_calc": {
+    "p50": 100.0,
+    "p95": 350.0,
+    "p99": 500.0
+  },
+  "ml-inference-service:inference": {
+    "p50": 50.0,
+    "p95": 150.0,
+    "p99": 250.0
+  },
+  "_memory_thresholds_mb": {
+    "market-data-processing-service": 512,
+    "features-delta-one-service": 256,
+    "ml-inference-service": 1024
+  },
+  "_load_test_baselines": {
+    "instruments_45": {
+      "throughput_msgs_per_sec": 1000,
+      "latency_p99_ms": 50.0
+    },
+    "instruments_1000": {
+      "throughput_msgs_per_sec": 500,
+      "latency_p99_ms": 100.0
+    },
+    "instruments_5000": {
+      "throughput_msgs_per_sec": 200,
+      "latency_p99_ms": 250.0
+    },
+    "instruments_10000": {
+      "throughput_msgs_per_sec": 100,
+      "latency_p99_ms": 500.0
+    }
+  }
+}

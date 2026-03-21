@@ -171,8 +171,8 @@ ESLINT_VER=$(npx eslint --version 2>/dev/null || echo "not found")
 log_success "ESLint ${ESLINT_VER}"
 
 # vitest (warn if missing — older repos may not have it yet)
-if ./node_modules/.bin/vitest --version >/dev/null 2>&1; then
-  VITEST_VER=$(./node_modules/.bin/vitest --version 2>/dev/null || echo "?")
+if node_modules/.bin/vitest --version >/dev/null 2>&1; then
+  VITEST_VER=$(node_modules/.bin/vitest --version 2>/dev/null || echo "?")
   log_success "vitest ${VITEST_VER}"
 else
   log_warn "vitest not found in node_modules — run npm install; unit tests will be skipped"
@@ -272,12 +272,12 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   # ── console.* in production code ───────────────────────────────────────────
   # Bypass: add entries to CODEX_CONSOLE_EXCLUDE_GLOBS before sourcing (e.g. "!src/lib/logger.ts")
   _CONSOLE_EXTRA=()
-  for g in ${CODEX_CONSOLE_EXCLUDE_GLOBS[@]+"${CODEX_CONSOLE_EXCLUDE_GLOBS[@]}"}; do
+  for g in "${CODEX_CONSOLE_EXCLUDE_GLOBS[@]+"${CODEX_CONSOLE_EXCLUDE_GLOBS[@]}"}"; do
     _CONSOLE_EXTRA+=(--glob "$g")
   done
   _CONSOLE_HITS=$(rg "console\.(log|warn|error|debug|info)" src/ \
     --glob "!src/**/*.test.*" --glob "!src/setupTests.*" \
-    ${_CONSOLE_EXTRA[@]+"${_CONSOLE_EXTRA[@]}"} 2>/dev/null || true)
+    "${_CONSOLE_EXTRA[@]+"${_CONSOLE_EXTRA[@]}"}" 2>/dev/null || true)
   if [ -n "$_CONSOLE_HITS" ]; then
     log_fail "console.* in production code — remove or replace with structured logging:"
     echo "$_CONSOLE_HITS" | head -5
@@ -289,13 +289,13 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   # ── Hardcoded hex colours / rgb() ──────────────────────────────────────────
   # Bypass: add entries to CODEX_COLOUR_EXCLUDE_GLOBS (e.g. "!src/lib/brand-colours.ts")
   _COLOUR_EXTRA=()
-  for g in ${CODEX_COLOUR_EXCLUDE_GLOBS[@]+"${CODEX_COLOUR_EXCLUDE_GLOBS[@]}"}; do
+  for g in "${CODEX_COLOUR_EXCLUDE_GLOBS[@]+"${CODEX_COLOUR_EXCLUDE_GLOBS[@]}"}"; do
     _COLOUR_EXTRA+=(--glob "$g")
   done
   _COLOUR_HITS=$(rg '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgb\(|rgba\(' src/ \
     --glob "!src/**/*.test.*" --glob "!src/lib/chart-theme.*" \
     --glob "!src/globals.css" --glob "!src/**/*.css" \
-    ${_COLOUR_EXTRA[@]+"${_COLOUR_EXTRA[@]}"} 2>/dev/null || true)
+    "${_COLOUR_EXTRA[@]+"${_COLOUR_EXTRA[@]}"}" 2>/dev/null || true)
   if [ -n "$_COLOUR_HITS" ]; then
     log_fail "Hardcoded colour values — use CSS vars (--color-*) or Tailwind classes:"
     echo "$_COLOUR_HITS" | head -5
@@ -307,12 +307,12 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   # ── Hardcoded localhost URLs ────────────────────────────────────────────────
   # Bypass: add entries to CODEX_LOCALHOST_EXCLUDE_GLOBS (e.g. "!src/lib/dev-utils.ts")
   _LOCALHOST_EXTRA=()
-  for g in ${CODEX_LOCALHOST_EXCLUDE_GLOBS[@]+"${CODEX_LOCALHOST_EXCLUDE_GLOBS[@]}"}; do
+  for g in "${CODEX_LOCALHOST_EXCLUDE_GLOBS[@]+"${CODEX_LOCALHOST_EXCLUDE_GLOBS[@]}"}"; do
     _LOCALHOST_EXTRA+=(--glob "$g")
   done
   _LOCALHOST_HITS=$(rg 'http://localhost:[0-9]+' src/ \
     --glob "!src/**/*.test.*" --glob "!src/lib/mock-api.*" --glob "!src/mock/**" \
-    ${_LOCALHOST_EXTRA[@]+"${_LOCALHOST_EXTRA[@]}"} 2>/dev/null || true)
+    "${_LOCALHOST_EXTRA[@]+"${_LOCALHOST_EXTRA[@]}"}" 2>/dev/null || true)
   if [ -n "$_LOCALHOST_HITS" ]; then
     log_fail "Hardcoded localhost URL — use import.meta.env.VITE_* instead:"
     echo "$_LOCALHOST_HITS" | head -5
