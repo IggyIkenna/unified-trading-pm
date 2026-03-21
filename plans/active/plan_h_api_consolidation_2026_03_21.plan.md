@@ -65,7 +65,8 @@ todos:
     blocked_by: h-p0-scaffold-repo
   - id: h-p1-execution
     content: |
-      - [ ] [AGENT] P0. execution domain (from execution-results-api): GET /execution/orders, /execution/fills, /execution/venues, /execution/algos, /execution/backtests (5 endpoints)
+      - [ ] [AGENT] P0. execution domain (from execution-results-api): GET /execution/orders, /execution/fills, /execution/venues, /execution/algos, /execution/backtests (5 endpoints).
+      Absorbed from backtest_config_ui: POST /execution/experiments — experiment submission endpoint (validates BacktestExperimentConfig, uploads shard configs to GCS, triggers batch Cloud Run jobs, returns experiment_id for tracking).
     status: todo
     blocked_by: h-p0-scaffold-repo
   - id: h-p1-positions
@@ -110,7 +111,8 @@ todos:
     blocked_by: h-p0-scaffold-repo
   - id: h-p1-instruments
     content: |
-      - [ ] [AGENT] P0. data/instruments domain (NEW, from instruments-service): GET /instruments/list, /instruments/catalogue (2 endpoints)
+      - [ ] [AGENT] P0. data/instruments domain (NEW, from instruments-service): GET /instruments/list, /instruments/catalogue (2 endpoints).
+      Absorbed from backend_frontend_alignment: GET /instruments/registry — comprehensive instrument registry showing every instrument across all venues with metadata (asset class, venue, instrument type, data types available, date range, cloud location).
     status: todo
     blocked_by: h-p0-scaffold-repo
   - id: h-p1-documents
@@ -125,7 +127,8 @@ todos:
     blocked_by: h-p0-scaffold-repo
   - id: h-p1-service-status
     content: |
-      - [ ] [AGENT] P0. service-status domain (NEW): GET /service-status/health (aggregated), /service-status/feature-freshness (2 endpoints)
+      - [ ] [AGENT] P0. service-status domain (NEW): GET /service-status/health (aggregated), /service-status/feature-freshness (2 endpoints).
+      Absorbed from backend_frontend_alignment: GET /service-status/activity — cross-service activity event stream (type, entity, actor, timestamp, details, lifecycle_stage). Sources: strategy-service, execution-service, ml-training-service, pnl-attribution-service via PubSub.
     status: todo
     blocked_by: h-p0-scaffold-repo
   - id: h-p1-users

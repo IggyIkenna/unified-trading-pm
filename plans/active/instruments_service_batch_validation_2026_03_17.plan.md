@@ -189,21 +189,23 @@ todos:
   # ═══════════════════════════════════════════════════════════════
   - id: b3-extract-topology-resolver
     content: |
-      - [ ] [AGENT] P1. Extract topology resolver from deployment-service to UTL
+      - [x] [AGENT] P1. Extract topology resolver from deployment-service to UTL
       New module: unified_trading_library/topology/resolver.py
       Functions: read_runtime_topology(), resolve_transport(), get_downstream_consumers()
       deployment-service refactored to import from UTL instead of local impl.
       Update pyproject.toml + workspace-manifest.json if dep changes.
-    status: todo
-    note: ""
+      DONE: Completed in live_batch_alignment Phase 0D (topology_reader moved to UTL 2026-03-18).
+    status: done
+    note: "Completed in live_batch_alignment Phase 0D"
 
   - id: b3-wire-instruments-topology
     content: |
-      - [ ] [AGENT] P1. Wire instruments-service to UTL topology resolver
+      - [x] [AGENT] P1. Wire instruments-service to UTL topology resolver
       Replace hardcoded transport with mode-resolved (batch=cloud-storage, live=PubSub).
       Use VenueMapping.venue_to_data_provider (already in UAC) for protocol resolution.
-    status: todo
-    note: ""
+      DONE: Completed in live_batch_alignment Phase 0D (topology_reader moved to UTL 2026-03-18).
+    status: done
+    note: "Completed in live_batch_alignment Phase 0D"
 
   # ═══════════════════════════════════════════════════════════════
   # PHASE B4: Cleanup + Verification

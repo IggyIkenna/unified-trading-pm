@@ -110,6 +110,18 @@ todos:
       - [ ] [AGENT] P1. Standardize pagination response shape across all APIs that return lists. Shape: {"data": [...], "pagination": {"total": int, "page": int, "page_size": int, "has_next": bool}}. Audit and fix inconsistencies.
     status: todo
     blocked_by: p1-fix-api-mock-gaps
+  - id: p2-data-granularity-labelling
+    content: |
+      - [ ] [AGENT] P1. Add data granularity labelling to instrument/data type metadata.
+      Absorbed from backend_frontend_alignment: add `granularity` field to instrument metadata (tick, block, sampled_5m, timeframe_configurable). CeFi OHLCV=time-sampled, CeFi trades=tick-level, DeFi pool_state=per-block, DeFi swaps=per-block, Sports odds_tick=sampled 5-10m, Sports odds_change=event-driven. Update relevant API responses to include granularity alongside data type.
+    status: todo
+    blocked_by: p1-fix-api-mock-gaps
+  - id: p2-data-history-start-dates
+    content: |
+      - [ ] [AGENT] P2. Expose per-venue data start dates via API.
+      Absorbed from backend_frontend_alignment: deployment-service already has `expected-start-dates` per service. Expose via API: GET /config/expected-start-dates/{service_name}. Show "Data available since Sep 2019" per venue in catalogue. Cloud location per instrument: add cloud_locations field (["gcp", "aws"]) to instrument metadata.
+    status: todo
+    blocked_by: p1-fix-api-mock-gaps
   - id: p2-openapi-schema-parity
     content: |
       - [ ] [AGENT] P0. Verify OpenAPI spec matches actual API responses. For each API: call every endpoint in mock mode, validate response against OpenAPI schema. Fix any schema mismatches. Run cassette parity tests: cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py.

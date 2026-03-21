@@ -72,6 +72,10 @@ repo_gates:
 
 depends_on: []
 
+# NOTE: AUTH_FAILURE events (full_system_audit P0-04) and S2S auth events (full_system_audit P0-05) are already done.
+# These were completed in the 2026-03-11 full audit remediation (execution-service + alerting-service).
+# Plan G Phase 1 S2S enrollment should build on that existing work, not redo it.
+
 todos:
   # ── Phase 0: Service Access Matrix ── PARALLEL ─────────────────────────────
   - id: p0-define-service-categories
@@ -138,6 +142,7 @@ todos:
   - id: p3-create-entitlement-registry
     content: |
       - [ ] [AGENT] P0. Create entitlement registry in unified-config-interface/unified_config_interface/auth/entitlements.py. Define the 7 subscription tiers as an enum. Map each tier to: allowed endpoints (list of URL patterns), instrument count limit, feature flags (e.g., DeFi access, ML predictions, real-time data). Load from entitlements.yaml config file. Export from UCfgI public surface.
+      Absorbed from backend_frontend_alignment: subscription/entitlement management API — org->subscription tier mapping, per-org entitlement list, subscription upgrade/downgrade API, usage tracking (API calls, data queries, compute hours). Database: org_subscriptions table (org_id, tier, entitlements[], start_date, renewal_date). Auth: entitlements included in JWT token.
     status: todo
     note: ""
   - id: p3-api-entitlement-middleware

@@ -29,7 +29,17 @@ depends_on:
   - plan-d-testnet-stress-testing
 
 todos:
-  # ── Phase 0: Generated Type Consumption (from Plan A) ──
+  # ── Phase 0: Generated Type Consumption (from Plan A) + Shared UI Components ──
+  # Absorbed from ui_consolidation_ux_hardening + ui_navigation_ux_model:
+  # - DimensionalGrid component (dimension pills, pin/unpin, sortable metrics, heatmap, CSV export, row selection)
+  # - FilterBar component (URL-based state, cascading counts, multi-select, search-within-dropdown)
+  # - CrossLink + buildCrossLink (surface registry, cross-surface navigation)
+  # - GlobalNavBar (intent-based labels: Overview/Strategies/Operations/Config/Settlements/ML, global fuzzy search)
+  # - EntityLink (strategy/client/instrument/service entity routing)
+  # - BreadcrumbNav + SparklineCell components
+  # - Visual polish (globals.css: rounder radii, transitions, PnL colors, card hover, section spacing)
+  # - Command Center landing page (KPI grid + strategy sparkline table + alert feed + health bar)
+  # These are implemented as part of the page migration waves (Phase 8) and shared component work.
   - id: p0-generate-ts-constants
     content: |
       - [ ] [AGENT] P0. Generate TypeScript constants from ui-reference-data.json. Create a codegen script (scripts/generate-ts-from-registry.ts or .py) that reads ui-reference-data.json and outputs typed TS constants to src/generated/registry-constants.ts. Each registry becomes a typed const with as const assertion. Output must include JSDoc comments with source repo and version.
@@ -308,11 +318,14 @@ todos:
   - id: p8-wave2-strategy-ml
     content: |
       - [ ] [AGENT] P1. Wave 2 migration — strategies, ML training, ML inference, reports, PnL attribution pages: fully wired to BFF, REST-only (no WebSocket needed for historical data).
+      Absorbed from config_lifecycle_flows: DimensionalGrid selection, StrategyGridResults wire to backtest results API, Promote toolbar with environment picker + cross-link to deployment-ui, ML training ExperimentDetailPage wire to real API + DeployModal for 'Deploy to Inference', config generator wire to /config/generate-all API, mass-deploy preview + deploy step.
     status: todo
     blocked_by: p8-wave1-dashboard-trading
   - id: p8-wave3-backtest-admin
     content: |
       - [ ] [AGENT] P2. Wave 3 migration — backtest, portal, admin, config, deployment pages: fully wired to BFF, config pages integrate with config CRUD from Phase 5.
+      Absorbed from backtest_config_ui: BacktestConfigPanel with 3 tabs (ML/Strategy/Execution), FixedParamsSection with dropdowns, GridParamsSection with context-sensitive range sliders, shard count preview (live calculation), experiment tracking UI (status, progress, results per shard).
+      Absorbed from config_lifecycle_flows: deployment-ui query param acceptance (?service=&config_folders=&env=&mode=), mass-deploy progress tracking (poll /backtest/status).
     status: todo
     blocked_by: p8-wave2-strategy-ml
   - id: p8-qg-final
