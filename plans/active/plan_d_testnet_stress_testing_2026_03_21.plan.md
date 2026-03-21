@@ -136,21 +136,19 @@ todos:
   # ── Phase 3: Performance Regression Gates ── PARALLEL with Phase 1 ──────
   - id: p3-perf-gate-ci-integration
     content: |
-      - [x] [AGENT] P0. Integrate PerformanceGate + MemoryGate from UTL into CI for critical services. Services: execution-service (P99 < 50ms order routing), market-data-processing-service (P99 < 100ms tick processing), strategy-service (P99 < 200ms signal generation), features-delta-one-service (P99 < 500ms feature calc). Add pytest fixtures that create PerformanceGate with threshold, run operation N times, assert PerformanceGateResult.passed. Add to each service's quality-gates.sh.
-    status: done
-    note: "tests/perf/ created in 5 services (exec, mdps, strategy, fdos, ml-inference). 22 tests, all pass."
-    note: ""
+      - [ ] [AGENT] P0. Integrate PerformanceGate + MemoryGate from UTL into CI for critical services. AUDIT CORRECTION: PerformanceGate and MemoryGate classes EXIST in UTL (correcting earlier audit mistake that said they were missing), and tests/perf/ directories were created in 5 services. However, these tests are NOT activated in any service's quality-gates.sh script — they exist as dead test files that CI never runs. Must: add explicit perf test invocation to each service's quality-gates.sh.
+    status: todo
+    note: "Tests exist but not activated in QG scripts. Gates exist in UTL but are dead code in CI."
   - id: p3-memory-gate-ci
     content: |
-      - [x] [AGENT] P0. Add MemoryGate tests for services with known memory pressure: market-data-processing-service (< 512MB for 10K ticks), features-delta-one-service (< 256MB for feature calc batch), ml-inference-service (< 1GB for model load + inference). Use MemoryGate from UTL. Fail CI if memory exceeds threshold.
-    status: done
-    note: "MemoryGate tests created in mdps (512MB), fdos (256MB), ml-inference (1GB). All pass."
-    note: ""
+      - [ ] [AGENT] P0. Add MemoryGate tests for services with known memory pressure. AUDIT CORRECTION: MemoryGate test files were created but are NOT invoked by quality-gates.sh in any service. Must activate in QG scripts.
+    status: todo
+    note: "Test files exist but not activated in QG scripts."
   - id: p3-perf-baselines
     content: |
-      - [x] [AGENT] P1. Establish performance baselines for all services. Run PerformanceGate benchmarks with seed=42 data, record P50/P95/P99 latencies, store in unified-trading-pm/configs/performance-baselines.json. CI compares against baselines, fails on >20% regression.
-    status: done
-    note: ""
+      - [ ] [AGENT] P1. Establish performance baselines for all services. AUDIT: baselines not recorded because perf tests not activated in CI. Must activate tests first, then record baselines.
+    status: todo
+    note: "Depends on p3-perf-gate-ci-integration activation."
   # ── Phase 4: Load Testing Infrastructure ── SEQUENTIAL after Phase 3 ────
   - id: p4-synthetic-load-generator
     content: |

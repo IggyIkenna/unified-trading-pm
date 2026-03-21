@@ -283,6 +283,16 @@ isProject: false
 
 # Notes & Context
 
+## Citadel Audit Findings (2026-03-21)
+
+**unified-trading-api is P3 SCAFFOLD status.** Route module files exist but return mock data or "not yet wired"
+responses. Zero Pydantic response schemas defined. Only 1 test exists. This plan is correctly marked as NOT STARTED —
+the scaffold needs to be rebuilt properly with real Pydantic models, proper response schemas, and working mock mode from
+the start.
+
+**auth-api is P2 DEV status.** No OAuth implementation, no production guard, no RBAC enforcement. Plan H Phase 0
+entitlement middleware depends on auth-api being functional. This dependency must be tracked.
+
 ## Architecture Decision
 
 ONE `unified-trading-api` repo absorbs all 9 domain data API repos. The UI integrates with a single API origin instead

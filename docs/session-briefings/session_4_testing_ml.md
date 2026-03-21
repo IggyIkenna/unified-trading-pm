@@ -167,6 +167,24 @@
 - Backwards compat: old flat configs must still deserialize via `@model_validator(mode="before")`
 - Grid only explodes within relevant parameter space -- swing_high grid never applies odds_time_bucket
 
+## CITADEL AUDIT FINDINGS (2026-03-21)
+
+This session needs to address the following honest status corrections:
+
+1. **PerformanceGate/MemoryGate exist in UTL but NOT activated in QG scripts.** A prior audit incorrectly claimed these
+   classes did not exist — they DO exist and are exported from UTL. Test files (tests/perf/) were created in 5 services.
+   HOWEVER, these perf tests are NOT invoked by any service's quality-gates.sh script. They exist as dead test files
+   that CI never runs. Plan D Phase 3 todos have been reset to NOT DONE. Must: add explicit perf test invocation to each
+   service's quality-gates.sh, then record baselines.
+
+2. **Plan D Phase 0 (seed hardening) IS genuinely done.** All 15 seed scripts have --seed support. Do not re-do.
+
+3. **Plan D Phase 2 (error code audit) Phase 0 items ARE genuinely done.** VENUE_ERROR_MAP has 32/33 venues covered.
+   aave_plasma already exists. The execution work (wiring classify_venue_error, ERROR_STORM test suite) remains todo.
+
+4. **18/21 service mock providers are hollow stubs** — this affects Plan D scenario testing since scenarios depend on
+   mock mode producing realistic data. Coordinate with Session 2 on mock provider quality.
+
 ## Success Criteria
 
 - [ ] All QGs pass on all 16 affected repos

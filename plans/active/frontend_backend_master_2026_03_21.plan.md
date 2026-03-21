@@ -66,6 +66,33 @@ isProject: false
 
 # Notes & Context
 
+## AUDIT STATUS (Citadel Audit 2026-03-21)
+
+| Plan | Name                      | Claimed Status | Actual Status    | Key Finding                                                                       |
+| ---- | ------------------------- | -------------- | ---------------- | --------------------------------------------------------------------------------- |
+| A    | Registry & Schema Sync    | Phase 0 done   | Phase 0 done     | Correct. 0/9 new registries extracted (Phase 1 NOT STARTED). 66 empty schemas.    |
+| B    | Config Hot-Reload         | Phase 1 done   | Phase 1 NOT DONE | 18/21 services have hollow stub callbacks. 0/21 read getters. Reset to todo.      |
+| C    | Domain Data API Readiness | Phase 1 done   | Phase 1 PARTIAL  | 18/21 mock providers are hollow stubs. Reset p1-fix-api-mock-gaps to todo.        |
+| D    | Testnet & Stress Testing  | Phase 3 done   | Phase 3 NOT DONE | PerformanceGate/MemoryGate exist in UTL but NOT activated in QG scripts.          |
+| E    | UI Backend Integration    | Not started    | Not started      | NEW: UI->API path mismatch + wrong auth header. Added Phase 0B fix todos.         |
+| F    | UI Quality Hardening      | Not started    | Not started      | Correct. No changes needed.                                                       |
+| G    | Auth & Entitlement        | Phase 1 done   | Phase 1 NOT DONE | 19/21 services have auth files but NOT applied to routes. auth-api is P2 DEV.     |
+| H    | API Consolidation         | Not started    | Not started      | unified-trading-api is P3 SCAFFOLD — route modules return mock/stub data. 1 test. |
+| I    | Client Reporting & Docs   | Phase 2 done   | Phase 2 done     | Correct. Plan I status is accurate.                                               |
+
+### P0-P4 Maturity Ratings
+
+| Component           | Rating      | Notes                                                    |
+| ------------------- | ----------- | -------------------------------------------------------- |
+| unified-trading-api | P3 SCAFFOLD | Route modules exist but return mock/stub data. 0 schemas |
+| auth-api            | P2 DEV      | No OAuth impl, no production guard, no RBAC              |
+| S2S auth enrollment | P2 DEV      | Files exist in 19 services but not applied to routes     |
+| Config hot-reload   | P2 DEV      | Boilerplate files exist but not activated at startup     |
+| Mock providers      | P2 DEV      | 18/21 are hollow stubs with trivial data                 |
+| Perf/Memory gates   | P2 DEV      | Classes exist in UTL, tests exist, but not in QG scripts |
+| Registry extraction | P1 STUB     | Script extracts 4/13 categories                          |
+| OpenAPI spec        | P1 STUB     | 7 services missing, 66 empty schemas                     |
+
 ## 3-Category Data Model
 
 All data flowing between backend and frontend falls into exactly three categories, each with a distinct communication
@@ -183,6 +210,7 @@ Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan I (Client
 - No hot-reload mechanism (config changes require page refresh)
 - Feature flags scattered across 6 different env var files
 - No config change audit trail in UI
+- **CITADEL AUDIT:** 18/21 services have hollow stub callbacks (files exist, not activated at startup, 0 read getters)
 
 ### Audit C: Domain Data + BFF
 
@@ -192,6 +220,7 @@ Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan I (Client
 - Two independent mock systems (7,100 lines inline TS + 16 MSW handlers)
 - No WebSocket/SSE for real-time push, only 2-10s polling
 - 541 orphan domain models in internal contracts not exposed via API
+- **CITADEL AUDIT:** 18/21 service mock providers are hollow stubs; UI sends x-demo-persona instead of JWT Bearer
 
 ### Audit D: Testnet & Stress Testing
 
@@ -200,6 +229,13 @@ Entitlement) runs in PARALLEL with Plans A-D+H (no dependencies). Plan I (Client
 - No latency simulation capability
 - No edge-case scenario injection (empty lists, error states, rate limits)
 - Mock data is static, no lifecycle simulation (instrument listing/delisting)
+- **CITADEL AUDIT:** PerformanceGate/MemoryGate exist in UTL but NOT activated in any service's QG scripts
+
+### Audit G: Auth & Entitlement (CITADEL AUDIT)
+
+- **S2S auth: 19/21 services have auth files but NOT applied to routes** — dead code
+- **auth-api is P2 DEV** — no OAuth implementation, no production guard, no RBAC enforcement
+- **unified-trading-api is P3 SCAFFOLD** — route modules return mock/stub data, zero response schemas, 1 test
 
 ## Key Architectural Decisions
 

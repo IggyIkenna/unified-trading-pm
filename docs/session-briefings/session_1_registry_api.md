@@ -100,6 +100,23 @@
 - UAC import rules: consumers import from domain facades only (`from unified_api_contracts.{domain} import ...`), never
   from `canonical.*` or `normalize_utils.*`
 
+## CITADEL AUDIT FINDINGS (2026-03-21)
+
+This session needs to address the following honest status corrections:
+
+1. **Registry generation: 0/9 new registries extracted.** generate_ui_reference_data.py exists but only handles 4/13
+   categories. Phase 1 is correctly NOT STARTED — the script enhancement is real work, not a verification task.
+
+2. **OpenAPI spec: 7 services missing, 66 empty schemas.** Phase 2 is correctly NOT STARTED. The empty schema count was
+   originally reported as 11, then 86 by audit, corrected to 66 after removing intentional markers.
+
+3. **unified-trading-api is P3 SCAFFOLD.** Route module files exist from a prior session but return mock data or "not
+   yet wired" placeholder responses. Zero Pydantic response schemas are defined. Only 1 test. This is NOT a working API
+   — it needs to be rebuilt properly with real models and response schemas.
+
+4. **Plan A Phase 0 audits ARE genuinely done** — the audit correctly identified gaps. Execution work (Phase 1+) is what
+   remains. Do not waste time re-auditing.
+
 ## Success Criteria
 
 - [ ] All QGs pass on: unified-api-contracts, unified-internal-contracts, execution-results-api,

@@ -145,6 +145,26 @@
 - Shard-level failure isolation -- no `raise` inside per-venue/per-shard loops
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)`
 
+## CITADEL AUDIT FINDINGS (2026-03-21)
+
+This session needs to address the following honest status corrections:
+
+1. **Config hot-reload: 18/21 services are hollow stubs.** A prior agent session created boilerplate callback files in
+   20 services but: (a) 18/21 do NOT call start_domain_config_reloaders() in their startup path, (b) 0/21 services read
+   the domain config getters at runtime. The callbacks are dead code. All Phase 1A-1E todos have been reset to NOT DONE.
+   Each service needs: (1) add start_domain_config_reloaders() to main.py/app.py, (2) make the service engine consume
+   the getter functions instead of reading static config once at startup.
+
+2. **18/21 service mock providers are hollow stubs.** mock_data.py files exist in services but return trivial/empty data
+   that does not exercise real service logic. Plan C Phase 1 p1-fix-api-mock-gaps has been reset to NOT DONE. Each mock
+   provider must return realistic data matching Pydantic response models.
+
+3. **Plan B Phase 0 (UCfgI schemas) IS genuinely done.** The 5 domain config schemas were correctly added. Do not re-do
+   this work.
+
+4. **Plan C Phase 0 (audits) ARE genuinely done.** Health endpoints and mock mode audits were completed. The issue is
+   Phase 1 execution quality, not Phase 0 audit accuracy.
+
 ## Success Criteria
 
 - [ ] All QGs pass on: unified-config-interface, unified-trading-library, config-api, all 21 services

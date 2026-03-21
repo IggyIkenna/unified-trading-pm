@@ -55,12 +55,28 @@ todos:
     status: todo
     blocked_by: p0-delete-hand-maintained-ts
 
+  # ── Phase 0B: Fix UI->API Path Mismatch + Auth Header (BEFORE BFF scaffold) ──
+  # CITADEL AUDIT (2026-03-21): UI currently has two critical integration bugs:
+  # 1. next.config.mjs rewrites /api/* -> backend, but backend routes are at /{service}/api/*
+  # 2. Auth header sends x-demo-persona (mock auth) instead of JWT Bearer token
+  # These MUST be fixed before or during BFF scaffold.
+  - id: p0b-fix-next-config-rewrites
+    content: |
+      - [ ] [AGENT] P0. AUDIT FIX: Rewrite next.config.mjs proxy rules. Current /api/* rewrites are wrong — backend services serve at /{service-name}/api/v1/*. Fix all rewrite rules to match actual backend route structure. Document the correct mapping from BFF paths to backend service paths.
+    status: todo
+    blocked_by: p0-verify-ui-build
+  - id: p0b-fix-auth-header
+    content: |
+      - [ ] [AGENT] P0. AUDIT FIX: Replace x-demo-persona header with JWT Bearer token. Current UI sends mock persona header for auth — this is a dev-only hack that will fail against real backends. Must use Authorization: Bearer <token> header. In mock mode (VITE_SKIP_AUTH=true), skip auth entirely rather than sending a fake persona header.
+    status: todo
+    blocked_by: p0-verify-ui-build
+
   # ── Phase 1: BFF Scaffold (SEQUENTIAL after Phase 0) ──
   - id: p1-bff-scaffold
     content: |
       - [ ] [AGENT] P0. Scaffold BFF layer in unified-trading-system-ui — Next.js API route directory (app/api/), server-side HTTP client with retry/timeout, auth token forwarding from session, error normalization (backend errors -> standard UI error shape).
     status: todo
-    blocked_by: p0-verify-ui-build
+    blocked_by: p0b-fix-auth-header
   - id: p1-service-registry
     content: |
       - [ ] [AGENT] P0. Create BFF service registry — map domain names to backend URLs using port registry from unified-trading-pm/scripts/dev/ui-api-mapping.json. Support env-based override (NEXT_PUBLIC_API_BASE_URL).
@@ -344,6 +360,14 @@ isProject: false
 This plan consolidates all UI-side work that was extracted from Plans A-D (backend-only) into a single UI integration
 plan. It depends on all four backend plans completing first, ensuring that backend APIs, registries, config
 infrastructure, and testing infrastructure are ready before UI integration begins.
+
+## Citadel Audit Findings (2026-03-21)
+
+- **UI->API path mismatch:** next.config.mjs rewrites /api/_ but backend routes are at /{service}/api/v1/_. All proxy
+  rules need rewriting. Added Phase 0B todo p0b-fix-next-config-rewrites.
+- **Wrong auth header:** UI sends x-demo-persona (mock persona) instead of JWT Bearer token. This is a dev-only hack.
+  Added Phase 0B todo p0b-fix-auth-header.
+- **Both must be fixed BEFORE BFF scaffold** — BFF depends on correct path routing and auth token forwarding.
 
 ## Source Mapping
 

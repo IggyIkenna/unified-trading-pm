@@ -148,6 +148,14 @@ Phase 3 (SEQUENTIAL):
 NOTE: UI type replacement (generate TS constants, delete hand-maintained TS, verify UI build) has been moved to Plan E
 (UI Backend Integration). This plan now covers backend-only work.
 
+## Citadel Audit Findings (2026-03-21)
+
+- **Registry generation: 0/9 new registries extracted.** Phase 1 is correctly NOT STARTED. The
+  generate_ui_reference_data.py script exists but only extracts 4/13 categories. 9 registries still need extraction.
+- **OpenAPI spec: 7 services missing, 66 empty schemas** (audit found 86, corrected to 66 after removing
+  intentionally-empty marker schemas). Phase 2 is correctly NOT STARTED.
+- **Phase 0 audits are DONE** — the audit tasks correctly identified the gaps. Phase 1+ execution is the remaining work.
+
 ## Pre-Audit Manifest (To Be Populated by Phase 0)
 
 Phase 0 tasks produce this manifest. Executing agents in Phases 1-4 consume it.

@@ -173,6 +173,27 @@
 - Services use URDI for reference data, not UMI -- UMI is for market data only.
 - Pre-signed URLs: API never handles file bytes directly -- all file transfer is client-to-cloud-storage.
 
+## CITADEL AUDIT FINDINGS (2026-03-21)
+
+This session needs to address the following honest status corrections:
+
+1. **S2S auth: 19/21 NOT applying to routes.** auth_s2s.py files were created in 19 services by a prior agent session,
+   but verify_service_token is NOT applied to actual FastAPI route registrations. The middleware exists as dead code in
+   all 19 services. Plan G Phase 1 p1-enroll-remaining-services has been reset to NOT DONE. Each service needs: (1)
+   import the auth dependency in main.py/app.py, (2) apply it to the FastAPI app or individual routers, (3) add
+   integration test that unauthenticated call returns 401.
+
+2. **auth-api is P2 DEV.** No OAuth implementation. No production guard (being fixed separately). No RBAC enforcement.
+   Plan G Phase 2 (API auth standardization) depends on auth-api being functional for token issuance and validation.
+   This is a blocking dependency that must be tracked.
+
+3. **Plan G Phase 0 (service access matrix) IS genuinely done.** service_access_matrix.yaml and
+   entitlement_registry.yaml were correctly created in UCfgI auth/. Do not re-do this work.
+
+4. **Plan I status is accurate.** The Phase 0-3 work that was marked done is genuinely done (document schemas,
+   pre-signed URL helpers, invoicing endpoints, compliance endpoints, DocuSign integration). No corrections needed for
+   Plan I.
+
 ## Success Criteria
 
 - [ ] All QGs pass on: unified-config-interface, unified-cloud-interface, client-reporting-api, instruments-service, all

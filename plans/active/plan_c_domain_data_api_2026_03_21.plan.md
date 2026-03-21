@@ -90,8 +90,8 @@ todos:
     blocked_by: p0-audit-mock-mode
   - id: p1-fix-api-mock-gaps
     content: |
-      - [x] [AGENT] P0. All 9 API repos have mock mode (mock_data.py + mock_state.py) and return sample data in CLOUD_MOCK_MODE=true. Verified: client-reporting-api, ml-training-api, ml-inference-api all have mock support.
-    status: done
+      - [ ] [AGENT] P0. AUDIT CORRECTION: 18/21 service mock providers are HOLLOW STUBS — mock_data.py files exist but return trivial/empty data or do not exercise real service logic. Must rework mock providers with realistic data shapes that match Pydantic response models, exercise actual service logic paths (not just return hardcoded dicts), and produce data sufficient for UI rendering. Previously marked done incorrectly.
+    status: todo
     blocked_by: p0-audit-mock-mode
   - id: p1-fix-health-gaps
     content: |
@@ -149,6 +149,11 @@ Backend API audit findings (2026-03-21):
 - **541 orphan domain models** in backend not exposed via API
 - Inconsistent error response shapes across APIs
 - Missing health/ready endpoints in some services
+
+**CITADEL AUDIT UPDATE (2026-03-21):** 18/21 service mock providers are hollow stubs — mock_data.py files were created
+but return trivial/empty data that does not exercise real service logic. The "all 9 API repos have mock mode" finding
+was premature; the files exist but the data quality is insufficient for UI rendering or realistic testing. Phase 1
+p1-fix-api-mock-gaps has been reset to NOT DONE.
 
 NOTE: All UI work (BFF scaffold, BFF routes, hook rewire, inline mock deletion, WebSocket server/client, MSW alignment,
 page migration waves) has been moved to Plan E (UI Backend Integration). This plan ensures the backend APIs are ready
