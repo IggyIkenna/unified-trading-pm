@@ -41,6 +41,10 @@ repo_gates:
     code: C0
     deployment: none
     business: none
+  - repo: deployment-service
+    code: C0
+    deployment: none
+    business: none
 
 depends_on:
   - plan-c-domain-data-api
@@ -155,18 +159,55 @@ todos:
     status: todo
     note: ""
 
-  # ── Phase 5: Final Validation ── SEQUENTIAL after all phases ────────────
-  - id: p5-qg-sweep
+  # ── Phase 5: Deployment Service Mock Scenarios ── PARALLEL with Phase 3 ─
+  - id: p5-deployment-seed-mock-data
     content: |
-      - [ ] [SCRIPT] P0. Run quality-gates.sh on all affected repos: unified-internal-contracts, unified-api-contracts, unified-trading-library, execution-service, system-integration-tests. All must pass.
+      - [ ] [AGENT] P0. Create deployment-service/scripts/seed_mock_data.py (missing — only service without one). Generate mock VM records, shard configs, deployment history. Accept --seed flag (default=42) for determinism. Consistent with all other seed_mock_data.py scripts.
     status: todo
     note: ""
-  - id: p5-mock-live-parity-test
+  - id: p5-mock-vm-lifecycle
+    content: |
+      - [ ] [AGENT] P0. Add mock VM lifecycle state machine (STAGING->RUNNING->TERMINATED, with configurable failure injection). States transition on timer or API trigger. Failure injection: configurable probability of STAGING->FAILED transition. Wire into MockStateStore for interactive mode persistence.
+    status: todo
+    note: ""
+  - id: p5-mock-shard-failure
+    content: |
+      - [ ] [AGENT] P0. Add mock shard failure scenarios (individual shard FAILED while others SUCCEEDED). Configurable: which shard index fails, failure reason (OOM, timeout, crash). Verify: deployment-ui shows mixed shard states correctly. Shard-level failure isolation rules apply (no raise inside per-shard loop).
+    status: todo
+    note: ""
+  - id: p5-mock-health-gate-timeout
+    content: |
+      - [ ] [AGENT] P1. Add mock health gate timeout scenarios (slow-start simulation). Configurable delay before health endpoint returns 200. Test: deployment orchestrator correctly waits up to timeout, then marks deployment as FAILED if health gate never passes. Verify alerting-service receives health-gate-timeout event.
+    status: todo
+    note: ""
+  - id: p5-mock-quota-exhaustion
+    content: |
+      - [ ] [AGENT] P1. Add mock quota exhaustion (quota broker returns denial). QuotaBrokerClient mock returns DENIED for configurable resource types (CPU, GPU, memory). Verify: deployment-service handles denial gracefully, queues deployment for retry, emits QUOTA_DENIED event.
+    status: todo
+    note: ""
+  - id: p5-mock-cross-region-failover
+    content: |
+      - [ ] [AGENT] P1. Add mock cross-region failover (primary fails, secondary activates). Simulate: primary region health check fails, failover triggers to secondary region, traffic reroutes. Verify: deployment state reflects region switch, no data loss during failover window.
+    status: todo
+    note: ""
+  - id: p5-mock-orphan-cleanup-retry
+    content: |
+      - [ ] [AGENT] P2. Add mock orphan cleanup retry scenarios. Simulate: orphan VMs detected by cleanup job, first cleanup attempt fails (transient error), retry succeeds. Verify: cleanup job retries with backoff, orphan is eventually terminated, audit log records all attempts.
+    status: todo
+    note: ""
+
+  # ── Phase 6: Final Validation ── SEQUENTIAL after all phases ────────────
+  - id: p6-qg-sweep
+    content: |
+      - [ ] [SCRIPT] P0. Run quality-gates.sh on all affected repos: unified-internal-contracts, unified-api-contracts, unified-trading-library, execution-service, system-integration-tests, deployment-service. All must pass.
+    status: todo
+    note: ""
+  - id: p6-mock-live-parity-test
     content: |
       - [ ] [AGENT] P0. Create mock-vs-live parity test in system-integration-tests. Run full pipeline (instruments -> market-data -> features -> strategy -> execution) in mock mode with seed=42. Record outputs. Run same pipeline against staging with real data. Compare: schema shapes must match, field types must match, value ranges must be plausible. Document any delta.
     status: todo
     note: ""
-  - id: p5-end-to-end-scenario-test
+  - id: p6-end-to-end-scenario-test
     content: |
       - [ ] [AGENT] P0. End-to-end scenario test: activate BUST scenario via API, verify all downstream effects: price drops in market-data, risk alerts in alerting-service, position liquidation warnings in execution-service, UI shows circuit breaker state. All within 30 seconds of scenario activation.
     status: todo
@@ -185,12 +226,12 @@ Phase 0 (Seed Hardening)
 Phase 1 (Scenario Infra)  ←── Phase 2 (Error Codes) [PARALLEL]
     |                           |
     |                      Phase 3 (Perf Gates) [PARALLEL with Phase 1]
-    |                           |
-    v                           v
-Phase 4 (Load Testing) ←───────┘
-    |
-    v
-Phase 5 (Final Validation)
+    |                           |                    |
+    v                           v                    v
+Phase 4 (Load Testing) ←───────┘    Phase 5 (Deployment Mocks) [PARALLEL with Phase 3]
+    |                                     |
+    v                                     v
+Phase 6 (Final Validation) ←─────────────┘
 ```
 
 NOTE: UI scenario panel (selector dropdown, status indicator, real-time switching, custom scenario builder) and external
@@ -205,7 +246,10 @@ backend-only testing infrastructure.
   ErrorAction, QG check enforces coverage
 - **Phase 3 exit:** PerformanceGate + MemoryGate in CI for 4 critical services, baselines recorded
 - **Phase 4 exit:** Load generator runs, instrument scaling tested to 10K, response baselines recorded
-- **Phase 5 exit:** All QG pass, mock-live parity verified, end-to-end scenario test passes
+- **Phase 5 exit:** deployment-service seed_mock_data.py works, VM lifecycle state machine operational, shard failure
+  scenarios work, health gate timeout / quota exhaustion / failover / orphan cleanup scenarios all functional
+- **Phase 6 exit:** All QG pass (including deployment-service), mock-live parity verified, end-to-end scenario test
+  passes
 
 ## Pre-Audit Manifest
 

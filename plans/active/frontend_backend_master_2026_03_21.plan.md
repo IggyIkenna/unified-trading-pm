@@ -32,12 +32,17 @@ todos:
       - [ ] [AGENT] P1. Complete Plan D: Testnet & Stress Testing (backend-only) — seed hardening, scenario infrastructure, error code stress tests, performance gates, load testing
     status: todo
     blocked_by: plan-c-domain-data-api
+  # ── Auth Plan (G) — PARALLEL with A-D ──
+  - id: master-plan-g
+    content: |
+      - [ ] [AGENT] P0. Complete Plan G: Auth & Entitlement Hardening — service access matrix, S2S auth enrollment (all 21 services), API auth standardization (9 API repos), backend entitlement enforcement (7 tiers server-side), org-level data filtering
+    status: todo
   # ── UI Plans (E-F) ──
   - id: master-plan-e
     content: |
       - [ ] [AGENT] P0. Complete Plan E: UI Backend Integration — BFF scaffold + routes, hook rewire, inline mock deletion, WebSocket server/client, config CRUD, scenario panel, testnet deployment, page migration waves
     status: todo
-    blocked_by: plan-d-testnet-stress-testing
+    blocked_by: plan-d-testnet-stress-testing, plan-g-auth-entitlement
   - id: master-plan-f
     content: |
       - [ ] [AGENT] P1. Complete Plan F: UI Quality Gate Hardening — CI/CD pipeline, quality-gates.sh, TypeScript strict mode, 4-mode startup, auth integration, OpenAPI type consumption, Playwright tests
@@ -117,8 +122,8 @@ Plan A (Registry & Schema Sync) ──┐
                                   │              │
                                   └──────────────┤
                                                  v
-                                            Plan E (UI Backend Integration)
-                                                 │
+Plan G (Auth & Entitlement) ────────────> Plan E (UI Backend Integration)
+       [PARALLEL with A-D]                       │
                                                  v
                                             Plan F (UI Quality Hardening)
 ```
@@ -134,7 +139,8 @@ Plan A must complete first because:
 - Error code hardening ensures Plan E's BFF layer has correct error handling
 
 Plans B and C are independent of each other and run in PARALLEL after Plan A. Plan D depends on Plan C (needs working
-APIs to stress test). Plan E depends on ALL backend plans (A+B+C+D). Plan F depends on Plan E.
+APIs to stress test). Plan G (Auth & Entitlement) runs in PARALLEL with Plans A-D (no dependencies). Plan E depends on
+ALL backend plans (A+B+C+D) AND Plan G (needs auth integration). Plan F depends on Plan E.
 
 ## Audit Findings Summary
 
@@ -193,3 +199,4 @@ APIs to stress test). Plan E depends on ALL backend plans (A+B+C+D). Plan F depe
 | D    | `plan_d_testnet_stress_testing_2026_03_21.plan.md` | `plan-d-testnet-stress-testing` | Backend-only |
 | E    | `plan_e_ui_backend_integration_2026_03_21.plan.md` | `plan-e-ui-backend-integration` | UI-only      |
 | F    | `plan_f_ui_quality_hardening_2026_03_21.plan.md`   | `plan-f-ui-quality-hardening`   | UI-only      |
+| G    | `plan_g_auth_entitlement_2026_03_21.plan.md`       | `plan-g-auth-entitlement`       | Backend-only |
