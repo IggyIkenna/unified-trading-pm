@@ -46,12 +46,12 @@ todos:
   # ── Phase 1: UI Quality Gates ──
   - id: a8-p1-ui-build
     content: |
-      - [ ] [AGENT] P0. Ensure `NEXT_PUBLIC_MOCK_API=false npx next build` succeeds (UI always calls API now, no MSW). Fix any TypeScript strict mode errors. Fix any import errors from removed MSW code. Fix any broken references to deleted routes.
+      - [x] [AGENT] P0. Ensure `NEXT_PUBLIC_MOCK_API=false npx next build` succeeds (UI always calls API now, no MSW). Fix any TypeScript strict mode errors. Fix any import errors from removed MSW code. Fix any broken references to deleted routes.
     status: todo
 
   - id: a8-p1-ui-vitest
     content: |
-      - [ ] [AGENT] P0. Ensure vitest passes: `CI=true npm test -- --run`. Fix any broken component tests that relied on MSW handlers. Component tests should use the API hooks with mocked fetch (via vitest's mock capabilities) not MSW.
+      - [x] [AGENT] P0. Ensure vitest passes: `CI=true npm test -- --run`. Fix any broken component tests that relied on MSW handlers. Component tests should use the API hooks with mocked fetch (via vitest's mock capabilities) not MSW.
     status: todo
 
   # ── DEPENDENCY GATE: Phase 2 requires Agents 1, 5, 6 ──────────────────────
