@@ -89,13 +89,14 @@ todos:
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Reports > P&L → verify attribution table renders. 2) Navigate to Reports > Settlement → verify settlements table renders. 3) Navigate to Manage > Clients → verify client list renders. 4) Navigate to Manage > Users → verify user list renders. 5) Click "Onboard Client" → verify workflow opens.
     status: todo
   # ── Phase 7: PDF/CSV Export & Error States (Gap-Closing) ──
-  - id: a4-p7-csv-export
+  - id: a4-p7-export
     content: |
-      - [ ] [AGENT] P0. Add "Export CSV" button to ALL data tables in Reports and Manage:
-        1. P&L Attribution table, Settlement table, Reconciliation table, Regulatory table
+      - [ ] [AGENT] P0. Add split "Export" button (CSV + Excel) to ALL data tables in Reports and Manage:
+        1. P&L Attribution, Settlement, Reconciliation, Regulatory tables
         2. Client list, User list, Mandate list, Fee schedule list
-        3. Use the shared `exportTableToCsv(data, columns, filename)` utility from `lib/utils/csv-export.ts` (created by Agent 2)
-        4. Button placement: top-right of each table, consistent with other services
+        3. Use `exportTableToCsv()` and `exportTableToXlsx()` from `lib/utils/export.ts` (created by Agent 2)
+        4. Reports Excel: multi-sheet workbook — P&L on sheet 1, positions on sheet 2, orders on sheet 3
+        DEPENDENCY: Agent 2 must create `lib/utils/export.ts` first (a2-p7-export-tables).
     status: todo
   - id: a4-p7-pdf-generation
     content: |
@@ -115,6 +116,30 @@ todos:
         3. Client list empty: `<EmptyState title="No clients" description="Onboard your first client" action={{ label: "Onboard Client", onClick: openOnboardingModal }} />`
         4. User list empty: `<EmptyState title="No users" description="Add your first team member" action={{ label: "Add User", onClick: openAddUserModal }} />`
         5. Report generation error: toast with "Report generation failed — please try again"
+    status: todo
+  # ── Phase 8: Print CSS, DataTable, Scheduled Reports (Gap-Closing) ──
+  - id: a4-p8-print-css
+    content: |
+      - [ ] [AGENT] P0. Add print-optimized styles for Reports service pages:
+        1. Add `@media print` block in `globals.css`: hide nav, debug footer, filters, buttons. Full-width tables with borders. Page breaks between sections (`break-before: page`). Company logo header + timestamp footer.
+        2. Add "Print Report" button on P&L Attribution and Executive tabs (next to "Generate PDF"). Calls `window.print()`.
+        3. Charts rendered at print resolution (set chart container to fixed width in print media).
+        DEPENDENCY: None — can start immediately.
+    status: todo
+  - id: a4-p8-adopt-datatable
+    content: |
+      - [ ] [AGENT] P0. Replace shadcn `<Table>` with `DataTable` from `components/ui/data-table.tsx` (Agent 1) for ALL reports and manage tables: P&L, settlements, clients, users, mandates, fees, compliance.
+        DEPENDENCY: Agent 1 must create DataTable (a1-p6-tanstack-table).
+    status: todo
+  - id: a4-p8-scheduled-reports
+    content: |
+      - [ ] [AGENT] P1. Add scheduled report configuration UI (mock-only, demonstrates the capability):
+        1. "Schedule Report" button on P&L and Executive tabs → opens modal
+        2. Fields: frequency (daily/weekly/monthly), recipients (email), report type, format (PDF/Excel)
+        3. On submit: creates record in MockStateStore "scheduled_reports" — shows in a "Scheduled" sub-section
+        4. In mock mode, does NOT actually send emails — just persists the configuration
+        5. This demonstrates institutional workflow capability for client demos
+        DEPENDENCY: Agent 5 must add POST /reporting/schedules endpoint.
     status: todo
 isProject: false
 ---

@@ -298,12 +298,67 @@ todos:
         3. Verify skeleton placeholder is visible for at least 200ms before data appears
         4. This validates that the skeleton loading components actually work visually
     status: todo
-  - id: a8-p6-csv-pdf-tests
+  - id: a8-p6-export-tests
     content: |
       - [ ] [AGENT] P1. Playwright tests for export functionality:
-        1. Navigate to Positions table → click "Export CSV" → verify download triggers (check download event)
-        2. Navigate to Reports > P&L → click "Generate Report" → verify modal opens → submit → verify download toast
-        3. Navigate to Orders table → click "Export CSV" → verify CSV file has correct headers
+        1. Navigate to Positions table → click "Export" → select "CSV" → verify download triggers
+        2. Navigate to Positions table → click "Export" → select "Excel" → verify .xlsx download triggers
+        3. Navigate to Reports > P&L → click "Generate Report" → verify modal → submit → verify download toast
+        4. Navigate to Reports > P&L → click "Print Report" → verify print dialog opens (or print-friendly layout renders)
+    status: todo
+  # ── Phase 7: Full Registry Coverage Tests & Sync Pipeline (Gap-Closing) ──
+  - id: a8-p7-sync-pipeline-run
+    content: |
+      - [ ] [AGENT] P0. Run the FULL SSOT sync pipeline AFTER Agents 5-6 complete. This is the critical integration step:
+        1. Run `python unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` — sync UAC registries to UI
+        2. Verify output has ALL instruments from representative_sample.py (~40 specs)
+        3. Start unified-trading-api, fetch OpenAPI spec, generate TypeScript types:
+           `curl http://localhost:8030/openapi.json > ../unified-trading-system-ui/lib/registry/openapi.json`
+           `cd ../unified-trading-system-ui && npm run generate:types`
+        4. Run `python unified-trading-pm/scripts/validation/validate-strategy-manifest.py` — verify 50+ strategies
+        5. Run `python unified-trading-pm/scripts/manifest/check-strategy-instruments.py` — verify instrument refs
+        6. Run `python unified-trading-pm/scripts/checkers/check_ui_api_flow_coverage.py` — verify UI→API coverage
+        7. Run `python unified-trading-pm/scripts/validation/check-import-patterns.py` — verify no import violations
+        8. If ANY pipeline fails, FIX the source and re-run. Do NOT proceed to E2E tests with stale data.
+        DEPENDENCY: Agents 5 and 6 must be substantially complete.
+    status: todo
+  - id: a8-p7-indicator-tests
+    content: |
+      - [ ] [AGENT] P1. Playwright test: Technical indicators on Trading Terminal:
+        1. Navigate to Trading Terminal → verify candlestick chart renders
+        2. Click "SMA" indicator toggle → verify SMA overlay line appears on chart
+        3. Click "BB" (Bollinger Bands) → verify upper/lower bands appear
+        4. Click "SMA" again → verify SMA overlay disappears (toggle off)
+        DEPENDENCY: Agent 2 must implement indicators (a2-p7-technical-indicators).
+    status: todo
+  - id: a8-p7-full-instrument-tests
+    content: |
+      - [ ] [AGENT] P0. Playwright test: Full instrument coverage:
+        1. Navigate to Trading Terminal → open instrument selector dropdown
+        2. Verify instruments are grouped by category (CeFi Spot, CeFi Perps, TradFi, DeFi)
+        3. Verify at least 30 instruments are listed (from ui-reference-data.json)
+        4. Select a TradFi instrument (e.g., AAPL) → verify chart loads with candle data
+        5. Select a DeFi instrument (e.g., WETH-USDC) → verify chart loads
+        DEPENDENCY: Agents 5-6 must seed data for all instruments. Agent 2 must wire instrument selector.
+    status: todo
+  - id: a8-p7-strategy-scale-tests
+    content: |
+      - [ ] [AGENT] P0. Playwright test: 50+ strategy scale:
+        1. Navigate to Dashboard → verify strategy performance table shows 50+ rows
+        2. Verify table is virtualized (no lag with 50+ rows — TanStack Table handles this)
+        3. Navigate to Research > Strategies → verify 50+ strategies listed
+        4. Filter by asset class "DeFi" → verify only DeFi strategies shown
+        5. Navigate to Promote > Candidates → verify candidates from multiple asset classes
+        DEPENDENCY: Agent 6 must expand strategies to 50+. Agent 1 must create DataTable.
+    status: todo
+  - id: a8-p7-guided-tour-test
+    content: |
+      - [ ] [AGENT] P1. Playwright test: Guided tour:
+        1. Clear localStorage → login as admin (simulates first login)
+        2. Verify tour overlay appears highlighting first step (Global scope filters)
+        3. Click "Next" → verify tour advances to lifecycle navigation
+        4. Click "Skip" → verify tour closes and doesn't reappear on page reload
+        DEPENDENCY: Agent 1 must implement guided tour (a1-p6-guided-tour).
     status: todo
 isProject: false
 ---

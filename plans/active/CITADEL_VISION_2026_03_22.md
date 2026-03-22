@@ -243,57 +243,124 @@ def get_order_service(request: Request) -> OrderService:
 
 ---
 
-## SSOT Codegen Pipeline (CRITICAL — run after any schema/registry change)
+## SSOT Sync Infrastructure (CRITICAL — Central to Everything)
 
-### Pipeline 1: UAC → UI Reference Data
+The system has a comprehensive sync pipeline in `unified-trading-pm/scripts/`. These scripts are the backbone of the
+multi-repo architecture — they keep registries, schemas, configs, and types aligned across 65+ repos. **Every agent MUST
+understand and use this pipeline.**
+
+### Master Alignment Pipeline (Run FIRST, before any work)
 
 ```bash
-# 1. Generate reference data from UAC registries (14 registries)
-cd unified-api-contracts
-.venv/bin/python scripts/generate_ui_reference_data.py --output ../unified-trading-system-ui/lib/registry/ui-reference-data.json
-
-# 2. UI auto-imports via lib/registry/generated.ts (typed re-exports)
-# No manual step needed — generated.ts reads the JSON at build time
+# Full 9-stage alignment check + auto-fix
+cd /Users/ikennaigboaka/Code/unified-trading-system-repos
+bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix
 ```
 
-**When to run:** After ANY change to UAC registries (venues, instruments, enums, config schemas, error codes) **SSOT
-chain:** UAC registry Python → ui-reference-data.json → generated.ts → UI components
+This runs: tracked-ignored audit → broken symlinks → import pattern check → npm drift → uv.lock drift → dep caps →
+self-version parity → remote version drift → derive manifests → check alignment → validate uv sources → constraints
+resolution.
+
+### Pipeline 1: UAC → UI Reference Data (128 venues, all registries)
+
+```bash
+# Generates ui-reference-data.json (2,297 lines) from UAC registries
+# Includes: 128 venues, capability declarations, enums, config schemas, rate limits, instrument specs
+cd unified-api-contracts
+.venv/bin/python scripts/generate_ui_reference_data.py --output ../unified-trading-system-ui/context/api-contracts/openapi/ui-reference-data.json
+```
+
+**SSOT scripts (all in `unified-trading-pm/scripts/openapi/`):**
+- `generate_ui_reference_data.py` (371 lines) — UAC/UIC enums, registries, config schemas → JSON for UI
+- `generate_config_registry.py` (247 lines) — extracts all Pydantic config classes from 25+ repos
+- `generate_system_topology.py` (256 lines) — aggregates all PM manifests into single topology
+- `generate_unified_spec.py` (508 lines) — merges OpenAPI specs from all 16 FastAPI services
+
+**When to run:** After ANY change to UAC registries, UIC schemas, or service configs.
+**Automated:** GHA `uac-registry-sync.yml` triggers on UAC commits → regenerates → opens PR in UI repo.
 
 ### Pipeline 2: API → UI TypeScript Types
 
 ```bash
-# 1. Start unified-trading-api to get current OpenAPI spec
 cd unified-trading-api && CLOUD_MOCK_MODE=true .venv/bin/python -m unified_trading_api.main &
 sleep 3
-
-# 2. Fetch OpenAPI spec
 curl http://localhost:8030/openapi.json > ../unified-trading-system-ui/lib/registry/openapi.json
-
-# 3. Generate TypeScript types from OpenAPI
-cd ../unified-trading-system-ui
-npm run generate:types
-# Runs: openapi-typescript lib/registry/openapi.json -o lib/types/api-generated.ts
-
-# 4. Kill API server
+cd ../unified-trading-system-ui && npm run generate:types
 kill %1
 ```
 
-**When to run:** After ANY change to unified-trading-api route signatures, request/response models **SSOT chain:**
-FastAPI routes → OpenAPI spec → openapi-typescript → api-generated.ts → UI hooks
+**Automated:** GHA `uic-openapi-sync.yml` triggers on UIC commits → regenerates TypeScript types → opens PR.
 
 ### Pipeline 3: Persona/Org Alignment
 
-**SSOT:** unified-trading-api/mock_data/personas.py (to be created by Agent 6)
+**SSOT:** `unified-trading-api/mock_data/personas.py` (121 lines, already exists)
 
-- auth-api mock_data.py must use same org IDs and entitlement keys
-- UI hooks/use-auth.ts persona definitions must match
-- Run seed data tests to verify alignment
+- auth-api `mock_data.py` must use same org IDs and entitlement keys
+- UI `hooks/use-auth.ts` persona definitions must match
+- `scripts/verify_persona_alignment.py` validates all three match
+
+### Pipeline 4: Strategy Manifest Alignment
+
+**SSOT:** `unified-trading-pm/strategy-manifest.json`
+
+```bash
+# Validate strategy manifest completeness and references
+python unified-trading-pm/scripts/validation/validate-strategy-manifest.py
+
+# Check strategy-instrument capability matrix
+python unified-trading-pm/scripts/manifest/check-strategy-instruments.py
+```
+
+### Pipeline 5: Dependency Alignment
+
+```bash
+# Generate derived manifest from all pyproject.toml files
+python unified-trading-pm/scripts/manifest/generate-derived-manifest.py
+
+# Check alignment: manifest vs code imports vs constraints
+python unified-trading-pm/scripts/manifest/check-dependency-alignment.py
+
+# Auto-fix internal dependency misalignment
+python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply
+
+# Auto-fix external dependency versions to match canonical
+python unified-trading-pm/scripts/manifest/fix_external_dependency_alignment.py --apply
+```
+
+### Pipeline 6: Architecture Validation
+
+```bash
+# Check Citadel import rules (UAC facade-only, no cross-service imports)
+python unified-trading-pm/scripts/validation/check-import-patterns.py
+
+# Find all coding violations (try/except imports, os.getenv, type:ignore)
+python unified-trading-pm/scripts/validation/find-coding-violations.py
+
+# Check schema provenance (schemas in correct SSOT, not re-defined)
+python unified-trading-pm/scripts/validation/check_schema_provenance.py
+
+# Check UI→API flow coverage
+python unified-trading-pm/scripts/checkers/check_ui_api_flow_coverage.py
+```
+
+### Key Manifest Files (Data-Driven SSOTs)
+
+| File | Location | Purpose |
+| ---- | -------- | ------- |
+| `workspace-manifest.json` | PM root | All 65+ repos: versions, tiers, deps, CI status |
+| `workspace-constraints.toml` | PM root | External dep version SSOT |
+| `strategy-manifest.json` | PM root | All strategies: IDs, venues, maturity, capabilities |
+| `data-flow-manifest.json` | PM root | Data pipeline: instruments→tick-data→features→strategy |
+| `ui-api-mapping.json` | PM scripts/dev/ | Service→port mapping for local dev |
+| `ui-reference-data.json` | UAC openapi/ | Generated: 128 venues, enums, registries for UI |
 
 ### Current Drift Status (2026-03-22)
 
 - ui-reference-data.json is OUT OF SYNC with UAC (generator output changed)
 - OpenAPI spec in UI may not match current API routes
-- These MUST be re-synced before agents start UI→API integration work
+- strategy-manifest.json has 18 strategies — needs expansion to 50+
+- **These MUST be re-synced before agents start UI→API integration work**
+- Agent 8 is responsible for running ALL sync pipelines after Agents 5-6 finish
 
 ---
 
@@ -748,6 +815,202 @@ const mockMode = process.env.NEXT_PUBLIC_MOCK_API === "true";
 const { hasEntitlement } = useAuth();
 if (!hasEntitlement("execution")) return <UpgradeCard service="Execution" />;
 ```
+
+---
+
+## Full Instrument Coverage (MANDATORY — Use the Entire Registry)
+
+The system has **128 venues** in UAC and **~40 representative instruments** in
+`unified-api-contracts/registry/representative_sample.py`. The mock generators and seed data MUST cover ALL instruments
+the registry provides — not an arbitrary subset of 10.
+
+### SSOT Chain
+
+1. **UAC `representative_sample.py`** — Layer 1 deterministic instrument specs (CeFi spot, CeFi perps, TradFi, DeFi
+   pools, sports leagues). This is the SSOT for what instruments exist.
+2. **`generate_ui_reference_data.py`** — syncs UAC registries (venues, instruments, enums, capabilities) to
+   `ui-reference-data.json` (2,297 lines, already generated).
+3. **`seed.py`** — reads representative_sample.py to seed mock data for ALL instruments (candles, tickers, positions).
+4. **UI** — reads `ui-reference-data.json` for dropdowns, selectors, and validation.
+
+### What This Means for Each Agent
+
+- **Agent 5/6**: Seed candles, tickers, and order books for ALL instruments in representative_sample.py — not a hardcoded
+  list of 10. Use the registry programmatically: `from unified_api_contracts.registry.representative_sample import ...`
+- **Agent 2**: Instrument selector on Trading Terminal must list ALL instruments from ui-reference-data.json.
+- **Agent 8**: After Agents 5-6 finish, re-run `generate_ui_reference_data.py` to sync any registry changes to the UI.
+
+---
+
+## 50+ Strategy Expansion (MANDATORY — Combinatorial Coverage)
+
+Currently 18 strategies are seeded. The codex documents **10 archetypes × 5 asset classes × 4 execution modes**. We MUST
+expand to **50+ strategies** using representative combinations:
+
+### Expansion Approach (Config-Driven, Not Code-Path-Driven)
+
+The system is designed so that strategies are **config, not code**. Same strategy engine handles all combinations. The
+expansion is purely a seed data + registry update — no new code paths needed.
+
+**Target 50+ by combining:**
+
+| Archetype          | CeFi | TradFi | DeFi | Sports | Prediction | Total |
+| ------------------ | ---- | ------ | ---- | ------ | ---------- | ----- |
+| Market Making      | 3    | 2      | 2    | 2      | 1          | 10    |
+| ML Directional     | 3    | 2      | 1    | 2      | 1          | 9     |
+| Momentum           | 2    | 2      | 1    | —      | —          | 5     |
+| Mean Reversion     | 2    | 1      | 1    | —      | —          | 4     |
+| Basis Trade        | 2    | —      | 2    | —      | —          | 4     |
+| Statistical Arb    | 2    | 2      | —    | —      | —          | 4     |
+| Yield              | —    | —      | 3    | —      | —          | 3     |
+| Arbitrage          | 1    | —      | 1    | 2      | 1          | 5     |
+| Options            | 1    | 2      | —    | —      | —          | 3     |
+| Value Betting      | —    | —      | —    | 3      | —          | 3     |
+| **Total**          | **16** | **11** | **11** | **9** | **3**   | **50** |
+
+### What This Means for Each Agent
+
+- **Agent 6**: Expand `seed.py` strategies from 18 to 50+ using this matrix. Each strategy gets: name (following
+  `{CATEGORY}_{INSTRUMENT}_{ARCHETYPE}_{MODE}_{TIMEFRAME}` convention), org_id, PnL time-series, positions, orders.
+- **Agent 6**: Update `strategy-registry.ts` to include all 50+ strategies with proper archetype/category metadata.
+- **Agent 5**: No API changes needed — strategies are data, not endpoints.
+- **Agent 3**: Strategy comparison and backtest pages should handle 50+ strategies (virtualized tables if needed).
+
+### SSOT Alignment Required
+
+- `unified-trading-codex/09-strategy/` documents all archetypes — verify registry covers all documented types.
+- `unified-api-contracts` strategy type enums must include all archetypes.
+- `unified-internal-contracts` strategy schemas must support all execution modes.
+- `strategy-registry.ts` (1,863 lines) must be updated to include all 50+ strategies.
+
+---
+
+## Technical Indicators on Candlestick Charts (lightweight-charts)
+
+**lightweight-charts v5.1.0** (by TradingView) is already installed. It natively supports overlay series for technical
+indicators. Do NOT rebuild indicator math from scratch — use existing open-source finance libraries.
+
+### Implementation
+
+- **Library**: Use `lightweight-charts` built-in `addLineSeries()` for overlay indicators on the candlestick chart.
+- **Indicator computation**: Use a lightweight client-side library (e.g., `technicalindicators` npm package, or compute
+  from OHLCV data directly — SMA/EMA are trivial).
+- **Required indicators** (toggleable via toolbar above chart):
+  - SMA (Simple Moving Average) — 20, 50, 200 period
+  - EMA (Exponential Moving Average) — 12, 26
+  - Bollinger Bands — 20 period, 2 std dev
+  - Volume bars (already implemented via histogram series)
+- **Nice-to-have** (Phase 2):
+  - RSI (separate pane below chart)
+  - MACD (separate pane below chart)
+- **Indicator toolbar**: Row of toggle buttons above chart: `[SMA] [EMA] [BB] [RSI] [MACD] [Vol]`
+- **DEPENDENCY**: Agent 2 implements. Requires Agent 6's OHLCV candle data (200+ candles per instrument).
+
+---
+
+## TanStack Table for Institutional Blotters (MANDATORY)
+
+The current shadcn `<Table>` is semantic HTML only — no column reordering, no virtualization, no persistence. Every data
+table in the platform MUST use TanStack Table for institutional-grade blotter UX.
+
+### Requirements
+
+- **Install**: `npm install @tanstack/react-table @tanstack/react-virtual`
+- **Create**: `components/ui/data-table.tsx` — reusable wrapper around TanStack Table with:
+  - Column sorting (click header to sort)
+  - Column visibility toggle (hide/show columns via dropdown)
+  - Column resizing (drag column borders)
+  - Row virtualization for 1000+ rows (via @tanstack/react-virtual)
+  - Persistent column preferences (save to Zustand `ui-prefs-store.ts` → localStorage)
+- **Apply to**: ALL data tables across all services (positions, orders, fills, alerts, settlements, users, experiments,
+  backtests, audit trail, deployment history)
+- **DEPENDENCY**: Agent 1 creates the `data-table.tsx` component (Phase 5). Agents 2-4, 7 adopt it for their tables.
+
+---
+
+## Workspace Layout Persistence
+
+Zustand `ui-prefs-store.ts` already exists with sidebar collapse and theme preferences. Extend it for workspace
+persistence:
+
+### Requirements
+
+- **Filter persistence**: Global scope filters (org, client, strategy, mode) persist to localStorage via Zustand
+  `persist` middleware. When user reloads, filters are restored.
+- **Column preferences**: Per-table column visibility and order saved to localStorage (via TanStack Table + Zustand).
+- **Panel sizes**: `react-resizable-panels` (already installed) sizes persist to localStorage.
+- **DEPENDENCY**: Agent 1 extends `ui-prefs-store.ts` (Phase 5). Other agents wire their components to it.
+
+---
+
+## Guided Tour / Onboarding Walkthrough
+
+First-time users (especially demo clients) need a guided tour highlighting key features.
+
+### Requirements
+
+- **Install**: `npm install react-joyride` (or equivalent)
+- **Create**: `components/platform/guided-tour.tsx` — wraps react-joyride with platform-specific steps.
+- **Tour steps** (triggered on first login or via "Take Tour" button in debug footer):
+  1. Global scope filters — "Filter all data by organization and strategy"
+  2. Lifecycle navigation — "Navigate the full trading lifecycle: Acquire → Build → Run → Execute → Observe"
+  3. Trading Terminal — "Real-time prices, order entry, and position management"
+  4. Command Palette — "Press Cmd+K to search anything"
+  5. Batch/Live toggle — "Switch between real-time and reconciled historical data"
+  6. Reset Demo — "Reset all data to initial state"
+- **Persistence**: Tour completion saved to localStorage. Don't show again unless "Take Tour" clicked.
+- **DEPENDENCY**: Agent 1 creates (Phase 5, after navigation is finalized). No upstream blockers.
+
+---
+
+## Desktop Notifications & Sound Alerts
+
+### Requirements
+
+- **Browser Notification API**: Request permission on first login. For critical/high severity alerts, push a desktop
+  notification (even when tab is not focused).
+- **Sound**: Subtle audio ping for critical alerts (use Web Audio API or a small .mp3). Configurable in ui-prefs-store.
+- **Toast notifications** (Sonner — already installed): Wire for ALL mutation responses:
+  - Order placed → success toast
+  - Alert acknowledged → success toast
+  - Report generated → "Download Ready" toast with link
+  - Reset Demo → "Demo reset to initial state" toast
+  - Any API error → error toast with message
+- **DEPENDENCY**: Agent 1 wires Sonner toasts + notification permission (Phase 5). Agent 2 wires for trading mutations.
+  Agent 5 must have alert endpoints working.
+
+---
+
+## Excel Export (XLSX)
+
+CSV is insufficient for institutional clients. Every data table MUST support Excel export.
+
+### Requirements
+
+- **Install**: `npm install xlsx` (SheetJS — MIT licensed, client-side)
+- **Create**: `lib/utils/export.ts` with `exportTableToXlsx(data, columns, filename)` alongside existing
+  `exportTableToCsv()`.
+- **Every "Export CSV" button** becomes a split button: `[Export ▾]` → dropdown with "CSV" and "Excel" options.
+- **Excel formatting**: Headers bold, number columns right-aligned, date columns formatted, sheet name = table title.
+- **Reports Excel**: Multi-sheet workbook — P&L Attribution on sheet 1, positions on sheet 2, orders on sheet 3.
+- **DEPENDENCY**: Agent 2 creates `export.ts` utility (Phase 7). All agents use it for their tables.
+
+---
+
+## Print-Optimized Reports
+
+Reports service pages MUST be printable for client distribution.
+
+### Requirements
+
+- **Print CSS**: Add `@media print` styles in `globals.css`:
+  - Hide navigation, debug footer, filters, buttons
+  - Full-width tables with borders
+  - Page breaks between sections (`break-before: page`)
+  - Company logo header + timestamp footer on each page
+  - Charts rendered at print resolution
+- **"Print Report" button**: On P&L Attribution and Executive tabs, next to "Generate PDF". Calls `window.print()`.
+- **DEPENDENCY**: Agent 4 implements (Phase 7). No upstream blockers.
 
 ---
 

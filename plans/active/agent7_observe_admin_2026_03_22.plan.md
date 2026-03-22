@@ -105,9 +105,10 @@ todos:
         5. DevOps: if no recent deployments, show `<EmptyState title="No recent deployments" description="Trigger a deployment to see history" />`
         6. Every table in admin/ops pages: handle empty state explicitly
     status: todo
-  - id: a7-p8-csv-export
+  - id: a7-p8-export
     content: |
-      - [ ] [AGENT] P1. Add "Export CSV" button to: Alert history table, Audit trail table, Service health table, Deployment history table. Use shared `exportTableToCsv()` utility from `lib/utils/csv-export.ts`.
+      - [ ] [AGENT] P1. Add split "Export" button (CSV + Excel) to: Alert history, Audit trail, Service health, Deployment history tables. Use `exportTableToCsv()` and `exportTableToXlsx()` from `lib/utils/export.ts` (created by Agent 2).
+        DEPENDENCY: Agent 2 must create `lib/utils/export.ts` first (a2-p7-export-tables).
     status: todo
   - id: a7-p8-dynamic-imports
     content: |
@@ -116,6 +117,11 @@ todos:
         2. Dependency DAG visualization (from live-health-monitor-ui)
         3. Cloud Build log viewer (from deployment-ui)
         These are large, complex components that should not bloat the initial bundle.
+    status: todo
+  - id: a7-p8-adopt-datatable
+    content: |
+      - [ ] [AGENT] P0. Replace shadcn `<Table>` with `DataTable` from `components/ui/data-table.tsx` (Agent 1) for ALL observe/admin tables: Alerts, Service health grid, Audit trail, Deployment history, Batch jobs.
+        DEPENDENCY: Agent 1 must create DataTable (a1-p6-tanstack-table).
     status: todo
 isProject: false
 ---

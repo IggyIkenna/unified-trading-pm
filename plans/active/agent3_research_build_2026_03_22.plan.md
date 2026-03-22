@@ -94,13 +94,19 @@ todos:
         4. Promote Review Queue: `if (candidates.length === 0) return <EmptyState title="No candidates" description="All strategies have been reviewed" />`
         5. Every chart: if data is empty, show chart-skeleton with "No data available" overlay
     status: todo
-  - id: a3-p7-csv-export
+  - id: a3-p7-export
     content: |
-      - [ ] [AGENT] P1. Add "Export CSV" button to: ML Experiments table, Backtest Results table, Feature list table. Use the shared `exportTableToCsv()` utility from `lib/utils/csv-export.ts` (created by Agent 2). Button placement: top-right of each table, next to any existing filter controls.
+      - [ ] [AGENT] P1. Add split "Export" button (CSV + Excel) to: ML Experiments, Backtest Results, Feature list tables. Use `exportTableToCsv()` and `exportTableToXlsx()` from `lib/utils/export.ts` (created by Agent 2). Button: `[Export ▾]` → "CSV" / "Excel".
+        DEPENDENCY: Agent 2 must create `lib/utils/export.ts` first (a2-p7-export-tables).
     status: todo
   - id: a3-p7-dynamic-imports
     content: |
       - [ ] [AGENT] P1. Use Next.js `dynamic(() => import(...), { ssr: false })` for heavy chart components in research pages: equity curve charts, training loss curves, parameter sweep heatmaps, feature correlation matrices. These use browser-only APIs and should not be server-rendered.
+    status: todo
+  - id: a3-p7-adopt-datatable
+    content: |
+      - [ ] [AGENT] P0. Replace shadcn `<Table>` with `DataTable` from `components/ui/data-table.tsx` (Agent 1) for ALL research tables: ML Experiments, Backtest Results, Feature list, Strategy Candidates. Tables must handle 50+ strategies from expanded seed data.
+        DEPENDENCY: Agent 1 must create DataTable (a1-p6-tanstack-table).
     status: todo
 isProject: false
 ---

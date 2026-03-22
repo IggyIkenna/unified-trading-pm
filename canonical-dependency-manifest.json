@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-03-16T22:50:07.697828+00:00",
+  "generatedAt": "2026-03-22T10:18:38.274810+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -38,7 +38,7 @@
     },
     {
       "name": "asyncpg",
-      "versionRange": "asyncpg>=0.31.0,<0.32.0"
+      "versionRange": "asyncpg>=0.31.0,<1.0.0"
     },
     {
       "name": "bandit",
@@ -106,7 +106,7 @@
     },
     {
       "name": "fastapi",
-      "versionRange": "fastapi>=0.110.0,<1.0.0"
+      "versionRange": "fastapi>=0.115.0,<1.0.0"
     },
     {
       "name": "fastparquet",
@@ -358,7 +358,7 @@
     },
     {
       "name": "scipy",
-      "versionRange": "scipy>=1.14.0,<2.0.0"
+      "versionRange": "scipy>=1.15.0,<2.0.0"
     },
     {
       "name": "shellcheck_py",

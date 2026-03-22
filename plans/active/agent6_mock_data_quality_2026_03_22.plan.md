@@ -199,6 +199,53 @@ todos:
         2. Mix of: market moves ("BTC breaks $70K resistance"), regulatory ("SEC approves spot ETH ETF"), macro ("Fed signals rate pause"), crypto-specific ("Uniswap V4 launch")
         3. Store in MockStateStore "news" collection. API serves via GET /market-data/news.
     status: todo
+  # ── Phase 7: Full Registry Coverage & 50+ Strategy Expansion (Gap-Closing) ──
+  - id: a6-p7-full-instrument-seed
+    content: |
+      - [ ] [AGENT] P0. Expand seed data to cover ALL instruments from UAC representative_sample.py — not a hardcoded 10:
+        1. Import `from unified_api_contracts.registry.representative_sample import ...` to get the full instrument list (~40 specs: CeFi spot, CeFi perps, TradFi, DeFi pools, sports leagues)
+        2. Seed OHLCV candles for ALL instruments: 4 intervals × 200 candles each. Use Brownian motion generator (~50 lines, not hardcoded). Total: ~32,000 candle records.
+        3. Seed tickers_live and tickers_batch for ALL instruments with realistic prices
+        4. Seed order books (generated on-the-fly by Agent 5, not pre-seeded — but tickers must exist)
+        5. The Brownian motion generator must accept a base price per instrument — use realistic prices from the registry
+        6. Group instruments by category for the candle generation: crypto uses 24/7 timestamps, tradfi uses market hours, sports uses match schedules
+        DEPENDENCY: UAC representative_sample.py is the SSOT. No upstream changes needed.
+    status: todo
+  - id: a6-p7-strategy-expansion
+    content: |
+      - [ ] [AGENT] P0. Expand strategies from 18 to 50+ using the combinatorial matrix from CITADEL_VISION:
+        1. Read `unified-trading-codex/09-strategy/` for all documented archetypes (10 types across 5 asset classes)
+        2. Generate 50+ strategies following the naming convention: `{CATEGORY}_{INSTRUMENT}_{ARCHETYPE}_{MODE}_{TIMEFRAME}`
+        3. Distribution: CeFi 16, TradFi 11, DeFi 11, Sports 9, Prediction 3 (as per CITADEL_VISION matrix)
+        4. Each strategy gets: org_id (distributed across 4 orgs), PnL time-series (180 daily points), 2-5 positions, 3-8 orders, realistic metrics (sharpe, drawdown, etc.)
+        5. Strategy types that map to config, not code: market making for all asset classes, ML directional for all, momentum/mean reversion for CeFi/TradFi, value betting for sports, arbitrage across all
+        6. Update `strategy-registry.ts` (1,863 lines) in the UI to include all 50+ strategies with proper archetype/category metadata
+        7. Ensure all strategy archetypes documented in codex 09-strategy/ are represented
+        DEPENDENCY: None — seed generation is procedural. But strategy-registry.ts update requires understanding the UI's type system.
+    status: todo
+  - id: a6-p7-run-sync-pipeline
+    content: |
+      - [ ] [AGENT] P0. Run the full SSOT sync pipeline AFTER completing all seed data expansion:
+        1. Run `python unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` to sync UAC registries → ui-reference-data.json
+        2. Verify ui-reference-data.json includes ALL instruments from representative_sample.py
+        3. Verify strategy-manifest.json in PM is updated with the 50+ strategies
+        4. Run `python unified-trading-pm/scripts/validation/validate-strategy-manifest.py` to validate
+        5. Run `python unified-trading-pm/scripts/manifest/check-strategy-instruments.py` to verify instrument refs
+        6. Document which sync scripts were run and their output in a commit message
+        DEPENDENCY: All seed data expansion (a6-p7-full-instrument-seed, a6-p7-strategy-expansion) must be complete.
+    status: todo
+  - id: a6-p7-strategy-registry-alignment
+    content: |
+      - [ ] [AGENT] P0. Ensure strategy definitions are aligned across all layers:
+        1. `unified-trading-codex/09-strategy/` — documented archetypes (SSOT for what strategies exist)
+        2. `unified-api-contracts` — strategy type enums must include all 10 archetypes
+        3. `unified-internal-contracts` — strategy schemas must support all 4 execution modes
+        4. `unified-trading-api/mock_data/seed.py` — 50+ strategies seeded
+        5. `unified-trading-system-ui/lib/strategy-registry.ts` — 50+ strategies with UI metadata
+        6. `unified-trading-pm/strategy-manifest.json` — 50+ strategies registered
+        7. If any layer is missing archetypes or execution modes, ADD them. The codex is the SSOT — everything else derives from it.
+        DEPENDENCY: Strategy expansion (a6-p7-strategy-expansion) must be complete first.
+    status: todo
 isProject: false
 ---
 
@@ -293,8 +340,22 @@ These rules ensure the demo doesn't have embarrassing data inconsistencies:
 
 ## New scope (added 2026-03-22 gap analysis)
 
-- PnL time-series: 180 daily data points per strategy (3,240 total) — critical for Dashboard charts
-- OHLCV candles: 10 instruments _ 4 intervals _ 200 candles = 8,000 records — critical for Trading Terminal
-- Ticker seeds: 10 instruments with realistic prices — starting point for WebSocket ticks
+- PnL time-series: 180 daily data points per strategy — now 50+ strategies = 9,000+ data points
+- OHLCV candles: ALL instruments from representative_sample.py (~40) × 4 intervals × 200 candles = ~32,000 records
+- Ticker seeds: ALL instruments with realistic prices — starting point for WebSocket ticks
 - Batch/live collection separation with JSONL persistence to .local-dev-cache/
 - All collections need both `_live` and `_batch` variants
+
+## Phase 7 scope (full registry coverage — gap-closing)
+
+- **Full instrument coverage** (P0): Use ALL instruments from UAC representative_sample.py. Import programmatically.
+- **50+ strategy expansion** (P0): Combinatorial matrix from CITADEL_VISION. Config-driven, not code-path-driven.
+- **Run sync pipeline** (P0): generate_ui_reference_data.py, validate-strategy-manifest.py, check-strategy-instruments.py
+- **Cross-layer alignment** (P0): Codex → UAC → UIC → API seed → UI registry → PM manifest all consistent.
+
+## Sync pipeline scripts (MUST run after expansion)
+
+- `python unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` — sync UAC → UI reference data
+- `python unified-trading-pm/scripts/validation/validate-strategy-manifest.py` — validate strategy manifest
+- `python unified-trading-pm/scripts/manifest/check-strategy-instruments.py` — verify instrument refs
+- `python unified-trading-pm/scripts/checkers/check_ui_api_flow_coverage.py` — verify UI→API coverage

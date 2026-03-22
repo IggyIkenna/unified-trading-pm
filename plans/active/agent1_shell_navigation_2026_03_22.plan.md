@@ -142,6 +142,44 @@ todos:
     content: |
       - [ ] [AGENT] P1. Create `components/ui/ws-reconnect-banner.tsx` — a subtle top banner that appears when the WebSocket connection drops. Shows "Connection lost — reconnecting..." with a spinner. Auto-hides when reconnected. Wire into unified-shell.tsx. The WebSocket hook should implement exponential backoff reconnection (1s, 2s, 4s, max 30s) and emit connection state changes.
     status: todo
+  # ── Phase 6: Institutional UX Gap-Closing ──
+  - id: a1-p6-tanstack-table
+    content: |
+      - [ ] [AGENT] P0. Install TanStack Table and create reusable DataTable component:
+        1. Run `npm install @tanstack/react-table @tanstack/react-virtual` in unified-trading-system-ui
+        2. Create `components/ui/data-table.tsx` — wraps TanStack Table with: column sorting (click header), column visibility toggle (dropdown), column resizing (drag borders), row virtualization for 1000+ rows (via @tanstack/react-virtual), persistent column preferences (save to Zustand `ui-prefs-store.ts` via localStorage)
+        3. This component replaces the current shadcn `<Table>` for ALL data-heavy pages
+        4. Export as `DataTable` — other agents (2-4, 7) adopt it for positions, orders, fills, alerts, settlements, experiments, audit trail, deployments
+        DEPENDENCY: None — can start immediately. All table-using agents depend on this.
+    status: todo
+  - id: a1-p6-workspace-persistence
+    content: |
+      - [ ] [AGENT] P1. Extend Zustand `ui-prefs-store.ts` for workspace persistence:
+        1. Add zustand `persist` middleware to save to localStorage
+        2. Persist: global scope filters (org, client, strategy, mode), per-table column visibility/order (TanStack Table state), panel sizes (react-resizable-panels — already installed), last visited service page
+        3. On page reload, all filters and layout preferences are restored
+        4. Add `resetPreferences()` method called by Reset Demo
+        DEPENDENCY: None — zustand and react-resizable-panels already installed.
+    status: todo
+  - id: a1-p6-guided-tour
+    content: |
+      - [ ] [AGENT] P1. Add guided tour for first-time users and demo walkthroughs:
+        1. Run `npm install react-joyride`
+        2. Create `components/platform/guided-tour.tsx` wrapping react-joyride
+        3. Steps: Global scope filters → Lifecycle nav → Trading Terminal → Cmd+K → Batch/Live toggle → Reset Demo
+        4. Triggered on first login (localStorage check) OR "Take Tour" button in debug footer
+        5. Tour completion persisted — don't re-show unless clicked
+        DEPENDENCY: Navigation (Phase 3) and debug footer (Phase 2) must be done first.
+    status: todo
+  - id: a1-p6-desktop-notifications
+    content: |
+      - [ ] [AGENT] P1. Wire desktop notifications and Sonner toasts:
+        1. Request browser Notification API permission on first login
+        2. For critical/high alerts from `useAlerts()`, push desktop notification (even when tab unfocused)
+        3. Wire Sonner (already at `components/ui/sonner.tsx`) for ALL mutations: order placed, alert acknowledged, reset demo, API errors
+        4. Add notification sound toggle in ui-prefs-store (default: on for critical only)
+        DEPENDENCY: Agent 5's alert endpoints must be working.
+    status: todo
 isProject: false
 ---
 
@@ -226,3 +264,11 @@ clear React auth context, THEN `router.push("/login?persona=X")`.
 - WebSocket reconnection banner
 - Access denied / upgrade card for entitlement-gated services
 - These are the gap between "prototype" and "production-grade demo"
+
+## Phase 6 scope (added gap-closing analysis)
+
+- **TanStack Table DataTable component** (P0): ALL data tables across the platform use this. Agents 2-4, 7 depend on it.
+- **Workspace persistence** (P1): Zustand persist middleware for filters, columns, panel sizes. Foundation already exists.
+- **Guided tour** (P1): react-joyride for first-time users and demo walkthroughs. Requires navigation to be stable.
+- **Desktop notifications + Sonner toasts** (P1): Browser notifications for critical alerts. Sonner already installed.
+- Dark mode ALREADY EXISTS (Citadel-inspired cyan theme in globals.css) — no work needed.

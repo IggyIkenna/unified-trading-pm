@@ -162,6 +162,36 @@ todos:
         2. Create `scripts/verify_persona_alignment.py` — reads auth-api mock_data.py and unified-trading-api personas.py, verifies org IDs and persona names match. Exit 1 on mismatch.
         3. Verify unified-trading-api generates valid OpenAPI spec: `curl http://localhost:8030/openapi.json` should return complete spec with all routes documented.
     status: todo
+  # ── Phase 7: Full Registry Coverage & Scheduled Reports (Gap-Closing) ──
+  - id: a5-p7-full-instrument-coverage
+    content: |
+      - [ ] [AGENT] P0. Expand API to serve ALL instruments from UAC representative_sample.py — not a hardcoded subset:
+        1. Import `from unified_api_contracts.registry.representative_sample import ...` to get the full instrument list
+        2. Candles endpoint (`GET /market-data/candles`) must serve data for ALL instruments in the registry (seeded by Agent 6)
+        3. Tickers endpoint (`GET /market-data/tickers`) must return tickers for ALL instruments
+        4. Order book endpoint (`GET /market-data/orderbook`) must generate depth for ANY requested instrument
+        5. WebSocket tick generator must support subscriptions for ANY instrument in the registry
+        6. Instrument list endpoint (`GET /instruments/list`) must return the full registry with category grouping
+        DEPENDENCY: Agent 6 must seed data for all instruments. UAC representative_sample.py is the SSOT.
+    status: todo
+  - id: a5-p7-strategy-capacity
+    content: |
+      - [ ] [AGENT] P0. Ensure all strategy-related endpoints handle 50+ strategies from expanded seed data:
+        1. `GET /analytics/strategies` — must paginate and filter efficiently for 50+ strategies
+        2. `GET /analytics/timeseries` — must serve PnL time-series for any of 50+ strategy IDs
+        3. `GET /positions/active` — positions across 50+ strategies must support strategy_id filter
+        4. No new code paths needed — the service layer is config-driven, not strategy-type-driven
+        5. Verify no hardcoded strategy counts or assumptions in the service layer
+        DEPENDENCY: Agent 6 must expand seed data to 50+ strategies first.
+    status: todo
+  - id: a5-p7-scheduled-reports-endpoint
+    content: |
+      - [ ] [AGENT] P1. Add `POST /reporting/schedules` and `GET /reporting/schedules` endpoints for scheduled report configuration:
+        1. POST accepts: { frequency, recipients, report_type, format }. In mock mode: creates record in MockStateStore "scheduled_reports"
+        2. GET returns all scheduled reports for the authenticated org
+        3. In mock mode, no actual emails sent — just persists configuration
+        DEPENDENCY: None — Agent 4 will wire the UI to these endpoints.
+    status: todo
 isProject: false
 ---
 

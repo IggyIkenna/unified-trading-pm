@@ -82,6 +82,50 @@ LATENCY SIMULATION (Agent 5 implements, all agents benefit):
 - MOCK_LATENCY_MS env var (default 0 in CI, 150 in interactive). Makes skeletons visible and demo feel real.
 - Without this, skeletons flash for 0ms and the demo feels fake.
 
+INSTITUTIONAL UX GAP-CLOSING (mandatory across all agents — Phase 6+ todos):
+
+FULL INSTRUMENT COVERAGE:
+- UAC has 128 venues, ~40 representative instruments in representative_sample.py
+- Seed data, API endpoints, and UI instrument selectors must cover ALL instruments — not a hardcoded 10
+- generate_ui_reference_data.py syncs UAC registries to ui-reference-data.json (2,297 lines)
+- UI reads instruments from ui-reference-data.json, NOT from hardcoded arrays
+
+50+ STRATEGIES (config-driven expansion):
+- 10 archetypes × 5 asset classes. Currently 18 seeded, expanding to 50+
+- Same engine handles all strategies — expansion is data/config, not new code paths
+- strategy-registry.ts (1,863 lines) and strategy-manifest.json must both be updated
+
+TANSTACK TABLE (Agent 1 creates base component, all agents adopt):
+- Install: @tanstack/react-table + @tanstack/react-virtual
+- Agent 1 creates DataTable in components/ui/data-table.tsx: sorting, column visibility, resizing, virtualization
+- ALL data tables across ALL services MUST use DataTable (not shadcn <Table>)
+
+TECHNICAL INDICATORS (Agent 2 implements):
+- lightweight-charts v5.1.0 already installed. Use addLineSeries() for SMA, EMA, Bollinger Bands
+- Indicator toolbar toggles above chart. State persisted in ui-prefs-store
+
+EXCEL EXPORT (Agent 2 creates utility, all agents use):
+- Install: xlsx (SheetJS). Create lib/utils/export.ts with exportTableToXlsx()
+- Every "Export" button becomes split: CSV + Excel options
+
+DARK MODE: ALREADY EXISTS — Citadel-inspired cyan theme in globals.css. No work needed.
+
+SONNER TOASTS: Already installed at components/ui/sonner.tsx. Wire for ALL mutations.
+
+WORKSPACE PERSISTENCE: Zustand ui-prefs-store.ts exists. Add persist middleware for filters, columns, panel sizes.
+
+GUIDED TOUR: react-joyride for first-time users. Agent 1 creates after navigation is stable.
+
+PRINT CSS: Agent 4 adds @media print styles for Reports pages.
+
+SSOT SYNC PIPELINE (Agent 8 runs after Agents 5-6):
+- generate_ui_reference_data.py — sync UAC → UI reference data
+- generate_unified_spec.py → openapi.json → npm run generate:types → TypeScript types
+- validate-strategy-manifest.py — verify 50+ strategies
+- check-strategy-instruments.py — verify instrument references
+- check_ui_api_flow_coverage.py — verify UI→API coverage
+- These scripts are in unified-trading-pm/scripts/. They are CENTRAL to the expansion.
+
 CODE SPLITTING (Agent 1 implements, all agents follow):
 - Use Next.js dynamic() imports for heavy components (charts, data grids, deployment forms)
 - Charts MUST use dynamic(() => import(...), { ssr: false })

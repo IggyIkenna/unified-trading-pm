@@ -20,7 +20,7 @@ phases:
       python: "3.13"
     commands:
       - pip install uv
-      - uv pip install -e ".[dev]" --system
+      - uv pip install -e "." --system
       - echo "Installing Terraform..."
       - curl -fsSL -o /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.6.7/terraform_1.6.7_linux_amd64.zip
       - unzip -o /tmp/terraform.zip -d /usr/local/bin

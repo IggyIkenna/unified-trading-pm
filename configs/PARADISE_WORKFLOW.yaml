@@ -195,7 +195,7 @@ workflow:
       location: "docs/QUICK_START_GUIDE.md or docs/deployment/QUICK_START_GUIDE.md"
       typical_commands:
         - "source ./scripts/setup.sh"
-        - "uv pip install -e '.[dev]'"
+        - "uv pip install -e '.'"
         - "python -m {service} --help"
 
     - step: 2

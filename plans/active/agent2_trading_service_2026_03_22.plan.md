@@ -140,12 +140,24 @@ todos:
   # ── Phase 7: Charting & Error States (Gap-Closing) ──
   - id: a2-p7-verify-charting-lib
     content: |
-      - [ ] [AGENT] P0. Verify the candlestick chart component in `components/trading/` uses a real charting library (lightweight-charts, TradingView, or recharts) and can render OHLCV data from the API. Check:
-        1. Which library is used? Is it in package.json dependencies?
-        2. Does the chart component accept OHLCV data arrays as props?
-        3. Does it support real-time updates (appending new candles from WebSocket)?
-        4. Does it support interval switching (1m, 5m, 1h, 1d)?
-        If the chart is a placeholder (static SVG or hardcoded data), wire it to a real charting library. lightweight-charts (by TradingView) is recommended for candlestick + volume.
+      - [ ] [AGENT] P0. VERIFIED: `components/trading/candlestick-chart.tsx` uses lightweight-charts v5.1.0 (by TradingView) with candlestick series + volume histogram. Confirm it:
+        1. Accepts OHLCV data arrays as props
+        2. Supports real-time updates (appending new candles from WebSocket via chart.update())
+        3. Supports interval switching (1m, 5m, 1h, 1d) — refetch candles on interval change
+        4. If missing any capability, add it — the library is already installed and configured
+    status: todo
+  - id: a2-p7-technical-indicators
+    content: |
+      - [ ] [AGENT] P0. Add technical indicator overlays to the candlestick chart using lightweight-charts built-in `addLineSeries()`:
+        1. Install indicator computation: `npm install technicalindicators` (or compute SMA/EMA/BB from OHLCV data directly — they're trivial formulas)
+        2. Add indicator toolbar above chart: `[SMA] [EMA] [BB] [Vol]` toggle buttons
+        3. SMA: 20-period and 50-period moving averages as line overlays (different colors)
+        4. EMA: 12-period and 26-period as line overlays
+        5. Bollinger Bands: 20-period, 2 std dev — upper/lower as line series, fill between (lightweight-charts supports area between lines)
+        6. Volume bars already exist (histogram series) — just ensure toggle works
+        7. Each indicator toggles on/off via the toolbar buttons. State persisted in ui-prefs-store
+        8. Use `dynamic(() => import(...), { ssr: false })` for the chart + indicators (already needed for lightweight-charts)
+        DEPENDENCY: Agent 6 must seed OHLCV candle data (200+ candles per instrument). Indicator computation needs enough data points.
     status: todo
   - id: a2-p7-error-states-trading
     content: |
@@ -164,9 +176,33 @@ todos:
         4. Positions/Orders tables: always wrap in `overflow-x-auto`
         5. Dashboard cards: 4-col grid → 2-col on tablet → 1-col on mobile
     status: todo
-  - id: a2-p7-csv-export-tables
+  - id: a2-p7-export-tables
     content: |
-      - [ ] [AGENT] P1. Add "Export CSV" button to Positions table, Orders table, and Fills table. Client-side CSV generation: serialize visible columns to CSV string → create Blob → trigger download. Use a shared `exportTableToCsv(data, columns, filename)` utility in `lib/utils/csv-export.ts`.
+      - [ ] [AGENT] P1. Create shared export utility and wire to trading tables:
+        1. Install: `npm install xlsx` (SheetJS — client-side Excel generation)
+        2. Create `lib/utils/export.ts` with: `exportTableToCsv(data, columns, filename)` AND `exportTableToXlsx(data, columns, filename)` (Excel with bold headers, right-aligned numbers, formatted dates)
+        3. Add split "Export" button to Positions, Orders, and Fills tables: `[Export ▾]` → dropdown with "CSV" and "Excel" options
+        4. This utility is shared — Agents 3, 4, 7 use it for their tables
+        DEPENDENCY: None — can start immediately.
+    status: todo
+  - id: a2-p7-adopt-datatable
+    content: |
+      - [ ] [AGENT] P0. Replace current shadcn `<Table>` with `DataTable` from `components/ui/data-table.tsx` (created by Agent 1) for ALL trading data tables:
+        1. Positions table → DataTable with sortable columns, column visibility toggle
+        2. Orders table → DataTable with sortable columns, status filter
+        3. Fills table → DataTable with sortable columns
+        4. Execution Analytics tables → DataTable
+        5. Instrument selector on Terminal → read ALL instruments from ui-reference-data.json (not hardcoded 10)
+        DEPENDENCY: Agent 1 must create DataTable component first (a1-p6-tanstack-table).
+    status: todo
+  - id: a2-p7-full-instrument-selector
+    content: |
+      - [ ] [AGENT] P0. Update the Trading Terminal instrument selector to list ALL instruments from `ui-reference-data.json` (synced from UAC representative_sample.py). Currently hardcoded to ~10 crypto pairs. The selector should:
+        1. Read instruments from ui-reference-data.json `representative_instrument_sample` section
+        2. Group by category (CeFi Spot, CeFi Perps, TradFi, DeFi)
+        3. Support search/filter within the dropdown
+        4. On selection, update chart, order book, and WebSocket subscription
+        DEPENDENCY: Agent 8 must run sync pipeline to ensure ui-reference-data.json is current.
     status: todo
 isProject: false
 ---
