@@ -102,6 +102,40 @@ todos:
     content: |
       - [ ] [AGENT] P1. Add/update Playwright tests: 1) Login as admin → verify all 7 lifecycle stages visible. 2) Login as client-data-only → verify only Acquire visible, rest shows "Upgrade". 3) Click each lifecycle dropdown → verify lands on correct first tab (not card landing). 4) Click Reset Demo → verify page reloads to clean state.
     status: todo
+  # ── Phase 5: Error States, Responsive, Code Splitting (Gap-Closing) ──
+  - id: a1-p5-error-boundary
+    content: |
+      - [ ] [AGENT] P0. Create shared error/empty state components:
+        1. `components/ui/error-boundary.tsx` — React error boundary wrapping service pages. Catches render errors, shows "Something went wrong" with Retry button and "Return to Dashboard" link. Logs error to console.
+        2. `components/ui/api-error.tsx` — Standard API error display. Props: error object, onRetry callback. Shows: error icon, message, "Retry" button. Used as: `if (isError) return <ApiError error={error} onRetry={refetch} />`
+        3. `components/ui/empty-state.tsx` — Standard empty state. Props: icon, title, description, optional action (label + onClick). Used as: `if (data.length === 0) return <EmptyState title="No positions" description="Open the Trading Terminal to place your first trade" action={{ label: "Open Terminal", onClick: ... }} />`
+        4. Wrap every service layout.tsx with `<ErrorBoundary>` so individual pages don't white-screen the whole app.
+    status: todo
+  - id: a1-p5-access-denied
+    content: |
+      - [ ] [AGENT] P0. Create `components/platform/upgrade-card.tsx` — shown when a client persona lacks entitlements for a service. Props: serviceName, description. Shows service icon, "Upgrade to access {serviceName}", description of what they'd get, "Contact Sales" button. Wire into each service layout: if `!userEntitlements.includes(requiredEntitlement)`, show UpgradeCard instead of page content. Non-admin accessing /admin routes: redirect to /dashboard via middleware or layout check.
+    status: todo
+  - id: a1-p5-responsive-shell
+    content: |
+      - [ ] [AGENT] P1. Make the shell responsive:
+        1. `lifecycle-nav.tsx`: Add hamburger menu icon (visible at `md:hidden`). On click, open a slide-out drawer with the same lifecycle stages. Desktop nav hidden below md breakpoint.
+        2. `global-scope-filters.tsx`: Stack filters vertically below lg breakpoint. Use collapsible panel on tablet.
+        3. `service-tabs.tsx`: On narrow screens, tabs should horizontally scroll (not wrap to multiple lines). Add `overflow-x-auto` with `-webkit-overflow-scrolling: touch`.
+        4. `debug-footer.tsx`: Stack items vertically on narrow screens.
+        5. Add `<meta name="viewport" content="width=device-width, initial-scale=1" />` if not already in layout.
+    status: todo
+  - id: a1-p5-code-splitting
+    content: |
+      - [ ] [AGENT] P1. Add dynamic imports for heavy service page components to reduce initial bundle:
+        1. All charting components (candlestick, equity curve, heatmap, order book visualization) MUST use `dynamic(() => import(...), { ssr: false })` since they depend on browser APIs.
+        2. Deployment form components (from deployment-ui absorption) — dynamically imported.
+        3. Data grid components with complex filtering — dynamically imported.
+        4. Run `NEXT_PUBLIC_MOCK_API=true npx next build` and check chunk sizes in output. Flag any chunk > 500KB.
+    status: todo
+  - id: a1-p5-ws-reconnect
+    content: |
+      - [ ] [AGENT] P1. Create `components/ui/ws-reconnect-banner.tsx` — a subtle top banner that appears when the WebSocket connection drops. Shows "Connection lost — reconnecting..." with a spinner. Auto-hides when reconnected. Wire into unified-shell.tsx. The WebSocket hook should implement exponential backoff reconnection (1s, 2s, 4s, max 30s) and emit connection state changes.
+    status: todo
 isProject: false
 ---
 
@@ -146,6 +180,29 @@ isProject: false
 - `lib/reset-demo.ts` — existing resetDemo() function
 - `lib/stores/global-scope-store.ts` — live/batch mode, org/client/strategy scope
 
+## Risk Factors & Mitigations
+
+**RISK 1: Observe layout is a cross-agent blocker.** Agent 7 cannot render observe pages correctly until this agent
+creates observe/layout.tsx with OBSERVE_TABS. Risk/alerts currently show TRADING_TABS (wrong). MITIGATION: Create
+observe/layout.tsx in Phase 3 (a1-p3-service-tab-routing) BEFORE Phase 4. Prioritize this.
+
+**RISK 2: Manage pages live in (ops) route group, not (platform).** MANAGE*TABS is defined but never rendered because
+manage pages are in app/(ops)/manage/*. The (ops) layout may enforce admin-only access. Agent 4 needs pages in
+(platform)/services/manage/\_ for tabs to work. MITIGATION: Either move pages or create a redirect layout. Document
+decision for Agent 4.
+
+**RISK 3: Skeleton components created but not adopted by other agents.** MITIGATION: Use EXACT names from CITADEL_VISION
+§ Interface Contracts (TableSkeleton, CardGridSkeleton, ChartSkeleton). Add comment at top: "IMPORT THIS — do not create
+custom loading states."
+
+**RISK 4: Orphaned components may have stale prop types.** batch-live-rail.tsx, filter-bar.tsx etc. were written for an
+older API shape. Props may reference types/stores that no longer exist. MITIGATION: Read each component fully before
+wiring. Check every import and prop type. Fix type errors first.
+
+**RISK 5: Persona switcher may not properly clear auth state.** Redirecting to /login is not enough if JWT is cached in
+localStorage. Stale tokens = wrong org data. MITIGATION: Explicitly clear token (`localStorage.removeItem("token")`),
+clear React auth context, THEN `router.push("/login?persona=X")`.
+
 ## Orphaned components (exist on disk, zero imports)
 
 - `components/platform/batch-live-rail.tsx`
@@ -154,3 +211,12 @@ isProject: false
 - `components/platform/live-asof-toggle.tsx`
 - `components/trading/context-bar.tsx` (trading version — can stay dead, platform version covers it)
 - `components/trading/org-client-selector.tsx` (functionality in GlobalScopeFilters)
+
+## New scope (added 2026-03-22 gap analysis)
+
+- Error boundary, API error, and empty state components are NEW P0 requirements — every service page must use them
+- Responsive layout: hamburger nav on tablet, stacked panels, horizontal-scroll tabs
+- Code splitting: dynamic imports for charts and heavy components
+- WebSocket reconnection banner
+- Access denied / upgrade card for entitlement-gated services
+- These are the gap between "prototype" and "production-grade demo"

@@ -226,6 +226,74 @@ todos:
         5. Call POST /admin/reset (cleanup)
         This script should be runnable as `bash scripts/e2e-smoke.sh` from the unified-trading-system-ui repo.
     status: todo
+  # ── Phase 6: Org Isolation Matrix, Codegen Pipelines, Performance (Gap-Closing) ──
+  - id: a8-p6-org-isolation-matrix
+    content: |
+      - [ ] [AGENT] P0. Playwright test: Full Org Isolation Matrix — this is CRITICAL for demo credibility. BlackRock-grade means clients NEVER see each other's data.
+        1. Login as client-full (org: acme) → navigate to every service → verify ALL data has org_id matching "acme"
+        2. Login as client-data-only (org: beta) → verify only data service accessible, all data has org_id "beta"
+        3. Login as client-premium (org: vertex) → verify data + execution accessible, all data org_id "vertex"
+        4. Login as admin → verify ALL data visible across all orgs
+        5. For EACH service: Positions, Orders, Strategies, Alerts, PnL — verify org filtering works
+        6. Test cascading: select org "acme" in global scope → all pages filter to acme. Change to "vertex" → all pages update.
+        7. This test catches the case where one service page shows unfiltered data — a demo-killing bug.
+    status: todo
+  - id: a8-p6-codegen-pipeline-create
+    content: |
+      - [ ] [AGENT] P0. Verify and CREATE codegen pipeline scripts if they don't exist:
+        1. Check `unified-api-contracts/scripts/generate_ui_reference_data.py` — if missing, create it:
+           - Read UAC registry Python modules (venue registry, instrument types, error codes, enums)
+           - Output structured JSON to `--output` path
+           - Must be runnable as `.venv/bin/python scripts/generate_ui_reference_data.py --output <path>`
+        2. Check `unified-trading-system-ui/package.json` for `"generate:types"` script — if missing:
+           - `npm install -D openapi-typescript`
+           - Add script: `"generate:types": "openapi-typescript lib/registry/openapi.json -o lib/types/api-generated.ts"`
+        3. Check `unified-trading-api/scripts/verify_persona_alignment.py` — if missing, create it:
+           - Compare org IDs between auth-api mock_data.py and unified-trading-api personas.py
+           - Compare persona names and entitlements
+           - Exit 0 if aligned, exit 1 with diff on mismatch
+        4. Run ALL three pipelines and verify output is valid
+    status: todo
+  - id: a8-p6-error-state-tests
+    content: |
+      - [ ] [AGENT] P1. Playwright tests for error states:
+        1. Block API endpoint (intercept /positions/active → 500) → verify error boundary shows "Something went wrong" with Retry button
+        2. Click Retry → verify data loads successfully
+        3. Login as client-data-only → navigate to /services/trading/overview → verify "Upgrade" card shown (not blank page or 403)
+        4. Login as client-full → navigate to /admin → verify redirect to /dashboard
+    status: todo
+  - id: a8-p6-responsive-tests
+    content: |
+      - [ ] [AGENT] P1. Playwright tests for responsive layout:
+        1. Set viewport to 768x1024 (tablet) → verify hamburger menu appears, lifecycle nav is hidden
+        2. Click hamburger → verify slide-out drawer with service navigation
+        3. Navigate to Trading Terminal at tablet viewport → verify chart renders, layout stacks vertically
+        4. Verify data tables have horizontal scroll (no broken layouts)
+    status: todo
+  - id: a8-p6-bundle-size
+    content: |
+      - [ ] [AGENT] P1. Performance validation:
+        1. Run `NEXT_PUBLIC_MOCK_API=true npx next build` and capture output
+        2. Parse chunk sizes from build output
+        3. Flag any chunk > 500KB as a warning
+        4. Verify charting components use dynamic imports (not in initial bundle)
+        5. Add this as a CI check in the smoke test script
+    status: todo
+  - id: a8-p6-latency-test
+    content: |
+      - [ ] [AGENT] P1. Playwright test: Latency simulation makes skeletons visible:
+        1. Start API with MOCK_LATENCY_MS=300
+        2. Navigate to any service page
+        3. Verify skeleton placeholder is visible for at least 200ms before data appears
+        4. This validates that the skeleton loading components actually work visually
+    status: todo
+  - id: a8-p6-csv-pdf-tests
+    content: |
+      - [ ] [AGENT] P1. Playwright tests for export functionality:
+        1. Navigate to Positions table → click "Export CSV" → verify download triggers (check download event)
+        2. Navigate to Reports > P&L → click "Generate Report" → verify modal opens → submit → verify download toast
+        3. Navigate to Orders table → click "Export CSV" → verify CSV file has correct headers
+    status: todo
 isProject: false
 ---
 
@@ -269,3 +337,13 @@ clickable → NO card-based sub-pages appear. If any test encounters a card grid
 - Real-time feed E2E test: verify WebSocket ticks update the Trading Terminal
 - Batch/live switch E2E test: verify data actually changes when toggling modes
 - E2E tests must start BOTH auth-api (port 8200) and unified-trading-api (port 8030)
+
+## Additional scope (added 2026-03-22 gap analysis)
+
+- Org isolation matrix: test that every service correctly filters by org_id per persona — demo-critical
+- Codegen pipeline scripts: must be CREATED if they don't exist, not just run
+- Error state E2E tests: verify error boundaries, upgrade cards, and access denied flows
+- Responsive E2E tests: verify tablet layout works (hamburger, stacked panels)
+- Bundle size check: verify dynamic imports keep chunks under 500KB
+- Latency simulation test: verify skeletons are actually visible with MOCK_LATENCY_MS
+- CSV/PDF export tests: verify download functionality works end-to-end

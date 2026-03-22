@@ -81,6 +81,24 @@ todos:
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Research Hub → verify KPI cards render. 2) Navigate to ML Models → verify model list renders. 3) Navigate to Backtests → verify backtest table renders. 4) Click "New Strategy" → verify wizard modal opens. 5) Navigate to Promote > Review Queue → verify candidate list renders.
     status: todo
+  # ── Phase 7: Error States & Polish (Gap-Closing) ──
+  - id: a3-p7-error-states
+    content: |
+      - [ ] [AGENT] P1. Add error and empty states to ALL research and promote pages:
+        1. Every page using useQuery: add `if (isError) return <ApiError error={error} onRetry={refetch} />` (component created by Agent 1)
+        2. ML Experiments table: `if (experiments.length === 0) return <EmptyState title="No experiments" description="Start your first ML experiment" action={{ label: "New Experiment", onClick: ... }} />`
+        3. Backtest table: `if (backtests.length === 0) return <EmptyState title="No backtests" description="Run your first backtest" action={{ label: "New Backtest", onClick: ... }} />`
+        4. Promote Review Queue: `if (candidates.length === 0) return <EmptyState title="No candidates" description="All strategies have been reviewed" />`
+        5. Every chart: if data is empty, show chart-skeleton with "No data available" overlay
+    status: todo
+  - id: a3-p7-csv-export
+    content: |
+      - [ ] [AGENT] P1. Add "Export CSV" button to: ML Experiments table, Backtest Results table, Feature list table. Use the shared `exportTableToCsv()` utility from `lib/utils/csv-export.ts` (created by Agent 2). Button placement: top-right of each table, next to any existing filter controls.
+    status: todo
+  - id: a3-p7-dynamic-imports
+    content: |
+      - [ ] [AGENT] P1. Use Next.js `dynamic(() => import(...), { ssr: false })` for heavy chart components in research pages: equity curve charts, training loss curves, parameter sweep heatmaps, feature correlation matrices. These use browser-only APIs and should not be server-rendered.
+    status: todo
 isProject: false
 ---
 
@@ -115,10 +133,34 @@ All pages are REAL (252-704L). The problem is inline mock data. See manifest for
 - `strategy-ui/src/components/results/EquityCurveChart.tsx` (146L) — reusable chart component
 - `ml-training-ui/src/` — SKIP: main UI already has richer equivalents (591-704L vs 133-315L)
 
+## Risk Factors & Mitigations
+
+**RISK 1: "Verify" becomes superficial — agent checks page loads but doesn't fix inline mock data.** 12 research pages
+use inline mock data. Agent can "verify it renders" and move on, leaving page disconnected. MITIGATION: For every
+"verify" todo, check if page imports from hooks/api/use-\*.ts (GOOD) or uses hardcoded data (BAD). If hardcoded: wire to
+API hook. Do NOT mark verify as done if inline mock remains.
+
+**RISK 2: strategy-ui wizard uses different component library.** Built with Vite + potentially MUI or custom components.
+Direct import will fail. MITIGATION: Extract the FLOW (step sequence, validation, fields) not the components. Rebuild
+with shadcn/ui (Dialog, Form with zod, Input/Select/Textarea). Keep CSV upload via papaparse.
+
+**RISK 3: ML sub-tabs are 12 pages deep — easy to lose track.** MITIGATION: Work through ALL ML sub-tabs in Phase 0
+before moving to strategies. Check off each explicitly.
+
+**RISK 4: API endpoints may not exist yet (Agent 5 dependency).** GET /ml/experiments, POST /ml/training-jobs may not be
+implemented when Agent 3 starts. MITIGATION: Wire hooks to correct paths NOW. If API returns 404, page shows error state
+(from Agent 1). When Agent 5 adds endpoints, pages work automatically. Don't skip wiring because endpoint doesn't exist.
+
 ## API endpoints needed
 
 - GET /ml/models, GET /ml/experiments, GET /ml/training-jobs, GET /ml/features
 - GET /ml/validation-results, POST /ml/training-jobs, POST /ml/models/{id}/promote
 - GET /execution/backtests, POST /execution/backtests
 - POST /analytics/strategies/{id}/promote, POST /analytics/strategies/{id}/reject
-- POST /analytics/strategies/{id}/promote, POST /analytics/strategies/{id}/reject
+
+## New scope (added 2026-03-22 gap analysis)
+
+- Error states and empty states are mandatory — every table/chart must handle isError and empty data
+- CSV export on data tables
+- Dynamic imports for chart components (SSR incompatible)
+- These close the gap between "pages render" and "pages feel production-grade"

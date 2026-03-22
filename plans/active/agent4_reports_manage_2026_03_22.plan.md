@@ -85,6 +85,34 @@ todos:
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Reports > P&L → verify attribution table renders. 2) Navigate to Reports > Settlement → verify settlements table renders. 3) Navigate to Manage > Clients → verify client list renders. 4) Navigate to Manage > Users → verify user list renders. 5) Click "Onboard Client" → verify workflow opens.
     status: todo
+  # ── Phase 7: PDF/CSV Export & Error States (Gap-Closing) ──
+  - id: a4-p7-csv-export
+    content: |
+      - [ ] [AGENT] P0. Add "Export CSV" button to ALL data tables in Reports and Manage:
+        1. P&L Attribution table, Settlement table, Reconciliation table, Regulatory table
+        2. Client list, User list, Mandate list, Fee schedule list
+        3. Use the shared `exportTableToCsv(data, columns, filename)` utility from `lib/utils/csv-export.ts` (created by Agent 2)
+        4. Button placement: top-right of each table, consistent with other services
+    status: todo
+  - id: a4-p7-pdf-generation
+    content: |
+      - [ ] [AGENT] P0. Add "Generate PDF Report" capability to Reports > P&L and Reports > Executive:
+        1. Add "Generate Report" button that opens a modal: select client, date range, report type (P&L Attribution / Executive Summary / Regulatory)
+        2. On submit: call `POST /reporting/generate` with { type, client_id, date_range, format: "pdf" }
+        3. Show spinner while "generating"
+        4. On success: show "Download Ready" toast with download link
+        5. In mock mode, the API returns a pre-generated sample PDF. Create a minimal sample PDF (even 1-page with title + table) in `unified-trading-api/unified_trading_api/mock_data/sample_reports/executive_report.pdf`
+        6. For the download: API serves file via `GET /reporting/download/{report_id}` which returns the sample PDF with correct Content-Type headers
+    status: todo
+  - id: a4-p7-error-states
+    content: |
+      - [ ] [AGENT] P1. Add error and empty states to ALL reports and manage pages:
+        1. Every page using useQuery: `if (isError) return <ApiError error={error} onRetry={refetch} />`
+        2. Settlement table empty: `<EmptyState title="No settlements" description="Settlements appear after trades are reconciled" />`
+        3. Client list empty: `<EmptyState title="No clients" description="Onboard your first client" action={{ label: "Onboard Client", onClick: openOnboardingModal }} />`
+        4. User list empty: `<EmptyState title="No users" description="Add your first team member" action={{ label: "Add User", onClick: openAddUserModal }} />`
+        5. Report generation error: toast with "Report generation failed — please try again"
+    status: todo
 isProject: false
 ---
 
@@ -143,6 +171,19 @@ Manage pages currently live in `app/(ops)/manage/*` but should be accessible via
 
 - OPTION A: Move pages from (ops) to (platform)/services/manage/ (preferred — tabs work correctly)
 - OPTION B: Fix (ops) layout to allow internal-trader role, add MANAGE_TABS rendering
+
+## New scope (added 2026-03-22 gap analysis)
+
+- PDF report generation is a NEW P0 requirement — must have downloadable reports for demo
+- CSV export on every data table
+- Error states and empty states mandatory on all pages
+- These close the gap between "data on screen" and "production workflow"
+
+## New API endpoints for PDF generation
+
+- POST /reporting/generate — accepts { type, client_id, date_range, format }
+- GET /reporting/download/{report_id} — serves generated report file
+- Agent 5 must add these endpoints. In mock mode, return sample PDFs from mock_data/sample_reports/
 
 ## API endpoints needed
 

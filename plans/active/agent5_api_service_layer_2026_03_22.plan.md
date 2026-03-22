@@ -6,23 +6,23 @@ overview:
 todos:
   - id: a5-p0-service-interfaces
     content: |
-      - [ ] [AGENT] P0. Create `unified_trading_api/services/` directory with service interface definitions using Python Protocol classes. Create one Protocol per domain: ExecutionService, PositionService, MarketDataService, AnalyticsService, MLService, ReportingService, AuditService, ConfigService, AlertService, RiskService, InstrumentService, DocumentService, DeploymentService, ServiceStatusService, UserService. Each Protocol defines the methods that the route handlers call (e.g., `async def list_orders(self, filters: OrderFilters) -> PaginatedResponse`).
-    status: todo
+      - [x] [AGENT] P0. DONE — services/ directory already exists with DomainService Protocol in base.py, MockDomainService in mock_service.py, LiveDomainService in live_service.py, factory.py with get_service(). VERIFY the Protocol covers all 15 domains listed. If any domain methods are missing, ADD them to the existing Protocol — do NOT recreate.
+    status: done
   - id: a5-p0-mock-implementations
     content: |
-      - [ ] [AGENT] P0. Create mock implementations for each service Protocol in `unified_trading_api/services/mock/`. Each mock service takes a `MockStateStore` instance and implements the Protocol methods by reading/writing to the store. CRITICAL: the mock implementations must apply the SAME filtering, pagination, sorting, and validation logic that real implementations would. The only difference is the data source (store.list() vs service_client.get()).
-    status: todo
+      - [x] [AGENT] P0. DONE — MockDomainService exists in services/mock_service.py using MockStateStore. VERIFY it covers all 15 domains. If domain-specific logic is missing (e.g., filtering, pagination), ADD it to the existing implementation.
+    status: done
   - id: a5-p0-live-stubs
     content: |
-      - [ ] [AGENT] P1. Create stub real implementations for each service Protocol in `unified_trading_api/services/live/`. Each stub raises `NotImplementedError("Wire to {service_name}")` but has the correct method signatures. This makes it clear what needs wiring later without breaking the code.
-    status: todo
+      - [x] [AGENT] P1. DONE — LiveDomainService exists in services/live_service.py with NotImplementedError stubs. VERIFY method signatures match Protocol.
+    status: done
   - id: a5-p0-factory
     content: |
-      - [ ] [AGENT] P0. Create `unified_trading_api/services/factory.py` with `get_{domain}_service(request: Request)` factory functions that return mock or real implementation based on `request.app.state.mock_mode`. These are used as FastAPI `Depends()` in route handlers.
-    status: todo
+      - [x] [AGENT] P0. DONE — factory.py exists with get_service(request) used as FastAPI Depends(). VERIFY it handles mock/real switching correctly.
+    status: done
   - id: a5-p1-execution-routes
     content: |
-      - [ ] [AGENT] P0. Refactor `routes/execution.py` to use service layer. Replace all `if mock_mode: mock_store.list("orders")` with `service.list_orders(filters)`. The route handler should ONLY handle HTTP concerns (parsing query params, building response). All business logic lives in the service. Add POST /execution/orders endpoint for manual order placement.
+      - [ ] [AGENT] P0. VERIFY routes/execution.py uses service layer (already does). ADD missing endpoints: POST /execution/orders (manual order placement). Verify filtering and pagination work correctly.
     status: todo
   - id: a5-p1-positions-routes
     content: |
@@ -30,7 +30,7 @@ todos:
     status: todo
   - id: a5-p1-market-data-routes
     content: |
-      - [ ] [AGENT] P0. Refactor `routes/market_data.py` to use service layer.
+      - [ ] [AGENT] P0. VERIFY routes/market_data.py uses service layer. ADD missing endpoints: GET /market-data/candles, GET /market-data/orderbook (moved from Phase 4 — these are P0 for demo).
     status: todo
   - id: a5-p1-analytics-routes
     content: |
@@ -76,14 +76,7 @@ todos:
     status: todo
   - id: a5-p4-websocket
     content: |
-      - [ ] [AGENT] P0. (UPGRADED from P2 — critical for demo feel) Enhance `routes/websocket.py` to support mock tick generation. In mock mode, the WebSocket MUST:
-        1. Accept subscribe/unsubscribe messages: `{ "action": "subscribe", "instruments": ["BTC-USDT", "ETH-USDT"] }`
-        2. Run a background asyncio task that generates Brownian motion price ticks every 500-2000ms (randomized)
-        3. Each tick: `{ "instrument": "BTC-USDT", "price": 67234.50, "volume": 1.23, "bid": 67230.00, "ask": 67239.00, "timestamp": "..." }`
-        4. Update the `tickers_live` collection in MockStateStore on each tick (so REST GET /market-data/tickers reflects current prices)
-        5. Seed initial prices from MockStateStore `tickers_live` collection (from Agent 6's seed data)
-        6. Support multiple concurrent clients
-        This is the SINGLE MOST IMPORTANT feature for real-time feel. Without it, the terminal looks dead.
+      - [ ] [AGENT] P0. VERIFY routes/websocket.py (4,859 lines, already has synthetic tick generator and channel multiplexing). Ensure: 1) Ticks update tickers_live collection in MockStateStore on each tick 2) Subscribe/unsubscribe protocol works 3) Multiple concurrent clients supported. ADD if missing: Brownian motion price drift, configurable tick intervals.
     status: todo
   - id: a5-p4-candles-endpoint
     content: |
@@ -142,6 +135,30 @@ todos:
     content: |
       - [ ] [AGENT] P0. Ensure `bash scripts/quality-gates.sh` passes with all new code. Fix any basedpyright errors, ruff violations, or test failures.
     status: todo
+  # ── Phase 6: Latency Simulation, PDF Endpoints, Codegen (Gap-Closing) ──
+  - id: a5-p6-latency-sim
+    content: |
+      - [ ] [AGENT] P0. Add latency simulation to MockDomainService. Without this, mock APIs return in <1ms and the demo feels fake — skeletons flash invisibly, loading states can't be verified.
+        1. Read `MOCK_LATENCY_MS` env var (default: 0 in CI/deterministic, 150 in interactive mode)
+        2. In MockDomainService.list() and .get(), add `await asyncio.sleep((base_ms + random.randint(0, base_ms // 2)) / 1000)`
+        3. POST endpoints (create order, acknowledge): lower latency (50-100ms) for snappy feel
+        4. POST /admin/reset: zero latency
+        5. WebSocket ticks: NOT delayed (already have 500-2000ms intervals)
+    status: todo
+  - id: a5-p6-pdf-endpoints
+    content: |
+      - [ ] [AGENT] P1. Add PDF report generation endpoints for Reports service:
+        1. `POST /reporting/generate` — accepts { type, client_id, date_range, format }. In mock mode: create a record in MockStateStore "generated_reports" with status "ready" and a report_id. Return { report_id, status: "ready" }.
+        2. `GET /reporting/download/{report_id}` — serves a sample PDF file. Create `mock_data/sample_reports/` directory with 1-2 sample PDFs (can be minimal: title page + one table). Return with Content-Type: application/pdf.
+        3. In real mode: proxy to client-reporting-api's generation endpoint.
+    status: todo
+  - id: a5-p6-codegen-verify
+    content: |
+      - [ ] [AGENT] P1. Verify and create codegen pipeline scripts if missing:
+        1. Check if `npm run generate:types` exists in unified-trading-system-ui/package.json. If not, add: `"generate:types": "openapi-typescript lib/registry/openapi.json -o lib/types/api-generated.ts"` and add `openapi-typescript` to devDependencies.
+        2. Create `scripts/verify_persona_alignment.py` — reads auth-api mock_data.py and unified-trading-api personas.py, verifies org IDs and persona names match. Exit 1 on mismatch.
+        3. Verify unified-trading-api generates valid OpenAPI spec: `curl http://localhost:8030/openapi.json` should return complete spec with all routes documented.
+    status: todo
 isProject: false
 ---
 
@@ -162,13 +179,17 @@ isProject: false
 - `unified-trading-api` (port 8030) — YOUR scope. Absorbs 8 domain APIs. Routes reporting/\* to client-reporting-api in
   real mode.
 
-## Current state of unified-trading-api
+## Current state of unified-trading-api (verified 2026-03-22)
 
-- 16 domain routers, ~1,538 lines total
-- Every route has `if mock_mode: return mock_store.list(domain)` / `else: return NOT_IMPLEMENTED`
-- Simple MockStateStore (69 lines, in-memory, no persistence)
-- 1 test file (test_health.py)
-- seed.py has ~400 lines of seed data (partial coverage)
+- 19 domain routers using service layer DI (get_service(request)) — NO if/else mock checks
+- services/ EXISTS: DomainService Protocol (base.py), MockDomainService (mock_service.py), LiveDomainService
+  (live_service.py), factory.py
+- WebSocket: 4,859 lines with channel-based multiplexing and synthetic tick generator
+- personas.py: 121 lines, 4 orgs, 5 personas, matches auth-api
+- state_store.py: 68 lines, in-memory only — NEEDS UTL MockStateStore migration
+- seed.py: 1,323 lines covering basic domains — NEEDS enrichment
+- 3 test files (minimal) — NEEDS expansion to 80%+ coverage
+- auth-api: EXISTS at port 8200 with JWT — NOT in dev stack yet
 
 ## UTL MockStateStore features (to adopt)
 

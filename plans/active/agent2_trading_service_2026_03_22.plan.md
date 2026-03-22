@@ -87,7 +87,7 @@ todos:
   # ── Phase 5: Execution Service (Execute — separate from Trading) ──
   - id: a2-p5-execution-layout
     content: |
-      - [ ] [AGENT] P0. Create `/services/execution/layout.tsx` with EXECUTE_TABS (new tab set). Add "execute" lifecycle stage to lifecycle-mapping.ts between "run" and "observe". Tabs: Analytics | Algos | Venues | TCA | Benchmarks | Candidates | Handoff. Entry point: `/services/execution/overview`. Entitlement gated: `execution-basic` for Analytics/Venues, `execution-full` for Algos/TCA/Benchmarks/Candidates/Handoff.
+      - [ ] [AGENT] P0. VERIFY (already exists) `/services/execution/layout.tsx` has EXECUTE_TABS (7 tabs, pages 298-405 lines each already exist). Confirm "execute" lifecycle stage exists in lifecycle-mapping.ts between "run" and "observe". Tabs: Analytics | Algos | Venues | TCA | Benchmarks | Candidates | Handoff. Entry point: `/services/execution/overview`. Entitlement gated: `execution-basic` for Analytics/Venues, `execution-full` for Algos/TCA/Benchmarks/Candidates/Handoff.
     status: todo
 
   - id: a2-p5-execution-analytics
@@ -119,6 +119,37 @@ todos:
   - id: a2-p6-tests
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Trading Terminal → verify chart renders, order book renders, order form visible. 2) Click "Manual Trade" → verify drawer opens with trade form. 3) Toggle batch mode → verify banner appears, data changes. 4) Navigate to Positions tab → verify table renders with data. 5) Navigate to Orders tab → verify table renders with data. 6) Navigate to Execute > Analytics → verify execution data renders. 7) Navigate to Execute > Venues → verify venue status renders.
+    status: todo
+  # ── Phase 7: Charting & Error States (Gap-Closing) ──
+  - id: a2-p7-verify-charting-lib
+    content: |
+      - [ ] [AGENT] P0. Verify the candlestick chart component in `components/trading/` uses a real charting library (lightweight-charts, TradingView, or recharts) and can render OHLCV data from the API. Check:
+        1. Which library is used? Is it in package.json dependencies?
+        2. Does the chart component accept OHLCV data arrays as props?
+        3. Does it support real-time updates (appending new candles from WebSocket)?
+        4. Does it support interval switching (1m, 5m, 1h, 1d)?
+        If the chart is a placeholder (static SVG or hardcoded data), wire it to a real charting library. lightweight-charts (by TradingView) is recommended for candlestick + volume.
+    status: todo
+  - id: a2-p7-error-states-trading
+    content: |
+      - [ ] [AGENT] P1. Add error and empty states to ALL trading and execution pages:
+        1. Every page using useQuery: add `if (isError) return <ApiError error={error} onRetry={refetch} />` (component created by Agent 1)
+        2. Every table: add `if (data.length === 0) return <EmptyState title="No orders" description="Place your first trade from the Terminal" />`
+        3. Trading Terminal: if WebSocket fails to connect, show fallback with last known prices + "Live feed unavailable" badge
+        4. Manual Trade drawer: show toast on submission error with error message from API
+    status: todo
+  - id: a2-p7-responsive-trading
+    content: |
+      - [ ] [AGENT] P1. Make Trading Terminal responsive:
+        1. Desktop (1280px+): chart + order book + order form side-by-side (current layout)
+        2. Tablet (768-1280px): chart full-width on top, order book + order form side-by-side below
+        3. Order book: use horizontal scroll on narrow screens
+        4. Positions/Orders tables: always wrap in `overflow-x-auto`
+        5. Dashboard cards: 4-col grid → 2-col on tablet → 1-col on mobile
+    status: todo
+  - id: a2-p7-csv-export-tables
+    content: |
+      - [ ] [AGENT] P1. Add "Export CSV" button to Positions table, Orders table, and Fills table. Client-side CSV generation: serialize visible columns to CSV string → create Blob → trigger download. Use a shared `exportTableToCsv(data, columns, filename)` utility in `lib/utils/csv-export.ts`.
     status: todo
 isProject: false
 ---
@@ -164,11 +195,42 @@ isProject: false
 - `lib/trading-data.ts` — Client-side mock data (770 lines) — will be replaced by API calls
 - `components/trading/` — 31 trading components (candlestick, order-book, kpi-card, etc.)
 
+## Risk Factors & Mitigations
+
+**RISK 1 (HIGHEST): WebSocket dependency on Agent 5.** The terminal's real-time feel depends on Agent 5's WebSocket tick
+generator. If delayed or format differs, terminal is static. MITIGATION: Use EXACT message format from CITADEL_VISION §
+Interface Contracts. If WebSocket isn't ready, implement FALLBACK: client-side setInterval with Brownian motion ticks
+(same callback interface). Remove fallback when Agent 5 delivers.
+
+**RISK 2: Candlestick chart may not support streaming append.** Component may only accept static OHLCV arrays and
+re-render entirely. MITIGATION: Read the candlestick component FIRST. Check charting library. If no streaming support,
+use ref-based approach: maintain candle array in ref, append, debounce state updates.
+
+**RISK 3: ManualTradingPanel from git uses incompatible patterns.** Written for live-health-monitor-ui (Vite, different
+state). Imports won't work in main UI. MITIGATION: Don't copy-paste the whole component. Extract LOGIC and FIELDS,
+rebuild with shadcn/ui (Sheet for drawer, Input, Select, Button). Wire to apiFetch from lib/api/fetch.ts.
+
+**RISK 4: Execution layout conflicts with Agent 1.** Both agents touch execution/layout.tsx. MITIGATION: Agent 2 does
+NOT touch layout.tsx. Only touch page.tsx files within execution/ tabs. If layout doesn't exist yet, create minimal one
+with TODO comment for Agent 1 to replace.
+
+**RISK 5: WebSocket already has 4,859 lines — may already have tick generator.** Current state baseline says WebSocket
+has synthetic tick generator. Don't rebuild what exists. MITIGATION: Read routes/websocket.py FIRST. If tick generation
+exists, just verify it matches the interface contract format. If it doesn't match, adapt the UI consumer to the existing
+format (don't rewrite the server).
+
 ## Absorbed from prior plans
 
 - plan_e_ui_backend_integration: Phase 0B UI→API path mismatch fixes
 - live_batch_alignment_audit: Batch/live data architecture decisions
 - strategy_system_citadel_master: Strategy lifecycle and handoff flow
+
+## Current state corrections (2026-03-22 audit)
+
+- Execution service pages ALL EXIST (7 tabs, 298-405 lines each) — do NOT build from scratch
+- API routes already use service layer DI — do NOT refactor route patterns
+- WebSocket already has synthetic tick generator (4,859 lines) — verify it works, don't rebuild
+- personas.py already exists (121 lines) — use it for org-scoped data filtering
 
 ## API endpoints needed (all exist in unified-trading-api mock mode)
 

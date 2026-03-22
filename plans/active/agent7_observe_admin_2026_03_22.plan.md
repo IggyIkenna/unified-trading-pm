@@ -91,6 +91,29 @@ todos:
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Observe > Risk Dashboard → verify exposure data renders. 2) Navigate to Observe > Alerts → verify alert list renders, click acknowledge. 3) Navigate to Observe > System Health → verify service health grid renders. 4) Navigate to Admin > DevOps → verify deployment form renders. 5) Verify Admin pages are HIDDEN when logged in as client persona.
     status: todo
+  # ── Phase 8: Error States & Responsive (Gap-Closing) ──
+  - id: a7-p8-error-states
+    content: |
+      - [ ] [AGENT] P1. Add error and empty states to ALL observe and admin pages:
+        1. Risk Dashboard: if risk data fails to load, show `<ApiError>` with retry. If no risk limits configured, show `<EmptyState title="No risk limits configured" description="Set up risk limits in Manage > Mandates" />`
+        2. Alerts page: if no alerts, show `<EmptyState title="All clear" description="No active alerts — all systems operating normally" />` (positive empty state)
+        3. System Health: if service status API fails, show error banner but still render cached/stale data if available
+        4. Admin Dashboard: if no pending approvals, show `<EmptyState title="No pending approvals" />`
+        5. DevOps: if no recent deployments, show `<EmptyState title="No recent deployments" description="Trigger a deployment to see history" />`
+        6. Every table in admin/ops pages: handle empty state explicitly
+    status: todo
+  - id: a7-p8-csv-export
+    content: |
+      - [ ] [AGENT] P1. Add "Export CSV" button to: Alert history table, Audit trail table, Service health table, Deployment history table. Use shared `exportTableToCsv()` utility from `lib/utils/csv-export.ts`.
+    status: todo
+  - id: a7-p8-dynamic-imports
+    content: |
+      - [ ] [AGENT] P1. Use Next.js `dynamic(() => import(...), { ssr: false })` for heavy components absorbed from satellite UIs:
+        1. Deployment form (from deployment-ui — very large component)
+        2. Dependency DAG visualization (from live-health-monitor-ui)
+        3. Cloud Build log viewer (from deployment-ui)
+        These are large, complex components that should not bloat the initial bundle.
+    status: todo
 isProject: false
 ---
 
@@ -161,3 +184,11 @@ LARGE components. Start by wiring the devops-dashboard.tsx (779L), then progress
 - GET /audit/trail, GET /audit/data-health, GET /audit/compliance, GET /audit/logs
 - GET /deployment/services, POST /deployment/trigger, GET /deployment/history
 - GET /config/services, POST /config/reload
+
+## New scope (added 2026-03-22 gap analysis)
+
+- Error states and empty states mandatory on all observe/admin pages
+- Positive empty states for alerts ("All clear") and approvals ("No pending")
+- CSV export on data tables
+- Dynamic imports for heavy satellite UI components (deployment form, DAG viz)
+- These close the gap between "pages render" and "production-grade ops console"

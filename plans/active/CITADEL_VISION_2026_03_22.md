@@ -647,6 +647,110 @@ Every agent MUST follow this protocol after completing work:
 
 ---
 
+## Cross-Agent Interface Contracts (BINDING — All Agents Must Follow)
+
+These are the exact names, shapes, and conventions that multiple agents depend on. If any agent deviates, the
+integration breaks silently. Treat these as immutable contracts.
+
+### MockStateStore Collection Names (Agent 5 creates, Agent 6 seeds, Agents 2-4/7 read via API)
+
+```
+# Live collections (mutable, persisted to .local-dev-cache/)
+positions_live, orders_live, fills_live, tickers_live, pnl_live,
+strategies, organizations, clients, alerts, risk_limits,
+ml_models, ml_experiments, ml_features, ml_training_jobs,
+settlements, invoices, documents, services_health, fee_schedules,
+mandates, users, compliance_rules, news, audit_trail, batch_jobs,
+candles_1m, candles_5m, candles_1h, candles_1d, pnl_timeseries_live
+
+# Batch collections (immutable, re-seeded on reset)
+positions_batch, orders_batch, fills_batch, tickers_batch,
+pnl_batch, pnl_timeseries_batch
+```
+
+### Org IDs (Agent 6 defines in personas.py, auth-api must match, UI must match)
+
+```
+odum-internal   — Odum Internal (admin + internal-trader personas)
+acme            — Alpha Capital (client-full persona)
+vertex          — Vertex Partners (client-premium persona)
+beta            — Beta Fund (client-data-only persona)
+```
+
+### Persona Names (must be identical across auth-api, unified-trading-api, UI)
+
+```
+admin           — org: odum-internal, entitlements: ["*"]
+internal-trader — org: odum-internal, entitlements: ["platform", "wildcard"]
+client-full     — org: acme, entitlements: ["data", "research", "trading", "execution", "observe", "reports"]
+client-premium  — org: vertex, entitlements: ["data", "execution", "research"]
+client-data-only — org: beta, entitlements: ["data"]
+```
+
+### WebSocket Message Format (Agent 5 sends, Agent 2 consumes)
+
+```jsonc
+// Client → Server (subscribe)
+{ "action": "subscribe", "channel": "market-data", "instruments": ["BTC-USDT", "ETH-USDT"] }
+
+// Client → Server (unsubscribe)
+{ "action": "unsubscribe", "channel": "market-data", "instruments": ["BTC-USDT"] }
+
+// Server → Client (tick)
+{ "channel": "market-data", "type": "tick", "data": {
+    "instrument": "BTC-USDT", "price": 67234.50, "volume": 1.23,
+    "bid": 67230.00, "ask": 67239.00, "timestamp": "2026-03-22T14:30:00Z"
+}}
+
+// Server → Client (alert)
+{ "channel": "alerts", "type": "new_alert", "data": {
+    "id": "alert-001", "severity": "high", "message": "...", "timestamp": "..."
+}}
+```
+
+### API Query Params for Batch/Live (Agent 5 implements, Agents 2-4/7 send from UI)
+
+```
+GET /positions/active?mode=live                    → reads positions_live
+GET /positions/active?mode=batch&as_of=2026-03-21  → reads positions_batch
+GET /analytics/timeseries?mode=live                → reads pnl_timeseries_live
+GET /analytics/timeseries?mode=batch               → reads pnl_timeseries_batch
+```
+
+Default (no mode param) = live. The UI sends the mode from `useGlobalScope().scope.mode`.
+
+### Skeleton Component Names (Agent 1 creates, Agents 2-4/7 import)
+
+```
+components/ui/table-skeleton.tsx      — export TableSkeleton({ rows?: number, columns?: number })
+components/ui/card-grid-skeleton.tsx   — export CardGridSkeleton({ cards?: number })
+components/ui/chart-skeleton.tsx       — export ChartSkeleton({ height?: number })
+```
+
+### Debug Footer Props (Agent 1 creates, used in unified-shell.tsx)
+
+```tsx
+// The debug footer reads from these sources:
+const { user } = useAuth(); // persona name, org
+const { scope, setMode } = useGlobalScope(); // live/batch mode
+const mockMode = process.env.NEXT_PUBLIC_MOCK_API === "true";
+
+// Reset Demo calls:
+// 1. POST /admin/reset (API — clears MockStateStore)
+// 2. resetDemo() from lib/reset-demo.ts (UI — clears local state)
+// 3. router.refresh() (reloads current page data)
+```
+
+### Entitlement Checks (All UI agents must use this pattern)
+
+```tsx
+// In any service page that needs entitlement gating:
+const { hasEntitlement } = useAuth();
+if (!hasEntitlement("execution")) return <UpgradeCard service="Execution" />;
+```
+
+---
+
 ## Key Technical Rules
 
 - `uv pip install` not `pip install`

@@ -5,7 +5,7 @@ overview:
 todos:
   - id: a6-p0-persona-ssot
     content: |
-      - [ ] [AGENT] P0. Create a shared persona definition file that is the SSOT for both auth-api and the UI. Currently auth-api has `MOCK_USERS`/`MOCK_ORGS` in `mock_data.py` and the UI has personas in `hooks/use-auth.ts`. Create `unified-trading-api/unified_trading_api/mock_data/personas.py` with:
+      - [ ] [AGENT] P0. VERIFY existing personas.py (121 lines, already exists at unified_trading_api/mock_data/personas.py with 4 orgs, 5 personas). Ensure it matches auth-api mock_data.py EXACTLY (org IDs, persona names, entitlements). If any misalignment: fix personas.py to match. Add any missing entitlement keys needed by the UI (check hooks/use-auth.ts).
         - 4 organizations: Odum Internal (odum-internal), Alpha Capital (acme), Beta Fund (beta), Vertex Partners (vertex)
         - 5 personas: admin, internal-trader, client-full (acme), client-premium (vertex), client-data-only (beta)
         - Entitlements per persona matching the UI's entitlement checks
@@ -141,6 +141,40 @@ todos:
         5. Batch vs live data returns different results
         6. Reset clears mutations but preserves seed
     status: todo
+  # ── Phase 6: Cross-Domain Consistency & Client-Reporting-API (Gap-Closing) ──
+  - id: a6-p6-data-consistency
+    content: |
+      - [ ] [AGENT] P0. Add cross-domain data consistency validation to seed.py. After seed_all_domains(), run validate_consistency() that checks:
+        1. Price consistency: OHLCV candle close prices for a given date match the price used to calculate that day's strategy PnL (for strategies trading that instrument)
+        2. Reference integrity: every strategy_id in positions/orders exists in strategies collection. Every order_id in fills exists in orders. Every org_id exists in organizations.
+        3. Temporal consistency: no position opened_at before strategy inception_date. PnL time-series starts at strategy inception.
+        4. Aggregation consistency: sum of position-level PnL per strategy approximately equals strategy's reported PnL (within 5% tolerance)
+        5. Batch/live consistency: batch data is a slightly stale version of live — not completely different random data. Batch positions = live positions minus 1-2 unreconciled fills.
+        6. validate_consistency() raises ValueError with descriptive message on any violation. It runs automatically in seed_all_domains() — no manual invocation needed.
+    status: todo
+  - id: a6-p6-client-reporting-alignment
+    content: |
+      - [ ] [AGENT] P1. Ensure client-reporting-api mock data aligns with unified-trading-api seed data. unified-trading-api proxies /reporting/* to client-reporting-api in real mode. In mock mode, unified-trading-api serves from its own MockStateStore. For demo consistency:
+        1. Read client-reporting-api's mock_data if it exists
+        2. Ensure the same org IDs, client names, and report types are used
+        3. If client-reporting-api has its own seed data, verify no conflicts with unified-trading-api's reporting seed data
+        4. Document any alignment issues as TODOs for follow-up
+    status: todo
+  - id: a6-p6-sample-pdfs
+    content: |
+      - [ ] [AGENT] P1. Create sample PDF reports in `unified_trading_api/mock_data/sample_reports/`:
+        1. `executive_report.pdf` — 1-2 pages: title "Executive Summary — March 2026", AUM table, top strategies, risk summary
+        2. `pnl_attribution.pdf` — 1-2 pages: title "P&L Attribution Report", attribution table by strategy
+        3. These are served by Agent 5's `GET /reporting/download/{report_id}` endpoint
+        4. Can be generated programmatically using reportlab or fpdf2, or be static hand-crafted PDFs
+    status: todo
+  - id: a6-p6-news-seed
+    content: |
+      - [ ] [AGENT] P1. Seed 15-20 mock news items for the Observe > News page (currently a 24-line stub):
+        1. Each item: title, source (Reuters, Bloomberg, CoinDesk, etc.), timestamp (last 48 hours), category (market, regulatory, macro, crypto), relevance_score, linked_instruments[]
+        2. Mix of: market moves ("BTC breaks $70K resistance"), regulatory ("SEC approves spot ETH ETF"), macro ("Fed signals rate pause"), crypto-specific ("Uniswap V4 launch")
+        3. Store in MockStateStore "news" collection. API serves via GET /market-data/news.
+    status: todo
 isProject: false
 ---
 
@@ -188,6 +222,16 @@ Cross-reference `lib/strategy-registry.ts` (strategy definitions) and `lib/taxon
 
 - Seed data MUST match the UI's current client-side data closely enough that the Dashboard looks the same after
   migration. Same strategy names, similar PnL ranges, same org names.
+
+## Cross-domain consistency rules (added 2026-03-22)
+
+These rules ensure the demo doesn't have embarrassing data inconsistencies:
+
+- If BTC candles show a 5% rally on March 15, the BTC-momentum strategy PnL must show a corresponding positive day
+- If a position references strategy "alpha-btc-momentum", that strategy must exist in strategies collection
+- If an order shows as "filled", there must be corresponding fill records
+- Batch data must look like "yesterday's version" of live data, not completely unrelated numbers
+- validate_consistency() function enforces all of this automatically
 
 ## New scope (added 2026-03-22 gap analysis)
 
