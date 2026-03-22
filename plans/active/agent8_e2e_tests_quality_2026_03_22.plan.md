@@ -351,6 +351,38 @@ todos:
         5. Navigate to Promote > Candidates → verify candidates from multiple asset classes
         DEPENDENCY: Agent 6 must expand strategies to 50+. Agent 1 must create DataTable.
     status: todo
+  - id: a8-p7-realtime-pnl-test
+    content: |
+      - [ ] [AGENT] P0. Playwright test: Real-time PnL propagation (validates server-side calculation end-to-end):
+        1. Login as admin → navigate to Dashboard
+        2. Note the current total PnL value displayed
+        3. Wait 5 seconds (WebSocket ticks update prices → server recalculates PnL → emits on analytics channel)
+        4. Verify the PnL value has CHANGED (even slightly — Brownian motion ensures movement)
+        5. Navigate to Positions tab → verify unrealized_pnl column values update in real-time
+        6. This validates the FULL flow: tick → server PnL recalc → WebSocket emit → UI render
+        CRITICAL: If PnL doesn't update, the server-side calculation (Agent 5 a5-p4-realtime-pnl) is broken. The UI should NOT have its own PnL calculation fallback.
+        DEPENDENCY: Agent 5 a5-p4-realtime-pnl, Agent 2 a2-p6b-realtime-pnl-dashboard.
+    status: todo
+  - id: a8-p7-data-freshness-test
+    content: |
+      - [ ] [AGENT] P1. Playwright test: Data freshness indicators:
+        1. Navigate to Trading Terminal → verify "Live" badge with green dot is visible
+        2. Navigate to Positions → verify "Live" indicator on positions panel
+        3. Toggle to batch mode → verify "As of {date}" badge appears (no "Live" indicator)
+        4. Toggle back to live → verify "Live" indicator returns
+        DEPENDENCY: Agent 1 a1-p7-data-freshness (DataFreshness component).
+    status: todo
+  - id: a8-p7-no-client-side-mock-data
+    content: |
+      - [ ] [AGENT] P0. Verification test: No client-side mock data sources remain:
+        1. Verify `lib/mocks/` directory does NOT exist (removed by Agent 6)
+        2. Verify `lib/trading-data.ts` is NOT imported by any page in `app/` (grep for imports)
+        3. Verify `lib/ml-mock-data.ts`, `lib/execution-platform-mock-data.ts`, `lib/data-service-mock-data.ts`, `lib/strategy-platform-mock-data.ts` are NOT imported by any page
+        4. Verify NO page has `const mockData = [` or `const MOCK_` inline arrays
+        5. Every data table must get its data from a `useQuery` hook calling the API
+        This enforces the separation of concerns: the UI is visual only, all data comes from the API.
+        DEPENDENCY: Agent 6 Phase 4 (MSW removal + trading-data.ts migration).
+    status: todo
   - id: a8-p7-guided-tour-test
     content: |
       - [ ] [AGENT] P1. Playwright test: Guided tour:

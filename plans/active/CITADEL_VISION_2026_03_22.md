@@ -22,9 +22,14 @@ follow this vision. No agent should make decisions that conflict with this docum
      domain data APIs (batch-audit-api, config-api, deployment-api, execution-results-api, market-data-api,
      ml-inference-api, ml-training-api, trading-analytics-api) are absorbed into unified-trading-api.
 
-3. **90% CODE SHARING** — Mock and real modes share the same route handlers, the same service layer, the same
-   filtering/pagination logic. Only the data source differs (MockStateStore vs backend service calls). No MSW in the UI
-   — the UI always calls the real API. The API handles mock/real internally.
+3. **90% CODE SHARING** — Mock and real modes share the same route handlers (on the gateway), the same service layer,
+   the same filtering/pagination logic. Only the data source differs (MockStateStore vs backend service calls).
+   **Default integration path:** the UI calls the real HTTP APIs (`unified-trading-api`, `auth-api`,
+   `client-reporting-api`); each gateway handles mock vs live internally. **Exception — Tier 0 (offline / API not
+   ready):** the UI may run with an in-browser or same-origin mock that implements the **same OpenAPI operations** and
+   an in-memory store, so product work continues without `unified-trading-api` running. Tier 0 is not a second ad-hoc
+   data universe: it stays aligned via OpenAPI types, UAC schemas, shared seed fixtures, and contract checks against
+   Tier 1. See **Runtime convergence tiers** (below).
 
 4. **DIRECT-TO-TABS** — No intermediate landing pages with feature cards. Clicking a lifecycle nav item goes directly to
    the first tab of that service. Tabs ARE the navigation within a service.
@@ -38,6 +43,195 @@ follow this vision. No agent should make decisions that conflict with this docum
 
 ---
 
+## Runtime convergence tiers (topology × external data × API availability)
+
+Work can progress at **three cumulative tiers** without blocking: each tier is **strictly more faithful** to production
+than the last. Two ideas stay **orthogonal**:
+
+- **Call topology** — who is in the HTTP/process graph (UI-only vs gateway vs full microservice fleet).
+- **External data / risk posture** — `mock_mode`, testnet, emulators, VCR, vs live venues. Services can run the **same
+  code paths** with **non-prod** adapters; that is still “real engine” topology.
+
+### Real engines vs in-browser mocks (clarification)
+
+**“Run real services” does not mean “traffic crosses the public internet.”** It means **real checked-out service repos**
+(`strategy-service`, `execution-service`, …) started with each service’s **CLI** as **OS processes** on a developer
+machine (or any host) — typically the same **sibling clone** pattern as `setup-workspace.sh` and
+`workspace-manifest.json` `dependencies[]`. **Localhost HTTP** from UI → `unified-trading-api` → `strategy-service` is
+still **real engine code**, not a TypeScript reimplementation. **Tier 0 (in-browser / no `:8030`)** is only for when
+those Python processes are **intentionally absent**; it is not the definition of “mock mode.”
+
+### Local dev mesh (single machine, sibling clones)
+
+- **Self-contained UI workflow:** `unified-trading-system-ui` setup may, behind an **env flag**, **clone sibling repos**
+  at manifest-aligned versions so a developer working **only** in the UI repo (or a sparse checkout) still runs the
+  **same service revisions** as the full workspace — functionality tracks the services without vendoring multi‑MB domain
+  data into the UI git tree.
+- **Mock / non-prod:** Services run with CLI + env that select **mock adapters**, emulators, testnet, or
+  `CLOUD_MOCK_MODE` as policy dictates. They may still **read/write cloud storage** for large blobs, shared caches, or
+  reference datasets — “local process” ≠ “offline”; it means **not** depending on a long-lived K8s deployment to exist
+  before you can dev.
+- **Bulk domain data:** Registries and heavy artifacts stay **out of the UI repo** (cloud, CDN, versioned JSON from UAC
+  / seed pipelines); **engines** stay in sibling service repos.
+
+### UI → gateway integration profiles
+
+1. **Slim (API-only):** UI points at `UNIFIED_TRADING_API_BASE_URL` (and auth/reporting URLs). **No** local clone of
+   strategy/execution/etc. on that laptop — the gateway runs elsewhere (staging, teammate, CI).
+2. **Full local mesh:** UI startup (env) triggers **clone + run** for **siblings + `unified-trading-api`** per manifest;
+   all listeners on **localhost**; the UI talks **only via HTTP** to gateways (never embed Python in the Next.js
+   bundle). Same effective topology as “full workspace on one machine” today.
+
+### Gateway → downstream target modes (`LiveDomainService` and successors)
+
+One gateway codebase; **two configuration shapes** (not duplicated business logic):
+
+1. **Co-located fleet:** Service base URLs point at **localhost** (or docker-compose network) where processes were
+   started from **cloned sibling repos** — laptop and many integration tests.
+2. **Networked fleet:** Base URLs point at **remote** processes (cloud Run, staging k8s, another VPC). **Ports, TLS, and
+   auth** are config-only.
+
+**Production evolution:** Hops may become **Pub/Sub, Redis, or internal buses** instead of raw HTTP between every pair;
+the invariant remains **real orchestration against real engine processes**, not reimplemented logic in the gateway.
+
+### Tier 0 — UI-only trading API (no HTTP to `unified-trading-api`)
+
+**When:** `unified-trading-api` is down, not merged yet, or developers want **zero** Python gateway processes for UI
+work.
+
+**Shape:**
+
+- No requests to the trading gateway port (`:8030` by convention). Auth and client-reporting may still use their
+  gateways if running, or be mocked behind the same env flag — product choice.
+- **State:** trading-domain reads/writes live in an **in-memory (or IndexedDB) store inside the browser** — fully
+  self-contained for everything that fits in RAM.
+- **Large domain data:** instrument registries, representative samples, static reference tables, and other **bulk**
+  payloads may load over the network from **cloud storage / CDN / versioned JSON artifacts** (exported from UAC or the
+  same seed pipeline as the API). That does **not** violate Tier 0: the **trading API process** is still absent; only
+  read-mostly reference data crosses the wire.
+- **Semantics:** the in-UI layer should mirror **`MockDomainService` behavior** and **OpenAPI** response shapes — not
+  arbitrary fixtures. **Service Python does not execute inside the browser**; when you need **real engines**, use
+  **sibling clones + local processes** (sections above), not a bigger JS bundle. Tier 0 alignment uses **shared
+  contracts** (OpenAPI codegen, JSON Schema, exported seed JSON) and **tests** that compare Tier 0 responses to Tier 1
+  curl fixtures.
+
+**Sensible?** Yes, for velocity and demos when the gateway is unavailable. **Risk:** behavioral drift vs the server.
+**Mitigation:** OpenAPI SSOT, shared seeds (Agent 6), and periodic contract tests — not hand-written MSW handlers that
+diverge from `unified-trading-api`.
+
+### Tier 1 — Gateway + libraries, no (or minimal) cross-service HTTP
+
+**When:** Laptop demo, fast CI, partial stack.
+
+**Shape:** `unified-trading-api` runs; **MockStateStore** (UTL) backs mock mode on the gateway; **no** fan-out to
+strategy-service, execution-service, etc., or only **selective** HTTP (e.g. reporting proxy). Same FastAPI routes and
+service layer as production gateway; **process graph** is not the full fleet.
+
+### Tier 2 — Full fleet topology, mock-friendly backends
+
+**When:** Staging, SIT, integration tests that must prove **wiring**.
+
+**Shape:** Gateway **calls** real service processes at **configured URLs** (localhost from sibling clones **or** remote
+hosts — **equivalent** for parity). Each downstream service may run **`mock_mode`**, testnet, or emulators — **same
+orchestration graph as production**, different credentials and side effects. This is **full engine + wire** parity;
+“mock” here means **external I/O posture**, not “skip microservices” and not “must be in the cloud.”
+
+### Progression rule
+
+Features may land at **Tier 0** first, then gain assurance at **Tier 1** (curl + gateway), then **Tier 2** (fleet —
+**including** localhost sibling mesh). **Authoritative trading behavior** remains **defined and tested at the API**
+(curl / integration tests); Tier 0 is a **contract-preserving projector** for the UI when the gateway is absent — not a
+permanent second backend. Prefer **full local mesh + mock_mode services** over Tier 0 when the goal is **engine**
+fidelity without a remote cluster.
+
+---
+
+## Runtime mode: env vars, CLI, health, and UI truthfulness
+
+This section is the **implementation SSOT** for “what to build” so every combination of tier, mesh, and environment is
+**explicit**, **observable**, and **fails loudly** when prerequisites are missing. Applies to **dev, staging, and prod**
+(the values change; the **contract** does not).
+
+### 1. Configuration surface (env + CLI) — single matrix
+
+**Principle:** No silent fallbacks. **Declared mode** + **effective mode** may differ only when the UI/API shows **why**
+(readiness / banner).
+
+| Concern                        | Typical variables / CLI                                                                                         | Notes                                                                                                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deployment environment**     | `DEPLOYMENT_ENV` or `NODE_ENV` + explicit `APP_ENV=development\|staging\|production`                            | UI: `NEXT_PUBLIC_APP_ENV` (must be public for badge). Never rely on `NODE_ENV` alone for staging vs prod.                                                                   |
+| **UI integration profile**     | `NEXT_PUBLIC_UI_INTEGRATION=slim\|full_mesh\|tier0_offline`                                                     | **slim** = HTTP to remote/local API only. **full_mesh** = bootstrap may clone siblings + start processes (script/CLI). **tier0_offline** = in-browser API mock, no `:8030`. |
+| **API base URLs**              | `NEXT_PUBLIC_UNIFIED_TRADING_API_URL`, auth, reporting                                                          | Slim profile; full_mesh may still use localhost defaults.                                                                                                                   |
+| **Gateway data path**          | `UNIFIED_TRADING_API_USE_MOCK_DOMAIN_SERVICE=true\|false` (or existing `CLOUD_MOCK_MODE` / `data_mode` per UCI) | Tier 1 **MockStateStore** vs **LiveDomainService** fan-out.                                                                                                                 |
+| **Gateway downstream targets** | `LIVE_SERVICE_STRATEGY_URL`, `LIVE_SERVICE_EXECUTION_URL`, … or **one** `SERVICE_MESH_CONFIG` / discovery file  | Co-located vs networked; empty or localhost per tier.                                                                                                                       |
+| **Local mesh bootstrap**       | `scripts/dev-start.sh --profile full-mesh` (or UI `pnpm run dev:mesh`)                                          | Clones + starts siblings + API; manifest pins versions. **CLI must print** effective profile and missing repos.                                                             |
+| **Per-service mock**           | Existing service CLI flags + `CLOUD_MOCK_MODE`, provider keys                                                   | Each service logs **effective** mock/live at startup.                                                                                                                       |
+
+**CLI rules:** Any dev entrypoint that starts multiple processes **must** (1) parse the same env names as CI/staging
+templates in PM, (2) **exit non-zero** with a **clear message** if `NEXT_PUBLIC_UI_INTEGRATION=full_mesh` but a required
+repo failed clone, (3) print a one-line **effective summary** (profile + tier + mock flags).
+
+### 2. Health vs readiness — machine-readable mode and gaps
+
+**`GET /health` (liveness):** Process up; minimal dependencies (optional).
+
+**`GET /readiness` (or extended `GET /health` in dev only — pick one per repo and document):** JSON body **must**
+include, for `unified-trading-api` and each long-lived service:
+
+- `app_env`: `development` \| `staging` \| `production`
+- `declared_runtime_tier`: what config **asked** for (0 / 1 / 2 or enum)
+- `effective_runtime_tier`: what is **actually** satisfiable (may be lower if upstreams down)
+- `mock_domain_service`: bool (gateway using MockStateStore path)
+- `external_data_mocked`: bool (aggregate: emulators / testnet / `CLOUD_MOCK_MODE`)
+- `upstream_checks`: array of
+  `{ "name": "strategy-service", "required_for_tier": 2, "ok": false, "url": "...", "error": "connection refused" }`
+- `degraded_reasons`: string[] for logs and UI banners
+
+**Rules:**
+
+- If **declared** tier is 2 but a **required** upstream is down → `effective_runtime_tier` ≤ what still works, HTTP
+  **503** on readiness (or **200 with `ok: false`** — pick one standard; gateway should be consistent across envs).
+- **Startup logs:** WARN when `declared` ≠ `effective` or when running Tier 1 but env hints Tier 2.
+
+Downstream services **must** expose the same **shape** (subset allowed) so the gateway can aggregate for the UI **System
+Health** surface.
+
+### 3. UI: always show where you are and what is missing
+
+**Global shell (every env, not only mock):**
+
+- **Environment badge:** `DEV` \| `STAGING` \| `PROD` (color-coded). Sourced from `NEXT_PUBLIC_APP_ENV` + build-time
+  injection for prod.
+- **Runtime strip** (compact, Row 1 or debug bar): **Tier** (0/1/2), **Integration** (slim / mesh / offline), **Data:**
+  Mock store vs Live fan-out, **API:** Reachable / Degraded / Offline (from polling readiness).
+- **Blocking banner** when user or config expects Tier 2 but readiness shows missing upstreams — text must name
+  **which** service and **which** env var or port fixes it (link to internal runbook or tooltip).
+- **Debug footer** (existing plan): extends to show **effective** tier + link “View readiness JSON” for developers when
+  `NEXT_PUBLIC_DEBUG_RUNTIME=true`.
+
+**Observe > System Health** (or equivalent tab): table of services from **aggregated readiness**; red/yellow/green; last
+error string; **required for current tier** column.
+
+**Prod:** Same badges (no secrets); readiness may be auth-gated; degraded state still visible to ops roles.
+
+### 4. Implementation checklist (repos)
+
+| Repo / artifact                      | Change                                                                                                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **unified-trading-api**              | Implement readiness JSON above; aggregate optional upstream probes when `LiveDomainService`; clear errors when tier unsatisfied.               |
+| **unified-trading-system-ui**        | Read `NEXT_PUBLIC_*`; shell badges; poll trading + auth readiness; banners; wire System Health tab to aggregated endpoint or parallel fetches. |
+| **Sibling services**                 | Standardize readiness field subset + startup WARN on config mismatch.                                                                          |
+| **unified-trading-pm**               | `dev-start.sh` / compose templates: document env matrix; same keys as staging secret templates; fail-fast messages.                            |
+| **unified-config-interface / codex** | Document canonical env names if not already (avoid drift).                                                                                     |
+
+### 5. Agent ownership (for execution)
+
+- **Agent 1 (shell):** Runtime strip, banners, System Health wiring, debug footer extensions — see `agent1` plan todo.
+- **Agent 5 (gateway):** Readiness schema, upstream checks, tier semantics — see `agent5` plan todo.
+- **Agent 7 (observe):** System Health tab consumes readiness; align with shell.
+
+---
+
 ## Service Architecture
 
 ### Global Shell (Every Authenticated Page)
@@ -48,7 +242,8 @@ Row 1 CENTER: [All Orgs ▾] [All Clients ▾] [All Strategies ▾] [$41M] [28.9
 Row 1 RIGHT:  [Search ⌘K] [🔔] [Odum Internal ▾] [User ▾]
 Row 2:        Tab1 | Tab2 | Tab3 | Tab4 | Tab5          [Live ◉ / As-Of 📅]
 Breadcrumbs:  Trading > Terminal
-Debug Footer: [Reset Demo] [Mock Mode ◉] [Persona: Admin ▾]  (mock mode only)
+Env strip:    [DEV] Tier 2 · Mesh · Live fan-out · API OK   (all envs; prod uses PROD styling)
+Debug Footer: [Reset Demo] [Mock Mode ◉] [Persona: Admin ▾]  (mock / debug flags only)
 ```
 
 ### Global Scope Filters (Row 1 Center — EVERY service page)
@@ -271,13 +466,14 @@ cd unified-api-contracts
 ```
 
 **SSOT scripts (all in `unified-trading-pm/scripts/openapi/`):**
+
 - `generate_ui_reference_data.py` (371 lines) — UAC/UIC enums, registries, config schemas → JSON for UI
 - `generate_config_registry.py` (247 lines) — extracts all Pydantic config classes from 25+ repos
 - `generate_system_topology.py` (256 lines) — aggregates all PM manifests into single topology
 - `generate_unified_spec.py` (508 lines) — merges OpenAPI specs from all 16 FastAPI services
 
-**When to run:** After ANY change to UAC registries, UIC schemas, or service configs.
-**Automated:** GHA `uac-registry-sync.yml` triggers on UAC commits → regenerates → opens PR in UI repo.
+**When to run:** After ANY change to UAC registries, UIC schemas, or service configs. **Automated:** GHA
+`uac-registry-sync.yml` triggers on UAC commits → regenerates → opens PR in UI repo.
 
 ### Pipeline 2: API → UI TypeScript Types
 
@@ -345,14 +541,14 @@ python unified-trading-pm/scripts/checkers/check_ui_api_flow_coverage.py
 
 ### Key Manifest Files (Data-Driven SSOTs)
 
-| File | Location | Purpose |
-| ---- | -------- | ------- |
-| `workspace-manifest.json` | PM root | All 65+ repos: versions, tiers, deps, CI status |
-| `workspace-constraints.toml` | PM root | External dep version SSOT |
-| `strategy-manifest.json` | PM root | All strategies: IDs, venues, maturity, capabilities |
-| `data-flow-manifest.json` | PM root | Data pipeline: instruments→tick-data→features→strategy |
-| `ui-api-mapping.json` | PM scripts/dev/ | Service→port mapping for local dev |
-| `ui-reference-data.json` | UAC openapi/ | Generated: 128 venues, enums, registries for UI |
+| File                         | Location        | Purpose                                                |
+| ---------------------------- | --------------- | ------------------------------------------------------ |
+| `workspace-manifest.json`    | PM root         | All 65+ repos: versions, tiers, deps, CI status        |
+| `workspace-constraints.toml` | PM root         | External dep version SSOT                              |
+| `strategy-manifest.json`     | PM root         | All strategies: IDs, venues, maturity, capabilities    |
+| `data-flow-manifest.json`    | PM root         | Data pipeline: instruments→tick-data→features→strategy |
+| `ui-api-mapping.json`        | PM scripts/dev/ | Service→port mapping for local dev                     |
+| `ui-reference-data.json`     | UAC openapi/    | Generated: 128 venues, enums, registries for UI        |
 
 ### Current Drift Status (2026-03-22)
 
@@ -376,6 +572,8 @@ files here. In production, the same directory structure would be populated by re
 - `orders_live.jsonl` — real-time orders
 - `pnl_live.jsonl` — real-time PnL snapshots
 - `tickers_live.jsonl` — latest ticker prices
+- `alerts_live.jsonl` — real-time alerts (new alerts arrive, can be acknowledged)
+- `risk_live.jsonl` — real-time risk exposure (updated as positions change)
 
 ### Batch/Live Switch
 
@@ -388,23 +586,63 @@ The **only difference** between batch and live mode is which collection the API 
 The switch is clean because both live in the same `.local-dev-cache/` directory. The UI sends `mode` and `as_of` query
 params; the API reads from the correct collection. No separate data stores, no environment variable changes.
 
+**This applies to ALL domain data — no exceptions.** Positions, orders, fills, PnL, tickers, alerts, risk exposure,
+settlements, strategy health — every domain has `_live` and `_batch` variants. The service engine logic (filtering,
+pagination, aggregation, org-scoping) is >90% identical between modes. The ONLY difference is the storage collection
+name. No separate code paths, no mode-specific business logic.
+
 ### Batch Data Characteristics (vs Live)
 
 - Batch PnL includes reconciliation adjustments (slightly different from live)
 - Batch positions may lag by 1-2 fills (unreconciled fills not yet in batch)
 - Batch prices are official close prices, live prices are last tick
 - Batch has exact fee breakdowns, live has estimated fees
+- Batch alerts are the reconciled alert history — all alerts have final status (acknowledged/escalated/resolved). Live
+  alerts include new unacknowledged alerts that arrived since the batch cut.
+- Batch risk is end-of-day risk snapshot. Live risk updates as positions and prices change.
 
 ### WebSocket Mock Feed
 
 The unified-trading-api WebSocket endpoint (`/ws`) MUST emit simulated price ticks in mock mode:
 
-- **Brownian motion** price generator for subscribed instruments (BTC-USDT, ETH-USDT, SOL-USDT, etc.)
+- **Brownian motion** price generator for subscribed instruments (ALL instruments from `representative_sample.py`)
 - **Tick interval**: 500ms-2000ms (randomized for realism)
 - **Data**: `{ instrument, price, volume, bid, ask, timestamp }`
 - Ticks update the `tickers_live` collection in MockStateStore (so REST endpoints reflect current prices)
 - The UI Trading Terminal subscribes on mount, unsubscribes on unmount
 - This is what makes the terminal feel **alive** — prices moving, charts updating, order book shifting
+
+### Real-Time PnL Propagation (CRITICAL — Server-Side, Not UI Logic)
+
+Price ticks MUST flow through to PnL. The calculation happens in the **mock service layer**, NOT in the UI.
+
+**Server-side flow (Agent 5 — MockDomainService):**
+
+1. WebSocket tick generator updates `tickers_live` collection with new prices
+2. On each tick batch, MockDomainService recalculates positions:
+   - For each position where `instrument == tick.instrument`:
+     `unrealized_pnl = (tick.price - position.entry_price) * position.quantity * side_multiplier`
+   - Update `positions_live` collection in MockStateStore
+3. Aggregate strategy-level PnL from updated positions:
+   - Group positions by strategy_id, sum unrealized_pnl per strategy
+   - Update `pnl_live` collection
+4. Emit WebSocket messages:
+   - `{ channel: "positions", type: "pnl_update", data: { positions: [...] } }`
+   - `{ channel: "analytics", type: "pnl_snapshot", data: { strategies: [...] } }`
+
+**Client-side flow (Agent 2 — UI):**
+
+1. Dashboard subscribes to `analytics` WebSocket channel
+2. Strategy performance cards update PnL values on each snapshot
+3. Equity curves append new data points in real-time
+4. Position table updates PnL column from `positions` channel
+
+**Why server-side:** This ensures the same PnL calculation logic works when the service is real. The UI is purely visual
+— it renders what the WebSocket tells it. If you can't see PnL updating via `wscat`, it shouldn't update in the UI
+either.
+
+**Test:** `wscat -c ws://localhost:8030/ws` → subscribe to positions channel → observe PnL values changing as ticks
+arrive. If this works, the UI just renders it.
 
 ### OHLCV Candle Data
 
@@ -513,6 +751,8 @@ Agents MUST read this before planning work. Several areas are further along than
   auth-api's `mock_data.py`.
 - **auth-api**: Fully implemented — port 8200, JWT issuance (HS256, 1h access / 7d refresh), 5 mock users, mock login
   flow. Has `mock_data.py` and `mock_state.py`.
+- **Dark mode**: Already the only theme. `ui-prefs-store.ts` has `theme: "dark"`, `theme-provider.tsx` wraps
+  `next-themes`, all shadcn/ui components use CSS variables with dark mode support. No work needed.
 - **Execution service pages**: All 7 tabs exist as real pages (298-405 lines each): overview, algos, venues, tca,
   benchmarks, candidates, handoff. Layout exists.
 - **UI page richness**: 49 of 60 service pages are real (100-2000+ lines). Only 11 are stubs (24 lines each).
@@ -723,17 +963,27 @@ integration breaks silently. Treat these as immutable contracts.
 
 ```
 # Live collections (mutable, persisted to .local-dev-cache/)
+# Updated by WebSocket ticks, manual actions, alert engine
 positions_live, orders_live, fills_live, tickers_live, pnl_live,
-strategies, organizations, clients, alerts, risk_limits,
-ml_models, ml_experiments, ml_features, ml_training_jobs,
-settlements, invoices, documents, services_health, fee_schedules,
-mandates, users, compliance_rules, news, audit_trail, batch_jobs,
-candles_1m, candles_5m, candles_1h, candles_1d, pnl_timeseries_live
+alerts_live, risk_live, pnl_timeseries_live,
+candles_1m, candles_5m, candles_1h, candles_1d,
 
-# Batch collections (immutable, re-seeded on reset)
+# Shared collections (same in live and batch — reference data, not time-varying)
+strategies, strategy_configs, organizations, clients,
+ml_models, ml_experiments, ml_features, ml_training_jobs,
+invoices, documents, services_health, fee_schedules,
+mandates, users, compliance_rules, news, audit_trail, batch_jobs,
+
+# Batch collections (immutable T+1 reconciled snapshots, re-seeded on reset)
+# >90% same data shape as live — only storage differs
 positions_batch, orders_batch, fills_batch, tickers_batch,
-pnl_batch, pnl_timeseries_batch
+pnl_batch, pnl_timeseries_batch,
+alerts_batch, risk_batch
 ```
+
+**Key principle:** Every domain that has time-varying data gets both `_live` and `_batch` variants. The API service
+layer code is >90% identical — same filtering, pagination, org-scoping, aggregation. The ONLY branching is which
+collection to read from based on the `mode` query param. No mode-specific business logic.
 
 ### Org IDs (Agent 6 defines in personas.py, auth-api must match, UI must match)
 
@@ -820,53 +1070,90 @@ if (!hasEntitlement("execution")) return <UpgradeCard service="Execution" />;
 
 ## Full Instrument Coverage (MANDATORY — Use the Entire Registry)
 
-The system has **128 venues** in UAC and **~40 representative instruments** in
+The system has **128 venues** in UAC and **50+ representative instruments** in
 `unified-api-contracts/registry/representative_sample.py`. The mock generators and seed data MUST cover ALL instruments
 the registry provides — not an arbitrary subset of 10.
 
+### What Actually Exists in `representative_sample.py` (verified 2026-03-22)
+
+- 7 CeFi spot (Binance BTC/ETH/SOL, Coinbase BTC, Bybit ETH, OKX BTC, Upbit BTC)
+- 6 CeFi perpetuals (Binance-Futures, Deribit, Hyperliquid, OKX, Bybit, Aster)
+- 1 CeFi futures config (Deribit BTC — generates dated futures dynamically)
+- 4 TradFi equities (AAPL, QQQ, GLD, VIX)
+- 3 TradFi futures (ES, ZB, ZN — CME/ICE)
+- 18 DeFi instruments (Aave V3 aTokens+debtTokens, Compound V3, Uniswap V2/V3/V4, Lido, EtherFi, Morpho, Curve, Ethena,
+  Euler)
+- 4 Sports instruments (Polymarket prediction markets, Betfair exchange odds, Pinnacle fixed odds)
+- Options chain config (Deribit BTC — generates strikes/expiries dynamically from ref_date)
+
 ### SSOT Chain
 
-1. **UAC `representative_sample.py`** — Layer 1 deterministic instrument specs (CeFi spot, CeFi perps, TradFi, DeFi
-   pools, sports leagues). This is the SSOT for what instruments exist.
+1. **UAC `representative_sample.py`** — Layer 1 deterministic instrument specs. This is the SSOT for what instruments
+   exist. **Seed generators MUST import from this file, not hardcode instrument lists.**
 2. **`generate_ui_reference_data.py`** — syncs UAC registries (venues, instruments, enums, capabilities) to
    `ui-reference-data.json` (2,297 lines, already generated).
-3. **`seed.py`** — reads representative_sample.py to seed mock data for ALL instruments (candles, tickers, positions).
+3. **`seed.py`** — imports `CEFI_SPOT_SPECS`, `CEFI_PERPETUAL_SPECS`, `TRADFI_EQUITY_SPECS`, `TRADFI_FUTURES_SPECS`,
+   `DEFI_INSTRUMENT_SPECS`, `SPORTS_INSTRUMENT_SPECS` from `representative_sample` and generates candles, tickers,
+   positions for ALL of them programmatically. If UAC registry expands, seed expands automatically — no seed.py change.
 4. **UI** — reads `ui-reference-data.json` for dropdowns, selectors, and validation.
 
 ### What This Means for Each Agent
 
-- **Agent 5/6**: Seed candles, tickers, and order books for ALL instruments in representative_sample.py — not a hardcoded
-  list of 10. Use the registry programmatically: `from unified_api_contracts.registry.representative_sample import ...`
+- **Agent 5/6**: Seed candles, tickers, and order books for ALL instruments in representative_sample.py — not a
+  hardcoded list of 10. Use the registry programmatically:
+  `from unified_api_contracts.registry.representative_sample import ...` The seed generator iterates ALL spec lists. If
+  a new instrument is added to UAC, it appears on next `POST /admin/reset`.
 - **Agent 2**: Instrument selector on Trading Terminal must list ALL instruments from ui-reference-data.json.
 - **Agent 8**: After Agents 5-6 finish, re-run `generate_ui_reference_data.py` to sync any registry changes to the UI.
 
 ---
 
-## 50+ Strategy Expansion (MANDATORY — Combinatorial Coverage)
+## 50+ Strategy Expansion (MANDATORY — Config-Driven, Not Code-Path-Driven)
 
-Currently 18 strategies are seeded. The codex documents **10 archetypes × 5 asset classes × 4 execution modes**. We MUST
-expand to **50+ strategies** using representative combinations:
+Currently 18 strategies are seeded. The codex documents **13 code-complete archetypes + 4 documented-only** across
+CeFi/TradFi/DeFi/Sports. We MUST expand to **50+ strategies** using representative combinations.
 
-### Expansion Approach (Config-Driven, Not Code-Path-Driven)
+### Expansion Approach (Config, Not Code — CRITICAL DISTINCTION)
 
-The system is designed so that strategies are **config, not code**. Same strategy engine handles all combinations. The
-expansion is purely a seed data + registry update — no new code paths needed.
+The system is designed so that strategies are **config, not code**. The `EventDrivenStrategyEngine` in strategy-service
+is parameterised by subscription config (see `codex/09-strategy/cross-cutting/config-architecture.md`). Each strategy is
+a config entry defining: archetype, asset_class, instruments[], trigger subscriptions, risk_limits. Expanding to 50+
+strategies means adding config entries and seeding matching data — **NOT adding new strategy engine code paths**.
+
+This is NOT 10x the strategy-service work. It is expanding the config registry + seed data.
+
+### Existing Code-Complete Archetypes (from codex/09-strategy/)
+
+| Archetype       | CeFi                       | TradFi                   | DeFi                    | Sports                    | Status        |
+| --------------- | -------------------------- | ------------------------ | ----------------------- | ------------------------- | ------------- |
+| Momentum        | cefi_momentum.py           | —                        | —                       | —                         | Code complete |
+| Mean Reversion  | mean_reversion_strategy.py | —                        | —                       | —                         | Code complete |
+| ML Directional  | —                          | tradfi_ml_directional.py | —                       | ml_sports_strategy.py     | Code complete |
+| Options ML      | —                          | options_ml_strategy.py   | —                       | —                         | Code complete |
+| Basis Trade     | —                          | —                        | defi_basis.py           | —                         | Code complete |
+| Staked Basis    | —                          | —                        | defi_staked_basis.py    | —                         | Code complete |
+| Recursive Basis | —                          | —                        | defi_recursive_basis.py | —                         | Code complete |
+| AAVE Lending    | —                          | —                        | defi_lending.py         | —                         | Code complete |
+| Arbitrage       | —                          | —                        | —                       | arbitrage_strategy.py     | Code complete |
+| Value Betting   | —                          | —                        | —                       | value_betting_strategy.py | Code complete |
+| Market Making   | Documented                 | Documented               | Documented              | Documented                | Config only   |
+| AMM LP          | —                          | —                        | Documented              | —                         | Config only   |
 
 **Target 50+ by combining:**
 
-| Archetype          | CeFi | TradFi | DeFi | Sports | Prediction | Total |
-| ------------------ | ---- | ------ | ---- | ------ | ---------- | ----- |
-| Market Making      | 3    | 2      | 2    | 2      | 1          | 10    |
-| ML Directional     | 3    | 2      | 1    | 2      | 1          | 9     |
-| Momentum           | 2    | 2      | 1    | —      | —          | 5     |
-| Mean Reversion     | 2    | 1      | 1    | —      | —          | 4     |
-| Basis Trade        | 2    | —      | 2    | —      | —          | 4     |
-| Statistical Arb    | 2    | 2      | —    | —      | —          | 4     |
-| Yield              | —    | —      | 3    | —      | —          | 3     |
-| Arbitrage          | 1    | —      | 1    | 2      | 1          | 5     |
-| Options            | 1    | 2      | —    | —      | —          | 3     |
-| Value Betting      | —    | —      | —    | 3      | —          | 3     |
-| **Total**          | **16** | **11** | **11** | **9** | **3**   | **50** |
+| Archetype       | CeFi   | TradFi | DeFi   | Sports | Prediction | Total  |
+| --------------- | ------ | ------ | ------ | ------ | ---------- | ------ |
+| Market Making   | 3      | 2      | 2      | 2      | 1          | 10     |
+| ML Directional  | 3      | 2      | 1      | 2      | 1          | 9      |
+| Momentum        | 2      | 2      | 1      | —      | —          | 5      |
+| Mean Reversion  | 2      | 1      | 1      | —      | —          | 4      |
+| Basis Trade     | 2      | —      | 2      | —      | —          | 4      |
+| Statistical Arb | 2      | 2      | —      | —      | —          | 4      |
+| Yield           | —      | —      | 3      | —      | —          | 3      |
+| Arbitrage       | 1      | —      | 1      | 2      | 1          | 5      |
+| Options         | 1      | 2      | —      | —      | —          | 3      |
+| Value Betting   | —      | —      | —      | 3      | —          | 3      |
+| **Total**       | **16** | **11** | **11** | **9**  | **3**      | **50** |
 
 ### What This Means for Each Agent
 
@@ -1014,6 +1301,74 @@ Reports service pages MUST be printable for client distribution.
 
 ---
 
+## Separation of Concerns (MANDATORY — All Agents)
+
+The UI should NEVER do service logic. Everything demonstrable in the UI must also be achievable via API/service calls
+(scripts, CLI, curl). The backend must be complete enough that the frontend is purely visual.
+
+### Layer Responsibilities
+
+| Layer                                                         | Responsible For                                                        | NOT Responsible For                                              |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **UAC Registry** (`representative_sample.py`)                 | Instrument specs, venue capabilities, enums                            | Seed data, API routes, UI rendering                              |
+| **Service Engine** (strategy-service, execution-service etc.) | Strategy logic, PnL calculation, risk assessment                       | HTTP, WebSocket, UI rendering                                    |
+| **Mock Service Layer** (`MockDomainService`)                  | Same filtering/pagination/PnL-recalc as real, backed by MockStateStore | UI components, client-side computation                           |
+| **API Routes** (`unified-trading-api`)                        | HTTP surface, WebSocket emission, auth, org-scoping                    | Business logic (delegate to service layer)                       |
+| **UI** (`unified-trading-system-ui`)                          | Visual rendering, chart overlays, indicator math, export formatting    | Data generation, PnL calculation, filtering logic, mock fixtures |
+
+### The Curl Test
+
+**If you can't demonstrate a feature by running a `curl` command against the API, the logic is in the wrong layer.**
+
+Examples:
+
+- PnL calculation: `curl /analytics/pnl` must return correct PnL — NOT computed in the UI from raw positions
+- Org filtering: `curl /positions/active -H "Authorization: Bearer {client_token}"` must return only that client's data
+- Strategy list: `curl /analytics/strategies` must return all 50+ strategies — NOT hardcoded in `trading-data.ts`
+- Batch/live switch: `curl /positions/active?mode=batch` vs `curl /positions/active?mode=live` must return different
+  data
+
+### No Two Sources of Truth for Service Logic
+
+- If the UI has a `lib/trading-data.ts` that generates strategies client-side, AND the API has `seed.py` that generates
+  strategies server-side — that is TWO sources of truth. Delete the client-side one. The UI calls the API.
+- If the UI computes PnL from positions client-side, AND the API recalculates PnL server-side — the UI version must be
+  deleted. The UI renders what the API returns.
+- If the UI has MSW handlers that return mock data, AND the API has MockDomainService — MSW must be removed. One mock
+  source: the API service layer.
+
+### Missing Service Functionality
+
+If a feature is needed for the demo and the service engine doesn't support it:
+
+1. **Check if the service exists** — it probably does (67 repos covering every domain)
+2. **Add the feature to the existing service** — don't work around it
+3. **If the service's mock_mode provider is missing the feature** — add it to the mock provider in that service
+4. **The unified-trading-api MockDomainService** is a gateway-level mock. It reads from MockStateStore which is seeded
+   with data that represents what the real services would return. It does NOT replace the services — it simulates their
+   output for the demo.
+
+---
+
+## Data Freshness Indicators (MANDATORY for Production Feel)
+
+Production trading systems always show data staleness. This is critical for the batch/live story — WebSocket-fed panels
+should be visually distinct from batch data panels.
+
+### Implementation
+
+- Create `components/ui/data-freshness.tsx`:
+  - Shows "Updated Xs ago" or "Live" badge based on `lastUpdated` timestamp
+  - Green dot: < 5s (or WebSocket-connected)
+  - Yellow: 5-30s
+  - Red: > 30s or disconnected
+- Render on every data panel header that uses real-time or recently-fetched data
+- WebSocket-fed panels (Trading Terminal, Positions, Dashboard PnL): show "Live" with green dot
+- REST-fetched panels (Reports, Manage): show relative timestamp from last successful React Query fetch
+- Batch mode panels: show "As of {date}" badge (no staleness indicator — batch is a snapshot by definition)
+
+---
+
 ## Key Technical Rules
 
 - `uv pip install` not `pip install`
@@ -1023,3 +1378,35 @@ Reports service pages MUST be printable for client distribution.
 - No `os.getenv()` — use `UnifiedCloudConfig`
 - Flat deps only in pyproject.toml (no optional-dependencies)
 - Each repo has its own .venv for quality gates
+
+---
+
+## Gap Classification Framework (Added 2026-03-22)
+
+Every missing demo capability falls into ONE of three categories. Agents MUST identify the category BEFORE writing code,
+because the fix location differs:
+
+| Category                             | Meaning                                | Fix Location                                                                      |
+| ------------------------------------ | -------------------------------------- | --------------------------------------------------------------------------------- |
+| **Type 1: Service Missing**          | No service implements this             | Add to real service repo                                                          |
+| **Type 2: UI Visualization Missing** | Service has it, UI doesn't show it     | UI components + API hooks. If API doesn't proxy, add MockDomainService simulation |
+| **Type 3: Not Mockable**             | Service has it, mock can't simulate it | Add mock simulation in MockDomainService using seeded data                        |
+
+**Full gap analysis:** `.cursor/plans/GAP_CLASSIFICATION_2026_03_22.md`
+
+### Key Findings (2026-03-22 Service Audit)
+
+Services that have RICH functionality the UI plans didn't originally cover:
+
+- **risk-and-exposure-service**: VaR (6 methods), stress scenarios (GFC/COVID/Crypto), correlation matrix, regime
+  detection, 6-check pre-trade engine, delta-gamma VaR, DeFi reconciliation
+- **execution-service**: PreTradeRiskEngine, 7 execution algos, 3-state circuit breaker, kill switch, drain mode, MiFID
+  II/FCA compliance, OptionsComboHandler
+- **features-volatility-service**: Black-Scholes + Black-76 Greeks, GEX, vol surface (ATM/skew/butterfly/term
+  structure), realized vol (Parkinson/Yang-Zhang)
+- **strategy-service**: 25+ code-complete strategies, 5-dim signal vector, options ML (3 prediction types), risk monitor
+  (Aave health factor)
+- **position-balance-monitor-service**: Portfolio Greeks aggregation (delta/gamma/theta/vega/rho)
+
+**The only Type 1 gap (genuinely missing):** FX conversion / multi-currency. Trivial to mock with static rates.
+Everything else is Type 2 (UI gap) or Type 3 (mock gap) — the real services already have the functionality.

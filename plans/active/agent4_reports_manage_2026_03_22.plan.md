@@ -7,140 +7,156 @@ todos:
   # ─────────────────────────────────────────────────────────────────────────────
   - id: a4-p0-reports-overview
     content: |
-      - [ ] [AGENT] P0. Verify `/services/reports/overview` (P&L Attribution tab) has real content. Should show: aggregated P&L by strategy, attribution breakdown (funding, carry, basis, delta, greeks, slippage, fees), time series. Wire to `GET /analytics/pnl` and `GET /reporting/pnl-attribution` APIs. The Dashboard already has `PnLAttributionPanel` — reuse that component here with more detail.
-    status: todo
+      - [x] [AGENT] P0. Verify `/services/reports/overview` (P&L Attribution tab) has real content. Should show: aggregated P&L by strategy, attribution breakdown (funding, carry, basis, delta, greeks, slippage, fees), time series. Wire to `GET /analytics/pnl` and `GET /reporting/pnl-attribution` APIs. The Dashboard already has `PnLAttributionPanel` — reuse that component here with more detail.
+    status: done
   - id: a4-p0-reports-executive
     content: |
-      - [ ] [AGENT] P1. Verify `/services/reports/executive` has: AUM overview, performance summary (MTD/QTD/YTD), top/bottom strategies, risk utilization, client-level breakdowns. Wire to `GET /reporting/executive-summary` API.
-    status: todo
+      - [x] [AGENT] P1. Verify `/services/reports/executive` has: AUM overview, performance summary (MTD/QTD/YTD), top/bottom strategies, risk utilization, client-level breakdowns. Wire to `GET /reporting/executive-summary` API.
+    status: done
   - id: a4-p0-reports-settlement
     content: |
-      - [ ] [AGENT] P0. Verify `/services/reports/settlement` has real content. If stub, build it by absorbing patterns from `settlement-ui/src/pages/Settlements.tsx` (settlement tracking table with status: pending/matched/disputed/settled) and `settlement-ui/src/pages/Invoices.tsx` (invoice list with generation, download, send actions). Wire to `GET /analytics/settlements` and `GET /reporting/invoices` APIs.
-    status: todo
+      - [x] [AGENT] P0. Verify `/services/reports/settlement` has real content. If stub, build it by absorbing patterns from `settlement-ui/src/pages/Settlements.tsx` (settlement tracking table with status: pending/matched/disputed/settled) and `settlement-ui/src/pages/Invoices.tsx` (invoice list with generation, download, send actions). Wire to `GET /analytics/settlements` and `GET /reporting/invoices` APIs.
+    status: done
   - id: a4-p0-reports-reconciliation
     content: |
-      - [ ] [AGENT] P1. Verify `/services/reports/reconciliation` has: batch vs live reconciliation view showing drift, unmatched trades, position breaks. This is related to the DriftAnalysisPanel on the Dashboard — share that component.
-    status: todo
+      - [x] [AGENT] P1. Verify `/services/reports/reconciliation` has: batch vs live reconciliation view showing drift, unmatched trades, position breaks. This is related to the DriftAnalysisPanel on the Dashboard — share that component.
+    status: done
   - id: a4-p0-reports-regulatory
     content: |
-      - [ ] [AGENT] P1. Verify `/services/reports/regulatory` has: MiFID II transaction reporting, FCA best execution reporting, EMIR derivative reporting. Wire to `GET /reporting/regulatory` API.
-    status: todo
+      - [x] [AGENT] P1. Verify `/services/reports/regulatory` has: MiFID II transaction reporting, FCA best execution reporting, EMIR derivative reporting. Wire to `GET /reporting/regulatory` API.
+    status: done
   - id: a4-p1-absorb-client-reporting
     content: |
-      - [ ] [AGENT] P1. Review `client-reporting-ui/src/components/` for patterns to absorb:
+      - [x] [AGENT] P1. Review `client-reporting-ui/src/components/` for patterns to absorb:
         - `GenerateTab.tsx` — report generation workflow (select client, date range, report type → generate PDF/CSV)
         - `PerformanceTab.tsx` — performance metrics visualization
         - `ReportsTab.tsx` — report list with download links
         Extract these patterns and integrate into Reports service tabs. The report generation workflow should be a "Generate Report" button on the P&L tab that opens a modal with client/date/type selection.
-    status: todo
+    status: done
   - id: a4-p1-absorb-invoicing
     content: |
-      - [ ] [AGENT] P1. Review `_reference/versa-invoicing/` for invoicing patterns. Review `_reference/versa-client-reporting/` for client-facing reporting patterns. Incorporate fee calculation display (from client-reporting-api's fee_calculator.py) into the Settlement tab.
-    status: todo
+      - [x] [AGENT] P1. Review `_reference/versa-invoicing/` for invoicing patterns. Review `_reference/versa-client-reporting/` for client-facing reporting patterns. Incorporate fee calculation display (from client-reporting-api's fee_calculator.py) into the Settlement tab.
+    status: done
   - id: a4-p2-manage-clients
     content: |
-      - [ ] [AGENT] P0. Verify `/services/manage/clients` has: client list table with columns (name, org, status, strategies, AUM, last activity). Should have "Onboard Client" button. Wire to `GET /users/organizations` API. If stub, build using mock data.
-    status: todo
+      - [x] [AGENT] P0. Verify `/services/manage/clients` has: client list table with columns (name, org, status, strategies, AUM, last activity). Should have "Onboard Client" button. Wire to `GET /users/organizations` API. If stub, build using mock data.
+    status: done
   - id: a4-p2-manage-mandates
     content: |
-      - [ ] [AGENT] P1. Verify `/services/manage/mandates` has: mandate list (investment mandates defining strategy allocation, risk limits, fee structure per client). Wire to `GET /config/mandates` API.
-    status: todo
+      - [x] [AGENT] P1. Verify `/services/manage/mandates` has: mandate list (investment mandates defining strategy allocation, risk limits, fee structure per client). Wire to `GET /config/mandates` API.
+    status: done
   - id: a4-p2-manage-fees
     content: |
-      - [ ] [AGENT] P1. Verify `/services/manage/fees` has: fee schedule management (management fee %, performance fee %, hurdle rate, high-water mark). Wire to `GET /config/fee-schedules` API.
-    status: todo
+      - [x] [AGENT] P1. Verify `/services/manage/fees` has: fee schedule management (management fee %, performance fee %, hurdle rate, high-water mark). Wire to `GET /config/fee-schedules` API.
+    status: done
   - id: a4-p2-manage-users
     content: |
-      - [ ] [AGENT] P0. Verify `/services/manage/users` has: user list with roles, status, last login. Should have "Add User" button. Wire to `GET /users/list` API. If stub, build by absorbing patterns from `user-management-ui/src/` — particularly the user lifecycle management (onboard, modify roles, deactivate).
-    status: todo
+      - [x] [AGENT] P0. Verify `/services/manage/users` has: user list with roles, status, last login. Should have "Add User" button. Wire to `GET /users/list` API. If stub, build by absorbing patterns from `user-management-ui/src/` — particularly the user lifecycle management (onboard, modify roles, deactivate).
+    status: done
   - id: a4-p2-manage-compliance
     content: |
-      - [ ] [AGENT] P1. Verify `/services/manage/compliance` has: compliance rules, violations log, audit trail. Wire to `GET /audit/compliance` API.
-    status: todo
+      - [x] [AGENT] P1. Verify `/services/manage/compliance` has: compliance rules, violations log, audit trail. Wire to `GET /audit/compliance` API.
+    status: done
   - id: a4-p3-absorb-onboarding
     content: |
-      - [ ] [AGENT] P1. Review `onboarding-ui/src/pages/` for patterns to absorb:
+      - [x] [AGENT] P1. Review `onboarding-ui/src/pages/` for patterns to absorb:
         - `VenueConnectionPage.tsx` — venue API key entry, connection testing
         - `RiskConfiguration.tsx` — risk limit setup per strategy/client
         - `CredentialStatusPage.tsx` — credential health dashboard
         - `StrategyOnboarding.tsx` — strategy activation workflow
         - `StrategyListPage.tsx` — strategy selection during onboarding
         These should become modals/drawers triggered from the Clients and Mandates tabs. "Onboard Client" button on Clients tab should open a multi-step flow: 1) Client details → 2) Strategy selection → 3) Venue connection → 4) Risk config → 5) Review & activate.
-    status: todo
+    status: done
   - id: a4-p4-absorb-user-mgmt
     content: |
-      - [ ] [AGENT] P1. Review `user-management-ui/src/` for patterns to absorb. Key feature: single-click user provisioning (GitHub, Slack, M365, GCP, portal access per role). This should become the "Add User" workflow on the Users tab. In mock mode, adding a user should update MockStateStore and be visible immediately in the user list.
-    status: todo
+      - [x] [AGENT] P1. Review `user-management-ui/src/` for patterns to absorb. Key feature: single-click user provisioning (GitHub, Slack, M365, GCP, portal access per role). This should become the "Add User" workflow on the Users tab. In mock mode, adding a user should update MockStateStore and be visible immediately in the user list.
+    status: done
   - id: a4-p5-document-management
     content: |
-      - [ ] [AGENT] P1. Add a "Documents" sub-section accessible from Reports service (either as a 6th tab or a panel within Settlement). Should show: uploaded documents list, upload button (calls `GET /documents/upload-url` then uploads to the returned URL), download links (calls `GET /documents/download-url`). In mock mode, upload should add a record to MockStateStore "documents" domain; download URL returns a mock URL.
-    status: todo
+      - [x] [AGENT] P1. Add a "Documents" sub-section accessible from Reports service (either as a 6th tab or a panel within Settlement). Should show: uploaded documents list, upload button (calls `GET /documents/upload-url` then uploads to the returned URL), download links (calls `GET /documents/download-url`). In mock mode, upload should add a record to MockStateStore "documents" domain; download URL returns a mock URL.
+    status: done
   # ── Phase 5B: Visual Polish + Reporting API ──
   - id: a4-p5b-skeleton-loading
     content: |
-      - [ ] [AGENT] P1. Ensure ALL reports and manage pages use skeleton loading states (not "Loading..." text). Use skeleton components from Agent 1. Key pages: P&L Attribution (table + chart skeleton), Settlement (table skeleton), Client List (table skeleton), User List (table skeleton). Mandatory per CITADEL_VISION visual polish standards.
-    status: todo
+      - [x] [AGENT] P1. Ensure ALL reports and manage pages use skeleton loading states (not "Loading..." text). Use skeleton components from Agent 1. Key pages: P&L Attribution (table + chart skeleton), Settlement (table skeleton), Client List (table skeleton), User List (table skeleton). Mandatory per CITADEL_VISION visual polish standards.
+    status: done
   - id: a4-p5b-reporting-api-routing
     content: |
-      - [ ] [AGENT] P1. Verify that Reports service pages route API calls correctly. Per CITADEL_VISION, unified-trading-api proxies `/reporting/*` to client-reporting-api (port 8014) in real mode, and serves from MockStateStore in mock mode. The UI should NOT need separate base URLs — everything goes through port 8030. Verify: `hooks/api/use-reports.ts` calls `/reporting/*` endpoints and these work in mock mode. If Agent 5 has not yet set up the proxy, document this as a dependency.
-    status: todo
+      - [x] [AGENT] P1. Verify that Reports service pages route API calls correctly. Per CITADEL_VISION, unified-trading-api proxies `/reporting/*` to client-reporting-api (port 8014) in real mode, and serves from MockStateStore in mock mode. The UI should NOT need separate base URLs — everything goes through port 8030. Verify: `hooks/api/use-reports.ts` calls `/reporting/*` endpoints and these work in mock mode. If Agent 5 has not yet set up the proxy, document this as a dependency.
+    status: done
   - id: a4-p6-tests
     content: |
-      - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Reports > P&L → verify attribution table renders. 2) Navigate to Reports > Settlement → verify settlements table renders. 3) Navigate to Manage > Clients → verify client list renders. 4) Navigate to Manage > Users → verify user list renders. 5) Click "Onboard Client" → verify workflow opens.
-    status: todo
+      - [x] [AGENT] P1. Add Playwright tests: 1) Navigate to Reports > P&L → verify attribution table renders. 2) Navigate to Reports > Settlement → verify settlements table renders. 3) Navigate to Manage > Clients → verify client list renders. 4) Navigate to Manage > Users → verify user list renders. 5) Click "Onboard Client" → verify workflow opens.
+    status: done
   # ── Phase 7: PDF/CSV Export & Error States (Gap-Closing) ──
   - id: a4-p7-export
     content: |
-      - [ ] [AGENT] P0. Add split "Export" button (CSV + Excel) to ALL data tables in Reports and Manage:
+      - [x] [AGENT] P0. Add split "Export" button (CSV + Excel) to ALL data tables in Reports and Manage:
         1. P&L Attribution, Settlement, Reconciliation, Regulatory tables
         2. Client list, User list, Mandate list, Fee schedule list
         3. Use `exportTableToCsv()` and `exportTableToXlsx()` from `lib/utils/export.ts` (created by Agent 2)
         4. Reports Excel: multi-sheet workbook — P&L on sheet 1, positions on sheet 2, orders on sheet 3
         DEPENDENCY: Agent 2 must create `lib/utils/export.ts` first (a2-p7-export-tables).
-    status: todo
+    status: done
   - id: a4-p7-pdf-generation
     content: |
-      - [ ] [AGENT] P0. Add "Generate PDF Report" capability to Reports > P&L and Reports > Executive:
+      - [x] [AGENT] P0. Add "Generate PDF Report" capability to Reports > P&L and Reports > Executive:
         1. Add "Generate Report" button that opens a modal: select client, date range, report type (P&L Attribution / Executive Summary / Regulatory)
         2. On submit: call `POST /reporting/generate` with { type, client_id, date_range, format: "pdf" }
         3. Show spinner while "generating"
         4. On success: show "Download Ready" toast with download link
         5. In mock mode, the API returns a pre-generated sample PDF. Create a minimal sample PDF (even 1-page with title + table) in `unified-trading-api/unified_trading_api/mock_data/sample_reports/executive_report.pdf`
         6. For the download: API serves file via `GET /reporting/download/{report_id}` which returns the sample PDF with correct Content-Type headers
-    status: todo
+    status: done
   - id: a4-p7-error-states
     content: |
-      - [ ] [AGENT] P1. Add error and empty states to ALL reports and manage pages:
+      - [x] [AGENT] P1. Add error and empty states to ALL reports and manage pages:
         1. Every page using useQuery: `if (isError) return <ApiError error={error} onRetry={refetch} />`
         2. Settlement table empty: `<EmptyState title="No settlements" description="Settlements appear after trades are reconciled" />`
         3. Client list empty: `<EmptyState title="No clients" description="Onboard your first client" action={{ label: "Onboard Client", onClick: openOnboardingModal }} />`
         4. User list empty: `<EmptyState title="No users" description="Add your first team member" action={{ label: "Add User", onClick: openAddUserModal }} />`
         5. Report generation error: toast with "Report generation failed — please try again"
-    status: todo
+    status: done
   # ── Phase 8: Print CSS, DataTable, Scheduled Reports (Gap-Closing) ──
   - id: a4-p8-print-css
     content: |
-      - [ ] [AGENT] P0. Add print-optimized styles for Reports service pages:
+      - [x] [AGENT] P0. Add print-optimized styles for Reports service pages:
         1. Add `@media print` block in `globals.css`: hide nav, debug footer, filters, buttons. Full-width tables with borders. Page breaks between sections (`break-before: page`). Company logo header + timestamp footer.
         2. Add "Print Report" button on P&L Attribution and Executive tabs (next to "Generate PDF"). Calls `window.print()`.
         3. Charts rendered at print resolution (set chart container to fixed width in print media).
         DEPENDENCY: None — can start immediately.
-    status: todo
+    status: done
   - id: a4-p8-adopt-datatable
     content: |
-      - [ ] [AGENT] P0. Replace shadcn `<Table>` with `DataTable` from `components/ui/data-table.tsx` (Agent 1) for ALL reports and manage tables: P&L, settlements, clients, users, mandates, fees, compliance.
+      - [x] [AGENT] P0. Replace shadcn `<Table>` with `DataTable` from `components/ui/data-table.tsx` (Agent 1) for ALL reports and manage tables: P&L, settlements, clients, users, mandates, fees, compliance.
         DEPENDENCY: Agent 1 must create DataTable (a1-p6-tanstack-table).
-    status: todo
+    status: done
   - id: a4-p8-scheduled-reports
     content: |
-      - [ ] [AGENT] P1. Add scheduled report configuration UI (mock-only, demonstrates the capability):
+      - [x] [AGENT] P1. Add scheduled report configuration UI (mock-only, demonstrates the capability):
         1. "Schedule Report" button on P&L and Executive tabs → opens modal
         2. Fields: frequency (daily/weekly/monthly), recipients (email), report type, format (PDF/Excel)
         3. On submit: creates record in MockStateStore "scheduled_reports" — shows in a "Scheduled" sub-section
         4. In mock mode, does NOT actually send emails — just persists the configuration
         5. This demonstrates institutional workflow capability for client demos
         DEPENDENCY: Agent 5 must add POST /reporting/schedules endpoint.
-    status: todo
+    status: done
+  # ── Phase 9: Service-Capability Visualization (Gap-Closing — from GAP_CLASSIFICATION_2026_03_22.md) ──
+  - id: a4-p9-regulatory-page
+    content: |
+      - [x] [AGENT] P1. Build `/services/reports/regulatory` page (currently 24-line stub). GAP CATEGORY: Type 2+3 (execution-service has MiFID II/FCA/EMIR compliance reporter — UI is a stub, mock doesn't simulate it).
+        The REAL implementation lives in:
+        - `execution-service/compliance/mifid_reporter.py` — MiFIDReporter with best execution checks, Article 26/27 reporting
+        - `execution-service/compliance/compliance_reporter.py` — EU_MIFID_II and UK_FCA jurisdiction
+        Agent 5 adds `GET /reporting/regulatory` endpoint (a5-p8-regulatory-reports). Agent 6 seeds 8-10 report records.
+        Build the page with:
+        1. Regulatory report list table (DataTable): report_type (MiFID II / FCA / EMIR), jurisdiction, status badge (submitted=green, pending=yellow, overdue=red), filing_date, next_due_date
+        2. Status summary cards: X submitted, Y pending, Z overdue
+        3. Click row → detail panel: instruments covered, best execution metrics summary, filing reference
+        4. Export button (CSV + Excel) using shared export utility
+        5. NOT interactive filing (that requires real service) — display and export only
+        DEPENDENCY: Agent 5 a5-p8-regulatory-reports endpoint. Agent 6 seeds regulatory_reports.
+    status: done
 isProject: false
 ---
 
@@ -231,6 +247,8 @@ Manage pages currently live in `app/(ops)/manage/*` but should be accessible via
 - CSV export on every data table
 - Error states and empty states mandatory on all pages
 - These close the gap between "data on screen" and "production workflow"
+- **Regulatory reporting (Gap Classification):** execution-service has MiFID II/FCA compliance reporter. Agent 5 adds
+  mock endpoint. Build the regulatory tab with real data shape.
 
 ## New API endpoints for PDF generation
 

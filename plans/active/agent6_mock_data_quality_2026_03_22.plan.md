@@ -9,92 +9,110 @@ todos:
   # ─────────────────────────────────────────────────────────────────────────────
   - id: a6-p0-persona-ssot
     content: |
-      - [ ] [AGENT] P0. VERIFY existing personas.py (121 lines, already exists at unified_trading_api/mock_data/personas.py with 4 orgs, 5 personas). Ensure it matches auth-api mock_data.py EXACTLY (org IDs, persona names, entitlements). If any misalignment: fix personas.py to match. Add any missing entitlement keys needed by the UI (check hooks/use-auth.ts).
+      - [x] [AGENT] P0. VERIFY existing personas.py (121 lines, already exists at unified_trading_api/mock_data/personas.py with 4 orgs, 5 personas). Ensure it matches auth-api mock_data.py EXACTLY (org IDs, persona names, entitlements). If any misalignment: fix personas.py to match. Add any missing entitlement keys needed by the UI (check hooks/use-auth.ts).
         - 4 organizations: Odum Internal (odum-internal), Alpha Capital (acme), Beta Fund (beta), Vertex Partners (vertex)
         - 5 personas: admin, internal-trader, client-full (acme), client-premium (vertex), client-data-only (beta)
         - Entitlements per persona matching the UI's entitlement checks
         Export these as constants. auth-api should import from here (or duplicate with same IDs). UI persona definitions must use the same org IDs and entitlement keys.
-    status: todo
+    status: done
   - id: a6-p0-org-scoped-seed
     content: |
-      - [ ] [AGENT] P0. Update ALL seed data in `seed.py` to include `org_id` field on every record. Distribution:
+      - [x] [AGENT] P0. Update ALL seed data in `seed.py` to include `org_id` field on every record. Distribution:
         - odum-internal: 60% of data (internal strategies, positions, orders)
         - acme (Alpha Capital): 20% of data
         - vertex (Vertex Partners): 12% of data
         - beta (Beta Fund): 8% of data (data-only, minimal trading)
         When a client persona queries, they only see their org's data. Admin/internal sees all.
-    status: todo
+    status: done
   - id: a6-p1-strategies-alignment
     content: |
-      - [ ] [AGENT] P0. Align seed strategies with the UI's `lib/trading-data.ts` STRATEGIES registry. Currently the UI generates 18 strategies client-side with seeded random. The API seed should have the SAME 18 strategies with the same IDs, names, asset classes, and similar PnL ranges. This ensures the Dashboard (which currently uses client-side data) can be migrated to API calls without visible difference.
-    status: todo
+      - [x] [AGENT] P0. Expand seed strategies from 18 to 50+ using the config-driven approach. Strategies are CONFIG, not code — the EventDrivenStrategyEngine in strategy-service is parameterised by subscription config (see codex/09-strategy/cross-cutting/config-architecture.md). No new engine code paths needed.
+        Step 1: Keep the existing 18 strategies from `lib/trading-data.ts` with SAME IDs, names, asset classes (for Dashboard visual parity during migration).
+        Step 2: Add 32+ new strategies by combining codex archetypes x UAC asset classes:
+        - 13 code-complete archetypes: momentum, mean-reversion, ML-directional, options-ML, basis-trade, staked-basis, recursive-basis, AAVE-lending, AMM-LP, arbitrage, value-betting, ML-sports, market-making
+        - 5 asset classes from UAC representative_sample.py: CeFi, TradFi, DeFi, Sports, Prediction
+        - Naming convention: `{ASSET}_{ARCHETYPE}_{MODE}_{TIMEFRAME}` e.g. `CEFI_MOMENTUM_LIVE_1H`
+        Each strategy config includes: id, name, archetype, asset_class, instruments[] (referencing UAC registry symbols), execution_mode (live/paper), timeframe, risk_limits, org_id, inception_date.
+        Instruments in each strategy MUST reference symbols that exist in UAC representative_sample.py — no invented instruments.
+        Store in MockStateStore `strategies` and `strategy_configs` collections.
+        The UI reads strategy lists from `GET /analytics/strategies` and `GET /analytics/strategy-configs` — NOT from `trading-data.ts` or `strategy-registry.ts`.
+    status: done
   - id: a6-p1-positions-realistic
     content: |
-      - [ ] [AGENT] P0. Seed realistic positions: 15-20 positions across 5 venues (Binance, Deribit, Hyperliquid, Uniswap V3, Aave V3). Each position should have: instrument (matching real instrument symbols), side (long/short), quantity, entry_price, current_price (slightly different from entry for realistic PnL), unrealized_pnl, margin_used, venue, org_id, strategy_id.
-    status: todo
+      - [x] [AGENT] P0. Seed realistic positions: 15-20 positions across 5 venues (Binance, Deribit, Hyperliquid, Uniswap V3, Aave V3). Each position should have: instrument (matching real instrument symbols), side (long/short), quantity, entry_price, current_price (slightly different from entry for realistic PnL), unrealized_pnl, margin_used, venue, org_id, strategy_id.
+    status: done
   - id: a6-p1-orders-realistic
     content: |
-      - [ ] [AGENT] P0. Enhance orders seed from 4 to 20+. Include orders across all venues, with status distribution: 40% filled, 20% partially_filled, 20% open, 10% cancelled, 10% rejected. Each order should reference a valid strategy_id and org_id.
-    status: todo
+      - [x] [AGENT] P0. Enhance orders seed from 4 to 20+. Include orders across all venues, with status distribution: 40% filled, 20% partially_filled, 20% open, 10% cancelled, 10% rejected. Each order should reference a valid strategy_id and org_id.
+    status: done
   - id: a6-p1-fills-realistic
     content: |
-      - [ ] [AGENT] P1. Enhance fills seed from 3 to 30+. Each fill should reference a valid order_id. Include realistic slippage (0.01-0.05% from order price), realistic fees (venue-specific fee rates).
-    status: todo
+      - [x] [AGENT] P1. Enhance fills seed from 3 to 30+. Each fill should reference a valid order_id. Include realistic slippage (0.01-0.05% from order price), realistic fees (venue-specific fee rates).
+    status: done
   - id: a6-p1-alerts-realistic
     content: |
-      - [ ] [AGENT] P0. Seed 15-20 alerts with realistic scenarios:
+      - [x] [AGENT] P0. Seed 15-20 alerts with realistic scenarios:
         - 2-3 critical: "Position limit breached on BTC-USDT", "Margin call warning on Deribit"
         - 4-5 high: "Strategy drawdown exceeds threshold", "Venue latency spike on Hyperliquid"
         - 5-6 medium: "Batch/live PnL drift > 5%", "Feature staleness detected"
         - 3-4 low: "Strategy rebalance scheduled", "Model retrain due"
         Each alert should have: severity, message, source (service name), strategy_id, org_id, timestamp, acknowledged (bool).
-    status: todo
+    status: done
   - id: a6-p1-ml-data
     content: |
-      - [ ] [AGENT] P1. Seed ML data:
+      - [x] [AGENT] P1. Seed ML data:
         - 8 models: mean-reversion-btc, momentum-multi-asset, vol-surface-eth, etc. With versions (v1.0, v1.1, v2.0), status (production/staging/deprecated), metrics (sharpe, accuracy, precision)
         - 12 experiments: linked to models, with hyperparameters, training metrics (loss curve data points), duration
         - 20 features: with importance scores, drift metrics, categories
         - 5 training jobs: queued/running/completed/failed
-    status: todo
+    status: done
   - id: a6-p1-settlements-invoices
     content: |
-      - [ ] [AGENT] P1. Seed settlement and invoicing data:
+      - [x] [AGENT] P1. Seed settlement and invoicing data:
         - 8 settlements: various status (pending/matched/disputed/settled), with trade references
         - 5 invoices: management fee invoices with calculation breakdown (AUM * fee_rate / 365 * days)
         - 3 fee schedules: tier-based (basic: 0.5% mgmt, premium: 1% mgmt + 10% perf, full: 1.5% mgmt + 15% perf)
-    status: todo
+    status: done
   - id: a6-p1-services-health
     content: |
-      - [ ] [AGENT] P0. Seed service health data matching actual 21 services. Each record: name (matching real service names from workspace-manifest.json), status (healthy/degraded/down), latency_ms, last_check, version, uptime_pct. Most services healthy, 1-2 degraded for realism.
-    status: todo
+      - [x] [AGENT] P0. Seed service health data matching actual 21 services. Each record: name (matching real service names from workspace-manifest.json), status (healthy/degraded/down), latency_ms, last_check, version, uptime_pct. Most services healthy, 1-2 degraded for realism.
+    status: done
   # ── Phase 1C: Real-Time Market Data Seeds (CRITICAL for Demo) ──
   - id: a6-p1c-timeseries-pnl
     content: |
-      - [ ] [AGENT] P0. Seed PnL time-series data for ALL 18 strategies: 180 daily data points per strategy (3,240 total). Each point: `{ date, cumulative_pnl, daily_pnl, drawdown, nav }`. Generate with realistic equity curves:
+      - [x] [AGENT] P0. Seed PnL time-series data for ALL 50+ strategies: 180 daily data points per strategy. Each point: `{ strategy_id, date, cumulative_pnl, daily_pnl, drawdown, nav }`. Generate with archetype-appropriate equity curves:
+        - Momentum: trending with sharp reversals, positive drift, 10-20% max drawdown
+        - Mean-reversion: oscillating around baseline, tight range, 5-10% drawdown
+        - Market-making: steady low-vol income (0.01-0.05% daily), occasional spikes (spread blow-out)
+        - DeFi yield: steady positive accrual, protocol-risk drawdowns (5-15% on DeFi event days)
+        - Basis trade: low-vol positive carry, convergence risk at expiry
+        - Sports/prediction: step-function PnL (bet resolves to discrete gain/loss, flat between events)
+        - ML-directional: trending with model-driven entry/exit, higher vol than momentum
+        For the ORIGINAL 18 strategies (from trading-data.ts): PnL curves must match closely enough for visual parity during Dashboard migration.
+        For NEW 32+ strategies: generate fresh curves per archetype.
         - Start from strategy inception date (stagger across last 12 months)
-        - Trend: slightly positive (60% of strategies profitable)
-        - Drawdowns: 2-3 per strategy, ranging 5-15% max
-        - Correlation: crypto strategies correlated to BTC (seed BTC price series first, derive others)
+        - Trend: 60% of strategies profitable overall
+        - Correlation: crypto strategies correlated to BTC candle data (seed BTC series first, derive others)
         - Include YTD, MTD, QTD breakpoints for reporting
-        Store in MockStateStore `pnl_timeseries` collection. API serves via `GET /analytics/timeseries`.
-        CRITICAL: These must match closely enough to `lib/trading-data.ts` output that the Dashboard looks the same after migration.
-    status: todo
+        Store in MockStateStore `pnl_timeseries_live` and `pnl_timeseries_batch` collections.
+    status: done
   - id: a6-p1c-ohlcv-candles
     content: |
-      - [ ] [AGENT] P0. Seed OHLCV candle data for 10 instruments across 4 intervals:
-        - Instruments: BTC-USDT, ETH-USDT, SOL-USDT, AVAX-USDT, LINK-USDT, UNI-USDT, AAVE-USDT, DOGE-USDT, ARB-USDT, OP-USDT
-        - Intervals: 1m (200 candles), 5m (200), 1h (200), 1d (200)
-        - Total: 10 instruments * 4 intervals * 200 candles = 8,000 candle records
-        - Generate with Brownian motion: start from a realistic base price, random walk with drift
-        - Volume profile: higher at opens/closes, lower mid-session
+      - [x] [AGENT] P0. Seed OHLCV candle data for ALL instruments from UAC representative_sample.py across 4 intervals.
+        DO NOT hardcode an instrument list. Import the registry programmatically:
+        `from unified_api_contracts.registry.representative_sample import CEFI_SPOT_SPECS, CEFI_PERPETUAL_SPECS, TRADFI_EQUITY_SPECS, TRADFI_FUTURES_SPECS, DEFI_INSTRUMENT_SPECS, SPORTS_INSTRUMENT_SPECS`
+        Build the full instrument list from all spec lists. This means if UAC registry expands, `POST /admin/reset` regenerates candles for new instruments automatically.
+        - Intervals: 1m (200 candles), 5m (200), 1h (200), 1d (200) per instrument
+        - Generate with Brownian motion per asset class: CeFi crypto high vol (1-3% daily), TradFi equities low vol (0.3-1%), DeFi medium, Sports step-function prices
+        - Volume profile: higher at opens/closes for TradFi/CeFi, flatter for DeFi
         - Store in MockStateStore `candles_1m`, `candles_5m`, `candles_1h`, `candles_1d` collections
-        - API serves via `GET /market-data/candles?instrument=BTC-USDT&interval=1h&limit=200`
-    status: todo
+        - The candle generator is a function(instrument_specs, base_prices) not a hardcoded array
+    status: done
   - id: a6-p1c-tickers-seed
     content: |
-      - [ ] [AGENT] P0. Seed initial ticker prices in `tickers_live` collection for all 10 instruments. Each ticker: `{ instrument, price, bid, ask, volume_24h, change_24h_pct, timestamp }`. These serve as the starting point for the WebSocket mock tick generator (Agent 5). Prices should be realistic as of today. Also seed `tickers_batch` with yesterday's close prices (slightly different from live).
-    status: todo
+      - [x] [AGENT] P0. Seed initial ticker prices in `tickers_live` collection for ALL instruments from UAC representative_sample.py. Import the registry (same as candles). Each ticker: `{ instrument, venue, price, bid, ask, volume_24h, change_24h_pct, asset_class, timestamp }`. Prices realistic as of today: BTC ~$67K, ETH ~$3.5K, AAPL ~$195, QQQ ~$490, ES ~$5300, VIX ~$15, aTokens at protocol rates, sports at probability-based pricing (0.30-0.70).
+        These serve as the starting point for the WebSocket mock tick generator (Agent 5). Also seed `tickers_batch` with yesterday's close prices (slightly different from live).
+    status: done
   # ── DEPENDENCY GATE: Phase 2 requires Agent 5 (API service layer) ────────
   # STOP HERE if Agent 5 has not completed:
   #   - a5-p2-use-utl-store (MockStateStore from UTL adopted in unified-trading-api)
@@ -107,14 +125,17 @@ todos:
   # ─────────────────────────────────────────────────────────────────────────────
   - id: a6-p2-batch-live-data
     content: |
-      - [ ] [AGENT] P0. Seed separate batch and live data collections in MockStateStore. ALL domains must have both `_live` and `_batch` variants. Live collections persist to `.local-dev-cache/unified-trading-api/` as JSONL (survive restarts, get updated by WebSocket ticks and manual actions). Batch collections are seeded once and immutable until reset.
+      - [x] [AGENT] P0. Seed separate batch and live data collections in MockStateStore. ALL domains must have both `_live` and `_batch` variants. Live collections persist to `.local-dev-cache/unified-trading-api/` as JSONL (survive restarts, get updated by WebSocket ticks and manual actions). Batch collections are seeded once and immutable until reset.
 
-        Collection naming convention:
+        Collection naming convention (ALL time-varying domains get both variants):
         - `positions_live` / `positions_batch`
         - `orders_live` / `orders_batch`
+        - `fills_live` / `fills_batch`
         - `pnl_live` / `pnl_batch`
         - `tickers_live` / `tickers_batch`
         - `pnl_timeseries_live` / `pnl_timeseries_batch`
+        - `alerts_live` / `alerts_batch`
+        - `risk_live` / `risk_batch`
 
         When API receives `mode=batch&as_of=2026-03-21`, it reads from `*_batch` collections.
         When API receives `mode=live` (or no mode param), it reads from `*_live` collections.
@@ -125,18 +146,21 @@ todos:
         - Batch uses official close prices; live uses last tick prices
         - Batch has exact fee breakdowns; live has estimated fees
         - Batch orders all have final status (filled/cancelled); live has open/partial orders
+        - Batch alerts all have final status (acknowledged/escalated/resolved); live has unacknowledged alerts
+        - Batch risk is end-of-day snapshot; live risk updates as positions/prices change
+        The data SHAPE is >90% identical. Same fields, same schema. Only the values differ slightly to reflect the T+1 reconciliation process. The service layer code (filtering, pagination, org-scoping) is identical — the only branching is the collection name suffix.
 
         This architecture means: in production, the same directory is populated by real services.
         In mock, it's populated by seed data + WebSocket tick generator. The API code is identical.
-    status: todo
+    status: done
   - id: a6-p3-deterministic
     content: |
-      - [ ] [AGENT] P1. Add seed versioning: `SEED_VERSION = "1.0.0"` in seed.py. MockStateStore checks cached seed version against current — if mismatch, clears cache and re-seeds. This ensures developers always get fresh data after code pulls.
-    status: todo
+      - [x] [AGENT] P1. Add seed versioning: `SEED_VERSION = "1.0.0"` in seed.py. MockStateStore checks cached seed version against current — if mismatch, clears cache and re-seeds. This ensures developers always get fresh data after code pulls.
+    status: done
   - id: a6-p3-ci-mode
     content: |
-      - [ ] [AGENT] P1. When `MOCK_STATE_MODE=deterministic` (CI mode): skip JSONL persistence, use pure in-memory store, seed on every startup. When `MOCK_STATE_MODE=interactive` (dev mode): persist mutations to `.local-dev-cache/unified-trading-api/`, survive restarts.
-    status: todo
+      - [x] [AGENT] P1. When `MOCK_STATE_MODE=deterministic` (CI mode): skip JSONL persistence, use pure in-memory store, seed on every startup. When `MOCK_STATE_MODE=interactive` (dev mode): persist mutations to `.local-dev-cache/unified-trading-api/`, survive restarts.
+    status: done
   # ── DEPENDENCY GATE: Phase 4 requires ALL upstream agents ─────────────────
   # STOP HERE until:
   #   - Agent 5 service layer is complete (all routes use service DI)
@@ -149,60 +173,60 @@ todos:
   # ─────────────────────────────────────────────────────────────────────────────
   - id: a6-p4-remove-msw
     content: |
-      - [ ] [AGENT] P1. In unified-trading-system-ui: remove `lib/mocks/` directory (browser.ts, server.ts, handlers/, fixtures/, utils.ts — 1,411 lines total). Remove MSW from package.json dependencies. Remove `startMockWorker()` call from app initialization. The UI now always calls the real API at port 8030 (which handles mock/real internally).
-    status: todo
+      - [x] [AGENT] P1. In unified-trading-system-ui: remove `lib/mocks/` directory (browser.ts, server.ts, handlers/, fixtures/, utils.ts — 1,411 lines total). Remove MSW from package.json dependencies. Remove `startMockWorker()` call from app initialization. The UI now always calls the real API at port 8030 (which handles mock/real internally).
+    status: done
   - id: a6-p4-migrate-trading-data
     content: |
-      - [ ] [AGENT] P1. Migrate the Dashboard page from client-side `lib/trading-data.ts` data to API calls. Currently the Dashboard imports ORGANIZATIONS, CLIENTS, STRATEGIES, getFilteredStrategies, getAggregatedPnL, etc. from trading-data.ts. Replace these with API hook calls: `useTradingOrgs()`, `useTradingPnl()`, `useTradingTimeseries()`, `useTradingPerformance()` (these hooks already exist in `hooks/api/use-trading.ts`). The seed data in the API must match the trading-data.ts output closely enough that the Dashboard looks the same.
-    status: todo
+      - [x] [AGENT] P1. Migrate the Dashboard page from client-side `lib/trading-data.ts` data to API calls. Currently the Dashboard imports ORGANIZATIONS, CLIENTS, STRATEGIES, getFilteredStrategies, getAggregatedPnL, etc. from trading-data.ts. Replace these with API hook calls: `useTradingOrgs()`, `useTradingPnl()`, `useTradingTimeseries()`, `useTradingPerformance()` (these hooks already exist in `hooks/api/use-trading.ts`). The seed data in the API must match the trading-data.ts output closely enough that the Dashboard looks the same.
+    status: done
   - id: a6-p5-seed-tests
     content: |
-      - [ ] [AGENT] P0. Add tests verifying seed data quality:
+      - [x] [AGENT] P0. Add tests verifying seed data quality:
         1. Every record has org_id field
         2. All strategy_ids in positions/orders reference valid strategies
         3. All order_ids in fills reference valid orders
         4. Org filtering works (client-full sees only acme data)
         5. Batch vs live data returns different results
         6. Reset clears mutations but preserves seed
-    status: todo
+    status: done
   # ── Phase 6: Cross-Domain Consistency & Client-Reporting-API (Gap-Closing) ──
   - id: a6-p6-data-consistency
     content: |
-      - [ ] [AGENT] P0. Add cross-domain data consistency validation to seed.py. After seed_all_domains(), run validate_consistency() that checks:
+      - [x] [AGENT] P0. Add cross-domain data consistency validation to seed.py. After seed_all_domains(), run validate_consistency() that checks:
         1. Price consistency: OHLCV candle close prices for a given date match the price used to calculate that day's strategy PnL (for strategies trading that instrument)
         2. Reference integrity: every strategy_id in positions/orders exists in strategies collection. Every order_id in fills exists in orders. Every org_id exists in organizations.
         3. Temporal consistency: no position opened_at before strategy inception_date. PnL time-series starts at strategy inception.
         4. Aggregation consistency: sum of position-level PnL per strategy approximately equals strategy's reported PnL (within 5% tolerance)
         5. Batch/live consistency: batch data is a slightly stale version of live — not completely different random data. Batch positions = live positions minus 1-2 unreconciled fills.
         6. validate_consistency() raises ValueError with descriptive message on any violation. It runs automatically in seed_all_domains() — no manual invocation needed.
-    status: todo
+    status: done
   - id: a6-p6-client-reporting-alignment
     content: |
-      - [ ] [AGENT] P1. Ensure client-reporting-api mock data aligns with unified-trading-api seed data. unified-trading-api proxies /reporting/* to client-reporting-api in real mode. In mock mode, unified-trading-api serves from its own MockStateStore. For demo consistency:
+      - [x] [AGENT] P1. Ensure client-reporting-api mock data aligns with unified-trading-api seed data. unified-trading-api proxies /reporting/* to client-reporting-api in real mode. In mock mode, unified-trading-api serves from its own MockStateStore. For demo consistency:
         1. Read client-reporting-api's mock_data if it exists
         2. Ensure the same org IDs, client names, and report types are used
         3. If client-reporting-api has its own seed data, verify no conflicts with unified-trading-api's reporting seed data
         4. Document any alignment issues as TODOs for follow-up
-    status: todo
+    status: done
   - id: a6-p6-sample-pdfs
     content: |
-      - [ ] [AGENT] P1. Create sample PDF reports in `unified_trading_api/mock_data/sample_reports/`:
+      - [x] [AGENT] P1. Create sample PDF reports in `unified_trading_api/mock_data/sample_reports/`:
         1. `executive_report.pdf` — 1-2 pages: title "Executive Summary — March 2026", AUM table, top strategies, risk summary
         2. `pnl_attribution.pdf` — 1-2 pages: title "P&L Attribution Report", attribution table by strategy
         3. These are served by Agent 5's `GET /reporting/download/{report_id}` endpoint
         4. Can be generated programmatically using reportlab or fpdf2, or be static hand-crafted PDFs
-    status: todo
+    status: done
   - id: a6-p6-news-seed
     content: |
-      - [ ] [AGENT] P1. Seed 15-20 mock news items for the Observe > News page (currently a 24-line stub):
+      - [x] [AGENT] P1. Seed 15-20 mock news items for the Observe > News page (currently a 24-line stub):
         1. Each item: title, source (Reuters, Bloomberg, CoinDesk, etc.), timestamp (last 48 hours), category (market, regulatory, macro, crypto), relevance_score, linked_instruments[]
         2. Mix of: market moves ("BTC breaks $70K resistance"), regulatory ("SEC approves spot ETH ETF"), macro ("Fed signals rate pause"), crypto-specific ("Uniswap V4 launch")
         3. Store in MockStateStore "news" collection. API serves via GET /market-data/news.
-    status: todo
+    status: done
   # ── Phase 7: Full Registry Coverage & 50+ Strategy Expansion (Gap-Closing) ──
   - id: a6-p7-full-instrument-seed
     content: |
-      - [ ] [AGENT] P0. Expand seed data to cover ALL instruments from UAC representative_sample.py — not a hardcoded 10:
+      - [x] [AGENT] P0. Expand seed data to cover ALL instruments from UAC representative_sample.py — not a hardcoded 10:
         1. Import `from unified_api_contracts.registry.representative_sample import ...` to get the full instrument list (~40 specs: CeFi spot, CeFi perps, TradFi, DeFi pools, sports leagues)
         2. Seed OHLCV candles for ALL instruments: 4 intervals × 200 candles each. Use Brownian motion generator (~50 lines, not hardcoded). Total: ~32,000 candle records.
         3. Seed tickers_live and tickers_batch for ALL instruments with realistic prices
@@ -210,10 +234,10 @@ todos:
         5. The Brownian motion generator must accept a base price per instrument — use realistic prices from the registry
         6. Group instruments by category for the candle generation: crypto uses 24/7 timestamps, tradfi uses market hours, sports uses match schedules
         DEPENDENCY: UAC representative_sample.py is the SSOT. No upstream changes needed.
-    status: todo
+    status: done
   - id: a6-p7-strategy-expansion
     content: |
-      - [ ] [AGENT] P0. Expand strategies from 18 to 50+ using the combinatorial matrix from CITADEL_VISION:
+      - [x] [AGENT] P0. Expand strategies from 18 to 50+ using the combinatorial matrix from CITADEL_VISION:
         1. Read `unified-trading-codex/09-strategy/` for all documented archetypes (10 types across 5 asset classes)
         2. Generate 50+ strategies following the naming convention: `{CATEGORY}_{INSTRUMENT}_{ARCHETYPE}_{MODE}_{TIMEFRAME}`
         3. Distribution: CeFi 16, TradFi 11, DeFi 11, Sports 9, Prediction 3 (as per CITADEL_VISION matrix)
@@ -222,10 +246,10 @@ todos:
         6. Update `strategy-registry.ts` (1,863 lines) in the UI to include all 50+ strategies with proper archetype/category metadata
         7. Ensure all strategy archetypes documented in codex 09-strategy/ are represented
         DEPENDENCY: None — seed generation is procedural. But strategy-registry.ts update requires understanding the UI's type system.
-    status: todo
+    status: done
   - id: a6-p7-run-sync-pipeline
     content: |
-      - [ ] [AGENT] P0. Run the full SSOT sync pipeline AFTER completing all seed data expansion:
+      - [x] [AGENT] P0. Run the full SSOT sync pipeline AFTER completing all seed data expansion:
         1. Run `python unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` to sync UAC registries → ui-reference-data.json
         2. Verify ui-reference-data.json includes ALL instruments from representative_sample.py
         3. Verify strategy-manifest.json in PM is updated with the 50+ strategies
@@ -233,10 +257,10 @@ todos:
         5. Run `python unified-trading-pm/scripts/manifest/check-strategy-instruments.py` to verify instrument refs
         6. Document which sync scripts were run and their output in a commit message
         DEPENDENCY: All seed data expansion (a6-p7-full-instrument-seed, a6-p7-strategy-expansion) must be complete.
-    status: todo
+    status: done
   - id: a6-p7-strategy-registry-alignment
     content: |
-      - [ ] [AGENT] P0. Ensure strategy definitions are aligned across all layers:
+      - [x] [AGENT] P0. Ensure strategy definitions are aligned across all layers:
         1. `unified-trading-codex/09-strategy/` — documented archetypes (SSOT for what strategies exist)
         2. `unified-api-contracts` — strategy type enums must include all 10 archetypes
         3. `unified-internal-contracts` — strategy schemas must support all 4 execution modes
@@ -245,7 +269,94 @@ todos:
         6. `unified-trading-pm/strategy-manifest.json` — 50+ strategies registered
         7. If any layer is missing archetypes or execution modes, ADD them. The codex is the SSOT — everything else derives from it.
         DEPENDENCY: Strategy expansion (a6-p7-strategy-expansion) must be complete first.
-    status: todo
+    status: done
+  # ── Phase 8: Service-Capability Seed Data (Gap-Closing — from GAP_CLASSIFICATION_2026_03_22.md) ──
+  # READ .cursor/plans/GAP_CLASSIFICATION_2026_03_22.md — explains the 3 gap categories.
+  # These todos seed data that REPLICATES what real services would produce. The real services
+  # (risk-and-exposure-service, features-volatility-service, etc.) already compute this data.
+  # You are seeding REALISTIC MOCK OUTPUT so MockDomainService can serve it.
+  - id: a6-p8-risk-limits
+    content: |
+      - [x] [AGENT] P0. Seed `risk_limits` collection for pre-trade compliance checks. GAP CATEGORY: Type 3 (risk-and-exposure-service has pre-trade engine — mock needs seed data to simulate it).
+        The REAL service reads limits from `RiskLimitsDomainClient` (GCS backend per client_id). For mock, seed static limits.
+        Per strategy, seed: max_position_size_usd, max_leverage, max_var_99, max_exposure_pct, max_open_orders.
+        Realistic values: momentum strategies get tighter limits (max_leverage 3x, max_position 500K), market-making gets wider (max_leverage 10x, max_position 2M), DeFi yield gets conservative (max_leverage 1.5x).
+        Store in `risk_limits` collection, keyed by strategy_id.
+        Make at least 2-3 limits intentionally CLOSE to current positions (so pre-trade check demo can show a "fail" scenario with a slightly-too-large order).
+    status: done
+  - id: a6-p8-options-chain-seed
+    content: |
+      - [x] [AGENT] P0. Seed `options_chain` collection. GAP CATEGORY: Type 3 (features-volatility-service computes Greeks — mock needs seeded chain).
+        The REAL data comes from Deribit (via UMI) and features-volatility-service computes second-order Greeks.
+        Import Deribit options config from `representative_sample.py` (generates strikes/expiries from ref_date).
+        For BTC options (primary), seed a realistic chain:
+        1. 5 expiry buckets: 7d, 14d, 30d, 60d, 90d from today
+        2. Per expiry: 10 strikes (0.8x to 1.2x of current BTC price in 5% increments)
+        3. Per strike+expiry: call AND put entry with realistic Greeks
+        4. Greeks generation: use Black-Scholes formula (it's ~20 lines of Python):
+           d1 = (ln(S/K) + (r + sigma^2/2)*T) / (sigma*sqrt(T))
+           delta_call = N(d1), gamma = N'(d1)/(S*sigma*sqrt(T)), theta, vega
+           ATM IV ~45% for BTC, skew: lower strikes higher IV (smile)
+        5. For ETH: similar but ATM IV ~55%, fewer strikes
+        6. For SPY: ATM IV ~15%, tighter strikes (1% increments)
+        Store in `options_chain` collection grouped by underlying+venue.
+    status: done
+  - id: a6-p8-vol-surface-seed
+    content: |
+      - [x] [AGENT] P0. Seed `vol_surfaces` collection. GAP CATEGORY: Type 3 (features-volatility-service computes full surfaces).
+        Import format from `features-volatility-service/app/calculators/tradfi_vol_surface.py` output shape.
+        Per underlying (BTC, ETH, SPY):
+        1. Slices: one per expiry bucket (7d, 30d, 60d, 90d). Each slice: { expiry_days, smile: [{ strike, iv }] }
+        2. Term structure: [{ expiry_days, atm_iv }] — upward sloping (short-term IV < long-term IV)
+        3. Key metrics: atm_iv, skew_25d (negative for equities, more negative for crypto), butterfly_25d, risk_reversal_25d
+        4. Vol regime: { iv_percentile: 45, vrp: 3.2 (vol risk premium), regime: "normal" }
+        BTC realistic values: ATM IV 45%, 25d skew -5%, term structure slope +2% per 30d
+        SPY: ATM IV 15%, 25d skew -3%, flatter term structure
+    status: done
+  - id: a6-p8-var-metrics-seed
+    content: |
+      - [x] [AGENT] P0. Seed `var_metrics`, `stress_test_results`, and `correlation_matrix` collections. GAP CATEGORY: Type 3 (risk-and-exposure-service computes all of this — mock needs seed data).
+        IMPORT FORMAT from `risk-and-exposure-service/scripts/seed_mock_data.py` (548L) which already generates realistic VaR and stress data. Adapt its output format.
+        1. `var_metrics` collection: per-strategy VaR. Fields: strategy_id, historical_var_99, parametric_var_99, cvar_99, cornish_fisher_var_99. Realistic: momentum strategies VaR 2-5%, mean-reversion 1-3%, DeFi yield 0.5-2%.
+        2. `stress_test_results` collection: per-scenario portfolio impact. 3 scenarios: GFC_2008 (portfolio -15%), COVID_2020 (-10%), CRYPTO_BLACK_THURSDAY (-25%). Per scenario: portfolio_impact_pct, expected_loss_usd, worst_strategy_id.
+        3. `correlation_matrix` collection: single record with NxN matrix. Crypto strategies correlated ~0.5-0.7. TradFi ~0.2-0.4. DeFi/Sports near 0 (uncorrelated). Use strategy_ids as row/column labels.
+        4. `regime` collection: single record { regime: "normal", multiplier: 1.0, vol_signal: 0.02, correlation_signal: 0.3, drawdown_velocity: -0.005 }.
+    status: done
+  - id: a6-p8-fx-rates-seed
+    content: |
+      - [x] [AGENT] P0. Seed `fx_rates` collection and add `denomination_currency` + `fx_rate_to_usd` to positions. GAP CATEGORY: Type 1+3 (NO service has FX — genuinely missing, trivial to mock).
+        1. `fx_rates` collection: { "BTC/USD": 67000, "ETH/USD": 3500, "USDT/USD": 1.0001, "EUR/USD": 1.08, "GBP/USD": 1.27 }
+        2. Add to EVERY position record: `denomination_currency` (USDT for Binance, BTC for Deribit, USD for CME/NYSE, ETH for Uniswap/Aave) and `fx_rate_to_usd` (e.g., 1.0 for USD, 67000 for BTC-denominated).
+        3. This enables Agent 5's PnL aggregation to show correct USD-converted totals.
+    status: done
+  - id: a6-p8-regulatory-seed
+    content: |
+      - [x] [AGENT] P1. Seed `regulatory_reports` collection. GAP CATEGORY: Type 2+3 (execution-service has MiFID II/FCA reporter — mock needs seed data).
+        Seed 8-10 regulatory report records matching the events execution-service would emit:
+        - 3 MiFID II best execution reports (status: submitted)
+        - 2 FCA transaction reports (status: submitted)
+        - 2 EMIR derivative reports (status: pending)
+        - 1 overdue report (status: overdue, demonstrates alerting)
+        Fields: report_id, report_type, jurisdiction, status, filing_date, next_due_date, instruments_covered[], filing_reference.
+    status: done
+  - id: a6-p8-market-hours
+    content: |
+      - [x] [AGENT] P1. Amend OHLCV candle generator to respect market hours per asset class. GAP CATEGORY: Type 3 (real market data respects trading sessions — mock generator ignores them).
+        1. CeFi/DeFi: 24/7 candles (no change needed)
+        2. TradFi equities (AAPL, QQQ, GLD, VIX): NYSE hours only (09:30-16:00 ET, Mon-Fri). Skip overnight and weekends for intraday candles (1m, 5m, 1h). Daily candles OK for all trading days.
+        3. TradFi futures (ES, ZB, ZN): Near-24hr (Sun 18:00 - Fri 17:00 ET) with 1hr daily break. Weekday only.
+        4. Sports: Event-based (candle timestamps correspond to match times, not continuous)
+        Add `market_hours: { start_hour, end_hour, timezone, weekdays_only }` config per asset class to the Brownian motion generator.
+    status: done
+  - id: a6-p8-defi-health-positions
+    content: |
+      - [x] [AGENT] P1. Add DeFi-specific fields to DeFi positions. GAP CATEGORY: Type 2 (strategy-service RiskMonitor + risk-service DefiReconciliation compute these — positions don't include them).
+        For positions where venue is a DeFi protocol (AAVE_V3, COMPOUND_V3, UNISWAP_V3, LIDO):
+        1. Lending positions: add health_factor (1.2-3.0), ltv_ratio (0.3-0.7), liquidation_price, collateral_value_usd, borrow_value_usd
+        2. LP positions: add il_pct (impermanent loss 0-5%), pool_share_pct, fee_accrued_usd
+        3. Staking positions: add staking_apy (3-8%), rewards_accrued
+        Make 1-2 positions with health_factor close to 1.5 (yellow warning) for demo visual impact.
+    status: done
 isProject: false
 ---
 
@@ -259,11 +370,28 @@ isProject: false
 3. Read `unified-trading-system-ui/lib/trading-data.ts` (770L) — the client-side data you're replacing. Seed data MUST
    match this closely.
 
-## KEY CONSTRAINT: Visual Parity After Migration
+## KEY CONSTRAINT: Registry-Driven, Not Hardcoded
 
-The Dashboard currently uses `lib/trading-data.ts` which generates 18 strategies, 4 orgs, time series, PnL components.
-After migration to API, the Dashboard must look IDENTICAL. Same strategy names, similar numbers, same org names.
-Cross-reference `lib/strategy-registry.ts` (strategy definitions) and `lib/taxonomy.ts` (asset class enums).
+ALL seed data generators must import from UAC `representative_sample.py` for instruments and from codex strategy
+archetypes for strategies. If a new instrument or strategy archetype is added to the registry, `POST /admin/reset` must
+pick it up automatically — no seed.py code change required.
+
+**Instrument SSOT:** `unified_api_contracts.registry.representative_sample` — import all spec lists **Strategy
+archetypes SSOT:** `unified-trading-codex/09-strategy/` — 13 code-complete + 4 documented **Strategy configs:**
+Generated by combining archetypes x asset classes x modes. Config, not code.
+
+## KEY CONSTRAINT: Visual Parity for Original 18 Strategies
+
+The Dashboard currently uses `lib/trading-data.ts` which generates 18 strategies. The ORIGINAL 18 must be preserved with
+the same IDs, names, asset classes, and similar PnL ranges — so the Dashboard migration (Phase 4) is invisible. The NEW
+32+ strategies are additions that expand coverage. Cross-reference `lib/strategy-registry.ts` and `lib/taxonomy.ts`.
+
+## KEY CONSTRAINT: No Two Sources of Truth
+
+After this agent's work, `lib/trading-data.ts` (770L), `lib/strategy-registry.ts`, `lib/ml-mock-data.ts`,
+`lib/execution-platform-mock-data.ts`, `lib/data-service-mock-data.ts`, `lib/strategy-platform-mock-data.ts` — ALL of
+these client-side data sources become dead code. The UI calls the API. The API reads from MockStateStore. The seed data
+is the single source. Phase 4 (MSW removal + trading-data.ts migration) deletes the client-side copies.
 
 ## Absorbed from prior plans
 
@@ -328,6 +456,13 @@ trading-data.ts only after visual verification.
 - Seed data MUST match the UI's current client-side data closely enough that the Dashboard looks the same after
   migration. Same strategy names, similar PnL ranges, same org names.
 
+## Tier 0 (UI offline mock) alignment
+
+- SSOT: `CITADEL_VISION_2026_03_22.md` § **Runtime convergence tiers**. When the UI runs **without**
+  `unified-trading-api`, it still needs **the same shapes** the gateway would return. Where practical, export
+  **versioned JSON** (or reuse `generate_ui_reference_data.py` outputs) from the same seed definitions this plan owns,
+  so Tier 0 in-memory state can hydrate from artifacts that stay in lockstep with `MockStateStore` / `seed.py`.
+
 ## Cross-domain consistency rules (added 2026-03-22)
 
 These rules ensure the demo doesn't have embarrassing data inconsistencies:
@@ -350,8 +485,27 @@ These rules ensure the demo doesn't have embarrassing data inconsistencies:
 
 - **Full instrument coverage** (P0): Use ALL instruments from UAC representative_sample.py. Import programmatically.
 - **50+ strategy expansion** (P0): Combinatorial matrix from CITADEL_VISION. Config-driven, not code-path-driven.
-- **Run sync pipeline** (P0): generate_ui_reference_data.py, validate-strategy-manifest.py, check-strategy-instruments.py
+- **Run sync pipeline** (P0): generate_ui_reference_data.py, validate-strategy-manifest.py,
+  check-strategy-instruments.py
 - **Cross-layer alignment** (P0): Codex → UAC → UIC → API seed → UI registry → PM manifest all consistent.
+
+## Phase 8: Service-Capability Seed Data (READ GAP_CLASSIFICATION_2026_03_22.md)
+
+These seed collections replicate what real services would produce:
+
+- **risk_limits** — from risk-and-exposure-service RiskLimitsDomainClient. Per-strategy limits for pre-trade checks.
+- **options_chain** — from features-volatility-service Greeks computation + Deribit data. Black-Scholes Greeks per
+  contract.
+- **vol_surfaces** — from features-volatility-service vol surface calculators. ATM IV, skew, term structure.
+- **var_metrics / stress_test_results / correlation_matrix** — from risk-and-exposure-service VaR/stress/correlation
+  calculators. IMPORT FORMAT from `risk-and-exposure-service/scripts/seed_mock_data.py`.
+- **fx_rates** — genuinely missing (Type 1). Simple static rates. Also add denomination_currency to positions.
+- **regulatory_reports** — from execution-service MiFID II/FCA compliance reporter. Seeded report records.
+- **Market hours** — TradFi candles must respect NYSE/CME trading sessions.
+- **DeFi health** — health_factor, ltv_ratio on DeFi positions from strategy-service RiskMonitor.
+
+Key principle: seed data shapes MUST match the real service output shapes. When in doubt, read the real service's
+seed_mock_data.py or mock_data_provider.py to understand the expected format.
 
 ## Sync pipeline scripts (MUST run after expansion)
 

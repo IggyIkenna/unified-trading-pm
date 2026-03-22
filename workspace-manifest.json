@@ -447,6 +447,11 @@
           "name": "deployment-api",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.2.0,<1.0.0",
+          "required": true
         }
       ],
       "completion_path": "cefi",
@@ -1041,6 +1046,11 @@
           "name": "unified-feature-calculator-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-features-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -1111,6 +1121,11 @@
         },
         {
           "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-orchestration-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1199,13 +1214,7 @@
       "codex_sections": ["05-infrastructure"],
       "version": "0.1.0",
       "version_source": "version-file",
-      "dependencies": [
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.2.0,<1.0.0",
-          "required": true
-        }
-      ],
+      "dependencies": [],
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
@@ -1559,6 +1568,11 @@
         {
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.2.0,<1.0.0",
           "required": true
         }
       ],
@@ -2509,6 +2523,11 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.2.1,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "LOCAL_PASS",
@@ -2657,6 +2676,11 @@
         {
           "name": "unified-api-contracts",
           "version": ">=0.1.1,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
           "required": true
         }
       ],
@@ -3099,7 +3123,23 @@
       "doc_standard": "library-canonical",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
-      "dependencies": [],
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.2.38,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.39,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.48,<1.0.0",
+          "required": true
+        }
+      ],
       "ci_status": "LOCAL_PASS",
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -3165,6 +3205,11 @@
         {
           "name": "unified-api-contracts",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.48,<1.0.0",
           "required": true
         }
       ],

@@ -39,6 +39,24 @@ THE BIG PICTURE:
 - AUTH → UI calls auth-api (port 8200) via Next.js rewrite /api/auth/* → localhost:8200
 - VISIBLE UX: Every function has a visible button. Reset Demo, Live/Batch toggle, persona switcher all visible in shell
 
+SEPARATION OF CONCERNS (CRITICAL):
+- UI is VISUAL ONLY. No service logic, no PnL calculation, no data generation, no mock fixtures.
+- ALL data comes from the API. The API reads from MockStateStore (mock) or real services (live).
+- If you can't demonstrate it with `curl`, the logic is in the WRONG LAYER.
+- No two sources of truth: if the API seeds strategies, the UI does NOT also hardcode strategies.
+- Missing service functionality? Add it to the service/API — don't work around it in the UI.
+- Instruments: imported from UAC representative_sample.py (50+ specs). Seed generators read the registry.
+- Strategies: CONFIG, not code. 50+ strategies via archetype x asset_class config expansion.
+
+LIVE/BATCH COEXISTENCE (applies to ALL domain data):
+- Live mode: `?mode=live` → reads `{domain}_live` collections. WebSocket updates tickers/positions/PnL in real-time.
+- Batch mode: `?mode=batch&as_of=DATE` → reads `{domain}_batch` collections. Immutable T+1 reconciled snapshots. NOT affected by WebSocket ticks.
+- Same API endpoint serves both — different collection based on query param.
+- Real-time PnL recalculation (server-side) ONLY mutates _live collections. Batch data is never touched by ticks.
+- The toggle lives in `useGlobalScope().scope.mode`. ALL API hooks pass mode as query param.
+- This applies to: positions, orders, fills, PnL, tickers, timeseries — everything with live/batch variants.
+- Risk exposure and reconciliation can show BOTH simultaneously (live vs batch drift = the reconciliation view).
+
 REAL-TIME FEEL (CRITICAL for demo):
 - WebSocket mock tick generator: prices move every 500-2000ms on the Trading Terminal
 - OHLCV candle data: 200 candles per instrument per interval for candlestick charts
