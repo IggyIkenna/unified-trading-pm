@@ -3,6 +3,9 @@ name: agent7-observe-admin
 overview:
   Absorb deployment-ui, batch-audit-ui, live-health-monitor-ui, logs-dashboard-ui into Observe and Admin services
 todos:
+  # ── NO UPSTREAM DEPENDENCIES — all phases can start immediately ──────────
+  # This agent has NO deps on other agents. Execute all phases sequentially.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a7-p0-risk-dashboard
     content: |
       - [ ] [AGENT] P0. Verify `/services/trading/risk` has real content: exposure breakdown (by venue, asset class, strategy), VaR calculation, Greeks display (delta, gamma, vega, theta), stress scenarios, limit utilization bars. Wire to `GET /risk/exposure`, `GET /risk/limits` APIs. If stub, build using seed data.
@@ -154,6 +157,29 @@ OBSERVE_TABS is defined in service-tabs.tsx but NO LAYOUT RENDERS IT.
 | `components/dashboards/audit-dashboard.tsx`  | 615   | Admin > Dashboard | EXISTS — wire into admin page                               |
 | `components/dashboards/devops-dashboard.tsx` | 779   | Admin > DevOps    | EXISTS — wire into devops page (currently only 108L)        |
 | `components/dashboards/risk-dashboard.tsx`   | 809   | Observe > Risk    | EXISTS — verify if overlaps/complements the 1297L risk page |
+
+## Risk Factors & Mitigations
+
+**RISK 1 (HIGHEST): Observe layout dependency on Agent 1.** Agent 1 must create observe/layout.tsx with OBSERVE_TABS
+before Agent 7 can work. Currently, risk/alerts pages show TRADING_TABS (wrong), and observe/news and strategy-health
+have NO layout. MITIGATION: If Agent 1 hasn't created the observe layout when Agent 7 starts, Agent 7 creates a minimal
+observe/layout.tsx FIRST (just renders OBSERVE_TABS from service-tabs.tsx). Add a comment: "Created by Agent 7 as
+blocker resolution. Agent 1 should verify/enhance."
+
+**RISK 2: Risk page duplication — 1,297L page vs 809L risk-dashboard.tsx.** Two large risk components may overlap.
+Wiring both creates confusion. MITIGATION: Read BOTH files first. The 1,297L page in services/trading/risk is likely the
+detailed page. risk-dashboard.tsx (809L) in components/dashboards/ is likely a summary. Use the existing page as the tab
+content. Only wire risk-dashboard.tsx if it provides something the page doesn't.
+
+**RISK 3: deployment-ui components are MASSIVE (1,759L DeployForm, 4,013L DataStatus).** Full absorption is unrealistic
+in one session. These components use different frameworks. MITIGATION: Prioritize the EXISTING devops-dashboard.tsx
+(779L, already in repo) as the DevOps tab. Do NOT attempt to absorb all 6 deployment-ui components. Instead, absorb 1-2
+highest value (DeploymentHistory at 636L for "History" sub-tab, ReadinessTab at 527L for "Readiness"). Leave the rest as
+documented future work. The devops-dashboard.tsx alone is a significant upgrade over 108L.
+
+**RISK 4: Admin pages may be in (ops) route group with restricted access.** Similar to Manage routing issue.
+Admin/config/devops may use a different layout. MITIGATION: Verify the route group. If pages are in (ops), they should
+stay there (admin IS ops-only). But ensure the layout renders ADMIN_TABS correctly. If no tab rendering exists, add it.
 
 ## Admin/DevOps — Enrichment from deployment-ui (satellite)
 

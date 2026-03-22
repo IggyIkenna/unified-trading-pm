@@ -40,6 +40,17 @@ todos:
       - [ ] [AGENT] P0. Ensure vitest passes: `CI=true npm test -- --run`. Fix any broken component tests that relied on MSW handlers. Component tests should use the API hooks with mocked fetch (via vitest's mock capabilities) not MSW.
     status: todo
 
+  # ── DEPENDENCY GATE: Phase 2 requires Agents 1, 5, 6 ──────────────────────
+  # STOP HERE if these are not complete:
+  #   - Agent 1: shell navigation working (lifecycle nav, tab routing, debug footer)
+  #   - Agent 5: API service layer working (all routes return data in mock mode)
+  #   - Agent 6: seed data comprehensive (at least positions, orders, strategies, alerts)
+  # CHECK: Start API with CLOUD_MOCK_MODE=true → curl http://localhost:8030/health returns ok
+  # CHECK: Start UI → navigate to /dashboard → page renders with data (not empty/error)
+  # CHECK: Click lifecycle nav → lands on service first tab (not card landing)
+  # If upstream agents aren't done, stay on Phase 0-1 (quality gates, build fixes) and wait.
+  # Phase 0-1 have NO upstream deps and can run immediately.
+  # ─────────────────────────────────────────────────────────────────────────────
   # ── Phase 2: Playwright E2E Tests (Mock Mode) ──
   - id: a8-p2-playwright-setup
     content: |
@@ -309,6 +320,45 @@ isProject: false
 
 Every Playwright test should verify: clicking a lifecycle stage → lands on first tab → tab bar is visible → all tabs are
 clickable → NO card-based sub-pages appear. If any test encounters a card grid instead of tabs, that's a FAILURE.
+
+## Risk Factors & Mitigations
+
+**RISK 1 (HIGHEST): Depends on ALL 7 other agents — fragile integration point.** If ANY agent is incomplete (stub pages,
+missing endpoints, broken auth), E2E tests fail. Agent 8 can't distinguish "test is wrong" from "upstream agent didn't
+finish." MITIGATION: Structure tests in 3 tiers:
+
+- Tier 1 (run always): Navigation tests — verify routes exist, tabs render, no 404s. These work even if data is missing
+  (skeleton/empty states should appear).
+- Tier 2 (run after Agent 5+6): Data tests — verify tables have rows, charts have data.
+- Tier 3 (run after ALL agents): Flow tests — full user journeys (login → trade → reset). Run Tier 1 first. If it
+  passes, proceed to Tier 2. This gives useful feedback even if some agents lag.
+
+**RISK 2: Starting 3 servers in Playwright config is complex.** auth-api (8200) + unified-trading-api (8030) + Next.js
+(3000) all need to be up before tests run. Server startup order matters (auth-api must be up before unified-trading-api
+validates JWTs). MITIGATION: Use Playwright's `webServer` config array with dependencies:
+
+```js
+webServer: [
+  { command: "cd ../auth-api && .venv/bin/python -m auth_api.app", port: 8200, timeout: 30000 },
+  { command: "cd ../unified-trading-api && .venv/bin/python -m unified_trading_api.main", port: 8030, timeout: 30000 },
+  { command: "npm run dev", port: 3000, timeout: 60000 },
+];
+```
+
+Add health check retries: don't start tests until GET /health returns 200 on all 3 ports.
+
+**RISK 3: Codegen pipeline may fail if API has errors.** If unified-trading-api has basedpyright errors or won't start,
+codegen can't fetch OpenAPI spec. MITIGATION: Run `bash scripts/quality-gates.sh` on unified-trading-api FIRST (Phase
+0). Only proceed to codegen (Phase 4) after API quality gates pass.
+
+**RISK 4: Auth alignment test is brittle — JWTs expire, formats change.** Testing cross-API auth requires live JWTs that
+may have short expiry. MITIGATION: In mock mode, auth-api JWTs should have long expiry (1h minimum). The alignment test
+should login → immediately use token → all within 30 seconds. No token caching between tests.
+
+**RISK 5: Tests may be flaky due to timing (WebSocket, latency simulation).** WebSocket ticks arrive at random
+intervals. Asserting "price changed" may fail if tick hasn't arrived. MITIGATION: Use Playwright's
+`expect().toPass({ timeout: 5000 })` or `page.waitForFunction()` for time-dependent assertions. Don't use fixed sleeps.
+Wait for DOM changes.
 
 ## Absorbed from prior plans
 

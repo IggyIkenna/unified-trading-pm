@@ -4,6 +4,9 @@ overview:
   Refactor unified-trading-api from mock/real if-else to service layer pattern, wire MockStateStore from UTL, add POST
   /admin/reset
 todos:
+  # ── NO UPSTREAM DEPENDENCIES — all phases can start immediately ──────────
+  # This agent has NO deps on other agents. Execute all phases sequentially.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a5-p0-service-interfaces
     content: |
       - [x] [AGENT] P0. DONE — services/ directory already exists with DomainService Protocol in base.py, MockDomainService in mock_service.py, LiveDomainService in live_service.py, factory.py with get_service(). VERIFY the Protocol covers all 15 domains listed. If any domain methods are missing, ADD them to the existing Protocol — do NOT recreate.
@@ -212,6 +215,44 @@ isProject: false
 - No MSW in the UI anymore. The UI always calls the real API at port 8030.
 - The API handles mock/real internally via the service layer.
 - This means ALL API endpoints must return realistic data in mock mode.
+
+## Risk Factors & Mitigations (HIGHEST RISK AGENT)
+
+**RISK 1 (CRITICAL): Scope is enormous — this agent has 25+ todos across 7 phases.** Service layer + WebSocket + auth +
+reporting proxy + persistence + dev stack + tests. Agent may run out of context window or lose coherence mid-execution.
+MITIGATION: Execute in STRICT phase order. Complete Phase 0 (service interfaces) → Phase 1 (refactor routes) → Phase 2
+(MockStateStore migration) → Phase 3 (seed enrichment) → Phase 4 (WebSocket + candles + auth) → Phase 5 (tests) → Phase
+6 (PDF + codegen). Do NOT jump ahead. If context runs out, the earlier phases (service layer, MockStateStore) are more
+important than later ones (PDF, codegen).
+
+**RISK 2: Service layer already exists — don't rebuild it.** Current state baseline says services/ EXISTS with
+DomainService Protocol, MockDomainService, factory.py. All 19 routes already use service layer DI. MITIGATION: Read
+services/ directory FIRST. If the pattern matches the plan, SKIP Phase 0 and Phase 1. Focus on the gaps (MockStateStore
+migration, new endpoints, auth, persistence).
+
+**RISK 3: WebSocket already has 4,859 lines — don't break what works.** The existing WebSocket has channel-based
+multiplexing and synthetic tick generator. MITIGATION: Read routes/websocket.py FIRST. Verify tick generation matches
+CITADEL_VISION § Interface Contracts. If format differs, update the contract in CITADEL_VISION (since the server is
+already built) and notify Agent 2 to adapt. Don't rewrite 4,859 lines.
+
+**RISK 4: MockStateStore migration may break existing seed.py.** seed.py is 1,323 lines. Switching from the simple
+68-line store to UTL's MockStateStore changes the API for seeding (different method signatures, different storage
+format). MITIGATION: Create a migration wrapper. Keep the seed() function signature the same. Internally, translate
+calls from the old API to UTL MockStateStore API. Run seed.py after migration and verify all domains are populated. Do
+NOT rewrite seed.py — Agent 6 owns seed data content.
+
+**RISK 5: Collection naming mismatch between Agent 5 and Agent 6.** If Agent 5 reads from `positions_live` but Agent 6
+seeds into `positions`, data is invisible. MITIGATION: Use EXACT collection names from CITADEL_VISION § Interface
+Contracts. Both agents must read that section. Agent 5 must NOT invent new collection names.
+
+**RISK 6: Auth-api JWT format may not match expectations.** auth-api issues JWTs with specific claims. If
+unified-trading-api expects different claim names (e.g., `org_id` vs `organization_id`), auth breaks silently.
+MITIGATION: Read auth-api/auth_api/app.py to find JWT payload structure. Match claim names exactly in
+`get_current_user()` dependency. Add a test that decodes an auth-api JWT and verifies claim names.
+
+**RISK 7: Reporting proxy adds httpx dependency and async complexity.** httpx AsyncClient needs proper lifecycle
+management (startup/shutdown). MITIGATION: Create httpx client in FastAPI lifespan handler. Store on app.state. Close on
+shutdown. Use existing pattern from any other service that makes outbound HTTP calls.
 
 ## New scope (added 2026-03-22 gap analysis)
 

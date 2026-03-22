@@ -3,6 +3,12 @@ name: agent1-shell-navigation
 overview:
   Remove card landing pages, wire direct-to-tab routing, restore orphaned components, add Debug Footer with Reset Demo
 todos:
+  # ── NO UPSTREAM DEPENDENCIES — all phases can start immediately ──────────
+  # This agent has NO deps on other agents. All work is in unified-trading-system-ui.
+  # Other agents (2, 6, 8) depend on YOUR output (layouts, tab sets, debug footer).
+  # Complete Phase 0-3 as fast as possible to unblock them.
+  # ─────────────────────────────────────────────────────────────────────────────
+  # ── Phase 0: Remove Card Landing Pages (SEQUENTIAL) ──
   - id: a1-p0-remove-key-landing
     content: |
       - [ ] [AGENT] P0. Delete `app/(platform)/services/[key]/page.tsx` (dynamic card landing page) and the `SERVICE_SECTIONS` / `SERVICE_REGISTRY` definitions it uses. Each lifecycle nav dropdown item should link DIRECTLY to the first tab of that service (e.g. "Trading" → `/services/trading/overview`, NOT `/services/trading`).

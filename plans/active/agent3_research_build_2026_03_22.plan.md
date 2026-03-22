@@ -4,6 +4,9 @@ overview:
   Ensure Research/Build and Promote services have real content, absorb strategy-ui wizard and ml-training-ui experiment
   tracking
 todos:
+  # ── NO UPSTREAM DEPENDENCIES — all phases can start immediately ──────────
+  # This agent has NO deps on other agents. Execute all phases sequentially.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a3-p0-research-overview
     content: |
       - [ ] [AGENT] P0. Verify `/services/research/overview` has real content (not placeholder). It should show: active experiments count, model registry status, backtest queue, recent results. Wire to API hooks: `GET /ml/models` (model count), `GET /execution/backtests` (recent backtests). If placeholder, build a dashboard with KPI cards for each research domain (ML, Strategy, Execution).

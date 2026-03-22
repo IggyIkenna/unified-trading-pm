@@ -2,6 +2,9 @@
 name: agent4-reports-manage
 overview: Absorb settlement-ui, client-reporting-ui, onboarding-ui, user-management-ui into Reports and Manage services
 todos:
+  # ── NO UPSTREAM DEPENDENCIES — all phases can start immediately ──────────
+  # This agent has NO deps on other agents. Execute all phases sequentially.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a4-p0-reports-overview
     content: |
       - [ ] [AGENT] P0. Verify `/services/reports/overview` (P&L Attribution tab) has real content. Should show: aggregated P&L by strategy, attribution breakdown (funding, carry, basis, delta, greeks, slippage, fees), time series. Wire to `GET /analytics/pnl` and `GET /reporting/pnl-attribution` APIs. The Dashboard already has `PnLAttributionPanel` — reuse that component here with more detail.
@@ -162,6 +165,31 @@ isProject: false
 | `user-management-ui/OnboardUserPage.tsx`       | 225   | Manage > Users                              | "Add User" button → modal                      |
 | `user-management-ui/UserDetailPage.tsx`        | 255   | Manage > Users                              | Click user row → detail drawer                 |
 | `_reference/versa-audit-ui/CompliancePage.tsx` | 346   | Reports > Regulatory OR Manage > Compliance | Adapt compliance patterns                      |
+
+## Risk Factors & Mitigations
+
+**RISK 1 (HIGHEST): Manage routing is broken — pages in (ops), need (platform).** MANAGE_TABS exists in service-tabs.tsx
+but no layout renders it. Pages are in app/(ops)/manage/\* which uses a different layout that enforces admin-only
+access. MITIGATION: Coordinate with Agent 1. If Agent 1 resolves routing (move pages to platform or add redirect), Agent
+4 works within the resolved structure. If Agent 1 hasn't resolved it, Agent 4 MUST fix routing first (Phase 0 blocker).
+Option A (move to platform) is preferred — add entitlement check in the manage layout instead of relying on the (ops)
+route group.
+
+**RISK 2: Satellite UI components use different frameworks.** settlement-ui, onboarding-ui, user-management-ui are
+Vite + potentially different component libraries. Direct copy will fail. MITIGATION: Same as Agent 3 — extract LOGIC and
+LAYOUT, rebuild with shadcn/ui. For settlement-ui/ Settlements.tsx (522L), extract the table columns, status filters,
+and data flow. Rebuild the UI with shadcn Table + Badge + Select. Don't import the entire 522-line component.
+
+**RISK 3: Reports proxy verification depends on Agent 5.** Reports API calls go to port 8030 which proxies to
+client-reporting-api (8014). If Agent 5 hasn't set up the proxy, reports pages show errors. MITIGATION: Wire hooks to
+/reporting/\* paths on port 8030. If proxy isn't ready, unified-trading-api already serves reporting data from
+MockStateStore in mock mode. The proxy only matters in real mode. Verify mock mode works independently.
+
+**RISK 4: Onboarding multi-step modal is complex to get right.** The onboarding flow (Client → Strategy → Venue → Risk →
+Review) is 5 steps with validation. Doing this as a modal is harder than a full page. MITIGATION: Use shadcn Dialog +
+internal step state (useState for currentStep). Each step is a form section. Don't try to replicate onboarding-ui's full
+page routing — just 5 sequential forms in one Dialog. If it's too complex, reduce to 3 steps (Client → Strategy →
+Review) for MVP.
 
 ## MANAGE ROUTING FIX
 

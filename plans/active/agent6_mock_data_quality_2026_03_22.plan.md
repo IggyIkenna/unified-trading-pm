@@ -3,6 +3,10 @@ name: agent6-mock-data-quality
 overview:
   Enhance seed data realism, add org-scoped filtering, persona-based entitlement filtering, deterministic seeding for CI
 todos:
+  # ── Phase 0: Persona & Org Alignment (NO DEPS — start immediately) ────────
+  # Phase 0 has NO upstream dependencies. personas.py already exists (121L).
+  # You can start this while Agent 5 works on the service layer.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a6-p0-persona-ssot
     content: |
       - [ ] [AGENT] P0. VERIFY existing personas.py (121 lines, already exists at unified_trading_api/mock_data/personas.py with 4 orgs, 5 personas). Ensure it matches auth-api mock_data.py EXACTLY (org IDs, persona names, entitlements). If any misalignment: fix personas.py to match. Add any missing entitlement keys needed by the UI (check hooks/use-auth.ts).
@@ -91,6 +95,16 @@ todos:
     content: |
       - [ ] [AGENT] P0. Seed initial ticker prices in `tickers_live` collection for all 10 instruments. Each ticker: `{ instrument, price, bid, ask, volume_24h, change_24h_pct, timestamp }`. These serve as the starting point for the WebSocket mock tick generator (Agent 5). Prices should be realistic as of today. Also seed `tickers_batch` with yesterday's close prices (slightly different from live).
     status: todo
+  # ── DEPENDENCY GATE: Phase 2 requires Agent 5 (API service layer) ────────
+  # STOP HERE if Agent 5 has not completed:
+  #   - a5-p2-use-utl-store (MockStateStore from UTL adopted in unified-trading-api)
+  #   - a5-p0-factory (service factory with DI working)
+  # CHECK: grep "MockStateStore" unified-trading-api/unified_trading_api/mock_data/ returns UTL import
+  # CHECK: ls .local-dev-cache/unified-trading-api/ shows JSONL collection files after API startup
+  # If Agent 5 hasn't migrated to UTL MockStateStore yet, your batch/live collection
+  # approach won't persist. You CAN still write the seed data (Phase 0-1) into the
+  # existing in-memory store — it just won't survive restarts until Agent 5 finishes.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a6-p2-batch-live-data
     content: |
       - [ ] [AGENT] P0. Seed separate batch and live data collections in MockStateStore. ALL domains must have both `_live` and `_batch` variants. Live collections persist to `.local-dev-cache/unified-trading-api/` as JSONL (survive restarts, get updated by WebSocket ticks and manual actions). Batch collections are seeded once and immutable until reset.
@@ -123,6 +137,16 @@ todos:
     content: |
       - [ ] [AGENT] P1. When `MOCK_STATE_MODE=deterministic` (CI mode): skip JSONL persistence, use pure in-memory store, seed on every startup. When `MOCK_STATE_MODE=interactive` (dev mode): persist mutations to `.local-dev-cache/unified-trading-api/`, survive restarts.
     status: todo
+  # ── DEPENDENCY GATE: Phase 4 requires ALL upstream agents ─────────────────
+  # STOP HERE until:
+  #   - Agent 5 service layer is complete (all routes use service DI)
+  #   - Phase 0-3 of THIS plan are complete (seed data comprehensive)
+  #   - Agent 1 has removed the [key] card landing page
+  # CHECK: curl http://localhost:8030/analytics/pnl returns realistic PnL data (not empty)
+  # CHECK: curl http://localhost:8030/positions/active returns 15+ positions
+  # CHECK: the Dashboard page renders correctly with API data (not just trading-data.ts)
+  # DO NOT remove MSW until the API serves all data the Dashboard needs.
+  # ─────────────────────────────────────────────────────────────────────────────
   - id: a6-p4-remove-msw
     content: |
       - [ ] [AGENT] P1. In unified-trading-system-ui: remove `lib/mocks/` directory (browser.ts, server.ts, handlers/, fixtures/, utils.ts — 1,411 lines total). Remove MSW from package.json dependencies. Remove `startMockWorker()` call from app initialization. The UI now always calls the real API at port 8030 (which handles mock/real internally).
@@ -200,6 +224,40 @@ Cross-reference `lib/strategy-registry.ts` (strategy definitions) and `lib/taxon
 - plan_c_domain_data_api: Mock provider completeness
 - plan_d_testnet_stress_testing: Seed hardening, scenario infrastructure
 - production_mock_e2e_plan_d90c8f20: Mock E2E testing
+
+## Risk Factors & Mitigations
+
+**RISK 1 (HIGHEST): Visual parity is subjective and hard to verify automatically.** trading-data.ts generates data with
+seeded random. Seed data in the API will have different values. The Dashboard may look "different enough" that
+stakeholders notice. MITIGATION: Read trading-data.ts FIRST. Extract the EXACT strategy names, org names, and
+approximate PnL ranges. Hardcode these in seed.py (not random). For time-series, use similar growth patterns. After
+seeding, manually compare Dashboard screenshots (old vs new) before marking done.
+
+**RISK 2: seed.py becomes enormous (8,000 candles + 3,240 PnL points + all domains).** Startup will be slow. File will
+be unreadable. MITIGATION: Split seed.py into domain-specific modules:
+
+- `seed_strategies.py`, `seed_positions.py`, `seed_candles.py`, `seed_timeseries.py`
+- `seed.py` orchestrates: `seed_all_domains()` calls each module
+- Candle generation should be PROCEDURAL (Brownian motion function, not hardcoded arrays)
+- A Brownian motion generator for 8,000 candles is ~50 lines, not 8,000 lines
+
+**RISK 3: Collection naming mismatch with Agent 5.** If Agent 6 seeds into `positions` but Agent 5 reads from
+`positions_live`, data is invisible. MITIGATION: Use EXACT names from CITADEL_VISION § Interface Contracts. Seed into
+`positions_live` and `positions_batch`, NOT just `positions`.
+
+**RISK 4: MSW removal breaks UI build — scattered import references.** Removing lib/mocks/ is not just deleting files.
+Other files import from it:
+
+- app initialization calls `startMockWorker()`
+- Test files may import MSW handlers
+- Components may conditionally import MSW MITIGATION: After deleting lib/mocks/, run
+  `grep -r "mocks" --include="*.ts" --include="*.tsx" app/ lib/ hooks/ components/` to find all remaining references.
+  Fix each one. Then run `npx next build` to verify.
+
+**RISK 5: Dashboard migration (trading-data.ts → API) is a high-visibility change.** The Dashboard is the first thing
+users see after login. If it breaks or looks different, the entire demo is compromised. MITIGATION: Do this LAST (after
+all other seed data is solid). Keep trading-data.ts imports as fallback until API hooks return equivalent data. Remove
+trading-data.ts only after visual verification.
 
 ## Current seed data (what exists)
 

@@ -53,6 +53,14 @@ todos:
     content: |
       - [ ] [AGENT] P1. Verify `/services/trading/strategies/[id]` shows strategy detail: name, status, PnL, positions, configuration, audit trail. Wire to `GET /analytics/strategies/{id}` API. Verify `/services/trading/strategies` list page shows all strategies with status badges. Verify `/services/trading/strategies/grid` shows a parameter grid view.
     status: todo
+  # ── DEPENDENCY GATE: Phase 4B requires Agent 5 (API) ──────────────────────
+  # STOP HERE if Agent 5 has not completed:
+  #   - a5-p4-websocket (WebSocket mock tick generator in unified-trading-api)
+  #   - a5-p3-enhance-seeds (OHLCV candle data + ticker seeds)
+  # CHECK: curl http://localhost:8030/market-data/candles?instrument=BTC-USDT returns data
+  # CHECK: wscat -c ws://localhost:8030/ws connects and receives ticks
+  # If these fail, skip Phase 4B and move to Phase 5 (Execution layout — no API deps).
+  # ─────────────────────────────────────────────────────────────────────────────
   # ── Phase 4B: Real-Time Trading Feel (CRITICAL for Demo) ──
   - id: a2-p4b-websocket-terminal
     content: |
@@ -84,6 +92,15 @@ todos:
         4. Refresh on WebSocket tick (or poll every 2s)
         DEPENDENCY: Agent 5/6 must provide the order book endpoint and seed data.
     status: todo
+  # ── DEPENDENCY GATE: Phase 5 requires Agent 1 (Shell) ────────────────────
+  # STOP HERE if Agent 1 has not completed:
+  #   - a1-p3-fix-lifecycle-nav-links (added "execute" lifecycle stage)
+  #   - a1-p3-service-tab-routing (created EXECUTE_TABS in service-tabs.tsx)
+  # CHECK: grep "EXECUTE_TABS\|execute" components/shell/service-tabs.tsx returns results
+  # CHECK: grep "execute" lib/lifecycle-mapping.ts returns the new stage
+  # If Agent 1 hasn't done this yet, YOU create EXECUTE_TABS and the execute stage yourself
+  # (Agent 1 may do it first — check before duplicating work).
+  # ─────────────────────────────────────────────────────────────────────────────
   # ── Phase 5: Execution Service (Execute — separate from Trading) ──
   - id: a2-p5-execution-layout
     content: |
