@@ -297,6 +297,23 @@ todos:
         Fields: report_id, report_type (MIFID_II_BEST_EXECUTION / FCA_TRANSACTION / EMIR_DERIVATIVE), jurisdiction, status (submitted/pending/overdue), filing_date, next_due_date, instruments_covered[], summary.
         Agent 6 seeds 8-10 realistic records.
     status: done
+  # ── Phase 9: Cleanup & Quarantine (Post-Audit) ──
+  - id: a5-p9-quarantine-legacy-state-store
+    content: |
+      - [ ] [AGENT] P0. Remove or quarantine legacy `unified_trading_api/mock_data/state_store.py` (68 lines, in-memory only). Agent 5 migrated to UTL `MockStateStore` (a5-p2-use-utl-store) but the old file still exists in the repo. Either:
+        1. DELETE the file if nothing imports it (grep for `from .state_store import` and `from unified_trading_api.mock_data.state_store import`)
+        2. If something still imports it, update those imports to use UTL MockStateStore, THEN delete
+        3. Verify `POST /admin/reset` still works after removal
+        This is the last piece of technical debt from the migration.
+    status: todo
+  - id: a5-p9-readiness-upstream-probes
+    content: |
+      - [ ] [AGENT] P1. Finish readiness upstream probes if Tier 2 / ops UX is required. Currently `GET /readiness` returns `upstream_checks: []` (empty). For Tier 2 operations:
+        1. Add actual probe logic for configured upstream services (check env vars like `LIVE_SERVICE_*` URLs)
+        2. If upstream URL configured but unreachable, add to `degraded_reasons[]`
+        3. Set `effective_runtime_tier < declared_runtime_tier` when upstream missing
+        4. This is optional for Tier 1 (mock-only) but required before Tier 2 deployment
+    status: todo
 isProject: false
 ---
 

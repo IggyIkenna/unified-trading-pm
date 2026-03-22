@@ -200,10 +200,23 @@ credentials unavailable.
 Start the full stack locally with mock mode (no credentials needed):
 
 ```bash
+# Tier-based startup (preferred — unified-trading-system-ui)
+cd unified-trading-system-ui
+bash scripts/dev-tiers.sh --tier 1                     # UI + 3 API gateways (demo-ready)
+bash scripts/dev-tiers.sh --tier 2                     # UI + APIs + all services (full fleet)
+bash scripts/dev-tiers.sh --tier 0                     # UI-only (no Python)
+bash scripts/dev-tiers.sh --stop                       # stop all
+bash scripts/dev-tiers.sh --status                     # check what's running
+
+# Legacy PM-based startup (still works, broader scope)
 bash unified-trading-pm/scripts/dev/dev-start.sh --all --mode mock    # start all UIs + APIs
 bash unified-trading-pm/scripts/dev/dev-stop.sh                       # stop all
 bash unified-trading-pm/scripts/dev/dev-status.sh                     # check status
 ```
+
+Health page: `http://localhost:3000/health` — auto-detects tier, checks all connectors.
+
+Runtime tiers documented in `unified-trading-codex/05-infrastructure/runtime-tiers-and-deployment.md`.
 
 ### 5 Mode Axes
 
