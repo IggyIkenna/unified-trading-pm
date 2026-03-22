@@ -64,12 +64,56 @@ todos:
     content: |
       - [ ] [AGENT] P0. Seed service health data matching actual 21 services. Each record: name (matching real service names from workspace-manifest.json), status (healthy/degraded/down), latency_ms, last_check, version, uptime_pct. Most services healthy, 1-2 degraded for realism.
     status: todo
+  # ── Phase 1C: Real-Time Market Data Seeds (CRITICAL for Demo) ──
+  - id: a6-p1c-timeseries-pnl
+    content: |
+      - [ ] [AGENT] P0. Seed PnL time-series data for ALL 18 strategies: 180 daily data points per strategy (3,240 total). Each point: `{ date, cumulative_pnl, daily_pnl, drawdown, nav }`. Generate with realistic equity curves:
+        - Start from strategy inception date (stagger across last 12 months)
+        - Trend: slightly positive (60% of strategies profitable)
+        - Drawdowns: 2-3 per strategy, ranging 5-15% max
+        - Correlation: crypto strategies correlated to BTC (seed BTC price series first, derive others)
+        - Include YTD, MTD, QTD breakpoints for reporting
+        Store in MockStateStore `pnl_timeseries` collection. API serves via `GET /analytics/timeseries`.
+        CRITICAL: These must match closely enough to `lib/trading-data.ts` output that the Dashboard looks the same after migration.
+    status: todo
+  - id: a6-p1c-ohlcv-candles
+    content: |
+      - [ ] [AGENT] P0. Seed OHLCV candle data for 10 instruments across 4 intervals:
+        - Instruments: BTC-USDT, ETH-USDT, SOL-USDT, AVAX-USDT, LINK-USDT, UNI-USDT, AAVE-USDT, DOGE-USDT, ARB-USDT, OP-USDT
+        - Intervals: 1m (200 candles), 5m (200), 1h (200), 1d (200)
+        - Total: 10 instruments * 4 intervals * 200 candles = 8,000 candle records
+        - Generate with Brownian motion: start from a realistic base price, random walk with drift
+        - Volume profile: higher at opens/closes, lower mid-session
+        - Store in MockStateStore `candles_1m`, `candles_5m`, `candles_1h`, `candles_1d` collections
+        - API serves via `GET /market-data/candles?instrument=BTC-USDT&interval=1h&limit=200`
+    status: todo
+  - id: a6-p1c-tickers-seed
+    content: |
+      - [ ] [AGENT] P0. Seed initial ticker prices in `tickers_live` collection for all 10 instruments. Each ticker: `{ instrument, price, bid, ask, volume_24h, change_24h_pct, timestamp }`. These serve as the starting point for the WebSocket mock tick generator (Agent 5). Prices should be realistic as of today. Also seed `tickers_batch` with yesterday's close prices (slightly different from live).
+    status: todo
   - id: a6-p2-batch-live-data
     content: |
-      - [ ] [AGENT] P0. Seed separate batch and live data domains in MockStateStore. When API receives `mode=batch&as_of=2026-03-21`, it returns data from "positions_batch", "pnl_batch", etc. When `mode=live`, it returns from "positions_live", "pnl_live". The batch data should be slightly different from live (representing T+1 reconciled vs real-time):
-        - Batch PnL slightly higher/lower than live (representing reconciliation adjustments)
+      - [ ] [AGENT] P0. Seed separate batch and live data collections in MockStateStore. ALL domains must have both `_live` and `_batch` variants. Live collections persist to `.local-dev-cache/unified-trading-api/` as JSONL (survive restarts, get updated by WebSocket ticks and manual actions). Batch collections are seeded once and immutable until reset.
+
+        Collection naming convention:
+        - `positions_live` / `positions_batch`
+        - `orders_live` / `orders_batch`
+        - `pnl_live` / `pnl_batch`
+        - `tickers_live` / `tickers_batch`
+        - `pnl_timeseries_live` / `pnl_timeseries_batch`
+
+        When API receives `mode=batch&as_of=2026-03-21`, it reads from `*_batch` collections.
+        When API receives `mode=live` (or no mode param), it reads from `*_live` collections.
+
+        Batch vs live differences (to make the switch visually meaningful):
+        - Batch PnL includes reconciliation adjustments (+/- 0.1-0.5% from live)
         - Batch positions may have 1-2 fewer positions (unreconciled fills not yet in batch)
-        - Batch has exact prices, live has approximate (last tick) prices
+        - Batch uses official close prices; live uses last tick prices
+        - Batch has exact fee breakdowns; live has estimated fees
+        - Batch orders all have final status (filled/cancelled); live has open/partial orders
+
+        This architecture means: in production, the same directory is populated by real services.
+        In mock, it's populated by seed data + WebSocket tick generator. The API code is identical.
     status: todo
   - id: a6-p3-deterministic
     content: |
@@ -102,6 +146,20 @@ isProject: false
 
 # Notes & Context
 
+## CRITICAL: Read Before Any Work
+
+1. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+2. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — see exact per-page API hooks and what data each page
+   expects
+3. Read `unified-trading-system-ui/lib/trading-data.ts` (770L) — the client-side data you're replacing. Seed data MUST
+   match this closely.
+
+## KEY CONSTRAINT: Visual Parity After Migration
+
+The Dashboard currently uses `lib/trading-data.ts` which generates 18 strategies, 4 orgs, time series, PnL components.
+After migration to API, the Dashboard must look IDENTICAL. Same strategy names, similar numbers, same org names.
+Cross-reference `lib/strategy-registry.ts` (strategy definitions) and `lib/taxonomy.ts` (asset class enums).
+
 ## Absorbed from prior plans
 
 - mock_data_rollout_2026_03_18: Mock data enhancement (46% done)
@@ -130,3 +188,11 @@ isProject: false
 
 - Seed data MUST match the UI's current client-side data closely enough that the Dashboard looks the same after
   migration. Same strategy names, similar PnL ranges, same org names.
+
+## New scope (added 2026-03-22 gap analysis)
+
+- PnL time-series: 180 daily data points per strategy (3,240 total) — critical for Dashboard charts
+- OHLCV candles: 10 instruments _ 4 intervals _ 200 candles = 8,000 records — critical for Trading Terminal
+- Ticker seeds: 10 instruments with realistic prices — starting point for WebSocket ticks
+- Batch/live collection separation with JSONL persistence to .local-dev-cache/
+- All collections need both `_live` and `_batch` variants

@@ -31,7 +31,6 @@ todos:
     content: |
       - [ ] [AGENT] P1. Verify `components/platform/live-asof-toggle.tsx` is rendered in every service layout that has `LIVE_ASOF_VISIBLE[stage] = true`. Currently wired in trading layout — verify data, research, execute, and observe layouts also include it.
     status: todo
-
   - id: a1-p1-verify-global-scope-filters
     content: |
       - [ ] [AGENT] P0. Verify `components/platform/global-scope-filters.tsx` renders Org, Client, and Strategy dropdowns in the lifecycle nav center section. These MUST be visible on EVERY authenticated page. Verify:
@@ -69,6 +68,32 @@ todos:
     content: |
       - [ ] [AGENT] P0. Ensure every service area has a layout.tsx that renders `ServiceTabs` with the correct tab set. Verify/create: data/layout.tsx (DATA_TABS), research/layout.tsx (BUILD_TABS), execution/layout.tsx (EXECUTE_TABS — new), trading/layout.tsx (TRADING_TABS — remove Execution Analytics tab), manage/layout.tsx (MANAGE_TABS), reports/layout.tsx (REPORTS_TABS). For observe: either create observe/layout.tsx or ensure trading/risk and trading/alerts use OBSERVE_TABS when accessed from the Observe lifecycle stage. ALL service pages use tabs — NO card-based landing pages for any service.
     status: todo
+  # ── Phase 3B: Visual Polish (Real-Time Feel) ──
+  - id: a1-p3b-wire-cmdk
+    content: |
+      - [ ] [AGENT] P0. Wire the existing `components/ui/command.tsx` (cmdk library) to a global `Cmd+K` / `Ctrl+K` keyboard shortcut. Register the shortcut in the shell layout (`components/shell/unified-shell.tsx`). The command palette should search across: service names (navigate to service), strategy names (navigate to strategy detail), instrument names, and quick actions (Reset Demo, Toggle Batch/Live). Use the existing `CommandDialog` wrapper. This is a key institutional UX feature — every Bloomberg/Citadel terminal has keyboard-driven navigation.
+    status: todo
+  - id: a1-p3b-notification-bell
+    content: |
+      - [ ] [AGENT] P0. Wire the notification bell icon in `components/shell/lifecycle-nav.tsx` to show real alerts. Currently hardcoded to "3". Replace with:
+        1. Call `GET /alerts/active?acknowledged=false` via `useAlerts()` hook to get actual count
+        2. Show count as badge (or hide badge if 0)
+        3. On click: open a DropdownMenu with the 5 most recent alerts (severity badge, message, relative timestamp)
+        4. Each alert has an "Acknowledge" button that calls `POST /alerts/{id}/acknowledge`
+        5. "View All Alerts" link at bottom navigates to `/services/observe/alerts`
+    status: todo
+  - id: a1-p3b-skeleton-loading
+    content: |
+      - [ ] [AGENT] P1. Create reusable skeleton loading components for common page patterns. The existing `components/ui/skeleton.tsx` is underutilized — most pages show "Loading..." text instead of shimmer placeholders. Create:
+        1. `components/ui/table-skeleton.tsx` — renders N skeleton rows matching table column widths
+        2. `components/ui/card-grid-skeleton.tsx` — renders N skeleton cards in a grid
+        3. `components/ui/chart-skeleton.tsx` — renders a chart-shaped skeleton area
+        Then update the pattern in ALL service pages: replace `if (isLoading) return <div>Loading...</div>` with the appropriate skeleton component. This is mandatory per CITADEL_VISION visual polish standards.
+    status: todo
+  - id: a1-p3b-persona-relogin
+    content: |
+      - [ ] [AGENT] P0. Update the persona switcher in the debug footer (and any persona dropdown in the user menu). When a user clicks a different persona, it MUST redirect to the login page (`/login`) with the new persona pre-selected (e.g. `/login?persona=client-full`). It must NOT instant-swap the token in memory. The user clicks "Sign In" on the login page to complete the switch. This ensures the JWT is properly re-issued by auth-api and all API calls use the new token. Update `lib/reset-demo.ts` or the debug footer component accordingly.
+    status: todo
   - id: a1-p4-smoke-build
     content: |
       - [ ] [AGENT] P1. Run `NEXT_PUBLIC_MOCK_API=true npx next build` and fix any build errors. All removed routes should not cause 404s during build — add redirects in next.config.mjs where needed.
@@ -81,6 +106,28 @@ isProject: false
 ---
 
 # Notes & Context
+
+## CRITICAL: Read Before Any Work
+
+1. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — SSOT for all page states, routes, and source files
+2. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+
+## TABS-ONLY RULE (enforced by this agent)
+
+- Login → `/dashboard` (Command Center — 9 service cards grouped by lifecycle stage)
+- Click any service → lands on ONE page with tabs (the first tab of that service)
+- ALL content within a service is via tab switching — NO card-based sub-pages, NO nested landing pages
+- The `/services/[key]` dynamic card page (240L) is the ANTI-PATTERN being deleted
+- After this agent's work: every service has a layout.tsx rendering its tab set, every lifecycle nav item links to the
+  first tab
+
+## Dead Tab Sets to Fix (Agent 1 owns this)
+
+- PROMOTE_TABS: defined in service-tabs.tsx but NO layout renders it → create promote layout or contextual tab switching
+- OBSERVE_TABS: defined but NO layout renders it → risk/alerts show TRADING_TABS (wrong) → create observe layout
+- MANAGE_TABS: defined but pages live in (ops) route group → fix routing so manage tabs are visible
+- EXECUTE_TABS: does not exist yet → create it with: Analytics | Algos | Venues | TCA | Benchmarks | Candidates |
+  Handoff
 
 ## Absorbed from prior plans
 

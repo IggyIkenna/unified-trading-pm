@@ -76,7 +76,53 @@ todos:
     status: todo
   - id: a5-p4-websocket
     content: |
-      - [ ] [AGENT] P2. Enhance `routes/websocket.py` to support mock tick generation. In mock mode, the WebSocket should emit simulated price ticks (using Brownian motion or similar) for subscribed instruments. This replaces the client-side Brownian motion simulation in the UI.
+      - [ ] [AGENT] P0. (UPGRADED from P2 — critical for demo feel) Enhance `routes/websocket.py` to support mock tick generation. In mock mode, the WebSocket MUST:
+        1. Accept subscribe/unsubscribe messages: `{ "action": "subscribe", "instruments": ["BTC-USDT", "ETH-USDT"] }`
+        2. Run a background asyncio task that generates Brownian motion price ticks every 500-2000ms (randomized)
+        3. Each tick: `{ "instrument": "BTC-USDT", "price": 67234.50, "volume": 1.23, "bid": 67230.00, "ask": 67239.00, "timestamp": "..." }`
+        4. Update the `tickers_live` collection in MockStateStore on each tick (so REST GET /market-data/tickers reflects current prices)
+        5. Seed initial prices from MockStateStore `tickers_live` collection (from Agent 6's seed data)
+        6. Support multiple concurrent clients
+        This is the SINGLE MOST IMPORTANT feature for real-time feel. Without it, the terminal looks dead.
+    status: todo
+  - id: a5-p4-candles-endpoint
+    content: |
+      - [ ] [AGENT] P0. Add `GET /market-data/candles` endpoint. Parameters: `instrument` (required), `interval` (1m/5m/1h/1d, default 1h), `limit` (default 200). In mock mode, serve from MockStateStore `candles_{interval}` collection (seeded by Agent 6). Response: `[{ open, high, low, close, volume, timestamp }, ...]`.
+    status: todo
+  - id: a5-p4-orderbook-endpoint
+    content: |
+      - [ ] [AGENT] P0. Add `GET /market-data/orderbook` endpoint. Parameters: `instrument` (required). In mock mode, generate order book on-the-fly: 20 bid + 20 ask levels based on last ticker price from MockStateStore. Spread: 0.01-0.05% of price. Depth: decreasing away from mid. Add slight randomization on each request to simulate market movement. Response: `{ bids: [{ price, quantity }], asks: [{ price, quantity }], mid_price, spread }`.
+    status: todo
+  # ── Phase 4B: Auth-API & Client-Reporting-API Integration ──
+  - id: a5-p4b-reporting-proxy
+    content: |
+      - [ ] [AGENT] P0. In unified-trading-api, make `routes/reporting.py` act as a proxy to client-reporting-api (port 8014) in real mode. In mock mode, continue serving from MockStateStore. Implementation:
+        1. In mock mode: `return await service.list_reports(filters)` (from MockStateStore, same as before)
+        2. In real mode: `return await httpx.AsyncClient().get(f"http://localhost:8014/api/reports", params=filters)`
+        3. This means the UI only ever calls port 8030 — it never needs to know about port 8014
+        4. Add `/reporting/pnl-attribution`, `/reporting/executive-summary`, `/reporting/invoices`, `/reporting/regulatory` if not already present
+    status: todo
+  - id: a5-p4b-auth-api-alignment
+    content: |
+      - [ ] [AGENT] P0. Ensure unified-trading-api can validate JWTs issued by auth-api. In mock mode with `DISABLE_AUTH=true`, skip validation but still extract persona from the token (or from `X-Demo-Persona` header as fallback). In real mode, validate JWT signature against auth-api's public key. The persona/org_id extracted from the token drives org-scoped data filtering. Verify:
+        1. Auth-api's `mock_data.py` persona org IDs match unified-trading-api's `personas.py` org IDs
+        2. Token claims include: `user_id`, `org_id`, `role`, `entitlements[]`
+        3. Add a `get_current_user()` FastAPI dependency that extracts this from the request
+    status: todo
+  - id: a5-p4b-dev-stack-wiring
+    content: |
+      - [ ] [AGENT] P1. Update `unified-trading-pm/scripts/dev/ui-api-mapping.json` to add auth-api:
+        `{ "name": "auth-api", "api_port": 8200, "module": "auth_api" }`
+        Verify auth-api is started by `dev-start.sh --all`. Verify the UI's `next.config.mjs` rewrite (`/api/auth/*` → `http://localhost:8200/*`) works when auth-api is running.
+    status: todo
+  # ── Phase 4C: Live Data Persistence ──
+  - id: a5-p4c-live-persistence
+    content: |
+      - [ ] [AGENT] P0. Configure MockStateStore to persist live-domain collections to `.local-dev-cache/unified-trading-api/`. All collections with `_live` suffix persist as JSONL files. Both mock and production modes read from the same directory structure — the only difference is what writes to it (mock tick generator vs real service). Batch collections (`_batch` suffix) are seeded once and immutable. Ensure:
+        1. WebSocket tick generator updates `tickers_live.jsonl` on each tick
+        2. Manual order placement updates `orders_live.jsonl`
+        3. `POST /admin/reset` clears live mutations and re-seeds both live and batch collections
+        4. On startup, if `.local-dev-cache/` has existing data (MOCK_STATE_MODE=interactive), load it instead of re-seeding
     status: todo
   - id: a5-p5-integration-tests
     content: |
@@ -100,6 +146,21 @@ isProject: false
 ---
 
 # Notes & Context
+
+## CRITICAL: Read Before Any Work
+
+1. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+2. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — see `pages_needing_api_wiring` (18 pages) and
+   per-service API endpoint requirements
+3. The UI has 18 REAL pages using inline mock data that need API wiring. Your service layer must serve ALL endpoints
+   those pages expect.
+
+## 3-API Architecture
+
+- `auth-api` (port 8200) — stays separate, handles SSO/tokens
+- `client-reporting-api` (port 8014) — stays separate, handles client reports/invoices
+- `unified-trading-api` (port 8030) — YOUR scope. Absorbs 8 domain APIs. Routes reporting/\* to client-reporting-api in
+  real mode.
 
 ## Current state of unified-trading-api
 
@@ -130,3 +191,13 @@ isProject: false
 - No MSW in the UI anymore. The UI always calls the real API at port 8030.
 - The API handles mock/real internally via the service layer.
 - This means ALL API endpoints must return realistic data in mock mode.
+
+## New scope (added 2026-03-22 gap analysis)
+
+- WebSocket mock tick generator is now P0 (was P2) — critical for demo feel
+- OHLCV candle and order book endpoints are new P0 requirements
+- Reporting routes proxy to client-reporting-api (port 8014) in real mode
+- Auth-api JWT validation and persona extraction
+- Live data persistence to .local-dev-cache/ via MockStateStore JSONL
+- Batch/live collection separation: `{domain}_live` vs `{domain}_batch`
+- auth-api must be added to dev-start.sh and ui-api-mapping.json

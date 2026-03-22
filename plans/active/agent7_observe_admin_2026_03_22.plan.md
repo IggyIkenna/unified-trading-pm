@@ -82,6 +82,11 @@ todos:
         - `/ops/services` — service registry
         If stubs, build using seed data. Wire to `GET /service-status/services` and `GET /audit/batch-jobs` APIs.
     status: todo
+  # ── Phase 6B: Visual Polish ──
+  - id: a7-p6b-skeleton-loading
+    content: |
+      - [ ] [AGENT] P1. Ensure ALL observe and admin pages use skeleton loading states (not "Loading..." text). Use skeleton components from Agent 1. Key pages: Risk Dashboard (card grid + chart skeleton), Alerts (table skeleton), System Health (grid skeleton), Admin Dashboard (card grid skeleton), DevOps (table skeleton). Mandatory per CITADEL_VISION visual polish standards.
+    status: todo
   - id: a7-p7-tests
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Observe > Risk Dashboard → verify exposure data renders. 2) Navigate to Observe > Alerts → verify alert list renders, click acknowledge. 3) Navigate to Observe > System Health → verify service health grid renders. 4) Navigate to Admin > DevOps → verify deployment form renders. 5) Verify Admin pages are HIDDEN when logged in as client persona.
@@ -91,22 +96,62 @@ isProject: false
 
 # Notes & Context
 
-## Key source repos for absorption
+## CRITICAL: Read Before Any Work
 
-- `deployment-ui/src/App.tsx` — 8-tab structure (lines 63-74)
-- `deployment-ui/src/components/` — DeployForm, DeploymentHistory, ReadinessTab, etc.
-- `batch-audit-ui/src/pages/` — AuditTrailPage, DataCompletenessPage, CompliancePage
-- `live-health-monitor-ui/src/` — health monitoring patterns
-- `logs-dashboard-ui/src/` — log viewing patterns
-- `_reference/deployment-ui/` — additional deployment patterns
-- `_reference/versa-audit-ui/` — audit trail patterns
-- `_reference/versa-admin-ui/` — admin surface patterns
+1. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — SSOT for all page states, routes, and source files
+2. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
 
-## Absorbed from prior plans
+## TABS-ONLY RULE
 
-- full_system_audit_resolution_2026_03_18: System audit findings and remediations
-- cicd_code_rollout_master_2026_03_13: CI/CD pipeline improvements
-- quality_gates_systemic_remediation_2026_03_16: Quality gate fixes
+- Observe service = ONE page with 5 tabs: Risk Dashboard | Alerts | News | Strategy Health | System Health
+- Admin/Ops service = ONE page with 6 tabs: Admin Dashboard | Config | DevOps | Jobs | Services | Data ETL
+- Deployment-ui's 8-tab richness becomes SUB-TABS within the DevOps tab (NOT 8 separate pages)
+- Audit/compliance becomes a section within Admin Dashboard (NOT a separate page)
+
+## Stub Pages — Exact Source Files (NO from-scratch builds)
+
+| Stub                            | Source to Adapt                                                 | Lines | How                                                                                                               |
+| ------------------------------- | --------------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------- |
+| `observe/news` (24L)            | `components/platform/activity-feed.tsx` (111L, ALREADY IN REPO) | 111   | Import activity-feed, adapt for news items. Same UX pattern, different data source (news API vs activity events). |
+| `observe/strategy-health` (24L) | `live-health-monitor-ui/src/pages/DashboardPage.tsx` (312L)     | 312   | Adapt health dashboard for per-strategy health indicators (PnL drift, signal decay, model freshness).             |
+
+## Observe Layout Fix (CRITICAL — currently broken)
+
+OBSERVE_TABS is defined in service-tabs.tsx but NO LAYOUT RENDERS IT.
+
+- `/services/trading/risk` (1297L) uses trading layout → shows TRADING_TABS (WRONG)
+- `/services/trading/alerts` (403L) uses trading layout → shows TRADING_TABS (WRONG)
+- `/services/observe/news` and `strategy-health` have NO layout at all FIX: Agent 1 creates observe layout. This agent
+  ensures the pages render correctly within it.
+
+## Existing Dashboard Components (ALREADY BUILT, just need wiring)
+
+| Component                                    | Lines | Target            | Status                                                      |
+| -------------------------------------------- | ----- | ----------------- | ----------------------------------------------------------- |
+| `components/dashboards/audit-dashboard.tsx`  | 615   | Admin > Dashboard | EXISTS — wire into admin page                               |
+| `components/dashboards/devops-dashboard.tsx` | 779   | Admin > DevOps    | EXISTS — wire into devops page (currently only 108L)        |
+| `components/dashboards/risk-dashboard.tsx`   | 809   | Observe > Risk    | EXISTS — verify if overlaps/complements the 1297L risk page |
+
+## Admin/DevOps — Enrichment from deployment-ui (satellite)
+
+The DevOps page is only 108L but `components/dashboards/devops-dashboard.tsx` (779L) already exists. Additionally,
+deployment-ui has massive components that should become sub-tabs within DevOps: | Component | Lines | Purpose | Sub-tab
+| |---|---|---|---| | `deployment-ui/src/components/DeployForm.tsx` | 1759 | Deploy trigger wizard | Deploy sub-tab | |
+`deployment-ui/src/components/DeploymentHistory.tsx` | 636 | Past deployments timeline | History sub-tab | |
+`deployment-ui/src/components/CloudBuildsTab.tsx` | 703 | Cloud Build log viewer | Builds sub-tab | |
+`deployment-ui/src/components/ReadinessTab.tsx` | 527 | Pre-deployment checks | Readiness sub-tab | |
+`deployment-ui/src/components/DataStatusTab.tsx` | 4013 | Pipeline data status | Data Status sub-tab | |
+`deployment-ui/src/components/EpicReadinessView.tsx` | 491 | Release milestone tracking | Epics sub-tab | These are
+LARGE components. Start by wiring the devops-dashboard.tsx (779L), then progressively add deployment-ui sub-tabs.
+
+## Satellite Absorption for System Health
+
+| Source                                           | Lines | How                                                                   |
+| ------------------------------------------------ | ----- | --------------------------------------------------------------------- |
+| `live-health-monitor-ui/DependencyDagPage.tsx`   | 727   | Unique DAG visualization — add as expandable/sub-tab in System Health |
+| `live-health-monitor-ui/ResourceMetricsPage.tsx` | 111   | CPU/memory/disk — add as section in System Health                     |
+| `batch-audit-ui/AuditTrailPage.tsx`              | 243   | Audit event history — add to Admin Dashboard                          |
+| `batch-audit-ui/DataCompletenessPage.tsx`        | 290   | Data quality metrics — overlaps with Data > Missing                   |
 
 ## API endpoints needed
 

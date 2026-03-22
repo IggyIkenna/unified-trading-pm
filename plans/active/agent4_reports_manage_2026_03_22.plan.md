@@ -72,6 +72,15 @@ todos:
     content: |
       - [ ] [AGENT] P1. Add a "Documents" sub-section accessible from Reports service (either as a 6th tab or a panel within Settlement). Should show: uploaded documents list, upload button (calls `GET /documents/upload-url` then uploads to the returned URL), download links (calls `GET /documents/download-url`). In mock mode, upload should add a record to MockStateStore "documents" domain; download URL returns a mock URL.
     status: todo
+  # ── Phase 5B: Visual Polish + Reporting API ──
+  - id: a4-p5b-skeleton-loading
+    content: |
+      - [ ] [AGENT] P1. Ensure ALL reports and manage pages use skeleton loading states (not "Loading..." text). Use skeleton components from Agent 1. Key pages: P&L Attribution (table + chart skeleton), Settlement (table skeleton), Client List (table skeleton), User List (table skeleton). Mandatory per CITADEL_VISION visual polish standards.
+    status: todo
+  - id: a4-p5b-reporting-api-routing
+    content: |
+      - [ ] [AGENT] P1. Verify that Reports service pages route API calls correctly. Per CITADEL_VISION, unified-trading-api proxies `/reporting/*` to client-reporting-api (port 8014) in real mode, and serves from MockStateStore in mock mode. The UI should NOT need separate base URLs — everything goes through port 8030. Verify: `hooks/api/use-reports.ts` calls `/reporting/*` endpoints and these work in mock mode. If Agent 5 has not yet set up the proxy, document this as a dependency.
+    status: todo
   - id: a4-p6-tests
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Reports > P&L → verify attribution table renders. 2) Navigate to Reports > Settlement → verify settlements table renders. 3) Navigate to Manage > Clients → verify client list renders. 4) Navigate to Manage > Users → verify user list renders. 5) Click "Onboard Client" → verify workflow opens.
@@ -81,21 +90,59 @@ isProject: false
 
 # Notes & Context
 
-## Key source repos for absorption
+## CRITICAL: Read Before Any Work
 
-- `settlement-ui/src/pages/` — Settlements, Invoices, Positions, Reports pages
-- `client-reporting-ui/src/components/` — GenerateTab, PerformanceTab, ReportsTab
-- `onboarding-ui/src/pages/` — VenueConnectionPage, RiskConfiguration, CredentialStatusPage
-- `user-management-ui/src/` — User lifecycle management
-- `_reference/versa-client-reporting/` — Client vs internal view patterns
-- `_reference/versa-invoicing/` — Invoicing workflow patterns
-- `_reference/versa-onboarding/` — Onboarding flow patterns
+1. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — SSOT for all page states, routes, and source files
+2. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
 
-## Absorbed from prior plans
+## TABS-ONLY RULE
 
-- plan_i_client_reporting_docs: Document infrastructure, P&L reporting, invoicing, DocuSign
-- user_management_platform_2026_03_13: User lifecycle management
-- plan_g_auth_entitlement: Entitlement enforcement (manage service internal-only)
+- Reports service = ONE page with 5 tabs: P&L Attribution | Executive | Settlement | Reconciliation | Regulatory
+- Manage service = ONE page with 5 tabs: Clients | Mandates | Fees | Users | Compliance
+- Report generation, client onboarding, user provisioning are MODALS/DRAWERS triggered from buttons within tabs.
+- Document upload is a panel/section within Settlement tab — NOT a separate page.
+
+## Stub Pages — Exact Source Files (NO from-scratch builds)
+
+| Stub                           | Source to Adapt                                                                                                  | Lines | How                                                                                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reports/settlement` (24L)     | `settlement-ui/src/pages/Settlements.tsx`                                                                        | 522   | Direct adaptation as tab content. Has settlement table, status filters, venue breakdown. Also grab `Invoices.tsx` (120L) for invoice section. |
+| `reports/reconciliation` (24L) | `components/trading/drift-analysis-panel.tsx` (ALREADY IN REPO) + `settlement-ui/src/pages/Positions.tsx` (122L) | 122+  | Reuse DriftAnalysisPanel from Dashboard. Add batch/live position comparison.                                                                  |
+| `reports/regulatory` (24L)     | `_reference/versa-audit-ui/src/pages/CompliancePage.tsx`                                                         | 346   | Adapt compliance/regulatory patterns for MiFID II / FCA / EMIR.                                                                               |
+| `reports/executive` (7L)       | `components/dashboards/executive-dashboard.tsx` (717L)                                                           | 717   | ALREADY WIRED — the 7L page delegates to this component. NOT a stub. Just verify it renders.                                                  |
+
+## Manage Pages — All REAL, some need API wiring
+
+| Page                | Lines | Status      | Action                                                                             |
+| ------------------- | ----- | ----------- | ---------------------------------------------------------------------------------- |
+| `manage/clients`    | 495   | WIRED       | Keep. Add "Onboard Client" modal from `onboarding-ui/ClientOnboarding.tsx` (503L). |
+| `manage/mandates`   | 107   | INLINE MOCK | Wire to API. Expand with `onboarding-ui/RiskConfiguration.tsx` (344L) patterns.    |
+| `manage/fees`       | 369   | WIRED       | Keep as-is.                                                                        |
+| `manage/users`      | 353   | WIRED       | Keep. Add "Add User" modal from `user-management-ui/OnboardUserPage.tsx` (225L).   |
+| `manage/compliance` | 157   | INLINE MOCK | Wire to API. Absorb `_reference/versa-audit-ui/CompliancePage.tsx` (346L).         |
+
+## Satellite Absorption Map (as modals/drawers, NOT new pages)
+
+| Source                                         | Lines | Target Tab                                  | How                                            |
+| ---------------------------------------------- | ----- | ------------------------------------------- | ---------------------------------------------- |
+| `settlement-ui/Settlements.tsx`                | 522   | Reports > Settlement                        | Direct tab content adaptation                  |
+| `settlement-ui/Invoices.tsx`                   | 120   | Reports > Settlement                        | Invoice section within same tab                |
+| `client-reporting-ui/GenerateTab.tsx`          | 107   | Reports > P&L                               | "Generate Report" button → modal               |
+| `onboarding-ui/ClientOnboarding.tsx`           | 503   | Manage > Clients                            | "Onboard Client" button → multi-step modal     |
+| `onboarding-ui/ClientDetail.tsx`               | 545   | Manage > Clients                            | Expand client detail (click row → detail view) |
+| `onboarding-ui/RiskConfiguration.tsx`          | 344   | Manage > Mandates                           | Expand mandate config                          |
+| `user-management-ui/OnboardUserPage.tsx`       | 225   | Manage > Users                              | "Add User" button → modal                      |
+| `user-management-ui/UserDetailPage.tsx`        | 255   | Manage > Users                              | Click user row → detail drawer                 |
+| `_reference/versa-audit-ui/CompliancePage.tsx` | 346   | Reports > Regulatory OR Manage > Compliance | Adapt compliance patterns                      |
+
+## MANAGE ROUTING FIX
+
+Manage pages currently live in `app/(ops)/manage/*` but should be accessible via the platform shell at
+`/services/manage/*`. The (ops) layout enforces admin-only access, but Manage should be visible to internal traders too
+(just not to clients). Either:
+
+- OPTION A: Move pages from (ops) to (platform)/services/manage/ (preferred — tabs work correctly)
+- OPTION B: Fix (ops) layout to allow internal-trader role, add MANAGE_TABS rendering
 
 ## API endpoints needed
 

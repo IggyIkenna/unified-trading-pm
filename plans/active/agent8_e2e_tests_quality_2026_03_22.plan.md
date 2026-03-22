@@ -150,7 +150,7 @@ todos:
         4. basedpyright clean
     status: todo
 
-  # ── Phase 4: OpenAPI Schema Parity ──
+  # ── Phase 4: OpenAPI Schema Parity & Codegen Pipeline ──
   - id: a8-p4-openapi-parity
     content: |
       - [ ] [AGENT] P1. Generate OpenAPI spec from unified-trading-api (`GET /openapi.json`). Verify:
@@ -159,7 +159,62 @@ todos:
         3. UI TypeScript types (if generated from OpenAPI) are up to date
         4. Add a CI test that validates spec parity: start API in mock mode, call every endpoint, validate response against OpenAPI schema.
     status: todo
+  - id: a8-p4-codegen-pipeline-run
+    content: |
+      - [ ] [AGENT] P0. Run the SSOT codegen pipelines AFTER Agents 5-6 have finished their work. This is critical — without it, the UI will have stale types and reference data.
 
+        Pipeline 1: API → UI TypeScript types
+        ```bash
+        cd unified-trading-api && CLOUD_MOCK_MODE=true .venv/bin/python -m unified_trading_api.main &
+        sleep 3
+        curl http://localhost:8030/openapi.json > ../unified-trading-system-ui/lib/registry/openapi.json
+        cd ../unified-trading-system-ui && npm run generate:types
+        kill %1
+        ```
+
+        Pipeline 2: UAC → UI reference data
+        ```bash
+        cd unified-api-contracts
+        .venv/bin/python scripts/generate_ui_reference_data.py --output ../unified-trading-system-ui/lib/registry/ui-reference-data.json
+        ```
+
+        Pipeline 3: Persona alignment verification
+        - Compare auth-api `mock_data.py` org IDs with unified-trading-api `personas.py` org IDs
+        - Compare UI `hooks/use-auth.ts` persona definitions with both APIs
+        - All three MUST use identical org_id, persona name, and entitlement key values
+
+        If any pipeline fails, FIX the source and re-run. Do NOT proceed to E2E tests with stale types.
+    status: todo
+  - id: a8-p4-auth-alignment-test
+    content: |
+      - [ ] [AGENT] P0. Add a test that verifies persona/org alignment across all 3 APIs:
+        1. Start auth-api (port 8200) and unified-trading-api (port 8030) in mock mode
+        2. Login as each persona via auth-api `POST /auth/login` → get JWT
+        3. Call unified-trading-api `GET /positions/active` with that JWT
+        4. Verify: admin sees all data, client-full sees only acme data, client-data-only sees only beta data
+        5. Verify: auth-api org IDs match unified-trading-api org_id filtering
+        This catches the case where the two APIs have different persona definitions that silently break filtering.
+    status: todo
+
+  - id: a8-p4-test-realtime-feed
+    content: |
+      - [ ] [AGENT] P0. Playwright test: Real-Time Trading Feed
+        1. Login as admin → navigate to Trading Terminal
+        2. Wait 3 seconds → verify at least one price update has occurred (chart or ticker value changed)
+        3. Verify order book has bid/ask levels populated
+        4. Switch instrument → verify prices update for new instrument
+        5. This test validates the WebSocket mock feed is working end-to-end.
+    status: todo
+  - id: a8-p4-test-batch-live-switch
+    content: |
+      - [ ] [AGENT] P0. Playwright test: Batch/Live Data Switch
+        1. Login as admin → navigate to Trading Terminal in live mode
+        2. Note the current positions count and PnL value
+        3. Toggle to batch mode → verify "Viewing Batch Data" banner appears
+        4. Verify positions count or PnL value has CHANGED (batch data is different from live)
+        5. Toggle back to live → verify banner disappears and original values return
+        6. This validates the batch/live collection separation works end-to-end.
+    status: todo
   # ── Phase 5: Cross-Service E2E Smoke ──
   - id: a8-p5-smoke-test
     content: |
@@ -175,6 +230,17 @@ isProject: false
 ---
 
 # Notes & Context
+
+## CRITICAL: Read Before Any Work
+
+1. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+2. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — use per-service tab lists to verify every tab renders
+   in Playwright tests
+
+## TABS-ONLY VERIFICATION
+
+Every Playwright test should verify: clicking a lifecycle stage → lands on first tab → tab bar is visible → all tabs are
+clickable → NO card-based sub-pages appear. If any test encounters a card grid instead of tabs, that's a FAILURE.
 
 ## Absorbed from prior plans
 
@@ -195,3 +261,11 @@ isProject: false
 - All E2E tests run against mock mode (CLOUD_MOCK_MODE=true, no real cloud services)
 - POST /admin/reset is the test fixture — every test suite starts clean
 - Playwright must use `pool: "forks"` (not threads) to prevent zombie processes
+
+## New scope (added 2026-03-22 gap analysis)
+
+- SSOT codegen pipelines MUST run after Agents 5-6 finish (OpenAPI → TypeScript, UAC → reference data)
+- Auth alignment test: verify persona org IDs match across auth-api and unified-trading-api
+- Real-time feed E2E test: verify WebSocket ticks update the Trading Terminal
+- Batch/live switch E2E test: verify data actually changes when toggling modes
+- E2E tests must start BOTH auth-api (port 8200) and unified-trading-api (port 8030)

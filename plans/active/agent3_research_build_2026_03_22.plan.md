@@ -72,6 +72,11 @@ todos:
     content: |
       - [ ] [AGENT] P1. Verify execution research pages have content: `/services/execution/algos` (algo comparison: TWAP, VWAP, IS, Sniper), `/services/execution/venues` (venue connectivity, latency, fill rates), `/services/execution/benchmarks` (benchmark definitions and results), `/services/execution/tca` (transaction cost analysis). Wire all to API.
     status: todo
+  # ── Phase 5B: Visual Polish ──
+  - id: a3-p5b-skeleton-loading
+    content: |
+      - [ ] [AGENT] P1. Ensure ALL research and promote pages use skeleton loading states (not "Loading..." text) while API data loads. Use the skeleton components created by Agent 1 (table-skeleton, card-grid-skeleton, chart-skeleton). Every page that calls a `useQuery` hook must show a shimmer placeholder during `isLoading`. This is mandatory per CITADEL_VISION visual polish standards. Key pages: Research Hub (card grid skeleton), ML Experiments (table skeleton), Backtest Results (chart + table skeleton), Promote Review Queue (table skeleton).
+    status: todo
   - id: a3-p6-tests
     content: |
       - [ ] [AGENT] P1. Add Playwright tests: 1) Navigate to Research Hub → verify KPI cards render. 2) Navigate to ML Models → verify model list renders. 3) Navigate to Backtests → verify backtest table renders. 4) Click "New Strategy" → verify wizard modal opens. 5) Navigate to Promote > Review Queue → verify candidate list renders.
@@ -81,22 +86,39 @@ isProject: false
 
 # Notes & Context
 
+## CRITICAL: Read Before Any Work
+
+1. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — SSOT for all page states, routes, and source files
+2. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+
+## TABS-ONLY RULE
+
+- Research service = ONE page with tabs. ML has sub-tabs. Strategies have sub-tabs.
+- Promote service = ONE page with tabs.
+- NO card-based sub-pages. Wizard and creation flows are MODALS/DRAWERS within tabs.
+
+## Page Status — NO stubs, but 12 pages need API wiring
+
+All pages are REAL (252-704L). The problem is inline mock data. See manifest for per-page hooks status.
+
+## Satellite Absorption (as modals within tabs, NOT new pages)
+
+| Source                                | Lines       | Target         | How                           |
+| ------------------------------------- | ----------- | -------------- | ----------------------------- |
+| `strategy-ui/src/components/wizard/*` | ~709L total | Strategies tab | "New Strategy" button → modal |
+| `ml-training-ui/*`                    | —           | NOT NEEDED     | Main UI pages are richer      |
+
 ## Key source repos for absorption
 
-- `strategy-ui/src/components/wizard/` — multi-step wizard (BasicConfigStep, StrategySelectionStep, etc.)
-- `strategy-ui/src/components/results/` — equity curve chart, backtest results
-- `ml-training-ui/src/` — experiment tracking UI
-- `_reference/versa-execution-analytics-ui/` — execution analytics patterns
-
-## Absorbed from prior plans
-
-- strategy_system_citadel_master_2026_03_15: Strategy lifecycle, promote flow
-- uniform_ml_pipeline_sports_migration_2026_03_20: ML pipeline standardization
-- fixed_grid_config_refactor_2026_03_21: Grid config for strategy parameters
+- `strategy-ui/src/components/wizard/` — WizardContainer (148L), BasicConfigStep (192L), StrategySelectionStep (219L),
+  ReviewStep (150L)
+- `strategy-ui/src/components/results/EquityCurveChart.tsx` (146L) — reusable chart component
+- `ml-training-ui/src/` — SKIP: main UI already has richer equivalents (591-704L vs 133-315L)
 
 ## API endpoints needed
 
 - GET /ml/models, GET /ml/experiments, GET /ml/training-jobs, GET /ml/features
 - GET /ml/validation-results, POST /ml/training-jobs, POST /ml/models/{id}/promote
 - GET /execution/backtests, POST /execution/backtests
+- POST /analytics/strategies/{id}/promote, POST /analytics/strategies/{id}/reject
 - POST /analytics/strategies/{id}/promote, POST /analytics/strategies/{id}/reject
