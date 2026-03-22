@@ -208,7 +208,7 @@ todos:
   # ── Phase 8: Post-Audit Cleanup ──
   - id: a1-p8-refresh-manifest
     content: |
-      - [ ] [AGENT] P0. Refresh `UI_STRUCTURE_MANIFEST.json` to match actual wiring state after all agents completed. The manifest currently says BatchLiveRail has "zero imports" but it's wired in 4 files (dashboard, trading/overview, research/strategy/compare, research/strategy/results). FilterBar is wired in 3 files (trading/alerts, positions, orders). Update:
+      - [x] [AGENT] P0. Refresh `UI_STRUCTURE_MANIFEST.json` to match actual wiring state after all agents completed. The manifest currently says BatchLiveRail has "zero imports" but it's wired in 4 files (dashboard, trading/overview, research/strategy/compare, research/strategy/results). FilterBar is wired in 3 files (trading/alerts, positions, orders). Update:
         1. Set BatchLiveRail imports to 4 (list the files)
         2. Set FilterBar imports to 3 (list the files)
         3. Update dead tab sets status: verify if PROMOTE_TABS, OBSERVE_TABS, MANAGE_TABS now have layouts rendering them (agents created layouts)
@@ -219,7 +219,7 @@ todos:
     status: todo
   - id: a1-p8-clean-worktrees
     content: |
-      - [ ] [AGENT] P1. Remove `.claude/worktrees/` remnants from old agent sessions in unified-trading-system-ui. These contain duplicate/stale copies of components and pages from prior agent runs (agent-a18a06ab, agent-a9aade31, etc.). They are not referenced by the build and just add confusion.
+      - [x] [AGENT] P1. Remove `.claude/worktrees/` remnants from old agent sessions in unified-trading-system-ui. These contain duplicate/stale copies of components and pages from prior agent runs (agent-a18a06ab, agent-a9aade31, etc.). They are not referenced by the build and just add confusion.
         1. `rm -rf unified-trading-system-ui/.claude/worktrees/`
         2. Verify `npx next build` still succeeds after removal
         3. Add `.claude/worktrees/` to `.gitignore` if not already there

@@ -47,12 +47,12 @@ todos:
   - id: a8-p1-ui-build
     content: |
       - [x] [AGENT] P0. Ensure `NEXT_PUBLIC_MOCK_API=false npx next build` succeeds (UI always calls API now, no MSW). Fix any TypeScript strict mode errors. Fix any import errors from removed MSW code. Fix any broken references to deleted routes.
-    status: todo
+    status: done
 
   - id: a8-p1-ui-vitest
     content: |
       - [x] [AGENT] P0. Ensure vitest passes: `CI=true npm test -- --run`. Fix any broken component tests that relied on MSW handlers. Component tests should use the API hooks with mocked fetch (via vitest's mock capabilities) not MSW.
-    status: todo
+    status: done
 
   # ── DEPENDENCY GATE: Phase 2 requires Agents 1, 5, 6 ──────────────────────
   # STOP HERE if these are not complete:
@@ -183,7 +183,7 @@ todos:
         2. Response schemas match actual mock-mode responses
         3. UI TypeScript types (if generated from OpenAPI) are up to date
         4. Add a CI test that validates spec parity: start API in mock mode, call every endpoint, validate response against OpenAPI schema.
-    status: todo
+    status: done
   - id: a8-p4-codegen-pipeline-run
     content: |
       - [x] [AGENT] P0. Run the SSOT codegen pipelines AFTER Agents 5-6 have finished their work. This is critical — without it, the UI will have stale types and reference data.
@@ -262,7 +262,7 @@ todos:
         5. For EACH service: Positions, Orders, Strategies, Alerts, PnL — verify org filtering works
         6. Test cascading: select org "acme" in global scope → all pages filter to acme. Change to "vertex" → all pages update.
         7. This test catches the case where one service page shows unfiltered data — a demo-killing bug.
-    status: todo
+    status: done
   - id: a8-p6-codegen-pipeline-create
     content: |
       - [x] [AGENT] P0. Verify and CREATE codegen pipeline scripts if they don't exist:
@@ -294,36 +294,36 @@ todos:
         2. Click hamburger → verify slide-out drawer with service navigation
         3. Navigate to Trading Terminal at tablet viewport → verify chart renders, layout stacks vertically
         4. Verify data tables have horizontal scroll (no broken layouts)
-    status: todo
+    status: done
   - id: a8-p6-bundle-size
     content: |
-      - [ ] [AGENT] P1. Performance validation:
+      - [x] [AGENT] P1. Performance validation:
         1. Run `NEXT_PUBLIC_MOCK_API=true npx next build` and capture output
         2. Parse chunk sizes from build output
         3. Flag any chunk > 500KB as a warning
         4. Verify charting components use dynamic imports (not in initial bundle)
         5. Add this as a CI check in the smoke test script
-    status: todo
+    status: done
   - id: a8-p6-latency-test
     content: |
-      - [ ] [AGENT] P1. Playwright test: Latency simulation makes skeletons visible:
+      - [x] [AGENT] P1. Playwright test: Latency simulation makes skeletons visible:
         1. Start API with MOCK_LATENCY_MS=300
         2. Navigate to any service page
         3. Verify skeleton placeholder is visible for at least 200ms before data appears
         4. This validates that the skeleton loading components actually work visually
-    status: todo
+    status: done
   - id: a8-p6-export-tests
     content: |
-      - [ ] [AGENT] P1. Playwright tests for export functionality:
+      - [x] [AGENT] P1. Playwright tests for export functionality:
         1. Navigate to Positions table → click "Export" → select "CSV" → verify download triggers
         2. Navigate to Positions table → click "Export" → select "Excel" → verify .xlsx download triggers
         3. Navigate to Reports > P&L → click "Generate Report" → verify modal → submit → verify download toast
         4. Navigate to Reports > P&L → click "Print Report" → verify print dialog opens (or print-friendly layout renders)
-    status: todo
+    status: done
   # ── Phase 7: Full Registry Coverage Tests & Sync Pipeline (Gap-Closing) ──
   - id: a8-p7-sync-pipeline-run
     content: |
-      - [ ] [AGENT] P0. Run the FULL SSOT sync pipeline AFTER Agents 5-6 complete. This is the critical integration step:
+      - [x] [AGENT] P0. Run the FULL SSOT sync pipeline AFTER Agents 5-6 complete. This is the critical integration step:
         1. Run `python unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` — sync UAC registries to UI
         2. Verify output has ALL instruments from representative_sample.py (~40 specs)
         3. Start unified-trading-api, fetch OpenAPI spec, generate TypeScript types:
@@ -335,36 +335,36 @@ todos:
         7. Run `python unified-trading-pm/scripts/validation/check-import-patterns.py` — verify no import violations
         8. If ANY pipeline fails, FIX the source and re-run. Do NOT proceed to E2E tests with stale data.
         DEPENDENCY: Agents 5 and 6 must be substantially complete.
-    status: todo
+    status: done
   - id: a8-p7-indicator-tests
     content: |
-      - [ ] [AGENT] P1. Playwright test: Technical indicators on Trading Terminal:
+      - [x] [AGENT] P1. Playwright test: Technical indicators on Trading Terminal:
         1. Navigate to Trading Terminal → verify candlestick chart renders
         2. Click "SMA" indicator toggle → verify SMA overlay line appears on chart
         3. Click "BB" (Bollinger Bands) → verify upper/lower bands appear
         4. Click "SMA" again → verify SMA overlay disappears (toggle off)
         DEPENDENCY: Agent 2 must implement indicators (a2-p7-technical-indicators).
-    status: todo
+    status: done
   - id: a8-p7-full-instrument-tests
     content: |
-      - [ ] [AGENT] P0. Playwright test: Full instrument coverage:
+      - [x] [AGENT] P0. Playwright test: Full instrument coverage:
         1. Navigate to Trading Terminal → open instrument selector dropdown
         2. Verify instruments are grouped by category (CeFi Spot, CeFi Perps, TradFi, DeFi)
         3. Verify at least 30 instruments are listed (from ui-reference-data.json)
         4. Select a TradFi instrument (e.g., AAPL) → verify chart loads with candle data
         5. Select a DeFi instrument (e.g., WETH-USDC) → verify chart loads
         DEPENDENCY: Agents 5-6 must seed data for all instruments. Agent 2 must wire instrument selector.
-    status: todo
+    status: done
   - id: a8-p7-strategy-scale-tests
     content: |
-      - [ ] [AGENT] P0. Playwright test: 50+ strategy scale:
+      - [x] [AGENT] P0. Playwright test: 50+ strategy scale:
         1. Navigate to Dashboard → verify strategy performance table shows 50+ rows
         2. Verify table is virtualized (no lag with 50+ rows — TanStack Table handles this)
         3. Navigate to Research > Strategies → verify 50+ strategies listed
         4. Filter by asset class "DeFi" → verify only DeFi strategies shown
         5. Navigate to Promote > Candidates → verify candidates from multiple asset classes
         DEPENDENCY: Agent 6 must expand strategies to 50+. Agent 1 must create DataTable.
-    status: todo
+    status: done
   - id: a8-p7-realtime-pnl-test
     content: |
       - [x] [AGENT] P0. Playwright test: Real-time PnL propagation (validates server-side calculation end-to-end):
@@ -379,16 +379,16 @@ todos:
     status: done
   - id: a8-p7-data-freshness-test
     content: |
-      - [ ] [AGENT] P1. Playwright test: Data freshness indicators:
+      - [x] [AGENT] P1. Playwright test: Data freshness indicators:
         1. Navigate to Trading Terminal → verify "Live" badge with green dot is visible
         2. Navigate to Positions → verify "Live" indicator on positions panel
         3. Toggle to batch mode → verify "As of {date}" badge appears (no "Live" indicator)
         4. Toggle back to live → verify "Live" indicator returns
         DEPENDENCY: Agent 1 a1-p7-data-freshness (DataFreshness component).
-    status: todo
+    status: done
   - id: a8-p7-no-client-side-mock-data
     content: |
-      - [ ] [AGENT] P0. Verification test: No client-side mock data sources remain:
+      - [x] [AGENT] P0. Verification test: No client-side mock data sources remain:
         1. Verify `lib/mocks/` directory does NOT exist (removed by Agent 6)
         2. Verify `lib/trading-data.ts` is NOT imported by any page in `app/` (grep for imports)
         3. Verify `lib/ml-mock-data.ts`, `lib/execution-platform-mock-data.ts`, `lib/data-service-mock-data.ts`, `lib/strategy-platform-mock-data.ts` are NOT imported by any page
@@ -396,16 +396,16 @@ todos:
         5. Every data table must get its data from a `useQuery` hook calling the API
         This enforces the separation of concerns: the UI is visual only, all data comes from the API.
         DEPENDENCY: Agent 6 Phase 4 (MSW removal + trading-data.ts migration).
-    status: todo
+    status: done
   - id: a8-p7-guided-tour-test
     content: |
-      - [ ] [AGENT] P1. Playwright test: Guided tour:
+      - [x] [AGENT] P1. Playwright test: Guided tour:
         1. Clear localStorage → login as admin (simulates first login)
         2. Verify tour overlay appears highlighting first step (Global scope filters)
         3. Click "Next" → verify tour advances to lifecycle navigation
         4. Click "Skip" → verify tour closes and doesn't reappear on page reload
         DEPENDENCY: Agent 1 must implement guided tour (a1-p6-guided-tour).
-    status: todo
+    status: done
   # ── Phase 8: Quality Gates & SIT (Post-Audit Citadel Gate) ──
   - id: a8-p8-qg-unified-trading-api
     content: |
@@ -418,12 +418,12 @@ todos:
     status: done
   - id: a8-p8-qg-unified-trading-system-ui
     content: |
-      - [ ] [AGENT] P0. Run quality gates on unified-trading-system-ui:
+      - [x] [AGENT] P0. Run quality gates on unified-trading-system-ui:
         1. `VITE_MOCK_API=true npx vite build` — smoke build must succeed
         2. `CI=true npm test -- --run` — vitest must pass
         3. Fix any TypeScript errors, broken imports, or test failures
         This was NOT executed during the agent audit — it must pass before we can declare Agents 1-4 done.
-    status: todo
+    status: done
   - id: a8-p8-sit-tier-readiness
     content: |
       - [x] [AGENT] P1. Add SIT or smoke scenarios that encode tier + readiness validation:
@@ -436,17 +436,17 @@ todos:
            b. Navigate each lifecycle stage → first tab renders
            c. POST /admin/reset → verify clean state
         3. These encode the Citadel quality bar without using the word "citadel" in test names
-    status: todo
+    status: done
   - id: a8-p8-verify-no-redundant-impl
     content: |
-      - [ ] [AGENT] P0. Verify no redundant implementations remain across the codebase:
+      - [x] [AGENT] P0. Verify no redundant implementations remain across the codebase:
         1. Check `mock_data/state_store.py` is removed (Agent 5 a5-p9-quarantine-legacy-state-store)
         2. Check `lib/mocks/` directory is removed (Agent 6 a6-p4-remove-msw)
         3. Check no page imports from `lib/trading-data.ts` (Agent 6 a6-p4-migrate-trading-data)
         4. Check `lib/ml-mock-data.ts`, `lib/execution-platform-mock-data.ts`, `lib/data-service-mock-data.ts`, `lib/strategy-platform-mock-data.ts` are not imported by any page
         5. Grep for any `const mockData = [` or `const MOCK_` inline arrays in `app/` pages
         6. If any redundant implementations found, either delete them or document as explicit TODOs
-    status: todo
+    status: done
 isProject: false
 ---
 
