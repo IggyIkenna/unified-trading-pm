@@ -35,8 +35,99 @@ THE BIG PICTURE:
 - DIRECT-TO-TABS: No card landing pages. Lifecycle nav → first tab of service
 - 90% CODE SHARING: Mock and real modes share same route handlers + service layer
 - NO MSW: UI always calls real APIs. APIs handle mock/real via service layer internally
-- REPORTS → client-reporting-api (port 8014), everything else → unified-trading-api (port 8030)
+- REPORTS → unified-trading-api proxies /reporting/* to client-reporting-api (port 8014). UI only knows port 8030.
+- AUTH → UI calls auth-api (port 8200) via Next.js rewrite /api/auth/* → localhost:8200
 - VISIBLE UX: Every function has a visible button. Reset Demo, Live/Batch toggle, persona switcher all visible in shell
+
+REAL-TIME FEEL (CRITICAL for demo):
+- WebSocket mock tick generator: prices move every 500-2000ms on the Trading Terminal
+- OHLCV candle data: 200 candles per instrument per interval for candlestick charts
+- Order book depth: 20 bid + 20 ask levels for order book display
+- PnL time-series: 180 daily data points per strategy for equity curve charts
+- Live data persists to .local-dev-cache/ (survive restarts). Batch data is immutable snapshots.
+- Batch/live switch reads from different MockStateStore collections (_live vs _batch)
+
+AUTH FLOW:
+- Persona switching redirects to login page (requires re-sign-in), does NOT instant-swap tokens
+- auth-api must be running in dev stack (added to dev-start.sh and ui-api-mapping.json)
+- All 3 APIs must use identical org_id, persona name, and entitlement key values
+
+VISUAL POLISH (mandatory across all agents):
+- Skeleton loading states (shimmer placeholders), NOT "Loading..." text
+- Use existing components/ui/skeleton.tsx — create table/card/chart skeleton variants
+- Cmd+K command palette wired to global shortcut (component exists, needs shell wiring)
+- Notification bell shows real alert count and dropdown (not hardcoded "3")
+
+CURRENT STATE (verified 2026-03-22 — do NOT redo work that's already done):
+- API service layer EXISTS: services/ has DomainService Protocol, MockDomainService, LiveDomainService, factory.py. All 19 routes already use get_service(request) DI — NO if/else mock checks.
+- WebSocket EXISTS: routes/websocket.py is 4,859 lines with channel-based multiplexing and synthetic tick generator.
+- personas.py EXISTS: 121 lines, 4 orgs, 5 personas. Matches auth-api mock_data.py.
+- auth-api EXISTS: port 8200, JWT (HS256), mock login, 5 users. But NOT in ui-api-mapping.json or dev-start.sh yet.
+- Execution service pages ALL EXIST: 7 tabs, 298-405 lines each, with layout.tsx.
+- 49 of 60 service pages are REAL (100-2000+ lines). Only 11 are stubs (24 lines).
+- STILL NEEDED: MockStateStore migration (in-memory → UTL JSONL), seed enrichment (PnL timeseries, OHLCV, tickers, batch/live, org-scoped), MSW removal, debug footer, skeleton variants, auth-api in dev stack, E2E tests, API tests.
+
+ERROR STATES (mandatory across all agents):
+- Create and use: error-boundary.tsx (React error boundary), api-error.tsx (failed API display + retry), empty-state.tsx (contextual empty states for tables/lists)
+- Every useQuery hook: handle isLoading (skeleton), isError (ApiError + retry), data.length===0 (EmptyState)
+- Access denied: show "Upgrade" card for missing entitlements, redirect non-admin from /admin to /dashboard
+- WebSocket disconnect: "Reconnecting..." banner with exponential backoff (1s, 2s, 4s, max 30s)
+
+RESPONSIVE LAYOUT (mandatory across all agents):
+- Desktop (1440px+): full layout. Laptop (1280px): scroll instead of side-by-side. Tablet (768px): hamburger nav, stacked panels, horizontal-scroll tables
+- Use Tailwind responsive prefixes (md:, lg:) — no custom media queries
+- Dashboard: 4-col → 2-col → 1-col grid. Tables: always overflow-x-auto wrapper
+
+LATENCY SIMULATION (Agent 5 implements, all agents benefit):
+- MOCK_LATENCY_MS env var (default 0 in CI, 150 in interactive). Makes skeletons visible and demo feel real.
+- Without this, skeletons flash for 0ms and the demo feels fake.
+
+CODE SPLITTING (Agent 1 implements, all agents follow):
+- Use Next.js dynamic() imports for heavy components (charts, data grids, deployment forms)
+- Charts MUST use dynamic(() => import(...), { ssr: false })
+
+MANDATORY COMPLETION PROTOCOL (after EVERY todo):
+When you finish a todo or group of todos, you MUST do ALL of the following:
+
+1. TICK THE PLAN — Mark the todo as done (change `- [ ]` to `- [x]`) in your plan file.
+
+2. RUN TESTS — Run `bash scripts/quality-gates.sh` in every repo you modified. If a test breaks:
+   - If the test logic is WRONG (tests an old pattern your refactor correctly replaced): fix the test.
+   - If the test logic is RIGHT (catches a real bug in your refactor): fix your refactor, not the test.
+   - The refactor plan is canonical, but tests provide quality guidance you MUST respect.
+
+3. HARDEN THE RULES — For every structural change you make, add a rule or constraint that prevents
+   future agents from undoing it. Specifically:
+   a. If you DELETE a route/page/component: add it to `redirects_only` in next.config.mjs so it
+      can't be recreated at the old path. Add a comment explaining why it was removed.
+   b. If you CREATE a new pattern (e.g., service layout with tabs): add a comment at the top of
+      the file explaining the architectural constraint ("This layout renders EXECUTE_TABS. Do NOT
+      add card-based sub-pages within this service — use tabs only.").
+   c. If you WIRE an orphaned component: remove it from the `orphaned_components_to_wire` list in
+      UI_STRUCTURE_MANIFEST.json and update the page's state from "STUB" to "REAL".
+   d. If you ADD an API endpoint: update the OpenAPI spec and run the codegen pipeline:
+      `cd unified-trading-system-ui && npm run generate:types`
+
+4. UPDATE THE MANIFEST — After each phase, update `UI_STRUCTURE_MANIFEST.json`:
+   - Change page states (STUB → REAL, REDIRECT → deleted)
+   - Add new API hooks to the hooks list
+   - Update line counts if substantially changed
+   - Remove items from `routes_to_delete` once deleted
+   - Remove items from `orphaned_components_to_wire` once wired
+   - Remove items from `dead_tab_sets` once fixed
+
+5. UPDATE DOCS — If your change affects architecture described in any of these docs, update them:
+   - `CODEBASE_STRUCTURE.md` — if you add/remove components or change folder structure
+   - `ROUTES.md` — if you add/remove/rename routes
+   - `SERVICE_COMPLETION_STATUS.md` — if you change a service's completion level
+   - `.cursorrules` or repo-level CLAUDE.md — if you establish a pattern that must be followed
+
+6. COMMIT WITH CONTEXT — Every commit message must explain WHY, not just what. Include:
+   - Which plan todo ID it completes (e.g., "completes a1-p0-remove-key-landing")
+   - What architectural constraint it enforces (e.g., "direct-to-tabs: no card landing pages")
+
+If you skip any of these steps, your work can be undone by the next agent who doesn't understand
+why you made the change. The rule base IS the institutional memory.
 
 SSOT CODEGEN PIPELINES (run when you change schemas/registries):
 - After UAC registry changes: `cd unified-api-contracts && .venv/bin/python scripts/generate_ui_reference_data.py --output ../unified-trading-system-ui/lib/registry/ui-reference-data.json`
@@ -72,8 +163,12 @@ YOUR MISSION:
 6. FIX lifecycle-nav links to go direct-to-tab (no intermediate landings)
 7. FIX breadcrumbs to show Home > Service > Tab
 8. VERIFY every service has a layout.tsx with correct ServiceTabs
-9. FIX build: NEXT_PUBLIC_MOCK_API=true npx next build must pass
-10. ADD Playwright tests for navigation flows
+9. WIRE Cmd+K command palette (component exists in components/ui/command.tsx — add global shortcut in shell)
+10. WIRE notification bell to show real alert count + dropdown (currently hardcoded "3" in lifecycle-nav.tsx)
+11. CREATE skeleton loading components (table-skeleton, card-grid-skeleton, chart-skeleton) from existing Skeleton component
+12. FIX persona switcher: redirect to /login?persona=X (requires re-sign-in, NOT instant-swap)
+13. FIX build: NEXT_PUBLIC_MOCK_API=true npx next build must pass
+14. ADD Playwright tests for navigation flows
 
 DO NOT TOUCH: page content within service tabs (that's Agent 2-4, 7's job)
 DO NOT TOUCH: API code (that's Agent 5-6's job)
@@ -104,8 +199,11 @@ YOUR MISSION:
 2. RESTORE ManualTradingPanel from git (commit 5c24fa2 in live-health-monitor-ui) as drawer in Terminal
 3. VERIFY all 6 Trading tabs have real content (Terminal, Positions, Orders, Execution, Accounts, Markets)
 4. WIRE batch/live mode switching on Terminal (banner, different data based on global scope mode)
-5. VERIFY strategy detail and list pages work
-6. ADD Playwright tests for trading flows
+5. WIRE WebSocket feed: terminal subscribes to ws://localhost:8030/ws, receives live price ticks, updates chart + order book
+6. WIRE candlestick chart to GET /market-data/candles (historical) + WebSocket ticks (real-time append)
+7. WIRE order book to GET /market-data/orderbook (depth levels)
+8. VERIFY strategy detail and list pages work
+9. ADD Playwright tests for trading flows
 
 DO NOT TOUCH: Shell/navigation components (Agent 1's scope)
 DO NOT TOUCH: API route handlers (Agent 5's scope)
@@ -207,22 +305,29 @@ YOUR MISSION:
 3. CREATE services/live/ with stub implementations (NotImplementedError)
 4. CREATE services/factory.py with Depends() factories
 5. REFACTOR all 15 route files to use service layer (eliminate if/else mock checks)
-6. REPLACE local state_store.py with UTL MockStateStore (JSONL persistence)
+6. REPLACE local state_store.py with UTL MockStateStore (JSONL persistence to .local-dev-cache/)
 7. ADD POST /admin/reset endpoint
 8. ADD POST /execution/orders endpoint (for manual trading)
-9. ADD new API endpoints needed by UI agents (GET /ml/experiments, etc.)
-10. ADD integration tests for every route (mock mode)
-11. ENSURE quality-gates.sh passes
+9. ADD new API endpoints: GET /ml/experiments, GET /market-data/candles, GET /market-data/orderbook
+10. IMPLEMENT WebSocket mock tick generator (P0 — critical for real-time demo feel)
+11. WIRE reporting proxy: /reporting/* forwards to client-reporting-api (port 8014) in real mode
+12. WIRE auth: validate JWTs from auth-api, extract persona/org_id for data scoping
+13. UPDATE dev stack: add auth-api to ui-api-mapping.json and dev-start.sh
+14. CONFIGURE live data persistence: _live collections persist to .local-dev-cache/, _batch immutable
+15. ADD integration tests for every route (mock mode)
+16. ENSURE quality-gates.sh passes
 
 DO NOT TOUCH: UI code (Agents 1-4, 7), seed data content (Agent 6)
 
 Current state of unified-trading-api:
-- 16 domain routers, ~1,538 lines
+- 17 domain routers, ~1,538 lines
 - Every route: `if mock_mode: return mock_store.list(domain)` else `return NOT_IMPLEMENTED`
-- Simple state_store.py (69 lines, in-memory only, no persistence)
+- Simple state_store.py (68 lines, in-memory only, no persistence)
 - 1 test file (test_health.py)
+- seed.py: 1,309 lines (partial coverage)
+- No services/ directory, no admin reset, no WebSocket ticks, no auth-api integration
 
-The service layer pattern is explained in CITADEL_VISION_2026_03_22.md.
+The service layer pattern and real-time data architecture are explained in CITADEL_VISION_2026_03_22.md.
 Read your plan file for detailed todos. Execute in phase order.
 ```
 
@@ -246,11 +351,14 @@ YOUR MISSION:
 2. ENHANCE seed.py with comprehensive, realistic data across ALL domains
 3. ADD org_id to every seed record for persona-based scoping
 4. ALIGN seed strategies with UI's trading-data.ts (same IDs, names, asset classes)
-5. SEED batch vs live data variants
-6. ADD seed versioning and CI/deterministic mode
-7. REMOVE MSW from the UI (lib/mocks/ directory, ~1,411 lines)
-8. MIGRATE Dashboard from client-side trading-data.ts to API hooks
-9. ADD seed data quality tests
+5. SEED PnL time-series: 180 daily data points per strategy (3,240 total) for equity curve charts
+6. SEED OHLCV candle data: 10 instruments * 4 intervals * 200 candles = 8,000 records
+7. SEED initial ticker prices for 10 instruments (starting point for WebSocket ticks)
+8. SEED batch AND live data variants: _live collections (mutable, persisted) and _batch collections (immutable snapshots)
+9. ADD seed versioning and CI/deterministic mode
+10. REMOVE MSW from the UI (lib/mocks/ directory, ~1,411 lines)
+11. MIGRATE Dashboard from client-side trading-data.ts to API hooks
+12. ADD seed data quality tests
 
 CRITICAL CONSTRAINT: The seed data MUST produce visually identical results to the current
 client-side trading-data.ts when rendered on the Dashboard. Same strategy names, similar PnL
@@ -315,11 +423,14 @@ YOUR SCOPE:
 YOUR MISSION:
 1. FIX unified-trading-api quality-gates.sh (ruff, basedpyright, pytest with coverage ≥ 80%)
 2. FIX unified-trading-system-ui build (TypeScript strict, no MSW references)
-3. SET UP Playwright E2E infrastructure (start API + UI, POST /admin/reset before each suite)
+3. SET UP Playwright E2E infrastructure (start auth-api + unified-trading-api + UI, POST /admin/reset before each suite)
 4. WRITE Playwright tests for EVERY service: Auth flow, Trading flow, Research flow, Data flow, Reports flow, Manage flow, Observe flow, Admin flow, Reset Demo flow
-5. VERIFY API integration tests cover all routes
-6. ADD OpenAPI schema parity test
-7. CREATE smoke test script (bash scripts/e2e-smoke.sh)
+5. WRITE real-time feel tests: WebSocket ticks update terminal, batch/live switch changes data
+6. RUN SSOT codegen pipelines after Agents 5-6 finish: OpenAPI → TypeScript types, UAC → reference data
+7. ADD auth alignment test: verify persona org IDs match across auth-api and unified-trading-api
+8. VERIFY API integration tests cover all routes
+9. ADD OpenAPI schema parity test
+10. CREATE smoke test script (bash scripts/e2e-smoke.sh)
 
 DEPENDENCY: This agent depends on Agents 5-6 (API + data) being substantially complete.
 Start with Phases 0-1 (quality gates, build fixes) which can run immediately.
@@ -335,17 +446,15 @@ Read your plan file for detailed todos. Execute in phase order.
 ## Execution Order & Dependencies
 
 ```
-PARALLEL GROUP 1 (start immediately):
-  Agent 1: Shell & Navigation (UI only, no API dependency)
-  Agent 3: Research & Build (UI only, can verify/build pages independently)
-  Agent 4: Reports & Manage (UI only, can verify/build pages independently)
-  Agent 5: API Service Layer (backend only, no UI dependency)
-  Agent 7: Observe & Admin (UI only, can verify/build pages independently)
+PARALLEL GROUP 1 (start immediately — ALL agents can start now):
+  Agent 1: Shell & Navigation (UI only)
+  Agent 2: Trading Service (execution pages already exist, API hooks ready)
+  Agent 3: Research & Build (UI only, pages exist, need API wiring)
+  Agent 4: Reports & Manage (UI only, satellite absorption)
+  Agent 5: API Enhancement (service layer exists — focus on MockStateStore, seeds, latency, auth-api)
+  Agent 6: Mock Data Quality (personas.py exists — focus on seed enrichment, consistency, MSW removal)
+  Agent 7: Observe & Admin (UI only, satellite absorption)
 
-PARALLEL GROUP 2 (after Agent 5 service layer is scaffolded):
-  Agent 2: Trading Service (needs API endpoints for hook wiring)
-  Agent 6: Mock Data Quality (needs Agent 5's MockStateStore integration)
-
-PARALLEL GROUP 3 (after Agents 1-7 substantially complete):
-  Agent 8: E2E Tests & Quality (needs all services to have content)
+PARALLEL GROUP 2 (after Agents 1-7 substantially complete):
+  Agent 8: E2E Tests & Quality (needs all services to have content + codegen pipelines)
 ```

@@ -297,6 +297,356 @@ FastAPI routes → OpenAPI spec → openapi-typescript → api-generated.ts → 
 
 ---
 
+## Real-Time Data Architecture (CRITICAL for Demo Feel)
+
+### Live Data Persistence
+
+Both mock and production modes read live data from the **same directory structure**:
+`.local-dev-cache/unified-trading-api/`. The MockStateStore (from UTL) persists all live-domain collections as JSONL
+files here. In production, the same directory structure would be populated by real service writes. This means:
+
+- `positions_live.jsonl` — real-time positions (updated by WebSocket or polling)
+- `orders_live.jsonl` — real-time orders
+- `pnl_live.jsonl` — real-time PnL snapshots
+- `tickers_live.jsonl` — latest ticker prices
+
+### Batch/Live Switch
+
+The **only difference** between batch and live mode is which collection the API reads from:
+
+- **Live mode** (`mode=live`): reads from `{domain}_live` collections — real-time, mutable, updated by WebSocket feed
+- **Batch mode** (`mode=batch&as_of=2026-03-21`): reads from `{domain}_batch` collections — T+1 reconciled, immutable
+  snapshots
+
+The switch is clean because both live in the same `.local-dev-cache/` directory. The UI sends `mode` and `as_of` query
+params; the API reads from the correct collection. No separate data stores, no environment variable changes.
+
+### Batch Data Characteristics (vs Live)
+
+- Batch PnL includes reconciliation adjustments (slightly different from live)
+- Batch positions may lag by 1-2 fills (unreconciled fills not yet in batch)
+- Batch prices are official close prices, live prices are last tick
+- Batch has exact fee breakdowns, live has estimated fees
+
+### WebSocket Mock Feed
+
+The unified-trading-api WebSocket endpoint (`/ws`) MUST emit simulated price ticks in mock mode:
+
+- **Brownian motion** price generator for subscribed instruments (BTC-USDT, ETH-USDT, SOL-USDT, etc.)
+- **Tick interval**: 500ms-2000ms (randomized for realism)
+- **Data**: `{ instrument, price, volume, bid, ask, timestamp }`
+- Ticks update the `tickers_live` collection in MockStateStore (so REST endpoints reflect current prices)
+- The UI Trading Terminal subscribes on mount, unsubscribes on unmount
+- This is what makes the terminal feel **alive** — prices moving, charts updating, order book shifting
+
+### OHLCV Candle Data
+
+The API must serve historical candle data (`GET /market-data/candles?instrument=BTC-USDT&interval=1h&limit=200`):
+
+- Seed 200 candles per instrument per interval (1m, 5m, 1h, 1d)
+- Generated procedurally: Brownian motion with realistic volume profiles (higher volume at opens/closes)
+- At least 10 instruments with candle data
+
+### Order Book Depth
+
+The API must serve order book snapshots (`GET /market-data/orderbook?instrument=BTC-USDT`):
+
+- 20 bid levels + 20 ask levels per instrument
+- Realistic spread (0.01-0.05% of price)
+- Depth decreasing away from mid-price
+- In mock mode, regenerated with slight randomization on each request (simulates market movement)
+
+---
+
+## Auth Architecture (3-API Integration)
+
+### Auth Flow
+
+- **Login**: UI redirects to `/login` → user picks persona (mock) or OAuth provider (real) → auth-api issues JWT → UI
+  stores token → UI reads entitlements from token claims → UI renders appropriate service access
+- **Persona switching**: Clicking a different persona in the debug footer **redirects to login page** with the new
+  persona pre-selected. It does NOT instant-swap — the user must click "Sign In" to complete the switch. This ensures
+  the JWT is properly re-issued and all API calls use the new token.
+- **Logout**: UI clears token → redirects to `/login`
+
+### auth-api Integration (Port 8200)
+
+- **MUST be added to** `ui-api-mapping.json` and `dev-start.sh` service_workers
+- UI's `next.config.mjs` already has rewrite: `/api/auth/:path*` → `http://localhost:8200/:path*`
+- In mock mode with `DISABLE_AUTH=true`: auth-api still runs but skips token validation, issues demo JWTs
+- **Remove MSW auth handlers** — the UI should call auth-api directly, even in mock mode. Auth-api has its own
+  `mock_data.py` with demo personas that must align with unified-trading-api's `personas.py`
+
+### client-reporting-api Integration (Port 8014)
+
+Reports service routes MUST go to client-reporting-api, not unified-trading-api:
+
+- **Option A (recommended)**: unified-trading-api acts as proxy — `/reporting/*` routes forward to
+  `http://localhost:8014/api/*`. This keeps the UI simple (one API base URL).
+- **Option B**: UI has separate base URL for reports. Add `NEXT_PUBLIC_REPORTING_URL=http://localhost:8014` env var and
+  update `lib/api/fetch.ts` to route `/reporting/*` and `/reports/*` paths to this URL.
+
+Choose Option A for simplicity. unified-trading-api's `routes/reporting.py` becomes a thin proxy in real mode and serves
+from MockStateStore in mock mode (mirroring client-reporting-api's data).
+
+### Dev Stack Changes Required
+
+1. Add auth-api to `ui-api-mapping.json`: `{ "name": "auth-api", "api_port": 8200, "module": "auth_api" }`
+2. Add auth-api to `dev-start.sh` service_workers section
+3. Remove MSW auth handlers from UI (`lib/mocks/handlers/auth.ts`)
+4. Verify auth-api `mock_data.py` persona IDs match unified-trading-api `personas.py`
+
+---
+
+## Visual Polish Standards (Agents MUST Follow)
+
+### Loading States (MANDATORY)
+
+Every page that fetches data from the API MUST show **skeleton placeholders** (not "Loading..." text) while data loads:
+
+- Use the existing `<Skeleton>` component from `components/ui/skeleton.tsx`
+- Pattern: `if (isLoading) return <PageSkeleton />` where `PageSkeleton` mimics the page layout with shimmer bars
+- Tables: show 5 skeleton rows with column-width-appropriate shimmer bars
+- Cards: show card outline with shimmer content
+- Charts: show chart area outline with shimmer
+- This is the difference between "prototype" and "production" feel
+
+### Command Palette (Wire Existing Component)
+
+The `<Command>` component from `components/ui/command.tsx` (cmdk library) MUST be wired to:
+
+- Global `Cmd+K` / `Ctrl+K` keyboard shortcut
+- Search across: services, strategies, instruments, recent pages
+- Quick actions: Reset Demo, Switch Persona, Toggle Batch/Live
+- Render in the shell layout so it's available on every page
+
+### Notification Bell (Wire to Real Alerts)
+
+The bell icon in `lifecycle-nav.tsx` MUST:
+
+- Show actual alert count from `GET /alerts/active?acknowledged=false` (not hardcoded "3")
+- Open a dropdown with the 5 most recent alerts (severity badge + message + timestamp)
+- "View All" link navigates to `/services/observe/alerts`
+- Acknowledge action calls `POST /alerts/{id}/acknowledge` inline
+
+---
+
+## Current State Baseline (Verified 2026-03-22)
+
+Agents MUST read this before planning work. Several areas are further along than initial estimates:
+
+### Already Done (Do NOT redo)
+
+- **API service layer**: `services/` exists with `DomainService` Protocol (base.py), `MockDomainService`
+  (mock_service.py), `LiveDomainService` (live_service.py), factory.py with `get_service(request)` DI. All 19 routes
+  already use this pattern — NO if/else mock checks remain.
+- **WebSocket**: `routes/websocket.py` is 4,859 lines with channel-based multiplexing (market-data, positions, alerts,
+  health, execution), synthetic tick generator, per-client subscription tracking.
+- **personas.py**: 121 lines in `unified_trading_api/mock_data/personas.py` — 4 orgs, 5 personas, entitlements. Matches
+  auth-api's `mock_data.py`.
+- **auth-api**: Fully implemented — port 8200, JWT issuance (HS256, 1h access / 7d refresh), 5 mock users, mock login
+  flow. Has `mock_data.py` and `mock_state.py`.
+- **Execution service pages**: All 7 tabs exist as real pages (298-405 lines each): overview, algos, venues, tca,
+  benchmarks, candidates, handoff. Layout exists.
+- **UI page richness**: 49 of 60 service pages are real (100-2000+ lines). Only 11 are stubs (24 lines each).
+
+### Still Needed (Confirmed gaps)
+
+- **MockStateStore migration**: state_store.py is still 68 lines, in-memory only. UTL MockStateStore (JSONL persistence,
+  .local-dev-cache/) NOT yet adopted.
+- **Seed data enrichment**: No PnL time-series, no OHLCV candles, no ticker seeds, no batch/live separation, no
+  org-scoped data. seed.py is 1,323 lines covering basic domains only.
+- **MSW removal**: `lib/mocks/` (18 handlers + fixtures) still exists. `lib/trading-data.ts` (1000+ lines) still used by
+  Dashboard.
+- **Debug footer**: Does not exist.
+- **Skeleton loading variants**: Only base `skeleton.tsx` exists. No table/card/chart variants.
+- **auth-api dev stack**: NOT in ui-api-mapping.json, NOT started by dev-start.sh.
+- **E2E tests**: Only 2 Playwright specs (smoke.spec.ts, trader.spec.ts).
+- **API tests**: Only 3 test files. Coverage far below 80%.
+- **11 stub pages**: orders, accounts, settlement, reconciliation, regulatory, news, strategy-health, coverage, missing,
+  venues (data), logs — all 24 lines.
+- **Orphaned components**: filter-bar (0 imports), candidate-basket (0 imports). batch-live-rail partially wired (2
+  imports). live-asof-toggle partially wired (4 imports).
+- **Portal pages**: 9 dead redirect pages still exist.
+- **Card landing [key]**: Still exists.
+
+---
+
+## Error States & Empty States (MANDATORY — All Agents)
+
+Every page and component that loads data MUST handle these states. This is the difference between a prototype and a
+production-grade demo.
+
+### Error Boundaries
+
+- Create `components/ui/error-boundary.tsx` — React error boundary that catches render errors, shows recovery UI (not
+  white screen)
+- Create `components/ui/api-error.tsx` — standard error display for failed API calls: icon, message, "Retry" button
+- Pattern: `if (isError) return <ApiError error={error} onRetry={refetch} />`
+- Toast notifications for non-blocking errors (failed acknowledge, failed order placement)
+
+### Empty States
+
+- Create `components/ui/empty-state.tsx` — standard empty state: icon, title, description, optional action button
+- Pattern: `if (data.length === 0) return <EmptyState title="No positions" description="..." />`
+- Every table, list, and grid MUST show an empty state — not a blank area
+- Empty states should be contextual: "No alerts — all systems normal" (positive), "No orders yet — place your first
+  trade" (actionable)
+
+### Access Denied States
+
+- Client persona navigating to a service they lack entitlements for: show "Upgrade" card with service description and
+  "Contact Sales" button — NOT a 403 or blank page
+- Non-admin accessing /admin: redirect to /dashboard
+
+### WebSocket Disconnection
+
+- Subtle banner "Reconnecting..." when WebSocket disconnects
+- Auto-reconnect with exponential backoff (1s, 2s, 4s, max 30s)
+- On reconnect, refetch latest data to catch up on missed ticks
+
+---
+
+## Responsive Layout (MANDATORY for Demo)
+
+Primary target is desktop (1440px+), but demo MUST be presentable on:
+
+- **Laptop** (1280px): All content visible, may scroll instead of side-by-side panels
+- **Tablet** (768px-1024px): Lifecycle nav collapses to hamburger. Global scope filters stack vertically. Tables use
+  horizontal scroll. Charts resize.
+- **Below 768px**: Not required — show "Best viewed on desktop" message
+
+### Key Responsive Rules
+
+- Lifecycle nav: desktop = full horizontal bar; tablet = hamburger with slide-out drawer
+- Global scope filters: desktop = inline in nav center; tablet = collapsible filter panel below nav
+- Trading Terminal: desktop = chart + order book + order form side-by-side; tablet = stacked vertically
+- Data tables: always use `overflow-x-auto` wrapper — never break table layout
+- Dashboard cards: desktop = 4-column grid; tablet = 2-column; mobile = 1-column
+- Use Tailwind responsive prefixes (`md:`, `lg:`) — no custom media queries
+
+---
+
+## Latency Simulation (MANDATORY for Demo Realism)
+
+Mock APIs returning data in <1ms makes the demo feel fake. Loading skeletons flash invisibly.
+
+### Implementation
+
+- Add `MOCK_LATENCY_MS` environment variable (default: 0 in CI/deterministic, 150 in interactive mode)
+- In `MockDomainService`, add `await asyncio.sleep(latency_ms / 1000)` before returning data
+- Latency slightly randomized: `base_ms + random.randint(0, base_ms // 2)` (e.g., 150-225ms)
+- WebSocket ticks are NOT delayed (already have 500-2000ms intervals)
+- POST endpoints (create order, acknowledge alert) use lower latency (50-100ms) for snappy feel
+- `POST /admin/reset` has zero latency
+
+---
+
+## PDF/CSV Report Generation (Reports Service)
+
+Reports service MUST support downloading, not just viewing data on screen.
+
+### CSV Export (Client-Side — All Data Tables)
+
+- Add "Export CSV" button on every data table (P&L, settlements, orders, positions)
+- Use client-side CSV generation from already-loaded data — no API endpoint needed
+- Pattern: serialize visible columns → Blob → trigger download
+
+### PDF Report (API-Side — Reports Service Only)
+
+- "Generate PDF Report" button on P&L Attribution and Executive tabs
+- API endpoint `POST /reporting/generate` accepts `{ type, client_id, date_range, format }`
+- In mock mode: return a pre-generated sample PDF from `mock_data/sample_reports/`
+- UX: click "Generate" → spinner → "Download Ready" toast with download link
+
+---
+
+## Cross-Domain Data Consistency (Seed Data Quality)
+
+Mock data MUST be internally consistent. Inconsistencies destroy credibility in demos.
+
+### Rules
+
+1. **Price consistency**: OHLCV candle close prices MUST match prices used for that day's PnL calculation
+2. **Reference integrity**: Every `strategy_id` in positions/orders MUST exist in strategies. Every `order_id` in fills
+   MUST exist in orders. Every `org_id` MUST exist in organizations.
+3. **Temporal consistency**: No position `opened_at` before strategy `inception_date`. No fills after market close. PnL
+   time-series starts at strategy inception.
+4. **Aggregation consistency**: Sum of position-level PnL per strategy approximately equals strategy reported PnL
+5. **Batch/live consistency**: Batch = slightly stale version of live — not completely different data
+
+### Validation
+
+- `seed.py` MUST include `validate_consistency()` that checks all rules above
+- Runs automatically after `seed_all_domains()`, raises on violation
+- Agent 8's seed quality tests MUST verify consistency
+
+---
+
+## Codegen Pipeline Scripts (Create If Missing)
+
+The SSOT Codegen Pipelines require scripts that may not yet exist. Agents MUST verify and create:
+
+### Pipeline 1: UAC → UI Reference Data
+
+- **Script**: `unified-api-contracts/scripts/generate_ui_reference_data.py`
+- **If missing**: Create it — reads UAC registries (venues, instruments, enums, config schemas, error codes), outputs
+  JSON consumable by UI
+- **Output**: `unified-trading-system-ui/lib/registry/ui-reference-data.json`
+
+### Pipeline 2: API → UI TypeScript Types
+
+- **Verify**: `npm run generate:types` in `unified-trading-system-ui/package.json`
+- **If missing**: Add: `"generate:types": "openapi-typescript lib/registry/openapi.json -o lib/types/api-generated.ts"`
+- **Dependency**: `openapi-typescript` must be in devDependencies
+
+### Pipeline 3: Persona Alignment
+
+- **Script**: Create `unified-trading-api/scripts/verify_persona_alignment.py`
+- **Checks**: auth-api org IDs == unified-trading-api personas.py org IDs == UI use-auth.ts persona names
+
+---
+
+## Code Splitting & Performance (ONE UI Consolidation)
+
+Consolidating 13 UIs into one creates bundle size risk. Mitigate:
+
+- Use Next.js `dynamic()` imports for heavy components (charting libraries, data grids, deployment forms)
+- Each service area's page components should be lazily loaded
+- Charts (candlestick, equity curve, heatmap) MUST use dynamic imports with `ssr: false`
+- Target: initial bundle < 500KB, per-service chunks < 200KB each
+- Verify with `NEXT_PUBLIC_MOCK_API=true npx next build` — check output for chunk sizes
+
+---
+
+## Agent Completion Protocol (MANDATORY after every todo)
+
+Every agent MUST follow this protocol after completing work:
+
+1. **TICK THE PLAN** — Change `- [ ]` to `- [x]` in the plan file for completed todos.
+
+2. **RUN TESTS** — `bash scripts/quality-gates.sh` in every repo modified. If a test breaks:
+   - Test logic WRONG (tests old pattern your refactor correctly replaced) → fix the test
+   - Test logic RIGHT (catches real bug in refactor) → fix the refactor, not the test
+   - The refactor plan is canonical, but tests provide quality guidance you MUST respect.
+
+3. **HARDEN THE RULES** — Prevent future agents from undoing your work:
+   - Deleted route? Add to `redirects_only` in next.config.mjs with comment explaining why.
+   - Created new pattern? Add architectural comment at top of file.
+   - Wired orphaned component? Remove from `orphaned_components_to_wire` in manifest.
+   - Added API endpoint? Run `npm run generate:types` to update TypeScript types.
+
+4. **UPDATE THE MANIFEST** — `UI_STRUCTURE_MANIFEST.json`:
+   - Change page states (STUB → REAL), update line counts, add API hooks.
+   - Remove completed items from `routes_to_delete`, `orphaned_components_to_wire`, `dead_tab_sets`.
+
+5. **UPDATE DOCS** — If your change affects architecture: update CODEBASE_STRUCTURE.md, ROUTES.md,
+   SERVICE_COMPLETION_STATUS.md, or repo-level CLAUDE.md/.cursorrules as needed.
+
+6. **COMMIT WITH CONTEXT** — Every commit message must explain WHY and reference the plan todo ID.
+
+---
+
 ## Key Technical Rules
 
 - `uv pip install` not `pip install`
