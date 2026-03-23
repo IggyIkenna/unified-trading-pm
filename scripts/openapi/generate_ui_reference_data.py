@@ -5,6 +5,9 @@ Extracts all registries, enums, config schemas, venue details, and strategy
 constraints from the codebase — everything a UI designer needs to populate
 dropdowns, filters, and understand the domain bounds.
 
+SSOT for how this fits other UI sync paths: unified-trading-pm/docs/ui-alignment-ssot.md
+Extend this script for new UAC/UIC/UCI-driven UI registries; do not add a parallel extractor.
+
 Usage:
     python generate_ui_reference_data.py [--output-dir PATH]
 """
@@ -325,6 +328,7 @@ def main() -> None:
                 "understand domain bounds. Use alongside the OpenAPI spec."
             ),
             "generated_by": "generate_ui_reference_data.py",
+            "ssot_doc": "unified-trading-pm/docs/ui-alignment-ssot.md",
         }
     }
 

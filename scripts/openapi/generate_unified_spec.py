@@ -6,6 +6,8 @@ calls app.openapi(), and merges all specs into one unified document.
 
 Usage:
     python generate_unified_spec.py [--output-dir PATH]
+
+See also: unified-trading-pm/docs/ui-alignment-ssot.md (OpenAPI vs ui-reference-data.json).
 """
 
 from __future__ import annotations

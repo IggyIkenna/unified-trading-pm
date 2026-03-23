@@ -23,7 +23,8 @@ import re
 import sys
 from pathlib import Path
 
-EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "venv", "__pycache__", "build"}
+# tests/ included because flat deps means test-only deps are in [project.dependencies]
+EXCLUDE_SEGMENTS = {"scripts", ".github", ".venv", "venv", "__pycache__", "build"}
 EXCLUDE_FILENAMES = {"conftest.py"}
 
 # Patterns for Python imports

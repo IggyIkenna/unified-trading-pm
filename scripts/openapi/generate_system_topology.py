@@ -10,6 +10,8 @@ Extracts and aggregates:
 
 Usage:
     python generate_system_topology.py [--output-dir PATH]
+
+SSOT for UI/registry generators and hand-maintained docs: unified-trading-pm/docs/ui-alignment-ssot.md
 """
 
 from __future__ import annotations

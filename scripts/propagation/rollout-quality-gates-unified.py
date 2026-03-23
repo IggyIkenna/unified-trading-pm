@@ -94,7 +94,11 @@ ROLLOUT_SKIP_REPOS = frozenset({"unified-trading-pm", "unified-trading-codex"})
 # when regenerating quality-gates.sh.  These are variable assignments or array declarations
 # that repos add manually and must not be wiped by rollout.
 _PRESERVED_VAR_PATTERNS = re.compile(
-    r"^(?:UAC_CANONICAL_EXEMPT|BROAD_EXCEPT_EXTRA_EXCLUDES|MAX_DURATION|RUN_INTEGRATION|EXTRA_RUFF_ARGS|EXTRA_PYTEST_ARGS)\b"
+    r"^(?:UAC_CANONICAL_EXEMPT|BROAD_EXCEPT_EXTRA_EXCLUDES|MAX_DURATION|RUN_INTEGRATION|EXTRA_RUFF_ARGS|EXTRA_PYTEST_ARGS"
+    r"|PRINT_EXCLUDE_GLOBS|OS_ENV_EXCLUDE_GLOBS|IMPORT_INSIDE_EXCLUDE_GLOBS"
+    r"|EMPTY_STR_EXCLUDE_GLOBS|EMPTY_DICT_LIST_EXCLUDE_GLOBS|GCP_PROJECT_ID_EXCLUDE_GLOBS"
+    r"|MAX_METHOD_LINES|MAX_FUNCTION_LINES|MAX_FILE_LINES|MANIFEST_ALIGNMENT_SKIP"
+    r"|FUNCTION_SIZE_EXTRA_EXCLUDES|ASYNCIO_RUN_EXCLUDE_GLOBS|SETUP_NO_SINK_EXCLUDE_GLOBS)\b"
 )
 
 # Repos where discover_source_dir() picks the wrong dir — override explicitly.
@@ -245,6 +249,7 @@ def _extract_preserved_lines(existing_content: str) -> list[str]:
     """
     preserved: list[str] = []
     in_custom_zone = False
+    pending_comments: list[str] = []
     for line in existing_content.splitlines():
         stripped = line.strip()
         if stripped.startswith("LOCAL_DEPS="):
@@ -252,8 +257,16 @@ def _extract_preserved_lines(existing_content: str) -> list[str]:
             continue
         if stripped.startswith("WORKSPACE_ROOT="):
             break
-        if in_custom_zone and _PRESERVED_VAR_PATTERNS.match(stripped):
-            preserved.append(line)
+        if in_custom_zone:
+            if stripped.startswith("#") or stripped == "":
+                # Buffer comments — only emit if followed by a preserved variable
+                pending_comments.append(line)
+            elif _PRESERVED_VAR_PATTERNS.match(stripped):
+                preserved.extend(pending_comments)
+                pending_comments = []
+                preserved.append(line)
+            else:
+                pending_comments = []
     return preserved
 
 

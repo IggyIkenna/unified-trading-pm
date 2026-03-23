@@ -366,9 +366,9 @@
   <circle cx="451" cy="1493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="396" y="1515" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="471" y="1485" width="146" height="38" class="infra" />
-  <rect x="471" y="1485" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="471" y="1485" width="4" height="38" fill="#facc15" rx="2" />
   <text x="544" y="1503" text-anchor="middle" class="label">deployment-service</text>
-  <circle cx="607" cy="1493" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="607" cy="1493" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="544" y="1515" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="627" y="1485" width="174" height="38" class="lib" />
   <rect x="627" y="1485" width="4" height="38" fill="#facc15" rx="2" />

@@ -381,13 +381,17 @@ log_section "[5/6] CODEX COMPLIANCE"
 V=0
 
 # PRINT_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. Rich console.print, bash template strings)
-rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    && { log_fail "print() — use log_event() from UEI"; V=$(( V + 1 )); } || log_success "No print()"
+# Excluded: console.print (Rich library), python3 -c "...print..." (bash heredoc templates), pprint
+_print_hits=$(rg "print\(" --type py --glob "!tests/**" --glob "!scripts/**" "${PRINT_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v 'console\.print\|pprint\|python3 -c\|".*print.*"\|# noqa: qg-print' || :)
+[[ -n "$_print_hits" ]] && { echo "$_print_hits"; log_fail "print() — use log_event() from UEI"; V=$(( V + 1 )); } || log_success "No print()"
 
 # OS_ENV_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. bootstrap_config.py, env_substitutor.py)
 # Lines annotated with "# config-bootstrap:" are the documented approved exception for pre-UCC init (LOG_LEVEL, PORT).
 # __main__.py is excluded because Cloud Run bootstrap reads PORT before UCC is available.
-_os_env_hits=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" --glob "!**/__main__.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null | grep -v 'config-bootstrap:' || :)
+# Exclude: config-bootstrap: annotated lines, comments (lines starting with #), docstrings
+_os_env_hits=$(rg "os\.getenv|os\.environ" --type py --glob "!tests/**" --glob "!scripts/**" --glob "!**/config.py" --glob "!**/__main__.py" "${OS_ENV_EXCLUDE_GLOBS[@]}" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v 'config-bootstrap:' | grep -v '^\s*#' | grep -v '# noqa: qg-os-env' || :)
 if [[ -n "$_os_env_hits" ]]; then
     echo "$_os_env_hits"
     log_fail "os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets"
@@ -490,8 +494,10 @@ rg "central-element-[0-9]+" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/n
 # GCP_PROJECT_ID_EXCLUDE_GLOBS: per-repo array of glob patterns (e.g. "!**/rollout-*.py")
 GCP_EXTRA=()
 for g in ${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]+"${GCP_PROJECT_ID_EXCLUDE_GLOBS[@]}"}; do GCP_EXTRA+=(--glob "$g"); done
-rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
-    && { log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
+# Exclude: docstrings (triple-quoted), comments, and noqa-annotated lines
+_gcp_id_hits=$(rg "GCP_PROJECT_ID" --type py --glob "!tests/**" --glob "!**/config.py" "${GCP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v '^\s*#\|^\s*"""\|# noqa: qg-gcp-project-id\|"""$' || :)
+[[ -n "$_gcp_id_hits" ]] && { echo "$_gcp_id_hits"; log_fail "Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)"; V=$(( V + 1 )); } || log_success "No GCP_PROJECT_ID usage"
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
 # Acceptable: pytest.skip inside _skip_integration_without_creds autouse fixture (integration marker pattern)
@@ -604,20 +610,20 @@ SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; V=$(( V + 1 )); } || log_success "No swallowed errors"
 
-# File size
+# File size — tests excluded (test files are often long due to fixtures/assertions)
 # FUNCTION_SIZE_EXTRA_EXCLUDES also applies here for consistency (same variable, same dirs to skip)
 SVIOL=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
     lines=$(wc -l < "$f" 2>/dev/null || echo 0)
     [[ "$lines" -gt $MAX_FILE_LINES ]] && SVIOL="${SVIOL}\n  $f: $lines L"
 done
 [[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
 
-# Function/class/method size
+# Function/class/method size — tests excluded (test functions are often long)
 # FUNCTION_SIZE_EXTRA_EXCLUDES: optional array of extra ! -path args set in quality-gates.sh
 # e.g. FUNCTION_SIZE_EXTRA_EXCLUDES=("! -path ./features_service/*" "! -path ./examples/*")
 FSIZES=""
-for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
+for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
     out=$($PYTHON_CMD -c "
 import ast, sys
 p=sys.argv[1]
