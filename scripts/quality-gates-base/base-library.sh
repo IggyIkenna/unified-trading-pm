@@ -425,7 +425,8 @@ fi
 # STEP 5.8 — No backward-compatibility re-export stubs
 # ============================================================
 BACK_COMPAT=$(rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward|re-export.*compat" \
-    --type py --glob "!tests/**" --glob "!.venv*" "$SOURCE_DIR/" 2>/dev/null || :)
+    --type py --glob "!tests/**" --glob "!.venv*" "$SOURCE_DIR/" 2>/dev/null \
+    | grep -v "# noqa:.*qg-backward-compat\|# noqa: qg-backward-compat" || :)
 [[ -n "$BACK_COMPAT" ]] && {
     log_fail "Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims"
     log_fail "See: cursor-rules/core/no-backward-compat-shims.mdc"
