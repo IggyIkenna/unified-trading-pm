@@ -24,9 +24,6 @@
       "path": "../../instruments-service"
     },
     {
-      "path": "../../market-data-api"
-    },
-    {
       "path": "../../market-data-processing-service"
     },
     {

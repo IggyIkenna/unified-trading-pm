@@ -13,9 +13,6 @@
       "name": "\ud83d\udc0d Venv"
     },
     {
-      "path": "../../auth-api"
-    },
-    {
       "path": "../../batch-live-reconciliation-service"
     },
     {
@@ -65,9 +62,6 @@
     },
     {
       "path": "../../instruments-service"
-    },
-    {
-      "path": "../../market-data-api"
     },
     {
       "path": "../../market-data-processing-service"
