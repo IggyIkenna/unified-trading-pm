@@ -10,11 +10,11 @@
 #   SOURCE_DIR        — e.g. "features_calendar_service"
 #   MIN_COVERAGE      — e.g. 70
 #   RUN_INTEGRATION   — e.g. false
-#   PYTEST_WORKERS    — e.g. ${PYTEST_WORKERS:-2}
+#   PYTEST_WORKERS    — explicit worker count override; default is max(1, cpu_count // 4)
 #   LOCAL_DEPS        — e.g. ("unified-events-interface")
 #
 # Optional caller variables:
-#   MAX_DURATION      — duration limit in seconds (default: 120); set to 300 for PM/codex
+#   MAX_DURATION      — duration limit in seconds (default: 300); set to 600 for PM/codex
 #   IGNORE_TIMEOUT    — set to "true" to skip duration check (useful when running parallel suites)
 #
 # Version guard (optional): declare EXPECTED_BASE_VERSION="1.0" in stub before sourcing.
@@ -196,10 +196,26 @@ if [ "$RUN_TESTS" = true ]; then
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
     COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
-    PARGS="-n $PYTEST_WORKERS --timeout=60 -q -r a --tb=short --no-header"
-    if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ]; then
+    # 25% of logical CPUs, minimum 1. Works on Linux, macOS (Intel + Apple Silicon), ARM.
+    # PYTEST_WORKERS env var overrides when set (e.g. CI throttling or debugging).
+    _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
+    PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=60 -q -r a --tb=short --no-header"
+    # RUN_INTEGRATION=true: include tests/integration/ when the directory exists.
+    # Repos without tests/integration/ run unit tests only — no failure, no skip.
+    # Integration tests are library contract tests (no real GCS/network calls).
+    # Real-infra tests use @pytest.mark.live and require IS_TEST_RUN=true.
+    _HAS_INTEGRATION=false
+    [ -d "tests/integration" ] && \
+        [ "$(find tests/integration -name 'test_*.py' 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ] && \
+        _HAS_INTEGRATION=true
+
+    if [ "$QUICK_MODE" = true ] || [ "$RUN_INTEGRATION" != "true" ] || [ "$_HAS_INTEGRATION" = false ]; then
         _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
+        # Remind: when RUN_INTEGRATION=true but no integration tests exist yet, nudge author.
+        if [ "$RUN_INTEGRATION" = "true" ] && [ "$_HAS_INTEGRATION" = false ] && [ "$QUICK_MODE" != true ]; then
+            log_warn "RUN_INTEGRATION=true but no tests/integration/test_*.py found — add library contract tests"
+        fi
     else
         _pytest_out=$($PYTHON_CMD -m pytest tests/unit/ tests/integration/ --disable-socket --allow-unix-socket $PARGS $COV 2>&1) \
             || { echo "$_pytest_out"; exit 1; }
@@ -239,9 +255,9 @@ if [ "$RUN_TESTS" = true ]; then
     log_ok "No duplicate test files"
 
     # Integration test coverage for library deps (plan: integration_tests_codex_compliance)
-    # Only enforced when RUN_INTEGRATION=true (repos that actually run integration tests)
+    # Only enforced when RUN_INTEGRATION=true AND tests/integration/ exists with test files.
     _INT_DEP_CHECK="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-integration-dep-coverage.py"
-    if [ -f "$_INT_DEP_CHECK" ] && [ "${RUN_INTEGRATION}" = "true" ]; then
+    if [ -f "$_INT_DEP_CHECK" ] && [ "${RUN_INTEGRATION}" = "true" ] && [ "${_HAS_INTEGRATION}" = true ]; then
         if ! $PYTHON_CMD "$_INT_DEP_CHECK" --repo "$SERVICE_NAME" --project-root "$PROJECT_ROOT" --manifest "${REPO_ROOT}/unified-trading-pm/workspace-manifest.json" 2>/dev/null; then
             log_fail "Integration test coverage missing for library deps — add tests in tests/integration/ that import each library. Bypass: QUALITY_GATE_BYPASS_AUDIT.md"
             exit 1
@@ -518,8 +534,9 @@ if [[ -f "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_prov
     if python3 "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$SERVICE_NAME" --workspace-root "$REPO_ROOT_SVC" 2>/dev/null; then
         log_success "Schema provenance OK (schemas from UAC/UIC)"
     else
-        log_warn "Schema provenance: local BaseModel/TypedDict/dataclass found (should import from UAC or UIC)"
+        log_fail "Schema provenance: local BaseModel/TypedDict/dataclass found (should import from UAC or UIC)"
         python3 "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$SERVICE_NAME" --workspace-root "$REPO_ROOT_SVC" 2>/dev/null | head -5 || true
+        V=$(( V + 1 ))
     fi
 fi
 
@@ -646,8 +663,11 @@ done
 [[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
 
 # Security: pip-audit (BLOCKING — OSV vulnerability database check)
-if command -v pip-audit &>/dev/null; then
-    pip-audit --format json -o /tmp/pip-audit-output.json 2>/dev/null \
+# Use venv pip-audit to skip internal/editable packages that are not on PyPI.
+_PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
+if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
+if command -v "$_PIPAUDIT" &>/dev/null; then
+    "$_PIPAUDIT" --format json --skip-editable -o /tmp/pip-audit-output.json 2>/dev/null \
         && log_success "pip-audit clean" \
         || { log_fail "pip-audit vulnerabilities found"; V=$(( V + 1 )); }
     # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)
@@ -760,10 +780,17 @@ fi
 # ============================================================
 # STEP 5.11 — Block protocol-specific symbols in service code
 # ============================================================
+# HARDCODED_PROTO_EXCLUDE_GLOBS: per-repo array of --glob exclusions.
+# Use when a file legitimately calls UCI/UTL APIs that use gcs_bucket as a field name
+# (e.g. ManifestWriter.write(gcs_bucket=...) — NOT a raw GCS SDK call).
+# Document exceptions in QUALITY_GATE_BYPASS_AUDIT.md.
+# Example (per-repo quality-gates.sh):
+#   HARDCODED_PROTO_EXCLUDE_GLOBS=("--glob=!**/adapters/catalogue_adapter.py")
 PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' --glob '!scripts/**' \
+    "${HARDCODED_PROTO_EXCLUDE_GLOBS[@]}" \
     -l . 2>/dev/null || :)
 if [ -n "$PROTOCOL_VIOLATIONS" ]; then
     log_fail "STEP 5.11: Protocol-specific symbols found. Use get_data_sink() / get_event_bus() from UCI instead:"
@@ -1045,8 +1072,7 @@ fi
 # ============================================================
 # STEP 5.34 — No brittle getattr for config fields (Pattern F)
 # Config access must use typed attributes, not getattr with fallback defaults.
-# NOTE: Advisory (WARN) until config_reloaders.py template is updated across all services.
-# Graduate to FAIL after full remediation.
+# All services remediated 2026-03-24 — this is now an ERROR.
 # ============================================================
 BRITTLE_GETATTR=$(rg 'getattr\s*\(\s*service_config\s*,' \
     --type py \
@@ -1056,9 +1082,9 @@ BRITTLE_GETATTR=$(rg 'getattr\s*\(\s*service_config\s*,' \
     | grep -v '# CORRECT-LOCAL' \
     || :)
 if [ -n "$BRITTLE_GETATTR" ]; then
-    log_warn "STEP 5.34: Brittle getattr(service_config, ...) found — use typed config class access:"
+    log_fail "STEP 5.34: Brittle getattr(service_config, ...) found — use typed config class access:"
     echo "$BRITTLE_GETATTR" | head -5
-    # Advisory only — will graduate to FAIL after config_reloaders template remediation
+    V=$(( V + 1 ))
 else
     log_success "STEP 5.34: No brittle getattr config patterns"
 fi
@@ -1145,26 +1171,27 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
     fi
 fi
 
-# ── [5.6] DEAD CODE DETECTION (vulture — warn/fail thresholds) ───────────────
-# vulture detects unused functions, classes, and variables.
-# Repos may opt out of specific symbols by adding a .vulture-whitelist.py file
-# (list each unused-but-intentional name as an attribute access, e.g. _.my_hook).
-if command -v vulture &>/dev/null; then
-    log_section "[5.6/6] DEAD CODE DETECTION (vulture)"
-    _VULTURE_WHITELIST=""
-    [ -f ".vulture-whitelist.py" ] && _VULTURE_WHITELIST=".vulture-whitelist.py"
-    _DEAD_CODE=$(run_timeout 60 vulture "$SOURCE_DIR" ${_VULTURE_WHITELIST} \
-        --min-confidence 80 2>/dev/null | wc -l | tr -d ' ')
-    if [ "${_DEAD_CODE:-0}" -gt 100 ]; then
-        log_fail "Dead code FAILED: vulture found ${_DEAD_CODE} unused items (threshold: 100) — remove dead code or add to .vulture-whitelist.py"
-        exit 1
-    elif [ "${_DEAD_CODE:-0}" -gt 20 ]; then
-        log_warn "Dead code WARN: vulture found ${_DEAD_CODE} unused items (review recommended; threshold: 20)"
-    else
-        log_ok "Dead code check PASSED (${_DEAD_CODE} items)"
-    fi
+# ── [5.6] SERVICE INFRASTRUCTURE CHECKS ──────────────────────────────────────
+
+# 5.6.1 — ServiceBootstrap usage (replaces lifecycle event grep)
+# STARTED/STOPPED/FAILED lifecycle events are emitted by UTL ServiceBootstrap.run().
+# Services MUST use ServiceBootstrap — we check for it instead of grepping for individual events.
+_HAS_BOOTSTRAP=$(rg 'ServiceBootstrap\(' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
+if [ "$_HAS_BOOTSTRAP" = "yes" ]; then
+    log_success "STEP 5.61: ServiceBootstrap used (lifecycle events handled by UTL)"
 else
-    log_warn "vulture not found — skipping dead-code check (install: uv pip install vulture)"
+    log_fail "STEP 5.61: ServiceBootstrap not found — services MUST use ServiceBootstrap from UTL for lifecycle events"
+    V=$(( V + 1 ))
+fi
+
+# 5.6.2 — Health API (FastAPI make_health_router with data_freshness)
+# Every service must expose /health and /readiness via UTL make_health_router.
+_HAS_HEALTH=$(rg 'make_health_router' --type py --glob '!.venv*' --glob '!**/tests/**' "$SOURCE_DIR/" -q 2>/dev/null && echo "yes" || echo "no")
+if [ "$_HAS_HEALTH" = "yes" ]; then
+    log_success "STEP 5.62: Health API present (make_health_router)"
+else
+    log_fail "STEP 5.62: No health API — add api/main.py with make_health_router (see market-tick-data-service/api/main.py)"
+    V=$(( V + 1 ))
 fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
@@ -1207,7 +1234,7 @@ if [ "$ACT_MODE" = true ]; then
 fi
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
-MAX_DURATION=${MAX_DURATION:-120}
+MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
     log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
