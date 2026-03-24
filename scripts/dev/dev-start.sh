@@ -565,7 +565,7 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: bash scripts/dev/dev-start.sh [OPTIONS]"
       echo ""
       echo "Target options (pick one or more):"
-      echo "  --stack NAME    Start a UI+API stack (e.g. deployment, batch-audit)"
+      echo "  --stack NAME    Start a UI+API stack (e.g. deployment, unified-trading)"
       echo "  --ui NAME       Start just a UI repo (e.g. deployment-ui)"
       echo "  --api NAME      Start just an API repo (e.g. deployment-api)"
       echo "  --all           Start all stacks"
@@ -602,7 +602,7 @@ while [[ $# -gt 0 ]]; do
       echo "  bash scripts/dev/dev-start.sh --stack deployment --frontend-only     # mock mode, UI only"
       echo "  bash scripts/dev/dev-start.sh --all --backend-only                   # mock mode, all APIs only"
       echo "  bash scripts/dev/dev-start.sh --all --mode real --frontend-only      # real mode, all UIs only"
-      echo "  bash scripts/dev/dev-start.sh --ui deployment-ui --api batch-audit-api"
+      echo "  bash scripts/dev/dev-start.sh --ui unified-trading-system-ui --api unified-trading-api"
       exit 0
       ;;
     *)

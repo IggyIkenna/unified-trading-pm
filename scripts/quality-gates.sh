@@ -3,8 +3,8 @@
 SERVICE_NAME="unified-trading-pm"
 SOURCE_DIR="scripts"
 MIN_COVERAGE=70
-RUN_INTEGRATION=false
-PYTEST_WORKERS=${PYTEST_WORKERS:-2}
+RUN_INTEGRATION=true
+PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 LOCAL_DEPS=("unified-events-interface" "unified-internal-contracts")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
 PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time on slow CI runners

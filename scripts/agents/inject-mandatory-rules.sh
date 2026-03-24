@@ -78,7 +78,7 @@ fi)
 2. NEVER use \`pip install\` — ALWAYS \`uv pip install\`
 3. NEVER use \`os.getenv()\` — ALWAYS \`UnifiedCloudConfig\`
 4. NEVER run \`basedpyright .\` or \`basedpyright\` (no args) — ALWAYS \`timeout 120 basedpyright <source_dir>/\`
-5. NEVER run \`git push\` — ALWAYS \`bash scripts/quickmerge.sh "msg" --agent\`
+5. NEVER use \`git push\` **alone** to land work — ALWAYS \`bash scripts/quickmerge.sh "msg" --agent\` for commit+PR. **Exception:** if the branch has **unpushed commits** before quickmerge, run \`git push -u origin <branch>\` first so \`origin/<branch>\` matches your tip (stash does not protect commits). See \`always-use-quickmerge.mdc\` § Push before quickmerge.
 6. NEVER use \`--dep-branch\` — it is HUMAN-ONLY and exits(1) with \`--agent\`
 7. NEVER run \`git reset --hard\`, \`git clean -fd\`, or \`git checkout .\` — these destroy work
 8. NEVER create *_SUMMARY.md, *_STATUS.md, READY_TO_*, COMPLETION_* files
@@ -88,8 +88,9 @@ fi)
 12. Only run basedpyright 2-3 times total per session — once to see errors, once to verify fix.
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SELF-CHECK: If you catch yourself about to use pip, os.getenv, git push,
-# pytest directly, or basedpyright without a source dir — STOP. Re-read above.
+# SELF-CHECK: If you catch yourself about to use pip, os.getenv, git push **instead of**
+# quickmerge, pytest directly, or basedpyright without a source dir — STOP. Re-read above.
+# (A safety \`git push\` to sync an unpushed branch tip before quickmerge is OK.)
 # ══════════════════════════════════════════════════════════════════════════════
 
 PREAMBLE_EOF

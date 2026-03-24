@@ -285,60 +285,60 @@ tradfi:
 # =============================================================================
 defi:
   # Excluded venues (launched after April 2023):
-  # - UNISWAPV4-ETH: Launched 2024-11-01
+  # - UNISWAPV4-ETHEREUM: Launched 2024-11-01
   # - MORPHO-ETHEREUM: Launched 2024-01-08
   # - ETHERFI: Launched 2024-01-01
   # - ETHENA: Launched 2024-02-16
 
-  UNISWAPV2-ETH:
+  UNISWAPV2-ETHEREUM:
     instrument_types: [POOL]
     data_types: [swaps, liquidity]
     instruments:
-      - instrument_key: "UNISWAPV2-ETH:POOL:ETH-USDT@ETHEREUM"
+      - instrument_key: "UNISWAPV2-ETHEREUM:POOL:ETH-USDT@ETHEREUM"
         base_asset: ETH
         quote_asset: USDT
         chain: ethereum
-      - instrument_key: "UNISWAPV2-ETH:POOL:ETH-USDC@ETHEREUM"
+      - instrument_key: "UNISWAPV2-ETHEREUM:POOL:ETH-USDC@ETHEREUM"
         base_asset: ETH
         quote_asset: USDC
         chain: ethereum
-      - instrument_key: "UNISWAPV2-ETH:POOL:WBTC-ETH@ETHEREUM"
+      - instrument_key: "UNISWAPV2-ETHEREUM:POOL:WBTC-ETH@ETHEREUM"
         base_asset: WBTC
         quote_asset: ETH
         chain: ethereum
 
-  UNISWAPV3-ETH:
+  UNISWAPV3-ETHEREUM:
     instrument_types: [POOL]
     data_types: [swaps, liquidity]
     instruments:
-      - instrument_key: "UNISWAPV3-ETH:POOL:ETH-USDT-500@ETHEREUM"
+      - instrument_key: "UNISWAPV3-ETHEREUM:POOL:ETH-USDT-500@ETHEREUM"
         base_asset: ETH
         quote_asset: USDT
         chain: ethereum
         fee_tier: 500
-      - instrument_key: "UNISWAPV3-ETH:POOL:ETH-USDC-500@ETHEREUM"
+      - instrument_key: "UNISWAPV3-ETHEREUM:POOL:ETH-USDC-500@ETHEREUM"
         base_asset: ETH
         quote_asset: USDC
         chain: ethereum
         fee_tier: 500
-      - instrument_key: "UNISWAPV3-ETH:POOL:WBTC-ETH-3000@ETHEREUM"
+      - instrument_key: "UNISWAPV3-ETHEREUM:POOL:WBTC-ETH-3000@ETHEREUM"
         base_asset: WBTC
         quote_asset: ETH
         chain: ethereum
         fee_tier: 3000
 
-  AAVE_V3_ETH:
+  AAVEV3_ETHEREUM:
     instrument_types: [POOL]
     data_types: [utilization, rate_indices, oracle_prices]
     instruments:
-      - instrument_key: "AAVE_V3_ETH:A_TOKEN:AWETH@ETHEREUM"
+      - instrument_key: "AAVEV3_ETHEREUM:A_TOKEN:AWETH@ETHEREUM"
         base_asset: WETH
         chain: ethereum
         notes: "AAVE V3 supply position"
-      - instrument_key: "AAVE_V3_ETH:A_TOKEN:AUSDT@ETHEREUM"
+      - instrument_key: "AAVEV3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM"
         base_asset: USDT
         chain: ethereum
-      - instrument_key: "AAVE_V3_ETH:A_TOKEN:AUSDC@ETHEREUM"
+      - instrument_key: "AAVEV3_ETHEREUM:A_TOKEN:AUSDC@ETHEREUM"
         base_asset: USDC
         chain: ethereum
 

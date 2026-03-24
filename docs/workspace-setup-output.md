@@ -1,3 +1,10 @@
+<!-- markdownlint-disable -->
+
+> **2026-03-24:** Captured **historical** bootstrap log. Repo names such as `execution-results-api` and
+> `trading-analytics-ui` appear because this transcript predates the **archive/** sweep. **Current** layout:
+> `workspace-manifest.json`, `scripts/dev/ui-api-mapping.json`, **`archive/README.md`**. The former
+> **execution-results** HTTP surface is **`unified-trading-api`** (Python package **`unified_trading_api`**).
+
 hk@hk:/data/Upwork/On Going/Ikenna/new-workspace/unified-trading-system-repos$ git clone
 git@github.com:IggyIkenna/unified-trading-pm.git
 

@@ -10,7 +10,7 @@ tags: [instruments, api-keys, data-access, uds, domain-layer]
 # Domain Data Layer: Service → UDS → UCS
 
 RULE: Services use unified_domain_client for ALL domain data. unified_trading_services is for cloud primitives only.
-WHY: UTS domain client stubs have been deleted — importing them from UTS will fail at import time.
+WHY: UTL domain client stubs have been deleted — importing them from UTL will fail at import time.
 CODEX: 02-data/subscription-model.md, 05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md
 ENFORCED BY: UCS_DOMAIN_IMPORT quality gate check (blocking)
 
@@ -38,7 +38,7 @@ sink = get_data_sink(routing_key="instruments")  # maps to PROTOCOL_DATA_SINK_BU
 sink.write(data=output_df, path=output_path)
 ```
 
-## Import from UTS (cloud primitives — backward compat only):
+## Import from UTL (cloud primitives — backward compat only):
 ```python
 from unified_trading_services import (
     get_storage_client, get_secret_client,  # re-exported from UCI

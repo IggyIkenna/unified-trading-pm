@@ -3,6 +3,11 @@
 > Paste this entire prompt into a new agent session to execute Phase 3. REQUIRES Phase 1 AND Phase 2 fully complete.
 > Verify preconditions before starting.
 
+> **2026-03-24 topology note:** The **active** surface is **`unified-trading-system-ui`** + **`deployment-ui`** and APIs
+> **`unified-trading-api`**, **`auth-api`**, **`deployment-api`**, **`client-reporting-api`**, **`market-data-api`**
+> (`scripts/dev/ui-api-mapping.json`). Sections below that list **11 UIs** or **`execution-results-api`** are
+> **historical** parallel-agent staging; legacy repos live under workspace-root **`archive/README.md`**.
+
 ---
 
 Follow all workspace cursor rules in .cursorrules. No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git
@@ -33,7 +38,7 @@ This means — no exceptions, no shortcuts:
 - **Full observability** — every request logs `correlation_id`, `service_name`, `timestamp`. Every failure is
   structured.
 - **Every secret** through Secret Manager. Every config through `UnifiedCloudConfig`.
-- **Every external call** has retry logic (`@with_retry` from UTS) and a timeout.
+- **Every external call** has retry logic (`@with_retry` from UTL) and a timeout.
 - **Every async operation** has an explicit timeout — no indefinite awaits.
 - If it would fail a Citadel code review, it is not done.
 
@@ -98,11 +103,12 @@ If any check fails: STOP. Complete Phase 1/2 first.
 | RES    | risk-and-exposure-service         | F     |
 | AS     | alerting-service                  | F     |
 
-**T5 API Services (3):** `execution-results-api`, `market-data-api`, `client-reporting-api`
+**T5 API Services (active SSOT):** `unified-trading-api`, `auth-api`, `deployment-api`, `client-reporting-api`,
+`market-data-api` — see `ui-api-mapping.json` (archived split APIs: `archive/README.md`).
 
-**T6 UIs (11):** `batch-audit-ui`, `client-reporting-ui`, `deployment-ui`, `execution-analytics-ui`,
-`live-health-monitor-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui`, `settlement-ui`, `strategy-ui`,
-`trading-analytics-ui`
+**T6 UIs (historical list — archived split UIs):** `batch-audit-ui`, `client-reporting-ui`, `deployment-ui`,
+`execution-analytics-ui`, `live-health-monitor-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui`,
+`settlement-ui`, `strategy-ui`, `trading-analytics-ui` — **active:** `unified-trading-system-ui` + `deployment-ui` only.
 
 ---
 

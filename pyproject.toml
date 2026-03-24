@@ -18,6 +18,7 @@ dependencies = [
     "basedpyright==1.38.2",
     "pip-audit>=2.7.0,<3.0.0",
     "bandit>=1.7.0,<2.0.0",
+    "duckdb>=1.2.0,<2.0.0",
 ]
 [tool.setuptools.packages.find]
 include = []

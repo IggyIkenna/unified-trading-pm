@@ -115,6 +115,14 @@ bash scripts/quickmerge.sh "your message" --agent   # ALWAYS --agent in Claude C
 - `--agent --skip-typecheck` for max speed (lint + format + codex only)
 - Staging lock: `staging_status.locked=true` in manifest = SIT running, do not merge to main
 
+**Push before quickmerge (agents and humans)** — `quickmerge` stashes **uncommitted** work, then may align your branch
+to `origin/<branch>`. That does **not** protect **commits** that exist only locally: the branch pointer can move to
+match the remote and leave earlier local-only commits off the branch (recoverable via `git reflog`, but avoid the
+surprise). **Rule:** If you already ran `git commit` on `feat/your-branch` and those commits are **not** on `origin`
+yet, run `git push -u origin feat/your-branch` **before** `quickmerge` (or rely on quickmerge alone to create the commit
+so there are no orphan local commits). Prefer the two-pass model: Pass 1 QG → Pass 2 `quickmerge --agent` with
+**either** a clean working tree of uncommitted changes **or** a pushed branch tip.
+
 **Untrack ignored files** — If tracked files match `.gitignore`, untrack them so history is clean and clones don't get
 bad files. Safe workflow: (1) detect: `git ls-files --ignored --exclude-standard`; (2) untrack:
 `git rm --cached <files>` (or `git rm -r --cached <dir>` for dirs). Never bare `git rm` — that deletes files from disk.

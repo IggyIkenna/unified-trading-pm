@@ -86,7 +86,7 @@ Services that should adopt this pattern (FastAPI variant):
 - position-balance-monitor-service
 - alerting-service
 - market-data-api
-- ml-inference-api
-- ml-training-api
-- execution-results-api
+- unified-trading-api
+- auth-api
+- client-reporting-api
 - deployment-api

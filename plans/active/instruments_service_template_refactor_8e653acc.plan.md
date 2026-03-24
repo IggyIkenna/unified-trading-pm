@@ -348,8 +348,8 @@ fully covers all venues, they are deleted too.
 Two files must be split BEFORE the main deletions (Tracks 2a, 2b) to avoid breaching 900 lines when app/core logic
 merges in:
 
-- `**engine/venues/ccxt_service.py` (866L)\*\* → split into `ccxt_service.py` + `ccxt_symbols.py`
-- `**engine/processors/cefi_processor.py` (827L)\*\* → split into `cefi_market_data.py` + `cefi_metadata.py`
+- `**engine/venues/ccxt_service.py` (866L) → split into `ccxt_service.py` + `ccxt_symbols.py`
+- `**engine/processors/cefi_processor.py` (827L) → split into `cefi_market_data.py` + `cefi_metadata.py`
 
 ---
 

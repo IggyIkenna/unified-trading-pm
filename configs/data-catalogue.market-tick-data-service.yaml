@@ -386,7 +386,7 @@ shard_status:
   DEFI:
     _status: "27.8% overall, but found venues at 100%. Missing: all lending/LST venues + UniV4."
     _sample_period: 2025-01-01 to 2025-01-31
-    UNISWAPV2-ETH:
+    UNISWAPV2-ETHEREUM:
       instrument_types:
         POOL:
           data_types:
@@ -399,7 +399,7 @@ shard_status:
           latest_data_date: null
           assignee: ""
           notes: 100% -- swaps 100%, liquidity 100%. Fully complete.
-    UNISWAPV3-ETH:
+    UNISWAPV3-ETHEREUM:
       instrument_types:
         POOL:
           data_types:
@@ -412,7 +412,7 @@ shard_status:
           latest_data_date: null
           assignee: ""
           notes: 100% for swaps. Liquidity NOT in response -- may be missing or different path.
-    UNISWAPV4-ETH:
+    UNISWAPV4-ETHEREUM:
       instrument_types:
         POOL:
           data_types:
@@ -425,7 +425,7 @@ shard_status:
           latest_data_date: null
           assignee: jinzhaohu
           notes: 22.6% -- only 7/31 dates. swaps only, no liquidity. Needs backfill.
-    AAVE_V3_ETH:
+    AAVEV3_ETHEREUM:
       instrument_types:
         A_TOKEN:
           data_types:
@@ -526,7 +526,7 @@ priority_gaps:
   moderate:
     - "UPBIT: 32.3% -- sparse spot data"
     - "OKX SPOT: 22.6% -- spot folder underrepresented"
-    - "UNISWAPV4-ETH: 22.6% -- only 7 days"
+    - "UNISWAPV4-ETHEREUM: 22.6% -- only 7 days"
     - "COINBASE: 45.2%"
     - "BINANCE-SPOT: 58.1%"
   near_complete:
@@ -538,8 +538,8 @@ priority_gaps:
     - "FX: 54.8%"
     - "CBOE: 51.6%"
   complete:
-    - "UNISWAPV2-ETH: 100%"
-    - "UNISWAPV3-ETH: 100% (swaps)"
+    - "UNISWAPV2-ETHEREUM: 100%"
+    - "UNISWAPV3-ETHEREUM: 100% (swaps)"
 tick_windows:
   - start: "2023-05-01"
     end: "2023-05-31"

@@ -14,6 +14,8 @@
 #   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --sync-git           # fetch + report drift vs active_feature_branch (from manifest)
 #   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --sync-git=main      # fetch + report drift vs origin/main
 #   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --sync-git=staging   # fetch + report drift vs origin/staging
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --repos=unified-features-interface,market-tick-data-service
+#   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --repos=unified-features-interface --force
 #
 # Run from workspace root (parent of unified-trading-pm):
 #   cd /path/to/unified-trading-system-repos
@@ -26,6 +28,7 @@ ROLLOUT_FIRST=false
 SYNC_GIT=false
 SYNC_GIT_BRANCH=""
 FORCE=false
+REPO_FILTER=""
 for arg in "$@"; do
   case $arg in
     --check) CHECK_ONLY=true ;;
@@ -33,8 +36,9 @@ for arg in "$@"; do
     --force) FORCE=true ;;
     --sync-git) SYNC_GIT=true ;;
     --sync-git=*) SYNC_GIT=true; SYNC_GIT_BRANCH="${arg#--sync-git=}" ;;
+    --repos=*) REPO_FILTER="${arg#--repos=}" ;;
     --help | -h)
-      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--force] [--sync-git[=BRANCH]]"
+      echo "Usage: bash run-all-setup.sh [--check] [--rollout-first] [--force] [--sync-git[=BRANCH]] [--repos=REPO1,REPO2,...]"
       echo "  --check              Run setup.sh --check only (verify, no install)"
       echo "  --rollout-first      Propagate setup.sh + quality-gates.sh + quickmerge.sh + build infra first"
       echo "                       Rollout failures are non-fatal — setup continues with warnings"
@@ -45,6 +49,9 @@ for arg in "$@"; do
       echo "                       BRANCH: main | staging | feature (default) | any-branch-name"
       echo "                       'feature' (default) reads active_feature_branch from workspace-manifest.json"
       echo "                       Never merges — read-only. Useful on new machines to see stale repos."
+      echo "  --repos=REPO1,REPO2  Only run setup for the listed repos (comma-separated)."
+      echo "                       Tier ordering is preserved — filtered repos still run in correct tier order."
+      echo "                       Example: --repos=unified-features-interface,market-tick-data-service"
       echo ""
       echo "Run from workspace root (parent of unified-trading-pm):"
       echo "  cd /path/to/unified-trading-system-repos"
@@ -53,6 +60,21 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+# Parse --repos filter into a comma-delimited string for simple matching
+# Format: ",repo1,repo2,repo3," — leading/trailing commas enable substring match
+REPO_FILTER_STR=""
+REPO_FILTER_COUNT=0
+if [ -n "$REPO_FILTER" ]; then
+  REPO_FILTER_STR=",$REPO_FILTER,"
+  IFS=',' read -ra _FILTER_REPOS <<< "$REPO_FILTER"
+  REPO_FILTER_COUNT=${#_FILTER_REPOS[@]}
+fi
+
+_in_repo_filter() {
+  [ -z "$REPO_FILTER_STR" ] && return 0  # no filter = accept all
+  [[ "$REPO_FILTER_STR" == *",$1,"* ]]
+}
 
 # ── Resolve workspace root ────────────────────────────────────────────────────
 if [ -f "$(pwd)/unified-trading-pm/workspace-manifest.json" ]; then
@@ -175,6 +197,7 @@ fi
 echo "━━━ Run setup in all repos (topological tier order, parallel within tier) ━━━"
 echo "  Workspace: $WORKSPACE_ROOT"
 echo "  Mode: $([ "$CHECK_ONLY" = true ] && echo 'CHECK' || ([ "$FORCE" = true ] && echo 'FORCE REINSTALL' || echo 'INSTALL'))"
+[ -n "$REPO_FILTER_STR" ] && echo "  Filter: $REPO_FILTER ($REPO_FILTER_COUNT repo(s))"
 echo ""
 
 # ── Parse manifest into "LEVEL:repo1 repo2 ..." lines ────────────────────────
@@ -205,9 +228,13 @@ while IFS=: read -r LEVEL REPOS_STR; do
   # shellcheck disable=SC2206
   ALL_REPOS=($REPOS_STR)
 
-  # Pre-filter: skip missing dirs / repos without setup.sh before forking
+  # Pre-filter: skip missing dirs / repos without setup.sh / repos not in --repos filter
   RUNNABLE=()
   for repo in "${ALL_REPOS[@]}"; do
+    # If --repos filter is set, skip repos not in the filter
+    if ! _in_repo_filter "$repo"; then
+      continue
+    fi
     rp="$WORKSPACE_ROOT/$repo"
     if [ ! -d "$rp" ] || [ ! -f "$rp/scripts/setup.sh" ]; then
       echo "  [SKIP] $repo"

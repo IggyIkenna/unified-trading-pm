@@ -1,3 +1,8 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`.
+
+---
+
 # Deferred Audit Issues — Final Status (2026-03-03)
 
 **Date:** 2026-03-02 (decisions finalized 2026-03-03, execution completed 2026-03-03) **Source:**
@@ -215,7 +220,7 @@ Services: alerting-service, execution-service, features-delta-one-service,
 5. Update pyproject.toml: change --cov-fail-under from 40 to 70
 6. Verify pytest passes at new threshold
 
-Repos (14): deployment-service, execution-service, execution-results-api,
+Repos (14): deployment-service, execution-service, unified-trading-api,
   features-delta-one-service, features-sports-service, features-volatility-service,
   market-data-processing-service, ml-training-service, position-balance-monitor-service,
   risk-and-exposure-service, unified-domain-client, unified-events-interface,
@@ -252,8 +257,9 @@ Already included in Group C above.
 
 ### ISS-059: CI script to check imports against declared dependencies
 
-**Background:** ISS-011 investigation found execution-results-api doesn't actually depend on UDC, but UDC was available
-in the workspace venv due to aggregate install. Quality gates should catch undeclared imports.
+**Background:** ISS-011 investigation found **`unified-trading-api`** (then `execution-results-api`) doesn't actually
+depend on UDC, but UDC was available in the workspace venv due to aggregate install. Quality gates should catch
+undeclared imports.
 
 **Agent instructions:**
 

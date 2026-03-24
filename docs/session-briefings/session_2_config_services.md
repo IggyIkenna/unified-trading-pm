@@ -1,40 +1,41 @@
 # Session 2: Config & Service Hardening
 
+> **2026-03-24:** Historical session charter. API names below were updated to the **consolidated** surface
+> (**`unified-trading-api`**, **`auth-api`**) where they referred to standalone repos now under **`archive/`**. See
+> **`archive/README.md`** and **`scripts/dev/ui-api-mapping.json`**.
+
 ## Services & Repos Affected
 
 > **DO NOT work on these repos in other sessions -- they are owned by this session.**
 
-| Repo                             | What Changes                                                                | Risk |
-| -------------------------------- | --------------------------------------------------------------------------- | ---- |
-| unified-config-interface         | 5 domain config schemas (Risk, AlertRule, RateLimit, FeatureFlag, Strategy) | MED  |
-| unified-trading-library          | ConfigReloader / DomainConfigReloader enhancements if needed                | LOW  |
-| config-api                       | POST /config/publish endpoint, CLI command, --dry-run flag                  | MED  |
-| market-tick-data-service         | 8 config placement violations + hot-reload callback                         | HIGH |
-| market-data-processing-service   | Hot-reload callback wiring                                                  | LOW  |
-| features-technical-service       | Hot-reload callback wiring                                                  | LOW  |
-| features-microstructure-service  | Hot-reload callback wiring                                                  | LOW  |
-| features-orderflow-service       | Hot-reload callback wiring                                                  | LOW  |
-| features-alternative-service     | Hot-reload callback wiring                                                  | LOW  |
-| features-cross-sectional-service | Hot-reload callback wiring                                                  | LOW  |
-| features-sentiment-service       | Hot-reload callback wiring                                                  | LOW  |
-| features-onchain-service         | Hot-reload callback wiring                                                  | LOW  |
-| features-sports-service          | Hot-reload callback wiring                                                  | LOW  |
-| strategy-service                 | Hot-reload callback wiring (StrategyDomainConfig)                           | MED  |
-| trading-agent-service            | Hot-reload callback wiring                                                  | LOW  |
-| risk-management-service          | Hot-reload callback (RiskDomainConfig -- atomic swap critical)              | HIGH |
-| position-balance-monitor-service | Hot-reload callback wiring                                                  | LOW  |
-| pnl-attribution-service          | Hot-reload callback wiring                                                  | LOW  |
-| alerting-service                 | Hot-reload callback (AlertRuleDomainConfig)                                 | MED  |
-| reconciliation-service           | Hot-reload callback wiring                                                  | LOW  |
-| ml-training-service              | Hot-reload callback wiring                                                  | LOW  |
-| ml-inference-service             | Hot-reload callback wiring                                                  | LOW  |
-| deployment-api                   | Mock mode audit + response schema standardization (Plan C)                  | LOW  |
-| trading-analytics-api            | Mock mode audit + response schema standardization (Plan C)                  | LOW  |
-| batch-audit-api                  | Mock mode audit + response schema standardization (Plan C)                  | LOW  |
-| ml-training-api                  | Mock mode audit + response schema standardization (Plan C)                  | LOW  |
-| ml-inference-api                 | Mock mode audit + response schema standardization (Plan C)                  | LOW  |
-| market-data-api                  | Mock mode audit + response schema standardization (Plan C)                  | LOW  |
-| risk-management-service          | Mock mode audit + health endpoints (Plan C)                                 | LOW  |
+| Repo                             | What Changes                                                                     | Risk |
+| -------------------------------- | -------------------------------------------------------------------------------- | ---- |
+| unified-config-interface         | 5 domain config schemas (Risk, AlertRule, RateLimit, FeatureFlag, Strategy)      | MED  |
+| unified-trading-library          | ConfigReloader / DomainConfigReloader enhancements if needed                     | LOW  |
+| unified-trading-api (config)     | POST /config/publish endpoint, CLI command, --dry-run flag                       | MED  |
+| market-tick-data-service         | 8 config placement violations + hot-reload callback                              | HIGH |
+| market-data-processing-service   | Hot-reload callback wiring                                                       | LOW  |
+| features-technical-service       | Hot-reload callback wiring                                                       | LOW  |
+| features-microstructure-service  | Hot-reload callback wiring                                                       | LOW  |
+| features-orderflow-service       | Hot-reload callback wiring                                                       | LOW  |
+| features-alternative-service     | Hot-reload callback wiring                                                       | LOW  |
+| features-cross-sectional-service | Hot-reload callback wiring                                                       | LOW  |
+| features-sentiment-service       | Hot-reload callback wiring                                                       | LOW  |
+| features-onchain-service         | Hot-reload callback wiring                                                       | LOW  |
+| features-sports-service          | Hot-reload callback wiring                                                       | LOW  |
+| strategy-service                 | Hot-reload callback wiring (StrategyDomainConfig)                                | MED  |
+| trading-agent-service            | Hot-reload callback wiring                                                       | LOW  |
+| risk-management-service          | Hot-reload callback (RiskDomainConfig -- atomic swap critical)                   | HIGH |
+| position-balance-monitor-service | Hot-reload callback wiring                                                       | LOW  |
+| pnl-attribution-service          | Hot-reload callback wiring                                                       | LOW  |
+| alerting-service                 | Hot-reload callback (AlertRuleDomainConfig)                                      | MED  |
+| reconciliation-service           | Hot-reload callback wiring                                                       | LOW  |
+| ml-training-service              | Hot-reload callback wiring                                                       | LOW  |
+| ml-inference-service             | Hot-reload callback wiring                                                       | LOW  |
+| deployment-api                   | Mock mode audit + response schema standardization (Plan C)                       | LOW  |
+| unified-trading-api              | Mock mode audit + OpenAPI/schema parity (Plan C; supersedes archived split APIs) | LOW  |
+| market-data-api                  | Mock mode audit + response schema standardization (Plan C)                       | LOW  |
+| risk-management-service          | Mock mode audit + health endpoints (Plan C)                                      | LOW  |
 
 ### Shared Repo Boundaries
 
@@ -49,13 +50,13 @@
 - **ml-training-service**: Session 2 OWNS hot-reload callback only. Session 4 OWNS grid config refactor.
 - **ml-inference-service**: Session 2 OWNS hot-reload callback only. Session 4 OWNS grid config refactor.
 - **alerting-service**: Session 2 OWNS hot-reload callback. Session 3 OWNS S2S auth enrollment.
-- **config-api**: Session 2 OWNS entirely (publish endpoint, CLI, mock mode fixes).
+- **unified-trading-api (config routes)**: Session 2 OWNS config publish surface (was standalone config-api; archived).
 - **9 API repos** (mock mode/response schema): Session 2 OWNS mock mode completeness and response schema
   standardization. Session 3 OWNS auth middleware standardization on these same repos. No file overlap -- Session 2
   touches mock_data.py/models.py/health endpoints; Session 3 touches middleware/auth.py.
 - **client-reporting-api**: Session 2 OWNS mock mode and response schema only. Session 3 OWNS business features (P&L,
   invoicing, DocuSign).
-- **execution-results-api**: Session 2 OWNS mock mode completeness. Session 1 OWNS OpenAPI spec addition.
+- **unified-trading-api**: Session 2 OWNS mock mode completeness. Session 1 OWNS OpenAPI spec addition.
 
 ## Plans Covered
 
@@ -103,15 +104,15 @@
    - QG gate: all 21 services
 
 4. **Plan C Phase 1** (PARALLEL with Plan B Phase 1, after Plan C Phase 0):
-   - Fix execution-results-api mock mode + OpenAPI coverage
+   - Fix unified-trading-api mock mode + OpenAPI coverage
    - Fix mock mode gaps in remaining APIs
    - Fix health endpoint gaps
 
 5. **Plan B Phase 2** (after Phase 1):
-   - POST /config/publish endpoint in config-api
-   - CLI command: `config-api publish --domain risk --file risk-config.yaml`
+   - POST /config/publish endpoint on unified-trading-api
+   - CLI command: `unified-trading-api config publish --domain risk --file risk-config.yaml`
    - --dry-run flag
-   - QG gate: config-api
+   - QG gate: unified-trading-api
 
 6. **Plan C Phase 2** (after Phase 1):
    - Standardize error response shape across all 12 APIs
@@ -167,10 +168,10 @@ This session needs to address the following honest status corrections:
 
 ## Success Criteria
 
-- [ ] All QGs pass on: unified-config-interface, unified-trading-library, config-api, all 21 services
+- [ ] All QGs pass on: unified-config-interface, unified-trading-library, unified-trading-api, all 21 services
 - [ ] 5 domain config schemas added to UCfgI (Risk, AlertRule, RateLimit, FeatureFlag, Strategy)
 - [ ] All 21 services have working hot-reload callbacks (not log-only stubs)
-- [ ] config-api has POST /config/publish with schema validation and dry-run mode
+- [ ] unified-trading-api has POST /config/publish with schema validation and dry-run mode
 - [ ] Zero config placement violations across all services
 - [ ] All 12 APIs have complete mock mode and consistent response schemas
 - [ ] Standard error shape and pagination across all APIs

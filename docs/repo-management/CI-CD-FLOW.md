@@ -776,7 +776,7 @@ SIT START:
   → reads staging_commits from PM manifest (exact SHA set)
   → dispatches sit-lock to PM (payload: { commit_shas: {...} })
   → PM's sit-gate.yml: sets locked=true, locked_since=utcnow(), locked_reason="SIT running"
-  → deployment-tests: clones v1 service repos (market-data-service, execution-service, trading-analytics-api)
+  → deployment-tests: clones v1 service repos (market-data-service, execution-service, unified-trading-api)
     from **staging** branch before docker compose up — build-from-source (Option A). See § SIT Deployment-Tests Build Source.
 
 SIT PASS:
@@ -834,7 +834,7 @@ Multiple `feat/*` PRs merging to staging within 10 minutes form a **batch** — 
 **SSOT:** `docs/ci-cd-ssot.md` §7. This section summarizes the design.
 
 **Option A (current):** Build-from-source in GHA. Before `docker compose up`, `smoke-test-gate.yml` clones the v1
-service repos (market-data-service, execution-service, trading-analytics-api) from the **staging** branch as siblings of
+service repos (market-data-service, execution-service, unified-trading-api) from the **staging** branch as siblings of
 PM. Compose uses `build.context: ../../<repo>`. We validate the staged stack — cloning staging ensures we test exactly
 what will be promoted.
 

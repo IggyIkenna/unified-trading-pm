@@ -1,30 +1,46 @@
 # UI alignment — generators and docs (SSOT)
 
-**Purpose:** One place that lists how **unified-trading-system-ui** stays aligned with contracts, manifests, and strategy documentation. Use this before adding any new “generator” or sync path so we do not end up with two sources of truth.
+**Purpose:** One place that lists how **unified-trading-system-ui** stays aligned with contracts, manifests, and
+strategy documentation. Use this before adding any new “generator” or sync path so we do not end up with two sources of
+truth.
 
 **This file is the index.** Individual scripts keep their own docstrings; they point here for the full picture.
+
+**Consolidated surface (2026-03):** Active workspace SSOT targets **one primary trading UI**
+(`unified-trading-system-ui`) plus **deployment-ui** for deployment-focused flows, with APIs centered on
+**unified-trading-api**, **deployment-api**, and **auth-api** (see `scripts/dev/ui-api-mapping.json`). Legacy UIs and
+APIs that were removed from `workspace-manifest.json` — including **logs-dashboard-ui**, **live-health-monitor-ui**,
+**odum-research-website**, and **batch-audit-api** — live under the workspace-root **`archive/`** directory for
+reference only.
 
 ---
 
 ## When to re-run (not a one-off)
 
-These generators are **repeatable**: run them again whenever their **inputs** change. There is no separate “migration” mode.
+These generators are **repeatable**: run them again whenever their **inputs** change. There is no separate “migration”
+mode.
 
-| Trigger (examples) | Regenerate |
-| --- | --- |
-| UAC registry or enum changes, new venues, `VALID_*` constants | §1 `generate_ui_reference_data.py` |
-| `unified_internal_contracts` enums / presets used by the script | §1 |
-| `UnifiedCloudConfig` or config schema extraction in the script | §1 |
-| `unified-trading-pm/scripts/dev/ui-api-mapping.json` stacks | §1 |
-| `workspace-manifest.json`, `strategy-manifest.json`, data-flow manifest, deployment topology | §2 `generate_system_topology.py` |
-| UIC OpenAPI or HTTP contract surface for the UI | §3 OpenAPI / `uic-openapi-sync.yml` |
+| Trigger (examples)                                                                           | Regenerate                          |
+| -------------------------------------------------------------------------------------------- | ----------------------------------- |
+| UAC registry or enum changes, new venues, `VALID_*` constants                                | §1 `generate_ui_reference_data.py`  |
+| `unified_internal_contracts` enums / presets used by the script                              | §1                                  |
+| `UnifiedCloudConfig` or config schema extraction in the script                               | §1                                  |
+| `unified-trading-pm/scripts/dev/ui-api-mapping.json` stacks                                  | §1                                  |
+| `workspace-manifest.json`, `strategy-manifest.json`, data-flow manifest, deployment topology | §2 `generate_system_topology.py`    |
+| UIC OpenAPI or HTTP contract surface for the UI                                              | §3 OpenAPI / `uic-openapi-sync.yml` |
 
-**CI note:** Today these steps are **manual** (or ad-hoc in maintainer workflows), not a single scheduled job in every repo. If you add automation, document it **here** so there is still one index.
+**CI automation (2026-03-23):** The `uac-registry-sync.yml` and `uic-openapi-sync.yml` workflow templates auto-create
+PRs when UAC/UIC merge to main/staging. File paths corrected from `src/generated/` to `lib/registry/` and `lib/types/`.
+A `registry-drift` CI job in the UI repo's `ci.yml` should be added to fail PRs if the checked-in JSON/TS drifts from
+what the generators produce — this is the next automation step.
 
 ### §1 — `ui-reference-data.json` (full loop)
 
-1. **Workspace:** Sibling repos `unified-api-contracts`, `unified-config-interface`, `unified-internal-contracts` checked out next to `unified-trading-pm` (standard workspace layout).
-2. **Python path:** Imports need those packages on `PYTHONPATH` (repo roots that contain `unified_api_contracts`, `unified_config_interface`, `unified_internal_contracts`), **or** a venv where all three are installed editable (e.g. after `setup-workspace` + `uv sync` in a consumer that lists them as path deps).
+1. **Workspace:** Sibling repos `unified-api-contracts`, `unified-config-interface`, `unified-internal-contracts`
+   checked out next to `unified-trading-pm` (standard workspace layout).
+2. **Python path:** Imports need those packages on `PYTHONPATH` (repo roots that contain `unified_api_contracts`,
+   `unified_config_interface`, `unified_internal_contracts`), **or** a venv where all three are installed editable (e.g.
+   after `setup-workspace` + `uv sync` in a consumer that lists them as path deps).
 3. **Run** (from workspace root, adjust `PYTHONPATH` if needed):
 
    ```bash
@@ -42,9 +58,12 @@ These generators are **repeatable**: run them again whenever their **inputs** ch
       unified-trading-system-ui/lib/registry/ui-reference-data.json
    ```
 
-6. **`lib/registry/generated.ts`:** It **imports** the JSON. You do **not** need to edit it when only **values** inside existing keys change. If you add **new top-level sections** or new keys the UI must re-export, extend `generated.ts` (or add a consumer that reads `referenceData` directly).
+6. **`lib/registry/generated.ts`:** It **imports** the JSON. You do **not** need to edit it when only **values** inside
+   existing keys change. If you add **new top-level sections** or new keys the UI must re-export, extend `generated.ts`
+   (or add a consumer that reads `referenceData` directly).
 
-7. **Quality gates:** `cd unified-trading-system-ui && bash scripts/quality-gates.sh` (and UAC QG if you changed that repo).
+7. **Quality gates:** `cd unified-trading-system-ui && bash scripts/quality-gates.sh` (and UAC QG if you changed that
+   repo).
 
 ### §2 — `system-topology.json`
 
@@ -54,62 +73,89 @@ Same workspace root assumption. Run:
 python3 unified-trading-pm/scripts/openapi/generate_system_topology.py
 ```
 
-Default output: `unified-api-contracts/openapi/system-topology.json`. Re-run after manifest edits; consume from tooling or future UI features (not the main `ui-reference-data.json` path).
+Default output: `unified-api-contracts/openapi/system-topology.json`. Re-run after manifest edits; consume from tooling
+or future UI features (not the main `ui-reference-data.json` path).
 
 ---
 
 ## 1. Machine-generated JSON for UI registries (extend, do not duplicate)
 
-| Output | Generator | Default path | UI consumption |
-| --- | --- | --- | --- |
+| Output                   | Generator                                                                  | Default path                                           | UI consumption                                                                                                           |
+| ------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
 | `ui-reference-data.json` | `python3 unified-trading-pm/scripts/openapi/generate_ui_reference_data.py` | `unified-api-contracts/openapi/ui-reference-data.json` | Copy into `unified-trading-system-ui/lib/registry/ui-reference-data.json`. Typed accessors: `lib/registry/generated.ts`. |
 
-**What it extracts:** UAC venue/instrument registries and enums (explicit list), UIC enums (dynamic `dir()` scan), `UnifiedCloudConfig` field metadata, UAC validation constants (`VALID_*`), operational-mode / testing-stage presets, `scripts/dev/ui-api-mapping.json` stacks.
+**What it extracts:** UAC venue/instrument registries and enums (explicit list), UIC enums (dynamic `dir()` scan),
+`UnifiedCloudConfig` field metadata, UAC validation constants (`VALID_*`), operational-mode / testing-stage presets,
+`scripts/dev/ui-api-mapping.json` stacks.
 
-**Rule:** If the UI needs new dropdowns or labels from **UAC/UIC/UCI**, add extraction to **`generate_ui_reference_data.py`** and regenerate the JSON. Do **not** introduce a second Python script that repeats the same registry/enum extraction for the UI.
+**Rule:** If the UI needs new dropdowns or labels from **UAC/UIC/UCI**, add extraction to
+**`generate_ui_reference_data.py`** and regenerate the JSON. Do **not** introduce a second Python script that repeats
+the same registry/enum extraction for the UI.
 
-**Requires:** Workspace checkout with `unified-api-contracts`, `unified-internal-contracts`, `unified-config-interface` importable (typically workspace venv).
+**Requires:** Workspace checkout with `unified-api-contracts`, `unified-internal-contracts`, `unified-config-interface`
+importable (typically workspace venv).
 
 ---
 
 ## 2. System topology JSON (tooling / future UI; not the same as §1)
 
-| Output | Generator | Default path |
-| --- | --- | --- |
+| Output                 | Generator                                                                | Default path                                         |
+| ---------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
 | `system-topology.json` | `python3 unified-trading-pm/scripts/openapi/generate_system_topology.py` | `unified-api-contracts/openapi/system-topology.json` |
 
-Aggregates `workspace-manifest.json`, `data-flow-manifest.json`, **`strategy-manifest.json`**, UI/API flow tests, DAG, `ui-api-mapping.json`. Useful for diagrams and automation; **not** automatically bundled as the main UI registry (that is §1).
+Aggregates `workspace-manifest.json`, `data-flow-manifest.json`, **`strategy-manifest.json`**, UI/API flow tests, DAG,
+`ui-api-mapping.json`. Useful for diagrams and automation; **not** automatically bundled as the main UI registry (that
+is §1).
 
 ---
 
 ## 3. OpenAPI / HTTP contracts
 
-| Concern | Location |
-| --- | --- |
-| Unified OpenAPI generation | `unified-trading-pm/scripts/openapi/generate_unified_spec.py`, `generate-unified-openapi.sh` |
+| Concern                              | Location                                                                                                                                                                   |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unified OpenAPI generation           | `unified-trading-pm/scripts/openapi/generate_unified_spec.py`, `generate-unified-openapi.sh`                                                                               |
 | UI TypeScript types from UIC OpenAPI | GHA template `unified-trading-pm/scripts/workflow-templates/uic-openapi-sync.yml` → targets `unified-trading-system-ui` (`src/generated/api-types.ts` or path in template) |
 
 OpenAPI sync is **separate** from `ui-reference-data.json` (domain registries vs HTTP schemas).
+
+**`generate_unified_spec.py` (merged OpenAPI):** The script prepends every `SERVICE_REGISTRY` repo root to `PYTHONPATH`
+before each subprocess extract, so sibling imports like `auth_api` resolve without a hand-built export. You still need
+**internal libraries** on `PYTHONPATH` (or installed in the active interpreter) because each service imports
+`unified_trading_library`, `unified_config_interface`, etc. Example from workspace root:
+
+```bash
+LIBS="unified-api-contracts:unified-config-interface:unified-cloud-interface:unified-events-interface:unified-trading-library"
+export PYTHONPATH="${LIBS}:${PYTHONPATH:-}"
+python3 unified-trading-pm/scripts/openapi/generate_unified_spec.py
+```
+
+Default outputs: `unified-api-contracts/openapi/unified-trading-system.openapi.{json,yaml}`. Copy the JSON/YAML into
+`unified-trading-system-ui/context/api-contracts/openapi/` when the UI bundles the merged contract.
 
 ---
 
 ## 4. Strategy manifest validation (PM; no UI artifact)
 
-Scripts such as `scripts/validation/validate-strategy-manifest.py`, `scripts/manifest/generate-strategy-instrument-matrix.py`, `check-strategy-instruments.py` — **validate or derive** PM manifests. They do **not** replace Codex prose or the browser handbook.
+Scripts such as `scripts/validation/validate-strategy-manifest.py`,
+`scripts/manifest/generate-strategy-instrument-matrix.py`, `check-strategy-instruments.py` — **validate or derive** PM
+manifests. They do **not** replace Codex prose or the browser handbook.
 
-**Codex SSOT for strategy meaning:** `unified-trading-codex/09-strategy/README.md`, per-asset-class markdown, `STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md`.
+**Codex SSOT for strategy meaning:** `unified-trading-codex/09-strategy/README.md`, per-asset-class markdown,
+`STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md`.
 
 ---
 
 ## 5. Human-maintained UI docs (intentionally not generated)
 
-| Artifact | Repo | Notes |
-| --- | --- | --- |
-| `docs/MOCK_STATIC_BROWSER_AGENT_HANDBOOK.md` | unified-trading-system-ui | Long-form **browser-agent evaluation** spec; consolidates Codex `09-strategy/` into one file. **No committed generator** — edit in place when strategy docs or mock labels change. |
-| `docs/MOCK_STATIC_EVALUATION_SPEC.md` | unified-trading-system-ui | Short maintainer pointer to the handbook. |
-| Mock fixtures (`lib/*-mock-data.ts`, `strategy-registry.ts`, etc.) | unified-trading-system-ui | Hand-maintained; should stay **consistent** with handbook + Codex. |
+| Artifact                                                           | Repo                      | Notes                                                                                                                                                                              |
+| ------------------------------------------------------------------ | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/MOCK_STATIC_BROWSER_AGENT_HANDBOOK.md`                       | unified-trading-system-ui | Long-form **browser-agent evaluation** spec; consolidates Codex `09-strategy/` into one file. **No committed generator** — edit in place when strategy docs or mock labels change. |
+| `docs/MOCK_STATIC_EVALUATION_SPEC.md`                              | unified-trading-system-ui | Short maintainer pointer to the handbook.                                                                                                                                          |
+| Mock fixtures (`lib/*-mock-data.ts`, `strategy-registry.ts`, etc.) | unified-trading-system-ui | Hand-maintained; should stay **consistent** with handbook + Codex.                                                                                                                 |
 
-**Rule:** Do **not** add an ad-hoc generator under the UI repo or `/tmp` flows without updating **this** document. If automation becomes worthwhile later, add a **single** optional step under `unified-trading-pm/scripts/openapi/` (or one subcommand of the existing generator) and document it in §1 or a new subsection here — still one SSOT index.
+**Rule:** Do **not** add an ad-hoc generator under the UI repo or `/tmp` flows without updating **this** document. If
+automation becomes worthwhile later, add a **single** optional step under `unified-trading-pm/scripts/openapi/` (or one
+subcommand of the existing generator) and document it in §1 or a new subsection here — still one SSOT index.
 
 ---
 

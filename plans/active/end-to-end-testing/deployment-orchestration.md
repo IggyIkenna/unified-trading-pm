@@ -18,6 +18,7 @@ All 4 must work at T2 (local fleet), T3-T6 (cloud), and in both mock and real mo
 **What:** Run the full data→features→ML→strategy→execution pipeline once, end-to-end.
 
 **Flow:**
+
 ```
 instruments-service (download)
   → market-tick-data-service (download per venue)
@@ -32,6 +33,7 @@ instruments-service (download)
 ```
 
 **CLI interface:**
+
 ```bash
 # Run full thermal batch
 python -m deployment_service batch run \
@@ -49,6 +51,7 @@ python -m deployment_service batch run \
 ```
 
 **Per-service flexibility:**
+
 - Code version (git SHA / tag) per service
 - Category filter (CEFI, TRADFI, DEFI, SPORTS, PREDICTION)
 - Operation override
@@ -56,6 +59,7 @@ python -m deployment_service batch run \
 - Each service's CLI args injected from deployment config
 
 **Execution model:**
+
 - Services run sequentially within the pipeline DAG
 - Each service checks previous service's output before starting (readiness probe)
 - Failure at any step: log error, alert, stop cascade (configurable: continue-on-error)
@@ -68,11 +72,13 @@ python -m deployment_service batch run \
 **What:** Set up a scheduler that runs the thermal batch daily at a fixed time, with cascading dependencies.
 
 **Implementation options:**
+
 - **Cloud Scheduler + Pub/Sub** (GCP): Cloud Scheduler triggers first service → completion event triggers next
 - **EventBridge + Step Functions** (AWS): EventBridge rule → Step Functions state machine
 - **Cloud Run Jobs** (GCP) or **CodeBuild** (AWS): each service is a job, chained by completion triggers
 
 **Setup CLI:**
+
 ```bash
 # Set up daily T+1 batch schedule
 python -m deployment_service schedule create \
@@ -88,13 +94,14 @@ python -m deployment_service schedule list
 python -m deployment_service schedule disable --cluster defi
 ```
 
-**Cascade contract:**
-Each service, on completion:
+**Cascade contract:** Each service, on completion:
+
 1. Writes a completion marker: `{service}/batch/{date}/COMPLETE`
 2. Emits a Pub/Sub event: `batch.{service}.complete` with `{date, status, duration, output_path}`
 3. Next service in the DAG subscribes to this event and starts when all upstream markers are present
 
 **The dependency chain is defined in deployment config, not hardcoded:**
+
 ```yaml
 # deployment-service/configs/clusters/defi.yaml
 cluster: defi
@@ -123,6 +130,7 @@ pipeline:
 **What:** Target existing deployments, stop and start them individually, like managing jobs in batch mode.
 
 **CLI interface:**
+
 ```bash
 # List running services
 python -m deployment_service live status --cluster defi
@@ -145,6 +153,7 @@ python -m deployment_service live scale \
 ```
 
 **Services are async — order doesn't matter for startup:**
+
 - Each service waits for its dependencies' readiness endpoints before processing
 - Services register health at `GET /health` and readiness at `GET /readiness`
 - Readiness = health + upstream dependencies healthy
@@ -158,16 +167,17 @@ python -m deployment_service live scale \
 
 **Deployment groups (clusters):**
 
-| Cluster | Services included | Notes |
-|---------|------------------|-------|
-| `cefi` | instruments, tick-data, processing, features-delta-one, features-cross-instrument, features-multi-timeframe, ml-training, ml-inference, strategy, execution, pnl, risk, alerting | Full CeFi pipeline |
-| `tradfi` | Same as cefi + features-volatility, features-calendar | Adds options/futures features |
-| `defi` | instruments, tick-data, processing, features-onchain, strategy, execution, pnl, risk | Skips ML for now |
-| `sports` | instruments, features-sports, ml-training, ml-inference, strategy, execution, pnl | Sports-specific pipeline |
-| `prediction` | instruments, features-sports, strategy, execution, pnl | Prediction markets (subset of sports) |
-| `full` | All services | Everything |
+| Cluster      | Services included                                                                                                                                                                | Notes                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `cefi`       | instruments, tick-data, processing, features-delta-one, features-cross-instrument, features-multi-timeframe, ml-training, ml-inference, strategy, execution, pnl, risk, alerting | Full CeFi pipeline                    |
+| `tradfi`     | Same as cefi + features-volatility, features-calendar                                                                                                                            | Adds options/futures features         |
+| `defi`       | instruments, tick-data, processing, features-onchain, strategy, execution, pnl, risk                                                                                             | Skips ML for now                      |
+| `sports`     | instruments, features-sports, ml-training, ml-inference, strategy, execution, pnl                                                                                                | Sports-specific pipeline              |
+| `prediction` | instruments, features-sports, strategy, execution, pnl                                                                                                                           | Prediction markets (subset of sports) |
+| `full`       | All services                                                                                                                                                                     | Everything                            |
 
 **CLI:**
+
 ```bash
 # Bootstrap entire cluster
 python -m deployment_service cluster bootstrap \
@@ -186,6 +196,7 @@ python -m deployment_service cluster teardown --cluster defi
 ```
 
 **versions.yaml:**
+
 ```yaml
 services:
   instruments-service: v0.4.1
@@ -200,14 +211,15 @@ services:
 
 **The same 4 operations work against cloud targets:**
 
-| Operation | Local (T2) | Cloud (T3-T6) |
-|-----------|-----------|---------------|
-| `batch run` | subprocess | Cloud Run Job / CodeBuild |
-| `schedule create` | cron job | Cloud Scheduler / EventBridge |
-| `live start/stop` | kill/spawn process | Cloud Run service revision / ECS task |
-| `cluster bootstrap` | spawn all | Deploy all Cloud Run services |
+| Operation           | Local (T2)         | Cloud (T3-T6)                         |
+| ------------------- | ------------------ | ------------------------------------- |
+| `batch run`         | subprocess         | Cloud Run Job / CodeBuild             |
+| `schedule create`   | cron job           | Cloud Scheduler / EventBridge         |
+| `live start/stop`   | kill/spawn process | Cloud Run service revision / ECS task |
+| `cluster bootstrap` | spawn all          | Deploy all Cloud Run services         |
 
 **Cloud provider abstraction:**
+
 ```python
 # deployment-service already has:
 # - GCPCloudBuildClient (unified-cloud-interface)
@@ -230,6 +242,7 @@ services:
 6. **Batch history** — timeline of past batch runs with success/failure per step
 
 **The Deployment UI calls the deployment-service API:**
+
 ```
 POST /deployment/cluster/bootstrap   { cluster, mode, versions }
 POST /deployment/batch/run           { cluster, as_of_date }
@@ -244,18 +257,18 @@ GET  /deployment/batch/history       { cluster, limit }
 
 ## 7. Relationship to Tiers
 
-| Tier | Batch | Schedule | Live | Cluster |
-|------|-------|----------|------|---------|
-| T0 | N/A | N/A | N/A | N/A |
-| T1 | N/A (API uses MockStateStore) | N/A | N/A | N/A |
-| T2 | ✅ local processes | ✅ local cron | ✅ local processes | ✅ local processes |
-| T3 | ✅ cloud jobs | ✅ cloud scheduler | ✅ cloud services | ✅ cloud deploy |
-| T4 | ✅ | ✅ | ✅ | ✅ |
-| T5 | ✅ (mock) | ✅ (mock) | ✅ (mock) | ✅ (mock) |
-| T6 | ✅ (real) | ✅ (real) | ✅ (real) | ✅ (real) |
+| Tier | Batch                         | Schedule           | Live               | Cluster            |
+| ---- | ----------------------------- | ------------------ | ------------------ | ------------------ |
+| T0   | N/A                           | N/A                | N/A                | N/A                |
+| T1   | N/A (API uses MockStateStore) | N/A                | N/A                | N/A                |
+| T2   | ✅ local processes            | ✅ local cron      | ✅ local processes | ✅ local processes |
+| T3   | ✅ cloud jobs                 | ✅ cloud scheduler | ✅ cloud services  | ✅ cloud deploy    |
+| T4   | ✅                            | ✅                 | ✅                 | ✅                 |
+| T5   | ✅ (mock)                     | ✅ (mock)          | ✅ (mock)          | ✅ (mock)          |
+| T6   | ✅ (real)                     | ✅ (real)          | ✅ (real)          | ✅ (real)          |
 
-T0 and T1 don't need deployment orchestration — they're for UI development and API demos.
-T2+ is where deployment orchestration becomes relevant.
+T0 and T1 don't need deployment orchestration — they're for UI development and API demos. T2+ is where deployment
+orchestration becomes relevant.
 
 ---
 
@@ -267,6 +280,7 @@ T2+ is where deployment orchestration becomes relevant.
 - Deployment UI pages in `unified-trading-system-ui/app/(ops)/devops/` and `app/(platform)/services/manage/`
 
 **What needs to be built:**
+
 - Pipeline DAG definition (cluster YAML configs)
 - Cascade orchestration (completion events → next service trigger)
 - Schedule CRUD (Cloud Scheduler / EventBridge integration)

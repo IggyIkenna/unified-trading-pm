@@ -16,7 +16,8 @@ CLEAN_CACHE=false
 
 # Known dev ports for final sweep
 UI_PORTS=(5173 5174 5175 5176 5177 5178 5179 5180 5181 5182 5183)
-API_PORTS=(8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014 8015 8016)
+# deployment-api, client-reporting-api, market-data-api, unified-trading-api, auth-api (see ui-api-mapping.json)
+API_PORTS=(8004 8014 8016 8030 8200)
 # Service worker ports (from ui-api-mapping.json service_workers section)
 WORKER_PORTS=(8018 8019 8020 8021 8022 8023 8024 8025)
 # Emulator ports

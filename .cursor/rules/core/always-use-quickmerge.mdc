@@ -48,6 +48,19 @@ Two-pass model:
 
 `--agent` = skip act + skip tests. Quickmerge becomes a fast format/lint gate before PR creation.
 
+## Push before quickmerge (local commits)
+
+Quickmerge **stashes uncommitted** changes before switching branches, then **stash pop** — that protects dirty trees, not
+**commits that exist only locally**. Stage 5 may run `git checkout -B <branch> origin/<branch>`, which sets the branch tip
+to match the remote; **unpushed commits** can stop being reachable from the branch name (still in reflog until GC).
+
+**Do this:** If you (or a prior step) already ran `git commit` on `feat/your-branch` and did **not** push, run
+`git push -u origin feat/your-branch` **before** quickmerge. **Or** use quickmerge as the primary commit path after Pass 1
+QG so there are no orphan local-only commits.
+
+**Agents:** Same rule — never run quickmerge on a branch that is ahead of `origin` with unpushed commits unless you push
+first (or you intend only uncommitted work + quickmerge’s own commit).
+
 ```bash
 bash scripts/quickmerge.sh "feat: ..." --agent                          # skip act + tests
 bash scripts/quickmerge.sh "feat: ..." --agent --skip-typecheck         # also skip typecheck

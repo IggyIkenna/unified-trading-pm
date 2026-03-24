@@ -62,7 +62,7 @@ echo ""
 echo "=== Demo environment ready ==="
 echo "  market-data-service: http://localhost:8001"
 echo "  execution-service:   http://localhost:8002"
-echo "  trading-analytics:   http://localhost:8010"
+echo "  (unified-trading-api is not in this compose file — run locally on :8030 when needed; see scripts/dev/ui-api-mapping.json)"
 echo ""
 echo "Stop with: docker compose -f ${COMPOSE_FILE} down"
 

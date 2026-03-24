@@ -406,7 +406,13 @@
   "onboarding-ui": {
     "api_base": "VITE_API_BASE_URL (config-api)",
     "requests": [
-      { "fetch_url": "/config", "method": "GET", "served_by_api": "config-api", "orphan": false, "data_mode": "batch" },
+      {
+        "fetch_url": "/config",
+        "method": "GET",
+        "served_by_api": "config-api",
+        "orphan": false,
+        "data_mode": "batch"
+      },
       {
         "fetch_url": "/config/entries",
         "method": "GET",
@@ -428,7 +434,13 @@
         "orphan": false,
         "data_mode": "batch"
       },
-      { "fetch_url": "/venues", "method": "GET", "served_by_api": "config-api", "orphan": false, "data_mode": "batch" },
+      {
+        "fetch_url": "/venues",
+        "method": "GET",
+        "served_by_api": "config-api",
+        "orphan": false,
+        "data_mode": "batch"
+      },
       {
         "fetch_url": "/venues/configs",
         "method": "GET",
@@ -690,81 +702,6 @@
       }
     ]
   },
-  "live-health-monitor-ui": {
-    "api_base": "VITE_EXECUTION_API_URL (execution-service, not in API repos)",
-    "requests": [
-      {
-        "fetch_url": "/manual/instruction",
-        "method": "POST",
-        "served_by_api": "execution-service (not in workspace API repos)",
-        "orphan": false,
-        "data_mode": "live",
-        "note": "Execution-service is a backend service, not an API repo"
-      },
-      {
-        "fetch_url": "/manual/cancel",
-        "method": "POST",
-        "served_by_api": "execution-service",
-        "orphan": false,
-        "data_mode": "live"
-      },
-      {
-        "fetch_url": "/manual/instructions/{instructionId}",
-        "method": "GET",
-        "served_by_api": "execution-service",
-        "orphan": false,
-        "data_mode": "live"
-      },
-      {
-        "fetch_url": "/rules/recent (VITE_ALERTING_API_URL)",
-        "method": "GET",
-        "served_by_api": "alerting-service (not in workspace API repos)",
-        "orphan": false,
-        "data_mode": "live",
-        "note": "Alerting-service is a backend service"
-      },
-      {
-        "fetch_url": "/audit/trail (VITE_BATCH_AUDIT_API_URL)",
-        "method": "GET",
-        "served_by_api": "batch-audit-api",
-        "orphan": false,
-        "data_mode": "batch"
-      }
-    ]
-  },
-  "logs-dashboard-ui": {
-    "api_base": "VITE_LOGS_API_URL (batch-audit-api)",
-    "requests": [
-      {
-        "fetch_url": "/audit/trail",
-        "method": "GET",
-        "served_by_api": "batch-audit-api",
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "fetch_url": "/audit/trail/services",
-        "method": "GET",
-        "served_by_api": "batch-audit-api",
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "fetch_url": "/api/v1/logs",
-        "method": "GET",
-        "served_by_api": "batch-audit-api",
-        "orphan": false,
-        "data_mode": "both"
-      },
-      {
-        "fetch_url": "/api/v1/services",
-        "method": "GET",
-        "served_by_api": "batch-audit-api",
-        "orphan": false,
-        "data_mode": "batch"
-      }
-    ]
-  },
   "ml-training-ui": {
     "api_base": "VITE_ML_TRAINING_API_URL + VITE_ML_INFERENCE_API_URL",
     "requests": [
@@ -895,9 +832,25 @@
     "requests": [],
     "note": "No API client files found; likely a shared component library or admin shell"
   },
-  "odum-research-website": {
-    "api_base": "Built-in Next.js API routes (Firebase Auth + Firestore)",
-    "requests": [],
-    "note": "Self-contained Next.js app; no external API service"
+  "unified-trading-system-ui": {
+    "api_base": "unified-trading-api (+ auth-api, deployment-api, client-reporting-api via env/proxy)",
+    "requests": [
+      {
+        "fetch_url": "/health",
+        "method": "GET",
+        "served_by_api": "unified-trading-api",
+        "orphan": false,
+        "data_mode": "live",
+        "note": "Placeholder coverage row; extend when UI fetch scan includes consolidated app"
+      },
+      {
+        "fetch_url": "/health",
+        "method": "GET",
+        "served_by_api": "auth-api",
+        "orphan": false,
+        "data_mode": "live",
+        "note": "Placeholder coverage row for auth health checks"
+      }
+    ]
   }
 }

@@ -9,7 +9,7 @@
 # Add "# deploy-via-dispatch" after title if deploy_via_dispatch: true in manifest.
 #
 # Variable conventions:
-#   {{SERVICE_NAME}}   — e.g. batch-audit-api
+#   {{SERVICE_NAME}}   — e.g. unified-trading-api or deployment-api
 #   {{REGISTRY_REPO}}  — e.g. unified-trading-system
 
 substitutions:

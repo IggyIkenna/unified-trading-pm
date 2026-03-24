@@ -2,48 +2,46 @@
   "folders": [
     {
       "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root",
+      "name": "📁 Workspace Root"
     },
     {
       "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config",
+      "name": "⚙️ Cursor Config"
     },
     {
       "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv",
+      "name": "🐍 Venv"
     },
     {
       "path": "../../unified-trading-codex",
-      "name": "\ud83d\udcda Codex",
+      "name": "📚 Codex"
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM",
+      "name": "📋 PM"
     },
     {
-      "path": "../../ml-inference-service",
+      "path": "../../ml-inference-service"
     },
     {
-      "path": "../../ml-training-service",
+      "path": "../../ml-training-service"
     },
     {
-      "path": "../../ml-inference-api",
+      "path": "../../unified-ml-interface"
     },
     {
-      "path": "../../ml-training-api",
+      "path": "../../unified-feature-calculator-library"
     },
     {
-      "path": "../../trading-analytics-api",
+      "path": "../../unified-features-interface"
     },
     {
-      "path": "../../ml-training-ui",
+      "path": "../../unified-feature-orchestration-library"
     },
     {
-      "path": "../../unified-ml-interface",
-    },
-    {
-      "path": "../../unified-feature-calculator-library",
-    },
+      "path": "../../unified-trading-system-ui",
+      "name": "🎨 UI"
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -59,43 +57,42 @@
     "cursorpyright.analysis.reportAny": "error",
     "cursorpyright.analysis.reportUnknownMemberType": "error",
     "cursorpyright.analysis.reportUnknownVariableType": "error",
-    "cursorpyright.analysis.extraPaths": [
-      "${workspaceFolder}/unified-events-interface",
-      "${workspaceFolder}/unified-cloud-interface",
-      "${workspaceFolder}/unified-config-interface",
-      "${workspaceFolder}/unified-internal-contracts",
-      "${workspaceFolder}/unified-api-contracts",
-      "${workspaceFolder}/unified-trading-library",
-      "${workspaceFolder}/unified-domain-client",
-      "${workspaceFolder}/unified-position-interface",
-      "${workspaceFolder}/unified-reference-data-interface",
-      "${workspaceFolder}/unified-market-interface",
-    ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": ["tests", "-v"],
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
     "files.autoSave": "onFocusChange",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit",
-      },
+        "source.organizeImports": "explicit"
+      }
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lint.select": [
+      "E",
+      "F",
+      "W",
+      "I"
+    ],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": ["--line-length", "120"],
+    "ruff.format.args": [
+      "--line-length",
+      "120"
+    ],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -104,7 +101,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -127,20 +124,34 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true,
+      "**/coverage/**": true
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
-    "editor.rulers": [100],
-    "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
-  },
+    "cursorpyright.analysis.extraPaths": [
+      "${workspaceFolder}/unified-events-interface",
+      "${workspaceFolder}/unified-cloud-interface",
+      "${workspaceFolder}/unified-config-interface",
+      "${workspaceFolder}/unified-internal-contracts",
+      "${workspaceFolder}/unified-api-contracts",
+      "${workspaceFolder}/unified-trading-library",
+      "${workspaceFolder}/unified-domain-client",
+      "${workspaceFolder}/unified-position-interface",
+      "${workspaceFolder}/unified-reference-data-interface",
+      "${workspaceFolder}/unified-market-interface"
+    ],
+    "editor.rulers": [
+      100
+    ],
+    "editor.tabSize": 4
+  }
 }

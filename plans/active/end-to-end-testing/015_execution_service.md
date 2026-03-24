@@ -24,7 +24,7 @@ Follows `procedure.md`. Pipeline position: #15 (L5 strategy/execution layer).
 | -------------------------------- | ---------------------- | ---------- |
 | position-balance-monitor-service | order_lifecycle_events | PubSub/GCS |
 | pnl-attribution-service          | execution results      | GCS        |
-| execution-results-api            | order/fill data        | GCS/API    |
+| unified-trading-api              | order/fill data        | GCS/API    |
 | alerting-service                 | order_rejection_spikes | PubSub     |
 
 ## Operations
@@ -216,6 +216,59 @@ tests that each instruction type routes to the correct adapter.
 | 7.8  | Shard-level isolation         | One venue failure does not crash other venue processing       |        |
 | 7.9  | `load_dotenv(override=False)` | `.env.mock` loaded with `override=False`                      |        |
 | 7.10 | Graceful shutdown             | KeyboardInterrupt -> STOPPED event, clean exit                |        |
+
+### Phase 8: Backtest Chain Validation (strategy → execution → PnL)
+
+Verify the execution-service backtest produces output that downstream services can consume, and that backtest simulation
+applies realistic DeFi assumptions.
+
+#### 8a: Strategy Instruction Consumption
+
+| #    | What                                                    | Expected                                                                | Status |
+| ---- | ------------------------------------------------------- | ----------------------------------------------------------------------- | ------ |
+| 8a.1 | Load StrategyInstructions from strategy-service         | Instructions read from `strategy-store-*/backtest/` GCS path            |        |
+| 8a.2 | All instruction types routed                            | CeFi BUY/SELL → matching-engine, DeFi SWAP/LEND/BORROW/STAKE → UDEI sim |        |
+| 8a.3 | Instruction count consumed = instruction count produced | Zero dropped instructions (or explicit skip with logged reason)         |        |
+| 8a.4 | Strategy ID preserved                                   | `strategy_id` from instruction propagated to fill output                |        |
+
+#### 8b: DeFi Backtest Realistic Assumptions
+
+| #    | What                          | Expected                                                                      | Status |
+| ---- | ----------------------------- | ----------------------------------------------------------------------------- | ------ |
+| 8b.1 | Gas cost modeling             | Each DeFi fill includes `gas_cost_usd` field (not zero)                       |        |
+| 8b.2 | Slippage modeling             | Fill price differs from instruction price by slippage model                   |        |
+| 8b.3 | Pool depth / liquidity impact | Large orders have proportionally worse fills (AMM curve simulation)           |        |
+| 8b.4 | MEV exposure modeling         | Sandwich/frontrun cost estimated for swaps (optional but flagged)             |        |
+| 8b.5 | Protocol fee attribution      | Aave/Uniswap protocol fees included in fill cost                              |        |
+| 8b.6 | Multi-step DeFi operations    | RECURSIVE_STAKED_BASIS generates N sequential fills (stake→borrow→swap→stake) |        |
+
+#### 8c: Fill Output Schema for Downstream
+
+| #    | What                                             | Expected                                                                                                                 | Status |
+| ---- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 8c.1 | Fill schema matches PnL-attribution expectation  | `PnlDomainAdapter.read_fills()` can parse execution backtest output                                                      |        |
+| 8c.2 | Fill schema matches position-tracker expectation | `FillEventMessage` can be constructed from backtest fill records                                                         |        |
+| 8c.3 | Required columns present                         | `fill_id`, `order_id`, `strategy_id`, `instrument`, `side`, `quantity`, `price`, `fee`, `gas_cost`, `timestamp`, `venue` |        |
+| 8c.4 | GCS path convention                              | Fills written to `execution_fills/day=YYYY-MM-DD/` (same layout as live fills)                                           |        |
+| 8c.5 | Backtest vs live fill schema parity              | Backtest fill schema is a superset of live fill schema (extra: `simulated=true`, `slippage_model`)                       |        |
+
+#### 8d: TCA Metrics from Backtest
+
+| #    | What                              | Expected                                                       | Status |
+| ---- | --------------------------------- | -------------------------------------------------------------- | ------ |
+| 8d.1 | Implementation shortfall computed | Per-fill: arrival_price - fill_price                           |        |
+| 8d.2 | VWAP comparison                   | Execution VWAP vs market VWAP for backtest period              |        |
+| 8d.3 | Algo performance summary          | Per-strategy: total slippage, avg execution time, fill rate    |        |
+| 8d.4 | DeFi-specific TCA                 | Gas cost as % of trade value, protocol fee breakdown, MEV cost |        |
+
+#### 8e: Grid Backtest Support
+
+| #    | What                                 | Expected                                                                    | Status |
+| ---- | ------------------------------------ | --------------------------------------------------------------------------- | ------ |
+| 8e.1 | Batch backtest with multiple configs | `--configs config1.json config2.json ...` runs all, writes separate results |        |
+| 8e.2 | Parallel execution                   | `--parallel 4` runs 4 backtests concurrently                                |        |
+| 8e.3 | Grid result isolation                | Each config's fills written to separate subdirectory                        |        |
+| 8e.4 | Aggregate TCA across grid            | Summary TCA comparing execution quality across config variants              |        |
 
 ## Known Issues Audit
 

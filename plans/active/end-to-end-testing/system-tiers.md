@@ -2,12 +2,12 @@
 
 ## Core Invariant
 
-**Mock is always the service running in mock mode.** The ONLY variable between tiers is **topology** — whether
-calls are colocated (in-process) or cross network (HTTP). No feature creep between tiers. Same `MockDomainService`,
-same `MockStateStore`, same seed data, same business logic. The topology changes; the engine never does.
+**Mock is always the service running in mock mode.** The ONLY variable between tiers is **topology** — whether calls are
+colocated (in-process) or cross network (HTTP). No feature creep between tiers. Same `MockDomainService`, same
+`MockStateStore`, same seed data, same business logic. The topology changes; the engine never does.
 
-Replace `CLOUD_MOCK_MODE=true` with `CLOUD_MOCK_MODE=false` at ANY tier to switch to real adapters. All 7 tiers
-are operable in both mock and real modes.
+Replace `CLOUD_MOCK_MODE=true` with `CLOUD_MOCK_MODE=false` at ANY tier to switch to real adapters. All 7 tiers are
+operable in both mock and real modes.
 
 ---
 
@@ -15,20 +15,20 @@ are operable in both mock and real modes.
 
 ### Local Tiers (developer machine, all processes on localhost)
 
-| Tier | Name | Topology | What runs | Calls |
-|------|------|----------|-----------|-------|
-| **T0** | UI-only | Colocated | UI (Next.js) | No network. In-browser mock store mirrors MockDomainService behavior. |
-| **T1** | UI + API | Network (UI↔API) | UI + `unified-trading-api` | UI → HTTP → API gateway. API uses internal MockStateStore. No downstream services. |
+| Tier   | Name                | Topology                    | What runs                        | Calls                                                                                          |
+| ------ | ------------------- | --------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **T0** | UI-only             | Colocated                   | UI (Next.js)                     | No network. In-browser mock store mirrors MockDomainService behavior.                          |
+| **T1** | UI + API            | Network (UI↔API)           | UI + `unified-trading-api`       | UI → HTTP → API gateway. API uses internal MockStateStore. No downstream services.             |
 | **T2** | UI + API + Services | Network (UI↔API↔Services) | UI + API + all service processes | UI → HTTP → API → HTTP → services. Each service runs in mock mode locally. Full engine parity. |
 
 ### Cloud Tiers (progressive deployment, mock or real)
 
-| Tier | Name | Topology | What runs where | Driven by |
-|------|------|----------|-----------------|-----------|
-| **T3** | UI in cloud | Cloud UI, local API+services | UI on Cloud Run/Vercel, API on localhost or cloud | Deployment UI |
-| **T4** | UI + API in cloud | Cloud UI+API, local services | UI + API on Cloud Run, services on localhost or cloud | Deployment UI |
-| **T5** | Full cloud (mock) | All cloud | UI + API + services on Cloud Run, all mock mode | Deployment UI |
-| **T6** | Full cloud (real) | All cloud, real adapters | Same as T5 but `CLOUD_MOCK_MODE=false` — real venues, real data | Deployment UI |
+| Tier   | Name              | Topology                     | What runs where                                                 | Driven by     |
+| ------ | ----------------- | ---------------------------- | --------------------------------------------------------------- | ------------- |
+| **T3** | UI in cloud       | Cloud UI, local API+services | UI on Cloud Run/Vercel, API on localhost or cloud               | Deployment UI |
+| **T4** | UI + API in cloud | Cloud UI+API, local services | UI + API on Cloud Run, services on localhost or cloud           | Deployment UI |
+| **T5** | Full cloud (mock) | All cloud                    | UI + API + services on Cloud Run, all mock mode                 | Deployment UI |
+| **T6** | Full cloud (real) | All cloud, real adapters     | Same as T5 but `CLOUD_MOCK_MODE=false` — real venues, real data | Deployment UI |
 
 ### Tier progression rule
 
@@ -97,8 +97,8 @@ CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local \
   .venv/bin/python -m <service_module> --operation serve --mode live &
 ```
 
-The API gateway's `LiveDomainService` routes to `localhost:<service-port>` instead of using MockStateStore.
-This requires `GATEWAY_MODE=fleet` (or equivalent) on the API gateway.
+The API gateway's `LiveDomainService` routes to `localhost:<service-port>` instead of using MockStateStore. This
+requires `GATEWAY_MODE=fleet` (or equivalent) on the API gateway.
 
 Services and their ports are defined in `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
 
@@ -142,10 +142,11 @@ Services and their ports are defined in `unified-trading-pm/scripts/dev/ui-api-m
 ## Relationship to Service E2E Tests
 
 The per-service tests in `001_instruments_service.md` through `023_trading_agent_service.md` are **T2-level** tests.
-They verify each service's CLI contract independently. The system tiers defined here compose those services into
-the full graph and verify the wiring between them.
+They verify each service's CLI contract independently. The system tiers defined here compose those services into the
+full graph and verify the wiring between them.
 
 **Order of operations:**
+
 1. Each service passes its own `bash scripts/quality-gates.sh` (unit + type check)
 2. Each service passes its `procedure.md` E2E test (service-level, T2)
 3. System E2E at T1 (API integration — no services needed)
@@ -158,13 +159,13 @@ the full graph and verify the wiring between them.
 
 `/health` on the UI shows which tier is effectively running:
 
-| What's green | Effective tier |
-|-------------|---------------|
-| Nothing | T0 (UI-only, or broken) |
-| API gateway only | T1 |
-| API + all domain endpoints + auth + reporting | T1 (full gateways) |
-| API + services (once LiveDomainService wired) | T2 |
-| Cloud URLs reachable | T3-T6 |
+| What's green                                  | Effective tier          |
+| --------------------------------------------- | ----------------------- |
+| Nothing                                       | T0 (UI-only, or broken) |
+| API gateway only                              | T1                      |
+| API + all domain endpoints + auth + reporting | T1 (full gateways)      |
+| API + services (once LiveDomainService wired) | T2                      |
+| Cloud URLs reachable                          | T3-T6                   |
 
 The health page detects tier automatically — no manual configuration needed.
 
@@ -172,14 +173,14 @@ The health page detects tier automatically — no manual configuration needed.
 
 ## Deployment UI (T3-T6 Driver)
 
-The Deployment UI (`unified-trading-deployment-ui` or the deployment section inside `unified-trading-system-ui`)
-drives T3-T6:
+The Deployment UI (`unified-trading-deployment-ui` or the deployment section inside `unified-trading-system-ui`) drives
+T3-T6:
 
 - **T3**: Deploy UI to Cloud Run / Vercel. Point at local or cloud API.
 - **T4**: Deploy API gateway to Cloud Run. Configure service URLs.
 - **T5**: Deploy all services to Cloud Run (mock mode).
 - **T6**: Flip `CLOUD_MOCK_MODE=false`. Real adapters, real venues.
 
-The Deployment UI should be able to run **standalone** (independent of the main UI) for ops teams.
-There's already a version inside `unified-trading-deployment-ui` — unify with the deployment section
-in `unified-trading-system-ui/app/(platform)/services/manage/` or `app/(ops)/devops/`.
+The Deployment UI should be able to run **standalone** (independent of the main UI) for ops teams. There's already a
+version inside `unified-trading-deployment-ui` — unify with the deployment section in
+`unified-trading-system-ui/app/(platform)/services/manage/` or `app/(ops)/devops/`.

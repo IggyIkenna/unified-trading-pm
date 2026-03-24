@@ -235,6 +235,33 @@ TRADFI:
         tick_window: [ohlcv_24h] # External source (Yahoo Finance), daily candles - no tick data
       start_date: "2020-01-01"
 
+    POLYGON:
+      domain: tradfi
+      book_type: N/A # Reference data provider, not market microstructure
+      fee_type: N/A
+      instrument_types: [EQUITY, ETF]
+      folders: [corporate_actions, earnings_results]
+      data_types:
+        default: [corporate_action_confirmed, earnings_result]
+      notes: >
+        Polygon.io Equities Basic tier. Provides confirmed dividends (/v3/reference/dividends), confirmed splits
+        (/v3/reference/splits), and macro economic results (FRED). These are calendar/reference data types, not market
+        microstructure. Macro results (macro_result) fetched via FRED, not Polygon.
+      start_date: "2020-01-01"
+
+    FRED:
+      domain: tradfi
+      book_type: N/A # Macro data provider
+      fee_type: N/A
+      instrument_types: [MACRO]
+      folders: [economic_results]
+      data_types:
+        default: [macro_result]
+      notes: >
+        FRED (Federal Reserve Economic Data). Provides NFP/CPI/GDP/FOMC/Claims/PCE actual values from
+        series/observations endpoint.
+      start_date: "2010-01-01"
+
   # Tick data windows (dates where expensive tick data is collected)
   tick_windows:
     - start: "2023-05-01"
@@ -288,7 +315,7 @@ DEFI:
 
   venues:
     # DEX protocols - swaps + liquidity (folder: pool)
-    UNISWAPV2-ETH:
+    UNISWAPV2-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: pool # 0.3% pool fee
@@ -300,7 +327,7 @@ DEFI:
         - liquidity # Hourly pool snapshots via pairHourDatas (V2 subgraph supports hourly)
       start_date: "2020-05-18" # Uniswap V2 launch
 
-    UNISWAPV3-ETH:
+    UNISWAPV3-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: pool # variable pool fee (0.01%, 0.05%, 0.3%, 1%)
@@ -312,7 +339,7 @@ DEFI:
         - liquidity # Hourly pool snapshots via poolHourDatas (V3 supports hourly)
       start_date: "2021-05-05" # Uniswap V3 launch
 
-    UNISWAPV4-ETH:
+    UNISWAPV4-ETHEREUM:
       domain: defi
       book_type: AMM
       fee_type: pool # variable pool fee via hooks
@@ -329,7 +356,7 @@ DEFI:
     # rate_indices includes: liquidity_index, borrow_index, utilization_rate, supply_apy, borrow_apy
     # utilization is extracted from rate_indices download (no duplicate API call)
     # risk_params queried from The Graph for historical governance parameter changes
-    AAVE_V3_ETH:
+    AAVEV3_ETHEREUM:
       domain: defi
       book_type: AMM # Lending uses pool-based matching
       fee_type: lending # borrow/supply rate based fees

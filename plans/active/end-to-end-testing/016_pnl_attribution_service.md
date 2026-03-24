@@ -237,6 +237,59 @@ run_cli()
 | 7.7 | Health API                  | `--serve` starts uvicorn on HEALTH_PORT (default 8009)            |        |
 | 7.8 | setup_service_observability | Called with tracing enabled                                       |        |
 
+### Phase 8: Backtest Chain Validation (execution fills → PnL → positions)
+
+Verify PnL-attribution can consume execution-service backtest output and produce correct attribution, and that the two
+independent PnL sources (strategy-service PnL, PnL-attribution from fills) reconcile.
+
+#### 8a: Backtest Fill Ingestion
+
+| #    | What                                       | Expected                                                                               | Status |
+| ---- | ------------------------------------------ | -------------------------------------------------------------------------------------- | ------ |
+| 8a.1 | Read backtest fills from execution-service | `PnlDomainAdapter.read_fills()` successfully parses backtest parquet                   |        |
+| 8a.2 | Backtest fill schema accepted              | Extra backtest columns (`simulated`, `slippage_model`, `gas_cost`) do not break parser |        |
+| 8a.3 | All fills ingested                         | Fill count from PnL matches fill count from execution-service output                   |        |
+| 8a.4 | strategy_id preserved                      | Attribution groups correctly by `strategy_id`                                          |        |
+| 8a.5 | DeFi venue fills handled                   | DeFi venue fills (Uniswap, Aave, etc.) attributed correctly                            |        |
+
+#### 8b: DeFi-Specific Attribution
+
+| #    | What                     | Expected                                                                           | Status |
+| ---- | ------------------------ | ---------------------------------------------------------------------------------- | ------ |
+| 8b.1 | Gas fee attribution      | Gas costs from DeFi fills attributed as separate cost component                    |        |
+| 8b.2 | Protocol fee attribution | Uniswap/Aave protocol fees broken out from execution cost                          |        |
+| 8b.3 | MEV cost attribution     | MEV exposure cost (if modeled) attributed separately                               |        |
+| 8b.4 | Multi-leg attribution    | Recursive staked basis (N fills per instruction) attributed as single strategy PnL |        |
+| 8b.5 | DeFi alpha decomposition | Alpha vs beta for DeFi strategies — benchmark = protocol base yield                |        |
+
+#### 8c: Strategy PnL ↔ Attribution Reconciliation
+
+| #    | What                                          | Expected                                                                  | Status |
+| ---- | --------------------------------------------- | ------------------------------------------------------------------------- | ------ |
+| 8c.1 | Strategy-service PnL (gross)                  | From `strategy-store-*/backtest/` results                                 |        |
+| 8c.2 | PnL-attribution PnL (net of execution costs)  | From `pnl-store-*/pnl/` attribution output                                |        |
+| 8c.3 | Reconciliation: gross - execution costs ≈ net | `strategy_pnl - (slippage + gas + protocol_fees + mev) ≈ attribution_pnl` |        |
+| 8c.4 | Tolerance check                               | Difference < 1% of gross PnL (or exact if no execution cost modeling)     |        |
+| 8c.5 | Per-strategy reconciliation                   | Check holds for each `strategy_id`, not just aggregate                    |        |
+| 8c.6 | Execution alpha extraction                    | `execution_alpha = arrival_price_pnl - actual_fill_pnl` (per-strategy)    |        |
+
+#### 8d: Arrival Price Benchmark
+
+| #    | What                                     | Expected                                                            | Status |
+| ---- | ---------------------------------------- | ------------------------------------------------------------------- | ------ |
+| 8d.1 | Arrival price from strategy instructions | `read_strategy_instructions_path()` provides instruction price      |        |
+| 8d.2 | Benchmark = instruction price            | Execution alpha measured against strategy's intended price          |        |
+| 8d.3 | Current VWAP benchmark replaced          | If using VWAP, flag as known limitation; arrival price is preferred |        |
+
+#### 8e: Grid Result Aggregation
+
+| #    | What                              | Expected                                                                   | Status |
+| ---- | --------------------------------- | -------------------------------------------------------------------------- | ------ |
+| 8e.1 | PnL attribution across grid cells | Run attribution for each grid cell's execution output                      |        |
+| 8e.2 | Cross-cell comparison             | Aggregate: best/worst Sharpe, total execution cost, alpha ranking          |        |
+| 8e.3 | Config style impact on PnL        | Different config styles produce materially different PnL profiles          |        |
+| 8e.4 | Optimal config identification     | Grid aggregation surface shows which config maximizes risk-adjusted return |        |
+
 ### Known Issues Audit
 
 Check these patterns (from procedure.md fix strategies) before running:

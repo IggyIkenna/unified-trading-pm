@@ -56,7 +56,7 @@ LEVEL_COLORS: dict[int, str] = {
     0: "#1e3a5f",  # PM — dark navy
     1: "#16a34a",  # Codex — green
     2: "#3b82f6",  # T0 foundation — blue
-    3: "#7c3aed",  # T1 UTS — purple
+    3: "#7c3aed",  # T1 UTL — purple
     4: "#8b5cf6",  # T2 interfaces — violet
     5: "#ec4899",  # T3 core interfaces — pink
     6: "#dc2626",  # DeFi/sports execution — red

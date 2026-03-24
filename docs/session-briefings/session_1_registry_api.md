@@ -1,18 +1,20 @@
 # Session 1: Registry & API Foundation
 
+> **2026-03-24:** Historical session charter. API names below were updated to the **consolidated** surface
+> (**`unified-trading-api`**, **`auth-api`**) where they referred to standalone repos now under **`archive/`**. See
+> **`archive/README.md`** and **`scripts/dev/ui-api-mapping.json`**.
+
 ## Services & Repos Affected
 
 > **DO NOT work on these repos in other sessions -- they are owned by this session.**
 
-| Repo                              | What Changes                                                                                                                        | Risk |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| unified-api-contracts             | Registry extraction script enhancement (9 new registries), aave_plasma bug fix, 18 missing venue error maps, error classifier tests | MED  |
-| unified-internal-contracts        | OpenAPI spec fixes: add execution-results-api paths, fix 11 empty schemas                                                           | MED  |
-| unified-trading-api               | **NEW REPO** -- scaffold FastAPI app, 14 domain route modules, WebSocket, entitlement middleware, MockStateStore, seed data         | HIGH |
-| unified-trading-pm                | scripts/openapi/, ui-api-mapping.json updates (port 8020), dev-start.sh updates, workspace-manifest.json entry                      | LOW  |
-| execution-results-api             | Add to OpenAPI spec (introspect routes for schema generation)                                                                       | LOW  |
-| unified-market-interface          | Ensure classify_venue_error called on adapter errors (read-only audit + small fixes)                                                | LOW  |
-| unified-trade-execution-interface | Ensure classify_venue_error called on adapter errors (read-only audit + small fixes)                                                | LOW  |
+| Repo                              | What Changes                                                                                                                  | Risk |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---- |
+| unified-internal-contracts        | OpenAPI spec fixes: add unified-trading-api paths, fix 11 empty schemas                                                       | MED  |
+| unified-trading-api               | **NEW REPO** — scaffold FastAPI app, domain routes, WebSocket, middleware, MockStateStore, seed; merged OpenAPI introspection | HIGH |
+| unified-trading-pm                | scripts/openapi/, ui-api-mapping.json updates (port 8020), dev-start.sh updates, workspace-manifest.json entry                | LOW  |
+| unified-market-interface          | Ensure classify_venue_error called on adapter errors (read-only audit + small fixes)                                          | LOW  |
+| unified-trade-execution-interface | Ensure classify_venue_error called on adapter errors (read-only audit + small fixes)                                          | LOW  |
 
 ### Shared Repo Boundaries
 
@@ -35,9 +37,8 @@
 
 ## What's Already Done (Don't Redo)
 
-- Plan A Phase 0 was listed as todo but the master plan notes error codes, aave_plasma fix, 18 venue maps, and
-  execution-service wiring as already done in prior sessions. **Verify status before re-doing** -- check UAC
-  registry/capability_declarations/ for existing venue error maps and aave_plasma fix.
+execution-service wiring as already done in prior sessions. **Verify status before re-doing** -- check UAC
+
 - instruments_service_batch_validation Phase B1 (UAC reference data centralization) is DONE -- tradfi_symbology.py,
   defi_protocol_registry.py, market_data_categories.py all created in UAC.
 - instrument_data_source_separation is a separate plan but touches UAC tradfi_symbology.py -- coordinate if needed but
@@ -58,7 +59,7 @@
    - p1-qg-gate-uac: quality-gates.sh on UAC
 
 3. **Plan A Phase 2** (PARALLEL with Phase 1):
-   - p2-add-execution-results-api-spec: introspect execution-results-api routes, add to OpenAPI
+   - p2-add-unified-trading-api-spec: introspect unified-trading-api routes, add to OpenAPI
    - p2-fix-empty-schemas: populate 11 empty {} schemas from Pydantic models
    - p2-restore-openapi-typescript: fix codegen script output (currently .bak file)
    - p2-qg-gate-uic: quality-gates.sh on UIC
@@ -119,10 +120,10 @@ This session needs to address the following honest status corrections:
 
 ## Success Criteria
 
-- [ ] All QGs pass on: unified-api-contracts, unified-internal-contracts, execution-results-api,
-      unified-market-interface, unified-trade-execution-interface
+- [ ] All QGs pass on: unified-api-contracts, unified-internal-contracts, unified-trading-api, unified-market-interface,
+      unified-trade-execution-interface
 - [ ] generate_ui_reference_data.py extracts all 13 registry categories with tests
-- [ ] OpenAPI spec has execution-results-api, zero empty schemas
+- [ ] OpenAPI spec has unified-trading-api, zero empty schemas
 - [ ] CI trigger workflows created (UAC->UI, UIC->UI)
 - [ ] unified-trading-api scaffolded with all 61 endpoints across 16 domains
 - [ ] WebSocket endpoint with channel multiplexing (mock + real mode)

@@ -13,7 +13,8 @@ owner: agent
 
 Services catch exceptions with bare `except Exception as e: logger.error(...)` — no ErrorCategory classification, no
 recovery strategy, no correlation ID, no event emission. Errors vanish into logs instead of propagating through UEI to
-alerting-service. 422 files have unstructured error handling. Only execution-results-api follows the correct pattern.
+alerting-service. 422 files have unstructured error handling. Only unified-trading-api (and a few other APIs) follow the
+correct pattern.
 
 **Goal:** Every error in every service gets classified (ErrorCategory), assessed (ErrorSeverity), given a recovery
 strategy (ErrorRecoveryStrategy), emitted as a structured event via UEI, and picked up by alerting-service for action.
@@ -71,11 +72,13 @@ Phase 5 (mock/real parity fixes) ──parallel──
 
 - [ ] [AGENT] P0. Create `unified_trading_library/service_framework/error_handling.py` with:
   - `classify_error(exc) -> ErrorCategory` — maps exception types to categories
-  - `classify_and_emit_error(exc, service_name, operation, venue=None, instrument_key=None, shard=None, recovery=None)` — classifies, logs structured, emits `SERVICE_ERROR` via `log_event()`
+  - `classify_and_emit_error(exc, service_name, operation, venue=None, instrument_key=None, shard=None, recovery=None)`
+    — classifies, logs structured, emits `SERVICE_ERROR` via `log_event()`
   - `@structured_error_handler` decorator — wraps functions to auto-classify + emit on exception
   - Export from `service_framework/__init__.py` and `unified_trading_library/__init__.py`
 
 **Error classification mapping:**
+
 ```
 ValueError, KeyError, TypeError       → VALIDATION
 ConnectionError, TimeoutError         → NETWORK
@@ -87,6 +90,7 @@ All other Exception                   → UNKNOWN (severity=CRITICAL)
 ```
 
 **Recovery strategy defaults:**
+
 ```
 NETWORK, TIMEOUT                      → RETRY_WITH_BACKOFF
 VALIDATION, CONFIGURATION             → FAIL_FAST
@@ -97,7 +101,8 @@ UNKNOWN                               → ALERT
 ### 1.2 UEI: `SERVICE_ERROR` event type
 
 - [ ] [AGENT] P0. Add `SERVICE_ERROR` to UEI `LifecycleEventType` enum (if not already there)
-- [ ] [AGENT] P0. Ensure `log_event("SERVICE_ERROR", details={...})` carries the full `EnhancedError.model_dump()` payload so downstream consumers (alerting-service) can parse it
+- [ ] [AGENT] P0. Ensure `log_event("SERVICE_ERROR", details={...})` carries the full `EnhancedError.model_dump()`
+      payload so downstream consumers (alerting-service) can parse it
 
 ### 1.3 Export + tests
 
@@ -128,26 +133,31 @@ UNKNOWN                               → ALERT
 ## Phase 3: P1 Service Fixes (PARALLEL, grouped)
 
 ### 3A: Feature services — PARALLEL
+
 - [ ] [AGENT] P1. features-delta-one-service: Fix 4 bare excepts in batch_handler.py
 - [ ] [AGENT] P1. features-commodity-service: Fix 8+ bare excepts across data source adapters
 - [ ] [AGENT] P1. All other feature services: audit and fix bare excepts
 
 ### 3B: ML services — PARALLEL
+
 - [ ] [AGENT] P1. ml-training-service: Fix 8 bare excepts in model_registry.py
 - [ ] [AGENT] P1. ml-inference-service: Fix fallback prediction path — fail with structured error
 
 ### 3C: Data services — PARALLEL
+
 - [ ] [AGENT] P1. market-data-processing-service: Replace MarketDataProcessingError hierarchy with ErrorCategory mapping
 - [ ] [AGENT] P1. market-tick-data-service: Fix async dependency checker + validated uploader bare excepts
 - [ ] [AGENT] P1. instruments-service: Ensure consistent use of EnhancedError (40 files import but inconsistent)
 
 ### 3D: Other services — PARALLEL
+
 - [ ] [AGENT] P1. strategy-service: Add EnhancedError to signal_generation module
 - [ ] [AGENT] P1. pnl-attribution-service, position-balance-monitor-service: Fix bare excepts
 - [ ] [AGENT] P1. batch-live-reconciliation-service: Fix stage handler bare excepts
 - [ ] [AGENT] P1. trading-agent-service: Fix bare excepts in loop handlers
 
 ### 3E: Deduplicate custom exceptions
+
 - [ ] [AGENT] P1. Delete DataNotFoundError from strategy-service (duplicate of execution-service)
 - [ ] [AGENT] P1. Replace all custom exception classes with classify_and_emit_error() pattern
 
@@ -199,9 +209,10 @@ UNKNOWN                               → ALERT
 - [ ] [AGENT] P1. features-calendar-service: Complete migration of DEPRECATED schemas to UIC
 - [ ] [AGENT] P2. strategy-service types.py: Audit 30+ TypedDicts — move cross-service contracts to UIC
 
-### 5.3 Missing __main__.py
+### 5.3 Missing **main**.py
 
-- [ ] [AGENT] P2. Add __main__.py to: risk-and-exposure-service, position-balance-monitor-service, risk-management-service
+- [ ] [AGENT] P2. Add **main**.py to: risk-and-exposure-service, position-balance-monitor-service,
+      risk-management-service
 
 ### QG Gate: All affected repos pass QG
 

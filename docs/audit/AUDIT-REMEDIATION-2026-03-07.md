@@ -1,3 +1,8 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`.
+
+---
+
 # Audit Remediation Plan — 2026-03-07
 
 **Source:** Institutional-grade audit run 2026-03-07 (10 parallel agents, 140 criteria, Sections 1–10) **Overall audit
@@ -209,7 +214,7 @@ Required: `README.md`, `docs/ARCHITECTURE.md`, `docs/CONFIGURATION.md`, `docs/GC
 
 | Repo                              | Missing                                                         |
 | --------------------------------- | --------------------------------------------------------------- |
-| execution-results-api             | All 7 docs                                                      |
+| unified-trading-api               | All 7 docs                                                      |
 | market-data-api                   | All 7 docs                                                      |
 | client-reporting-api              | All 7 docs                                                      |
 | features-commodity-service        | README, GCS_PATHS, DEPLOYMENT_GUIDE, TESTING, SCHEMA_VALIDATION |
@@ -306,14 +311,14 @@ E501 is globally ignored in 30+ repos. **Fix (three steps):**
 
 - `features-delta-one-service` has ruff at `v0.9.6`
 - 18+ repos on `pre-commit-hooks v5.0.0` (not v6.0.0)
-- 4 Python repos missing ruff hook entirely: `client-reporting-api`, `execution-results-api`, `market-data-api`,
+- 4 Python repos missing ruff hook entirely: `client-reporting-api`, `unified-trading-api`, `market-data-api`,
   `unified-sports-execution-interface` **Fix:** Update `.pre-commit-config.yaml` template in PM, then run
   `run-all-setup.sh --rollout-first` to propagate.
 
 #### A4.3 — 8.15 FAIL: 17 repos without `.git/hooks/pre-commit` installed
 
 **What:** Pre-commit hooks not installed despite `.pre-commit-config.yaml` existing. **Affected repos:**
-`client-reporting-api`, `execution-results-api`, `features-commodity-service`, `features-cross-instrument-service`,
+`client-reporting-api`, `unified-trading-api`, `features-commodity-service`, `features-cross-instrument-service`,
 `features-multi-timeframe-service`, `features-sports-service`, `ibkr-gateway-infra`, `market-data-api`, `strategy-ui`,
 `strategy-validation-service`, `system-integration-tests`, `trading-agent-service`, `unified-cloud-interface`,
 `unified-internal-contracts`, `unified-position-interface`, `unified-sports-execution-interface`,

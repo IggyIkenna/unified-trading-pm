@@ -115,7 +115,7 @@ Example: `unified-events-interface` (T0) bumps with `feat!:`:
 - PM dispatches to all direct dependents of UEI
 - Each of those may bump and cascade to their dependents
 - Full DAG traversal, but still only along actual dependency edges
-- `strategy-ui` (no Python dep on UEI) is skipped
+- UI repos such as **`deployment-ui`** (no Python dep on UEI) are skipped
 
 **The workspace-manifest.json dependency graph IS the cascade topology.**
 

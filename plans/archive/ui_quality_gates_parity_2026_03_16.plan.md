@@ -64,9 +64,8 @@ repo_gates:
 
 depends_on:
   - ui-kit-ux-hardening-2026-03-16
-  - ui-trader-acceptance-testing-2026-03-15  # Phase 3 (ui-kit component tests) should run AFTER TAT ph1-uikit-layout-fixes
-                                              # so tests encode correct layout, not pre-fix layout
-
+  - ui-trader-acceptance-testing-2026-03-15 # Phase 3 (ui-kit component tests) should run AFTER TAT ph1-uikit-layout-fixes
+    # so tests encode correct layout, not pre-fix layout
 # OUT OF SCOPE (covered by ui-trader-acceptance-testing-2026-03-15):
 #   - Playwright E2E / visual regression baselines (TAT ph0, ph1)
 #   - Stress scenario testing (TAT ph5)
@@ -325,20 +324,23 @@ Agents get the same text-parseable feedback as Python:
   };
   ```
 
-- [x] **p2-eslint-rollout** — ESLint propagation wired into `rollout-quality-gates-unified.py` (not a separate script — propagation happens as part of `process_repo` for all TypeScript repos). `--ui-only` flag also added.
+- [x] **p2-eslint-rollout** — ESLint propagation wired into `rollout-quality-gates-unified.py` (not a separate script —
+      propagation happens as part of `process_repo` for all TypeScript repos). `--ui-only` flag also added.
   - Reads `eslint.config.base.js` from PM
   - Copies to each UI repo as `.eslintrc.cjs` (direct copy, not symlink — matches existing pattern for other SSOT files)
   - `--dry-run`, `--repo <name>` flags
   - Adds a header comment: `// SSOT: unified-trading-pm/scripts/quality-gates-base/eslint.config.base.js`
 
-- [ ] **p2-propagate-eslint** — Run `python3 scripts/propagation/rollout-quality-gates-unified.py --ui-only` across all 13 UI repos. Dry-run confirmed 13/13 repos ready. Still pending: actual execution + consumer UI ESLint fixes for `any`/`no-console` violations.
+- [ ] **p2-propagate-eslint** — Run `python3 scripts/propagation/rollout-quality-gates-unified.py --ui-only` across all
+      13 UI repos. Dry-run confirmed 13/13 repos ready. Still pending: actual execution + consumer UI ESLint fixes for
+      `any`/`no-console` violations.
 
 ### ══ PHASE 3 — `unified-trading-ui-kit`: Add full test infrastructure ══ ✅ DONE BY OTHER AGENTS
 
 > **Status (2026-03-16):** Completed by parallel agents. All infrastructure and 17 of 19 component tests are in place.
 > `app-shell.test.tsx` and `deployment-panel.test.tsx` are intentionally deferred with documented reasons in
-> `vitest.config.ts` exclusion comments. Coverage threshold set to 70% (lines/statements/functions/branches).
-> Threshold was set lower than the plan's 80% target — acceptable given the two complex components are excluded.
+> `vitest.config.ts` exclusion comments. Coverage threshold set to 70% (lines/statements/functions/branches). Threshold
+> was set lower than the plan's 80% target — acceptable given the two complex components are excluded.
 
 - [x] **p3-uikit-deps** — Add to `unified-trading-ui-kit/package.json` devDependencies:
 
@@ -430,7 +432,8 @@ Agents get the same text-parseable feedback as Python:
   - `src/components/ui/api-connection-badge.test.tsx` — renders connected/disconnected states; fetches health URL;
     handles fetch errors gracefully
 
-- [ ] **p3-uikit-tests-deployment** *(deferred — deployment-panel excluded from coverage with documented reason in vitest.config.ts)* — Create tests for deployment panel:
+- [ ] **p3-uikit-tests-deployment** _(deferred — deployment-panel excluded from coverage with documented reason in
+      vitest.config.ts)_ — Create tests for deployment panel:
   - `src/components/ui/deployment-panel.test.tsx` — renders service selector; renders mode radio buttons; date range
     inputs visible; submit button present; section dividers between field groups; table rows for deployment history
 

@@ -1,3 +1,8 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`.
+
+---
+
 # System Audit Report — 2026-03-09
 
 **Auditor:** Claude Code (15 parallel agents) **Date:** 2026-03-09 **Scope:** All active service repos in workspace
@@ -84,17 +89,17 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
 
 ## Section 3 — Security
 
-| CATEGORY  | CRITERION                       | STATUS   | EVIDENCE                                                                                                             |
-| --------- | ------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
-| Secrets   | No hardcoded API keys/tokens    | PASS     | Zero in production source                                                                                            |
-| Secrets   | Secrets via get_secret_client() | PASS     | UnifiedCloudConfig enforces pattern                                                                                  |
-| Transport | No verify=False                 | PASS     | 30 HTTP client files checked; all use default SSL                                                                    |
-| Auth      | Auth middleware on all APIs     | PASS     | All 4 APIs use `APIRouter(Depends(verify_api_key))`                                                                  |
-| Auth      | No mock auth in prod            | PASS     | DISABLE_AUTH guarded by environment check                                                                            |
-| Auth      | AUTH_FAILURE events logged      | WARN     | deployment-api ✓, client-reporting-api ✓; market-data-api ✗ (auth.py:35-40), execution-results-api ✗ (auth.py:35-40) |
-| Audit     | SECRET_ACCESSED events logged   | **FAIL** | Event type defined in UEI but **never called** in any production code                                                |
-| Audit     | CONFIG_CHANGED events logged    | PASS     | 15 log_event("CONFIG_CHANGED") calls confirmed (config_reloaders.py:189 et al.)                                      |
-| Auth      | deployment-api S2S auth         | PASS     | **FIXED** — verify_service_token with AUTH_FAILURE logging at auth.py:28-85                                          |
+| CATEGORY  | CRITERION                       | STATUS   | EVIDENCE                                                                                                           |
+| --------- | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
+| Secrets   | No hardcoded API keys/tokens    | PASS     | Zero in production source                                                                                          |
+| Secrets   | Secrets via get_secret_client() | PASS     | UnifiedCloudConfig enforces pattern                                                                                |
+| Transport | No verify=False                 | PASS     | 30 HTTP client files checked; all use default SSL                                                                  |
+| Auth      | Auth middleware on all APIs     | PASS     | All 4 APIs use `APIRouter(Depends(verify_api_key))`                                                                |
+| Auth      | No mock auth in prod            | PASS     | DISABLE_AUTH guarded by environment check                                                                          |
+| Auth      | AUTH_FAILURE events logged      | WARN     | deployment-api ✓, client-reporting-api ✓; market-data-api ✗ (auth.py:35-40), unified-trading-api ✗ (auth.py:35-40) |
+| Audit     | SECRET_ACCESSED events logged   | **FAIL** | Event type defined in UEI but **never called** in any production code                                              |
+| Audit     | CONFIG_CHANGED events logged    | PASS     | 15 log_event("CONFIG_CHANGED") calls confirmed (config_reloaders.py:189 et al.)                                    |
+| Auth      | deployment-api S2S auth         | PASS     | **FIXED** — verify_service_token with AUTH_FAILURE logging at auth.py:28-85                                        |
 
 **Score: WARN** (SECRET_ACCESSED gap; AUTH_FAILURE incomplete across APIs)
 
@@ -136,20 +141,20 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
 
 ## Section 6 — Observability
 
-| CATEGORY    | CRITERION                        | STATUS | EVIDENCE                                                                                                                            |
-| ----------- | -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Health      | /health on all 4 API services    | PASS   | All 4: execution-results-api:195, market-data-api health.py:6, client-reporting-api health.py:6, deployment-api health_routes.py:30 |
-| Health      | /readiness on all 4 API services | PASS   | All 4 confirmed                                                                                                                     |
-| Correlation | correlation_id propagated        | PASS   | test_correlation_propagation.py validates UUID flow                                                                                 |
-| Metrics     | prometheus_client imported       | PASS   | 28 files                                                                                                                            |
-| Metrics     | RECORDS_PROCESSED Counter        | PASS   | All 4 APIs + 14+ services have metrics.py:5-9                                                                                       |
-| Metrics     | PROCESSING_LATENCY Histogram     | PASS   | All 4 APIs + 14+ services have metrics.py:11-15                                                                                     |
-| Dashboards  | trading-overview.json present    | PASS   | deployment-service/grafana/dashboards/trading-overview.json                                                                         |
-| Dashboards  | system-health.json present       | PASS   | deployment-service/grafana/dashboards/system-health.json                                                                            |
-| Memory      | Pre-crash checkpoint at 85%      | PASS   | execution-service, strategy-service, risk, ml-inference                                                                             |
-| Compliance  | MiFID II ComplianceReporter      | PASS   | execution-service/compliance/compliance_reporter.py                                                                                 |
-| Compliance  | FCA StrategyComplianceReporter   | PASS   | strategy-service/compliance/compliance_reporter.py                                                                                  |
-| Tests       | test_event_logging.py present    | PASS   | unified-events-interface/tests/unit/test_event_logging.py                                                                           |
+| CATEGORY    | CRITERION                        | STATUS | EVIDENCE                                                                                                                          |
+| ----------- | -------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| Health      | /health on all 4 API services    | PASS   | All 4: unified-trading-api:195, market-data-api health.py:6, client-reporting-api health.py:6, deployment-api health_routes.py:30 |
+| Health      | /readiness on all 4 API services | PASS   | All 4 confirmed                                                                                                                   |
+| Correlation | correlation_id propagated        | PASS   | test_correlation_propagation.py validates UUID flow                                                                               |
+| Metrics     | prometheus_client imported       | PASS   | 28 files                                                                                                                          |
+| Metrics     | RECORDS_PROCESSED Counter        | PASS   | All 4 APIs + 14+ services have metrics.py:5-9                                                                                     |
+| Metrics     | PROCESSING_LATENCY Histogram     | PASS   | All 4 APIs + 14+ services have metrics.py:11-15                                                                                   |
+| Dashboards  | trading-overview.json present    | PASS   | deployment-service/grafana/dashboards/trading-overview.json                                                                       |
+| Dashboards  | system-health.json present       | PASS   | deployment-service/grafana/dashboards/system-health.json                                                                          |
+| Memory      | Pre-crash checkpoint at 85%      | PASS   | execution-service, strategy-service, risk, ml-inference                                                                           |
+| Compliance  | MiFID II ComplianceReporter      | PASS   | execution-service/compliance/compliance_reporter.py                                                                               |
+| Compliance  | FCA StrategyComplianceReporter   | PASS   | strategy-service/compliance/compliance_reporter.py                                                                                |
+| Tests       | test_event_logging.py present    | PASS   | unified-events-interface/tests/unit/test_event_logging.py                                                                         |
 
 **Score: PASS** — Significant improvement; /health was missing on 7/14 services in prior audit.
 
@@ -185,7 +190,7 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
 | Codex    | Codex reflects current decisions  | PASS     | Key files updated Mar 7-9; bootstrap exception documented                                                                                                                                                                                                                                                                                                                                                                           |
 | Rules    | Cursor rules consistent           | WARN     | .cursor/rules/ symlink returns 0 when searched (tool traversal issue); unified-trading-pm/cursor-rules/ has 132 files — likely symlink traversal, not an actual gap                                                                                                                                                                                                                                                                 |
 | Topology | manifest matches runtime-topology | WARN     | Different formats (JSON vs YAML); both complete but 1:1 verification not possible                                                                                                                                                                                                                                                                                                                                                   |
-| Repos    | All 4 API services in manifest    | PASS     | execution-results-api, market-data-api, client-reporting-api, deployment-api all confirmed                                                                                                                                                                                                                                                                                                                                          |
+| Repos    | All 4 API services in manifest    | PASS     | unified-trading-api, market-data-api, client-reporting-api, deployment-api all confirmed                                                                                                                                                                                                                                                                                                                                            |
 | Plans    | Active plan count                 | WARN     | Memory said 16; filesystem has **14** (2 plans archived since last session)                                                                                                                                                                                                                                                                                                                                                         |
 
 **Score: FAIL** (9.1: 13 plans unregistered in SSOT-INDEX)
@@ -307,8 +312,7 @@ Regression from prior audit (CONDITIONAL PASS → FAIL). Primary drivers:
    `log_event("SECRET_ACCESSED", ...)` to `UnifiedCloudConfig` secret retrieval path.
 
 8. **[WARN] Section 3** — `market-data-api/market_data_api/auth.py:35-40` and
-   `execution-results-api/execution_results_api/auth.py:35-40` raise HTTPException without
-   `log_event("AUTH_FAILURE", ...)`.
+   `unified-trading-api/unified_trading_api/auth.py:35-40` raise HTTPException without `log_event("AUTH_FAILURE", ...)`.
 
 9. **[FAIL] Section 2** — `strategy-service/strategy_service/engine/core/signal_publisher.py:96,151` — bare
    `except Exception:` not fixed from prior audit. Specify exception types.
@@ -353,7 +357,7 @@ observability, and technical debt trajectory are all improved.
 4. Convert 8 float price fields to Decimal in unified-internal-contracts (Section 5) — breaking change, needs downstream
    coordination
 5. Add `log_event("SECRET_ACCESSED", ...)` to UnifiedCloudConfig secret retrieval (Section 3)
-6. Add `log_event("AUTH_FAILURE", ...)` to market-data-api and execution-results-api auth handlers (Section 3)
+6. Add `log_event("AUTH_FAILURE", ...)` to market-data-api and unified-trading-api auth handlers (Section 3)
 7. Fix DAG ref typo: `unified-feature-calculator` → `unified-feature-calculator-library` in manifest (Section 1)
 
 ### P2 — Code quality (longer horizon)

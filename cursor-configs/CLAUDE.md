@@ -41,6 +41,10 @@ Read these before making ANY code changes:
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
   in Dockerfiles — never `python:3.13-slim` or `pip install uv`
 - `bash scripts/quickmerge.sh "message" --agent` not `git push` — always use `--agent` in Claude Code sessions
+- **Push before quickmerge when you already committed locally** — If the branch has commits not on `origin`, run
+  `git push -u origin <branch>` before quickmerge. Quickmerge’s stash only saves **uncommitted** work; aligning the
+  branch to `origin/<branch>` can move the branch tip off local-only commits. Prefer: Pass 1 QG → then quickmerge (which
+  commits + pushes), or push first if you committed manually.
 - Two-pass model: `bash scripts/quality-gates.sh` first (Pass 1 — full), then `quickmerge --agent` (Pass 2 —
   lint/format/typecheck/codex, no tests, no act)
 - **NEVER use `--dep-branch` in agent/Claude Code sessions** — it is a human-only flag. Quickmerge exits(1) if
@@ -59,6 +63,21 @@ Read these before making ANY code changes:
 - `.env` files must NEVER contain placeholder credential paths — ADC is the default
 - Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--category` (domain). See
   `codex/06-coding-standards/cli-convention.md`.
+
+## Service Infrastructure Requirements (QG-Enforced as ERRORS)
+
+Every service MUST have all of the following (enforced as errors in base-service.sh since 2026-03-24):
+
+- **ServiceBootstrap** (STEP 5.61) — `ServiceBootstrap(` must appear in service source. Handles lifecycle events
+  (STARTED/STOPPED/FAILED) automatically. Services do NOT emit these manually.
+- **Health API** (STEP 5.62) — `api/main.py` with `make_health_router` from UTL. Must include `data_freshness` callback.
+  Template: `market-tick-data-service/market_tick_data_service/api/main.py`.
+- **Typed config reloaders** (STEP 5.34) — `config_reloaders.py` must use typed config class, never `object` type or
+  `getattr(service_config, ...)`. Pattern: `start_domain_config_reloaders(service_config: MyServiceConfig)`.
+- **Schema provenance** — All domain types (BaseModel, TypedDict, dataclass) must come from UAC or UIC. No local
+  definitions in service source (scripts/ excluded).
+- **API key hot-reload** — Services fetching API keys from Secret Manager must use `ApiKeyReloader` from UTL, not
+  one-shot `validate_api_keys_for_venues()`. See `codex/06-coding-standards/config-reloader-pattern.md`.
 
 ## DeFi Execution Architecture
 
@@ -404,7 +423,8 @@ grep -r "pattern" --include="*.py" --exclude-dir=".venv*" --exclude-dir="tests"
 
 **Workspaces:**
 
-- `unified-trading-system-repos.code-workspace` — full (all 59 manifest repos)
+- `unified-trading-system-repos.code-workspace` — curated multi-repo set (~50 sibling repos + root / `.cursor` /
+  `.venv-workspace`; edit `folders` in PM when the set changes)
 - `workspace-libraries` — T0–T2 libraries
 - `workspace-uis` — UI repos
 - `workspace-trading` — execution, strategy, risk

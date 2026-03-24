@@ -146,6 +146,48 @@ correct instruments and strategies.
 | 4.5 | SPORTS     | (not in choices)             | Should reject or handle gracefully                        |        |
 | 4.6 | PREDICTION | (not in choices)             | Should reject or handle gracefully                        |        |
 
+### Phase 4b: Backtest Grid Sweep (multi-config parameter expansion)
+
+The grid generator (`strategy_service/cli/grid_generator.py`) produces N configs from parameter ranges. This phase
+verifies the full grid lifecycle: generate → run all cells → aggregate → compare.
+
+| #    | What                                                                                      | Expected                                                                                                                                       | Status |
+| ---- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 4b.1 | Generate grid: CEFI MOM_MACD × 3 timeframes (5m, 15m, 1h) × 3 instruments (BTC, ETH, SOL) | 9 config files written to `configs_grid/{grid_id}/`                                                                                            |        |
+| 4b.2 | Generate grid: DEFI strategies × param ranges                                             | AAVE_LENDING (3 rate thresholds) + BASIS_TRADE (3 spread thresholds) + STAKED_BASIS (3 leverage tiers) + RECURSIVE (3 depth levels) = 12 cells |        |
+| 4b.3 | Run CEFI grid end-to-end                                                                  | All 9 cells produce results in `strategy-store-*/backtest/{grid_id}/`                                                                          |        |
+| 4b.4 | Run DEFI grid end-to-end                                                                  | All 12 cells produce results, DeFi sweep params populated                                                                                      |        |
+| 4b.5 | Grid result aggregation                                                                   | Summary file with per-cell Sharpe, cumulative return, max drawdown                                                                             |        |
+| 4b.6 | Grid cell independence                                                                    | One cell failure does not abort remaining cells                                                                                                |        |
+| 4b.7 | Grid ID uniqueness                                                                        | Re-running same grid produces new grid_id (no overwrite)                                                                                       |        |
+| 4b.8 | Config expansion verification                                                             | `STRATEGY_MODE_VALID_PARAMS` for DeFi modes populated (not empty sets)                                                                         |        |
+| 4b.9 | `--max-workers` respected                                                                 | `--max-workers 2` runs 2 cells in parallel, not all at once                                                                                    |        |
+
+**DeFi sweep dimensions to verify:**
+
+| Strategy               | Sweep parameter        | Expected range    |
+| ---------------------- | ---------------------- | ----------------- |
+| AAVE_LENDING           | lending_rate_threshold | [2.0, 3.5, 5.0] % |
+| BASIS_TRADE            | basis_spread_threshold | [0.5, 1.0, 2.0] % |
+| STAKED_BASIS           | leverage_tier          | [1x, 2x, 3x]      |
+| RECURSIVE_STAKED_BASIS | recursion_depth        | [2, 3, 4] loops   |
+
+**Known gap:** `STRATEGY_MODE_VALID_PARAMS` has empty sweep param sets for `basis` and `pure_lending` modes in
+`grid_generator.py`. This must be populated before grid sweep can run for DeFi strategies.
+
+### Phase 4c: Backtest → Execution Instruction Flow
+
+Verify that strategy backtest results produce StrategyInstructions that execution-service can consume.
+
+| #    | What                                | Expected                                                                                  | Status |
+| ---- | ----------------------------------- | ----------------------------------------------------------------------------------------- | ------ |
+| 4c.1 | DEFI backtest produces instructions | `StrategyInstruction` artifacts written alongside strategy results                        |        |
+| 4c.2 | Instruction schema matches UAC      | Fields: `instruction_type`, `instrument`, `quantity`, `price`, `timestamp`, `strategy_id` |        |
+| 4c.3 | DeFi instruction types present      | SWAP, LEND, BORROW, STAKE instruction types in output                                     |        |
+| 4c.4 | Instruction GCS path                | Written to path execution-service reads from (see `system-pipeline-integration.md`)       |        |
+| 4c.5 | CEFI backtest produces instructions | BUY/SELL instructions for MOM_MACD strategies                                             |        |
+| 4c.6 | Instruction count ≈ signal count    | Each trade signal produces corresponding instruction(s)                                   |        |
+
 ### Phase 5: Live Mode
 
 strategy-service currently only supports `--mode batch`. Live mode is not yet implemented.

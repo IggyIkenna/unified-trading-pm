@@ -27,7 +27,7 @@ ready for its own E2E test (following the instruments-service 7-phase pattern) b
 | features-commodity-service  | cli/main.py:25                       | **default (True)**    | NEEDS FIX |
 | execution-service           | **init**.py:34                       | `False`               | OK        |
 | execution-service           | cli/backtest.py:43                   | **default (True)**    | NEEDS FIX |
-| execution-results-api       | main.py:46                           | `False`               | OK        |
+| unified-trading-api         | main.py (consolidated gateway)       | `False`               | OK        |
 | ml-training-service         | cli/handlers/**init**.py:20          | **default (no args)** | NEEDS FIX |
 | ml-inference-service        | cli/main.py:54                       | `False`               | OK        |
 | strategy-service            | cli/main.py:40                       | `False`               | OK        |

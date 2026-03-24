@@ -63,8 +63,6 @@ severity_definitions:
     failure_action: "INFO — reported only, no point deduction"
 
 journeys:
-  # ── deployment-ui ──────────────────────────────────────────────────────────
-
   - repo: deployment-ui
     journey_id: deploy-service
     page_or_route: /deployments
@@ -72,10 +70,12 @@ journeys:
     interaction_type: click
     expected_request: POST /api/deployments
     expected_response_contract: DeploymentState
-    expected_ui_update: "Status badge transitions to 'deploying', then 'deployed'"
-    required_layers: [ui_mock, api_mock, real_flow]
+    expected_ui_update: Status badge transitions to 'deploying', then 'deployed'
+    required_layers:
+      - ui_mock
+      - api_mock
+      - real_flow
     criticality: critical
-
   - repo: deployment-ui
     journey_id: kill-switch-toggle
     page_or_route: /services/{id}
@@ -83,10 +83,12 @@ journeys:
     interaction_type: toggle
     expected_request: POST /api/services/{id}/kill-switch
     expected_response_contract: ServiceState
-    expected_ui_update: "Kill switch badge toggles between 'active' and 'killed'"
-    required_layers: [ui_mock, api_mock, real_flow]
+    expected_ui_update: Kill switch badge toggles between 'active' and 'killed'
+    required_layers:
+      - ui_mock
+      - api_mock
+      - real_flow
     criticality: critical
-
   - repo: deployment-ui
     journey_id: start-dates-config
     page_or_route: /config/start-dates
@@ -94,10 +96,12 @@ journeys:
     interaction_type: dropdown_select
     expected_request: PUT /api/config/start-dates
     expected_response_contract: ConfigUpdateResponse
-    expected_ui_update: "Confirmation toast shown, dropdown reflects new selection"
-    required_layers: [ui_mock, api_mock, real_flow]
+    expected_ui_update: Confirmation toast shown, dropdown reflects new selection
+    required_layers:
+      - ui_mock
+      - api_mock
+      - real_flow
     criticality: high
-
   - repo: deployment-ui
     journey_id: region-selection
     page_or_route: /config/region
@@ -105,383 +109,9 @@ journeys:
     interaction_type: dropdown_select
     expected_request: PUT /api/config/region
     expected_response_contract: ConfigUpdateResponse
-    expected_ui_update: "Region badge updates to selected region"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: high
-
-  # ── logs-dashboard-ui ──────────────────────────────────────────────────────
-
-  - repo: logs-dashboard-ui
-    journey_id: log-stream-filter
-    page_or_route: /logs
-    control_id: "[data-testid='service-filter-dropdown']"
-    interaction_type: dropdown_select
-    expected_request: GET /api/v1/logs?service={service}
-    expected_response_contract: LogQueryResponse
-    expected_ui_update: "Log table filters to show only selected service entries"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: logs-dashboard-ui
-    journey_id: events-tab-navigation
-    page_or_route: /events
-    control_id: "[data-testid='events-tab']"
-    interaction_type: click
-    expected_request: GET /audit/trail
-    expected_response_contract: AuditTrailResponse
-    expected_ui_update: "Events table renders with audit trail entries"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: high
-
-  # ── execution-analytics-ui ─────────────────────────────────────────────────
-
-  - repo: execution-analytics-ui
-    journey_id: run-backtest
-    page_or_route: /run
-    control_id: "button[type='submit']"
-    interaction_type: form_submit
-    expected_request: POST /backtest/run
-    expected_response_contract: BacktestRunResponse
-    expected_ui_update: "Run status transitions to 'running', progress bar appears, results populate on completion"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: execution-analytics-ui
-    journey_id: load-results
-    page_or_route: /results
-    control_id: "button:has-text('Load')"
-    interaction_type: click
-    expected_request: GET /results
-    expected_response_contract: ResultsResponse
-    expected_ui_update: "Results table populates with run_id, strategy, sharpe, net_alpha_bps, pnl columns"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: execution-analytics-ui
-    journey_id: analysis-filter-category
-    page_or_route: /analysis
-    control_id: "select.select:has(option:has-text('Category'))"
-    interaction_type: dropdown_select
-    expected_request: GET /results/execution_alpha
-    expected_response_contract: ExecutionAlphaResponse
-    expected_ui_update: "Alpha distribution chart and summary metrics update to reflect filtered category"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  - repo: execution-analytics-ui
-    journey_id: grid-results-view
-    page_or_route: /grid
-    control_id: "table tbody tr"
-    interaction_type: navigation
-    expected_request: GET /results
-    expected_response_contract: ResultsResponse
-    expected_ui_update: "Grid table renders with result_id, strategy, sharpe, net_alpha_bps, pnl, status badge"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  # ── live-health-monitor-ui ─────────────────────────────────────────────────
-
-  - repo: live-health-monitor-ui
-    journey_id: manual-trade-submit
-    page_or_route: /dashboard
-    control_id: "button[type='submit']:has-text('Submit Trade')"
-    interaction_type: form_submit
-    expected_request: POST /api/execution/manual-instruction
-    expected_response_contract: ManualTradeResponse
-    expected_ui_update: "Submission result shows status (ACCEPTED/REJECTED) with instruction_id or error message"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: live-health-monitor-ui
-    journey_id: positions-load
-    page_or_route: /dashboard
-    control_id: "table:has(th:has-text('Symbol'))"
-    interaction_type: navigation
-    expected_request: GET /api/positions
-    expected_response_contract: PositionsResponse
-    expected_ui_update: "Live Positions table renders with symbol, side badge, qty, P&L, venue columns"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: live-health-monitor-ui
-    journey_id: system-health-view
-    page_or_route: /health
-    control_id: "div.grid:has(div:has-text('Latency'))"
-    interaction_type: navigation
-    expected_request: GET /api/health
-    expected_response_contract: HealthResponse
-    expected_ui_update: "Service health cards render with status badge, latency, uptime for each service"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: live-health-monitor-ui
-    journey_id: alerts-tab-switch
-    page_or_route: /alerts
-    control_id: "button[value='history']"
-    interaction_type: click
-    expected_request: GET /api/alerts/history
-    expected_response_contract: AlertHistoryResponse
-    expected_ui_update: "Alert History table renders with event_type, severity badge, service, timestamp"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  # ── settlement-ui ──────────────────────────────────────────────────────────
-
-  - repo: settlement-ui
-    journey_id: positions-view
-    page_or_route: /positions
-    control_id: "table:has(th:has-text('Symbol'))"
-    interaction_type: navigation
-    expected_request: GET /api/positions
-    expected_response_contract: SettlementPositionsResponse
-    expected_ui_update:
-      "EOD Positions table renders with symbol, side badge, qty, entry/current price, unrealized P&L, settled status"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: settlement-ui
-    journey_id: invoices-view
-    page_or_route: /invoices
-    control_id: "table:has(th:has-text('Client'))"
-    interaction_type: navigation
-    expected_request: GET /api/invoices
-    expected_response_contract: InvoicesResponse
-    expected_ui_update:
-      "Fund Invoicing table renders with client, amount, currency, status badge (paid/pending/overdue), due date"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: settlement-ui
-    journey_id: report-download
-    page_or_route: /reports
-    control_id: "button:has-text('Download')"
-    interaction_type: click
-    expected_request: GET /api/reports/{id}/download
-    expected_response_contract: ReportDownloadResponse
-    expected_ui_update: "Browser initiates file download for finalized report"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  # ── onboarding-ui ──────────────────────────────────────────────────────────
-
-  - repo: onboarding-ui
-    journey_id: venue-registration
-    page_or_route: /venues
-    control_id: "button:has-text('Register Venue')"
-    interaction_type: form_submit
-    expected_request: POST /api/venues
-    expected_response_contract: VenueRegistrationResponse
-    expected_ui_update: "New venue appears in table with 'disconnected' status badge, dialog closes"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: onboarding-ui
-    journey_id: client-onboarding-wizard
-    page_or_route: /clients
-    control_id: "button:has-text('Register Client')"
-    interaction_type: form_submit
-    expected_request: POST /api/clients
-    expected_response_contract: ClientRegistrationResponse
-    expected_ui_update: "New client appears in table with 'pending' status badge, 2-step wizard completes"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: onboarding-ui
-    journey_id: strategy-onboarding
-    page_or_route: /strategies
-    control_id: "button:has-text('Create Strategy')"
-    interaction_type: form_submit
-    expected_request: POST /api/strategies
-    expected_response_contract: StrategyRegistrationResponse
-    expected_ui_update: "New strategy appears in table with 'paused' status badge, dialog closes"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  # ── strategy-ui ────────────────────────────────────────────────────────────
-
-  - repo: strategy-ui
-    journey_id: strategy-card-navigate
-    page_or_route: /strategies
-    control_id: "div.card:has(h3:has-text('StatArb'))"
-    interaction_type: click
-    expected_request: GET /api/strategies/{id}
-    expected_response_contract: StrategyDetailResponse
-    expected_ui_update: "Navigate to strategy detail page with Sharpe, daily P&L, monthly return, venue tags"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  - repo: strategy-ui
-    journey_id: backtest-results-load
-    page_or_route: /strategies/{id}/backtest
-    control_id: "div:has(h1:has-text('Backtesting'))"
-    interaction_type: navigation
-    expected_request: GET /api/strategies/{id}/backtest
-    expected_response_contract: BacktestResultResponse
-    expected_ui_update: "Equity curve chart renders, summary cards show Sharpe, total return, max drawdown, trade count"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: strategy-ui
-    journey_id: live-trading-view
-    page_or_route: /strategies/{id}/live
-    control_id: "div:has(span:has-text('Live'))"
-    interaction_type: navigation
-    expected_request: GET /api/strategies/{id}/live
-    expected_response_contract: StrategyLiveResponse
-    expected_ui_update: "Live badge pulses, P&L card updates every 5s, open positions table renders"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  # ── ml-training-ui ─────────────────────────────────────────────────────────
-
-  - repo: ml-training-ui
-    journey_id: experiment-navigate
-    page_or_route: /experiments
-    control_id: "tr.table-row:has(td:has-text('StatArb'))"
-    interaction_type: click
-    expected_request: GET /api/experiments/{id}
-    expected_response_contract: ExperimentDetailResponse
-    expected_ui_update: "Navigate to experiment detail with accuracy, loss, epochs, dataset, status badge"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  - repo: ml-training-ui
-    journey_id: model-deploy
-    page_or_route: /experiments/{id}
-    control_id: "button:has-text('Deploy')"
-    interaction_type: form_submit
-    expected_request: POST /api/models/deploy
-    expected_response_contract: ModelDeployResponse
-    expected_ui_update: "Deploy modal shows progress, model appears in models page with 'staging' status"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: ml-training-ui
-    journey_id: model-promote
-    page_or_route: /models
-    control_id: "button:has-text('Promote')"
-    interaction_type: click
-    expected_request: POST /api/models/{id}/promote
-    expected_response_contract: ModelPromoteResponse
-    expected_ui_update: "Model status badge transitions from 'staging' to 'production'"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  # ── batch-audit-ui ─────────────────────────────────────────────────────────
-
-  - repo: batch-audit-ui
-    journey_id: batch-jobs-filter
-    page_or_route: /jobs
-    control_id: "div.card:has(div:has-text('Failed'))"
-    interaction_type: click
-    expected_request: GET /api/batch/jobs?status=failed
-    expected_response_contract: BatchJobsResponse
-    expected_ui_update: "Job table filters to show only failed jobs with error badge and progress bar"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: batch-audit-ui
-    journey_id: compliance-tab-tts
-    page_or_route: /compliance
-    control_id: "button:has-text('TTS Records')"
-    interaction_type: click
-    expected_request: GET /api/compliance/tts
-    expected_response_contract: TTSRecordsResponse
-    expected_ui_update: "TTS Records table renders with service, event_type, tts_tag badge, resolved status"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: batch-audit-ui
-    journey_id: data-completeness-expand
-    page_or_route: /data-completeness
-    control_id: "div.card-header:has(span:has-text('features-delta-one-service'))"
-    interaction_type: click
-    expected_request: GET /api/data-health
-    expected_response_contract: DataHealthResponse
-    expected_ui_update:
-      "Service card expands to show GCS path table with status badges (present/missing/stale), size, updated timestamp"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  # ── trading-analytics-ui ───────────────────────────────────────────────────
-
-  - repo: trading-analytics-ui
-    journey_id: recon-runs-filter
-    page_or_route: /recon
-    control_id: "div.card:has(div:has-text('Failed'))"
-    interaction_type: click
-    expected_request: GET /api/recon/runs?status=failed
-    expected_response_contract: ReconRunsResponse
-    expected_ui_update:
-      "Recon table filters to failed runs, shows ML/Strategy/Execution stage badges and deviation count"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: trading-analytics-ui
-    journey_id: recon-detail-navigate
-    page_or_route: /recon/{date}
-    control_id: "tr.table-row:has(td:has-text('2026-03'))"
-    interaction_type: click
-    expected_request: GET /api/recon/{date}/deviations
-    expected_response_contract: ReconDeviationsResponse
-    expected_ui_update: "Navigate to deviation drill page with field-level mismatches between batch and live"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  - repo: trading-analytics-ui
-    journey_id: orderbook-symbol-select
-    page_or_route: /orderbook
-    control_id: "button[role='combobox']"
-    interaction_type: dropdown_select
-    expected_request: GET /api/market-data/orderbook?symbol={symbol}
-    expected_response_contract: OrderBookResponse
-    expected_ui_update: "Order book refreshes with new symbol's bid/ask tables, mid price, spread update"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: trading-analytics-ui
-    journey_id: latency-analytics-view
-    page_or_route: /latency
-    control_id: "div:has(h1:has-text('Latency'))"
-    interaction_type: navigation
-    expected_request: GET /api/analytics/latency
-    expected_response_contract: LatencyAnalyticsResponse
-    expected_ui_update:
-      "P50/P95/P99/P99.9 summary cards render, venue breakdown table shows per-venue latency with status badges"
-    required_layers: [ui_mock, api_mock]
-    criticality: high
-
-  # ── client-reporting-ui ────────────────────────────────────────────────────
-
-  - repo: client-reporting-ui
-    journey_id: generate-report
-    page_or_route: /generate
-    control_id: "button:has-text('Generate')"
-    interaction_type: form_submit
-    expected_request: POST /api/reports/generate
-    expected_response_contract: ReportGenerateResponse
-    expected_ui_update: "Status text transitions from 'Generating...' to 'Report generated successfully.'"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: client-reporting-ui
-    journey_id: performance-chart-load
-    page_or_route: /performance
-    control_id: "div:has(h1:has-text('Performance'))"
-    interaction_type: navigation
-    expected_request: GET /api/performance
-    expected_response_contract: PerformanceResponse
-    expected_ui_update: "Monthly returns bar chart renders, performance table shows period, return %, AUM"
-    required_layers: [ui_mock, api_mock, real_flow]
-    criticality: critical
-
-  - repo: client-reporting-ui
-    journey_id: reports-list-view
-    page_or_route: /reports
-    control_id: "button[value='reports']"
-    interaction_type: click
-    expected_request: GET /api/reports
-    expected_response_contract: ReportsListResponse
-    expected_ui_update: "Reports tab shows list of generated reports with period, type, status, download links"
-    required_layers: [ui_mock, api_mock]
+    expected_ui_update: Region badge updates to selected region
+    required_layers:
+      - ui_mock
+      - api_mock
+      - real_flow
     criticality: high

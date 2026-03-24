@@ -47,19 +47,19 @@ jobs:
       - name: Generate TypeScript types
         run: |
           npx openapi-typescript "${{ steps.spec.outputs.path }}" \
-            --output src/generated/api-types.ts
+            --output lib/types/api-generated.ts
 
       - name: Check for changes
         id: diff
         run: |
-          git diff --quiet src/generated/api-types.ts || echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --quiet lib/types/api-generated.ts || echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create PR branch
         if: steps.diff.outputs.changed == 'true'
         run: |
           BRANCH="auto/uic-openapi-sync-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add src/generated/api-types.ts
+          git add lib/types/api-generated.ts
           git commit -m "chore: sync OpenAPI types from UIC ${{ github.event.client_payload.version }}"
           git push origin "$BRANCH"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"

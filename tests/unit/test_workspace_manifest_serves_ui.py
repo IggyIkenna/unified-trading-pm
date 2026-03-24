@@ -74,12 +74,8 @@ class TestServesUiPresence:
         """Specific known APIs that serve UIs must have serves_ui."""
         expected_apis_with_ui = [
             "deployment-api",
-            "execution-results-api",
-            "config-api",
-            "batch-audit-api",
-            "trading-analytics-api",
             "client-reporting-api",
-            "ml-training-api",
+            "unified-trading-api",
         ]
         missing: list[str] = []
         for api_name in expected_apis_with_ui:
@@ -153,9 +149,9 @@ class TestUiApiMappingConsistency:
             entry = repositories[api]
             serves_ui = entry.get("serves_ui", [])
             if isinstance(serves_ui, list) and ui not in serves_ui:
-                # Some UIs are served by a different API in manifest than mapping
-                # (e.g., strategy-ui is served by execution-results-api in mapping
-                # but config-api in manifest). Only flag if serves_ui is empty.
+                # Some stacks intentionally pair one UI with a secondary API in mapping;
+                # manifest `serves_ui` may list the same UI under a different API.
+                # Only flag if serves_ui is empty.
                 if len(serves_ui) == 0:
                     missing_pairings.append(f"stack={stack_name}: {api} should serve {ui}")
         # Note: Not all mappings will match 1:1 since some UIs are dual-served.

@@ -6,7 +6,7 @@
       {
         "endpoint": "/api/health",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "live"
       },
@@ -64,21 +64,21 @@
       {
         "endpoint": "/api/services/{service_name}/discover-configs",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/api/services/{service_name}/list-directories",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/api/services/{service_name}/config-buckets",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
@@ -144,21 +144,21 @@
       {
         "endpoint": "/api/deployments",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "both"
       },
       {
         "endpoint": "/api/deployments",
         "method": "POST",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "live"
       },
       {
         "endpoint": "/api/deployments/{deployment_id}",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "live"
       },
@@ -250,7 +250,7 @@
       {
         "endpoint": "/api/deployments/{deployment_id}/rollback",
         "method": "POST",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "live"
       },
@@ -401,14 +401,14 @@
       {
         "endpoint": "/api/service-status/execution-service/data-status",
         "method": "GET",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/api/service-status/execution-service/missing-shards",
         "method": "POST",
-        "consuming_uis": ["deployment-ui", "execution-analytics-ui"],
+        "consuming_uis": ["deployment-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
@@ -660,72 +660,82 @@
       {
         "endpoint": "/config",
         "method": "GET",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/config/entries",
         "method": "GET",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/config",
         "method": "POST",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/config/{key}",
         "method": "PUT",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/venues",
         "method": "GET",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/venues/configs",
         "method": "GET",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/venues/configs/{config_id}",
         "method": "GET",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/venues/configs",
         "method": "POST",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/venues/configs/{config_id}",
         "method": "PUT",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/venues/configs/{config_id}",
         "method": "DELETE",
-        "consuming_uis": ["onboarding-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       }
     ]
   },
@@ -734,16 +744,18 @@
       {
         "endpoint": "/api/v1/health",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/health",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/readiness",
@@ -780,226 +792,258 @@
       {
         "endpoint": "/api/v1/results/buckets",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/results/prefixes",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/results",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/results/files",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/results/local-default-directory",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/results/execution_alpha",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/results/{result_id}",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/analysis/performance",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/analysis/aggregate",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/analysis/distribution",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/analysis/timeseries",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/analysis/heatmap",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/analysis/best-configs",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/validate/config",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/validate/dependencies",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/algorithms",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/strategies",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui", "strategy-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/generate",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/generate-all",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/system/cores",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/users",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/sources",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/config/users/{username}/configs",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/results",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/run",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/batch",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/run-local",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/batch-local",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/run-exact-cli",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/status/{job_id}",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/backtest/mass-deploy",
         "method": "POST",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/strategies",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui", "strategy-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/strategies",
@@ -1012,9 +1056,10 @@
       {
         "endpoint": "/api/v1/data/instructions",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/instructions",
@@ -1027,65 +1072,74 @@
       {
         "endpoint": "/api/v1/data/configs",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/configs/content",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/configs/validate",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/instruments",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/instruments/data",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/tick-data",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/tick-data/instruments",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/data/tick-data/ticks",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/fills",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/fills",
@@ -1098,16 +1152,18 @@
       {
         "endpoint": "/api/v1/fills/stream",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/api/v1/stream/fills",
         "method": "GET",
-        "consuming_uis": ["execution-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       }
     ]
   },
@@ -1116,9 +1172,10 @@
       {
         "endpoint": "/analytics/trades",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/analytics/trades",
@@ -1131,37 +1188,42 @@
       {
         "endpoint": "/analytics/slippage",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/analytics/strategy/{strategy_id}/performance",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/analytics/predictions/quality",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/analytics/risk",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/settlement/positions",
         "method": "GET",
-        "consuming_uis": ["settlement-ui"],
-        "orphan": false,
-        "data_mode": "both"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "both",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/settlement/positions",
@@ -1182,9 +1244,10 @@
       {
         "endpoint": "/settlement/invoices",
         "method": "GET",
-        "consuming_uis": ["settlement-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/settlement/invoices",
@@ -1205,9 +1268,10 @@
       {
         "endpoint": "/settlement/reports",
         "method": "GET",
-        "consuming_uis": ["settlement-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/settlements/submit",
@@ -1220,9 +1284,10 @@
       {
         "endpoint": "/settlements/pending",
         "method": "GET",
-        "consuming_uis": ["settlement-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/settlements/{settlement_id}/confirm",
@@ -1235,86 +1300,98 @@
       {
         "endpoint": "/settlements/residuals",
         "method": "GET",
-        "consuming_uis": ["settlement-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/recon/runs",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/recon/runs/{date}",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/recon/runs/{date}/stages/{stage}",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/recon/deviations",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/recon/runs/{date}/agent-report",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/stream/signals",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/stream/predictions",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/market-data/candles",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "both"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "both",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/instruments",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/instruments/corporate-actions",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/prime-brokers",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/prime-brokers",
@@ -1335,9 +1412,10 @@
       {
         "endpoint": "/clients/{client_id}/fee-schedule",
         "method": "GET",
-        "consuming_uis": ["trading-analytics-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/clients/{client_id}/fee-schedule",
@@ -1349,129 +1427,15 @@
       }
     ]
   },
-  "batch-audit-api": {
+  "auth-api": {
     "endpoints": [
       {
-        "endpoint": "/audit/trail",
+        "endpoint": "/health",
         "method": "GET",
-        "consuming_uis": ["logs-dashboard-ui", "live-health-monitor-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/trail/services",
-        "method": "GET",
-        "consuming_uis": ["logs-dashboard-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/trail/summary",
-        "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "batch",
-        "note": "Summary endpoint; no direct UI consumer"
-      },
-      {
-        "endpoint": "/audit/trail",
-        "method": "POST",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "batch",
-        "note": "Event ingestion; services post events, not UIs"
-      },
-      {
-        "endpoint": "/audit/data-health",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/data-health/retention",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/data-health/services/{service_name}",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/compliance",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/compliance/orphans",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/compliance/tts",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/audit/compliance/errors",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/batch/jobs",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/batch/jobs/{job_id}",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/batch/jobs/services/{service_name}/history",
-        "method": "GET",
-        "consuming_uis": ["batch-audit-ui"],
-        "orphan": false,
-        "data_mode": "batch"
-      },
-      {
-        "endpoint": "/api/v1/logs",
-        "method": "GET",
-        "consuming_uis": ["logs-dashboard-ui"],
-        "orphan": false,
-        "data_mode": "both"
-      },
-      {
-        "endpoint": "/api/v1/logs",
-        "method": "POST",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "batch",
-        "note": "Log ingestion; services post logs, not UIs"
-      },
-      {
-        "endpoint": "/api/v1/services",
-        "method": "GET",
-        "consuming_uis": ["logs-dashboard-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "data_mode": "live",
+        "note": "Placeholder coverage row; extend when auth-api route inventory is automated"
       }
     ]
   },
@@ -1480,9 +1444,10 @@
       {
         "endpoint": "/health",
         "method": "GET",
-        "consuming_uis": ["ml-training-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/readiness",
@@ -1511,9 +1476,10 @@
       {
         "endpoint": "/experiments",
         "method": "GET",
-        "consuming_uis": ["ml-training-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/experiments",
@@ -1526,9 +1492,10 @@
       {
         "endpoint": "/experiments/{run_id}",
         "method": "GET",
-        "consuming_uis": ["ml-training-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/experiments/{run_id}/phase/{phase_num}",
@@ -1601,9 +1568,10 @@
       {
         "endpoint": "/models",
         "method": "GET",
-        "consuming_uis": ["ml-training-ui"],
-        "orphan": false,
-        "data_mode": "batch"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "batch",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/models/{model_id}",
@@ -1616,16 +1584,18 @@
       {
         "endpoint": "/models/deploy",
         "method": "POST",
-        "consuming_uis": ["ml-training-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/models/{model_id}/undeploy",
         "method": "POST",
-        "consuming_uis": ["ml-training-ui"],
-        "orphan": false,
-        "data_mode": "live"
+        "consuming_uis": [],
+        "orphan": true,
+        "data_mode": "live",
+        "note": "No UI consumers after workspace archive sweep"
       },
       {
         "endpoint": "/predictions/recent",
@@ -1650,100 +1620,98 @@
       {
         "endpoint": "/metrics",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "live",
-        "note": "Prometheus scrape endpoint"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
       },
       {
         "endpoint": "/health",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "live"
       },
       {
         "endpoint": "/readiness",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "live",
-        "note": "Readiness probe; internal"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
       },
       {
         "endpoint": "/api/reports",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/api/reports/generate",
         "method": "POST",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/pnl",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "both"
       },
       {
         "endpoint": "/performance",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/alerts",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "live"
       },
       {
         "endpoint": "/sports/pnl",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/sports/clv",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/sports/venue-performance",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "batch"
       },
       {
         "endpoint": "/sports/positions",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "live"
       },
       {
         "endpoint": "/sports/risk",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "live"
       },
       {
         "endpoint": "/api/v1/stream/reports",
         "method": "GET",
-        "consuming_uis": ["client-reporting-ui"],
+        "consuming_uis": ["unified-trading-system-ui"],
         "orphan": false,
         "data_mode": "live"
       }
@@ -1754,74 +1722,77 @@
       {
         "endpoint": "/health",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "live",
-        "note": "Health probe; headless API, no UI"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
       },
       {
         "endpoint": "/readiness",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "live",
-        "note": "Readiness probe; headless API, no UI"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
       },
       {
         "endpoint": "/data-contract",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "batch",
-        "note": "Data contract introspection; internal"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "batch"
       },
       {
         "endpoint": "/metrics",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "live",
-        "note": "Prometheus scrape endpoint"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
       },
       {
         "endpoint": "/orderbook/{symbol}/snapshot",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "live",
-        "note": "Headless API; no UI assigned"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
       },
       {
         "endpoint": "/candles",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "both",
-        "note": "Headless API; no UI assigned"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "both"
       },
       {
         "endpoint": "/venues",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "batch",
-        "note": "Headless API; no UI assigned"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "batch"
       },
       {
         "endpoint": "/venues/{venue}/validate",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
-        "data_mode": "batch",
-        "note": "Headless API; no UI assigned"
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "batch"
       },
       {
         "endpoint": "/stream/orderbook",
         "method": "GET",
-        "consuming_uis": [],
-        "orphan": true,
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
+        "data_mode": "live"
+      }
+    ]
+  },
+  "unified-trading-api": {
+    "endpoints": [
+      {
+        "endpoint": "/health",
+        "method": "GET",
+        "consuming_uis": ["unified-trading-system-ui"],
+        "orphan": false,
         "data_mode": "live",
-        "note": "Headless API; no UI assigned"
+        "note": "Placeholder row for consolidated gateway; extend when route scan is wired"
       }
     ]
   }

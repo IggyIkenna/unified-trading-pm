@@ -1,5 +1,12 @@
 # System Context Guide for Versa Repos
 
+> **2026-03 naming:** `versa-*` layouts below are **legacy split UIs**. The active surfaces are
+> **`unified-trading-system-ui`**
+>
+> - **`deployment-ui`**, APIs **`unified-trading-api`**, **`auth-api`**, **`deployment-api`**, plus domain APIs — see
+>   `unified-trading-pm/scripts/dev/ui-api-mapping.json`. Archived Versa trees:
+>   **`unified-trading-system-ui/_reference/`** and workspace-root **`archive/README.md`**.
+
 Every `versa-*` repo contains a `context/` folder with read-only reference material from four source repos. This guide
 explains what is in each folder, when to use it, and how to trace data from a backend service through to the UI
 component that renders it.
@@ -135,7 +142,7 @@ Trade execution analytics: fill analysis, slippage, venue comparison.
 | ---------------------- | ---------------------------------------------------------------------- |
 | Fill/trade schema      | `api-contracts/canonical-schemas/` → `CanonicalFill`, `CanonicalTrade` |
 | Execution event types  | `internal-contracts/schemas/execution.py`, `domain/execution_service/` |
-| API endpoints          | `api-contracts/openapi/execution-results-api.yaml`                     |
+| API endpoints          | `api-contracts/openapi/unified-trading-system.openapi.yaml` (merged)   |
 | Venue-specific nuances | `api-contracts/docs/TRADFI_VENUE_NUANCES.md`                           |
 | DeFi execution types   | `internal-contracts/schemas/defi.py`                                   |
 

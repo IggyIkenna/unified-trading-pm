@@ -339,7 +339,7 @@ parallelization:
   example_task_split:
     person_A: "market-tick-data-service TRADFI NASDAQ (EQUITY + ETF)"
     person_B: "market-tick-data-service TRADFI CME (FUTURE + OPTION)"
-    person_C: "market-tick-data-service DEFI UNISWAPV3-ETH (POOL)"
+    person_C: "market-tick-data-service DEFI UNISWAPV3-ETHEREUM (POOL)"
     ikenna: "market-data-processing-service (stabilizing for team)"
 
 # =============================================================================

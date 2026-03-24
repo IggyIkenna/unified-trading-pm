@@ -1,3 +1,9 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`. Service rows reflect the **report-era** manifest;
+HTTP-facing APIs may be consolidated under **`unified-trading-api`** — confirm in `ui-api-mapping.json`.
+
+---
+
 # Documentation Gap Report — 2026-03-08
 
 Audit scope: S5.1 (service-canonical) and S5.2 (library-canonical) required documentation. Audit date: 2026-03-09.
@@ -15,7 +21,7 @@ Legend: **P** = Present | **M** = Missing | **S(n)** = Stub (n lines or fewer)
 | client-reporting-api              | P      | P            | P             | P         | P          | P       | P          | P            |
 | deployment-api                    | P      | P            | P             | P         | P          | P       | P          | P            |
 | deployment-service                | P      | P            | P             | P         | P          | P       | P          | P            |
-| execution-results-api             | P      | P            | P             | P         | P          | P       | P          | P            |
+| unified-trading-api               | P      | P            | P             | P         | P          | P       | P          | P            |
 | execution-service                 | P      | P            | P             | P         | P          | P       | P          | P            |
 | features-calendar-service         | P      | P            | P             | P         | P          | P       | P          | P            |
 | features-commodity-service        | P      | P            | P             | P         | P          | P       | P          | P            |

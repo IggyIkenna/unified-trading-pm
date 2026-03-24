@@ -40,19 +40,19 @@ jobs:
       - name: Generate UI reference data
         run: |
           python _uac/scripts/generate_ui_reference_data.py \
-            --output src/generated/ui-reference-data.json
+            --output lib/registry/ui-reference-data.json
 
       - name: Check for changes
         id: diff
         run: |
-          git diff --quiet src/generated/ui-reference-data.json || echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --quiet lib/registry/ui-reference-data.json || echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create PR branch
         if: steps.diff.outputs.changed == 'true'
         run: |
           BRANCH="auto/uac-registry-sync-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add src/generated/ui-reference-data.json
+          git add lib/registry/ui-reference-data.json
           git commit -m "chore: sync UI reference data from UAC ${{ github.event.client_payload.version }}"
           git push origin "$BRANCH"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"

@@ -80,6 +80,10 @@ exceptions.
 ## 2. Git & Commits
 
 - **Conventional commits required:** `feat:`, `fix:`, `chore:`, `feat!:` (breaking)
+- **Push before quickmerge if you have local-only commits** — Stash in quickmerge protects **uncommitted** edits, not
+  **unpushed commits**. If `feat/x` has commits that exist only on your machine, run `git push -u origin feat/x` before
+  `bash scripts/quickmerge.sh "..." --agent`, or use quickmerge as the sole commit path so you do not accumulate
+  unpushed commits before it runs. SSOT: `always-use-quickmerge.mdc` (unpushed commits).
 - **Never** `git reset --hard`, `git clean -fd`, `git restore` that discards uncommitted work — unless user explicitly
   requests
 - **Dependency conflict:** If a dep repo has uncommitted changes, commit them first on the `active_feature_branch` (read

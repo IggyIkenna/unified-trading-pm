@@ -8,86 +8,13 @@
       "api_port": 8004,
       "api_module": "deployment_api"
     },
-    "onboarding": {
-      "ui": "onboarding-ui",
-      "ui_port": 5173,
-      "api": "config-api",
-      "api_port": 8005,
-      "api_module": "config_api"
-    },
-    "execution-analytics": {
-      "ui": "execution-analytics-ui",
-      "ui_port": 5174,
-      "api": "execution-results-api",
-      "api_port": 8006,
-      "api_module": "execution_results_api"
-    },
-    "strategy": {
-      "ui": "strategy-ui",
-      "ui_port": 5175,
-      "api": "execution-results-api",
-      "api_port": 8006,
-      "api_module": "execution_results_api",
-      "$note": "Strategy UI fetches /api/strategies/* from execution-results-api. Backtest runs use a separate local Python process (port 5001), not an API service."
-    },
-    "settlement": {
-      "ui": "settlement-ui",
-      "ui_port": 5176,
-      "api": "trading-analytics-api",
-      "api_port": 8012,
-      "api_module": "trading_analytics_api",
-      "$note": "Settlement routes live in trading-analytics-api (/settlement/* and /settlements/*). No separate settlement-api needed."
-    },
-    "live-health-monitor": {
-      "ui": "live-health-monitor-ui",
-      "ui_port": 5177,
-      "api": "execution-results-api",
-      "api_port": 8006,
-      "api_module": "execution_results_api",
-      "$note": "Live health monitor calls /api/positions, /api/risk, /api/health from execution-results-api. Manual trade instructions route to execution-service directly (VITE_EXECUTION_API_URL)."
-    },
-    "logs-dashboard": {
-      "ui": "logs-dashboard-ui",
-      "ui_port": 5178,
-      "api": "batch-audit-api",
-      "api_port": 8013,
-      "api_module": "batch_audit_api",
-      "$note": "Logs dashboard calls /api/v1/audit/trail and /audit/trail/services from batch-audit-api. Manifest confirms batch-audit-api serves_ui includes logs-dashboard-ui."
-    },
-    "ml-training": {
-      "ui": "ml-training-ui",
-      "ui_port": 5179,
-      "api": "ml-training-api",
-      "api_port": 8011,
-      "api_module": "ml_training_api"
-    },
-    "trading-analytics": {
-      "ui": "trading-analytics-ui",
-      "ui_port": 5180,
-      "api": "trading-analytics-api",
-      "api_port": 8012,
-      "api_module": "trading_analytics_api"
-    },
-    "batch-audit": {
-      "ui": "batch-audit-ui",
-      "ui_port": 5181,
-      "api": "batch-audit-api",
-      "api_port": 8013,
-      "api_module": "batch_audit_api"
-    },
     "client-reporting": {
-      "ui": "client-reporting-ui",
-      "ui_port": 5182,
+      "ui": "unified-trading-system-ui",
+      "ui_port": 3000,
       "api": "client-reporting-api",
       "api_port": 8014,
-      "api_module": "client_reporting_api"
-    },
-    "ml-inference": {
-      "ui": null,
-      "ui_port": null,
-      "api": "ml-inference-api",
-      "api_port": 8015,
-      "api_module": "ml_inference_api"
+      "api_module": "client_reporting_api",
+      "$note": "Standalone client-reporting-ui archived under workspace-root archive/. Client reporting surfaces are integrated into unified-trading-system-ui."
     },
     "market-data": {
       "ui": null,
@@ -96,21 +23,13 @@
       "api_port": 8016,
       "api_module": "market_data_api"
     },
-    "odum-website": {
-      "ui": "odum-research-website",
-      "ui_port": 3000,
-      "api": null,
-      "api_port": null,
-      "api_module": null,
-      "$note": "Self-contained Next.js app with built-in API routes (Firebase Auth + Firestore). No separate API service. Uses port 3000 (Next.js default) instead of 5184 to match Next.js convention."
-    },
     "user-management": {
-      "ui": "user-management-ui",
-      "ui_port": 5184,
-      "api": null,
-      "api_port": 8017,
-      "api_module": null,
-      "$note": "Admin UI for user lifecycle management (onboard/modify/offboard). OAuth admin auth. Mock mode uses client-side fetch intercepts. Backend API TBD — currently calls external APIs (GitHub, Slack, MS Graph, GCP) via mock layer."
+      "api": "auth-api",
+      "api_port": 8200,
+      "api_module": "auth_api",
+      "ui": "unified-trading-system-ui",
+      "ui_port": 3000,
+      "$note": "User lifecycle management merged into auth-api (provisioning routes) and unified-trading-system-ui (admin pages). Standalone user-management-ui archived."
     },
     "unified-trading": {
       "ui": "unified-trading-system-ui",
@@ -118,7 +37,7 @@
       "api": "unified-trading-api",
       "api_port": 8030,
       "api_module": "unified_trading_api",
-      "$note": "Consolidated API gateway replacing 9 separate domain data APIs. 61 endpoints across 16 domains. WebSocket at /ws. Will eventually replace execution-analytics, trading-analytics, batch-audit, ml-training, ml-inference, client-reporting, market-data, config stacks."
+      "$note": "Canonical UI + consolidated domain API (three-API model with auth-api and deployment-api). Legacy split UIs, odum-research-website, logs-dashboard-ui, live-health-monitor-ui, batch-audit-api, and related APIs moved to workspace-root archive/."
     },
     "auth": {
       "ui": null,
@@ -136,7 +55,7 @@
       "port": 8018,
       "module": "execution_service.cli.main",
       "extra_args": "--operation live_execution --mode live",
-      "$note": "FIX engine. Port 8005 is taken by config-api (onboarding stack), so uses 8018. Runs live execution mode in dev."
+      "$note": "FIX engine. Uses 8018 for local dev (avoids collision with other API stacks). Runs live execution mode in dev."
     },
     "risk-and-exposure-service": {
       "repo": "risk-and-exposure-service",

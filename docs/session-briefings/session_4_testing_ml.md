@@ -1,5 +1,9 @@
 # Session 4: Testing & ML/Strategy
 
+> **2026-03-24:** Historical session charter. API names below were updated to the **consolidated** surface
+> (**`unified-trading-api`**, **`auth-api`**) where they referred to standalone repos now under **`archive/`**. See
+> **`archive/README.md`** and **`scripts/dev/ui-api-mapping.json`**.
+
 ## Services & Repos Affected
 
 > **DO NOT work on these repos in other sessions -- they are owned by this session.**
@@ -109,7 +113,6 @@
 
 7. **Plan D Phase 2: Error Code Stress Testing** (PARALLEL with Phase 1):
    - Re-audit VENUE_ERROR_MAP completeness
-   - Fix aave_plasma missing entry
    - Add missing venue error maps
    - Wire classify_venue_error into execution-service error routing
    - ERROR_STORM scenario test suite
@@ -180,7 +183,6 @@ This session needs to address the following honest status corrections:
 2. **Plan D Phase 0 (seed hardening) IS genuinely done.** All 15 seed scripts have --seed support. Do not re-do.
 
 3. **Plan D Phase 2 (error code audit) Phase 0 items ARE genuinely done.** VENUE_ERROR_MAP has 32/33 venues covered.
-   aave_plasma already exists. The execution work (wiring classify_venue_error, ERROR_STORM test suite) remains todo.
 
 4. **18/21 service mock providers are hollow stubs** — this affects Plan D scenario testing since scenarios depend on
    mock mode producing realistic data. Coordinate with Session 2 on mock provider quality.

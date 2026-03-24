@@ -3,6 +3,9 @@
 > Paste this entire prompt into a new agent session to execute Phase 1. Do NOT start Phase 2 until every done criterion
 > below is checked.
 
+> **2026-03-24:** Steps referencing **`execution-results-api`** describe **historical** extraction work. The
+> consolidated gateway is **`unified-trading-api`**; archived repos are under **`archive/README.md`**.
+
 ---
 
 Follow all workspace cursor rules in .cursorrules. No summary docs (no-summary-docs.mdc). uv not pip. quickmerge not git

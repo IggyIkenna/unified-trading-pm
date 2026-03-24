@@ -1,0 +1,27 @@
+# Bucket Isolation -- Three-Tier Model
+
+RULE: Group A (raw data: instruments, market_data, features_calendar) has NO env in bucket name. Group B (derived data: features_*, ml_*, strategy, execution, pnl) ALWAYS uses get_bucket_environment() for mock/dev/prod isolation. Never hardcode bucket names in services. CLOUD_MOCK_MODE=true always routes Group B to mock tier.
+WHY: Prevents dev/mock writes from polluting production buckets. Prod buckets are IAM write-protected.
+CODEX: 05-infrastructure/bucket-isolation-model.md
+SSOT: unified-cloud-interface/unified_cloud_interface/constants.py (get_bucket_environment, get_bucket_name, get_scenario_prefix)
+
+DO:
+  from unified_cloud_interface import get_bucket_name, get_bucket_environment, get_scenario_prefix
+  bucket = get_bucket_name("strategy", "DEFI")  # auto-resolves mock/dev/prod
+  prefix = get_scenario_prefix(scenario="stress")  # "scenario=stress/" in mock, "" in dev/prod
+
+NEVER:
+  bucket = f"strategy-store-defi-{project_id}"  # hardcoded, no env isolation
+  bucket = f"strategy-store-defi-prod-{project_id}"  # hardcoded env
+  Writing to prod buckets from CLOUD_MOCK_MODE=true or ENVIRONMENT=dev
+
+## Data Catalogue
+After every successful batch or live run, ManifestWriter writes a Parquet manifest to data-catalogue-{pid}/{service}/day={date}/manifest.parquet. This is automatic via ServiceCLI post-run hook.
+
+## Data Status Feature Toggle
+deployment-service data-status supports --source manifest|gcs|auto (env: DATA_STATUS_SOURCE, default: auto).
+"auto" tries ManifestReader first (DuckDB over Parquet manifests), falls back to GCS blob scanning.
+Use --source gcs for --check-venues/--check-data-types that need blob-level granularity.
+
+## Scenario Routing (mock tier only)
+--scenario flag routes reads/writes to scenario={name}/ subdirectory within mock buckets. Standard scenarios (default, stress, missing_data) are long-lived. Custom scenarios auto-expire after 30 days.

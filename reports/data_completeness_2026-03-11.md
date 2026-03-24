@@ -1,3 +1,10 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`. Rows that name **`ml-inference-api`** /
+**`ml-training-api`** reflect the **report-era** service list; HTTP routes may now be served from
+**`unified-trading-api`** or archived repos — confirm in the UI/API mapping.
+
+---
+
 # Data Completeness Report — 2026-03-11
 
 **Overall:** 26/33 sources passing (94.5% average coverage) **Threshold:** 95.0%

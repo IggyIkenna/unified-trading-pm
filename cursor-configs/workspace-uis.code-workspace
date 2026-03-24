@@ -2,31 +2,32 @@
   "folders": [
     {
       "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root",
+      "name": "📁 Workspace Root"
     },
     {
       "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config",
+      "name": "⚙️ Cursor Config"
     },
     {
       "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv",
+      "name": "🐍 Venv"
     },
     {
       "path": "../../unified-trading-codex",
-      "name": "\ud83d\udcda Codex",
+      "name": "📚 Codex"
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM",
+      "name": "📋 PM"
     },
     {
       "path": "../../unified-trading-system-ui",
-      "name": "\ud83d\udcda UI",
+      "name": "🎨 UI"
     },
     {
-      "path": "../../.extra/deployment-ui",
-    },
+      "path": "../../deployment-ui",
+      "name": "🛠️ Deployment UI"
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -42,7 +43,6 @@
     "cursorpyright.analysis.reportAny": "error",
     "cursorpyright.analysis.reportUnknownMemberType": "error",
     "cursorpyright.analysis.reportUnknownVariableType": "error",
-    "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [
@@ -53,15 +53,15 @@
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit",
-      },
+        "source.organizeImports": "explicit"
+      }
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
@@ -87,7 +87,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -110,19 +110,19 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true,
+      "**/coverage/**": true
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
-    "typescript.tsdk": "node_modules/typescript/lib",
-  },
+    "typescript.tsdk": "node_modules/typescript/lib"
+  }
 }

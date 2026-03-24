@@ -93,8 +93,8 @@ todos:
   - [ ] [AGENT] P1. Build trending wallet detector. "Trending" definition (configurable, all must be true): 1.
         trailing_7d_pnl > $500 2. win_rate_30d > 0.58 3. calibration_score_30d > median + 1 stdev 4. trade_count_30d >=
         10 (not a one-hit wonder) Runs nightly, writes results to `prediction_markets.trending_wallets`. Publishes
-        Telegram alert when new wallet enters SMART or WHALE tier. Exposes REST endpoint via
-        `unified-trading-analytics-api` for ad hoc querying: GET
+        Telegram alert when new wallet enters SMART or WHALE tier. Exposes REST endpoint via `unified-trading-api`
+        (/analytics and related routes) for ad hoc querying: GET
         /prediction-markets/wallets?tier=SMART&sort=trailing_7d_pnl&limit=50 status: pending blocked_by:
         p2-wallet-profiler note: ""
 

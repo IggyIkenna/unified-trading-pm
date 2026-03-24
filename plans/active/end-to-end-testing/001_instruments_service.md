@@ -37,15 +37,15 @@ Follows `procedure.md`. Pipeline position: #1 (no upstream dependencies).
 
 ### Phase 2: Dry-Run (batch, real data, no writes)
 
-| #   | Operation         | Category   | Expected                                 | Status                                      |
-| --- | ----------------- | ---------- | ---------------------------------------- | ------------------------------------------- |
-| 2.1 | instruments       | CEFI       | Fetch from Tardis/CCXT, no GCS writes    | PASS — 19 venues fetched, dry-run confirmed |
-| 2.2 | instruments       | TRADFI     | Fetch from EOD/IBKR, no GCS writes       |                                             |
-| 2.3 | instruments       | DEFI       | Fetch from subgraphs, no GCS writes      |                                             |
-| 2.4 | instruments       | SPORTS     | Fetch from sportsbooks, no GCS writes    |                                             |
-| 2.5 | instruments       | PREDICTION | Should skip gracefully (not implemented) |                                             |
-| 2.6 | aggregate         | (all)      | Read existing GCS data, no new writes    |                                             |
-| 2.7 | corporate_actions | TRADFI     | Fetch from FMP, no GCS writes            |                                             |
+| #   | Operation   | Category   | Expected                                                        | Status                                                      |
+| --- | ----------- | ---------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
+| 2.1 | instruments | CEFI       | Fetch from Tardis/CCXT, no GCS writes                           | PASS — 19 venues fetched, dry-run confirmed                 |
+| 2.2 | instruments | TRADFI     | Fetch from EOD/IBKR, no GCS writes                              |                                                             |
+| 2.3 | instruments | DEFI       | Fetch from subgraphs, no GCS writes                             | PASS — 108 instruments/day, 7 days, Balancer 400 (isolated) |
+| 2.4 | instruments | SPORTS     | Fetch from sportsbooks, no GCS writes                           |                                                             |
+| 2.5 | instruments | PREDICTION | Should skip gracefully (not implemented)                        |                                                             |
+| 2.6 | aggregate   | (all)      | Read existing GCS data, no new writes                           |                                                             |
+| 2.7 | —           | —          | Corporate actions operation moved to features-calendar-service. |                                                             |
 
 ### Phase 3: Real Writes (dev, CSV sampling on)
 
@@ -58,13 +58,13 @@ Follows `procedure.md`. Pipeline position: #1 (no upstream dependencies).
 
 ### Phase 4: Category Sweep
 
-| #   | Category   | Expected venues                                                            | Expected instrument count (approx)           | Status |
-| --- | ---------- | -------------------------------------------------------------------------- | -------------------------------------------- | ------ |
-| 4.1 | CEFI       | 17 venues, 389,245 instruments                                             | GCS verified: `instruments-store-cefi-*`     | PASS   |
-| 4.2 | TRADFI     | 7 venues, 1,212,352 instruments (CME 1.08M, ICE 99K, NASDAQ 12K, NYSE 12K) | GCS verified: `instruments-store-tradfi-*`   | PASS   |
-| 4.3 | DEFI       | 15 protocols, ~120 instruments fetched                                     | **ISSUE #11: wrote to CEFI bucket not DEFI** | FAIL   |
-| 4.4 | SPORTS     | 101 leagues configured, SportsOrchestrator called                          | **ISSUE #12: USRI not installed**            | FAIL   |
-| 4.5 | PREDICTION | Explicit "not supported" message, returns empty                            | Correct behavior                             | PASS   |
+| #   | Category   | Expected venues                                                                      | Expected instrument count (approx)                     | Status  |
+| --- | ---------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------ | ------- |
+| 4.1 | CEFI       | 17 venues, 389,245 instruments                                                       | GCS verified: `instruments-store-cefi-*`               | PASS    |
+| 4.2 | TRADFI     | 7 venues, 1,212,352 instruments (CME 1.08M, ICE 99K, NASDAQ 12K, NYSE 12K)           | GCS verified: `instruments-store-tradfi-*`             | PASS    |
+| 4.3 | DEFI       | 14 protocols, 108 instruments/day (Balancer=0, Hyperliquid=0), 756 total over 7 days | DEFI bucket correct; Balancer broken; Aster casing bug | PARTIAL |
+| 4.4 | SPORTS     | 101 leagues configured, SportsOrchestrator called                                    | **ISSUE #12: USRI not installed**                      | FAIL    |
+| 4.5 | PREDICTION | Explicit "not supported" message, returns empty                                      | Correct behavior                                       | PASS    |
 
 ### Phase 5: Live Mode (15-minute clock-aligned schedule)
 
@@ -108,19 +108,90 @@ Mock mode must test failure scenarios that affect the whole pipeline:
 | 7.5 | Error classification    | ADAPTER_FETCH_FAILED events for failed venues |        |
 | 7.6 | Memory watchdog         | "Memory watchdog started" logged              |        |
 
-## Issues Found
+## DEFI Category E2E Audit (2026-03-23)
 
-(logged in `plans/active/issues/service_control_surface_issues_2026_03_21.md`)
+### Run Parameters
 
-| Issue                              | Severity | Fixed?                |
-| ---------------------------------- | -------- | --------------------- |
-| `load_dotenv(override=True)`       | P1       | Yes                   |
-| `--dry-run` not enforced           | P1       | Yes (framework-level) |
-| `ENVIRONMENT=development` rejected | P2       | Yes                   |
-| `TESTNET_MODE=mainnet` rejected    | P2       | Yes                   |
-| Asyncio nesting in handlers        | P1       | Yes                   |
-| Raw API keys in .env               | P0       | Yes                   |
-| Hardcoded bucket names in .env     | P2       | Yes                   |
+- Date range: 2026-03-17 to 2026-03-23 (7 days)
+- Mode: dry-run (no GCS writes, real API calls)
+- Duration: ~6 minutes
+- Exit code: 0
+
+### Data Availability Summary
+
+| Protocol    | Instruments/day | Status | Notes                                    |
+| ----------- | --------------- | ------ | ---------------------------------------- |
+| UniswapV2   | 7               | OK     | 500 pairs fetched, top 7 filtered        |
+| UniswapV3   | 30              | OK     | 500 pools fetched, top 30 filtered       |
+| UniswapV4   | 22              | OK     | 500 pools fetched, top 22 filtered       |
+| Curve       | 4               | OK     | 49 pools fetched, 4 filtered             |
+| Balancer    | 0               | FAIL   | 400 Bad Request every day (see Issue #1) |
+| AaveV3      | 12              | OK     | 86 markets fetched, 12 filtered          |
+| Aave Plasma | 12              | OK     | Same 86 markets, 12 filtered             |
+| EtherFi     | 1               | OK     | 1 LST instrument                         |
+| Lido        | 2               | OK     | 2 LST instruments                        |
+| Morpho      | 1               | OK     | 7 markets fetched, 1 filtered            |
+| Euler       | 2               | OK     | 2 markets                                |
+| Fluid       | 6               | OK     | 6 markets                                |
+| Hyperliquid | 0               | WARN   | No error, returns 0 (see Issue #3)       |
+| Aster       | 20              | OK     | 326 perps fetched, 20 filtered           |
+| Ethena      | 1               | OK     | 1 yield-bearing instrument               |
+| **Total**   | **108/day**     |        | **756 instruments across 7 days**        |
+
+### Consistency
+
+- 108 instruments per day, identical count across all 7 days -- deterministic pipeline
+- 7/7 days processed successfully (100%)
+- 7 processing errors (1/day, all Balancer)
+
+### Issues Found (DEFI E2E Audit)
+
+| #   | Issue                               | Severity | Root Cause                                                                                                                                                                                   | Fix Location                                                                           |
+| --- | ----------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1   | Balancer 400 Bad Request (7/7 days) | P1       | URL mismatch: request hits `api-v3.balancer.fi/` but UMI adapter defines `api-v3.balancer.fi/graphql`. instruments-service may be calling the base URL without `/graphql` path               | unified-market-interface `balancer_adapter.py` or instruments-service DeFi processor   |
+| 2   | Aster venue casing: `defi/ASTER`    | P2       | Aster writes as lowercase `defi/ASTER` while all others write `DEFI/VENUE-ETHEREUM`. Downstream consumers querying `DEFI/` prefix will miss Aster data                                       | instruments-service `defi_orchestration.py` — Aster adapter returns lowercase category |
+| 3   | Hyperliquid returns 0 instruments   | P2       | No error logged, silently returns empty. May be intentional (no on-chain instruments on Ethereum?) or adapter not querying correctly. Needs classification: expected-empty or broken adapter | instruments-service or UMI `hyperliquid_adapter`                                       |
+| 4   | Data catalogue entries missing      | P3       | `dataset_id=instruments_` and `dataset_id=instruments_defi` not found in PM `data-catalogue.instruments-service.yaml` — warns 2x per day (14 warnings total)                                 | unified-trading-pm `configs/data-catalogue.instruments-service.yaml`                   |
+| 5   | Pydantic settings UserWarning       | P3       | `A custom validator is returning a value other than self` on every startup. Not blocking but noisy                                                                                           | unified-config-interface or instruments-service config model                           |
+| 6   | CFE venue not in UAC                | P3       | `instruments-service handles 1 venue(s) not in UAC INSTRUMENT_TYPES_BY_VENUE: ['CFE']` — not DEFI-specific but logged on startup                                                             | unified-api-contracts `INSTRUMENT_TYPES_BY_VENUE` missing CFE                          |
+
+### Error Handling Assessment
+
+| Check                                       | Result | Notes                                                                     |
+| ------------------------------------------- | ------ | ------------------------------------------------------------------------- |
+| Balancer failure isolated (no cascade)      | PASS   | Other 14 protocols unaffected, pipeline continues                         |
+| Balancer error classified                   | WARN   | Classified as `UNKNOWN` — should be `API_SCHEMA_CHANGED` or `BAD_REQUEST` |
+| Empty protocol result handled (Hyperliquid) | PASS   | Returns 0, logs INFO, continues                                           |
+| Dry-run enforced                            | PASS   | All writes redirected to local temp dirs                                  |
+| Memory watchdog active                      | PASS   | "Memory watchdog started" logged                                          |
+| API key retrieval from Secret Manager       | PASS   | Tardis + Graph API keys retrieved successfully                            |
+| CCXT exchange pre-loading                   | PASS   | 3/3 exchanges loaded (binance 4280, bybit 3379, deribit 4368)             |
+| ServiceRuntime dimensions logged            | PASS   | op, mode, provider, env, data_mode, testnet, dry_run all present          |
+
+### Architecture Compliance Assessment
+
+| Check                                       | Result | Notes                                                                            |
+| ------------------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| Bucket routing: DEFI category → defi bucket | PASS   | `instruments-store-defi-central-element-323112` (Issue #11 from Phase 4.3 FIXED) |
+| UCI DataSink abstraction used               | PASS   | All writes via `LocalDataSink` / `DataSink` interface                            |
+| UEI event logging initialized               | PASS   | `GcsEventSink` configured for batch mode                                         |
+| OpenTelemetry tracing                       | PASS   | Enabled, service=instruments-service                                             |
+| Venue-partitioned storage layout            | PASS   | `day=YYYY-MM-DD/venue=PROTOCOL-CHAIN/` structure                                 |
+| Sequential protocol processing              | PASS   | Protocols processed one at a time within each day                                |
+| Date batching                               | PASS   | 84 day-venue combinations (7 days × 12 venues) tracked                           |
+
+### Previous Issues Status
+
+| Issue                              | Severity | Fixed?                            |
+| ---------------------------------- | -------- | --------------------------------- |
+| `load_dotenv(override=True)`       | P1       | Yes                               |
+| `--dry-run` not enforced           | P1       | Yes (framework-level)             |
+| `ENVIRONMENT=development` rejected | P2       | Yes                               |
+| `TESTNET_MODE=mainnet` rejected    | P2       | Yes                               |
+| Asyncio nesting in handlers        | P1       | Yes                               |
+| Raw API keys in .env               | P0       | Yes                               |
+| Hardcoded bucket names in .env     | P2       | Yes                               |
+| DEFI wrote to CEFI bucket (#11)    | P1       | **Yes** (confirmed in this audit) |
 
 ## Next Service
 

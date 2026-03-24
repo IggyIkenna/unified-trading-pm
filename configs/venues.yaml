@@ -48,6 +48,8 @@ categories:
       - ICE
       # External data providers (non-exchange)
       - FX # FX rates (KRW-USD, etc.) - ohlcv_24h (data via Yahoo Finance)
+      - POLYGON # Corporate actions + earnings (Polygon.io Equities Basic)
+      - FRED # Macro economic results (NFP, CPI, FOMC, GDP, Claims, PCE)
     # Global data_types list (for backward compatibility)
     data_types:
       - trades
@@ -55,6 +57,9 @@ categories:
       - ohlcv_15m # VIX from CBOE/Barchart
       - ohlcv_24h # FX rates from FX venue (Yahoo Finance source)
       - tbbo
+      - corporate_action_confirmed # Polygon.io: confirmed dividends + splits
+      - earnings_result # yfinance: actual EPS + surprise%
+      - macro_result # FRED: NFP/CPI/GDP/FOMC/Claims/PCE actuals
     # Databento dataset mappings
     venue_to_databento:
       CME: GLBX.MDP3
@@ -115,18 +120,18 @@ categories:
     description: Decentralized Finance protocols (The Graph, Direct APIs)
     venues:
       # Ethereum DEX protocols (swaps)
-      - UNISWAPV2-ETH
-      - UNISWAPV3-ETH
-      - UNISWAPV4-ETH
-      - CURVE-ETH
+      - UNISWAPV2-ETHEREUM
+      - UNISWAPV3-ETHEREUM
+      - UNISWAPV4-ETHEREUM
+      - CURVE-ETHEREUM
       # FUTURE IMPLEMENTATION - NOT MVP (data source issues, see adapters for details)
       # - BALANCER-ETH   # TODO: The Graph deprecated, RPC fallback needs work
       # Lending protocols
-      - AAVE_V3_ETH
+      - AAVEV3_ETHEREUM
       - COMPOUND_V3_ETH
       - MORPHO-ETHEREUM
-      # - EULER-PLASMA   # TODO: Adapter not implemented - excluded from deployment
-      # - FLUID-PLASMA   # TODO: Adapter not implemented - excluded from deployment
+      # - EULER-ETHEREUM   # TODO: Adapter not implemented - excluded from deployment
+      # - FLUID-ETHEREUM   # TODO: Adapter not implemented - excluded from deployment
       # LST/Yield protocols
       - LIDO
       - ETHERFI
@@ -146,19 +151,19 @@ categories:
     # DEX = swaps + liquidity, Lending = rate_indices/utilization/oracle_prices/risk_params
     # LST = oracle_prices + rewards
     venue_data_types:
-      UNISWAPV2-ETH:
+      UNISWAPV2-ETHEREUM:
         POOL:
           default: [swaps, liquidity]
           tick_window: [swaps, liquidity]
-      UNISWAPV3-ETH:
+      UNISWAPV3-ETHEREUM:
         POOL:
           default: [swaps, liquidity]
           tick_window: [swaps, liquidity]
-      UNISWAPV4-ETH:
+      UNISWAPV4-ETHEREUM:
         POOL:
           default: [swaps, liquidity]
           tick_window: [swaps, liquidity]
-      AAVE_V3_ETH:
+      AAVEV3_ETHEREUM:
         POOL:
           default: [rate_indices, oracle_prices, utilization, risk_params]
           tick_window: [rate_indices, oracle_prices, utilization, risk_params]
@@ -184,17 +189,17 @@ categories:
           tick_window: [oracle_prices]
     # Data provider mappings
     venue_to_provider:
-      UNISWAPV2-ETH: the_graph
-      UNISWAPV3-ETH: the_graph
-      UNISWAPV4-ETH: the_graph
+      UNISWAPV2-ETHEREUM: the_graph
+      UNISWAPV3-ETHEREUM: the_graph
+      UNISWAPV4-ETHEREUM: the_graph
       # FUTURE IMPLEMENTATION - NOT MVP
-      # CURVE-ETH: the_graph      # TODO: The Graph deprecated
+      # CURVE-ETHEREUM: the_graph      # TODO: The Graph deprecated
       # BALANCER-ETH: the_graph   # TODO: The Graph deprecated
-      AAVE_V3_ETH: protocol_sdk
+      AAVEV3_ETHEREUM: protocol_sdk
       COMPOUND_V3_ETH: protocol_sdk
       MORPHO-ETHEREUM: protocol_sdk
-      # EULER-PLASMA: protocol_sdk   # TODO: Adapter not implemented
-      # FLUID-PLASMA: protocol_sdk   # TODO: Adapter not implemented
+      # EULER-ETHEREUM: protocol_sdk   # TODO: Adapter not implemented
+      # FLUID-ETHEREUM: protocol_sdk   # TODO: Adapter not implemented
       LIDO: protocol_sdk
       ETHERFI: protocol_sdk
       ETHENA: protocol_sdk
@@ -268,10 +273,10 @@ instrument_types:
   HYPERLIQUID: [PERPETUAL]
   ASTER: [PERPETUAL]
   # DeFi protocols (instrument type = POOL or LST or YIELD_BEARING)
-  UNISWAPV2-ETH: [POOL]
-  UNISWAPV3-ETH: [POOL]
-  UNISWAPV4-ETH: [POOL]
-  AAVE_V3_ETH: [POOL]
+  UNISWAPV2-ETHEREUM: [POOL]
+  UNISWAPV3-ETHEREUM: [POOL]
+  UNISWAPV4-ETHEREUM: [POOL]
+  AAVEV3_ETHEREUM: [POOL]
   COMPOUND_V3_ETH: [POOL]
   MORPHO-ETHEREUM: [POOL]
   LIDO: [LST]

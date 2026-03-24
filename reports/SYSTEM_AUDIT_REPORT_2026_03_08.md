@@ -1,3 +1,8 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`.
+
+---
+
 # System Audit Report — 2026-03-08
 
 **Auditor:** Claude Code (automated codebase scan) **Date:** 2026-03-08 **Scope:** All active service repos in workspace
@@ -47,18 +52,18 @@ completed)
 
 ## Section 3 — Security
 
-| Criterion                                             | Target  | Actual                                                                                                       | Result |
-| ----------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ | ------ |
-| Hardcoded API keys                                    | 0       | 0                                                                                                            | PASS   |
-| os.getenv with KEY/SECRET/TOKEN in prod               | 0       | 3 (instruments-service scripts only — GITHUB_TOKEN for CI)                                                   | PASS   |
-| S2S auth (`verify_service_token` / `X-Service-Token`) | present | 26 occurrences across client-reporting-api, execution-results-api, market-data-api, unified-config-interface | WARN   |
+| Criterion                                             | Target  | Actual                                                                                                     | Result |
+| ----------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- | ------ |
+| Hardcoded API keys                                    | 0       | 0                                                                                                          | PASS   |
+| os.getenv with KEY/SECRET/TOKEN in prod               | 0       | 3 (instruments-service scripts only — GITHUB_TOKEN for CI)                                                 | PASS   |
+| S2S auth (`verify_service_token` / `X-Service-Token`) | present | 26 occurrences across client-reporting-api, unified-trading-api, market-data-api, unified-config-interface | WARN   |
 
 **Notes:**
 
 - No hardcoded secrets found in any production source file.
 - `instruments-service/scripts/run_quality_gates.py` uses `os.getenv("GITHUB_TOKEN")` — this is in a CI helper script,
   not service source, so acceptable.
-- S2S auth is implemented on **3 of 4 external-facing APIs** (client-reporting-api, execution-results-api,
+- S2S auth is implemented on **3 of 4 external-facing APIs** (client-reporting-api, unified-trading-api,
   market-data-api). `deployment-api` does not have `verify_service_token`; it uses a different auth mechanism. Needs
   verification.
 - `AUTH_FAILURE`, `SECRET_ACCESSED`, `CONFIG_CHANGED` event logging — not spot-checked in this pass (requires UEI event
@@ -125,7 +130,7 @@ timestamps; core CeFi/TradFi schemas are correct)
 | -------------------------------- | ------------ | ----------------------------------------------------------- | ------ |
 | `/health` on all API services    | 14/14        | 7/14                                                        | WARN   |
 | `/readiness` on all API services | 14/14        | 6/14                                                        | WARN   |
-| Prometheus metrics               | all services | 12/14 (deployment-api=0, execution-results-api=0)           | WARN   |
+| Prometheus metrics               | all services | 12/14 (deployment-api=0, unified-trading-api=0)             | WARN   |
 | OTel `init_tracing` at startup   | all services | 4/14 (execution, strategy, risk-and-exposure, ml-inference) | WARN   |
 
 **`/health` endpoint coverage:**
@@ -135,7 +140,7 @@ timestamps; core CeFi/TradFi schemas are correct)
 | alerting-service                 | YES                  | YES        |
 | client-reporting-api             | YES                  | YES        |
 | deployment-api                   | YES (at /api/health) | NO         |
-| execution-results-api            | YES                  | YES        |
+| unified-trading-api              | YES                  | YES        |
 | market-data-api                  | YES                  | YES        |
 | risk-and-exposure-service        | YES                  | YES        |
 | position-balance-monitor-service | YES                  | YES        |
@@ -147,7 +152,7 @@ timestamps; core CeFi/TradFi schemas are correct)
 | ml-inference-service             | NO                   | NO         |
 | ml-training-service              | NO                   | NO         |
 
-**Prometheus gaps:** `deployment-api` and `execution-results-api` have 0 Prometheus usage.
+**Prometheus gaps:** `deployment-api` and `unified-trading-api` have 0 Prometheus usage.
 
 **OTel gaps:** Only 4 services have `init_tracing` at startup; 10 services have no OTel instrumentation.
 
@@ -169,7 +174,7 @@ timestamps; core CeFi/TradFi schemas are correct)
 - `ml-training-service/ml_training_service/ml/model_registry.py` — 2 TODOs (explicit import mapping)
 - `unified-market-interface` (venue_config.py) — 3 TODOs (Balancer future implementation)
 - `deployment-api` — 1 TODO (Prometheus middleware pending)
-- `execution-results-api` — 1 TODO (extraction HTTP boundary)
+- `unified-trading-api` — 1 TODO (extraction HTTP boundary)
 
 **`except ImportError` violations:**
 

@@ -47,13 +47,9 @@ SERVICE_TIMEOUT = 30
 # (service_name, module_path, app_attribute)
 SERVICE_REGISTRY: list[tuple[str, str, str]] = [
     ("deployment-api", "deployment_api.main", "app"),
-    ("config-api", "config_api.api.main", "app"),
-    ("execution-results-api", "execution_results_api.main", "app"),
-    ("trading-analytics-api", "trading_analytics_api.api.main", "app"),
-    ("batch-audit-api", "batch_audit_api.api.main", "app"),
+    ("auth-api", "auth_api.app", "app"),
+    ("unified-trading-api", "unified_trading_api.main", "create_app"),
     ("client-reporting-api", "client_reporting_api.api.main", "app"),
-    ("ml-inference-api", "ml_inference_api.api.main", "app"),
-    ("ml-training-api", "ml_training_api.api.main", "app"),
     ("market-data-api", "market_data_api.api.main", "app"),
     ("alerting-service", "alerting_service.api.main", "app"),
     ("execution-service", "execution_service.api.app", "app"),
@@ -137,8 +133,20 @@ builtins.JSONResponse = fastapi.responses.JSONResponse
 
 # ---- Now import the service module (routes registered during import) ----
 import importlib
+from fastapi import FastAPI as _FastAPI
+
 mod = importlib.import_module("{module_path}")
-app = getattr(mod, "{app_attr}")
+_obj = getattr(mod, "{app_attr}")
+if isinstance(_obj, _FastAPI):
+    app = _obj
+elif callable(_obj):
+    app = _obj()
+else:
+    raise TypeError(
+        "Expected FastAPI app or factory, got "
+        + type(_obj).__name__
+        + " from {module_path}.{app_attr}"
+    )
 
 # Inject JSONResponse into every endpoint module's namespace
 for route in getattr(app, "routes", []):
@@ -407,6 +415,22 @@ def main() -> None:
         # Script is at unified-trading-pm/scripts/openapi/
         workspace_root = script_dir.parent.parent.parent
     workspace_root = workspace_root.resolve()
+
+    # Subprocess extractors only see PYTHONPATH — prepend every service repo root from
+    # SERVICE_REGISTRY so `import auth_api` / `import deployment_api` resolve without a
+    # hand-built shell export (see ui-alignment-ssot.md).
+    _roots: list[str] = []
+    _seen_roots: set[str] = set()
+    for service_name, _, _ in SERVICE_REGISTRY:
+        root = workspace_root / service_name
+        if root.is_dir():
+            key = str(root.resolve())
+            if key not in _seen_roots:
+                _seen_roots.add(key)
+                _roots.append(key)
+    _extra_pp = os.pathsep.join(_roots)
+    _existing_pp = os.environ.get("PYTHONPATH", "")
+    os.environ["PYTHONPATH"] = _extra_pp + (os.pathsep + _existing_pp if _existing_pp else "")
 
     # Determine output directory
     output_dir = args.output_dir

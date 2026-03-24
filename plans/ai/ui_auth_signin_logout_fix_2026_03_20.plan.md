@@ -2,20 +2,10 @@
 
 ---
 
-type: code
-epic: epic-code-completion
-status: in_progress
-created: 2026-03-20
-repo: unified-trading-system-ui
-completion_gates:
-  code: C4
-  deployment: D1
-  business: B1
-repo_gates:
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: D0
-    business: B0
+type: code epic: epic-code-completion status: in_progress created: 2026-03-20 repo: unified-trading-system-ui
+completion_gates: code: C4 deployment: D1 business: B1 repo_gates:
+
+- repo: unified-trading-system-ui code: C0 deployment: D0 business: B0
 
 ---
 
@@ -37,11 +27,11 @@ The current auth implementation has several bugs that break the sign-in and logo
 3. **GlobalNavBar logout is non-functional** — The legacy nav (`components/trading/global-nav-bar.tsx`) has a "Log out"
    dropdown menu item with no `onClick` handler. It does not call `useAuth().logout()` or redirect to `/login`.
 
-4. **No JWT-ready token layer** — Auth is localStorage-only with persona objects. Future JWT integration (FastAPI backend)
-   requires a token abstraction layer that the current implementation lacks.
+4. **No JWT-ready token layer** — Auth is localStorage-only with persona objects. Future JWT integration (FastAPI
+   backend) requires a token abstraction layer that the current implementation lacks.
 
-5. **RequireAuth inline login does `window.location.reload()`** — The RequireAuth component reloads the entire page after
-   inline login. This works but is a poor UX (full-page flash). The state should propagate without a reload.
+5. **RequireAuth inline login does `window.location.reload()`** — The RequireAuth component reloads the entire page
+   after inline login. This works but is a poor UX (full-page flash). The state should propagate without a reload.
 
 ## Root Cause Analysis
 
@@ -68,8 +58,8 @@ The current auth implementation has several bugs that break the sign-in and logo
 5. **Login page uses `router.push()` correctly** — Because context updates propagate, `router.push()` works without
    reload.
 
-6. **Add token abstraction** — The auth context stores an optional `token` field. For mock mode, it's a demo token.
-   For future JWT mode, it will be the real JWT. API hooks can read the token from context.
+6. **Add token abstraction** — The auth context stores an optional `token` field. For mock mode, it's a demo token. For
+   future JWT mode, it will be the real JWT. API hooks can read the token from context.
 
 ### Phase 2: JWT integration (future — not this plan)
 

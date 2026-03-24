@@ -1,5 +1,9 @@
 # Session 3: Auth & Reporting & Instruments
 
+> **2026-03-24:** Historical session charter. API names below were updated to the **consolidated** surface
+> (**`unified-trading-api`**, **`auth-api`**) where they referred to standalone repos now under **`archive/`**. See
+> **`archive/README.md`** and **`scripts/dev/ui-api-mapping.json`**.
+
 ## Services & Repos Affected
 
 > **DO NOT work on these repos in other sessions -- they are owned by this session.**
@@ -39,16 +43,12 @@
 
 ### API Auth Standardization (middleware only -- no mock data or response schema changes)
 
-| Repo                  | What Changes                                             | Risk |
-| --------------------- | -------------------------------------------------------- | ---- |
-| deployment-api        | Auth middleware standardization, entitlement enforcement | MED  |
-| config-api            | Auth middleware standardization, entitlement enforcement | MED  |
-| execution-results-api | Auth middleware standardization, entitlement enforcement | MED  |
-| trading-analytics-api | Auth middleware standardization, entitlement enforcement | MED  |
-| batch-audit-api       | Auth middleware standardization, entitlement enforcement | MED  |
-| ml-training-api       | Auth middleware standardization, entitlement enforcement | MED  |
-| ml-inference-api      | Auth middleware standardization, entitlement enforcement | MED  |
-| market-data-api       | Auth middleware standardization, entitlement enforcement | MED  |
+| Repo                | What Changes                                                                 | Risk |
+| ------------------- | ---------------------------------------------------------------------------- | ---- |
+| deployment-api      | Auth middleware standardization, entitlement enforcement                     | MED  |
+| unified-trading-api | Auth middleware on consolidated domain routes (replaces archived split APIs) | MED  |
+| auth-api            | JWT/OAuth issuance, user lifecycle, provisioning                             | MED  |
+| market-data-api     | Auth middleware standardization, entitlement enforcement                     | MED  |
 
 ### Shared Repo Boundaries
 

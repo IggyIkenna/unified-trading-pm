@@ -1,12 +1,18 @@
 # Workspace Completion Plan — Full Audit Remediation
 
+> **2026-03-24:** The phases below are a **historical** remediation log (manifest hygiene, UTL rename, deployment
+> split). For the **current** repo/UI/API surface, use `workspace-manifest.json`, `scripts/dev/ui-api-mapping.json`, and
+> workspace-root **`archive/README.md`** (split UIs and deprecated APIs).
+
 ## Context
 
 Four parallel audits identified 6 major work streams needed to bring the workspace to completion: manifest hygiene, QG
 fixes, the UTL big rename, unified-cloud-services elimination, deployment v3 four-way split completion, and service
 dependency corrections.
 
-**Workspace size:** 60 repos (was 58 — added execution-analytics-ui and unified-trading-ui-auth)
+**Workspace size:** 60 repos (historical milestone — included adding split Versa-era UIs such as
+`execution-analytics-ui` and `unified-trading-ui-auth`). **Current** product UIs: **`unified-trading-system-ui`** +
+**`deployment-ui`**.
 
 **Success criteria:**
 
@@ -17,7 +23,8 @@ dependency corrections.
 - `unified-cloud-services` name eliminated from codebase
 - `unified-trading-services` renamed to `unified-trading-library` everywhere
 - Manifest is SSOT — versions, deps, statuses all match reality
-- All 13 UI repos have TS-aware quality gates with full tooling
+- At the time, all 13 split UI repos had TS-aware quality gates with full tooling (**historical**; active UIs: see
+  banner above)
 
 ---
 
@@ -25,20 +32,20 @@ dependency corrections.
 
 All changes applied to `unified-trading-pm/workspace-manifest.json`:
 
-| #    | Task                                                | Status                                                                       |
-| ---- | --------------------------------------------------- | ---------------------------------------------------------------------------- |
-| 0.1  | Add `status: "active"` to 35 repos                  | DONE                                                                         |
-| 0.2  | Fix `deployment-service` entry (folder_name)        | DONE (removed after Phase 1 rename)                                          |
-| 0.3  | Add 3 missing repos to manifest                     | DONE — execution-analytics-ui, unified-trading-ui-auth added. Now 60 repos.  |
-| 0.4  | Normalize `"SCAFFOLDED"` → `"scaffolded"`           | DONE                                                                         |
-| 0.5  | Add missing metadata to 6 repos                     | DONE                                                                         |
-| 0.6  | Normalize dependency format                         | DONE                                                                         |
-| 0.7  | Remove `ibkr-gateway-infra` from topo order L2      | DONE                                                                         |
-| 0.8  | Remove service-to-service deps from manifest        | DONE — market-data-processing-service, market-tick-data-service deps removed |
-| 0.9  | Update stale QG statuses                            | DONE                                                                         |
-| 0.10 | Sync manifest versions to pyproject.toml            | DONE — 16 repos synced                                                       |
-| 0.11 | Sync manifest dependency arrays with pyproject.toml | DONE                                                                         |
-| 0.12 | Fix PM version to 0.7.0                             | DONE                                                                         |
+| #    | Task                                                | Status                                                                                                        |
+| ---- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 0.1  | Add `status: "active"` to 35 repos                  | DONE                                                                                                          |
+| 0.2  | Fix `deployment-service` entry (folder_name)        | DONE (removed after Phase 1 rename)                                                                           |
+| 0.3  | Add 3 missing repos to manifest                     | DONE — added missing split UI repos (e.g. `execution-analytics-ui`, `unified-trading-ui-auth`). Now 60 repos. |
+| 0.4  | Normalize `"SCAFFOLDED"` → `"scaffolded"`           | DONE                                                                                                          |
+| 0.5  | Add missing metadata to 6 repos                     | DONE                                                                                                          |
+| 0.6  | Normalize dependency format                         | DONE                                                                                                          |
+| 0.7  | Remove `ibkr-gateway-infra` from topo order L2      | DONE                                                                                                          |
+| 0.8  | Remove service-to-service deps from manifest        | DONE — market-data-processing-service, market-tick-data-service deps removed                                  |
+| 0.9  | Update stale QG statuses                            | DONE                                                                                                          |
+| 0.10 | Sync manifest versions to pyproject.toml            | DONE — 16 repos synced                                                                                        |
+| 0.11 | Sync manifest dependency arrays with pyproject.toml | DONE                                                                                                          |
+| 0.12 | Fix PM version to 0.7.0                             | DONE                                                                                                          |
 
 ---
 
@@ -105,7 +112,8 @@ All steps completed:
 8 repos got new cloudbuild.yaml files:
 
 - unified-internal-contracts, unified-sports-execution-interface, unified-feature-calculator-library
-- unified-ml-interface, features-sports-service, execution-results-api, market-data-api, client-reporting-api
+- unified-ml-interface, features-sports-service, unified-trading-api (consolidated; supersedes archived
+  execution-results-api), market-data-api, client-reporting-api
 
 ### 3c: ImportError fixes — DONE
 
@@ -207,21 +215,25 @@ All steps completed:
 
 The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check → vitest → Playwright → security
 
-**13 UI repos on disk (all fully aligned):**
+**13 split UI repos on disk at the time (historical list — Versa era; fully aligned then).** **2026-03:** Consolidated
+product UI is **`unified-trading-system-ui`**; **`deployment-ui`** remains; other names below mostly live under
+workspace-root **`archive/README.md`** or **`unified-trading-system-ui/_reference/`** (frozen).
 
 1. batch-audit-ui
 2. client-reporting-ui
 3. deployment-ui
 4. execution-analytics-ui
-5. execution-analytics-ui
-6. live-health-monitor-ui
-7. logs-dashboard-ui
-8. ml-training-ui
-9. onboarding-ui
-10. settlement-ui
-11. strategy-ui
-12. trading-analytics-ui
-13. unified-trading-ui-auth
+5. live-health-monitor-ui
+6. logs-dashboard-ui
+7. ml-training-ui
+8. onboarding-ui
+9. settlement-ui
+10. strategy-ui
+11. trading-analytics-ui
+12. unified-trading-ui-auth
+
+(The original completion log also listed `execution-analytics-ui` twice to reach “13 lines”; **12** distinct Versa-era
+UI repos.)
 
 **Tooling added to repos that were missing it:**
 
@@ -236,7 +248,8 @@ The script pipeline: deps → auto-fix → ESLint → tsc → prettier-check →
 | playwright.config.ts created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                          |
 | Smoke test scaffolds created | deployment-ui, strategy-ui, unified-trading-ui-auth                                                                                                                                          |
 
-**All 13 repos now have:** Playwright, ESLint, vitest, prettier, TypeScript strict, TS-aware quality-gates.sh
+**All split UI repos in the matrix above now had:** Playwright, ESLint, vitest, prettier, TypeScript strict, TS-aware
+quality-gates.sh
 
 ---
 
@@ -285,14 +298,19 @@ rg "unified_trading_services|unified_cloud_services" --type py --glob '!.venv*' 
 rg "unified-cloud-services|unified-domain-services|api-contracts" --glob '*/pyproject.toml' --glob '!.venv*'
 # Expected: zero results
 
-# UI repos: verify all have TS QG script
-for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
+# UI repos (historical Versa-era list — many under archive/ now): verify TS QG script
+for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
     grep -q "QUALITY GATES (UI)" "$repo/scripts/quality-gates.sh" && echo "$repo: OK" || echo "$repo: MISSING"
 done
-# Expected: all OK
+# Expected: OK where repo still exists on disk
 
-# UI repos: verify full tooling
-for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
+# Active product UIs (2026-03): at minimum these should have TS QG
+for repo in unified-trading-system-ui deployment-ui; do
+    grep -q "QUALITY GATES (UI)" "$repo/scripts/quality-gates.sh" && echo "$repo: OK" || echo "$repo: MISSING"
+done
+
+# UI repos: verify full tooling (historical list)
+for repo in batch-audit-ui client-reporting-ui deployment-ui execution-analytics-ui live-health-monitor-ui logs-dashboard-ui ml-training-ui onboarding-ui settlement-ui strategy-ui trading-analytics-ui unified-trading-ui-auth; do
     ok=true
     grep -q '"@playwright/test"' "$repo/package.json" || ok=false
     grep -q '"eslint"' "$repo/package.json" || ok=false

@@ -131,6 +131,22 @@ Test that CLI correctly switches between GCP and AWS backends:
 | 5.5 | State bucket derivation (GCP)                      | `unified-deployment-state-{project_id}` |        |
 | 5.6 | State bucket derivation (AWS)                      | `unified-deployment-state-{account_id}` |        |
 
+### Phase 3b: Data Source Toggle (--source flag)
+
+Test the manifest vs GCS data source modes for `data-status`:
+
+| #    | Command / Config                                                                                               | Expected                                                   | Status |
+| ---- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------ |
+| 3b.1 | `data-status -s instruments-service --start-date 2026-03-21 --end-date 2026-03-21 --source manifest`           | Fast result from Parquet manifests via DuckDB              |        |
+| 3b.2 | `data-status -s instruments-service --start-date 2026-03-21 --end-date 2026-03-21 --source gcs`                | Original GCS blob-scan behavior, same data                 |        |
+| 3b.3 | `data-status -s instruments-service --start-date 2026-03-21 --end-date 2026-03-21 --source auto`               | Tries manifest first, falls back to GCS if no manifests    |        |
+| 3b.4 | `data-status -s instruments-service --source manifest` vs `--source gcs` (same date range)                     | Output matches: same services, dates, completion %         |        |
+| 3b.5 | `DATA_STATUS_SOURCE=manifest data-status -s instruments-service --start-date 2026-03-21 --end-date 2026-03-21` | Env var selects manifest mode                              |        |
+| 3b.6 | `DATA_STATUS_SOURCE=gcs data-status ... --source manifest`                                                     | CLI flag overrides env var (manifest wins)                 |        |
+| 3b.7 | `data-status -s instruments-service --source manifest --check-venues`                                          | Falls back to GCS or errors (venues need blob granularity) |        |
+| 3b.8 | `data-status -s market-tick-data-service --source manifest --check-data-types`                                 | Falls back to GCS or errors (data-types need blob scan)    |        |
+| 3b.9 | `data-status -s instruments-service --source manifest` with no manifests written                               | Graceful empty result or auto-fallback to GCS              |        |
+
 ### Phase 5b: Mock vs Real A/B
 
 | #    | Config                                  | Expected                                        | Status |

@@ -38,11 +38,6 @@ logger = logging.getLogger(__name__)
 CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     # === API Services ===
     ("deployment-api", "deployment_api.deployment_api_config", "DeploymentApiConfig"),
-    ("config-api", "config_api.config", "ConfigApiConfig"),
-    ("trading-analytics-api", "trading_analytics_api.config", "TradingAnalyticsApiConfig"),
-    ("batch-audit-api", "batch_audit_api.config", "BatchAuditApiConfig"),
-    ("ml-inference-api", "ml_inference_api.config", "MLInferenceApiConfig"),
-    ("ml-training-api", "ml_training_api.config", "MLTrainingApiConfig"),
     ("market-data-api", "market_data_api.config", "MarketDataApiConfig"),
     ("client-reporting-api", "client_reporting_api.config", "ClientReportingApiConfig"),
     # === Core Services ===

@@ -2,6 +2,11 @@
 
 Reference for granting GitHub repo access. Access is managed on GitHub (per-repo or via organization teams).
 
+**Active surface (2026-03):** Primary UI **`unified-trading-system-ui`**, ops UI **`deployment-ui`**, HTTP APIs
+**`unified-trading-api`**, **`auth-api`**, **`deployment-api`**, plus domain APIs — see
+`scripts/dev/ui-api-mapping.json`. Split Versa-era UIs and deprecated standalone APIs live under workspace-root
+**`archive/README.md`**.
+
 ## Principals to grant access
 
 | Principal        | Type         |
@@ -11,25 +16,27 @@ Reference for granting GitHub repo access. Access is managed on GitHub (per-repo
 
 ## Repositories (11)
 
-Grant **datadodo** and **CosmicTrader** access to these repos:
+Grant **datadodo** and **CosmicTrader** access to these repos (high-touch subset; full list: `workspace-manifest.json`):
 
 | #   | Repo                             | GitHub URL                                                     |
 | --- | -------------------------------- | -------------------------------------------------------------- |
 | 1   | alerting-service                 | https://github.com/IggyIkenna/alerting-service                 |
-| 2   | deployment-api                   | https://github.com/IggyIkenna/deployment-api                   |
-| 3   | deployment-service               | https://github.com/IggyIkenna/deployment-service               |
-| 4   | execution-analytics-ui           | https://github.com/IggyIkenna/execution-analytics-ui           |
-| 5   | execution-analytics-ui           | https://github.com/IggyIkenna/execution-analytics-ui           |
+| 2   | auth-api                         | https://github.com/IggyIkenna/auth-api                         |
+| 3   | deployment-api                   | https://github.com/IggyIkenna/deployment-api                   |
+| 4   | deployment-service               | https://github.com/IggyIkenna/deployment-service               |
+| 5   | deployment-ui                    | https://github.com/IggyIkenna/deployment-ui                    |
 | 6   | features-multi-timeframe-service | https://github.com/IggyIkenna/features-multi-timeframe-service |
 | 7   | ml-training-ui                   | https://github.com/IggyIkenna/ml-training-ui                   |
 | 8   | system-integration-tests         | https://github.com/IggyIkenna/system-integration-tests         |
 | 9   | unified-api-contracts            | https://github.com/IggyIkenna/unified-api-contracts            |
 | 10  | unified-cloud-interface          | https://github.com/IggyIkenna/unified-cloud-interface          |
-| 11  | unified-trading-ui-auth          | https://github.com/IggyIkenna/unified-trading-ui-auth          |
+| 11  | unified-trading-system-ui        | https://github.com/IggyIkenna/unified-trading-system-ui        |
 
-_Note: `unified-cloud-interface`, `deployment-api`, `system-integration-tests`, `execution-analytics-ui`, and
-`ml-training-ui` may not have `github_url` in `workspace-manifest.json`; URLs above use the same owner. Adjust if your
-org or repo names differ._
+Also grant the same access to **`unified-trading-api`**, **`market-data-api`**, and **`client-reporting-api`**
+(first-class API repos referenced from the UI mapping).
+
+_Note: Some entries may not have `github_url` in `workspace-manifest.json`; URLs above use the same owner. Adjust if
+your org or repo names differ._
 
 ## How to grant access (GitHub)
 
@@ -39,13 +46,13 @@ org or repo names differ._
 2. **Settings** → **Collaborators and teams** (or **Collaborators** for personal repos).
 3. **Add people** → enter `datadodo` → choose role (Read / Write / Admin) → **Add**.
 4. Repeat for `CosmicTrader`.
-5. Repeat for all 11 repos.
+5. Repeat for all listed repos (including the three API repos in the note above).
 
 ### Via GitHub Organization (recommended if you use an org)
 
 1. Create a team (e.g. **Unified Trading – Dev**).
 2. Add **datadodo** and **CosmicTrader** to that team.
-3. Grant the team access to the 11 repos (Repository access → Add repositories → select all 11 → choose role).
+3. Grant the team access to the repos (Repository access → Add repositories → select all → choose role).
 
 ### Script (recommended)
 

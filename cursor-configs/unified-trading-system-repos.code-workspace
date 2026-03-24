@@ -1,192 +1,180 @@
 {
   "folders": [
     {
-      "path": ".",
+      "path": "../..",
       "name": "📁 Workspace Root"
     },
     {
-      "path": ".cursor",
+      "path": "../../.cursor",
       "name": "⚙️ Cursor Config"
     },
     {
-      "path": ".venv-workspace",
+      "path": "../../.venv-workspace",
       "name": "🐍 Venv"
     },
     {
-      "path": "unified-trading-codex",
+      "path": "../../auth-api"
+    },
+    {
+      "path": "../../batch-live-reconciliation-service"
+    },
+    {
+      "path": "../../client-reporting-api"
+    },
+    {
+      "path": "../../deployment-api"
+    },
+    {
+      "path": "../../deployment-service"
+    },
+    {
+      "path": "../../deployment-ui"
+    },
+    {
+      "path": "../../execution-algo-library"
+    },
+    {
+      "path": "../../execution-service"
+    },
+    {
+      "path": "../../features-calendar-service"
+    },
+    {
+      "path": "../../features-commodity-service"
+    },
+    {
+      "path": "../../features-cross-instrument-service"
+    },
+    {
+      "path": "../../features-delta-one-service"
+    },
+    {
+      "path": "../../features-multi-timeframe-service"
+    },
+    {
+      "path": "../../features-onchain-service"
+    },
+    {
+      "path": "../../features-sports-service"
+    },
+    {
+      "path": "../../features-volatility-service"
+    },
+    {
+      "path": "../../ibkr-gateway-infra"
+    },
+    {
+      "path": "../../instruments-service"
+    },
+    {
+      "path": "../../market-data-api"
+    },
+    {
+      "path": "../../market-data-processing-service"
+    },
+    {
+      "path": "../../market-tick-data-service"
+    },
+    {
+      "path": "../../matching-engine-library"
+    },
+    {
+      "path": "../../ml-inference-service"
+    },
+    {
+      "path": "../../ml-training-service"
+    },
+    {
+      "path": "../../pnl-attribution-service"
+    },
+    {
+      "path": "../../position-balance-monitor-service"
+    },
+    {
+      "path": "../../risk-and-exposure-service"
+    },
+    {
+      "path": "../../strategy-service"
+    },
+    {
+      "path": "../../system-integration-tests"
+    },
+    {
+      "path": "../../trading-agent-service"
+    },
+    {
+      "path": "../../unified-api-contracts"
+    },
+    {
+      "path": "../../unified-cloud-interface"
+    },
+    {
+      "path": "../../unified-config-interface"
+    },
+    {
+      "path": "../../unified-defi-execution-interface"
+    },
+    {
+      "path": "../../unified-domain-client"
+    },
+    {
+      "path": "../../unified-events-interface"
+    },
+    {
+      "path": "../../unified-feature-calculator-library"
+    },
+    {
+      "path": "../../unified-feature-orchestration-library"
+    },
+    {
+      "path": "../../unified-features-interface"
+    },
+    {
+      "path": "../../unified-internal-contracts"
+    },
+    {
+      "path": "../../unified-market-interface"
+    },
+    {
+      "path": "../../unified-ml-interface"
+    },
+    {
+      "path": "../../unified-position-interface"
+    },
+    {
+      "path": "../../unified-reference-data-interface"
+    },
+    {
+      "path": "../../unified-sports-execution-interface"
+    },
+    {
+      "path": "../../unified-sports-reference-interface"
+    },
+    {
+      "path": "../../unified-trade-execution-interface"
+    },
+    {
+      "path": "../../unified-trading-api"
+    },
+    {
+      "path": "../../unified-trading-codex",
       "name": "📚 Codex"
     },
     {
-      "path": "unified-trading-pm",
+      "path": "../../unified-trading-library"
+    },
+    {
+      "path": "../../unified-trading-pm",
       "name": "📋 Project Management"
     },
     {
-      "path": "unified-trading-system-ui",
+      "path": "../../unified-trading-system-ui",
       "name": "🎨 UI"
-    },
-    {
-      "path": "alerting-service"
-    },
-    {
-      "path": "batch-audit-api"
-    },
-    {
-      "path": "batch-live-reconciliation-service"
-    },
-    {
-      "path": "client-reporting-api"
-    },
-    {
-      "path": "deployment-api"
-    },
-    {
-      "path": "deployment-service"
-    },
-    {
-      "path": "execution-algo-library"
-    },
-    {
-      "path": "execution-results-api"
-    },
-    {
-      "path": "execution-service"
-    },
-    {
-      "path": "features-calendar-service"
-    },
-    {
-      "path": "features-commodity-service"
-    },
-    {
-      "path": "features-cross-instrument-service"
-    },
-    {
-      "path": "features-delta-one-service"
-    },
-    {
-      "path": "features-multi-timeframe-service"
-    },
-    {
-      "path": "features-onchain-service"
-    },
-    {
-      "path": "features-sports-service"
-    },
-    {
-      "path": "features-volatility-service"
-    },
-    {
-      "path": "ibkr-gateway-infra"
-    },
-    {
-      "path": "instruments-service"
-    },
-    {
-      "path": "market-data-api"
-    },
-    {
-      "path": "market-data-processing-service"
-    },
-    {
-      "path": "market-tick-data-service"
-    },
-    {
-      "path": "matching-engine-library"
-    },
-    {
-      "path": "ml-inference-api"
-    },
-    {
-      "path": "ml-inference-service"
-    },
-    {
-      "path": "ml-training-api"
-    },
-    {
-      "path": "ml-training-service"
-    },
-    {
-      "path": "odum-research-website"
-    },
-    {
-      "path": "pnl-attribution-service"
-    },
-    {
-      "path": "position-balance-monitor-service"
-    },
-    {
-      "path": "risk-and-exposure-service"
-    },
-    {
-      "path": "strategy-service"
-    },
-    {
-      "path": "system-integration-tests"
-    },
-    {
-      "path": "trading-agent-service"
-    },
-    {
-      "path": "trading-analytics-api"
-    },
-    {
-      "path": "unified-api-contracts"
-    },
-    {
-      "path": "unified-cloud-interface"
-    },
-    {
-      "path": "unified-config-interface"
-    },
-    {
-      "path": "unified-defi-execution-interface"
-    },
-    {
-      "path": "unified-domain-client"
-    },
-    {
-      "path": "unified-events-interface"
-    },
-    {
-      "path": "unified-feature-calculator-library"
-    },
-    {
-      "path": "unified-feature-orchestration-library"
-    },
-    {
-      "path": "unified-features-interface"
-    },
-    {
-      "path": "unified-internal-contracts"
-    },
-    {
-      "path": "unified-market-interface"
-    },
-    {
-      "path": "unified-ml-interface"
-    },
-    {
-      "path": "unified-position-interface"
-    },
-    {
-      "path": "unified-reference-data-interface"
-    },
-    {
-      "path": "unified-sports-execution-interface"
-    },
-    {
-      "path": "unified-sports-reference-interface"
-    },
-    {
-      "path": "unified-trade-execution-interface"
-    },
-    {
-      "path": "unified-trading-library"
     }
   ],
   "settings": {
     "terminal.integrated.env.osx": {
-      "UNIFIED_TRADING_WORKSPACE_ROOT": "${workspaceFolder}",
+      "UNIFIED_TRADING_WORKSPACE_ROOT": "${workspaceFolder}"
     },
     "scm.repositories.visible": 100,
     "git.maxRepositoryCount": 100,
@@ -224,15 +212,15 @@
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit",
-      },
+        "source.organizeImports": "explicit"
+      }
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
@@ -258,7 +246,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -281,26 +269,26 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true,
+      "**/coverage/**": true
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
+    "files.trimFinalNewlines": true
   },
   "extensions": {
     "unwantedRecommendations": [
       "ms-python.pylance",
       "ms-python.mypy-type-checker",
       "ms-python.black-formatter",
-      "ms-python.isort",
-    ],
-  },
+      "ms-python.isort"
+    ]
+  }
 }

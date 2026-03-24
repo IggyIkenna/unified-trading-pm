@@ -66,7 +66,7 @@ def _make_strategy(
 class TestInstrumentFormat:
     def test_valid_formats(self) -> None:
         assert MOD.validate_instrument_format("BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN") is True
-        assert MOD.validate_instrument_format("AAVE_V3_ETH:A_TOKEN:AUSDT@ETHEREUM") is True
+        assert MOD.validate_instrument_format("AAVEV3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM") is True
         assert MOD.validate_instrument_format("DERIBIT:OPTION:BTC-28MAR26-80000-C") is True
         assert MOD.validate_instrument_format("IBKR:EQUITY:SPY") is True
 
@@ -83,7 +83,7 @@ class TestInstrumentFormat:
 class TestInstrumentParsing:
     def test_extract_venue(self) -> None:
         assert MOD.extract_instrument_venue("BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN") == "BINANCE-FUTURES"
-        assert MOD.extract_instrument_venue("AAVE_V3_ETH:A_TOKEN:AUSDT") == "AAVE_V3_ETH"
+        assert MOD.extract_instrument_venue("AAVEV3_ETHEREUM:A_TOKEN:AUSDT") == "AAVEV3_ETHEREUM"
 
     def test_extract_type(self) -> None:
         assert MOD.extract_instrument_type("BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN") == "PERPETUAL"

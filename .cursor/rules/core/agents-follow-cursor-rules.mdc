@@ -56,6 +56,8 @@ Do NOT build ad-hoc solutions. See SUB_AGENT_MANDATORY_RULES.md §0 for the full
 
 - Follow all workspace cursor rules in .cursorrules and .cursor/rules
 - uv not pip, basedpyright not pyright, quickmerge not git push
+- Push before quickmerge when the branch has **unpushed commits** (stash does not protect commits) — see
+  `always-use-quickmerge.mdc` § Push before quickmerge
 - Delete deprecated code; no parallel code paths
 - Search unified libraries before implementing anything new (§0 decision tree)
 - No *_SUMMARY.md; plans only in unified-trading-pm/plans/

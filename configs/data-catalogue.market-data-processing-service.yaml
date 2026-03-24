@@ -47,14 +47,14 @@ api_query_results:
     dates_expected: 31
     prefixes_queried: 1
     expected_venues:
-      - AAVE_V3_ETH
+      - AAVEV3_ETHEREUM
       - ETHENA
       - ETHERFI
       - LIDO
       - MORPHO-ETHEREUM
-      - UNISWAPV2-ETH
-      - UNISWAPV3-ETH
-      - UNISWAPV4-ETH
+      - UNISWAPV2-ETHEREUM
+      - UNISWAPV3-ETHEREUM
+      - UNISWAPV4-ETHEREUM
     found_venues: []
     venue_coverage_pct: 0.0
 catalogue_dimensions:
@@ -459,7 +459,7 @@ shard_status:
           notes: FX rates. Daily only. 0% Jan 2025.
   DEFI:
     _status: 0.0% -- 0/31 dates found (Jan 2025 API sample)
-    UNISWAPV2-ETH:
+    UNISWAPV2-ETHEREUM:
       instrument_types:
         POOL:
           timeframes:
@@ -477,7 +477,7 @@ shard_status:
           latest_data_date: null
           assignee: ""
           notes: 0% Jan 2025. No MDPS output found.
-    UNISWAPV3-ETH:
+    UNISWAPV3-ETHEREUM:
       instrument_types:
         POOL:
           timeframes:
@@ -495,7 +495,7 @@ shard_status:
           latest_data_date: null
           assignee: ""
           notes: 0% Jan 2025. No MDPS output found.
-    UNISWAPV4-ETH:
+    UNISWAPV4-ETHEREUM:
       instrument_types:
         POOL:
           timeframes:
@@ -513,7 +513,7 @@ shard_status:
           latest_data_date: null
           assignee: ""
           notes: 0% Jan 2025. No MDPS output found.
-    AAVE_V3_ETH:
+    AAVEV3_ETHEREUM:
       instrument_types:
         POOL:
           timeframes:
@@ -625,7 +625,9 @@ priority_gaps:
         - 24h
       reason:
         CEFI blocked upstream -- TARDIS API issue means no raw tick data to process. 5859 prefixes queried, 0 found.
-    - venue: ALL DEFI (UNISWAPV2-ETH, UNISWAPV3-ETH, UNISWAPV4-ETH, AAVE_V3_ETH, MORPHO-ETHEREUM, LIDO, ETHERFI, ETHENA)
+    - venue:
+        ALL DEFI (UNISWAPV2-ETHEREUM, UNISWAPV3-ETHEREUM, UNISWAPV4-ETHEREUM, AAVEV3_ETHEREUM, MORPHO-ETHEREUM, LIDO,
+        ETHERFI, ETHENA)
       category: DEFI
       completion_pct: 0.0
       timeframes_found: []

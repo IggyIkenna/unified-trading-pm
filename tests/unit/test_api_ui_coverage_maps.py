@@ -222,21 +222,23 @@ class TestCrossMapConsistency:
 class TestOrphanSummary:
     """Summary statistics about orphan endpoints to ensure awareness."""
 
-    def test_api_orphan_count_documented(self, api_to_ui: dict[str, object]) -> None:
-        """Count API orphans. This test documents the count; it does not fail on orphans.
-        Orphans are expected for internal/metrics/health endpoints."""
+    def test_api_orphan_count_documented(self, api_to_ui: dict[str, object], ui_api_mapping: dict[str, object]) -> None:
+        """Count API orphans for **active dev-stack APIs** only (see ui-api-mapping.json stacks).
+
+        Archived APIs may remain in api-to-ui-coverage.json for reference; they must not dominate
+        the orphan ratio."""
+        stacks = ui_api_mapping.get("stacks", {})
+        active_apis = {entry["api"] for entry in stacks.values() if isinstance(entry, dict) and entry.get("api")}
         orphan_count = 0
         total_count = 0
         for api_name, api_data in api_to_ui.items():
-            if api_name.startswith("$"):
+            if api_name.startswith("$") or api_name not in active_apis:
                 continue
             for ep in api_data["endpoints"]:
                 total_count += 1
                 if ep["orphan"]:
                     orphan_count += 1
-        # Just ensure we have data
-        assert total_count > 0, "No endpoints found in api-to-ui-coverage"
-        # Orphan ratio should be reasonable (under 50%)
+        assert total_count > 0, "No endpoints found for active dev-stack APIs in api-to-ui-coverage"
         ratio = orphan_count / total_count
         assert ratio < 0.5, f"Orphan ratio {ratio:.1%} ({orphan_count}/{total_count}) is too high"
 

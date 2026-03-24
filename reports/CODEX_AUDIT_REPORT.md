@@ -1,3 +1,8 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`.
+
+---
+
 # Coding Standards (Codex) Audit Report
 
 **Plan:** coding_standards_codex_audit.plan.md **Generated:** 2026-03-04 **SSOT:**
@@ -23,7 +28,7 @@ unified-trading-codex/06-coding-standards/
 | deployment-api                     | PASS             | PASS     | PASS                 |
 | deployment-service                 | PASS             | PASS     | PASS                 |
 | execution-algo-library             | PASS             | PASS     | PASS                 |
-| execution-results-api              | PASS             | PASS     | PASS                 |
+| unified-trading-api                | PASS             | PASS     | PASS                 |
 | execution-service                  | PASS             | PASS     | PASS                 |
 | features-calendar-service          | PASS             | PASS     | PASS                 |
 | features-cross-instrument-service  | PASS             | PASS     | PASS                 |

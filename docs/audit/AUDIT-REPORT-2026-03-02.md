@@ -1,3 +1,8 @@
+**Naming note (2026-03-24):** Historical snapshot. Active API/UI surface: `scripts/dev/ui-api-mapping.json`,
+`workspace-manifest.json`, and workspace-root `archive/README.md`.
+
+---
+
 # Unified Trading System — Comprehensive Audit Report
 
 **Date:** 2026-03-02 **Auditor:** Claude Opus 4.6 (15 parallel agents) **Scope:** Workspace-wide (60 repos, 25 audit
@@ -69,7 +74,7 @@ See: `unified-trading-pm/docs/audit/DEFERRED-ISSUES-DECISIONS.md` for full decis
 | ml-training-service              | 48        | 48%      | BLOCKED (11 test failures)                 |
 | features-volatility-service      | 37        | 37%      | BLOCKED (15 test failures)                 |
 | unified-domain-client            | 37        | 37%      | BLOCKED (8 test failures)                  |
-| execution-results-api            | 21        | 21%      | NEEDS TESTS                                |
+| unified-trading-api              | 21        | 21%      | NEEDS TESTS                                |
 | deployment-service               | 21        | 21%      | NEEDS TESTS                                |
 | execution-service                | 55        | N/A      | BLOCKED (ImportError)                      |
 | features-delta-one-service       | 55        | N/A      | BLOCKED (import errors)                    |
@@ -116,7 +121,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Description:** All 5 API services check `os.getenv("DISABLE_AUTH", "false")` and if `"true"`, bypass all auth
   returning `"dev-mode"`. No production guard prevents this from being set in Cloud Run.
 - **Files:**
-  - `execution-results-api/execution_results_api/auth.py:23`
+  - `unified-trading-api/unified_trading_api/auth.py:23`
   - `alerting-service/alerting_service/auth.py:23`
   - `client-reporting-api/client_reporting_api/auth.py:37`
   - `market-data-api/market_data_api/auth.py:23`
@@ -207,7 +212,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
   - `execution-service/execution_service/cli/backtest.py:171,177,183`
   - `features-sports-service/features_sports_service/live_runner.py:8`
   - `features-volatility-service/tests/conftest.py:58-64` (6 occurrences)
-  - `execution-results-api/tests/test_results_service_phase_c.py` (12 occurrences)
+  - `unified-trading-api/tests/test_results_service_phase_c.py` (12 occurrences)
 - **Fix:**
   1. In production code: replace with `config.gcp_project_id` from `UnifiedCloudConfig`
   2. In scripts: accept `--project-id` CLI arg or read from config
@@ -251,11 +256,11 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 - **Files:** `unified-config-interface/pyproject.toml` (dependency on `unified-events-interface`)
 - **Fix:** Either inline the UEI functionality UCI needs, or promote UCI to T1, or amend tier_rules to allow T0-to-T0
 
-### ISS-011: execution-results-api depends on unified-domain-client (T3) — FIXED (false positive: no actual dependency)
+### ISS-011: unified-trading-api depends on unified-domain-client (T3) — FIXED (false positive: no actual dependency)
 
 - **Section:** S2 (Tier Architecture) | **Criterion:** 2.7
 - **Severity:** HIGH | **Time:** 2-4h | **Difficulty:** Medium
-- **Files:** `execution-results-api/pyproject.toml` (dependency on `unified-domain-client`)
+- **Files:** `unified-trading-api/pyproject.toml` (dependency on `unified-domain-client`)
 - **Fix:** Remove UDC dependency; route cloud storage through the proxied execution-service backend
 
 ### ISS-012: 5 services still import UnifiedCloudServicesConfig (old name) — FIXED
@@ -354,7 +359,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
   - `alerting-service/alerting_service/auth.py:23,27`
   - `deployment-api/deployment_api/auth.py:23,27`
   - `client-reporting-api/client_reporting_api/auth.py:37,41`
-  - `execution-results-api/execution_results_api/auth.py:23,27`
+  - `unified-trading-api/unified_trading_api/auth.py:23,27`
   - `execution_service/utils/gcs_service.py:54-86` (legacy file, 7 calls)
 - **Fix:**
   1. Create `ApiAuthConfig(BaseSettings)` in unified-config-interface
@@ -426,7 +431,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 
 - **Section:** S17 (Testing) | **Criterion:** 17.1.1
 - **Severity:** MEDIUM | **Time:** 28-56h total | **Difficulty:** Medium-High
-- **Repos:** deployment-service, execution-service, execution-results-api, features-delta-one-service,
+- **Repos:** deployment-service, execution-service, unified-trading-api, features-delta-one-service,
   features-sports-service, features-volatility-service, market-data-processing-service, ml-training-service,
   position-balance-monitor-service, risk-and-exposure-service, unified-domain-client, unified-events-interface,
   unified-internal-contracts, unified-market-interface
@@ -688,7 +693,7 @@ Issues are sorted by priority (P0 = immediate, P3 = polish). Each issue has:
 | ml-training-service        | WARN  | WARN  | PASS | FAIL   | WARN   | WARN | FAIL   | 5      |
 | features-delta-one-service | WARN  | FAIL  | PASS | PASS   | FAIL   | WARN | FAIL   | 5      |
 | unified-market-interface   | FAIL  | WARN  | PASS | FAIL   | FAIL   | FAIL | WARN   | 6      |
-| execution-results-api      | FAIL  | WARN  | FAIL | PASS   | WARN   | FAIL | FAIL   | 7      |
+| unified-trading-api        | FAIL  | WARN  | FAIL | PASS   | WARN   | FAIL | FAIL   | 7      |
 | strategy-service           | PASS  | WARN  | PASS | PASS   | WARN   | WARN | WARN   | 3      |
 | features-calendar-service  | PASS  | PASS  | PASS | PASS   | PASS   | WARN | PASS   | 1      |
 | unified-api-contracts      | PASS  | PASS  | PASS | PASS   | PASS   | FAIL | WARN   | 2      |
