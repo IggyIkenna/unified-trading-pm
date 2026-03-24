@@ -2539,6 +2539,17 @@
         "trading",
         "standard"
       ]
+    },
+    "deployment-ui": {
+      "type": "ui",
+      "arch_tier": "T3",
+      "version": "0.1.0",
+      "dependencies": [],
+      "ci_status": "BASELINE_RECORDED",
+      "testing_level": "unit",
+      "status": "active",
+      "tier": "T3",
+      "role": "Deployment management UI"
     }
   },
   "topologicalOrder": {
