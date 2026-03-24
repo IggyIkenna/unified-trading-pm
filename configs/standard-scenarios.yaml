@@ -1,0 +1,19 @@
+# Standard scenarios — long-lived, used for regression and E2E testing.
+# Custom scenarios (grid sweeps, ad-hoc backtests, sync-to-mock slices)
+# auto-expire after custom_scenario_expiry_days.
+
+standard_scenarios:
+  - name: default
+    description: Normal mock data seed, used for regression testing and UI demos
+    auto_expire: false
+  - name: stress
+    description: High cardinality (10x instruments, heavy load)
+    auto_expire: false
+  - name: missing_data
+    description: Instruments/features disappear mid-day (failure mode testing)
+    auto_expire: false
+  - name: corrupt_data
+    description: Malformed timestamps, invalid schemas (error handling testing)
+    auto_expire: false
+
+custom_scenario_expiry_days: 30
