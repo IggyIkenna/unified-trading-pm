@@ -3153,7 +3153,6 @@
     "risk-and-exposure-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.2.38,<1.0.0",
-        "unified-events-interface": "unified-events-interface>=0.2.2,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -3237,7 +3236,7 @@
           "uvicorn[standard]>=0.27.0,<1.0.0"
         ]
       },
-      "internal_count": 4,
+      "internal_count": 3,
       "external_count": 26
     },
     "batch-live-reconciliation-service": {
