@@ -126,21 +126,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
           "required": true
@@ -200,21 +185,6 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
         }
       ],
       "ci_status": "LOCAL_PASS",
@@ -263,6 +233,11 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
           "required": true
         }
       ],
@@ -375,6 +350,31 @@
           "name": "deployment-api",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "completion_path": "cefi",
@@ -476,23 +476,8 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-domain-client",
           "version": ">=0.1.14,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -573,21 +558,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
           "required": true
@@ -644,21 +614,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
           "required": true
@@ -712,21 +667,6 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -792,21 +732,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-features-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -868,21 +793,6 @@
           "required": true
         },
         {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-feature-calculator-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -938,21 +848,6 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -1019,21 +914,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-feature-calculator-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1066,6 +946,11 @@
         {
           "name": "unified-sports-reference-interface",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
           "required": true
         }
       ],
@@ -1113,21 +998,6 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -1241,16 +1111,6 @@
           "required": true
         },
         {
-          "name": "unified-config-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-reference-data-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1328,16 +1188,6 @@
           "required": true
         },
         {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
           "required": true
@@ -1394,16 +1244,6 @@
         {
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -1504,21 +1344,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
           "required": true
@@ -1586,21 +1411,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-feature-calculator-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
@@ -1654,21 +1464,6 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -1728,21 +1523,6 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-internal-contracts",
           "version": ">=0.1.2,<1.0.0",
           "required": true
@@ -1796,16 +1576,6 @@
       "dependencies": [
         {
           "name": "unified-api-contracts",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.1.0,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         },
@@ -1879,23 +1649,8 @@
           "required": true
         },
         {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
           "name": "unified-domain-client",
           "version": ">=0.1.14,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
@@ -2000,21 +1755,6 @@
         {
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-cloud-interface",
-          "version": ">=0.11.6,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-config-interface",
-          "version": ">=0.1.17,<1.0.0",
-          "required": true
-        },
-        {
-          "name": "unified-events-interface",
-          "version": ">=0.2.2,<1.0.0",
           "required": true
         },
         {
