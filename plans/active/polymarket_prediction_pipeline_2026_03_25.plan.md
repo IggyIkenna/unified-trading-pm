@@ -510,49 +510,49 @@ todos:
 
 ## Problem Statement
 
-The PREDICTION category exists in UIC MarketCategory but has zero pipeline wiring. Polymarket
-(the largest prediction market by volume) provides public APIs for crypto up/down markets
-(BTC/ETH/SOL all timeframes), equity index markets (SPX/NDX daily), and 25+ soccer/football
-leagues with moneyline/spreads/totals/btts markets. This data needs to flow through the standard
-instruments-service → market-tick-data-service pipeline with canonical instrument IDs that map
+The PREDICTION category exists in UIC MarketCategory but has zero pipeline wiring. Polymarket (the largest prediction
+market by volume) provides public APIs for crypto up/down markets (BTC/ETH/SOL all timeframes), equity index markets
+(SPX/NDX daily), and 25+ soccer/football leagues with moneyline/spreads/totals/btts markets. This data needs to flow
+through the standard instruments-service → market-tick-data-service pipeline with canonical instrument IDs that map
 Polymarket's team names, fixtures, and market types to our existing canonical formats.
 
 ## What Already Exists
 
-| Component | Location | Status |
-|-----------|----------|--------|
-| `MarketCategory.PREDICTION` | UIC `market_category.py:16` | Exists, unused |
-| Polymarket schemas | UAC `external/polymarket/schemas.py` | Complete (14 models) |
-| Polymarket normalizers | UAC `external/polymarket/normalize.py` | Complete (6 functions) |
-| Sports tag mappings | UAC `external/polymarket/sports_mappings.py` | 10 leagues mapped |
-| Crypto/macro tag mappings | UAC `external/polymarket/crypto_macro_mappings.py` | BTC+SPX only |
-| Research fetchers | `polymarket-correlation-research/` | Standalone, patterns to borrow |
-| `CanonicalBetMarket` | UAC `canonical/domain/` | Exists, used by normalize |
+| Component                   | Location                                           | Status                         |
+| --------------------------- | -------------------------------------------------- | ------------------------------ |
+| `MarketCategory.PREDICTION` | UIC `market_category.py:16`                        | Exists, unused                 |
+| Polymarket schemas          | UAC `external/polymarket/schemas.py`               | Complete (14 models)           |
+| Polymarket normalizers      | UAC `external/polymarket/normalize.py`             | Complete (6 functions)         |
+| Sports tag mappings         | UAC `external/polymarket/sports_mappings.py`       | 10 leagues mapped              |
+| Crypto/macro tag mappings   | UAC `external/polymarket/crypto_macro_mappings.py` | BTC+SPX only                   |
+| Research fetchers           | `polymarket-correlation-research/`                 | Standalone, patterns to borrow |
+| `CanonicalBetMarket`        | UAC `canonical/domain/`                            | Exists, used by normalize      |
 
 ## What's Missing
 
-| Gap | Where to fix |
-|-----|-------------|
-| PREDICTION not in `VENUE_CATEGORY_MAP` | UAC `registry/market_data_categories.py` |
-| No POLYMARKET venue in instruments-service | `orchestrator.py` |
-| No POLYMARKET venue in MTDS | `orchestrator.py` |
-| No UMI adapter for Polymarket | `unified_market_interface/adapters/` |
-| No URDI adapter for Polymarket | `unified_reference_data_interface/adapters/` |
-| Only 10/25+ soccer leagues mapped | UAC `sports_mappings.py` |
-| No team name normalization | UAC `sports_mappings.py` |
-| No fixture cross-reference | Needs URDI adapter at runtime |
-| No GCS buckets | Infrastructure |
-| SPX only has "1d" timeframe | UAC `crypto_macro_mappings.py` |
+| Gap                                        | Where to fix                                 |
+| ------------------------------------------ | -------------------------------------------- |
+| PREDICTION not in `VENUE_CATEGORY_MAP`     | UAC `registry/market_data_categories.py`     |
+| No POLYMARKET venue in instruments-service | `orchestrator.py`                            |
+| No POLYMARKET venue in MTDS                | `orchestrator.py`                            |
+| No UMI adapter for Polymarket              | `unified_market_interface/adapters/`         |
+| No URDI adapter for Polymarket             | `unified_reference_data_interface/adapters/` |
+| Only 10/25+ soccer leagues mapped          | UAC `sports_mappings.py`                     |
+| No team name normalization                 | UAC `sports_mappings.py`                     |
+| No fixture cross-reference                 | Needs URDI adapter at runtime                |
+| No GCS buckets                             | Infrastructure                               |
+| SPX only has "1d" timeframe                | UAC `crypto_macro_mappings.py`               |
 
 ## Polymarket API Architecture (Reference)
 
-| API | Endpoint | Auth | Use Case |
-|-----|----------|------|----------|
-| Gamma | `gamma-api.polymarket.com` | None | Market discovery, metadata, tags, series |
-| CLOB | `clob.polymarket.com` | L2 HMAC (optional for reads) | Order book, trades |
-| Data | `data-api.polymarket.com` | None | Historical trade fills (paginated) |
+| API   | Endpoint                   | Auth                         | Use Case                                 |
+| ----- | -------------------------- | ---------------------------- | ---------------------------------------- |
+| Gamma | `gamma-api.polymarket.com` | None                         | Market discovery, metadata, tags, series |
+| CLOB  | `clob.polymarket.com`      | L2 HMAC (optional for reads) | Order book, trades                       |
+| Data  | `data-api.polymarket.com`  | None                         | Historical trade fills (paginated)       |
 
 **Key Gamma fields for sports markets:**
+
 - `series[].slug` → league (e.g., "premier-league-2025")
 - `sportsMarketType` → market type (moneyline, spreads, totals, btts)
 - `line` → spread/total value (e.g., -1.5)
@@ -563,6 +563,7 @@ Polymarket's team names, fixtures, and market types to our existing canonical fo
 - `clobTokenIds` → [YES_token, NO_token]
 
 **Key Gamma fields for crypto/macro:**
+
 - `slug` → e.g., "btc-updown-5m-1774230900" or "spx-daily-up-or-down"
 - `outcomes` → ["Up", "Down"]
 - `resolutionSource` → Chainlink stream URL or Binance
@@ -570,70 +571,70 @@ Polymarket's team names, fixtures, and market types to our existing canonical fo
 
 ## Polymarket Soccer Leagues Available (25+)
 
-| Polymarket Series Slug | Canonical league_id | Country | Competition |
-|------------------------|-------------------|---------|-------------|
-| `premier-league-2025` | EPL | GB | English Premier League |
-| `efl-championship` | ENG_CHAMPIONSHIP | GB | English Championship |
-| `efa-2025` | FA_CUP | GB | FA Cup |
-| `la-liga-2025` | LAL | ES | La Liga |
-| `la-liga-2` | SPA_SEGUNDA | ES | Segunda División |
-| `copa-del-rey` | COPA_DEL_REY | ES | Copa del Rey |
-| `bundesliga-2025` | BUN | DE | Bundesliga |
-| `bundesliga-2` | GER_2BUNDESLIGA | DE | 2. Bundesliga |
-| `serie-a-2025` | SEA | IT | Serie A |
-| `ligue-1-2025` | FL1 | FR | Ligue 1 |
-| `ligue-2` | FR_LIGUE_2 | FR | Ligue 2 |
-| `scottish-premiership` | SCO_PREM | GB | Scottish Premiership |
-| `primeira-liga` | POR_PRIMEIRA | PT | Primeira Liga |
-| `denmark-superliga` | DEN_SUPERLIGA | DK | Superliga |
-| `norway-eliteserien` | NOR_ELITESERIEN | NO | Eliteserien |
-| `tur-2025` | TUR_SUPER_LIG | TR | Süper Lig |
-| `a-league-soccer` | AUS_ALEAGUE | AU | A-League |
-| `mls-2025` | MLS | US | Major League Soccer |
-| `primera-a` | COL_PRIMERA_A | CO | Primera A |
-| `primera-divisin-argentina` | ARG_PRIMERA | AR | Primera División |
-| `k-league` | KOR_KLEAGUE | KR | K League |
-| `japan-j2-league` | JPN_J2 | JP | J2 League |
-| `saudi-professional-league` | SAU_PRO_LEAGUE | SA | SPL |
-| `rus-2025` | RUS_PREMIER | RU | Premier League |
-| `ucl-2025` | UCL | INTL | Champions League |
-| `uel-2025` | UEL | INTL | Europa League |
-| `europa-conference-league` | UECL | INTL | Conference League |
-| `concacaf` | CONCACAF | INTL | CONCACAF |
-| `sud-2025` | COPA_SUDAMERICANA | INTL | Copa Sudamericana |
+| Polymarket Series Slug      | Canonical league_id | Country | Competition            |
+| --------------------------- | ------------------- | ------- | ---------------------- |
+| `premier-league-2025`       | EPL                 | GB      | English Premier League |
+| `efl-championship`          | ENG_CHAMPIONSHIP    | GB      | English Championship   |
+| `efa-2025`                  | FA_CUP              | GB      | FA Cup                 |
+| `la-liga-2025`              | LAL                 | ES      | La Liga                |
+| `la-liga-2`                 | SPA_SEGUNDA         | ES      | Segunda División       |
+| `copa-del-rey`              | COPA_DEL_REY        | ES      | Copa del Rey           |
+| `bundesliga-2025`           | BUN                 | DE      | Bundesliga             |
+| `bundesliga-2`              | GER_2BUNDESLIGA     | DE      | 2. Bundesliga          |
+| `serie-a-2025`              | SEA                 | IT      | Serie A                |
+| `ligue-1-2025`              | FL1                 | FR      | Ligue 1                |
+| `ligue-2`                   | FR_LIGUE_2          | FR      | Ligue 2                |
+| `scottish-premiership`      | SCO_PREM            | GB      | Scottish Premiership   |
+| `primeira-liga`             | POR_PRIMEIRA        | PT      | Primeira Liga          |
+| `denmark-superliga`         | DEN_SUPERLIGA       | DK      | Superliga              |
+| `norway-eliteserien`        | NOR_ELITESERIEN     | NO      | Eliteserien            |
+| `tur-2025`                  | TUR_SUPER_LIG       | TR      | Süper Lig              |
+| `a-league-soccer`           | AUS_ALEAGUE         | AU      | A-League               |
+| `mls-2025`                  | MLS                 | US      | Major League Soccer    |
+| `primera-a`                 | COL_PRIMERA_A       | CO      | Primera A              |
+| `primera-divisin-argentina` | ARG_PRIMERA         | AR      | Primera División       |
+| `k-league`                  | KOR_KLEAGUE         | KR      | K League               |
+| `japan-j2-league`           | JPN_J2              | JP      | J2 League              |
+| `saudi-professional-league` | SAU_PRO_LEAGUE      | SA      | SPL                    |
+| `rus-2025`                  | RUS_PREMIER         | RU      | Premier League         |
+| `ucl-2025`                  | UCL                 | INTL    | Champions League       |
+| `uel-2025`                  | UEL                 | INTL    | Europa League          |
+| `europa-conference-league`  | UECL                | INTL    | Conference League      |
+| `concacaf`                  | CONCACAF            | INTL    | CONCACAF               |
+| `sud-2025`                  | COPA_SUDAMERICANA   | INTL    | Copa Sudamericana      |
 
 ## Polymarket Crypto/Macro Markets Available
 
-| Asset | Series Slug Pattern | Timeframes | Resolution |
-|-------|-------------------|------------|------------|
-| BTC | `btc-updown-{tf}-{ts}`, `bitcoin-up-or-down-*` | 5m, 15m, 1h, 4h, 1d, 1w, 1M | Chainlink BTC/USD |
-| ETH | `eth-updown-{tf}-{ts}`, `ethereum-up-or-down-*` | 5m, 15m, 1h, 4h, 1d, 1w, 1M | Chainlink ETH/USD |
-| SOL | `sol-updown-{tf}-{ts}`, `solana-up-or-down-*` | 5m, 15m, 1h, 4h, 1d | Chainlink SOL/USD |
-| XRP | `xrp-updown-{tf}-{ts}`, `xrp-up-or-down-*` | 5m, 15m, 1h, 4h, 1w | Chainlink XRP/USD |
-| DOGE | `doge-updown-{tf}-{ts}` | 5m, 15m, 1d, 1M | Chainlink DOGE/USD |
-| BNB | `bnb-updown-{tf}-{ts}` | 5m, 15m, 4h, 1d | Chainlink BNB/USD |
-| HYPE | `hype-updown-{tf}-{ts}` | 5m, 15m, 1h, 4h, 1d | Chainlink |
-| SPX | `spx-daily-up-or-down`, `spx-hit-price-monthly` | 1d, 1M | Official close |
-| NDX | `ndx-daily-up-or-down`, `ndx-hit-price-monthly` | 1d, 1M | Official close |
-| DJIA | `dow-jones-daily-up-or-down` | 1d | Official close |
-| DAX | `dax-daily-up-or-down` | 1d | Official close |
-| Crude Oil | `crude-oil-cl-up-or-down`, `oil-daily-*` | 1d | NYMEX settlement |
-| Gold | `gold-daily-up-or-down` | 1d | COMEX settlement |
-| Silver | `silver-daily-up-or-down` | 1d | COMEX settlement |
-| EUR/USD | `eurusd-daily-up-or-down` | 1d | Forex close |
-| GBP/USD | `gbpusd-daily-up-or-down` | 1d | Forex close |
-| USD/JPY | `usdjpy-daily-up-or-down` | 1d | Forex close |
+| Asset     | Series Slug Pattern                             | Timeframes                  | Resolution         |
+| --------- | ----------------------------------------------- | --------------------------- | ------------------ |
+| BTC       | `btc-updown-{tf}-{ts}`, `bitcoin-up-or-down-*`  | 5m, 15m, 1h, 4h, 1d, 1w, 1M | Chainlink BTC/USD  |
+| ETH       | `eth-updown-{tf}-{ts}`, `ethereum-up-or-down-*` | 5m, 15m, 1h, 4h, 1d, 1w, 1M | Chainlink ETH/USD  |
+| SOL       | `sol-updown-{tf}-{ts}`, `solana-up-or-down-*`   | 5m, 15m, 1h, 4h, 1d         | Chainlink SOL/USD  |
+| XRP       | `xrp-updown-{tf}-{ts}`, `xrp-up-or-down-*`      | 5m, 15m, 1h, 4h, 1w         | Chainlink XRP/USD  |
+| DOGE      | `doge-updown-{tf}-{ts}`                         | 5m, 15m, 1d, 1M             | Chainlink DOGE/USD |
+| BNB       | `bnb-updown-{tf}-{ts}`                          | 5m, 15m, 4h, 1d             | Chainlink BNB/USD  |
+| HYPE      | `hype-updown-{tf}-{ts}`                         | 5m, 15m, 1h, 4h, 1d         | Chainlink          |
+| SPX       | `spx-daily-up-or-down`, `spx-hit-price-monthly` | 1d, 1M                      | Official close     |
+| NDX       | `ndx-daily-up-or-down`, `ndx-hit-price-monthly` | 1d, 1M                      | Official close     |
+| DJIA      | `dow-jones-daily-up-or-down`                    | 1d                          | Official close     |
+| DAX       | `dax-daily-up-or-down`                          | 1d                          | Official close     |
+| Crude Oil | `crude-oil-cl-up-or-down`, `oil-daily-*`        | 1d                          | NYMEX settlement   |
+| Gold      | `gold-daily-up-or-down`                         | 1d                          | COMEX settlement   |
+| Silver    | `silver-daily-up-or-down`                       | 1d                          | COMEX settlement   |
+| EUR/USD   | `eurusd-daily-up-or-down`                       | 1d                          | Forex close        |
+| GBP/USD   | `gbpusd-daily-up-or-down`                       | 1d                          | Forex close        |
+| USD/JPY   | `usdjpy-daily-up-or-down`                       | 1d                          | Forex close        |
 
 ## Canonical Instrument ID Format (SSOT)
 
-| Sub-category | Format | Example |
-|-------------|--------|---------|
-| Crypto up/down | `POLYMARKET::UP_DOWN::{ASSET}::{TF}::{WINDOW_END_TS}` | `POLYMARKET::UP_DOWN::BTC::5M::1774230900` |
-| Macro up/down | `POLYMARKET::UP_DOWN::{INDEX}::{TF}::{DATE}` | `POLYMARKET::UP_DOWN::SPX::1D::2026-03-25` |
-| Soccer moneyline | `POLYMARKET::MONEYLINE::{FIXTURE_ID}::{OUTCOME}` | `POLYMARKET::MONEYLINE::1034567::HOME` |
-| Soccer spreads | `POLYMARKET::SPREADS::{FIXTURE_ID}::{OUTCOME}_{LINE}` | `POLYMARKET::SPREADS::1034567::AWAY_-1.5` |
-| Soccer totals | `POLYMARKET::TOTALS::{FIXTURE_ID}::{OVER_UNDER}_{LINE}` | `POLYMARKET::TOTALS::1034567::OVER_2.5` |
-| Soccer BTTS | `POLYMARKET::BTTS::{FIXTURE_ID}::{YES_NO}` | `POLYMARKET::BTTS::1034567::YES` |
+| Sub-category     | Format                                                  | Example                                    |
+| ---------------- | ------------------------------------------------------- | ------------------------------------------ |
+| Crypto up/down   | `POLYMARKET::UP_DOWN::{ASSET}::{TF}::{WINDOW_END_TS}`   | `POLYMARKET::UP_DOWN::BTC::5M::1774230900` |
+| Macro up/down    | `POLYMARKET::UP_DOWN::{INDEX}::{TF}::{DATE}`            | `POLYMARKET::UP_DOWN::SPX::1D::2026-03-25` |
+| Soccer moneyline | `POLYMARKET::MONEYLINE::{FIXTURE_ID}::{OUTCOME}`        | `POLYMARKET::MONEYLINE::1034567::HOME`     |
+| Soccer spreads   | `POLYMARKET::SPREADS::{FIXTURE_ID}::{OUTCOME}_{LINE}`   | `POLYMARKET::SPREADS::1034567::AWAY_-1.5`  |
+| Soccer totals    | `POLYMARKET::TOTALS::{FIXTURE_ID}::{OVER_UNDER}_{LINE}` | `POLYMARKET::TOTALS::1034567::OVER_2.5`    |
+| Soccer BTTS      | `POLYMARKET::BTTS::{FIXTURE_ID}::{YES_NO}`              | `POLYMARKET::BTTS::1034567::YES`           |
 
 ## Category ID Format (Human-Readable Groupings)
 
@@ -647,10 +648,11 @@ PREDICTION                     ← MarketCategory enum value
 
 ## Fixture Cross-Reference Strategy
 
-Polymarket soccer markets identify fixtures by team names + game start time + series slug.
-Our canonical system uses API-Football fixture_ids.
+Polymarket soccer markets identify fixtures by team names + game start time + series slug. Our canonical system uses
+API-Football fixture_ids.
 
 **Runtime cross-reference flow:**
+
 1. URDI PolymarketReferenceAdapter discovers soccer markets via Gamma API
 2. Extract: home_team, away_team, gameStartTime, series_slug
 3. Map series_slug → canonical league_id (static table in sports_mappings.py)
@@ -660,6 +662,7 @@ Our canonical system uses API-Football fixture_ids.
 7. If no match: use `PM_{gameId}` as fallback fixture_id
 
 **Team name normalization examples:**
+
 ```
 "Club Atlético de Madrid"    → "ATLETICO_MADRID"
 "Real Sociedad de Fútbol"    → "REAL_SOCIEDAD"
@@ -707,27 +710,32 @@ P7 (QG sweep) ────────────────── P7a: All re
 ## Success Criteria
 
 ### Phase 1
+
 - PREDICTION in VENUE_CATEGORY_MAP with POLYMARKET venue
 - 25+ soccer leagues mapped to canonical league_ids
 - All crypto/macro underlyings and timeframes registered
 - `cd unified-api-contracts && bash scripts/quality-gates.sh` green
 
 ### Phase 2
+
 - Team name normalization covers all teams in 25+ leagues
 - sportsMarketType mapped to canonical types
 - PolymarketGammaMarket schema has all sports-specific fields
 
 ### Phase 3
+
 - URDI adapter discovers markets from all 3 sub-categories
 - UMI adapter fetches trades with canonical instrument IDs
 - Both adapters handle rate limiting and pagination correctly
 
 ### Phase 4
+
 - `instruments-service --category PREDICTION` produces InstrumentRecord[]
 - `market-tick-data-service --category PREDICTION` writes tick data to GCS
 - Canonical instrument IDs consistent across both services
 
 ### Phase 6
+
 - B4: 1-day pipeline end-to-end with zero errors for both crypto and soccer
 - Soccer fixture_ids cross-referenced with API-Football where possible
 - Trade data includes volume, price, side, timestamp for all markets
@@ -736,30 +744,30 @@ P7 (QG sweep) ────────────────── P7a: All re
 
 ### Symbols being ADDED (no existing consumers to break)
 
-| Symbol | Where | Consumers |
-|--------|-------|-----------|
-| PREDICTION in VENUE_CATEGORY_MAP | UAC registry | instruments-service, MTDS |
-| PolymarketReferenceAdapter | URDI adapters/ | instruments-service |
-| PolymarketTickAdapter | UMI adapters/ | MTDS |
-| POLYMARKET_TEAM_TO_CANONICAL | UAC external/polymarket | URDI adapter |
-| build_prediction_instrument_id() | UAC canonical/domain/prediction | URDI, UMI adapters |
-| parse_prediction_instrument_id() | UAC canonical/domain/prediction | downstream consumers |
+| Symbol                           | Where                           | Consumers                 |
+| -------------------------------- | ------------------------------- | ------------------------- |
+| PREDICTION in VENUE_CATEGORY_MAP | UAC registry                    | instruments-service, MTDS |
+| PolymarketReferenceAdapter       | URDI adapters/                  | instruments-service       |
+| PolymarketTickAdapter            | UMI adapters/                   | MTDS                      |
+| POLYMARKET_TEAM_TO_CANONICAL     | UAC external/polymarket         | URDI adapter              |
+| build_prediction_instrument_id() | UAC canonical/domain/prediction | URDI, UMI adapters        |
+| parse_prediction_instrument_id() | UAC canonical/domain/prediction | downstream consumers      |
 
 ### Files that need changes
 
-| File | Change | Action |
-|------|--------|--------|
-| `unified_api_contracts/registry/market_data_categories.py` | Add PREDICTION category | Edit |
-| `unified_api_contracts/external/polymarket/sports_mappings.py` | Expand to 25+ leagues + team names | Edit |
-| `unified_api_contracts/external/polymarket/crypto_macro_mappings.py` | Add all assets + timeframes | Edit |
-| `unified_api_contracts/external/polymarket/schemas.py` | Add sports-specific Gamma fields | Edit |
-| `unified_api_contracts/canonical/domain/prediction/__init__.py` | New: canonical ID helpers | Create |
-| `unified_reference_data_interface/adapters/polymarket.py` | New: reference adapter | Create |
-| `unified_reference_data_interface/factory.py` | Register POLYMARKET adapter | Edit |
-| `unified_market_interface/adapters/polymarket.py` | New: tick adapter | Create |
-| `instruments_service/engine/orchestrator.py` | Add PREDICTION → POLYMARKET | Edit |
-| `market_tick_data_service/engine/orchestrator.py` | Add PREDICTION → POLYMARKET | Edit |
-| `unified-trading-codex/02-data/prediction-schema-paths.md` | New: PREDICTION paths doc | Create |
+| File                                                                 | Change                             | Action |
+| -------------------------------------------------------------------- | ---------------------------------- | ------ |
+| `unified_api_contracts/registry/market_data_categories.py`           | Add PREDICTION category            | Edit   |
+| `unified_api_contracts/external/polymarket/sports_mappings.py`       | Expand to 25+ leagues + team names | Edit   |
+| `unified_api_contracts/external/polymarket/crypto_macro_mappings.py` | Add all assets + timeframes        | Edit   |
+| `unified_api_contracts/external/polymarket/schemas.py`               | Add sports-specific Gamma fields   | Edit   |
+| `unified_api_contracts/canonical/domain/prediction/__init__.py`      | New: canonical ID helpers          | Create |
+| `unified_reference_data_interface/adapters/polymarket.py`            | New: reference adapter             | Create |
+| `unified_reference_data_interface/factory.py`                        | Register POLYMARKET adapter        | Edit   |
+| `unified_market_interface/adapters/polymarket.py`                    | New: tick adapter                  | Create |
+| `instruments_service/engine/orchestrator.py`                         | Add PREDICTION → POLYMARKET        | Edit   |
+| `market_tick_data_service/engine/orchestrator.py`                    | Add PREDICTION → POLYMARKET        | Edit   |
+| `unified-trading-codex/02-data/prediction-schema-paths.md`           | New: PREDICTION paths doc          | Create |
 
 ## Verification
 

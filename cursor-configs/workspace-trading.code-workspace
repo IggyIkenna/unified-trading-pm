@@ -2,61 +2,61 @@
   "folders": [
     {
       "path": "../..",
-      "name": "📁 Workspace Root"
+      "name": "📁 Workspace Root",
     },
     {
       "path": "../../.cursor",
-      "name": "⚙️ Cursor Config"
+      "name": "⚙️ Cursor Config",
     },
     {
       "path": "../../.venv-workspace",
-      "name": "🐍 Venv"
+      "name": "🐍 Venv",
     },
     {
       "path": "../../unified-trading-codex",
-      "name": "📚 Codex"
+      "name": "📚 Codex",
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "📋 PM"
+      "name": "📋 PM",
     },
     {
-      "path": "../../execution-service"
+      "path": "../../execution-service",
     },
     {
-      "path": "../../unified-trading-api"
+      "path": "../../unified-trading-api",
     },
     {
       "path": "../../unified-trading-system-ui",
-      "name": "🎨 UI"
+      "name": "🎨 UI",
     },
     {
-      "path": "../../strategy-service"
+      "path": "../../strategy-service",
     },
     {
-      "path": "../../position-balance-monitor-service"
+      "path": "../../position-balance-monitor-service",
     },
     {
-      "path": "../../risk-and-exposure-service"
+      "path": "../../risk-and-exposure-service",
     },
     {
-      "path": "../../pnl-attribution-service"
+      "path": "../../pnl-attribution-service",
     },
     {
-      "path": "../../unified-trade-execution-interface"
+      "path": "../../unified-trade-execution-interface",
     },
     {
-      "path": "../../unified-sports-execution-interface"
+      "path": "../../unified-sports-execution-interface",
     },
     {
-      "path": "../../unified-defi-execution-interface"
+      "path": "../../unified-defi-execution-interface",
     },
     {
-      "path": "../../execution-algo-library"
+      "path": "../../execution-algo-library",
     },
     {
-      "path": "../../matching-engine-library"
-    }
+      "path": "../../matching-engine-library",
+    },
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -74,40 +74,29 @@
     "cursorpyright.analysis.reportUnknownVariableType": "error",
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-      "tests",
-      "-v"
-    ],
+    "python.testing.pytestArgs": ["tests", "-v"],
     "files.autoSave": "onFocusChange",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": [
-      "E",
-      "F",
-      "W",
-      "I"
-    ],
+    "ruff.lint.select": ["E", "F", "W", "I"],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": [
-      "--line-length",
-      "120"
-    ],
+    "ruff.format.args": ["--line-length", "120"],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -116,7 +105,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -139,14 +128,14 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true
+      "**/coverage/**": true,
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false
+      "**/uv.lock": false,
     },
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
@@ -164,11 +153,9 @@
       "${workspaceFolder}/unified-feature-calculator-library",
       "${workspaceFolder}/unified-ml-interface",
       "${workspaceFolder}/unified-position-interface",
-      "${workspaceFolder}/unified-reference-data-interface"
+      "${workspaceFolder}/unified-reference-data-interface",
     ],
-    "editor.rulers": [
-      100
-    ],
-    "editor.tabSize": 4
-  }
+    "editor.rulers": [100],
+    "editor.tabSize": 4,
+  },
 }

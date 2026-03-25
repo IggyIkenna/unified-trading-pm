@@ -638,6 +638,34 @@ services:
         description: Soccer-Football-Info for referee data, additional stats
         required_for:
           - SPORTS
+  alerting-service:
+    description: >-
+      Alert routing, deduplication, cooldown, and delivery to PagerDuty, Telegram, Slack. Shared service — not
+      per-category. Persists alert history and cooldown state to GCS.
+    upstream: []
+    outputs:
+      - name: alert_history
+        bucket_template: alerting-service-{project_id}
+        path_template: alerting/history/date={date}/
+        required_dimensions:
+          - date
+    external_dependencies: []
+
+  reconciliation-service:
+    description: >-
+      Trade reconciliation between execution fills and venue confirmations. Shared service — not per-category.
+    upstream:
+      - service: execution-service
+        required: true
+        description: Needs fill data to reconcile
+    outputs:
+      - name: reconciliation_results
+        bucket_template: reconciliation-store-{project_id}
+        path_template: recon/date={date}/
+        required_dimensions:
+          - date
+    external_dependencies: []
+
 execution_order:
   - instruments-service
   - corporate-actions
@@ -660,3 +688,4 @@ category_domain_mapping:
   TRADFI: tradfi
   DEFI: defi
   SPORTS: sports
+  PREDICTION: prediction

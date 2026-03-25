@@ -11,8 +11,8 @@ priority: P0
 
 ## Problem
 
-1. **Venue launch dates are hardcoded in instruments-service** (`_VENUE_LAUNCH_DATES` dict in orchestrator.py) instead of
-   being in UAC as SSOT. Different services could use different dates.
+1. **Venue launch dates are hardcoded in instruments-service** (`_VENUE_LAUNCH_DATES` dict in orchestrator.py) instead
+   of being in UAC as SSOT. Different services could use different dates.
 
 2. **Venue names are inconsistent across repos** — UAC VenueMapping uses `UNISWAPV3-ETH`, URDI uses
    `UNISWAPV3-ETHEREUM`, instruments-service uses the URDI format. No validation prevents mismatches.
@@ -21,8 +21,8 @@ priority: P0
    regardless of the requested date. `available_since` and `available_to` fields on InstrumentRecord are `None` for all
    DeFi instruments. The date filter only gates at venue level, not instrument level.
 
-4. **Downstream services trust instrument definitions blindly** — market-tick-data-service, features-onchain-service etc.
-   process whatever instruments-service outputs without cross-checking against the start date registry.
+4. **Downstream services trust instrument definitions blindly** — market-tick-data-service, features-onchain-service
+   etc. process whatever instruments-service outputs without cross-checking against the start date registry.
 
 ## Solution
 
@@ -44,20 +44,20 @@ priority: P0
 
 The Graph subgraphs expose `createdAtTimestamp` on pools/markets. Each adapter needs to extract this.
 
-| Adapter | Source for available_since | Verified |
-|---------|--------------------------|----------|
-| UniswapV2 | `pair.createdAtTimestamp` from The Graph | Needs check |
-| UniswapV3 | `pool.createdAtTimestamp` from The Graph | **Confirmed** (tested) |
-| UniswapV4 | `pool.createdAtTimestamp` from The Graph | Needs check |
-| AaveV3 | `reserve.createdTimestamp` from The Graph | Needs check |
-| Balancer | `pool.createTime` from Balancer API v3 | Needs check |
-| Morpho | Market creation event timestamp | Needs check |
-| Curve | Pool deployment block → timestamp | Needs check (REST API may not have it) |
-| Euler | Market creation timestamp | Needs check |
-| Fluid | Market creation timestamp | Needs check |
-| Lido | Contract deployment date (fixed: 2020-12-18) | Static |
-| EtherFi | Contract deployment date (fixed: 2023-11-01) | Static |
-| Ethena | Contract deployment date (fixed: 2024-02-19) | Static |
+| Adapter   | Source for available_since                   | Verified                               |
+| --------- | -------------------------------------------- | -------------------------------------- |
+| UniswapV2 | `pair.createdAtTimestamp` from The Graph     | Needs check                            |
+| UniswapV3 | `pool.createdAtTimestamp` from The Graph     | **Confirmed** (tested)                 |
+| UniswapV4 | `pool.createdAtTimestamp` from The Graph     | Needs check                            |
+| AaveV3    | `reserve.createdTimestamp` from The Graph    | Needs check                            |
+| Balancer  | `pool.createTime` from Balancer API v3       | Needs check                            |
+| Morpho    | Market creation event timestamp              | Needs check                            |
+| Curve     | Pool deployment block → timestamp            | Needs check (REST API may not have it) |
+| Euler     | Market creation timestamp                    | Needs check                            |
+| Fluid     | Market creation timestamp                    | Needs check                            |
+| Lido      | Contract deployment date (fixed: 2020-12-18) | Static                                 |
+| EtherFi   | Contract deployment date (fixed: 2023-11-01) | Static                                 |
+| Ethena    | Contract deployment date (fixed: 2024-02-19) | Static                                 |
 
 - [ ] [AGENT] P1. Update UniswapV3 adapter: add `createdAtTimestamp` to GraphQL query, set `available_since`
 - [ ] [AGENT] P1. Update UniswapV2 adapter: same
@@ -77,6 +77,7 @@ The Graph subgraphs expose `createdAtTimestamp` on pools/markets. Each adapter n
 ### 5. Downstream two-way validation
 
 Downstream services (market-tick-data, features-onchain, etc.) should:
+
 1. **Check instrument definitions exist** for the requested date (instruments-service has run)
 2. **Cross-check against venue start date registry** (UAC) — if venue wasn't launched, don't process
 
@@ -92,8 +93,8 @@ Downstream services (market-tick-data, features-onchain, etc.) should:
 
 ## Success Criteria
 
-- Running instruments-service for 2021-03-01 DEFI should show UniswapV2 pools that existed in March 2021
-  (with correct `available_since` dates), NOT the current top 500
+- Running instruments-service for 2021-03-01 DEFI should show UniswapV2 pools that existed in March 2021 (with correct
+  `available_since` dates), NOT the current top 500
 - All venue names across UAC, URDI, instruments-service, VenueMapping are identical (canonical format)
 - `validate_venue_names()` catches any service using a non-canonical venue name
 - Downstream services refuse to process dates before venue launch (cross-checked against UAC SSOT)

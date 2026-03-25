@@ -349,22 +349,22 @@ todos:
 
 ## Problem Statement
 
-The sports domain has extensive schema infrastructure but the batch pipeline has never been run end-to-end.
-Three services need to work in sequence: instruments-service (fixtures from API-Football), market-tick-data-service
-(odds from Odds API), and features-sports-service (derived features from multiple providers).
+The sports domain has extensive schema infrastructure but the batch pipeline has never been run end-to-end. Three
+services need to work in sequence: instruments-service (fixtures from API-Football), market-tick-data-service (odds from
+Odds API), and features-sports-service (derived features from multiple providers).
 
 ## Canonical ID Table (SSOT)
 
-| Entity | Format | Example | Source |
-|--------|--------|---------|--------|
-| League | `{COUNTRY_CODE}_{LEAGUE_ABBR}` | `EPL`, `BUN` | UAC league_data.py |
-| Team | `SCREAMING_SNAKE_CASE` | `MAN_CITY`, `TOTTENHAM` | UAC team_mappings.py |
-| Fixture | `{api_football_fixture_id}` | `"1034567"` | API Football |
-| Player | `{LASTNAME}_{INITIAL}` | `PICKFORD_J` | UAC player_name.py |
-| Stadium | `SCREAMING_SNAKE_CASE` | `ANFIELD` | UAC stadium_mappings.py |
-| Referee | `{LASTNAME}_{INITIAL}` | `ATKINSON_M` | Same pattern as player |
-| Season | `{YYYY}/{YY}` | `2024/25` | String convention |
-| Instrument | `{fixture_id}::{market_type}::{outcome}::{bookmaker_key}` | `"1034567::h2h::home::betfair_ex_uk"` | UAC CanonicalOdds |
+| Entity     | Format                                                    | Example                               | Source                  |
+| ---------- | --------------------------------------------------------- | ------------------------------------- | ----------------------- |
+| League     | `{COUNTRY_CODE}_{LEAGUE_ABBR}`                            | `EPL`, `BUN`                          | UAC league_data.py      |
+| Team       | `SCREAMING_SNAKE_CASE`                                    | `MAN_CITY`, `TOTTENHAM`               | UAC team_mappings.py    |
+| Fixture    | `{api_football_fixture_id}`                               | `"1034567"`                           | API Football            |
+| Player     | `{LASTNAME}_{INITIAL}`                                    | `PICKFORD_J`                          | UAC player_name.py      |
+| Stadium    | `SCREAMING_SNAKE_CASE`                                    | `ANFIELD`                             | UAC stadium_mappings.py |
+| Referee    | `{LASTNAME}_{INITIAL}`                                    | `ATKINSON_M`                          | Same pattern as player  |
+| Season     | `{YYYY}/{YY}`                                             | `2024/25`                             | String convention       |
+| Instrument | `{fixture_id}::{market_type}::{outcome}::{bookmaker_key}` | `"1034567::h2h::home::betfair_ex_uk"` | UAC CanonicalOdds       |
 
 ## Architecture Decision
 
@@ -399,23 +399,23 @@ These patterns go into USRI adapters (interface layer), NOT into services.
 
 ### Symbols being ADDED
 
-| Symbol | Where | Consumers |
-|--------|-------|-----------|
-| `"odds_api": "odds-api-key"` | UAC canonical_mappings.py | MTDS, USRI |
-| Canonical ID docstrings | UAC canonical/domain/sports/__init__.py | All sports consumers |
-| ODDS_API venue routing | MTDS orchestrator.py | MTDS |
-| Quota tracking | USRI odds_api.py | FSS, MTDS |
+| Symbol                       | Where                                   | Consumers            |
+| ---------------------------- | --------------------------------------- | -------------------- |
+| `"odds_api": "odds-api-key"` | UAC canonical_mappings.py               | MTDS, USRI           |
+| Canonical ID docstrings      | UAC canonical/domain/sports/**init**.py | All sports consumers |
+| ODDS_API venue routing       | MTDS orchestrator.py                    | MTDS                 |
+| Quota tracking               | USRI odds_api.py                        | FSS, MTDS            |
 
 ### Files that need changes
 
-| File | Change | Action |
-|------|--------|--------|
-| `unified_api_contracts/canonical/canonical_mappings.py` | Add odds_api to DATA_SOURCE_TO_SECRET | Add entry |
-| `unified_api_contracts/canonical/domain/sports/__init__.py` | Add ID format docstrings | Edit docstrings |
-| `market_tick_data_service/engine/orchestrator.py` | Change SPORTS venues to ["ODDS_API"] | Edit list |
-| `unified_sports_reference_interface/adapters/odds_api.py` | Add quota tracking | Extend _get_with_retry |
-| `unified-trading-pm/scripts/sports/migrate_sports_gcs_to_hive.sh` | New migration script | Create |
-| `unified-trading-codex/02-data/sports-schema-paths.md` | Add canonical ID format table | Edit |
+| File                                                              | Change                                | Action                  |
+| ----------------------------------------------------------------- | ------------------------------------- | ----------------------- |
+| `unified_api_contracts/canonical/canonical_mappings.py`           | Add odds_api to DATA_SOURCE_TO_SECRET | Add entry               |
+| `unified_api_contracts/canonical/domain/sports/__init__.py`       | Add ID format docstrings              | Edit docstrings         |
+| `market_tick_data_service/engine/orchestrator.py`                 | Change SPORTS venues to ["ODDS_API"]  | Edit list               |
+| `unified_sports_reference_interface/adapters/odds_api.py`         | Add quota tracking                    | Extend \_get_with_retry |
+| `unified-trading-pm/scripts/sports/migrate_sports_gcs_to_hive.sh` | New migration script                  | Create                  |
+| `unified-trading-codex/02-data/sports-schema-paths.md`            | Add canonical ID format table         | Edit                    |
 
 ## Dependency DAG
 
@@ -452,26 +452,32 @@ P7 (cleanup) ──────── P7a: QG sweep all repos
 ## Success Criteria
 
 ### Phase 1
+
 - C4: `cd unified-api-contracts && bash scripts/quality-gates.sh` green
 - All sports data sources registered in DATA_SOURCE_TO_SECRET
 
 ### Phase 2
+
 - instruments-service --category SPORTS produces InstrumentRecord[] for 20+ leagues
 - Canonical fixture IDs match API Football format
 
 ### Phase 3
+
 - MTDS --category SPORTS writes odds parquet with canonical instrument IDs
 - Quota tracking logs x-requests-remaining on each Odds API call
 
 ### Phase 4
+
 - Migration script passes dry-run
 - Old data accessible via new hive paths
 
 ### Phase 5
+
 - FSS batch mode computes features from all 4 providers
 - Output in hive-partitioned GCS paths
 
 ### Phase 6
+
 - B4: 1-day pipeline end-to-end with zero errors
 - Data completeness >= 95% per provider
 - 1-week run covers all prediction leagues
