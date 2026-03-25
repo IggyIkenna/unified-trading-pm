@@ -360,7 +360,7 @@ PYEOF
 echo "$SELF_VERSION_DRIFT"
 if echo "$SELF_VERSION_DRIFT" | grep -q "\[WARN\]"; then
   SELF_VERSION_HAS_DRIFT=true
-  if [ "$FIX" = true ]; then
+  if [ "$APPLY_FIXES" = true ]; then
     echo "  Applying --fix: syncing manifest versions from pyproject.toml..."
     "$PYTHON" - "$PM_ROOT/workspace-manifest.json" "$WORKSPACE_ROOT" <<'PYEOF'
 import json, sys, re
