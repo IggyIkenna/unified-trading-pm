@@ -1488,6 +1488,7 @@
     },
     "execution-service": {
       "internal_deps": {
+        "matching-engine-library": "matching-engine-library>=0.1.0,<1.0.0",
         "unified-defi-execution-interface": "unified-defi-execution-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -1631,12 +1632,13 @@
           "websockets>=14.0,<15.0.0"
         ]
       },
-      "internal_count": 2,
+      "internal_count": 3,
       "external_count": 46
     },
     "features-calendar-service": {
       "internal_deps": {
         "unified-feature-calculator-library": "unified-feature-calculator-library>=0.1.0,<1.0.0",
+        "unified-features-interface": "unified-features-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -1719,7 +1721,7 @@
           "types-requests>=2.32.0,<3.0.0"
         ]
       },
-      "internal_count": 2,
+      "internal_count": 3,
       "external_count": 26
     },
     "features-cross-instrument-service": {
@@ -2498,7 +2500,7 @@
     },
     "ml-training-service": {
       "internal_deps": {
-        "unified-ml-interface": "path",
+        "unified-ml-interface": "unified-ml-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
@@ -3007,6 +3009,7 @@
     },
     "position-balance-monitor-service": {
       "internal_deps": {
+        "unified-position-interface": "unified-position-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -3104,7 +3107,7 @@
           "uvicorn[standard]>=0.27.0,<1.0.0"
         ]
       },
-      "internal_count": 1,
+      "internal_count": 2,
       "external_count": 31
     },
     "risk-and-exposure-service": {

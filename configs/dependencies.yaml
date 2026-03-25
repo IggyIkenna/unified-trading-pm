@@ -425,7 +425,7 @@ services:
         required: false
         description: Optional - deployment flexibility for pre-trade risk checks (talks to strategy)
         check:
-          bucket_template: risk-store-{project_id}-{category_lower}
+          bucket_template: risk-store-{category_lower}-{project_id}
           path_template: risk/{venue}/{date}/
       - service: position-balance-monitor-service
         required: false
@@ -549,7 +549,7 @@ services:
         required: false
         description: Optional - deployment flexibility for P&L-based risk attribution
         check:
-          bucket_template: pnl-store-{project_id}-{category_lower}
+          bucket_template: pnl-store-{category_lower}-{project_id}
           path_template: pnl/{venue}/{date}/
     description:
       Calculate risk metrics and exposure limits from positions and market data. Does NOT execute orders - talks to
@@ -567,7 +567,7 @@ services:
         description: Market prices for mark-to-market risk calculations
     outputs:
       - name: risk_metrics
-        bucket_template: risk-store-{project_id}-{category_lower}
+        bucket_template: risk-store-{category_lower}-{project_id}
         path_template: risk/{venue}/{date}/risk_metrics_*.parquet
         required_dimensions:
           - category
@@ -598,7 +598,7 @@ services:
         description: Instrument metadata for P&L calculations
     outputs:
       - name: pnl_attribution
-        bucket_template: pnl-store-{project_id}-{category_lower}
+        bucket_template: pnl-store-{category_lower}-{project_id}
         path_template: pnl/{client_id}/{date}/pnl_attribution_*.parquet
         required_dimensions:
           - category
