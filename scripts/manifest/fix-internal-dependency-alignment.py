@@ -272,8 +272,17 @@ def get_tier_map(manifest: JsonDict) -> dict[str, int]:
     return tiers
 
 
+# Repos exempt from tier violation checks — these have documented bootstrap exceptions.
+# deployment-service: directly uses cloud/config/events for infrastructure orchestration.
+TIER_EXEMPT_REPOS: frozenset[str] = frozenset({
+    "deployment-service",
+})
+
+
 def is_tier_violation(repo: str, dep: str, tier_map: dict[str, int]) -> bool:
     """True if repo importing dep would violate DAG (repo tier must be > dep tier)."""
+    if repo in TIER_EXEMPT_REPOS:
+        return False
     repo_tier = tier_map.get(repo, 0)
     dep_tier = tier_map.get(dep, 0)
     return repo_tier <= dep_tier
