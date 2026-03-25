@@ -22,6 +22,14 @@ services:
         description: DeFi protocol data
         required_for:
           - DEFI
+      - name: polymarket_gamma_api
+        description: Polymarket prediction market metadata (no auth)
+        required_for:
+          - PREDICTION
+      - name: kalshi_api
+        description: Kalshi prediction market metadata
+        required_for:
+          - PREDICTION
   # Upstream: required=true = must have; required=false = optional deployment flexibility (can_use).
   corporate-actions:
     description: Corporate actions for TradFi equities (dividends, splits, earnings)
@@ -77,6 +85,14 @@ services:
         description: DeFi protocol APIs
         required_for:
           - DEFI
+      - name: polymarket_data_api
+        description: Polymarket CLOB + Data API trade fills (no auth)
+        required_for:
+          - PREDICTION
+      - name: kalshi_api
+        description: Kalshi trade data
+        required_for:
+          - PREDICTION
   market-data-processing-service:
     description: Process raw tick data into candles
     upstream:

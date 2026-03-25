@@ -71,7 +71,6 @@
     "deployment-api": "0.1.1",
     "deployment-service": "0.1.1",
     "deployment-ui": "0.1.0",
-    "elysium-defi-system": "0.1.0",
     "execution-algo-library": "0.1.2",
     "execution-service": "0.1.1",
     "features-cross-instrument-service": "0.1.1",
@@ -420,6 +419,11 @@
           "name": "unified-defi-execution-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "matching-engine-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -470,6 +474,11 @@
         },
         {
           "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-features-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1814,7 +1823,7 @@
       "version": "0.2.2",
       "version_source": "pyproject.toml",
       "dependencies": [],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 97,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
