@@ -1493,7 +1493,6 @@
         "matching-engine-library": "matching-engine-library>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-defi-execution-interface": "unified-defi-execution-interface>=0.1.0,<1.0.0",
-        "unified-domain-client": "unified-domain-client>=0.1.0,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-sports-execution-interface": "unified-sports-execution-interface>=0.1.0,<1.0.0",
         "unified-trade-execution-interface": "unified-trade-execution-interface>=0.1.0,<1.0.0",
@@ -1639,7 +1638,7 @@
           "websockets>=14.0,<15.0.0"
         ]
       },
-      "internal_count": 9,
+      "internal_count": 8,
       "external_count": 46
     },
     "features-calendar-service": {
@@ -2237,7 +2236,6 @@
       "internal_deps": {
         "market-tick-data-service": "market-tick-data-service>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
-        "unified-cloud-interface": "unified-cloud-interface>=0.11.6,<1.0.0",
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -2336,7 +2334,7 @@
           "types-aiobotocore-full>=2.26.0,<3.0.0"
         ]
       },
-      "internal_count": 5,
+      "internal_count": 4,
       "external_count": 31
     },
     "market-tick-data-service": {
