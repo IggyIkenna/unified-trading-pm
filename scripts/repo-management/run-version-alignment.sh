@@ -76,6 +76,7 @@ echo "  [1–2]   Derived + canonical manifests         — generated (prerequis
 echo "  [3]     Dependency alignment (internal+external)— auto-fix with --fix"
 echo "  [3.5]   [tool.uv.sources] editable entries   — auto-fix with --fix"
 echo "  [3.6]   Internal deps editable (not registry) — manual: uv sync in each repo"
+echo "  [3.7]   Import-vs-deps audit (direct imports need dep + source) — auto-fix with --fix"
 echo "  [4]     Constraint resolution (uv pip compile)— manual: validate-dependency-conflicts.py --regenerate"
 echo ""
 echo "Downstream CI (not run here; alignment must pass first):"
@@ -538,6 +539,19 @@ if ! "$PYTHON" scripts/manifest/validate-internal-editable.py; then
   echo ""
   echo "  Internal deps must be path/editable. Run: uv sync in each repo."
   exit 1
+fi
+
+# 3.7. Validate every direct import of an internal library has dep + uv source
+echo "[3.7/5] Validating direct imports have deps + uv sources..."
+if [ "$APPLY_FIXES" = true ]; then
+  "$PYTHON" scripts/manifest/validate-import-deps.py --fix || true
+else
+  if ! "$PYTHON" scripts/manifest/validate-import-deps.py; then
+    echo ""
+    echo "  Services import internal libraries without declaring them in pyproject.toml."
+    echo "  Run with --fix to auto-add missing [project.dependencies] + [tool.uv.sources] entries."
+    exit 1
+  fi
 fi
 
 # 4. Validate constraints resolve

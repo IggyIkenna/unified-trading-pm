@@ -5,21 +5,51 @@
     "unified-trading-pm": {
       "internal_deps": {},
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "duckdb": ["duckdb>=1.2.0,<2.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "jsonschema": ["jsonschema>=4.0.0,<5.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pytest-asyncio<2.0.0,": ["pytest-asyncio<2.0.0,>=0.25.0"],
-        "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
-        "pytest-mock<4.0.0,": ["pytest-mock<4.0.0,>=3.15.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.1"],
-        "ruff": ["ruff==0.15.0"],
-        "tomli-w": ["tomli-w>=1.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "duckdb": [
+          "duckdb>=1.2.0,<2.0.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "jsonschema": [
+          "jsonschema>=4.0.0,<5.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pytest-asyncio<2.0.0,": [
+          "pytest-asyncio<2.0.0,>=0.25.0"
+        ],
+        "pytest-cov<8.0.0,": [
+          "pytest-cov<8.0.0,>=7.0.0"
+        ],
+        "pytest-mock<4.0.0,": [
+          "pytest-mock<4.0.0,>=3.15.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout<3.0.0,": [
+          "pytest-timeout<3.0.0,>=2.4.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "pytest<10.0.0,": [
+          "pytest<10.0.0,>=9.0.1"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "tomli-w": [
+          "tomli-w>=1.0.0"
+        ]
       },
       "internal_count": 0,
       "external_count": 15
@@ -33,27 +63,69 @@
     "unified-api-contracts": {
       "internal_deps": {},
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "ccxt": ["ccxt>=4.5.24,<5.0.0"],
-        "databento": ["databento>=0.32.0,<1.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "hypothesis": ["hypothesis>=6.0.0,<7.0.0"],
-        "ib-insync": ["ib_insync>=0.9.86,<1.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "requests": ["requests>=2.32.5,<3.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "tardis-client": ["tardis-client>=1.3.7,<2.0.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "ccxt": [
+          "ccxt>=4.5.24,<5.0.0"
+        ],
+        "databento": [
+          "databento>=0.32.0,<1.0.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "hypothesis": [
+          "hypothesis>=6.0.0,<7.0.0"
+        ],
+        "ib-insync": [
+          "ib_insync>=0.9.86,<1.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "requests": [
+          "requests>=2.32.5,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "tardis-client": [
+          "tardis-client>=1.3.7,<2.0.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ]
       },
       "internal_count": 0,
       "external_count": 21
@@ -63,34 +135,90 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "boto3": ["boto3>=1.40.70,<2.0.0"],
-        "boto3-stubs": ["boto3-stubs[s3,secretsmanager]>=1.35.0,<2.0.0"],
-        "botocore": ["botocore>=1.34.0,<2.0.0"],
-        "gcsfs": ["gcsfs>=2025.5.0,<2026.0.0"],
-        "google-auth": ["google-auth>=2.40.0,<3.0.0"],
-        "google-cloud-bigquery": ["google-cloud-bigquery>=3.40.0,<4.0.0"],
-        "google-cloud-build": ["google-cloud-build>=3.0.0,<4.0.0"],
-        "google-cloud-compute": ["google-cloud-compute>=1.45.0,<2.0.0"],
-        "google-cloud-logging": ["google-cloud-logging>=3.12.0,<4.0.0"],
-        "google-cloud-pubsub": ["google-cloud-pubsub>=2.28.0,<3.0.0"],
-        "google-cloud-run": ["google-cloud-run>=0.15.0,<1.0.0"],
-        "google-cloud-secret-manager": ["google-cloud-secret-manager>=2.25.0,<3.0.0"],
-        "google-cloud-storage": ["google-cloud-storage>=3.8.0,<4.0.0"],
-        "moto": ["moto[s3,secretsmanager,sqs]>=5.0.0,<6.0.0"],
-        "pandas<3.0.0,": ["pandas<3.0.0,>=2.3.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pyjwt": ["PyJWT>=2.8.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "redis": ["redis>=5.0.0,<6.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "boto3": [
+          "boto3>=1.40.70,<2.0.0"
+        ],
+        "boto3-stubs": [
+          "boto3-stubs[s3,secretsmanager]>=1.35.0,<2.0.0"
+        ],
+        "botocore": [
+          "botocore>=1.34.0,<2.0.0"
+        ],
+        "gcsfs": [
+          "gcsfs>=2025.5.0,<2026.0.0"
+        ],
+        "google-auth": [
+          "google-auth>=2.40.0,<3.0.0"
+        ],
+        "google-cloud-bigquery": [
+          "google-cloud-bigquery>=3.40.0,<4.0.0"
+        ],
+        "google-cloud-build": [
+          "google-cloud-build>=3.0.0,<4.0.0"
+        ],
+        "google-cloud-compute": [
+          "google-cloud-compute>=1.45.0,<2.0.0"
+        ],
+        "google-cloud-logging": [
+          "google-cloud-logging>=3.12.0,<4.0.0"
+        ],
+        "google-cloud-pubsub": [
+          "google-cloud-pubsub>=2.28.0,<3.0.0"
+        ],
+        "google-cloud-run": [
+          "google-cloud-run>=0.15.0,<1.0.0"
+        ],
+        "google-cloud-secret-manager": [
+          "google-cloud-secret-manager>=2.25.0,<3.0.0"
+        ],
+        "google-cloud-storage": [
+          "google-cloud-storage>=3.8.0,<4.0.0"
+        ],
+        "moto": [
+          "moto[s3,secretsmanager,sqs]>=5.0.0,<6.0.0"
+        ],
+        "pandas<3.0.0,": [
+          "pandas<3.0.0,>=2.3.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "PyJWT>=2.8.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "redis": [
+          "redis>=5.0.0,<6.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 28
@@ -98,17 +226,39 @@
     "unified-events-interface": {
       "internal_deps": {},
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 0,
       "external_count": 11
@@ -119,23 +269,57 @@
         "unified-trading-library": "unified-trading-library>=1.6.0,<2.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "numpy<2.4.0,": ["numpy<2.4.0,>=2.3.0"],
-        "pandas-stubs<3.0.0,": ["pandas-stubs<3.0.0,>=2.2.0"],
-        "pandas<3.0.0,": ["pandas<3.0.0,>=2.3.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pyarrow<24.0.0,": ["pyarrow<24.0.0,>=23.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml<7.0.0,": ["pyyaml<7.0.0,>=6.0.1"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "numpy<2.4.0,": [
+          "numpy<2.4.0,>=2.3.0"
+        ],
+        "pandas-stubs<3.0.0,": [
+          "pandas-stubs<3.0.0,>=2.2.0"
+        ],
+        "pandas<3.0.0,": [
+          "pandas<3.0.0,>=2.3.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pyarrow<24.0.0,": [
+          "pyarrow<24.0.0,>=23.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml<7.0.0,": [
+          "pyyaml<7.0.0,>=6.0.1"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 17
@@ -147,22 +331,54 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pyasn1": ["pyasn1>=0.6.3,<0.7.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pyasn1": [
+          "pyasn1>=0.6.3,<0.7.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 16
@@ -175,23 +391,57 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "aioresponses": ["aioresponses>=0.7.6,<1.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "ccxt": ["ccxt>=4.5.24,<5.0.0"],
-        "google-auth": ["google-auth>=2.40.0,<3.0.0"],
-        "ib-insync<1.0.0,": ["ib-insync<1.0.0,>=0.9.86"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "aioresponses": [
+          "aioresponses>=0.7.6,<1.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "ccxt": [
+          "ccxt>=4.5.24,<5.0.0"
+        ],
+        "google-auth": [
+          "google-auth>=2.40.0,<3.0.0"
+        ],
+        "ib-insync<1.0.0,": [
+          "ib-insync<1.0.0,>=0.9.86"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ]
       },
       "internal_count": 4,
       "external_count": 17
@@ -205,40 +455,108 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit<2.0.0,": ["bandit<2.0.0,>=1.7.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "databento": ["databento>=0.32.0,<1.0.0"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "fsspec<2026.0.0,": ["fsspec<2026.0.0,>=2025.2.0"],
-        "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
-        "joblib<2.0.0,": ["joblib<2.0.0,>=1.3.0"],
-        "mypy<2.0.0,": ["mypy<2.0.0,>=1.13.0"],
-        "numpy<2.4.0,": ["numpy<2.4.0,>=2.3.0"],
-        "opentelemetry-api": ["opentelemetry-api>=1.27.0,<2.0.0"],
-        "opentelemetry-exporter-otlp-proto-grpc": ["opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"],
-        "opentelemetry-instrumentation-aiohttp-client": ["opentelemetry-instrumentation-aiohttp-client>=0.48b0,<1.0.0"],
-        "opentelemetry-instrumentation-requests": ["opentelemetry-instrumentation-requests>=0.48b0,<1.0.0"],
-        "opentelemetry-sdk": ["opentelemetry-sdk>=1.27.0,<2.0.0"],
-        "pandas<3.0.0,": ["pandas<3.0.0,>=2.3.0"],
-        "pip-audit<3.0.0,": ["pip-audit<3.0.0,>=2.7.0"],
-        "polars<2.0.0,": ["polars<2.0.0,>=1.37.0"],
-        "prek<1.0.0,": ["prek<1.0.0,>=0.3.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "psutil<7.0.0,": ["psutil<7.0.0,>=6.0.0"],
-        "pyarrow<24.0.0,": ["pyarrow<24.0.0,>=23.0.0"],
-        "pydantic-settings<3.0.0,": ["pydantic-settings<3.0.0,>=2.12.0"],
-        "pydantic<3.0.0,": ["pydantic<3.0.0,>=2.12.5"],
-        "pytest-asyncio<2.0.0,": ["pytest-asyncio<2.0.0,>=0.25.0"],
-        "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.1"],
-        "python-dotenv<2.0.0,": ["python-dotenv<2.0.0,>=1.0.0"],
-        "pyyaml<7.0.0,": ["pyyaml<7.0.0,>=6.0.1"],
-        "ruff": ["ruff==0.15.0"],
-        "starlette": ["starlette>=0.46.3,<1.0.0"],
-        "web3": ["web3>=6.0.0,<7.0.0"]
+        "bandit<2.0.0,": [
+          "bandit<2.0.0,>=1.7.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "databento": [
+          "databento>=0.32.0,<1.0.0"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "fsspec<2026.0.0,": [
+          "fsspec<2026.0.0,>=2025.2.0"
+        ],
+        "httpx<1.0.0,": [
+          "httpx<1.0.0,>=0.28.1"
+        ],
+        "joblib<2.0.0,": [
+          "joblib<2.0.0,>=1.3.0"
+        ],
+        "mypy<2.0.0,": [
+          "mypy<2.0.0,>=1.13.0"
+        ],
+        "numpy<2.4.0,": [
+          "numpy<2.4.0,>=2.3.0"
+        ],
+        "opentelemetry-api": [
+          "opentelemetry-api>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-exporter-otlp-proto-grpc": [
+          "opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-instrumentation-aiohttp-client": [
+          "opentelemetry-instrumentation-aiohttp-client>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-instrumentation-requests": [
+          "opentelemetry-instrumentation-requests>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-sdk": [
+          "opentelemetry-sdk>=1.27.0,<2.0.0"
+        ],
+        "pandas<3.0.0,": [
+          "pandas<3.0.0,>=2.3.0"
+        ],
+        "pip-audit<3.0.0,": [
+          "pip-audit<3.0.0,>=2.7.0"
+        ],
+        "polars<2.0.0,": [
+          "polars<2.0.0,>=1.37.0"
+        ],
+        "prek<1.0.0,": [
+          "prek<1.0.0,>=0.3.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "psutil<7.0.0,": [
+          "psutil<7.0.0,>=6.0.0"
+        ],
+        "pyarrow<24.0.0,": [
+          "pyarrow<24.0.0,>=23.0.0"
+        ],
+        "pydantic-settings<3.0.0,": [
+          "pydantic-settings<3.0.0,>=2.12.0"
+        ],
+        "pydantic<3.0.0,": [
+          "pydantic<3.0.0,>=2.12.5"
+        ],
+        "pytest-asyncio<2.0.0,": [
+          "pytest-asyncio<2.0.0,>=0.25.0"
+        ],
+        "pytest-cov<8.0.0,": [
+          "pytest-cov<8.0.0,>=7.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout<3.0.0,": [
+          "pytest-timeout<3.0.0,>=2.4.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "pytest<10.0.0,": [
+          "pytest<10.0.0,>=9.0.1"
+        ],
+        "python-dotenv<2.0.0,": [
+          "python-dotenv<2.0.0,>=1.0.0"
+        ],
+        "pyyaml<7.0.0,": [
+          "pyyaml<7.0.0,>=6.0.1"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "starlette": [
+          "starlette>=0.46.3,<1.0.0"
+        ],
+        "web3": [
+          "web3>=6.0.0,<7.0.0"
+        ]
       },
       "internal_count": 5,
       "external_count": 34
@@ -249,16 +567,36 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 10
@@ -266,20 +604,48 @@
     "execution-algo-library": {
       "internal_deps": {},
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 0,
       "external_count": 14
@@ -290,22 +656,54 @@
         "unified-events-interface": "unified-events-interface"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio<2.0.0,": ["pytest-asyncio<2.0.0,>=0.25.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock<4.0.0,": ["pytest-mock<4.0.0,>=3.15.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "httpx<1.0.0,": [
+          "httpx<1.0.0,>=0.28.1"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio<2.0.0,": [
+          "pytest-asyncio<2.0.0,>=0.25.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock<4.0.0,": [
+          "pytest-mock<4.0.0,>=3.15.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scikit-learn": [
+          "scikit-learn>=1.5.0,<2.0.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 16
@@ -319,22 +717,54 @@
         "unified-ml-interface": "unified-ml-interface>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pyright": ["pyright>=1.1.390,<2.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock<4.0.0,": ["pytest-mock<4.0.0,>=3.15.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pyright": [
+          "pyright>=1.1.390,<2.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock<4.0.0,": [
+          "pytest-mock<4.0.0,>=3.15.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 5,
       "external_count": 16
@@ -348,35 +778,93 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
-        "bandit<2.0.0,": ["bandit<2.0.0,>=1.7.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "boto3<2.0.0,": ["boto3<2.0.0,>=1.40.70"],
-        "ccxt<5.0.0,": ["ccxt<5.0.0,>=4.5.24"],
-        "databento<1.0.0,": ["databento<1.0.0,>=0.32.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "lz4<5.0.0,": ["lz4<5.0.0,>=4.3.0"],
-        "pip-audit<3.0.0,": ["pip-audit<3.0.0,>=2.7.0"],
-        "polars<2.0.0,": ["polars<2.0.0,>=1.37.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "pyyaml<7.0.0,": ["pyyaml<7.0.0,>=6.0.1"],
-        "requests<3.0.0,": ["requests<3.0.0,>=2.32.5"],
-        "respx": ["respx>=0.21.0,<1.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"],
-        "web3<7.0.0,": ["web3<7.0.0,>=6.0.0"],
-        "websockets<15.0.0,": ["websockets<15.0.0,>=14.0"],
-        "yfinance<1.0.0,": ["yfinance<1.0.0,>=0.2.66"]
+        "aiohttp<4.0.0,": [
+          "aiohttp<4.0.0,>=3.13.2"
+        ],
+        "bandit<2.0.0,": [
+          "bandit<2.0.0,>=1.7.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "boto3<2.0.0,": [
+          "boto3<2.0.0,>=1.40.70"
+        ],
+        "ccxt<5.0.0,": [
+          "ccxt<5.0.0,>=4.5.24"
+        ],
+        "databento<1.0.0,": [
+          "databento<1.0.0,>=0.32.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "lz4<5.0.0,": [
+          "lz4<5.0.0,>=4.3.0"
+        ],
+        "pip-audit<3.0.0,": [
+          "pip-audit<3.0.0,>=2.7.0"
+        ],
+        "polars<2.0.0,": [
+          "polars<2.0.0,>=1.37.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "pyyaml<7.0.0,": [
+          "pyyaml<7.0.0,>=6.0.1"
+        ],
+        "requests<3.0.0,": [
+          "requests<3.0.0,>=2.32.5"
+        ],
+        "respx": [
+          "respx>=0.21.0,<1.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ],
+        "web3<7.0.0,": [
+          "web3<7.0.0,>=6.0.0"
+        ],
+        "websockets<15.0.0,": [
+          "websockets<15.0.0,>=14.0"
+        ],
+        "yfinance<1.0.0,": [
+          "yfinance<1.0.0,>=0.2.66"
+        ]
       },
       "internal_count": 5,
       "external_count": 29
@@ -388,26 +876,66 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.2,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "joblib": ["joblib>=1.3.0,<2.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
-        "scipy": ["scipy>=1.15.0,<2.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "joblib": [
+          "joblib>=1.3.0,<2.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scikit-learn": [
+          "scikit-learn>=1.5.0,<2.0.0"
+        ],
+        "scipy": [
+          "scipy>=1.15.0,<2.0.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 20
@@ -418,19 +946,45 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "ccxt": ["ccxt>=4.5.24,<5.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pyjwt": ["PyJWT>=2.9.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "ccxt": [
+          "ccxt>=4.5.24,<5.0.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pyjwt": [
+          "PyJWT>=2.9.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 13
@@ -443,24 +997,60 @@
         "unified-sports-execution-interface": "unified-sports-execution-interface>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "ccxt<5.0.0,": ["ccxt<5.0.0,>=4.5.24"],
-        "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
-        "ib-insync": ["ib_insync>=0.9.86,<1.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
+        "aiohttp<4.0.0,": [
+          "aiohttp<4.0.0,>=3.13.2"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "ccxt<5.0.0,": [
+          "ccxt<5.0.0,>=4.5.24"
+        ],
+        "httpx<1.0.0,": [
+          "httpx<1.0.0,>=0.28.1"
+        ],
+        "ib-insync": [
+          "ib_insync>=0.9.86,<1.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ]
       },
       "internal_count": 4,
       "external_count": 18
@@ -472,18 +1062,42 @@
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 12
@@ -494,18 +1108,42 @@
         "unified-events-interface": "unified-events-interface>=0.2.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 12
@@ -517,18 +1155,42 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.2,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "responses": ["responses>=0.24.1,<1.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "responses": [
+          "responses>=0.24.1,<1.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 12
@@ -540,25 +1202,63 @@
         "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "aioresponses": ["aioresponses>=0.7.6,<1.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "beautifulsoup4": ["beautifulsoup4>=4.12,<5.0"],
-        "betfairlightweight": ["betfairlightweight>=2.20,<3.0"],
-        "cryptography": ["cryptography>=44.0.0,<47.0.0"],
-        "lxml": ["lxml>=5.0,<6.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "playwright": ["playwright>=1.40,<2.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "vcrpy": ["vcrpy>=8.0.0,<9.0.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "aioresponses": [
+          "aioresponses>=0.7.6,<1.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "beautifulsoup4": [
+          "beautifulsoup4>=4.12,<5.0"
+        ],
+        "betfairlightweight": [
+          "betfairlightweight>=2.20,<3.0"
+        ],
+        "cryptography": [
+          "cryptography>=44.0.0,<47.0.0"
+        ],
+        "lxml": [
+          "lxml>=5.0,<6.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "playwright": [
+          "playwright>=1.40,<2.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov<8.0.0,": [
+          "pytest-cov<8.0.0,>=7.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "vcrpy": [
+          "vcrpy>=8.0.0,<9.0.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 19
@@ -570,17 +1270,39 @@
         "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 11
@@ -595,36 +1317,96 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "ccxt<5.0.0,": ["ccxt<5.0.0,>=4.5.24"],
-        "databento": ["databento>=0.32.0,<1.0.0"],
-        "eth-abi<6.0.0,": ["eth-abi<6.0.0,>=5.0.1"],
-        "exchange-calendars": ["exchange-calendars>=4.5.0,<5.0.0"],
-        "ib-insync": ["ib_insync>=0.9.86,<1.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "plotly": ["plotly>=6.4.0,<7.0.0"],
-        "polars<2.0.0,": ["polars<2.0.0,>=1.37.0"],
-        "prek": ["prek>=0.3.0,<1.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "web3": ["web3>=6.0.0,<7.0.0"],
-        "yfinance": ["yfinance>=0.2.66,<1.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "ccxt<5.0.0,": [
+          "ccxt<5.0.0,>=4.5.24"
+        ],
+        "databento": [
+          "databento>=0.32.0,<1.0.0"
+        ],
+        "eth-abi<6.0.0,": [
+          "eth-abi<6.0.0,>=5.0.1"
+        ],
+        "exchange-calendars": [
+          "exchange-calendars>=4.5.0,<5.0.0"
+        ],
+        "ib-insync": [
+          "ib_insync>=0.9.86,<1.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "plotly": [
+          "plotly>=6.4.0,<7.0.0"
+        ],
+        "polars<2.0.0,": [
+          "polars<2.0.0,>=1.37.0"
+        ],
+        "prek": [
+          "prek>=0.3.0,<1.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "web3": [
+          "web3>=6.0.0,<7.0.0"
+        ],
+        "yfinance": [
+          "yfinance>=0.2.66,<1.0.0"
+        ]
       },
       "internal_count": 6,
       "external_count": 30
@@ -634,87 +1416,232 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "anthropic": ["anthropic>=0.49.0,<1.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "anthropic": [
+          "anthropic>=0.49.0,<1.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "sse-starlette": [
+          "sse-starlette>=1.6.1,<2.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 22
     },
     "execution-service": {
       "internal_deps": {
+        "execution-algo-library": "execution-algo-library>=0.1.0,<1.0.0",
         "matching-engine-library": "matching-engine-library>=0.1.0,<1.0.0",
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-cloud-interface": "unified-cloud-interface>=0.1.0,<1.0.0",
+        "unified-config-interface": "unified-config-interface>=0.1.0,<1.0.0",
         "unified-defi-execution-interface": "unified-defi-execution-interface>=0.1.0,<1.0.0",
+        "unified-domain-client": "unified-domain-client>=0.1.0,<1.0.0",
+        "unified-events-interface": "unified-events-interface>=0.1.0,<1.0.0",
+        "unified-internal-contracts": "unified-internal-contracts>=0.1.0,<1.0.0",
+        "unified-sports-execution-interface": "unified-sports-execution-interface>=0.1.0,<1.0.0",
+        "unified-trade-execution-interface": "unified-trade-execution-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
-        "alembic": ["alembic>=1.13.0,<2.0.0"],
-        "asyncpg": ["asyncpg>=0.31.0,<1.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "binance-futures-connector": ["binance-futures-connector>=2.0.0,<3.0.0"],
-        "cryptography": ["cryptography>=46.0.5"],
-        "eth-abi<6.0.0,": ["eth-abi<6.0.0,>=5.0.1"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "fsspec": ["fsspec>=2025.2.0,<2026.0.0"],
-        "greenlet": ["greenlet>=3.0.0,<4.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "nautilus-trader": ["nautilus-trader>=1.221.0,<2.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "opentelemetry-api": ["opentelemetry-api>=1.27.0,<2.0.0"],
-        "opentelemetry-exporter-otlp-proto-grpc": ["opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"],
-        "opentelemetry-instrumentation-fastapi": ["opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"],
-        "opentelemetry-sdk": ["opentelemetry-sdk>=1.27.0,<2.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "psycopg2-binary": ["psycopg2-binary>=2.9.9,<3.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "python-multipart": ["python-multipart>=0.0.9,<1.0.0"],
-        "requests": ["requests>=2.32.5,<3.0.0"],
-        "rich<15.0.0,": ["rich<15.0.0,>=14.2.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
-        "slowapi": ["slowapi>=0.1.9,<1.0.0"],
-        "sqlalchemy": ["sqlalchemy>=2.0.0,<3.0.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"],
-        "uvloop": ["uvloop>=0.21.0,<1.0.0; sys_platform != 'win32'"],
-        "websockets": ["websockets>=14.0,<15.0.0"]
+        "aiohttp<4.0.0,": [
+          "aiohttp<4.0.0,>=3.13.2"
+        ],
+        "alembic": [
+          "alembic>=1.13.0,<2.0.0"
+        ],
+        "asyncpg": [
+          "asyncpg>=0.31.0,<1.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "binance-futures-connector": [
+          "binance-futures-connector>=2.0.0,<3.0.0"
+        ],
+        "cryptography": [
+          "cryptography>=46.0.5"
+        ],
+        "eth-abi<6.0.0,": [
+          "eth-abi<6.0.0,>=5.0.1"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "fsspec": [
+          "fsspec>=2025.2.0,<2026.0.0"
+        ],
+        "greenlet": [
+          "greenlet>=3.0.0,<4.0.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "nautilus-trader": [
+          "nautilus-trader>=1.221.0,<2.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "opentelemetry-api": [
+          "opentelemetry-api>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-exporter-otlp-proto-grpc": [
+          "opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-instrumentation-fastapi": [
+          "opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-sdk": [
+          "opentelemetry-sdk>=1.27.0,<2.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "psycopg2-binary": [
+          "psycopg2-binary>=2.9.9,<3.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "python-multipart": [
+          "python-multipart>=0.0.9,<1.0.0"
+        ],
+        "requests": [
+          "requests>=2.32.5,<3.0.0"
+        ],
+        "rich<15.0.0,": [
+          "rich<15.0.0,>=14.2.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ],
+        "slowapi": [
+          "slowapi>=0.1.9,<1.0.0"
+        ],
+        "sqlalchemy": [
+          "sqlalchemy>=2.0.0,<3.0.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ],
+        "uvloop": [
+          "uvloop>=0.21.0,<1.0.0; sys_platform != 'win32'"
+        ],
+        "websockets": [
+          "websockets>=14.0,<15.0.0"
+        ]
       },
-      "internal_count": 3,
+      "internal_count": 12,
       "external_count": 46
     },
     "features-calendar-service": {
@@ -724,32 +1651,84 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "click": ["click>=8.3.1,<9.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "pytz": ["pytz>=2024.1,<2026.0"],
-        "ruff": ["ruff==0.15.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "click": [
+          "click>=8.3.1,<9.0.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "pytz": [
+          "pytz>=2024.1,<2026.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ]
       },
       "internal_count": 3,
       "external_count": 26
@@ -759,35 +1738,93 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "hmmlearn": ["hmmlearn>=0.3.0,<1.0.0"],
-        "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "ruptures": ["ruptures>=1.1.0,<2.0.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
-        "statsmodels<1.0.0,": ["statsmodels<1.0.0,>=0.14.6"],
-        "tqdm": ["tqdm>=4.66.0,<5.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "hmmlearn": [
+          "hmmlearn>=0.3.0,<1.0.0"
+        ],
+        "httpx<1.0.0,": [
+          "httpx<1.0.0,>=0.28.1"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "ruptures": [
+          "ruptures>=1.1.0,<2.0.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ],
+        "statsmodels<1.0.0,": [
+          "statsmodels<1.0.0,>=0.14.6"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 29
@@ -797,32 +1834,84 @@
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "numba": ["numba>=0.62.1,<1.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
-        "ta-lib": ["ta-lib>=0.6.8,<1.0.0"],
-        "tqdm": ["tqdm>=4.66.0,<5.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "numba": [
+          "numba>=0.62.1,<1.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ],
+        "ta-lib": [
+          "ta-lib>=0.6.8,<1.0.0"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 26
@@ -837,31 +1926,81 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
-        "tqdm": ["tqdm>=4.66.0,<5.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ]
       },
       "internal_count": 6,
       "external_count": 25
@@ -871,31 +2010,81 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "tqdm": ["tqdm>=4.66.0,<5.0.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 25
@@ -905,21 +2094,51 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 15
@@ -929,28 +2148,72 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
-        "tqdm": ["tqdm>=4.66.0,<5.0.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 22
@@ -961,37 +2224,99 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiobotocore": ["aiobotocore>=2.11.0,<3.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "boto3": ["boto3>=1.40.70,<2.0.0"],
-        "boto3-stubs": ["boto3-stubs[s3,sqs,sns]>=1.40.0,<2.0.0"],
-        "cryptography": ["cryptography>=46.0.5"],
-        "exchange-calendars<5.0.0,": ["exchange-calendars<5.0.0,>=4.5.0"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "numba": ["numba>=0.62.1,<1.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "types-aiobotocore-full": ["types-aiobotocore-full>=2.26.0,<3.0.0"]
+        "aiobotocore": [
+          "aiobotocore>=2.11.0,<3.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "boto3": [
+          "boto3>=1.40.70,<2.0.0"
+        ],
+        "boto3-stubs": [
+          "boto3-stubs[s3,sqs,sns]>=1.40.0,<2.0.0"
+        ],
+        "cryptography": [
+          "cryptography>=46.0.5"
+        ],
+        "exchange-calendars<5.0.0,": [
+          "exchange-calendars<5.0.0,>=4.5.0"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "numba": [
+          "numba>=0.62.1,<1.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "types-aiobotocore-full": [
+          "types-aiobotocore-full>=2.26.0,<3.0.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 31
@@ -1001,31 +2326,81 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "cryptography": ["cryptography>=46.0.5"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "freezegun": ["freezegun>=1.2.2,<2.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prek": ["prek>=0.3.0,<1.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-benchmark": ["pytest-benchmark>=4.0.0,<5.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "shellcheck-py": ["shellcheck-py>=0.9.0.6,<1.0.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"],
-        "uvicorn": ["uvicorn[standard]>=0.29.0,<1.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "cryptography": [
+          "cryptography>=46.0.5"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "freezegun": [
+          "freezegun>=1.2.2,<2.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prek": [
+          "prek>=0.3.0,<1.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-benchmark": [
+          "pytest-benchmark>=4.0.0,<5.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "shellcheck-py": [
+          "shellcheck-py>=0.9.0.6,<1.0.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.29.0,<1.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 25
@@ -1035,37 +2410,99 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "fastapi": ["fastapi>=0.115.0,<1.0.0"],
-        "lightgbm": ["lightgbm>=4.0.0,<5.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "onnxruntime": ["onnxruntime>=1.18.0,<2.0.0"],
-        "opentelemetry-api": ["opentelemetry-api>=1.27.0,<2.0.0"],
-        "opentelemetry-exporter-otlp-proto-grpc": ["opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"],
-        "opentelemetry-instrumentation-fastapi": ["opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"],
-        "opentelemetry-sdk": ["opentelemetry-sdk>=1.27.0,<2.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "requests": ["requests>=2.32.5,<3.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
-        "shap<1.0.0,": ["shap<1.0.0,>=0.51.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"],
-        "uvicorn": ["uvicorn>=0.34.0,<1.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi": [
+          "fastapi>=0.115.0,<1.0.0"
+        ],
+        "lightgbm": [
+          "lightgbm>=4.0.0,<5.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "onnxruntime": [
+          "onnxruntime>=1.18.0,<2.0.0"
+        ],
+        "opentelemetry-api": [
+          "opentelemetry-api>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-exporter-otlp-proto-grpc": [
+          "opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-instrumentation-fastapi": [
+          "opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-sdk": [
+          "opentelemetry-sdk>=1.27.0,<2.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "requests": [
+          "requests>=2.32.5,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scikit-learn": [
+          "scikit-learn>=1.5.0,<2.0.0"
+        ],
+        "shap<1.0.0,": [
+          "shap<1.0.0,>=0.51.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn>=0.34.0,<1.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 31
@@ -1076,40 +2513,108 @@
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
-        "aiobotocore": ["aiobotocore>=2.11.0,<3.0.0"],
-        "bandit<2.0.0,": ["bandit<2.0.0,>=1.7.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "boto3": ["boto3>=1.40.70,<2.0.0"],
-        "db-dtypes": ["db-dtypes>=1.5.0,<2.0.0"],
-        "fastapi": ["fastapi>=0.115.0,<1.0.0"],
-        "joblib": ["joblib>=1.3.0,<2.0.0"],
-        "lightgbm": ["lightgbm>=4.0.0,<5.0.0"],
-        "matplotlib<4.0.0,": ["matplotlib<4.0.0,>=3.9.0"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "optuna": ["optuna>=4.0.0,<5.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pip-audit<3.0.0,": ["pip-audit<3.0.0,>=2.7.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"],
-        "shap": ["shap>=0.46.0,<1.0.0"],
-        "ta-lib": ["ta-lib>=0.6.8,<1.0.0"],
-        "tqdm": ["tqdm>=4.66.0,<5.0.0"],
-        "uvicorn": ["uvicorn>=0.34.0,<1.0.0"]
+        "aiobotocore": [
+          "aiobotocore>=2.11.0,<3.0.0"
+        ],
+        "bandit<2.0.0,": [
+          "bandit<2.0.0,>=1.7.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "boto3": [
+          "boto3>=1.40.70,<2.0.0"
+        ],
+        "db-dtypes": [
+          "db-dtypes>=1.5.0,<2.0.0"
+        ],
+        "fastapi": [
+          "fastapi>=0.115.0,<1.0.0"
+        ],
+        "joblib": [
+          "joblib>=1.3.0,<2.0.0"
+        ],
+        "lightgbm": [
+          "lightgbm>=4.0.0,<5.0.0"
+        ],
+        "matplotlib<4.0.0,": [
+          "matplotlib<4.0.0,>=3.9.0"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "optuna": [
+          "optuna>=4.0.0,<5.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pip-audit<3.0.0,": [
+          "pip-audit<3.0.0,>=2.7.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scikit-learn": [
+          "scikit-learn>=1.5.0,<2.0.0"
+        ],
+        "shap": [
+          "shap>=0.46.0,<1.0.0"
+        ],
+        "ta-lib": [
+          "ta-lib>=0.6.8,<1.0.0"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn>=0.34.0,<1.0.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 34
@@ -1119,26 +2624,66 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pre-commit": ["pre-commit>=3.0,<4.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scipy<2.0.0,": ["scipy<2.0.0,>=1.15.0"],
-        "uvicorn": ["uvicorn[standard]>=0.29.0,<1.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pre-commit": [
+          "pre-commit>=3.0,<4.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scipy<2.0.0,": [
+          "scipy<2.0.0,>=1.15.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.29.0,<1.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 20
@@ -1148,41 +2693,111 @@
         "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "binance-futures-connector": ["binance-futures-connector>=2.0.0,<3.0.0"],
-        "gcloud-aio-storage": ["gcloud-aio-storage>=9.0.0,<10.0.0"],
-        "matplotlib<4.0.0,": ["matplotlib<4.0.0,>=3.9.0"],
-        "numba": ["numba>=0.62.1,<1.0.0"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "opentelemetry-api": ["opentelemetry-api>=1.27.0,<2.0.0"],
-        "opentelemetry-exporter-otlp-proto-grpc": ["opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"],
-        "opentelemetry-instrumentation-fastapi": ["opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"],
-        "opentelemetry-sdk": ["opentelemetry-sdk>=1.27.0,<2.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "plotly<7.0.0,": ["plotly<7.0.0,>=6.4.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dateutil": ["python-dateutil>=2.8.2,<3.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "rich<15.0.0,": ["rich<15.0.0,>=14.2.0"],
-        "ruff": ["ruff==0.15.0"],
-        "typer": ["typer>=0.9.0,<1.0.0"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"]
+        "aiohttp<4.0.0,": [
+          "aiohttp<4.0.0,>=3.13.2"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "binance-futures-connector": [
+          "binance-futures-connector>=2.0.0,<3.0.0"
+        ],
+        "gcloud-aio-storage": [
+          "gcloud-aio-storage>=9.0.0,<10.0.0"
+        ],
+        "matplotlib<4.0.0,": [
+          "matplotlib<4.0.0,>=3.9.0"
+        ],
+        "numba": [
+          "numba>=0.62.1,<1.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "opentelemetry-api": [
+          "opentelemetry-api>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-exporter-otlp-proto-grpc": [
+          "opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-instrumentation-fastapi": [
+          "opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-sdk": [
+          "opentelemetry-sdk>=1.27.0,<2.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "plotly<7.0.0,": [
+          "plotly<7.0.0,>=6.4.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "rich<15.0.0,": [
+          "rich<15.0.0,>=14.2.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "typer": [
+          "typer>=0.9.0,<1.0.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 35
@@ -1192,31 +2807,81 @@
         "unified-trading-library": "unified-trading-library>=0.4.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "hmmlearn": ["hmmlearn>=0.3.0,<1.0.0"],
-        "httpx<1.0.0,": ["httpx<1.0.0,>=0.28.1"],
-        "numpy": ["numpy>=2.3.0,<2.4.0"],
-        "openpyxl": ["openpyxl>=3.1.0,<4.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "polars": ["polars>=1.37.0,<2.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pyarrow": ["pyarrow>=23.0.0,<24.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "python-dotenv": ["python-dotenv>=1.0.0,<2.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "scikit-learn": ["scikit-learn>=1.5.0,<2.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "hmmlearn": [
+          "hmmlearn>=0.3.0,<1.0.0"
+        ],
+        "httpx<1.0.0,": [
+          "httpx<1.0.0,>=0.28.1"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "openpyxl": [
+          "openpyxl>=3.1.0,<4.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dotenv": [
+          "python-dotenv>=1.0.0,<2.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scikit-learn": [
+          "scikit-learn>=1.5.0,<2.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 25
@@ -1226,22 +2891,54 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
-        "anthropic": ["anthropic>=0.49.0,<1.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "ruff": ["ruff==0.15.0"]
+        "aiohttp<4.0.0,": [
+          "aiohttp<4.0.0,>=3.13.2"
+        ],
+        "anthropic": [
+          "anthropic>=0.49.0,<1.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 16
@@ -1251,26 +2948,66 @@
         "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
       },
       "external_deps": {
-        "anthropic<1.0.0,": ["anthropic<1.0.0,>=0.49.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "google-auth": ["google-auth>=2.40.0,<3.0.0"],
-        "jinja2": ["jinja2>=3.0.0,<4.0.0"],
-        "matplotlib": ["matplotlib>=3.9.0,<4.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
+        "anthropic<1.0.0,": [
+          "anthropic<1.0.0,>=0.49.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "google-auth": [
+          "google-auth>=2.40.0,<3.0.0"
+        ],
+        "jinja2": [
+          "jinja2>=3.0.0,<4.0.0"
+        ],
+        "matplotlib": [
+          "matplotlib>=3.9.0,<4.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "sse-starlette": [
+          "sse-starlette>=1.6.1,<2.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 20
@@ -1281,43 +3018,110 @@
     },
     "position-balance-monitor-service": {
       "internal_deps": {
+        "unified-api-contracts": "path",
+        "unified-cloud-interface": "path",
+        "unified-config-interface": "path",
+        "unified-events-interface": "path",
+        "unified-internal-contracts": "path",
         "unified-position-interface": "unified-position-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiofiles": ["aiofiles>=24.1.0,<25.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pandas-stubs": ["pandas-stubs>=2.2.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prek": ["prek>=0.3.0,<1.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "psycopg2-binary": ["psycopg2-binary>=2.9.9,<3.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "python-multipart": ["python-multipart>=0.0.9,<1.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "slowapi": ["slowapi>=0.1.9,<1.0.0"],
-        "sqlalchemy": ["sqlalchemy>=2.0.0,<3.0.0"],
-        "sse-starlette": ["sse-starlette>=1.6.1,<2.0.0"],
-        "starlette<1.0.0,": ["starlette<1.0.0,>=0.52.1"],
-        "types-requests": ["types-requests>=2.32.0,<3.0.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
+        "aiofiles": [
+          "aiofiles>=24.1.0,<25.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prek": [
+          "prek>=0.3.0,<1.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "psycopg2-binary": [
+          "psycopg2-binary>=2.9.9,<3.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "python-multipart": [
+          "python-multipart>=0.0.9,<1.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "slowapi": [
+          "slowapi>=0.1.9,<1.0.0"
+        ],
+        "sqlalchemy": [
+          "sqlalchemy>=2.0.0,<3.0.0"
+        ],
+        "sse-starlette": [
+          "sse-starlette>=1.6.1,<2.0.0"
+        ],
+        "starlette<1.0.0,": [
+          "starlette<1.0.0,>=0.52.1"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
       },
-      "internal_count": 2,
+      "internal_count": 7,
       "external_count": 31
     },
     "risk-and-exposure-service": {
@@ -1330,32 +3134,84 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiofiles": ["aiofiles>=24.1.0,<25.0.0"],
-        "aiohttp<4.0.0,": ["aiohttp<4.0.0,>=3.13.2"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "mypy": ["mypy>=1.13.0,<2.0.0"],
-        "opentelemetry-api": ["opentelemetry-api>=1.27.0,<2.0.0"],
-        "opentelemetry-exporter-otlp-proto-grpc": ["opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"],
-        "opentelemetry-instrumentation-fastapi": ["opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"],
-        "opentelemetry-sdk": ["opentelemetry-sdk>=1.27.0,<2.0.0"],
-        "pandas": ["pandas>=2.3.0,<3.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prek": ["prek>=0.3.0,<1.0.0"],
-        "prometheus-client<1.0.0,": ["prometheus-client<1.0.0,>=0.20.0"],
-        "psutil": ["psutil>=6.0.0,<7.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pydantic-settings": ["pydantic-settings>=2.12.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "ruff": ["ruff==0.15.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
+        "aiofiles": [
+          "aiofiles>=24.1.0,<25.0.0"
+        ],
+        "aiohttp<4.0.0,": [
+          "aiohttp<4.0.0,>=3.13.2"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "mypy": [
+          "mypy>=1.13.0,<2.0.0"
+        ],
+        "opentelemetry-api": [
+          "opentelemetry-api>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-exporter-otlp-proto-grpc": [
+          "opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-instrumentation-fastapi": [
+          "opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-sdk": [
+          "opentelemetry-sdk>=1.27.0,<2.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prek": [
+          "prek>=0.3.0,<1.0.0"
+        ],
+        "prometheus-client<1.0.0,": [
+          "prometheus-client<1.0.0,>=0.20.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
       },
       "internal_count": 6,
       "external_count": 26
@@ -1366,13 +3222,27 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "basedpyright": ["basedpyright==1.38.2"],
-        "pydantic<3.0.0,": ["pydantic<3.0.0,>=2.12.5"],
-        "pytest-cov<8.0.0,": ["pytest-cov<8.0.0,>=7.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "pytest<10.0.0,": ["pytest<10.0.0,>=9.0.1"]
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "pydantic<3.0.0,": [
+          "pydantic<3.0.0,>=2.12.5"
+        ],
+        "pytest-cov<8.0.0,": [
+          "pytest-cov<8.0.0,>=7.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout<3.0.0,": [
+          "pytest-timeout<3.0.0,>=2.4.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "pytest<10.0.0,": [
+          "pytest<10.0.0,>=9.0.1"
+        ]
       },
       "internal_count": 2,
       "external_count": 7
@@ -1386,32 +3256,84 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "aiohttp": ["aiohttp>=3.13.2,<4.0.0"],
-        "anthropic<1.0.0,": ["anthropic<1.0.0,>=0.49.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "cachetools": ["cachetools>=5.0.0,<6.0.0"],
-        "cryptography": ["cryptography>=46.0.5"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "google-auth": ["google-auth>=2.40.0,<3.0.0"],
-        "gunicorn": ["gunicorn>=22.0.0,<23.0.0"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "jsonpickle": ["jsonpickle>=3.0.0,<4.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pygithub": ["PyGithub>=2.0.0,<3.0.0"],
-        "pyjwt": ["pyjwt>=2.12.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "redis": ["redis>=5.0.0,<6.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
+        "aiohttp": [
+          "aiohttp>=3.13.2,<4.0.0"
+        ],
+        "anthropic<1.0.0,": [
+          "anthropic<1.0.0,>=0.49.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "cachetools": [
+          "cachetools>=5.0.0,<6.0.0"
+        ],
+        "cryptography": [
+          "cryptography>=46.0.5"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "google-auth": [
+          "google-auth>=2.40.0,<3.0.0"
+        ],
+        "gunicorn": [
+          "gunicorn>=22.0.0,<23.0.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "jsonpickle": [
+          "jsonpickle>=3.0.0,<4.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pygithub": [
+          "PyGithub>=2.0.0,<3.0.0"
+        ],
+        "pyjwt": [
+          "pyjwt>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "redis": [
+          "redis>=5.0.0,<6.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
       },
       "internal_count": 5,
       "external_count": 26
@@ -1422,26 +3344,66 @@
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "botocore": ["botocore>=1.34.0,<2.0.0"],
-        "fastapi<1.0.0,": ["fastapi<1.0.0,>=0.115.0"],
-        "flask": ["flask>=3.0.0,<4.0.0"],
-        "functions-framework": ["functions-framework>=3.8.0,<4.0.0"],
-        "google-cloud-compute": ["google-cloud-compute>=1.45.0,<2.0.0"],
-        "google-cloud-run<1.0.0,": ["google-cloud-run<1.0.0,>=0.15.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "prometheus-client": ["prometheus-client>=0.20.0,<1.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-asyncio": ["pytest-asyncio>=0.25.0,<2.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-mock": ["pytest-mock>=3.15.0,<4.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout": ["pytest-timeout>=2.4.0,<3.0.0"],
-        "pytest-xdist": ["pytest-xdist>=3.6.0,<4.0.0"],
-        "pyyaml": ["pyyaml>=6.0.1,<7.0.0"],
-        "ruff": ["ruff==0.15.0"],
-        "uvicorn": ["uvicorn[standard]>=0.27.0,<1.0.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "botocore": [
+          "botocore>=1.34.0,<2.0.0"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "flask": [
+          "flask>=3.0.0,<4.0.0"
+        ],
+        "functions-framework": [
+          "functions-framework>=3.8.0,<4.0.0"
+        ],
+        "google-cloud-compute": [
+          "google-cloud-compute>=1.45.0,<2.0.0"
+        ],
+        "google-cloud-run<1.0.0,": [
+          "google-cloud-run<1.0.0,>=0.15.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "pyyaml": [
+          "pyyaml>=6.0.1,<7.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 20
@@ -1467,18 +3429,42 @@
         "unified-config-interface": "unified-config-interface>=0.2.0,<1.0.0"
       },
       "external_deps": {
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "ib-insync": ["ib_insync>=0.9.86,<1.0.0"],
-        "jsonschema": ["jsonschema>=4.0.0,<5.0.0"],
-        "pip-audit<3.0.0,": ["pip-audit<3.0.0,>=2.7.0"],
-        "pydantic": ["pydantic>=2.12.5,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "ruff": ["ruff==0.15.0"]
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "ib-insync": [
+          "ib_insync>=0.9.86,<1.0.0"
+        ],
+        "jsonschema": [
+          "jsonschema>=4.0.0,<5.0.0"
+        ],
+        "pip-audit<3.0.0,": [
+          "pip-audit<3.0.0,>=2.7.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout<3.0.0,": [
+          "pytest-timeout<3.0.0,>=2.4.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 1,
       "external_count": 12
@@ -1489,18 +3475,42 @@
         "unified-trading-library": "unified-trading-library>=0.1.0"
       },
       "external_deps": {
-        "asyncpg": ["asyncpg>=0.31.0,<1.0.0"],
-        "bandit": ["bandit>=1.7.0,<2.0.0"],
-        "basedpyright": ["basedpyright==1.38.2"],
-        "boto3<2.0.0,": ["boto3<2.0.0,>=1.40.70"],
-        "httpx": ["httpx>=0.28.1,<1.0.0"],
-        "pip-audit": ["pip-audit>=2.7.0,<3.0.0"],
-        "pytest": ["pytest>=9.0.1,<10.0.0"],
-        "pytest-cov": ["pytest-cov>=7.0.0,<8.0.0"],
-        "pytest-socket": ["pytest-socket>=0.7.0,<1.0.0"],
-        "pytest-timeout<3.0.0,": ["pytest-timeout<3.0.0,>=2.4.0"],
-        "pytest-xdist<4.0.0,": ["pytest-xdist<4.0.0,>=3.6.0"],
-        "ruff": ["ruff==0.15.0"]
+        "asyncpg": [
+          "asyncpg>=0.31.0,<1.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "boto3<2.0.0,": [
+          "boto3<2.0.0,>=1.40.70"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.1,<10.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout<3.0.0,": [
+          "pytest-timeout<3.0.0,>=2.4.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ]
       },
       "internal_count": 2,
       "external_count": 12
