@@ -83,7 +83,6 @@ See plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b:
 - execution-service/sports/models.py → domain/execution-service/sports.py
 - strategy-service/models/domain_data.py + order.py → domain/strategy-service/
 - market-data-processing-service/models.py + base_adapter.py → domain/market-data-processing/
-- market-data-api/core/orderbook_subscriber.py → domain/market-data-api/
 - features-onchain-service/models.py → UIC features.py (OnchainFeatureRecord)
 - features-sports-service/schemas/output_schemas.py (column lists) → UIC sports.py (TypedDicts)
 - unified-domain-client/schemas/instrument_key.py → UIC reference/ (InstrumentKey)

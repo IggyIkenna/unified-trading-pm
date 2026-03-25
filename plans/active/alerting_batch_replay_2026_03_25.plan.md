@@ -319,12 +319,13 @@ todos:
 
 ## Problem Statement
 
-The alerting service accepts `--mode batch` but ignores the mode — both batch and live read from
-Pub/Sub via AlertSubscriber. This violates the system's batch/live alignment philosophy where
+The alerting service accepts `--mode batch` but ignores the mode — both batch and live read from Pub/Sub via
+AlertSubscriber. This violates the system's batch/live alignment philosophy where
 `get_messaging_protocol("batch") → "gcs"` and `get_messaging_protocol("live") → "pubsub"`.
 
-Batch replay should let you answer: "Given historical events from March 15-20, what alerts would
-have fired with the current routing rules?" This is essential for:
+Batch replay should let you answer: "Given historical events from March 15-20, what alerts would have fired with the
+current routing rules?" This is essential for:
+
 - Validating alert rule changes before deploying to live
 - Debugging false positives/negatives from production incidents
 - Tuning cooldown and deduplication parameters
@@ -369,22 +370,20 @@ BATCH MODE (new)
 
 ## Key Design Decisions
 
-1. **Same routing pipeline**: Batch mode calls `route_event()` with identical rules.
-   The only difference is delivery suppression — no actual notifications sent.
+1. **Same routing pipeline**: Batch mode calls `route_event()` with identical rules. The only difference is delivery
+   suppression — no actual notifications sent.
 
-2. **GCS as batch event source**: Events live at `events/{service}/{date}/events.jsonl`
-   (written by `GcsEventSink` in UEI). BatchEventReader reads all services' logs for the
-   requested date range and yields them chronologically.
+2. **GCS as batch event source**: Events live at `events/{service}/{date}/events.jsonl` (written by `GcsEventSink` in
+   UEI). BatchEventReader reads all services' logs for the requested date range and yields them chronologically.
 
-3. **Audit-only output**: Batch writes to `alerting/batch-audit/date={date}/audit.jsonl`
-   with full metadata about what would have been delivered. This is queryable for
-   post-hoc analysis.
+3. **Audit-only output**: Batch writes to `alerting/batch-audit/date={date}/audit.jsonl` with full metadata about what
+   would have been delivered. This is queryable for post-hoc analysis.
 
-4. **Batch speed**: No rate limiting, no sleep between events. Process as fast as GCS
-   reads allow. A week of events replays in seconds.
+4. **Batch speed**: No rate limiting, no sleep between events. Process as fast as GCS reads allow. A week of events
+   replays in seconds.
 
-5. **Deterministic replay**: Events sorted by original timestamp within each date partition.
-   Deduplication and cooldown state reset at start of each batch run (clean slate).
+5. **Deterministic replay**: Events sorted by original timestamp within each date partition. Deduplication and cooldown
+   state reset at start of each batch run (clean slate).
 
 ## Event Log Format (Input — written by all services)
 
@@ -397,7 +396,19 @@ BATCH MODE (new)
 ## Batch Audit Record Format (Output)
 
 ```jsonl
-{"event_name": "CIRCUIT_BREAKER_OPEN", "matched_rule": "CIRCUIT_BREAKER_*", "would_deliver_to": ["pagerduty", "telegram"], "severity": "critical", "deduplicated": false, "cooldown_active": false, "original_timestamp": "2026-03-20T14:23:01Z", "source_service": "execution-service"}
+{
+  "event_name": "CIRCUIT_BREAKER_OPEN",
+  "matched_rule": "CIRCUIT_BREAKER_*",
+  "would_deliver_to": [
+    "pagerduty",
+    "telegram"
+  ],
+  "severity": "critical",
+  "deduplicated": false,
+  "cooldown_active": false,
+  "original_timestamp": "2026-03-20T14:23:01Z",
+  "source_service": "execution-service"
+}
 ```
 
 ## CLI Usage
@@ -440,35 +451,40 @@ P5 (QG sweep) ────────────── P5a: All repos green
 ## Success Criteria
 
 ### Phase 1
+
 - BatchEventReader.stream() yields events from GCS JSONL files
 - Handles missing logs gracefully (skip with warning)
 
 ### Phase 2
+
 - `--mode batch --date 2026-03-20` uses BatchEventReader, not AlertSubscriber
 - `--mode live` still uses AlertSubscriber (no regression)
 - Topology convention honoured: `get_messaging_protocol("batch") == "gcs"`
 
 ### Phase 3
+
 - Batch mode runs same routing rules but writes audit records instead of delivering
-- Audit records include: event_name, matched_rule, would_deliver_to, severity,
-  deduplicated flag, cooldown_active flag
+- Audit records include: event_name, matched_rule, would_deliver_to, severity, deduplicated flag, cooldown_active flag
 - Summary report printed at end of batch run
 
 ### Phase 4
+
 - Unit tests pass with CLOUD_MOCK_MODE=true
 - `cd alerting-service && bash scripts/quality-gates.sh` green
 
 ## Pre-Audit Manifest
 
 ### Files to CREATE
-| File | Purpose |
-|------|---------|
-| `alerting_service/subscribers/batch_event_reader.py` | GCS event log reader |
-| `tests/unit/test_batch_replay.py` | Unit tests |
-| `unified-trading-codex/04-architecture/alerting-batch-live.md` | Convention doc |
+
+| File                                                           | Purpose              |
+| -------------------------------------------------------------- | -------------------- |
+| `alerting_service/subscribers/batch_event_reader.py`           | GCS event log reader |
+| `tests/unit/test_batch_replay.py`                              | Unit tests           |
+| `unified-trading-codex/04-architecture/alerting-batch-live.md` | Convention doc       |
 
 ### Files to MODIFY
-| File | Change |
-|------|--------|
-| `alerting_service/main.py` | Branch on mode: batch→BatchEventReader, live→AlertSubscriber |
-| `alerting_service/notifiers/router.py` | Add _BATCH_MODE flag + audit record writer |
+
+| File                                   | Change                                                       |
+| -------------------------------------- | ------------------------------------------------------------ |
+| `alerting_service/main.py`             | Branch on mode: batch→BatchEventReader, live→AlertSubscriber |
+| `alerting_service/notifiers/router.py` | Add \_BATCH_MODE flag + audit record writer                  |

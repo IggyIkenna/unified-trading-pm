@@ -215,7 +215,6 @@ for event in AUTH_SUCCESS AUTH_FAILURE AUTH_DENIED S2S_AUTH_SUCCESS S2S_AUTH_FAI
 done
 
 # Check AUTH_FAILURE event in ALL API services (not just execution-service)
-for svc in market-data-api config-api execution-results-api alerting-service \
            risk-and-exposure-service client-reporting-api trading-analytics-api \
            ml-inference-api ml-training-api deployment-api batch-audit-api; do
   hits=$(rg 'AUTH_FAILURE' "$svc/" --type py --glob '!**/tests/**' -l 2>/dev/null | wc -l)
@@ -1749,7 +1748,6 @@ queryable.
 
 ```bash
 # Step 1 — Catalog all API repos and their route endpoints
-for api in market-data-api config-api execution-results-api alerting-service \
            risk-and-exposure-service client-reporting-api trading-analytics-api \
            ml-inference-api ml-training-api deployment-api batch-audit-api \
            market-tick-data-service position-balance-monitor-service pnl-attribution-service; do
@@ -1775,7 +1773,6 @@ for py in uic_dir.rglob('*.py'):
         if m: domains.add(m.group(1))
 
 # Check which schemas are referenced in API repos
-api_dirs = ['market-data-api', 'config-api', 'execution-results-api', 'alerting-service',
             'risk-and-exposure-service', 'client-reporting-api', 'trading-analytics-api',
             'ml-inference-api', 'ml-training-api', 'deployment-api', 'batch-audit-api']
 served = set()
@@ -1800,7 +1797,6 @@ else:
 # Each domain must have at least one API endpoint or documented N/A reason
 python3 -c "
 domains = {
-    'market_data': ['market-data-api', 'market-tick-data-service'],
     'instruments': [],  # GAP: no API for instrument metadata
     'execution': ['execution-results-api'],
     'strategy': [],  # GAP: no API for strategy management

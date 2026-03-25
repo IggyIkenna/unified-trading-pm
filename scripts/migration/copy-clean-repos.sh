@@ -13,7 +13,6 @@ CLEAN_REPOS=(
   alerting-service batch-audit-ui client-reporting-api client-reporting-ui
   execution-results-api features-calendar-service features-multi-timeframe-service
   features-onchain-service features-sports-service ibkr-gateway-infra logs-dashboard-ui
-  market-data-api ml-inference-service ml-training-service ml-training-ui
   onboarding-ui pnl-attribution-service position-balance-monitor-service
   risk-and-exposure-service strategy-ui unified-api-contracts unified-cloud-interface
   unified-config-interface unified-defi-execution-interface unified-domain-client

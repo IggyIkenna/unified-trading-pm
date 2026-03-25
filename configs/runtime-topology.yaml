@@ -167,7 +167,6 @@ clusters:
     layer: "L6"
   api_services:
     services:
-      - market-data-api
       - client-reporting-api
       - deployment-api
       - unified-trading-api
@@ -285,14 +284,12 @@ service_flows:
 
   # === Layer 2 → API: Processing → Market Data API ===
   - producer: market-data-processing-service
-    consumer: market-data-api
     data: candles_stream
     modes:
       batch: { transport: gcs }
       live: { transport: pubsub }
 
   - producer: market-tick-data-service
-    consumer: market-data-api
     data: orderbook_stream
     modes:
       batch: { transport: gcs }
@@ -770,7 +767,6 @@ api_interactions:
     endpoint_family: /api/*
     data_mode: batch
   - caller: unified-trading-system-ui
-    callee: market-data-api
     protocol: http
     endpoint_family: /api/*
     data_mode: batch+live
@@ -1528,7 +1524,6 @@ data_retention_policy:
 health_probes:
   api_services:
     endpoints: ["/health", "/readiness"]
-    services: [unified-trading-api, auth-api, market-data-api, client-reporting-api, deployment-api]
     note: Cloud Run auto-restart on health check failure
   vm_services:
     method: deployment-engine-watchdog
@@ -1582,7 +1577,6 @@ deployment_modes:
     services:
       - unified-trading-api
       - auth-api
-      - market-data-api
       - client-reporting-api
       - deployment-api
     note: Scale based on HTTP/SSE connection count. Min instances configurable.
@@ -1678,7 +1672,6 @@ deployment_targets:
       unified-trading-api:
         port: 8030
         reason: Consolidated domain gateway; scales with HTTP/SSE connection count
-      market-data-api:
         port: 8016
         reason: Scales with HTTP/SSE connection count (see ui-api-mapping.json)
       deployment-api:
@@ -1742,7 +1735,6 @@ protocols:
     default: vm # Default deployment target: VM
     # Per-service overrides (Cloud Run for stateless HTTP services):
     deployment-api: cloud_run
-    market-data-api: cloud_run
     unified-trading-api: cloud_run
     auth-api: cloud_run
     client-reporting-api: cloud_run

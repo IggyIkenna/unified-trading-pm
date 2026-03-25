@@ -172,7 +172,6 @@ todos:
   # Phase 9A — User Feedback Items
   - id: p9a-health-all-services
     content: |
-      - [ ] [AGENT] P0. Expand health page (/health) to check ALL 8-10 backend services — not just 3 gateways. Add: execution-results-api (8006), market-data-api (8007), deployment-api (8004), batch-audit-api (8013), trading-analytics-api (8012), ml-training-api (8011), plus the existing unified-trading-api (8030), auth-api (8200), client-reporting-api (8014). Also add GET /reporting/reports as a domain check (already done). Each service: health endpoint, latency, status badge.
     status: todo
   - id: p9a-admin-cloud-services
     content: |

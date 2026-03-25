@@ -52,7 +52,6 @@ Set by `rollout-quality-gates-unified.py --recalibrate` reading `coverage.xml` f
 | client-reporting-api | 86% | 85 |
 | alerting-service | 83% | 82 |
 | deployment-service | 80% | 79 |
-| market-data-api | 80% | 79 |
 | position-balance-monitor-service | 77% | 76 |
 | ml-inference-service | 75% | 74 |
 | risk-and-exposure-service | 74% | 73 |

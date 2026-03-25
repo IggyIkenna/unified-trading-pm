@@ -107,6 +107,31 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -150,6 +175,21 @@
         {
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
           "required": true
         }
       ],
@@ -348,6 +388,51 @@
           "name": "matching-engine-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "execution-algo-library",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=0.1.14,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-sports-execution-interface",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trade-execution-interface",
+          "version": ">=0.1.1,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -393,6 +478,31 @@
           "name": "unified-features-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -429,6 +539,26 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
           "required": true
         }
       ],
@@ -467,6 +597,31 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -499,6 +654,36 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-features-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
           "required": true
         }
       ],
@@ -596,6 +781,36 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-features-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -633,6 +848,56 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-orchestration-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-features-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=0.3.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-reference-data-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-sports-reference-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -665,6 +930,31 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
           "required": true
         }
       ],
@@ -762,6 +1052,11 @@
           "name": "unified-internal-contracts",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-sports-reference-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -802,6 +1097,31 @@
           "name": "market-tick-data-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -837,6 +1157,26 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-market-interface",
+          "version": ">=0.3.2,<1.0.0",
           "required": true
         }
       ],
@@ -907,6 +1247,31 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -946,6 +1311,36 @@
           "name": "unified-ml-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -980,6 +1375,26 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -1013,6 +1428,36 @@
       "dependencies": [
         {
           "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-position-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1110,6 +1555,36 @@
           "name": "unified-trading-library",
           "version": ">=0.4.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-domain-client",
+          "version": ">=0.1.14,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -1182,6 +1657,31 @@
         {
           "name": "unified-trading-library",
           "version": ">=0.3.42,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-cloud-interface",
+          "version": ">=0.11.6,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-config-interface",
+          "version": ">=0.1.17,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-events-interface",
+          "version": ">=0.2.2,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-internal-contracts",
+          "version": ">=0.1.2,<1.0.0",
           "required": true
         }
       ],
@@ -2134,12 +2634,7 @@
       {
         "level": 9,
         "description": "Operational services + API gateways",
-        "repos": [
-          "client-reporting-api",
-          "market-data-api",
-          "position-balance-monitor-service",
-          "risk-and-exposure-service"
-        ]
+        "repos": ["client-reporting-api", "position-balance-monitor-service", "risk-and-exposure-service"]
       },
       {
         "level": 10,
@@ -2154,7 +2649,7 @@
       {
         "level": 12,
         "description": "IaC + post-deploy validation (deploy last; references all service images)",
-        "repos": ["elysium-defi-system", "ibkr-gateway-infra", "system-integration-tests"]
+        "repos": ["ibkr-gateway-infra", "system-integration-tests"]
       }
     ]
   },
@@ -2404,13 +2899,7 @@
         "position-balance-monitor-service",
         "alerting-service"
       ],
-      "required_api_services": [
-        "unified-trading-api",
-        "deployment-api",
-        "auth-api",
-        "client-reporting-api",
-        "market-data-api"
-      ],
+      "required_api_services": ["unified-trading-api", "deployment-api", "auth-api", "client-reporting-api"],
       "required_uis": ["unified-trading-system-ui", "deployment-ui"],
       "not_required": [
         "features-sports-service",

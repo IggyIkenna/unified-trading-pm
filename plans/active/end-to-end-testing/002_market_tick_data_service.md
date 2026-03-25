@@ -12,9 +12,7 @@ Follows `procedure.md`. Pipeline position: #2 (depends on instruments-service fo
 ## Runtime Topology
 
 - **Cluster:** data_pipeline (L1-L2)
-- **Upstream:** instruments-service (instruments_universe via GCS/PubSub)
-- **Downstream:** market-data-processing-service (raw_tick_data), execution-service (live_market_feed), market-data-api
-  (orderbook_stream)
+- **Upstream:** instruments-service (instruments_universe via GCS/PubSub) (orderbook_stream)
 - **Schedule:** Batch = date-range historical download; Live = persistent WebSocket connections to exchanges
 - **Sharding:** `--shard-index` / `--total-shards` for parallel batch download
 

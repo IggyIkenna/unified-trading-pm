@@ -13,9 +13,8 @@ Follows `procedure.md`. Pipeline position: #3 (depends on market-tick-data-servi
 
 - **Cluster:** data_pipeline (L1-L2)
 - **Upstream:** market-tick-data-service (raw_tick_data via GCS/PubSub/in_memory)
-- **Downstream:** features-delta-one-service, features-volatility-service, features-cross-instrument-service,
-  features-commodity-service, features-sports-service, risk-and-exposure-service, strategy-service, market-data-api (all
-  via processed_candles_ohlcv)
+- **Downstream:** features-delta-one-service, features-volatility-service, features-cross-instrument-service, via
+  processed_candles_ohlcv)
 - **Schedule:** Batch = process date-range of raw ticks into OHLCV candles; Live = continuous timer-aligned candle
   processing via PubSub
 - **Sharding:** `--max-results` for limiting instruments per shard

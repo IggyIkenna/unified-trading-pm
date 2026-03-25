@@ -55,7 +55,6 @@ variable "service_repos" {
     "client-reporting-api",
     "deployment-api",
     "execution-results-api",
-    "market-data-api",
     "ml-inference-api",
     "ml-training-api",
     "trading-analytics-api",

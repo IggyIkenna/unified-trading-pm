@@ -13,7 +13,6 @@ REPOS=(alerting-service archive batch-audit-ui client-reporting-api client-repor
   execution-results-api execution-service features-calendar-service features-cross-instrument-service
   features-delta-one-service features-multi-timeframe-service features-onchain-service
   features-sports-service features-volatility-service ibkr-gateway-infra instruments-service
-  live-health-monitor-ui logs-dashboard-ui market-data-api market-data-processing-service
   market-tick-data-service matching-engine-library ml-inference-service ml-training-service
   ml-training-ui onboarding-ui pnl-attribution-service position-balance-monitor-service
   risk-and-exposure-service settlement-ui strategy-service strategy-ui

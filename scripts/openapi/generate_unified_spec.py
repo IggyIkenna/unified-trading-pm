@@ -50,7 +50,6 @@ SERVICE_REGISTRY: list[tuple[str, str, str]] = [
     ("auth-api", "auth_api.app", "app"),
     ("unified-trading-api", "unified_trading_api.main", "create_app"),
     ("client-reporting-api", "client_reporting_api.api.main", "app"),
-    ("market-data-api", "market_data_api.api.main", "app"),
     ("alerting-service", "alerting_service.api.main", "app"),
     ("execution-service", "execution_service.api.app", "app"),
     ("risk-and-exposure-service", "risk_and_exposure_service.api.main", "app"),

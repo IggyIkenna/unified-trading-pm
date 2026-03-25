@@ -4,7 +4,6 @@
 > Verify preconditions before starting.
 
 > **2026-03-24 topology note:** The **active** surface is **`unified-trading-system-ui`** + **`deployment-ui`** and APIs
-> **`unified-trading-api`**, **`auth-api`**, **`deployment-api`**, **`client-reporting-api`**, **`market-data-api`**
 > (`scripts/dev/ui-api-mapping.json`). Sections below that list **11 UIs** or **`execution-results-api`** are
 > **historical** parallel-agent staging; legacy repos live under workspace-root **`archive/README.md`**.
 
@@ -104,7 +103,6 @@ If any check fails: STOP. Complete Phase 1/2 first.
 | AS     | alerting-service                  | F     |
 
 **T5 API Services (active SSOT):** `unified-trading-api`, `auth-api`, `deployment-api`, `client-reporting-api`,
-`market-data-api` — see `ui-api-mapping.json` (archived split APIs: `archive/README.md`).
 
 **T6 UIs (historical list — archived split UIs):** `batch-audit-ui`, `client-reporting-ui`, `deployment-ui`,
 `execution-analytics-ui`, `live-health-monitor-ui`, `logs-dashboard-ui`, `ml-training-ui`, `onboarding-ui`,
@@ -281,7 +279,6 @@ Every service (T4/T5) and UI (T6) follows this pattern:
 ## Tier 6 — UIs (11 repos)
 
 **Before starting T6:** `ui-local-dev-setup` — add `.env.local.example` to all 11 UI repos. Port map:
-8001=deployment-api, 8002=execution-results-api, 8003=client-reporting-api, 8004=market-data-api.
 
 11 agents in parallel after all T5 D5:
 

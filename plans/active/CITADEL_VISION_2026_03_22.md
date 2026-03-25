@@ -38,7 +38,6 @@ Use this section as the **close-out order** after feature work slows down. SSOT 
    - `client-reporting-api` — Client-facing reporting, invoicing, regulatory, document management (needs only API keys
      and reporting logic, no core system services)
    - `unified-trading-api` — Trading system gateway (all internal + external trading functionality) The 8 remaining
-     domain data APIs (batch-audit-api, config-api, deployment-api, execution-results-api, market-data-api,
      ml-inference-api, ml-training-api, trading-analytics-api) are absorbed into unified-trading-api.
 
 3. **90% CODE SHARING** — Mock and real modes share the same route handlers (on the gateway), the same service layer,

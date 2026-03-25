@@ -45,7 +45,7 @@
       "api": "auth-api",
       "api_port": 8200,
       "api_module": "auth_api",
-      "$note": "Authentication service — JWT issuance, persona resolution, OAuth token exchange. No dedicated UI; auth flows handled by each UI's login page."
+      "$note": "Authentication service \u2014 JWT issuance, persona resolution, OAuth token exchange. No dedicated UI; auth flows handled by each UI's login page."
     }
   },
   "service_workers": {

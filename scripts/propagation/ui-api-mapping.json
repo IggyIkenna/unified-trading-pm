@@ -51,6 +51,6 @@
     "default_port": "8030",
     "api_path": "/api",
     "endpoints": ["/health", "/readiness"],
-    "note": "Consolidated UI. Domain traffic goes to unified-trading-api; auth-api, deployment-api, client-reporting-api, and market-data-api are additional backends — see scripts/dev/ui-api-mapping.json stacks."
+    "note": "Consolidated UI. Domain traffic goes to unified-trading-api; auth-api, deployment-api, client-reporting-api are additional backends \u2014 see scripts/dev/ui-api-mapping.json stacks."
   }
 }
