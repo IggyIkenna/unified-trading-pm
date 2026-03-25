@@ -415,6 +415,11 @@
           "name": "unified-trading-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "unified-defi-execution-interface",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "ci_status": "FAILING",
@@ -460,6 +465,11 @@
       "dependencies": [
         {
           "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-feature-calculator-library",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
@@ -1188,6 +1198,11 @@
       "dependencies": [
         {
           "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-ml-interface",
           "version": ">=0.1.0,<1.0.0",
           "required": true
         }
