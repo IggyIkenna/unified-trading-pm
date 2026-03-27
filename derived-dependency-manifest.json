@@ -583,6 +583,7 @@
     "execution-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-market-interface": "unified-market-interface>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
       "external_deps": {
@@ -746,7 +747,7 @@
           "websockets>=14.0,<15.0.0"
         ]
       },
-      "internal_count": 2,
+      "internal_count": 3,
       "external_count": 53
     },
     "features-calendar-service": {

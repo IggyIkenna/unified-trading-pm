@@ -1,1 +1,56 @@
+# Intentional discards from setup.sh / alignment workflow
+# These were reset: moving to origin/main during workspace initialization
+# All confirmed safe — work was either already in origin/main or was intermediate local state
+deployment-api:0777d2e
+deployment-api:dc03d83
+deployment-api:e3f55bc
+execution-results-api:132cb1d
+execution-results-api:8541737
+execution-service:9ba757bc
+execution-service:cbd509bd
+onboarding-ui:7985556
+onboarding-ui:a3c20a2
+unified-cloud-interface:da9dea0
+unified-config-interface:890c67d
+unified-config-interface:9deae46
+unified-config-interface:ba73c76
+unified-config-interface:f298cb7
+unified-defi-execution-interface:30d2102
+unified-defi-execution-interface:7c1badd
+unified-domain-client:8cb7974
+unified-domain-client:de2a80d
+unified-feature-calculator-library:39ef97d
+unified-feature-calculator-library:f09e086
+unified-internal-contracts:194ac40
+unified-internal-contracts:ad08d68
+unified-market-interface:0efc383
+unified-market-interface:65368bb
+unified-ml-interface:6bf2a58
+unified-ml-interface:b8081f3
+unified-ml-interface:e1524f2
+unified-position-interface:4bfa3d3
+unified-position-interface:755c7f1
+unified-position-interface:d101169
+unified-reference-data-interface:7919328
+unified-reference-data-interface:9484fe6
+unified-sports-execution-interface:3c5dfe2
+unified-sports-execution-interface:7d681fe
+unified-sports-execution-interface:99089b0
+unified-trade-execution-interface:41176aa
+unified-trade-execution-interface:a90034d
+unified-trade-execution-interface:f118b21
+unified-trading-codex:181daf1
+unified-trading-codex:d4f2513
+unified-trading-library:18de5bb
+unified-trading-library:772125a
+
+# Low-risk resets (--soft etc.) — confirmed safe 2026-03-27
+deployment-api
+unified-api-contracts
+unified-market-interface
+unified-trading-api
+unified-trading-library
+unified-trading-pm
+
+# Intentional reset to origin/live-defi-rollout — confirmed safe 2026-03-27
 execution-service:5f1b8f30
