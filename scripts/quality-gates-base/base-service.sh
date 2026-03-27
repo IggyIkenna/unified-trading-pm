@@ -570,9 +570,12 @@ DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests
     | grep -v "# noqa" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
-# Old event logging pattern — must use unified_events_interface directly
-EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
-[[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_events_interface import ...'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports from unified_events_interface"
+# Old event logging pattern — flag obsolete cloud logging helpers only.
+# log_event/setup_events: from unified_trading_library import log_event is correct (UEI merged into UTL;
+#   check-import-patterns.py enforces top-level top-level import; from unified_events_interface also accepted).
+# setup_cloud_logging/observability: old non-standard helpers — flag these.
+EL_OLD=$(rg "from unified_trading_library[. ].*(setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+[[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_trading_library import log_event'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports OK"
 
 # ============================================================
 # STEP 5.5 — No direct cloud SDK imports (must route through UCLI/UCS)
