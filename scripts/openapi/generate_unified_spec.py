@@ -46,10 +46,12 @@ SERVICE_TIMEOUT = 30
 # === Step 2: Service Registry ===
 # (service_name, module_path, app_attribute)
 SERVICE_REGISTRY: list[tuple[str, str, str]] = [
+    # === API Gateways ===
     ("deployment-api", "deployment_api.main", "app"),
     ("auth-api", "auth_api.app", "app"),
     ("unified-trading-api", "unified_trading_api.main", "create_app"),
     ("client-reporting-api", "client_reporting_api.api.main", "app"),
+    # === Core Services ===
     ("alerting-service", "alerting_service.api.main", "app"),
     ("execution-service", "execution_service.api.app", "app"),
     ("risk-and-exposure-service", "risk_and_exposure_service.api.main", "app"),
@@ -57,6 +59,23 @@ SERVICE_REGISTRY: list[tuple[str, str, str]] = [
     ("deployment-service", "deployment_service.api.app", "app"),
     ("market-tick-data-service", "market_tick_data_service.api.main", "app"),
     ("pnl-attribution-service", "pnl_attribution_service.api.main", "app"),
+    ("strategy-service", "strategy_service.api.main", "app"),
+    ("instruments-service", "instruments_service.api.main", "app"),
+    ("trading-agent-service", "trading_agent_service.api.main", "app"),
+    # === Feature Services ===
+    ("features-calendar-service", "features_calendar_service.api.main", "app"),
+    ("features-delta-one-service", "features_delta_one_service.api.main", "app"),
+    ("features-onchain-service", "features_onchain_service.api.main", "app"),
+    ("features-volatility-service", "features_volatility_service.api.main", "app"),
+    ("features-sports-service", "features_sports_service.api.main", "app"),
+    ("features-cross-instrument-service", "features_cross_instrument_service.api.main", "app"),
+    ("features-multi-timeframe-service", "features_multi_timeframe_service.api.main", "app"),
+    ("features-commodity-service", "features_commodity_service.api.main", "app"),
+    # === Batch / ML Services ===
+    ("market-data-processing-service", "market_data_processing_service.api.main", "app"),
+    ("ml-inference-service", "ml_inference_service.api.main", "app"),
+    ("ml-training-service", "ml_training_service.api.main", "app"),
+    ("batch-live-reconciliation-service", "batch_live_reconciliation_service.api.main", "app"),
 ]
 
 

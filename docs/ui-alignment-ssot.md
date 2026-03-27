@@ -23,7 +23,7 @@ mode.
 | Trigger (examples)                                                                           | Regenerate                          |
 | -------------------------------------------------------------------------------------------- | ----------------------------------- |
 | UAC registry or enum changes, new venues, `VALID_*` constants                                | §1 `generate_ui_reference_data.py`  |
-| `unified_internal_contracts` enums / presets used by the script                              | §1                                  |
+| `unified_api_contracts.internal` enums / presets used by the script                          | §1                                  |
 | `UnifiedCloudConfig` or config schema extraction in the script                               | §1                                  |
 | `unified-trading-pm/scripts/dev/ui-api-mapping.json` stacks                                  | §1                                  |
 | `workspace-manifest.json`, `strategy-manifest.json`, data-flow manifest, deployment topology | §2 `generate_system_topology.py`    |
@@ -36,15 +36,17 @@ what the generators produce — this is the next automation step.
 
 ### §1 — `ui-reference-data.json` (full loop)
 
-1. **Workspace:** Sibling repos `unified-api-contracts`, `unified-config-interface`, `unified-internal-contracts`
-   checked out next to `unified-trading-pm` (standard workspace layout).
+1. **Workspace:** Sibling repos `unified-api-contracts` and `unified-trading-library` checked out next to
+   `unified-trading-pm` (standard workspace layout). Note: `unified-internal-contracts` is now
+   `unified_api_contracts.internal` (sub-module of `unified-api-contracts`), `unified-config-interface` is now
+   `unified_trading_library.config_interface`.
 2. **Python path:** Imports need those packages on `PYTHONPATH` (repo roots that contain `unified_api_contracts`,
-   `unified_config_interface`, `unified_internal_contracts`), **or** a venv where all three are installed editable (e.g.
-   after `setup-workspace` + `uv sync` in a consumer that lists them as path deps).
+   `unified_trading_library`), **or** a venv where both are installed editable (e.g. after `setup-workspace` + `uv sync`
+   in a consumer that lists them as path deps).
 3. **Run** (from workspace root, adjust `PYTHONPATH` if needed):
 
    ```bash
-   PYTHONPATH="unified-api-contracts:unified-config-interface:unified-internal-contracts" \
+   PYTHONPATH="unified-api-contracts:unified-trading-library" \
      python3 unified-trading-pm/scripts/openapi/generate_ui_reference_data.py
    ```
 
@@ -92,8 +94,9 @@ or future UI features (not the main `ui-reference-data.json` path).
 **`generate_ui_reference_data.py`** and regenerate the JSON. Do **not** introduce a second Python script that repeats
 the same registry/enum extraction for the UI.
 
-**Requires:** Workspace checkout with `unified-api-contracts`, `unified-internal-contracts`, `unified-config-interface`
-importable (typically workspace venv).
+**Requires:** Workspace checkout with `unified-api-contracts` and `unified-trading-library` importable (typically
+workspace venv). Internal contracts are at `unified_api_contracts.internal`, config interface is at
+`unified_trading_library.config_interface`.
 
 ---
 
@@ -121,13 +124,16 @@ OpenAPI sync is **separate** from `ui-reference-data.json` (domain registries vs
 **`generate_unified_spec.py` (merged OpenAPI):** The script prepends every `SERVICE_REGISTRY` repo root to `PYTHONPATH`
 before each subprocess extract, so sibling imports like `auth_api` resolve without a hand-built export. You still need
 **internal libraries** on `PYTHONPATH` (or installed in the active interpreter) because each service imports
-`unified_trading_library`, `unified_config_interface`, etc. Example from workspace root:
+`unified_trading_library`, `unified_api_contracts`, etc. Example from workspace root:
 
 ```bash
-LIBS="unified-api-contracts:unified-config-interface:unified-cloud-interface:unified-events-interface:unified-trading-library"
+LIBS="unified-api-contracts:unified-trading-library"
 export PYTHONPATH="${LIBS}:${PYTHONPATH:-}"
 python3 unified-trading-pm/scripts/openapi/generate_unified_spec.py
 ```
+
+Note: `unified-config-interface`, `unified-cloud-interface`, and `unified-events-interface` are now consolidated into
+`unified-trading-library` as `config_interface`, `cloud_interface`, and `events_interface` sub-modules respectively.
 
 Default outputs: `unified-api-contracts/openapi/unified-trading-system.openapi.{json,yaml}`. Copy the JSON/YAML into
 `unified-trading-system-ui/context/api-contracts/openapi/` when the UI bundles the merged contract.
@@ -140,7 +146,7 @@ Scripts such as `scripts/validation/validate-strategy-manifest.py`,
 `scripts/manifest/generate-strategy-instrument-matrix.py`, `check-strategy-instruments.py` — **validate or derive** PM
 manifests. They do **not** replace Codex prose or the browser handbook.
 
-**Codex SSOT for strategy meaning:** `unified-trading-codex/09-strategy/README.md`, per-asset-class markdown,
+**Codex SSOT for strategy meaning:** `unified-trading-pm/codex/09-strategy/README.md`, per-asset-class markdown,
 `STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md`.
 
 ---
@@ -161,6 +167,6 @@ subcommand of the existing generator) and document it in §1 or a new subsection
 
 ## 6. Related PM / codex links
 
-- `unified-trading-codex/09-strategy/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` — catalog vs `strategy-service` exports
+- `unified-trading-pm/codex/09-strategy/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` — catalog vs `strategy-service` exports
 - `unified-trading-pm/strategy-manifest.json` — machine strategy list
 - `unified-trading-pm/scripts/dev/ui-api-mapping.json` — service stacks for reference data

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Check schema provenance: local BaseModel/TypedDict/dataclass definitions should live in
-unified-api-contracts or unified-internal-contracts. Flags violations.
+unified-api-contracts (includes unified_api_contracts.internal, formerly unified-internal-contracts).
+Flags violations.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from pathlib import Path
 WORKSPACE_ROOT = Path("/Users/ikennaigboaka/Code/unified-trading-system-repos")
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 
-EXCLUDED_REPOS = {"unified-api-contracts", "unified-internal-contracts"}
+EXCLUDED_REPOS = {"unified-api-contracts"}
 
 # Patterns for schema definitions
 CLASS_BASEMODEL_RE = re.compile(r"class\s+(\w+)\s*\(\s*[^)]*BaseModel\s*[^)]*\)")

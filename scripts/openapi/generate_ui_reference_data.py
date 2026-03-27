@@ -192,7 +192,7 @@ def extract_config_schema_universe() -> dict[str, object]:
                 "required": field_info.is_required(),
             }
         configs["UnifiedCloudConfig"] = {
-            "source": "unified-config-interface",
+            "source": "unified-trading-library (config_interface/)",
             "fields": fields,
         }
         logger.info("  UnifiedCloudConfig: %d fields", len(fields))
