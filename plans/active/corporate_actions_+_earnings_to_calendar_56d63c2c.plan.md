@@ -56,7 +56,7 @@ todos:
     status: completed
   - id: uv-lock-and-manifest
     content:
-      Run uv lock in changed repos; update workspace-manifest.json if unified-internal-contracts is a new dep for
+      Run uv lock in changed repos; update workspace-manifest.json if unified-api-contracts (internal) is a new dep for
       features-calendar-service
     status: completed
   - id: uta-calendar-router
@@ -186,7 +186,7 @@ Note: `PolygonFinancials` is intentionally omitted — `/vX/reference/financials
 
 ## Phase 2: UIC — add corporate actions domain models
 
-**New file:** `unified-internal-contracts/unified_internal_contracts/domain/corporate_actions/models.py`
+**New file:** `unified-api-contracts (internal)/unified_internal_contracts/domain/corporate_actions/models.py`
 
 Move `DividendRecord`, `StockSplitRecord`, `EarningsRecord`, `CorporateActionsBundle`, `CorporateActionType` from
 `[instruments-service/instruments_service/corporate_actions/models.py](instruments-service/instruments_service/corporate_actions/models.py)`
@@ -212,7 +212,7 @@ class EarningsResultRecord(BaseModel):
 Export all from `unified_internal_contracts/__init__.py`.
 
 Check `[features-calendar-service/pyproject.toml](features-calendar-service/pyproject.toml)` — if
-`unified-internal-contracts` is not in `[project.dependencies]`, add it, then run `uv lock` and update
+`unified-api-contracts (internal)` is not in `[project.dependencies]`, add it, then run `uv lock` and update
 `workspace-manifest.json`.
 
 ---
@@ -397,7 +397,7 @@ data venue entry.
 ## Quickmerge Order
 
 1. `unified-api-contracts` — new Polygon schemas (`feat:`)
-2. `unified-internal-contracts` — new domain models incl. `MacroResultRecord` (`feat:`)
+2. `unified-api-contracts (internal)` — new domain models incl. `MacroResultRecord` (`feat:`)
 3. `features-calendar-service` — adapters + calculators + handlers (`feat:`)
 4. `instruments-service` — delete corporate actions module (`feat!:`, MINOR bump pre-1.0.0)
 5. `unified-trading-pm` — runtime topology + venue configs (`chore:`)

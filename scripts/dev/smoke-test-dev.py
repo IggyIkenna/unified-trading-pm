@@ -117,8 +117,8 @@ LIBRARY_IMPORTS: list[tuple[str, str, bool]] = [
     ("unified_api_contracts (UAC)", "import unified_api_contracts", True),
     ("unified_api_contracts.internal (UIC)", "import unified_api_contracts.internal", True),
     ("unified_market_interface (UMI)", "import unified_market_interface", False),
-    ("unified_domain_client (UDC)", "import unified_domain_client", False),
-    ("unified_feature_calculator_library (UFCL)", "import unified_feature_calculator_library", False),
+    ("unified_trading_library (UTL)", "import unified_trading_library", False),
+    ("unified_trading_library.feature_calculator (UFCL)", "import unified_trading_library.feature_calculator", False),
 ]
 
 for label, stmt, mandatory in LIBRARY_IMPORTS:

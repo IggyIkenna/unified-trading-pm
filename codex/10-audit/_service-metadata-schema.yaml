@@ -1,0 +1,445 @@
+# ==============================================================================
+# Service Metadata Schema - Canonical Definition
+# ==============================================================================
+#
+# This schema defines ALL metadata fields that can be tracked for services
+# in the Unified Trading System.
+#
+# Usage:
+#   - Service audit YAML files (10-audit/batch/*.yaml, 10-audit/live/*.yaml)
+#     should include these fields in their header
+#   - Service registry (11-project-management/service-registry.yaml) uses this schema
+#   - Scripts read these fields for label generation, dashboard creation, etc.
+#
+# ==============================================================================
+
+schema_version: "1.0"
+last_updated: "2026-02-12"
+
+# ==============================================================================
+# Core Service Identification
+# ==============================================================================
+
+service:
+  type: string
+  required: true
+  description: "Service name (e.g. market-data-processing-service)"
+  example: "market-data-processing-service"
+
+type:
+  type: enum
+  required: true
+  description: "Service type classification"
+  values:
+    - pipeline # Data pipeline service (in DAG)
+    - platform # Platform library or orchestrator
+    - ui-observability # Observability/monitoring web UI
+    - ui-control # Control/deployment web UI
+    - ui-analysis # Analytics/analysis web UI
+  example: "pipeline"
+
+# ==============================================================================
+# Pipeline-Specific Metadata (if type: pipeline)
+# ==============================================================================
+
+pipeline_metadata:
+  type: object
+  required_if: "type == pipeline"
+  fields:
+    layer:
+      type: integer
+      description:
+        "DAG layer position (1=data-io, 2=market-data, 3=processed, 4=features, 5=ml, 6=strategy, 7=post-trade)"
+      range: [1, 7]
+      example: 3
+
+    group:
+      type: enum
+      description: "Service group within pipeline"
+      values:
+        - data-io
+        - market-data
+        - features
+        - ml
+        - strategy-execution
+        - post-trade
+      example: "market-data"
+
+    upstream_dependencies:
+      type: list[string]
+      description: "Services this service depends on (reads from)"
+      example: ["instruments-service", "market-tick-data-service"]
+
+    output_bucket:
+      type: string
+      description: "Primary GCS output bucket"
+      example: "gs://market-data-processed"
+
+# ==============================================================================
+# UI-Specific Metadata (if type: ui-*)
+# ==============================================================================
+
+ui_metadata:
+  type: object
+  required_if: "type starts with ui-"
+  fields:
+    category:
+      type: enum
+      description: "UI category (OCA model)"
+      values: [observability, control, analysis]
+      example: "observability"
+
+    purpose:
+      type: string
+      description: "One-line description of UI purpose"
+      example: "Real-time P&L, risk, positions, alerts dashboard"
+
+    tech_stack:
+      type: list[string]
+      description: "Frontend technologies"
+      example: ["React", "TypeScript", "WebSocket"]
+
+    backend_apis:
+      type: list[string]
+      description: "Backend services this UI integrates with"
+      example: ["strategy-service", "execution-service"]
+
+    has_control_features:
+      type: boolean
+      description: "Does UI have control actions (not just view)?"
+      default: false
+      example: true
+
+    deployment_type:
+      type: enum
+      description: "Deployment method"
+      values: [cloud_run, gcs_static_cdn]
+      example: "cloud_run"
+
+# ==============================================================================
+# Domain Coverage (ALL services)
+# ==============================================================================
+
+domain_coverage:
+  type: object
+  required: true
+  fields:
+    venues:
+      type: list[string]
+      description: "Supported venues (or ALL for platform/UI services)"
+      example: ["BINANCE", "COINBASE", "DERIBIT", "AAVEV3_ETHEREUM"]
+
+    asset_classes:
+      type: list[enum]
+      description: "Supported asset classes (or ALL)"
+      values: [CRYPTO_CEFI, DEFI, TRADFI_EQUITIES, TRADFI_OPTIONS, TRADFI_FUTURES, SPORTS, ALL]
+      example: ["CRYPTO_CEFI", "DEFI"]
+
+    feature_groups:
+      type: list[string]
+      description: "Feature groups produced/consumed (for feature services)"
+      example: ["candles", "orderbook_snapshots"]
+      optional: true
+
+    timeframes:
+      type: list[string]
+      description: "Supported timeframes (for market data / features)"
+      example: ["1m", "5m", "15m", "1h", "1d"]
+      optional: true
+
+# ==============================================================================
+# Data Coverage (Pipeline services)
+# ==============================================================================
+
+data_coverage:
+  type: object
+  required_if: "type == pipeline"
+  fields:
+    start_date:
+      type: date
+      description: "Earliest data this service can process (YYYY-MM-DD)"
+      example: "2020-01-01"
+
+    end_date:
+      type: date
+      description: "Latest data (null = ongoing)"
+      nullable: true
+      example: null
+
+    batch_mode:
+      type: boolean
+      description: "Supports batch (historical) processing"
+      example: true
+
+    live_mode:
+      type: boolean
+      description: "Supports live (real-time) processing"
+      example: true
+
+# ==============================================================================
+# Infrastructure (ALL services)
+# ==============================================================================
+
+infrastructure:
+  type: object
+  required: true
+  fields:
+    has_ui:
+      type: boolean
+      description: "Is this a UI service?"
+      example: false
+
+    ui_path:
+      type: string
+      description: "Path to UI code (if has_ui: true)"
+      nullable: true
+      example: "live-health-monitor-ui/"
+
+    config_paths:
+      type: list[string]
+      description: "Paths to config files"
+      example: ["configs/market-data-processing/batch.env", "configs/market-data-processing/live.env"]
+
+    credentials:
+      type: list[enum]
+      description: "Required credentials/permissions"
+      values:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+        - SECRET_MANAGER_ACCESS
+        - EXCHANGE_API_KEYS
+        - GITHUB_TOKEN
+        - SERVICE_ACCOUNT
+        - OKTA_SSO_CLIENT
+      example: ["GCS_BUCKET_ACCESS", "BIGQUERY_DATASET_ACCESS"]
+
+    deployment:
+      type: object
+      fields:
+        cloudbuild:
+          type: string
+          example: "cloudbuild.yaml"
+        dockerfile:
+          type: string
+          example: "Dockerfile"
+        github_token_required:
+          type: boolean
+          description: "Needs GitHub token for private repo access (unified-trading-library)"
+          example: true
+        cloud_build_auth:
+          type: enum
+          values: [service-account, workload-identity]
+          example: "service-account"
+
+# ==============================================================================
+# Readiness Tracking (ALL services)
+# ==============================================================================
+
+readiness:
+  type: object
+  required: true
+  fields:
+    test_coverage:
+      type: percentage
+      description: "Current test coverage"
+      example: 45
+
+    test_coverage_target:
+      type: percentage
+      description: "Aspirational coverage target"
+      example: 80
+
+    coding_standards_compliant:
+      type: boolean
+      description: "Passes all coding standards audits"
+      example: false
+
+    cloud_compatibility:
+      type: list[enum]
+      description: "Which clouds this service runs on"
+      values: [GCP, AWS, BOTH]
+      example: ["GCP"]
+
+    latency_target:
+      type: string
+      description: "End-to-end latency target (for pipeline services)"
+      example: "<2s"
+      optional: true
+
+    enhanced_auth:
+      type: boolean
+      description: "Has Okta SSO, RBAC, 2FA (for UIs)"
+      default: false
+      example: false
+
+# ==============================================================================
+# Product/Strategy Support (Grows over time)
+# ==============================================================================
+
+supports:
+  type: object
+  required: false
+  fields:
+    products:
+      type: list[string]
+      description: "Products this service supports"
+      example: ["delta-one-crypto", "volatility-arb"]
+
+    strategies:
+      type: list[string]
+      description: "Strategies this service supports"
+      example: ["basis-arb", "vol-surface-arb"]
+
+    clients:
+      type: list[string]
+      description: "Client IDs (for multi-tenant services)"
+      example: []
+
+# ==============================================================================
+# Ownership & Priority (ALL services)
+# ==============================================================================
+
+owner_default:
+  type: enum
+  required: true
+  description: "Default owner bootstrap"
+  values: [Ikenna, Harsh, Femi]
+  example: "Ikenna"
+
+priority:
+  type: enum
+  required: true
+  description: "Priority level"
+  values: [P0-critical, P1-high, P2-medium, P3-low]
+  example: "P1-high"
+
+milestone:
+  type: enum
+  required: true
+  description: "Target milestone"
+  values: [TechReadiness, Batch85, Live90, Commercialization]
+  example: "Batch85"
+
+# ==============================================================================
+# Commercial Stages (Optional - for services with commercial readiness tracking)
+# ==============================================================================
+
+commercial_tracking:
+  type: object
+  required: false
+  fields:
+    readiness_tier:
+      type: enum
+      description: "Technical readiness tier"
+      values: [smoke_tested, scale_tested, history_validated, live_stability_validated, uat_accepted]
+      example: "scale_tested"
+
+    commercial_stage:
+      type: enum
+      description: "Commercialization stage"
+      values: [signal_candidate, signal_commercial_ready, strategy_candidate, strategy_commercial_ready]
+      example: "signal_candidate"
+
+# ==============================================================================
+# Example: Complete Service Metadata
+# ==============================================================================
+
+# Example pipeline service
+example_pipeline_service:
+  service: "market-data-processing-service"
+  type: "pipeline"
+  owner_default: "Ikenna"
+  priority: "P1-high"
+  milestone: "Batch85"
+
+  pipeline_metadata:
+    layer: 3
+    group: "market-data"
+    upstream_dependencies:
+      - "instruments-service"
+      - "market-tick-data-service"
+    output_bucket: "gs://market-data-processed"
+
+  domain_coverage:
+    venues: ["BINANCE", "COINBASE", "DERIBIT"]
+    asset_classes: ["CRYPTO_CEFI"]
+    feature_groups: ["candles", "orderbook_snapshots"]
+    timeframes: ["1m", "5m", "15m", "1h", "1d"]
+
+  data_coverage:
+    start_date: "2020-01-01"
+    end_date: null
+    batch_mode: true
+    live_mode: true
+
+  infrastructure:
+    has_ui: false
+    ui_path: null
+    config_paths:
+      - "configs/market-data-processing/batch.env"
+      - "configs/market-data-processing/live.env"
+    credentials:
+      - GCS_BUCKET_ACCESS
+      - BIGQUERY_DATASET_ACCESS
+    deployment:
+      cloudbuild: "cloudbuild.yaml"
+      dockerfile: "Dockerfile"
+      github_token_required: true
+      cloud_build_auth: "service-account"
+
+  readiness:
+    test_coverage: 45
+    test_coverage_target: 80
+    coding_standards_compliant: false
+    cloud_compatibility: ["GCP"]
+    latency_target: "<2s"
+    enhanced_auth: false
+
+  supports:
+    products: ["delta-one-crypto", "volatility-arb"]
+    strategies: ["basis-arb", "vol-surface-arb"]
+    clients: []
+
+# Example UI service (web-based with control features)
+example_ui_service:
+  service: "live-health-monitor-ui"
+  type: "ui-observability"
+  owner_default: "Harsh"
+  priority: "P2-medium"
+  milestone: "Live90"
+
+  ui_metadata:
+    category: "observability"
+    purpose: "Real-time P&L, risk, positions, alerts + trading control"
+    tech_stack: ["React", "TypeScript", "WebSocket"]
+    backend_apis:
+      - "strategy-service"
+      - "execution-service"
+      - "position-balance-monitor-service"
+    has_control_features: true
+    deployment_type: "cloud_run"
+
+  domain_coverage:
+    venues: ["ALL"]
+    asset_classes: ["ALL"]
+
+  infrastructure:
+    has_ui: true
+    ui_path: "live-health-monitor-ui/"
+    config_paths:
+      - "configs/live-health-monitor-ui/prod.env"
+    credentials:
+      - OKTA_SSO_CLIENT
+      - SERVICE_ACCOUNT
+    deployment:
+      cloudbuild: "cloudbuild.yaml"
+      dockerfile: "Dockerfile"
+      github_token_required: false
+      cloud_build_auth: "workload-identity"
+
+  readiness:
+    test_coverage: 20
+    test_coverage_target: 60
+    coding_standards_compliant: false
+    cloud_compatibility: ["GCP"]
+    enhanced_auth: true # Okta SSO + 2FA for control tab

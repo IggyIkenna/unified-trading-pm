@@ -1,6 +1,6 @@
 # Circuit Breaker Configuration
 # ==============================
-# Schema: unified-internal-contracts/reference/circuit_breaker_config.py
+# Schema: unified-api-contracts/unified_api_contracts/internal/reference/circuit_breaker_config.py
 #         VenueCircuitBreakerConfig + CircuitBreakerConfigRegistry
 #
 # Loaded by execution-service/engine/circuit_breaker.py (Phase 2).

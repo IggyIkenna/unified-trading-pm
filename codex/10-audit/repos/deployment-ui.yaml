@@ -1,0 +1,124 @@
+# Repo Readiness Checklist v3.0 - deployment-ui
+# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Generated: 2026-03-11
+
+schema_version: "3.0"
+repo: "deployment-ui"
+repo_type: "ui"
+arch_tier: "ui"
+deployment_modes: null
+business_modes: null
+version: "0.1.0"
+status: "scaffolded"
+last_updated: "2026-03-11"
+
+# ==============================================================================
+# CODE READINESS
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR1"
+  readiness_note: "Scaffolded. Vitest tests missing (audit §16 FAIL). BR2/BR5 N/A."
+
+  cr1_functionality:
+    status: "not_assessed"
+    criteria:
+      "Zero NotImplementedError in core paths; zero stub handlers; no TODO/FIXME in prod-path code; audit §2 passes"
+    evidence: ""
+    notes: ""
+
+  cr2_unit_tests:
+    status: "not_assessed"
+    criteria: "QG unit stage green; coverage >= 70%; --cov-report=xml written"
+    coverage_pct: null
+    coverage_floor_pct: 70
+    evidence: ""
+    notes: ""
+
+  cr3_integration_tests:
+    status: "not_assessed"
+    criteria: "1 manifest deps require tests in tests/integration/."
+    manifest_dep_count: 1
+    manifest_deps_covered:
+      # - deployment-api
+    manifest_deps_missing:
+      - deployment-api
+    evidence: ""
+    notes: ""
+
+  cr4_quality_gate:
+    status: "not_assessed"
+    criteria:
+      "bash scripts/quality-gates.sh Pass 1 fully green; 0 ruff errors; 0 basedpyright errors; no bypass shortcuts"
+    last_run_date: null
+    basedpyright_errors: null
+    ruff_errors: null
+    evidence: ""
+    notes: ""
+
+  cr5_quickmerge:
+    status: "not_assessed"
+    criteria: "bash scripts/quickmerge.sh merged to feat/code-readiness-deployment-ui or main via cascade"
+    branch: null
+    ci_url: null
+    merged_to_main: false
+    evidence: ""
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "DR0"
+  na_reason: null
+
+  batch: null # not a batch-mode service
+  live: null # not a live-mode service
+
+# ==============================================================================
+# BUSINESS READINESS
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR0"
+
+  batch: null # no batch mode
+  live: null # no live mode
+
+# ==============================================================================
+# CODE AUDIT ITEMS (automated validator cross-reference)
+# ==============================================================================
+
+code_audit_items:
+  COD-01: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-02: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-04: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-05: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-10: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-14: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-16: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-20: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-01: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-05: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-06: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-01: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-02: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-04: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-08: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-01: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-02: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-03: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-04: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-05: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-06: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-22: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  BASE-30: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-31: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-32: { status: "not_assessed", verified_date: null, notes: "" }
+  REGULATORY-01: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-02: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }

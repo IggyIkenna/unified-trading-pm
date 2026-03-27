@@ -82,6 +82,7 @@ todos:
 Part of the 6-plan sports integration series.
 
 ## Success Criteria
+
 - 4 time-bucket snapshots per fixture per date
 - Pinnacle sharp odds present
 - Credit usage <= 15,000 per date

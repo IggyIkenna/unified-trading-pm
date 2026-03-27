@@ -14,7 +14,7 @@ completion_gates:
   deployment: D2
   business: none
 repo_gates:
-  - repo: unified-internal-contracts
+  - repo: unified-api-contracts (internal)
     code: C4
     deployment: none
     business: none
@@ -34,18 +34,18 @@ repo_gates:
     code: C3
     deployment: none
     business: none
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm (codex/ subdir)
     code: C0
     deployment: none
     business: none
 depends_on: []
 todos:
   # =========================================================================
-  # PHASE 1 — Schema Foundation (unified-internal-contracts)
+  # PHASE 1 — Schema Foundation (unified-api-contracts (internal))
   # =========================================================================
   - id: p1a-operational-mode-enum
     content: |
-      - [x] [AGENT] P0. Add `OperationalMode` StrEnum to `unified-internal-contracts/unified_internal_contracts/modes.py`.
+      - [x] [AGENT] P0. Add `OperationalMode` StrEnum to `unified-api-contracts (internal)/unified_internal_contracts/modes.py`.
         Values: LIVE="live", MANUAL="manual", BACKTEST="backtest", PAPER="paper".
         Docstring: "Per-service operational mode — validated at startup. Injected as OPERATIONAL_MODE env var."
         Add to `__all__` in modes.py.
@@ -56,7 +56,7 @@ todos:
       "Existing `ExecutionMode` in execution_preferences.py is AGGRESSIVE/PASSIVE/NEUTRAL/TWAP/VWAP — different concept."
   - id: p1b-manual-execution-mode-enum
     content: |
-      - [x] [AGENT] P0. Add `ManualExecutionMode` StrEnum to `unified-internal-contracts/unified_internal_contracts/execution.py`.
+      - [x] [AGENT] P0. Add `ManualExecutionMode` StrEnum to `unified-api-contracts (internal)/unified_internal_contracts/execution.py`.
         Values: EXECUTE="execute" (route to venue via orchestrator), RECORD_ONLY="record_only" (skip venue, record fill directly — OTC, missed, simulation).
         CANNOT be named `ExecutionMode` — that already exists in `domain/execution_service/execution_preferences.py` (AGGRESSIVE/PASSIVE/etc).
         Add to `__all__` in execution.py.
@@ -65,7 +65,7 @@ todos:
     note: ""
   - id: p1c-extend-manual-instruction
     content: |
-      - [x] [AGENT] P0. Extend `ManualInstruction` in `unified-internal-contracts/unified_internal_contracts/execution.py`.
+      - [x] [AGENT] P0. Extend `ManualInstruction` in `unified-api-contracts (internal)/unified_internal_contracts/execution.py`.
         Add fields (all with defaults so existing consumers don't break):
         - `execution_mode: ManualExecutionMode = ManualExecutionMode.EXECUTE`
         - `client_id: str = ""`  (org hierarchy)
@@ -81,7 +81,7 @@ todos:
       order_type, quantity, submitted_at, price, reason"
   - id: p1d-reconciliation-schema
     content: |
-      - [x] [AGENT] P0. Create `unified-internal-contracts/unified_internal_contracts/reconciliation.py`.
+      - [x] [AGENT] P0. Create `unified-api-contracts (internal)/unified_internal_contracts/reconciliation.py`.
         Add `ReconciliationAction` StrEnum: ACCEPT="accept", REJECT="reject", INVESTIGATE="investigate".
         Add `ReconciliationResolution` BaseModel:
         - break_id: str
@@ -96,15 +96,15 @@ todos:
       service-internal. This is cross-service contract."
   - id: p1e-delete-duplicate-manual-instruction
     content: |
-      - [x] [AGENT] P0. Delete `unified-internal-contracts/unified_internal_contracts/domain/execution_service/manual_instruction.py`.
+      - [x] [AGENT] P0. Delete `unified-api-contracts (internal)/unified_internal_contracts/domain/execution_service/manual_instruction.py`.
         This is a byte-for-byte duplicate of ManualInstruction in execution.py. Root `__init__.py` already imports from execution.py (line 352). `domain/execution_service/__init__.py` does NOT export it.
         Verify no imports reference the domain path: `rg "from.*domain.execution_service.manual_instruction" --type py`
-        Delete the file. Run `cd unified-internal-contracts && bash scripts/quality-gates.sh` to confirm no breakage.
+        Delete the file. Run `cd unified-api-contracts && bash scripts/quality-gates.sh` to confirm no breakage.
     status: done
     note: ""
   - id: p1f-uic-quality-gate
     content: |
-      - [x] [AGENT] P0. Run `cd unified-internal-contracts && bash scripts/quality-gates.sh`.
+      - [x] [AGENT] P0. Run `cd unified-api-contracts && bash scripts/quality-gates.sh`.
         All new symbols importable: OperationalMode, ManualExecutionMode, ReconciliationAction, ReconciliationResolution.
         basedpyright clean. ruff clean. All existing tests pass. No regressions.
     status: done
@@ -342,7 +342,7 @@ todos:
     note: "Can run in PARALLEL with p6a and p6b."
   - id: p6d-codex-documentation
     content: |
-      - [ ] [AGENT] P2. Add documentation to `unified-trading-codex/`:
+      - [ ] [AGENT] P2. Add documentation to `unified-trading-pm (codex/ subdir)/`:
         1. `04-architecture/manual-trade-booking.md`: Document OperationalMode enum, ManualExecutionMode, dual execution-service deployment, record-only fill pipeline, back-office vs in-context UI surfaces.
         2. `04-architecture/reconciliation-resolution.md`: Document ReconciliationResolution schema, accept/reject/investigate workflow, book-correction flow.
         Update `00-SSOT-INDEX.md` with pointers to new docs.
@@ -352,12 +352,12 @@ todos:
   - id: p6e-final-qg-sweep
     content: |
       - [ ] [AGENT] P0. Full QG sweep across all 6 affected repos (SEQUENTIAL):
-        1. `cd unified-internal-contracts && bash scripts/quality-gates.sh`
+        1. `cd unified-api-contracts && bash scripts/quality-gates.sh`
         2. `cd execution-service && bash scripts/quality-gates.sh`
         3. `cd batch-live-reconciliation-service && bash scripts/quality-gates.sh`
         4. `cd deployment-service && bash scripts/quality-gates.sh`
         5. `cd unified-trading-system-ui && VITE_MOCK_API=true npx vite build && CI=true npm test -- --run`
-        6. `cd unified-trading-codex && bash scripts/quality-gates.sh`
+        6. `cd unified-trading-pm && bash scripts/quality-gates.sh`
         ALL must pass green. Zero regressions.
     status: todo
     note: "FINAL GATE — plan archivable when all pass."
@@ -415,17 +415,17 @@ Phase 1 (UIC schemas) ─── QG ──→ Phase 2 (exec-svc) ─── QG ─
 
 ## Key Files
 
-| File                                                                                                   | Action                                                         |
-| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| `unified-internal-contracts/unified_internal_contracts/modes.py`                                       | ADD OperationalMode enum                                       |
-| `unified-internal-contracts/unified_internal_contracts/execution.py`                                   | ADD ManualExecutionMode, EXTEND ManualInstruction              |
-| `unified-internal-contracts/unified_internal_contracts/reconciliation.py`                              | CREATE ReconciliationAction + ReconciliationResolution         |
-| `unified-internal-contracts/unified_internal_contracts/domain/execution_service/manual_instruction.py` | DELETE (duplicate)                                             |
-| `execution-service/execution_service/cli/handlers/__init__.py`                                         | VALIDATE against OperationalMode                               |
-| `execution-service/execution_service/api/manual_schemas.py`                                            | ADD execution_mode, counterparty, source_reference fields      |
-| `execution-service/execution_service/api/manual_instruction_api.py`                                    | ADD record-only branch, dynamic venues, algos/venues endpoints |
-| `batch-live-reconciliation-service/batch_live_reconciliation_service/api/resolution_api.py`            | CREATE resolution endpoints                                    |
-| `deployment-service/configs/clusters/*.yaml`                                                           | ADD execution-service:manual to all 6 cluster configs          |
-| `unified-trading-system-ui/app/(platform)/services/trading/book/page.tsx`                              | CREATE back-office booking page                                |
-| `unified-trading-system-ui/components/trading/manual-trading-panel.tsx`                                | EXTEND with algos, dynamic venues, execution_mode              |
-| `unified-trading-system-ui/app/(platform)/services/reports/reconciliation/page.tsx`                    | ADD accept/reject/book actions                                 |
+| File                                                                                                         | Action                                                         |
+| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `unified-api-contracts (internal)/unified_internal_contracts/modes.py`                                       | ADD OperationalMode enum                                       |
+| `unified-api-contracts (internal)/unified_internal_contracts/execution.py`                                   | ADD ManualExecutionMode, EXTEND ManualInstruction              |
+| `unified-api-contracts (internal)/unified_internal_contracts/reconciliation.py`                              | CREATE ReconciliationAction + ReconciliationResolution         |
+| `unified-api-contracts (internal)/unified_internal_contracts/domain/execution_service/manual_instruction.py` | DELETE (duplicate)                                             |
+| `execution-service/execution_service/cli/handlers/__init__.py`                                               | VALIDATE against OperationalMode                               |
+| `execution-service/execution_service/api/manual_schemas.py`                                                  | ADD execution_mode, counterparty, source_reference fields      |
+| `execution-service/execution_service/api/manual_instruction_api.py`                                          | ADD record-only branch, dynamic venues, algos/venues endpoints |
+| `batch-live-reconciliation-service/batch_live_reconciliation_service/api/resolution_api.py`                  | CREATE resolution endpoints                                    |
+| `deployment-service/configs/clusters/*.yaml`                                                                 | ADD execution-service:manual to all 6 cluster configs          |
+| `unified-trading-system-ui/app/(platform)/services/trading/book/page.tsx`                                    | CREATE back-office booking page                                |
+| `unified-trading-system-ui/components/trading/manual-trading-panel.tsx`                                      | EXTEND with algos, dynamic venues, execution_mode              |
+| `unified-trading-system-ui/app/(platform)/services/reports/reconciliation/page.tsx`                          | ADD accept/reject/book actions                                 |

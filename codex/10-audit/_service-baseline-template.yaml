@@ -1,0 +1,950 @@
+# ==============================================================================
+# Service Baseline Template - ALL Services Must Pass These Checks
+# ==============================================================================
+#
+# This template defines the baseline checklist that EVERY service in the
+# Unified Trading System must satisfy, regardless of type (pipeline/platform/UI).
+#
+# Usage:
+#   - Copy this template when creating a new service audit file
+#   - Extend with group-specific items (see _service-pipeline-*.yaml, _service-ui-*.yaml)
+#   - Run sync-issues.py to create GitHub issues from fail/partial items
+#
+# ==============================================================================
+
+template_version: "2.0"
+last_updated: "2026-02-21"
+applies_to: "ALL services"
+
+# ==============================================================================
+# Baseline Checklist Items
+# BASE-01 through BASE-32: Core standards
+# HARDENING-01 through HARDENING-06: Hardening & defensive code elimination
+# REGULATORY-01 through REGULATORY-04: FCA compliance & audit trail
+# DR-01 through DR-03: Disaster recovery & business continuity
+# SECURITY-03 through SECURITY-05: Additional security standards
+# ==============================================================================
+
+items:
+  # ---------------------------------------------------------------------------
+  # Configuration Management
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-01
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "Config management via UnifiedCloudServicesConfig"
+    description: |
+      Service uses UnifiedCloudServicesConfig for ALL configuration.
+      No os.getenv(), no hardcoded project IDs, no empty fallbacks.
+
+      ✅ Pass: All config via config.py or config/ package extending UnifiedCloudServicesConfig
+      ❌ Fail: os.getenv() found, hardcoded project IDs, empty string defaults
+    evidence: "Check config.py or config/, search for os.getenv in production code"
+    codex_ref: "06-coding-standards/configuration-management.md"
+
+  # ---------------------------------------------------------------------------
+  # Observability
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-02
+    area: "03-observability"
+    priority: P0-critical
+    title: "3-tier event logging (STARTED, STOPPED, FAILED)"
+    description: |
+      Service implements all 11 lifecycle events.
+
+      Required: STARTED, INGESTING_DATA, PROCESSING_DATA, SAVING_DATA,
+                DATA_SAVED, COMPLETED, STOPPED, FAILED, VALIDATION_ERROR,
+                NO_DATA_FOUND, SKIPPED
+
+      ✅ Pass: log_event() calls for all applicable events, tests/unit/test_event_logging.py exists
+      ❌ Fail: Missing log_event calls, no event logging tests
+    evidence: "Check for log_event() usage, test_event_logging.py"
+    codex_ref: "03-observability/lifecycle-events.md"
+
+  - id: BASE-03
+    area: "03-observability"
+    priority: P1-high
+    title: "Resource monitoring enabled (CPU, memory, disk)"
+    description: |
+      setup_cloud_logging(enable_resource_monitoring=True) called at startup.
+
+      ✅ Pass: PerformanceMonitor enabled, 85%/90% thresholds configured
+      ❌ Fail: No resource monitoring, no thresholds
+    evidence: "Check main() or __main__ for setup_cloud_logging call"
+    codex_ref: "03-observability/resource-events.md"
+
+  # ---------------------------------------------------------------------------
+  # Code Quality
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-04
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "Quality gates pass (ruff, pytest, mypy)"
+    description: |
+      scripts/quality-gates.sh --no-fix exits 0.
+
+      ✅ Pass: All checks pass (ruff format, ruff check, pytest, mypy)
+      ❌ Fail: Any quality gate failure
+    evidence: "Run bash scripts/quality-gates.sh --no-fix"
+    codex_ref: "06-coding-standards/quality-gates.md"
+
+  - id: BASE-05
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "Codex compliance (no print, no bare except, imports at top)"
+    description: |
+      scripts/check-codex-compliance.sh exits 0.
+
+      Checks: No print(), no os.getenv(), no bare except:, imports at top
+
+      ✅ Pass: All codex anti-pattern checks pass
+      ❌ Fail: Any anti-pattern violations
+    evidence: "Run bash scripts/check-codex-compliance.sh (from codex root)"
+    codex_ref: "06-coding-standards/README.md"
+
+  # ---------------------------------------------------------------------------
+  # Data & Schema
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-06
+    area: "02-data"
+    priority: P0-critical
+    title: "GCS input/output with schema validation"
+    description: |
+      Service validates schemas before writing to GCS.
+      Uses validate_timestamp_date_alignment() before writes.
+
+      ✅ Pass: Schema validation in place, timestamp-date alignment checked
+      ❌ Fail: No validation, writes without schema checks
+    evidence: "Check for validate_timestamp_date_alignment, validate_schema calls"
+    codex_ref: "02-data/schema-governance.md"
+
+  # ---------------------------------------------------------------------------
+  # Architecture & Deployment
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-07
+    area: "04-architecture"
+    priority: P1-high
+    title: "Batch-live mode support (--mode batch|live)"
+    description: |
+      Service supports both modes OR clearly documents why single-mode.
+
+      ✅ Pass: --mode flag, batch-live symmetry (4 seams differ), or valid single-mode justification
+      ❌ Fail: No mode support, unclear architecture
+    evidence: "Check CLI args, config.mode field, main logic"
+    codex_ref: "04-architecture/batch-live-symmetry.md"
+
+  - id: BASE-08
+    area: "05-infrastructure"
+    priority: P1-high
+    title: "Dockerfile and cloudbuild.yaml exist"
+    description: |
+      Service has deployment artifacts for Cloud Build.
+
+      ✅ Pass: Dockerfile, cloudbuild.yaml, .dockerignore present
+      ❌ Fail: Missing deployment files
+    evidence: "Check root directory for Dockerfile, cloudbuild.yaml"
+    codex_ref: "05-infrastructure/ci-cd.md"
+
+  - id: BASE-09
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "quickmerge.sh and quality-gates.sh scripts exist"
+    description: |
+      Service has scripts/ directory with standard tooling.
+
+      ✅ Pass: scripts/quickmerge.sh, scripts/quality-gates.sh present and functional
+      ❌ Fail: Missing scripts
+    evidence: "Check scripts/ directory"
+    codex_ref: "06-coding-standards/contribution-guide.md"
+
+  # ---------------------------------------------------------------------------
+  # Error Handling
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-10
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "Error handling with decorators (@handle_api_errors, @handle_storage_errors)"
+    description: |
+      Service uses unified-trading-library error handling decorators.
+      No bare except: clauses without specific handling.
+
+      ✅ Pass: Decorators used, specific exception handling
+      ❌ Fail: Bare except:, no error handling
+    evidence: "Check for @handle_api_errors, @handle_storage_errors usage"
+    codex_ref: "06-coding-standards/README.md#error-handling"
+
+  # ---------------------------------------------------------------------------
+  # Testing
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-11
+    area: "06-coding-standards"
+    priority: P2-medium
+    title: "Test coverage (unit, integration, e2e)"
+    description: |
+      Service has tests/unit/, tests/integration/, tests/e2e/ structure.
+      Coverage ≥35% (minimum gate), target 80% (audit readiness).
+
+      ✅ Pass: Test structure exists, coverage ≥35%
+      ❌ Fail: No tests, coverage <35%
+    evidence: "Run pytest --cov"
+    codex_ref: "06-coding-standards/testing.md"
+
+  - id: BASE-12
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "Regression test for every bug fix"
+    description: |
+      Every bug fix has test_regression_{issue}_{description}.py.
+
+      ✅ Pass: All historical bug fixes have regression tests
+      ❌ Fail: Bug fixes without tests
+    evidence: "Check tests/ for test_regression_* files"
+    codex_ref: "06-coding-standards/testing.md"
+
+  # ---------------------------------------------------------------------------
+  # Authentication & Credentials
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-13
+    area: "07-security"
+    priority: P1-high
+    title: "GitHub token configured for private repo access"
+    description: |
+      Service can access unified-trading-library private repo.
+      GitHub token (GH_PAT) configured in Cloud Build, local .env.
+
+      ✅ Pass: Can install unified-trading-library from private repo
+      ❌ Fail: Build fails on unified-trading-library dependency
+    evidence: "Check cloudbuild.yaml, .env.example for GH_PAT"
+    codex_ref: "05-infrastructure/ci-cd.md"
+
+  - id: BASE-14
+    area: "07-security"
+    priority: P1-high
+    title: "Cloud Build service account auth configured"
+    description: |
+      Cloud Build uses service account with least-privilege IAM roles.
+      No hardcoded credentials in cloudbuild.yaml.
+
+      ✅ Pass: Service account properly configured, IAM roles assigned
+      ❌ Fail: Missing service account, overly permissive roles
+    evidence: "Check cloudbuild.yaml service account, IAM roles in Terraform"
+    codex_ref: "07-security/README.md"
+
+  - id: BASE-15
+    area: "07-security"
+    priority: P0-critical
+    title: "Secrets managed via Secret Manager (not .env in repo)"
+    description: |
+      All secrets (API keys, tokens) managed via Secret Manager.
+      .env files are in .gitignore; .env.example shows structure only.
+
+      ✅ Pass: Secrets via Secret Manager, .env in .gitignore, .env.example present
+      ❌ Fail: .env committed to repo, secrets hardcoded
+    evidence: "Check .gitignore, .env.example, Secret Manager usage"
+    codex_ref: "07-security/secrets-management.md"
+
+  # ---------------------------------------------------------------------------
+  # Metadata & Documentation
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-16
+    area: "11-project-management"
+    priority: P2-medium
+    title: "Service metadata YAML complete"
+    description: |
+      Service audit YAML has complete metadata per _service-metadata-schema.yaml.
+
+      Fields: type, group, venues, coverage, credentials, readiness, etc.
+
+      ✅ Pass: All required fields present
+      ❌ Fail: Missing metadata fields
+    evidence: "Check 10-audit/batch/{service}.yaml header"
+    codex_ref: "10-audit/_service-metadata-schema.yaml"
+
+  - id: BASE-17
+    area: "04-architecture"
+    priority: P2-medium
+    title: "Upstream dependencies documented"
+    description: |
+      Service audit YAML lists all upstream_dependencies (for pipeline services).
+
+      ✅ Pass: Dependencies listed, matches actual code
+      ❌ Fail: Dependencies not documented or incorrect
+    evidence: "Check pipeline_metadata.upstream_dependencies"
+    codex_ref: "04-architecture/README.md"
+
+  - id: BASE-18
+    area: "02-data"
+    priority: P2-medium
+    title: "Data coverage dates specified"
+    description: |
+      Service audit YAML has data_coverage.start_date and end_date (for pipeline services).
+
+      ✅ Pass: Dates documented, accurate
+      ❌ Fail: Dates missing or unknown
+    evidence: "Check data_coverage section"
+    codex_ref: "02-data/README.md"
+
+  # ---------------------------------------------------------------------------
+  # Classification & Metadata (NEW)
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-19
+    area: "11-project-management"
+    priority: P2-medium
+    title: "Service classification metadata complete"
+    description: |
+      Service registry entry includes:
+      - deployment_type: standalone, bundled, library
+      - mode_support: batch, live, both
+      - ui_type: observability, control, analysis, none
+      - sharding_dimensions: category, venue, date, instrument_type, etc.
+
+      ✅ Pass: All classification fields populated in service-registry.yaml
+      ❌ Fail: Missing or incomplete classification
+    evidence: "Check service-registry.yaml services[] entry for this service"
+    codex_ref: "11-project-management/service-registry.yaml"
+    ssot_reference: "service-registry.yaml"
+
+  # ---------------------------------------------------------------------------
+  # Operational Data Alignment (NEW)
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-20
+    area: "04-architecture"
+    priority: P1-high
+    applies_to: "pipeline services with sharding"
+    title: "Sharding config aligned with sharding.{service}.yaml SSOT"
+    description: |
+      Service's actual sharding implementation matches sharding.{service}.yaml.
+      CLI args (--category, --venue, --date, etc.) match shard_dimensions list.
+
+      ✅ Pass: Implementation matches SSOT, CLI args aligned, compute recommendations followed
+      ❌ Fail: Sharding dimensions mismatch, missing CLI args
+    evidence: "Compare service CLI args with sharding.{service}.yaml"
+    codex_ref: "04-architecture/batch-live-symmetry.md"
+    ssot_reference: "unified-trading-pm/configs/sharding.{service}.yaml"
+    validator: "scripts/validators/validate_sharding_config_alignment.py"
+
+  - id: BASE-21
+    area: "02-data"
+    priority: P1-high
+    applies_to: "pipeline services"
+    title: "Start dates aligned with expected_start_dates.yaml SSOT"
+    description: |
+      Service implements "Skip Invalid Dates Philosophy":
+      1. Load expected_start_dates.yaml at startup
+      2. Check if requested date >= earliest_valid_date for (category, venue)
+      3. If date < earliest_valid_date: log.info("Skipping date - insufficient lookback")
+      4. If date >= earliest_valid_date: proceed with processing
+
+      ✅ Pass: Service skips dates before expected_start_dates, logs appropriately
+      ❌ Fail: Service fails on early dates instead of skipping, or processes without checking
+    evidence: "Check for expected_start_dates.yaml loading, date validation logic"
+    codex_ref: "02-data/data-availability.md"
+    ssot_reference: "unified-trading-pm/configs/expected_start_dates.yaml"
+    validator: "scripts/validators/validate_start_dates_alignment.py"
+
+  - id: BASE-22
+    area: "11-project-management"
+    priority: P1-high
+    applies_to: "pipeline services"
+    title: "MVP data coverage validated"
+    description: |
+      Service supports MVP universe per mvp-universe.yaml:
+      - Instruments: BTC, ETH
+      - CEFI venues: BINANCE-SPOT, BINANCE-FUTURES, OKX, UPBIT, COINBASE, HYPERLIQUID, ASTER
+      - DeFi venues: AAVEV3_ETHEREUM, UNISWAP_V3_ETH, COMPOUND_V3_ETH
+      - TradFi venues: CME, CBOE, NYSE
+
+      Note: Service should support FULL functionality (options code exists) but be tested against MVP data.
+
+      ✅ Pass: Service config includes all MVP venues, tested with BTC/ETH
+      ❌ Fail: MVP venues missing from config, no MVP testing
+    evidence: "Check config venue lists, test data fixtures"
+    codex_ref: "11-project-management/mvp-universe.yaml"
+    ssot_reference: "unified-trading-codex/11-project-management/mvp-universe.yaml"
+    validator: "scripts/validators/validate_mvp_coverage.py"
+
+  - id: BASE-23
+    area: "02-data"
+    priority: P2-medium
+    applies_to: "pipeline services"
+    title: "Data catalogue sync (completion status)"
+    description: |
+      Service's actual GCS data completion matches data-catalogue.{service}.yaml.
+      Shard completion tracked: stage_1_has_run, stage_2_data_complete.
+
+      ✅ Pass: data-catalogue.{service}.yaml reflects current GCS state
+      ❌ Fail: Catalogue out of date, missing shards not tracked
+    evidence: "Run data-status CLI, compare with data-catalogue.{service}.yaml"
+    codex_ref: "02-data/data-catalogue.md"
+    ssot_reference: "unified-trading-pm/configs/data-catalogue.{service}.yaml"
+    validator: "scripts/validators/validate_data_catalogue_sync.py"
+
+  # ---------------------------------------------------------------------------
+  # CI/CD & Deployment (NEW)
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-24
+    area: "06-coding-standards"
+    priority: P0-critical
+    title: "Local quality gates pass (ruff==0.15.0, pytest, coverage ≥35%)"
+    description: |
+      bash scripts/quality-gates.sh --no-fix exits 0.
+      Ruff version: 0.15.0 (must match GitHub Actions and Cloud Build).
+
+      ✅ Pass: All checks pass (format, lint, tests, coverage ≥35%)
+      ❌ Fail: Any quality gate failure
+    evidence: "Run bash scripts/quality-gates.sh --no-fix"
+    codex_ref: "06-coding-standards/quality-gates.md"
+    ssot_reference: "pyproject.toml ruff version"
+    validator: "scripts/validators/validate_quality_gates_local.py"
+
+  - id: BASE-25
+    area: "06-coding-standards"
+    priority: P0-critical
+    title: "GitHub Actions quality gates pass (same ruff==0.15.0, same tests)"
+    description: |
+      .github/workflows/quality-gates.yml passes on main branch.
+      Uses identical ruff version (0.15.0) and test commands as local.
+
+      ✅ Pass: GitHub Actions green check, no version drift
+      ❌ Fail: GitHub Actions failures, ruff version mismatch
+    evidence: "Check GitHub Actions status, compare ruff versions"
+    codex_ref: "06-coding-standards/quality-gates.md#github-actions"
+    ssot_reference: ".github/workflows/quality-gates.yml"
+    validator: "scripts/validators/validate_github_actions.py"
+
+  - id: BASE-26
+    area: "06-coding-standards"
+    priority: P0-critical
+    title: "Cloud Build test-in-image passes"
+    description: |
+      Cloud Build runs quality gates INSIDE Docker image (test-in-image pattern).
+      Tests the artifact you deploy. Same ruff==0.15.0 as local and GitHub Actions.
+
+      ✅ Pass: Cloud Build test step passes, image pushed to Artifact Registry
+      ❌ Fail: Cloud Build test failures, image not pushed
+    evidence: "Check Cloud Build logs, Artifact Registry for latest image"
+    codex_ref: "06-coding-standards/quality-gates.md#cloud-build-architecture"
+    ssot_reference: "cloudbuild.yaml"
+    validator: "scripts/validators/validate_cloud_build.py"
+
+  - id: BASE-27
+    area: "05-infrastructure"
+    priority: P1-high
+    applies_to: "libraries (UCS, UCI, UEI, UDI, UMI, UOI, algo lib)"
+    title: "Artifact Registry publishing (idempotent with version validation)"
+    description: |
+      Library uses idempotent package upload with version validation:
+      1. Store version→commit mapping in GCS
+      2. Before upload: check if version exists with different commit
+      3. If same commit: skip (idempotent rebuild)
+      4. If different commit: FAIL and require version bump in pyproject.toml
+
+      ✅ Pass: Version conflicts detected, idempotent rebuilds work
+      ❌ Fail: No version validation, duplicate versions with different code
+    evidence: "Check cloudbuild.yaml for version validation step"
+    codex_ref: "05-infrastructure/artifact-registry.md"
+    ssot_reference: "cloudbuild.yaml, pyproject.toml version field"
+    validator: "scripts/validators/validate_artifact_registry.py"
+
+  # ---------------------------------------------------------------------------
+  # Deployment Topology (NEW)
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-28
+    area: "04-architecture"
+    priority: P1-high
+    applies_to: "batch services"
+    title: "Batch deployment correct (Cloud Run Jobs, date-based sharding, GCS messaging)"
+    description: |
+      Batch service deployed as Cloud Run Job with:
+      - Date-based sharding (--date CLI arg)
+      - GCS for input/output (no PubSub in batch)
+      - One job per shard dimension combination
+
+      ✅ Pass: Cloud Run Job definition, GCS I/O, correct sharding
+      ❌ Fail: Wrong deployment type, PubSub used in batch, no sharding
+    evidence: "Check Terraform/Cloud Build for Cloud Run Job, main.py for GCS I/O"
+    codex_ref: "04-architecture/batch-live-symmetry.md#batch-deployment"
+    ssot_reference: "N/A (codex standard)"
+
+  - id: BASE-29
+    area: "04-architecture"
+    priority: P1-high
+    applies_to: "live services"
+    title: "Live deployment correct (Cloud Run Services, venue-based sharding, PubSub messaging)"
+    description: |
+      Live service deployed as Cloud Run Service (always-on) with:
+      - Venue-based sharding (one deployment cluster per category, parallel threads per venue)
+      - PubSub for output events (no GCS writes in hot path)
+      - WebSocket or streaming connections to data sources
+
+      ✅ Pass: Cloud Run Service definition, PubSub publishing, streaming connections
+      ❌ Fail: Wrong deployment type, GCS writes in hot path, no PubSub
+    evidence: "Check Terraform for Cloud Run Service, main.py for PubSub/WebSocket"
+    codex_ref: "04-architecture/batch-live-symmetry.md#live-deployment"
+    ssot_reference: "N/A (codex standard)"
+
+  # ---------------------------------------------------------------------------
+  # Central Libraries (NEW)
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-30
+    area: "05-infrastructure"
+    priority: P1-high
+    title: "Uses UCI, UCS, UEI correctly (no fallback imports, no reinvented wheels)"
+    description: |
+      Service imports from unified-trading-library, unified-config-interface, unified-events-interface.
+      No fallback try-except imports (Pattern B required post-Feb 2026).
+      No duplicate implementations of library functionality.
+
+      ✅ Pass: Direct imports only, all library functionality used correctly
+      ❌ Fail: Fallback imports found, duplicate implementations, missing library usage
+    evidence: "Grep for 'try:.*import.*unified' patterns, check for duplicate code"
+    codex_ref: "05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md"
+    ssot_reference: "N/A (codex standard)"
+    validator: "scripts/validators/validate_library_usage.py"
+
+  - id: BASE-31
+    area: "05-infrastructure"
+    priority: P1-high
+    applies_to: "pipeline services"
+    title: "Service-specific library usage (UDI, UMI, UOI, algo lib)"
+    description: |
+      Service uses appropriate domain libraries:
+      - UDI (unified-domain-interface): All services for domain models
+      - UMI (unified-market-interface): market-tick-data-service, market-data-processing-service
+      - UOI (unified-order-interface): execution-service
+      - execution-algo-library: execution-service, strategy-service
+
+      ✅ Pass: Correct libraries imported, no duplicate implementations
+      ❌ Fail: Missing library imports, duplicate domain/market/order logic
+    evidence: "Check imports, compare with LIBRARY-DEPENDENCY-MATRIX.md"
+    codex_ref: "05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md"
+    ssot_reference: "N/A (codex standard)"
+    validator: "scripts/validators/validate_service_libraries.py"
+
+  # ---------------------------------------------------------------------------
+  # Security (NEW)
+  # ---------------------------------------------------------------------------
+
+  - id: BASE-32
+    area: "07-security"
+    priority: P0-critical
+    title: ".env files safe (in .gitignore, no actual secrets)"
+    description: |
+      .env files for local development only:
+      - .env in .gitignore (workspace root and service root)
+      - .env.example shows structure with placeholder values
+      - No actual API keys, tokens, or secrets in .env.example
+
+      ✅ Pass: .env ignored, .env.example safe, no secrets committed
+      ❌ Fail: .env committed, secrets in .env.example
+    evidence: "Check .gitignore, .env.example content, git history"
+    codex_ref: "07-security/secrets-management.md"
+    ssot_reference: "N/A (codex standard)"
+    validator: "scripts/validators/validate_env_files.py"
+
+  - id: SECURITY-03
+    area: "07-security"
+    priority: P0-critical
+    title: "No service account JSON files in git (scan all repos, rotate if found)"
+    description: |
+      No service account credentials (*.json files with private keys) committed to GitHub.
+      If found: rotate immediately, revoke old credentials, update Secret Manager.
+
+      ✅ Pass: No *.json files with private_key fields in git history
+      ❌ Fail: Service account files found in repo
+    evidence: "Run: git log --all --full-history --diff-filter=A -- '*.json' | grep private_key"
+    codex_ref: "07-security/secrets-management.md#credential-files"
+    ssot_reference: "N/A (security standard)"
+    validator: "scripts/validators/validate_no_service_accounts.py"
+
+  - id: SECURITY-04
+    area: "07-security"
+    priority: P0-critical
+    title: "Vulnerability scanning operational (Dependabot/Safety integrated)"
+    description: |
+      Automated dependency vulnerability scanning:
+      1. GitHub Dependabot enabled (daily scans, auto-PR for patch/minor)
+      2. Safety CLI in quality gates (fails on HIGH/CRITICAL CVEs)
+      3. Security patch monitoring (48h SLA for HIGH/CRITICAL)
+
+      ✅ Pass: Dependabot config exists, Safety in quality-gates.sh, last scan <24h
+      ❌ Fail: No vulnerability scanning, outdated dependencies
+    evidence: "Check .github/dependabot.yml, scripts/quality-gates.sh for safety"
+    codex_ref: "07-security/vulnerability-management.md"
+    ssot_reference: "N/A (security standard)"
+    validator: "scripts/validators/validate_vulnerability_scanning.py"
+
+  - id: SECURITY-05
+    area: "07-security"
+    priority: P0-critical
+    title: "Security audit logging enabled (secret access, auth failures, config changes)"
+    description: |
+      Security-relevant events logged to dedicated audit log:
+      - Secret Manager read operations (secret name, service, timestamp, success/failure)
+      - Authentication failures (Okta SSO, API keys, expired tokens)
+      - Authorization denials (IAM permissions, RBAC denials)
+      - Configuration changes (GCS ConfigStore writes, Terraform apply, IAM policy changes)
+
+      Retention: 1 year in Cloud Logging, then archive to GCS.
+
+      ✅ Pass: Security audit log sink configured, alert policies for HIGH-severity events
+      ❌ Fail: No security logging, no alerts
+    evidence: "Check Cloud Logging audit log queries, alert policies"
+    codex_ref: "07-security/audit-logging.md"
+    ssot_reference: "N/A (security standard)"
+    validator: "scripts/validators/validate_security_audit_logging.py"
+
+  # ===========================================================================
+  # HARDENING STANDARDS
+  # ===========================================================================
+
+  - id: HARDENING-01
+    area: "06-coding-standards"
+    priority: P0-critical
+    title: "No fallback imports (single import path per dependency)"
+    description: |
+      Every dependency has exactly ONE import path. No try-except fallback imports.
+
+      ❌ FORBIDDEN:
+        try:
+            from unified_events_interface import log_event
+        except ImportError:
+            from unified_trading_library.observability import log_event
+
+      ✅ REQUIRED:
+        from unified_events_interface import log_event
+
+      ✅ Pass: All imports are direct, no try-except patterns
+      ❌ Fail: Fallback imports found
+    evidence: "Grep for 'try:.*import' patterns in production code"
+    codex_ref: ".cursor/rules/hardening-standards.mdc"
+    ssot_reference: "N/A (hardening standard)"
+    validator: "scripts/validators/validate_no_fallback_imports.py"
+
+  - id: HARDENING-02
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "No bare except clauses (all exceptions typed)"
+    description: |
+      All exception handling is explicit. No bare except:.
+
+      ❌ FORBIDDEN:
+        try:
+            risky_operation()
+        except:
+            pass
+
+      ✅ REQUIRED:
+        try:
+            risky_operation()
+        except (ValueError, KeyError) as e:
+            logger.error(f"Operation failed: {e}")
+            raise
+
+      ✅ Pass: All except clauses specify exception types
+      ❌ Fail: Bare except: found
+    evidence: "Grep for 'except:' (without exception type)"
+    codex_ref: ".cursor/rules/hardening-standards.mdc"
+    ssot_reference: "N/A (hardening standard)"
+    validator: "scripts/validators/validate_no_bare_except.py"
+
+  - id: HARDENING-03
+    area: "02-data"
+    priority: P1-high
+    applies_to: "pipeline services"
+    title: "Known-missing vs unexpected-missing data (use expected_start_dates.yaml; fail loud for unexpected)"
+    description: |
+      Service distinguishes:
+      1. Known-missing data: date < expected_start_dates → log.info("Skipping"), continue
+      2. Unexpected-missing data: date >= expected_start_dates → log.error("Missing data"), raise MissingDataError
+
+      ❌ FORBIDDEN: Silent skips for unexpected missing data, empty dataframes accepted without validation
+
+      ✅ REQUIRED:
+        if date < expected_start_dates[category][venue]:
+            log.info(f"Skipping {date} - before data availability")
+            return
+
+        data = fetch_data(date)
+        if data.empty:
+            raise MissingDataError(f"Expected data for {date} but got empty result")
+
+      ✅ Pass: Uses expected_start_dates.yaml, fails loud on unexpected missing data
+      ❌ Fail: Silent skips, no date validation, accepts empty data without checking
+    evidence: "Check for expected_start_dates loading, MissingDataError raises"
+    codex_ref: ".cursor/rules/hardening-standards.mdc, 02-data/data-availability.md"
+    ssot_reference: "unified-trading-pm/configs/expected_start_dates.yaml"
+    validator: "scripts/validators/validate_missing_data_handling.py"
+
+  - id: HARDENING-04
+    area: "05-infrastructure"
+    priority: P1-high
+    title: "Each dependency library used correctly (no duplicate implementations)"
+    description: |
+      Service uses central libraries for their intended purpose:
+      - unified-trading-library: storage_client, secret_client, error decorators
+      - unified-config-interface: BaseConfig base class
+      - unified-events-interface: log_event, setup_events
+      - unified-domain-interface: domain models (Instrument, Venue, Strategy, etc.)
+
+      No duplicate implementations of library functionality.
+
+      ✅ Pass: All library functions used correctly, no duplicate code
+      ❌ Fail: Reimplemented library functionality, incorrect library usage
+    evidence: "Check imports, compare with library API docs"
+    codex_ref: ".cursor/rules/hardening-standards.mdc, 05-infrastructure/unified-libraries/"
+    ssot_reference: "N/A (hardening standard)"
+    validator: "scripts/validators/validate_library_usage_correct.py"
+
+  - id: HARDENING-05
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "No defensive empty-data fallbacks (assume data exists or fail)"
+    description: |
+      Service does NOT silently handle missing data with empty defaults.
+
+      ❌ FORBIDDEN:
+        data = fetch_data() or pd.DataFrame()  # Silent fallback to empty
+        if data is None:
+            data = pd.DataFrame()  # Defensive empty dataframe
+
+      ✅ REQUIRED:
+        data = fetch_data()
+        if data.empty:
+            raise MissingDataError("Expected data but got empty result")
+
+      ✅ Pass: No defensive empty-data fallbacks, explicit error handling
+      ❌ Fail: Silent empty-data fallbacks found
+    evidence: "Grep for 'or pd.DataFrame()', '= pd.DataFrame()' after data fetches"
+    codex_ref: ".cursor/rules/hardening-standards.mdc"
+    ssot_reference: "N/A (hardening standard)"
+    validator: "scripts/validators/validate_no_defensive_fallbacks.py"
+
+  - id: HARDENING-06
+    area: "04-architecture"
+    priority: P1-high
+    applies_to: "pipeline services"
+    title: "Shard-level failure isolation (one shard fails, others continue)"
+    description: |
+      Batch services isolate failures to individual shards:
+      - Each shard (category×venue×date) runs independently
+      - One shard failure does NOT stop other shards
+      - Failed shards logged, tracked in data-catalogue.{service}.yaml
+      - Retry logic for transient failures
+
+      ✅ Pass: Shard-level try-except, other shards continue, failures tracked
+      ❌ Fail: One shard failure stops entire job, no failure tracking
+    evidence: "Check orchestration logic, exception handling per shard"
+    codex_ref: ".cursor/rules/hardening-standards.mdc, 04-architecture/batch-live-symmetry.md"
+    ssot_reference: "N/A (hardening standard)"
+    validator: "scripts/validators/validate_shard_isolation.py"
+
+  # ===========================================================================
+  # REGULATORY COMPLIANCE
+  # ===========================================================================
+
+  - id: REGULATORY-01
+    area: "07-security"
+    priority: P0-critical
+    applies_to: "execution-service, strategy-service, position-balance-monitor-service, risk-and-exposure-service"
+    mode: "live"
+    title: "Immutable audit trail implemented (write-once log for trades/orders/positions/risk)"
+    description: |
+      Service writes all financial transactions to write-once audit log:
+      - All executed trades (order ID, instrument, venue, quantity, price, timestamp, counterparty)
+      - All order submissions (order ID, type, parameters, submission timestamp)
+      - All position changes (position ID, instrument, change delta, timestamp, trigger)
+      - All risk checks (check ID, risk type, threshold, actual value, passed/failed, timestamp)
+
+      Implementation: Firestore (write-once security rules) OR BigQuery (write-once tables) OR blockchain
+
+      Required fields: event_id, event_type, timestamp_utc, service_name, user_id, data_hash, previous_event_hash (blockchain-style chaining)
+
+      ✅ Pass: Audit log writes are append-only, all financial events logged <100ms, hash chain validates
+      ❌ Fail: No audit log, write-once not enforced, missing events
+    evidence: "Firestore collection 'audit_trail' with security rules, or BigQuery dataset 'regulatory_audit'"
+    codex_ref: "07-security/audit-trail.md"
+    ssot_reference: "N/A (new regulatory standard)"
+    validator: "scripts/validators/validate_immutable_audit_trail.py"
+    estimated_effort: "3-4 weeks"
+
+  - id: REGULATORY-02
+    area: "07-security"
+    priority: P0-critical
+    applies_to: "all services with financial data"
+    mode: "both"
+    title: "7-year audit retention with tamper detection"
+    description: |
+      Audit trail data retained for 7 years (FCA requirement) with tamper detection:
+      - Automated lifecycle policy (GCS: 7 years, then archive to Coldline)
+      - Tamper detection via hash chain validation (daily integrity check job)
+      - Alert on hash mismatch or missing audit entries
+
+      Storage tiers:
+      - Hot (0-90 days): BigQuery for queries, Firestore for writes
+      - Warm (90 days - 2 years): BigQuery archived tables
+      - Cold (2-7 years): GCS Coldline with BigQuery external tables
+
+      ✅ Pass: Lifecycle policies configured, daily tamper detection job exists, alerting configured
+      ❌ Fail: No retention policy, no tamper detection, no alerts
+    evidence: "GCS lifecycle policies, Cloud Scheduler tamper detection job, alert policies"
+    codex_ref: "07-security/audit-trail.md#retention"
+    ssot_reference: "N/A (new regulatory standard)"
+    validator: "scripts/validators/validate_audit_retention.py"
+    estimated_effort: "1-2 weeks"
+
+  - id: REGULATORY-03
+    area: "07-security"
+    priority: P0-critical
+    applies_to: "execution-service"
+    mode: "live"
+    title: "FCA compliance reporting ready (MiFID II transaction reporting, best execution, client reporting)"
+    description: |
+      FCA regulatory reporting infrastructure operational:
+
+      1. MiFID II Transaction Reporting (T+1 deadline):
+         - Report all executed trades to FCA-approved ARM
+         - Fields: instrument ISIN, venue MIC code, price, quantity, timestamp, client ID, capacity
+         - Format: ISO 20022 XML or FCA-specified CSV
+         - Submission: Daily by 8:00 AM UTC for previous day trades
+
+      2. Best Execution Reports (quarterly):
+         - Top 5 venues per instrument class
+         - Execution quality metrics (price improvement, speed, fill rate)
+
+      3. Client Reporting (monthly/quarterly):
+         - Statement of positions, trades, P&L, fee breakdown
+
+      ✅ Pass: ARM submission scripts exist, FCA reporting config present, client report templates created
+      ❌ Fail: No FCA reporting infrastructure, missing templates
+    evidence: "ARM submission scripts, FCA reporting config, client report templates"
+    codex_ref: "07-security/fca-compliance.md"
+    ssot_reference: "N/A (new regulatory standard)"
+    validator: "Manual review of FCA submission logs, ARM confirmations"
+    estimated_effort: "4-6 weeks"
+
+  - id: REGULATORY-04
+    area: "07-security"
+    priority: P1-high
+    applies_to: "execution-service"
+    mode: "live"
+    title: "Regulatory submission automation operational (Cloud Scheduler FCA submission)"
+    description: |
+      Automated regulatory reporting with monitoring:
+      - Cloud Scheduler job triggers daily FCA submission (7:00 AM UTC)
+      - Generates MiFID II transaction reports from audit trail
+      - Submits to ARM via SFTP (authenticated, encrypted)
+      - Parses ARM confirmation receipt
+      - Stores submission proof (file hash, timestamp, ARM confirmation ID)
+      - Alerts on: submission failure, ARM rejection, missing confirmation
+
+      Manual override: UI for manual report regeneration, manual SFTP upload, documented escalation
+
+      ✅ Pass: Cloud Scheduler job exists, ARM submission script tested (dry-run), alerting configured
+      ❌ Fail: No automation, manual process only, no alerts
+    evidence: "Cloud Scheduler job, ARM submission logs, alert configuration"
+    codex_ref: "07-security/fca-compliance.md#automation"
+    ssot_reference: "N/A (new regulatory standard)"
+    validator: "scripts/validators/validate_regulatory_automation.py"
+    estimated_effort: "2-3 weeks"
+
+  # ===========================================================================
+  # DISASTER RECOVERY & BUSINESS CONTINUITY
+  # ===========================================================================
+
+  - id: DR-01
+    area: "08-workflows"
+    priority: P1-high
+    applies_to: "all services"
+    mode: "both"
+    title: "DR/BCP procedures documented (runbooks, RTO/RPO, escalation paths)"
+    description: |
+      Disaster recovery and business continuity procedures documented:
+
+      1. DR Runbooks (per service): recovery procedures, dependencies, startup order, health checks, rollback
+      2. Recovery Time Objective (RTO): Target 4 hours for critical services
+      3. Recovery Point Objective (RPO): Target 15 minutes data loss max
+      4. Escalation Paths:
+         - L1: On-call engineer (15 min response)
+         - L2: Service owner (30 min response)
+         - L3: CTO/Founder (1 hour response)
+      5. Communication Plan: Internal (Slack #incidents), External (status page, client emails), Regulatory (FCA notification if >4h outage)
+
+      ✅ Pass: DR runbooks exist, escalation contacts documented, communication plan defined
+      ❌ Fail: No DR documentation, undefined RTO/RPO, no escalation paths
+    evidence: "DR runbooks in unified-trading-codex/08-workflows/dr/, escalation contact list"
+    codex_ref: "08-workflows/disaster-recovery.md"
+    ssot_reference: "N/A (new DR standard)"
+    validator: "Manual review of DR documentation"
+    estimated_effort: "2-3 weeks"
+
+  - id: DR-02
+    area: "08-workflows"
+    priority: P1-high
+    applies_to: "all services with state"
+    mode: "both"
+    title: "Automated backup/restore operational (GCS, BigQuery, Firestore with quarterly restore testing)"
+    description: |
+      Automated backup and tested restore procedures:
+
+      1. GCS Data Backups: daily snapshots, cross-region replication (us-central1 → us-east1), versioning (30-day retention)
+      2. BigQuery Backups: daily dataset snapshots, cross-region copies
+      3. Firestore Backups: automated daily exports to GCS, point-in-time recovery
+      4. Restore Testing: quarterly restore drills (documented results), restore to isolated test project, validate data integrity, measure restore time (validate RTO)
+
+      ✅ Pass: Backup schedules configured, cross-region replication verified, last restore test <90 days
+      ❌ Fail: No backups, no cross-region replication, no restore testing
+    evidence: "Backup logs, restore test reports, cross-region replication status"
+    codex_ref: "08-workflows/disaster-recovery.md#backups"
+    ssot_reference: "N/A (new DR standard)"
+    validator: "scripts/validators/validate_backup_restore.py"
+    estimated_effort: "2-3 weeks"
+
+  - id: DR-03
+    area: "08-workflows"
+    priority: P1-high
+    applies_to: "all critical services"
+    mode: "both"
+    title: "Failover testing schedule defined and executed (quarterly failover tests)"
+    description: |
+      Regular failover testing to validate DR procedures:
+
+      1. Quarterly Failover Tests: simulate primary region failure, failover to secondary (us-east1), validate all services operational, measure failover time (validate RTO), document results
+      2. Test Scenarios: GCS bucket unavailable, BigQuery region outage, Cloud Run crash loop, complete primary region failure
+      3. Success Criteria: All critical services running in <4 hours (RTO), data loss <15 minutes (RPO), no data corruption, monitoring/alerting functional
+      4. Post-Test Actions: update runbooks based on findings, fix identified gaps, schedule next test (90 days out)
+
+      ✅ Pass: Failover test reports exist, last test <90 days old, RTO/RPO validated
+      ❌ Fail: No failover testing, last test >90 days old, RTO/RPO not validated
+    evidence: "Failover test reports in unified-trading-codex/08-workflows/dr/test-results/"
+    codex_ref: "08-workflows/disaster-recovery.md#failover-testing"
+    ssot_reference: "N/A (new DR standard)"
+    validator: "Manual review of failover test reports"
+    estimated_effort: "1 week initial setup, 1 day per quarterly test"
+# ==============================================================================
+# Summary
+# ==============================================================================
+
+# Total baseline items: 50+ (18 original + 14 new BASE + 6 HARDENING + 4 REGULATORY + 3 DR + 3 new SECURITY + 2 existing SECURITY renamed)
+# Priority breakdown:
+#   - P0-critical: 2 (event logging, secrets)
+#   - P1-high: 11 (config, resource monitoring, quality gates, etc.)
+#   - P2-medium: 5 (test coverage, metadata, docs)
+#   - P3-low: 0
+
+# These items apply to ALL 32 services.
+# Group-specific templates extend this baseline.

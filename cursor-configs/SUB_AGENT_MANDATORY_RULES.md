@@ -119,7 +119,8 @@ exceptions.
   in a service that fetches instrument definitions.
 - **Shard-level failure isolation** — a failed shard (venue x date) MUST NOT kill other shards. Catch all exceptions
   per-shard, log `VENUE_PROCESSING_FAILED` event with details, return empty result. No `raise` inside
-  per-venue/per-shard processing loops. SSOT: `unified-trading-codex/04-architecture/shard-level-failure-isolation.md`
+  per-venue/per-shard processing loops. SSOT:
+  `unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md`
 - **UAC error classification** — every adapter that makes external API calls MUST classify errors through UAC
   `classify_venue_error()` and emit `log_event("ADAPTER_FETCH_FAILED", details={...})` with error_code, action,
   retry_safe. The Graph returns HTTP 200 for errors — adapters MUST parse response body for `errors` key.
@@ -154,7 +155,7 @@ exceptions.
 - **NEVER put normalizers in interface adapters or services** — normalization lives in UAC, co-located with the external
   source it normalizes
 
-**Reference:** `unified-trading-codex/02-data/contracts-scope-and-layout.md`
+**Reference:** `unified-trading-pm/codex/02-data/contracts-scope-and-layout.md`
 
 ---
 
@@ -393,7 +394,7 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
   | Stop + clean cache     | `bash unified-trading-pm/scripts/dev/dev-stop.sh --clean`            | Wipes `.local-dev-cache/`             |
   | Check running services | `bash unified-trading-pm/scripts/dev/dev-status.sh`                  | Shows all 5 mode axes                 |
 
-- **Full docs:** `unified-trading-codex/08-workflows/local-dev.md`
+- **Full docs:** `unified-trading-pm/codex/08-workflows/local-dev.md`
 
 ---
 
@@ -404,13 +405,13 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
 NEVER declare a repo has reached a readiness stage (CR1, CR2, DR3, BR3, etc.) unless ALL criteria for that stage are
 fully met. The criteria are defined in:
 
-- Template: `unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
+- Template: `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml`
 - Per-repo: `cat {repo}/.readiness-ref` → gives path to `codex/10-audit/repos/{repo-name}.yaml`
 
 To check current declared state for a repo:
 
 ```bash
-cat $(cat {repo}/.readiness-ref 2>/dev/null || echo "unified-trading-codex/10-audit/repos/{repo}.yaml")
+cat $(cat {repo}/.readiness-ref 2>/dev/null || echo "unified-trading-pm/codex/10-audit/repos/{repo}.yaml")
 ```
 
 ### MANDATORY RULE: Three Axes — All Required
@@ -477,7 +478,7 @@ must always be in the loop for MAJOR version promotions.
 **Venv vs testing:** `.venv-workspace` = IDE only. Tests use per-repo `.venv` via quality-gates.sh. See
 `.cursor/rules/testing/no-manual-pytest.mdc`.
 
-**CODEX:** unified-trading-codex/06-coding-standards/README.md
+**CODEX:** unified-trading-pm/codex/06-coding-standards/README.md
 
 ---
 

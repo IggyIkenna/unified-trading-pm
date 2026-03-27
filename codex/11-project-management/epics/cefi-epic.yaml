@@ -1,0 +1,208 @@
+# ==============================================================================
+# CeFi Trading Epic — Readiness Definition
+# ==============================================================================
+#
+# MVP Priority: 2 (structure defined; completion not enforced for DeFi MVP)
+# Business invariant: PnL confirmed via backtest (BR5) for all service repos.
+# Branch gate: all required repos at CR5 (quickmerged to main).
+#
+# CeFi strategies in scope (from mvp-universe.yaml):
+#   ML prediction-based (swing high/low breakout vs reversion across 5 timeframes)
+#   Timeframes: 1m, 5m, 15m, 4h, 24h
+#
+# CeFi venues in scope (MVP):
+#   - BINANCE-SPOT (start: 2019-03-30)
+#   - BINANCE-FUTURES (start: 2019-11-17)
+#   - OKX (start: 2019-03-30)
+#   - UPBIT (start: 2021-09-01)
+#   - COINBASE (start: 2019-03-30)
+#   - HYPERLIQUID (start: 2023-05-01)
+#   - ASTER (start: 2021-08-30)
+#
+# See: unified-trading-codex/11-project-management/mvp-universe.yaml
+# ==============================================================================
+
+epic_id: cefi
+display_name: "CeFi Trading Epic"
+mvp_priority: 2
+business_requirement_minimum: br5_pnl_backtest
+last_updated: "2026-03-11"
+
+completion_criteria:
+  code: cr5_quickmerged_main
+  deploy: dr3_smoke_green
+  business: br5_pnl_backtest
+
+required_repos:
+  # ── Core ─────────────────────────────────────────────────────────────────
+
+  - repo: unified-api-contracts
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-cloud-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-events-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-config-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: execution-algo-library
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-trading-library
+    arch_tier: library-t1
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-reference-data-interface
+    arch_tier: library-t1
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-feature-calculator-library
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-market-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-ml-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-position-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-trade-execution-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-domain-client
+    arch_tier: library-t3
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: instruments-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: market-tick-data-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: market-data-processing-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: features-delta-one-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: features-calendar-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: features-volatility-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: ml-training-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: ml-inference-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: cefi
+
+  - repo: strategy-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: execution-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: pnl-attribution-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: risk-and-exposure-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br3
+    asset_class: core
+
+  - repo: position-balance-monitor-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br3
+    asset_class: core
+
+  - repo: alerting-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br3
+    asset_class: core
+
+optional_repos:
+  - repo: unified-defi-execution-interface
+    asset_class: defi
+    note: "Required for DeFi epic. Optional for CeFi."
+
+  - repo: features-onchain-service
+    asset_class: defi
+    note: "DeFi onchain features not required for CeFi."

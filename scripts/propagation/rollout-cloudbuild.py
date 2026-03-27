@@ -47,7 +47,6 @@ CONFIGS_DIR = PM_ROOT / "configs"
 LIBRARY_CUSTOM_CLOUDBUILD = {
     "unified-api-contracts",
     "unified-reference-data-interface",
-    "execution-algo-library",
 }
 
 SKIP_REPOS = {

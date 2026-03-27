@@ -1,0 +1,679 @@
+# ==============================================================================
+# Unified Trading System — Repo Readiness Checklist Template (v3.0)
+# ==============================================================================
+#
+# SSOT for all per-repo readiness state in the workspace.
+# Copy to repos/{repo-name}.yaml and fill in each field.
+#
+# Schema version: 3.0
+# Supersedes: deployment-service/configs/checklist.*.yaml (readiness criteria only)
+# Supersedes: 10-audit/batch/*.yaml + 10-audit/live/*.yaml
+#
+# IMPORTANT NOTES:
+#   - deployment-service/configs/ remains SSOT for: sharding, venues, data-catalogue
+#     operational data. This file owns READINESS criteria only.
+#   - Status values: pass | fail | partial | not_assessed | na
+#   - Agents MUST NOT set br8_user_approved.status = "pass" autonomously.
+#
+# Status values:
+#   pass         - Item fully satisfied; evidence confirms compliance
+#   fail         - Item not satisfied; remediation required
+#   partial      - Partially satisfied; some aspects need work
+#   not_assessed - Not yet evaluated
+#   na           - Not applicable (document reason in na_reason)
+#
+# repo_type values:
+#   library-t0   - Tier 0: zero-dep base libraries (UAC, UIC, UEI, UCI, EAL, MEL)
+#   library-t1   - Tier 1: single-dep libraries (UTL, URDI, USEI)
+#   library-t2   - Tier 2: multi-dep libraries (UMI, UTEI, UML, UFCL, UDEI, UPI)
+#   library-t3   - Tier 3: domain clients (UDC)
+#   service      - T4 production services
+#   api          - T5 API gateway services
+#   ui           - T6 frontend UI repos
+#   infra        - Infrastructure/devops repos (deployment-service, PM, codex, SIT)
+#
+# deployment_modes values:
+#   null         - Libraries (not deployed as Cloud Run services)
+#   ["batch"]    - Batch-only services
+#   ["live"]     - Live-only services
+#   ["batch", "live"] - Services supporting both modes
+#
+# ==============================================================================
+
+schema_version: "3.0"
+repo: "{REPO_NAME}"
+repo_type: "library-t0|library-t1|library-t2|library-t3|service|api|ui|infra"
+arch_tier: null # 0 | 1 | 2 | 3 | service | api | ui | infra
+deployment_modes: null # null for libraries; ["batch"] | ["live"] | ["batch","live"] for services
+business_modes: null # null for libraries; ["batch"] | ["live"] | ["batch","live"]
+version: "0.0.0"
+status: "active" # active | scaffolded | future
+last_updated: "YYYY-MM-DD"
+
+# ==============================================================================
+# CODE READINESS (CR1–CR5)
+# ==============================================================================
+# Progresses independently from DR and BR.
+# CR3 rule: count dependencies[] in workspace-manifest.json — each dep must have
+#           a test in tests/integration/. Zero-dep repos satisfy CR3 automatically.
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR0" # CR0 | CR1 | CR2 | CR3 | CR4 | CR5
+  readiness_note: ""
+
+  cr1_functionality:
+    status: "not_assessed"
+    criteria: |
+      Zero NotImplementedError in core paths; zero stub handlers returning {} or pass;
+      no TODO/FIXME markers in production-path code. Audit §2 passes.
+      Every stub must be tracked in an active plan.
+    evidence: ""
+    notes: ""
+
+  cr2_unit_tests:
+    status: "not_assessed"
+    criteria: |
+      QG unit stage green; coverage >= floor (80% for libraries, 70% for services);
+      zero skipped tests without documented reason; --cov-report=xml written to disk.
+    coverage_pct: null
+    coverage_floor_pct: null # 80 for libraries, 70 for services
+    evidence: ""
+    notes: ""
+
+  cr3_integration_tests:
+    status: "not_assessed"
+    criteria: |
+      Every direct manifest dependency exercised by at least one integration test
+      in tests/integration/. Tests run credential-free (CLOUD_PROVIDER=local
+      CLOUD_MOCK_MODE=true). Zero-dep repos satisfy CR3 automatically.
+    manifest_dep_count: 0
+    manifest_deps_covered: []
+    manifest_deps_missing: []
+    evidence: ""
+    notes: ""
+
+  cr4_quality_gate:
+    status: "not_assessed"
+    criteria: |
+      bash scripts/quality-gates.sh Pass 1 fully green: ruff (0 errors), basedpyright
+      (0 errors), coverage floor, codex checks, security scan, all tests pass.
+      No || : bypasses added to reach green.
+    last_run_date: null
+    basedpyright_errors: null
+    ruff_errors: null
+    evidence: ""
+    notes: ""
+
+  cr5_quickmerge:
+    status: "not_assessed"
+    criteria: |
+      bash scripts/quickmerge.sh merged to feat/code-readiness-{repo} or main via
+      cascade. PR created and CI passes. For v1.0.0 gate: CR5 means merged to main,
+      not just feat/*.
+    branch: null
+    ci_url: null
+    merged_to_main: false
+    evidence: ""
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS (DR1–DR6)
+# ==============================================================================
+# For libraries: deployment_modes is null; all DR items set to na.
+# Batch and live sub-sections populated per deployment_modes.
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "DR0" # DR0 | DR1 | DR2 | DR3 | DR4 | DR5 | DR6
+  na_reason: null # set if library (e.g. "library; wheel published to AR, not deployed as Cloud Run service")
+
+  batch: null # populate if deployment_modes includes "batch"
+  live: null # populate if deployment_modes includes "live"
+
+# DR section structure (populate batch and/or live):
+# batch:
+#   dr1_infra:
+#     status: "not_assessed"
+#     criteria: |
+#       Docker image builds; cloudbuild.yaml correct; infra provisioned (GCS buckets,
+#       PubSub topics, Secret Manager entries populated); scripts/setup-workspace.sh
+#       succeeds for this repo.
+#     evidence: ""
+#     notes: ""
+#   dr2_ci_smoke:
+#     status: "not_assessed"
+#     criteria: |
+#       production_mock_e2e GHA suite green; emulators + mocks only; zero live cloud calls;
+#       CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true throughout.
+#     gha_run_url: null
+#     evidence: ""
+#     notes: ""
+#   dr3_feature_env:
+#     status: "not_assessed"
+#     criteria: |
+#       At least one successful deployment to feat/dev Cloud Run environment;
+#       GET /health returns 200; GET /readiness returns 200; smoke route returns
+#       expected payload.
+#     health_url: null
+#     readiness_url: null
+#     evidence: ""
+#     notes: ""
+#   dr4_sit_pass:
+#     status: "not_assessed"
+#     criteria: |
+#       system-integration-tests full suite passes with this repo as target; uses
+#       real credentials in staging; no circuit breaker trips during SIT run.
+#     sit_run_url: null
+#     evidence: ""
+#     notes: ""
+#   dr5_load_perf:
+#     status: "not_assessed"
+#     criteria: |
+#       P99 latency <= declared SLA; no memory leaks under 10-min sustained load;
+#       throughput >= target. SLA declared in the plan owning this repo.
+#     sla_p99_ms: null
+#     throughput_target: null
+#     evidence: ""
+#     notes: ""
+#   dr6_prod_ready:
+#     status: "not_assessed"
+#     criteria: |
+#       Zero CRITICAL CVEs; auth middleware verified; no DISABLE_AUTH in prod config;
+#       runbook exists in docs/; post-deploy health checks pass for >= 24 hours.
+#     cve_scan_date: null
+#     runbook_path: null
+#     evidence: ""
+#     notes: ""
+
+# ==============================================================================
+# BUSINESS READINESS (BR1–BR8)
+# ==============================================================================
+# N/A rules:
+#   BR2: na for libraries and UIs (no circuit breaker)
+#   BR5: na for non-revenue repos
+#   BR6: na for libraries and UIs (no batch vs live runtime)
+#   BR7: na for libraries and UIs
+#   BR8: ALWAYS required — even for infra repos; NO AGENT MAY SET THIS
+#
+# Revenue-path repos (BR5 required): execution-service, strategy-service,
+#   pnl-attribution-service, risk-and-exposure-service, ml-inference-service,
+#   ml-training-service, alerting-service
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR0" # BR0 | BR1 | BR2 | BR3 | BR4 | BR5 | BR6 | BR7 | BR8
+
+  batch: null # populate if business_modes includes "batch"
+  live: null # populate if business_modes includes "live"
+
+# BR section structure (populate batch and/or live):
+# batch:
+#   br1_acceptance_criteria:
+#     status: "not_assessed"
+#     criteria: |
+#       Plan owning this repo has a measurable acceptance criteria section.
+#     plan_ref: null
+#     evidence: ""
+#     notes: ""
+#   br2_circuit_breaker:
+#     status: "not_assessed"
+#     na_reason: null  # e.g. "library — no circuit breaker"
+#     criteria: |
+#       CLOSED->OPEN->HALF_OPEN verified via FaultInjectionTransport;
+#       PubSub propagation tested; recovery path tested.
+#     evidence: ""
+#     notes: ""
+#   br3_event_handling:
+#     status: "not_assessed"
+#     na_reason: null
+#     criteria: |
+#       All UEI events fire correctly in integration tests; event schema matches UAC
+#       canonical; correlation_id propagated; log_event() called at lifecycle points.
+#     evidence: ""
+#     notes: ""
+#   br4_pnl_targets:
+#     status: "not_assessed"
+#     na_reason: null
+#     criteria: |
+#       Domain KPIs declared AND measured (not estimated). ML accuracy >= threshold;
+#       strategy Sharpe >= target; execution alpha >= benchmark; latency P99 < SLA;
+#       data completeness >= 99.9%.
+#     kpis_declared: []
+#     evidence: ""
+#     notes: ""
+#   br5_pnl_optimization:
+#     status: "not_assessed"
+#     na_reason: null  # e.g. "not revenue-path"
+#     criteria: |
+#       At least one full backtest run confirms strategy/model/execution contribution
+#       is positive; artifacts stored in gs://unified-backtests/{repo}/.
+#     backtest_artifact_uri: null
+#     evidence: ""
+#     notes: ""
+#   br6_batch_vs_live:
+#     status: "not_assessed"
+#     na_reason: null
+#     criteria: |
+#       t+1 check: batch output matches live expectations within declared tolerance;
+#       live_batch_protocol_completeness plan items complete for this repo.
+#     tolerance_pct: null
+#     evidence: ""
+#     notes: ""
+#   br7_staging_parity:
+#     status: "not_assessed"
+#     na_reason: null
+#     criteria: |
+#       N-minute replay of staging calls against prod-equivalent environment;
+#       output delta within tolerance.
+#     replay_duration_min: null
+#     evidence: ""
+#     notes: ""
+#   br8_user_approved:
+#     status: "not_assessed"
+#     criteria: |
+#       Human sign-off that the commercial objective for this repo is met.
+#       NO AGENT MAY SET THIS TO pass. User reviews all undone items first.
+#     approved_date: null
+#     approved_by: null
+#     notes: ""
+
+# ==============================================================================
+# ASSET CLASS READINESS
+# ==============================================================================
+# Tracks which asset classes this repo supports and what is available per class.
+# Drives epic-level aggregation: compute-epic-readiness.py reads these fields to
+# compute per-epic completion %.
+#
+# supported_asset_classes: list of asset classes this repo participates in.
+#   Valid values: cefi | defi | tradfi | sports | core
+#   "core" = required by all epics (infrastructure/shared repos).
+#
+# Per asset class block (repeat for each class in supported_asset_classes):
+#   mvp_ready: true once all sub-fields are satisfied for MVP scope.
+#   data.historical_available: batch historical data exists for this asset class.
+#   data.historical_start_date: ISO date of earliest available data (from mvp-universe.yaml).
+#   data.live_available: live streaming data available.
+#   data.mock_available: mock/fixture data available for tests (CLOUD_MOCK_MODE=true).
+#   data.testnet_available: testnet environment exists (DeFi protocols).
+#   data.testnet_env: testnet name (e.g. "sepolia", "arbitrum-goerli").
+#   feature_groups: feature group IDs this repo produces/consumes for this asset class.
+#   ml_models: model IDs from ml-training-service configs (services only).
+#   venue_deps: venues/protocols this repo directly depends on for this asset class.
+#   branch_status: manually updated; reflects current git state.
+#     qg_passed: CR4 (bash scripts/quality-gates.sh) is green on this branch.
+#     quickmerged: CR5 (quickmerge PR merged) achieved on this branch.
+#
+# Epic gate: epic = 100% when all required repos have
+#   asset_class_readiness.{class}.branch_status.main.quickmerged: true
+#   AND business_readiness.current_stage >= br5 (for service repos).
+#
+# AGENTS: do NOT set mvp_ready: true autonomously — derive it from sub-fields.
+# ==============================================================================
+
+asset_class_readiness:
+  supported_asset_classes: [] # list of: cefi | defi | tradfi | sports | core
+
+  # Template block — copy and rename key per asset class in supported_asset_classes.
+  # Example shown for "defi"; replace with "cefi", "tradfi", "sports", or "core".
+  defi: # replace key with actual asset class
+    mvp_ready: false
+    data:
+      historical_available: false
+      historical_start_date: null # ISO date or null; from mvp-universe.yaml data_availability
+      live_available: false
+      mock_available: false
+      testnet_available: false
+      testnet_env: null # e.g. "sepolia", "arbitrum-goerli"; null for non-DeFi
+    feature_groups: [] # e.g. [onchain_lending, tvl_metrics, staking_yield]
+    ml_models: [] # model IDs from ml-training-service configs (empty for libs)
+    venue_deps: [] # venues/protocols this repo depends on (from mvp-universe.yaml)
+    branch_status:
+      feature:
+        reached: false
+        qg_passed: false # CR4 green on this branch
+        quickmerged: false # CR5 achieved
+      staging:
+        reached: false
+        qg_passed: false
+        quickmerged: false
+      main:
+        reached: false
+        qg_passed: false
+        quickmerged: false # true = epic gate satisfied for this repo
+
+# ==============================================================================
+# CODE AUDIT ITEMS (automated validator cross-reference)
+# ==============================================================================
+# These map to the automated validators in 10-audit/_checklist-template-enhanced.yaml.
+# They are complementary to CR/DR/BR — automation checks feed into CR1/CR4 criteria.
+# Validators live in: unified-trading-codex/scripts/validators/
+#
+# All items default to not_assessed. Set status as validators run.
+# Full item descriptions: 10-audit/_checklist-template-enhanced.yaml
+# ==============================================================================
+
+code_audit_items:
+  # Configuration Management
+  COD-01:
+    status: "not_assessed" # Config extends UnifiedCloudConfig; no os.getenv()
+    verified_date: null
+    notes: ""
+  COD-02:
+    status: "not_assessed" # No hardcoded domain config (inline dicts, magic numbers)
+    verified_date: null
+    notes: ""
+  COD-03:
+    status: "not_assessed" # Configuration documented in docs/CONFIGURATION.md
+    verified_date: null
+    notes: ""
+  COD-20:
+    status: "not_assessed" # No hardcoded project IDs
+    verified_date: null
+    notes: ""
+
+  # Error Handling
+  COD-04:
+    status: "not_assessed" # Unified error decorators; no bare except
+    verified_date: null
+    notes: ""
+  COD-05:
+    status: "not_assessed" # No bare except clauses
+    verified_date: null
+    notes: ""
+  COD-06:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-07:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-08:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-09:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+
+  # Testing
+  COD-10:
+    status: "not_assessed" # Unit tests exist; coverage > 30%
+    verified_date: null
+    notes: ""
+  COD-11:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-12:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-13:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-14:
+    status: "not_assessed" # Quality gate alignment (local == CI == Cloud Build)
+    verified_date: null
+    notes: ""
+  COD-15:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-16:
+    status: "not_assessed" # Quality gates pass (bash scripts/quality-gates.sh)
+    verified_date: null
+    notes: ""
+  COD-17:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-18:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-19:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-21:
+    status: "not_assessed" # Regression tests for known-fixed bugs
+    verified_date: null
+    notes: ""
+  COD-22:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-23:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-24:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  COD-25:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+
+  # Observability
+  OBS-01:
+    status: "not_assessed" # Standardized logging via setup_cloud_logging()
+    verified_date: null
+    notes: ""
+  OBS-05:
+    status: "not_assessed" # All 11 lifecycle events implemented
+    verified_date: null
+    notes: ""
+  OBS-06:
+    status: "not_assessed" # test_event_logging.py exists and passes
+    verified_date: null
+    notes: ""
+
+  # Data Validation
+  DAT-01:
+    status: "not_assessed" # Schema-first design
+    verified_date: null
+    notes: ""
+  DAT-02:
+    status: "not_assessed" # Pre-upload schema validation
+    verified_date: null
+    notes: ""
+  DAT-03:
+    status: "not_assessed" # Timestamp-date alignment validation
+    verified_date: null
+    notes: ""
+
+  # Security
+  SEC-01:
+    status: "not_assessed" # Secrets via get_secret_client()
+    verified_date: null
+    notes: ""
+  SEC-02:
+    status: "not_assessed" # .env.example has no actual secret values
+    verified_date: null
+    notes: ""
+  SEC-03:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  SEC-04:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  SEC-05:
+    status: "not_assessed" # No hardcoded credentials in code
+    verified_date: null
+    notes: ""
+  SECURITY-03:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  SECURITY-04:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  SECURITY-05:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+
+  # Infrastructure
+  INF-04:
+    status: "not_assessed" # Dockerfile exists (multi-stage)
+    verified_date: null
+    notes: ""
+  INF-05:
+    status: "not_assessed" # Cloud-agnostic design
+    verified_date: null
+    notes: ""
+  INF-08:
+    status: "not_assessed" # Cloud Build config (cloudbuild.yaml)
+    verified_date: null
+    notes: ""
+
+  # Architecture
+  ARC-02:
+    status: "not_assessed" # Sharding config exists
+    na_reason: null # set for libraries and non-pipeline repos
+    verified_date: null
+    notes: ""
+  ARC-11:
+    status: "not_assessed" # Batch-live symmetry
+    na_reason: null
+    verified_date: null
+    notes: ""
+
+  # Baseline Items
+  BASE-13:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-14:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-15:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-19:
+    status: "not_assessed" # Service classification metadata complete
+    verified_date: null
+    notes: ""
+  BASE-20:
+    status: "not_assessed" # Sharding config in deployment-service
+    na_reason: null
+    verified_date: null
+    notes: ""
+  BASE-21:
+    status: "not_assessed" # Expected start dates in deployment-service
+    na_reason: null
+    verified_date: null
+    notes: ""
+  BASE-22:
+    status: "not_assessed" # MVP data coverage validated
+    na_reason: null
+    verified_date: null
+    notes: ""
+  BASE-24:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-25:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-26:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-28:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-29:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-30:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-31:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  BASE-32:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+
+  # Hardening
+  HARDENING-01:
+    status: "not_assessed" # No fallback imports
+    verified_date: null
+    notes: ""
+  HARDENING-02:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  HARDENING-03:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  HARDENING-04:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  HARDENING-05:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+  HARDENING-06:
+    status: "not_assessed"
+    verified_date: null
+    notes: ""
+
+  # Regulatory
+  REGULATORY-01:
+    status: "not_assessed" # Immutable audit trail
+    na_reason: null
+    verified_date: null
+    notes: ""
+  REGULATORY-02:
+    status: "not_assessed"
+    na_reason: null
+    verified_date: null
+    notes: ""
+  REGULATORY-03:
+    status: "not_assessed" # FCA compliance reporting
+    na_reason: null
+    verified_date: null
+    notes: ""
+  REGULATORY-04:
+    status: "not_assessed"
+    na_reason: null
+    verified_date: null
+    notes: ""
+
+  # Disaster Recovery
+  DR-01:
+    status: "not_assessed"
+    na_reason: null
+    verified_date: null
+    notes: ""
+  DR-02:
+    status: "not_assessed"
+    na_reason: null
+    verified_date: null
+    notes: ""
+  DR-03:
+    status: "not_assessed"
+    na_reason: null
+    verified_date: null
+    notes: ""

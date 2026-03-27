@@ -1,0 +1,116 @@
+# Alignment Resolution Decisions
+# Created: 2026-02-21
+# Reviewer: Ikenna
+#
+# Instructions: For each conflict in alignment-report-20260221_100648.md,
+# specify your resolution decision.
+#
+# Decision types:
+#   - update_utd_configs: Modify files in deployment-service/configs/
+#   - update_codex: Modify codex documentation
+#   - update_epic: Modify epic markdown files
+#   - update_registry: Modify service-registry.yaml
+#   - flag_as_mvp_exclusion: Add to mvp-universe.yaml as exclusion
+#   - no_action_needed: Conflict is false positive or acceptable deviation
+#   - create_new_doc: Create missing documentation
+
+resolution_date: "2026-02-21"
+reviewer: "Ikenna"
+status: "approved" # Change to "approved" after review
+
+resolutions:
+  - conflict_id: "service_count_001"
+    title: "Service count discrepancy (35 vs 32)"
+    decision: "update_registry"
+    action: |
+      Add field to service-registry.yaml:
+      - production_services: 32
+      - total_services: 35 (includes 3 non-production: sports-betting-services and 2 others)
+      Add comment explaining the 11 excluded directories are not services but artifacts/docs
+    rationale: "Production scope is 32 services/libraries; registry lists 35 total including non-production"
+    priority: "P1-high"
+    estimated_effort: "5 minutes"
+
+  - conflict_id: "mvp_venues_not_in_venues_yaml"
+    title: "MVP venues not found in venues.yaml"
+    decision: "no_action_needed"
+    action: "Parser issue - venues ARE in venues.yaml under categories.CEFI.venues. No action needed."
+    rationale:
+      "False positive - venues.yaml has BINANCE-SPOT, BINANCE-FUTURES, OKX, UPBIT, COINBASE, HYPERLIQUID, ASTER under
+      categories.CEFI.venues list"
+    priority: "P1-high (false positive)"
+    estimated_effort: "0 (improve parser)"
+
+  - conflict_id: "start_dates_no_docs"
+    title: "Services have start dates but no codex docs"
+    decision: "no_action_needed"
+    action:
+      "Parser treating metadata fields as service names. Fields like 'earliest_valid_features',
+      'max_lookback_days_by_timeframe' are configuration metadata, not services."
+    rationale: "False positive - these are config fields in expected_start_dates.yaml, not service names"
+    priority: "P2-medium (false positive)"
+    estimated_effort: "0 (improve parser)"
+
+  - conflict_id: "sharding_no_checklist"
+    title: "instruments-service (corporate-actions domain) has sharding but no checklist"
+    decision: "update_utd_configs"
+    action:
+      "Create unified-trading-codex/10-audit/repos/corporate-actions.yaml (codex v3.0 schema, supersedes old
+      deployment-service/configs/checklist.*.yaml pattern which was removed 2026-03-11)"
+    rationale:
+      "corporate-actions domain within instruments-service has sharding config; needs codex v3.0 readiness entry"
+    priority: "P1-high"
+    estimated_effort: "30 minutes"
+
+  - conflict_id: "registry_not_operational"
+    title: "17 services in registry but no operational configs"
+    decision: "update_registry"
+    action: |
+      Add operational_status field to service-registry.yaml for each service:
+      - operational: true/false
+      - reason_if_not_operational: "UI service (no sharding)", "Library (no standalone deployment)", "Platform service", etc.
+
+      Services without sharding/checklists are expected:
+      - 7 Libraries: No sharding (imported by other services)
+      - 6 UI services: No sharding (frontend only)
+      - 3 Platform services: Different deployment pattern
+      - 1 Service: position-balance-monitor-service, risk-and-exposure-service, pnl-attribution-service (post-trade services - may need checklists added)
+    rationale:
+      "Not all services need sharding configs (libraries, UIs, platform services). Clarify operational status in
+      registry."
+    priority: "P2-medium"
+    estimated_effort: "1 hour"
+
+  - conflict_id: "epics_not_operational"
+    title: "features-sports-service in epic but excluded from MVP"
+    decision: "flag_as_mvp_exclusion"
+    action: |
+      In mvp-universe.yaml:
+      excluded_services:
+        - features-sports-service
+      rationale: "Sports explicitly excluded from MVP scope"
+
+      In sports-integration-epic.md:
+      Add note at top: "Status: EXCLUDED FROM MVP - Post-commercialization"
+    rationale: "Sports services explicitly excluded from MVP per user specification"
+    priority: "P2-medium"
+    estimated_effort: "10 minutes"
+
+# Additional Notes
+notes: |
+  False positives detected (2):
+  - mvp_venues_not_in_venues_yaml: Parser needs to navigate nested structure
+  - start_dates_no_docs: Parser treating config metadata as service names
+
+  Real conflicts (4):
+  - service_count_001: Need to clarify production vs total count
+  - sharding_no_checklist: corporate-actions needs checklist
+  - registry_not_operational: Clarify operational status for libraries/UIs/platform
+  - epics_not_operational: Mark sports as MVP exclusion
+
+  Post-trade services (position-balance-monitor-service, risk-and-exposure, pnl-attribution):
+  - position-balance-monitor-service: NEEDS sharding (calculates positions as domain data)
+  - risk-and-exposure-service: NEEDS sharding (calculates risk/exposure as domain data)
+  - pnl-attribution-service: Review if sharding needed
+  - USER DECISION: Position/risk services are engines for domain data calculation, NOT just UIs
+  - ACTION REQUIRED: Create sharding configs and checklists for position-balance-monitor-service and risk-and-exposure services

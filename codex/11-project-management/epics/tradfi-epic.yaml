@@ -1,0 +1,170 @@
+# ==============================================================================
+# TradFi Trading Epic — Readiness Definition
+# ==============================================================================
+#
+# MVP Priority: 3 (structure defined; completion not enforced for DeFi MVP)
+# Business invariant: PnL confirmed via backtest (BR5) for all service repos.
+#
+# TradFi instruments in scope (from mvp-universe.yaml):
+#   - ES (E-mini S&P 500 futures, CME) — P0-critical
+#   - MES (Micro E-mini S&P 500, CME) — P0-critical
+#   - SPY (S&P 500 ETF, NYSE)
+#   - BTC futures (CME)
+#   - VIX (CBOE)
+#   - Bitcoin ETFs (IBIT, GBTC, BITO)
+#
+# TradFi venues in scope (MVP):
+#   - CME (start: 2020-01-01)
+#   - CBOE (start: 2020-01-01)
+#   - NYSE (start: 2020-01-01)
+#
+# See: unified-trading-codex/11-project-management/mvp-universe.yaml
+# ==============================================================================
+
+epic_id: tradfi
+display_name: "TradFi Trading Epic"
+mvp_priority: 3
+business_requirement_minimum: br5_pnl_backtest
+last_updated: "2026-03-11"
+
+completion_criteria:
+  code: cr5_quickmerged_main
+  deploy: dr3_smoke_green
+  business: br5_pnl_backtest
+
+required_repos:
+  # ── Core (shared with CeFi) ───────────────────────────────────────────────
+
+  - repo: unified-api-contracts
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-cloud-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-events-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-config-interface
+    arch_tier: library-t0
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-trading-library
+    arch_tier: library-t1
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-domain-client
+    arch_tier: library-t3
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-market-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: unified-trade-execution-interface
+    arch_tier: library-t2
+    min_stage: cr5
+    min_br_stage: na
+    asset_class: core
+
+  - repo: instruments-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: market-tick-data-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: tradfi
+
+  - repo: market-data-processing-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: tradfi
+
+  - repo: features-delta-one-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: tradfi
+
+  - repo: features-calendar-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: tradfi
+
+  - repo: ml-training-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: tradfi
+
+  - repo: ml-inference-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: tradfi
+
+  - repo: strategy-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: execution-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: pnl-attribution-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br5
+    asset_class: core
+
+  - repo: risk-and-exposure-service
+    arch_tier: service
+    min_stage: cr5
+    min_br_stage: br3
+    asset_class: core
+
+  # ── TradFi-specific infrastructure ────────────────────────────────────────
+
+  - repo: ibkr-gateway-infra
+    arch_tier: infra
+    min_stage: cr4
+    min_br_stage: na
+    asset_class: tradfi
+    rationale: "IBKR gateway required for TradFi order routing. CR4 only (infra repo)."
+
+optional_repos:
+  - repo: features-commodity-service
+    asset_class: tradfi
+    note: "Commodity features (energy) useful for TradFi but not required for MVP scope (ES/MES/SPY/VIX)."
+
+  - repo: unified-defi-execution-interface
+    asset_class: defi
+
+  - repo: features-onchain-service
+    asset_class: defi

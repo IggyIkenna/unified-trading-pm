@@ -23,7 +23,7 @@ repo_gates:
   - repo: ml-inference-service
     code: C0
     notes: "Sports inference pipeline"
-  - repo: unified-ml-interface
+  - repo: unified-trading-library (ml/ sub-package)
     code: C0
     notes: "Verify/add Poisson NLL, RPS, Brier score metrics"
 
@@ -34,7 +34,7 @@ isProject: false
 todos:
   - id: p1-verify-metrics
     content: |
-      - [ ] [AGENT] P0. Check unified-ml-interface for Poisson NLL, RPS, Brier score.
+      - [ ] [AGENT] P0. Check unified-trading-library (ml/ sub-package) for Poisson NLL, RPS, Brier score.
         If missing, port from archived footballbets/ml/football_metrics.py (17,674L).
     status: pending
   - id: p2-training-config
@@ -72,11 +72,11 @@ todos:
 
 # Sports Integration Plan 5: ML Training Pipeline
 
-Part of the 6-plan sports integration series.
-Depends on Plan 4 (1000+ features available).
-Can run in PARALLEL with Plan 4 once basic features exist.
+Part of the 6-plan sports integration series. Depends on Plan 4 (1000+ features available). Can run in PARALLEL with
+Plan 4 once basic features exist.
 
 ## Success Criteria
+
 - Model 2A trained and in GCS model registry
 - Walk-forward validation per-season
 - Sports metrics integrated

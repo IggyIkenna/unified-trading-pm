@@ -23,7 +23,7 @@ repo_gates:
   - repo: unified-reference-data-interface
     code: C0
     notes: "Add standings, injuries, fixture details methods to API-Football adapter"
-  - repo: unified-sports-reference-interface
+  - repo: instruments-service (URDI sports/ sub-package)
     code: C0
     notes: "Fix get_teams() season logic for European leagues"
   - repo: unified-api-contracts

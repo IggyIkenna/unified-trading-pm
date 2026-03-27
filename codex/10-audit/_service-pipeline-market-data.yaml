@@ -1,0 +1,81 @@
+# ==============================================================================
+# Service Template: Pipeline - Market Data Group
+# ==============================================================================
+#
+# Applies to: market-tick-data-service, market-data-processing-service
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: MARKET-01 through MARKET-03
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "Pipeline services - Market Data group (Layer 2)"
+services: ["market-tick-data-service", "market-data-processing-service"]
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Market Data Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: MARKET-01
+    area: "04-architecture"
+    priority: P0-critical
+    title: "Real-time WebSocket handling (if live mode)"
+    description: |
+      Live mode uses WebSocket for real-time tick data ingestion.
+      Handles reconnection, backpressure, heartbeats.
+
+      ✅ Pass: WebSocket client with reconnection logic, backpressure handling
+      ❌ Fail: No live mode OR no WebSocket handling
+    evidence: "Check for WebSocket client, live mode implementation"
+    codex_ref: "04-architecture/live/README.md"
+
+  - id: MARKET-02
+    area: "02-data"
+    priority: P1-high
+    title: "Tick-to-candle aggregation (if applicable)"
+    description: |
+      market-data-processing-service aggregates ticks to candles.
+      Supports multiple timeframes (1m, 5m, 15m, 1h, 1d).
+
+      ✅ Pass: Candle aggregation logic, multiple timeframes
+      ❌ Fail: No aggregation OR single timeframe only
+    evidence: "Check candle aggregation, timeframe config"
+    codex_ref: "02-data/README.md"
+
+  - id: MARKET-03
+    area: "04-architecture"
+    priority: P1-high
+    title: "Out-of-order data handling"
+    description: |
+      Service handles out-of-order ticks, late-arriving data.
+      Uses timestamp-based ordering, windowing, or buffering.
+
+      ✅ Pass: Out-of-order handling, timestamp ordering
+      ❌ Fail: Assumes in-order data, breaks on late arrivals
+    evidence: "Check for timestamp sorting, buffering logic"
+    codex_ref: "04-architecture/concurrency.md"
+
+  - id: MARKET-04
+    area: "02-data"
+    priority: P1-high
+    title: "Sports data API clients (if applicable)"
+    description: |
+      For market-data-processing-service: Support SPORTS asset class.
+      - Batch mode: Odds API client (historical odds, 15+ bookmakers)
+      - Live mode: Betfair Stream WebSocket, Pinnacle API (real-time odds)
+      - Reference data: API-Football client (fixtures, teams, stats)
+      - Data normalization: Normalize odds across bookmakers (decimal format)
+
+      ✅ Pass: Sports API clients, batch + live modes, odds normalization
+      ❌ Fail: No sports support, or ad-hoc sports logic
+      ⚠️ N/A: Service doesn't handle sports data
+    evidence: "Check clients/sports/, processors/sports/, --asset-class SPORTS flag"
+    codex_ref: "01-domain/asset-classes.md#sports, 02-data/sports-data-sources.md"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 4 (group) = 22 items
+# ==============================================================================

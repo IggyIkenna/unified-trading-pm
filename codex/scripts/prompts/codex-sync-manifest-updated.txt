@@ -1,0 +1,44 @@
+You are running inside unified-trading-codex. unified-trading-pm is checked out at ./unified-trading-pm/.
+
+Your task is to validate and sync codex docs with the current PM plans and manifest. Work through these steps in order:
+
+=== STEP 1: Understand current state ===
+1. Read unified-trading-pm/workspace-manifest.json — note the repo topology and tiers
+2. Read all active plans in unified-trading-pm/plans/active/ — note architectural decisions, constraints, and anything newly implemented
+3. Read 00-SSOT-INDEX.md — understand what is currently registered as canonical SSOT
+
+=== STEP 2: Check plan → codex doc coverage ===
+4. For each active plan, identify key architectural decisions and constraints
+5. Check codex docs (00-* through 13-* directories) for coverage of each plan's key decisions
+6. For any active plan that introduces a new architectural pattern, check if a corresponding doc exists
+7. If a plan marks something as DONE or IMPLEMENTED that establishes a new canonical pattern (branch model, version cascade, event bus contract, etc.), that pattern needs a SSOT entry in 00-SSOT-INDEX.md
+
+=== STEP 3: Check internal codex consistency ===
+8. Identify docs that cover the same concept across multiple directories (e.g., versioning rules in 05-infrastructure vs 06-coding-standards vs 10-*)
+9. For each overlapping concept, verify the docs agree — flag any contradiction (e.g., different semver rules, different branch names, different API patterns)
+10. If two docs contradict, update the non-canonical one to defer to the canonical SSOT. Add a one-line note: "See [canonical-doc] for authoritative definition."
+11. Check that docs referencing other codex docs use correct relative paths and the referenced files actually exist
+
+=== STEP 4: Update 00-SSOT-INDEX.md ===
+12. For any implemented pattern (from step 2) not yet in 00-SSOT-INDEX.md, add an entry pointing to the canonical doc
+13. For any contradiction fixed in step 3, verify the SSOT-INDEX already points to the winning doc — add or update the entry if not
+14. SSOT-INDEX format: one line per entry — `| concept | canonical-doc-path | notes |`
+15. Do NOT add entries for things still in-progress or planned (only for implemented/confirmed patterns)
+
+=== STEP 5: Update or create docs ===
+16. For any gap found: FIRST check if an existing doc in the relevant directory can absorb the new content as a section. Only create a new file if the concept is genuinely distinct and no existing doc is a natural home for it. Prefer adding a section to an existing doc over creating a new file.
+17. When updating or creating: follow existing .md style — no summaries, no fluff, only actionable content. Minimal additions only.
+18. Only edit files within unified-trading-codex (current directory)
+19. Do NOT modify anything in unified-trading-pm/
+
+=== STEP 6: Validate and commit ===
+19. Run: python scripts/validate-alignment.py --check-drift
+20. If you made any doc changes, run:
+    bash scripts/quickmerge.sh "chore: sync codex docs with PM manifest update" --files "<space-separated list of changed files>"
+
+Rules:
+- Follow the no-summary-docs cursor rule: docs must be actionable, not descriptive summaries
+- STRONG preference for editing existing docs over creating new ones — new files should be rare
+- Do not create duplicate docs for things already covered
+- When two docs cover the same concept, one must explicitly defer to the other — never leave contradictions silently
+- If no changes are needed, exit cleanly without committing

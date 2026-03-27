@@ -33,11 +33,11 @@ overview: |
   ## Scope: 7 repos
   - unified-api-contracts — settlement registry, fixture ID helpers
   - unified-reference-data-interface — cross-reference Polymarket gameId → API-Football fixture_id
-  - unified-sports-reference-interface — fixture lookup by team+date (existing get_fixtures)
+  - instruments-service (URDI sports/ sub-package) — fixture lookup by team+date (existing get_fixtures)
   - unified-features-interface — prediction feature calculators
   - features-prediction-service — new service or extend existing
   - unified-trading-pm — plan + validation scripts
-  - unified-trading-codex — update prediction-schema-paths.md
+  - unified-trading-pm/codex — update prediction-schema-paths.md
 
 type: code
 epic: epic-code-completion
@@ -55,7 +55,7 @@ repo_gates:
   - repo: unified-reference-data-interface
     code: C0
     notes: "Cross-reference Polymarket → API-Football fixture_id"
-  - repo: unified-sports-reference-interface
+  - repo: instruments-service (URDI sports/ sub-package)
     code: C0
     notes: "Fixture lookup by team+date (may need no changes)"
   - repo: unified-features-interface
@@ -64,7 +64,7 @@ repo_gates:
   - repo: unified-trading-pm
     code: C0
     notes: "Validation scripts"
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm/codex
     code: C0
     notes: "Updated prediction-schema-paths.md"
 
@@ -273,7 +273,7 @@ todos:
         cd unified-api-contracts && bash scripts/quality-gates.sh
         cd unified-reference-data-interface && bash scripts/quality-gates.sh
         cd unified-features-interface && bash scripts/quality-gates.sh
-        cd unified-trading-codex && bash scripts/quality-gates.sh
+        cd unified-trading-pm && bash scripts/quality-gates.sh
         All must pass.
     status: pending
     blocked_by: p2e-1-validation-run
@@ -422,4 +422,4 @@ P2F (QG sweep) ────────────── F1: All repos green
 | `unified_reference_data_interface/adapters/polymarket.py`                 | Cross-reference fixture_id    |
 | `unified_api_contracts/canonical/domain/prediction/prediction_mapping.py` | ID helpers                    |
 | `unified_api_contracts/external/polymarket/__init__.py`                   | Export settlement registry    |
-| `unified-trading-codex/02-data/prediction-schema-paths.md`                | Update with fixture ID format |
+| `unified-trading-pm/codex/02-data/prediction-schema-paths.md`             | Update with fixture ID format |

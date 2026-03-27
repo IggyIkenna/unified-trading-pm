@@ -1,0 +1,87 @@
+# ==============================================================================
+# Service Template: Platform Services
+# ==============================================================================
+#
+# Applies to: unified-trading-library, deployment-service,
+#             (future: exchange-interface-library)
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: PLAT-01 through PLAT-04
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "Platform services (libraries, orchestrators)"
+services:
+  - "unified-trading-library"
+  - "deployment-service"
+  # Future: "exchange-interface-library"
+
+# Inherit all baseline items
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Platform Services Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: PLAT-01
+    area: "05-infrastructure"
+    priority: P1-high
+    title: "Library packaging and distribution"
+    description: |
+      Library services are pip-installable, versioned, and published.
+
+      For private repos:
+        - unified-trading-library: installable via GitHub PAT
+        - exchange-interface-library: installable via GitHub PAT
+
+      ✅ Pass: setup.py or pyproject.toml, versioning, installable
+      ❌ Fail: Not installable OR no versioning
+    evidence: "Check setup.py/pyproject.toml, pip install test"
+    codex_ref: "05-infrastructure/README.md"
+    applies_to: ["unified-trading-library"]
+
+  - id: PLAT-02
+    area: "04-architecture"
+    priority: P1-high
+    title: "Orchestration & deployment scripts (deployment-service)"
+    description: |
+      deployment-service has orchestration scripts, Terraform, DAG configs.
+
+      ✅ Pass: Deployment scripts, Terraform configs, orchestration
+      ❌ Fail: Missing deployment automation
+    evidence: "Check scripts/, terraform/, configs/"
+    codex_ref: "05-infrastructure/deployment-topology.md"
+    applies_to: ["deployment-service"]
+
+  - id: PLAT-03
+    area: "06-coding-standards"
+    priority: P1-high
+    title: "Backward compatibility (library services)"
+    description: |
+      Library services maintain backward compatibility.
+      Breaking changes increment major version (semver).
+
+      ✅ Pass: Versioning strategy, deprecation notices, migration guides
+      ❌ Fail: Breaking changes without version bump
+    evidence: "Check CHANGELOG.md, version history"
+    codex_ref: "06-coding-standards/versioning.md"
+    applies_to: ["unified-trading-library"]
+
+  - id: PLAT-04
+    area: "06-coding-standards"
+    priority: P2-medium
+    title: "API documentation (library services)"
+    description: |
+      Library services have comprehensive API documentation.
+      Docstrings, examples, usage guides.
+
+      ✅ Pass: API docs, docstrings, examples
+      ❌ Fail: No documentation OR incomplete
+    evidence: "Check docs/, README.md, docstrings"
+    codex_ref: "06-coding-standards/README.md#documentation"
+    applies_to: ["unified-trading-library"]
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 4 (group) = 22 items
+# ==============================================================================

@@ -1,0 +1,381 @@
+# ==============================================================================
+# Validator → Epic Task Mapping
+# ==============================================================================
+#
+# This file extends validator-checklist-mapping.yaml to link validators to
+# specific epic tasks. This enables:
+#   - Automated validation of epic task completion
+#   - Epic task unblocking when validators pass
+#   - GitHub issue status updates based on validator results
+#
+# Format:
+#   validator_id:
+#     related_epic_tasks: List of epic:task_id references
+#     validation_criteria: What the validator checks
+#     unblocks: Which blocker types (D1-D8) this validator resolves
+#
+# Last Updated: 2026-02-21
+# Schema Version: 1.0
+# ==============================================================================
+
+validators:
+  # ==========================================================================
+  # CONFIGURATION VALIDATORS
+  # ==========================================================================
+
+  no_os_getenv_validator:
+    checklist_items: [COD-01]
+    audit_items: [BASE-01]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "1.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+      - epic: "unified-libraries-refactor"
+        task_id: "1.2"
+        service: "market-tick-data-service"
+        classification: "VALIDATE"
+      - epic: "unified-libraries-refactor"
+        task_id: "1.2"
+        service: "market-data-processing-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "No os.getenv() usage in production code"
+      - "Config extends UnifiedCloudServicesConfig"
+    unblocks: ["D4"] # Code structure compliance
+
+  hardcoded_config_validator:
+    checklist_items: [COD-02]
+    audit_items: [BASE-02]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "1.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+      - epic: "market-data-infrastructure"
+        task_id: "2.1"
+        service: "market-tick-data-service"
+        classification: "REFACTOR"
+    validation_criteria:
+      - "No hardcoded venue mappings"
+      - "No hardcoded date ranges"
+      - "No magic numbers"
+    unblocks: ["D4"]
+
+  cloud_agnostic_validator:
+    checklist_items: [COD-20, INF-05]
+    audit_items: [BASE-30, INF-02]
+    related_epic_tasks:
+      - epic: "unified-libraries-refactor"
+        task_id: "3.1"
+        service: "ALL"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "No hardcoded GCP project IDs"
+      - "Use get_storage_client() abstractions"
+    unblocks: ["D4"]
+
+  # ==========================================================================
+  # OBSERVABILITY VALIDATORS
+  # ==========================================================================
+
+  lifecycle_events_validator:
+    checklist_items: [OBS-05]
+    audit_items: [BASE-02, OBS-01]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "2.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+      - epic: "data-io-production-readiness"
+        task_id: "2.1"
+        service: "market-tick-data-service"
+        classification: "VALIDATE"
+      - epic: "unified-libraries-refactor"
+        task_id: "2.3"
+        service: "market-data-processing-service"
+        classification: "REFACTOR"
+    validation_criteria:
+      - "All 11 lifecycle events implemented"
+      - "STARTED, VALIDATION_STARTED, VALIDATION_COMPLETED events"
+      - "DATA_INGESTION_STARTED, DATA_INGESTION_COMPLETED events"
+      - "PROCESSING_STARTED, PROCESSING_COMPLETED events"
+      - "UPLOAD_STARTED, UPLOAD_COMPLETED events"
+      - "STOPPED, FAILED events"
+    unblocks: ["D4"]
+
+  domain_events_validator:
+    checklist_items: [OBS-07]
+    audit_items: [OBS-02]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "2.2"
+        service: "instruments-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "Domain-specific events documented"
+      - "Service-specific events list exists"
+    unblocks: ["D4"]
+
+  # ==========================================================================
+  # DATA PIPELINE VALIDATORS
+  # ==========================================================================
+
+  data_completeness_validator:
+    checklist_items: [DAT-01, DAT-02]
+    audit_items: [DAT-01]
+    related_epic_tasks:
+      - epic: "market-data-infrastructure"
+        task_id: "1.1"
+        service: "market-tick-data-service"
+        classification: "VALIDATE"
+      - epic: "market-data-infrastructure"
+        task_id: "1.2"
+        service: "market-data-processing-service"
+        classification: "REFACTOR"
+    validation_criteria:
+      - "stage_1_has_run = true for all required shards"
+      - "stage_2_data_complete = true for MVP shards"
+      - "completion_pct >= 100 for critical shards"
+    unblocks: ["D1"] # Data availability
+
+  data_catalogue_sync_validator:
+    checklist_items: [DAT-03]
+    audit_items: [DAT-03]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "8.1"
+        service: "ALL"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "data-catalogue.{service}.yaml exists"
+      - "Catalogue mirrors actual GCS data"
+    unblocks: ["D1"]
+
+  # ==========================================================================
+  # HARDENING VALIDATORS
+  # ==========================================================================
+
+  no_fallback_imports_validator:
+    checklist_items: [HARDENING-01]
+    audit_items: [HARDENING-01]
+    related_epic_tasks:
+      - epic: "unified-libraries-refactor"
+        task_id: "4.1"
+        service: "ALL"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "No try-except fallback imports"
+      - "Direct imports from unified-events-interface"
+      - "No unified_trading_library.observability fallbacks"
+    unblocks: ["D4"]
+
+  library_usage_validator:
+    checklist_items: [HARDENING-04]
+    audit_items: [HARDENING-04]
+    related_epic_tasks:
+      - epic: "unified-libraries-refactor"
+        task_id: "4.2"
+        service: "ALL"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "Uses correct library versions"
+      - "No deprecated patterns"
+    unblocks: ["D4"]
+
+  # ==========================================================================
+  # CI/CD VALIDATORS
+  # ==========================================================================
+
+  batch_deployment_validator:
+    checklist_items: [BASE-28]
+    audit_items: [BASE-28]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "3.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+      - epic: "market-data-infrastructure"
+        task_id: "2.1"
+        service: "market-tick-data-service"
+        classification: "REFACTOR"
+    validation_criteria:
+      - "CLI accepts --mode batch"
+      - "Batch handler registered"
+      - "Quality gates pass for batch mode"
+    unblocks: ["D3"] # Quality gates + Docker
+
+  live_deployment_validator:
+    checklist_items: [BASE-29]
+    audit_items: [BASE-29]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "3.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "CLI accepts --mode live"
+      - "Live handler registered"
+      - "WebSocket/PubSub integration present"
+    unblocks: ["D3", "D5"] # Quality gates + full implementation
+
+  cicd_status_validator:
+    checklist_items: [BASE-24, BASE-25]
+    audit_items: [BASE-24]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "4.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+      - epic: "unified-libraries-refactor"
+        task_id: "3.1"
+        service: "market-data-processing-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "Quality gates script exists"
+      - "Ruff v0.15.0 across all three stages"
+      - "Tests pass (coverage >= 35%)"
+    unblocks: ["D3"]
+
+  artifact_registry_validator:
+    checklist_items: [BASE-26]
+    audit_items: [BASE-26]
+    related_epic_tasks:
+      - epic: "unified-libraries-refactor"
+        task_id: "5.1"
+        service: "unified-trading-library"
+        classification: "VALIDATE"
+      - epic: "unified-libraries-refactor"
+        task_id: "5.2"
+        service: "unified-events-interface"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "Package published to Artifact Registry"
+      - "Versioning follows semantic versioning"
+    unblocks: ["D2"] # Auth/package creation
+
+  # ==========================================================================
+  # ALIGNMENT VALIDATORS
+  # ==========================================================================
+
+  sharding_config_validator:
+    checklist_items: [BASE-20]
+    audit_items: [BASE-20]
+    related_epic_tasks:
+      - epic: "data-io-production-readiness"
+        task_id: "1.2"
+        service: "instruments-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "sharding.{service}.yaml exists"
+      - "Matches codex patterns"
+    unblocks: ["D4"]
+
+  expected_start_dates_validator:
+    checklist_items: [BASE-21]
+    audit_items: [BASE-21]
+    related_epic_tasks:
+      - epic: "market-data-infrastructure"
+        task_id: "1.1"
+        service: "market-tick-data-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "expected_start_dates.yaml exists"
+      - "Matches actual data availability"
+    unblocks: ["D1"]
+
+  venue_mappings_validator:
+    checklist_items: [BASE-22]
+    audit_items: [BASE-22]
+    related_epic_tasks:
+      - epic: "market-data-infrastructure"
+        task_id: "1.1"
+        service: "instruments-service"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "venues.yaml exists"
+      - "Category mappings correct"
+    unblocks: ["D4"]
+
+  # ==========================================================================
+  # SECURITY VALIDATORS
+  # ==========================================================================
+
+  no_print_statements_validator:
+    checklist_items: [COD-04]
+    audit_items: [COD-04]
+    related_epic_tasks:
+      - epic: "unified-libraries-refactor"
+        task_id: "6.1"
+        service: "ALL"
+        classification: "VALIDATE"
+    validation_criteria:
+      - "No print() statements in production code"
+      - "Use logger.info() instead"
+    unblocks: ["D4"]
+
+  safe_env_files_validator:
+    checklist_items: [SEC-01]
+    audit_items: [SEC-01]
+    related_epic_tasks:
+      - epic: "post-trade-and-execution"
+        task_id: "1.1"
+        service: "position-balance-monitor-service"
+        classification: "IMPLEMENT"
+      - epic: "post-trade-and-execution"
+        task_id: "2.1"
+        service: "risk-and-exposure-service"
+        classification: "IMPLEMENT"
+    validation_criteria:
+      - ".env files not committed"
+      - ".env.example exists"
+      - "Secrets use Secret Manager"
+    unblocks: ["D2"]
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+
+metadata:
+  total_validators: 20
+  epics_covered:
+    - data-io-production-readiness
+    - unified-libraries-refactor
+    - market-data-infrastructure
+    - post-trade-and-execution
+  services_covered:
+    - instruments-service
+    - market-tick-data-service
+    - market-data-processing-service
+    - position-balance-monitor-service
+    - risk-and-exposure-service
+    - unified-trading-library
+    - unified-events-interface
+  blocker_types:
+    D1: "Data Availability" # Unblocked by data_completeness, data_catalogue_sync, expected_start_dates
+    D2: "Auth/Package Creation" # Unblocked by artifact_registry, safe_env_files
+    D3: "Quality Gates + Docker" # Unblocked by batch/live_deployment, cicd_status
+    D4: "Code Structure" # Unblocked by most validators (config, observability, hardening)
+    D5: "Full Implementation" # Unblocked by live_deployment (requires WebSocket/PubSub)
+    D6: "Human Testing" # Not validator-unblockable (requires human)
+    D7: "Human Validation" # Not validator-unblockable (requires human)
+    D8: "Repo Contention" # Not validator-unblockable (coordination issue)
+  automated_unblocking:
+    D1: ["data_completeness_validator", "data_catalogue_sync_validator"]
+    D2: ["artifact_registry_validator", "safe_env_files_validator"]
+    D3: ["batch_deployment_validator", "live_deployment_validator", "cicd_status_validator"]
+    D4:
+      [
+        "no_os_getenv_validator",
+        "hardcoded_config_validator",
+        "cloud_agnostic_validator",
+        "lifecycle_events_validator",
+        "no_fallback_imports_validator",
+        "library_usage_validator",
+        "sharding_config_validator",
+        "venue_mappings_validator",
+        "no_print_statements_validator",
+      ]
+    D5: ["live_deployment_validator"]
+  last_updated: "2026-02-21"
+  schema_version: "1.0"

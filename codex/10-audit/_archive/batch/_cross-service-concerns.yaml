@@ -1,0 +1,121 @@
+# Cross-cutting batch concerns - unified-trading-system
+# Affects the batch pipeline as a whole, not individual services
+# audit_date: 2026-02-10
+# auditor: automated-codex-scan
+
+mode: "batch"
+scope: "cross-service"
+audit_date: "2026-02-10"
+
+concerns:
+  - id: "BATCH-01"
+    name: "Pipeline dependency chain integrity"
+    status: "partial"
+    description:
+      "Ability of each service to find upstream data (instruments, corporate-actions, market-data, features, etc.)"
+    evidence: |
+      - configs/dependencies.yaml defines upstream/downstream relationships
+      - Per-service DAT-18 (pipeline dependency chain) mostly not_assessed
+      - dependency_checker exists in some services but end-to-end chain not verified
+    services_affected:
+      [
+        "instruments-service",
+        "instruments-service (corporate-actions domain)",
+        "market-tick-data-service",
+        "market-data-processing-service",
+        "features-*",
+        "ml-*",
+        "strategy-service",
+        "execution-service",
+      ]
+    notes: "Need end-to-end run from instruments -> execution to confirm data flows."
+
+  - id: "BATCH-02"
+    name: "Consistent sharding config across services"
+    status: "partial"
+    description: "configs/sharding.{service}.yaml alignment - dimensions, CLI args, expected_start_dates"
+    evidence: |
+      - deployment-service/configs/sharding.*.yaml exists
+      - ARC-02 (sharding config) not_assessed in many services
+      - Per-service CLI-GCS alignment (ARC-03) not verified
+    services_affected: ["all"]
+    notes: "Sharding must be consistent for parallel pipeline runs."
+
+  - id: "BATCH-03"
+    name: "Data catalogue completeness"
+    status: "fail"
+    description: "Central data catalogue (paths, schemas, expected dates) across all services"
+    evidence: |
+      - DAT-11 (GCS_PATHS.md) fail in execution-service, missing in several services
+      - DAT-13 (data catalogue) not_assessed in all services
+      - No single authoritative catalogue for batch outputs
+    services_affected: ["all"]
+    notes: "Critical for onboarding and operational visibility."
+
+  - id: "BATCH-04"
+    name: "End-to-end pipeline test coverage"
+    status: "partial"
+    description: "Integration/e2e tests that run full pipeline from instruments to execution"
+    evidence: |
+      - tests/e2e/ and tests/smoke/ exist in execution-service, strategy-service
+      - No system-integration-tests level E2E that exercises all 12 services
+      - tests/smoke/ validates shard combinatorics per service
+    services_affected: ["all"]
+    notes: "Per-service E2E exists; cross-service pipeline E2E missing."
+
+  - id: "BATCH-05"
+    name: "Shared library (unified-trading-library) compliance"
+    status: "partial"
+    description: "All services use UCS abstractions (get_storage_client, get_secret_client, UnifiedCloudConfig)"
+    evidence: |
+      - Most services pass INF-05 (no direct google.cloud imports)
+      - Residual os.getenv() in several services (COD-01 partial)
+      - Some raw GCS access vs domain clients (DAT-10 partial)
+    services_affected:
+      ["instruments-service", "instruments-service (corporate-actions domain)", "execution-service", "strategy-service"]
+    notes: "Config pattern correct; residual escapes in config/venue loading."
+
+  - id: "BATCH-06"
+    name: "Security - credential files in repos"
+    status: "fail"
+    priority: "P0"
+    description: "Service account key file ({project_id}-e35fb0ddafe2.json) committed to ALL repos"
+    evidence: |
+      - SEC-05 partial/fail across all services
+      - Credential JSON present in every repo
+    services_affected: ["all"]
+    notes: "CRITICAL. Remove credential files, use workload identity or env-based auth."
+
+  - id: "BATCH-07"
+    name: "Hardcoded project IDs"
+    status: "fail"
+    priority: "P0"
+    description: "COD-20 - {project_id} in Dockerfiles, CI, tests, docs"
+    evidence: |
+      - Hardcoded in Dockerfiles, cloudbuild.yaml, test fixtures, help text
+      - Should use GCP_PROJECT_ID from config or .env.example placeholders
+    services_affected: ["all"]
+    notes: "Replace with config-driven or placeholder values."
+
+  - id: "BATCH-08"
+    name: "Quality gate consistency across repos"
+    status: "partial"
+    description: "Same ruff version, pytest-xdist, cloudbuild quality gates before Docker build"
+    evidence: |
+      - ruff version varies slightly; check-ruff-versions.sh exists
+      - COD-13 fail: pytest-xdist missing in execution-service
+      - cloudbuild.yaml structure varies; some use -n auto, some do not
+    services_affected: ["execution-service", "ml-inference-service", "market-tick-data-service", "others"]
+    notes: "Run check-ruff-versions.sh; add pytest-xdist to all dev deps."
+
+risks:
+  - "Credential files in repos: immediate security exposure"
+  - "Hardcoded project ID: locks deployment to single GCP project"
+  - "Data catalogue gap: operational blind spots for batch runs"
+  - "No cross-service E2E: regression risk when changing dependencies"
+
+recommendations:
+  - "Remove credential JSON from all repos; use workload identity"
+  - "Replace {project_id} with config placeholder in all CI/Dockerfiles"
+  - "Create unified data catalogue (paths, schemas, expected dates)"
+  - "Add system-integration-tests end-to-end pipeline test (Layer 3a/3b)"

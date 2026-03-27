@@ -8,15 +8,15 @@
 
 **Strict linting pre-configured:** Ruff 0.15.0 + Pylance STRICT + basedpyright. Auto-fix on save (⌘S). RED squiggles = will fail CI. One-time setup: `bash .cursor/workspace-configs/setup-workspace-venv-complete.sh`.
 
-**Two-layer rule system:** `.cursor/rules/*.mdc` = enforcement reminders (what Cursor checks). `unified-trading-codex/` = the specification/SSOT (the why and full detail). Both must be consulted.
+**Two-layer rule system:** `.cursor/rules/*.mdc` = enforcement reminders (what Cursor checks). `unified-trading-pm/codex/` = the specification/SSOT (the why and full detail). Both must be consulted.
 
 ---
 
-## Source of Truth: unified-trading-codex
+## Source of Truth: unified-trading-pm/codex
 
-ALL code changes must comply with `unified-trading-codex/` principles. Start with the master navigator:
+ALL code changes must comply with `unified-trading-pm/codex/` principles. Start with the master navigator:
 
-- **`unified-trading-codex/00-SSOT-INDEX.md`** — canonical entry point: maps every topic to its SSOT doc
+- **`unified-trading-pm/codex/00-SSOT-INDEX.md`** — canonical entry point: maps every topic to its SSOT doc
 - `06-coding-standards/` — quality gates, testing, contribution, dependencies
 - `04-architecture/` — batch-live symmetry, deployment topology, concurrency (TIER-ARCHITECTURE.md)
 - `03-observability/` — 3-tier event logging, alerting, monitoring

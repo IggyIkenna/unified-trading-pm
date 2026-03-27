@@ -23,7 +23,7 @@ repo_gates:
   - repo: execution-service
     code: C0
     notes: "Verify sports routing through USEI"
-  - repo: unified-sports-execution-interface
+  - repo: execution-service (sports_execution/ sub-package)
     code: C0
     notes: "Verify Betfair + paper trading adapters"
   - repo: unified-trading-pm
@@ -100,11 +100,11 @@ todos:
 
 # Sports Integration Plan 6: Strategy, Execution & GCS Migration
 
-Part of the 6-plan sports integration series.
-This is the FINAL plan — depends on all others.
-GCS migration requires explicit user approval before execution.
+Part of the 6-plan sports integration series. This is the FINAL plan — depends on all others. GCS migration requires
+explicit user approval before execution.
 
 ## Success Criteria
+
 - ArbitrageStrategy produces arb signals from MTDS odds
 - MLSportsStrategy produces Kelly-sized signals from ML predictions
 - Paper trading executes cleanly for 1 day

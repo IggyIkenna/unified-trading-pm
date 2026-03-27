@@ -27,7 +27,7 @@ overview: |
 
   ## Scope: 2 repos
   - alerting-service — BatchEventReader, main.py batch wiring, delivery suppression
-  - unified-trading-codex — document batch/live alerting convention
+  - unified-trading-pm/codex — document batch/live alerting convention
 
 type: code
 epic: epic-code-completion
@@ -42,7 +42,7 @@ repo_gates:
   - repo: alerting-service
     code: C0
     notes: "BatchEventReader + main.py batch wiring + delivery suppression"
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm/codex
     code: C0
     notes: "Document batch alerting convention"
 
@@ -286,7 +286,7 @@ todos:
   - id: p4b-codex-doc
     content: |
       - [ ] [AGENT] P2. Document batch/live alerting convention in codex.
-        File: unified-trading-codex/04-architecture/alerting-batch-live.md
+        File: unified-trading-pm/codex/04-architecture/alerting-batch-live.md
 
         Document:
         1. Live mode: Pub/Sub → route_event() → PagerDuty/Telegram/Slack → GCS audit
@@ -309,7 +309,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. Run quality gates on all touched repos.
         cd alerting-service && bash scripts/quality-gates.sh
-        cd unified-trading-codex && bash scripts/quality-gates.sh
+        cd unified-trading-pm && bash scripts/quality-gates.sh
         All must pass.
     status: pending
     blocked_by: p4a-unit-tests
@@ -476,11 +476,11 @@ P5 (QG sweep) ────────────── P5a: All repos green
 
 ### Files to CREATE
 
-| File                                                           | Purpose              |
-| -------------------------------------------------------------- | -------------------- |
-| `alerting_service/subscribers/batch_event_reader.py`           | GCS event log reader |
-| `tests/unit/test_batch_replay.py`                              | Unit tests           |
-| `unified-trading-codex/04-architecture/alerting-batch-live.md` | Convention doc       |
+| File                                                              | Purpose              |
+| ----------------------------------------------------------------- | -------------------- |
+| `alerting_service/subscribers/batch_event_reader.py`              | GCS event log reader |
+| `tests/unit/test_batch_replay.py`                                 | Unit tests           |
+| `unified-trading-pm/codex/04-architecture/alerting-batch-live.md` | Convention doc       |
 
 ### Files to MODIFY
 

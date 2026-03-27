@@ -452,7 +452,7 @@ BACK_COMPAT=$(rg "# MIGRATED|backward compat|backward-compat|Re-export.*backward
 # STEP 5.9 — Schema placement (advisory for libraries)
 # ============================================================
 # UAC and UIC are the schema repos — skip; they own external API and internal domain schemas
-if [[ "$PACKAGE_NAME" != "unified-api-contracts" && "$PACKAGE_NAME" != "unified-internal-contracts" ]]; then
+if [[ "$PACKAGE_NAME" != "unified-api-contracts" ]]; then
     DOMAIN_CONTRACTS_IN_LIB=$(rg 'class \w+\(BaseModel\)' --type py \
         --glob "!tests/**" --glob "!**/__init__.py" \
         "$SOURCE_DIR/" 2>/dev/null | grep -v '#.*CORRECT-LOCAL' || :)
@@ -478,15 +478,6 @@ if [[ "$PACKAGE_NAME" = "unified-api-contracts" ]]; then
             WORKSPACE_ROOT="$REPO_ROOT_FOR_SCHEMA" python3 "$PROJECT_ROOT/scripts/check_schema_organization.py" 2>/dev/null || true
         fi
     fi
-elif [[ "$PACKAGE_NAME" = "unified-internal-contracts" ]]; then
-    if [[ -x "$PROJECT_ROOT/scripts/check_schema_organization.py" ]] || command -v python3 &>/dev/null; then
-        if python3 "$PROJECT_ROOT/scripts/check_schema_organization.py" 2>/dev/null; then
-            log_success "UIC schema organization OK"
-        else
-            log_warn "UIC schema organization: see script output"
-            WORKSPACE_ROOT="$REPO_ROOT_FOR_SCHEMA" python3 "$PROJECT_ROOT/scripts/check_schema_organization.py" 2>/dev/null || true
-        fi
-    fi
 elif [[ -f "$REPO_ROOT_FOR_SCHEMA/unified-trading-pm/scripts/validation/check_schema_provenance.py" ]]; then
     if python3 "$REPO_ROOT_FOR_SCHEMA/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$PACKAGE_NAME" --workspace-root "$REPO_ROOT_FOR_SCHEMA" 2>/dev/null; then
         log_success "Schema provenance OK (schemas from UAC/UIC)"
@@ -506,7 +497,7 @@ if [[ "$PACKAGE_NAME" = "unified-config-interface" ]]; then
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' --glob '!**/cloud_config.py' -l . 2>/dev/null || :)
 elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
     # UTL defines/deprecates these symbols — skip the origin and compat-layer files
-    # domain_client/ was merged from unified-domain-client and uses these symbols legitimately
+    # domain_client/ sub-package (merged into UTL) uses these symbols legitimately
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
         --glob '!**/domain/standardized_service.py' --glob '!**/__init__.py' \
@@ -517,17 +508,6 @@ elif [[ "$PACKAGE_NAME" = "unified-trading-library" ]]; then
         --glob '!**/domain_client/sports/**' --glob '!**/domain_client/standardized_service.py' \
         -l . 2>/dev/null \
         | grep -v "# noqa:.*qg-protocol-symbol\|# noqa: qg-protocol-symbol" || :)
-elif [[ "$PACKAGE_NAME" = "unified-domain-client" ]]; then
-    # UDC defines its own StandardizedDomainCloudService (domain wrapper, not a protocol violation)
-    # and CloudTarget (local config dataclass, not UTL's deprecated GCS-specific CloudTarget).
-    # All client files and sports/ are legitimate consumers of UDC's own class — excluded.
-    PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
-        --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' \
-        --glob '!**/standardized_service.py' --glob '!**/cloud_target.py' \
-        --glob '!**/factories.py' --glob '!**/__init__.py' \
-        --glob '!**/cloud_data_provider.py' --glob '!**/clients/**' \
-        --glob '!**/sports/**' \
-        -l . 2>/dev/null || :)
 else
     PROTOCOL_VIOLATIONS=$(rg "CloudTarget|upload_to_gcs_batch|gcs_bucket|bigquery_dataset|StandardizedDomainCloudService" \
         --type py --glob '!.venv*' --glob '!**/.venv*/**' --glob '!tests' -l . 2>/dev/null || :)
@@ -674,7 +654,6 @@ fi
 # ============================================================
 _UAC_EXEMPT="${UAC_CANONICAL_EXEMPT:-false}"
 [[ "${PACKAGE_NAME:-}" == "unified-api-contracts" ]] && _UAC_EXEMPT=true
-[[ "${PACKAGE_NAME:-}" == "unified-internal-contracts" ]] && _UAC_EXEMPT=true
 if [[ "$_UAC_EXEMPT" != "true" ]]; then
   DEEP_UAC_IMPORTS=0
   rg 'from unified_api_contracts\.canonical\.' "$SOURCE_DIR/" --glob '!**/test_*' --glob '!**/conftest*' --type py 2>/dev/null && DEEP_UAC_IMPORTS=1 || :
@@ -720,7 +699,7 @@ fi
 
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
-VSCRIPT="${REPO_ROOT}/unified-trading-codex/scripts/run-all-validators.sh"
+VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
 [ -f "$VSCRIPT" ] && "$VSCRIPT" --category all --failed-only 2>/dev/null || log_warn "Validators not available (optional)"
 
 # ── [ACT] GITHUB ACTIONS SIMULATION (opt-in via --act) ───────────────────────

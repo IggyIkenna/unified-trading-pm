@@ -6,7 +6,7 @@ verifies that the dep's current local version (from its own pyproject.toml) actu
 satisfies the declared version constraint.
 
 This catches issues like:
-  - UMI declares unified-internal-contracts>=1.0.0,<2.0.0 but UIC is at 0.1.3
+  - UMI declares unified-api-contracts>=1.0.0,<2.0.0 but UAC is at 0.1.3
   - Any >=X.Y.Z lower bound higher than the dep's current version
 
 Also detects per-repo extras conflicts by running uv pip install --dry-run for

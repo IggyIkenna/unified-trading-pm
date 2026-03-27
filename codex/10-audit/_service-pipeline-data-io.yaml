@@ -1,0 +1,80 @@
+# ==============================================================================
+# Service Template: Pipeline - Data I/O Group
+# ==============================================================================
+#
+# Applies to: instruments-service, corporate-actions, features-calendar-service
+#
+# Baseline: BASE-01 through BASE-18 (from _service-baseline-template.yaml)
+# Group additions: DATA-01 through DATA-03
+#
+# ==============================================================================
+
+template_version: "1.0"
+applies_to: "Pipeline services - Data I/O group (Layer 1)"
+services: ["instruments-service", "corporate-actions", "features-calendar-service"]
+
+# Inherit all baseline items (BASE-01 through BASE-18)
+extends: "_service-baseline-template.yaml"
+
+# ==============================================================================
+# Data I/O Group-Specific Items
+# ==============================================================================
+
+group_items:
+  - id: DATA-01
+    area: "05-infrastructure"
+    priority: P1-high
+    title: "External API integration (with retry/backoff)"
+    description: |
+      Service integrates with external APIs (exchange, corporate actions, calendar providers).
+      Uses @handle_api_errors decorator with exponential backoff.
+
+      ✅ Pass: API client with retry logic, rate limit handling
+      ❌ Fail: No retry logic, no rate limit handling
+    evidence: "Check for @handle_api_errors, retry configuration"
+    codex_ref: "06-coding-standards/README.md#error-handling"
+
+  - id: DATA-02
+    area: "02-data"
+    priority: P1-high
+    title: "Instrument metadata management"
+    description: |
+      Service manages or consumes instrument metadata.
+      Canonical instrument ID format: VENUE:INSTRUMENT_TYPE:PAYLOAD[@CHAIN]
+
+      ✅ Pass: Proper ID format, metadata schemas, lifecycle handling
+      ❌ Fail: Non-standard IDs, missing lifecycle events
+    evidence: "Check instrument ID format, metadata schemas"
+    codex_ref: "01-domain/README.md#instrument-lifecycle"
+
+  - id: DATA-03
+    area: "03-observability"
+    priority: P2-medium
+    title: "Data freshness checks"
+    description: |
+      Service monitors data freshness and alerts on stale data.
+
+      ✅ Pass: Freshness checks, staleness alerts
+      ❌ Fail: No freshness monitoring
+    evidence: "Check for timestamp checks, staleness detection"
+    codex_ref: "03-observability/alerting.md"
+
+  - id: DATA-04
+    area: "01-domain"
+    priority: P1-high
+    title: "Sports instrument support (if applicable)"
+    description: |
+      For instruments-service: Support SPORTS asset class (FOOTBALL).
+      - Parse sports instrument format: SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION
+      - Fixture matching logic (Betfair market ID → API-Football fixture ID)
+      - Team/league normalization (canonical names: LIVERPOOL, ENG-PREMIER_LEAGUE)
+      - Season-based format (2024-2025, not dates)
+
+      ✅ Pass: Sports parser, fixture matching, team normalization
+      ❌ Fail: No sports support, or ad-hoc sports logic
+      ⚠️ N/A: Service doesn't handle sports instruments
+    evidence: "Check parsers/sports.py, matching/fixtures.py, normalization/teams.py"
+    codex_ref: "01-domain/asset-classes.md#sports, 01-domain/sports-instruments.md"
+# ==============================================================================
+# Total Checklist Items: 18 (baseline) + 4 (group) = 22 items
+# ==============================================================================

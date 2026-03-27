@@ -11,4 +11,4 @@ globs: ["**/*.py"]
 | Internal service message | UIC domain/{service}/ | UAC, interfaces, services |
 | Service config | Service's own config.py | UAC, UIC |
 
-Reference: unified-trading-codex/02-data/contracts-scope-and-layout.md
+Reference: unified-trading-pm/codex/02-data/contracts-scope-and-layout.md

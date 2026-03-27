@@ -78,8 +78,8 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     ),
     ("unified-config-interface", "unified_trading_library.config_interface.domain_configs", "CustomRiskScenarioConfig"),
     ("unified-market-interface", "unified_market_interface.config", "MarketDataProviderConfig"),
-    ("unified-trade-execution-interface", "unified_trade_execution_interface.config", "OrderInterfaceConfig"),
-    ("unified-trade-execution-interface", "unified_trade_execution_interface.config", "ExecutionDataSourceConfig"),
+    ("execution-service", "execution_service.trade_execution.config", "OrderInterfaceConfig"),
+    ("execution-service", "execution_service.trade_execution.config", "ExecutionDataSourceConfig"),
     # === Strategy internals ===
     ("strategy-service", "strategy_service.engine.core.config_loader", "StrategyConfig"),
     ("strategy-service", "strategy_service.engine.core.config_loader", "MLSignalConfig"),

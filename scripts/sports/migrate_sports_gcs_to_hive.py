@@ -94,7 +94,7 @@ def migrate_raw_data(dry_run: bool = True) -> list[str]:
     import pandas as pd
     from google.cloud import storage
 
-    storage.Client(project=PROJECT_ID)  # validates credentials
+    client = storage.Client(project=PROJECT_ID)
     actions: list[str] = []
 
     for old_path, entity in RAW_ENTITY_MAP.items():
@@ -129,7 +129,7 @@ def migrate_odds_data(dry_run: bool = True, date_range: tuple[str, str] | None =
     """
     from google.cloud import storage
 
-    storage.Client(project=PROJECT_ID)  # validates credentials
+    client = storage.Client(project=PROJECT_ID)
     old_bucket = client.bucket(OLD_ODDS)
     actions: list[str] = []
 
@@ -226,7 +226,7 @@ def migrate_features(dry_run: bool = True) -> list[str]:
     """
     from google.cloud import storage
 
-    storage.Client(project=PROJECT_ID)  # validates credentials
+    client = storage.Client(project=PROJECT_ID)
     old_bucket = client.bucket(OLD_FEATURES)
     new_bucket = client.bucket(NEW_FEATURES)
     actions: list[str] = []

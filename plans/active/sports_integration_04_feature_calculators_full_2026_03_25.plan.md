@@ -107,10 +107,10 @@ todos:
 
 # Sports Integration Plan 4: Feature Calculators Full 1000+
 
-Part of the 6-plan sports integration series.
-Depends on Plan 3 (enrichment data flowing from all providers).
+Part of the 6-plan sports integration series. Depends on Plan 3 (enrichment data flowing from all providers).
 
 ## Success Criteria
+
 - Feature count >= 1000 (vs archived 857)
 - All 17+ calculators producing non-zero features
 - No .iterrows() in production paths

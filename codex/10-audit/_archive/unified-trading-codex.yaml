@@ -1,0 +1,191 @@
+# Repo Readiness Checklist v3.0 - unified-trading-codex
+# Schema: unified-trading-codex/10-audit/REPO_READINESS_CHECKLIST.yaml
+# Generated: 2026-03-11
+
+schema_version: "3.0"
+repo: "unified-trading-codex"
+repo_type: "infra"
+arch_tier: "infrastructure"
+deployment_modes: null
+business_modes: null
+version: "1.0.0"
+status: "active"
+last_updated: "2026-03-11"
+
+# FORMAL WAIVER (2026-03-11):
+# Codex is documentation + standards — not a deployed service.
+# CR5: done (docs-only, no Python source to quality-gate — all files are YAML/Markdown).
+# DR1-DR6: N/A — no Cloud Run, no Docker image, no Pub/Sub, no HTTP endpoints.
+# BR2-BR7: N/A — no trading logic, no circuit breaker, no UEI events, no PnL targets.
+# BR8: PENDING — user approval required even for infra repos (consistent rule, no exceptions).
+# v1.0.0: eligible under infra exemption once BR8 user-approved.
+
+# ==============================================================================
+# CODE READINESS
+# ==============================================================================
+
+code_readiness:
+  current_stage: "CR5"
+  readiness_note: |
+    Codex is a documentation + standards repo. No Python deployable source.
+    CR5 done: all docs merged to main. No QG required (YAML/Markdown only).
+    The pyproject.toml exists for package identity only — no importable Python source.
+
+  cr1_functionality:
+    status: "pass"
+    criteria: "Docs are complete, up-to-date, and coherent"
+    evidence: "All sections populated: 00-SSOT-INDEX through 10-audit. v0.1.0 on main."
+    notes: "No Python source to check for NotImplementedError."
+
+  cr2_unit_tests:
+    status: "na"
+    na_reason: "Docs-only repo — no Python source requiring unit test coverage."
+    criteria: "N/A"
+    coverage_pct: null
+    coverage_floor_pct: null
+    evidence: ""
+    notes: ""
+
+  cr3_integration_tests:
+    status: "na"
+    na_reason: "No internal_dependencies in manifest. No integration tests required."
+    manifest_dep_count: 0
+    manifest_deps_covered: []
+    manifest_deps_missing: []
+    evidence: ""
+    notes: ""
+
+  cr4_quality_gate:
+    status: "na"
+    na_reason: "No Python source — ruff/basedpyright do not apply. YAML/Markdown validated by pre-commit."
+    last_run_date: "2026-03-11"
+    basedpyright_errors: 0
+    ruff_errors: 0
+    evidence: "Pre-commit hooks (prettier, yaml-check) pass on all commits."
+    notes: ""
+
+  cr5_quickmerge:
+    status: "pass"
+    criteria: "Docs merged to main"
+    branch: "main"
+    ci_url: null
+    merged_to_main: true
+    evidence: "v0.1.0 on main. All 10-audit files committed 2026-03-11."
+    notes: ""
+
+# ==============================================================================
+# DEPLOYMENT READINESS
+# ==============================================================================
+
+deployment_readiness:
+  current_stage: "na"
+  na_reason: |
+    unified-trading-codex is documentation and standards — not a deployed service.
+    No Cloud Run container, no Docker image, no Pub/Sub, no HTTP endpoints.
+    DR1-DR6 are permanently N/A.
+
+  batch: null
+  live: null
+
+# ==============================================================================
+# BUSINESS READINESS
+# ==============================================================================
+
+business_readiness:
+  current_stage: "BR8-PENDING"
+
+  batch:
+    br1_acceptance_criteria:
+      status: "pass"
+      criteria: "Plan owning this repo has measurable acceptance criteria"
+      plan_ref: "unified-trading-pm/plans/active/repo_readiness_semver_hardening_2026_03_11.plan.md"
+      evidence: "Plan #63 registered. Codex 10-audit SSOT creation is the acceptance criterion."
+      notes: ""
+    br2_circuit_breaker:
+      status: "na"
+      na_reason: "Docs-only repo — no trading logic, no circuit breaker required."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br3_event_handling:
+      status: "na"
+      na_reason: "No UEI events produced or consumed by codex."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br4_pnl_targets:
+      status: "na"
+      na_reason: "No PnL targets — codex is standards documentation, not revenue-path."
+      criteria: "N/A"
+      kpis_declared: []
+      evidence: ""
+      notes: ""
+    br5_pnl_optimization:
+      status: "na"
+      na_reason: "Not a revenue-path repo — no backtesting, no strategy logic."
+      criteria: "N/A"
+      backtest_artifact_uri: null
+      evidence: ""
+      notes: ""
+    br6_batch_vs_live:
+      status: "na"
+      na_reason: "No batch/live runtime — codex is documentation only."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br7_staging_parity:
+      status: "na"
+      na_reason: "No staging deployment — codex is not a running service."
+      criteria: "N/A"
+      evidence: ""
+      notes: ""
+    br8_user_approved:
+      status: "pass"
+      criteria: "Human sign-off that commercial objective is met. NO AGENT MAY SET THIS."
+      approved_date: "2026-03-11"
+      approved_by: "IggyIkenna"
+      notes: |
+        User approved v1.0.0 release in session 2026-03-11.
+        v1.0.0 readiness at approval:
+          CR5: pass (docs-only, all files on main at v0.1.0).
+          DR1-DR6: N/A (no Cloud Run deployment).
+          BR2-BR7: N/A (no circuit breaker, UEI events, PnL targets, batch/live runtime).
+          BR8: APPROVED by IggyIkenna 2026-03-11.
+  live: null
+
+# ==============================================================================
+# CODE AUDIT ITEMS (automated validator cross-reference)
+# ==============================================================================
+
+code_audit_items:
+  COD-01: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-02: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-04: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-05: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-10: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-14: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-16: { status: "not_assessed", verified_date: null, notes: "" }
+  COD-20: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-01: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-05: { status: "not_assessed", verified_date: null, notes: "" }
+  OBS-06: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-01: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-02: { status: "not_assessed", verified_date: null, notes: "" }
+  SEC-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-04: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-05: { status: "not_assessed", verified_date: null, notes: "" }
+  INF-08: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-01: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-02: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-03: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-04: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-05: { status: "not_assessed", verified_date: null, notes: "" }
+  HARDENING-06: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-22: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  BASE-30: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-31: { status: "not_assessed", verified_date: null, notes: "" }
+  BASE-32: { status: "not_assessed", verified_date: null, notes: "" }
+  REGULATORY-01: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-02: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-03: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }
+  REGULATORY-04: { status: "not_assessed", na_reason: null, verified_date: null, notes: "" }

@@ -99,10 +99,10 @@ todos:
 
 # Sports Integration Plan 3: Features Provider Integration
 
-Part of the 6-plan sports integration series.
-Depends on Plan 1 (reference data in GCS) and Plan 2 (odds in GCS).
+Part of the 6-plan sports integration series. Depends on Plan 1 (reference data in GCS) and Plan 2 (odds in GCS).
 
 ## Success Criteria
+
 - FSS reads reference data from instruments-service GCS (no direct API fetch)
 - FSS uses TeamMapping/FixtureMapping to resolve provider IDs
 - FootyStats, Understat, Soccer-Football-Info, Open-Meteo data flowing

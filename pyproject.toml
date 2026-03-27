@@ -42,7 +42,7 @@ max-complexity = 7
 "scripts/dev/smoke-test-dev.py" = ["BLE001", "S102"]
 
 [tool.basedpyright]
-extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management", "../unified-events-interface", "../unified-internal-contracts", "../unified-api-contracts"]
+extraPaths = ["scripts", "scripts/manifest", "scripts/validation", "scripts/propagation", "scripts/repo-management", "../unified-internal-contracts", "../unified-api-contracts"]
 pythonVersion = "3.13"
 venvPath = "."
 venv = ".venv"

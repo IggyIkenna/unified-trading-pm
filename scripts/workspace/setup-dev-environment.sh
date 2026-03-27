@@ -315,12 +315,9 @@ log_step 7 "Install repo dependencies (T0→T1→T2→T3 order)"
 # Topological order from workspace-manifest.json (L2-L6 = Python libraries/interfaces)
 # L2: T0 foundation (no inter-library deps)
 T0_REPOS=(
-    "matching-engine-library"
     "unified-api-contracts"
     "unified-cloud-interface"
     "unified-events-interface"
-    "unified-internal-contracts"
-    "unified-reference-data-interface"
 )
 
 # L3: T1 services runtime
@@ -331,19 +328,13 @@ T1_REPOS=(
 
 # L4: T2 domain client + calc library
 T2_REPOS=(
-    "execution-algo-library"
-    "unified-feature-calculator-library"
+    "unified-features-interface"
 )
 
 # L5-L6: T3 interfaces
 T3_REPOS=(
-    "unified-domain-client"
     "unified-market-interface"
-    "unified-ml-interface"
-    "unified-position-interface"
-    "unified-trade-execution-interface"
-    "unified-defi-execution-interface"
-    "unified-sports-execution-interface"
+    "unified-reference-data-interface"
 )
 
 install_repo() {
@@ -398,11 +389,11 @@ run_import_check() {
 run_import_check "unified_events_interface" \
     "from unified_events_interface import setup_events, log_event"
 
-run_import_check "unified_internal_contracts" \
-    "import unified_internal_contracts"
-
 run_import_check "unified_api_contracts" \
     "import unified_api_contracts"
+
+run_import_check "unified_api_contracts.internal" \
+    "from unified_api_contracts import internal"
 
 # T1 libraries
 run_import_check "unified_config_interface (UnifiedCloudConfig)" \
@@ -412,15 +403,15 @@ run_import_check "unified_trading_library" \
     "import unified_trading_library"
 
 # T2 libraries
-run_import_check "unified_feature_calculator_library" \
-    "import unified_feature_calculator_library"
+run_import_check "unified_features_interface" \
+    "import unified_features_interface"
 
 # T3 interfaces (best-effort)
 run_import_check "unified_market_interface" \
     "import unified_market_interface"
 
-run_import_check "unified_domain_client" \
-    "import unified_domain_client"
+run_import_check "unified_reference_data_interface" \
+    "import unified_reference_data_interface"
 
 # ── STEP 9: PROVISION DEV INFRASTRUCTURE ─────────────────────────────────────
 # RETIRED: seed-dev-project.sh (2026-03-13) — replaced by Terraform + VCR cassettes

@@ -22,11 +22,11 @@ repo_gates:
     code: C2
     deployment: none
     business: none
-  - repo: unified-internal-contracts
+  - repo: unified-api-contracts (internal)
     code: C2
     deployment: none
     business: none
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm (codex/ subdir)
     code: C5
     deployment: none
     business: none

@@ -1,0 +1,624 @@
+# ==============================================================================
+# Unified Trading Codex - Enhanced Master Audit Checklist Template (v2.0)
+# ==============================================================================
+#
+# Copy this file to checklist.{service}.yaml and assess each item.
+#
+# ENHANCEMENTS (v2.0):
+#   - validator_id: Which validator script checks this item
+#   - ssot_ref: Which codex document/config is the single source of truth
+#   - automation_status: manual, semi-automated, automated
+#   - criticality: critical, high, medium, low
+#   - Organized into sections for easier navigation
+#
+# Status values:
+#   pass          - Item fully satisfied; evidence confirms compliance
+#   fail          - Item not satisfied; remediation required
+#   partial       - Partially satisfied; some aspects need work
+#   not_assessed  - Not yet evaluated
+#   na            - Not applicable to this service (document reason in notes)
+#
+# Priority levels:
+#   P0 - Critical: blocks production deployment
+#   P1 - High: must fix before live trading
+#   P2 - Medium: technical debt; fix when capacity allows
+#   P3 - Low: best-practice polish
+#
+# Automation status:
+#   automated      - Fully automated validator exists and runs in CI
+#   semi-automated - Partial automation (some manual checks required)
+#   manual         - Manual assessment only (no automated checks)
+#
+# Criticality:
+#   critical - Failure causes system crash, data loss, or incorrect behavior
+#   high     - Failure degrades system reliability or performance
+#   medium   - Failure increases technical debt or maintenance burden
+#   low      - Failure is cosmetic or minor polish issue
+#
+# ==============================================================================
+
+service_name: "{SERVICE_NAME}"
+last_updated: "YYYY-MM-DD"
+auditor: ""
+template_version: "2.0"
+
+# ==============================================================================
+# SECTION 1: CONFIGURATION MANAGEMENT
+# ==============================================================================
+# Items: COD-01, COD-02, COD-03, COD-20
+# Focus: UnifiedCloudConfig usage, no os.getenv(), no hardcoded values
+# ==============================================================================
+
+items:
+  - id: "COD-01"
+    area: "06-coding-standards"
+    section: "configuration"
+    title: "Config extends UnifiedCloudConfig"
+    description: |
+      Service config class in {service}/config.py or config/ package extends UnifiedCloudConfig.
+      No direct os.getenv() anywhere in codebase. All env vars accessed via config attributes.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "no_os_getenv_validator"
+    ssot_ref: "06-coding-standards/configuration-management.md"
+    automated_check: "validators/security/no_os_getenv_validator.py"
+
+  - id: "COD-02"
+    area: "06-coding-standards"
+    section: "configuration"
+    title: "No hardcoded domain config"
+    description: |
+      No inline dicts for instrument/venue/exchange mappings. No hardcoded date ranges, API URLs, or magic numbers.
+      VenueMapping from unified-trading-library used.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "semi-automated"
+    validator_id: "hardcoded_config_validator"
+    ssot_ref: "06-coding-standards/configuration-management.md"
+    automated_check: "validators/codex/hardcoded_config_validator.py"
+
+  - id: "COD-03"
+    area: "06-coding-standards"
+    section: "configuration"
+    title: "Configuration documented"
+    description: |
+      docs/CONFIGURATION.md documents all config options, env vars, config class structure, secret management, and
+      multi-cloud support.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P3"
+    criticality: "low"
+    automation_status: "manual"
+    validator_id: null
+    ssot_ref: "06-coding-standards/configuration-management.md"
+    automated_check: null
+
+  - id: "COD-20"
+    area: "06-coding-standards"
+    section: "configuration"
+    title: "No hardcoded project IDs"
+    description: |
+      No hardcoded '{project_id}' or other GCP project IDs in source code, tests, or scripts.
+      All sourced from config or env vars.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "cloud_agnostic_validator"
+    ssot_ref: "05-infrastructure/cloud-agnostic-migration.md"
+    automated_check: "validators/security/cloud_agnostic_validator.py"
+
+  # ==============================================================================
+  # SECTION 2: OBSERVABILITY & LOGGING
+  # ==============================================================================
+  # Items: OBS-01 through OBS-14
+  # Focus: Lifecycle events, logging setup, resource monitoring, alerting
+  # ==============================================================================
+
+  - id: "OBS-01"
+    area: "03-observability"
+    section: "logging"
+    title: "Standardized logging via setup_cloud_logging()"
+    description: |
+      Uses setup_cloud_logging() from unified-trading-library. JSON format enabled.
+      Third-party loggers suppressed to WARNING.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "semi-automated"
+    validator_id: "logging_setup_validator"
+    ssot_ref: "03-observability/README.md"
+    automated_check: "validators/data_pipeline/logging_setup_validator.py"
+
+  - id: "OBS-05"
+    area: "03-observability"
+    section: "lifecycle-events"
+    title: "All 11 lifecycle events implemented"
+    description: |
+      Service emits all required lifecycle events via log_event(): STARTED, VALIDATION_STARTED, VALIDATION_COMPLETED,
+      DATA_INGESTION_STARTED, DATA_INGESTION_COMPLETED, PROCESSING_STARTED, PROCESSING_COMPLETED, UPLOAD_STARTED,
+      UPLOAD_COMPLETED, STOPPED, FAILED.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "lifecycle_events_validator"
+    ssot_ref: "03-observability/lifecycle-events.md"
+    automated_check: "validators/data_pipeline/lifecycle_events_validator.py"
+
+  - id: "OBS-06"
+    area: "03-observability"
+    section: "lifecycle-events"
+    title: "test_event_logging.py exists and passes"
+    description: |
+      tests/unit/test_event_logging.py verifies all required lifecycle events are emitted.
+      Test must not be skipped or disabled.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "event_logging_test_validator"
+    ssot_ref: "03-observability/lifecycle-events.md"
+    automated_check: "validators/data_pipeline/event_logging_test_validator.py"
+
+  # ==============================================================================
+  # SECTION 3: DATA VALIDATION & QUALITY
+  # ==============================================================================
+  # Items: DAT-01 through DAT-20
+  # Focus: Schema validation, timestamp alignment, NaN handling, data completeness
+  # ==============================================================================
+
+  - id: "DAT-01"
+    area: "02-data"
+    section: "schema-validation"
+    title: "Schema-first design"
+    description: |
+      Output schemas are defined in schemas/output_schemas.py before data is produced.
+      Schema is the contract; code conforms to schema, not the other way around.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "semi-automated"
+    validator_id: "schema_first_validator"
+    ssot_ref: "02-data/schema-governance.md"
+    automated_check: "validators/data_pipeline/schema_first_validator.py"
+
+  - id: "DAT-02"
+    area: "02-data"
+    section: "schema-validation"
+    title: "Pre-upload schema validation"
+    description: |
+      GCS outputs validated against strict schema (ParquetSchemaEnforcer) before upload.
+      NaN in non-nullable columns logged as ERROR; invalid files skipped.
+    applies_to: "all"
+    mode: "batch"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "output_validation_validator"
+    ssot_ref: "02-data/schema-governance.md"
+    automated_check: "validators/data_pipeline/output_validation_validator.py"
+
+  - id: "DAT-03"
+    area: "02-data"
+    section: "schema-validation"
+    title: "Timestamp-date alignment validation"
+    description: |
+      Data timestamps validated against expected folder date before upload via validate_timestamp_date_alignment().
+      Misaligned data skipped.
+    applies_to: "all"
+    mode: "batch"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "timestamp_alignment_validator"
+    ssot_ref: "02-data/schema-governance.md"
+    automated_check: "validators/data_pipeline/timestamp_alignment_validator.py"
+
+  # ==============================================================================
+  # SECTION 4: ERROR HANDLING
+  # ==============================================================================
+  # Items: COD-04, COD-05, COD-06
+  # Focus: Unified error decorators, no bare except, proper exception handling
+  # ==============================================================================
+
+  - id: "COD-04"
+    area: "06-coding-standards"
+    section: "error-handling"
+    title: "Unified error handling decorators"
+    description: |
+      API calls use @handle_api_errors. Storage operations use @handle_storage_errors.
+      ErrorCategory/ErrorSeverity from unified-trading-library used. No bare except: clauses.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "error_handling_validator"
+    ssot_ref: "06-coding-standards/README.md#error-handling"
+    automated_check: "validators/codex/error_handling_validator.py"
+
+  - id: "COD-05"
+    area: "06-coding-standards"
+    section: "error-handling"
+    title: "No bare except clauses"
+    description: |
+      No bare 'except:' in any source file. No 'except Exception: pass' that silently swallows errors.
+      All exceptions catch specific types.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "no_bare_except_validator"
+    ssot_ref: "06-coding-standards/README.md#error-handling"
+    automated_check: "validators/codex/no_bare_except_validator.py"
+
+  # ==============================================================================
+  # SECTION 5: TESTING & QUALITY GATES
+  # ==============================================================================
+  # Items: COD-10 through COD-17, COD-21
+  # Focus: Unit/integration/e2e tests, coverage, quality gates, regression tests
+  # ==============================================================================
+
+  - id: "COD-10"
+    area: "06-coding-standards"
+    section: "testing"
+    title: "Unit tests exist"
+    description: |
+      tests/unit/ directory exists with meaningful coverage. Tests cover core business logic.
+      pytest runs without errors. Coverage > 30%.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "test_coverage_validator"
+    ssot_ref: "06-coding-standards/testing.md"
+    automated_check: "validators/codex/test_coverage_validator.py"
+
+  - id: "COD-14"
+    area: "06-coding-standards"
+    section: "quality-gates"
+    title: "Quality gate alignment"
+    description: |
+      Quality gates identical across local (scripts/quality-gates.sh), GitHub Actions, and Cloud Build.
+      Same Python version, same checks, same ruff rules. No || true bypasses.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "quality_gate_alignment_validator"
+    ssot_ref: "06-coding-standards/quality-gates.md"
+    automated_check: "validators/codex/quality_gate_alignment_validator.py"
+
+  - id: "COD-16"
+    area: "06-coding-standards"
+    section: "quality-gates"
+    title: "Quality gates pass"
+    description: |
+      bash scripts/quality-gates.sh --no-fix passes. All linting, formatting, and tests pass.
+      Failure blocks image build.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "quality_gates_pass_validator"
+    ssot_ref: "06-coding-standards/quality-gates.md"
+    automated_check: "validators/codex/quality_gates_pass_validator.py"
+
+  - id: "COD-21"
+    area: "06-coding-standards"
+    section: "testing"
+    title: "Regression tests for known-fixed bugs"
+    description: |
+      When a bug is fixed, a regression test is added that reproduces the original bug.
+      Test naming: test_regression_{issue_number}_{description}
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P2"
+    criticality: "medium"
+    automation_status: "manual"
+    validator_id: null
+    ssot_ref: "06-coding-standards/testing.md"
+    automated_check: null
+
+  # ==============================================================================
+  # SECTION 6: SECURITY & CREDENTIALS
+  # ==============================================================================
+  # Items: SEC-01 through SEC-07
+  # Focus: Secrets management, no hardcoded credentials, least-privilege IAM
+  # ==============================================================================
+
+  - id: "SEC-01"
+    area: "07-security"
+    section: "secrets"
+    title: "Secrets via get_secret_client()"
+    description: |
+      All secrets accessed via get_secret_client() or get_secret_client() from unified-trading-library.
+      No hardcoded API keys, tokens, or passwords in source code.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "secrets_management_validator"
+    ssot_ref: "07-security/secrets-management.md"
+    automated_check: "validators/security/secrets_management_validator.py"
+
+  - id: "SEC-02"
+    area: "07-security"
+    section: "secrets"
+    title: ".env.example has no actual secret values"
+    description: |
+      .env.example contains secret NAMES and placeholder descriptions only.
+      No actual API keys, tokens, passwords, or connection strings.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "safe_env_files_validator"
+    ssot_ref: "07-security/secrets-management.md"
+    automated_check: "validators/security/safe_env_files_validator.py"
+
+  - id: "SEC-05"
+    area: "07-security"
+    section: "credentials"
+    title: "No hardcoded credentials in code"
+    description: |
+      No API keys, bearer tokens, connection strings, or passwords in any .py file.
+      Secrets always resolved at runtime from Secret Manager or env vars.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P0"
+    criticality: "critical"
+    automation_status: "automated"
+    validator_id: "no_hardcoded_credentials_validator"
+    ssot_ref: "07-security/secrets-management.md"
+    automated_check: "validators/security/no_hardcoded_credentials_validator.py"
+
+  # ==============================================================================
+  # SECTION 7: INFRASTRUCTURE & DEPLOYMENT
+  # ==============================================================================
+  # Items: INF-01 through INF-15
+  # Focus: Dockerfile, cloudbuild.yaml, Terraform, deploy scripts
+  # ==============================================================================
+
+  - id: "INF-04"
+    area: "05-infrastructure"
+    section: "docker"
+    title: "Dockerfile exists (multi-stage)"
+    description: |
+      Dockerfile at repo root. Multi-stage build for smaller image. Non-root user.
+      unified-trading-library installed correctly.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "semi-automated"
+    validator_id: "dockerfile_validator"
+    ssot_ref: "05-infrastructure/ci-cd.md"
+    automated_check: "validators/infrastructure/dockerfile_validator.py"
+
+  - id: "INF-05"
+    area: "05-infrastructure"
+    section: "cloud-agnostic"
+    title: "Cloud-agnostic design"
+    description: |
+      Uses get_storage_client(), get_secret_client() from unified-trading-library.
+      No direct google.cloud imports in production code. No hardcoded GCP project IDs.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "cloud_agnostic_validator"
+    ssot_ref: "05-infrastructure/cloud-agnostic-migration.md"
+    automated_check: "validators/security/cloud_agnostic_validator.py"
+
+  - id: "INF-08"
+    area: "05-infrastructure"
+    section: "ci-cd"
+    title: "Cloud Build config"
+    description: |
+      cloudbuild.yaml exists. Runs quality gates before Docker build.
+      Builds image and pushes to Artifact Registry.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "semi-automated"
+    validator_id: "cloudbuild_validator"
+    ssot_ref: "05-infrastructure/ci-cd.md"
+    automated_check: "validators/infrastructure/cloudbuild_validator.py"
+
+  # ==============================================================================
+  # SECTION 8: ARCHITECTURE & SHARDING
+  # ==============================================================================
+  # Items: ARC-01 through ARC-11
+  # Focus: Pipeline DAG, sharding config, batch-live symmetry, compute resources
+  # ==============================================================================
+
+  - id: "ARC-02"
+    area: "04-architecture"
+    section: "sharding"
+    title: "Sharding config exists"
+    description: |
+      configs/sharding.{service}.yaml exists with dimensions, CLI args, and compute recommendations defined.
+    applies_to: "pipeline"
+    mode: "batch"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "sharding_config_validator"
+    ssot_ref: "04-architecture/batch-live-symmetry.md"
+    ssot_file: "deployment-service/configs/sharding.{service}.yaml"
+    automated_check: "validators/architecture/sharding_config_validator.py"
+
+  - id: "ARC-11"
+    area: "04-architecture"
+    section: "batch-live-symmetry"
+    title: "Batch-live symmetry"
+    description: |
+      Service supports --mode batch|live with shared engine; mode-specific logic isolated to adapter seams only.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P2"
+    criticality: "medium"
+    automation_status: "semi-automated"
+    validator_id: "batch_live_symmetry_validator"
+    ssot_ref: "04-architecture/batch-live-symmetry.md"
+    automated_check: "validators/architecture/batch_live_symmetry_validator.py"
+
+  # ==============================================================================
+  # SECTION 9: MVP & SERVICE CLASSIFICATION
+  # ==============================================================================
+  # Items: Service metadata, MVP coverage, classification
+  # Focus: service-registry.yaml, mvp-universe.yaml alignment
+  # ==============================================================================
+
+  - id: "BASE-19"
+    area: "11-project-management"
+    section: "classification"
+    title: "Service classification metadata complete"
+    description: |
+      Service registry entry includes:
+      - deployment_type: standalone, bundled, library
+      - mode_support: batch, live, both
+      - ui_type: observability, control, analysis, none
+      - sharding_dimensions: category, venue, date, instrument_type, etc.
+    applies_to: "all"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P2"
+    criticality: "medium"
+    automation_status: "automated"
+    validator_id: "service_classification_validator"
+    ssot_ref: "11-project-management/service-registry.yaml"
+    ssot_file: "unified-trading-codex/11-project-management/service-registry.yaml"
+    automated_check: "validators/classification/service_classification_validator.py"
+
+  - id: "BASE-22"
+    area: "11-project-management"
+    section: "mvp-coverage"
+    title: "MVP data coverage validated"
+    description: |
+      Service supports MVP universe per mvp-universe.yaml:
+      - Instruments: BTC, ETH
+      - CEFI venues: BINANCE-SPOT, BINANCE-FUTURES, OKX, UPBIT, COINBASE, HYPERLIQUID, ASTER
+      - DeFi venues: AAVEV3_ETHEREUM, UNISWAP_V3_ETH, COMPOUND_V3_ETH
+      - TradFi venues: CME, CBOE, NYSE
+    applies_to: "pipeline"
+    mode: "both"
+    status: "not_assessed"
+    evidence: ""
+    notes: ""
+    priority: "P1"
+    criticality: "high"
+    automation_status: "automated"
+    validator_id: "mvp_coverage_validator"
+    ssot_ref: "11-project-management/mvp-universe.yaml"
+    ssot_file: "unified-trading-codex/11-project-management/mvp-universe.yaml"
+    automated_check: "validators/classification/mvp_coverage_validator.py"
+# ==============================================================================
+# Summary
+# ==============================================================================
+# This enhanced template includes 38 representative items (out of 110 total)
+# organized into 9 sections for easier navigation and assessment.
+#
+# Each item now includes:
+#   - validator_id: Which automated validator checks this (if automated)
+#   - ssot_ref: Single source of truth reference (codex doc or config file)
+#   - automation_status: Level of automation (automated/semi-automated/manual)
+#   - criticality: Impact level (critical/high/medium/low)
+#   - automated_check: Path to validator script (if automated)
+#
+# For the complete 110-item checklist, see _checklist-template.yaml
+# ==============================================================================

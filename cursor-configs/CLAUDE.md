@@ -26,7 +26,7 @@ Read these before making ANY code changes:
 1. `.cursorrules` — workspace standards (uv not pip, quickmerge not git push, etc.)
 2. `.cursor/rules/no-empty-fallbacks.mdc` — no try/except fallback imports
 3. `.cursor/rules/no-type-any-use-specific.mdc` — no Any types
-4. `unified-trading-codex/06-coding-standards/README.md` — coding standards
+4. `unified-trading-pm/codex/06-coding-standards/README.md` — coding standards
 5. `unified-trading-pm/plans/PLAN_FORMAT.md` — plan format; **Cursor checkboxes** (`- [x]` / `- [ ]`) required on every
    todo
 
@@ -239,7 +239,7 @@ bash unified-trading-pm/scripts/dev/dev-status.sh                     # check st
 
 Health page: `http://localhost:3000/health` — auto-detects tier, checks all connectors.
 
-Runtime tiers documented in `unified-trading-codex/05-infrastructure/runtime-tiers-and-deployment.md`.
+Runtime tiers documented in `unified-trading-pm/codex/05-infrastructure/runtime-tiers-and-deployment.md`.
 
 ### 5 Mode Axes
 
@@ -278,7 +278,7 @@ bash unified-trading-pm/scripts/dev/dev-start.sh --reset     # wipe cache + star
 UIs on ports 5173-5183, APIs on 8004-8016. Port registry SSOT: `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
 Vitest must use `pool: "forks"` (not threads) to prevent zombie node processes.
 
-Full guide: `unified-trading-codex/08-workflows/local-dev.md`
+Full guide: `unified-trading-pm/codex/08-workflows/local-dev.md`
 
 ## This is a Multi-Repo Workspace (NOT a monorepo)
 
@@ -294,10 +294,12 @@ approach is wrong, FIX it. Never work around it.
 
 Key repo mapping: events → `unified-events-interface`, schemas → `unified-api-contracts` (external + internal via
 `unified_api_contracts.internal`), cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data →
-`unified-market-interface`, execution (CeFi/DeFi/sports/position) → `execution-service`, reference data →
-`instruments-service`, domain utils → `unified-domain-client` / `unified-trading-library`, features →
-`unified-features-interface` / `unified-feature-orchestration-library`, sports reference →
-`unified-sports-reference-interface`, UI → check existing 13 UIs first.
+`unified-market-interface`, execution (CeFi/DeFi/sports) → `execution-service`, position →
+`position-balance-monitor-service`, reference data → `instruments-service` (URDI still exists as library; sports/
+sub-package in URDI), domain utils / ML / feature orchestration / feature calculators → `unified-trading-library`
+(domain_client/, ml/, feature_service_base/, feature_calculator/ sub-packages), features → `unified-features-interface`,
+sports reference → `unified-reference-data-interface` (sports/ sub-package), execution algos / matching engine →
+`execution-service` (algo_library/, matching_engine/ sub-packages), UI → check existing 13 UIs first.
 
 **Citadel Import Rules (UAC):** All consumer repos import from UAC domain facades only
 (`from unified_api_contracts.{domain} import ...`). Never import from `unified_api_contracts.canonical.*` or
@@ -361,7 +363,7 @@ Every plan MUST declare explicit success criteria per phase:
 
 ### 6. Downstream Consumer Updates
 
-When modifying shared libraries (UAC, UTL, UCI, UEI, UDC):
+When modifying shared libraries (UAC, UTL, UCI, UEI):
 
 - Pre-audit identifies EVERY downstream consumer
 - Plan includes explicit fix items for each affected repo
@@ -454,4 +456,4 @@ dirs), `normalize_utils/` (internal), `registry/`, root facades (market.py, exec
 
 **Import rules**: Services use `from unified_api_contracts import X` or `from unified_api_contracts.{domain} import X`.
 Deep paths (`canonical.*`, `normalize_utils.*`) are UAC-internal only. SSOT:
-`unified-trading-codex/02-data/contracts-scope-and-layout.md`
+`unified-trading-pm/codex/02-data/contracts-scope-and-layout.md`

@@ -274,9 +274,11 @@ def get_tier_map(manifest: JsonDict) -> dict[str, int]:
 
 # Repos exempt from tier violation checks — these have documented bootstrap exceptions.
 # deployment-service: directly uses cloud/config/events for infrastructure orchestration.
-TIER_EXEMPT_REPOS: frozenset[str] = frozenset({
-    "deployment-service",
-})
+TIER_EXEMPT_REPOS: frozenset[str] = frozenset(
+    {
+        "deployment-service",
+    }
+)
 
 
 def is_tier_violation(repo: str, dep: str, tier_map: dict[str, int]) -> bool:

@@ -1,0 +1,1444 @@
+registry_version: "2.0"
+# Product surface SSOT: unified-trading-pm/workspace-manifest.json + scripts/dev/ui-api-mapping.json
+# Split UIs and repos listed under workspace-root archive/README.md are ARCHIVED — not in manifest repositories.
+last_updated: "2026-03-24"
+total_services: 37
+architecture_changes:
+  - Removed reconciliation-service (integrated into position-balance-monitor-service)
+  - "Merged risk-monitor-service + exposure-monitor-service \u2192 risk-and-exposure-service"
+  - Added 5 unified libraries (events, config, market, order, execution-algo)
+  - Added market-tick-data-service (market data ingestion)
+  - "2026-03: Active product UIs \u2192 unified-trading-system-ui + deployment-ui; split UIs (live-health-monitor-ui,
+    batch-audit-ui, etc.) ARCHIVED \u2014 reference only; see workspace-root archive/README.md"
+services:
+  - service: instruments-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P1-high
+    milestone: TechReadiness
+    pipeline_metadata:
+      layer: 1
+      group: data-io
+      upstream_dependencies: []
+      output_bucket: gs://instruments-data
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - COINBASE
+        - AAVEV3_ETHEREUM
+        - UNISWAPV3-ETHEREUM
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/instruments/batch.env
+        - configs/instruments/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+        - EXCHANGE_API_KEYS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 40
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+  # NOTE: corporate-actions is NOT a standalone repo. It is the corporate-actions domain within instruments-service.
+  # See instruments-service/corporate_actions/ — batch-only, TRADFI equities + CEFI events.
+  # The entry below tracks the domain's readiness, not a separate service deployment.
+  - service: instruments-service (corporate-actions domain)
+    type: pipeline
+    owner_default: Harsh
+    priority: P3-low
+    milestone: Commercialization
+    pipeline_metadata:
+      layer: 1
+      group: data-io
+      upstream_dependencies:
+        - instruments-service
+      output_bucket: gs://corporate-actions-data
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - TRADFI_EQUITIES
+        - CRYPTO_CEFI
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: false
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/corporate-actions/batch.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 10
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+  - service: features-calendar-service
+    type: pipeline
+    owner_default: Femi
+    priority: P3-low
+    milestone: Commercialization
+    pipeline_metadata:
+      layer: 1
+      group: data-io
+      upstream_dependencies: []
+      output_bucket: gs://features-calendar
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/features-calendar/batch.env
+        - configs/features-calendar/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 15
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+  - service: market-tick-data-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P1-high
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 2
+      group: market-data
+      upstream_dependencies:
+        - instruments-service
+      output_bucket: gs://market-tick-data
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - COINBASE
+        - AAVEV3_ETHEREUM
+        - UNISWAPV3-ETHEREUM
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+      feature_groups:
+        - raw_ticks
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/market-tick-data-service/batch.env
+        - configs/market-tick-data-service/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+        - EXCHANGE_API_KEYS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 35
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      latency_target: <1s
+  - service: market-data-processing-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P1-high
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 3
+      group: market-data
+      upstream_dependencies:
+        - instruments-service
+        - market-tick-data-service
+      output_bucket: gs://market-data-processed
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - COINBASE
+        - AAVEV3_ETHEREUM
+        - UNISWAPV3-ETHEREUM
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+      feature_groups:
+        - candles
+        - orderbook_snapshots
+      timeframes:
+        - 1m
+        - 5m
+        - 15m
+        - 1h
+        - 1d
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/market-data-processing/batch.env
+        - configs/market-data-processing/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 45
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      latency_target: <2s
+  - service: features-delta-one-service
+    type: pipeline
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 4
+      group: features
+      upstream_dependencies:
+        - market-data-processing-service
+        - features-calendar-service
+      output_bucket: gs://features-delta-one
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - COINBASE
+      asset_classes:
+        - CRYPTO_CEFI
+      feature_groups:
+        - basis
+        - spread
+        - funding
+        - yield
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/features-delta-one/batch.env
+        - configs/features-delta-one/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 30
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+    supports:
+      products:
+        - delta-one-crypto
+      strategies:
+        - basis-arb
+        - funding-arb
+  - service: features-volatility-service
+    type: pipeline
+    owner_default: Femi
+    priority: P3-low
+    milestone: Commercialization
+    pipeline_metadata:
+      layer: 4
+      group: features
+      upstream_dependencies:
+        - market-data-processing-service
+      output_bucket: gs://features-volatility
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - DERIBIT
+        - CME
+      asset_classes:
+        - CRYPTO_CEFI
+        - TRADFI_OPTIONS
+      feature_groups:
+        - iv_surface
+        - greeks
+        - term_structure
+        - skew
+    data_coverage:
+      start_date: "2021-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/features-volatility/batch.env
+        - configs/features-volatility/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 20
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      latency_target: 1-min
+    supports:
+      products:
+        - volatility-arb
+        - options-strategies
+      strategies:
+        - vol-surface-arb
+  - service: features-onchain-service
+    type: pipeline
+    owner_default: Harsh
+    priority: P2-medium
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 4
+      group: features
+      upstream_dependencies:
+        - market-data-processing-service
+      output_bucket: gs://features-onchain
+    domain_coverage:
+      venues:
+        - AAVEV3_ETHEREUM
+        - UNISWAPV3-ETHEREUM
+        - COMPOUND_V3_ETH
+      asset_classes:
+        - DEFI
+      feature_groups:
+        - tvl
+        - liquidity_depth
+        - health_factor
+        - gas_prices
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/features-onchain/batch.env
+        - configs/features-onchain/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+        - THE_GRAPH_API_KEY
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 25
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+    supports:
+      products:
+        - defi-yield
+        - defi-arb
+      strategies:
+        - defi-arb
+  - service: features-sports-service
+    type: pipeline
+    owner_default: Harsh
+    priority: P2-medium
+    milestone: SportsBetting
+    pipeline_metadata:
+      layer: 4
+      group: features
+      upstream_dependencies:
+        - instruments-service
+        - market-data-processing-service
+      output_bucket: gs://features-sports
+    domain_coverage:
+      venues:
+        - POLYMARKET
+        - BETFAIR
+        - PINNACLE
+      asset_classes:
+        - SPORTS
+      feature_groups:
+        - team_features
+        - odds_features
+        - h2h_features
+        - league_features
+        - context_features
+        - lineup_features
+        - weather_features
+        - halftime_features
+        - referee_features
+        - venue_features
+        - season_features
+        - advanced_stats
+        - xg_features
+        - poisson_features
+        - goal_timing
+        - halftime_patterns
+        - shots_features
+        - possession_features
+        - pressing_features
+      horizons:
+        - t24h
+        - t60m
+        - t0
+        - ht
+      leagues_tier_1:
+        - ENG-PREMIER_LEAGUE
+        - GER-BUNDESLIGA
+        - ESP-LA_LIGA
+        - ITA-SERIE_A
+        - FRA-LIGUE_1
+      leagues_tier_2:
+        - UEFA-CHAMPIONS_LEAGUE
+        - UEFA-EUROPA_LEAGUE
+        - ENG-CHAMPIONSHIP
+        - NED-EREDIVISIE
+        - POR-PRIMEIRA_LIGA
+    data_coverage:
+      start_date: "2018-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/features-sports/batch.env
+        - configs/features-sports/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+        - ODDS_API_KEY
+        - API_FOOTBALL_KEY
+        - BETFAIR_SESSION_TOKEN
+        - PINNACLE_API_KEY
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 0
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+    supports:
+      products:
+        - sports-betting-arb
+        - sports-ml-signals
+        - sports-value-betting
+      strategies:
+        - sports-arb
+        - sports-value-betting
+        - sports-kelly
+  - service: ml-training-service
+    type: pipeline
+    owner_default: CosmicTrader
+    priority: P2-medium
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 5
+      group: ml
+      upstream_dependencies:
+        - features-delta-one-service
+        - features-volatility-service
+        - features-onchain-service
+      output_bucket: gs://ml-models
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: false
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/ml-training/batch.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 25
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+    supports:
+      products:
+        - ml-signals
+      strategies:
+        - ml-based-strategies
+  - service: ml-inference-service
+    type: pipeline
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Live90
+    pipeline_metadata:
+      layer: 5
+      group: ml
+      upstream_dependencies:
+        - ml-training-service
+        - features-delta-one-service
+        - features-volatility-service
+        - features-onchain-service
+      output_bucket: gs://ml-predictions
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/ml-inference/batch.env
+        - configs/ml-inference/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 20
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      latency_target: <500ms
+  - service: strategy-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P1-high
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 6
+      group: strategy-execution
+      upstream_dependencies:
+        - ml-inference-service
+        - features-delta-one-service
+        - features-volatility-service
+        - features-onchain-service
+      output_bucket: gs://strategy-signals
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/strategy/batch.env
+        - configs/strategy/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 50
+      test_coverage_target: 85
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      latency_target: <1s
+    supports:
+      products:
+        - delta-one-crypto
+        - defi-arb
+        - volatility-arb
+      strategies:
+        - basis-arb
+        - funding-arb
+        - defi-arb
+        - vol-surface-arb
+  - service: execution-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P0-critical
+    milestone: Live90
+    pipeline_metadata:
+      layer: 6
+      group: strategy-execution
+      upstream_dependencies:
+        - strategy-service
+      output_bucket: gs://execution-logs
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - COINBASE
+        - AAVEV3_ETHEREUM
+        - UNISWAPV3-ETHEREUM
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/execution/batch.env
+        - configs/execution/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+        - EXCHANGE_API_KEYS
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 55
+      test_coverage_target: 90
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      latency_target: <100ms
+    supports:
+      products:
+        - ALL
+      strategies:
+        - ALL
+  - service: position-balance-monitor-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P0-critical
+    milestone: Live90
+    pipeline_metadata:
+      layer: 7
+      group: post-trade
+      upstream_dependencies:
+        - execution-service
+      downstream_consumers:
+        - strategy-service
+        - risk-and-exposure-service
+        - pnl-attribution-service
+      output_bucket: gs://position-balance-snapshots
+    notes: "**Source of truth** for positions. Tracks positions from fills, queries account state
+
+      via unified-order-interface, reconciles with exchange APIs, provides position state API.
+
+      Replaced standalone reconciliation-service (functionality integrated here).
+
+      "
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/position-balance-monitor-service/batch.env
+        - configs/position-balance-monitor-service/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+        - EXCHANGE_API_KEYS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 0
+      test_coverage_target: 85
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+  - service: risk-and-exposure-service
+    type: pipeline
+    owner_default: Ikenna
+    priority: P0-critical
+    milestone: Live90
+    pipeline_metadata:
+      layer: 7
+      group: post-trade
+      upstream_dependencies:
+        - position-balance-monitor-service
+      output_bucket: gs://risk-and-exposure-metrics
+    notes: "**Consolidated risk + exposure monitoring**. Provides pre-trade risk checks (reject
+
+      instructions violating limits) and real-time risk monitoring (exposure aggregation,
+
+      limit monitoring, breach alerting). Merged risk-monitor-service + exposure-monitor-service.
+
+      "
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/risk-and-exposure/batch.env
+        - configs/risk-and-exposure/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 0
+      test_coverage_target: 85
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+  - service: pnl-attribution-service
+    type: pipeline
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Batch85
+    pipeline_metadata:
+      layer: 7
+      group: post-trade
+      upstream_dependencies:
+        - execution-service
+        - position-balance-monitor-service
+      output_bucket: gs://pnl-attribution
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    data_coverage:
+      start_date: "2020-01-01"
+      end_date: null
+      batch_mode: true
+      live_mode: true
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/pnl-attribution/batch.env
+        - configs/pnl-attribution/live.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 15
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+  - service: unified-trading-library
+    type: platform
+    owner_default: Ikenna
+    priority: P0-critical
+    milestone: TechReadiness
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: false
+      config_paths: []
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - SECRET_MANAGER_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+      deployment:
+        github_token_required: false
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 60
+      test_coverage_target: 85
+      coding_standards_compliant: true
+      cloud_compatibility:
+        - GCP
+        - AWS
+    operational_status:
+      is_operational: true
+      has_sharding: false
+      reason: Library - imported by other services, no standalone deployment
+  # unified-trading-deployment-v3: ARCHIVED 2026-03-03. Split into deployment-service +
+  # deployment-api + deployment-ui + system-integration-tests. See removedEntries in workspace-manifest.json.
+  - service: unified-trading-codex
+    type: platform
+    owner_default: Ikenna
+    priority: P1-high
+    milestone: TechReadiness
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: false
+      config_paths: []
+      credentials: []
+      deployment:
+        github_token_required: false
+        cloud_build_auth: N/A
+    readiness:
+      test_coverage: 0
+      test_coverage_target: 0
+      coding_standards_compliant: true
+      cloud_compatibility:
+        - N/A
+    operational_status:
+      is_operational: true
+      has_sharding: false
+      reason: Platform service - different deployment pattern
+  - service: exchange-interface-library
+    type: platform
+    owner_default: Ikenna
+    priority: P2-medium
+    milestone: Commercialization
+    domain_coverage:
+      venues:
+        - BINANCE-SPOT
+        - BINANCE-FUTURES
+        - COINBASE
+        - AAVEV3_ETHEREUM
+        - UNISWAPV3-ETHEREUM
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+    infrastructure:
+      has_ui: false
+      config_paths: []
+      credentials:
+        - EXCHANGE_API_KEYS
+      deployment:
+        github_token_required: false
+        cloud_build_auth: N/A
+    readiness:
+      test_coverage: 40
+      test_coverage_target: 80
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - ALL
+  - service: alerting-service
+    type: platform
+    owner_default: Harsh
+    priority: P1-high
+    milestone: Live90
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: false
+      config_paths:
+        - configs/alerting/prod.env
+      credentials:
+        - GCS_BUCKET_ACCESS
+        - BIGQUERY_DATASET_ACCESS
+        - SLACK_WEBHOOK
+        - PAGERDUTY_API_KEY
+      deployment:
+        github_token_required: true
+        cloud_build_auth: service-account
+    readiness:
+      test_coverage: 25
+      test_coverage_target: 75
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+    operational_status:
+      is_operational: true
+      has_sharding: false
+      reason: Platform service - different deployment pattern
+  - service: unified-trading-system-ui
+    type: ui-platform
+    owner_default: Ikenna
+    priority: P0-critical
+    milestone: Live90
+    ui_metadata:
+      category: consolidated-product
+      purpose: Primary trading and operations UI — consolidates capabilities formerly split across archived UIs
+      tech_stack:
+        - React
+        - TypeScript
+        - Vite
+      backend_apis:
+        - unified-trading-api
+        - auth-api
+        - deployment-api
+        - client-reporting-api
+      has_control_features: true
+      deployment_type: cloud_run_or_static
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: unified-trading-system-ui/
+      config_paths: []
+      credentials:
+        - OKTA_SSO_CLIENT
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 0
+      test_coverage_target: 70
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: true
+    operational_status:
+      is_operational: true
+      has_sharding: false
+      reason: Canonical product UI — ports and API pairings in unified-trading-pm/scripts/dev/ui-api-mapping.json
+  - service: deployment-ui
+    type: ui-observability
+    owner_default: Ikenna
+    priority: P1-high
+    milestone: Live90
+    ui_metadata:
+      category: observability
+      purpose: Deployment orchestration, Cloud Build triggers, service status, config (pairs with deployment-api)
+      tech_stack:
+        - React
+        - TypeScript
+      backend_apis:
+        - deployment-api
+      has_control_features: true
+      deployment_type: cloud_run_or_static
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: deployment-ui/
+      config_paths: []
+      credentials:
+        - GOOGLE_OAUTH_CLIENT
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 0
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: true
+    operational_status:
+      is_operational: true
+      has_sharding: false
+      reason: Active ops UI — pairs with deployment-api per ui-api-mapping.json
+  # --- ARCHIVED — reference only (workspace-root archive/README.md; not in workspace-manifest repositories) ---
+  - service: live-health-monitor-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-observability
+    owner_default: Harsh
+    priority: P1-high
+    milestone: Live90
+    ui_metadata:
+      category: observability
+      purpose: Real-time P&L, risk, positions, alerts + trading control tab
+      tech_stack:
+        - React
+        - TypeScript
+        - WebSocket
+        - Okta SSO
+      backend_apis:
+        - strategy-service
+        - execution-service
+        - position-balance-monitor-service
+        - risk-and-exposure-service
+      has_control_features: true
+      deployment_type: cloud_run
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: live-health-monitor-ui/
+      config_paths:
+        - configs/live-health-monitor-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 20
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: true
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: batch-audit-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-observability
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Batch85
+    ui_metadata:
+      category: observability
+      purpose: Batch job monitoring, quality metrics, data completeness audits
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - unified-trading-library
+      has_control_features: false
+      deployment_type: gcs_static_cdn
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: batch-audit-ui/
+      config_paths:
+        - configs/batch-audit-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 15
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: logs-dashboard-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-observability
+    owner_default: Harsh
+    priority: P2-medium
+    milestone: Live90
+    ui_metadata:
+      category: observability
+      purpose: Centralized log search, filtering, analysis
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - unified-trading-library
+      has_control_features: false
+      deployment_type: gcs_static_cdn
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: logs-dashboard-ui/
+      config_paths:
+        - configs/logs-dashboard-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 10
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: ml-training-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-control
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Batch85
+    ui_metadata:
+      category: control
+      purpose: ML model deployment, version management, A/B testing, rollback
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - ml-training-service
+        - ml-inference-service
+      has_control_features: true
+      deployment_type: cloud_run
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: ml-training-ui/
+      config_paths:
+        - configs/ml-training-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 10
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: true
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: execution-analytics-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-analysis
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Batch85
+    ui_metadata:
+      category: analysis
+      purpose: Strategy/execution backtesting, result analysis, parameter tuning
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - strategy-service
+        - execution-service
+      has_control_features: false
+      deployment_type: cloud_run
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - CRYPTO_CEFI
+        - DEFI
+    infrastructure:
+      has_ui: true
+      ui_path: execution-analytics-ui/
+      config_paths:
+        - configs/execution-analytics-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 15
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: trading-analytics-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-analysis
+    owner_default: Femi
+    priority: P2-medium
+    milestone: Commercialization
+    ui_metadata:
+      category: analysis
+      purpose: P&L attribution, Sharpe ratio, win rate, trade history analytics
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - pnl-attribution-service
+        - execution-service
+      has_control_features: false
+      deployment_type: gcs_static_cdn
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: trading-analytics-ui/
+      config_paths:
+        - configs/trading-analytics-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 10
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: settlement-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-analysis
+    owner_default: Harsh
+    priority: P3-low
+    milestone: Commercialization
+    ui_metadata:
+      category: analysis
+      purpose: Settlement reports, cash flows, fee breakdown
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - position-balance-monitor-service
+        - execution-service
+      has_control_features: false
+      deployment_type: gcs_static_cdn
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: settlement-ui/
+      config_paths:
+        - configs/settlement-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 5
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: client-reporting-ui
+    archived: true
+    archive_note: "ARCHIVED — reference only. See workspace-root archive/README.md."
+    type: ui-analysis
+    owner_default: Femi
+    priority: P3-low
+    milestone: Commercialization
+    ui_metadata:
+      category: analysis
+      purpose: Client performance reports, portfolio analytics, statements
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - pnl-attribution-service
+        - position-balance-monitor-service
+      has_control_features: false
+      deployment_type: gcs_static_cdn
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: client-reporting-ui/
+      config_paths:
+        - configs/client-reporting-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 5
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+  - service: strategy-onboarding-ui
+    archived: true
+    archive_note:
+      "ARCHIVED — reference only. See workspace-root archive/README.md (onboarding-ui / strategy-ui lineage)."
+    type: ui-analysis
+    owner_default: Ikenna
+    priority: P3-low
+    milestone: Commercialization
+    ui_metadata:
+      category: analysis
+      purpose: Strategy configuration, parameter input, onboarding wizard
+      tech_stack:
+        - React
+        - TypeScript
+        - Okta SSO
+      backend_apis:
+        - strategy-service
+      has_control_features: false
+      deployment_type: cloud_run
+    domain_coverage:
+      venues:
+        - ALL
+      asset_classes:
+        - ALL
+    infrastructure:
+      has_ui: true
+      ui_path: strategy-onboarding-ui/
+      config_paths:
+        - configs/strategy-onboarding-ui/prod.env
+      credentials:
+        - OKTA_SSO_CLIENT
+        - SERVICE_ACCOUNT
+      deployment:
+        github_token_required: false
+        cloud_build_auth: workload-identity
+    readiness:
+      test_coverage: 5
+      test_coverage_target: 60
+      coding_standards_compliant: false
+      cloud_compatibility:
+        - GCP
+      enhanced_auth: false
+    operational_status:
+      is_operational: false
+      has_sharding: false
+      reason: "ARCHIVED — reference only; see workspace-root archive/README.md"
+production_services: 25
+metadata:
+  archive_reference_ssot:
+    "Workspace-root archive/README.md — archived Git repos and scratch trees; excluded from
+    unified-trading-pm/workspace-manifest.json repositories."
+  excluded_from_production:
+    - build_issues.md
+    - docs
+    - execution_service (legacy naming)
+    - mr_report
+    - one-time-scripts
+    - phase_2
+    - presentations
+    - scripts (workspace-level)
+    - temp
+    - sports-betting-services
+    - archive

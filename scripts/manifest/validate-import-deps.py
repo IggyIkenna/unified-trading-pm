@@ -24,24 +24,11 @@ WORKSPACE = Path(__file__).resolve().parents[3]  # workspace root
 INTERNAL_PACKAGES: dict[str, str] = {
     "unified_trading_library": "unified-trading-library",
     "unified_api_contracts": "unified-api-contracts",
-    "unified_api_contracts.internal": "unified-internal-contracts",
     "unified_trading_library.cloud_interface": "unified-cloud-interface",
     "unified_trading_library.config_interface": "unified-config-interface",
     "unified_trading_library.events_interface": "unified-events-interface",
     "unified_market_interface": "unified-market-interface",
-    "instruments_service.reference_data": "unified-reference-data-interface",
-    "unified_trade_execution_interface": "unified-trade-execution-interface",
-    "unified_defi_execution_interface": "unified-defi-execution-interface",
-    "unified_sports_execution_interface": "unified-sports-execution-interface",
-    "unified_sports_reference_interface": "unified-sports-reference-interface",
-    "position_balance_monitor_service.position_interface": "unified-position-interface",
-    "unified_features_interface": "unified-features-interface",
-    "unified_feature_calculator_library": "unified-feature-calculator-library",
-    "unified_feature_orchestration_library": "unified-feature-orchestration-library",
-    "unified_ml_interface": "unified-ml-interface",
-    "unified_domain_client": "unified-domain-client",
-    "matching_engine_library": "matching-engine-library",
-    "execution_algo_library": "execution-algo-library",
+    "unified_reference_data_interface": "unified-reference-data-interface",
 }
 
 # =========================================================================
@@ -58,40 +45,27 @@ BANNED_DIRECT_IMPORTS: frozenset[str] = frozenset(
 # Per-service allowed direct deps (beyond UTL/UAC/UIC)
 # deployment-service is fully exempt — not listed here, handled by EXEMPT_REPOS
 ALLOWED_DIRECT_DEPS: dict[str, frozenset[str]] = {
-    "instruments-service": frozenset({"instruments_service.reference_data"}),
+    "instruments-service": frozenset({"unified_reference_data_interface"}),
     "market-tick-data-service": frozenset({"unified_market_interface"}),
     "market-data-processing-service": frozenset({"unified_market_interface"}),
     "features-sports-service": frozenset(
         {
             "unified_market_interface",
-            "unified_sports_reference_interface",
-            "unified_feature_calculator_library",
-            "unified_features_interface",
-            "unified_feature_orchestration_library",
+            "unified_reference_data_interface",
         }
     ),
-    "features-calendar-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "features-commodity-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "features-cross-instrument-service": frozenset(
-        {"unified_feature_calculator_library", "unified_features_interface"}
-    ),
-    "features-delta-one-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "features-multi-timeframe-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "features-onchain-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "features-volatility-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "execution-service": frozenset(
-        {
-            "unified_trade_execution_interface",
-            "unified_defi_execution_interface",
-            "unified_sports_execution_interface",
-            "execution_algo_library",
-            "matching_engine_library",
-        }
-    ),
-    "ml-inference-service": frozenset({"unified_ml_interface"}),
-    "ml-training-service": frozenset({"unified_ml_interface", "unified_feature_calculator_library"}),
-    "position-balance-monitor-service": frozenset({"position_balance_monitor_service.position_interface"}),
-    "strategy-service": frozenset({"unified_domain_client"}),
+    "features-calendar-service": frozenset(set()),
+    "features-commodity-service": frozenset({"unified_api_contracts"}),
+    "features-cross-instrument-service": frozenset({"unified_api_contracts"}),
+    "features-delta-one-service": frozenset(set()),
+    "features-multi-timeframe-service": frozenset({"unified_api_contracts"}),
+    "features-onchain-service": frozenset({"unified_api_contracts"}),
+    "features-volatility-service": frozenset(set()),
+    "execution-service": frozenset(set()),
+    "ml-inference-service": frozenset(set()),
+    "ml-training-service": frozenset(set()),
+    "position-balance-monitor-service": frozenset(set()),
+    "strategy-service": frozenset(set()),
 }
 
 # Fully exempt repos — not checked for banned imports at all

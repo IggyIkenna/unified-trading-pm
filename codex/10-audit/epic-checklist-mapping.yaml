@@ -1,0 +1,294 @@
+# Epic-to-Checklist-to-Audit Mapping Registry
+#
+# Purpose: Map between epic tasks, checklist items, audit items, and validators
+#
+# Three ID schemes unified:
+#   - Epic tasks: "epic-name:task-id" (e.g., "data-io:1.1")
+#   - Checklist items: "item_XX_name" (e.g., "item_03b_unified_config_class")
+#   - Audit items: "CATEGORY-NN" (e.g., "BASE-01", "OBS-05")
+#   - Validators: "validator_name" (e.g., "no_os_getenv_validator")
+#
+# This file enables bidirectional sync between:
+#   - Epic task completion → checklist item status
+#   - Checklist item status → epic task blockers
+#   - Validator results → audit YAML status
+#   - Audit status → checklist items
+#
+# Format:
+#   epic_task: Unique epic:task_id reference
+#   service: Service repo name
+#   classification: IMPLEMENT | VALIDATE | REFACTOR
+#   checklist_items: List of related checklist item IDs
+#   audit_items: List of related audit YAML item IDs
+#   validator_ids: List of validators that check this task
+#
+# Last Updated: 2026-02-21
+# Schema Version: 1.0
+
+# ==============================================================================
+# CONFIGURATION MAPPINGS
+# ==============================================================================
+
+mappings:
+  - epic_task: "data-io:1.1"
+    service: "instruments-service"
+    classification: "VALIDATE"
+    description: "Config migration to UnifiedCloudServicesConfig"
+    checklist_items:
+      - item_03b_unified_config_class
+      - item_03c_no_hardcoded_config
+    audit_items:
+      - BASE-01
+      - COD-01
+      - COD-02
+    validator_ids:
+      - no_os_getenv_validator
+      - hardcoded_config_validator
+      - cloud_agnostic_validator
+
+  - epic_task: "unified-libraries:1.2"
+    service: "market-tick-data-service"
+    classification: "VALIDATE"
+    description: "Migrate to unified-config-interface"
+    checklist_items:
+      - item_03b_unified_config_class
+      - item_02_dependency_management
+    audit_items:
+      - BASE-01
+      - BASE-02
+      - HARDENING-01
+    validator_ids:
+      - no_os_getenv_validator
+      - no_fallback_imports_validator
+
+  # ==============================================================================
+  # EVENT LOGGING MAPPINGS
+  # ==============================================================================
+
+  - epic_task: "data-io:2.1"
+    service: "instruments-service"
+    classification: "VALIDATE"
+    description: "Implement 11 lifecycle events"
+    checklist_items:
+      - item_04_standardized_logging
+      - item_04b_unified_error_handling
+    audit_items:
+      - BASE-02
+      - OBS-01
+      - OBS-05
+    validator_ids:
+      - lifecycle_events_validator
+      - domain_events_validator
+
+  - epic_task: "unified-libraries:2.3"
+    service: "market-data-processing-service"
+    classification: "REFACTOR"
+    description: "Migrate to unified-events-interface"
+    checklist_items:
+      - item_04_standardized_logging
+    audit_items:
+      - OBS-01
+      - OBS-05
+      - HARDENING-01
+    validator_ids:
+      - lifecycle_events_validator
+
+  # ==============================================================================
+  # BATCH-LIVE SYMMETRY MAPPINGS
+  # ==============================================================================
+
+  - epic_task: "data-io:3.1"
+    service: "instruments-service"
+    classification: "VALIDATE"
+    description: "Expose LiveHandler via CLI"
+    checklist_items:
+      - item_28_batch_mode_docs
+      - item_29_live_mode_docs
+    audit_items:
+      - BASE-28
+      - BASE-29
+      - ARC-01
+    validator_ids:
+      - batch_deployment_validator
+      - live_deployment_validator
+
+  - epic_task: "market-data:2.2"
+    service: "market-tick-data-service"
+    classification: "REFACTOR"
+    description: "Implement live mode with WebSocket"
+    checklist_items:
+      - item_28_batch_mode_docs
+      - item_29_live_mode_docs
+    audit_items:
+      - BASE-28
+      - BASE-29
+    validator_ids:
+      - batch_deployment_validator
+
+  # ==============================================================================
+  # QUALITY GATES MAPPINGS
+  # ==============================================================================
+
+  - epic_task: "data-io:4.1"
+    service: "instruments-service"
+    classification: "VALIDATE"
+    description: "Quality gates consistency"
+    checklist_items:
+      - item_07_unit_tests
+      - item_08_integration_tests
+      - item_11_test_coverage
+    audit_items:
+      - BASE-24
+      - BASE-25
+      - COD-03
+    validator_ids:
+      - cicd_status_validator
+
+  - epic_task: "unified-libraries:3.1"
+    service: "market-data-processing-service"
+    classification: "VALIDATE"
+    description: "Update quality gates script"
+    checklist_items:
+      - item_07_unit_tests
+      - item_11_test_coverage
+    audit_items:
+      - BASE-24
+      - COD-03
+    validator_ids:
+      - cicd_status_validator
+
+  # ==============================================================================
+  # DATA CATALOGUE MAPPINGS (D1 Blockers)
+  # ==============================================================================
+
+  - epic_task: "market-data:1.1"
+    service: "market-tick-data-service"
+    classification: "VALIDATE"
+    description: "Complete BINANCE-SPOT data ingestion"
+    checklist_items:
+      - item_34_data_catalogue
+      - item_35_catalogue_gcs_mirror
+    audit_items:
+      - DAT-01
+      - DAT-02
+      - DAT-03
+    validator_ids:
+      - data_completeness_validator
+      - data_catalogue_sync_validator
+    data_dependencies:
+      category: "CRYPTO_CEFI"
+      venues: ["BINANCE-SPOT"]
+      required_shards: 200
+      blocker_type: "D1"
+
+  - epic_task: "market-data:1.2"
+    service: "market-data-processing-service"
+    classification: "REFACTOR"
+    description: "Process BINANCE-FUTURES candles"
+    checklist_items:
+      - item_34_data_catalogue
+    audit_items:
+      - DAT-01
+      - DAT-02
+    validator_ids:
+      - data_completeness_validator
+    data_dependencies:
+      category: "CRYPTO_CEFI"
+      venues: ["BINANCE-FUTURES"]
+      required_shards: 180
+      blocker_type: "D1"
+
+  # ==============================================================================
+  # VALIDATOR MAPPINGS
+  # ==============================================================================
+
+  - epic_task: "unified-libraries:4.1"
+    service: "ALL"
+    classification: "IMPLEMENT"
+    description: "Create missing validators"
+    checklist_items:
+      - item_12_linting_quality
+    audit_items:
+      - BASE-24
+      - HARDENING-01
+      - HARDENING-04
+    validator_ids:
+      - no_fallback_imports_validator
+      - library_usage_validator
+      - hardcoded_config_validator
+
+  # ==============================================================================
+  # DOCUMENTATION MAPPINGS
+  # ==============================================================================
+
+  - epic_task: "data-io:9.1"
+    service: "instruments-service"
+    classification: "VALIDATE"
+    description: "Update per-service observability docs"
+    checklist_items:
+      - item_26_architecture_docs
+      - item_27_deployment_docs
+      - item_28_batch_mode_docs
+    audit_items:
+      - BASE-26
+      - BASE-27
+      - BASE-28
+    validator_ids: []
+
+  # ==============================================================================
+  # CROSS-SERVICE MAPPINGS
+  # ==============================================================================
+
+  - epic_task: "post-trade:1.1"
+    service: "position-balance-monitor-service"
+    classification: "IMPLEMENT"
+    description: "Create position reconciliation service"
+    checklist_items:
+      - item_01_repository_exists
+      - item_02_dependency_management
+      - item_03b_unified_config_class
+      - item_04_standardized_logging
+    audit_items:
+      - BASE-01
+      - BASE-02
+      - BASE-03
+    validator_ids:
+      - no_os_getenv_validator
+      - lifecycle_events_validator
+
+  - epic_task: "post-trade:2.1"
+    service: "risk-and-exposure-service"
+    classification: "IMPLEMENT"
+    description: "Create risk limit checking service"
+    checklist_items:
+      - item_01_repository_exists
+      - item_02_dependency_management
+      - item_03b_unified_config_class
+    audit_items:
+      - BASE-01
+      - BASE-02
+    validator_ids:
+      - no_os_getenv_validator
+
+# ==============================================================================
+# METADATA
+# ==============================================================================
+
+metadata:
+  total_mappings: 15
+  services_covered:
+    - instruments-service
+    - market-tick-data-service
+    - market-data-processing-service
+    - position-balance-monitor-service
+    - risk-and-exposure-service
+  checklist_items_mapped: 20
+  audit_items_mapped: 25
+  validators_mapped: 15
+  epics_covered:
+    - data-io-production-readiness
+    - unified-libraries-refactor
+    - market-data-infrastructure
+    - post-trade-and-execution
+  last_updated: "2026-02-21"
+  schema_version: "1.0"

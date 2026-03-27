@@ -28,14 +28,14 @@ overview: |
 
   ## Scope: 9 repos touched
   - unified-api-contracts (UAC) — DATA_SOURCE_TO_SECRET + canonical ID docstrings
-  - unified-sports-reference-interface (USRI) — quota tracking on OddsApi adapter
+  - instruments-service (URDI sports/ sub-package) (USRI) — quota tracking on OddsApi adapter
   - unified-reference-data-interface (URDI) — verify sports adapter routing
   - instruments-service — verify SPORTS hook (likely no code changes)
   - market-tick-data-service — wire ODDS_API venue
   - unified-market-interface (UMI) — verify OddsApiAdapter returns canonical IDs
   - features-sports-service — verify batch end-to-end
   - unified-trading-pm — plan + GCS migration script
-  - unified-trading-codex — update sports-schema-paths.md
+  - unified-trading-pm/codex — update sports-schema-paths.md
 
   ## Archived repo reference (patterns only, no code copy)
   `archive/new-sports-batting-services` (branch: `week1-implementation`, 41 commits ahead of main)
@@ -57,7 +57,7 @@ repo_gates:
   - repo: unified-api-contracts
     code: C0
     notes: "DATA_SOURCE_TO_SECRET + canonical ID format docstrings"
-  - repo: unified-sports-reference-interface
+  - repo: instruments-service (URDI sports/ sub-package)
     code: C0
     notes: "Quota tracking on OddsApi adapter"
   - repo: unified-reference-data-interface
@@ -78,7 +78,7 @@ repo_gates:
   - repo: unified-trading-pm
     code: C0
     notes: "Plan + GCS migration script"
-  - repo: unified-trading-codex
+  - repo: unified-trading-pm/codex
     code: C0
     notes: "Update sports-schema-paths.md"
 
@@ -327,7 +327,7 @@ todos:
     content: |
       - [ ] [AGENT] P0. Run quality gates across all touched repos.
         cd unified-api-contracts && bash scripts/quality-gates.sh
-        cd unified-sports-reference-interface && bash scripts/quality-gates.sh
+        cd instruments-service && bash scripts/quality-gates.sh  # includes URDI sports/ sub-package
         cd unified-reference-data-interface && bash scripts/quality-gates.sh
         cd instruments-service && bash scripts/quality-gates.sh
         cd market-tick-data-service && bash scripts/quality-gates.sh
@@ -415,7 +415,7 @@ These patterns go into USRI adapters (interface layer), NOT into services.
 | `market_tick_data_service/engine/orchestrator.py`                 | Change SPORTS venues to ["ODDS_API"]  | Edit list               |
 | `unified_sports_reference_interface/adapters/odds_api.py`         | Add quota tracking                    | Extend \_get_with_retry |
 | `unified-trading-pm/scripts/sports/migrate_sports_gcs_to_hive.sh` | New migration script                  | Create                  |
-| `unified-trading-codex/02-data/sports-schema-paths.md`            | Add canonical ID format table         | Edit                    |
+| `unified-trading-pm/codex/02-data/sports-schema-paths.md`         | Add canonical ID format table         | Edit                    |
 
 ## Dependency DAG
 

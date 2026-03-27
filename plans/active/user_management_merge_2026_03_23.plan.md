@@ -14,7 +14,7 @@ affects:
   - auth-api
   - user-management-ui
   - unified-trading-pm
-  - unified-trading-codex
+  - unified-trading-pm (codex/ subdir)
 ---
 
 # User Management Merge — Frontend into UTSU, Backend into auth-api
@@ -390,8 +390,8 @@ the admin section for admin users; non-admin users see a read-only user list.
       add `archived_reason: "merged into unified-trading-system-ui (frontend) and auth-api (backend)"`. **Repo:
       unified-trading-pm**
 
-- [ ] [AGENT] P1. Update `unified-trading-codex/05-infrastructure/runtime-tiers-and-deployment.md` — document port 3100
-      static mock tier + provisioning in auth-api. **Repo: unified-trading-codex**
+- [ ] [AGENT] P1. Update `unified-trading-pm (codex/ subdir)/05-infrastructure/runtime-tiers-and-deployment.md` —
+      document port 3100 static mock tier + provisioning in auth-api. **Repo: unified-trading-pm (codex/ subdir)**
 
 - [ ] [AGENT] P1. Archive `user-management-ui` repo — add README noting merge destination, remove from active workspace
       files. **Repo: user-management-ui, unified-trading-pm**

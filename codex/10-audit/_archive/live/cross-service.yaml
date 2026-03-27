@@ -1,0 +1,100 @@
+# Cross-cutting live concerns - unified-trading-system
+# Affects live trading as a whole, not individual services
+# audit_date: 2026-02-10
+# auditor: automated-codex-scan
+
+mode: "live"
+scope: "cross-service"
+audit_date: "2026-02-10"
+
+concerns:
+  - id: "LIVE-01"
+    name: "End-to-end latency budget (<2s)"
+    status: "not_assessed"
+    description: "Signal generation to order submission must complete within 2 seconds"
+    evidence: |
+      - No latency measurement in strategy-service or execution-service
+      - No SLA or latency budget defined in docs
+      - ANL-02 (live performance metrics) fail in execution-service
+    services_affected: ["strategy-service", "execution-service", "features-*", "market-data-processing-service"]
+    notes: "Need latency instrumentation and alerts for SLA breaches."
+
+  - id: "LIVE-02"
+    name: "Streaming infrastructure readiness"
+    status: "partial"
+    description: "Pub/Sub, WebSocket, or equivalent for real-time market data and signals"
+    evidence: |
+      - NautilusTrader supports WebSocket exchange connectivity
+      - ARC-08 partial: embedded communication (in-process vs streaming) partially verified
+      - No cross-service streaming topology documented
+    services_affected:
+      ["market-tick-data-service", "market-data-processing-service", "strategy-service", "execution-service"]
+    notes: "Single-service streaming exists; cross-service data flow not fully designed."
+
+  - id: "LIVE-03"
+    name: "Position reconciliation across services"
+    status: "fail"
+    priority: "P0"
+    description: "WRK-04 - reconcile internal positions with exchange-reported positions"
+    evidence: |
+      - execution-service WRK-04 fail: no position reconciliation
+      - Position drift must be detected and alerted
+    services_affected: ["execution-service", "strategy-service"]
+    notes: "P0 for live. Position discrepancies can cause duplicate orders or missed risk limits."
+
+  - id: "LIVE-04"
+    name: "Client isolation architecture"
+    status: "fail"
+    priority: "P0"
+    description: "DOM-04, SEC-06 - multi-client credential and data isolation"
+    evidence: |
+      - execution-service DOM-04 fail: no multi-client isolation
+      - SEC-06 fail: API keys via os.getenv without client separation
+      - venues/initializer reads keys from flat env vars
+    services_affected: ["execution-service"]
+    notes: "One client's credentials and positions must be isolated from another."
+
+  - id: "LIVE-05"
+    name: "Alerting and monitoring integration"
+    status: "fail"
+    description: "OBS-14 - connection loss, order rejection, position drift, latency alerts"
+    evidence: |
+      - execution-service OBS-14 fail: no alerting configuration for live execution
+      - Alerting PLANNED across services
+    services_affected: ["execution-service", "strategy-service", "market-tick-data-service"]
+    notes: "Critical for live: must detect exchange disconnects, rejections, anomalies."
+
+  - id: "LIVE-06"
+    name: "Disaster recovery procedures"
+    status: "not_assessed"
+    description: "WRK-01, WRK-02 - failover, backup, recovery runbooks"
+    evidence: |
+      - WRK-01, WRK-02 not_assessed / PLANNED in all services
+      - No documented failover or recovery procedures
+    services_affected: ["all"]
+    notes: "Required before live production. Exchange outage, service crash, data corruption scenarios."
+
+  - id: "LIVE-07"
+    name: "Exchange connectivity testing"
+    status: "partial"
+    description: "Verified connectivity to exchanges (paper/sandbox) for all venues"
+    evidence: |
+      - NautilusTrader supports paper trading and sandbox
+      - Per-service exchange connectivity not systematically tested
+      - No documented connectivity matrix (venue x environment)
+    services_affected: ["execution-service", "market-tick-data-service"]
+    notes: "Paper trading connectivity should be verified before live."
+
+risks:
+  - "No position reconciliation: duplicate orders or risk limit breaches"
+  - "No client isolation: one client can affect another"
+  - "No alerting: silent failures in live mode"
+  - "No disaster recovery: extended outage on any failure"
+
+recommendations:
+  - "Implement position reconciliation (WRK-04) before live"
+  - "Add client isolation to execution-service (DOM-04, SEC-06)"
+  - "Configure OBS-14 alerting: connection loss, order rejection, position drift"
+  - "Document and test disaster recovery procedures (WRK-01, WRK-02)"
+  - "Add latency instrumentation and enforce <2s budget"
+  - "Verify exchange sandbox connectivity for all target venues"

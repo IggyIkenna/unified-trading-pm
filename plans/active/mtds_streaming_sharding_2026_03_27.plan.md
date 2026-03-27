@@ -51,14 +51,15 @@ venues (Binance trades = multi-GB per day) will OOM if loaded entirely into memo
 
 ### Storage pattern (confirmed from git history ~Feb 9 2026)
 
-- **Instruments:** one parquet per venue — all instrument types together (options chain = single file, not one per option)
+- **Instruments:** one parquet per venue — all instrument types together (options chain = single file, not one per
+  option)
 - **Tick data:** one parquet per venue×data_type shard — all instruments for that combo in one file
 - **instrument_ids filter:** `VENUE:TYPE:SYMBOL` format, parsed to extract venue, applied pre/post download
 
 ### Memory budget
 
-Target: **< 2 GB peak RSS** per shard. Stream in 50 MB chunks via local temp file + PyArrow row group appending.
-Temp file grows on disk (SSD), uploaded to GCS at close, then deleted.
+Target: **< 2 GB peak RSS** per shard. Stream in 50 MB chunks via local temp file + PyArrow row group appending. Temp
+file grows on disk (SSD), uploaded to GCS at close, then deleted.
 
 ## Execution phases
 
@@ -80,9 +81,8 @@ Phase 5: Verify all venues via CLI
 
 ## Phase 1: Streaming write infrastructure (UTL)
 
-**Goal:** A `StreamingParquetWriter` in UTL that accepts DataFrame chunks and writes a **single parquet
-file** to GCS — not multiple part files. Uses a local temp file with PyArrow row group appending,
-then uploads once to GCS at close.
+**Goal:** A `StreamingParquetWriter` in UTL that accepts DataFrame chunks and writes a **single parquet file** to GCS —
+not multiple part files. Uses a local temp file with PyArrow row group appending, then uploads once to GCS at close.
 
 - [ ] [AGENT] P0. Add `StreamingParquetWriter` to `unified_trading_library/io/streaming_writer.py`
   - Constructor: `StreamingParquetWriter(bucket, gcs_path, flush_threshold_mb=50)`
@@ -94,8 +94,8 @@ then uploads once to GCS at close.
   - Uses `get_storage_client().upload_file()` for the final GCS upload
 - [ ] [AGENT] P0. Export from UTL `__init__.py`
 
-**Output:** One parquet file per shard in GCS. Peak memory = one chunk (~50MB DataFrame) at any time.
-The local temp file grows on disk but is deleted after upload.
+**Output:** One parquet file per shard in GCS. Peak memory = one chunk (~50MB DataFrame) at any time. The local temp
+file grows on disk but is deleted after upload.
 
 ## Phase 2: UMI adapter download_batch() — CeFi via Tardis
 
