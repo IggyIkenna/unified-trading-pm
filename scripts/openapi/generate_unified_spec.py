@@ -41,14 +41,13 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 # Per-service timeout in seconds
-SERVICE_TIMEOUT = 30
+SERVICE_TIMEOUT = 60
 
 # === Step 2: Service Registry ===
 # (service_name, module_path, app_attribute)
 SERVICE_REGISTRY: list[tuple[str, str, str]] = [
     # === API Gateways ===
     ("deployment-api", "deployment_api.main", "app"),
-    ("auth-api", "auth_api.app", "app"),
     ("unified-trading-api", "unified_trading_api.main", "create_app"),
     ("client-reporting-api", "client_reporting_api.api.main", "app"),
     # === Core Services ===
