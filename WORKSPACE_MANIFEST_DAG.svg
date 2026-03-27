@@ -243,7 +243,7 @@
   <rect x="210" y="1247" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="307" y="1265" text-anchor="middle" class="label">unified-trading-system-ui</text>
   <circle cx="395" cy="1255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
-  <text x="307" y="1277" text-anchor="middle" class="ver">0.1.0</text>
+  <text x="307" y="1277" text-anchor="middle" class="ver">0.2.0</text>
   <!-- L9: IaC + post-deploy validation (deploy last; references all service images) (2 repos) -->
   <rect x="40" y="1319" width="2320" height="107" class="level-bg" />
   <rect x="55" y="1327" width="80" height="22" fill="#06b6d4" class="level-badge" />

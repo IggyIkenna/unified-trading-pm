@@ -90,7 +90,7 @@ CONFIG_REGISTRY: list[tuple[str, str, str]] = [
     ("strategy-service", "strategy_service.engine.core.config_loader", "PositionConfig"),
 ]
 
-EXTRACT_TIMEOUT = 30
+EXTRACT_TIMEOUT = 90
 
 
 def _extract_config_script(module_path: str, class_name: str) -> str:

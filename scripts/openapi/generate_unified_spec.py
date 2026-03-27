@@ -41,7 +41,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 # Per-service timeout in seconds
-SERVICE_TIMEOUT = 60
+SERVICE_TIMEOUT = 90
 
 # === Step 2: Service Registry ===
 # (service_name, module_path, app_attribute)
