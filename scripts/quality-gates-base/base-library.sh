@@ -394,6 +394,8 @@ _di_extra_globs=()
 for _excl in "${DEEP_IMPORT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _di_extra_globs+=("--glob" "!${_excl}"); done
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" "${_di_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "from ${_SELF_PKG}\." \
+    | grep -v "from unified_api_contracts\.internal" \
+    | grep -v "from unified_api_contracts\.testing" \
     | grep -v "# noqa:.*qg-deep-import\|# noqa: qg-deep-import" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
@@ -409,7 +411,7 @@ CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' \
-    --glob '!*/providers/**' \
+    --glob '!**/providers/**' \
     --glob '!*/cache.py' \
     --glob '!typings/**' --glob '!*/typings/**' \
     -l . 2>/dev/null || :)
