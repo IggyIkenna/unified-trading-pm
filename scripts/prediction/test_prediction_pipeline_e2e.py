@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 async def test_urdi_instruments() -> dict[str, list[dict[str, str]]]:
     """Phase 1: Fetch instruments via URDI PolymarketReferenceDataAdapter."""
-    from unified_reference_data_interface.adapters.polymarket import PolymarketReferenceDataAdapter
+    from instruments_service.reference_data.adapters.polymarket import PolymarketReferenceDataAdapter
 
     logger.info("=" * 60)
     logger.info("PHASE 1: URDI Instrument Fetch")
@@ -213,6 +213,7 @@ def test_data_types() -> None:
         PredictionMarketCategory,
         PredictionMarketMapper,
     )
+
     mapper = PredictionMarketMapper()
     m = mapper.map_market("polymarket", "cid", "Bitcoin Up or Down - March 25, 2PM ET")
     assert m.category == PredictionMarketCategory.CRYPTO
@@ -228,7 +229,7 @@ async def write_to_gcs(instruments: dict[str, list[dict[str, str]]], date: str) 
     logger.info("PHASE 6: GCS Write (Hive Partitions)")
     logger.info("=" * 60)
 
-    from unified_cloud_interface import get_storage_client
+    from unified_trading_library.cloud_interface import get_storage_client
 
     client = get_storage_client(provider="gcp")
     bucket = "instruments-store-prediction-central-element-323112"
@@ -291,9 +292,14 @@ async def main() -> None:
     logger.info("E2E PREDICTION PIPELINE TEST: ALL PHASES PASSED")
     logger.info("=" * 60)
     total = sum(len(v) for v in instruments.values())
-    logger.info("  Instruments: %d (BTC=%d, SPX=%d, Sports=%d, Other=%d)",
-                total, len(instruments["btc"]), len(instruments["spx"]),
-                len(instruments["sports"]), len(instruments["other"]))
+    logger.info(
+        "  Instruments: %d (BTC=%d, SPX=%d, Sports=%d, Other=%d)",
+        total,
+        len(instruments["btc"]),
+        len(instruments["spx"]),
+        len(instruments["sports"]),
+        len(instruments["other"]),
+    )
     logger.info("  Trades: %d", len(trades))
     logger.info("  Leagues mapped: 35, Teams mapped: 196, Underlyings: 20")
 

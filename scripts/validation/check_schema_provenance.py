@@ -25,7 +25,7 @@ CLASS_DATACLASS_NO_PAREN_RE = re.compile(r"@\s*dataclass\s*\n\s*class\s+(\w+)\s*
 
 # Import from UAC/UIC
 IMPORT_UAC_UIC_RE = re.compile(
-    r"from\s+(unified_api_contracts|unified_internal_contracts)(?:\.\w+)?\s+import\s+([^;\n]+)",
+    r"from\s+(unified_api_contracts|unified_api_contracts.internal)(?:\.\w+)?\s+import\s+([^;\n]+)",
     re.MULTILINE,
 )
 
@@ -64,7 +64,7 @@ def find_schema_definitions(content: str) -> list[str]:
 
 
 def schema_imported_from_uac_uic(repo_path: Path, schema_name: str) -> bool:
-    """Check if schema_name is imported from unified_api_contracts or unified_internal_contracts anywhere in repo."""
+    """Check if schema_name is imported from UAC or UAC.internal anywhere in repo."""
     for py_file in repo_path.rglob("*.py"):
         rel = py_file.relative_to(repo_path)
         if should_exclude_file(str(rel)):

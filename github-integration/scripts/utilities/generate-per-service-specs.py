@@ -426,7 +426,7 @@ All services MUST implement these 11 lifecycle events:
 ### CPU, Memory, Disk Monitoring
 
 ```python
-# Use unified_events_interface for lifecycle event logging
+# Use unified_trading_library.events_interface for lifecycle event logging
 from unified_trading_services import setup_service, GCSEventSink
 setup_service(service_name="{m["service_name"]}", mode="batch", sink=GCSEventSink(...))
 ```

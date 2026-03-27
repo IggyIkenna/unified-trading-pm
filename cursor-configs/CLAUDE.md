@@ -55,7 +55,7 @@ Read these before making ANY code changes:
 - No `os.getenv()` — use `UnifiedCloudConfig`
 - No `# type: ignore` to hide architectural violations — fix the root cause
 - No `try/except ImportError` around library imports — fail loud
-- Services use URDI for reference data, not UMI — UMI is for market data only
+- Services use instruments-service for reference data, not UMI — UMI is for market data only
 - Shard-level failure isolation — no `raise` inside per-venue/per-shard loops (see
   codex/04-architecture/shard-level-failure-isolation.md)
 - Every adapter MUST classify errors through UAC `classify_venue_error()` and emit `ADAPTER_FETCH_FAILED` events
@@ -74,41 +74,41 @@ Every service MUST have all of the following (enforced as errors in base-service
   Template: `market-tick-data-service/market_tick_data_service/api/main.py`.
 - **Typed config reloaders** (STEP 5.34) — `config_reloaders.py` must use typed config class, never `object` type or
   `getattr(service_config, ...)`. Pattern: `start_domain_config_reloaders(service_config: MyServiceConfig)`.
-- **Schema provenance** — All domain types (BaseModel, TypedDict, dataclass) must come from UAC or UIC. No local
-  definitions in service source (scripts/ excluded).
+- **Schema provenance** — All domain types (BaseModel, TypedDict, dataclass) must come from UAC (including
+  `unified_api_contracts.internal`). No local definitions in service source (scripts/ excluded).
 - **API key hot-reload** — Services fetching API keys from Secret Manager must use `ApiKeyReloader` from UTL, not
   one-shot `validate_api_keys_for_venues()`. See `codex/06-coding-standards/config-reloader-pattern.md`.
 
 ## DeFi Execution Architecture
 
-**Interface credential convention**: Interfaces are API-keyless. Services fetch credentials from Secret Manager and
-inject them at runtime via factory/constructor params. See `codex/04-architecture/interface-credential-convention.md`.
+**Interface credential convention**: execution-service fetches credentials from Secret Manager and injects them at
+runtime via factory/constructor params. See `codex/04-architecture/interface-credential-convention.md`.
 
-- UTEI: `get_order_adapter(venue, api_key, api_secret, ...)` — keys as params
-- UDEI: `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` — from config dict
-- USEI: `adapter(credentials={"api_key": key})` — keys as params
-- URDI: `create_adapter(venue, api_key=key)` — keys as params
+- Trade execution: `get_order_adapter(venue, api_key, api_secret, ...)` — keys as params
+- DeFi execution: `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` — from config dict
+- Sports execution: `adapter(credentials={"api_key": key})` — keys as params
+- Reference data: `create_adapter(venue, api_key=key)` — keys as params
 - UMI/UEI/UFI: no keys needed
 
 **RPC URL templates**: `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py` — SSOT for all chain→RPC
-mappings. UDEI imports from UAC, never defines its own.
+mappings. execution-service DeFi connectors import from UAC, never define their own.
 
 **Flash loan receiver**: Deployed Solidity contract required for Aave flash loans. Source in
 `deployment-service/contracts/FlashLoanReceiver.sol`. Deploy via
 `bash deployment-service/scripts/deploy-flash-loan-receiver.sh --chain <name>`. Address in UAC
-`config/testnet_contracts.yaml`. UDEI `connect()` validates on-chain (`eth_getCode`), fails loud if missing. See
-`codex/04-architecture/flash-loan-receiver.md`.
+`config/testnet_contracts.yaml`. execution-service `connect()` validates on-chain (`eth_getCode`), fails loud if
+missing. See `codex/04-architecture/flash-loan-receiver.md`.
 
 **Contract registry schema**: `unified-config-interface/testnet_contracts.py` has `PROTOCOL_SCHEMAS` declaring required
 contracts per protocol. Registry validates at load time — missing contracts raise `ValueError` with deploy command.
 
-**Uniswap live swap**: UDEI `UniswapConnector.swap_exact_input()` executes live swaps via SwapRouter02
+**Uniswap live swap**: execution-service `UniswapConnector.swap_exact_input()` executes live swaps via SwapRouter02
 (`0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45`). Flow: ERC20 `approve(router, amount)` then `exactInputSingle`. Returns
 `DeFiSwapResult` with tx hash, gas used, and effective price.
 
-**DeFi error classification**: 13 structured error codes in UDEI `DefiErrorCode` (aave.py). Every revert maps to a known
-code: `INSUFFICIENT_COLLATERAL`, `SLIPPAGE_EXCEEDED`, `TX_REVERTED`, etc. Execution-service routes on code prefix
-(FAIL/RETRY/SKIP).
+**DeFi error classification**: 13 structured error codes in execution-service `DefiErrorCode` (aave.py). Every revert
+maps to a known code: `INSUFFICIENT_COLLATERAL`, `SLIPPAGE_EXCEEDED`, `TX_REVERTED`, etc. Execution-service routes on
+code prefix (FAIL/RETRY/SKIP).
 
 **DeFi pipeline flow**: instruments-service → market-tick-data-service → features-onchain-service → strategy-service →
 execution-service. All via service CLIs. No standalone scripts. See the pipeline map discussion in this session's
@@ -130,6 +130,11 @@ MINOR bump, not MAJOR). 1.0.0 is a deliberate human decision.
 5. Bump goes to staging → SIT validates → promotes to main
 
 **Post-1.0.0 semver rules change:** feat! = MAJOR bump (opens approval issue), not MINOR.
+
+**NEVER bump versions manually** — not in `pyproject.toml`, not in `workspace-manifest.json`, not in version floor
+constraints in consumer repos. The semver-agent handles ALL version bumps automatically on merge to main based on
+conventional commit prefixes (`feat:`, `fix:`, `feat!:`). Manually editing version numbers causes drift and conflicts
+with CI/CD automation.
 
 ## PM/Codex Doc-Only Fast-Path
 
@@ -205,10 +210,9 @@ replace live cloud services (see `unified-trading-pm/plans/archive/cicd_mock_har
 **DeFi unit tests**: Use `responses` library (`@responses.activate`, `passthrough=False`) for Hyperliquid REST. Mock
 Web3 at the signing level — never hit real RPCs in unit tests.
 
-**DeFi integration tests**: Use the shared Tenderly fork fixtures in
-`unified-defi-execution-interface/tests/integration/conftest.py`. Fixtures: `tenderly_fork` (session), `funded_wallet`,
-`flash_loan_receiver`, `aave_connector`, `uniswap_connector`. All marked `@pytest.mark.allow_network`. Skipped if SM
-credentials unavailable.
+**DeFi integration tests**: Use the shared Tenderly fork fixtures in `execution-service/tests/integration/conftest.py`.
+Fixtures: `tenderly_fork` (session), `funded_wallet`, `flash_loan_receiver`, `aave_connector`, `uniswap_connector`. All
+marked `@pytest.mark.allow_network`. Skipped if SM credentials unavailable.
 
 **Local stack**: `bash unified-trading-pm/scripts/demo-mode.sh --seed` — no credentials required.
 
@@ -288,10 +292,11 @@ new capability — **look at the existing system first**. Do NOT build ad-hoc so
 create unnecessary repos/files. If a library is missing a feature, ADD the feature to the library. If the library's
 approach is wrong, FIX it. Never work around it.
 
-Key repo mapping: events → `unified-events-interface`, schemas → `unified-internal-contracts` / `unified-api-contracts`,
-cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data → `unified-market-interface`,
-execution → `unified-trade-execution-interface`, domain utils → `unified-domain-client` / `unified-trading-library`,
-features → `unified-features-interface` / `unified-feature-orchestration-library`, sports reference →
+Key repo mapping: events → `unified-events-interface`, schemas → `unified-api-contracts` (external + internal via
+`unified_api_contracts.internal`), cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data →
+`unified-market-interface`, execution (CeFi/DeFi/sports/position) → `execution-service`, reference data →
+`instruments-service`, domain utils → `unified-domain-client` / `unified-trading-library`, features →
+`unified-features-interface` / `unified-feature-orchestration-library`, sports reference →
 `unified-sports-reference-interface`, UI → check existing 13 UIs first.
 
 **Citadel Import Rules (UAC):** All consumer repos import from UAC domain facades only
@@ -356,7 +361,7 @@ Every plan MUST declare explicit success criteria per phase:
 
 ### 6. Downstream Consumer Updates
 
-When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
+When modifying shared libraries (UAC, UTL, UCI, UEI, UDC):
 
 - Pre-audit identifies EVERY downstream consumer
 - Plan includes explicit fix items for each affected repo
@@ -365,7 +370,7 @@ When modifying shared libraries (UAC, UIC, UTL, UCI, UEI, UDC):
 
 ### 7. Single Source of Truth
 
-- Types/schemas belong in ONE place. UAC for external data normalization, UIC for internal.
+- Types/schemas belong in ONE place. UAC for external data normalization, `unified_api_contracts.internal` for internal.
 - No service should self-declare types that exist in contracts libraries
 - No re-definition of enums, dataclasses, or Pydantic models that already exist upstream
 - Pre-audit should catch self-declared duplicates and include them in the fix manifest

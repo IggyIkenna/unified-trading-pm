@@ -24,17 +24,17 @@ WORKSPACE = Path(__file__).resolve().parents[3]  # workspace root
 INTERNAL_PACKAGES: dict[str, str] = {
     "unified_trading_library": "unified-trading-library",
     "unified_api_contracts": "unified-api-contracts",
-    "unified_internal_contracts": "unified-internal-contracts",
-    "unified_cloud_interface": "unified-cloud-interface",
-    "unified_config_interface": "unified-config-interface",
-    "unified_events_interface": "unified-events-interface",
+    "unified_api_contracts.internal": "unified-internal-contracts",
+    "unified_trading_library.cloud_interface": "unified-cloud-interface",
+    "unified_trading_library.config_interface": "unified-config-interface",
+    "unified_trading_library.events_interface": "unified-events-interface",
     "unified_market_interface": "unified-market-interface",
-    "unified_reference_data_interface": "unified-reference-data-interface",
+    "instruments_service.reference_data": "unified-reference-data-interface",
     "unified_trade_execution_interface": "unified-trade-execution-interface",
     "unified_defi_execution_interface": "unified-defi-execution-interface",
     "unified_sports_execution_interface": "unified-sports-execution-interface",
     "unified_sports_reference_interface": "unified-sports-reference-interface",
-    "unified_position_interface": "unified-position-interface",
+    "position_balance_monitor_service.position_interface": "unified-position-interface",
     "unified_features_interface": "unified-features-interface",
     "unified_feature_calculator_library": "unified-feature-calculator-library",
     "unified_feature_orchestration_library": "unified-feature-orchestration-library",
@@ -47,46 +47,60 @@ INTERNAL_PACKAGES: dict[str, str] = {
 # =========================================================================
 # BANNED DIRECT IMPORTS — services must use UTL re-exports instead
 # =========================================================================
-BANNED_DIRECT_IMPORTS: frozenset[str] = frozenset({
-    "unified_config_interface",
-    "unified_cloud_interface",
-    "unified_events_interface",
-})
+BANNED_DIRECT_IMPORTS: frozenset[str] = frozenset(
+    {
+        "unified_trading_library.config_interface",
+        "unified_trading_library.cloud_interface",
+        "unified_trading_library.events_interface",
+    }
+)
 
 # Per-service allowed direct deps (beyond UTL/UAC/UIC)
 # deployment-service is fully exempt — not listed here, handled by EXEMPT_REPOS
 ALLOWED_DIRECT_DEPS: dict[str, frozenset[str]] = {
-    "instruments-service": frozenset({"unified_reference_data_interface"}),
+    "instruments-service": frozenset({"instruments_service.reference_data"}),
     "market-tick-data-service": frozenset({"unified_market_interface"}),
     "market-data-processing-service": frozenset({"unified_market_interface"}),
-    "features-sports-service": frozenset({
-        "unified_market_interface", "unified_sports_reference_interface",
-        "unified_feature_calculator_library", "unified_features_interface",
-        "unified_feature_orchestration_library",
-    }),
+    "features-sports-service": frozenset(
+        {
+            "unified_market_interface",
+            "unified_sports_reference_interface",
+            "unified_feature_calculator_library",
+            "unified_features_interface",
+            "unified_feature_orchestration_library",
+        }
+    ),
     "features-calendar-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
     "features-commodity-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "features-cross-instrument-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
+    "features-cross-instrument-service": frozenset(
+        {"unified_feature_calculator_library", "unified_features_interface"}
+    ),
     "features-delta-one-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
     "features-multi-timeframe-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
     "features-onchain-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
     "features-volatility-service": frozenset({"unified_feature_calculator_library", "unified_features_interface"}),
-    "execution-service": frozenset({
-        "unified_trade_execution_interface", "unified_defi_execution_interface",
-        "unified_sports_execution_interface", "execution_algo_library",
-        "matching_engine_library",
-    }),
+    "execution-service": frozenset(
+        {
+            "unified_trade_execution_interface",
+            "unified_defi_execution_interface",
+            "unified_sports_execution_interface",
+            "execution_algo_library",
+            "matching_engine_library",
+        }
+    ),
     "ml-inference-service": frozenset({"unified_ml_interface"}),
     "ml-training-service": frozenset({"unified_ml_interface", "unified_feature_calculator_library"}),
-    "position-balance-monitor-service": frozenset({"unified_position_interface"}),
+    "position-balance-monitor-service": frozenset({"position_balance_monitor_service.position_interface"}),
     "strategy-service": frozenset({"unified_domain_client"}),
 }
 
 # Fully exempt repos — not checked for banned imports at all
-EXEMPT_REPOS: frozenset[str] = frozenset({
-    "deployment-service",
-    "deployment-api",
-})
+EXEMPT_REPOS: frozenset[str] = frozenset(
+    {
+        "deployment-service",
+        "deployment-api",
+    }
+)
 
 FIX = "--fix" in sys.argv
 
@@ -158,7 +172,7 @@ def fix_pyproject(pyproject_path: Path, missing_deps: list[str], missing_sources
         if marker in text:
             idx = text.index(marker)
             end = text.index("\n", idx)
-            text = text[:end + 1] + dep_line + "\n" + text[end + 1:]
+            text = text[: end + 1] + dep_line + "\n" + text[end + 1 :]
 
     for pkg in missing_sources:
         source_block = f'\n[tool.uv.sources.{pkg}]\npath = "../{pkg}"\neditable = true\n'

@@ -2,169 +2,141 @@
   "folders": [
     {
       "path": "../..",
-      "name": "\ud83d\udcc1 Workspace Root",
+      "name": "\ud83d\udcc1 Workspace Root"
     },
     {
       "path": "../../.cursor",
-      "name": "\u2699\ufe0f Cursor Config",
+      "name": "\u2699\ufe0f Cursor Config"
     },
     {
       "path": "../../.venv-workspace",
-      "name": "\ud83d\udc0d Venv",
+      "name": "\ud83d\udc0d Venv"
     },
     {
-      "path": "../../batch-live-reconciliation-service",
+      "path": "../../batch-live-reconciliation-service"
     },
     {
-      "path": "../../client-reporting-api",
+      "path": "../../client-reporting-api"
     },
     {
-      "path": "../../deployment-api",
+      "path": "../../deployment-api"
     },
     {
-      "path": "../../deployment-service",
+      "path": "../../deployment-service"
     },
     {
-      "path": "../../deployment-ui",
+      "path": "../../deployment-ui"
     },
     {
-      "path": "../../execution-algo-library",
+      "path": "../../execution-algo-library"
     },
     {
-      "path": "../../execution-service",
+      "path": "../../execution-service"
     },
     {
-      "path": "../../features-calendar-service",
+      "path": "../../features-calendar-service"
     },
     {
-      "path": "../../features-commodity-service",
+      "path": "../../features-commodity-service"
     },
     {
-      "path": "../../features-cross-instrument-service",
+      "path": "../../features-cross-instrument-service"
     },
     {
-      "path": "../../features-delta-one-service",
+      "path": "../../features-delta-one-service"
     },
     {
-      "path": "../../features-multi-timeframe-service",
+      "path": "../../features-multi-timeframe-service"
     },
     {
-      "path": "../../features-onchain-service",
+      "path": "../../features-onchain-service"
     },
     {
-      "path": "../../features-sports-service",
+      "path": "../../features-sports-service"
     },
     {
-      "path": "../../features-volatility-service",
+      "path": "../../features-volatility-service"
     },
     {
-      "path": "../../ibkr-gateway-infra",
+      "path": "../../ibkr-gateway-infra"
     },
     {
-      "path": "../../instruments-service",
+      "path": "../../instruments-service"
     },
     {
-      "path": "../../market-data-processing-service",
+      "path": "../../market-data-processing-service"
     },
     {
-      "path": "../../market-tick-data-service",
+      "path": "../../market-tick-data-service"
     },
     {
-      "path": "../../matching-engine-library",
+      "path": "../../matching-engine-library"
     },
     {
-      "path": "../../ml-inference-service",
+      "path": "../../ml-inference-service"
     },
     {
-      "path": "../../ml-training-service",
+      "path": "../../ml-training-service"
     },
     {
-      "path": "../../pnl-attribution-service",
+      "path": "../../pnl-attribution-service"
     },
     {
-      "path": "../../position-balance-monitor-service",
+      "path": "../../position-balance-monitor-service"
     },
     {
-      "path": "../../risk-and-exposure-service",
+      "path": "../../risk-and-exposure-service"
     },
     {
-      "path": "../../strategy-service",
+      "path": "../../strategy-service"
     },
     {
-      "path": "../../system-integration-tests",
+      "path": "../../system-integration-tests"
     },
     {
-      "path": "../../trading-agent-service",
+      "path": "../../trading-agent-service"
     },
     {
-      "path": "../../unified-api-contracts",
+      "path": "../../unified-api-contracts"
+    },
+    {},
+    {},
+    {},
+    {},
+    {
+      "path": "../../unified-feature-calculator-library"
     },
     {
-      "path": "../../unified-cloud-interface",
+      "path": "../../unified-feature-orchestration-library"
     },
     {
-      "path": "../../unified-config-interface",
+      "path": "../../unified-features-interface"
     },
     {
-      "path": "../../unified-defi-execution-interface",
+      "path": "../../unified-market-interface"
     },
     {
-      "path": "../../unified-domain-client",
+      "path": "../../unified-ml-interface"
     },
+    {},
     {
-      "path": "../../unified-events-interface",
-    },
-    {
-      "path": "../../unified-feature-calculator-library",
-    },
-    {
-      "path": "../../unified-feature-orchestration-library",
-    },
-    {
-      "path": "../../unified-features-interface",
-    },
-    {
-      "path": "../../unified-internal-contracts",
-    },
-    {
-      "path": "../../unified-market-interface",
-    },
-    {
-      "path": "../../unified-ml-interface",
-    },
-    {
-      "path": "../../unified-position-interface",
-    },
-    {
-      "path": "../../unified-reference-data-interface",
-    },
-    {
-      "path": "../../unified-sports-execution-interface",
-    },
-    {
-      "path": "../../unified-sports-reference-interface",
-    },
-    {
-      "path": "../../unified-trade-execution-interface",
-    },
-    {
-      "path": "../../unified-trading-api",
+      "path": "../../unified-trading-api"
     },
     {
       "path": "../../unified-trading-codex",
-      "name": "\ud83d\udcda Codex",
+      "name": "\ud83d\udcda Codex"
     },
     {
-      "path": "../../unified-trading-library",
+      "path": "../../unified-trading-library"
     },
     {
       "path": "../../unified-trading-pm",
-      "name": "\ud83d\udccb PM",
+      "name": "\ud83d\udccb PM"
     },
     {
       "path": "../../unified-trading-system-ui",
-      "name": "\ud83c\udfa8 UI",
-    },
+      "name": "\ud83c\udfa8 UI"
+    }
   ],
   "settings": {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv-workspace/bin/python",
@@ -183,29 +155,40 @@
     "cursorpyright.analysis.extraPaths": [],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": ["tests", "-v"],
+    "python.testing.pytestArgs": [
+      "tests",
+      "-v"
+    ],
     "files.autoSave": "onFocusChange",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
-      "source.organizeImports": "explicit",
+      "source.organizeImports": "explicit"
     },
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
-        "source.organizeImports": "explicit",
-      },
+        "source.organizeImports": "explicit"
+      }
     },
     "ruff.enable": true,
     "ruff.lint.enable": true,
-    "ruff.lint.select": ["E", "F", "W", "I"],
+    "ruff.lint.select": [
+      "E",
+      "F",
+      "W",
+      "I"
+    ],
     "ruff.lineLength": 120,
     "ruff.organizeImports": true,
     "ruff.fixAll": true,
     "ruff.path": "${workspaceFolder}/.venv-workspace/bin/ruff",
-    "ruff.format.args": ["--line-length", "120"],
+    "ruff.format.args": [
+      "--line-length",
+      "120"
+    ],
     "files.exclude": {
       "**/__pycache__": true,
       "**/*.pyc": true,
@@ -214,7 +197,7 @@
       "**/.venv": true,
       "**/.pixi": true,
       "**/.venv.backup": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "files.watcherExclude": {
       "**/.git/objects/**": true,
@@ -237,19 +220,19 @@
       "**/.cache/**": true,
       "**/.nyc_output/**": true,
       "**/htmlcov/**": true,
-      "**/coverage/**": true,
+      "**/coverage/**": true
     },
     "search.exclude": {
       "**/__pycache__": true,
       "**/.pytest_cache": true,
       "**/.ruff_cache": true,
       "**/.venv": true,
-      "**/uv.lock": false,
+      "**/uv.lock": false
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-  },
+    "files.trimFinalNewlines": true
+  }
 }

@@ -104,10 +104,18 @@ _section("Check 2: T0-T3 library imports")
 LIBRARY_IMPORTS: list[tuple[str, str, bool]] = [
     # (label, import_statement, mandatory)
     ("unified_trading_library (UTL)", "import unified_trading_library", True),
-    ("unified_config_interface (UCI)", "from unified_config_interface import UnifiedCloudConfig", True),
-    ("unified_events_interface (UEI)", "from unified_events_interface import setup_events, log_event", True),
+    (
+        "unified_trading_library.config_interface (UCI)",
+        "from unified_trading_library.config_interface import UnifiedCloudConfig",
+        True,
+    ),
+    (
+        "unified_trading_library.events_interface (UEI)",
+        "from unified_trading_library.events_interface import setup_events, log_event",
+        True,
+    ),
     ("unified_api_contracts (UAC)", "import unified_api_contracts", True),
-    ("unified_internal_contracts (UIC)", "import unified_internal_contracts", True),
+    ("unified_api_contracts.internal (UIC)", "import unified_api_contracts.internal", True),
     ("unified_market_interface (UMI)", "import unified_market_interface", False),
     ("unified_domain_client (UDC)", "import unified_domain_client", False),
     ("unified_feature_calculator_library (UFCL)", "import unified_feature_calculator_library", False),
@@ -131,7 +139,7 @@ if cloud_mock in ("1", "true", "yes"):
     _pass("CLOUD_MOCK_MODE", "set to true — mock GCS/PubSub active")
     # Attempt UnifiedCloudConfig instantiation (reads CLOUD_MOCK_MODE)
     try:
-        from unified_config_interface import UnifiedCloudConfig  # type: ignore[import-not-found]
+        from unified_trading_library.config_interface import UnifiedCloudConfig  # type: ignore[import-not-found]
 
         cfg = UnifiedCloudConfig()
         _pass("UnifiedCloudConfig instantiated", f"project={cfg.gcp_project_id}")
@@ -200,7 +208,7 @@ else:
 _section("Check 6: setup_events() from UEI")
 
 try:
-    from unified_events_interface import log_event, setup_events  # type: ignore[import-not-found]
+    from unified_trading_library.events_interface import log_event, setup_events  # type: ignore[import-not-found]
 
     # setup_events with a test service name; CLOUD_MOCK_MODE=true prevents real PubSub init
     setup_events("smoke-test", mode="test")

@@ -667,7 +667,8 @@ done
 _PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
 if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
 if command -v "$_PIPAUDIT" &>/dev/null; then
-    "$_PIPAUDIT" --format json --skip-editable -o /tmp/pip-audit-output.json 2>/dev/null \
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539"
+    "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null \
         && log_success "pip-audit clean" \
         || { log_fail "pip-audit vulnerabilities found"; V=$(( V + 1 )); }
     # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)

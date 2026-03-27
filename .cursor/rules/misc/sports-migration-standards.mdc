@@ -13,7 +13,7 @@ tags:
 ---
 # Sports Migration Standards
 
-RULE: Sports pipeline services (features-sports-service, unified-sports-execution-interface, sports-strategy, sports-execution) MUST NOT import from sports-betting-services (footballbets). No PostgreSQL/psycopg2/SQLAlchemy in pipeline; data flows via GCS + PubSub only. No empty fallbacks; no dict[str, Any] at service boundaries.
+RULE: Sports pipeline services (features-sports-service, execution-service sports adapters, sports-strategy, sports-execution) MUST NOT import from sports-betting-services (footballbets). No PostgreSQL/psycopg2/SQLAlchemy in pipeline; data flows via GCS + PubSub only. No empty fallbacks; no dict[str, Any] at service boundaries. NOTE: unified-sports-execution-interface has been merged into execution-service.
 WHY: Complete separation from legacy repo; Citadel-audit-worthy boundaries; fail-fast config.
 CODEX: 04-architecture/sports-integration-plan.md (§ Phase 3), 06-coding-standards/integration-testing-layers.md
 
@@ -26,7 +26,7 @@ DO:
 NEVER:
   from footballbets (any module)
   os.getenv(KEY, '') or config.bucket or ""
-  PostgreSQL/SQLAlchemy in features-sports-service, unified-sports-execution-interface, sports-strategy, sports-execution
+  PostgreSQL/SQLAlchemy in features-sports-service, execution-service sports adapters, sports-strategy, sports-execution
   dict[str, Any] at GCS/PubSub boundaries
 
 See: no-empty-fallbacks.mdc, batch-live-symmetry.mdc, event-logging.mdc.

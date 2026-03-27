@@ -29,7 +29,7 @@ MOVED:
 - Import in `api/manual_instruction_api.py`: `from execution_service.utils.audit_log import persist_audit_log`
 
 TESTS:
-- `test_sports_execution.py` uses `pytest.importorskip('unified_internal_contracts.domain.execution_service.sports')` — skips gracefully if sports contracts not published
+- `test_sports_execution.py` uses `pytest.importorskip('unified_api_contracts.internal.domain.execution_service.sports')` — skips gracefully if sports contracts not published
 
 DO:
 - Add new utility files to `execution_service/utils/`

@@ -36,7 +36,7 @@ When defining or updating unified-api-contracts schemas, capture scripts, or ado
 ## Dependency and CI
 
 - Consumers depend on unified-api-contracts via path dependency `../unified-api-contracts` and clone it to `../unified-api-contracts` in CI (see path-dependency-ci.mdc).
-- Contract-vs-reality: normal CI validates all `examples/*.json` against Pydantic models. Live verification and response collection run in the interfaces (UMI, UTEI, USEI, URDI, UPI, UCI), not in AC — interfaces hold API keys and perform integration tests.
+- Contract-vs-reality: normal CI validates all `examples/*.json` against Pydantic models. Live verification and response collection run in the active service repos (UMI, execution-service, instruments-service, position-balance-monitor-service, UCI), not in AC — those repos hold API keys and perform integration tests.
 
 ---
 
@@ -49,7 +49,7 @@ When an adapter consumes an external API that does NOT have a schema in unified-
 3. Never use `dict[str, Any]` — quality gates now BLOCK this pattern
 4. For PascalCase APIs: `Field(alias="PascalCase")` with `model_config = {"populate_by_name": True}`
 
-**Exemplar:** `unified-sports-execution-interface/adapters/exchanges/_matchbook_models.py`, `_smarkets_models.py`, `_betdaq_models.py`
+**Exemplar:** `execution-service/sports_execution/adapters/_matchbook_models.py`, `_smarkets_models.py`, `_betdaq_models.py` (these should ultimately move to UAC external)
 
 ## Related
 

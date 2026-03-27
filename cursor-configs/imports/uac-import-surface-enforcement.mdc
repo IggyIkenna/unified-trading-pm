@@ -37,7 +37,7 @@ from unified_api_contracts.schemas.v2 import ...              # internal schemas
 These repos set `UAC_CANONICAL_EXEMPT=true` in their `quality-gates.sh`:
 
 - `unified-api-contracts` — UAC itself (defines the internals)
-- `unified-internal-contracts` — UIC (sibling schema repo)
+- `unified-api-contracts` internal packages — UAC itself (defines the internals; `UAC_CANONICAL_EXEMPT=true` already set)
 - `system-integration-tests` — SIT (tests internal structure)
 
 ## QG Enforcement

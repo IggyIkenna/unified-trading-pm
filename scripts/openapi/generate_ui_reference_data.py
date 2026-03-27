@@ -159,7 +159,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
     enums: dict[str, list[str]] = {}
 
     try:
-        import unified_internal_contracts as uic
+        import unified_api_contracts.internal as uic
 
         for name in dir(uic):
             obj = getattr(uic, name, None)
@@ -182,7 +182,7 @@ def extract_config_schema_universe() -> dict[str, object]:
 
     # UCI UnifiedCloudConfig fields
     try:
-        from unified_config_interface import UnifiedCloudConfig
+        from unified_trading_library.config_interface import UnifiedCloudConfig
 
         fields = {}
         for field_name, field_info in UnifiedCloudConfig.model_fields.items():

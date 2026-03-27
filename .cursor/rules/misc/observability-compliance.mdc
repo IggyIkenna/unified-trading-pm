@@ -10,8 +10,8 @@ WHY: End-to-end tracing, performance monitoring, audit trail, and regulatory com
 CODEX: 03-observability/lifecycle-events.md, 07-security/audit-logging.md
 
 MACHINE-READABLE SSOT:
- unified-internal-contracts/events.py REQUIRED_EVENT_FIELDS
- unified-internal-contracts/schemas/audit.py EXECUTION_AUDIT, STRATEGY_AUDIT
+ unified-api-contracts/unified_api_contracts/internal/events.py REQUIRED_EVENT_FIELDS
+ unified-api-contracts/unified_api_contracts/internal/schemas/audit.py EXECUTION_AUDIT, STRATEGY_AUDIT
  runtime-topology.yaml data_retention_policy, health_probes
 
 DO:

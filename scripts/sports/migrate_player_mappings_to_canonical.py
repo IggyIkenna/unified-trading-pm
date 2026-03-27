@@ -24,7 +24,7 @@ from unified_api_contracts import PlayerMapping
 from unified_api_contracts.external.api_football import (  # noqa: deep-import
     get_canonical_player_name_from_api_football,
 )
-from unified_cloud_interface import download_from_storage, upload_to_storage
+from unified_trading_library.cloud_interface import download_from_storage, upload_to_storage
 
 logger = logging.getLogger(__name__)
 

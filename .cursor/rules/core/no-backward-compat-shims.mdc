@@ -38,7 +38,7 @@ from .account_schemas import BinanceFeeRate as BinanceFeeRate
 **Prohibited — alias stub:**
 ```python
 # old_module.py
-from unified_internal_contracts.features import OnchainFeatureRecord as OnchainFeature  # MIGRATED
+from unified_api_contracts.internal.features import OnchainFeatureRecord as OnchainFeature  # MIGRATED
 ```
 
 ## What This Requires

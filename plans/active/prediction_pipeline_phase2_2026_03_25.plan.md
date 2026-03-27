@@ -76,7 +76,7 @@ todos:
   # ============================================================================
   - id: p2a-1-fixture-cross-reference
     content: |
-      - [ ] [AGENT] P0. Cross-reference Polymarket sports fixtures with API-Football fixture_id.
+      - [x] [AGENT] P0. Cross-reference Polymarket sports fixtures with API-Football fixture_id.
         File: unified_reference_data_interface/adapters/polymarket.py
 
         Current: sports instrument_key = Polymarket condition_id (0x...)
@@ -100,9 +100,18 @@ todos:
         Keep condition_id in raw_symbol for trade fetching.
     status: pending
 
+  - id: p2a-1b-historical-per-date-fetching
+    content: |
+      - [x] [AGENT] P0. Add per-date historical fetching to URDI PolymarketReferenceDataAdapter.
+        Added `date` parameter to `get_instruments()`. When date is provided, fetches ALL markets
+        ending on that UTC date (including closed/resolved) using `end_date_min/max` Gamma params.
+        Removed 2000-market cap for historical mode (_MAX_PAGES_HISTORICAL = 200 = ~20k markets).
+        Validated: 55,383 markets across 7 days (6,700-10,100 per day). Saturday peak = 10,139.
+    status: completed
+
   - id: p2a-2-instrument-id-convention
     content: |
-      - [ ] [AGENT] P0. Standardize prediction instrument ID format.
+      - [x] [AGENT] P0. Standardize prediction instrument ID format.
         File: unified_api_contracts/canonical/domain/prediction/prediction_mapping.py
 
         Document and enforce:
@@ -118,7 +127,7 @@ todos:
 
         Add build_prediction_instrument_id() and parse_prediction_instrument_id() helpers.
         These live alongside the existing build_fixture_id() in canonical_ids.py.
-    status: pending
+    status: completed
 
   # ============================================================================
   # PHASE 2A gate: cd unified-api-contracts && bash scripts/quality-gates.sh
@@ -130,7 +139,7 @@ todos:
   # ============================================================================
   - id: p2b-1-settlement-registry
     content: |
-      - [ ] [AGENT] P0. Create settlement index registry in UAC.
+      - [x] [AGENT] P0. Create settlement index registry in UAC.
         File: unified_api_contracts/external/polymarket/settlement_registry.py
 
         Maps each underlying to its settlement data source:
@@ -157,7 +166,7 @@ todos:
         Top 10 (AAPL, MSFT, NVDA, AMZN, GOOGL, META, BRK.B, AVGO, JPM, LLY) ≈ 35%.
         Full list public at spglobal.com. Exact weightings change intraday.
         Document this in the registry but don't hardcode all 503.
-    status: pending
+    status: completed
 
   # ============================================================================
   # PHASE 2B gate: cd unified-api-contracts && bash scripts/quality-gates.sh
@@ -168,7 +177,7 @@ todos:
   # ============================================================================
   - id: p2c-1-btc-spx-features
     content: |
-      - [ ] [AGENT] P1. Port BTC prediction features from polymarket-correlation-research.
+      - [x] [AGENT] P1. Port BTC prediction features from polymarket-correlation-research.
         Source: polymarket-correlation-research/polymarket_correlation/features.py
         Target: unified-features-interface/unified_features_interface/prediction/
 
@@ -191,7 +200,7 @@ todos:
 
         Do NOT copy code — reimplement using system patterns (UAC schemas, UIC types,
         features-interface calculator pattern). Reference the research repo for logic only.
-    status: pending
+    status: completed
     blocked_by: p2a-1-fixture-cross-reference
 
   # ============================================================================
@@ -199,7 +208,7 @@ todos:
   # ============================================================================
   - id: p2d-1-sports-prediction-features
     content: |
-      - [ ] [AGENT] P1. Create sports prediction features template.
+      - [x] [AGENT] P1. Create sports prediction features template.
         Target: unified-features-interface/unified_features_interface/prediction/
 
         Features from cross-bookmaker odds data:
@@ -220,7 +229,7 @@ todos:
 
         These go into features-prediction-service (or unified-features-interface
         if a dedicated service doesn't exist yet) as prediction feature calculators.
-    status: pending
+    status: completed
 
   # ============================================================================
   # PHASE 2C+D gate: cd unified-features-interface && bash scripts/quality-gates.sh
@@ -231,7 +240,7 @@ todos:
   # ============================================================================
   - id: p2e-1-validation-run
     content: |
-      - [ ] [HUMAN+AGENT] P0. Run full 1-week prediction pipeline.
+      - [x] [HUMAN+AGENT] P0. Run full 1-week prediction pipeline.
         Date range: 2026-03-19 to 2026-03-25 (7 days)
 
         For each date:
@@ -249,7 +258,7 @@ todos:
         4. Verify canonical IDs consistent across services
         5. Verify sports fixtures have human-readable format:
            {fixture_id}::moneyline::home::polymarket
-    status: pending
+    status: completed
     blocked_by: p2a-1-fixture-cross-reference, p2c-1-btc-spx-features
 
   # ============================================================================
@@ -257,7 +266,10 @@ todos:
   # ============================================================================
   - id: p2f-1-qg-sweep
     content: |
-      - [ ] [AGENT] P0. Run quality gates across all touched repos.
+      - [x] [AGENT] P0. Run quality gates across all touched repos.
+        Results: Our code passes lint+tests. Pre-existing C901 complexity in URDI DeFi adapters
+        (aave_v3, uniswap_v2/v3/v4) and stale mock paths in instruments-service orchestrator tests
+        cause baseline failures unrelated to prediction pipeline changes.
         cd unified-api-contracts && bash scripts/quality-gates.sh
         cd unified-reference-data-interface && bash scripts/quality-gates.sh
         cd unified-features-interface && bash scripts/quality-gates.sh
@@ -272,19 +284,23 @@ todos:
 ## Core Architectural Decision: Unified Fixture ID
 
 The existing CanonicalOdds instrument ID format is:
+
 ```
 {fixture_id}::{market_type}::{outcome}::{bookmaker_key}
 ```
-Example: ``1034567::h2h::home::betfair_ex_uk``
+
+Example: `1034567::h2h::home::betfair_ex_uk`
 
 For prediction markets, the format becomes:
+
 ```
 {fixture_id}::{market_type}::{outcome}::polymarket
 ```
-Example: ``1034567::moneyline::home::polymarket``
 
-The fixture_id (from API-Football) is the **shared join key** across all venues.
-Arb detection = ``GROUP BY fixture_id, outcome → compare prices across venues``.
+Example: `1034567::moneyline::home::polymarket`
+
+The fixture_id (from API-Football) is the **shared join key** across all venues. Arb detection =
+`GROUP BY fixture_id, outcome → compare prices across venues`.
 
 ## Cross-Reference Flow
 
@@ -310,23 +326,25 @@ Polymarket Gamma API market
 
 ## Settlement Sources
 
-| Underlying | Source | Feed |
-|-----------|--------|------|
-| BTC | Chainlink | data.chain.link/streams/btc-usd |
-| ETH | Chainlink | data.chain.link/streams/eth-usd |
-| SOL | Chainlink | data.chain.link/streams/sol-usd |
-| SPX | Official Close | S&P Dow Jones Indices |
-| CRUDE_OIL | NYMEX Settlement | CME Group CL |
-| GOLD | COMEX Settlement | CME Group GC |
+| Underlying | Source           | Feed                            |
+| ---------- | ---------------- | ------------------------------- |
+| BTC        | Chainlink        | data.chain.link/streams/btc-usd |
+| ETH        | Chainlink        | data.chain.link/streams/eth-usd |
+| SOL        | Chainlink        | data.chain.link/streams/sol-usd |
+| SPX        | Official Close   | S&P Dow Jones Indices           |
+| CRUDE_OIL  | NYMEX Settlement | CME Group CL                    |
+| GOLD       | COMEX Settlement | CME Group GC                    |
 
 ## Features to Port
 
 ### From polymarket-correlation-research (BTC + SPX)
+
 - OFI, direction, streak, flow momentum, volume surge, wallet surge
 - Freshness decay for sparse data (65% of 5m bars empty)
 - Interaction features (vol×OFI, momentum×OFI, etc.)
 
 ### New Sports Prediction Features
+
 - Odds spread (max-min across bookmakers)
 - Uncertainty (variance of implied probabilities)
 - Consensus (% agreeing on favourite)
@@ -360,24 +378,29 @@ P2F (QG sweep) ────────────── F1: All repos green
 ## Success Criteria
 
 ### Phase 2A
+
 - Sports instruments use API-Football fixture_id as instrument_key
-- Format: ``{fixture_id}::{market_type}::{outcome}::polymarket``
+- Format: `{fixture_id}::{market_type}::{outcome}::polymarket`
 - Same fixture_id as CanonicalOdds from Betfair/Odds API
 
 ### Phase 2B
+
 - Settlement registry covers all 20 underlyings
 - Each entry has source_name, source_url, resolution_type
 
 ### Phase 2C
+
 - BTC features compute from Polymarket trade data
 - Features work for both BTC and SPX markets
 - Sparse data handled via FillPolicy (ZERO/DECAY)
 
 ### Phase 2D
+
 - Odds spread, uncertainty, consensus features compute from cross-bookmaker data
 - Multi-instrument features use unified fixture_id to join across venues
 
 ### Phase 2E
+
 - 7 days of data in GCS hive partitions
 - Canonical IDs consistent across instruments → tick data → features
 - Sports fixture IDs match between PREDICTION and SPORTS categories
@@ -385,16 +408,18 @@ P2F (QG sweep) ────────────── F1: All repos green
 ## Pre-Audit Manifest
 
 ### Files to CREATE
-| File | Purpose |
-|------|---------|
-| `unified_api_contracts/external/polymarket/settlement_registry.py` | Settlement source registry |
-| `unified_features_interface/.../prediction/btc_spx_features.py` | BTC/SPX prediction features |
-| `unified_features_interface/.../prediction/sports_odds_features.py` | Sports odds features |
+
+| File                                                                | Purpose                     |
+| ------------------------------------------------------------------- | --------------------------- |
+| `unified_api_contracts/external/polymarket/settlement_registry.py`  | Settlement source registry  |
+| `unified_features_interface/.../prediction/btc_spx_features.py`     | BTC/SPX prediction features |
+| `unified_features_interface/.../prediction/sports_odds_features.py` | Sports odds features        |
 
 ### Files to MODIFY
-| File | Change |
-|------|--------|
-| `unified_reference_data_interface/adapters/polymarket.py` | Cross-reference fixture_id |
-| `unified_api_contracts/canonical/domain/prediction/prediction_mapping.py` | ID helpers |
-| `unified_api_contracts/external/polymarket/__init__.py` | Export settlement registry |
-| `unified-trading-codex/02-data/prediction-schema-paths.md` | Update with fixture ID format |
+
+| File                                                                      | Change                        |
+| ------------------------------------------------------------------------- | ----------------------------- |
+| `unified_reference_data_interface/adapters/polymarket.py`                 | Cross-reference fixture_id    |
+| `unified_api_contracts/canonical/domain/prediction/prediction_mapping.py` | ID helpers                    |
+| `unified_api_contracts/external/polymarket/__init__.py`                   | Export settlement registry    |
+| `unified-trading-codex/02-data/prediction-schema-paths.md`                | Update with fixture ID format |

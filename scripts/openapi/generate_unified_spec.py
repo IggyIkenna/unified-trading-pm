@@ -104,7 +104,7 @@ _original_make = _er_mod.make_events_relay_router
 
 def _patched_make_events_relay_router():
     from fastapi import APIRouter
-    from unified_events_interface import log_event
+    from unified_trading_library.events_interface import log_event
 
     router = APIRouter(tags=["events"])
 
@@ -372,12 +372,12 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
 
     # Audit UIC exports
     try:
-        import unified_internal_contracts
+        import unified_api_contracts.internal
 
-        uic_all = getattr(unified_internal_contracts, "__all__", [])
+        uic_all = getattr(unified_api_contracts.internal, "__all__", [])
         for name in uic_all:
             try:
-                obj = getattr(unified_internal_contracts, name)
+                obj = getattr(unified_api_contracts.internal, name)
                 if isinstance(obj, type) and hasattr(obj, "model_fields"):
                     if name not in schema_names:
                         orphans.append(f"UIC: {name}")
@@ -385,7 +385,7 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
                 pass
         logger.info("UIC audit: %d exports checked", len(uic_all))
     except ImportError:
-        logger.warning("Could not import unified_internal_contracts for orphan audit")
+        logger.warning("Could not import unified_api_contracts.internal for orphan audit")
 
     return orphans
 

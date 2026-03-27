@@ -40,7 +40,7 @@ todos:
   # ============================================================================
   - id: p1-fix-season-logic
     content: |
-      - [ ] [AGENT] P0. Fix USRI api_football get_teams(league_id, season) season calculation.
+      - [x] [AGENT] P0. Fix USRI api_football get_teams(league_id, season) season calculation.
         File: unified_sports_reference_interface/adapters/api_football.py:178
         Current: effective_season = season if season is not None else datetime.now().year
         Fix: For Aug-start leagues (European), season = current_year if month >= 8 else current_year - 1.
@@ -154,10 +154,11 @@ todos:
 
 # Sports Integration Plan 1: Reference Data Pipeline
 
-Part of the 6-plan sports integration series. See master plan index at
-.claude/plans/splendid-percolating-wave.md for the full dependency DAG.
+Part of the 6-plan sports integration series. See master plan index at .claude/plans/splendid-percolating-wave.md for
+the full dependency DAG.
 
 ## Success Criteria
+
 - 9+ entity types written to GCS per date
 - 2 mapping tables written (team_mapping, fixture_mapping)
 - European league teams returned (season=2025 fix)

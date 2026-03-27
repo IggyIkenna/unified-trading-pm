@@ -4,7 +4,7 @@ priority: 45
 
 # VCR Cassette Ownership
 
-RULE: The six interfaces (unified-market-interface, unified-trade-execution-interface, unified-sports-execution-interface, unified-reference-data-interface, unified-position-interface, unified-cloud-interface) perform VCR recording and live schema validation in their integration tests; they hold API keys. unified-api-contracts (AC) holds schemas and static examples only. Consumers reference cassettes by path — never duplicate.
+RULE: The active interface and service repos (unified-market-interface, execution-service, unified-cloud-interface) perform VCR recording and live schema validation in their integration tests; they hold API keys. unified-api-contracts (AC) holds schemas and static examples only. Consumers reference cassettes by path — never duplicate. NOTE: unified-trade-execution-interface, unified-sports-execution-interface, unified-reference-data-interface, unified-position-interface, unified-defi-execution-interface have been merged into execution-service / instruments-service / position-balance-monitor-service — their VCR tests now live in those service repos.
 WHY: Single source of truth for schemas in AC; interfaces own live verification and keys; prevents cassette drift.
 CODEX: 02-data/vcr-cassette-ownership.md
 
