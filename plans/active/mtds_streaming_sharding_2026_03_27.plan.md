@@ -49,9 +49,16 @@ venues (Binance trades = multi-GB per day) will OOM if loaded entirely into memo
 | NYSE            | trades       | 1-3 GB      | 212         |
 | AAVEV3-ETHEREUM | rate_indices | 10 MB       | 51          |
 
+### Storage pattern (confirmed from git history ~Feb 9 2026)
+
+- **Instruments:** one parquet per venue — all instrument types together (options chain = single file, not one per option)
+- **Tick data:** one parquet per venue×data_type shard — all instruments for that combo in one file
+- **instrument_ids filter:** `VENUE:TYPE:SYMBOL` format, parsed to extract venue, applied pre/post download
+
 ### Memory budget
 
-Target: **< 2 GB peak RSS** per shard. Stream in 50 MB chunks, flush to GCS, release.
+Target: **< 2 GB peak RSS** per shard. Stream in 50 MB chunks via local temp file + PyArrow row group appending.
+Temp file grows on disk (SSD), uploaded to GCS at close, then deleted.
 
 ## Execution phases
 
@@ -73,20 +80,22 @@ Phase 5: Verify all venues via CLI
 
 ## Phase 1: Streaming write infrastructure (UTL)
 
-**Goal:** A `StreamingParquetWriter` in UTL that accepts DataFrame chunks and flushes to GCS when buffer exceeds a
-configurable threshold.
+**Goal:** A `StreamingParquetWriter` in UTL that accepts DataFrame chunks and writes a **single parquet
+file** to GCS — not multiple part files. Uses a local temp file with PyArrow row group appending,
+then uploads once to GCS at close.
 
 - [ ] [AGENT] P0. Add `StreamingParquetWriter` to `unified_trading_library/io/streaming_writer.py`
-  - Constructor: `StreamingParquetWriter(bucket, path_template, flush_threshold_mb=50)`
-  - Method: `write_chunk(df: pd.DataFrame)` — appends to buffer, auto-flushes when threshold hit
-  - Method: `flush()` — writes current buffer to GCS as one parquet part file
-  - Method: `close()` — final flush + returns total bytes written
-  - Part files: `part-{sequence:04d}.parquet` under the partition path
-  - Uses `get_data_sink()` internally — respects PROTOCOL_DATA_SINK_BACKEND
+  - Constructor: `StreamingParquetWriter(bucket, gcs_path, flush_threshold_mb=50)`
+  - Method: `write_chunk(df: pd.DataFrame)` — converts to PyArrow table, appends as row group to local temp file
+  - Method: `close() -> int` — uploads the single temp file to GCS, deletes local temp, returns bytes written
+  - Uses `tempfile.NamedTemporaryFile` for local staging — no memory accumulation
+  - PyArrow `ParquetWriter.write_table()` appends row groups to a single file (native support)
+  - One file in GCS: `day={date}/venue={venue}/data_type={type}/ticks.parquet`
+  - Uses `get_storage_client().upload_file()` for the final GCS upload
 - [ ] [AGENT] P0. Export from UTL `__init__.py`
 
-**Success:** `StreamingParquetWriter` can write 500 MB of data in 50 MB chunks without exceeding 100 MB peak memory
-above the chunk size.
+**Output:** One parquet file per shard in GCS. Peak memory = one chunk (~50MB DataFrame) at any time.
+The local temp file grows on disk but is deleted after upload.
 
 ## Phase 2: UMI adapter download_batch() — CeFi via Tardis
 
@@ -143,8 +152,9 @@ downloads trades and writes to GCS.
   - Concurrency: up to 4 shards in parallel (Semaphore)
   - Each shard writes to `day={date}/venue={venue}/data_type={type}/ticks.parquet`
 - [ ] [AGENT] P0. Wire `StreamingParquetWriter` into the write path
-  - Replace `sink.write(data=df, ...)` with streaming writer for large DataFrames
-  - Threshold: if df > 50 MB estimated, use streaming; else direct write
+  - All shards use StreamingParquetWriter — adapters call `writer.write_chunk(df)` per chunk
+  - `writer.close()` uploads the single parquet to GCS and cleans up the temp file
+  - Small shards (DeFi ~10 MB) just write one chunk then close — no overhead
 - [ ] [AGENT] P0. Update ManifestWriter to track per-shard availability
   - Index now has `(date, venue, data_type) → record_count`
 
