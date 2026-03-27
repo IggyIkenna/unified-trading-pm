@@ -1621,7 +1621,7 @@
       "codex_sections": [
         "06-coding-standards"
       ],
-      "version": "0.1.0",
+      "version": "0.2.0",
       "version_source": "package.json",
       "dependencies": [],
       "ci_status": "FAILING",
