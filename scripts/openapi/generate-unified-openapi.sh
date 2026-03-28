@@ -77,4 +77,38 @@ echo ""
 echo "=== Generating System Topology ==="
 python "$SCRIPT_DIR/generate_system_topology.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+# ---------------------------------------------------------------------------
+# Sync to UI repos (if present as sibling directories)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Syncing to UI repos ==="
+
+OUTPUT_DIR="$WORKSPACE_ROOT/unified-api-contracts/openapi"
+SYNCED=0
+
+for UI_REPO in unified-trading-system-ui unified-trading-system-ui\ copy; do
+    UI_DIR="$WORKSPACE_ROOT/$UI_REPO"
+    REGISTRY_DIR="$UI_DIR/lib/registry"
+
+    if [[ -d "$REGISTRY_DIR" ]]; then
+        cp "$OUTPUT_DIR/unified-trading-system.openapi.json" "$REGISTRY_DIR/openapi.json"
+        cp "$OUTPUT_DIR/unified-trading-system.openapi.yaml" "$REGISTRY_DIR/openapi.yaml"
+        [[ -f "$OUTPUT_DIR/ui-reference-data.json" ]] && cp "$OUTPUT_DIR/ui-reference-data.json" "$REGISTRY_DIR/ui-reference-data.json"
+        echo "  Synced spec → $UI_REPO/lib/registry/"
+
+        # Regenerate TypeScript types if npx is available
+        TYPES_FILE="$UI_DIR/lib/types/api-generated.ts"
+        if [[ -f "$TYPES_FILE" ]] && command -v npx &>/dev/null; then
+            (cd "$UI_DIR" && npx --yes openapi-typescript lib/registry/openapi.json --output lib/types/api-generated.ts 2>/dev/null) \
+                && echo "  Regenerated TypeScript types → $UI_REPO/lib/types/api-generated.ts" \
+                || echo "  WARNING: TypeScript type generation failed (run manually: cd $UI_REPO && npx openapi-typescript lib/registry/openapi.json --output lib/types/api-generated.ts)"
+        fi
+        SYNCED=$((SYNCED + 1))
+    fi
+done
+
+if [[ $SYNCED -eq 0 ]]; then
+    echo "  No UI repos found — skipping sync (expected: unified-trading-system-ui as sibling)"
+fi
+
 echo "=== All Done ==="
