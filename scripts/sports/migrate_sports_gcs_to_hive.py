@@ -92,9 +92,7 @@ def migrate_raw_data(dry_run: bool = True) -> list[str]:
     New: gs://{NEW_INSTRUMENTS}/sports_reference/archived_raw/source={provider}/entity={type}/{entity}.parquet
     """
     import pandas as pd
-    from google.cloud import storage
 
-    client = storage.Client(project=PROJECT_ID)
     actions: list[str] = []
 
     for old_path, entity in RAW_ENTITY_MAP.items():

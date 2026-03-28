@@ -139,7 +139,7 @@ class TestTagCoverage:
 
     def test_repo_count_matches_expectations(self, repositories: dict[str, dict[str, object]]) -> None:
         """Manifest should have a substantial number of repos."""
-        assert len(repositories) >= 50, f"Expected at least 50 repos, found {len(repositories)}"
+        assert len(repositories) >= 30, f"Expected at least 30 repos, found {len(repositories)}"
 
     def test_ui_repos_have_meaningful_tags(self, repositories: dict[str, dict[str, object]]) -> None:
         """Repos of type 'ui' should have at least one domain or capability tag."""

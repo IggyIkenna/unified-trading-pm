@@ -56,9 +56,9 @@
   <text x="95" y="224" text-anchor="middle" class="level-label">L0</text>
   <text x="150" y="224" class="desc">Project management — pure root (manifest, templates, scripts, cursor rules). No dependencies. (1 repos)</text>
   <rect x="70" y="247" width="146" height="38" class="devops" />
-  <rect x="70" y="247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="247" width="4" height="38" fill="#facc15" rx="2" />
   <text x="143" y="265" text-anchor="middle" class="label">unified-trading-pm</text>
-  <circle cx="206" cy="255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="206" cy="255" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="143" y="277" text-anchor="middle" class="ver">1.2.0</text>
   <!-- L1: Foundation — zero inter-library dependencies (Tier 0). Depends on PM + codex for CI standards. (1 repos) -->
   <rect x="40" y="319" width="2320" height="107" class="level-bg" />
@@ -161,9 +161,9 @@
   <circle cx="2333" cy="850" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="2228" y="872" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="70" y="890" width="188" height="38" class="svc" />
-  <rect x="70" y="890" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="890" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="164" y="908" text-anchor="middle" class="label">market-tick-data-service</text>
-  <circle cx="248" cy="898" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="248" cy="898" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="164" y="920" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="268" y="890" width="160" height="38" class="svc" />
   <rect x="268" y="890" width="4" height="38" fill="#ef4444" rx="2" />

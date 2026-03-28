@@ -503,7 +503,9 @@ EL=$(rg '\.get\s*\(\s*["\x27][^"\x27]+["\x27]\s*,\s*\[\]\s*\)' --type py --glob 
 rg "central-element-[0-9]+" tests/ 2>/dev/null \
     && { log_fail "Hardcoded prod project ID in tests — use 'test-project'"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in tests"
 
-rg "central-element-[0-9]+" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
+HP_EXTRA=()
+for g in ${HARDCODED_PROJECT_EXCLUDE_GLOBS[@]+"${HARDCODED_PROJECT_EXCLUDE_GLOBS[@]}"}; do HP_EXTRA+=(--glob "$g"); done
+rg "central-element-[0-9]+" --type py --glob "!tests/**" "${HP_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Hardcoded project ID in production — use config.gcp_project_id"; V=$(( V + 1 )); } || log_success "No hardcoded project ID in production"
 
 # GCP_PROJECT_ID is legacy — only GCP_PROJECT_ID is canonical
@@ -529,8 +531,11 @@ DOMAIN_FROM_UCS=$(rg 'from unified_trading_library import.*(market_category|Doma
 [[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
 
 # Schema provenance: local BaseModel/TypedDict/dataclass should import from UAC or UIC
+# SCHEMA_PROVENANCE_SKIP: set true for devops/PM repos where local BaseModel in checker scripts is expected
 REPO_ROOT_SVC="${REPO_ROOT:-$(dirname "$PROJECT_ROOT")}"
-if [[ -f "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" ]]; then
+if [[ "${SCHEMA_PROVENANCE_SKIP:-false}" == "true" ]]; then
+    log_success "Schema provenance: skipped (SCHEMA_PROVENANCE_SKIP=true)"
+elif [[ -f "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" ]]; then
     if python3 "$REPO_ROOT_SVC/unified-trading-pm/scripts/validation/check_schema_provenance.py" --repo "$SERVICE_NAME" --workspace-root "$REPO_ROOT_SVC" 2>/dev/null; then
         log_success "Schema provenance OK (schemas from UAC/UIC)"
     else
@@ -580,8 +585,10 @@ EL_OLD=$(rg "from unified_trading_library[. ].*(setup_cloud_logging|observabilit
 # ============================================================
 # STEP 5.5 — No direct cloud SDK imports (must route through UCLI/UCS)
 # ============================================================
+_csdk_extra=()
+for g in ${CLOUD_SDK_EXCLUDE_GLOBS[@]+"${CLOUD_SDK_EXCLUDE_GLOBS[@]}"}; do _csdk_extra+=(--glob "$g"); done
 DIRECT_CLOUD=$(rg 'from google\.cloud import|^import boto3\b|^from boto3 import|^from botocore import' \
-    --type py "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ | grep -v '\.venv' | grep -v '# noqa: cloud-sdk-direct' || :)
+    --type py "${_csdk_extra[@]}" "${SOURCE_DIR}/" 2>/dev/null | grep -v __pycache__ | grep -v '\.venv' | grep -v '# noqa: cloud-sdk-direct' || :)
 [[ -n "$DIRECT_CLOUD" ]] && {
     log_fail "Direct cloud SDK imports found (route through unified-cloud-interface instead):"
     echo "$DIRECT_CLOUD" | head -5
@@ -767,11 +774,14 @@ TYPEDDICT_IN_SERVICE=$(rg 'class \w+\(TypedDict\)' --type py \
 # ============================================================
 # STEP 5.10 — Block direct cloud SDK imports outside UCI providers
 # ============================================================
+_csdk_step_extra=()
+for g in ${CLOUD_SDK_EXCLUDE_GLOBS[@]+"${CLOUD_SDK_EXCLUDE_GLOBS[@]}"}; do _csdk_step_extra+=(--glob "$g"); done
 CLOUD_SDK_VIOLATIONS=$(rg "^from google\.cloud|^import boto3|^import botocore" \
     --type py \
     --glob '!.venv*' --glob '!**/.venv*/**' \
     --glob '!tests' \
     --glob '!unified_cloud_interface/providers/**' \
+    "${_csdk_step_extra[@]}" \
     -l . 2>/dev/null || :)
 if [ -n "$CLOUD_SDK_VIOLATIONS" ]; then
     log_fail "STEP 5.10: Direct cloud SDK imports found. Use unified_cloud_interface instead:"

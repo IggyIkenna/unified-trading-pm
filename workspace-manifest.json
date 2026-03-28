@@ -998,7 +998,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1573,7 +1573,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1653,14 +1653,18 @@
     },
     "deployment-ui": {
       "type": "ui",
-      "arch_tier": "T3",
+      "arch_tier": "ui",
       "version": "0.1.0",
       "dependencies": [],
       "ci_status": "BASELINE_RECORDED",
       "testing_level": "unit",
       "status": "active",
-      "tier": "T3",
-      "role": "Deployment management UI"
+      "tier": 3,
+      "role": "Deployment management UI",
+      "tags": [
+        "infrastructure",
+        "deployment"
+      ]
     }
   },
   "topologicalOrder": {

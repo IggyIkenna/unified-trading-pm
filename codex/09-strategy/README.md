@@ -15,39 +15,70 @@ For **Tier 0 UI mock parity** (fixtures, cross-strategy UX expectations, promoti
 ```
 09-strategy/
 ├── cross-cutting/          # Concerns shared by ALL strategies
-├── defi/                   # DeFi strategies (4 active)
-├── cefi/                   # CeFi strategies (momentum, mean reversion)
-├── tradfi/                 # TradFi strategies (ML directional, options)
+├── defi/                   # DeFi strategies (15 — EVM, Solana, BTC, multi-chain)
+├── cefi/                   # CeFi strategies (momentum, mean reversion, arb)
+├── tradfi/                 # TradFi strategies (ML directional, options, vol)
 ├── sports/                 # Sports betting strategies (arb, value, ML)
+├── prediction/             # Prediction market strategies (cross-venue arb)
 └── templates/              # Strategy description template
 ```
 
 ## Strategy Index
 
-### DeFi (4 strategies + 1 MM)
+### DeFi — Ethereum / EVM (5 strategies + 1 MM)
 
-| Strategy                                                 | File                      | Status        | Capital Target |
-| -------------------------------------------------------- | ------------------------- | ------------- | -------------- |
-| [Basis Trade](defi/basis-trade.md)                       | `defi_basis.py`           | Code complete | TBD            |
-| [Staked Basis](defi/staked-basis.md)                     | `defi_staked_basis.py`    | Code complete | TBD            |
-| [AAVE Lending](defi/aave-lending.md)                     | `defi_lending.py`         | Code complete | TBD            |
-| [Recursive Staked Basis](defi/recursive-staked-basis.md) | `defi_recursive_basis.py` | Code complete | TBD            |
-| [AMM Liquidity Provision](defi/market-making-lp.md)      | TBD                       | Documented    | TBD            |
+| Strategy                                                 | File                      | Status        | Target APY |
+| -------------------------------------------------------- | ------------------------- | ------------- | ---------- |
+| [ETH Basis Trade](defi/basis-trade.md)                   | `defi_basis.py`           | Code complete | 10-25%     |
+| [ETH Staked Basis](defi/staked-basis.md)                 | `defi_staked_basis.py`    | Code complete | 15-30%     |
+| [Recursive Staked Basis](defi/recursive-staked-basis.md) | `defi_recursive_basis.py` | Code complete | 20-40%     |
+| [AAVE Lending](defi/aave-lending.md)                     | `defi_lending.py`         | Code complete | 3-12%      |
+| [AMM Liquidity Provision](defi/market-making-lp.md)      | TBD                       | Documented    | 15-50%     |
 
-### CeFi (2 strategies + 1 MM)
+### DeFi — Solana (4 strategies)
 
-| Strategy                                 | File                         | Status        | Capital Target |
-| ---------------------------------------- | ---------------------------- | ------------- | -------------- |
-| [Momentum](cefi/momentum.md)             | `cefi_momentum.py`           | Code complete | TBD            |
-| [Mean Reversion](cefi/mean-reversion.md) | `mean_reversion_strategy.py` | Code complete | TBD            |
-| [Market Making](cefi/market-making.md)   | TBD                          | Documented    | TBD            |
+| Strategy                                                          | File | Status     | Target APY |
+| ----------------------------------------------------------------- | ---- | ---------- | ---------- |
+| [SOL Basis Trade (Drift)](defi/sol-basis-trade.md)                | TBD  | Documented | 15-30%     |
+| [SOL Staked Basis (mSOL + Drift)](defi/sol-staked-basis.md)       | TBD  | Documented | 22-37%     |
+| [SOL Lending Yield (Kamino)](defi/sol-lending-yield.md)           | TBD  | Documented | 8-25%      |
+| [SOL Concentrated LP (Raydium/Orca)](defi/sol-concentrated-lp.md) | TBD  | Documented | 20-60%     |
 
-### TradFi (2 strategies + 1 MM)
+### DeFi — BTC (2 strategies)
+
+| Strategy                                                     | File | Status     | Target APY |
+| ------------------------------------------------------------ | ---- | ---------- | ---------- |
+| [BTC Basis Trade (WBTC/cbBTC)](defi/btc-basis-trade.md)      | TBD  | Documented | 8-18%      |
+| [BTC Lending Yield (multi-chain)](defi/btc-lending-yield.md) | TBD  | Documented | 3-15%      |
+
+### DeFi — Multi-Chain / Cross-Chain (4 strategies)
+
+| Strategy                                                                  | File | Status     | Target APY |
+| ------------------------------------------------------------------------- | ---- | ---------- | ---------- |
+| [Multi-Chain Lending Yield (SOR)](defi/multi-chain-lending-yield.md)      | TBD  | Documented | 5-12%      |
+| [Cross-Chain Yield Arbitrage](defi/cross-chain-yield-arb.md)              | TBD  | Documented | 3-8%       |
+| [L2 Basis Trade (low gas)](defi/l2-basis-trade.md)                        | TBD  | Documented | 12-25%     |
+| [Cross-Chain SOR Rebalancing (meta)](defi/cross-chain-sor-rebalancing.md) | TBD  | Documented | +2-5%      |
+
+### CeFi (4 strategies + 1 MM)
+
+| Strategy                                                     | File                                  | Status        | Capital Target |
+| ------------------------------------------------------------ | ------------------------------------- | ------------- | -------------- |
+| [Momentum](cefi/momentum.md)                                 | `cefi_momentum.py`                    | Code complete | TBD            |
+| [Mean Reversion](cefi/mean-reversion.md)                     | `mean_reversion_strategy.py`          | Code complete | TBD            |
+| [Cross-Exchange Arbitrage](cefi/cross-exchange.md)           | `cross_exchange_strategy.py`          | Code complete | TBD            |
+| [Statistical Arbitrage](cefi/stat-arb.md)                    | `stat_arb_strategy.py`               | Code complete | TBD            |
+| [Market Making](cefi/market-making.md)                       | TBD                                   | Documented    | TBD            |
+
+### TradFi (5 strategies + 1 MM)
 
 | Strategy                                                 | File                                | Status        | Capital Target |
 | -------------------------------------------------------- | ----------------------------------- | ------------- | -------------- |
 | [ML Directional](tradfi/ml-directional.md)               | `tradfi_ml_directional_strategy.py` | Code complete | TBD            |
 | [Options ML](tradfi/options-ml.md)                       | `options_ml_strategy.py`            | Code complete | TBD            |
+| [TradFi Momentum](tradfi/tradfi-momentum.md)             | `tradfi_momentum.py`                | Code complete | TBD            |
+| [Relative Volatility](tradfi/relative-volatility.md)     | `rel_vol_strategy.py`               | Code complete | TBD            |
+| [Volatility Surface](tradfi/volatility-surface.md)       | `vol_surface_strategy.py`           | Code complete | TBD            |
 | [Options Market Making](tradfi/market-making-options.md) | TBD                                 | Documented    | TBD            |
 
 ### Sports (5 strategies + 1 MM)
@@ -60,6 +91,12 @@ For **Tier 0 UI mock parity** (fixtures, cross-strategy UX expectations, promoti
 | Halftime ML                              | `halftime_ml.py`            | Code complete | TBD            |
 | Kelly criterion                          | `kelly.py`                  | Code complete | TBD            |
 | [Market Making](sports/market-making.md) | `market_making.py`          | Documented    | TBD            |
+
+### Prediction Markets (1 strategy)
+
+| Strategy                                                     | File                         | Status        | Capital Target |
+| ------------------------------------------------------------ | ---------------------------- | ------------- | -------------- |
+| [Prediction Arbitrage](prediction/prediction-arb.md)        | `prediction_arb_strategy.py` | Code complete | TBD            |
 
 ## Cross-Cutting Concerns
 

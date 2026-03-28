@@ -235,25 +235,25 @@ rg 'except Exception' --type py \
 
 **Required state:**
 
-| Criterion                | Requirement                                                                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                                           |
-| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                                         |
-| HTTP verify              | No `verify=False` outside test code                                                                                           |
-| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                                     |
-| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                                              |
-| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                                               |
-| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted                   |
-| Auth events all services | ALL API services with auth middleware emit AUTH_FAILURE at minimum — not just execution-service                               |
+| Criterion                | Requirement                                                                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hardcoded secrets        | Zero in production source (excluding test fixtures)                                                                                           |
+| Secret access            | All secrets via `get_secret_client(project_id, secret_name)`; no `os.getenv` fallback                                                         |
+| HTTP verify              | No `verify=False` outside test code                                                                                                           |
+| API authentication       | All API services have auth middleware; 401 paths log `AUTH_FAILURE` event                                                                     |
+| `SECRET_ACCESSED` event  | Logged on every secret retrieval                                                                                                              |
+| `CONFIG_CHANGED` event   | Logged on every config mutation                                                                                                               |
+| Full auth event set      | AUTH_SUCCESS (first-per-session), AUTH_FAILURE, AUTH_DENIED, S2S_AUTH_SUCCESS, S2S_AUTH_FAILURE all emitted                                   |
+| Auth events all services | ALL API services with auth middleware emit AUTH_FAILURE at minimum — not just execution-service                                               |
 | Auth via UEI only        | All auth-related logging (login, session, permission, role) flows through `unified-trading-library.events_interface` — no custom auth loggers |
-| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                                                |
-| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                                              |
+| Mock auth                | `DISABLE_AUTH` env flag does NOT affect production deployments                                                                                |
+| Broad `except Exception` | Zero in production source; each legitimate use in `QUALITY_GATE_BYPASS_AUDIT.md`                                                              |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — minor documentation gap; OR ≤3 broad `except Exception` all documented
 in BYPASS_AUDIT.md. `FAIL` — any hardcoded secret; any 401 path missing `AUTH_FAILURE`; any `verify=False`; OR
 `get_secret_client` bypassed with env var fallback; OR any auth event missing from execution-service auth paths; OR any
-API service with auth middleware missing AUTH_FAILURE event; OR auth logging bypasses `unified-trading-library.events_interface`; OR
-undocumented broad `except Exception` in production code.
+API service with auth middleware missing AUTH_FAILURE event; OR auth logging bypasses
+`unified-trading-library.events_interface`; OR undocumented broad `except Exception` in production code.
 
 ---
 
@@ -282,17 +282,17 @@ rg 'gcs_bucket|gs://' --type py --glob '!.venv*' \
 
 **Required state:**
 
-| Criterion                | Requirement                                                                                                      |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Service→service imports  | Zero cross-service Python imports in T4 repos                                                                    |
+| Criterion                | Requirement                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Service→service imports  | Zero cross-service Python imports in T4 repos                                                                                              |
 | Cloud SDK confinement    | `google.cloud.*` and `boto3` only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
-| Cloud-agnostic I/O       | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere (from UTL cloud_interface)       |
-| Batch-live symmetry      | Same processing engine for batch and live; transport layer switches on `--mode`                                  |
-| UCI PubSub               | Services use `get_pubsub_client()` from UTL cloud_interface, not `google-cloud-pubsub` directly                  |
-| Deployment API boundary  | No direct `deployment_service` Python imports from other services                                                |
-| Separation of concerns   | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries       |
-| No library duplication   | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)     |
-| Import ↔ manifest match | Every `from unified_*` import in a service has a corresponding entry in workspace-manifest.json `dependencies[]` |
+| Cloud-agnostic I/O       | `get_storage_client()`, `get_secret_client()`, `CloudEventSink` used everywhere (from UTL cloud_interface)                                 |
+| Batch-live symmetry      | Same processing engine for batch and live; transport layer switches on `--mode`                                                            |
+| UCI PubSub               | Services use `get_pubsub_client()` from UTL cloud_interface, not `google-cloud-pubsub` directly                                            |
+| Deployment API boundary  | No direct `deployment_service` Python imports from other services                                                                          |
+| Separation of concerns   | Services contain only business logic (orchestration, decisions); all infrastructure delegated to libraries                                 |
+| No library duplication   | No service reimplements functionality that already exists in a unified-\* library (check with cross-repo rg)                               |
+| Import ↔ manifest match | Every `from unified_*` import in a service has a corresponding entry in workspace-manifest.json `dependencies[]`                           |
 
 **Audit commands (separation of concerns):**
 
@@ -349,16 +349,17 @@ for repo in m['repos']:
 - Pattern: catch all exceptions per-shard, log VENUE_PROCESSING_FAILED event with details, return empty result
 - SSOT: unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md
 
-**Scoring:** `PASS` — zero violations. `FAIL` — any cross-service import; any direct cloud SDK outside UTL cloud_interface/deployment;
-any service reimplements library functionality; any undeclared dependency import; any service using UMI for reference
-data instead of URDI; any unguarded raise inside per-venue/per-shard processing loops.
+**Scoring:** `PASS` — zero violations. `FAIL` — any cross-service import; any direct cloud SDK outside UTL
+cloud_interface/deployment; any service reimplements library functionality; any undeclared dependency import; any
+service using UMI for reference data instead of URDI; any unguarded raise inside per-venue/per-shard processing loops.
 
 ---
 
 ## Section 5 — Schema Governance
 
 **Goal:** Clean separation between `unified-api-contracts` (external venue schemas) and `unified-api-contracts.internal`
-(internal schemas, formerly `unified-internal-contracts`). No float for price/monetary fields. No duplicated schemas across AC and UIC.
+(internal schemas, formerly `unified-internal-contracts`). No float for price/monetary fields. No duplicated schemas
+across AC and UIC.
 
 **Audit commands:**
 
@@ -870,13 +871,13 @@ rg 'bigquery_dataset|BigQueryClient' --type py \
 
 **Required state:**
 
-| Criterion                       | Requirement                                                           |
-| ------------------------------- | --------------------------------------------------------------------- |
+| Criterion                       | Requirement                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `google.cloud.*` imports        | Only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
 | `boto3` imports                 | Only in `unified-trading-library/unified_trading_library/cloud_interface/` and `deployment-service/backends/` |
 | `gcs_bucket`/`gs://` references | Only in `unified-trading-library/unified_trading_library/cloud_interface/`                                    |
-| `os.getenv` in cloud config     | Zero (use `UnifiedCloudConfig`); bootstrap exception only             |
-| `get_pubsub_client()`           | All services use UTL cloud_interface PubSub abstraction               |
+| `os.getenv` in cloud config     | Zero (use `UnifiedCloudConfig`); bootstrap exception only                                                     |
+| `get_pubsub_client()`           | All services use UTL cloud_interface PubSub abstraction                                                       |
 
 ### §12.X Credential Placeholder Detection
 
@@ -884,8 +885,8 @@ rg 'bigquery_dataset|BigQueryClient' --type py \
 - Check: `rg "your-service-account" .env .env.example` — any match is a violation
 - ADC (Application Default Credentials) is the default for local dev; no key file references
 
-**Scoring:** `PASS` — zero violations. `FAIL` — any banned pattern found in non-UTL-cloud_interface/non-deployment source; any .env file
-containing placeholder credential paths.
+**Scoring:** `PASS` — zero violations. `FAIL` — any banned pattern found in non-UTL-cloud_interface/non-deployment
+source; any .env file containing placeholder credential paths.
 
 ---
 
@@ -1261,14 +1262,14 @@ python3 unified-trading-pm/scripts/check-repo-readiness.py --all
 
 **Required state:**
 
-| Criterion                   | Requirement                                                           |
-| --------------------------- | --------------------------------------------------------------------- |
-| Readiness schema SSOT       | `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml` v3.0 |
+| Criterion                   | Requirement                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| Readiness schema SSOT       | `unified-trading-pm/codex/10-audit/REPO_READINESS_CHECKLIST.yaml` v3.0       |
 | Per-repo readiness YAML     | `unified-trading-pm/codex/10-audit/repos/{repo-name}.yaml` for all ~33 repos |
-| CR/DR/BR axes               | Each axis tracked independently; N/A items documented with reason     |
-| v1.0.0 gateway gates        | CR5 + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 all PASS before any 1.0.0 tag |
-| `deployment_modes` declared | `batch`, `live`, or `both` per repo in readiness YAML                 |
-| `.readiness-ref`            | Symlink in each repo pointing to codex canonical location             |
+| CR/DR/BR axes               | Each axis tracked independently; N/A items documented with reason            |
+| v1.0.0 gateway gates        | CR5 + DR3 + DR4 + BR2 + BR3 + BR4 + BR8 all PASS before any 1.0.0 tag        |
+| `deployment_modes` declared | `batch`, `live`, or `both` per repo in readiness YAML                        |
+| `.readiness-ref`            | Symlink in each repo pointing to codex canonical location                    |
 
 **Scoring:** `PASS` — all ~33 repos have YAML files; verifier exits 0. `WARN` — 1–5 repos missing YAML (tracked in
 `repo_readiness_semver_hardening_2026_03_11.plan.md`). `FAIL` — any repo reaches 1.0.0 without passing v1.0.0 gateway
@@ -1575,16 +1576,16 @@ rg 'assert_feature_fresh\|assert_market_data_fresh\|DataStalenessError' \
 
 **Required state:**
 
-| Criterion                          | Requirement                                                                                 |
-| ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| Criterion                          | Requirement                                                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `DataFreshnessContract`            | Defined for all 30 data sources in `unified-api-contracts/unified_api_contracts/internal/reference/data_freshness.py` |
-| `FreshnessMonitor`                 | Wired in all 9 data-producing services                                                      |
-| `DATA_STALE` event                 | Emitted when age > `warn_age_seconds`                                                       |
-| `FEED_UNHEALTHY` event             | Emitted when age > `max_age_seconds`; triggers PagerDuty + Telegram                         |
-| `DATA_AVAILABILITY_RESTORED` event | Emitted when feed recovers                                                                  |
-| Freshness gates in consumers       | `strategy-service` + `execution-service` raise `DataStalenessError`                         |
-| Daily completeness check           | `check-data-completeness.sh` scheduled via Cloud Scheduler 08:00 UTC                        |
-| SIT test                           | Injects artificial staleness; verifies `FEED_UNHEALTHY` emission                            |
+| `FreshnessMonitor`                 | Wired in all 9 data-producing services                                                                                |
+| `DATA_STALE` event                 | Emitted when age > `warn_age_seconds`                                                                                 |
+| `FEED_UNHEALTHY` event             | Emitted when age > `max_age_seconds`; triggers PagerDuty + Telegram                                                   |
+| `DATA_AVAILABILITY_RESTORED` event | Emitted when feed recovers                                                                                            |
+| Freshness gates in consumers       | `strategy-service` + `execution-service` raise `DataStalenessError`                                                   |
+| Daily completeness check           | `check-data-completeness.sh` scheduled via Cloud Scheduler 08:00 UTC                                                  |
+| SIT test                           | Injects artificial staleness; verifies `FEED_UNHEALTHY` emission                                                      |
 
 **Scoring:** `PASS` — all criteria met. `WARN` — 1–2 data sources missing `DataFreshnessContract` (tracked in
 `data_availability_live_expectations_2026_03_10.plan.md`). `FAIL` — freshness gates absent from consuming services; OR
@@ -1846,8 +1847,8 @@ reason; OR config/events/alerts data not fully queryable.
 ## Section 30 — Configuration Architecture & ConfigStore Compliance
 
 **Goal:** All services follow the canonical configuration pattern. Service config extends `UnifiedCloudConfig`. Config
-schemas are Pydantic models in `config.py`. Runtime-mutable config uses `ConfigStore` (UTL cloud_interface storage). Bootstrap
-config uses `os.environ` only in declared exception files. No ad-hoc config patterns.
+schemas are Pydantic models in `config.py`. Runtime-mutable config uses `ConfigStore` (UTL cloud_interface storage).
+Bootstrap config uses `os.environ` only in declared exception files. No ad-hoc config patterns.
 
 **Audit commands:**
 
@@ -2004,17 +2005,17 @@ except Exception as e:
 
 **Required state:**
 
-| Criterion                                | Requirement                                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Criterion                                | Requirement                                                                                                 |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | Infra ↔ UTL parity                      | Every infrastructure component in runtime-topology.yaml has a corresponding UTL cloud_interface abstraction |
-| No direct infra SDK in services          | Services never import redis, kafka, firestore, etc. directly — only via UTL cloud_interface                |
-| Storage abstraction                      | `get_storage_client()` covers GCS + S3                                                      |
-| Messaging abstraction                    | `get_pubsub_client()` covers PubSub + SNS/SQS                                               |
-| Secrets abstraction                      | `get_secret_client()` covers GCP Secret Manager + AWS Secrets Manager                       |
-| Query abstraction                        | `get_query_client()` covers BigQuery + Athena (if in topology)                              |
-| Cache abstraction (if Redis in topology) | `get_cache_client()` or equivalent in UTL cloud_interface covers Redis/Memcached            |
-| Topology ↔ repo parity                  | All services in topology `service_flows` exist as repos in workspace                        |
-| No infrastructure orphans                | No infra component provisioned but never abstracted (dead infrastructure cost)              |
+| No direct infra SDK in services          | Services never import redis, kafka, firestore, etc. directly — only via UTL cloud_interface                 |
+| Storage abstraction                      | `get_storage_client()` covers GCS + S3                                                                      |
+| Messaging abstraction                    | `get_pubsub_client()` covers PubSub + SNS/SQS                                                               |
+| Secrets abstraction                      | `get_secret_client()` covers GCP Secret Manager + AWS Secrets Manager                                       |
+| Query abstraction                        | `get_query_client()` covers BigQuery + Athena (if in topology)                                              |
+| Cache abstraction (if Redis in topology) | `get_cache_client()` or equivalent in UTL cloud_interface covers Redis/Memcached                            |
+| Topology ↔ repo parity                  | All services in topology `service_flows` exist as repos in workspace                                        |
+| No infrastructure orphans                | No infra component provisioned but never abstracted (dead infrastructure cost)                              |
 
 **Scoring:** `PASS` — full parity; every topology component has UTL cloud_interface abstraction; zero direct infra SDK
 imports. `WARN` — 1 infra component lacking UTL cloud_interface abstraction but tracked in plan. `FAIL` — any service

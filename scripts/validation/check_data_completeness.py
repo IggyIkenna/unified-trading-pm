@@ -39,7 +39,7 @@ from unified_api_contracts.internal.reference.data_freshness import (
     ALL_FRESHNESS_CONTRACTS,
     DataFreshnessContract,
 )
-from unified_trading_library.events_interface import DATA_COMPLETENESS_CHECK, log_event, setup_events
+from unified_trading_library import DATA_COMPLETENESS_CHECK, log_event, setup_events
 
 logger = logging.getLogger(__name__)
 

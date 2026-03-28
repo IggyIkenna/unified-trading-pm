@@ -122,7 +122,7 @@ _original_make = _er_mod.make_events_relay_router
 
 def _patched_make_events_relay_router():
     from fastapi import APIRouter
-    from unified_trading_library.events_interface import log_event
+    from unified_trading_library import log_event
 
     router = APIRouter(tags=["events"])
 

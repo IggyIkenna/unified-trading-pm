@@ -143,7 +143,7 @@ def test_event_helper_imported(all_event_markers: set[str]) -> None:
 
 def test_mock_event_sink_importable() -> None:
     """MockEventSink must be importable and expose the required interface."""
-    from unified_trading_library.events_interface import MockEventSink
+    from unified_trading_library import MockEventSink
 
     sink = MockEventSink()
     assert hasattr(sink, "events"), "MockEventSink missing 'events' attribute"
@@ -162,7 +162,7 @@ def test_setup_events_signature_meets_contract() -> None:
     """
     import inspect
 
-    from unified_trading_library.events_interface import setup_events
+    from unified_trading_library import setup_events
 
     sig = inspect.signature(setup_events)
     param_names = list(sig.parameters.keys())

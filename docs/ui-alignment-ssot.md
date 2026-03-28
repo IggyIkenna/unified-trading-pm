@@ -167,6 +167,7 @@ subcommand of the existing generator) and document it in §1 or a new subsection
 
 ## 6. Related PM / codex links
 
-- `unified-trading-pm/codex/09-strategy/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` — catalog vs `strategy-service` exports
+- `unified-trading-pm/codex/09-strategy/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` — catalog vs `strategy-service`
+  exports
 - `unified-trading-pm/strategy-manifest.json` — machine strategy list
 - `unified-trading-pm/scripts/dev/ui-api-mapping.json` — service stacks for reference data

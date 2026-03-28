@@ -139,7 +139,7 @@ if cloud_mock in ("1", "true", "yes"):
     _pass("CLOUD_MOCK_MODE", "set to true — mock GCS/PubSub active")
     # Attempt UnifiedCloudConfig instantiation (reads CLOUD_MOCK_MODE)
     try:
-        from unified_trading_library.config_interface import UnifiedCloudConfig  # type: ignore[import-not-found]
+        from unified_trading_library import UnifiedCloudConfig  # type: ignore[import-not-found]
 
         cfg = UnifiedCloudConfig()
         _pass("UnifiedCloudConfig instantiated", f"project={cfg.gcp_project_id}")
@@ -208,7 +208,7 @@ else:
 _section("Check 6: setup_events() from UEI")
 
 try:
-    from unified_trading_library.events_interface import log_event, setup_events  # type: ignore[import-not-found]
+    from unified_trading_library import log_event, setup_events  # type: ignore[import-not-found]
 
     # setup_events with a test service name; CLOUD_MOCK_MODE=true prevents real PubSub init
     setup_events("smoke-test", mode="test")

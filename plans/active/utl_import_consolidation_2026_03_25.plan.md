@@ -62,8 +62,8 @@ INSTRUMENT_TYPE_FOLDER_MAP, VENUE_CATEGORY_MAP, CONFIG_SCHEMA, validate_config_f
 get_analytics_client, EventBus, PubSubClient, QueueClient, StorageBlob, BlobMetadata, StorageDataSource,
 AnalyticsClient, PubSubSubscriberClient, PubSubReceivedMessage, CredentialsRegistry, create_s2s_auth_dependency
 
-**unified_events_interface** (36 missing — mostly event name constants): All KILL*SWITCH*_, ORDER\__, POSITION*\*,
-PORTFOLIO*_, BALANCE\__, DEVIATION*\*, PNL*_, CIRCUIT*BREAKER*_, REGIME\_\*, TRADE_REPORTED_MIFID, etc. +
+**unified_events_interface** (36 missing — mostly event name constants): All KILL*SWITCH*\_, ORDER\__, POSITION*\*,
+PORTFOLIO*_, BALANCE\__, DEVIATION*\*, PNL*_, CIRCUIT*BREAKER*\_, REGIME\_\*, TRADE_REPORTED_MIFID, etc. +
 CoordinationEvent, ComplianceEventPayload, JSONDict
 
 ### ~60 domain-specific symbols (remain as direct deps — NOT added to UTL):
@@ -81,7 +81,7 @@ Feature calculator math, ML types, position types, market adapters, execution ad
 
 - [x] [AGENT] P0. Add UnifiedCloudConfig, InstrumentDomainConfig, and all domain config classes
 - [x] [AGENT] P0. Add get_data_source, get_event_bus, get_pubsub_client, and all cloud clients
-- [x] [AGENT] P0. Add all event name constants (KILL*SWITCH*_, ORDER\__, etc.)
+- [x] [AGENT] P0. Add all event name constants (KILL*SWITCH*\_, ORDER\_\_, etc.)
 - [x] [AGENT] P0. Add CoordinationEvent, ComplianceEventPayload, ConfigStoreError, etc.
 - [x] [AGENT] P0. Verify: `python3 -c "from unified_trading_library import UnifiedCloudConfig; print('OK')"` — PASS
 

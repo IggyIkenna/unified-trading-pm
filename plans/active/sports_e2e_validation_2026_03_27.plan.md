@@ -1,103 +1,101 @@
 ---
-title: "Sports E2E Validation + Feature Regeneration"
+title: "Sports E2E Validation + Arb Pipeline"
 status: active
 priority: P0
 created: 2026-03-27
+updated: 2026-03-27
 locked_by: live-defi-rollout
 locked_since: 2026-03-27
 ---
 
-# Sports E2E Validation + Feature Regeneration
+# Sports E2E Validation + Arb Pipeline
 
 ## Context
 
-Phase A (reference data backfill) and Phase D (odds migration) are complete. 288M odds rows + 143K fixtures + 1.87M
-events in GCS. MTDS schema aligned to v3. Bookmakers= cost fix applied (30 credits/call vs 120). Need to validate the
-full pipeline E2E, backfill the 80-day odds gap, and regenerate all features from historical data.
+Phase A (reference data backfill) and Phase D (odds migration) complete. MTDS validated for 1 day (248K rows, 16min).
+Critical discovery: MTDS used fixed UTC timestamps instead of per-fixture kickoff-relative timestamps. T-120m was a dead
+zone (3% coverage) — confirmed as collection artifact via live API test showing 20/20 bookmakers within 93s bm_time
+spread at correct T-120m. User upgrading Odds API to 50M credits per refill. Total budget: ~207M credits for full
+backfill (4.1 refills).
 
-## Phase 1: MTDS E2E Validation (SEQUENTIAL)
+**Design doc**: `memory/sports_odds_final_design_2026_03_27.md`
 
-Validate that MTDS downloads odds correctly with the new bookmakers= param and writes to GCS in the correct schema.
+## Phase 1: MTDS Adapter Rewrite (SEQUENTIAL)
 
-- [ ] [SCRIPT] P0. Run MTDS for 1 day (2026-03-27) with bookmakers= param, confirm 30 credits/call, verify GCS output
-      schema matches migrated v3 data
-- [ ] [SCRIPT] P0. Verify GCS output: 20 bookmakers, 14 time buckets, canonical instrument IDs, microsecond timestamps
-- [ ] [SCRIPT] P1. Run MTDS for 7 days (2026-03-20 to 2026-03-27), time the run, extrapolate cost for 80-day backfill
-- [ ] [SCRIPT] P1. Create MTDS sports doc at `market-tick-data-service/docs/SPORTS_ODDS.md` covering process, cost,
-      schema
+Rewrite odds adapter for per-fixture timestamps. `bm_time` as ground truth.
 
-**Success criteria**: GCS parquet schema matches migrated data. Credits used = ~14K per day (30 × 14 buckets × 33
-leagues).
+- [x] [SCRIPT] P0. Validate MTDS for 1 day with current adapter (248K rows, 16min, 72K credits)
+- [x] [ANALYSIS] P0. Confirm T-120m dead zone is collection artifact (live API test: 93s bm_time spread at correct time)
+- [x] [DESIGN] P0. Final bucket design: Tier 1 (12 ML buckets) + Tier 2 (57 arb buckets)
+- [x] [CODE] P0. Rewrite `OddsApiAdapter.download_batch()` — per-fixture timestamps from kickoff times
+- [x] [CODE] P0. Add `fetch_utc, staleness_seconds, minutes_to_kickoff, bm_time` columns to output
+- [x] [CODE] P0. Change GCS path: `venue=ODDS_API` → `source=ODDS_API`
+- [x] [CODE] P1. Support Tier 1 (12 buckets) and Tier 2 (57 buckets) modes via `--tier` CLI flag
 
-## Phase 2: FSS E2E Validation (SEQUENTIAL, after Phase 1)
+**Success criteria**: MTDS downloads odds at correct per-fixture times. bm_time matches expected bucket within
+tolerance.
 
-Validate that FSS reads from GCS and computes features correctly.
+## Phase 2: 1-Week Validation (SEQUENTIAL, after Phase 1)
 
-- [ ] [SCRIPT] P0. Run FSS for 1 day (2026-03-22 — has both reference data and odds), time the run
-- [ ] [SCRIPT] P0. Verify output: check which of 23 calculators produce output, count features per group
-- [ ] [SCRIPT] P1. Identify which calculators fail and why (missing provider data, missing GCS paths, etc.)
-- [ ] [SCRIPT] P1. Run FSS for 7 days, time it, identify bottlenecks
-- [ ] [SCRIPT] P1. Create FSS sports doc at `features-sports-service/docs/SPORTS_FEATURES.md`
+Run full pipeline for 1 week. Validate data quality, arb opportunities, feature computation.
 
-**Success criteria**: At least odds-based calculators (odds_calculator, steam_detector) produce correct output from GCS
-data.
+- [ ] [SCRIPT] P0. Run MTDS Tier 2 (57 buckets) for 1 recent week — all leagues
+- [ ] [ANALYSIS] P0. Verify bm_time freshness: ≥18 bookmakers within ±60s at T-10m, T-30m, T-60m, T-120m
+- [ ] [ANALYSIS] P0. Arb scan: find cross-bookmaker arb opportunities (bm_time ±60s, implied prob > 100%)
+- [ ] [ANALYSIS] P0. Arb by time horizon: how much arb at T-4h vs T-2h vs T-30m vs T-10m?
+- [ ] [ANALYSIS] P0. Arb by league: which leagues have most/least efficient markets?
+- [ ] [SCRIPT] P1. Run MDPS cleaning pass — filter by bm_time freshness, add buckets
+- [ ] [SCRIPT] P1. Run FSS on cleaned data — verify odds features (velocity, CLV, steam)
+- [ ] [SCRIPT] P1. Verify feature matrix is ML-ready (one row per fixture, all features as columns)
 
-## Phase 3: Odds Gap Backfill (PARALLEL with Phase 2)
+**Success criteria**: Clear picture of arb landscape. Features compute correctly from clean data. Arb backtest possible.
 
-Backfill 2025-12-31 to 2026-03-21 (~80 days) via MTDS batch.
+## Phase 3: Arb Backtest (SEQUENTIAL, after Phase 2)
 
-- [ ] [SCRIPT] P0. Run MTDS backfill: `--start-date 2025-12-31 --end-date 2026-03-21` — estimated ~1.1M credits,
-      ~20min/day
-- [ ] [SCRIPT] P0. Verify no gaps: BigQuery `SELECT COUNT(DISTINCT day) FROM odds_ticks_hive` should show ~1,905 days
-      (1825 migrated + 80 backfilled)
-- [ ] [SCRIPT] P1. Update BigQuery external table if needed
+Run actual arb backtest using the full system.
 
-**Success criteria**: Continuous odds coverage from 2020-06-06 to present. No date gaps.
+- [ ] [CODE] P0. Implement arb_calculator in FSS (cross-bookmaker arb %, eligible pairs, duration)
+- [ ] [CODE] P0. Implement spread_calculator in FSS (sharp-soft spread, vig, max-min)
+- [ ] [SCRIPT] P0. Run strategy-service arb backtest on 1-week data
+- [ ] [ANALYSIS] P0. P&L analysis: expected arb return per fixture, per league, per time horizon
+- [ ] [ANALYSIS] P1. Determine optimal X hours window for arb (cost vs opportunity trade-off)
 
-## Phase 4: Feature Regeneration Timing (SEQUENTIAL, after Phase 2)
+**Success criteria**: Arb backtest runs E2E. Clear P&L picture per league/time horizon.
 
-Profile feature regeneration cost to decide local vs VM.
+## Phase 4: Full System Integration (after Phase 3)
 
-- [ ] [SCRIPT] P0. Time FSS for 1 week of historical data (e.g. 2025-12-15 to 2025-12-21) — measures compute only, no
-      API calls for odds calculators
-- [ ] [SCRIPT] P0. Identify which calculators need live API calls (FootyStats, Understat, etc.) vs pure GCS reads
-- [ ] [SCRIPT] P1. For GCS-only calculators: extrapolate to full 5.5 years, decide local vs VM
-- [ ] [SCRIPT] P1. For API-dependent calculators: estimate API credit cost, decide batch strategy
-- [ ] [SCRIPT] P2. If VM needed: use pattern from odds migration (e2-standard-2, asia-northeast1-b, screen session)
+When satisfied with 1-week results, plan the full backfill.
 
-**Success criteria**: Clear time/cost estimate for full regeneration. Decision on local vs VM.
+- [ ] [PLAN] P0. Cost plan: Tier 1 (126M credits, 5.8yr) + Tier 2 (103M credits, 1yr) = 207M total
+- [ ] [CODE] P0. Wire MDPS for sports odds processing (L2.5 in pipeline)
+- [ ] [SCRIPT] P0. Run Tier 2 backfill (1 year, arb quality) — ~103M credits
+- [ ] [SCRIPT] P1. Run Tier 1 backfill (5.8 years, ML quality) — ~126M credits
+- [ ] [SCRIPT] P1. Regenerate features from backfilled data
+- [ ] [SCRIPT] P2. Migrate existing 288M rows to `source=ODDS_API`, relabel with bm_time for long-horizon features
+- [ ] [SCRIPT] P2. BigQuery external tables over new data
+- [ ] [SCRIPT] P2. Cleanup old `venue=ODDS_API` paths
 
-## Phase 5: Full Feature Regeneration (after Phase 4)
+**Success criteria**: Full historical coverage. Features regenerated. Arb backtest on full history.
 
-- [ ] [SCRIPT] P0. Run GCS-only feature calculators for full history (2020-06 to present)
-- [ ] [SCRIPT] P1. Run API-dependent calculators where data available (FootyStats, Open-Meteo)
-- [ ] [SCRIPT] P2. Verify feature counts: target 672 features across 23 groups
-- [ ] [SCRIPT] P2. BigQuery external table over features bucket
+## Phase 5: Live Pipeline (after Phase 4)
 
-**Success criteria**: Features parquets in GCS for full history. BigQuery-queryable.
+- [ ] [CODE] P1. MTDS live mode: capture odds per fixture schedule (Pub/Sub trigger)
+- [ ] [CODE] P1. MDPS live mode: clean + bucket in real-time
+- [ ] [CODE] P1. FSS live mode: compute features per fixture ~60min pre-KO
+- [ ] [CODE] P2. Strategy live mode: arb detection + signal generation
 
-## Phase 6: Cleanup + Convergence
-
-- [ ] [SCRIPT] P1. Converge GCS path conventions: `sports_reference/by_date/entity=` vs `sports_reference/fixtures/day=`
-- [ ] [SCRIPT] P1. Delete remaining orphaned GCS paths (old hyphenated instrument_availability, catalogue, test output)
-- [ ] [SCRIPT] P1. Delete USRI odds_api.py adapter (orphaned — odds owned by UMI)
-- [ ] [SCRIPT] P2. Reference data re-backfill with microsecond timestamps (fixtures/stats/events — quick ~20min)
-- [ ] [SCRIPT] P2. Update handoff memory with final state
+**Success criteria**: Batch = live. Same schema, same paths, same features.
 
 ## Dependency Graph
 
 ```
-Phase 1 (MTDS validation)
+Phase 1 (adapter rewrite)
     │
-    ├──→ Phase 2 (FSS validation)
-    │        │
-    │        └──→ Phase 4 (timing profile)
-    │                  │
-    │                  └──→ Phase 5 (full regeneration)
-    │
-    └──→ Phase 3 (odds backfill) ── PARALLEL with Phase 2
-                                          │
-                                          └──→ Phase 5
-
-Phase 6 (cleanup) ── after all above
+    └──→ Phase 2 (1-week validation)
+              │
+              └──→ Phase 3 (arb backtest)
+                        │
+                        └──→ Phase 4 (full integration + backfill)
+                                  │
+                                  └──→ Phase 5 (live pipeline)
 ```

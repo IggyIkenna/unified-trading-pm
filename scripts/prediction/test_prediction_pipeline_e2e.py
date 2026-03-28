@@ -90,7 +90,7 @@ async def test_urdi_instruments() -> dict[str, list[dict[str, str]]]:
 
 async def test_umi_trades(condition_ids: list[str]) -> list[dict[str, object]]:
     """Phase 2: Fetch trades via UMI PolymarketAdapter."""
-    from unified_market_interface.adapters.prediction.polymarket_adapter import PolymarketAdapter
+    from unified_market_interface import PolymarketAdapter
 
     logger.info("")
     logger.info("=" * 60)
@@ -229,7 +229,7 @@ async def write_to_gcs(instruments: dict[str, list[dict[str, str]]], date: str) 
     logger.info("PHASE 6: GCS Write (Hive Partitions)")
     logger.info("=" * 60)
 
-    from unified_trading_library.cloud_interface import get_storage_client
+    from unified_trading_library import get_storage_client
 
     client = get_storage_client(provider="gcp")
     bucket = "instruments-store-prediction-central-element-323112"

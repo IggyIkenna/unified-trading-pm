@@ -34,16 +34,25 @@ EXTERNAL_PACKAGES = {
 }
 
 # Patterns for detecting deep imports
-DEEP_IMPORT_PATTERN = re.compile(r"^from\s+(" + "|".join(EXTERNAL_PACKAGES) + r")\.(\w+(?:\.\w+)*)\s+import")
+_sorted_pkgs = sorted(EXTERNAL_PACKAGES, key=len, reverse=True)
+DEEP_IMPORT_PATTERN = re.compile(
+    r"^from\s+(" + "|".join(_sorted_pkgs) + r")\.(\w+(?:\.\w+)*)\s+import"
+)
 
 # Pattern for from imports
-FROM_IMPORT_PATTERN = re.compile(r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s+import\s+(.+)$")
+FROM_IMPORT_PATTERN = re.compile(
+    r"^(\s*)from\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)"
+    r"\s+import\s+(.+)$"
+)
 
 
 class ImportViolation:
     """Represents an import pattern violation."""
 
-    def __init__(self, file_path: str, line_no: int, original: str, package: str, module_path: str, imports: str):
+    def __init__(
+        self, file_path: str, line_no: int, original: str,
+        package: str, module_path: str, imports: str,
+    ):
         self.file_path = file_path
         self.line_no = line_no
         self.original = original
@@ -59,7 +68,10 @@ class ImportViolation:
         return f"{indent}from {self.package} import {self.imports}"
 
     def __str__(self) -> str:
-        return f"{self.file_path}:{self.line_no}: Deep import from {self.package}.{self.module_path}"
+        return (
+            f"{self.file_path}:{self.line_no}: "
+            f"Deep import from {self.package}.{self.module_path}"
+        )
 
 
 class ImportChecker:

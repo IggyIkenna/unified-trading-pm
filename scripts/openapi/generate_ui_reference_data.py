@@ -182,7 +182,7 @@ def extract_config_schema_universe() -> dict[str, object]:
 
     # UCI UnifiedCloudConfig fields
     try:
-        from unified_trading_library.config_interface import UnifiedCloudConfig
+        from unified_trading_library import UnifiedCloudConfig
 
         fields = {}
         for field_name, field_info in UnifiedCloudConfig.model_fields.items():

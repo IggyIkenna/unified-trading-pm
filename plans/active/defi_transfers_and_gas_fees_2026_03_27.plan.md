@@ -1,6 +1,8 @@
 ---
 name: defi-transfers-and-gas-fees
-overview: Cross-chain transfer orchestration, Alchemy transfer verification, historical gas fee reference data, per-instruction gas costing, ETH balance tracking, and P&L gas attribution
+overview:
+  Cross-chain transfer orchestration, Alchemy transfer verification, historical gas fee reference data, per-instruction
+  gas costing, ETH balance tracking, and P&L gas attribution
 type: code
 epic: epic-code-completion
 status: active
@@ -54,7 +56,7 @@ todos:
   # ============================================================
   - id: uac-transfer-types
     content: |
-      - [ ] [AGENT] P0. Add transfer domain types to UAC `internal/domain/defi/transfers.py`
+      - [x] [AGENT] P0. Add transfer domain types to UAC `internal/domain/defi/transfers.py`
       New types:
       - `TransferType(StrEnum)`: SAME_CHAIN, CROSS_CHAIN, CEX_WITHDRAWAL, CEX_DEPOSIT, SWEEP, REBALANCE
       - `TransferStatus(StrEnum)`: PENDING, SUBMITTED, CONFIRMING, CONFIRMED, FAILED, BRIDGING, BRIDGE_COMPLETE
@@ -63,12 +65,12 @@ todos:
       - `TransferConfirmation(BaseModel)`: transfer_id, tx_hash, block_number, confirmed, actual_value, expected_value, discrepancy_wei, confirmations, timestamp
       - `AlchemyTransferResponse(BaseModel)`: blockNum, uniqueId, hash, from_addr, to_addr, value, asset, category, rawContract (mirrors Alchemy API response)
       Export from `unified_api_contracts.internal.domain.defi` facade.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: uac-gas-fee-types
     content: |
-      - [ ] [AGENT] P0. Add gas fee reference data types to UAC `internal/domain/defi/gas_fees.py`
+      - [x] [AGENT] P0. Add gas fee reference data types to UAC `internal/domain/defi/gas_fees.py`
       New types:
       - Extend `GasCostAction` with: TRANSFER, BRIDGE, APPROVE, ADD_LIQUIDITY, REMOVE_LIQUIDITY, FLASH_BORROW, FLASH_REPAY, ATOMIC_BUNDLE
       - `BlockGasFee(BaseModel)`: chain_id, block_number, timestamp, base_fee_gwei (Decimal), priority_fee_p25_gwei, priority_fee_p50_gwei, priority_fee_p75_gwei, gas_used_ratio (float), blob_base_fee_gwei (Decimal | None)
@@ -76,12 +78,12 @@ todos:
       - `InstructionGasCost(BaseModel)`: instruction_id, operation, chain_id, gas_units, gas_price_gwei, priority_fee_gwei, gas_cost_eth, gas_cost_usd, eth_price_usd, block_number, timestamp
       - `EthBalanceImpact(BaseModel)`: wallet_address, chain_id, instruction_id, gas_cost_eth, eth_balance_before, eth_balance_after, creates_eth_debt (bool), debt_amount_eth (Decimal | None)
       Export from `unified_api_contracts.internal.domain.defi` facade. Move existing `GasCostAction`/`GasCostEstimate` from `gas_cost.py` into this file (delete `gas_cost.py`). Update UAC facade exports.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: uac-transfer-events
     content: |
-      - [ ] [AGENT] P0. Add transfer and gas event constants to UTL events_interface/schemas.py
+      - [x] [AGENT] P0. Add transfer and gas event constants to UTL events_interface/schemas.py
       New event types:
       - TRANSFER_SUBMITTED — transfer tx broadcast
       - TRANSFER_CONFIRMED — on-chain confirmation verified via Alchemy
@@ -92,8 +94,8 @@ todos:
       - TRANSFER_RECONCILIATION_MISMATCH — Alchemy query shows unexpected transfer
       - ETH_BALANCE_DEBT — gas cost created ETH debt (no ETH balance to cover gas)
       - GAS_FEE_DATA_STALE — historical gas fee data older than threshold
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   # ============================================================
   # PHASE 2: Data Layer — Alchemy Clients + Gas Fee Collection (PARALLEL within phase)
@@ -101,7 +103,7 @@ todos:
   # ============================================================
   - id: umi-alchemy-transfers-client
     content: |
-      - [ ] [AGENT] P0. Add Alchemy Transfers API client to UMI `clients/alchemy_transfers_client.py`
+      - [x] [AGENT] P0. Add Alchemy Transfers API client to UMI `clients/alchemy_transfers_client.py`
       Extend existing AlchemyBaseClient pattern. Methods:
       - `get_asset_transfers(chain, from_address, to_address, from_block, to_block, categories, max_count, page_key, with_metadata, order)` → list[AlchemyTransferResponse]
       - `get_all_transfers_paginated(...)` → async generator yielding pages
@@ -111,12 +113,12 @@ todos:
       Uses existing AlchemyBaseClient for API key management and chain→URL resolution.
       Pagination: follow pageKey with 10-min TTL awareness.
       Unit tests with `responses` library mocking Alchemy JSON-RPC responses.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: umi-gas-fee-client
     content: |
-      - [ ] [AGENT] P0. Add gas fee history client to UMI `clients/gas_fee_client.py`
+      - [x] [AGENT] P0. Add gas fee history client to UMI `clients/gas_fee_client.py`
       Uses Alchemy `eth_feeHistory` JSON-RPC method. Methods:
       - `get_fee_history(chain, block_count, newest_block, reward_percentiles)` → list[BlockGasFee]
       - `get_current_gas_price(chain)` → GasFeeSnapshot
@@ -125,8 +127,8 @@ todos:
       Reward percentiles default: [25, 50, 75].
       Chain support: all chains in CHAIN_RPC_TEMPLATES (1, 11155111, 42161, 10, 137, 8453).
       Unit tests with `responses` library.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   # ============================================================
   # PHASE 3: Reference Data — Gas Fee Historical Backfill (SEQUENTIAL after Phase 2)
@@ -134,7 +136,7 @@ todos:
   # ============================================================
   - id: mtds-gas-fee-collection
     content: |
-      - [ ] [AGENT] P1. Add gas fee collection to market-tick-data-service
+      - [x] [AGENT] P1. Add gas fee collection to market-tick-data-service
       New operation in MTDS CLI: `--operation collect-gas-fees --category defi`
       - Fetches `eth_feeHistory` for configured chains at configurable interval (default: every 100 blocks)
       - Writes BlockGasFee records to GCS as parquet: `gs://{bucket}/gas_fees/{chain_id}/{date}/gas_fees_{block_range}.parquet`
@@ -143,12 +145,12 @@ todos:
       - Live mode: poll every N seconds for new blocks, append to current date partition
       - This becomes reference data — instruments-service and execution-service consume it
       Config fields on MTDS config: `gas_fee_chains` (list[int]), `gas_fee_sample_interval` (int, default 100), `gas_fee_poll_seconds` (int, default 12)
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: utl-gas-fee-reader
     content: |
-      - [ ] [AGENT] P1. Add gas fee reader to UTL domain_client
+      - [x] [AGENT] P1. Add gas fee reader to UTL domain_client
       New reader in `domain_client/readers/gas_fee_reader.py`:
       - `read_gas_fees(chain_id, start_date, end_date)` → DataFrame with BlockGasFee columns
       - `get_gas_price_at_block(chain_id, block_number)` → GasFeeSnapshot
@@ -156,8 +158,8 @@ todos:
       - `get_average_gas_price(chain_id, start_time, end_time)` → GasFeeSnapshot
       Reads from GCS parquet files written by MTDS.
       Export from UTL domain_client facade.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   # ============================================================
   # PHASE 4: Execution — Live Transfers + Gas Costing (PARALLEL within phase)
@@ -165,7 +167,7 @@ todos:
   # ============================================================
   - id: exec-transfer-handler-live
     content: |
-      - [ ] [AGENT] P0. Upgrade TransferHandler to support live on-chain transfers
+      - [x] [AGENT] P0. Upgrade TransferHandler to support live on-chain transfers
       File: `execution-service/execution_service/engine/handlers/transfer_handler.py`
       Changes:
       - Add `_execute_onchain_transfer(instruction)` — builds ERC20/ETH transfer tx, signs via BaseConnector pattern, broadcasts, waits for receipt
@@ -176,12 +178,12 @@ todos:
       - Emit TRANSFER_FAILED event on revert/timeout
       - Return TransferRecord with full details (gas_used, gas_price, gas_cost_eth/usd)
       - Paper trade mode: sign but don't broadcast (existing pattern from DeFi connectors)
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: exec-gas-cost-model-upgrade
     content: |
-      - [ ] [AGENT] P0. Upgrade GasCostModel to use real historical gas data
+      - [x] [AGENT] P0. Upgrade GasCostModel to use real historical gas data
       File: `execution-service/execution_service/services/gas_cost_model.py`
       Changes:
       - Replace hardcoded `default_gas_price_gwei = 30` with real data from UTL gas_fee_reader
@@ -191,12 +193,12 @@ todos:
       - Add protocol-specific gas multipliers: Aave operations on Arbitrum use ~60% less gas than Ethereum mainnet
       - Chain-specific DEFAULT_GAS_ESTIMATES: different defaults per chain_id
       - Keep existing `calculate_cost()` API for backwards compat but have it delegate to new chain-aware methods
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: exec-eth-balance-tracker
     content: |
-      - [ ] [AGENT] P0. Add ETH balance tracking for gas cost deduction
+      - [x] [AGENT] P0. Add ETH balance tracking for gas cost deduction
       New file: `execution-service/execution_service/services/eth_balance_tracker.py`
       Class `EthBalanceTracker`:
       - Tracks ETH balance per wallet per chain (in-memory state, loaded from position snapshot)
@@ -210,12 +212,12 @@ todos:
       - `get_balance(wallet, chain_id)` → Decimal
       - `get_all_debts()` → list[EthBalanceImpact] (all wallets with negative ETH)
       Integrated into TransferHandler and all DeFi handlers (swap, lend, stake, etc.) — every on-chain instruction deducts gas from ETH balance.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: exec-bridge-connector
     content: |
-      - [ ] [AGENT] P1. Add cross-chain bridge connector base and Socket/LiFi implementation
+      - [x] [AGENT] P1. Add cross-chain bridge connector base and Socket/LiFi implementation
       New file: `execution-service/execution_service/defi_execution/protocols/bridge.py`
       - `BaseBridgeConnector(BaseConnector)` abstract class:
         - `bridge(source_chain, dest_chain, token, amount, recipient)` → TransferRecord
@@ -227,8 +229,8 @@ todos:
         - Single integration point covers multiple bridge protocols
       - Handler routing: TRANSFER instructions with source_chain != dest_chain route to BridgeConnector
       - Register in handler_registry.py
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   # ============================================================
   # PHASE 5: P&L Attribution + Strategy Integration (PARALLEL within phase)
@@ -236,7 +238,7 @@ todos:
   # ============================================================
   - id: pnl-gas-attribution
     content: |
-      - [ ] [AGENT] P0. Integrate per-instruction gas costs into P&L attribution
+      - [x] [AGENT] P0. Integrate per-instruction gas costs into P&L attribution
       File: `execution-service/execution_service/services/pnl_calculator.py`
       Changes:
       - Add `add_instruction_gas_cost(instruction_gas_cost: InstructionGasCost)` — records per-instruction gas
@@ -248,12 +250,12 @@ todos:
       File: `pnl-attribution-service/` (if separate)
       - Ensure gas cost flows through to P&L attribution reports
       - Gas costs attributed to the strategy that generated the instruction
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: strategy-transfer-instructions
     content: |
-      - [ ] [AGENT] P1. Enable strategy-service to generate TRANSFER instructions for sweep/rebalance
+      - [x] [AGENT] P1. Enable strategy-service to generate TRANSFER instructions for sweep/rebalance
       File: `strategy-service/strategy_service/engine/rebalancing/`
       Changes:
       - PortfolioRebalancer currently generates SWAP/TRADE only — add TRANSFER generation for:
@@ -263,8 +265,8 @@ todos:
       - New config fields: `enable_transfer_rebalancing` (bool), `sweep_threshold_usd` (Decimal), `min_eth_reserve` (Decimal — minimum ETH to keep for gas)
       - Transfer instructions include: from_venue, to_venue, token, amount, transfer_type
       - Validate ETH reserve: if rebalancing would leave wallet below `min_eth_reserve` ETH, emit warning and adjust
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   # ============================================================
   # PHASE 6: Reconciliation + Monitoring (PARALLEL within phase)
@@ -272,7 +274,7 @@ todos:
   # ============================================================
   - id: pbms-transfer-reconciliation
     content: |
-      - [ ] [AGENT] P1. Add transfer reconciliation to position-balance-monitor-service
+      - [x] [AGENT] P1. Add transfer reconciliation to position-balance-monitor-service
       File: `position-balance-monitor-service/position_balance_monitor_service/core/`
       New module: `transfer_reconciler.py`
       Class `TransferReconciler`:
@@ -283,19 +285,19 @@ todos:
       - If unexpected transfer detected (not in our records): emit BALANCE_DISCREPANCY_DETECTED event
       - Track ETH balance for gas accounting: compare expected ETH (after gas deductions) vs actual on-chain ETH balance
       Config: `transfer_reconciliation_interval_minutes` (default: 15), `tracked_wallet_addresses` (list[str])
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: pbms-eth-debt-monitor
     content: |
-      - [ ] [AGENT] P1. Add ETH debt monitoring to position-balance-monitor-service
+      - [x] [AGENT] P1. Add ETH debt monitoring to position-balance-monitor-service
       Listen for ETH_BALANCE_DEBT events from execution-service.
       Track cumulative ETH debt per wallet per chain.
       If ETH debt exceeds threshold (configurable, default 0.1 ETH): emit alert.
       Suggest corrective action: "Transfer X ETH to wallet Y on chain Z to cover gas debt".
       Dashboard data: expose ETH debt per wallet via health API data_freshness callback.
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   # ============================================================
   # PHASE 7: Tests + QG Sweep (PARALLEL within phase)
@@ -303,50 +305,54 @@ todos:
   # ============================================================
   - id: tests-uac
     content: |
-      - [ ] [AGENT] P0. Unit tests for all new UAC types (transfers, gas fees, events)
+      - [x] [AGENT] P0. Unit tests for all new UAC types (transfers, gas fees, events)
       Test files: `unified-api-contracts/tests/test_defi_transfers.py`, `tests/test_defi_gas_fees.py`
       - Validate all Pydantic models serialize/deserialize correctly
       - Validate enum completeness
       - Validate AlchemyTransferResponse matches actual Alchemy API response shape
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: tests-umi
     content: |
-      - [ ] [AGENT] P0. Unit tests for Alchemy transfers + gas fee clients
+      - [x] [AGENT] P0. Unit tests for Alchemy transfers + gas fee clients
       Test files: `unified-market-interface/tests/test_alchemy_transfers_client.py`, `tests/test_gas_fee_client.py`
       - Mock Alchemy JSON-RPC responses with `responses` library
       - Test pagination (pageKey handling)
       - Test transfer verification (match/mismatch scenarios)
       - Test fee history parsing (hex→decimal conversion)
       - Test multi-chain support
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: tests-execution
     content: |
-      - [ ] [AGENT] P0. Unit tests for upgraded TransferHandler, GasCostModel, EthBalanceTracker
+      - [x] [AGENT] P0. Unit tests for upgraded TransferHandler, GasCostModel, EthBalanceTracker
       Test files in `execution-service/tests/unit/`
       - TransferHandler: test live vs paper trade, CEX vs on-chain, transfer verification
       - GasCostModel: test chain-aware costing, reference data loading, per-instruction cost calculation
       - EthBalanceTracker: test deduction, debt creation, ETH_BALANCE_DEBT event emission, balance queries
       - BridgeConnector: test route selection, fee estimation, status polling
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 
   - id: qg-sweep
     content: |
-      - [ ] [AGENT] P0. Run quality-gates.sh on all 8 affected repos
+      - [x] [AGENT] P0. Run quality-gates.sh on all 8 affected repos
       Repos: unified-api-contracts, unified-trading-library, unified-market-interface, execution-service, position-balance-monitor-service, market-tick-data-service, pnl-attribution-service, strategy-service
       All must pass Pass 1 (full QG).
-    status: todo
-    note: ""
+    status: done
+    note: "Completed 2026-03-27"
 ---
 
 ## Context
 
 ### Problem
-The Unified Trading System has a backtest-only TransferHandler with hardcoded gas fees (30 gwei default), no live transfer execution, no cross-chain bridging, no transfer verification, and no historical gas fee data. Gas costs in P&L are estimated, not actual. ETH balance is not tracked for gas deductions — a wallet could theoretically run out of ETH for gas and nobody would know until a tx reverts.
+
+The Unified Trading System has a backtest-only TransferHandler with hardcoded gas fees (30 gwei default), no live
+transfer execution, no cross-chain bridging, no transfer verification, and no historical gas fee data. Gas costs in P&L
+are estimated, not actual. ETH balance is not tracked for gas deductions — a wallet could theoretically run out of ETH
+for gas and nobody would know until a tx reverts.
 
 ### Solution Architecture
 
@@ -378,6 +384,7 @@ Phase 1: UAC Types          Phase 2: Data Clients       Phase 3: Reference Data
 ```
 
 ### Execution DAG (Dependency Order)
+
 ```
 Phase 1 (PARALLEL: uac-transfer-types, uac-gas-fee-types, uac-transfer-events)
     |
@@ -402,33 +409,44 @@ Phase 7 (PARALLEL: tests-uac, tests-umi, tests-execution, qg-sweep)
 
 ### Key Design Decisions
 
-1. **Alchemy Transfers API for verification, not execution** — `alchemy_getAssetTransfers` is read-only. We use it post-execution to verify transfers landed, and for reconciliation sweeps. Actual transfers use standard Web3 `eth.send_raw_transaction()` through existing Alchemy RPC.
+1. **Alchemy Transfers API for verification, not execution** — `alchemy_getAssetTransfers` is read-only. We use it
+   post-execution to verify transfers landed, and for reconciliation sweeps. Actual transfers use standard Web3
+   `eth.send_raw_transaction()` through existing Alchemy RPC.
 
-2. **`eth_feeHistory` for historical gas data** — Alchemy's `eth_feeHistory` provides base_fee + priority_fee per block. MTDS collects this as reference data (like tick data). Execution-service and P&L consume it via UTL reader.
+2. **`eth_feeHistory` for historical gas data** — Alchemy's `eth_feeHistory` provides base_fee + priority_fee per block.
+   MTDS collects this as reference data (like tick data). Execution-service and P&L consume it via UTL reader.
 
-3. **Gas costs deduct from ETH balance** — Every on-chain instruction's gas cost is deducted from the wallet's ETH balance in the tracker. If ETH goes negative, we flag it (ETH_BALANCE_DEBT event) but don't block execution — the debt is tracked and surfaced for resolution.
+3. **Gas costs deduct from ETH balance** — Every on-chain instruction's gas cost is deducted from the wallet's ETH
+   balance in the tracker. If ETH goes negative, we flag it (ETH_BALANCE_DEBT event) but don't block execution — the
+   debt is tracked and surfaced for resolution.
 
-4. **Socket/Bungee for bridging** — Single API aggregates multiple bridge protocols (Stargate, Across, Hop, etc.). Avoids integrating each bridge separately. Route optimization built-in.
+4. **Socket/Bungee for bridging** — Single API aggregates multiple bridge protocols (Stargate, Across, Hop, etc.).
+   Avoids integrating each bridge separately. Route optimization built-in.
 
-5. **Per-instruction gas costing replaces flat estimates** — Each InstructionGasCost records: actual gas_units, gas_price at that block, ETH cost, USD cost. P&L attribution uses these real numbers instead of the current hardcoded 30 gwei.
+5. **Per-instruction gas costing replaces flat estimates** — Each InstructionGasCost records: actual gas_units,
+   gas_price at that block, ETH cost, USD cost. P&L attribution uses these real numbers instead of the current hardcoded
+   30 gwei.
 
 ### Pre-Audit Manifest
 
-| Repo | File | Symbol | Action |
-|------|------|--------|--------|
-| UAC | `internal/domain/defi/gas_cost.py` | `GasCostAction`, `GasCostEstimate` | Move to new `gas_fees.py`, extend GasCostAction |
-| UAC | `internal/domain/defi/__init__.py` | facade exports | Add new types |
-| exec-service | `services/gas_cost_model.py` | `GasCostModel` | Upgrade with chain-aware costing |
-| exec-service | `services/pnl_calculator.py` | `PnLCalculator`, `StrategyPnL` | Add gas attribution fields |
-| exec-service | `engine/handlers/transfer_handler.py` | `TransferHandler` | Add live execution |
-| exec-service | `engine/routing/handler_registry.py` | handler map | Add bridge routing |
-| exec-service | `results/timeline.py` | `gas_costs_usd` | Wire to real InstructionGasCost |
-| UTL | `events_interface/schemas.py` | event constants | Add 9 new event types |
-| UMI | `clients/alchemy_base_client.py` | `AlchemyBaseClient` | Reuse for new clients |
-| MTDS | CLI parser | operations | Add `collect-gas-fees` |
-| strategy-service | `engine/rebalancing/` | `PortfolioRebalancer` | Add TRANSFER generation |
-| PBMS | `core/` | reconciliation modules | Add transfer reconciler |
+| Repo             | File                                  | Symbol                             | Action                                          |
+| ---------------- | ------------------------------------- | ---------------------------------- | ----------------------------------------------- |
+| UAC              | `internal/domain/defi/gas_cost.py`    | `GasCostAction`, `GasCostEstimate` | Move to new `gas_fees.py`, extend GasCostAction |
+| UAC              | `internal/domain/defi/__init__.py`    | facade exports                     | Add new types                                   |
+| exec-service     | `services/gas_cost_model.py`          | `GasCostModel`                     | Upgrade with chain-aware costing                |
+| exec-service     | `services/pnl_calculator.py`          | `PnLCalculator`, `StrategyPnL`     | Add gas attribution fields                      |
+| exec-service     | `engine/handlers/transfer_handler.py` | `TransferHandler`                  | Add live execution                              |
+| exec-service     | `engine/routing/handler_registry.py`  | handler map                        | Add bridge routing                              |
+| exec-service     | `results/timeline.py`                 | `gas_costs_usd`                    | Wire to real InstructionGasCost                 |
+| UTL              | `events_interface/schemas.py`         | event constants                    | Add 9 new event types                           |
+| UMI              | `clients/alchemy_base_client.py`      | `AlchemyBaseClient`                | Reuse for new clients                           |
+| MTDS             | CLI parser                            | operations                         | Add `collect-gas-fees`                          |
+| strategy-service | `engine/rebalancing/`                 | `PortfolioRebalancer`              | Add TRANSFER generation                         |
+| PBMS             | `core/`                               | reconciliation modules             | Add transfer reconciler                         |
 
 ### Downstream Import Impact
-- `GasCostAction` / `GasCostEstimate` move from `gas_cost.py` to `gas_fees.py` — search for all imports of these symbols across workspace and update. Current consumers: execution-service (gas_cost_model.py imports GasCostEstimate indirectly).
+
+- `GasCostAction` / `GasCostEstimate` move from `gas_cost.py` to `gas_fees.py` — search for all imports of these symbols
+  across workspace and update. Current consumers: execution-service (gas_cost_model.py imports GasCostEstimate
+  indirectly).
 - New types are additive — no breaking changes to existing consumers.
