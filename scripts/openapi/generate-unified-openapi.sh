@@ -78,6 +78,15 @@ echo "=== Generating System Topology ==="
 python "$SCRIPT_DIR/generate_system_topology.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 # ---------------------------------------------------------------------------
+# Type usage audit (dead type detection)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Running Type Usage Audit ==="
+python "$SCRIPT_DIR/audit_type_usage.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Sync to UI repos (if present as sibling directories)
 # ---------------------------------------------------------------------------
 echo ""
