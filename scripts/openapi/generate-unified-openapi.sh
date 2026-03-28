@@ -87,6 +87,15 @@ python "$SCRIPT_DIR/audit_type_usage.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 
 # ---------------------------------------------------------------------------
+# Dead code path audit (orphan modules in services)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Running Dead Code Path Audit ==="
+python "$SCRIPT_DIR/audit_dead_code.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
 # Sync to UI repos (if present as sibling directories)
 # ---------------------------------------------------------------------------
 echo ""
