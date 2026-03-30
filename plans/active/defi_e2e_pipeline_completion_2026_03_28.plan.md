@@ -99,7 +99,9 @@ todos:
         Only run adapters for data types that exist in the file (e.g. Aave: rate_indices/utilization/oracle_prices/risk_params,
         Uniswap: swaps/liquidity). Zero-config, self-describing. Prevents wasteful no-op adapter runs.
     status: done
-    note: "Worker filters tick_data by data_type column. Adapters declare related_data_types. 24/24 combos pass, correct per-venue data_type filtering."
+    note:
+      "Worker filters tick_data by data_type column. Adapters declare related_data_types. 24/24 combos pass, correct
+      per-venue data_type filtering."
 
   - id: mdps-venue-name-alignment
     content: |
@@ -169,7 +171,9 @@ todos:
         Verify: signal generation, position recovery (is_deployed), batch_handler signal-only mode.
         Strategy reads features from features-onchain GCS output, generates ENTER/EXIT/HOLD signals.
     status: done
-    note: "GCSFeatureProvider created. 17,280 features loaded. DEPLOY signals generated at 1% APY threshold. Real Aave supply APY=1.88%."
+    note:
+      "GCSFeatureProvider created. 17,280 features loaded. DEPLOY signals generated at 1% APY threshold. Real Aave
+      supply APY=1.88%."
 
   - id: strategy-multi-defi
     content: |
@@ -193,7 +197,9 @@ todos:
         Aave V3 supply/withdraw on Tenderly fork. Verify: tx simulation, gas estimation, error classification
         (13 DefiErrorCode values), FILL_COMPLETED event emission.
     status: pending
-    note: "Partial: Tenderly VNet creation, wallet funding (100ETH/10K USDC/DAI), FlashLoanReceiver deployment all work. Supply tx reverts — likely approve() issue (#061)."
+    note:
+      "Partial: Tenderly VNet creation, wallet funding (100ETH/10K USDC/DAI), FlashLoanReceiver deployment all work.
+      Supply tx reverts — likely approve() issue (#061)."
 
   - id: execution-signal-to-fill
     content: |

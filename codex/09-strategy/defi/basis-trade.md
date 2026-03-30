@@ -241,6 +241,131 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork + Hyperliquid testnet                   |
 | LIVE_REAL    | Pending | All above + real capital approval                     |
 
+## Wallet & Capital Flow
+
+| Component        | Value                            |
+| ---------------- | -------------------------------- |
+| Treasury reserve | 20% of AUM                       |
+| Hot wallet       | Per-chain, per-strategy isolated |
+| CeFi sub-account | Yes (Hyperliquid -- perp margin) |
+| Bridge required  | No (single-chain for spot leg)   |
+| Custody          | Copper MPC                       |
+
+Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to ETH (spot leg) + TRANSFER USDC to Hyperliquid
+(margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + SWAP ETH back --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
+real-time gas prices and writes them as features consumed by the strategy. Gas hits P&L immediately as a realized
+transaction cost -- not estimated. For the swap leg on Ethereum mainnet, gas is ~$15-25 per rebalance at 30 gwei. The
+Hyperliquid perp leg has zero gas cost (off-chain CLOB).
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Perps use the CeFi base asset universe
+(`hyperliquid_aster_mvp_base_assets`, 21 coins).
+
+## Underlying Families / Basis Coins
+
+The `basis_coins` config parameter defines which coins the strategy can deploy on. This is a **two-waterfall weighting**
+system: coins are ranked by funding rate magnitude, and capital is allocated proportionally to the top N coins that pass
+the minimum funding rate threshold. Currently deployed on ETH only, but the config supports multi-coin expansion.
+
+- **Tier 1 (highest weight):** ETH -- deepest perp liquidity, most stable funding
+- **Tier 2:** BTC, SOL -- strong funding rates, good perp depth
+
+The basis_coins list is a **fixed** strategy config parameter from UAC registry -- it is NOT gridded. Other parameters
+(funding rate thresholds, delta drift tolerances, rebalance frequency) are gridded around it.
+
+## E2E Manual Trading Workflow
+
+Step-by-step manual recreation of the multi-venue basis trade. Spot leg on-chain (DEX), perp legs on CeFi venues.
+
+### Prerequisites
+
+- Treasury wallet funded with USDC on Ethereum
+- CeFi venue accounts (Hyperliquid, Binance, OKX, Bybit, Aster) with API keys
+- Trading wallet created
+
+### Step-by-Step
+
+| Step | Action                                              | Instruction Type | Service                                 | Instant P&L                         |
+| ---- | --------------------------------------------------- | ---------------- | --------------------------------------- | ----------------------------------- |
+| 1    | Observe treasury balance                            | —                | position-balance-monitor                | —                                   |
+| 2    | Transfer $100K USDC treasury → trading wallet       | TRANSFER         | execution-service                       | Gas: ~$2                            |
+| 3    | Swap $90K USDC → ETH (SOR picks best DEX)           | SWAP             | execution-service (SOR → Uniswap/Curve) | Gas: ~$15. Slippage: ~5 bps ($4.50) |
+| 4    | Transfer $2K USDC margin → Hyperliquid              | TRANSFER         | execution-service                       | Gas: ~$0 (off-chain)                |
+| 5    | Transfer $2K USDC margin → Binance                  | TRANSFER         | execution-service                       | Gas: ~$0 (exchange internal)        |
+| 6    | Transfer $2K USDC margin → OKX                      | TRANSFER         | execution-service                       | Gas: ~$0                            |
+| 7    | Transfer $2K USDC margin → Bybit                    | TRANSFER         | execution-service                       | Gas: ~$0                            |
+| 8    | Transfer $2K USDC margin → Aster                    | TRANSFER         | execution-service                       | Gas: ~$0                            |
+| 9    | SHORT ETH perp on Hyperliquid (weighted by funding) | TRADE            | execution-service (API)                 | Trading fee: ~3-8 bps               |
+| 10   | SHORT ETH perp on Binance (weighted)                | TRADE            | execution-service                       | Trading fee: ~3-8 bps               |
+| 11   | SHORT ETH perp on OKX (weighted)                    | TRADE            | execution-service                       | Trading fee: ~3-8 bps               |
+| 12   | SHORT ETH perp on Bybit (weighted)                  | TRADE            | execution-service                       | Trading fee: ~3-8 bps               |
+| 13   | SHORT ETH perp on Aster (weighted)                  | TRADE            | execution-service                       | Trading fee: ~3-8 bps               |
+
+### Two-Waterfall Weighting (Decision Logic)
+
+Strategy determines allocation via:
+
+1. **Pillar 1 (Coin weight)**: avg funding rate per coin across venues. Min 2.5% annualized.
+2. **Pillar 2 (Venue weight)**: per-venue funding rate for that coin. Max 50% per venue.
+
+### Position State After Deployment
+
+- Trading wallet: ~30 ETH LONG (spot)
+- Hyperliquid: ~8 ETH SHORT (30% weight at 6.5% funding)
+- Binance: ~8 ETH SHORT (25% weight at 5.8% funding)
+- OKX: ~6 ETH SHORT (20% weight at 5.2% funding)
+- Bybit: ~5 ETH SHORT (15% weight at 4.8% funding)
+- Aster: ~3 ETH SHORT (10% weight at 4.2% funding)
+- Net delta: ~0 (market neutral)
+
+### Instant P&L
+
+- Swap slippage: ~$4.50 (5 bps on $90K)
+- Gas (swap): ~$15
+- Trading fees (5 perp trades): ~$27 (avg 6 bps on $90K total)
+- Total entry cost: ~$46.50
+
+### Ongoing P&L (Daily)
+
+- Funding income: weighted average ~5.5% APY on $90K notional = ~$13.56/day
+- Cost recovery: ~3.4 days
+
+### Risk Metrics
+
+- Net delta: 0 (±2% tolerance before rebalance)
+- Venue concentration: max 50% per venue
+- Liquidation risk: per-venue margin requirements
+- Funding rate risk: if all venues go negative, strategy exits
+
+### Exit Workflow
+
+| Step | Action                                  | Instruction Type |
+| ---- | --------------------------------------- | ---------------- |
+| 1    | Close all perp SHORTs (buy to close)    | TRADE × 5 venues |
+| 2    | Swap ETH → USDC                         | SWAP             |
+| 3    | Withdraw margin from each CeFi venue    | TRANSFER × 5     |
+| 4    | Transfer USDC trading wallet → treasury | TRANSFER         |
+
+### Trade History (Expected Output)
+
+| #   | Time  | Type     | Venue       | Amount       | Gas | Slippage | Fee   | Running P&L |
+| --- | ----- | -------- | ----------- | ------------ | --- | -------- | ----- | ----------- |
+| 1   | 10:01 | TRANSFER | WALLET      | 100,000 USDC | $2  | —        | —     | -$2         |
+| 2   | 10:02 | SWAP     | Uniswap V3  | 30 ETH       | $15 | -$4.50   | —     | -$21.50     |
+| 3   | 10:03 | TRANSFER | Hyperliquid | 2,000 USDC   | $0  | —        | —     | -$21.50     |
+| 4   | 10:03 | TRADE    | Hyperliquid | -8 ETH SHORT | $0  | —        | $5.40 | -$26.90     |
+| ... | ...   | ...      | ...         | ...          | ... | ...      | ...   | ...         |
+| EOD | —     | FUNDING  | All venues  | +$13.56      | $0  | —        | —     | -$32.94     |
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_basis.py`

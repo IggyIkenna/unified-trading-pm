@@ -42,13 +42,20 @@ SKIP_DIRS: set[str] = {
 
 # Common rg glob excludes applied to every search.
 RG_GLOB_EXCLUDES: list[str] = [
-    "--glob", "!.venv*",
-    "--glob", "!**/node_modules/**",
-    "--glob", "!**/build/**",
-    "--glob", "!**/dist/**",
-    "--glob", "!**/__pycache__/**",
-    "--glob", "!**/archive/**",
-    "--glob", "!**/*.egg-info/**",
+    "--glob",
+    "!.venv*",
+    "--glob",
+    "!**/node_modules/**",
+    "--glob",
+    "!**/build/**",
+    "--glob",
+    "!**/dist/**",
+    "--glob",
+    "!**/__pycache__/**",
+    "--glob",
+    "!**/archive/**",
+    "--glob",
+    "!**/*.egg-info/**",
 ]
 
 BATCH_SIZE = 50
@@ -58,6 +65,7 @@ RG_TIMEOUT_SECONDS = 10
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class TypeUsage:
@@ -82,15 +90,12 @@ class TypeUsage:
         if non_init_instantiation or non_init_annotation or non_init_isinstance:
             return "ALIVE"
 
-        all_test_files = (
-            self.instantiation_files + self.type_annotation_files + self.isinstance_files
-        )
+        all_test_files = self.instantiation_files + self.type_annotation_files + self.isinstance_files
         if any(_is_test_file(f) for f in all_test_files):
             return "TEST_ONLY"
 
         all_init_files = self.re_export_files + [
-            f for f in (self.instantiation_files + self.type_annotation_files)
-            if _is_init_file(f)
+            f for f in (self.instantiation_files + self.type_annotation_files) if _is_init_file(f)
         ]
         if all_init_files:
             return "IMPORT_CHAIN_ONLY"
@@ -109,6 +114,7 @@ def _is_init_file(path: str) -> bool:
 # ---------------------------------------------------------------------------
 # Extract __all__ from an __init__.py via AST
 # ---------------------------------------------------------------------------
+
 
 def extract_all_names(init_path: Path) -> list[str]:
     """Parse __all__ from an __init__.py using the AST — no imports needed."""
@@ -137,6 +143,7 @@ def extract_all_names(init_path: Path) -> list[str]:
 # Batched ripgrep searches
 # ---------------------------------------------------------------------------
 
+
 def _build_search_dirs(workspace_root: Path) -> list[Path]:
     """Return list of repo directories to search (excluding SKIP_DIRS)."""
     dirs: list[str] = []
@@ -159,7 +166,8 @@ def _run_rg(
     """Run ripgrep with the given pattern across search_paths. Return matching file paths."""
     cmd = [
         "rg",
-        "--type", "py",
+        "--type",
+        "py",
         "-l",  # files-with-matches only
         "--no-messages",
     ]
@@ -196,7 +204,8 @@ def _run_rg_with_content(
     """Run rg returning (file_path, matched_line) pairs."""
     cmd = [
         "rg",
-        "--type", "py",
+        "--type",
+        "py",
         "--no-filename",
         "--with-filename",
         "--no-heading",
@@ -229,7 +238,7 @@ def _run_rg_with_content(
         # Format: filepath:matched_content
         colon_idx = line.find(":")
         if colon_idx > 0:
-            pairs.append((line[:colon_idx], line[colon_idx + 1:]))
+            pairs.append((line[:colon_idx], line[colon_idx + 1 :]))
     return pairs
 
 
@@ -292,7 +301,7 @@ def _batch_search_isinstance(
     pairs = _run_rg_with_content(pattern, search_paths)
     for file_path, matched_line in pairs:
         for name in type_names:
-            if f"isinstance(" in matched_line and name in matched_line:
+            if "isinstance(" in matched_line and name in matched_line:
                 if file_path not in results[name]:
                     results[name].append(file_path)
     return results
@@ -379,6 +388,7 @@ def _batch_search_import_only(
 # ---------------------------------------------------------------------------
 # Main audit logic
 # ---------------------------------------------------------------------------
+
 
 def run_audit(
     workspace_root: Path,
@@ -510,9 +520,7 @@ def run_audit(
                 {
                     "name": u.name,
                     "source": u.source,
-                    "test_files": sorted(
-                        set(u.instantiation_files + u.type_annotation_files + u.isinstance_files)
-                    ),
+                    "test_files": sorted(set(u.instantiation_files + u.type_annotation_files + u.isinstance_files)),
                 }
                 for u in test_only
             ],
@@ -586,9 +594,7 @@ def run_audit(
         text_lines.append("IMPORT-CHAIN-ONLY TYPES (only in __init__.py re-exports)")
         text_lines.append("-" * 40)
         for u in sorted(import_chain_only, key=lambda x: x.name):
-            chain_str = ", ".join(
-                _shorten_path(f, workspace_root) for f in sorted(u.re_export_files)[:5]
-            )
+            chain_str = ", ".join(_shorten_path(f, workspace_root) for f in sorted(u.re_export_files)[:5])
             text_lines.append(f"  [{u.source}] {u.name}")
             if chain_str:
                 text_lines.append(f"           chain: {chain_str}")
@@ -605,9 +611,7 @@ def run_audit(
         for u in top_alive:
             non_test_inst = len([f for f in u.instantiation_files if not _is_test_file(f) and not _is_init_file(f)])
             non_test_annot = len([f for f in u.type_annotation_files if not _is_test_file(f) and not _is_init_file(f)])
-            text_lines.append(
-                f"  [{u.source}] {u.name:<50} inst={non_test_inst:<3} annot={non_test_annot}"
-            )
+            text_lines.append(f"  [{u.source}] {u.name:<50} inst={non_test_inst:<3} annot={non_test_annot}")
 
     text_lines.append("")
     text_lines.append("=" * 72)
@@ -641,6 +645,7 @@ def _shorten_path(path: str, workspace_root: Path) -> str:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(

@@ -302,6 +302,47 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork per chain + Socket testnet bridge                            |
 | LIVE_REAL    | Pending | All above + real capital approval + bridge risk acceptance                 |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                     |
+| Hot wallet       | Multi-chain (one per destination chain), per-strategy isolated |
+| CeFi sub-account | No                                                             |
+| Bridge required  | Yes (capital moves to highest-APY chain via Socket bridge)     |
+| Custody          | Copper MPC                                                     |
+
+Capital flow: treasury-ETH --> BRIDGE via Socket --> treasury-DEST --> hot-wallet-DEST --> LEND to highest-APY protocol.
+On rebalance: WITHDRAW --> BRIDGE to new best chain --> LEND. Gas token reserves maintained on each active chain. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM chains). The MTDS `gas_fee_handler` fetches
+real-time gas prices for all supported chains and writes them as features. Gas hits P&L immediately as a realized
+transaction cost -- not estimated. Gas costs are factored into the spread calculation:
+`net_spread = gross_spread - annualized(gas_withdraw + bridge_fee + gas_supply)`.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Multi-Chain Support
+
+Operates across all chains where supported lending protocols are deployed (Aave V3: 10 chains, Compound V3: 6 chains,
+Morpho: 6 chains). All chains have Alchemy RPC endpoints configured via `CHAIN_RPC_TEMPLATES` in UAC
+`registry/capability_declarations/_defi.py`.
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). For
+lending markets, the **base asset must be in `DEFI_MAJOR_ASSET_SYMBOLS`**. The strategy only evaluates venues that pass
+the filtering pipeline -- no shitcoin pools or illiquid markets reach the spread matrix.
+
+## Bridge Costs
+
+Bridge cost is a **one-time P&L hit** -- not amortized. The bridge fee is deducted from principal at the time of each
+rebalance. Across API provides live fee quotes; static estimates serve as fallback. The entry decision checks whether
+the yield spread recovers the total rebalance cost (gas + bridge fee) within the expected holding period.
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_yield_arb.py`

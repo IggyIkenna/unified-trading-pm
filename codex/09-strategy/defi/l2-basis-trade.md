@@ -294,6 +294,42 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork on Arbitrum + Hyperliquid testnet             |
 | LIVE_REAL    | Pending | All above + real capital + L2 wallet funded with gas ETH    |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                     |
+| Hot wallet       | L2-chain wallet (Arbitrum or Base), per-strategy isolated      |
+| CeFi sub-account | Yes (Hyperliquid -- perp margin)                               |
+| Bridge required  | Yes (capital must be bridged to L2 if originating on Ethereum) |
+| Custody          | Copper MPC                                                     |
+
+Capital flow: Client deposit --> treasury --> BRIDGE to L2 --> hot wallet (L2) --> SWAP to ETH (spot leg) + TRANSFER
+USDC to Hyperliquid (margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + SWAP ETH back -->
+BRIDGE to L1 --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
+real-time gas prices for the L2 chain and writes them as features. Gas hits P&L immediately as a realized transaction
+cost -- not estimated. L2 gas is the key differentiator vs mainnet basis: ~$0.05-0.15 per rebalance on Arbitrum/Base vs
+~$15-25 on Ethereum mainnet. This makes positions as small as $500 profitable.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+pools on L2 require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Perps use the CeFi base asset universe.
+
+## Bridge Costs
+
+Initial capital must be bridged from Ethereum to the L2 chain. This bridge cost is a **one-time P&L hit** -- not
+amortized. Across API provides live fee quotes (typically 0.04-0.12% for ETH to Arbitrum/Base). The entry decision
+factors this one-time cost into the minimum holding period: strategy only enters if expected funding yield recovers
+bridge cost within the first week. Ongoing rebalancing incurs no bridge cost (all on same L2 chain).
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_l2_basis.py`

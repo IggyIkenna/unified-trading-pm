@@ -59,17 +59,28 @@ SKIP_SUBDIRS: set[str] = {
 
 # rg glob excludes applied to every search.
 RG_GLOB_EXCLUDES: list[str] = [
-    "--glob", "!.venv*",
-    "--glob", "!**/.venv*/**",
-    "--glob", "!**/node_modules/**",
-    "--glob", "!**/build/**",
-    "--glob", "!**/dist/**",
-    "--glob", "!**/__pycache__/**",
-    "--glob", "!**/archive/**",
-    "--glob", "!**/*.egg-info/**",
-    "--glob", "!**/tests/**",
-    "--glob", "!**/test/**",
-    "--glob", "!**/scripts/**",
+    "--glob",
+    "!.venv*",
+    "--glob",
+    "!**/.venv*/**",
+    "--glob",
+    "!**/node_modules/**",
+    "--glob",
+    "!**/build/**",
+    "--glob",
+    "!**/dist/**",
+    "--glob",
+    "!**/__pycache__/**",
+    "--glob",
+    "!**/archive/**",
+    "--glob",
+    "!**/*.egg-info/**",
+    "--glob",
+    "!**/tests/**",
+    "--glob",
+    "!**/test/**",
+    "--glob",
+    "!**/scripts/**",
 ]
 
 RG_TIMEOUT_SECONDS = 5
@@ -89,16 +100,17 @@ ENTRY_POINT_CANDIDATES: list[str] = [
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ModuleInfo:
     """Metadata for a single Python module file within a service."""
 
-    file_path: Path            # Absolute path to .py file
-    rel_path: str              # Relative to repo root (e.g. "execution_service/engine/core.py")
-    dotted_module: str         # e.g. "execution_service.engine.core"
-    short_name: str            # e.g. "core" (leaf module name)
-    parent_dotted: str         # e.g. "execution_service.engine"
-    is_init: bool              # True if __init__.py
+    file_path: Path  # Absolute path to .py file
+    rel_path: str  # Relative to repo root (e.g. "execution_service/engine/core.py")
+    dotted_module: str  # e.g. "execution_service.engine.core"
+    short_name: str  # e.g. "core" (leaf module name)
+    parent_dotted: str  # e.g. "execution_service.engine"
+    is_init: bool  # True if __init__.py
     classification: str = "UNKNOWN"  # REACHABLE / ORPHAN_MODULE / DEAD_BRANCH
 
 
@@ -118,6 +130,7 @@ class ServiceAudit:
 # ---------------------------------------------------------------------------
 # Discover service repos
 # ---------------------------------------------------------------------------
+
 
 def _discover_service_repos(workspace_root: Path) -> list[tuple[str, str, Path]]:
     """Return (repo_name, package_name, repo_path) for each service/api repo."""
@@ -148,6 +161,7 @@ def _discover_service_repos(workspace_root: Path) -> list[tuple[str, str, Path]]
 # Discover modules within a service package
 # ---------------------------------------------------------------------------
 
+
 def _discover_modules(repo_path: Path, package_name: str) -> list[ModuleInfo]:
     """Find all .py files in the service package, excluding tests/scripts/__pycache__."""
     package_dir = repo_path / package_name
@@ -176,14 +190,16 @@ def _discover_modules(repo_path: Path, package_name: str) -> list[ModuleInfo]:
         parent_dotted = ".".join(dotted_parts[:-1]) if len(dotted_parts) > 1 else ""
         short_name = dotted_parts[-1] if not is_init else (dotted_parts[-1] if len(dotted_parts) > 1 else package_name)
 
-        modules.append(ModuleInfo(
-            file_path=py_file,
-            rel_path=rel_path,
-            dotted_module=dotted,
-            short_name=short_name,
-            parent_dotted=parent_dotted,
-            is_init=is_init,
-        ))
+        modules.append(
+            ModuleInfo(
+                file_path=py_file,
+                rel_path=rel_path,
+                dotted_module=dotted,
+                short_name=short_name,
+                parent_dotted=parent_dotted,
+                is_init=is_init,
+            )
+        )
 
     return modules
 
@@ -191,6 +207,7 @@ def _discover_modules(repo_path: Path, package_name: str) -> list[ModuleInfo]:
 # ---------------------------------------------------------------------------
 # Identify entry points
 # ---------------------------------------------------------------------------
+
 
 def _find_entry_points(
     repo_path: Path,
@@ -213,6 +230,7 @@ def _find_entry_points(
 # Import graph construction via ripgrep
 # ---------------------------------------------------------------------------
 
+
 def _run_rg(
     pattern: str,
     search_path: Path,
@@ -221,7 +239,8 @@ def _run_rg(
     """Run ripgrep with the given pattern in search_path. Return raw stdout."""
     cmd: list[str] = [
         "rg",
-        "--type", "py",
+        "--type",
+        "py",
         "--no-messages",
         "--no-heading",
         "--with-filename",
@@ -259,7 +278,8 @@ def _run_rg_files_only(
     """Run ripgrep returning only matching file paths."""
     cmd: list[str] = [
         "rg",
-        "--type", "py",
+        "--type",
+        "py",
         "-l",
         "--no-messages",
     ]
@@ -345,7 +365,9 @@ def _build_import_edges(
         return None
 
     def _resolve_relative(
-        importing_file: Path, dotted_suffix: str, dot_count: int,
+        importing_file: Path,
+        dotted_suffix: str,
+        dot_count: int,
     ) -> str | None:
         """Resolve a relative import to an absolute dotted module path."""
         # The importing file's package.
@@ -384,7 +406,7 @@ def _build_import_edges(
             if colon_idx <= 0:
                 continue
             file_path_str = line[:colon_idx]
-            content = line[colon_idx + 1:].strip()
+            content = line[colon_idx + 1 :].strip()
 
             # Find the importer module.
             importer = module_by_file.get(file_path_str)
@@ -416,7 +438,7 @@ def _build_import_edges(
                 return
             module_path = rest[:import_idx].strip()
             # The imported names (after "import").
-            imported_names = rest[import_idx + 8:].strip()
+            imported_names = rest[import_idx + 8 :].strip()
 
             # Try resolving the full dotted path first.
             resolved = _resolve_dotted(module_path)
@@ -440,7 +462,9 @@ def _build_import_edges(
                     edges[importer.dotted_module].add(resolved)
 
     def _process_relative_import(
-        importer: ModuleInfo, content: str, file_path: Path,
+        importer: ModuleInfo,
+        content: str,
+        file_path: Path,
     ) -> None:
         """Parse a relative import line and add edges."""
         content = content.strip()
@@ -451,7 +475,7 @@ def _build_import_edges(
         if import_idx < 0:
             return
         dot_part = rest[:import_idx].strip()
-        imported_names = rest[import_idx + 8:].strip()
+        imported_names = rest[import_idx + 8 :].strip()
 
         # Count leading dots.
         dot_count = 0
@@ -489,6 +513,7 @@ def _build_import_edges(
 # Reachability analysis (BFS from entry points)
 # ---------------------------------------------------------------------------
 
+
 def _compute_reachable(
     entry_points: list[ModuleInfo],
     forward_edges: dict[str, set[str]],
@@ -514,6 +539,7 @@ def _compute_reachable(
 # ---------------------------------------------------------------------------
 # Dead branch detection
 # ---------------------------------------------------------------------------
+
 
 def _classify_modules(
     all_modules: list[ModuleInfo],
@@ -550,6 +576,7 @@ def _classify_modules(
 # ---------------------------------------------------------------------------
 # Fallback: string-based import search for modules with zero edges
 # ---------------------------------------------------------------------------
+
 
 def _fallback_string_search(
     repo_path: Path,
@@ -603,6 +630,7 @@ def _fallback_string_search(
 # ---------------------------------------------------------------------------
 # Audit a single service
 # ---------------------------------------------------------------------------
+
 
 def _audit_service(
     repo_name: str,
@@ -669,6 +697,7 @@ def _audit_service(
 # ---------------------------------------------------------------------------
 # Main audit orchestration
 # ---------------------------------------------------------------------------
+
 
 def run_audit(
     workspace_root: Path,
@@ -774,9 +803,7 @@ def run_audit(
 
     # Services with issues.
     services_with_issues = [
-        (name, audit)
-        for name, audit in sorted(audits.items())
-        if audit.orphan_modules or audit.dead_branch_modules
+        (name, audit) for name, audit in sorted(audits.items()) if audit.orphan_modules or audit.dead_branch_modules
     ]
 
     if services_with_issues:
@@ -784,10 +811,7 @@ def run_audit(
         text_lines.append("-" * 40)
         for repo_name, audit in services_with_issues:
             text_lines.append("")
-            text_lines.append(
-                f"  {repo_name} ({audit.total_modules} modules, "
-                f"{audit.reachable} reachable)"
-            )
+            text_lines.append(f"  {repo_name} ({audit.total_modules} modules, {audit.reachable} reachable)")
             if audit.entry_points:
                 text_lines.append(f"    Entry points: {', '.join(audit.entry_points)}")
             if audit.orphan_modules:
@@ -836,6 +860,7 @@ def run_audit(
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(

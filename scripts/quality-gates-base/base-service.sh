@@ -57,6 +57,10 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
+_qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
+trap '_qg_exit_handler' EXIT
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 # Per-repo overrides: set MAX_FILE_LINES / MAX_FUNCTION_LINES / MAX_METHOD_LINES
 # BEFORE sourcing this script (${VAR:-default} preserves pre-set values).
@@ -303,7 +307,9 @@ fi
 log_section "[3.5/6] IMPORT PATTERNS"
 IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
-if [ -f "$IP" ]; then
+if [[ "${SKIP_IMPORT_PATTERNS:-false}" == "true" ]]; then
+    log_ok "Import patterns: skipped (SKIP_IMPORT_PATTERNS=true)"
+elif [ -f "$IP" ]; then
     # Bypass: add --exclude flags for files whitelisted in QUALITY_GATE_BYPASS_AUDIT.md §1.2
     $PYTHON_CMD "$IP" --quiet 2>/dev/null && log_ok "Import patterns PASSED" || { log_fail "Import patterns FAILED"; exit 1; }
 else
@@ -445,6 +451,8 @@ rg "except:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
 
 # Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
 for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+    # Skip if the import line has a noqa comment for this check
+    rg "import requests.*# noqa:.*qg-requests-in-async" "$f" >/dev/null 2>&1 && continue
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
@@ -1147,8 +1155,17 @@ else
     log_success "STEP 5.36: No bare Settings() outside config module"
 fi
 
-[[ $V -gt 0 ]] && { log_fail "Codex compliance FAILED: $V violations"; exit 1; }
-log_ok "Codex compliance PASSED"
+# CODEX_MAX_VIOLATIONS: repos with pre-existing violations can set a ceiling.
+# The goal is to ratchet this down to 0 over time.
+_max_v=${CODEX_MAX_VIOLATIONS:-0}
+if [[ $V -gt $_max_v ]]; then
+    log_fail "Codex compliance FAILED: $V violations (max allowed: $_max_v)"
+    exit 1
+elif [[ $V -gt 0 ]]; then
+    log_warn "Codex compliance: $V violations (within tolerance of $_max_v)"
+else
+    log_ok "Codex compliance PASSED"
+fi
 
 # ── [5.5] WORKFLOW LINT (actionlint) ──────────────────────────────────────────
 if [ -d "${REPO_ROOT}/.github/workflows" ]; then

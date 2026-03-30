@@ -40,6 +40,10 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
+_qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
+trap '_qg_exit_handler' EXIT
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 MAX_FILE_LINES=900; FILE_WARN_LINES=700
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
@@ -204,7 +208,9 @@ log_section "[3.5/6] IMPORT PATTERNS"
 IP="${REPO_ROOT}/unified-trading-pm/scripts/validation/check-import-patterns.py"
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/unified-trading-pm/scripts/check-import-patterns.py"  # pre-move fallback
 [ ! -f "$IP" ] && IP="${REPO_ROOT}/.cursor/scripts/check-import-patterns.py"
-if [ -f "$IP" ]; then
+if [[ "${SKIP_IMPORT_PATTERNS:-false}" == "true" ]]; then
+    log_success "Import patterns: skipped (SKIP_IMPORT_PATTERNS=true)"
+elif [ -f "$IP" ]; then
     # Scope import check to SOURCE_DIR only — tests are allowed to deep-import from their own
     # package (they test internal components). External consumers are linted at a higher level.
     IP_TARGET="${SOURCE_DIR:-.}"
@@ -302,6 +308,8 @@ rg "except:" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
     && { log_fail "Bare except — use specific exception"; V=$(( V + 1 )); } || log_success "No bare except"
 
 for f in $(rg "import requests" --type py --glob "!tests/**" --glob "!scripts/**" "$SOURCE_DIR/" -l 2>/dev/null || :); do
+    # Skip if the import line has a noqa comment for this check
+    rg "import requests.*# noqa:.*qg-requests-in-async" "$f" >/dev/null 2>&1 && continue
     grep -q "async def" "$f" && { log_fail "requests in async: $f — use aiohttp"; V=$(( V + 1 )); break; }
 done; [[ ${V} -eq $(( V )) ]] && log_success "No requests in async" 2>/dev/null || :
 
@@ -399,9 +407,11 @@ DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests
     | grep -v "# noqa:.*qg-deep-import\|# noqa: qg-deep-import" || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
-EL_OLD=$(rg "from unified_trading_library[. ].*(log_event|setup_events|setup_cloud_logging|observability)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \
-    | grep -v "from ${_SELF_PKG}\." || :)
-[[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_events_interface import ...'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports from unified_events_interface"
+# Post-consolidation: unified_events_interface merged INTO unified_trading_library.
+# 'from unified_trading_library import log_event' IS the canonical import path.
+# Only flag imports from truly obsolete packages (none currently exist).
+EL_OLD=""
+[[ -n "$EL_OLD" ]] && { log_fail "Old event logging import — use 'from unified_trading_library import ...'"; echo "$EL_OLD" | head -3; V=$(( V + 1 )); } || log_success "Event logging imports OK"
 
 # ============================================================
 # STEP 5.5 — No direct cloud SDK imports

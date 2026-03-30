@@ -157,6 +157,54 @@ steps (perp hedge) are separate instructions.
 | `weekly_rewards`              | features-onchain   | 24h | EtherFi/EIGEN reward distribution |
 | `eth_price`                   | market-tick-data   | 1s  | PnL, sizing, HF calculation       |
 
+## Hedged vs Unhedged Modes
+
+The strategy supports two operating modes via `hedge_mode` config:
+
+### Hedged (default, delta-neutral)
+
+Full perp hedge: short perp sized at `total_weeth * weeth_rate`. Collects leveraged staking yield + leveraged funding
+rate - borrow cost. This is the standard deployment -- delta-neutral with amplified yield.
+
+### Unhedged (directional, long ETH)
+
+No perp hedge: the strategy is long leveraged weETH and short ETH debt only. PnL is dominated by ETH price movement. Use
+case: clients with a long-term bullish ETH view who want to amplify staking yield without funding rate dependency. Net
+APY = `staking_apy * leverage - borrow_apy * (leverage - 1) + reward_yield * leverage`. Higher risk (no delta
+neutrality), higher return in bull markets.
+
+## Reward Mode (EIGEN / ETHFI Split)
+
+The `reward_mode` config controls how EtherFi/EigenLayer reward distributions are handled:
+
+| Mode    | Behavior                                    | Use Case                              |
+| ------- | ------------------------------------------- | ------------------------------------- |
+| `HOLD`  | Hold reward tokens (EIGEN, ETHFI) in wallet | Long-term accumulation                |
+| `SELL`  | Immediately swap rewards to WETH via SOR    | Realize yield, compound into position |
+| `SPLIT` | 50% hold / 50% sell (configurable ratio)    | Balanced approach                     |
+
+Rewards are tracked as `SEASONAL_WEEKLY` settlement type. The `weekly_rewards` feature from features-onchain-service
+provides the expected distribution amount for APY forecasting.
+
+## Depeg Tolerance as Leverage Cap
+
+The weETH/ETH depeg tolerance functions as a **leverage cap** -- not an exit trigger (until emergency threshold). As
+weETH depegs from its fair value (based on accumulated staking yield), the effective collateral value drops, reducing
+health factor. The strategy uses depeg tolerance to dynamically cap leverage:
+
+```
+max_safe_leverage = (liquidation_threshold * (1 - depeg_tolerance)) / (1 - liquidation_threshold * (1 - depeg_tolerance))
+```
+
+- At 0% depeg: max leverage ~5x (Aave E-Mode)
+- At 1% depeg: max leverage ~3.5x -- strategy deleverages proactively
+- At 2% depeg: max leverage ~2.5x -- further deleverage
+- At 3%+ depeg: EMERGENCY EXIT regardless of health factor
+
+This means depeg tolerance is a **sliding scale for leverage reduction**, not a binary exit signal. The strategy
+gradually reduces leverage as depeg increases, maintaining HF > target. Only at the emergency threshold (default 3%)
+does it trigger a full atomic unwind.
+
 ## Dual-Index Position Mechanics
 
 aweETH has **two simultaneous yield sources**:
@@ -410,6 +458,146 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | BATCH_REAL   | Pending | Blocked by historical APY storage (#4) + liquidation enforcement (p5) |
 | STAGING      | Pending | Tenderly fork (atomic bundles execute against fork)                   |
 | LIVE_REAL    | Pending | All above + real capital approval + client risk acknowledgment        |
+
+## Wallet & Capital Flow
+
+| Component        | Value                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                                         |
+| Hot wallet       | Per-chain, per-strategy isolated                                                   |
+| CeFi sub-account | Yes (Hyperliquid -- perp margin)                                                   |
+| Bridge required  | No (single-chain -- Ethereum mainnet)                                              |
+| Flash loan       | Morpho Blue (0% fee) / AAVE (0.05% fee) -- protocol provides and repays atomically |
+| Custody          | Copper MPC                                                                         |
+
+Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to WETH + FLASH BORROW (atomic bundle: flash borrow,
+swap to weETH, deposit to Aave, borrow WETH, repay flash) + TRANSFER USDC to Hyperliquid (margin). Flash loan amount is
+NOT from wallet -- protocol provides and repays within a single atomic transaction. Rebalance: treasury < 10% -->
+strategy reduces position --> atomic deleverage bundle + close perp --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked via Alchemy RPC using `eth_feeHistory` (Ethereum mainnet). The MTDS `gas_fee_handler` fetches
+real-time gas prices and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
+estimated. Atomic bundles are gas-intensive: ~500k gas for entry (~$45 at 30 gwei), ~600k for exit. Gas is a significant
+cost component that must be recovered by the leveraged yield within the first few hours of deployment.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Both WETH and weETH are in the whitelist.
+Lending markets (Aave V3) require the base asset to be major. Perps use the CeFi base asset universe.
+
+## E2E Manual Trading Workflow
+
+Step-by-step manual recreation of the recursive staked basis strategy. Uses atomic flash loan for leveraged entry.
+
+### Prerequisites
+
+- Treasury wallet funded with USDC/ETH on Ethereum
+- Hyperliquid account for perp hedge
+- FlashLoanReceiver contract deployed (or use Instadapp DSA)
+- Alchemy RPC for Ethereum
+
+### Step-by-Step (Atomic Deploy Sequence)
+
+All steps 3-8 execute atomically in a single transaction via flash loan:
+
+| Step                    | Action                                      | Instruction Type | Service                           | Instant P&L            |
+| ----------------------- | ------------------------------------------- | ---------------- | --------------------------------- | ---------------------- |
+| 1                       | Observe treasury balance                    | —                | position-balance-monitor          | —                      |
+| 2                       | Transfer ETH from treasury → trading wallet | TRANSFER         | execution-service                 | Gas: ~$2               |
+| **Atomic Bundle Start** |                                             |                  |                                   |                        |
+| 3                       | Flash borrow ETH from Morpho (0% fee)       | FLASH_BORROW     | execution-service                 | $0 (no fee)            |
+| 4                       | Swap USDC → ETH (90% of wallet)             | SWAP             | execution-service (SOR)           | Slippage: ~5 bps       |
+| 5                       | Swap ETH → weETH (EtherFi staking)          | SWAP             | execution-service                 | Slippage: ~20-35 bps   |
+| 6                       | Deposit weETH as collateral in AAVE V3      | LEND             | execution-service (AaveConnector) | Gas included in bundle |
+| 7                       | Borrow ETH from AAVE against weETH          | BORROW           | execution-service (AaveConnector) | Gas included           |
+| 8                       | Repay flash loan with borrowed ETH          | FLASH_REPAY      | execution-service                 | $0                     |
+| **Atomic Bundle End**   |                                             |                  | Total bundle gas: ~$50-80         |                        |
+| 9                       | Transfer margin USDC → Hyperliquid          | TRANSFER         | execution-service                 | $0                     |
+| 10                      | Short ETH perp on Hyperliquid (delta hedge) | TRADE            | execution-service                 | Fee: ~3-8 bps          |
+
+### Position State After Deployment
+
+- AAVE collateral: ~120 aWEETH ($360K at 2.5x leverage)
+- AAVE debt: ~96 ETH ($288K borrowed)
+- Hyperliquid: -96 ETH SHORT (delta hedge)
+- Health Factor: ~1.52
+- LTV: 80% (target, capped by depeg tolerance)
+- Net delta: ~0 (hedged mode) or +120 ETH (unhedged mode)
+
+### Instant P&L
+
+- Flash loan: $0 (Morpho 0% fee)
+- Swap slippage (USDC→ETH): ~$18 (5 bps on $360K)
+- Swap slippage (ETH→weETH): ~$90 (25 bps on $360K)
+- Atomic bundle gas: ~$65
+- Perp trade fee: ~$17 (6 bps on $288K)
+- Total entry cost: ~$190
+
+### Leverage Cap (Depeg Tolerance)
+
+- `max_leverage = liq_threshold / (1 - liq_threshold + depeg_tolerance)`
+- With 2% depeg tolerance and 77.5% liq threshold: 3.16x max
+- Applied via `compute_depeg_safe_leverage()` BEFORE entry, not as exit trigger
+
+### Ongoing P&L (Daily)
+
+- Staking yield (weETH): 3.5% APY × 2.5x = 8.75%
+- Funding income (perp hedge): 5.0% APY
+- EtherFi rewards (EIGEN + ETHFI): 3.0% APY × 2.5x = 7.5%
+- Borrow cost (AAVE ETH): -3.0% APY × 1.5x = -4.5%
+- **Net APY: ~21.75%** on $144K base capital
+- Daily: ~$85.89
+- Cost recovery: ~2.2 days
+
+### Reward Mode (P&L Attribution)
+
+- `reward_mode="all"`: EIGEN + ETHFI rewards included
+- `reward_mode="eigen_only"`: only EIGEN (lower but more conservative)
+- `reward_mode="ethfi_only"`: only ETHFI
+
+### Risk Metrics
+
+- Health Factor: monitored every candle. Deleverage at HF < 1.4. Emergency exit at HF < 1.25.
+- LTV: 80% target. Max safe = `1/(1-ltv) * 0.85`
+- weETH/ETH depeg: 2% tolerance → sizes leverage to survive 2% move
+- Liquidation price: where HF hits 1.0 (computed from collateral/debt/liq_threshold)
+
+### Exit Workflow (Atomic Unwind)
+
+| Step | Action                          | Instruction Type |
+| ---- | ------------------------------- | ---------------- |
+| 1    | Flash borrow ETH                | FLASH_BORROW     |
+| 2    | Repay AAVE debt                 | REPAY            |
+| 3    | Withdraw weETH collateral       | WITHDRAW         |
+| 4    | Swap weETH → ETH                | SWAP             |
+| 5    | Repay flash loan                | FLASH_REPAY      |
+| 6    | Close perp SHORT (buy to close) | TRADE            |
+| 7    | Swap ETH → USDC                 | SWAP             |
+| 8    | Transfer USDC → treasury        | TRANSFER         |
+
+### Trade History (Expected Output)
+
+| #   | Time  | Type         | Instrument  | Amount    | Gas | Slippage | Running P&L |
+| --- | ----- | ------------ | ----------- | --------- | --- | -------- | ----------- |
+| 1   | 10:01 | TRANSFER     | ETH         | $144K     | $2  | $0       | -$2         |
+| 2   | 10:02 | FLASH_BORROW | ETH         | 96 ETH    | $0  | $0       | -$2         |
+| 3   | 10:02 | SWAP         | ETH/USDC    | 120 ETH   | —   | -$18     | -$20        |
+| 4   | 10:02 | SWAP         | weETH/ETH   | 120 weETH | —   | -$90     | -$110       |
+| 5   | 10:02 | LEND         | aWEETH      | 120       | —   | $0       | -$110       |
+| 6   | 10:02 | BORROW       | ETH         | 96        | —   | $0       | -$110       |
+| 7   | 10:02 | FLASH_REPAY  | ETH         | 96        | $65 | $0       | -$175       |
+| 8   | 10:03 | TRANSFER     | USDC        | $10K      | $0  | $0       | -$175       |
+| 9   | 10:03 | TRADE        | ETH-PERP    | -96 SHORT | $0  | —        | -$192       |
+| EOD | —     | STAKING      | weETH       | +$34.52   | $0  | $0       | -$157.48    |
+| EOD | —     | FUNDING      | Perp        | +$39.45   | $0  | $0       | -$118.03    |
+| EOD | —     | BORROW       | ETH debt    | -$23.67   | $0  | $0       | -$141.70    |
+| EOD | —     | REWARDS      | EIGEN+ETHFI | +$29.59   | $0  | $0       | -$112.11    |
 
 ## References
 

@@ -261,6 +261,164 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork                                                         |
 | LIVE_REAL    | Pending | All above + real capital approval                                     |
 
+## Underlying Families / Lending Basket
+
+The `lending_basket` config parameter defines a list of correlated tokens forming a family. Tokens within a family are
+interchangeable from a lending perspective -- the strategy treats them as equivalent collateral and switches between
+them based on real-time APY.
+
+### Defined Families
+
+- **Stablecoin family:** `["USDC", "USDT", "DAI"]` -- all USD-pegged, interchangeable for lending yield
+- **ETH family:** `["ETH", "WETH"]` -- native ETH and wrapped ETH, same underlying value
+
+### Registry and Configuration
+
+- **Possible universe** is defined in UAC (`unified-api-contracts`) as registry data. This is the SSOT for which tokens
+  can form families and which Aave reserve pools exist per chain.
+- **Configured family** lives in the strategy config as a **fixed** parameter. The basket is NOT gridded -- you don't
+  grid USDC/USDT/DAI combinations. You grid other parameters (APY thresholds, utilization limits, rebalance frequency)
+  around the family.
+- At strategy init, the configured `lending_basket` is validated against the UAC registry. If a token in the basket has
+  no corresponding Aave reserve on the target chain, init fails loud with a clear error message.
+
+## Smart Routing Within Family
+
+On each candle, the strategy performs intra-family APY comparison to maximise yield:
+
+1. Read `aave_supply_apy_{TOKEN}` for each token in the basket (e.g., `aave_supply_apy_USDC`, `aave_supply_apy_USDT`,
+   `aave_supply_apy_DAI`)
+2. Pick the highest APY token in the family
+3. If the wallet currently holds a different token from the family, emit a SWAP instruction first (same-chain DEX SOR
+   via execution-service)
+4. Then emit TRANSFER + LEND instructions as normal
+
+**SOR constraint:** routing is always same-chain. Cross-chain transfers require bridging, which is a multi-leg
+non-atomic operation and belongs to the omnichain-transfers strategy, not the lending strategy.
+
+**Cost guard:** the swap is only emitted if the APY improvement exceeds the swap cost (gas + slippage). A 0.01% APY
+improvement on a $10K position does not justify a $5 swap cost. The threshold is configurable via
+`min_apy_improvement_bps` (default: 50 bps).
+
+## ETH Lending Variant
+
+A dedicated factory function creates the ETH-denominated lending strategy:
+
+- **Factory:** `create_eth_lending_strategy()` with `lending_basket=["ETH", "WETH"]`
+- **Instrument:** `AAVEV3-ETHEREUM:A_TOKEN:AWETH@ETHEREUM`
+- **Target APY:** ~2% (lower than stablecoins due to lower borrow demand for ETH)
+- **Use case:** ETH-denominated returns for ETH share class clients. Avoids USD/ETH FX risk -- returns accrue in the
+  same denomination as the capital base.
+
+The same smart routing logic applies: if ETH has higher supply APY than WETH (rare but possible during high wrapping
+activity), the strategy routes accordingly.
+
+## Wallet & Capital Flow
+
+| Component        | Value                            |
+| ---------------- | -------------------------------- |
+| Treasury reserve | 20% of AUM                       |
+| Hot wallet       | Per-chain, per-strategy isolated |
+| CeFi sub-account | No                               |
+| Bridge required  | No (single-chain)                |
+| Custody          | Copper MPC                       |
+
+Capital flow: Client deposit --> treasury --> hot wallet --> TRANSFER + LEND to Aave V3. Rebalance: treasury < 10% -->
+strategy reduces position --> WITHDRAW + TRANSFER --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM chains). The MTDS `gas_fee_handler` fetches
+real-time gas prices and writes them as features consumed by the strategy. Gas hits P&L immediately as a realized
+transaction cost -- not estimated or amortized. For this single-chain strategy (Ethereum mainnet), gas costs are the
+primary cost drag (~$15-25 per supply/withdraw at 30 gwei).
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). For
+lending markets, the **base asset must be in `DEFI_MAJOR_ASSET_SYMBOLS`** (~65 tokens). The lending basket tokens (USDC,
+USDT, DAI for stablecoin family; ETH, WETH for ETH family) are all in the whitelist. Validated at strategy init.
+
+## E2E Manual Trading Workflow
+
+Step-by-step manual recreation of the AAVE lending strategy. Each step maps to a StrategyInstruction type and a backend
+service interaction.
+
+### Prerequisites
+
+- Treasury wallet funded with USDC/USDT/DAI on Ethereum
+- Trading wallet created (per-strategy, per-chain)
+- Alchemy RPC configured for Ethereum
+
+### Step-by-Step
+
+| Step | Action                                             | Instruction Type | Service                                     | Instant P&L                        |
+| ---- | -------------------------------------------------- | ---------------- | ------------------------------------------- | ---------------------------------- |
+| 1    | Observe treasury balance                           | —                | position-balance-monitor (treasury_monitor) | —                                  |
+| 2    | Transfer $100K USDC from treasury → trading wallet | TRANSFER         | execution-service (custody provider)        | Gas: ~$2                           |
+| 3    | Approve USDC spend on AAVE V3                      | —                | execution-service (ERC-20 approve)          | Gas: ~$5                           |
+| 4    | Supply USDC to AAVE V3 pool                        | LEND             | execution-service (AaveConnector.supply)    | Gas: ~$12. Expected: 100,000 aUSDC |
+| 5    | Verify aUSDC balance in trading wallet             | —                | position-balance-monitor                    | aUSDC balance = supplied amount    |
+
+### Position State After Deployment
+
+- Trading wallet: 100,000 aUSDC (yield-bearing)
+- Treasury: reduced by $100K + gas costs
+- No debt, no perp position
+- Health Factor: N/A (no borrowing)
+
+### Instant P&L Per Step
+
+- Step 2: -$2 (gas for transfer)
+- Step 4: -$12 (gas for AAVE supply). aUSDC received = USDC supplied (1:1 at entry via liquidity index)
+- Total entry cost: ~$14
+
+### Ongoing P&L (Daily)
+
+- Interest accrues via AAVE liquidity index: `daily_interest = position * (index_today / index_yesterday - 1)`
+- At 4.8% APY on $100K: ~$13.15/day
+- Cost recovery: ~1.1 days
+
+### Risk Metrics
+
+- Health Factor: N/A (pure lending, no debt)
+- Liquidation risk: None
+- Protocol risk: AAVE V3 smart contract risk
+- Utilization risk: if pool utilization > 90%, withdrawal may be delayed
+
+### Exit Workflow
+
+| Step | Action                                                          | Instruction Type | Instant P&L |
+| ---- | --------------------------------------------------------------- | ---------------- | ----------- |
+| 1    | Withdraw aUSDC from AAVE (burns aUSDC, returns USDC + interest) | WITHDRAW         | Gas: ~$12   |
+| 2    | Transfer USDC from trading wallet → treasury                    | TRANSFER         | Gas: ~$2    |
+| 3    | Total exit cost: ~$14                                           | —                | —           |
+
+### Service Interaction Diagram
+
+```
+User (UI)
+  │
+  ├──→ position-balance-monitor: read treasury balance
+  ├──→ execution-service: TRANSFER (custody signs tx)
+  ├──→ execution-service: LEND (AaveConnector.supply via RPC)
+  ├──→ position-balance-monitor: read aUSDC balance
+  ├──→ pnl-attribution-service: compute daily interest P&L
+  └──→ risk-and-exposure-service: compute HF/LTV (N/A for pure lending)
+```
+
+### Trade History (Expected Output)
+
+| #   | Time  | Type     | Instrument | Amount  | Price | Gas    | Slippage | Running P&L |
+| --- | ----- | -------- | ---------- | ------- | ----- | ------ | -------- | ----------- |
+| 1   | 10:01 | TRANSFER | USDC       | 100,000 | $1.00 | $2.00  | $0       | -$2.00      |
+| 2   | 10:02 | LEND     | aUSDC      | 100,000 | $1.00 | $12.00 | $0       | -$14.00     |
+| 3   | EOD   | INTEREST | aUSDC      | +13.15  | $1.00 | $0     | $0       | -$0.85      |
+| 4   | Day 2 | INTEREST | aUSDC      | +13.15  | $1.00 | $0     | $0       | +$12.30     |
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_lending.py`
@@ -269,3 +427,4 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 - **Aave positions:** `unified-market-interface/adapters/defi/aave_positions.py`
 - **Settlement:** `strategy-service/strategy_service/engine/core/settlement_service.py`
 - **PnL calculator:** `strategy-service/strategy_service/engine/core/pnl_calculator.py`
+- **UAC token registry:** `unified-api-contracts/registry/` (lending basket universe)

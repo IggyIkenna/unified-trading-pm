@@ -2,7 +2,7 @@
 # Repo-specific settings only. Body: unified-trading-pm/scripts/quality-gates-base/base-service.sh
 SERVICE_NAME="unified-trading-pm"
 SOURCE_DIR="scripts"
-MIN_COVERAGE=48  # PM is scripts/config, not a library — coverage floor reflects script-heavy codebase
+MIN_COVERAGE=70
 RUN_INTEGRATION=true
 PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")

@@ -281,6 +281,138 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork + Hyperliquid testnet                                      |
 | LIVE_REAL    | Pending | All above + real capital approval                                        |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                 |
+| ---------------- | ------------------------------------- |
+| Treasury reserve | 20% of AUM                            |
+| Hot wallet       | Per-chain, per-strategy isolated      |
+| CeFi sub-account | Yes (Hyperliquid -- perp margin)      |
+| Bridge required  | No (single-chain -- Ethereum mainnet) |
+| Custody          | Copper MPC                            |
+
+Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to weETH (spot LST leg) + TRANSFER USDC to Hyperliquid
+(margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + SWAP weETH back --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked via Alchemy RPC using `eth_feeHistory` (Ethereum mainnet). The MTDS `gas_fee_handler` fetches
+real-time gas prices and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
+estimated. The weETH swap may route multi-hop (USDT->WETH->weETH) which increases gas to ~250k. The Hyperliquid perp leg
+has zero gas cost.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. weETH is in the ETH LST category of the
+whitelist. Perps use the CeFi base asset universe.
+
+## E2E Manual Trading Workflow
+
+Step-by-step manual recreation of the staked basis strategy. Each step maps to a StrategyInstruction type and a backend
+service interaction. This is delta-neutral: weETH LONG (spot LST) + ETH SHORT (perp) = net zero delta + staking yield +
+funding income.
+
+### Prerequisites
+
+- Treasury wallet funded with USDC on Ethereum
+- Trading wallet created (per-strategy, per-chain)
+- Hyperliquid sub-account with API credentials
+- Alchemy RPC configured for Ethereum
+
+### Step-by-Step
+
+| Step | Action                                              | Instruction Type | Service                                      | Instant P&L                                  |
+| ---- | --------------------------------------------------- | ---------------- | -------------------------------------------- | -------------------------------------------- |
+| 1    | Observe treasury balance                            | --               | position-balance-monitor (treasury_monitor)  | --                                           |
+| 2    | Transfer $100K USDC from treasury to trading wallet | TRANSFER         | execution-service (custody provider)         | Gas: ~$2                                     |
+| 3    | Swap $90K USDC to ETH via SOR                       | SWAP             | execution-service (UniswapConnector via SOR) | Gas: ~$15. Slippage: ~$4.50 (5bps on $90K)   |
+| 4    | Swap ETH to weETH (EtherFi staking)                 | SWAP             | execution-service (UniswapConnector)         | Gas: ~$15. Slippage: ~$22.50 (25bps on $90K) |
+| 5    | Transfer $10K USDC to Hyperliquid as margin         | TRANSFER         | execution-service (Hyperliquid deposit)      | Gas: ~$2                                     |
+| 6    | Short ETH perp (size = weETH_amount \* weETH_rate)  | TRADE            | execution-service (HyperliquidConnector)     | Fee: ~$5.40 (6bps on $90K notional)          |
+
+### Position State After Deployment
+
+- Trading wallet: weETH (worth ~$90K ETH-equivalent, appreciating via staking yield)
+- Hyperliquid: SHORT ETH-USDC perp (~$90K notional), $10K margin
+- Net delta: 0 (long weETH exposure + short perp cancel)
+- No Aave debt, no leverage
+
+### Instant P&L Decomposition
+
+| Component                  | Amount      | Notes                                               |
+| -------------------------- | ----------- | --------------------------------------------------- |
+| Gas (steps 2-5)            | -$34.00     | 4 on-chain txns (transfer + 2 swaps + transfer)     |
+| Swap slippage USDC to ETH  | -$4.50      | ~5bps on $90K, benchmarked vs oracle price          |
+| Swap slippage ETH to weETH | -$22.50     | ~25bps on $90K, weETH liquidity thinner than ETH    |
+| Perp trading fee           | -$5.40      | Hyperliquid taker 6bps on $90K notional             |
+| **Total entry cost**       | **-$66.40** |                                                     |
+| Gross instant P&L          | $0          | actual_output - expected_output (perfect execution) |
+| Net instant P&L            | -$66.40     | gross - all costs                                   |
+
+Strategy instruction carries `benchmark_price` (oracle ETH price at signal time) and `max_slippage_bps` (30bps for weETH
+leg). Execution-service rejects if slippage exceeds threshold.
+
+### Ongoing P&L (Daily)
+
+- Staking yield: weETH rate appreciation ~3.5% APY on $90K = ~$8.63/day
+- Funding income: positive funding on short perp ~5% APY on $90K = ~$12.33/day
+- No borrow cost (weETH held in wallet, not collateral)
+- **Combined daily income: ~$20.96/day (~8.5% APY)**
+- Cost recovery: ~3.2 days
+
+### Risk Metrics
+
+- Net delta target: 0 (rebalance if drift > 5%)
+- weETH/ETH depeg threshold: 2% (emergency exit)
+- Funding rate reversal: exit if combined APY drops below 5%
+- Hyperliquid margin: cross-margin, monitor for depletion during extreme basis widening
+- Health Factor: N/A (no Aave positions)
+
+### Exit Workflow
+
+| Step | Action                                            | Instruction Type | Instant P&L                          |
+| ---- | ------------------------------------------------- | ---------------- | ------------------------------------ |
+| 1    | Close short ETH perp on Hyperliquid               | TRADE            | Fee: ~$5.40                          |
+| 2    | Swap weETH to ETH                                 | SWAP             | Gas: ~$15. Slippage: ~$22.50 (25bps) |
+| 3    | Swap ETH to USDC                                  | SWAP             | Gas: ~$15. Slippage: ~$4.50 (5bps)   |
+| 4    | Withdraw USDC from Hyperliquid to trading wallet  | TRANSFER         | Gas: ~$2                             |
+| 5    | Transfer all USDC from trading wallet to treasury | TRANSFER         | Gas: ~$2                             |
+|      | **Total exit cost**                               |                  | **~$66.40**                          |
+
+### Service Interaction Diagram
+
+```
+User (UI)
+  |
+  +---> position-balance-monitor: read treasury balance
+  +---> execution-service: TRANSFER USDC (custody signs tx)
+  +---> execution-service: SWAP USDC->ETH (SOR picks best DEX)
+  +---> execution-service: SWAP ETH->weETH (EtherFi via Uniswap)
+  +---> execution-service: TRANSFER USDC to Hyperliquid
+  +---> execution-service: TRADE short ETH perp (Hyperliquid CLOB)
+  +---> position-balance-monitor: read weETH balance + perp position
+  +---> pnl-attribution-service: compute staking_yield_pnl + funding_pnl
+  +---> risk-and-exposure-service: compute delta drift
+```
+
+### Trade History (Expected Output)
+
+| #   | Time  | Type            | Instrument    | Amount          | Price  | Gas    | Slippage | Fee   | Running P&L |
+| --- | ----- | --------------- | ------------- | --------------- | ------ | ------ | -------- | ----- | ----------- |
+| 1   | 10:01 | TRANSFER        | USDC          | 100,000         | $1.00  | $2.00  | $0       | $0    | -$2.00      |
+| 2   | 10:02 | SWAP            | USDC->ETH     | 90,000          | $3,200 | $15.00 | $4.50    | $0    | -$21.50     |
+| 3   | 10:03 | SWAP            | ETH->weETH    | 28.125 ETH      | $3,200 | $15.00 | $22.50   | $0    | -$59.00     |
+| 4   | 10:04 | TRANSFER        | USDC          | 10,000          | $1.00  | $2.00  | $0       | $0    | -$61.00     |
+| 5   | 10:05 | TRADE           | ETH-USDC perp | -28.125 (short) | $3,200 | $0     | $0       | $5.40 | -$66.40     |
+| 6   | EOD   | STAKING_YIELD   | weETH         | +0.0027         | $3,200 | $0     | $0       | $0    | -$57.77     |
+| 7   | EOD   | FUNDING         | ETH perp      | +$12.33         | --     | $0     | $0       | $0    | -$45.44     |
+| 8   | Day 2 | STAKING+FUNDING | --            | --              | --     | $0     | $0       | $0    | -$24.48     |
+| 9   | Day 4 | STAKING+FUNDING | --            | --              | --     | $0     | $0       | $0    | +$17.44     |
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_staked_basis.py`

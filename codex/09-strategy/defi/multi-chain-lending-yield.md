@@ -301,6 +301,60 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork per chain + Socket testnet bridge                       |
 | LIVE_REAL    | Pending | All above + real capital approval + multi-chain wallet setup          |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                     |
+| Hot wallet       | Multi-chain (one per destination chain), per-strategy isolated |
+| CeFi sub-account | No                                                             |
+| Bridge required  | Yes (multi-chain -- Socket bridge between chains)              |
+| Custody          | Copper MPC                                                     |
+
+Capital flow: Client deposit --> treasury --> hot wallet --> BRIDGE to best chain --> TRANSFER + LEND to protocol.
+Rebalance: treasury < 10% --> strategy reduces position --> WITHDRAW + BRIDGE back --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
+real-time gas prices for all supported chains and writes them as features consumed by CrossChainSOR. Gas hits P&L
+immediately as a realized transaction cost -- not estimated. The gas cost differential between chains (L1 ~$15-25 vs L2
+~$0.10-0.25) is a key input to the SOR scoring formula.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Multi-Chain Support
+
+Operates across 22+ (protocol, chain) tuples: Aave V3 (10 chains), Compound V3 (6 chains), Morpho (6 chains), Kamino
+(Solana). All EVM chains have Alchemy RPC endpoints configured via `CHAIN_RPC_TEMPLATES` in UAC
+`registry/capability_declarations/_defi.py` (12 EVM mainnets + 10 testnets + Solana mainnet/devnet + BTC in the system).
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). For
+lending markets, the **base asset must be in `DEFI_MAJOR_ASSET_SYMBOLS`** (~65 tokens). The strategy only evaluates
+reserves that pass the filtering pipeline.
+
+## Bridge Costs
+
+Cross-chain migration via Socket bridge incurs a **one-time P&L hit** -- not amortized over the holding period. The
+bridge fee is deducted from principal at the time of the transfer. Across API provides live fee quotes; static estimates
+serve as fallback. The rebalance decision checks whether
+`apy_differential * remaining_holding_period > bridge_fee + 2 * gas_cost` before initiating any migration.
+
+## Underlying Families / Lending Basket
+
+The `lending_basket` config parameter defines which tokens are interchangeable for lending. Tokens within a family can
+be swapped to chase higher APY across chains:
+
+- **Stablecoin family:** USDC, USDT, DAI -- all USD-pegged, interchangeable
+- **ETH family:** ETH, WETH -- same underlying value
+- **BTC family:** WBTC, CBBTC -- cross-chain BTC exposure
+
+The lending basket is a **fixed** strategy config parameter from UAC registry -- not gridded. Validated against the UAC
+whitelist at strategy init.
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_multichain_lending.py`

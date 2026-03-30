@@ -361,6 +361,50 @@ Links to SSOT -- do not duplicate:
 | STAGING      | Pending | Tenderly forks on multiple chains + real Socket API                  |
 | LIVE_REAL    | Pending | All above + bridge risk accepted + gas tokens funded on all chains   |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                                       |
+| ---------------- | --------------------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                                  |
+| Hot wallet       | Multi-chain (one per destination chain), per-strategy isolated              |
+| CeFi sub-account | No                                                                          |
+| Bridge required  | Yes (core operation -- capital moves between chains via Socket/Across/CCTP) |
+| Custody          | Copper MPC                                                                  |
+
+Capital flow: treasury-ETH --> BRIDGE via Socket --> treasury-DEST --> hot-wallet-DEST --> DEPOSIT to protocol. Gas
+token reserves maintained on each active chain (2x expected gas cost in native token). Maximum 20% of portfolio in
+transit at any time. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM chains). The MTDS `gas_fee_handler` fetches
+real-time gas prices for all 19 supported EVM chains and writes them as features consumed by the CrossChainSOR scoring
+engine. Gas hits P&L immediately as a realized transaction cost -- not estimated. Gas cost differentials between chains
+are a primary input to the SOR scoring formula and the decision of whether to rebalance.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Multi-Chain Support
+
+All 19 EVM mainnets plus Solana are supported. All chains have Alchemy RPC endpoints configured via
+`CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py` (12 EVM mainnets + 10 testnets + Solana
+mainnet/devnet + BTC in the system). Gas token balances (ETH, MATIC, AVAX, BNB, etc.) are tracked per chain via
+`GasTokenBalanceTracker`.
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). The
+CrossChainSOR only evaluates instruments that pass the filtering pipeline. For lending markets, the base asset must be
+in `DEFI_MAJOR_ASSET_SYMBOLS`. For DEX pools, BOTH sides must be major assets with TVL minimums enforced.
+
+## Bridge Costs
+
+Bridge cost is a **one-time P&L hit** -- not amortized over the holding period. The bridge fee is deducted from
+principal at the time of the transfer. Across API provides live fee quotes for bridge selection; static estimates from
+historical averages serve as fallback. The CrossChainSOR entry decision checks whether the yield improvement on the
+target chain recovers the total migration cost (gas + bridge fee) within the expected holding period before executing.
+
 ## References
 
 - **Strategy ID:** `DEFI_CROSSCHAIN_SOR_REBALANCE_1H`

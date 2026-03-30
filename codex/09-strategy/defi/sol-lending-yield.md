@@ -291,6 +291,35 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Kamino devnet + funded devnet wallet with test USDC/SOL               |
 | LIVE_REAL    | Pending | All above + real capital approval                                     |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                |
+| ---------------- | ------------------------------------ |
+| Treasury reserve | 20% of AUM                           |
+| Hot wallet       | Solana wallet, per-strategy isolated |
+| CeFi sub-account | No                                   |
+| Bridge required  | No (single-chain -- Solana only)     |
+| Custody          | Copper MPC                           |
+
+Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> TRANSFER + LEND to Kamino. Rebalance: treasury <
+10% --> strategy reduces position --> WITHDRAW + TRANSFER --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked via Alchemy RPC using `getRecentPrioritizationFees` (Solana). The MTDS `gas_fee_handler` fetches
+real-time priority fees and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
+estimated. Solana gas is negligible (~0.001 SOL / ~$0.15 per transaction), making even the leveraged variant (4
+transactions for full deploy) cost only ~$0.60 total.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). For
+Kamino lending markets, the **base asset must be in `DEFI_MAJOR_ASSET_SYMBOLS`**. SOL, USDC, and USDT are all in the
+whitelist. Solana tokens now include LSTs and ecosystem tokens (35+ in `SOLANA_TOKEN_ADDRESSES`).
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_sol_lending.py`

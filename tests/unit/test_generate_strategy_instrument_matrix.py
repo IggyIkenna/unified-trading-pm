@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
+from unittest.mock import patch
 
 # ── Load the script as a module ──────────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -320,3 +322,144 @@ class TestRealManifest:
         strategies = data["strategies"]
         instrument_map = MOD.build_instrument_to_strategies_map(strategies)
         assert len(instrument_map) > 0, "Should have at least one instrument mapped"
+
+
+# ── Tests: load_manifest ─────────────────────────────────────────────────
+
+
+class TestLoadManifest:
+    def test_loads_valid_manifest(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [_make_strategy()]}))
+        data = MOD.load_manifest(manifest)
+        assert "strategies" in data
+
+    def test_exits_when_manifest_missing(self, tmp_path: Path) -> None:
+        import pytest
+
+        with pytest.raises(SystemExit):
+            MOD.load_manifest(tmp_path / "nonexistent.json")
+
+
+# ── Tests: print_matrix_table ─────────────────────────────────────────────
+
+
+class TestPrintMatrixTable:
+    def test_prints_without_error(self, capsys: object) -> None:
+        rows: list[dict[str, str | list[str]]] = [
+            {
+                "strategy_id": "TEST_STRAT",
+                "category": "CEFI",
+                "venues": ["BINANCE-FUTURES"],
+                "asset_classes": ["PERPETUAL"],
+                "instruments": ["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+                "live_capable": "True",
+                "batch_capable": "True",
+            }
+        ]
+        # Should not raise
+        MOD.print_matrix_table(rows)
+
+    def test_truncates_long_strings(self, capsys: object) -> None:
+        rows: list[dict[str, str | list[str]]] = [
+            {
+                "strategy_id": "TEST_STRAT",
+                "category": "CEFI",
+                "venues": ["VENUE_" + str(i) for i in range(20)],
+                "asset_classes": ["PERPETUAL"],
+                "instruments": ["VENUE_" + str(i) + ":PERPETUAL:BTC-USDT@LIN" for i in range(20)],
+                "live_capable": "True",
+                "batch_capable": "True",
+            }
+        ]
+        MOD.print_matrix_table(rows)
+
+    def test_empty_instruments(self, capsys: object) -> None:
+        rows: list[dict[str, str | list[str]]] = [
+            {
+                "strategy_id": "TEST_STRAT",
+                "category": "CEFI",
+                "venues": [],
+                "asset_classes": [],
+                "instruments": [],
+                "live_capable": "False",
+                "batch_capable": "False",
+            }
+        ]
+        MOD.print_matrix_table(rows)
+
+
+# ── Tests: main() ────────────────────────────────────────────────────────
+
+
+class TestMainFunction:
+    def test_main_with_valid_manifest(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [_make_strategy()]}))
+        with patch.object(sys, "argv", ["prog", "--manifest", str(manifest)]):
+            result = MOD.main()
+        assert result == 0
+
+    def test_main_json_output(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(json.dumps({"strategies": [_make_strategy()]}))
+        with patch.object(sys, "argv", ["prog", "--json", "--manifest", str(manifest)]):
+            result = MOD.main()
+        assert result == 0
+
+    def test_main_category_filter(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "strategies": [
+                        _make_strategy(strategy_id="CEFI_1", category="CEFI"),
+                        _make_strategy(strategy_id="DEFI_1", category="DEFI"),
+                    ]
+                }
+            )
+        )
+        with patch.object(sys, "argv", ["prog", "--category", "CEFI", "--manifest", str(manifest)]):
+            result = MOD.main()
+        assert result == 0
+
+    def test_main_category_filter_no_match(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "strategies": [
+                        _make_strategy(strategy_id="CEFI_1", category="CEFI"),
+                    ]
+                }
+            )
+        )
+        with patch.object(sys, "argv", ["prog", "--category", "SPORTS", "--manifest", str(manifest)]):
+            result = MOD.main()
+        assert result == 1  # No strategies found
+
+    def test_main_with_instrument_errors(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        strat = _make_strategy(instruments=["bad-format"])
+        manifest.write_text(json.dumps({"strategies": [strat]}))
+        with patch.object(sys, "argv", ["prog", "--manifest", str(manifest)]):
+            result = MOD.main()
+        assert result == 1
+
+    def test_main_with_warnings(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "strategy-manifest.json"
+        strat_a = _make_strategy(
+            strategy_id="A",
+            category="CEFI",
+            instruments=["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+        )
+        strat_b = _make_strategy(
+            strategy_id="B",
+            category="DEFI",
+            instruments=["BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN"],
+        )
+        manifest.write_text(json.dumps({"strategies": [strat_a, strat_b]}))
+        with patch.object(sys, "argv", ["prog", "--manifest", str(manifest)]):
+            result = MOD.main()
+        # Warnings don't cause failure
+        assert result == 0

@@ -283,6 +283,37 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Drift devnet + Marinade devnet + funded devnet wallet                   |
 | LIVE_REAL    | Pending | All above + real capital approval                                       |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                       |
+| ---------------- | ----------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                  |
+| Hot wallet       | Solana wallet, per-strategy isolated                        |
+| CeFi sub-account | Yes (Drift sub-account -- perp margin)                      |
+| Bridge required  | Yes (if capital originates on EVM; No if already on Solana) |
+| Custody          | Copper MPC                                                  |
+
+Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> SWAP to SOL --> STAKE to mSOL (spot LST leg) +
+DEPOSIT USDC to Drift (margin). Rebalance: treasury < 10% --> strategy reduces position --> close perp + unstake mSOL +
+SWAP SOL back --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked via Alchemy RPC using `getRecentPrioritizationFees` (Solana). The MTDS `gas_fee_handler` fetches
+real-time priority fees and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
+estimated. Full deploy costs ~0.004 SOL (~$0.60 total for swap + stake + deposit + perp). Solana gas is negligible
+relative to position size.
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md).
+Jupiter swap routing uses SOL and USDC which are both in `DEFI_MAJOR_ASSET_SYMBOLS`. mSOL is in the Solana LST category
+(WSOL, MSOL, STSOL, JITOSOL, BSOL, JSOL -- 35+ Solana tokens in `SOLANA_TOKEN_ADDRESSES`). LST/yield protocols have no
+additional filtering needed -- the adapter returns all instruments.
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_sol_staked_basis.py`

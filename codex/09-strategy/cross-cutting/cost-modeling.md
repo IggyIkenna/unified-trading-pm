@@ -91,14 +91,35 @@ estimation.
 
 ## DeFi Gas Cost Model
 
+### Gas Tracking via Alchemy RPC
+
+Real-time gas prices are fetched per-chain via Alchemy RPC endpoints and published as features by the MTDS
+`gas_fee_handler`:
+
+| Chain Type                                 | RPC Method                    | What It Returns                                     |
+| ------------------------------------------ | ----------------------------- | --------------------------------------------------- |
+| **EVM chains** (12 mainnets + 10 testnets) | `eth_feeHistory`              | Base fee + priority fee history per block           |
+| **Solana** (mainnet + devnet)              | `getRecentPrioritizationFees` | Priority fee percentiles per recent slot            |
+| **BTC**                                    | `estimatesmartfee`            | Fee rate (sat/vByte) for target confirmation blocks |
+
+All gas costs hit P&L immediately as realized transaction costs -- not estimated or amortized. The `gas_fee_handler`
+writes gas prices to the feature pipeline, where they are consumed by:
+
+- **Strategy-service CostEstimator**: pre-trade cost check against budget
+- **CrossChainSOR**: chain selection based on gas cost differential
+- **PnL attribution**: actual gas cost in the FEES attribution bucket
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
 ### Gas Estimation Pipeline
 
 ```
-1. features-onchain-service publishes gas_price_gwei as a feature
-2. strategy-service CostEstimator reads gas feature
-3. Estimate: gas_cost_usd = gas_units × gas_price_gwei × 1e-9 × eth_price_usd
-4. Compare gas_cost_usd against trade notional → cost_bps
-5. If cost_bps > budget: no-op (small trades on L1 are uneconomical)
+1. MTDS gas_fee_handler fetches gas prices via Alchemy RPC (eth_feeHistory / getRecentPrioritizationFees)
+2. Gas prices published as features (gas_price_gwei per chain)
+3. Strategy-service CostEstimator reads gas feature
+4. Estimate: gas_cost_usd = gas_units × gas_price_gwei × 1e-9 × eth_price_usd
+5. Compare gas_cost_usd against trade notional → cost_bps
+6. If cost_bps > budget: no-op (small trades on L1 are uneconomical)
 ```
 
 ### Gas Units by Operation Type
@@ -185,6 +206,37 @@ Effective cost per bet = overround / num_outcomes = ~2.95%
 
 The dominant cost in prediction markets is the bid-ask spread, not fees. Spread cost varies dramatically with market
 liquidity and time to resolution.
+
+## Bridge Cost Model (Cross-Chain DeFi)
+
+Cross-chain strategies incur bridge costs when moving capital between chains. Bridge cost is a **one-time P&L hit** --
+not amortized over the holding period. The fee is deducted from principal at the time of the bridge transaction.
+
+### Bridge Fee Sources
+
+| Source                       | Priority | When Used                                       |
+| ---------------------------- | -------- | ----------------------------------------------- |
+| **Across API (live quotes)** | Primary  | Real-time fee quotes for supported routes       |
+| **Static estimates**         | Fallback | Historical average fees when API is unavailable |
+
+### Entry Decision Guard
+
+Before initiating any cross-chain transfer, the strategy checks:
+
+```
+entry_allowed = (yield_improvement * expected_holding_period) > (bridge_fee + source_gas + dest_gas)
+```
+
+This ensures the yield improvement on the target chain recovers the total migration cost within the holding period.
+
+### Bridge Cost Components
+
+| Component                  | Typical Range        | Notes                                                 |
+| -------------------------- | -------------------- | ----------------------------------------------------- |
+| Bridge protocol fee        | 0.01-0.15% of amount | Varies by bridge (Across cheapest, Stargate moderate) |
+| Source chain gas           | $0.10-$25            | L2 cheap, L1 expensive                                |
+| Destination chain gas      | $0.10-$25            | Same chain-dependent scaling                          |
+| Slippage (large transfers) | 0-0.10%              | Price impact for transfers > $500K                    |
 
 ## Slippage Estimation
 

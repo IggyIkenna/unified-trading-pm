@@ -331,6 +331,37 @@ Links to SSOT -- do not duplicate:
 | STAGING      | Pending | Solana devnet fork or Bankrun simulation                      |
 | LIVE_REAL    | Pending | All above + IL risk accepted + Solana wallet funded           |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                           |
+| ---------------- | --------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                      |
+| Hot wallet       | Solana wallet, per-strategy isolated                            |
+| CeFi sub-account | No (optional Drift sub-account for delta-neutral hedge variant) |
+| Bridge required  | No (single-chain -- Solana only)                                |
+| Custody          | Copper MPC                                                      |
+
+Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> ADD_LIQUIDITY to Raydium/Orca pool (SOL + USDC
+from wallet). Rebalance: REMOVE_LIQUIDITY + re-ADD_LIQUIDITY at new range (all on Solana, ~$0.60 total gas). Exit:
+REMOVE_LIQUIDITY + COLLECT_FEES --> TRANSFER --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked via Alchemy RPC using `getRecentPrioritizationFees` (Solana). The MTDS `gas_fee_handler` fetches
+real-time priority fees and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
+estimated. Solana LP operations cost ~0.002-0.004 SOL per add/remove (~$0.30-0.60), enabling aggressive range management
+that would be uneconomical on Ethereum L1 (~$50-100 per rebalance).
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md).
+Solana DEX pools (Raydium, Orca) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS` with a **$10k TVL minimum**
+(client-side filter -- Solana DEXes return all pools via REST API). Solana tokens now include LSTs and ecosystem tokens
+(35+ in `SOLANA_TOKEN_ADDRESSES`), enabling LP on pairs like SOL/USDC, mSOL/SOL, jitoSOL/SOL.
+
 ## References
 
 - **Implementation:** TBD -- Solana LP strategy not yet implemented

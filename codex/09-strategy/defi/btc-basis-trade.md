@@ -306,6 +306,36 @@ See [cross-cutting/client-onboarding.md](../cross-cutting/client-onboarding.md) 
 | STAGING      | Pending | Tenderly fork + Hyperliquid testnet                       |
 | LIVE_REAL    | Pending | All above + real capital approval                         |
 
+## Wallet & Capital Flow
+
+| Component        | Value                                                                   |
+| ---------------- | ----------------------------------------------------------------------- |
+| Treasury reserve | 20% of AUM                                                              |
+| Hot wallet       | Per-chain, per-strategy isolated                                        |
+| CeFi sub-account | Yes (Hyperliquid -- perp margin)                                        |
+| Bridge required  | No (single-chain for spot leg; Arbitrum variant uses same-chain wallet) |
+| Custody          | Copper MPC                                                              |
+
+Capital flow: Client deposit --> treasury --> hot wallet --> SWAP to WBTC (spot leg) + TRANSFER USDC to Hyperliquid
+(margin). Optional stacked variant adds SUPPLY WBTC to Aave V3 for additional yield. Rebalance: treasury < 10% -->
+strategy reduces position --> close perp + SWAP WBTC back --> treasury. See
+[wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarchy-and-capital-flow.md).
+
+## Gas Fee Tracking
+
+Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
+real-time gas prices and writes them as features consumed by the strategy. Gas hits P&L immediately as a realized
+transaction cost -- not estimated. For Ethereum mainnet: ~$15-25 per swap. For Arbitrum: ~$0.10-0.25 per swap. The
+Hyperliquid perp leg has zero gas cost (off-chain CLOB).
+
+**Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
+
+## Instrument Filtering
+
+Pool and market discovery follows the rules in [instrument-filtering.md](../cross-cutting/instrument-filtering.md). DEX
+pools (swap leg) require BOTH sides to be in `DEFI_MAJOR_ASSET_SYMBOLS`. Both WBTC and CBBTC are in the BTC family
+within the whitelist. Perps use the CeFi base asset universe.
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_btc_basis.py`
