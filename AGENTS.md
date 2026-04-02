@@ -1,103 +1,40 @@
 # AGENTS.md — Unified Trading System
 
-Shared instructions for all autonomous agents (Claude Code, Codex, Cursor) in any repo of this workspace. Ephemeral:
-copied from PM during setup-workspace-from-manifest.sh, removed by cleanup script before quickmerge/PR.
+Shared instructions for all agents (Claude Code, Codex, Cursor) across this workspace.
 
 ---
 
-## Token Optimization — Read First
+## Core Rules
 
-- No chain-of-thought, no planning prose, no restating context
-- Prefer bullets, tables, or JSON over prose
-- Launch parallel sub-agents (up to 10/turn) for independent cross-repo tasks
-- Sub-agents: ONE narrowly scoped task each; return ONLY final result (≤400 tokens)
-- NEVER pass `model=` in sub-agent Task calls — omitting it = auto mode = free
-- Sub-agents do NOT inherit session context; always pass `WORKSPACE_ROOT` + venv path explicitly
-- **Sub-agents MUST get full rules:** paste contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
-  at TOP of prompt, OR instruct: "Before any action, read SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly"
-- Full guidance: `unified-trading-pm/cursor-rules/core/token-optimization.mdc`, `agents-follow-cursor-rules.mdc`
-
----
-
-## Environment
-
-| Use case                  | Venv                        | Command                                                      |
-| ------------------------- | --------------------------- | ------------------------------------------------------------ |
-| **Quality gates / tests** | Repo `.venv`                | `cd <repo> && bash scripts/quality-gates.sh` — no activation |
-| **IDE / general Python**  | Workspace `.venv-workspace` | `source <WORKSPACE_ROOT>/.venv-workspace/bin/activate`       |
-
-**Never** run `pytest` directly. Always use `quality-gates.sh` (uses per-repo `.venv`).
+- Follow all workspace cursor rules in `.cursorrules` and `.cursor/rules`
+- No summary files — never create `*_SUMMARY.md`, `*_STATUS.md`, `READY_TO_*`, `COMPLETION_*`
+- Delete deprecated code; no parallel code paths
+- Search existing repos/libraries before implementing anything new
+- Never `git reset --hard` or discard uncommitted work without explicit user request
+- Conventional commits: `feat:`, `fix:`, `chore:`, `feat!:` (breaking)
 
 ---
 
 ## Workspace Structure
 
-**Multi-repo workspace (~62 independent git repos) — NOT a monorepo.** Each subdirectory is its own git repo with its
-own pyproject.toml, venv, and QG script.
+Multi-repo workspace (~62 independent git repos). Key locations:
 
-```
-unified-trading-system-repos/
-├── unified-trading-pm/          # Plans, scripts, cursor rules, workspace manifest (SSOT)
-├── unified-trading-codex/       # Coding standards, architecture docs
-├── unified-cloud-interface/     # T0 — cloud primitives
-├── unified-config-interface/    # T0 — config
-├── unified-events-interface/    # T0 — events
-├── unified-trading-library/     # T1 — shared library
-├── unified-domain-client/       # T2/T3 — domain client
-├── market-tick-data-service/    # T3 service (level 8)
-├── strategy-ui/                 # UI repo (level 11)
-└── ...                          # ~55 more repos
-```
-
-**Key files (all in `unified-trading-pm/`):**
-
-- `workspace-manifest.json` — SSOT: all repos, types, deps, versions, merge order
-- `plans/active/INDEX.md` — canonical plan registry
-- `cursor-rules/` — all cursor rules (workspace root `.cursor/rules` → here)
-- `cursor-configs/CLAUDE.md` — Claude Code instructions (symlinked into every repo's `.claude/`)
+- `unified-trading-pm/` — plans, scripts, cursor rules, workspace manifest (SSOT)
+- `unified-trading-pm/workspace-manifest.json` — all repos, deps, versions, merge order
+- `unified-trading-pm/plans/active/INDEX.md` — canonical plan registry
 
 ---
 
-## Manifest Structure
+## Sub-Agent Rules
 
-Every repo entry in `workspace-manifest.json`:
+Sub-agents start with FRESH context — they do NOT inherit rules.
 
-```json
-{
-  "type": "service | library | ui | infrastructure | api",
-  "arch_tier": "0 | 1 | 2 | 3 | service | ui | api | infrastructure",
-  "dependencies": [{ "name": "unified-trading-library", "version": ">=0.1.0,<1.0.0", "required": true }]
-}
-```
+Every sub-agent prompt MUST include:
 
-Tier/level order: `topologicalOrder.levels` (SSOT). Repo level = which level lists it.
-
-**Tier invariant:** T0 → T1 → T2 → T3 — never import from a higher tier. T0 must be fully green before T1.
-
-**Dependency checkout in GHA** — every repo's `scripts/setup-workspace.sh`:
-
-```bash
-bash scripts/setup-workspace.sh   # clones PM + all direct manifest deps as siblings; pre-flight checks
-```
-
-Pre-flight outcomes: required dep clone failure → `exit 1` | optional failure → warn | version mismatch → warn.
-
-What `setup-workspace.sh` also sets up for you:
-
-- **Cursor rules** — copied as real files (not symlinks) to `$WORKSPACE_ROOT/.cursor/rules/` from PM
-- **`.cursorrules`** — copied to `$WORKSPACE_ROOT/.cursorrules` from PM
-- **AGENTS.md** — copied as a real file to `$WORKSPACE_ROOT/AGENTS.md` from PM (ephemeral)
-- **`.claude/CLAUDE.md`** — workspace-root symlink → PM `cursor-configs/CLAUDE.md`
-- **Cleanup script** — `$WORKSPACE_ROOT/.cleanup-cursor-rules.sh` generated automatically
-
-**Cursor rule cleanup is mandatory before quickmerge / PR creation:**
-
-```bash
-bash $WORKSPACE_ROOT/.cleanup-cursor-rules.sh   # removes ephemeral .cursor/rules + .cursorrules + AGENTS.md
-```
-
-The per-repo `.claude/CLAUDE.md` is a committed symlink. AGENTS.md is ephemeral (copied during setup, removed by
-cleanup).
+- "Before any action, read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and follow ALL rules
+  strictly."
+- `WORKSPACE_ROOT: <absolute path>`
+- NEVER pass `model=` in Task tool calls (auto mode = free)
 
 ---
 
@@ -345,6 +282,6 @@ automatically.
 ## Plans & Tracking
 
 - Active plans: `unified-trading-pm/plans/active/` (`.plan.md` files)
-- Registry: `unified-trading-pm/plans/active/INDEX.md` — register all new plans here
-- SSOT index: `unified-trading-codex/00-SSOT-INDEX.md`
-- Naming: `<topic>_<YYYY_MM_DD>.plan.md`
+- New AI-generated plans: `unified-trading-pm/plans/ai/` only — never directly to `active/`
+- Plan naming: `<topic>_<YYYY_MM_DD>.plan.md`
+- Locked plans (`locked_by` in frontmatter): do NOT archive, delete, or unlock autonomously

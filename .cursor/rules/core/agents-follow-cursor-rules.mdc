@@ -1,5 +1,7 @@
 ---
-description: "All agents (sub-agents, autonomous GHA agents, Claude Code sessions, Cursor background agents) MUST receive full workspace rules before doing any work"
+description:
+  "All agents (sub-agents, autonomous GHA agents, Claude Code sessions, Cursor background agents) MUST receive full
+  workspace rules before doing any work"
 alwaysApply: true
 priority: 95
 tags:
@@ -8,29 +10,27 @@ tags:
   - critical
 ---
 
-# All Agents Must Follow Workspace Rules — No Exceptions
+# All Agents Must Follow Workspace Rules
 
-ALL agents start with FRESH context and do NOT automatically inherit rules:
-- **Cursor sub-agents** (Task tool, generalPurpose, explore, shell, fast)
-- **Claude Code sub-agents** (Agent tool)
-- **Autonomous GHA agents** (conflict-resolution, plan-health, rules-alignment, semver-agent, agent-audit)
-- **Claude Code autonomous sessions** (claude --print, claude --dangerously-skip-permissions)
-- **Cursor background agents** (parallel agents via run-parallel-agents.sh)
-- **LLM wrapper agents** (llm-agent-wrapper.sh)
+All sub-agents start with FRESH context — they do NOT inherit rules from the parent session.
 
-## MANDATORY: Full Rules in Every Agent Prompt
+## When Spawning Sub-Agents
 
-### For Cursor/Claude Code sub-agents (Task tool, Agent tool):
+Include at the top of every sub-agent prompt:
 
-1. **Read and paste** the contents of `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at the TOP of the prompt.
-2. **If paste is impractical** (token limit): Include at TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly. You are a sub-agent with fresh context — you do NOT inherit parent rules."
-3. **Always include:** WORKSPACE_ROOT path and: "For tests/quality gates: cd <repo> && bash scripts/quality-gates.sh (uses per-repo .venv). Never use .venv-workspace for pytest."
+- "Before any action, read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and follow ALL rules
+  strictly."
+- `WORKSPACE_ROOT: <absolute path>`
+- NEVER pass `model=` in Task tool calls — auto mode is free
+
+## Core Rules (always apply)
 
 ### For local scripts launching agents (--print mode):
 
 **CRITICAL: Agents in `--print` mode CANNOT read files from disk.** Telling them "read .cursorrules" is useless.
 
 Use the mandatory rules injection script:
+
 ```bash
 RULES=$(bash unified-trading-pm/scripts/agents/inject-mandatory-rules.sh "$WORKSPACE_ROOT" "$REPO")
 FULL_PROMPT="${RULES}\n\n${TASK_PROMPT}"
@@ -39,6 +39,7 @@ FULL_PROMPT="${RULES}\n\n${TASK_PROMPT}"
 ### For GHA workflow agents:
 
 Load rules into `GITHUB_ENV` in a prior step, then prepend to prompt:
+
 ```yaml
 - name: Load mandatory rules
   run: |
@@ -49,8 +50,8 @@ Load rules into `GITHUB_ENV` in a prior step, then prepend to prompt:
 
 ## System-First Architecture (ALL agents)
 
-Before building anything, check existing repos. The 67-repo system covers every domain.
-Do NOT build ad-hoc solutions. See SUB_AGENT_MANDATORY_RULES.md §0 for the full decision tree.
+Before building anything, check existing repos. The 67-repo system covers every domain. Do NOT build ad-hoc solutions.
+See SUB_AGENT_MANDATORY_RULES.md §0 for the full decision tree.
 
 ## Minimum Reminders (if full paste skipped)
 
@@ -59,9 +60,6 @@ Do NOT build ad-hoc solutions. See SUB_AGENT_MANDATORY_RULES.md §0 for the full
 - Push before quickmerge when the branch has **unpushed commits** (stash does not protect commits) — see
   `always-use-quickmerge.mdc` § Push before quickmerge
 - Delete deprecated code; no parallel code paths
-- Search unified libraries before implementing anything new (§0 decision tree)
-- No *_SUMMARY.md; plans only in unified-trading-pm/plans/
-- Never git reset --hard; never --dep-branch with --agent
-
-SSOT: `unified-trading-pm/scripts/agents/inject-mandatory-rules.sh`
-CODEX: 06-coding-standards/cursor-rules-system.md
+- Search existing repos/libraries before implementing anything new
+- No `*_SUMMARY.md` files; plans only in `unified-trading-pm/plans/`
+- Never `git reset --hard`
