@@ -18,14 +18,13 @@ completion_gates:
 
 repo_gates:
   - repo: instruments-service
-    code: C0
-    notes: "Extend _fetch_sports_reference_data() for all entity types + mappings"
+    code: C4
+    notes: "DONE: All 9 entity types + mapping tables wired in orchestrator. Season logic fixed."
   - repo: instruments-service (reference_data/ sub-package)
-    code: C0
-    notes: "Add standings, injuries, fixture details methods to API-Football adapter"
-  - repo: instruments-service (reference_data/ sub-package)
-    code: C0
-    notes: "Fix get_teams() season logic for European leagues"
+    code: C4
+    notes:
+      "DONE: All methods exist on ApiFootballAdapter (fixtures, leagues, teams, standings, injuries, stats, events,
+      lineups, player_stats)"
   - repo: unified-api-contracts
     code: C4
     notes:
@@ -42,64 +41,46 @@ todos:
   # ============================================================================
   - id: p1-fix-season-logic
     content: |
-      - [ ] [AGENT] P0. Fix instruments-service reference_data api_football get_teams(league_id, season) season calculation.
-        File: instruments_service/reference_data/adapters/api_football.py
-        Current: effective_season = season if season is not None else datetime.now().year
-        Fix: For Aug-start leagues (European), season = current_year if month >= 8 else current_year - 1.
-        For Jan-start leagues (South America, Asia), season = current_year.
-        Use LEAGUE_REGISTRY.season_months to determine start month per league.
-        Test: adapter.get_teams(39, season=None) should return 20 EPL teams (not 0).
-        REMAINING: Season logic fix still needed.
-    status: pending
+      - [x] [AGENT] P0. Fix instruments-service reference_data api_football get_teams(league_id, season) season calculation.
+        DONE: _effective_season_for_league() uses get_league_by_api_football_id() → season_months[0]
+        to determine start month per league. European Aug-start → year-1 when querying in spring.
+        Calendar-year leagues → current year. File: reference_data/adapters/sports/adapters/api_football.py
+    status: done
 
   # ============================================================================
   # PHASE 2 — Add missing instruments-service reference_data fetch methods  [PARALLEL within phase]
   # ============================================================================
   - id: p2a-standings
     content: |
-      - [ ] [AGENT] P1. Add fetch_standings(league_id, season) to instruments-service reference_data api_football adapter.
-        File: instruments_service/reference_data/adapters/api_football.py
-        API endpoint: GET /standings?league={id}&season={year}
-        Returns: league table (position, team, points, GD, form)
-        Write to GCS: sports_reference/by_date/day={date}/entity=standings/standings.parquet
-        REMAINING: Method not yet implemented in instruments-service sports adapters.
-    status: pending
+      - [x] [AGENT] P1. Add fetch_standings(league_id, season) to api_football adapter.
+        DONE: Method exists + orchestrator wired. Writes to entity=standings/.
+    status: done
   - id: p2b-injuries
     content: |
-      - [ ] [AGENT] P1. Add fetch_injuries(date) to instruments-service reference_data api_football adapter.
-        API endpoint: GET /injuries?date={YYYY-MM-DD}
-        Returns: player injuries with reason, status, return date
-        Write to GCS: sports_reference/by_date/day={date}/entity=injuries/injuries.parquet
-        REMAINING: Method not yet implemented in instruments-service sports adapters.
-    status: pending
+      - [x] [AGENT] P1. Add fetch_injuries(date) to api_football adapter.
+        DONE: Method exists + orchestrator wired. Writes to entity=injuries/.
+    status: done
   - id: p2c-fixture-stats
     content: |
-      - [ ] [AGENT] P1. Add fetch_fixture_stats(fixture_id) to instruments-service reference_data api_football adapter.
-        API endpoint: GET /fixtures/statistics?fixture={id}
-        Returns: shots, possession, corners, fouls, cards per team
-        Write to GCS: sports_reference/by_date/day={date}/entity=fixture_stats/fixture_stats.parquet
-    status: pending
+      - [x] [AGENT] P1. Add fetch_fixture_stats(fixture_id) to api_football adapter.
+        DONE (2026-04-03): Method exists. Orchestrator wired for completed fixtures
+        (FT/AET/PEN) with 1 req/sec rate limiting. entity=fixture_stats/.
+    status: done
   - id: p2d-fixture-events
     content: |
-      - [ ] [AGENT] P1. Add fetch_fixture_events(fixture_id) to instruments-service reference_data api_football adapter.
-        API endpoint: GET /fixtures/events?fixture={id}
-        Returns: goals, cards, substitutions timeline
-        Write to GCS: sports_reference/by_date/day={date}/entity=fixture_events/fixture_events.parquet
-    status: pending
+      - [x] [AGENT] P1. Add fetch_fixture_events(fixture_id) to api_football adapter.
+        DONE (2026-04-03): Method exists. Orchestrator wired. entity=fixture_events/.
+    status: done
   - id: p2e-fixture-lineups
     content: |
-      - [ ] [AGENT] P1. Add fetch_fixture_lineups(fixture_id) to instruments-service reference_data api_football adapter.
-        API endpoint: GET /fixtures/lineups?fixture={id}
-        Returns: starting XI, formation, coach
-        Write to GCS: sports_reference/by_date/day={date}/entity=fixture_lineups/fixture_lineups.parquet
-    status: pending
+      - [x] [AGENT] P1. Add fetch_fixture_lineups(fixture_id) to api_football adapter.
+        DONE (2026-04-03): Method exists. Orchestrator wired. entity=fixture_lineups/.
+    status: done
   - id: p2f-player-stats
     content: |
-      - [ ] [AGENT] P1. Add fetch_fixture_player_stats(fixture_id) to instruments-service reference_data api_football adapter.
-        API endpoint: GET /fixtures/players?fixture={id}
-        Returns: per-player per-match stats (33 fields)
-        Write to GCS: sports_reference/by_date/day={date}/entity=player_stats/player_stats.parquet
-    status: pending
+      - [x] [AGENT] P1. Add fetch_fixture_player_stats(fixture_id) to api_football adapter.
+        DONE (2026-04-03): Method exists. Orchestrator wired. entity=player_stats/.
+    status: done
 
   # ============================================================================
   # PHASE 2 gate: instruments-service QG
@@ -135,15 +116,12 @@ todos:
   # ============================================================================
   - id: p4-orchestrator-wiring
     content: |
-      - [ ] [AGENT] P1. Extend _fetch_sports_reference_data() in instruments-service orchestrator.
-        File: instruments_service/engine/orchestrator.py:386
-        Currently fetches: leagues, teams
-        Add: standings, injuries, fixture_stats, fixture_events, fixture_lineups,
-          fixture_player_stats, team_mapping, fixture_mapping
-        Each entity writes to hive partition.
-        Rate limit: 1 req/sec between API-Football calls.
-    status: pending
-    blocked_by: p3a-team-mapping, p3b-fixture-mapping
+      - [x] [AGENT] P1. Extend _fetch_sports_reference_data() in instruments-service orchestrator.
+        DONE (2026-04-03): All 9 entity types wired: leagues, teams, standings, injuries,
+        fixture_stats, fixture_events, fixture_lineups, player_stats + mapping tables.
+        Per-fixture entities iterate over completed fixtures (FT/AET/PEN) with 1 req/sec.
+        File: instruments_service/engine/orchestrator.py
+    status: done
 
   # ============================================================================
   # PHASE 5 — Validation  [SEQUENTIAL]
