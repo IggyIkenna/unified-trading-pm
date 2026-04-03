@@ -136,10 +136,15 @@ todos:
     status: done
   - id: p5b-retention-test
     content: |
-      - [ ] [AGENT] P1. Retention test on sample day (e.g. 2020-10-31, 43K rows).
-        Pull from GCS, check per-bucket: how many bookmakers survive each staleness
-        cap vs how many are stale holdovers. Find knee point.
-    status: pending
+      - [x] [AGENT] P1. Retention test on 2020-10-31 (448K rows, 356 fixtures).
+        DONE (2026-04-03): Derived bm_minutes_to_kickoff from bm_time/kickoff_utc.
+        50.5% retention (226K → 59K after dedup, 73.9% dedup reduction).
+        6/8 buckets healthy (12 bookmakers, 320+ fixtures each).
+        T-4h: 0 rows (old VM1 Tier 2 fetch offsets had no 240min snapshot).
+        T-2h: 98 rows (3 bookmakers, 20 fixtures — partial overlap only).
+        VM3 Tier 1 offsets explicitly include 240min and 120min, will fill gaps.
+        Staleness caps validated: no bucket has excessive stale holdovers.
+    status: done
 
   # ============================================================================
   # PHASE 6 — FSS enrichment  [PENDING]
