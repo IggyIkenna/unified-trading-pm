@@ -188,37 +188,17 @@ Record Copper API responses for replay in CI:
 
 ### Per-Strategy Wallet Mapping
 
+Wallet mappings are now managed via `WalletMappingConfig` in UAC (`internal/domain/defi/wallet_config.py`). The config
+is loaded from GCS at `wallet-config/{chain_env}/wallet_mapping.json` and maps custodian wallets (treasury + trading)
+per chain. Each `TradingWalletConfig` includes a `strategy_id` for per-strategy isolation and an optional
+`max_allocation_usd` cap.
+
 The `custodian` field is a reference to the system-level custody config. Changing custodians (e.g. Copper → Fireblocks)
 requires only updating `custody.provider` + adding a new `CustodyProvider` implementation. Wallet IDs and strategy
 configs remain unchanged.
 
-```json
-{
-  "custody": {
-    "provider": "copper",
-    "api_url": "https://api.copper.co/platform"
-  },
-  "wallet_mapping": {
-    "treasury": {
-      "custodian_wallet_id": "vault-eth-main",
-      "chain": "ETHEREUM",
-      "address": "0x..."
-    },
-    "trading_wallets": {
-      "AAVE_LENDING": {
-        "custodian_wallet_id": "trading-aave-eth",
-        "chain": "ETHEREUM",
-        "address": "0x..."
-      },
-      "BASIS_TRADE": {
-        "custodian_wallet_id": "trading-basis-eth",
-        "chain": "ETHEREUM",
-        "address": "0x..."
-      }
-    }
-  }
-}
-```
+See [Wallet Hierarchy and Capital Flow](wallet-hierarchy-and-capital-flow.md) for the full `WalletMappingConfig` schema
+and example JSON.
 
 ## Cross-Strategy Wallet Concerns
 

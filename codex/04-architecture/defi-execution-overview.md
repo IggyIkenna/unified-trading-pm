@@ -107,6 +107,58 @@ async def test_my_defi_operation(self, aave_connector):
 
 Fixtures handle: fork creation, wallet funding, receiver deployment, connector wiring, fork cleanup.
 
+## New Operation Types
+
+Two additional operation types for DeFi reward management:
+
+| Operation      | Handler            | What It Does                                                                       | Gas Estimate               |
+| -------------- | ------------------ | ---------------------------------------------------------------------------------- | -------------------------- |
+| `CLAIM_REWARD` | RewardClaimHandler | On-chain reward claim from EigenLayer/EtherFi/Lido claim contracts.                | 150K                       |
+| `SELL_REWARD`  | RewardSellHandler  | Swap reward tokens (EIGEN, ETHFI) to base currency via Binance spot or Uniswap V3. | 300K (on-chain) or 0 (CEX) |
+
+Both operations are routed through the execution-service handler registry alongside existing operation types (TRADE,
+LEND, BORROW, SWAP, etc.). The strategy emits `StrategyInstruction` with the appropriate operation type, and
+execution-service dispatches to the correct handler.
+
+**Trigger conditions:**
+
+- `CLAIM_REWARD`: auto-triggered when accrued reward value >= $50. Max once per 24h per reward token.
+- `SELL_REWARD`: auto-triggered when wallet reward token balance \* price >= $100. Sell venue configurable (default:
+  Binance spot for liquid tokens, Uniswap V3 for on-chain-only tokens).
+
+## MEV Protection Framework
+
+Atomic bundles (flash loan entry/exit) are vulnerable to MEV extraction. Three interchangeable providers handle
+protection based on the execution environment:
+
+| Provider                 | Method                          | When Used                                                                             |
+| ------------------------ | ------------------------------- | ------------------------------------------------------------------------------------- |
+| `FlashbotsProvider`      | Relay submission                | Mainnet live execution. Bundles submitted via `eth_sendBundle` to Flashbots builders. |
+| `PrivateMempoolProvider` | Flashbots Protect / MEV Blocker | L2 deployments. Routes via `rpc.mevblocker.io` or Flashbots Protect RPC.              |
+| `NoProtectionProvider`   | Standard broadcast              | Batch, paper trade, testnet. No MEV risk in these environments.                       |
+
+The provider is selected via `mev_protection` in strategy config, not hardcoded. Execution-service resolves the provider
+at runtime and wraps the transaction submission accordingly.
+
+## Wrap Preprocessor
+
+Before executing DeFi operations, the wrap preprocessor auto-detects token wrapping requirements and emits WRAP
+instructions when needed. This is transparent to the strategy layer.
+
+| Source Token | Wrapped Token | When Required                       | Wrapping Contract |
+| ------------ | ------------- | ----------------------------------- | ----------------- |
+| ETH          | WETH          | Uniswap V3 swaps, Aave deposits     | WETH9             |
+| eETH         | weETH         | Aave collateral (eETH is rebasing)  | EtherFi weETH     |
+| stETH        | wstETH        | Aave collateral (stETH is rebasing) | Lido wstETH       |
+
+The preprocessor checks the target venue's accepted collateral list (from UAC registry) and rejects unsupported
+collateral at the venue level. If the source token has a known wrapped equivalent that the venue accepts, a WRAP
+instruction is automatically prepended to the instruction sequence.
+
+Rebasing tokens (eETH, stETH) cannot be used as Aave collateral directly because their balance changes break Aave's
+scaled balance accounting. Wrapping converts them to non-rebasing equivalents where yield accrues via exchange rate
+appreciation instead of balance changes.
+
 ## Key Files
 
 | File                                                       | What                                            |

@@ -209,7 +209,7 @@ def test_data_types() -> None:
     logger.info("  DATA_TYPES: %s", DATA_TYPES_BY_CATEGORY["prediction"])
 
     # Validate prediction domain exists in canonical schemas
-    from unified_api_contracts.canonical.domain.prediction import (
+    from unified_api_contracts import (
         PredictionMarketCategory,
         PredictionMarketMapper,
     )

@@ -1,7 +1,11 @@
 # DeFi Basis Trade
 
-> **Asset class:** DeFi **Strategy type:** Basis (delta-neutral funding rate arbitrage) **Strategy ID pattern:**
-> `DEFI_ETH_BASIS_SCE_1H`
+> **Asset class:** DeFi **Strategy type:** Basis (delta-neutral funding rate arbitrage) **Strategy IDs:**
+> `DEFI_ETH_BASIS_HYPER_SCE_1H` (single-coin ETH basis, original) / `DEFI_MULTI_BASIS_HUF_1H_V1` (multi-coin multi-venue
+> basis, current default)
+>
+> The multi-coin variant (`DEFI_MULTI_BASIS_HUF_1H_V1`) supersedes the single-coin for production use. The single-coin
+> ID is still used for testing and client configs with `fixed_basis_coin`.
 
 ## Overview
 
@@ -365,6 +369,101 @@ Strategy determines allocation via:
 | 4   | 10:03 | TRADE    | Hyperliquid | -8 ETH SHORT | $0  | —        | $5.40 | -$26.90     |
 | ... | ...   | ...      | ...         | ...          | ... | ...      | ...   | ...         |
 | EOD | —     | FUNDING  | All venues  | +$13.56      | $0  | —        | —     | -$32.94     |
+
+## Share Class
+
+The basis trade supports multiple share classes via `ShareClassMixin`. The share class determines the base currency
+denomination of P&L and the delta neutrality target.
+
+| Share Class | Target Delta             | P&L Currency | Notes                                                                                     |
+| ----------- | ------------------------ | ------------ | ----------------------------------------------------------------------------------------- |
+| `USDT`      | 0 (fully market neutral) | USD          | Default. Long spot + short perp cancel completely.                                        |
+| `ETH`       | total_equity_in_eth      | ETH          | Crypto exposure matches portfolio. Perp hedge only offsets the basis spread, not the ETH. |
+| `BTC`       | total_equity_in_btc      | BTC          | Same pattern as ETH. Used for BTC-denominated clients.                                    |
+
+For `USDT` share class, delta neutrality means zero net market exposure -- the strategy is purely a funding rate
+harvester. For `ETH` share class, delta neutrality means the portfolio's ETH-denominated value is stable -- the perp
+hedge removes basis risk but preserves the ETH exposure. The FX factor (USD/ETH conversion) is separated from trading
+P&L in attribution.
+
+Rebalancing thresholds apply to the delta deviation from the share-class-specific target, not from zero. For `ETH` share
+class, `|current_delta - total_equity_in_eth| / notional > threshold` triggers rebalance.
+
+See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full cross-strategy specification.
+
+## Client Config Overrides
+
+Client-specific configuration is supported via per-client GCS config overlays. Key override patterns:
+
+| Override                  | Example (Patrick config)      | Notes                                                                    |
+| ------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| `allowed_perp_venues`     | `["OKX", "BYBIT", "BINANCE"]` | Restricts perp venues. Default: all 5 (+ Hyperliquid, Aster).            |
+| `fixed_basis_coin`        | `"ETH"`                       | Locks to single coin. Disables multi-coin waterfall.                     |
+| `venue_weighting`         | `"EQUAL"`                     | Equal weight across allowed venues instead of funding-rate-proportional. |
+| `share_class`             | `"USDT"`                      | Base currency denomination.                                              |
+| `min_funding_rate_annual` | `0.025`                       | Minimum annualized funding rate for entry (default 2.5%).                |
+
+When `fixed_basis_coin` is set, Pillar 1 of the two-waterfall weighting is skipped entirely -- the strategy deploys only
+on the specified coin. When `venue_weighting="EQUAL"`, Pillar 2 assigns equal weight to all allowed venues instead of
+weighting by per-venue funding rate.
+
+## Two-Waterfall Weighting (Detail)
+
+Capital allocation uses a two-pillar waterfall system:
+
+**Pillar 1 -- Coin-Level Weights (across coins):**
+
+1. For each coin in `basis_coins`, compute `avg_funding_rate` as the weighted average funding rate across all allowed
+   perp venues for that coin.
+2. Filter: coins with `avg_funding_rate < 2.5%` annualized are excluded (floor configurable via
+   `min_funding_rate_annual`).
+3. Weight: remaining coins weighted proportionally to their `avg_funding_rate`. Example: ETH at 6% and SOL at 4% yield
+   weights 60%/40%.
+
+**Pillar 2 -- Venue Weights (within each coin):**
+
+1. For each coin's allocation, distribute across allowed perp venues by per-venue funding rate for that coin.
+2. Max 50% per venue (configurable via `max_venue_concentration`).
+3. Venues with funding rate below 1% annualized are excluded from that coin's allocation.
+
+The two-waterfall ensures diversification across both coins and venues. The strategy re-evaluates weights on each signal
+candle and rebalances only if the benefit exceeds cost (see Rebalance Cost-Benefit below).
+
+## Rebalance Cost-Benefit
+
+Rebalancing is gated by a cost-benefit check. The strategy only rebalances when:
+
+```
+expected_benefit > rebalance_cost * 1.5
+```
+
+Where:
+
+- `expected_benefit` = incremental funding income from improved allocation over the rebalance horizon (default: 7 days)
+- `rebalance_cost` = gas fees (swap leg) + slippage (30 bps estimated for swaps) + exchange fees (5 bps for perp trades)
+
+This prevents churn when funding rates shift marginally. The 1.5x multiplier is configurable via
+`rebalance_cost_multiplier` in strategy config. Higher values make the strategy more conservative about rebalancing.
+
+## Venue Collateral
+
+Each venue accepts specific collateral tokens. The strategy must ensure margin is posted in the correct token before
+opening perp positions.
+
+| Venue       | Accepted Collateral | Pre-Processing Required                       |
+| ----------- | ------------------- | --------------------------------------------- |
+| Hyperliquid | USDC only           | USDT must be swapped to USDC before transfer. |
+| Binance     | USDT, BTC, ETH      | No swap needed for USDT margin.               |
+| OKX         | USDT, BTC, ETH      | No swap needed for USDT margin.               |
+| Bybit       | USDT, BTC, ETH      | No swap needed for USDT margin.               |
+| Aster       | USDT, BTC, ETH      | No swap needed for USDT margin.               |
+
+For Hyperliquid, the strategy automatically emits a SWAP instruction (USDT to USDC) before the TRANSFER instruction.
+This is handled by the `CollateralValidationMixin` which checks venue collateral requirements before instruction
+emission.
+
+See [cross-cutting/venue-collateral-and-wrapping.md](../cross-cutting/venue-collateral-and-wrapping.md) for the full
+collateral matrix.
 
 ## References
 

@@ -118,18 +118,21 @@ pipeline:
 
 These apply to ALL strategies regardless of asset class:
 
-| Document                                                              | What It Covers                                                                            |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [PnL Attribution](cross-cutting/pnl-attribution.md)                   | Balance-based SOT, 7 attribution buckets, 2% reconciliation tolerance                     |
-| [Cost Modeling](cross-cutting/cost-modeling.md)                       | Transaction costs, gas, slippage, flash loan fees, opportunity cost                       |
-| [ML Pipeline](cross-cutting/ml-pipeline.md)                           | Feature ingestion, model lifecycle, signal generation, retraining                         |
-| [Latency Profiles](cross-cutting/latency-profiles.md)                 | p50/p99 targets per segment, co-location decision framework                               |
-| [Strategy Onboarding](cross-cutting/onboarding-checklist.md)          | Checklist for adding a new strategy to the system                                         |
-| [Client Onboarding](cross-cutting/client-onboarding.md)               | Adding a new client to an existing strategy                                               |
-| [Config Architecture](cross-cutting/config-architecture.md)           | Config-driven PnL, live=batch parity, hot-reload vs restart                               |
-| [Operational Modes Matrix](cross-cutting/operational-modes-matrix.md) | Mock/real, testnet, local cloud, env axes, IBKR paper vs `TESTNET_MODE`, SIT expectations |
-| [Margin & Health](cross-cutting/margin-health.md)                     | LTV, health factor, liquidation across CeFi/DeFi/TradFi                                   |
-| [Prediction Markets](cross-cutting/prediction-markets.md)             | Polymarket/Kalshi as features, execution, and arb surface                                 |
+| Document                                                                      | What It Covers                                                                            |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [PnL Attribution](cross-cutting/pnl-attribution.md)                           | Balance-based SOT, 7 attribution buckets, 2% reconciliation tolerance                     |
+| [Cost Modeling](cross-cutting/cost-modeling.md)                               | Transaction costs, gas, slippage, flash loan fees, opportunity cost                       |
+| [ML Pipeline](cross-cutting/ml-pipeline.md)                                   | Feature ingestion, model lifecycle, signal generation, retraining                         |
+| [Latency Profiles](cross-cutting/latency-profiles.md)                         | p50/p99 targets per segment, co-location decision framework                               |
+| [Strategy Onboarding](cross-cutting/onboarding-checklist.md)                  | Checklist for adding a new strategy to the system                                         |
+| [Client Onboarding](cross-cutting/client-onboarding.md)                       | Adding a new client to an existing strategy                                               |
+| [Config Architecture](cross-cutting/config-architecture.md)                   | Config-driven PnL, live=batch parity, hot-reload vs restart                               |
+| [Operational Modes Matrix](cross-cutting/operational-modes-matrix.md)         | Mock/real, testnet, local cloud, env axes, IBKR paper vs `TESTNET_MODE`, SIT expectations |
+| [Margin & Health](cross-cutting/margin-health.md)                             | LTV, health factor, liquidation across CeFi/DeFi/TradFi                                   |
+| [Prediction Markets](cross-cutting/prediction-markets.md)                     | Polymarket/Kalshi as features, execution, and arb surface                                 |
+| [Share Classes](cross-cutting/share-classes.md)                               | ETH/USDT/BTC base currency denomination, delta targets, FX factor in P&L                  |
+| [Reward Lifecycle](cross-cutting/reward-lifecycle.md)                         | Staking reward accrue/claim/sell/attribute pipeline (EIGEN, ETHFI)                        |
+| [Venue Collateral & Wrapping](cross-cutting/venue-collateral-and-wrapping.md) | Venue collateral matrix, token wrapping (ETH/eETH/stETH), instruction blocking            |
 
 ## Key Principles
 

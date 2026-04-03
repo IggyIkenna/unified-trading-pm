@@ -14,11 +14,16 @@ status: active
 depends_on:
   - sports-integration-01-reference-data-pipeline
   - sports-integration-02-odds-market-data-pipeline
+  - sports-batch-pipeline-end-to-end
 
 isProject: false
 ---
 
 # Sports Data Migration & Mapping Plan
+
+> **Conflict resolution**: Pass 2-6 (reference data backfill) depend on sports_batch_pipeline Phase 2
+> (instruments-service SPORTS hook) being complete. GCS paths must use `source=ODDS_API` format (not `venue=ODDS_API`)
+> per sports_e2e_validation adapter rewrite.
 
 ## Guiding Principles
 
@@ -67,7 +72,7 @@ Layer 4: DERIVED STAGE 2 (complex, subjective derivations)
 ### Provider 1: API-Football (api-football.com)
 
 - **Secret**: `api-football-api-key`
-- **USRI adapter**: `unified_sports_reference_interface/adapters/api_football.py`
+- **Adapter**: `instruments_service/reference_data/adapters/api_football.py`
 - **Role**: PRIMARY reference data source + fixture details
 - **Live feasible**: Yes (1 req/sec free tier, faster on paid)
 - **Coverage**: 100% of fixtures (143K), 100% of teams (30K)
@@ -90,7 +95,7 @@ Layer 4: DERIVED STAGE 2 (complex, subjective derivations)
 ### Provider 2: FootyStats (footystats.org)
 
 - **Secret**: `footystats-api-key`
-- **USRI adapter**: `unified_sports_reference_interface/adapters/footystats.py`
+- **Adapter**: `instruments_service/reference_data/adapters/footystats.py`
 - **Role**: Enrichment — 215 columns per match (corners, dangerous attacks, xG, cards, first-half splits)
 - **Live feasible**: Yes (API updates after each match within hours)
 - **Coverage**: 72.8% of fixtures mapped (102K/140K), 21.2% of teams mapped
@@ -110,7 +115,7 @@ table to join with API-Football fixtures.
 ### Provider 3: Understat (understat.com)
 
 - **Secret**: None (public scraping)
-- **USRI adapter**: `unified_sports_reference_interface/adapters/understat.py`
+- **Adapter**: `instruments_service/reference_data/adapters/understat.py`
 - **Role**: Shot-level xG data (x,y coordinates, situation, shot type)
 - **Live feasible**: Partially — data appears ~30min after match, but scraping has no SLA
 - **Coverage**: 8.1% of fixtures mapped (11.3K — only 5 leagues: EPL, La Liga, Bundesliga, Serie A, Ligue 1)
@@ -128,7 +133,7 @@ dependency**: Needs `us_team_id` and `us_fixture_id` from mapping table.
 ### Provider 4: Soccer-Football-Info (soccerfootball.info)
 
 - **Secret**: `soccer-football-info-api-key`
-- **USRI adapter**: `unified_sports_reference_interface/adapters/soccerfootball_info.py`
+- **Adapter**: `instruments_service/reference_data/adapters/soccerfootball_info.py`
 - **Role**: Progressive time-series stats (how stats evolve during match), HT data, dominance metrics
 - **Live feasible**: Yes (API with key)
 - **Coverage**: 38.1% of fixtures mapped (53.6K)
@@ -146,7 +151,7 @@ calculation. **Mapping dependency**: Needs `sf_team_id` and `sf_fixture_id` from
 ### Provider 5: Transfermarkt (transfermarkt.com)
 
 - **Secret**: `transfermarkt-api-key`
-- **USRI adapter**: `unified_sports_reference_interface/adapters/transfermarkt.py`
+- **Adapter**: `instruments_service/reference_data/adapters/transfermarkt.py`
 - **Role**: Player market values, squad composition, transfer history
 - **Live feasible**: Partially — valuations update monthly, not real-time
 - **Coverage**: 40.8% of teams mapped (12.2K)
@@ -162,7 +167,7 @@ calculation. **Mapping dependency**: Needs `sf_team_id` and `sf_fixture_id` from
 ### Provider 6: Open-Meteo (open-meteo.com)
 
 - **Secret**: None (public API)
-- **USRI adapter**: `unified_sports_reference_interface/adapters/open_meteo.py`
+- **Adapter**: `instruments_service/reference_data/adapters/open_meteo.py`
 - **Role**: Weather at stadium location on match day
 - **Live feasible**: Yes (free, fast, forecast + historical)
 - **Coverage**: Any venue with lat/lon (from venues.csv: 3,445 venues)

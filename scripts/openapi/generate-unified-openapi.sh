@@ -78,6 +78,16 @@ echo "=== Generating System Topology ==="
 python "$SCRIPT_DIR/generate_system_topology.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
 # ---------------------------------------------------------------------------
+# Instrument snapshot from GCS (full universe for UI mock realism)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Generating Instrument Snapshot ==="
+python "$SCRIPT_DIR/generate_instrument_snapshot.py" \
+    --workspace-root "$WORKSPACE_ROOT" \
+    --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi" \
+    --date "${INSTRUMENT_SNAPSHOT_DATE:-2026-03-27}"
+
+# ---------------------------------------------------------------------------
 # Type usage audit (dead type detection)
 # ---------------------------------------------------------------------------
 echo ""
@@ -112,7 +122,16 @@ for UI_REPO in unified-trading-system-ui unified-trading-system-ui\ copy; do
         cp "$OUTPUT_DIR/unified-trading-system.openapi.json" "$REGISTRY_DIR/openapi.json"
         cp "$OUTPUT_DIR/unified-trading-system.openapi.yaml" "$REGISTRY_DIR/openapi.yaml"
         [[ -f "$OUTPUT_DIR/ui-reference-data.json" ]] && cp "$OUTPUT_DIR/ui-reference-data.json" "$REGISTRY_DIR/ui-reference-data.json"
+        [[ -f "$OUTPUT_DIR/instruments-snapshot.json" ]] && cp "$OUTPUT_DIR/instruments-snapshot.json" "$REGISTRY_DIR/instruments-snapshot.json"
+        [[ -f "$OUTPUT_DIR/config-registry.json" ]] && cp "$OUTPUT_DIR/config-registry.json" "$REGISTRY_DIR/config-registry.json"
+        [[ -f "$OUTPUT_DIR/system-topology.json" ]] && cp "$OUTPUT_DIR/system-topology.json" "$REGISTRY_DIR/system-topology.json"
         echo "  Synced spec → $UI_REPO/lib/registry/"
+
+        # Deduplicate operationIds (multiple services share /health and /readiness)
+        DEDUPE_SCRIPT="$UI_DIR/scripts/dedupe-openapi-operation-ids.py"
+        if [[ -f "$DEDUPE_SCRIPT" ]]; then
+            python "$DEDUPE_SCRIPT" "$REGISTRY_DIR/openapi.json" --in-place
+        fi
 
         # Regenerate TypeScript types if npx is available
         TYPES_FILE="$UI_DIR/lib/types/api-generated.ts"

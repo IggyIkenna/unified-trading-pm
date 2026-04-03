@@ -3,34 +3,44 @@
 ## Overview
 
 The system manages client capital through a two-tier wallet hierarchy with automated capital flow between tiers. Each
-strategy operates on an isolated hot wallet per chain. A treasury wallet per chain serves as the client-facing
-deposit/withdrawal point.
+strategy operates on an isolated hot wallet (potentially on different chains). A treasury wallet per **share class**
+serves as the client-facing deposit/withdrawal point.
 
 ## Wallet Hierarchy
 
 Both wallet tiers are managed by the configured **custodian** (currently Copper.co, switchable). Clients
-deposit/withdraw into the custodian's treasury wallet. The system moves funds to the custodian's trading wallet(s) for
-strategy execution. The custodian name is a config parameter — switching providers requires only a new `CustodyProvider`
-implementation, no strategy changes.
+deposit/withdraw into the custodian's treasury wallet based on their fund's **share class** (base currency). The system
+moves funds to the custodian's trading wallet(s) for strategy execution. The custodian name is a config parameter —
+switching providers requires only a new `CustodyProvider` implementation, no strategy changes.
 
 ```
-CLIENT                CUSTODIAN TREASURY WALLET     CUSTODIAN TRADING WALLETS (per strategy per chain)
-                      (per chain)
-                                                    ┌─ AAVE_LENDING (ETH chain)
-Deposit ───────>  Treasury-ETH  ──── fund ────>     ├─ BASIS_TRADE (ETH chain)
-Withdraw <──────  (client-facing)  <── rebalance ── ├─ RECURSIVE_STAKED (ETH chain)
-                                                    └─ AMM_LP (ETH chain)
+CLIENT                CUSTODIAN TREASURY WALLET       CUSTODIAN TRADING WALLETS (per strategy, any chain)
+                      (per share class)
+                                                      ┌─ AAVE_LENDING (ETH chain)
+USDC ──────────>  Treasury-USDC  ──── fund ────>       ├─ BASIS_TRADE (ETH chain)
+(on ETH/ARB)      (share class: USDC, lives on ETH)   └─ L2_BASIS (Arbitrum — strategy bridges internally)
+                                    <── rebalance ──
 
-                  Treasury-ARB  ──── fund ────>     ├─ L2_BASIS (Arbitrum)
-                  (bridged from ETH)                └─ MULTICHAIN_LENDING (Arbitrum)
+ETH ───────────>  Treasury-ETH  ──── fund ────>       ├─ RECURSIVE_STAKED (ETH chain)
+(on ETH)          (share class: ETH, lives on ETH)    └─ STAKED_BASIS (ETH chain)
 
-                  Treasury-SOL  ──── fund ────>     ├─ SOL_BASIS (Solana)
-                  (bridged from ETH)                └─ KAMINO_LENDING (Solana)
+SOL/USDC ──────>  Treasury-SOL  ──── fund ────>       ├─ SOL_BASIS (Solana)
+(on Solana)       (share class: SOL, lives on SOL)    └─ SOL_LENDING (Solana)
 
-CeFi:             Funding Account ── transfer ──>   ├─ BASIS_TRADE (Hyperliquid sub-account)
-(exchange-managed) (Binance/HL/OKX)                 ├─ BTC_BASIS (Binance sub-account)
-                                                    └─ FUNDING_ARB (Bybit sub-account)
+BTC ───────────>  Treasury-BTC  ──── fund ────>       └─ BTC_LENDING (Bitcoin/wrapped)
+(on Bitcoin)      (share class: BTC, lives on BTC)
+
+CeFi:             Funding Account ── transfer ──>     ├─ BASIS_TRADE (Hyperliquid sub-account)
+(exchange-managed) (Binance/HL/OKX)                   ├─ BTC_BASIS (Binance sub-account)
+                                                      └─ FUNDING_ARB (Bybit sub-account)
 ```
+
+**Key principle:** Treasury is keyed by **share class** (the fund's base currency), not chain. Clients deposit into the
+treasury for their share class. The chain is just where that treasury wallet lives. Once funds move to trading wallets,
+the strategy decides which chains and venues to use. There is no bridging at deposit time.
+
+**Bridging only happens within strategy execution** — e.g., a CROSS_CHAIN_YIELD_ARB strategy might bridge USDC from
+Ethereum to Arbitrum to chase better yields. That's a strategy-level BRIDGE instruction, not a deposit flow.
 
 ## Capital Allocation Model
 
@@ -87,17 +97,22 @@ No treasury/hot wallet split. Single wallet per venue. Simpler capital structure
    d. Once treasury funded: withdrawal completes
 ```
 
-### Cross-Chain Deployment (Omnichain)
+### Cross-Chain Rebalancing (Strategy-Initiated Only)
+
+Bridging is a **strategy execution decision**, not a deposit flow. It only happens when a strategy needs to move capital
+between chains for yield optimization.
 
 ```
-1. Strategy decides to deploy on Arbitrum
+1. CROSS_CHAIN_YIELD_ARB strategy detects better APY on Optimism vs Arbitrum
 2. Instructions:
-   a. TRANSFER hot-wallet-eth → treasury-eth (if needed)
-   b. BRIDGE treasury-eth → treasury-arb (via Socket/Across)
-   c. TRANSFER treasury-arb → hot-wallet-l2basis-arb
-   d. Strategy deploys on Arbitrum
+   a. WITHDRAW hot-wallet-arb (Aave Arbitrum) → free capital
+   b. BRIDGE hot-wallet-arb → hot-wallet-opt (via Socket/Across)
+   c. LEND hot-wallet-opt → Aave Optimism pool
 3. Position-balance-monitor tracks in-flight bridge capital as PENDING_BRIDGE
 ```
+
+**Not used for:** Client deposits (deposit natively on target chain) or initial strategy funding (treasury funds trading
+wallet on the same chain).
 
 ### CeFi Venue Funding
 
@@ -132,6 +147,94 @@ signed = copper_client.sign_transaction(tx, wallet_id="hot-wallet-aave-eth")
 ```
 
 ## Configuration Schema
+
+### WalletMappingConfig (System-Level — UAC)
+
+Defined in `unified_api_contracts.internal.domain.defi.wallet_config`. This is the SSOT for all wallet mappings per
+chain environment. Loaded from GCS at: `wallet-config/{chain_env}/wallet_mapping.json`.
+
+**Dataclass hierarchy:**
+
+| Class                     | Purpose                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `WalletMappingConfig`     | Top-level: custodian, chain_env, share_classes map, reserve thresholds          |
+| `ShareClassWalletMapping` | Per-share-class: treasury wallet + list of trading wallets                      |
+| `TradingWalletConfig`     | Per-strategy wallet: wallet_id, address, strategy_id, chain, max_allocation_usd |
+| `WalletConfig`            | Single wallet: wallet_id, address, chain, label                                 |
+
+**Top-level fields:**
+
+| Field               | Type                                 | Default | Description                          |
+| ------------------- | ------------------------------------ | ------- | ------------------------------------ |
+| `custodian`         | `str`                                | —       | `"copper"`, `"fireblocks"`, `"mock"` |
+| `chain_env`         | `str`                                | —       | `"mainnet"`, `"testnet"`, `"fork"`   |
+| `share_classes`     | `dict[str, ShareClassWalletMapping]` | `{}`    | Per-share-class wallet mappings      |
+| `reserve_pct`       | `Decimal`                            | `20`    | Target treasury reserve % of AUM     |
+| `min_threshold_pct` | `Decimal`                            | `10`    | Below this: TREASURY_LOW event       |
+| `max_threshold_pct` | `Decimal`                            | `30`    | Above this: TREASURY_HIGH event      |
+
+**Helper methods:**
+
+- `get_treasury_address(share_class)` — returns treasury wallet address for a share class
+- `get_treasury_chain(share_class)` — returns the chain where the treasury wallet lives
+- `get_trading_address(share_class, strategy_id)` — returns trading wallet address for a strategy
+- `get_all_strategy_ids()` — returns all strategy IDs with trading wallets across all share classes
+
+**GCS path helper:** `wallet_config_gcs_path(chain_env)` returns `"wallet-config/{chain_env}/wallet_mapping.json"`.
+
+**Example config (testnet):**
+
+```json
+{
+  "custodian": "copper",
+  "chain_env": "testnet",
+  "reserve_pct": "20",
+  "min_threshold_pct": "10",
+  "max_threshold_pct": "30",
+  "share_classes": {
+    "USDC": {
+      "share_class": "USDC",
+      "treasury_wallet": {
+        "wallet_id": "vault-usdc-sep",
+        "address": "0x...",
+        "chain": "ETHEREUM"
+      },
+      "trading_wallets": [
+        {
+          "wallet_id": "trading-aave-sep",
+          "address": "0x...",
+          "strategy_id": "AAVE_LENDING",
+          "chain": "ETHEREUM"
+        },
+        {
+          "wallet_id": "trading-l2-basis-sep",
+          "address": "0x...",
+          "strategy_id": "L2_BASIS",
+          "chain": "ARBITRUM"
+        }
+      ]
+    },
+    "SOL": {
+      "share_class": "SOL",
+      "treasury_wallet": {
+        "wallet_id": "vault-sol-devnet",
+        "address": "7Ec...",
+        "chain": "SOLANA"
+      },
+      "trading_wallets": [
+        {
+          "wallet_id": "trading-sol-basis-devnet",
+          "address": "Fg6...",
+          "strategy_id": "SOL_BASIS",
+          "chain": "SOLANA"
+        }
+      ]
+    }
+  }
+}
+```
+
+A `testnet_wallet_mapping.json` fixture exists for development and integration testing.
 
 ### Per-Strategy Wallet Config (strategy config JSON)
 
@@ -200,20 +303,25 @@ remain the same.
 
 ## What Exists vs What Needs Building
 
-| Component                         | Status               | Where                                            |
-| --------------------------------- | -------------------- | ------------------------------------------------ |
-| TRANSFER instruction type         | Exists               | strategy-service, execution-service              |
-| BRIDGE instruction type           | Exists               | execution-service (Socket connector)             |
-| Per-venue balance reading         | Exists               | position-balance-monitor (venue_balance_tracker) |
-| On-chain balance reading          | Exists               | position-balance-monitor (Alchemy API)           |
-| CeFi sub-account transfers        | Exists               | execution-service (exchange adapters)            |
-| Treasury wallet config schema     | **Needs building**   | UAC                                              |
-| Treasury threshold monitoring     | **Needs building**   | position-balance-monitor or alerting             |
-| Auto-rebalance treasury↔hot      | **Needs building**   | strategy-service (meta-strategy or hook)         |
-| Copper MPC signing integration    | **Needs building**   | execution-service                                |
-| Per-client AUM tracking           | **Needs building**   | position-balance-monitor / IBOR                  |
-| Deposit detection events          | **Partially exists** | position-balance-monitor                         |
-| Cross-wallet exposure aggregation | **Needs building**   | risk-and-exposure-service                        |
+| Component                         | Status             | Where                                                   |
+| --------------------------------- | ------------------ | ------------------------------------------------------- |
+| TRANSFER instruction type         | **Working**        | strategy-service, execution-service                     |
+| BRIDGE instruction type           | **Working**        | execution-service (Socket connector)                    |
+| Per-venue balance reading         | **Working**        | position-balance-monitor (venue_balance_tracker)        |
+| On-chain balance reading          | **Working**        | position-balance-monitor (Alchemy API)                  |
+| CeFi sub-account transfers        | **Working**        | execution-service (exchange adapters)                   |
+| WalletMappingConfig schema        | **Working**        | UAC `internal/domain/defi/wallet_config.py`             |
+| GCS wallet config path            | **Working**        | `wallet-config/{chain_env}/wallet_mapping.json`         |
+| Testnet wallet mapping fixture    | **Working**        | `testnet_wallet_mapping.json`                           |
+| CopperCustodyProvider             | **Working**        | execution-service `custody/copper.py` (HMAC-SHA256 MPC) |
+| LocalKeyCustodyProvider           | **Working**        | execution-service `custody/local_key.py` (dev only)     |
+| MockCustodyProvider               | **Working**        | execution-service `custody/mock.py`                     |
+| Custody factory                   | **Working**        | execution-service `custody/factory.py`                  |
+| Treasury threshold monitoring     | **Needs building** | position-balance-monitor or alerting                    |
+| Auto-rebalance treasury↔hot      | **Needs building** | strategy-service (meta-strategy or hook)                |
+| Per-client AUM tracking           | **Needs building** | position-balance-monitor / IBOR                         |
+| Deposit detection events          | **Partially**      | position-balance-monitor                                |
+| Cross-wallet exposure aggregation | **Needs building** | risk-and-exposure-service                               |
 
 ## Security Model
 

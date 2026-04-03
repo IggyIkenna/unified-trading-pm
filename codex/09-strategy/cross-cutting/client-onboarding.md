@@ -72,6 +72,43 @@ Even though all clients run the same strategy template, positions WILL diverge o
 
 This is expected and normal. The system handles it by tracking each client's positions independently.
 
+## Client Strategy Config Overrides
+
+Per-client overrides are stored in UAC `ClientStrategyOverride` model and applied at strategy instance initialization.
+These allow tailoring strategy behavior without forking the strategy code.
+
+| Field                     | Type        | Description                                                     | Example (Patrick)             |
+| ------------------------- | ----------- | --------------------------------------------------------------- | ----------------------------- |
+| `allowed_perp_venues`     | `list[str]` | Venue whitelist for perp legs. Empty = all allowed.             | `["OKX", "BYBIT", "BINANCE"]` |
+| `multi_coin_rotation`     | `bool`      | Enable/disable multi-coin waterfall in basis strategies.        | `false`                       |
+| `fixed_basis_coin`        | `str`       | Lock basis trade to a single coin. Disables Pillar 1 weighting. | `"ETH"`                       |
+| `dynamic_venue_weighting` | `bool`      | Use funding-rate-proportional venue weights vs equal weights.   | `false`                       |
+| `max_leverage`            | `Decimal`   | Cap on leverage for recursive strategies.                       | `2.5`                         |
+| `share_class`             | `str`       | Base currency denomination for P&L (USDT, ETH, BTC).            | `"ETH"`                       |
+
+**How overrides are applied:**
+
+1. Strategy-service loads the base strategy config from GCS (`gs://config/{strategy_id}/base.yaml`).
+2. Client overlay is loaded from GCS (`gs://config/{strategy_id}/clients/{client_id}.yaml`).
+3. `ClientStrategyOverride` fields in the overlay replace the corresponding base config fields.
+4. Validation: overrides are type-checked against the UAC model. Invalid overrides fail loud at init.
+5. Hot-reload: config watcher picks up changes to client overlays without service restart.
+
+**Example: Patrick's config overlay:**
+
+```yaml
+client_id: "patrick"
+overrides:
+  allowed_perp_venues: ["OKX", "BYBIT", "BINANCE"]
+  multi_coin_rotation: false
+  fixed_basis_coin: "ETH"
+  dynamic_venue_weighting: false
+  share_class: "ETH"
+```
+
+This restricts Patrick to OKX/Bybit/Binance only (no Hyperliquid, no Aster), disables multi-coin rotation (ETH only),
+uses equal venue weighting instead of funding-rate-proportional, and denominates P&L in ETH.
+
 ## Removing a Client
 
 1. Strategy instance generates EXIT signal → closes all positions

@@ -8,6 +8,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-03-30
 ---
 
+> **Conflict resolution**: This plan owns ALL team name/fixture validation infrastructure across MTDS, FSS, and
+> instruments-service. sports_e2e_validation defers to this plan for data quality enforcement. sports_batch_pipeline
+> Phase 2 (instruments-service hook) should complete before this plan's Phase 4 (service integration).
+
 ## Context
 
 Team name resolution is fragmented: e2e-testing scripts use ad-hoc fuzzy matching, the arb backtest has its own
@@ -85,7 +89,29 @@ Betfair variants. This causes:
 
 **QG gate**: `cd unified-api-contracts && bash scripts/quality-gates.sh`
 
-### Phase 3: Service Integration [SEQUENTIAL after Phase 2]
+### Phase 3: UAC Bookmaker Registry [SEQUENTIAL after Phase 2]
+
+Bookmakers must be classified in UAC so services know which to use for features vs arb.
+
+- [ ] [AGENT] P0. **UAC bookmaker classification** — Add `BookmakerClassification` to UAC registry with fields: `key`,
+      `oddspapi_key`, `odds_api_key`, `category` (SHARP/UK/EU/US/ OFFSHORE/CRYPTO/EXCHANGE/PREDICTION), `use_for`
+      (ML_FEATURES/ARB/BOTH/EXCLUDED), `audit_result` (CLEAN/USABLE/MARGINAL/EXCLUDED), `audit_diff_pct`, `notes`.
+
+- [ ] [AGENT] P0. Populate for all 38 bookmakers:
+  - 12 ML_FEATURES: pinnacle, betfair_ex_uk, betsson, unibet, paddypower, draftkings, coral, betonlineag, betrivers,
+    casumo, fanduel, virginbet
+  - 23 ARB_ONLY: singbet, 188bet, 3et, sharpbet, dafabet, 1xbet, 22bet, bet365, betano, betmgm.co.uk, betplay, cloudbet,
+    kto, rollbit, roobet, bcgame, stake, pmu, polymarket, kalshi, matchbook, unibet.ie, betfair-ex
+  - 3 EXCLUDED: boylesports (corrupt), betway (4-6% diff), leovegas (3.3% diff)
+
+- [ ] [AGENT] P0. **CLV configuration** — Add to UAC: CLV reference bookmakers = best of Pinnacle closing price and
+      Betfair back_price_1. Live execution venue = Betfair or Pinnacle based on liquidity.
+
+- [ ] [AGENT] P1. **Data source routing** — Add to UAC: which source to use per bookmaker per purpose. ML features →
+      Odds API (historical, 5.5yr). Arb → OddsPapi (tick-level, 2-week rolling). Betfair → historical tick data (2-week
+      rolling).
+
+### Phase 4: Service Integration [SEQUENTIAL after Phase 3]
 
 - [ ] [AGENT] P1. **instruments-service**: Update sports fixture resolution to use `validate_team_resolution()` when
       ingesting from any source. Log `TEAM_RESOLUTION_FAILED` event (not silent skip) when a team name can't resolve.
@@ -96,8 +122,13 @@ Betfair variants. This causes:
 - [ ] [AGENT] P1. **MTDS sports adapter** (Odds API + OddsPapi): Use `validate_team_resolution()` for outcome name →
       HOME/AWAY/DRAW mapping. Current logic uses string matching; replace with canonical resolution.
 
+- [ ] [AGENT] P1. **MTDS bookmaker filtering** — Use UAC `BookmakerClassification.use_for` to route: features-service
+      only receives ML_FEATURES bookmaker ticks, arb strategy only receives ARB/BOTH bookmaker ticks. EXCLUDED
+      bookmakers are dropped at ingestion.
+
 - [ ] [AGENT] P2. **features services**: When computing ML features, validate that the fixture has odds from at least N
-      bookmakers with resolved team names. Skip fixture (with warning event) if resolution coverage < threshold.
+      bookmakers with resolved team names. Skip fixture (with warning event) if resolution coverage < threshold. CLV
+      features use best of Pinnacle + Betfair closing prices (not single-source).
 
 - [ ] [AGENT] P2. **strategy-service**: ArbitrageStrategy validates that both legs of an arb have matching canonical
       fixture IDs before execution.
@@ -121,6 +152,23 @@ Betfair variants. This causes:
   3. Checks kickoff time alignment (±30 min)
   4. Reports: matched fixtures, unmatched fixtures, resolution failures This replaces ad-hoc validation scattered across
      scripts.
+
+### Phase 4b: Exchange Data Quality Rules [PARALLEL with Phase 4]
+
+Betfair markets show floor prices (1.01-1.02) when not yet open or no liquidity. These must be filtered system-wide, not
+just in the backtest.
+
+- [ ] [AGENT] P0. **BETFAIR_MIN_PRICE = 1.03** — Any exchange back price <= 1.02 is a floor price (no real orders).
+      Filter at ingestion (MTDS) and feature computation. A Betfair market is valid only when ALL outcomes have back >
+      1.03 AND lay in exchange_meta. If any outcome is at floor, mark the entire market as invalid for that timestamp
+      (don't compute features, don't arb).
+
+- [ ] [AGENT] P1. **Betfair market open detection** — Track when a Betfair market transitions from floor prices to real
+      prices. Median: 47h before kickoff for first real price, 14h for tight spreads (<5%). Features-service should not
+      use Betfair data from before market open. MTDS can store it but tag `market_status=PRE_OPEN`.
+
+- [ ] [AGENT] P1. **Exchange liquidity validation** — For back-lay arb detection, require both back AND lay prices >
+      1.03, AND lay_size > minimum threshold (e.g. $50). Floor prices create fake arbs with infinite implied profit.
 
 ### Phase 5: Cross-Source Fixture Reconciliation [SEQUENTIAL after Phase 3]
 

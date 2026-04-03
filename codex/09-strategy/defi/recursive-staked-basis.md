@@ -55,7 +55,8 @@ After perp hedge:
   Perp short               = -7.5 ETH
   Margin                   = $1,000 USDC
 
-Health Factor = ($22,500 * 0.825) / $13,500 = 1.375
+Health Factor (standard) = ($22,500 * 0.775) / $13,500 = 1.29
+Health Factor (E-Mode)   = ($22,500 * 0.95)  / $13,500 = 1.58  ← auto-detected for weETH/WETH
 ```
 
 ### Wallet After Deploy
@@ -186,6 +187,23 @@ The `reward_mode` config controls how EtherFi/EigenLayer reward distributions ar
 Rewards are tracked as `SEASONAL_WEEKLY` settlement type. The `weekly_rewards` feature from features-onchain-service
 provides the expected distribution amount for APY forecasting.
 
+## Aave V3 E-Mode (Efficiency Mode)
+
+When both collateral and debt are ETH-correlated (weETH collateral + WETH debt), the strategy auto-detects Aave V3
+E-Mode via `get_emode_params()` from UAC. This provides dramatically higher LTV/liquidation parameters:
+
+| Mode     | LTV   | Liq Threshold | Liq Bonus | Max Leverage (raw) |
+| -------- | ----- | ------------- | --------- | ------------------ |
+| Standard | 72.5% | 77.5%         | 7.5%      | 3.6x               |
+| E-Mode   | 93%   | 95%           | 1%        | 14.3x              |
+
+**Detection:** `_resolve_emode_params()` extracts asset symbols from instrument IDs, calls `get_emode_params()`. Dynamic
+features from risk-and-exposure-service override E-Mode base values when present.
+
+**Config max_leverage still caps:** Even with E-Mode allowing 14.3x, the strategy's `max_leverage` config (default 3.0)
+and depeg tolerance cap apply. E-Mode means the protocol won't liquidate as aggressively, but the strategy stays
+conservative by design.
+
 ## Depeg Tolerance as Leverage Cap
 
 The weETH/ETH depeg tolerance functions as a **leverage cap** -- not an exit trigger (until emergency threshold). As
@@ -193,13 +211,22 @@ weETH depegs from its fair value (based on accumulated staking yield), the effec
 health factor. The strategy uses depeg tolerance to dynamically cap leverage:
 
 ```
-max_safe_leverage = (liquidation_threshold * (1 - depeg_tolerance)) / (1 - liquidation_threshold * (1 - depeg_tolerance))
+max_safe_leverage = liq_threshold / (1 - liq_threshold + depeg_tolerance)
 ```
 
-- At 0% depeg: max leverage ~5x (Aave E-Mode)
-- At 1% depeg: max leverage ~3.5x -- strategy deleverages proactively
-- At 2% depeg: max leverage ~2.5x -- further deleverage
-- At 3%+ depeg: EMERGENCY EXIT regardless of health factor
+**Three caps applied (most restrictive wins) in `_apply_ltv_leverage_cap()`:**
+
+1. **LTV-based:** `1/(1 - LTV) * 0.85` safety buffer
+2. **Depeg-based:** sizes leverage so `depeg_tolerance%` move won't trigger liquidation
+3. **Config `max_leverage`** (hard cap, default 3.0)
+
+| Depeg Tolerance | Standard Mode (liq=0.775) | E-Mode (liq=0.95) |
+| --------------- | ------------------------- | ----------------- |
+| 0%              | 3.44x                     | 20.0x             |
+| 2% (default)    | 3.16x                     | 13.57x            |
+| 3%              | 3.04x                     | 11.88x            |
+| 5%              | 2.82x                     | 9.50x             |
+| EMERGENCY EXIT  | ≥3% depeg                 | ≥3% depeg         |
 
 This means depeg tolerance is a **sliding scale for leverage reduction**, not a binary exit signal. The strategy
 gradually reduces leverage as depeg increases, maintaining HF > target. Only at the emergency threshold (default 3%)
@@ -539,11 +566,26 @@ All steps 3-8 execute atomically in a single transaction via flash loan:
 - Perp trade fee: ~$17 (6 bps on $288K)
 - Total entry cost: ~$190
 
-### Leverage Cap (Depeg Tolerance)
+### Leverage Cap (Depeg Tolerance + E-Mode)
 
-- `max_leverage = liq_threshold / (1 - liq_threshold + depeg_tolerance)`
-- With 2% depeg tolerance and 77.5% liq threshold: 3.16x max
-- Applied via `compute_depeg_safe_leverage()` BEFORE entry, not as exit trigger
+**Four caps applied in `_apply_ltv_leverage_cap()` (most restrictive wins):**
+
+1. **LTV cap:** `1/(1-LTV) * 0.85` safety buffer
+2. **Spread-move cap:** `liq_threshold / (1 - liq_threshold + max_spread_move)`
+   - Defaults from UAC `MAX_UNDERLYING_MOVES[base_currency].max_spread_move` (ETH=3%, SOL=5%)
+   - Override via `max_depeg_tolerance` config
+3. **Outright-move cap:** `(1 - maint_margin) / max_outright_move`
+   - Caps the perp hedge leg: if ETH can crash 30%, max leverage ~3.17x
+   - Defaults from UAC `MAX_UNDERLYING_MOVES[base_currency].max_outright_move`
+   - Override via `max_outright_move` config
+4. **Config `max_leverage`** (hard cap, default 3.0)
+
+| Move Type | ETH Default          | BTC Default | SOL Default        |
+| --------- | -------------------- | ----------- | ------------------ |
+| Outright  | 30% → 3.17x          | 25% → 3.8x  | 40% → 2.38x        |
+| Spread    | 3% → 11.88x (E-Mode) | 2% → —      | 5% → 9.5x (E-Mode) |
+
+**SSOT:** `unified_api_contracts.registry.max_underlying_moves.MAX_UNDERLYING_MOVES`
 
 ### Ongoing P&L (Daily)
 
@@ -598,6 +640,108 @@ All steps 3-8 execute atomically in a single transaction via flash loan:
 | EOD | —     | FUNDING      | Perp        | +$39.45   | $0  | $0       | -$118.03    |
 | EOD | —     | BORROW       | ETH debt    | -$23.67   | $0  | $0       | -$141.70    |
 | EOD | —     | REWARDS      | EIGEN+ETHFI | +$29.59   | $0  | $0       | -$112.11    |
+
+## Collateral Haircuts
+
+Aave V3 applies different loan-to-value (LTV) ratios and liquidation thresholds per collateral asset. These determine
+the maximum leverage achievable for each collateral type.
+
+| Collateral | LTV   | Liquidation Threshold | Max Leverage (theoretical) | Notes                                        |
+| ---------- | ----- | --------------------- | -------------------------- | -------------------------------------------- |
+| weETH      | 72.5% | 75%                   | 3.636x                     | Default for EtherFi staking.                 |
+| wstETH     | 79.5% | 82%                   | 4.88x                      | Higher LTV due to deeper Lido liquidity.     |
+| WETH       | 82.5% | 85%                   | 5.71x                      | Highest LTV. No staking yield on collateral. |
+
+Formula: `max_leverage = 1 / (1 - LTV)`. In practice, the strategy caps leverage below the theoretical maximum to
+maintain a health factor buffer. With the default `target_health_factor=1.5`, effective leverage is significantly lower
+than the theoretical max.
+
+The collateral choice (weETH vs wstETH vs WETH) trades off between staking yield and leverage capacity. weETH earns the
+highest combined yield (staking + EtherFi rewards) but has the lowest LTV. WETH has no staking yield but allows the
+highest leverage -- useful when funding rate alone justifies the strategy.
+
+## Health Factor Monitoring
+
+Health factor monitoring runs on a sub-5-minute cycle for this strategy, tighter than the standard 1H candle interval.
+This is critical because leveraged positions can approach liquidation rapidly during volatile markets.
+
+| Health Factor | Severity  | Action                                                                |
+| ------------- | --------- | --------------------------------------------------------------------- |
+| HF > 2.0      | HEALTHY   | No action. Strategy operates normally.                                |
+| HF 1.5 - 2.0  | WARNING   | Log alert. Reduce new entries. Monitor every 2 minutes.               |
+| HF 1.3 - 1.5  | CRITICAL  | Deleverage 20% via atomic bundle. Alert sent to client.               |
+| HF 1.1 - 1.3  | EMERGENCY | Full emergency deleverage. Atomic unwind of all Aave positions.       |
+| HF < 1.1      | IMMINENT  | Emergency exit all legs (Aave + perp). Accept slippage, priority gas. |
+
+The monitoring interval tightens as health factor degrades:
+
+- HF > 2.0: check every candle (1H)
+- HF 1.5-2.0: check every 2 minutes
+- HF < 1.5: check every 30 seconds (block-level for DeFi)
+
+Health factor is computed from on-chain data: `HF = (collateral_value * liquidation_threshold) / total_debt_value`. The
+`features-onchain-service` provides `health_factor` as a pre-computed feature. The strategy also computes a local
+estimate between feature updates using cached collateral and debt values with live price feeds.
+
+## MEV Protection
+
+Atomic bundles (flash loan entry/exit) are vulnerable to MEV extraction -- sandwich attacks can front-run the swap legs
+within the bundle. The strategy uses tiered MEV protection based on the execution environment.
+
+| Environment     | MEV Protection Method | Notes                                                         |
+| --------------- | --------------------- | ------------------------------------------------------------- |
+| Mainnet (live)  | Flashbots relay       | Bundles submitted via `eth_sendBundle` to Flashbots builders. |
+| L2 (Arbitrum)   | Private mempool       | MEV Blocker RPC endpoint for sequencer-level protection.      |
+| Testnet / Paper | NoProtection          | No MEV on testnets. Paper mode uses Tenderly fork.            |
+
+Flashbots relay ensures atomic bundles are not visible in the public mempool. The strategy's execution-service
+integration submits the bundle directly to block builders, who include it atomically or not at all. This eliminates
+sandwich risk on the swap legs.
+
+For L2 deployments (future), private mempool via MEV Blocker (`rpc.mevblocker.io`) routes transactions through a
+protected sequencer path. The protection method is configurable via `mev_protection` in strategy config.
+
+## Emergency Exit Cost Estimation
+
+Before deploying capital, the strategy estimates the cost of an emergency exit. Deployment is blocked if:
+
+```
+expected_annual_yield < emergency_close_cost * annualization_factor
+```
+
+Where `annualization_factor` defaults to 4 (meaning: the strategy must earn back emergency exit cost within 3 months).
+
+Emergency exit cost components:
+
+- Flash loan fee: $0 for Morpho, 0.05% of flash amount for Aave fallback
+- Gas for atomic unwind bundle: estimated from current gas price and ~600k gas units
+- Swap slippage on weETH to WETH: estimated from current pool depth and position size
+- Perp close slippage: estimated from Hyperliquid orderbook depth
+- Priority gas premium: 2x base gas for time-critical exits
+
+The estimation runs at signal time (before `DEPLOY` instruction emission). If the estimated emergency cost exceeds the
+threshold, the strategy logs a `DEPLOYMENT_BLOCKED_HIGH_EXIT_COST` event and waits for conditions to improve (typically:
+lower gas prices or deeper liquidity).
+
+## Share Class
+
+The recursive staked basis supports the same share classes as the other basis strategies. Note that recursive leverage
+amplifies the share class delta -- rebalance thresholds may need to be tighter for leveraged positions.
+
+| Share Class | Target Delta             | P&L Currency | Notes                                                                               |
+| ----------- | ------------------------ | ------------ | ----------------------------------------------------------------------------------- |
+| `USDT`      | 0 (fully market neutral) | USD          | Default. Leveraged weETH long + perp short cancel. Pure leveraged yield harvesting. |
+| `ETH`       | total_equity_in_eth      | ETH          | Perp hedge removes basis risk but preserves leveraged ETH exposure.                 |
+| `BTC`       | total_equity_in_btc      | BTC          | Same pattern. Less common for recursive strategies.                                 |
+
+For `USDT` share class, the leveraged position is delta-neutral in USD terms. For `ETH` share class, the perp hedge
+removes basis risk but the amplified staking yield accrues as ETH-denominated return. The FX factor separates
+base-currency conversion from the leveraged staking + funding P&L in attribution.
+
+Because leverage amplifies delta drift from weETH rate changes, the rebalance deviation threshold should be tighter than
+unleveraged strategies (e.g., 1.5% instead of 2% for a 2.5x leveraged position).
+
+See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full cross-strategy specification.
 
 ## References
 

@@ -6,9 +6,17 @@ locked_by: live-defi-rollout
 locked_since: 2026-03-28
 owner: agent
 created: 2026-03-28
+
+depends_on:
+  - ui-sync-hardening
 ---
 
 # Platform Strategy Families + Haruko Gap Closure
+
+> **Conflict resolution**: Phase 1A (strategy family tabs in service-tabs.tsx) conflicts with tiered_help_chatbot
+> (ChatWidget in UnifiedShell) and user_management_merge (ADMIN_TABS in service-tabs.tsx). Execution order for shell
+> changes: tiered_help_chatbot → user_management_merge → this plan. This plan adds new pages; ui_walkthrough builds DeFi
+> flows on top of them.
 
 ## Context
 
@@ -71,7 +79,7 @@ Phase 4 (SEQUENTIAL) ─ Integration Testing + Demo Polish
 - [x] [AGENT] P0. Add lock icons on family groups the user doesn't have entitlements for (FOMO visibility)
 - [x] [AGENT] P1. Move existing DeFi/Sports/Predictions/Options pages under family groups — update routes or use
       rewrites
-- [ ] [AGENT] P1. Add "Strategy Family" filter to global scope filters (top bar) alongside org/client/strategy
+- [x] [AGENT] P1. Add "Strategy Family" filter to global scope filters (top bar) alongside org/client/strategy
 
 ### 1B. Combo/Bundle Builders (PARALLEL)
 
@@ -125,16 +133,16 @@ Phase 4 (SEQUENTIAL) ─ Integration Testing + Demo Polish
 
 - [ ] [SCRIPT] P0. Map each new UI page to its backend service endpoint — create API contract in unified-trading-api or
       client-reporting-api
-- [ ] [SCRIPT] P0. Add mock API routes in `lib/api/mock-handler.ts` for all new endpoints
+- [x] [SCRIPT] P0. Add mock API routes in `lib/api/mock-handler.ts` for all new endpoints
 - [ ] [SCRIPT] P1. Create backend service stubs for: NAV calculator (pnl-attribution-service), pricing engine
       (ml-inference-service), IBOR reconciler (execution-service)
-- [ ] [SCRIPT] P1. Wire Firestore persistence for combo/bundle configurations per user
+- [x] [SCRIPT] P1. Wire Firestore persistence for combo/bundle configurations per user
 
 ## Phase 4: Integration & Polish
 
-- [ ] [AGENT] P0. Verify all 4 strategy families work end-to-end in mock mode
-- [ ] [AGENT] P0. Verify mode selector (Live/Paper/Batch) propagates to all new pages with visible data differences
+- [x] [AGENT] P0. Verify all 4 strategy families work end-to-end in mock mode
+- [x] [AGENT] P0. Verify mode selector (Live/Paper/Batch) propagates to all new pages with visible data differences
 - [ ] [AGENT] P0. Run full test suite — 122+ tests must pass
 - [ ] [AGENT] P0. Production build must succeed
-- [ ] [AGENT] P1. Update help chatbot decision tree with new pages and navigation
-- [ ] [AGENT] P1. Update UI-UX-Enhancements.md with completion status
+- [x] [AGENT] P1. Update help chatbot decision tree with new pages and navigation
+- [x] [AGENT] P1. Update UI-UX-Enhancements.md with completion status

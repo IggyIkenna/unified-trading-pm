@@ -81,24 +81,63 @@ to feature events via Pub/Sub.
 The strategy doesn't query instruments-service at runtime — it relies on the pipeline having already run instruments →
 MTDS → MDPS → features before strategy evaluation.
 
-### 4. Chain Resolution
+### 4. Chain Resolution (CHAIN_ENV)
+
+Implemented in UAC `registry/chain_env.py`. The `CHAIN_ENV` environment variable (read via
+`UnifiedCloudConfig.chain_env`) controls which chain IDs the system resolves to. Three values: `mainnet`, `testnet`,
+`fork`.
 
 ```python
-# In execution-service, when processing a DeFi instruction:
-chain_id = CHAIN_NAME_TO_ID[instruction.chain]  # "ETHEREUM" → 1
-api_key = get_secret("alchemy-api-key")
-rpc_url = CHAIN_RPC_TEMPLATES[chain_id].format(api_key=api_key)
+# UAC registry/chain_env.py — 21 chains mapped for both mainnet and testnet
+from unified_api_contracts.registry import resolve_chain_id, resolve_rpc_url
+
+# Strategy says "ETHEREUM" — system resolves based on CHAIN_ENV:
+chain_id = resolve_chain_id("ETHEREUM", env="mainnet")   # → 1
+chain_id = resolve_chain_id("ETHEREUM", env="testnet")   # → 11155111 (Sepolia)
+chain_id = resolve_chain_id("ETHEREUM", env="fork")      # → 1 (same as mainnet, different RPC)
+
+# Full RPC URL resolution:
+rpc_url = resolve_rpc_url("ETHEREUM", env="mainnet", alchemy_api_key=key)
 # → https://eth-mainnet.g.alchemy.com/v2/{key}
-```
 
-For testnet, the chain ID maps to a different endpoint:
-
-```python
-# Same code path, different chain_id from config:
-chain_id = 11155111  # Sepolia (from CHAIN_ENV=testnet config)
-rpc_url = CHAIN_RPC_TEMPLATES[chain_id].format(api_key=api_key)
+rpc_url = resolve_rpc_url("ETHEREUM", env="testnet", alchemy_api_key=key)
 # → https://eth-sepolia.g.alchemy.com/v2/{key}
+
+rpc_url = resolve_rpc_url("ETHEREUM", env="fork")
+# → "" (empty — caller provides Tenderly fork URL)
 ```
+
+**Chain coverage** (21 chains in both `MAINNET_CHAIN_IDS` and `TESTNET_CHAIN_IDS`):
+
+| Chain     | Mainnet ID  | Testnet ID  | Testnet Name     |
+| --------- | ----------- | ----------- | ---------------- |
+| ETHEREUM  | 1           | 11155111    | Sepolia          |
+| ARBITRUM  | 42161       | 421614      | Arbitrum Sepolia |
+| OPTIMISM  | 10          | 11155420    | Optimism Sepolia |
+| BASE      | 8453        | 84532       | Base Sepolia     |
+| POLYGON   | 137         | 80002       | Polygon Amoy     |
+| AVALANCHE | 43114       | 43113       | Avalanche Fuji   |
+| BSC       | 56          | 97          | BSC Testnet      |
+| LINEA     | 59144       | 59141       | Linea Sepolia    |
+| SCROLL    | 534352      | 534351      | Scroll Sepolia   |
+| ZKSYNC    | 324         | 300         | zkSync Sepolia   |
+| MANTLE    | 5000        | 5003        | Mantle Sepolia   |
+| BLAST     | 81457       | 168587773   | Blast Sepolia    |
+| MODE      | 34443       | 919         | Mode Testnet     |
+| GNOSIS    | 100         | 10200       | Gnosis Chiado    |
+| FANTOM    | 250         | 4002        | Fantom Testnet   |
+| CELO      | 42220       | 44787       | Celo Alfajores   |
+| AURORA    | 1313161554  | 1313161555  | Aurora Testnet   |
+| METIS     | 1088        | 599         | Metis Goerli     |
+| MOONBEAM  | 1284        | 1287        | Moonbase Alpha   |
+| SOLANA    | 0 (non-EVM) | 0 (non-EVM) | Devnet           |
+| BITCOIN   | 0 (non-EVM) | 0 (non-EVM) | Testnet          |
+
+`FORK_CHAIN_IDS` is aliased to `MAINNET_CHAIN_IDS` — fork mode uses mainnet chain IDs but routes transactions to the
+Tenderly fork RPC URL instead of mainnet.
+
+**Consumers updated:** `bridge_cost_model.py`, `sor_cross_chain.py`, and `uniswap.py` in execution-service all import
+`resolve_chain_id` from UAC instead of using hardcoded `CHAIN_NAME_TO_ID` mappings.
 
 ## Strategy vs Execution Decision Boundary
 
@@ -126,12 +165,28 @@ ETH/USDC 0.3% pool has best depth, splitting 60/40"
 
 ### Dynamic Instrument Subscription
 
-Strategies subscribe to instrument updates via hot reload:
+Implemented in `strategy_config_loader.py` (discovery + expiry filtering) and `colocated_engine.py` (date boundary
+re-discovery with change detection).
 
-1. instruments-service writes new instruments to GCS per date
-2. Config reloader detects new instruments matching strategy's intent
-3. Strategy re-evaluates: new pool with better yield? → rebalance
-4. Expiring instruments (futures) → strategy closes position before expiry
+**Batch flow:**
+
+1. On each date boundary, `discover_instruments()` re-reads GCS `instrument_availability/by_date/`
+2. `available_to_datetime` filtering excludes expired instruments (e.g., expired futures, delisted pools)
+3. `detect_instrument_changes()` computes added/removed instruments vs previous date
+4. Added instruments → `INSTRUMENTS_ADDED` event (strategy can evaluate new pool yields)
+5. Removed instruments → `INSTRUMENTS_REMOVED` event (strategy should close positions)
+
+**Live flow:**
+
+1. `get_active_instruments()` from `config_reloaders.py` returns hot-reloaded `InstrumentDomainConfig`
+2. `DomainConfigReloader` polls ConfigStore for changes (Pub/Sub-triggered)
+3. On reload: `CONFIG_CHANGED` event emitted with updated instrument/venue counts
+
+**Expiry handling:**
+
+- `discover_instruments()` filters on `available_to_datetime >= query_date`
+- Expired instruments are excluded from the returned list
+- Strategy sees position in expired instrument → emits CLOSE/WITHDRAW instructions
 
 This is critical for:
 
@@ -139,6 +194,27 @@ This is critical for:
 - **New pool launches**: better yield opportunity
 - **Protocol migrations**: Aave V3 → V4, Uniswap V3 → V4
 - **Chain expansions**: new L2 deployed, Aave launches on new chain
+
+### Continuous Mode (Paper/Live)
+
+The colocated engine supports `--continuous` mode for paper and live trading. Instead of generating a finite tick list
+from GCS features, the engine runs an infinite loop generating ticks at `--tick-interval` (default: 3600s = 1 hour).
+
+```bash
+# Paper: continuous on Tenderly fork, hourly ticks
+bash run-paper.sh --strategy AAVE_LENDING --continuous --tick-interval 3600
+
+# Live: continuous on mainnet, 15-minute ticks
+bash run-live.sh --strategy AAVE_LENDING --continuous --tick-interval 900
+```
+
+Each tick: load live features → strategy → execution → position → P&L → risk. Ctrl+C to stop gracefully.
+
+### Fork Time Advancement (Batch)
+
+In batch mode with Tenderly execution, the engine advances the fork's block timestamp by 24 hours on each date boundary
+via `provider.advance_time(86400)`. This ensures time-dependent DeFi operations (interest accrual, oracle updates, epoch
+boundaries) behave correctly across multi-day backtests.
 
 ## Key & Endpoint Resolution
 
@@ -176,20 +252,21 @@ All RPC URLs are templates in UAC SSOT:
 # Batch (local-batch.env):
 CLOUD_PROVIDER=gcp
 CLOUD_MOCK_MODE=false
+CHAIN_ENV=mainnet            # Mainnet chain IDs (fork uses mainnet IDs)
 CUSTODY_PROVIDER=mock        # No real signing in batch
 
-# Paper (local-paper.env — TO BE CREATED):
+# Paper (local-paper.env):
 CLOUD_PROVIDER=gcp
 CLOUD_MOCK_MODE=false
-CHAIN_ENV=testnet            # Use testnet chain IDs
-CUSTODY_PROVIDER=mock        # Or copper-sandbox
-TENDERLY_FORK=true           # Fork mainnet for execution
+CHAIN_ENV=fork               # Fork mode — mainnet chain IDs, Tenderly RPC
+CUSTODY_PROVIDER=mock        # Fork doesn't verify signatures
+TENDERLY_FORK=true           # Create Tenderly VNet fork for execution
 
-# Live (production):
+# Live (local-live.env / production):
 CLOUD_PROVIDER=gcp
 CLOUD_MOCK_MODE=false
-CHAIN_ENV=mainnet
-CUSTODY_PROVIDER=copper      # Real MPC signing
+CHAIN_ENV=mainnet            # Real mainnet chain IDs and RPC URLs
+CUSTODY_PROVIDER=copper      # Real MPC signing via Copper
 ```
 
 ## Smart Contract & Atomic Transaction Handling
@@ -215,39 +292,30 @@ execution-service InstructionRouter
 
 ### Per-Mode Execution Backend
 
-| Mode      | Backend                                  | Smart Contracts                                                 | Gas                          |
-| --------- | ---------------------------------------- | --------------------------------------------------------------- | ---------------------------- |
-| **Batch** | `non_trade_processor.py`                 | NOT called. Returns BENCHMARK_FILL at oracle price.             | Historical from GCS          |
-| **Paper** | `TenderlyExecutionProvider` (to build)   | Called on Tenderly fork. Real contract interaction, fake chain. | Real from fork tx receipt    |
-| **Live**  | `LiveExecutionProvider` + Copper signing | Called on mainnet. Real everything.                             | Real from mainnet tx receipt |
+| Mode      | Backend                                        | Smart Contracts                                               | Gas                          |
+| --------- | ---------------------------------------------- | ------------------------------------------------------------- | ---------------------------- |
+| **Batch** | `BenchmarkFillProvider` (lightweight fallback) | NOT called. Returns BENCHMARK_FILL at oracle price.           | Historical from GCS          |
+| **Batch** | `TenderlyExecutionProvider` (production)       | Called on Tenderly fork at historical block. Real code paths. | Real from fork tx receipt    |
+| **Paper** | `TenderlyExecutionProvider`                    | Called on Tenderly fork at latest block. Real-time execution. | Real from fork tx receipt    |
+| **Live**  | Mainnet RPC + `CopperCustodyProvider`          | Called on mainnet. Real everything.                           | Real from mainnet tx receipt |
 
-### Tenderly Integration
+### Execution Provider Architecture
 
-**Current state:** Integration test fixtures only.
+Location: `execution-service/execution_service/providers/`
 
-```python
-# execution-service/tests/integration/conftest.py
-@pytest.fixture(scope="session")
-def tenderly_fork():
-    """Create a Tenderly mainnet fork for integration testing."""
-    # Creates fork at latest block
-    # Returns fork RPC URL
+The `ExecutionProvider` protocol (defined in `providers/base.py`) abstracts where on-chain transactions execute. Two
+implementations exist:
 
-@pytest.fixture
-def funded_wallet(tenderly_fork):
-    """Fund a test wallet with ETH + tokens on the fork."""
+1. **`TenderlyExecutionProvider`** -- creates a Tenderly VNet fork per run. Supports `create_fork()`, `fund_wallet()`,
+   `advance_time()`, and `cleanup()`. Used for both batch (historical block) and paper (latest block) modes.
+2. **`BenchmarkFillProvider`** -- lightweight no-op provider. All fills computed at oracle price with zero slippage.
+   Used when `--benchmark-fill` is set or Tenderly credentials are unavailable.
 
-@pytest.fixture
-def aave_connector(tenderly_fork, funded_wallet):
-    """AaveConnector connected to fork with funded wallet."""
-```
+Factory: `get_execution_provider(mode, ...)` in `providers/factory.py` routes `"fork"`/`"tenderly"` to
+`TenderlyExecutionProvider` (with `BenchmarkFillProvider` fallback if no API key), anything else to
+`BenchmarkFillProvider`.
 
-**What needs building for paper trading:**
-
-1. `TenderlyExecutionProvider` — productionized version of test fixtures
-2. Fork management: create fork per day/hour, advance block time
-3. Config switch: `TENDERLY_FORK=true` in env
-4. Fork RPC URL injected into execution-service instead of mainnet RPC
+See [Tenderly Execution Provider](tenderly-execution-provider.md) for full API details.
 
 ### Code Path Alignment (Batch = Live)
 
@@ -283,36 +351,45 @@ the execution provider is pluggable.
 
 | Component                                    | Status                                                                   |
 | -------------------------------------------- | ------------------------------------------------------------------------ |
-| Strategy declares intent (not hardcoded IDs) | **Partially** — config has intent fields, resolution needs wiring        |
-| Dynamic instrument subscription (hot reload) | **Needs building** — config_reloaders exist but not wired to instruments |
+| Strategy declares intent (not hardcoded IDs) | **Working** — `StrategyInstrumentIntent` schema in UAC, resolution wired |
+| Dynamic instrument subscription (hot reload) | **Partially** — config_reloaders exist but not wired to instruments      |
 | Strategy ↔ execution decision boundary      | **Implemented in code** — SOR in execution, yields in strategy           |
 
 ### Execution Layer
 
-| Component                                          | Status                                                 |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| InstructionRouter (all DeFi operations)            | **Working** — LEND/BORROW/SWAP/TRADE/FLASH/TRANSFER    |
-| BENCHMARK_FILL (lightweight batch)                 | **Working** — quick iteration mode                     |
-| Tenderly fork fixtures (integration tests)         | **Exists** — aave_connector, uniswap_connector         |
-| TenderlyExecutionProvider (production batch/paper) | **Needs building** — productionize test fixtures       |
-| Copper MPC signing (live)                          | **Interface built** — CustodyProvider + mock + factory |
-| Live execution monitoring (confirmation, retry)    | **Needs building**                                     |
+| Component                                          | Status                                                                        |
+| -------------------------------------------------- | ----------------------------------------------------------------------------- |
+| InstructionRouter (all DeFi operations)            | **Working** — LEND/BORROW/SWAP/TRADE/FLASH/TRANSFER                           |
+| BenchmarkFillProvider (lightweight batch)          | **Working** — `providers/benchmark.py`, quick iteration mode                  |
+| TenderlyExecutionProvider (production batch/paper) | **Working** — `providers/tenderly.py`, VNet fork creation/fund/advance/delete |
+| ExecutionProvider protocol + factory               | **Working** — `providers/base.py` + `providers/factory.py`                    |
+| Tenderly fork fixtures (integration tests)         | **Working** — aave_connector, uniswap_connector                               |
+| CopperCustodyProvider (live MPC signing)           | **Working** — `custody/copper.py`, HMAC-SHA256, full signing flow             |
+| LocalKeyCustodyProvider (dev signing)              | **Working** — `custody/local_key.py`, Web3.py signing                         |
+| MockCustodyProvider (test/batch)                   | **Working** — `custody/mock.py`, deterministic SHA256                         |
+| Custody factory                                    | **Working** — `custody/factory.py`, routes on `config.provider`               |
+| Live execution monitoring (confirmation, retry)    | **Needs building**                                                            |
 
 ### Pipeline Scripts
 
-| Pipeline                                      | Status                        |
-| --------------------------------------------- | ----------------------------- |
-| `run-batch-pipeline.sh` (historical replay)   | **Working** — running now     |
-| `run-paper-pipeline.sh` (real-time on fork)   | **Needs building**            |
-| `run-live-pipeline.sh` (real-time on mainnet) | **Exists** — needs validation |
+| Pipeline                                                   | Status                                                                  |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `run-data-prep.sh` (instruments, ticks, process, features) | **Working** — positional subcommands for each pipeline stage            |
+| `run-batch.sh` (historical replay)                         | **Working** — `--strategy`, `--strategies`, `--category`, `--skip-data` |
+| `run-paper.sh` (real-time on Tenderly fork)                | **Working** — creates Tenderly fork, uses `local-paper.env`             |
+| `run-live.sh` (real-time on mainnet)                       | **Working** — Copper custody, interactive safety confirmation           |
+| `colocated_engine.py` (shared memory, 44 strategies)       | **Working** — async GCS sink, shared-memory architecture                |
 
 ### Config Layer
 
-| Component                                      | Status             |
-| ---------------------------------------------- | ------------------ |
-| `CHAIN_ENV` switch (mainnet/testnet chain IDs) | **Needs building** |
-| Custodian wallet mapping (real vs testnet)     | **Needs building** |
-| `local-paper.env` config                       | **Needs building** |
+| Component                                      | Status                                                                     |
+| ---------------------------------------------- | -------------------------------------------------------------------------- |
+| `CHAIN_ENV` switch (mainnet/testnet/fork)      | **Working** — UAC `registry/chain_env.py`, 21 chains, `resolve_chain_id()` |
+| `chain_env` on UnifiedCloudConfig              | **Working** — env var `CHAIN_ENV`, validates against `CHAIN_ENVS`          |
+| WalletMappingConfig (custodian wallet mapping) | **Working** — UAC `internal/domain/defi/wallet_config.py`                  |
+| `local-batch.env` (CHAIN_ENV=mainnet)          | **Working**                                                                |
+| `local-paper.env` (CHAIN_ENV=fork)             | **Working**                                                                |
+| `local-live.env` (CHAIN_ENV=mainnet + copper)  | **Working**                                                                |
 
 ## References
 

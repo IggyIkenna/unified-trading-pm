@@ -413,6 +413,85 @@ User (UI)
 | 8   | Day 2 | STAKING+FUNDING | --            | --              | --     | $0     | $0       | $0    | -$24.48     |
 | 9   | Day 4 | STAKING+FUNDING | --            | --              | --     | $0     | $0       | $0    | +$17.44     |
 
+## Configurable Staking Protocol
+
+The staking protocol is configurable via `staking_protocol` in strategy config. Each protocol has different yield
+characteristics, reward tokens, and Aave compatibility.
+
+| Protocol | LST Token | Aave Collateral? | Reward Tokens     | APY Key               | Notes                          |
+| -------- | --------- | ---------------- | ----------------- | --------------------- | ------------------------------ |
+| EtherFi  | weETH     | Yes (LTV 72.5%)  | EIGEN + ETHFI     | `etherfi_staking_apy` | Default. Highest combined APY. |
+| Lido     | wstETH    | Yes (LTV 79.5%)  | None (yield-only) | `lido_staking_apy`    | Simpler. No reward tokens.     |
+
+When `staking_protocol="LIDO"`, the strategy swaps into wstETH instead of weETH, and the reward lifecycle (EIGEN/ETHFI
+claiming and selling) is disabled entirely. The features consumed change accordingly -- `weeth_eth_rate` becomes
+`wsteth_eth_rate`, and `weekly_rewards` is not consumed.
+
+Protocol selection is a fixed config parameter, not gridded. A client chooses EtherFi or Lido at onboarding based on
+risk/reward preference.
+
+## Reward Lifecycle
+
+For EtherFi staking, the strategy manages two reward token streams:
+
+| Reward Token | Distribution Frequency | Claim Contract | Min Claim Threshold | Min Sell Threshold |
+| ------------ | ---------------------- | -------------- | ------------------- | ------------------ |
+| EIGEN        | Weekly (Mondays)       | EigenLayer     | $50                 | $100               |
+| ETHFI        | Quarterly              | EtherFi        | $50                 | $100               |
+
+**Lifecycle stages:**
+
+1. **Accrue** -- rewards accumulate in the protocol. Tracked as `PNL_FACTOR_REWARD_UNREALISED`.
+2. **Claim** -- on-chain transaction to the claim contract. Operation type: `CLAIM_REWARD`. Auto-triggered when accrued
+   value exceeds $50. Max once per 24h.
+3. **Sell** -- swap reward tokens to WETH via Binance spot or Uniswap V3. Operation type: `SELL_REWARD`. Auto-triggered
+   when wallet balance exceeds $100.
+4. **Attribute** -- realized proceeds split into `PNL_FACTOR_RESTAKING_REWARD` (EIGEN) and `PNL_FACTOR_SEASONAL_REWARD`
+   (ETHFI) for P&L attribution.
+
+For Lido (`staking_protocol="LIDO"`), there are no separate reward tokens -- yield accrues entirely through wstETH/ETH
+rate appreciation. The reward lifecycle is inactive.
+
+See [cross-cutting/reward-lifecycle.md](../cross-cutting/reward-lifecycle.md) for the full cross-strategy specification.
+
+## Token Wrapping
+
+DeFi protocols require specific wrapped token forms. The strategy handles wrapping automatically via
+`CollateralValidationMixin`:
+
+| Source Token | Wrapped Token | When Required                       | Wrapping Contract |
+| ------------ | ------------- | ----------------------------------- | ----------------- |
+| ETH          | WETH          | Uniswap V3 swaps, Aave deposits     | WETH9             |
+| eETH         | weETH         | Aave collateral (eETH is rebasing)  | EtherFi weETH     |
+| stETH        | wstETH        | Aave collateral (stETH is rebasing) | Lido wstETH       |
+
+Rebasing tokens (eETH, stETH) cannot be used as Aave collateral directly because their balance changes break Aave's
+scaled balance accounting. Wrapping converts them to non-rebasing equivalents where yield accrues via exchange rate
+appreciation instead of balance changes.
+
+The `CollateralValidationMixin` checks the target venue's accepted collateral and emits WRAP instructions before LEND
+instructions when needed. This is transparent to the strategy logic -- it only deals with the wrapped form.
+
+See [cross-cutting/venue-collateral-and-wrapping.md](../cross-cutting/venue-collateral-and-wrapping.md) for the full
+wrapping matrix.
+
+## Share Class
+
+The staked basis trade supports the same share classes as the plain basis trade. The share class determines the base
+currency for P&L and the delta neutrality target.
+
+| Share Class | Target Delta             | P&L Currency | Notes                                                           |
+| ----------- | ------------------------ | ------------ | --------------------------------------------------------------- |
+| `USDT`      | 0 (fully market neutral) | USD          | Default. weETH long + perp short cancel. Pure yield harvesting. |
+| `ETH`       | total_equity_in_eth      | ETH          | Perp hedge removes basis risk but preserves ETH exposure.       |
+| `BTC`       | total_equity_in_btc      | BTC          | Same pattern. Less common for staked basis.                     |
+
+For `ETH` share class with staked basis, delta neutrality means the weETH appreciation (staking yield) accrues as
+additional ETH-denominated return on top of the share class baseline. The FX factor separates base-currency conversion
+from staking + funding P&L in attribution.
+
+See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full cross-strategy specification.
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_staked_basis.py`

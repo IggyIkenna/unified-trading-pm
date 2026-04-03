@@ -419,6 +419,83 @@ User (UI)
 | 3   | EOD   | INTEREST | aUSDC      | +13.15  | $1.00 | $0     | $0       | -$0.85      |
 | 4   | Day 2 | INTEREST | aUSDC      | +13.15  | $1.00 | $0     | $0       | +$12.30     |
 
+## Oracle Depeg Risk
+
+Aave V3 uses Chainlink oracles for asset pricing. If the protocol oracle price diverges from the market price, the
+on-chain health factor and liquidation thresholds become unreliable. The strategy monitors oracle accuracy as a risk
+signal.
+
+| Divergence (oracle vs market) | Severity  | Action                                                       |
+| ----------------------------- | --------- | ------------------------------------------------------------ |
+| < 1%                          | NORMAL    | No action. Expected noise.                                   |
+| 1% - 2%                       | WARNING   | Log alert. Increase monitoring frequency to every 5 minutes. |
+| 2% - 3%                       | CRITICAL  | Reduce position by 50%. Alert sent to client.                |
+| > 3%                          | EMERGENCY | Full withdrawal. Oracle may be stale or manipulated.         |
+
+Oracle price is read from Chainlink aggregator via `features-onchain-service`. Market price comes from
+`market-tick-data-service` (aggregated across CEX venues). The divergence check runs on every candle.
+
+For the pure lending strategy (no debt), oracle depeg does not cause liquidation directly -- but it signals broader
+protocol instability. If Aave's oracle misprices the supplied asset, other users' positions may be liquidated
+incorrectly, causing cascade effects on utilization and withdrawal availability.
+
+## Borrow-Staking Spread
+
+When the lending strategy is combined with staking (ETH lending variant), the net spread between staking yield and
+borrow cost determines profitability after leverage.
+
+```
+net_spread = staking_apy - borrow_apy
+effective_yield = net_spread * leverage + base_supply_apy
+```
+
+| Condition                                    | Severity | Action                                           |
+| -------------------------------------------- | -------- | ------------------------------------------------ |
+| `net_spread > 0` after leverage              | NORMAL   | Strategy is profitable. Continue.                |
+| `net_spread > 0` but negative after leverage | WARNING  | Leverage cost exceeds spread. Reduce leverage.   |
+| `net_spread < 0`                             | CRITICAL | Borrow rate exceeds staking yield. Exit staking. |
+
+This monitoring applies only when the lending strategy is used in conjunction with a staking position (ETH family). For
+the pure stablecoin lending variant, borrow-staking spread is not applicable.
+
+## Stablecoin Depeg Monitoring
+
+For stablecoin lending (USDC, USDT, DAI family), the strategy monitors the peg stability of the supplied asset. A depeg
+event can cause bank-run dynamics on Aave -- other users rush to withdraw, pushing utilization to 100% and blocking
+further withdrawals.
+
+| Depeg (vs $1.00) | Severity  | Action                                                           |
+| ---------------- | --------- | ---------------------------------------------------------------- |
+| < 0.5%           | NORMAL    | No action. Normal fluctuation.                                   |
+| 0.5% - 1.0%      | WARNING   | Log alert. Prepare withdrawal instructions.                      |
+| 1.0% - 2.0%      | CRITICAL  | Withdraw 50% of position. Monitor utilization.                   |
+| > 2.0%           | EMERGENCY | Full withdrawal. Accept slippage to exit before utilization cap. |
+
+Depeg is measured as `abs(1.0 - token_price_usd)` using market-tick-data-service prices (CEX aggregated, not Aave
+oracle). The strategy checks depeg on every candle for the currently supplied token.
+
+If the strategy holds a diversified basket (USDC + USDT + DAI), a depeg in one token triggers rebalancing to the
+non-depegged tokens before considering full exit. This is handled by the smart routing within family logic (see above).
+
+## Share Class
+
+The lending strategy supports share classes primarily for the ETH lending variant.
+
+| Share Class | Supply Token  | P&L Currency | Notes                                                  |
+| ----------- | ------------- | ------------ | ------------------------------------------------------ |
+| `USDT`      | USDC/USDT/DAI | USD          | Default for stablecoin family. P&L is straightforward. |
+| `ETH`       | ETH/WETH      | ETH          | ETH lending variant. Returns denominated in ETH.       |
+
+For `USDT` share class, the lending yield is denominated in the same currency as the capital (USD stablecoins), so no FX
+factor applies. For `ETH` share class, the supply APY accrues in ETH-denominated terms. The FX factor separates ETH/USD
+price movements from the lending yield in P&L attribution.
+
+When a `USDT` share class client holds ETH family lending positions (rare but possible as a hedge component), the ETH
+price exposure is an additional delta that must be managed. In practice, the lending strategy defaults to matching the
+share class with the lending family: USDT share class uses stablecoin family, ETH share class uses ETH family.
+
+See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full cross-strategy specification.
+
 ## References
 
 - **Implementation:** `strategy-service/strategy_service/engine/strategies/defi_lending.py`

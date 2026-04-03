@@ -111,15 +111,54 @@ writes gas prices to the feature pipeline, where they are consumed by:
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
 
+### Unified Gas Schema (`GasCostRecord`)
+
+All gas costs use the canonical `GasCostRecord` schema from UAC internal, regardless of whether the cost came from a
+live tx receipt, a Tenderly fork receipt, or a GCS historical snapshot. The `source` field distinguishes them:
+
+```python
+# unified_api_contracts/internal/domain/defi/gas.py
+class GasCostRecord(BaseModel):
+    chain_id: int
+    chain_name: str
+    gas_price_gwei: Decimal
+    gas_used: int
+    gas_cost_eth: Decimal
+    gas_cost_usd: Decimal
+    priority_fee_gwei: Decimal
+    timestamp: datetime
+    source: Literal["gcs_historical", "tx_receipt", "fork_receipt"]
+
+    # Solana fields (non-EVM)
+    priority_fee_lamports: int | None = None
+    compute_units: int | None = None
+
+    # Bitcoin fields (non-EVM)
+    sat_per_vbyte: int | None = None
+    fee_rate_btc_per_kb: Decimal | None = None
+```
+
+**Source values:**
+
+| Source           | When Used                                   | Who Writes It                  |
+| ---------------- | ------------------------------------------- | ------------------------------ |
+| `gcs_historical` | Batch mode — gas price from GCS features    | MTDS gas_fee_handler           |
+| `tx_receipt`     | Live mode — actual gas used from mainnet tx | execution-service fill handler |
+| `fork_receipt`   | Paper/batch Tenderly mode — from fork tx    | TenderlyExecutionProvider      |
+
+**Rule:** PnL attribution reads `GasCostRecord.gas_cost_usd` regardless of source. The code path is identical.
+
 ### Gas Estimation Pipeline
 
 ```
 1. MTDS gas_fee_handler fetches gas prices via Alchemy RPC (eth_feeHistory / getRecentPrioritizationFees)
-2. Gas prices published as features (gas_price_gwei per chain)
+2. Gas prices published as features (gas_price_gwei per chain), written as GasCostRecord with source="gcs_historical"
 3. Strategy-service CostEstimator reads gas feature
 4. Estimate: gas_cost_usd = gas_units × gas_price_gwei × 1e-9 × eth_price_usd
 5. Compare gas_cost_usd against trade notional → cost_bps
 6. If cost_bps > budget: no-op (small trades on L1 are uneconomical)
+7. Post-trade: execution-service writes GasCostRecord with source="tx_receipt" or "fork_receipt"
+8. PnL attribution reads GasCostRecord.gas_cost_usd — same code, different source field
 ```
 
 ### Gas Units by Operation Type

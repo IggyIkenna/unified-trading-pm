@@ -339,6 +339,98 @@ class PnLAttribution:
     metadata: PnLMetadata              # fill_id, venue, benchmark_price, etc.
 ```
 
+## Share Class P&L
+
+P&L is converted from USD to the client's share class base currency. The FX attribution factor tracks the conversion
+difference, keeping trading P&L separate from currency exposure.
+
+```
+# ETH share class example
+pnl_eth = pnl_usd / eth_price_at_settlement
+
+# FX attribution
+fx_factor = pnl_usd * (1/eth_price_settlement - 1/eth_price_trade)
+trading_factor = pnl_usd / eth_price_trade
+total_pnl_eth = trading_factor + fx_factor  # = pnl_usd / eth_price_settlement
+```
+
+For `USDT` share class, no FX conversion applies (P&L is already in USD). For `ETH` and `BTC` share classes, every
+attribution factor is converted to the base currency at settlement time, and the FX component is separated as its own
+factor for transparency.
+
+This ensures clients see P&L in their chosen denomination while the system maintains USD as the internal accounting
+currency. The FX factor appears in attribution reports alongside DELTA, FUNDING, CARRY, etc.
+
+### Supported Share Classes
+
+| Share Class | Base Asset | FX Rate Feature (MDPS) | Delta Target             |
+| ----------- | ---------- | ---------------------- | ------------------------ |
+| `USDT`      | USD / USDT | n/a (rate = 1.0)       | 0 (market neutral)       |
+| `ETH`       | ETH        | `fx_rate_eth_usd`      | equity_in_eth (NOT zero) |
+| `BTC`       | BTC        | `fx_rate_btc_usd`      | equity_in_btc (NOT zero) |
+
+### FX Rate Source
+
+FX rates (`fx_rate_eth_usd`, `fx_rate_btc_usd`) are produced by `DefiFxRateAdapter` in MDPS. The adapter reads spot tick
+data from CeFi venues, aggregates to candle close, and applies LOCF. These features are consumed by strategy-service,
+pnl-attribution-service, and risk-and-exposure-service.
+
+### P&L Conversion in Settlement Service
+
+`strategy-service/strategy_service/engine/core/settlement_service.py`
+`convert_settlement_to_share_class(pnl, share_class, fx_rates)` converts a USD P&L dict.
+
+For `USDT`: returns all values unchanged with `_share_class` suffixed keys equal to USD values. For `ETH/BTC`: divides
+each value by the FX rate (ETH at $3500 → 1 ETH = 1/3500 USD → divide).
+
+Output keys:
+
+- `{factor}_usd` — original USD P&L (unchanged)
+- `{factor}_share_class` — same P&L in share class denomination
+- `total_pnl_usd`, `total_pnl_share_class`
+- `fx_rate_used` — the FX rate applied at settlement
+
+### ETH/BTC Share Class: Delta Target is NOT Zero
+
+For ETH share class, the risk target is NOT zero ETH delta. A portfolio targeting ETH denomination must hold
+equity_in_eth worth of ETH exposure. Zero ETH delta would mean underperforming ETH appreciation.
+
+`evaluate_base_currency_drift()` in risk_metrics.py enforces this:
+
+- Target ETH delta = account_equity / fx_rate_eth_usd
+- Drift = |actual - target| / target × 100%
+- WARNING at >2%, CRITICAL at >5%
+
+When drift exceeds threshold, strategy emits a SWAP instruction to buy ETH back toward target.
+
+See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full share class specification and
+[codex/04-architecture/defi-risk-monitoring.md](../../04-architecture/defi-risk-monitoring.md) for monitoring
+thresholds.
+
+## Reward P&L Factors
+
+Four additional attribution factors for DeFi staking reward streams. These extend the canonical factor hierarchy for
+strategies that involve liquid staking tokens (weETH, wstETH) and their associated reward protocols.
+
+| Factor                         | What It Captures                                         | Settlement Type   |
+| ------------------------------ | -------------------------------------------------------- | ----------------- |
+| `PNL_FACTOR_STAKING_YIELD`     | Base staking APY contribution (weETH/wstETH rate growth) | `LST_YIELD`       |
+| `PNL_FACTOR_RESTAKING_REWARD`  | EIGEN restaking rewards (weekly from EigenLayer)         | `SEASONAL_WEEKLY` |
+| `PNL_FACTOR_SEASONAL_REWARD`   | ETHFI quarterly airdrops (from EtherFi protocol)         | `SEASONAL_WEEKLY` |
+| `PNL_FACTOR_REWARD_UNREALISED` | Accrued but unclaimed rewards (mark-to-market estimate)  | `MARK_TO_MARKET`  |
+
+**Lifecycle:**
+
+1. Rewards accrue in the protocol. Tracked as `PNL_FACTOR_REWARD_UNREALISED` (unrealized, estimated from expected
+   distribution schedule).
+2. On-chain claim transaction converts unrealized to realized. `PNL_FACTOR_REWARD_UNREALISED` decreases,
+   `PNL_FACTOR_RESTAKING_REWARD` or `PNL_FACTOR_SEASONAL_REWARD` increases by the claimed amount.
+3. If reward tokens are sold (via `SELL_REWARD` operation), the realized proceeds replace the token-denominated value
+   with a USD-denominated value in the factor.
+
+These factors are only active for strategies that use EtherFi or Lido staking. For Lido (`staking_protocol="LIDO"`),
+only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
+
 ## SSOT References
 
 | Concept                | SSOT                       | Location                                                  |

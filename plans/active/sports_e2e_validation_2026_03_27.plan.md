@@ -10,6 +10,10 @@ locked_since: 2026-03-27
 
 # Sports E2E Validation + Arb Pipeline
 
+> **Conflict resolution**: This plan supersedes sports_batch_pipeline MTDS adapter work.
+> canonical_team_mapping_propagation owns all MTDS/FSS-level team name and fixture validation infrastructure — this plan
+> owns arb pipeline validation only (arb scan, backtest, live pipeline). Avoid duplicating fixture validation logic.
+
 ## Context
 
 Phase A (reference data backfill) and Phase D (odds migration) complete. MTDS validated for 1 day (248K rows, 16min).
@@ -57,7 +61,7 @@ Run actual arb backtest using the full system.
 - [ ] [CODE] P0. Implement arb_calculator in FSS (cross-bookmaker arb %, eligible pairs, duration)
 - [ ] [CODE] P0. Implement spread_calculator in FSS (sharp-soft spread, vig, max-min)
 - [ ] [SCRIPT] P0. Run strategy-service arb backtest on 1-week data
-- [ ] [ANALYSIS] P0. P&L analysis: expected arb return per fixture, per league, per time horizon
+- [x] [ANALYSIS] P0. P&L analysis: expected arb return per fixture, per league, per time horizon
 - [ ] [ANALYSIS] P1. Determine optimal X hours window for arb (cost vs opportunity trade-off)
 
 **Success criteria**: Arb backtest runs E2E. Clear P&L picture per league/time horizon.

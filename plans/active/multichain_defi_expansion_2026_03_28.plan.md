@@ -50,6 +50,8 @@ repo_gates:
 
 depends_on: []
 
+> **Conflict resolution**: QG sweep (last pending item) must complete before instrument_schema_cohesion Phase 2 adapter updates run. This plan owns chain_id logic in adapters; instrument_schema_cohesion owns field names/enum values. Both modify the same 25+ adapter files — cannot run simultaneously.
+
 todos:
   # Phase 1: UAC Foundation (DONE — 2026-03-27)
   - id: uac-chain-registry

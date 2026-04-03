@@ -4,11 +4,16 @@ status: active
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-29
+depends_on: [share-class-architecture, defi-instrument-pipeline-and-rewards]
 ---
 
 # DeFi Strategies Phase 2
 
 ## Context
+
+> **Sequencing**: Phase 2B/2C/2D strategy files (defi_base.py, defi_basis.py etc.) must run AFTER share_class sc-2a
+> (adds share_class to config) and defi_instrument_pipeline ip-3a/ip-5a (adds reward/lido fields). These 4 plans edit
+> the same strategy files — strict order: share_class → defi_instrument → client_config → defi_strategies_phase2.
 
 Phase 1 (2026-03-28/29) built the production-grade DeFi pipeline with batch=live parity:
 
@@ -35,25 +40,32 @@ Phase 2 expands to the full DeFi strategy suite.
 
 **Goal**: Concentrated liquidity positions on Uniswap V3. Strategy manages range, rebalances on price drift.
 
-- [ ] [AGENT] P0. Strategy: UniswapV3LPStrategy with \_collect_instructions()
-  - Instruction types: ADD_LIQUIDITY, REMOVE_LIQUIDITY, REBALANCE_RANGE
+- [x] [AGENT] P0. Strategy: UniswapV3LPStrategy with \_collect_instructions()
+  - Implemented as `AmmLPStrategy` in `strategy_service/engine/strategies/defi_amm_lp.py`
+  - Instruction types: ADD_LIQUIDITY, REMOVE_LIQUIDITY, REBALANCE_RANGE all implemented
   - Config: pair, fee tier, range width (in ticks), rebalance threshold
-  - P&L: fees earned (from swap volume \* position share) - impermanent loss
-- [ ] [AGENT] P0. Execution: LP handlers in InstructionRouter for ADD_LIQUIDITY/REMOVE_LIQUIDITY
-  - Uses AMM matching engine (already exists in execution-service)
-- [ ] [AGENT] P1. Features: pool volume, TVL, fee APY from Uniswap subgraph data
-- [ ] [AGENT] P1. Risk: impermanent loss tracking, range utilization %
+  - P&L: fees earned (from swap volume \* position share) - impermanent loss (compute_impermanent_loss_v2)
+- [x] [AGENT] P0. Execution: LP handlers in InstructionRouter for ADD_LIQUIDITY/REMOVE_LIQUIDITY
+  - Instructions defined in execution-service `defi_execution/instructions.py`
+- [x] [AGENT] P1. Features: pool volume, TVL, fee APY from Uniswap subgraph data
+  - AmmLPStrategy reads pool_volume, pool_tvl, fee_apy, current_tick from features
+- [x] [AGENT] P1. Risk: impermanent loss tracking, range utilization %
+  - `_range_utilization()` and `compute_pnl_breakdown()` with IL tracking in defi_amm_lp.py
 
 ## Phase 2C: Multi-Chain SOR for Swaps (PARALLEL with 2B)
 
 **Goal**: Smart Order Router that splits swaps across chains for best execution.
 
-- [ ] [AGENT] P0. Read available liquidity per chain from features (Uniswap, Curve, Balancer pools)
-- [ ] [AGENT] P0. SOR algorithm: minimize slippage by splitting across venues/chains
-  - Already have SOR in execution-service (sor_dex.py, sor_twap.py)
-  - Extend to cross-chain: factor in bridge cost + time
-- [ ] [AGENT] P1. Bridge integration: Socket/LayerZero transfer instructions
-- [ ] [AGENT] P1. Gas comparison across chains (L2s much cheaper than L1)
+- [x] [AGENT] P0. Read available liquidity per chain from features (Uniswap, Curve, Balancer pools)
+  - `CrossChainSORStrategy` in `cross_chain_sor.py` reads per-chain pool liquidity from features
+- [x] [AGENT] P0. SOR algorithm: minimize slippage by splitting across venues/chains
+  - Implemented as `CrossChainSORStrategy` with bridge cost + time factored in via `is_bridge_worthwhile()`
+  - Generates TRANSFER + SWAP instruction sequences for cross-chain moves
+- [x] [AGENT] P1. Bridge integration: Socket/LayerZero transfer instructions
+  - `SocketBridgeConnector` with live Socket v2 API (`https://api.socket.tech/v2`) implemented in
+    `execution_service/defi_execution/protocols/bridge.py`
+- [x] [AGENT] P1. Gas comparison across chains (L2s much cheaper than L1)
+  - L1/L2 gas differentials reflected in bridge cost model within CrossChainSORStrategy
 
 ## Phase 2D: Recursive Staking (SEQUENTIAL after 2A + 2C)
 
@@ -76,16 +88,24 @@ Phase 2 expands to the full DeFi strategy suite.
 
 **Goal**: Move assets across chains via bridge protocols.
 
-- [ ] [AGENT] P1. TRANSFER instruction with chain routing (Ethereum → Arbitrum → Base)
-- [ ] [AGENT] P1. Bridge cost model: gas + bridge fee + time estimate
-- [ ] [AGENT] P1. Cross-chain position tracking: same wallet, multiple chains
+- [x] [AGENT] P1. TRANSFER instruction with chain routing (Ethereum → Arbitrum → Base)
+  - Implemented in `multichain_lending.py` `_build_cross_chain_transfer()` and `cross_chain_sor.py`
+- [x] [AGENT] P1. Bridge cost model: gas + bridge fee + time estimate
+  - `_DEFAULT_BRIDGE_COSTS` static table + `BridgeCostEstimate` dataclass with bridge_cost_pct() in cross_chain_sor.py
+- [x] [AGENT] P1. Cross-chain position tracking: same wallet, multiple chains
+  - Confirmed in `position_balance_monitor_service/core/defi_health_aggregator.py` — `per_chain_health` field and
+    `_compute_per_chain_health()` method track positions per chain
 
 ## Phase 2F: Clean Run + Plots (AFTER all above)
 
 - [ ] [AGENT] P0. Clean GCS state (delete stale fills from old runs)
+  - No clean-state script found in e2e-testing/scripts/defi/ — needs implementation
 - [ ] [AGENT] P0. Full 7-day run: lending + basis trade + recursive staking
+  - run-batch.sh exists but no 7-day orchestration script confirmed
 - [ ] [AGENT] P0. Generate plots: positions, P&L attribution, HF/LTV, funding rates, venue allocation
+  - No plot generation script found in e2e-testing
 - [ ] [AGENT] P0. Compare strategy returns: lending vs basis vs recursive
+  - Dependent on 7-day run completing first
 
 ## Success Criteria
 

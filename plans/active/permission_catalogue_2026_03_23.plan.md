@@ -12,9 +12,14 @@ readiness:
 affects:
   - auth-api
   - unified-trading-system-ui
+depends_on: [user-management-merge]
 ---
 
 # Permission Catalogue — Granular Access Registry
+
+> **Conflict resolution**: Phase 1 (auth_api catalogue routes) and Phase 3 (onboard page) depend on
+> user_management_merge completing first. user_management_merge creates the provisioning routes and onboard page that
+> this plan extends. Both plans modify auth-api app.py — execute sequentially.
 
 ## Context
 
@@ -79,45 +84,54 @@ Which UI sections and API domains the user can access.
 
 ## Execution
 
-### Phase 1: Catalogue Model + API (auth-api)
+### Phase 0: Permission SSOT Consolidation (UAC)
 
-- [ ] [AGENT] P0. Create `auth_api/models/permission_catalogue.py` — PermissionDomain, PermissionCategory, Permission
-      (hierarchical: domain → category → permission). Each permission has: key, label, description, domain, category,
-      is_internal_only flag.
+- [x] [AGENT] P0. Consolidate 4 drifted permission taxonomies into UAC `rbac.py` — added `OrgType`, `Entitlement` (13
+      values), `SubscriptionTier` (7 values), `ProvisioningRole` (8 values), `TIER_ENTITLEMENTS` mapping. UTL
+      `entitlements.py` and API gateway `entitlement.py` updated to import from UAC instead of defining locally.
+      TypeScript UIs align manually.
 
-- [ ] [AGENT] P0. Create `auth_api/data/permission_catalogue.py` — the actual catalogue data seeded from real codebase
-      registries (33 venues, 12+ algos, 15+ instrument types, 6 internal services).
+### Phase 1: Catalogue Model + API (unified-trading-api — auth-api does not exist)
 
-- [ ] [AGENT] P0. Create `auth_api/routes/catalogue.py` — GET /catalogue (full tree), GET /catalogue/{domain} (single
-      domain), GET /catalogue/search?q= (search permissions by name).
+- [x] [AGENT] P0. Create `unified_trading_api/models/permission_catalogue.py` — PermissionDomain (8-value StrEnum),
+      CataloguePermission, PermissionCategory, DomainNode, CatalogueTree (Pydantic models). Hierarchical: domain →
+      category → permission. Each permission has: key, label, description, domain, category, is_internal_only flag.
 
-- [ ] [AGENT] P0. Wire catalogue router into app.py.
+- [x] [AGENT] P0. Create `unified_trading_api/models/permission_catalogue_data.py` — full catalogue data seeded from
+      real codebase registries. 8 domains, ~100+ permissions: 33 venues, 8 algos, 7 instruction types, 13 entitlements
+      from UAC Entitlement enum, internal-only flags on provisioning perms.
 
-- [ ] [AGENT] P0. Tests for catalogue endpoints.
+- [x] [AGENT] P0. Create `unified_trading_api/routes/catalogue.py` — GET /catalogue (full tree), GET /catalogue/domains
+      (summary), GET /catalogue/domain/{domain} (single domain), GET /catalogue/search?q= (case-insensitive substring
+      search).
+
+- [x] [AGENT] P0. Wire catalogue router into main.py at `/catalogue` prefix.
+
+- [x] [AGENT] P0. Tests for catalogue endpoints — 18 tests covering data integrity + route behavior.
 
 ### Phase 2: Admin UI — Catalogue Browser
 
-- [ ] [AGENT] P0. Create catalogue browser page at app/(ops)/admin/users/catalogue/page.tsx — tree view of all
+- [x] [AGENT] P0. Create catalogue browser page at app/(ops)/admin/users/catalogue/page.tsx — tree view of all
       permission domains, expandable categories, searchable. Shows every possible permission.
 
-- [ ] [AGENT] P0. Add "Catalogue" tab to ADMIN_TABS / USER_MGMT_TABS.
+- [x] [AGENT] P0. Add "Catalogue" tab to ADMIN_TABS / USER_MGMT_TABS.
 
 ### Phase 3: Wire into User Flows
 
-- [ ] [AGENT] P0. Update onboard page — replace flat checkbox list with catalogue-driven permission picker (grouped by
+- [x] [AGENT] P0. Update onboard page — replace flat checkbox list with catalogue-driven permission picker (grouped by
       domain, expandable, searchable).
 
-- [ ] [AGENT] P0. Update modify page — same catalogue-driven picker, pre-checked with user's current permissions.
+- [x] [AGENT] P0. Update modify page — same catalogue-driven picker, pre-checked with user's current permissions.
 
-- [ ] [AGENT] P0. Update access request page (user-facing) — users browse catalogue to request specific permissions.
+- [x] [AGENT] P0. Update access request page (user-facing) — users browse catalogue to request specific permissions.
 
-- [ ] [AGENT] P0. Update user detail page — show granted permissions organized by domain.
+- [x] [AGENT] P0. Update user detail page — show granted permissions organized by domain.
 
 ### Phase 4: Mock + Tests
 
-- [ ] [AGENT] P0. Add catalogue to mock handler (full tree in mock-provisioning-state.ts).
+- [x] [AGENT] P0. Add catalogue to mock handler (full tree in mock-provisioning-state.ts).
 
-- [ ] [AGENT] P0. Add Playwright E2E tests for catalogue browser + catalogue-driven onboard.
+- [x] [AGENT] P0. Add Playwright E2E tests for catalogue browser + catalogue-driven onboard.
 
 - [ ] [AGENT] P0. Run QG on both repos.
 

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import subprocess
 import sys
 import time
@@ -628,6 +629,97 @@ def _fallback_string_search(
 
 
 # ---------------------------------------------------------------------------
+# Import-based verification (catches what ripgrep misses)
+# ---------------------------------------------------------------------------
+
+
+def _verify_reachability_via_import(
+    repo_path: Path,
+    package_name: str,
+    entry_points: list[ModuleInfo],
+    all_modules: list[ModuleInfo],
+    reachable: set[str],
+) -> None:
+    """Use importlib to verify dead-classified modules are truly unreachable.
+
+    Ripgrep-based graph construction misses transitive import chains, deferred
+    imports inside functions, and conditional imports.  This step loads each
+    entry point via importlib and checks which modules Python actually pulled
+    in via sys.modules, promoting false-positive "dead" modules to REACHABLE.
+
+    Runs in a subprocess to avoid polluting the parent process's sys.modules.
+    Tolerates import failures (missing optional deps, etc.) gracefully.
+    """
+    # Build the set of dotted module names currently classified as dead.
+    dead_dotted = {m.dotted_module for m in all_modules if m.classification in ("ORPHAN_MODULE", "DEAD_BRANCH")}
+    if not dead_dotted:
+        return
+
+    # Build a small Python script that imports the entry points and reports
+    # which of the "dead" modules ended up in sys.modules.
+    entry_imports = [ep.dotted_module for ep in entry_points]
+    script = (
+        "import sys, json\n"
+        "dead = set(json.loads(sys.argv[1]))\n"
+        "entries = json.loads(sys.argv[2])\n"
+        "for e in entries:\n"
+        "    try:\n"
+        "        __import__(e)\n"
+        "    except Exception:\n"
+        "        pass\n"
+        "found = [m for m in dead if m in sys.modules]\n"
+        "print(json.dumps(found))\n"
+    )
+
+    import json
+
+    try:
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                script,
+                json.dumps(sorted(dead_dotted)),
+                json.dumps(entry_imports),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(repo_path),
+            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+    except subprocess.TimeoutExpired:
+        logger.debug("  import verification timed out for %s", package_name)
+        return
+
+    if result.returncode != 0:
+        logger.debug(
+            "  import verification failed for %s (exit %d)",
+            package_name,
+            result.returncode,
+        )
+        return
+
+    stdout = result.stdout.strip()
+    if not stdout:
+        return
+
+    try:
+        promoted: list[str] = json.loads(stdout)
+    except json.JSONDecodeError:
+        logger.debug("  import verification returned non-JSON for %s", package_name)
+        return
+
+    if promoted:
+        promoted_set = set(promoted)
+        reachable.update(promoted_set)
+        for m in all_modules:
+            if m.dotted_module in promoted_set and m.classification != "REACHABLE":
+                logger.debug("  promoted %s → REACHABLE (import verification)", m.dotted_module)
+                m.classification = "REACHABLE"
+
+
+# ---------------------------------------------------------------------------
 # Audit a single service
 # ---------------------------------------------------------------------------
 
@@ -678,6 +770,11 @@ def _audit_service(
         if module.classification == "ORPHAN_MODULE" and not module.is_init:
             if _fallback_string_search(repo_path, package_name, module):
                 module.classification = "DEAD_BRANCH"
+
+    # 6b. Import-based verification: attempt to load entry points and check
+    #     which modules Python actually imports (catches transitive chains,
+    #     deferred imports, and dynamic references that ripgrep misses).
+    _verify_reachability_via_import(repo_path, package_name, entry_points, all_modules, reachable)
 
     # 7. Collect results.
     for module in all_modules:

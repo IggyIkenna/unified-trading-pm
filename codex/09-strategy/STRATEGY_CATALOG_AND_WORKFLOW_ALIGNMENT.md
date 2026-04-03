@@ -93,56 +93,63 @@ From `09-strategy/README.md` and `cross-cutting/config-architecture.md`.
 `strategy_service.engine.strategies.__all__` in
 [`strategy_service/engine/strategies/__init__.py`](../../strategy-service/strategy_service/engine/strategies/__init__.py).
 
-### 3.1 Aligned (named in Codex index ↔ implemented & exported)
+### 3.1 Aligned (named in Codex README ↔ implemented & exported in `__all__`)
 
-| Codex area | Codex doc / file hint               | Implementation (exported)                                                       |
-| ---------- | ----------------------------------- | ------------------------------------------------------------------------------- |
-| DeFi       | `defi_basis.py`                     | `BasisTradeStrategy`, `create_basis_trade_strategy`                             |
-| DeFi       | `defi_staked_basis.py`              | `StakedBasisStrategy`, `create_staked_basis_strategy`                           |
-| DeFi       | `defi_lending.py`                   | `AAVELendingStrategy`, `create_aave_lending_strategy`                           |
-| DeFi       | `defi_recursive_basis.py`           | `RecursiveStakedBasisStrategy`, `create_recursive_staked_basis_strategy`        |
-| CeFi       | `cefi_momentum.py`                  | `CeFiMomentumStrategy`, `create_*_momentum_strategy`                            |
-| CeFi       | `mean_reversion_strategy.py`        | `MeanReversionStrategy`, `create_*_mean_reversion`                              |
-| TradFi     | `tradfi_ml_directional_strategy.py` | `TradFiMLDirectionalStrategy`, `validate_tradfi_ml_config` (under `tradfi_ml/`) |
-| TradFi     | `options_ml_strategy.py`            | `OptionsMLStrategy`, `create_*_ml_strategy` variants                            |
-| Sports     | `arbitrage_strategy.py`             | `ArbitrageStrategy`, `create_arbitrage_strategy`                                |
-| Sports     | `value_betting_strategy.py`         | `ValueBettingStrategy`, `create_value_betting_strategy`                         |
-| Sports     | `ml_sports_strategy.py`             | `MLSportsStrategy`, `create_ml_sports_strategy`                                 |
-| Sports     | `market_making.py`                  | `SportsMarketMakingStrategy`, `create_market_making_strategy`                   |
-| Cross      | `prediction-markets.md` / mapping   | `PredictionArbStrategy`, `normalize_*_market`, `CanonicalPredictionMarket`      |
+**36 strategy classes** are exported via `__all__` in `strategy_service/engine/strategies/__init__.py`. The README
+indexes **37 entries** (including variants like Unhedged Recursive, ETH Lending, and Omnichain Transfers).
 
-**Additional sports implementations in code (exported) with no dedicated `09-strategy/{name}.md` file:**
+All strategy classes listed in the README are now present in `__all__`. This includes the previously-missing quant
+strategies (StatArb, RelVol, CrossExchange, VolSurface) and the newly-added strategies (TradFiMLSwing, TradFiMomentum,
+CeFiMLDirectional, CeFiMarketMaking, BTC/SOL/multi-chain DeFi, OptionsMMStrategy).
 
-- `HalftimeMLStrategy` (`sports/halftime_ml.py`)
-- `KellyCriterionStrategy` (`sports/kelly.py`)
+| Domain     | Classes exported | README entries | Notes                                                         |
+| ---------- | ---------------- | -------------- | ------------------------------------------------------------- |
+| DeFi EVM   | 8                | 8 + 1 MM       | AmmLPStrategy covers MM; Unhedged Recursive = config variant  |
+| DeFi SOL   | 4                | 4              | SolBasis, SolStakedBasis, Kamino, SolConcentratedLP           |
+| DeFi BTC   | 2                | 2              | BtcBasis, BtcLending                                          |
+| DeFi Multi | 4                | 5              | Omnichain Transfers = meta (no strategy class); rest exported |
+| CeFi       | 5                | 4 + 1 MM       | Momentum, MeanReversion, CrossExchange, StatArb, MM           |
+| TradFi     | 6                | 5 + 1 MM       | MLDirectional, MLSwing, Momentum, RelVol, VolSurface, OptsMM  |
+| Sports     | 6                | 5 + 1 MM       | Arb, Value, ML, HalftimeML, Kelly, MM                         |
+| Prediction | 1                | 1              | PredictionArbStrategy                                         |
+| **Total**  | **36**           | **37**         | One-off diff = Omnichain Transfers (no class)                 |
 
-**TradFi in code but not in Codex README table:**
+### 3.2 system-topology.json coverage (32 entries vs 36 exported classes)
 
-- `TradFiMomentumStrategy`, `create_spy_momentum_strategy` (`tradfi_momentum.py`) — Codex CeFi/TradFi split mentions
-  ML + options; this is an extra TradFi momentum path in code.
+`system-topology.json` contains **32 strategy entries** (specific strategy_id instances, e.g. `CEFI_MOMENTUM_BTC_5M`).
+It maps to **20 unique strategy classes**. The following 16 exported classes have **no** topology entry:
 
-### 3.2 Implemented on disk but **not** in `__init__.py` exports (easy to miss in “workflow”)
+| Class                         | Domain     | Reason for gap                                                              |
+| ----------------------------- | ---------- | --------------------------------------------------------------------------- |
+| `AmmLPStrategy`               | DeFi EVM   | Documented — not yet added to topology                                      |
+| `BtcBasisTradeStrategy`       | DeFi BTC   | Documented — not yet added to topology                                      |
+| `BtcLendingStrategy`          | DeFi BTC   | Documented — not yet added to topology                                      |
+| `CeFiMLDirectionalStrategy`   | CeFi       | Exported — not yet added to topology                                        |
+| `CeFiMarketMakingStrategy`    | CeFi       | Exported — not yet added to topology                                        |
+| `CrossChainSORStrategy`       | DeFi Multi | Documented — not yet added to topology                                      |
+| `CrossChainYieldArbStrategy`  | DeFi Multi | Documented — not yet added to topology                                      |
+| `EthenaBenchmarkStrategy`     | DeFi EVM   | Documented — not yet added to topology                                      |
+| `KaminoLendingStrategy`       | DeFi SOL   | Documented — not yet added to topology                                      |
+| `L2BasisTradeStrategy`        | DeFi Multi | Documented — not yet added to topology                                      |
+| `MultiChainLendingStrategy`   | DeFi Multi | Documented — not yet added to topology                                      |
+| `OptionsMMStrategy`           | TradFi     | Documented — not yet added to topology                                      |
+| `SolBasisTradeStrategy`       | DeFi SOL   | Documented — not yet added to topology                                      |
+| `SolConcentratedLPStrategy`   | DeFi SOL   | Documented — not yet added to topology                                      |
+| `SolStakedBasisStrategy`      | DeFi SOL   | Documented — not yet added to topology                                      |
+| `TradFiMLDirectionalStrategy` | TradFi     | Exported (tradfi_ml/ package) — topology uses TradFiMLSwingStrategy instead |
 
-These modules exist under `engine/strategies/` but are **not** part of the public package surface today:
+**Factory export gap:** `create_prediction_arb_btc_strategy` is defined in `prediction_arb/prediction_arb_strategy.py`
+and referenced in system-topology.json but is **not** in `__all__`. `PredictionArbStrategy` itself IS exported.
 
-| Path (under `strategies/`)                  | Note                 |
-| ------------------------------------------- | -------------------- |
-| `cross_exchange/cross_exchange_strategy.py` | Cross-exchange logic |
-| `rel_vol/rel_vol_strategy.py`               | Relative vol         |
-| `stat_arb/stat_arb_strategy.py`             | Stat arb             |
-| `volatility/vol_surface_strategy.py`        | Vol surface          |
+### 3.3 Market-making strategy classes: export status
 
-**Misalignment:** Codex describes a **closed catalog** in the README; the repo contains **additional** strategy modules
-that are neither indexed in `09-strategy/README.md` nor exported. Onboarding and observability playbooks in Codex assume
-the README index is complete.
+| Codex entry                         | README status | Export status (current)                                                    |
+| ----------------------------------- | ------------- | -------------------------------------------------------------------------- |
+| DeFi AMM LP (`market-making-lp.md`) | Documented    | `AmmLPStrategy` exported in `__all__` with `create_amm_lp_strategy`        |
+| CeFi `market-making.md`             | Documented    | `CeFiMarketMakingStrategy` exported with `create_*_market_making_strategy` |
+| TradFi `market-making-options.md`   | Documented    | `OptionsMMStrategy` exported with `create_*_options_mm_strategy`           |
 
-### 3.3 Documented in Codex as “TBD” / MM-only (no `Code complete` row)
-
-| Codex entry                         | README status | Implementation note                                                          |
-| ----------------------------------- | ------------- | ---------------------------------------------------------------------------- |
-| DeFi AMM LP (`market-making-lp.md`) | Documented    | No dedicated exported class matching that doc in `__init__.py`               |
-| CeFi `market-making.md`             | Documented    | No `CeFiMarketMaking` in exports (sports has `SportsMarketMakingStrategy`)   |
-| TradFi `market-making-options.md`   | Documented    | No separate exported “options MM” class in `__init__.py` (options ML exists) |
+All three MM strategy classes are now exported. Previously flagged as missing; resolved.
 
 ### 3.4 README sports index
 
@@ -152,8 +159,26 @@ the README index is complete.
 
 ### 3.5 Duplicate / legacy file
 
-- `tradfi_ml_directional.py` at `strategies/` root vs `tradfi_ml/tradfi_ml_directional_strategy.py` — imports use the
-  package path; root file risks drift if both are maintained.
+- `tradfi_ml_directional.py` at `strategies/` root vs `tradfi_ml/tradfi_ml_directional_strategy.py` — both are imported
+  in `__init__.py`. The root file exports `TradFiMLSwingStrategy`; the package exports `TradFiMLDirectionalStrategy`.
+  These are distinct classes (swing vs directional), not duplicates.
+
+### 3.6 Missing codex documentation files
+
+The following strategies are in the README index (with links) but the target markdown files do **not** exist:
+
+| README link target              | Strategy class           | Status                 |
+| ------------------------------- | ------------------------ | ---------------------- |
+| `cefi/cross-exchange.md`        | `CrossExchangeStrategy`  | File missing           |
+| `cefi/stat-arb.md`              | `StatArbStrategy`        | File missing           |
+| `tradfi/tradfi-momentum.md`     | `TradFiMomentumStrategy` | File missing           |
+| `tradfi/relative-volatility.md` | `RelVolStrategy`         | File missing           |
+| `tradfi/volatility-surface.md`  | `VolSurfaceStrategy`     | File missing           |
+| `prediction/prediction-arb.md`  | `PredictionArbStrategy`  | File missing (dir too) |
+| `sports/halftime-ml.md`         | `HalftimeMLStrategy`     | File missing           |
+| `sports/kelly.md`               | `KellyCriterionStrategy` | File missing           |
+
+8 strategy docs referenced in README do not exist on disk. All 8 strategies are implemented and exported.
 
 ---
 
@@ -176,21 +201,35 @@ the README index is complete.
 
 Use this as a backlog bridge between documentation and engineering.
 
-1. **Catalog drift:** Update `09-strategy/README.md` to include **TradFi momentum**, **Halftime ML**, **Kelly**,
-   **Prediction arb**, and either document or delete **cross_exchange / rel_vol / stat_arb / vol_surface** (or move to
-   “experimental” with explicit non-export status).
-2. **Export policy:** Decide whether non-exported strategy packages are **deprecated**, **internal**, or **upcoming**;
-   align Codex and `__init__.py`.
-3. **Trigger subscriptions:** Implement UIC model + config + engine filtering per `config-architecture.md` §3 (Codex
+**Resolved (as of 2026-04-01):**
+
+- ~~Catalog drift: cross_exchange / rel_vol / stat_arb / vol_surface not in README~~ — All four now in README and
+  exported.
+- ~~Export policy: non-exported strategy packages~~ — All strategy classes are now exported in `__all__`. No
+  non-exported strategies remain.
+- ~~Market-making classes missing from exports~~ — AmmLPStrategy, CeFiMarketMakingStrategy, OptionsMMStrategy all
+  exported.
+
+**Still open:**
+
+1. **8 missing codex docs:** `cefi/cross-exchange.md`, `cefi/stat-arb.md`, `tradfi/tradfi-momentum.md`,
+   `tradfi/relative-volatility.md`, `tradfi/volatility-surface.md`, `prediction/prediction-arb.md` (+ prediction/
+   directory), `sports/halftime-ml.md`, `sports/kelly.md`. All 8 strategies are implemented and exported but lack
+   dedicated codex documentation files.
+2. **system-topology.json coverage:** 16 exported strategy classes have no entry in system-topology.json (see 3.2).
+   These need topology entries with maturity tracking, config files, and instrument mappings.
+3. **Factory export gap:** `create_prediction_arb_btc_strategy` is in system-topology.json but not in `__all__`.
+4. **Trigger subscriptions:** Implement UIC model + config + engine filtering per `config-architecture.md` 3 (Codex
    already specifies the gap).
-4. **Risk profile wiring:** Wire `StrategyRiskProfile` (UIC) to strategy config and validation; remove “implicit in
+5. **Risk profile wiring:** Wire `StrategyRiskProfile` (UIC) to strategy config and validation; remove “implicit in
    code” as the long-term state.
-5. **STRATEGY_MODES vs 09-strategy:** Schedule a **terminology pass** so `docs/STRATEGY_MODES.md` and
+6. **STRATEGY_MODES vs 09-strategy:** Schedule a **terminology pass** so `docs/STRATEGY_MODES.md` and
    `09-strategy/README.md` use one naming scheme for modes, delta tracking, and share classes.
-6. **Per-strategy doc completeness:** Run the template checklist against each `09-strategy/*/*.md` file and mark gaps
+7. **Per-strategy doc completeness:** Run the template checklist against each `09-strategy/*/*.md` file and mark gaps
    (many still have TBD capital targets and testing-stage placeholders).
-7. **Sports docs:** Add `09-strategy/sports/` markdown for Halftime ML and Kelly (or link from a single “advanced
-   sports” page) to match the README table.
+8. **API mock data alignment:** `unified-trading-api/mock_data/seed_strategies.py` uses different strategy IDs (e.g.
+   `DEFI_ETH_BASIS_SCE_1H`, `CEFI_BTC_ML_DIR_HUF_4H`) than system-topology.json (e.g. `DEFI_BASIS_ETH_1H`,
+   `CEFI_MOMENTUM_BTC_5M`). The mock seed data should be regenerated from system-topology.json for consistency.
 
 ---
 

@@ -5,7 +5,7 @@ locked_since: 2026-03-25
 overview: |
   Wire arbitrage detection + ML-based betting + execution routing.
   ArbitrageStrategy reads MTDS odds, MLSportsStrategy reads ML predictions.
-  Execution routes through USEI (Betfair, Pinnacle via Odds API, paper trading).
+  Execution routes through execution-service sports_execution sub-package (Betfair, Pinnacle via Odds API, paper trading).
   GCS migration is LAST — old buckets to hive format, needs user approval before execute.
 type: code
 epic: epic-code-completion
@@ -22,7 +22,7 @@ repo_gates:
     notes: "Wire ArbitrageStrategy + MLSportsStrategy to data sources"
   - repo: execution-service
     code: C0
-    notes: "Verify sports routing through USEI"
+    notes: "Verify sports routing through execution-service sports_execution sub-package"
   - repo: execution-service (sports_execution/ sub-package)
     code: C0
     notes: "Verify Betfair + paper trading adapters"
@@ -37,7 +37,7 @@ isProject: false
 todos:
   - id: p1-arbitrage-wiring
     content: |
-      - [ ] [AGENT] P1. Verify ArbitrageStrategy reads from MTDS GCS output.
+      - [x] [AGENT] P1. Verify ArbitrageStrategy reads from MTDS GCS output.
         File: strategy_service/engine/strategies/sports/arbitrage.py
         Input: odds parquet (64 bookmakers per fixture)
         Logic: GROUP BY fixture + market + selection, compare max/min prices
@@ -45,7 +45,7 @@ todos:
     status: pending
   - id: p2-ml-strategy-wiring
     content: |
-      - [ ] [AGENT] P1. Verify MLSportsStrategy reads from ml-inference output.
+      - [x] [AGENT] P1. Verify MLSportsStrategy reads from ml-inference output.
         File: strategy_service/engine/strategies/sports/ml_sports_strategy.py
         Input: model probabilities (home/draw/away)
         Logic: Kelly sizing, confidence gate, max-odds gate
@@ -53,9 +53,9 @@ todos:
     status: pending
   - id: p3-execution-routing
     content: |
-      - [ ] [AGENT] P1. Verify execution-service routes sports signals through USEI.
-        File: execution_service/adapters/sports_router.py
-        Routing: TradeSignal.venue -> USEI adapter (Betfair, Pinnacle, paper)
+      - [ ] [AGENT] P1. Verify execution-service routes sports signals through sports_execution sub-package.
+        File: execution_service/sports_execution/adapters/sports_router.py
+        Routing: TradeSignal.venue -> sports_execution adapter (Betfair, Pinnacle, paper)
         Paper mode: all signals to PaperBettingAdapter
     status: pending
   - id: p4-paper-trading

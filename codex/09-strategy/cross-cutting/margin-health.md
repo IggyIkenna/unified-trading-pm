@@ -132,6 +132,40 @@ Where:
 | DAI    | 75%              | 80%                   | 4%                  |
 | WSTETH | 69%              | 80%                   | 7%                  |
 
+### Aave V3 E-Mode (Efficiency Mode)
+
+When collateral and debt are in the same asset category, Aave V3 enables E-Mode with significantly elevated risk
+parameters. This dramatically changes leverage calculations for strategies like recursive staked basis.
+
+**SSOT:** `unified_api_contracts.registry.defi_reserve_params.AAVE_V3_EMODE_CATEGORIES`
+
+| E-Mode Category | Assets                     | LTV | Liq Threshold | Liq Bonus |
+| --------------- | -------------------------- | --- | ------------- | --------- |
+| ETH_CORRELATED  | WETH, weETH, wstETH, cbETH | 93% | 95%           | 1%        |
+| STABLECOIN      | USDC, USDT, DAI            | 97% | 97.5%         | 1%        |
+
+**Impact on recursive staked basis (weETH collateral + WETH debt = ETH_CORRELATED):**
+
+```
+Standard mode: LTV 72.5%, liq_threshold 77.5%
+  max_leverage = 1/(1 - 0.725) = 3.6x (raw), ~3.16x (with 2% depeg tolerance)
+
+E-Mode:       LTV 93%, liq_threshold 95%
+  max_leverage = 1/(1 - 0.93) = 14.3x (raw), ~13.6x (with 2% depeg tolerance)
+```
+
+**Depeg tolerance sizing with E-Mode:** `max_lev = liq_threshold / (1 - liq_threshold + depeg_tolerance)`
+
+| Depeg Tolerance | Standard (0.775 liq) | E-Mode (0.95 liq) |
+| --------------- | -------------------- | ----------------- |
+| 2%              | 3.16x                | 13.57x            |
+| 3%              | 3.04x                | 11.88x            |
+| 5%              | 2.82x                | 9.50x             |
+
+**Detection:** `get_emode_params(collateral_asset, debt_asset)` returns `EModeCategory | None`. Strategy
+`_resolve_emode_params()` auto-detects from instrument IDs. Dynamic features from risk-and-exposure-service override
+base E-Mode values when present.
+
 ### DeFi Health Factor Monitoring
 
 ```
@@ -389,6 +423,89 @@ Adjusted for correlation:
   correlation_adjusted_margin = base_margin × (1 + correlation_surcharge)
   correlation_surcharge = 0.10 × count_of_same_direction_positions_across_venues
 ```
+
+## DeFi Risk Dimensions
+
+The risk-and-exposure-service tracks 4 DeFi-specific risk dimensions. Each dimension has tiered severity thresholds and
+corresponding automated actions.
+
+### 1. Health Factor
+
+On-chain health factor from Aave V3 (`Pool.getUserAccountData`). Applies to any strategy with Aave debt positions
+(recursive staked basis, leveraged lending).
+
+| Health Factor | Severity  | Action                                                          |
+| ------------- | --------- | --------------------------------------------------------------- |
+| HF > 1.5      | NORMAL    | No action. Strategy operates normally.                          |
+| HF 1.3 - 1.5  | WARNING   | Log alert. Increase monitoring frequency. Reduce new entries.   |
+| HF 1.1 - 1.3  | CRITICAL  | Deleverage 20% via atomic bundle. Alert sent to client.         |
+| HF < 1.1      | EMERGENCY | Full emergency deleverage. Atomic unwind of all Aave positions. |
+
+### 2. Oracle Depeg
+
+Protocol oracle price (Chainlink via Aave) vs market price (aggregated CEX from market-tick-data-service). Applies to
+all DeFi strategies with on-chain positions.
+
+| Divergence (oracle vs market) | Severity  | Action                                                       |
+| ----------------------------- | --------- | ------------------------------------------------------------ |
+| < 1%                          | NORMAL    | No action. Expected noise.                                   |
+| 1% - 2%                       | WARNING   | Log alert. Increase monitoring frequency to every 5 minutes. |
+| 2% - 3%                       | CRITICAL  | Reduce position by 50%. Alert sent to client.                |
+| > 3%                          | EMERGENCY | Full withdrawal. Oracle may be stale or manipulated.         |
+
+### 3. Borrow-Staking Spread
+
+Net spread between staking APY and borrow APY, multiplied by leverage. Applies to recursive staked basis and any
+strategy combining staking with borrowing.
+
+```
+effective_spread = (staking_apy - borrow_apy) * leverage
+```
+
+| Condition                  | Severity | Action                                                                            |
+| -------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `effective_spread > 0`     | NORMAL   | Strategy is profitable. Continue.                                                 |
+| `effective_spread < 0`     | WARNING  | Leverage cost exceeds spread. Consider deleveraging.                              |
+| `effective_spread < -0.5%` | CRITICAL | Borrow rate significantly exceeds staking yield. Exit staking or reduce leverage. |
+
+### 4. Stablecoin Depeg
+
+Peg deviation for stablecoin positions (USDC, USDT, DAI). Applies to lending strategies with stablecoin exposure.
+
+| Depeg (vs $1.00) | Severity  | Action                                                               |
+| ---------------- | --------- | -------------------------------------------------------------------- |
+| < 0.5%           | NORMAL    | No action. Normal fluctuation.                                       |
+| 0.5% - 1.0%      | WARNING   | Log alert. Prepare withdrawal instructions.                          |
+| 1.0% - 5.0%      | CRITICAL  | Withdraw 50% of position. Monitor utilization for bank-run dynamics. |
+| > 5.0%           | EMERGENCY | Full withdrawal. Accept slippage to exit before utilization cap.     |
+
+## Venue Collateral Matrix
+
+The UAC registry is the SSOT for venue collateral acceptance. Each venue accepts specific tokens as margin or
+collateral, which determines pre-processing requirements (wrapping, swapping) before position entry.
+
+### DeFi Venues (Aave V3)
+
+| Collateral | LTV   | Liquidation Threshold | Max Leverage | Notes                               |
+| ---------- | ----- | --------------------- | ------------ | ----------------------------------- |
+| weETH      | 72.5% | 75%                   | 3.6x         | EtherFi. Highest combined yield.    |
+| wstETH     | 79.5% | 82%                   | 4.9x         | Lido. Higher LTV, no reward tokens. |
+| WETH       | 82.5% | 85%                   | 5.7x         | No staking yield. Highest leverage. |
+| USDC       | 80%   | 85%                   | 5.0x         | Stablecoin lending.                 |
+| USDT       | 75%   | 80%                   | 4.0x         | Stablecoin lending.                 |
+
+### CeFi Venues
+
+| Venue       | Accepted Margin                        | Notes                                         |
+| ----------- | -------------------------------------- | --------------------------------------------- |
+| Hyperliquid | USDC only                              | USDT must be swapped to USDC before transfer. |
+| Binance     | USDT (linear), BTC/ETH (coin-margined) | No swap needed for USDT linear perps.         |
+| OKX         | USDT (linear), BTC/ETH (coin-margined) | No swap needed for USDT linear perps.         |
+| Bybit       | USDT (linear), BTC/ETH (coin-margined) | No swap needed for USDT linear perps.         |
+| Aster       | USDT (linear), BTC/ETH (coin-margined) | No swap needed for USDT linear perps.         |
+
+The `CollateralValidationMixin` in strategy-service checks venue collateral requirements before instruction emission and
+auto-emits SWAP or WRAP instructions when the current token form is incompatible.
 
 ## SSOT References
 

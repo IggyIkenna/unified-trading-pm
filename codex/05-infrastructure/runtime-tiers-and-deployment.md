@@ -14,11 +14,25 @@ Replace `CLOUD_MOCK_MODE=true` with `CLOUD_MOCK_MODE=false` at ANY tier to switc
 
 ### Local Tiers (developer machine)
 
-| Tier   | Name                 | What runs                                                        | Calls                                                  |
-| ------ | -------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ |
-| **T0** | UI-only              | UI (Next.js)                                                     | No network. In-browser mock store.                     |
-| **T1** | UI + API gateways    | UI + `unified-trading-api` + `auth-api` + `client-reporting-api` | UI → HTTP → API. API uses MockStateStore internally.   |
-| **T2** | UI + APIs + Services | UI + APIs + all service processes                                | UI → HTTP → API → HTTP → Services. Full engine parity. |
+| Tier       | Name                 | What runs                                                        | Calls                                                  | Port |
+| ---------- | -------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ | ---- |
+| **static** | Static export        | Pre-built Next.js export via `npx serve`                         | Zero — pure static HTML/JS. No dev server, no APIs.    | 3100 |
+| **T0**     | UI-only              | UI (Next.js dev server, NEXT_PUBLIC_MOCK_API=true)               | No network. In-browser mock store.                     | 3100 |
+| **T1**     | UI + API gateways    | UI + `unified-trading-api` + `auth-api` + `client-reporting-api` | UI → HTTP → API. API uses MockStateStore internally.   | 3000 |
+| **T2**     | UI + APIs + Services | UI + APIs + all service processes                                | UI → HTTP → API → HTTP → Services. Full engine parity. | 3000 |
+
+**T-static** is for offline demos, screenshots, and visual regression. No API calls possible. Run:
+
+```bash
+bash scripts/dev-tiers.sh --tier static
+# or build only:
+bash scripts/static-mock-server.sh --build-only
+```
+
+**auth-api provisioning** (T1+): auth-api exposes `/api/auth/provisioning/*` routes for user onboarding, offboarding,
+access templates, and health checks. User management pages at `(ops)/admin/users/` connect to these routes. In T0 mode,
+provisioning calls are intercepted by the in-browser mock handler (`lib/api/mock-handler.ts`). Health page connector:
+`GET /auth/provisioning/health-checks`.
 
 ### Cloud Tiers (progressive deployment)
 
@@ -34,9 +48,10 @@ Replace `CLOUD_MOCK_MODE=true` with `CLOUD_MOCK_MODE=false` at ANY tier to switc
 **SSOT script:** `unified-trading-system-ui/scripts/dev-tiers.sh`
 
 ```bash
-bash scripts/dev-tiers.sh --tier 0        # UI-only
-bash scripts/dev-tiers.sh --tier 1        # UI + API gateways (demo-ready)
-bash scripts/dev-tiers.sh --tier 2        # UI + APIs + services (full fleet)
+bash scripts/dev-tiers.sh --tier static   # Static export (port 3100, zero deps)
+bash scripts/dev-tiers.sh --tier 0        # UI-only (port 3100, dev server)
+bash scripts/dev-tiers.sh --tier 1        # UI + API gateways (demo-ready, port 3000)
+bash scripts/dev-tiers.sh --tier 2        # UI + APIs + services (full fleet, port 3000)
 bash scripts/dev-tiers.sh --tier 1 --real # Tier 1 with real adapters
 bash scripts/dev-tiers.sh --stop          # Stop everything
 bash scripts/dev-tiers.sh --status        # What's running
