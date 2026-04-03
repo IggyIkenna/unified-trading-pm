@@ -103,6 +103,49 @@ todos:
         QG: cd features-sports-service && bash scripts/quality-gates.sh
     status: pending
     blocked_by: p3-wire-exporters
+
+  # ============================================================================
+  # PHASE 4b — FootyStats match data backfill  [PARALLEL with Phase 4]
+  # ============================================================================
+  - id: p4b-footystats-backfill
+    content: |
+      - [ ] [SCRIPT] P1. Backfill FootyStats match-level data to GCS.
+        FootyStats has per-half data (ht_goals, 2hg_goals, fh_corners, 2h_corners,
+        per-half xG) that no other source provides. UMI FootystatsAdapter exists but
+        is BLACKLISTED_NO_ACCESS (no API key).
+        Steps: 1) Obtain FootyStats API key. 2) Implement fetch_matches() in adapter.
+        3) Backfill 33 prediction leagues x 5.8 years.
+        4) Write to GCS with entity=footystats_matches partition.
+        BLOCKER: Need FootyStats API key before any work can proceed.
+    status: pending
+
+  # ============================================================================
+  # PHASE 5 — Manifest tracking + phased rollout  [SEQUENTIAL]
+  # ============================================================================
+  - id: p5a-fss-manifest
+    content: |
+      - [ ] [AGENT] P0. Verify FSS ManifestWriter tracks feature computation per date.
+        ManifestWriter exists in FSS batch_handler.py. Verify: writes availability_index
+        with date, feature_group, row_count, provider_count. --force overwrites, else skip.
+    status: pending
+    blocked_by: p4-validation
+  - id: p5b-one-month-features
+    content: |
+      - [ ] [SCRIPT] P0. Run features pipeline for 1 month (2025-03-01 to 2025-03-31).
+        FSS reads reference data + odds from GCS, computes all feature groups.
+        Verify: manifest shows 100% date coverage for the month.
+        Verify: all feature groups have non-zero rows per matchday.
+        Only proceed to full rollout after 1-month passes.
+    status: pending
+    blocked_by: p5a-fss-manifest
+  - id: p5c-full-period-features
+    content: |
+      - [ ] [SCRIPT] P1. Roll out features to full period (2020-06-01 to 2026-03-28).
+        Run FSS with --force=False (skip dates already in manifest).
+        Completeness target: >= 99% of matchdays with complete features.
+        Report per-calculator coverage. Flag gaps for --force re-run.
+    status: pending
+    blocked_by: p5b-one-month-features
 ---
 
 # Sports Integration Plan 3: Features Provider Integration
@@ -115,3 +158,6 @@ Part of the 6-plan sports integration series. Depends on Plan 1 (reference data 
 - FSS uses TeamMapping/FixtureMapping to resolve provider IDs
 - FootyStats, Understat, Soccer-Football-Info, Open-Meteo data flowing
 - All exporters produce non-zero rows
+- Manifest tracks 100% of dates with feature group counts
+- 1-month validation passes before full-period rollout
+- Full period (2020-06-01 to 2026-03-28) >= 99% feature coverage

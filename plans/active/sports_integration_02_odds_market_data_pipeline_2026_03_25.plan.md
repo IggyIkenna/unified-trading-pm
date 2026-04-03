@@ -151,47 +151,122 @@ todos:
   # ============================================================================
   - id: p6a-opening-odds
     content: |
-      - [ ] [AGENT] P0. Derive opening odds from T-24h bucket in FSS exporter.
-        T-24h = opening line. Label earliest horizon per fixture as opening.
-        Compute odds_movement = closing / opening - 1 for each outcome.
-    status: pending
+      - [x] [AGENT] P0. Derive opening odds from T-24h bucket in FSS exporter.
+        DONE (2026-04-03): compute_opening_odds() added to odds_calculator.py.
+        T-24h = opening line. Earliest horizon per fixture as opening.
+        odds_movement_{outcome} = closing / opening - 1 for each outcome.
+        6 new columns: opening_{home,draw,away}_odds, odds_movement_{home,draw,away}.
+        File: features_sports_service/calculators/odds_calculator.py
+    status: done
   - id: p6b-bookmaker-tier-tagging
     content: |
-      - [ ] [AGENT] P0. Tag bookmakers by BookmakerTier in FSS exporter.
-        Import classify_bookmaker() from UAC. Group by tier for:
-        sharp_consensus, soft_consensus, sharp_soft_delta, exchange_price,
-        bookmaker_disagreement (within-tier and cross-tier).
-    status: pending
+      - [x] [AGENT] P0. Tag bookmakers by BookmakerTier in FSS exporter.
+        DONE (2026-04-03): compute_tier_features() added to odds_calculator.py.
+        classify_bookmaker() from UAC. 16 new columns: sharp_consensus_*,
+        soft_consensus_*, exchange_price_*, sharp_soft_delta_*,
+        sharp_disagreement_*, soft_disagreement_*, bookmaker_count_*.
+        File: features_sports_service/calculators/odds_calculator.py
+    status: done
   - id: p6c-clv-features
     content: |
-      - [ ] [AGENT] P1. Compute CLV features in FSS.
+      - [x] [AGENT] P1. Compute CLV features in FSS.
+        DONE (2026-04-03): compute_clv_features() added to odds_calculator.py.
         CLV = closing_odds / opening_odds - 1 (T-0 / T-24h).
-        Settlement/results from instruments-service L0 data (already backfilled).
-        closing_line_predictability = correlation(CLV, settlement).
+        Sharp CLV uses Pinnacle only. Generic CLV uses median of all bookmakers.
+        9 new columns: clv_{home,draw,away}, sharp_clv_{home,draw,away},
+        clv_direction_{home,draw,away}.
+        File: features_sports_service/calculators/odds_calculator.py
+    status: done
+
+  # ============================================================================
+  # PHASE 7 — Halftime odds validation  [RE-OPENED — needs empirical test]
+  # ============================================================================
+  - id: p7a-halftime-empirical-test
+    content: |
+      - [ ] [SCRIPT] P1. Empirically test Odds API at offset -60 (HT) for recent match.
+        Pick a completed fixture (e.g. EPL 2026-03-22). Fetch historical odds at
+        kickoff + 60min. Check bm_time in response: is it AFTER kickoff? If yes,
+        bookmakers ARE updating in-play and Odds API captures it. If bm_time is
+        BEFORE kickoff, odds are stale closing line. This determines whether HT
+        odds are feasible from Odds API. Test with 1 fixture, 1 API call (60 credits).
+        Previous assumption (pre-match only) was not empirically validated.
+    status: pending
+  - id: p7b-halftime-odds-analysis
+    content: |
+      - [ ] [ANALYSIS] P1. If P7a shows real in-play bm_time: analyse HT odds quality.
+        Check: how many bookmakers update during match? Which markets (h2h, totals)?
+        Check: are prices meaningfully different from closing line?
+        If HT odds are real: keep -60 offset in Tier 2, add HT features to FSS.
+        If HT odds are stale: remove -60 offset, document as pre-match only.
+    status: pending
+    blocked_by: p7a-halftime-empirical-test
+
+  # ============================================================================
+  # PHASE 9 — FootyStats match data backfill  [PENDING — needs API key]
+  # ============================================================================
+  - id: p9a-footystats-match-backfill
+    content: |
+      - [ ] [SCRIPT] P1. Backfill FootyStats match-level data to GCS.
+        FootyStats API has per-half data (ht_goals, 2hg_goals, fh_corners,
+        2h_corners, per-half xG) that no other source provides. The UMI
+        FootystatsAdapter exists but is BLACKLISTED_NO_ACCESS (no API keys).
+        Steps: 1) Obtain FootyStats API key. 2) Implement fetch_matches() in
+        FootystatsAdapter. 3) Backfill 33 prediction leagues x 5.8 years.
+        4) Write to GCS with entity=footystats_matches partition.
+        Schema: FTMatchRaw in UAC (60+ columns including HT/FH/2H splits).
+        Normalizer already wires HT fields through to CanonicalFixture.
     status: pending
 
   # ============================================================================
-  # PHASE 7 — Halftime odds validation  [PENDING — design finalized]
+  # PHASE 10 — Manifest completeness tracking  [PARALLEL with Phase 8]
   # ============================================================================
-  - id: p7a-halftime-real-time
+  - id: p10a-mtds-manifest
     content: |
-      - [ ] [AGENT] P1. Source real halftime timestamps from API-Football.
-        API-Football fixture.status.elapsed + event timestamps give actual HT.
-        Use as ground truth for T+60 bucket filter window.
-    status: pending
-  - id: p7b-halftime-odds-stability
+      - [x] [AGENT] P0. MTDS ManifestWriter writes availability_index for SPORTS dates.
+        DONE (2026-04-02): MTDS writes entries for every SPORTS date including 0-row days.
+        --force=True overwrites existing entries. --force=False (default) skips dates
+        with existing manifest entries. Enables idempotent re-runs.
+    status: done
+  - id: p10b-mdps-manifest
     content: |
-      - [ ] [AGENT] P1. Validate HT via odds stability detection.
-        Find 5-10min window of small odds changes = half-time break.
-        Fallback when API-Football HT time unavailable.
-    status: pending
-  - id: p7c-halftime-arb-crossval
+      - [x] [AGENT] P0. MDPS ManifestWriter writes availability_index for bucketed output.
+        DONE (2026-04-03): Already wired via CandleOrchestrationService._write_manifest_records().
+        Writes granular entries (venue="ODDS_API:odds_horizon_bucket") and summary entry
+        (venue="odds_horizon_bucket") with candle counts. check_shard_freshness() handles
+        --force skip logic with schema_version + max_age_hours checks.
+    status: done
+  - id: p10c-completeness-checker
     content: |
-      - [ ] [AGENT] P2. Cross-validate HT with arb availability.
-        Compare arb size at HT window vs 20min before/after (in-play).
-        Small arbs + converged odds at HT vs wild swings in-play.
-        Test on 1-2 busy matchdays before full backfill.
+      - [ ] [SCRIPT] P1. Build completeness checker script for odds pipeline.
+        Read availability_index from MTDS + MDPS GCS buckets.
+        Report: dates with data, dates missing, % complete for date range.
+        Report: per-horizon coverage (T-24h through T-0), bookmaker count per date.
+        Output: completeness_report.json with per-date status.
+        CLI: python scripts/check_odds_completeness.py --start 2020-06-01 --end 2026-03-28
+        Flag dates needing --force re-run (schema mismatch, low row count).
     status: pending
+    blocked_by: p10a-mtds-manifest, p10b-mdps-manifest
+
+  # ============================================================================
+  # PHASE 11 — Phased rollout strategy  [SEQUENTIAL]
+  # ============================================================================
+  - id: p11a-one-month-validation
+    content: |
+      - [ ] [SCRIPT] P0. Run odds pipeline for 1 month (2025-03-01 to 2025-03-31).
+        MTDS fetch → MDPS bucket assignment → verify all 8 horizons populated.
+        Verify: manifest 100% for 31 dates, all horizons have rows, Pinnacle present.
+        Only proceed to full backfill after 1-month validation passes.
+    status: pending
+    blocked_by: p5a-mdps-bucket-assignment
+  - id: p11b-full-period-rollout
+    content: |
+      - [ ] [SCRIPT] P0. Roll out odds pipeline to full period (2020-06-01 to 2026-03-28).
+        Run MTDS with --force=False (skip dates already in manifest).
+        Run MDPS with --force=False on all dates with MTDS data.
+        Completeness checker must show >= 99% date coverage before declaring done.
+        VM3 backfill (in progress) covers L1 raw odds. This item covers L2.5 MDPS pass.
+    status: pending
+    blocked_by: p11a-one-month-validation
 
   # ============================================================================
   # PHASE 8 — Historical backfill (2026-04-02)  [IN PROGRESS]
@@ -227,4 +302,8 @@ Part of the 6-plan sports integration series.
 - All instrument IDs human-readable
 - MDPS assigns buckets by bm_time with graduated staleness tolerance
 - Opening odds (T-24h) and CLV (T-0/T-24h) computed by FSS
-- Halftime odds validated via real HT time + odds stability + arb cross-validation
+- HT odds empirically tested (offset -60) — real in-play or stale closing determined
+- Manifest tracks 100% of dates for both MTDS (L1) and MDPS (L2.5)
+- 1-month validation passes before full-period rollout
+- Full period (2020-06-01 to 2026-03-28) >= 99% odds coverage
+- --force overwrites existing manifest entries, default skips (idempotent)

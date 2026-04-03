@@ -124,7 +124,7 @@ todos:
     status: done
 
   # ============================================================================
-  # PHASE 5 — Validation  [SEQUENTIAL]
+  # PHASE 5 — Validation + manifest tracking  [SEQUENTIAL]
   # ============================================================================
   - id: p5-validation
     content: |
@@ -135,6 +135,37 @@ todos:
         QG: cd instruments-service && bash scripts/quality-gates.sh
     status: pending
     blocked_by: p4-orchestrator-wiring
+  - id: p5b-manifest-tracking
+    content: |
+      - [ ] [AGENT] P0. Verify instruments-service ManifestWriter tracks SPORTS reference data.
+        ManifestWriter already exists in instruments-service orchestrator.
+        Verify: availability_index written for each SPORTS date with entity counts.
+        Verify: --force=True overwrites, --force=False (default) skips existing dates.
+        Run completeness check: all dates 2020-06-01 to 2026-03-28 should have entries
+        after L0 backfill (71/71 chunks done per p8a-l0-reference-backfill in Plan 02).
+    status: pending
+    blocked_by: p5-validation
+
+  # ============================================================================
+  # PHASE 6 — Full-period reference data validation  [SEQUENTIAL]
+  # ============================================================================
+  - id: p6a-one-month-ref-validation
+    content: |
+      - [ ] [SCRIPT] P0. Validate reference data for 1 month (2025-03-01 to 2025-03-31).
+        Read availability_index from instruments-store-sports bucket.
+        Verify: all 31 dates have entries, all 9 entity types present per matchday.
+        Verify: teams, leagues, standings populated for all 33 prediction leagues.
+        Report gaps. Only proceed to full-period check after 1-month passes.
+    status: pending
+    blocked_by: p5b-manifest-tracking
+  - id: p6b-full-period-ref-validation
+    content: |
+      - [ ] [SCRIPT] P0. Validate reference data for full period (2020-06-01 to 2026-03-28).
+        Completeness target: >= 99% of matchdays have reference data in GCS.
+        Report: per-league coverage, per-entity-type coverage, dates with gaps.
+        Flag dates needing --force re-run. Declare done when >= 99% complete.
+    status: pending
+    blocked_by: p6a-one-month-ref-validation
 ---
 
 # Sports Integration Plan 1: Reference Data Pipeline
@@ -148,3 +179,6 @@ the full dependency DAG.
 - 2 mapping tables written (team_mapping, fixture_mapping)
 - European league teams returned (season=2025 fix)
 - All IDs human-readable
+- Manifest tracks 100% of dates with entity counts
+- Full period (2020-06-01 to 2026-03-28) >= 99% coverage validated
+- --force overwrites existing, default skips (idempotent re-runs)

@@ -71,7 +71,8 @@ Run actual arb backtest using the full system.
 When satisfied with 1-week results, plan the full backfill.
 
 - [ ] [PLAN] P0. Cost plan: Tier 1 (126M credits, 5.8yr) + Tier 2 (103M credits, 1yr) = 207M total
-- [ ] [CODE] P0. Wire MDPS for sports odds processing (L2.5 in pipeline)
+- [x] [CODE] P0. Wire MDPS for sports odds processing (L2.5 in pipeline) — DONE (2026-04-03):
+      SportsBucketAssignmentAdapter registered in MDPS
 - [ ] [SCRIPT] P0. Run Tier 2 backfill (1 year, arb quality) — ~103M credits
 - [ ] [SCRIPT] P1. Run Tier 1 backfill (5.8 years, ML quality) — ~126M credits
 - [ ] [SCRIPT] P1. Regenerate features from backfilled data

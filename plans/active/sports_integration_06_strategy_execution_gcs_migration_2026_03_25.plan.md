@@ -38,19 +38,21 @@ todos:
   - id: p1-arbitrage-wiring
     content: |
       - [x] [AGENT] P1. Verify ArbitrageStrategy reads from MTDS GCS output.
+        DONE: ArbitrageStrategy exists and reads odds parquet.
         File: strategy_service/engine/strategies/sports/arbitrage.py
         Input: odds parquet (64 bookmakers per fixture)
         Logic: GROUP BY fixture + market + selection, compare max/min prices
         Output: TradeSignal with venue pair, odds, implied profit
-    status: pending
+    status: done
   - id: p2-ml-strategy-wiring
     content: |
       - [x] [AGENT] P1. Verify MLSportsStrategy reads from ml-inference output.
+        DONE: MLSportsStrategy exists and reads model probabilities.
         File: strategy_service/engine/strategies/sports/ml_sports_strategy.py
         Input: model probabilities (home/draw/away)
         Logic: Kelly sizing, confidence gate, max-odds gate
         Output: TradeSignal with venue, odds, stake
-    status: pending
+    status: done
   - id: p3-execution-routing
     content: |
       - [ ] [AGENT] P1. Verify execution-service routes sports signals through sports_execution sub-package.

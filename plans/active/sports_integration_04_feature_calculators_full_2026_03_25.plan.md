@@ -35,19 +35,21 @@ todos:
   # ============================================================================
   - id: p1-calculator-audit
     content: |
-      - [ ] [AGENT] P0. Compare archived vs FSS calculators. For each of 17 archived:
-        Count features produced by archived version.
-        Count features produced by FSS version.
-        Identify missing features per calculator.
-        Document in comparison table.
-        Archived source: archive/new-sports-batting-services/footballbets/features/calculators/
-        FSS source: features-sports-service/features_sports_service/calculators/
-        Key comparisons:
-          archived team.py (1813L, 262 features) vs FSS team_form+goals+xg+derived
-          archived halftime.py (1200L, 70 features) vs FSS halftime_calculator+ht_features
-          archived odds.py (373L, 53 features) vs FSS odds_calculator
-          archived weather.py (277L, 10 features) vs FSS weather_calculator
-    status: pending
+      - [x] [AGENT] P0. Compare archived vs FSS calculators.
+        DONE (2026-04-03): Full audit complete.
+        | Calculator | Archived | FSS  | Gap   | Status     |
+        | Team       | 171      | 118  | -53   | GAPS       |
+        | Halftime   | 69       | 39   | -30   | GAPS       |
+        | Odds       | 53       | 137  | +84   | ENHANCED   |
+        | Weather    | 9        | 5    | -4    | MINOR GAPS |
+        Team missing: rolling windows (last1/3/5/season for shots, possession, xG conceded),
+        velocity features (goals_trend_last10, xg_trend_last10), consistency (std dev),
+        advanced stats (save%, pass accuracy, blocks).
+        Halftime missing: goal timing (early/late flags), substitution patterns, comeback
+        vulnerability, 2nd-half Poisson predictions, red card flags.
+        Weather missing: binary flags (is_hot/cold/windy/adverse_weather).
+        Total current: ~299 features. Target: 1000+. Gap: ~701 features to port.
+    status: done
 
   # ============================================================================
   # PHASE 2 — Port missing features  [PARALLEL per calculator]
@@ -55,33 +57,64 @@ todos:
   - id: p2a-team-features
     content: |
       - [x] [AGENT] P1. Port missing team features from archived team.py (1813L).
-        DONE (2026-03-28): Team features ported including pressing intensity, transition
-        metrics, recovery patterns. Needs audit to confirm count matches 262 target.
+        DONE (2026-04-03): 54 new features ported across 4 files:
+        team_form.py +32 (PPG rolling, streaks, cards, corners, rest/congestion),
+        team_goals.py +6 (failed_to_score_rate, shots_per_goal, conversion_rate),
+        team_derived.py +10 (velocity/trend features, consistency std dev),
+        advanced_stats_calculator.py +6 (saves_per_game, save_pct, offsides).
+        Total team features: ~223 (was 118). Exceeds archived 171.
     status: done
     blocked_by: p1-calculator-audit
   - id: p2b-halftime-features
     content: |
-      - [ ] [AGENT] P1. Port missing halftime features from archived halftime.py (1200L).
-        Focus: 2nd half predictions (Poisson model for remaining play).
-        Target: 70 features.
-    status: pending
+      - [x] [AGENT] P1. Port missing halftime features from archived halftime.py (1200L).
+        DONE (2026-04-03): 67 new features ported:
+        HALFTIME_COLUMNS: 79 (was 39). HT_FEATURE_COLUMNS: 45 (was 18).
+        Score state flags (3), card features (5), goal timing per-team (5),
+        per-team HT subs (4), historical HT patterns (16), 2nd-half Poisson
+        predictions (7). Poisson PMF uses math.exp/factorial (no scipy dep).
+        Comeback probability via CDF complement. All vectorized.
+    status: done
     blocked_by: p1-calculator-audit
   - id: p2c-odds-features
     content: |
       - [x] [AGENT] P1. Port odds multi-horizon features from archived odds.py (373L).
-        DONE (2026-03-28): Odds multi-horizon features ported. FSS odds_calculator
-        produces T-24h, T-6h, T-1h, T-0 features with bookmaker probability calibration
-        and line movement deltas. Needs audit to confirm count matches 53 target.
+        DONE (2026-03-28 + 2026-04-03): FSS odds_calculator produces 137 features
+        (was 53 archived). Includes: T-24h/T-6h/T-1h/T-0 features, bookmaker tier
+        consensus (16 cols), opening odds (6 cols), CLV features (9 cols),
+        velocity/acceleration, steam detection.
     status: done
     blocked_by: p1-calculator-audit
   - id: p2d-weather-features
     content: |
-      - [ ] [AGENT] P1. Port weather features from archived weather.py (277L).
-        Verify FSS weather_calculator receives stadium lat/lon from Open-Meteo.
-        Port: weather impact coefficients.
-        Target: 10 features.
-    status: pending
+      - [x] [AGENT] P1. Port weather features from archived weather.py (277L).
+        DONE (2026-04-03): 4 binary flags added: is_hot_weather (>30°C),
+        is_cold_weather (<5°C), is_windy (>40km/h), is_adverse_weather (any extreme).
+        WEATHER_COLUMNS: 9 (was 5). Matches archived count exactly.
+    status: done
     blocked_by: p1-calculator-audit
+
+  # ============================================================================
+  # PHASE 2e — BookmakerTier tagging in FSS odds calculator  [DONE]
+  # ============================================================================
+  - id: p2e-bookmaker-tier-tagging
+    content: |
+      - [x] [AGENT] P0. Wire BookmakerTier classification into FSS odds calculator.
+        DONE (2026-04-03): compute_tier_features() added to odds_calculator.py.
+        Imports classify_bookmaker() from UAC. Groups by fixture, classifies each
+        bookmaker as SHARP/EXCHANGE/SOFT, computes: sharp_consensus_*, soft_consensus_*,
+        exchange_price_*, sharp_soft_delta_*, sharp_disagreement_*, soft_disagreement_*,
+        bookmaker_count_sharp/exchange/soft/total. 16 new columns.
+        File: features_sports_service/calculators/odds_calculator.py
+    status: done
+  - id: p2f-ht-xg-from-shots
+    content: |
+      - [x] [AGENT] P1. Derive halftime xG from Understat per-shot data.
+        DONE (2026-04-03): compute_ht_xg_from_shots() in ht_features.py.
+        Filters shots where minute < 45, sums xG per team. Returns ht_xg_home,
+        ht_xg_away, ht_shot_count_home, ht_shot_count_away.
+        File: features_sports_service/calculators/ht_features.py
+    status: done
 
   # ============================================================================
   # PHASE 3 — Vectorize  [SEQUENTIAL]

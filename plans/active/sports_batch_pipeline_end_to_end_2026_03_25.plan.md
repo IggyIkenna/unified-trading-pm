@@ -131,13 +131,10 @@ todos:
   - id: p1d-mtds-sports-venue-routing
     content: |
       - [x] [AGENT] P0. Fix MTDS SPORTS venue routing.
-        File: market_tick_data_service/engine/orchestrator.py:59-62
-        Current: SPORTS -> ["BETFAIR", "API_FOOTBALL"]
-        Change to: SPORTS -> ["ODDS_API"]
-        Rationale: API_FOOTBALL is reference data (instruments-service). BETFAIR is one bookmaker
-        among 250+. ODDS_API is the aggregator that provides odds for all bookmakers.
-        Also update VenueMapping in UAC if ODDS_API is not in venue lists.
-    status: pending
+        DONE (via sports_e2e_validation plan): OddsApiAdapter fully rewritten with
+        source=ODDS_API path, per-fixture timestamps, bm_time ground truth.
+        File: market_tick_data_service/engine/orchestrator.py
+    status: done
 
   # ============================================================================
   # PHASE 1 gate: cd unified-api-contracts && bash scripts/quality-gates.sh
@@ -186,14 +183,10 @@ todos:
   - id: p3a-umi-odds-adapter-verify
     content: |
       - [x] [AGENT] P1. Verify UMI OddsApiAdapter for batch historical odds.
-        File: unified-market-interface SPORTS_REGISTRY
-        Check: Does OddsApiAdapter implement download_batch(date, data_types)?
-        Check: Does it return DataFrame with canonical instrument IDs?
-        Format: {fixture_id}::{market_type}::{outcome}::{bookmaker_key}
-        If not, implement the batch download method using Odds API v4 historical endpoint:
-          https://api.the-odds-api.com/v4/historical/sports/{sport}/odds
-    status: pending
-    blocked_by: p1d-mtds-sports-venue-routing
+        DONE (via sports_e2e_validation plan): OddsApiAdapter fully rewritten.
+        download_batch() returns DataFrame with canonical instrument IDs, per-fixture
+        timestamps, bm_time, BookmakerTier, fixture_id standalone columns.
+    status: done
 
   - id: p3b-usri-quota-tracking
     content: |
