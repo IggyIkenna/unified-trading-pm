@@ -122,18 +122,18 @@ todos:
   # ============================================================================
   - id: p5a-mdps-bucket-assignment
     content: |
-      - [ ] [AGENT] P0. Implement bm_time-driven bucket assignment in MDPS.
-        Design (2026-04-02):
-          1. Assign each row to nearest Tier horizon by bm_minutes_to_kickoff
-          2. Enforce bm_time <= fetch_utc (bookmaker can't update after query)
-          3. Apply graduated staleness cap per bucket:
-             T-24h: 60min, T-12h: 45min, T-6h: 30min, T-4h: 20min,
-             T-2h: 15min, T-1h: 10min, T-10m: 5min, T-0: 5min, HT: 5min
-          4. Per (fixture, bookmaker, outcome, bucket) → keep freshest bm_time
-        Benefits: zero extra API calls, bookmakers migrate to correct bucket,
-        slow-updating bookmakers not lost, staleness visible for quality filtering.
-        bookmaker_count_per_bucket becomes a feature (liquidity signal).
-    status: pending
+      - [x] [AGENT] P0. Implement bm_time-driven bucket assignment in MDPS.
+        DONE (2026-04-03): SportsBucketAssignmentAdapter registered as
+        (SPORTS, "odds_horizon_bucket") in MDPS. Vectorised assignment via
+        assign_horizon_buckets_vectorised(). 8 Tier 1 horizons with graduated
+        staleness caps: T-24h:60min, T-12h:45min, T-6h:30min, T-4h:20min,
+        T-2h:15min, T-1h:10min, T-10m:5min, T-0:5min. Causality filter
+        (bm_time <= fetch_utc). Dedup per (fixture, bookmaker, market_type,
+        horizon) keeping closest-to-target. process_to_bucketed_df() for
+        features-service consumption (richer than CandleOutput). Also fixed:
+        all 4 sports adapters now registered in main __init__.py (were missing).
+        File: market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py
+    status: done
   - id: p5b-retention-test
     content: |
       - [ ] [AGENT] P1. Retention test on sample day (e.g. 2020-10-31, 43K rows).
@@ -201,10 +201,11 @@ todos:
   - id: p8b-l1-odds-backfill
     content: |
       - [ ] [SCRIPT] P0. L1 odds backfill (2020-06-01 → 2026-03-28).
-        IN PROGRESS (2026-04-02): VM1 covered 2020-06-01→2020-10-31 (1,844 partitions).
-        VM2 (mtds-backfill-sports-odds-2) covering 2020-11-01→2026-03-28, --force,
-        Tier 1 ML buckets, 7-day chunks, auto-shutdown.
-        Credit budget: started ~5M, VM1 used ~1.7M. May need credit top-up.
+        IN PROGRESS (2026-04-03): VM3 (mtds-backfill-sports-odds-3, asia-northeast1-b)
+        launched with updated tarball containing all fixes: BookmakerTier, fixture_id
+        columns, source=ODDS_API path, no --venues conflict. Full re-run with --force,
+        Tier 1 ML buckets, 7-day chunks, 15M credit budget, auto-shutdown.
+        VM1 covered 2020-06-01→2020-10-31 (old schema). VM2 had old code too.
     status: in_progress
 ---
 
