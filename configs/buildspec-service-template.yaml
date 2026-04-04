@@ -32,28 +32,47 @@ phases:
       - echo "Creating ECR repo if needed..."
       - aws ecr describe-repositories --repository-names $REGISTRY_REPO --region $AWS_DEFAULT_REGION 2>/dev/null || aws
         ecr create-repository --repository-name $REGISTRY_REPO --region $AWS_DEFAULT_REGION
+      - |
+        if [ -n "$GCP_SA_KEY" ]; then
+          echo "$GCP_SA_KEY" | docker login -u _json_key --password-stdin https://asia-northeast1-docker.pkg.dev
+        else
+          echo "WARNING: GCP_SA_KEY not set — Docker build may fail when pulling GAR base image"
+        fi
       - IMAGE_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REGISTRY_REPO/$SERVICE_NAME"
-      - echo "Image URI: $IMAGE_URI"
+      - 'echo "Image URI: $IMAGE_URI"'
 
   build:
     commands:
       - echo "Building Docker image..."
-      - docker build -f Dockerfile -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
-      - echo "Running quality gates inside image..."
       - |
-        docker run --rm \
-          -e CLOUD_BUILD=true \
-          -e CLOUD_MOCK_MODE=true \
-          -e GCP_PROJECT_ID=test-project \
-          $IMAGE_URI:$IMAGE_TAG \
-          /bin/bash -c "bash scripts/quality-gates.sh --no-fix --quick"
+        if [ -n "$GCP_SA_KEY" ]; then
+          GCP_PROJECT_ID=$(echo "$GCP_SA_KEY" | python3 -c "import json,sys;print(json.load(sys.stdin).get('project_id','central-element-323112'))" 2>/dev/null || echo "central-element-323112")
+          docker build -f Dockerfile --build-arg PROJECT_ID=$GCP_PROJECT_ID -t $IMAGE_URI:$IMAGE_TAG -t $IMAGE_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+          echo "Running quality gates inside image..."
+          docker run --rm \
+            -e CLOUD_BUILD=true \
+            -e CLOUD_MOCK_MODE=true \
+            -e GCP_PROJECT_ID=test-project \
+            $IMAGE_URI:$IMAGE_TAG \
+            /bin/bash -c "bash scripts/quality-gates.sh --no-fix --quick"
+          export DOCKER_IMAGE_BUILT=true
+        else
+          echo "GCP_SA_KEY unavailable: running quality gates directly without Docker build/push"
+          bash scripts/quality-gates.sh --no-fix --quick
+          export DOCKER_IMAGE_BUILT=false
+        fi
       - echo "Quality gates passed"
 
   post_build:
     commands:
       - echo "Pushing image..."
-      - docker push $IMAGE_URI:$IMAGE_TAG
-      - docker push $IMAGE_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - |
+        if [ "${DOCKER_IMAGE_BUILT:-false}" = "true" ]; then
+          docker push $IMAGE_URI:$IMAGE_TAG
+          docker push $IMAGE_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+        else
+          echo "Skipping docker push because image build was skipped"
+        fi
       - echo "Build complete"
 
 artifacts:

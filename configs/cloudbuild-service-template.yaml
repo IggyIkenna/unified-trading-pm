@@ -117,6 +117,7 @@ steps:
         VERSION=$(cat /workspace/VERSION 2>/dev/null || echo "$SHORT_SHA")
         docker build -f Dockerfile \
           --build-arg PROJECT_ID=$PROJECT_ID \
+          -t asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA \
           -t asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:$$VERSION \
           -t asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:latest \
           .
@@ -219,7 +220,7 @@ steps:
       - |
         set -e
         pip install uv
-        uv pip install --system build twine keyrings.google-artifactregistry-auth
+        python -m pip install --no-cache-dir build twine keyrings.google-artifactregistry-auth
         mkdir -p /root/.config/pip
         echo "[global]
         extra-index-url = https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/simple/" \
