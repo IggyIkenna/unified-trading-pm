@@ -1,5 +1,9 @@
 # Venue Availability SSOT
 
+> **See also:** `codex/02-data/availability-manifest-and-data-status.md` for the complete availability manifest schema
+> (v4), per-service shard dimensions, data status page hierarchy, availability % calculation, and integrity principles.
+> This document covers venue launch dates and instrument availability specifically.
+
 ## What This Is
 
 Venue availability (launch dates, supported instrument types, active chains) is the single source of truth for

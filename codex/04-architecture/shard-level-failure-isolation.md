@@ -15,11 +15,21 @@ A **partially complete shard** should be killed — do not store partial data fo
 
 ## Sharding Dimensions
 
-| Service                        | Shard Dimensions                                      | Example                                               |
-| ------------------------------ | ----------------------------------------------------- | ----------------------------------------------------- |
-| instruments-service            | category x venue x date                               | CEFI x BINANCE-SPOT x 2026-01-05                      |
-| market-tick-data-service       | category x venue x instrument_type x data_type x date | CEFI x BINANCE-SPOT x SPOT_PAIR x trades x 2026-01-05 |
-| market-data-processing-service | category x venue x instrument_type x date x timeframe | CEFI x BINANCE-SPOT x SPOT_PAIR x 2026-01-05 x 1min   |
+For the complete per-service shard dimension matrix (all 8 pipeline layers, all categories), see
+**`codex/02-data/availability-manifest-and-data-status.md`** — the SSOT for availability manifest schema, shard
+dimensions, data status page hierarchy, and availability % calculation.
+
+Quick reference (not exhaustive — see SSOT for full matrix):
+
+| Service                        | Shard Dimensions                                                | Example                                          |
+| ------------------------------ | --------------------------------------------------------------- | ------------------------------------------------ |
+| instruments-service            | category x venue x [chain] x date                               | DEFI x AAVE_V3 x ETHEREUM x 2026-01-05           |
+| market-tick-data-service       | category x venue x [chain] x instrument_type x data_type x date | CEFI x BINANCE-SPOT x spot x trades x 2026-01-05 |
+| market-data-processing-service | category x venue x [chain] x instrument_type x date x timeframe | CEFI x BINANCE-SPOT x spot x 2026-01-05 x 1m     |
+| feature services               | feature_group x [timeframe] x [chain] x [league_id] x date      | momentum x 1h x 2026-01-05                       |
+| ML services                    | model_family x [training_period] x date                         | pregame_xg x 2024 x 2026-01-05                   |
+| strategy/execution/PnL         | strategy_id x [venue] x [instruction_type] x date               | strat_001 x BETFAIR x TRADE x 2026-01-05         |
+| risk-and-exposure              | client_id x date                                                | client_A x 2026-01-05                            |
 
 ## Error Handling Pattern
 
