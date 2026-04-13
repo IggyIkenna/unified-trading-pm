@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Odum Research — Strategy White Labelling</title>
+    <title>Odum Research — Trading Platform as a Service</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css" />
     <style>
       /* Odum Research — Premium Board Presentation Theme */
@@ -651,713 +651,305 @@
     <div class="reveal">
       <div class="slides">
         <!-- COVER -->
+      <div class="slides">
+        <!-- Slide 1: Cover -->
         <section class="cover-slide bg-gradient-radial">
-          <div class="cover-title">Strategy White Labelling</div>
-          <div class="cover-subtitle">
-            Battle-tested trading strategies — market making, arbitrage, momentum, DeFi yield — delivered under your
-            brand. Optionally managed by us.
-          </div>
-          <div class="divider"></div>
+          <div class="cover-title">Trading Infrastructure Without the Build</div>
+          <div class="cover-subtitle">The same platform we use for our own capital — available to you</div>
+          <div class="cover-tagline">FCA Authorised · Ref 975797</div>
           <div class="cover-meta">
-            <div class="cover-meta-item"><span>17+</span>Strategy Types</div>
-            <div class="cover-meta-item"><span>5</span>Asset Classes</div>
-            <div class="cover-meta-item"><span>SHAP</span>Explainability</div>
-            <div class="cover-meta-item"><span>2/20</span>Managed Option</div>
+            <div class="cover-meta-item"><strong>Asset Classes</strong><br />5</div>
+            <div class="cover-meta-item"><strong>Live Instruments</strong><br />12,000+</div>
+            <div class="cover-meta-item"><strong>Our Own Capital</strong><br />$7.5M</div>
+            <div class="cover-meta-item"><strong>Time to Go Live</strong><br />Weeks</div>
           </div>
-          <div class="slide-footer">Odum Research Ltd · FCA 975797 · Confidential</div>
-          <aside class="notes">
-            This service targets firms that want institutional-grade strategies but don't have the quant resource to
-            build them. We give them the framework — and optionally run it for them.
-          </aside>
         </section>
 
-        <!-- THE PROBLEM -->
+        <!-- Slide 2: The Problem -->
         <section>
-          <h2>The Problem</h2>
-          <div class="cols-2">
-            <div>
-              <div class="callout" style="text-align: left; font-size: 0.72em; padding: 24px">
-                A boutique hedge fund wants to run a DeFi basis trade + CeFi momentum strategy. They have capital and
-                distribution, but not the quant team or trading infrastructure to build it. Options: hire 3–5 quants
-                ($500K+ salary), buy generic algo tools (don't cover DeFi/sports), or build it themselves (12–18
-                months).
-              </div>
+          <h2>Building This Is Harder Than It Looks</h2>
+          <p>To replicate what our platform provides, you would need to integrate 80+ venues across 5 asset classes, 28 decentralised finance protocols on 11 blockchains, and 65+ sports data sources — each with different schemas, settlement logic, and connectivity.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px">
+            <div class="card">
+              <h3 style="color:var(--red)">The Build</h3>
+              <ul>
+                <li>80+ venue integrations, each with different schemas</li>
+                <li>Backtesting that genuinely matches production</li>
+                <li>Execution, monitoring, risk, and compliance tools</li>
+                <li>18–24 months before you can trade</li>
+              </ul>
             </div>
-            <div>
-              <div class="card" style="margin-bottom: 16px">
-                <h3>The Build-vs-Buy Gap</h3>
-                <p>
-                  Institutional-grade multi-asset strategy infrastructure requires: market data normalisation, ML
-                  inference pipeline, execution algo layer, risk management, compliance hooks. Years to build.
-                </p>
-              </div>
-              <div class="card">
-                <h3>The White-Label Gap</h3>
-                <p>
-                  FlexTrade and Trading Technologies offer TradFi execution frameworks. No one offers a turnkey
-                  white-label strategy framework spanning TradFi + DeFi + Sports.
-                </p>
-              </div>
+            <div class="card" style="border-color:var(--gold)">
+              <h3 style="color:var(--gold)">Our Platform</h3>
+              <ul>
+                <li>One codebase, one language, one normalised schema</li>
+                <li>Backtest to live is a configuration change — not a rewrite</li>
+                <li>One deployment infrastructure, one web-based interface</li>
+                <li>Live in weeks, not years</li>
+              </ul>
             </div>
           </div>
-          <aside class="notes">
-            The DeFi managed service model is already proven — we have a live DeFi client. Strategy White Labelling
-            formalises this as a product.
-          </aside>
+          <div style="margin-top:20px; padding:16px; border:1px solid var(--navy-border); border-radius:8px; text-align:center">
+            <p><em>We built this for ourselves first. It runs our own capital. We have clients for every service we offer. If it is good enough for our money, it should be good enough for yours.</em></p>
+          </div>
         </section>
 
-        <!-- STRATEGY TYPES -->
+        <!-- Slide 3: Five Layers -->
         <section>
-          <h2>The Strategy Library</h2>
-          <div class="cols-3">
-            <div class="card" style="margin-bottom: 16px">
-              <h3>Momentum</h3>
+          <h2>One System, Five Connected Layers</h2>
+          <p>Enter at any layer. Expand over time. The same layers govern our internal operations and your access.</p>
+          <div style="display:flex; gap:16px; margin-top:30px">
+            <div class="card" style="flex:1; text-align:center; border-color:var(--gold)">
+              <div style="font-size:1.4em; font-weight:800; color:var(--gold)">1</div>
+              <h3>Instruments &amp; Data</h3>
+              <p>Discover, normalise, validate</p>
+            </div>
+            <div style="display:flex; align-items:center; color:var(--gold); font-size:1.2em">→</div>
+            <div class="card" style="flex:1; text-align:center">
+              <div style="font-size:1.4em; font-weight:800; color:var(--gold)">2</div>
+              <h3>Research &amp; Modelling</h3>
+              <p>Features, ML, simulate</p>
+            </div>
+            <div style="display:flex; align-items:center; color:var(--gold); font-size:1.2em">→</div>
+            <div class="card" style="flex:1; text-align:center">
+              <div style="font-size:1.4em; font-weight:800; color:var(--gold)">3</div>
+              <h3>Decision &amp; Strategy</h3>
+              <p>Signals, sizing, risk</p>
+            </div>
+            <div style="display:flex; align-items:center; color:var(--gold); font-size:1.2em">→</div>
+            <div class="card" style="flex:1; text-align:center">
+              <div style="font-size:1.4em; font-weight:800; color:var(--gold)">4</div>
+              <h3>Execution &amp; Control</h3>
+              <p>Route, fill, monitor</p>
+            </div>
+            <div style="display:flex; align-items:center; color:var(--gold); font-size:1.2em">→</div>
+            <div class="card" style="flex:1; text-align:center">
+              <div style="font-size:1.4em; font-weight:800; color:var(--gold)">5</div>
+              <h3>Governance &amp; Reporting</h3>
+              <p>Audit, comply, report</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 4: Engagement Levels -->
+        <section>
+          <h2>Start Where It Fits</h2>
+          <p>Five engagement levels. You choose how deep you go.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-top:20px">
+            <div class="card">
+              <h3>Data Only</h3>
+              <p><em>Subscription</em></p>
+              <p>Normalised feeds across all five asset classes. 12,000+ instruments. We never see your signals.</p>
+            </div>
+            <div class="card">
+              <h3>Data + Research</h3>
+              <p><em>Subscription + compute</em></p>
+              <p>Backtesting and simulation. Feature engineering, machine learning pipelines. Execute wherever you want.</p>
+            </div>
+            <div class="card" style="border-color:var(--gold)">
+              <h3>Data + Research + Execution</h3>
+              <p><em>Subscription + per-trade</em></p>
+              <p>Backtest to live is a configuration change. Same data, same features, same risk controls. Plus execution algorithms across all venues.</p>
+            </div>
+            <div class="card">
+              <h3>Full Platform</h3>
+              <p><em>Enterprise subscription</em></p>
+              <p>The complete trading operating layer. Your strategies, your risk parameters, your commercial terms.</p>
+            </div>
+            <div class="card" style="border-color:var(--gold)">
+              <h3>Bespoke Strategy Build</h3>
+              <p><em>$100K–$250K development + retainer</em></p>
+              <p>We build specific strategies to your requirements. You operate them. Commercial terms bespoke per engagement.</p>
+            </div>
+          </div>
+          <p style="margin-top:16px; font-size:0.65em; text-align:center; color:var(--white-dim)">Every level uses the same underlying infrastructure. Expanding is adding access, not migrating systems.</p>
+        </section>
+
+        <!-- Slide 5: Coverage Breadth -->
+        <section>
+          <h2>What the Platform Covers</h2>
+          <table style="width:100%; margin-top:16px; border-collapse:collapse; font-size:0.6em">
+            <thead>
+              <tr style="border-bottom:2px solid var(--gold); color:var(--gold)">
+                <th style="text-align:left; padding:10px">Asset Class</th>
+                <th style="text-align:left; padding:10px">Instruments</th>
+                <th style="text-align:left; padding:10px">Data</th>
+                <th style="text-align:left; padding:10px">Research</th>
+                <th style="text-align:left; padding:10px">Execution</th>
+                <th style="text-align:left; padding:10px">Monitoring</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--navy-border); border-left:3px solid var(--blue-elec)"><td style="padding:8px"><strong>Traditional Finance</strong></td><td style="padding:8px">CME Group, ICE, CBOE, NASDAQ, NYSE</td><td style="padding:8px">Tick, orderbook, candles</td><td style="padding:8px">Futures, options, equities</td><td style="padding:8px">Time-weighted, volume-weighted, smart routing, optimal execution</td><td style="padding:8px">Returns, risk, reconciliation</td></tr>
+              <tr style="border-bottom:1px solid var(--navy-border); border-left:3px solid var(--green)"><td style="padding:8px"><strong>Centralised Crypto</strong></td><td style="padding:8px">Binance, OKX, Bybit, Deribit +4</td><td style="padding:8px">Tick, orderbook, liquidations, funding</td><td style="padding:8px">Spot, perpetuals, options surface</td><td style="padding:8px">Same algo suite + venue routing</td><td style="padding:8px">Same monitoring layer</td></tr>
+              <tr style="border-bottom:1px solid var(--navy-border); border-left:3px solid #a78bfa"><td style="padding:8px"><strong>Decentralised Finance</strong></td><td style="padding:8px">28 protocols, 11 chains</td><td style="padding:8px">Lending rates, pool data, gas fees</td><td style="padding:8px">Yield simulation, flash loans</td><td style="padding:8px">Uniswap, Aave, Morpho connectors</td><td style="padding:8px">On-chain position tracking</td></tr>
+              <tr style="border-bottom:1px solid var(--navy-border); border-left:3px solid var(--amber)"><td style="padding:8px"><strong>Sports</strong></td><td style="padding:8px">102 leagues, 40K+ fixtures/yr</td><td style="padding:8px">Odds from 65+ sources</td><td style="padding:8px">Machine learning prediction</td><td style="padding:8px">Cross-bookmaker routing</td><td style="padding:8px">Settlement reconciliation</td></tr>
+              <tr style="border-left:3px solid #fb7185"><td style="padding:8px"><strong>Predictions</strong></td><td style="padding:8px">Polymarket, Kalshi +3</td><td style="padding:8px">Binary / multi-outcome pricing</td><td style="padding:8px">Cross-market arbitrage detection</td><td style="padding:8px">Prediction market execution</td><td style="padding:8px">Event resolution tracking</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Slide 6: Backtest to Live -->
+        <section>
+          <h2>The Gap That Does Not Exist Here</h2>
+          <p>On most platforms, backtesting and live trading are separate environments. On ours, they are the same.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px">
+            <div class="card">
+              <h3 style="color:var(--red)">Most Platforms</h3>
               <ul>
-                <li>CeFi Momentum — BTC, ETH, SOL</li>
-                <li>TradFi Momentum — SPY, indices</li>
-                <li>Multi-timeframe signal fusion</li>
+                <li>Backtest uses different data feeds</li>
+                <li>Feature calculations diverge from production</li>
+                <li>Risk controls reimplemented for live</li>
+                <li>Months of engineering to promote a strategy</li>
               </ul>
             </div>
-            <div class="card" style="margin-bottom: 16px">
-              <h3>DeFi Yield</h3>
+            <div class="card" style="border-color:var(--green)">
+              <h3 style="color:var(--green)">Our Platform</h3>
               <ul>
-                <li>Basis Trade — long spot + short perp</li>
-                <li>Staked Basis — stake yield + funding</li>
-                <li>Recursive Basis — flash loan leverage</li>
-                <li>AAVE Lending — pure lending APY</li>
+                <li>Same data pipeline serves backtest and live</li>
+                <li>Same feature calculations, same code, same outputs</li>
+                <li>Same risk controls carry through</li>
+                <li><strong>Configuration change. Not a rewrite.</strong></li>
               </ul>
             </div>
-            <div class="card" style="margin-bottom: 16px">
-              <h3>Arbitrage</h3>
+          </div>
+          <div style="margin-top:20px; padding:16px; border:1px solid var(--gold); border-radius:8px; background:rgba(212,175,55,0.05); text-align:center">
+            <p><em>When you validate something in research, you know it will behave the same way in production. That is the single most important thing about this platform.</em></p>
+          </div>
+        </section>
+
+        <!-- Slide 7: Your Alpha Stays Yours -->
+        <section>
+          <h2>Your Alpha Stays Yours</h2>
+          <p>We do not need your edge. We have our own.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:20px">
+            <div>
               <ul>
-                <li>Cross-Exchange Arb — spot-futures</li>
-                <li>Statistical Arb — pairs trading</li>
-                <li>Prediction Arb — ML edge vs market</li>
+                <li><strong>Data only</strong> — we never see your signals</li>
+                <li><strong>Execution only</strong> — we route and fill without knowing the logic behind your orders</li>
+                <li><strong>Research only</strong> — take your results and execute elsewhere</li>
+                <li><strong>Full platform</strong> — we do not trade the same strategy you are running</li>
+                <li><strong>Bespoke build</strong> — we develop to your specification, you operate it</li>
+              </ul>
+            </div>
+            <div class="card" style="border-color:var(--gold)">
+              <h3>The Trust Proposition</h3>
+              <ul>
+                <li>We built this for ourselves first — it had to work</li>
+                <li>We have clients for every service we offer — it is proven</li>
+                <li>Nothing we deploy goes through without the same vetting we apply to our own capital</li>
+                <li>We will never front-run you or build strategies that overlap with yours</li>
+                <li>If we would not trust it with our money, it does not ship</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 8: Why Not Just AI -->
+        <section>
+          <h2>Why Not Build It Yourself with AI?</h2>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-top:20px">
+            <div class="card">
+              <h3>What AI Is Good At</h3>
+              <ul>
+                <li>Writing code and building interfaces</li>
+                <li>Integrating APIs</li>
+                <li>Generating tests</li>
+                <li>Reviewing pull requests</li>
+                <li>Monitoring systems</li>
+              </ul>
+              <p style="margin-top:12px; font-size:0.7em; color:var(--white-dim)"><em>We use AI for all of these. It makes a small team operate like a much larger one.</em></p>
+            </div>
+            <div class="card">
+              <h3>What AI Cannot Do Yet</h3>
+              <ul>
+                <li>Know what a good fill looks like</li>
+                <li>Reconcile positions when a bridge fails</li>
+                <li>Handle a venue outage with open positions at 3am</li>
+                <li>Debug a drawdown when the cause is market microstructure</li>
+                <li>Judge whether underperformance is regime change or system fault</li>
               </ul>
             </div>
             <div class="card">
-              <h3>Sports Betting</h3>
+              <h3>Why Experience Matters</h3>
               <ul>
-                <li>Value Betting — odds vs model prob</li>
-                <li>Kelly Criterion — optimal sizing</li>
-                <li>Arbitrage — cross-bookmaker</li>
-                <li>ML Sports — neural win prediction</li>
+                <li>Our team has traded options, delta one, high frequency, medium frequency</li>
+                <li>Across traditional finance, crypto, decentralised finance, and sports</li>
+                <li>That experience shapes every design decision</li>
+                <li>AI multiplies judgement — if the judgement is not there, the multiplication does not help</li>
+              </ul>
+            </div>
+          </div>
+          <div style="margin-top:20px; padding:16px; border:1px solid var(--navy-border); border-radius:8px; text-align:center">
+            <p><em>You could use AI to build from scratch. You would still need experienced people to operate it. We have already done both — the build and three years of operation.</em></p>
+          </div>
+        </section>
+
+        <!-- Slide 9: Proof Points -->
+        <section>
+          <h2>Proof Points</h2>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; margin-top:20px">
+            <div class="card" style="border-color:var(--green)">
+              <h3 style="color:var(--green)">Live and Revenue-Generating</h3>
+              <ul>
+                <li>$7.5M under management across two mandates</li>
+                <li>30%+ annualised on crypto mean reversion</li>
+                <li>First platform client at $125K — growing to $250K+ retainer</li>
+                <li>One appointed representative live</li>
+              </ul>
+            </div>
+            <div class="card" style="border-color:var(--amber)">
+              <h3 style="color:var(--amber)">In Active Pipeline</h3>
+              <ul>
+                <li>3 additional appointed representative prospects</li>
+                <li>Memorandum of understanding for execution services</li>
+                <li>Client funding development — India Exchange</li>
               </ul>
             </div>
             <div class="card">
-              <h3>Volatility</h3>
+              <h3>Built and Launch-Ready</h3>
               <ul>
-                <li>Relative Volatility — term structure</li>
-                <li>Volatility Surface — IV vs realised</li>
-              </ul>
-            </div>
-            <div class="card">
-              <h3>Market Making</h3>
-              <ul>
-                <li>Passive-Aggressive algo</li>
-                <li>DeFi AMM liquidity provision</li>
-                <li>Cross-venue spread capture</li>
+                <li>Full platform across 5 asset classes</li>
+                <li>35 strategies, 5 families</li>
+                <li>9 execution algorithms</li>
+                <li>22 microservices, 24,500+ tests</li>
               </ul>
             </div>
           </div>
-          <aside class="notes">
-            17+ strategy types. Every one is running or has been backtested on our own infrastructure. We only sell what
-            we run.
-          </aside>
+          <div style="margin-top:20px; padding:16px; border:1px solid var(--gold); border-radius:8px; background:rgba(212,175,55,0.05); text-align:center">
+            <p><em>The platform you would be using is the same one running real capital and serving real clients today.</em></p>
+          </div>
         </section>
 
-        <!-- HOW IT WORKS -->
-        <section>
-          <h2>How It Works</h2>
-          <div style="display: flex; flex-direction: column; gap: 0; font-size: 0.78em; align-items: center">
-            <!-- Row 1: Top pipeline boxes -->
-            <div style="display: flex; align-items: stretch; gap: 0; width: 90%">
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(212, 175, 55, 0.07);
-                  border: 1.5px solid var(--gold);
-                  border-radius: 8px 0 0 8px;
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--gold);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Client
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">Hedge fund · family office</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  padding: 0 6px;
-                  color: var(--blue-elec);
-                  font-size: 1.2em;
-                  font-weight: 700;
-                "
-              >
-                &#8594;
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(0, 212, 255, 0.05);
-                  border: 1.5px solid var(--blue-elec);
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--blue-elec);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Select Strategy
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">17+ types from library</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  padding: 0 6px;
-                  color: var(--blue-elec);
-                  font-size: 1.2em;
-                  font-weight: 700;
-                "
-              >
-                &#8594;
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(0, 212, 255, 0.05);
-                  border: 1.5px solid var(--blue-elec);
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--blue-elec);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Configure
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">Risk params · instruments · sizing</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  padding: 0 6px;
-                  color: var(--gold);
-                  font-size: 1.2em;
-                  font-weight: 700;
-                "
-              >
-                &#8594;
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(212, 175, 55, 0.09);
-                  border: 1.5px solid var(--gold);
-                  border-radius: 0 8px 8px 0;
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--gold);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Deploy
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">Choose deployment mode</div>
-              </div>
-            </div>
-
-            <!-- Branching arrows down to two paths -->
-            <div style="display: flex; width: 90%; justify-content: space-around; margin-top: 4px">
-              <div style="text-align: center; color: var(--gold); font-size: 0.9em; font-weight: 700; padding: 2px 0">
-                &#8595;
-              </div>
-              <div
-                style="text-align: center; color: var(--blue-elec); font-size: 0.9em; font-weight: 700; padding: 2px 0"
-              >
-                &#8595;
-              </div>
-            </div>
-
-            <!-- Row 2: Two paths -->
-            <div style="display: flex; gap: 16px; width: 90%">
-              <!-- Path A: Self-managed -->
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(212, 175, 55, 0.08);
-                  border: 2px solid var(--gold);
-                  border-radius: 8px;
-                  padding: 12px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--gold);
-                    font-size: 0.7em;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: 0.07em;
-                    margin-bottom: 6px;
-                  "
-                >
-                  Path A — Self-managed White Label
-                </div>
-                <div style="color: var(--white); font-size: 0.65em; line-height: 1.6">Client runs under own brand</div>
-                <div style="color: var(--white-dim); font-size: 0.6em; line-height: 1.6; margin-top: 2px">
-                  Full framework + docs + API
-                </div>
-              </div>
-              <!-- Path B: Managed Alpha -->
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(0, 212, 255, 0.06);
-                  border: 2px solid var(--blue-elec);
-                  border-radius: 8px;
-                  padding: 12px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--blue-elec);
-                    font-size: 0.7em;
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: 0.07em;
-                    margin-bottom: 6px;
-                  "
-                >
-                  Path B — Managed Alpha
-                </div>
-                <div style="color: var(--white); font-size: 0.65em; line-height: 1.6">Odum runs the strategy</div>
-                <div style="color: var(--white-dim); font-size: 0.6em; line-height: 1.6; margin-top: 2px">
-                  1.5% mgmt + 20% performance
-                </div>
-              </div>
-            </div>
-
-            <!-- Converging arrow -->
-            <div style="color: var(--blue-elec); font-size: 1.1em; font-weight: 700; line-height: 1; padding: 4px 0">
-              &#8595;
-            </div>
-
-            <!-- Row 3: Merged flow -->
-            <div style="display: flex; align-items: stretch; gap: 0; width: 90%">
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(0, 212, 255, 0.05);
-                  border: 1.5px solid var(--blue-elec);
-                  border-radius: 8px 0 0 8px;
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--blue-elec);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Risk Management
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">
-                  Kill switch · position limits · circuit breaker
-                </div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  padding: 0 6px;
-                  color: var(--blue-elec);
-                  font-size: 1.2em;
-                  font-weight: 700;
-                "
-              >
-                &#8594;
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(0, 212, 255, 0.05);
-                  border: 1.5px solid var(--blue-elec);
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--blue-elec);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  Execution
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">9 algos · 33 venues</div>
-              </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  padding: 0 6px;
-                  color: var(--gold);
-                  font-size: 1.2em;
-                  font-weight: 700;
-                "
-              >
-                &#8594;
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: rgba(212, 175, 55, 0.07);
-                  border: 1.5px solid var(--gold);
-                  border-radius: 0 8px 8px 0;
-                  padding: 10px 14px;
-                  text-align: center;
-                "
-              >
-                <div
-                  style="
-                    color: var(--gold);
-                    font-size: 0.7em;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.06em;
-                    margin-bottom: 4px;
-                  "
-                >
-                  PnL + Reporting
-                </div>
-                <div style="color: var(--white-dim); font-size: 0.6em">SHAP attribution · monthly commentary</div>
-              </div>
-            </div>
-          </div>
-          <aside class="notes">
-            Two deployment modes: client self-manages under their brand, or we run it for them. The managed route is
-            higher-value and aligns incentives — we only make the performance fee if we generate alpha.
-          </aside>
-        </section>
-
-        <!-- USPs -->
-        <section>
-          <h2>Unique Selling Points</h2>
-          <div class="cols-2">
-            <div>
-              <div class="card card-gold" style="margin-bottom: 16px">
-                <h3>1. Cross-Asset Breadth — Unmatched</h3>
-                <p>
-                  FlexTrade, TT, QuantLib are TradFi-only. No white-label framework covers sports strategies alongside
-                  DeFi yield + CeFi momentum. We do, with 17+ pre-built types.
-                </p>
-              </div>
-              <div class="card card-gold">
-                <h3>2. Managed Option — Proven</h3>
-                <p>
-                  We already operate a live managed DeFi strategy for a client. The managed alpha model is not
-                  theoretical — it's in production. That client's returns are our reference case.
-                </p>
-              </div>
-            </div>
-            <div>
-              <div class="card card-blue" style="margin-bottom: 16px">
-                <h3>3. SHAP Explainability</h3>
-                <p>
-                  Clients can see <em>why</em> the ML model traded — at the feature category level (e.g. "momentum
-                  contributed 35%, volatility regime 28%"). No competitor offers this transparency.
-                </p>
-              </div>
-              <div class="card card-blue">
-                <h3>4. Skin in the Game</h3>
-                <p>
-                  Every strategy we white-label is also running on our own prop book. We only sell what we run. This is
-                  a genuine commitment, not marketing.
-                </p>
-              </div>
-            </div>
-          </div>
-          <aside class="notes">
-            The skin in the game point is unusually strong. Institutional clients are deeply sceptical of strategy
-            vendors who don't trade their own strategies. We eliminate that concern entirely.
-          </aside>
-        </section>
-
-        <!-- TARGET MARKET -->
-        <section>
-          <h2>Target Market</h2>
-          <div class="cols-2">
-            <div>
-              <div class="card" style="margin-bottom: 16px">
-                <h3>Boutique Hedge Funds</h3>
-                <p>
-                  Sub-£500M AUM funds without quant infrastructure. Want institutional-grade strategies. Key pain:
-                  hiring quants is expensive and slow. White-label solves in weeks.
-                </p>
-                <div class="tag tag-gold">Primary</div>
-              </div>
-              <div class="card">
-                <h3>Family Offices</h3>
-                <p>
-                  Multi-generation wealth wanting DeFi/crypto exposure with institutional oversight. Managed option
-                  removes operational burden entirely.
-                </p>
-                <div class="tag tag-gold">Primary</div>
-              </div>
-            </div>
-            <div>
-              <div class="card" style="margin-bottom: 16px">
-                <h3>DeFi Protocols / DAOs</h3>
-                <p>
-                  Treasury management. DeFi protocols sitting on idle treasury assets. We run yield strategies on their
-                  behalf or provide framework for governance-controlled deployment.
-                </p>
-                <div class="tag tag-blue">Secondary</div>
-              </div>
-              <div class="card">
-                <h3>Crypto Funds</h3>
-                <p>
-                  Crypto-native funds wanting TradFi systematic exposure alongside crypto. Cross-asset correlation
-                  strategies. Managed alpha option attractive.
-                </p>
-                <div class="tag tag-blue">Secondary</div>
-              </div>
-            </div>
-          </div>
-          <aside class="notes">
-            The DeFi protocol treasury management angle is underexplored. There are $10B+ in protocol treasuries sitting
-            in stablecoins earning nothing. We can generate 8–20% yield safely.
-          </aside>
-        </section>
-
-        <!-- IP PROTECTION -->
-        <section>
-          <h2>IP Protection Framework</h2>
-          <div class="cols-2">
-            <div>
-              <div class="card card-gold">
-                <h3>What Clients Receive</h3>
-                <ul>
-                  <li>Strategy configuration framework (parameters, entry/exit logic)</li>
-                  <li>API access to execution engine</li>
-                  <li>SHAP attribution at feature-category level</li>
-                  <li>Performance reports and backtest results</li>
-                  <li>White-label branding package</li>
-                </ul>
-              </div>
-            </div>
-            <div>
-              <div class="card">
-                <h3>What We Protect</h3>
-                <ul>
-                  <li>ML model weights and feature definitions</li>
-                  <li>Confidence threshold parameters</li>
-                  <li>Fill simulation implementation</li>
-                  <li>Signal generation pipeline code</li>
-                  <li>Specific alpha-generating parameter sets</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="highlight-box" style="margin-top: 20px">
-            <p>
-              <strong>All white-label agreements include:</strong> source code non-disclosure · no reverse-engineering ·
-              territory restrictions where relevant · IP ownership remains with Odum Research · NDA + IP assignment
-              clause
-            </p>
-          </div>
-          <aside class="notes">
-            The framework is licensed, not sold. Model weights never leave Odum infrastructure. Clients get alpha, not
-            the recipe for alpha.
-          </aside>
-        </section>
-
-        <!-- RISKS -->
-        <section>
-          <h2>Risks &amp; Mitigants</h2>
-          <div class="risk-grid">
-            <div class="risk-item risk-high">
-              <span class="risk-label">Strategy Performance Risk — High</span>
-              <p>
-                Live strategies may underperform backtest. Mitigant: backtested with realistic fill simulation; managed
-                clients share downside via performance fee structure; we trade the strategy ourselves first.
-              </p>
-            </div>
-            <div class="risk-item risk-med">
-              <span class="risk-label">IP Leakage — Medium</span>
-              <p>
-                White-label client could attempt to reconstruct model. Mitigant: model weights never exposed;
-                contractual IP protections; SHAP reports show categories, not features.
-              </p>
-            </div>
-            <div class="risk-item risk-med">
-              <span class="risk-label">Regulatory — Medium</span>
-              <p>
-                Managing client money requires MiFID-compliant reporting. Mitigant: built-in MiFID II event types (5
-                compliance events in codebase); Compliance Oversight SMF16 held by Ikenna Igboaka.
-              </p>
-            </div>
-            <div class="risk-item risk-low">
-              <span class="risk-label">Competition — Low</span>
-              <p>
-                No competitor offers cross-asset white-label strategies covering DeFi + Sports. Build time for a
-                competitor: 2+ years minimum.
-              </p>
-            </div>
-          </div>
-          <aside class="notes">
-            Strategy performance risk is the real risk here — it's inherent to any investment management business. The
-            managed option aligns incentives: we only collect performance fees when we generate alpha.
-          </aside>
-        </section>
-
-        <!-- PRICING -->
-        <section>
-          <h2>Pricing Model</h2>
-          <div class="pricing-tiers">
-            <div class="pricing-card">
-              <span class="tier-name">Framework License</span>
-              <span class="price">£50–200k</span>
-              <span class="price-label">upfront per strategy type</span>
-              <ul style="font-size: 0.6em; text-align: left; margin-top: 12px">
-                <li>Full white-label rights</li>
-                <li>API access + docs</li>
-                <li>Annual maintenance fee</li>
-                <li>Client deploys independently</li>
-              </ul>
-            </div>
-            <div class="pricing-card featured">
-              <span class="tier-name">Managed Alpha</span>
-              <span class="price">1.5% + 20%</span>
-              <span class="price-label">management + performance</span>
-              <ul style="font-size: 0.6em; text-align: left; margin-top: 12px">
-                <li>We run the strategy</li>
-                <li>Monthly performance reports</li>
-                <li>SHAP attribution</li>
-                <li>Risk monitoring</li>
-              </ul>
-            </div>
-            <div class="pricing-card">
-              <span class="tier-name">Hybrid</span>
-              <span class="price">£25k + 10%</span>
-              <span class="price-label">discounted license + performance share</span>
-              <ul style="font-size: 0.6em; text-align: left; margin-top: 12px">
-                <li>Client has control</li>
-                <li>We share upside</li>
-                <li>Quarterly reviews</li>
-                <li>Strategy updates included</li>
-              </ul>
-            </div>
-          </div>
-          <aside class="notes">
-            The managed alpha structure is the most attractive for clients who don't want operational burden and for us
-            because it aligns incentives. 2/20 structure on £10M AUM = £400k/year minimum.
-          </aside>
-        </section>
-
-        <!-- REVENUE -->
+        <!-- Slide 10: Next Steps -->
         <section class="bg-gradient-radial">
-          <h2>Revenue Potential — Strategy White Labelling</h2>
-          <div class="cols-2">
-            <div>
-              <table class="scenario-table">
-                <thead>
-                  <tr>
-                    <th>Scenario</th>
-                    <th>Clients</th>
-                    <th>Avg ACV</th>
-                    <th>Annual Rev</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="scenario-conservative">Conservative</td>
-                    <td class="scenario-conservative">3 license + 1 managed</td>
-                    <td class="scenario-conservative">£50k</td>
-                    <td class="scenario-conservative">£150k</td>
-                  </tr>
-                  <tr>
-                    <td class="scenario-base">Base</td>
-                    <td class="scenario-base">5 license + 3 managed</td>
-                    <td class="scenario-base">£62k</td>
-                    <td class="scenario-base">£500k</td>
-                  </tr>
-                  <tr>
-                    <td class="scenario-upside">Upside</td>
-                    <td class="scenario-upside">10+ license + 8 managed</td>
-                    <td class="scenario-upside">£110k</td>
-                    <td class="scenario-upside">£2M+</td>
-                  </tr>
-                </tbody>
-              </table>
+          <h2>How to Start</h2>
+          <p style="margin-bottom:30px">The next step is a conversation about what you need — which asset classes, what kind of strategies, what your current setup looks like, and where the gaps are.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px">
+            <div class="card" style="text-align:center">
+              <div style="font-size:2em; color:var(--gold); margin-bottom:10px">1</div>
+              <h3>Scoping</h3>
+              <p>Which asset classes? What infrastructure do you have today? Where are the gaps?</p>
             </div>
-            <div>
-              <div class="card card-gold">
-                <h3>Cross-Sell Path</h3>
-                <p>Strategy clients naturally need:</p>
-                <ul>
-                  <li><strong>EaaS</strong> — execution of their white-labelled strategies</li>
-                  <li><strong>Data Provision</strong> — better data for the live strategy</li>
-                  <li><strong>IM / Sub-fund</strong> — "can you manage more capital?"</li>
-                  <li><strong>AR Umbrella</strong> — if they need regulatory coverage</li>
-                </ul>
-              </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:2em; color:var(--gold); margin-bottom:10px">2</div>
+              <h3>Trial</h3>
+              <p>We set up a trial on data and research layers. See the quality before committing to anything broader.</p>
+            </div>
+            <div class="card" style="text-align:center">
+              <div style="font-size:2em; color:var(--gold); margin-bottom:10px">3</div>
+              <h3>Go Live</h3>
+              <p>Data access in days. Research in days. Execution integration in weeks. Full platform or bespoke build scoped per engagement.</p>
             </div>
           </div>
-          <div class="slide-footer">Odum Research Ltd · FCA 975797 · Strategy White Labelling</div>
-          <aside class="notes">
-            The managed alpha upside is driven by AUM growth. 3 managed clients at £30M AUM each = £90M AUM = £1.8M
-            management fee + performance. Non-linear upside.
-          </aside>
+          <div style="margin-top:40px; text-align:center">
+            <p><strong>Contact:</strong> ikenna@odum-research.com</p>
+            <p>Odum Research Ltd · FCA 975797 · odum-research.com/services/platform</p>
+          </div>
+          <div class="slide-footer">Odum Research Ltd · FCA 975797 · Trading Platform as a Service</div>
         </section>
+      </div>
+    </div>
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
