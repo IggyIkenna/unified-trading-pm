@@ -55,7 +55,7 @@ Read these before making ANY code changes:
 - No `os.getenv()` — use `UnifiedCloudConfig`
 - No `# type: ignore` to hide architectural violations — fix the root cause
 - No `try/except ImportError` around library imports — fail loud
-- Services use instruments-service for reference data, not UMI — UMI is for market data only
+- Services use instruments-service for reference data, not MTDS — MTDS is for market data only
 - Shard-level failure isolation — no `raise` inside per-venue/per-shard loops (see
   codex/04-architecture/shard-level-failure-isolation.md)
 - Every adapter MUST classify errors through UAC `classify_venue_error()` and emit `ADAPTER_FETCH_FAILED` events
@@ -63,6 +63,10 @@ Read these before making ANY code changes:
 - `.env` files must NEVER contain placeholder credential paths — ADC is the default
 - Service CLIs follow standardised axes: `--operation` (what), `--mode` (batch/live), `--category` (domain). See
   `codex/06-coding-standards/cli-convention.md`.
+- **Availability manifest v4** — `ManifestWriter` writes proper shard columns (venue, chain, data_type, instrument_type,
+  league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type). **Never
+  overload `venue`** with non-venue data. For shard dimensions, data status page hierarchy, availability % calculation,
+  and integrity principles, see `codex/02-data/availability-manifest-and-data-status.md` (SSOT).
 
 ## Service Infrastructure Requirements (QG-Enforced as ERRORS)
 
@@ -88,7 +92,7 @@ runtime via factory/constructor params. See `codex/04-architecture/interface-cre
 - DeFi execution: `connector.connect(config={"wallet_private_key": pk, "rpc_url": url})` — from config dict
 - Sports execution: `adapter(credentials={"api_key": key})` — keys as params
 - Reference data: `create_adapter(venue, api_key=key)` — keys as params
-- UMI/UEI/UFI: no keys needed
+- MTDS market_interface / UEI / UFI: no keys needed
 
 **RPC URL templates**: `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py` — SSOT for all chain→RPC
 mappings. execution-service DeFi connectors import from UAC, never define their own.
@@ -114,7 +118,7 @@ code prefix (FAIL/RETRY/SKIP).
 execution-service. All via service CLIs. No standalone scripts. See the pipeline map discussion in this session's
 memory.
 
-**Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Pyth, Infura — all deleted from UAC, UMI, docs.
+**Removed providers** (do NOT reference): Elysium, Arkham, Bloxroute, Pyth, Infura — all deleted from UAC, MTDS, docs.
 
 ## Version Graduation (1.0.0 Process)
 
@@ -205,7 +209,7 @@ replace live cloud services (see `unified-trading-pm/plans/archive/cicd_mock_har
 
 **Network blocking**: `pytest --block-network` blocks all sockets; `@pytest.mark.allow_network` opts out.
 
-**WS tests**: Use `MockWebSocketFeed` from `unified-market-interface/tests/fixtures/mock_ws_server.py`.
+**WS tests**: Use `MockWebSocketFeed` from `market-tick-data-service/tests/market_interface/fixtures/mock_ws_server.py`.
 
 **DeFi unit tests**: Use `responses` library (`@responses.activate`, `passthrough=False`) for Hyperliquid REST. Mock
 Web3 at the signing level — never hit real RPCs in unit tests.
@@ -294,12 +298,13 @@ approach is wrong, FIX it. Never work around it.
 
 Key repo mapping: events → `unified-events-interface`, schemas → `unified-api-contracts` (external + internal via
 `unified_api_contracts.internal`), cloud → `unified-cloud-interface`, config → `unified-config-interface`, market data →
-`unified-market-interface`, execution (CeFi/DeFi/sports) → `execution-service`, position →
-`position-balance-monitor-service`, reference data → `instruments-service` (URDI still exists as library; sports/
-sub-package in URDI), domain utils / ML / feature orchestration / feature calculators → `unified-trading-library`
-(domain_client/, ml/, feature_service_base/, feature_calculator/ sub-packages), features → `unified-features-interface`,
-sports reference → `unified-reference-data-interface` (sports/ sub-package), execution algos / matching engine →
-`execution-service` (algo_library/, matching_engine/ sub-packages), UI → check existing 13 UIs first.
+`market-tick-data-service` (market_interface sub-package; UMI archived), execution (CeFi/DeFi/sports) →
+`execution-service`, position → `position-balance-monitor-service`, reference data → `instruments-service` (URDI still
+exists as library; sports/ sub-package in URDI), domain utils / ML / feature orchestration / feature calculators →
+`unified-trading-library` (domain_client/, ml/, feature_service_base/, feature_calculator/ sub-packages), features →
+`unified-features-interface`, sports reference → `unified-reference-data-interface` (sports/ sub-package), execution
+algos / matching engine → `execution-service` (algo_library/, matching_engine/ sub-packages), UI → check existing 13 UIs
+first.
 
 **Citadel Import Rules (UAC):** All consumer repos import from UAC domain facades only
 (`from unified_api_contracts.{domain} import ...`). Never import from `unified_api_contracts.canonical.*` or
