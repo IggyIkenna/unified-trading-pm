@@ -74,14 +74,14 @@ At one end: stable yield. Decentralised finance lending, stablecoin yield. Three
 percent drawdown. These can absorb fifty to a hundred million-plus. The pools are enormous. This is the conservative
 base layer.
 
-In the middle: basis trades, crypto momentum, traditional finance directional. Ten to thirty percent returns. Five to
+In the middle: basis trades, crypto long/short, traditional finance directional. Ten to thirty percent returns. Five to
 twenty million capacity. Moderate risk, moderate scale.
 
 At the top: leveraged decentralised finance yield, concentrated liquidity provision. Twenty to fifty percent. Five
 million per pool. Higher return but capacity-constrained.
 
-And then crypto trading — momentum, mean reversion, arbitrage. Market-dependent returns. This is where our live thirty
-percent annualised sits.
+And then crypto long/short — machine learning driven, mean reversion, arbitrage. Thirty percent-plus returns. This is
+where our live thirty percent annualised sits.
 
 Capacity matters more than most people realise. A strategy returning forty percent that can only absorb five million is
 a very different proposition from one returning eight percent that takes a hundred million. Our fee structure reflects

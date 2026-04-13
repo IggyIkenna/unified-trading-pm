@@ -123,13 +123,13 @@ Low-risk, high-capacity: decentralised finance lending and stablecoin yield. Thr
 Under one percent drawdown. Can absorb fifty to a hundred million-plus. Suitable for conservative mandates or as a base
 layer.
 
-Medium-risk, medium-capacity: basis trades, crypto momentum, traditional finance directional. Ten to thirty percent
+Medium-risk, medium-capacity: basis trades, crypto long/short, traditional finance directional. Ten to thirty percent
 returns. Five to twenty million capacity per strategy. The core of most multi-strategy portfolios.
 
 Higher-risk, capacity-constrained: leveraged decentralised finance yield, concentrated liquidity provision. Twenty to
 fifty percent returns. Five million per pool. Suitable for smaller, more aggressive allocations.
 
-Sports and prediction markets: machine learning prediction, cross-bookmaker arbitrage. Returns are market-dependent.
+Sports and prediction markets: machine learning prediction, cross-bookmaker arbitrage. Fifty percent-plus returns.
 Capacity is tighter — typically under a million. A specialist allocation.
 
 The infrastructure is the same across all of these. The configuration changes, not the platform.

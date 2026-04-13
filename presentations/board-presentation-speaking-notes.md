@@ -121,7 +121,7 @@ point is the spectrum.
 
 At one end: low-risk, high-capacity strategies — decentralised finance lending, stablecoin yield. These can absorb
 serious capital. At the other end: higher-return strategies with tighter capacity constraints. In between: basis trades,
-crypto momentum, traditional finance directional.
+crypto long/short, traditional finance directional.
 
 Capacity is the dimension most people overlook. A strategy returning forty percent that can only absorb five million is
 a very different proposition from one returning eight percent that takes a hundred million. For investment management,
