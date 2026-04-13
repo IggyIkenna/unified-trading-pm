@@ -302,6 +302,10 @@ These are the actual pricing venues for sports odds. "ODDS_API" is the data aggr
 ## Migration: v3 → v4
 
 - **No data re-downloads.** All data already exists in GCS. The manifest is just an index.
+- **GCS paths do NOT need to change.** The manifest is an abstraction layer over GCS paths. Old data stays at old
+  paths (e.g., `venue=ODDS_API/league=EPL/`). New manifest entries normalize to v4 columns (venue=PINNACLE,
+  league_id=EPL). The deployment-api reads the manifest, not GCS paths. GCS path changes are optional future
+  optimization, not a migration requirement.
 - **Backward compat in reader:** `read_availability_index()` backfills missing v4 columns with `""`.
 - **v4 writes coexist with v3 entries** until re-scanned.
 - **Re-scan existing data:** Run manifest rebuild scripts per service. Scans existing GCS paths, extracts new columns
