@@ -77,6 +77,51 @@ def extract_uac_registries() -> dict[str, object]:
         data["sports_venues"] = sorted(str(v) for v in SPORTS_VENUES)
         data["zero_alpha_venues"] = sorted(str(v) for v in ZERO_ALPHA_VENUES)
 
+        # DeFi protocol registry — full venue→protocol mapping + chain context
+        try:
+            from unified_api_contracts.registry import (
+                DEFI_PROTOCOLS,
+                DEFI_VENUE_TO_PROTOCOL,
+            )
+
+            data["defi_venue_to_protocol"] = {
+                str(k): {"protocol": v[0], "chain": v[1]} for k, v in DEFI_VENUE_TO_PROTOCOL.items()
+            }
+            data["defi_protocols"] = [{"protocol": p[0], "chain": p[1]} for p in DEFI_PROTOCOLS]
+            logger.info(
+                "  DeFi protocol registry: %d venues, %d protocols", len(DEFI_VENUE_TO_PROTOCOL), len(DEFI_PROTOCOLS)
+            )
+        except Exception as e:
+            logger.warning("  Failed to extract DeFi protocol registry: %s", e)
+
+        # Chain RPC templates — chain_id → RPC URL template
+        try:
+            from unified_api_contracts.registry import CHAIN_RPC_TEMPLATES
+
+            data["chain_rpc_templates"] = {str(k): str(v) for k, v in CHAIN_RPC_TEMPLATES.items()}
+            logger.info("  Chain RPC templates: %d chains", len(CHAIN_RPC_TEMPLATES))
+        except Exception as e:
+            logger.warning("  Failed to extract CHAIN_RPC_TEMPLATES: %s", e)
+
+        # Solana DeFi protocols
+        try:
+            from unified_api_contracts.registry import SOLANA_DEFI_PROTOCOLS
+
+            data["solana_defi_protocols"] = {
+                str(k): {str(pk): str(pv) for pk, pv in v.items()} for k, v in SOLANA_DEFI_PROTOCOLS.items()
+            }
+            logger.info("  Solana DeFi protocols: %d", len(SOLANA_DEFI_PROTOCOLS))
+        except Exception as e:
+            logger.warning("  Failed to extract SOLANA_DEFI_PROTOCOLS: %s", e)
+
+        # DeFi pool pairs
+        try:
+            from unified_api_contracts.registry import DEFI_POOL_PAIRS
+
+            data["defi_pool_pairs"] = [{"base": p[0], "quote": p[1]} for p in DEFI_POOL_PAIRS]
+        except Exception as e:
+            logger.warning("  Failed to extract DEFI_POOL_PAIRS: %s", e)
+
         # Endpoint registry — extract venue capabilities
         endpoint_data = {}
         registry_items = (
@@ -362,6 +407,9 @@ def main() -> None:
     print("=" * 60)
     regs = reference.get("registries", {})
     print(f"Venues in category map:  {len(regs.get('venue_category_map', {}))}")
+    print(f"DeFi venue→protocol:     {len(regs.get('defi_venue_to_protocol', {}))}")
+    print(f"DeFi protocols:          {len(regs.get('defi_protocols', []))}")
+    print(f"Chain RPC templates:     {len(regs.get('chain_rpc_templates', {}))}")
     print(f"UAC enums:               {len(reference.get('uac_enums', {}))}")
     print(f"UIC enums:               {len(reference.get('uic_enums', {}))}")
     print(f"Config schemas:          {len(reference.get('config_schemas', {}))}")
