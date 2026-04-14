@@ -108,8 +108,8 @@ build it yourself. You can use our frontend or build your own — the backend AP
 
 Third scenario: you want us to build strategies for you. You tell us what you want — decentralised finance yield, crypto
 long/short, sports prediction, whatever fits your mandate. We build it, test it on our own capital first, then deploy it
-for you. You operate it through our frontend or your own. Bespoke commercial terms. Built by a team with decades of
-institutional trading experience. Nothing ships that we would not trust with our own money.
+for you. Either of us can operate it — through our frontend or through the backend API. Bespoke commercial terms. Built
+by a team with decades of institutional trading experience. Nothing ships that we would not trust with our own money.
 
 Across all three: the frontend can be ours or yours. The platform is API-first. You can use the full web interface,
 connect via API with your own tools, or combine both. The backend infrastructure is the same regardless.
