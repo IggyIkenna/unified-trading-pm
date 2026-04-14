@@ -89,7 +89,34 @@ ongoing retainer or performance share.
 
 ---
 
-## Slide 5 — Coverage Breadth
+## Slide 5 — How You Plug In
+
+**"How You Plug In"**
+
+There are three ways to connect to the platform, depending on where you are in your own build.
+
+First scenario: you already have signals. You have built your own research, you generate your own trading signals, and
+you just need execution. You send signals to us via API. We execute across 80-plus venues with advanced algorithms —
+time-weighted, volume-weighted, smart order routing, optimal execution. You get best execution reporting — slippage
+analysis, fill quality, venue breakdown. We charge alpha-based fees on execution outperformance. You never touch our
+research layer. Your intellectual property stays completely yours.
+
+Second scenario: you want to build strategies on our infrastructure. You use our data, our feature library, our
+backtesting environment to develop your own strategies. When you are ready, you promote to live — same code, same data,
+same risk controls. No rewrite. That backtest-to-live cohesion is the core value — it would take you eighteen months to
+build it yourself. You can use our frontend or build your own — the backend API is the same either way.
+
+Third scenario: you want us to build strategies for you. You tell us what you want — decentralised finance yield, crypto
+long/short, sports prediction, whatever fits your mandate. We build it, test it on our own capital first, then deploy it
+for you. You operate it through our frontend or your own. Bespoke commercial terms. Built by a team with decades of
+institutional trading experience. Nothing ships that we would not trust with our own money.
+
+Across all three: the frontend can be ours or yours. The platform is API-first. You can use the full web interface,
+connect via API with your own tools, or combine both. The backend infrastructure is the same regardless.
+
+---
+
+## Slide 6 — Coverage Breadth
 
 **"What the Platform Covers"**
 
