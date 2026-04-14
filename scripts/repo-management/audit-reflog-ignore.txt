@@ -43,3 +43,17 @@ unified-trading-codex:181daf1
 unified-trading-codex:d4f2513
 unified-trading-library:18de5bb
 unified-trading-library:772125a
+
+# Low-risk resets (--soft etc.) — confirmed safe 2026-03-27
+deployment-api
+unified-api-contracts
+unified-market-interface
+unified-trading-api
+unified-trading-library
+unified-trading-pm
+
+# Intentional reset to origin/live-defi-rollout — confirmed safe 2026-03-27
+execution-service:5f1b8f30
+
+# Low-risk resets — confirmed safe 2026-04-13
+market-tick-data-service

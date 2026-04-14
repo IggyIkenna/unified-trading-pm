@@ -1,0 +1,28 @@
+---
+description: SSOT for availability manifest schema, shard dimensions, data status page, and missing data logic
+globs:
+  - "**/manifest_writer.py"
+  - "**/manifest_writer*.py"
+  - "**/data_manifest*"
+  - "**/data_status*"
+  - "**/DataStatusTab*"
+  - "**/availability_index*"
+alwaysApply: false
+---
+
+# Availability Manifest SSOT
+
+When working on ManifestWriter, availability index, data status, shard dimensions, or missing data:
+
+**Read first:** `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
+
+This document defines:
+- Schema v4 (16 columns: date, venue, chain, data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type, instrument_count, service_name, written_at, schema_version)
+- Per-service shard dimension matrix (L1-L8)
+- Data status page tree hierarchy per service × category
+- Availability % calculation (expected from UAC, found from manifest)
+- Integrity principles (atomic shard failure, schema validation, UAC SSOT)
+- DeFi chain grouping (venue=protocol, chain=chain, not venue=PROTOCOL-CHAIN)
+- Sports bookmaker venues (PINNACLE, BETFAIR_EX, etc., not "ODDS_API")
+
+**Never overload `venue`** with non-venue data. Use the proper column (feature_group, model_family, client_id, etc.).
